@@ -207,6 +207,20 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
       initData: async (knex) => {},
     },
     {
+      name: "t_model_history",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.text("modelId"); // 模型 ID（如 gpt-4o、doubao-1-5-pro-32k-250115）
+        table.text("type"); // 类型：language / image
+        table.text("manufacturer"); // 厂商
+        table.text("baseUrl"); // API BaseURL
+        table.integer("lastUsedTime"); // 最近使用时间戳
+        table.integer("userId");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
       name: "t_videoConfig",
       builder: (table) => {
         table.integer("id").notNullable();

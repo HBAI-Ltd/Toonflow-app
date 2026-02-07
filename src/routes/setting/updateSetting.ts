@@ -50,6 +50,23 @@ export default router.post(
       password,
     });
 
+    // 自动记录模型历史（用于下拉选择）
+    const modelEntries: Array<{ modelId: string; type: string; manufacturer: string; baseUrl: string }> = [];
+    if (languageModel?.model) {
+      modelEntries.push({ modelId: languageModel.model, type: "language", manufacturer: languageModel.manufacturer || "", baseUrl: languageModel.baseURL || "" });
+    }
+    if (imageModel?.model) {
+      modelEntries.push({ modelId: imageModel.model, type: "image", manufacturer: imageModel.manufacturer || "", baseUrl: imageModel.baseURL || "" });
+    }
+    for (const entry of modelEntries) {
+      const existing = await u.db("t_model_history").where({ modelId: entry.modelId, type: entry.type, userId }).first();
+      if (existing) {
+        await u.db("t_model_history").where({ id: existing.id }).update({ manufacturer: entry.manufacturer, baseUrl: entry.baseUrl, lastUsedTime: Date.now() });
+      } else {
+        await u.db("t_model_history").insert({ id: Date.now() + Math.floor(Math.random() * 1000), modelId: entry.modelId, type: entry.type, manufacturer: entry.manufacturer, baseUrl: entry.baseUrl, lastUsedTime: Date.now(), userId });
+      }
+    }
+
     res.status(200).send(success({ message: "修改全局配置成功" }));
   }
 );
