@@ -23,7 +23,7 @@ type ReturnType<T extends string> = T extends "video" ? resData[] : resData;
 export default async function getConfig<T extends ModelType | "video">(type: T, manufacturer?: string): Promise<ReturnType<T>> {
   if (type === "video") {
     // 查询 t_config 表，返回数组
-    const configList = await u.db("t_config").where("manufacturer", manufacturer).orderBy("index", "asc");
+    const configList = await u.db("t_config").where("manufacturer", manufacturer).orderBy("sortIndex", "asc");
 
     return configList.map((i) => {
       return {

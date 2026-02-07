@@ -199,7 +199,7 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         table.text("baseUrl");
         table.text("manufacturer");
         table.integer("createTime");
-        table.integer("index");
+        table.integer("sortIndex");
         table.integer("userId");
         table.primary(["id"]);
         table.unique(["id"]);

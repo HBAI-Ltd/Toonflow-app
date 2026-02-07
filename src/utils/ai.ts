@@ -123,14 +123,22 @@ const generators = {
       stream: false,
       watermark: false,
     };
-    // 图生图：存在图片时添加 image 字段
-    if (config.imageBase64) {
-      body.image = config.imageBase64;
+    // 图生图：存在图片时添加 image 字段（需要 Data URI 格式）
+    if (config.imageBase64 && config.imageBase64.length > 0) {
+      body.image = config.imageBase64.map((img) =>
+        img.startsWith("data:") ? img : `data:image/jpeg;base64,${img}`
+      );
     }
-    const res = await axios.post(`https://ark.cn-beijing.volces.com/api/v3/images/generations`, body, {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    });
-    return res.data.data[0].url;
+    try {
+      const res = await axios.post(`https://ark.cn-beijing.volces.com/api/v3/images/generations`, body, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      return res.data.data[0].url;
+    } catch (err: any) {
+      console.error("[volcengine 图像生成失败]", JSON.stringify(err?.response?.data || err.message));
+      console.error("[volcengine 请求参数]", JSON.stringify({ model, size: config.size, promptLength: config.prompt?.length, imageCount: config.imageBase64?.length }));
+      throw err;
+    }
   },
 
   gemini: async (config: ImageConfig, apiKey: string, baseURL: string, model: string) => {
@@ -248,19 +256,26 @@ const generateVideoWithConfig = async (config: VideoConfig, configItem: { model:
   let videoUrl: string | null = null;
   if (manufacturer === "volcengine") {
     const doubaoConfig = config as DoubaoVideoConfig;
+    const actualModel = model || "doubao-seedance-1-5-pro-251215";
+    // seedance-1-5-pro 支持首尾帧模式(flf2v)，其他模型只支持单图参考(i2v)或纯文本(t2v)
+    const supportsFlf2v = actualModel.includes("seedance-1-5") || actualModel.includes("seedance-2");
+    const imageContent = doubaoConfig.imageBase64
+      ? supportsFlf2v
+        ? doubaoConfig.imageBase64.map((base64, i) => ({
+            type: "image_url",
+            image_url: { url: base64 },
+            role: i === 0 ? "first_frame" : "last_frame",
+          }))
+        : // 非 1-5-pro 模型：只取第一张图作为参考图(i2v)，不传 role
+          [{ type: "image_url", image_url: { url: doubaoConfig.imageBase64[0] } }]
+      : [];
     const createRes = await axios.post(
       baseURL ?? "https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks",
       {
-        model: "doubao-seedance-1-5-pro-251215",
+        model: actualModel,
         content: [
           { type: "text", text: config.prompt },
-          ...(doubaoConfig.imageBase64
-            ? doubaoConfig.imageBase64.map((base64, i) => ({
-                type: "image_url",
-                image_url: { url: base64 },
-                role: i === 0 ? "first_frame" : "last_frame",
-              }))
-            : []),
+          ...imageContent,
         ],
         generate_audio: doubaoConfig.audio ?? false,
         duration: doubaoConfig.duration,
@@ -275,9 +290,13 @@ const generateVideoWithConfig = async (config: VideoConfig, configItem: { model:
       const res = await axios.get(`${baseURL ?? "https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks"}/${taskId}`, {
         headers: { Authorization: `Bearer ${apiKey}` },
       });
-      const { status, content } = res.data;
+      const { status, content, error: taskError } = res.data;
       if (status === "succeeded") return { completed: true, imageUrl: content?.video_url };
-      if (["failed", "cancelled", "expired"].includes(status)) return { completed: false, error: `任务${status}` };
+      if (["failed", "cancelled", "expired"].includes(status)) {
+        const detail = taskError?.message || taskError?.code || content?.error || JSON.stringify(res.data);
+        console.error("[volcengine 视频任务失败]", detail);
+        return { completed: false, error: `任务${status}: ${detail}` };
+      }
       if (["queued", "running"].includes(status)) return { completed: false };
       return { completed: false, error: `未知状态: ${status}` };
     });

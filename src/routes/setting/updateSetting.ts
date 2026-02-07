@@ -37,7 +37,7 @@ export default router.post(
           model: item.model,
           apiKey: item.apiKey,
           baseUrl: item.baseUrl,
-          index: item.index,
+          sortIndex: item.index,
           createTime: Date.now(),
           userId,
           manufacturer: item.manufacturer,
