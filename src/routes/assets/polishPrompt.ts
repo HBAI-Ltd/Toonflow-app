@@ -4,9 +4,16 @@ import * as zod from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 const router = express.Router();
-const jsonSchema = zod.object({
-  prompt: zod.string().describe("提示词"),
-});
+
+// 手动构建 JSON Schema，确保兼容 OpenAI strict 模式（含 additionalProperties: false）
+const promptJsonSchema = {
+  type: "object" as const,
+  properties: {
+    prompt: { type: "string" as const, description: "提示词" },
+  },
+  required: ["prompt"] as const,
+  additionalProperties: false,
+};
 interface OutlineItem {
   description: string;
   name: string;
@@ -205,7 +212,7 @@ export default router.post(
           jsonSchema: {
             name: "json",
             strict: true,
-            schema: zod.toJSONSchema(jsonSchema),
+            schema: promptJsonSchema,
           },
         },
       });

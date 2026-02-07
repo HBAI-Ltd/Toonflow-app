@@ -7,11 +7,17 @@ import path from "path";
 
 const router = express.Router();
 
-const cellsResultSchema = z.object({
-  time: z.number().describe("时长,镜头时长 1-15"),
-  content: z.string().describe("提示词内容"),
-  name: z.string().describe("分镜名称"),
-});
+// 手动构建 JSON Schema，确保兼容 OpenAI strict 模式（含 additionalProperties: false）
+const cellsResultJsonSchema = {
+  type: "object" as const,
+  properties: {
+    time: { type: "number" as const, description: "时长,镜头时长 1-15" },
+    content: { type: "string" as const, description: "提示词内容" },
+    name: { type: "string" as const, description: "分镜名称" },
+  },
+  required: ["time", "content", "name"] as const,
+  additionalProperties: false,
+};
 
 const prompt = `
 你是一名资深动画导演，擅长将静态分镜转化为简洁、专业、详尽的 Motion Prompt（视频生成动作提示）。你理解镜头语言、情绪节奏，能补充丰富但不重复静态元素，只突出变化与动态。
@@ -161,7 +167,7 @@ async function generateSingleVideoPrompt({
         jsonSchema: {
           name: "json",
           strict: true,
-          schema: z.toJSONSchema(cellsResultSchema),
+          schema: cellsResultJsonSchema,
         },
       },
     });

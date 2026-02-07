@@ -1,13 +1,10 @@
 import express from "express";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import u from "@/utils";
 import { z } from "zod";
-import { generateText, Output, tool, stepCountIs } from "ai";
+import { tool } from "ai";
+import aiText from "@/utils/ai/text";
 const router = express.Router();
-
-import { createOpenAI } from "@ai-sdk/openai";
-import { createDeepSeek } from "@ai-sdk/deepseek";
 
 // 检查语言模型
 export default router.post(
@@ -34,7 +31,7 @@ export default router.post(
       },
     });
     try {
-      const { reply } = await u.ai.text.invoke(
+      const { reply } = await aiText.invoke(
         {
           prompt: "请调用工具获取北京的天气，并回答我多少气温",
           tools: { getWeatherTool },

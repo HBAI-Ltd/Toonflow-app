@@ -1,7 +1,6 @@
 import generateImagePromptsTool from "@/agents/storyboard/generateImagePromptsTool";
 import u from "@/utils";
 import sharp from "sharp";
-import { z } from "zod";
 
 interface AssetItem {
   name: string;
@@ -36,17 +35,27 @@ interface ResourceItem {
   intro: string;
 }
 
-// 资产过滤响应的 schema
-const filteredAssetsSchema = z.object({
-  relevantAssets: z
-    .array(
-      z.object({
-        name: z.string().describe("资产名称"),
-        reason: z.string().describe("选择该资产的原因"),
-      }),
-    )
-    .describe("与分镜内容相关的资产列表"),
-});
+// 资产过滤响应的 JSON Schema（手动构建，确保兼容 OpenAI strict 模式）
+const filteredAssetsJsonSchema = {
+  type: "object" as const,
+  properties: {
+    relevantAssets: {
+      type: "array" as const,
+      description: "与分镜内容相关的资产列表",
+      items: {
+        type: "object" as const,
+        properties: {
+          name: { type: "string" as const, description: "资产名称" },
+          reason: { type: "string" as const, description: "选择该资产的原因" },
+        },
+        required: ["name", "reason"] as const,
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["relevantAssets"] as const,
+  additionalProperties: false,
+};
 
 // 压缩图片直到不超过指定大小
 async function compressImage(buffer: Buffer, maxSizeBytes: number = 3 * 1024 * 1024): Promise<Buffer> {
@@ -215,12 +224,13 @@ async function filterRelevantAssets(prompts: string[], allResources: ResourceIte
     return availableImages;
   }
 
-  const chatModel = await u.ai.text({});
-  const result = await chatModel!.invoke({
-    messages: [
-      {
-        role: "user",
-        content: `请分析以下分镜描述，从可用资产中筛选出与分镜内容直接相关的资产。
+  try {
+    const chatModel = await u.ai.text({});
+    const result = await chatModel!.invoke({
+      messages: [
+        {
+          role: "user",
+          content: `请分析以下分镜描述，从可用资产中筛选出与分镜内容直接相关的资产。
 
 分镜描述：
 ${prompts.map((p, i) => `${i + 1}. ${p}`).join("\n")}
@@ -228,29 +238,35 @@ ${prompts.map((p, i) => `${i + 1}. ${p}`).join("\n")}
 可用资产列表：
 ${availableResources.map((r) => `- ${r.name}：${r.intro}`).join("\n")}
 
-请仅选择在分镜中明确出现或被提及的角色、场景、道具。不要选择与分镜内容无关的资产。`,
+请仅选择在分镜中明确出现或被提及的角色、场景、道具。不要选择与分镜内容无关的资产。
+请严格按照 JSON 格式返回结果，包含 relevantAssets 数组字段。`,
+        },
+      ],
+      responseFormat: {
+        type: "json_schema",
+        jsonSchema: {
+          name: "filteredAssets",
+          strict: true,
+          schema: filteredAssetsJsonSchema,
+        },
       },
-    ],
-    responseFormat: {
-      type: "json_schema",
-      jsonSchema: {
-        name: "filteredAssets",
-        strict: true,
-        schema: z.toJSONSchema(filteredAssetsSchema),
-      },
-    },
-  });
+    });
 
-  const data = result?.json as z.infer<typeof filteredAssetsSchema>;
+    const data = result?.json as { relevantAssets?: Array<{ name: string; reason: string }> };
 
-  if (!data?.relevantAssets || data.relevantAssets.length === 0) {
+    if (!data?.relevantAssets || data.relevantAssets.length === 0) {
+      return availableImages;
+    }
+
+    const relevantNames = new Set(data.relevantAssets.map((a) => a.name));
+    const filteredImages = availableImages.filter((img) => relevantNames.has(img.name));
+
+    return filteredImages.length > 0 ? filteredImages : availableImages;
+  } catch (err: any) {
+    // 资产过滤失败时降级：返回全部可用资产，不阻断图片生成流程
+    console.warn("资产过滤失败，使用全部资产:", err.message);
     return availableImages;
   }
-
-  const relevantNames = new Set(data.relevantAssets.map((a) => a.name));
-  const filteredImages = availableImages.filter((img) => relevantNames.has(img.name));
-
-  return filteredImages.length > 0 ? filteredImages : availableImages;
 }
 
 // 构建资产映射提示词
