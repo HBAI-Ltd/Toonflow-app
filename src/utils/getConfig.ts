@@ -1,55 +1,44 @@
 import u from "@/utils";
 
-type AIType = "text" | "image" | "video";
+// 只包含 t_setting 表里实际存在的字段
+const modelFields = {
+  image: "imageModel",
+  language: "languageModel",
+  text: "languageModel",
+} as const;
 
-interface BaseConfig {
+interface resData {
   model: string;
   apiKey: string;
-  manufacturer: string;
-}
-
-interface TextResData extends BaseConfig {
   baseURL: string;
-  manufacturer: "deepseek" | "openAi" | "doubao";
+  manufacturer: "openAi" | "volcengine" | "runninghub" | "gemini" | "apimart";
 }
 
-interface ImageResData extends BaseConfig {
-  manufacturer: "openAi" | "gemini" | "volcengine" | "runninghub" | "apimart";
-}
+type ModelType = keyof typeof modelFields;
 
-interface VideoResData extends BaseConfig {
-  baseURL: string;
-  manufacturer: "openAi" | "volcengine" | "runninghub" | "apimart" | "confyUI";
-}
+// 定义返回类型映射
+type ReturnType<T extends string> = T extends "video" ? resData[] : resData;
 
-type ResDataMap = {
-  text: TextResData;
-  image: ImageResData;
-  video: VideoResData;
-};
+// 主方法
+export default async function getConfig<T extends ModelType | "video">(type: T, manufacturer?: string): Promise<ReturnType<T>> {
+  if (type === "video") {
+    // 查询 t_config 表，返回数组
+    const configList = await u.db("t_config").where("manufacturer", manufacturer).orderBy("index", "asc");
 
-const errorMessages: Record<AIType, string> = {
-  text: "文本模型配置不存在",
-  image: "图像模型配置不存在",
-  video: "视频模型配置不存在",
-};
-
-const needBaseURL: AIType[] = ["text", "video"];
-
-export default async function getConfig<T extends AIType>(aiType: T): Promise<ResDataMap[T]> {
-  const config = await u.db("t_config").where("type", aiType).first();
-
-  if (!config) throw new Error(errorMessages[aiType]);
-
-  const result: BaseConfig = {
-    model: config?.model ?? "",
-    apiKey: config?.apiKey ?? "",
-    manufacturer: config?.manufacturer ?? "",
-  };
-
-  if (needBaseURL.includes(aiType)) {
-    return { ...result, baseURL: config.baseUrl } as ResDataMap[T];
+    return configList.map((i) => {
+      return {
+        ...i,
+        baseURL: i.baseUrl,
+      };
+    }) as ReturnType<T>;
   }
 
-  return result as ResDataMap[T];
+  // 只查询当前需要的字段
+  const modelName = modelFields[type as ModelType];
+  const data: Record<string, any> | undefined = await u.db("t_setting").where({ id: 1 }).select([modelName]).first();
+
+  if (!data) throw new Error("设置数据不存在");
+
+  // 字段值为 JSON 字符串，解析
+  return JSON.parse(data[modelName] || "{}") as ReturnType<T>;
 }
