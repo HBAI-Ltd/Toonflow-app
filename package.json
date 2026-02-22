@@ -58,7 +58,7 @@
     "jsonwebtoken": "^9.0.3",
     "knex": "^3.1.0",
     "morgan": "^1.10.1",
-    "qwen-ai-provider": "^0.1.1",
+    "qwen-ai-provider-v5": "^2.0.1",
     "serialize-error": "^13.0.1",
     "sharp": "^0.34.5",
     "sqlite3": "^5.1.7",
