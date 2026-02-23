@@ -1,0 +1,115 @@
+# CI 构建专用 - JS 产物由 CI 预编译，此处只打包运行环境
+FROM node:24-alpine
+
+WORKDIR /app
+
+# 安装 nginx 和 supervisor
+RUN apk add --no-cache nginx supervisor && \
+    mkdir -p /var/lib/nginx/logs /var/log/nginx && \
+    npm install -g pm2
+
+# 复制 CI 预编译的后端产物
+COPY dist-build ./build
+COPY package.json yarn.lock ./
+
+# 复制静态页面到 nginx 目录
+COPY scripts/web /usr/share/nginx/html
+
+# 替换前端硬编码地址为相对路径，通过 nginx 反代转发
+RUN sed -i 's|http://127.0.0.1:60000|/api|g' /usr/share/nginx/html/index.html && \
+    sed -i 's|"ws://127.0.0.1:60000"|(location.protocol==="https:"?"wss://":"ws://")+location.host|g' /usr/share/nginx/html/index.html
+
+# 只安装生产依赖（native 模块在目标架构下编译）
+RUN yarn install --frozen-lockfile --production
+
+# 配置 nginx（反代 API / WebSocket / 资源文件）
+RUN cat > /etc/nginx/http.d/default.conf << 'EOF'
+server {
+    listen 80;
+
+    # API 反代（去掉 /api 前缀）
+    location /api/ {
+        proxy_pass http://127.0.0.1:60000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # WebSocket 反代
+    location /outline/ {
+        proxy_pass http://127.0.0.1:60000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /storyboard/ {
+        proxy_pass http://127.0.0.1:60000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # 前端静态文件 + 资源文件 fallback
+    # 先找前端文件，再找 uploads 目录，最后 fallback 到 index.html
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ @backend;
+    }
+
+    # 资源文件走后端（express.static 在根路径 serve uploads）
+    location @backend {
+        proxy_pass http://127.0.0.1:60000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_intercept_errors on;
+        error_page 404 = /index.html;
+    }
+}
+EOF
+
+# 配置 nginx 主配置，日志输出到 stderr/stdout
+RUN sed -i 's|error_log /var/log/nginx/error.log warn;|error_log /dev/stderr warn;|g' /etc/nginx/nginx.conf || true && \
+    sed -i 's|access_log /var/log/nginx/access.log main;|access_log /dev/stdout main;|g' /etc/nginx/nginx.conf || true
+
+# 配置 supervisor
+RUN cat > /etc/supervisord.conf << 'EOF'
+[supervisord]
+nodaemon=true
+logfile=/var/log/supervisord.log
+pidfile=/var/run/supervisord.pid
+
+[program:nginx]
+command=nginx -g "daemon off;"
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:app]
+command=pm2-runtime start build/app.js --name app
+directory=/app
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+environment=NODE_ENV=prod
+EOF
+
+ENV NODE_ENV=prod
+
+# 预创建 env 配置文件，避免应用启动时用默认的 127.0.0.1 覆盖
+RUN mkdir -p /app/env && printf 'NODE_ENV=prod\nPORT=60000\nOSSURL=/' > /app/env/.env.prod
+
+EXPOSE 80
+
+# 启动时创建必要目录（防止 volume 挂载覆盖）
+CMD ["sh", "-c", "mkdir -p /var/log/nginx /var/lib/nginx/logs && exec supervisord -c /etc/supervisord.conf"]
