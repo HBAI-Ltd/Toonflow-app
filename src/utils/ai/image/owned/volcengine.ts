@@ -7,7 +7,10 @@ export default async (input: ImageConfig, config: AIConfig): Promise<string> => 
   if (!config.apiKey) throw new Error("缺少API Key");
 
   const apiKey = "Bearer " + config.apiKey.replace(/Bearer\s+/g, "").trim();
-  const size = input.size === "1K" ? "2K" : input.size;
+  let size: string = input.size === "1K" ? "2K" : input.size;
+  if (config.model === "doubao-seedream-5-0-260128" && size.toLowerCase() === "2k") {
+    size = "3k";
+  }
 
   const body: Record<string, any> = {
     model: config.model,
