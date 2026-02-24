@@ -9,6 +9,12 @@ const modelList: Owned[] = [
   // 火山引擎
   {
     manufacturer: "volcengine",
+    model: "doubao-seedream-5-0-260128",
+    grid: false,
+    type: "ti2i",
+  },
+  {
+    manufacturer: "volcengine",
     model: "doubao-seedream-4-5-251128",
     grid: false,
     type: "ti2i",
