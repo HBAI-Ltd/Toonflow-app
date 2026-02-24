@@ -15,9 +15,9 @@
 
 <div align="center">
 
-<img src="./logo.png" alt="Toonflow Logo" height="120"/>
+<img src="./logo.png" alt="Vivido Logo" height="120"/>
 
-# Toonflow
+# Vivido
 
   <p align="center">
     <b>
@@ -47,7 +47,7 @@
 
 # 🌟 Main Features
 
-Toonflow is an AI tool that leverages AI technology to automatically turn novels into scripts, then uses AI to generate images and videos for efficient short drama production. With Toonflow, you can easily accomplish the entire workflow from text to visuals, making short drama creation more intelligent and convenient.
+Vivido is an AI tool that leverages AI technology to automatically turn novels into scripts, then uses AI to generate images and videos for efficient short drama production. With Vivido, you can easily accomplish the entire workflow from text to visuals, making short drama creation more intelligent and convenient.
 
 - ✅ **Character Generation**  
    Automatically analyzes the original novel text, intelligently recognizes and generates character profiles, including appearance, personality, identity, etc., providing a reliable foundation for subsequent script and image creation.
@@ -75,9 +75,9 @@ Toonflow is an AI tool that leverages AI technology to automatically turn novels
 ## 📺 Video Tutorial
 
 https://www.bilibili.com/video/BV1na6wB6Ea2
-[![Toonflow 8-minute Quick Start AI Video](./videoCover.png)](https://www.bilibili.com/video/BV1na6wB6Ea2)
+[![Vivido 8-minute Quick Start AI Video](./videoCover.png)](https://www.bilibili.com/video/BV1na6wB6Ea2)
 
-**Toonflow 8-Minute Quick Start AI Video**
+**Vivido 8-Minute Quick Start AI Video**
 👉 [Click to watch](https://www.bilibili.com/video/BV1na6wB6Ea2/?share_source=copy_web&vd_source=5b718c25439a901a34c7bc0c1d35b38e)
 
 📱 Watch via WeChat QR scan
@@ -212,8 +212,8 @@ pm2 monit             # Monitoring panel
 
 To deploy or customize the frontend separately, refer to the frontend repo:
 
-- **GitHub**: [Toonflow-web](https://github.com/HBAI-Ltd/Toonflow-web)
-- **Gitee**: [Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
+- **GitHub**: [Vivido-web](https://github.com/HBAI-Ltd/Toonflow-web)
+- **Gitee**: [Vivido-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
 
 > 💡 **Note**: This repo includes pre-compiled frontend assets; regular users don’t need to deploy frontend separately. The frontend repo is for developers needing secondary development.
 
@@ -292,8 +292,8 @@ To deploy or customize the frontend separately, refer to the frontend repo:
 
 To modify the frontend, go to the frontend repo:
 
-- **GitHub**: [Toonflow-web](https://github.com/HBAI-Ltd/Toonflow-web)
-- **Gitee**: [Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
+- **GitHub**: [Vivido-web](https://github.com/HBAI-Ltd/Toonflow-web)
+- **Gitee**: [Vivido-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
 
 After building the frontend, copy the contents of the `dist` folder into this project’s `scripts/web` directory for integration.
 
@@ -343,10 +343,10 @@ After building the frontend, copy the contents of the `dist` folder into this pr
 
 | Repository        | Description                           | GitHub                                             | Gitee                                            |
 | ----------------- | ------------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
-| **Toonflow-app**  | Full client (this repo, for users)    | [GitHub](https://github.com/HBAI-Ltd/Toonflow-app) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-app) |
-| **Toonflow-web**  | Frontend source (for devs)            | [GitHub](https://github.com/HBAI-Ltd/Toonflow-web) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-web) |
+| **Vivido-app**  | Full client (this repo, for users)    | [GitHub](https://github.com/HBAI-Ltd/Toonflow-app) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-app) |
+| **Vivido-web**  | Frontend source (for devs)            | [GitHub](https://github.com/HBAI-Ltd/Toonflow-web) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-web) |
 
-> 💡 **Tip**: If you just want to use Toonflow, download the client from this repo. The web repo is only for frontend customization/development.
+> 💡 **Tip**: If you just want to use Vivido, download the client from this repo. The web repo is only for frontend customization/development.
 
 ---
 
@@ -385,22 +385,22 @@ We continue to optimize the product. Key focuses for the near future:
 
 Group 6:
 
-<img src="./chat6QR.jpg" alt="Toonflow Logo" height="400"/>
+<img src="./chat6QR.jpg" alt="Vivido Logo" height="400"/>
 <p>Scan with WeChat to join. If the QR expires, open an issue to request an update.</p>
 
 ---
 
 # 💌 Contact Us
 
-📧 Email: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow%20Inquiry)
+📧 Email: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Vivido%20Inquiry)
 
 ---
 
 # 📜 License
 
-Toonflow is open source under the AGPL-3.0 license. Details: https://www.gnu.org/licenses/agpl-3.0.html
+Vivido is open source under the AGPL-3.0 license. Details: https://www.gnu.org/licenses/agpl-3.0.html
 
-You may use Toonflow for any purpose, including commercial, as long as you adhere to the AGPL-3.0 terms and conditions.
+You may use Vivido for any purpose, including commercial, as long as you adhere to the AGPL-3.0 terms and conditions.
 
 For proprietary/commercial licensing exempt from AGPL-3.0, please contact us by email.
 
@@ -414,7 +414,7 @@ For proprietary/commercial licensing exempt from AGPL-3.0, please contact us by 
 
 # 🙏 Special Thanks
 
-Thanks to the following open-source projects for empowering Toonflow:
+Thanks to the following open-source projects for empowering Vivido:
 
 - [Express](https://expressjs.com/) – Fast, open, minimal Node.js web framework
 - [LangChain](https://js.langchain.com/) – Framework for building LLM apps
@@ -425,7 +425,7 @@ Thanks to the following open-source projects for empowering Toonflow:
 - [Aigne](https://github.com/aigne-com/aigne) – Unified LLM API middleware
 - [Electron](https://www.electronjs.org/) – Cross-platform desktop app framework
 
-Thanks to the following organizations/individuals for supporting Toonflow:
+Thanks to the following organizations/individuals for supporting Vivido:
 
 <table>
   <tr>
