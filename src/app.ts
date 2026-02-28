@@ -13,6 +13,22 @@ import jwt from "jsonwebtoken";
 
 const app = express();
 let server: ReturnType<typeof app.listen> | null = null;
+const isElectron = typeof process.versions?.electron !== "undefined";
+const apiPrefixes = [
+  "/assets/",
+  "/index",
+  "/novel/",
+  "/other/",
+  "/outline/",
+  "/project/",
+  "/prompt/",
+  "/script/",
+  "/setting/",
+  "/storyboard/",
+  "/task/",
+  "/user/",
+  "/video/",
+];
 
 export default async function startServe() {
   if (process.env.NODE_ENV == "dev") await buildRoute();
@@ -25,7 +41,7 @@ export default async function startServe() {
   app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 
   let rootDir: string;
-  if (typeof process.versions?.electron !== "undefined") {
+  if (isElectron) {
     const { app } = require("electron");
     const userDataDir: string = app.getPath("userData");
     rootDir = path.join(userDataDir, "uploads");
@@ -41,15 +57,29 @@ export default async function startServe() {
 
   app.use(express.static(rootDir));
 
+  let webDir: string | null = null;
+  if (!isElectron) {
+    webDir = path.join(process.cwd(), "scripts", "web");
+    if (fs.existsSync(webDir)) {
+      app.use(express.static(webDir));
+      console.log("前端目录:", webDir);
+    }
+  }
+
   app.use(async (req, res, next) => {
+    if (req.path === "/other/login") return next();
+
+    if (!isElectron) {
+      const isApiPath = apiPrefixes.some((prefix) => req.path.startsWith(prefix));
+      if (!isApiPath) return next();
+    }
+
     const setting = await u.db("t_setting").where("id", 1).select("tokenKey").first();
     if (!setting) return res.status(500).send({ message: "服务器未配置，请联系管理员" });
     const { tokenKey } = setting;
     // 从 header 或 query 参数获取 token
     const rawToken = req.headers.authorization || (req.query.token as string) || "";
     const token = rawToken.replace("Bearer ", "");
-    // 白名单路径
-    if (req.path === "/other/login") return next();
 
     if (!token) return res.status(401).send({ message: "未提供token" });
     try {
@@ -63,6 +93,19 @@ export default async function startServe() {
 
   const router = await import("@/router");
   await router.default(app);
+
+  if (!isElectron && webDir) {
+    const indexPath = path.join(webDir, "index.html");
+    if (fs.existsSync(indexPath)) {
+      app.use((req, res, next) => {
+        if (req.method === "GET") {
+          const isApiPath = apiPrefixes.some((prefix) => req.path.startsWith(prefix));
+          if (!isApiPath) return res.sendFile(indexPath);
+        }
+        next();
+      });
+    }
+  }
 
   // 404 处理
   app.use((_, res, next: NextFunction) => {
@@ -100,5 +143,4 @@ export function closeServe(): Promise<void> {
   });
 }
 
-const isElectron = typeof process.versions?.electron !== "undefined";
 if (!isElectron) startServe();
