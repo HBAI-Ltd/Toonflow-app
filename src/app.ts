@@ -39,16 +39,19 @@ export default async function startServe() {
   }
   console.log("文件目录:", rootDir);
 
+  // 静态文件挂载到 /api/uploads 路径下
+  app.use("/api/uploads", express.static(rootDir));
+  // 兼容旧路径：直接访问静态文件（非 /api 前缀）
   app.use(express.static(rootDir));
 
-  app.use(async (req, res, next) => {
+  app.use("/api", async (req, res, next) => {
     const setting = await u.db("t_setting").where("id", 1).select("tokenKey").first();
     if (!setting) return res.status(500).send({ message: "服务器未配置，请联系管理员" });
     const { tokenKey } = setting;
     // 从 header 或 query 参数获取 token
     const rawToken = req.headers.authorization || (req.query.token as string) || "";
     const token = rawToken.replace("Bearer ", "");
-    // 白名单路径
+    // 白名单路径（注意：此处 req.path 是去掉 /api 前缀后的路径）
     if (req.path === "/other/login") return next();
 
     if (!token) return res.status(401).send({ message: "未提供token" });
@@ -61,8 +64,11 @@ export default async function startServe() {
     }
   });
 
+  // 创建子路由，挂载到 /api 前缀下
+  const apiRouter = express.Router();
   const router = await import("@/router");
-  await router.default(app);
+  await router.default(apiRouter as any);
+  app.use("/api", apiRouter);
 
   // 404 处理
   app.use((_, res, next: NextFunction) => {

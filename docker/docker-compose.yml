@@ -11,8 +11,7 @@ services:
     container_name: toonflow
     restart: unless-stopped
     ports:
-      - "80"
-      - "60000:60000"
+      - "80:80"
     environment:
       - NODE_ENV=prod
     volumes:

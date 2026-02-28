@@ -45,6 +45,23 @@ RUN yarn install --frozen-lockfile --production
 RUN cat > /etc/nginx/http.d/default.conf << 'EOF'
 server {
     listen 80;
+
+    # API 请求反向代理到后端
+    location /api {
+        proxy_pass http://127.0.0.1:60000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
+        client_max_body_size 100m;
+    }
+
+    # 前端静态文件
     location / {
         root /usr/share/nginx/html;
         index index.html;
@@ -88,7 +105,6 @@ EOF
 ENV NODE_ENV=prod
 
 EXPOSE 80
-EXPOSE 60000
 
 # 启动时创建必要目录（防止 volume 挂载覆盖）
 CMD sh -c "mkdir -p /var/log/nginx /var/lib/nginx/logs && exec supervisord -c /etc/supervisord.conf"
