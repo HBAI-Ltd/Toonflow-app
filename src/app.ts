@@ -14,7 +14,23 @@ import jwt from "jsonwebtoken";
 const app = express();
 let server: ReturnType<typeof app.listen> | null = null;
 const isElectron = typeof process.versions?.electron !== "undefined";
-const apiPrefixes = [
+const authRequiredRouteRoots = [
+  "assets",
+  "index",
+  "novel",
+  "other",
+  "outline",
+  "project",
+  "prompt",
+  "script",
+  "setting",
+  "storyboard",
+  "task",
+  "user",
+  "video",
+];
+
+const spaFallbackExcludePrefixes = [
   "/assets/",
   "/index",
   "/novel/",
@@ -29,6 +45,18 @@ const apiPrefixes = [
   "/user/",
   "/video/",
 ];
+
+const authExemptPathRegexes = [/^\/other\/login(?:\/|$)/];
+
+const buildSegmentPrefixRegex = (roots: string[]): RegExp => {
+  const escapedRoots = roots.map((root) => root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  return new RegExp(`^/(?:${escapedRoots.join("|")})(?:/|$)`);
+};
+
+const authRequiredRouteRegex = buildSegmentPrefixRegex(authRequiredRouteRoots);
+
+const isAuthRequiredPath = (pathName: string) => authRequiredRouteRegex.test(pathName);
+const isAuthExemptPath = (pathName: string) => authExemptPathRegexes.some((regex) => regex.test(pathName));
 
 export default async function startServe(randomPort: Boolean = false) {
   if (process.env.NODE_ENV == "dev") await buildRoute();
@@ -67,11 +95,10 @@ export default async function startServe(randomPort: Boolean = false) {
   }
 
   app.use(async (req, res, next) => {
-    if (req.path === "/other/login") return next();
+    if (isAuthExemptPath(req.path)) return next();
 
     if (!isElectron) {
-      const isApiPath = apiPrefixes.some((prefix) => req.path.startsWith(prefix));
-      if (!isApiPath) return next();
+      if (!isAuthRequiredPath(req.path)) return next();
     }
 
     const setting = await u.db("t_setting").where("id", 1).select("tokenKey").first();
@@ -99,8 +126,8 @@ export default async function startServe(randomPort: Boolean = false) {
     if (fs.existsSync(indexPath)) {
       app.use((req, res, next) => {
         if (req.method === "GET") {
-          const isApiPath = apiPrefixes.some((prefix) => req.path.startsWith(prefix));
-          if (!isApiPath) return res.sendFile(indexPath);
+          const shouldServeSpa = !spaFallbackExcludePrefixes.some((prefix) => req.path.startsWith(prefix));
+          if (shouldServeSpa) return res.sendFile(indexPath);
         }
         next();
       });
