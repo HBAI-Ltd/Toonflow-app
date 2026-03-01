@@ -11,6 +11,7 @@ import apimart from "./owned/apimart";
 import other from "./owned/other";
 import gemini from "./owned/gemini";
 import modelScope from "./owned/modelScope";
+import grsai from "./owned/grsai";
 
 const urlToBase64 = async (url: string): Promise<string> => {
   const res = await axios.get(url, { responseType: "arraybuffer" });
@@ -28,6 +29,7 @@ const modelInstance = {
   // apimart: apimart,
   modelScope,
   other,
+  grsai
 } as const;
 
 export default async (input: ImageConfig, config: AIConfig) => {

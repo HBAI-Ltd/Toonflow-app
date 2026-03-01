@@ -1,8 +1,12 @@
 import { app, BrowserWindow } from "electron";
 import path from "path";
 import startServe, { closeServe } from "src/app";
+import { number } from "zod";
 
-function createMainWindow(): void {
+// 默认端口配置
+const defaultPort = 60000;
+
+function createMainWindow(port: any): void {
   const win = new BrowserWindow({
     width: 900,
     height: 600,
@@ -14,14 +18,28 @@ function createMainWindow(): void {
   const htmlPath = isDev
     ? path.join(process.cwd(), "scripts", "web", "index.html")
     : path.join(app.getAppPath(), "scripts", "web", "index.html");
-  void win.loadFile(htmlPath);
+  
+  // 使用实际端口构建地址
+  const baseUrl = `http://localhost:${port}`;
+  const wsBaseUrl = `ws://localhost:${port}`;
+  
+  // 构建带有 query 参数的 URL
+  const url = new URL(`file://${htmlPath}`);
+  url.searchParams.set("baseUrl", baseUrl);
+  url.searchParams.set("wsBaseUrl", wsBaseUrl);
+  
+  console.log("%c Line:30 🥓 url", "background:#33a5ff", url.toString());
+
+  void win.loadURL(url.toString());
 }
 app.whenReady().then(async () => {
-  createMainWindow();
   try {
-    await startServe();
+    const port = await startServe(false);
+    createMainWindow(60000);
   } catch (err) {
     console.error("[服务启动失败]:", err);
+    // 如果服务启动失败，使用默认端口创建窗口
+    createMainWindow(defaultPort);
   }
 });
 
@@ -30,7 +48,10 @@ app.on("window-all-closed", () => {
 });
 
 app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
+  if (BrowserWindow.getAllWindows().length === 0) {
+    // 重新激活时使用默认端口
+    createMainWindow(defaultPort);
+  }
 });
 
 app.on("before-quit", async (event) => {

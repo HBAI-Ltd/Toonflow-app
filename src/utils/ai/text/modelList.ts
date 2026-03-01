@@ -30,13 +30,12 @@ const instanceMap = {
   openai: createOpenAI,
   zhipu: createZhipu,
   qwen: createQwen,
-
   gemini: createGoogleGenerativeAI,
-
   anthropic: createAnthropic,
   modelScope: (options: OpenAIProviderSettings) => createOpenAI({ ...options, headers: { ...options?.headers, "X-ModelScope-Async-Mode": "true" } }),
   xai: createXai,
   other: createOpenAI,
+  grsai:createOpenAI
 };
 const modelList: Owned[] = [
   // DeepSeek

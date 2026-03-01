@@ -18,9 +18,11 @@ export default async (input: ImageConfig, config: AIConfig): Promise<string> => 
       "4K": "2304x4096",
     },
   };
+  const fullPrompt = input.systemPrompt ? `${input.systemPrompt}\n\n${input.prompt}` : input.prompt;
+
   const body: Record<string, any> = {
     model: config.model,
-    prompt: input.prompt,
+    prompt: fullPrompt,
     size: sizeMap[input.aspectRatio][size],
     response_format: "url",
     sequential_image_generation: "disabled",

@@ -30,7 +30,7 @@ const apiPrefixes = [
   "/video/",
 ];
 
-export default async function startServe() {
+export default async function startServe(randomPort: Boolean = false) {
   if (process.env.NODE_ENV == "dev") await buildRoute();
 
   expressWs(app);
@@ -120,11 +120,14 @@ export default async function startServe() {
     res.status(err.status || 500).send(err);
   });
 
-  const port = parseInt(process.env.PORT || "60000");
-  server = app.listen(port, async () => {
-    const address = server?.address();
-    const realPort = typeof address === "string" ? address : address?.port;
-    console.log(`[服务启动成功]: http://localhost:${realPort}`);
+  const port = randomPort ? 0 : parseInt(process.env.PORT || "60000");
+  return await new Promise((resolve, reject) => {
+    server = app.listen(port, async (v) => {
+      const address = server?.address();
+      const realPort = typeof address === "string" ? address : address?.port;
+      console.log(`[服务启动成功]: http://localhost:${realPort}`);
+      resolve(realPort);
+    });
   });
 }
 

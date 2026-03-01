@@ -30,7 +30,7 @@ const buildOptions = async (input: AIInput<any>, config: AIConfig = {}) => {
   if (manufacturer == "other") {
     owned = modelList.find((m) => m.manufacturer === manufacturer);
   } else {
-    owned = modelList.find((m) => m.model === model);
+    owned = modelList.find((m) => m.model === model && m.manufacturer === manufacturer);
     if (!owned) owned = modelList.find((m) => m.manufacturer === manufacturer);
   }
   if (!owned) throw new Error("不支持的厂商");
@@ -54,7 +54,7 @@ const buildOptions = async (input: AIInput<any>, config: AIConfig = {}) => {
   };
 
   const output = input.output ? (outputBuilders[owned.responseFormat]?.(input.output) ?? null) : null;
-  const chatModelManufacturer = ["volcengine", "other", "openai", "modelScope"];
+  const chatModelManufacturer = ["volcengine", "other", "openai", "modelScope","grsai"];
   const modelFn = chatModelManufacturer.includes(owned.manufacturer) ? (modelInstance as OpenAIProvider).chat(model!) : modelInstance(model!);
 
   return {

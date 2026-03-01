@@ -119,7 +119,6 @@ export default async (input: ImageConfig, config: AIConfig): Promise<string> => 
       return { completed: false };
     });
   } catch (error: any) {
-    console.error("%c Line:90 🥪 error", "background:#93c0a4", error.response?.data?.errors?.message);
     const msg = u.error(error).message || "图片生成失败";
     throw new Error(msg);
   }

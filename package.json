@@ -1,6 +1,6 @@
 {
   "name": "toonflow-app",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Toonflow 是一款 AI 短剧漫剧工具，能够利用 AI 技术将小说自动转化为剧本，并结合 AI 生成的图片和视频，实现高效的短剧创作。",
   "author": "HBAI-Ltd <ltlctools@outlook.com>",
   "homepage": "https://github.com/HBAI-Ltd/Toonflow-app#readme",

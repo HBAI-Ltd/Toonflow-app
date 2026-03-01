@@ -68,11 +68,12 @@ export default async (input: ImageConfig, config: AIConfig): Promise<string> => 
   const apiKey = config.apiKey.replace("Bearer ", "");
   const baseURL = "https://www.runninghub.cn";
   const imageUrls = await Promise.all(input.imageBase64.map((base64Image) => uploadBase64ToRunninghub(base64Image, apiKey, baseURL)));
+  const fullPrompt = input.systemPrompt ? `${input.systemPrompt}\n\n${input.prompt}` : input.prompt;
 
   const endpoint = input.imageBase64.length === 0 ? "/openapi/v2/rhart-image-n-pro/text-to-image" : "/openapi/v2/rhart-image-n-pro/edit";
   const taskRes = await axios.post(
     `https://www.runninghub.cn${endpoint}`,
-    { prompt: input.prompt, resolution: input.size, aspectRatio: input.aspectRatio, ...(imageUrls.length > 0 && { imageUrls }) },
+    { prompt: fullPrompt, resolution: input.size, aspectRatio: input.aspectRatio, ...(imageUrls.length > 0 && { imageUrls }) },
     { headers: { Authorization: "Bearer " + apiKey } },
   );
   const taskId = taskRes.data.taskId;

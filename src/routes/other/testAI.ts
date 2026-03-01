@@ -48,7 +48,6 @@ export default router.post(
       );
       res.status(200).send(success(reply));
     } catch (err) {
-      console.log("%c Line:51 🥟 err", "background:#e41a6a", err);
       const msg = u.error(err).message;
       console.error(msg);
       res.status(500).send(error(msg));

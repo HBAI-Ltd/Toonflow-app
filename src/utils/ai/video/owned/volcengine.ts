@@ -52,11 +52,11 @@ export default async (input: VideoConfig, config: AIConfig) => {
 
   // 轮询任务状态
   return await pollTask(async () => {
-    const { status, content } = (
-      await axios.get(`${baseUrl}/${taskId}`, {
-        headers: { Authorization: authorization },
-      })
-    ).data;
+    const data = await axios.get(`${baseUrl}/${taskId}`, {
+      headers: { Authorization: authorization },
+    });
+
+    const { status, content } = data.data;
 
     switch (status) {
       case "succeeded":
