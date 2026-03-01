@@ -1,0 +1,44 @@
+yarn test v1.0.0
+(node:85441) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:85441) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+$ cross-env NODE_ENV=prod node build/app.js
+[环境变量] prod
+数据库目录: /Users/a12110/Code/TS/Toonflow/Toonflow-app/db.sqlite
+文件目录: /Users/a12110/Code/TS/Toonflow/Toonflow-app/uploads
+前端目录: /Users/a12110/Code/TS/Toonflow/Toonflow-app/scripts/web
+[服务启动成功]: http://localhost:60000
+[初始化数据库] 创建数据表: t_user
+[初始化数据库] 表数据初始化: t_user
+[初始化数据库] 创建数据表: t_assets
+[初始化数据库] 创建数据表: t_chatHistory
+[初始化数据库] 创建数据表: t_novel
+[初始化数据库] 创建数据表: t_outline
+[初始化数据库] 创建数据表: t_storyline
+[初始化数据库] 创建数据表: t_project
+[初始化数据库] 创建数据表: t_script
+[初始化数据库] 创建数据表: t_setting
+[初始化数据库] 表数据初始化: t_setting
+[初始化数据库] 创建数据表: t_video
+[初始化数据库] 创建数据表: t_taskList
+[初始化数据库] 创建数据表: t_image
+[初始化数据库] 创建数据表: t_config
+[初始化数据库] 表数据初始化: t_config
+[初始化数据库] 创建数据表: t_videoConfig
+[初始化数据库] 创建数据表: t_aiModelMap
+[初始化数据库] 表数据初始化: t_aiModelMap
+[初始化数据库] 创建数据表: t_prompts
+[初始化数据库] 表数据初始化: t_prompts
+[初始化数据库] 创建数据表: t_textModel
+[初始化数据库] 表数据初始化: t_textModel
+[初始化数据库] 创建数据表: t_imageModel
+[初始化数据库] 表数据初始化: t_imageModel
+[初始化数据库] 创建数据表: t_videoModel
+[初始化数据库] 表数据初始化: t_videoModel
+[0mGET / [32m200[0m 3.849 ms - 17956800[0m
+[0mHEAD / [32m200[0m 1.316 ms - 17956800[0m
+[0mGET / [32m200[0m 56.774 ms - 17956800[0m
+[0mGET /favicon.ico [32m200[0m 2.502 ms - 13988[0m
+[0mPOST /other/login [32m200[0m 16.632 ms - 243[0m
+[0mPOST /project/getProject [32m200[0m 5.785 ms - 41[0m
+error Command failed with exit code 1.
