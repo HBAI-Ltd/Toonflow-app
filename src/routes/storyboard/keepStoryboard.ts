@@ -5,6 +5,18 @@ import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 const router = express.Router();
 
+function normalizeInputPath(input: string): string {
+  const value = input.trim();
+  if (value.startsWith("http://") || value.startsWith("https://")) {
+    try {
+      return new URL(value).pathname;
+    } catch {
+      return value;
+    }
+  }
+  return value;
+}
+
 // 保存分镜图
 export default router.post(
   "/",
@@ -30,7 +42,7 @@ export default router.post(
     const list = results.map((item: any) => {
       return {
         ...item,
-        filePath: new URL(item.filePath).pathname,
+        filePath: normalizeInputPath(item.filePath),
       };
     });
     // 按 base64Data 原始顺序过滤、插库

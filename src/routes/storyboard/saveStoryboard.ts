@@ -5,6 +5,18 @@ import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 const router = express.Router();
 
+function normalizeInputPath(input: string): string {
+  const value = input.trim();
+  if (value.startsWith("http://") || value.startsWith("https://")) {
+    try {
+      return new URL(value).pathname;
+    } catch {
+      return value;
+    }
+  }
+  return value;
+}
+
 // 保存分镜图
 export default router.post(
   "/",
@@ -15,7 +27,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { filePath, id, prompt } = req.body;
-    const savePath = new URL(filePath).pathname;
+    const savePath = normalizeInputPath(filePath);
 
     let imageUrl = "";
 

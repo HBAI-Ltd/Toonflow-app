@@ -1,10 +1,22 @@
 import express from "express";
 import u from "@/utils";
-import { success } from "@/lib/responseFormat";
+import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
 import { v4 as uuid } from "uuid";
 const router = express.Router();
+
+function normalizeInputPath(input: string): string {
+  const value = input.trim();
+  if (value.startsWith("http://") || value.startsWith("https://")) {
+    try {
+      return new URL(value).pathname;
+    } catch {
+      return value;
+    }
+  }
+  return value;
+}
 
 // 新增视频
 export default router.post(
@@ -19,6 +31,9 @@ export default router.post(
   }),
   async (req, res) => {
     const { scriptId, type, resolution, filePath, duration, prompt } = req.body;
+    if (!filePath.length) {
+      return res.status(400).send(error("请先选择图片"));
+    }
 
     let model = "";
     if (type.includes("doubao")) {
@@ -28,8 +43,8 @@ export default router.post(
       model = "sora-2";
     }
 
-    let firstFrame = new URL(filePath[0]).pathname;
-    let storyboardImgs = filePath.map((path: string) => new URL(path).pathname);
+    const firstFrame = normalizeInputPath(filePath[0]);
+    const storyboardImgs = filePath.map((path: string) => normalizeInputPath(path));
 
     await u.db("t_video").insert({
       time: duration,

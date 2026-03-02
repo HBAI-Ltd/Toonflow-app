@@ -103,6 +103,32 @@ async function urlToBase64(imageUrl: string): Promise<string> {
   const base64 = Buffer.from(response.data, "binary").toString("base64");
   return `data:${contentType};base64,${base64}`;
 }
+
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+function isDataUrl(value: string): boolean {
+  return /^data:image\//i.test(value.trim());
+}
+
+async function sourceToBase64(imageSource: string): Promise<string> {
+  const source = imageSource.trim();
+  if (!source) throw new Error("图片地址为空");
+  if (isDataUrl(source)) return source;
+
+  if (isHttpUrl(source)) {
+    try {
+      const pathname = new URL(source).pathname;
+      return await u.oss.getImageBase64(pathname);
+    } catch {
+      return await urlToBase64(source);
+    }
+  }
+
+  // 兼容 /a/b.png、a/b.png 等相对路径输入
+  return await u.oss.getImageBase64(source);
+}
 // 生成单个分镜提示
 async function generateSingleVideoPrompt({
   scriptText,
@@ -127,7 +153,7 @@ async function generateSingleVideoPrompt({
         },
         {
           type: "image",
-          image: await urlToBase64(ossPath),
+          image: await sourceToBase64(ossPath),
         },
       ],
     },

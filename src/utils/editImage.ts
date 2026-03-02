@@ -19,6 +19,14 @@ async function urlToBase64(imageUrl: string): Promise<string> {
   const base64 = Buffer.from(response.data, "binary").toString("base64");
   return `data:${contentType};base64,${base64}`;
 }
+
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+function isDataUrl(value: string): boolean {
+  return /^data:image\//i.test(value.trim());
+}
 // 将图片ID和指令转换为base64数组和替换后的指令
 async function convertDirectiveAndImages(images: Record<string, string>, directive: string) {
   // step1: 列出所有别名
@@ -49,16 +57,30 @@ async function convertDirectiveAndImages(images: Record<string, string>, directi
 
   for (const imageVal of Object.values(images)) {
     // 判断是否为base64串
-    const isBase64 = typeof imageVal === "string" && /^data:image\//.test(imageVal);
-    if (isBase64) {
-      base64Images.push(imageVal);
-    } else if (typeof imageVal === "number") {
-      const base64 = await getImageBase64ForId(imageVal);
-      base64Images.push(base64);
-    } else if (imageVal.includes("http")) {
-      const base64 = await urlToBase64(imageVal);
-      base64Images.push(base64);
+    if (typeof imageVal !== "string") continue;
+    const normalizedValue = imageVal.trim();
+    if (!normalizedValue) continue;
+
+    if (isDataUrl(normalizedValue)) {
+      base64Images.push(normalizedValue);
+      continue;
     }
+
+    if (/^\d+$/.test(normalizedValue)) {
+      const base64 = await getImageBase64ForId(Number(normalizedValue));
+      base64Images.push(base64);
+      continue;
+    }
+
+    if (isHttpUrl(normalizedValue)) {
+      const base64 = await urlToBase64(normalizedValue);
+      base64Images.push(base64);
+      continue;
+    }
+
+    // 兼容 /a/b.png、a/b.png 等相对路径输入
+    const base64 = await u.oss.getImageBase64(normalizedValue);
+    base64Images.push(base64);
   }
   return {
     prompt,

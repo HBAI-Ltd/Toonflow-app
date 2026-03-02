@@ -16,6 +16,31 @@ async function urlToBase64(imageUrl: string): Promise<string> {
   return `data:${contentType};base64,${base64}`;
 }
 
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+function isDataUrl(value: string): boolean {
+  return /^data:image\//i.test(value.trim());
+}
+
+async function sourceToBase64(imageSource: string): Promise<string> {
+  const source = imageSource.trim();
+  if (!source) throw new Error("图片地址为空");
+  if (isDataUrl(source)) return source;
+
+  if (isHttpUrl(source)) {
+    try {
+      const pathname = new URL(source).pathname;
+      return await u.oss.getImageBase64(pathname);
+    } catch {
+      return await urlToBase64(source);
+    }
+  }
+
+  return await u.oss.getImageBase64(source);
+}
+
 // 超分并保存到 oss
 async function superResolutionAndSave(src: string, projectId: number, videoRatio: string): Promise<{ ossPath: string; base64: string }> {
   const apiConfig = await u.getPromptAi("storyboardImage");
@@ -26,7 +51,7 @@ async function superResolutionAndSave(src: string, projectId: number, videoRatio
       resType: "b64",
       systemPrompt: "你的核心任务是将所给的图片超分到 1K ，不改变图片任何内容，仅改变分辨率",
       prompt: "你的核心任务是将所给的图片超分到 1K ，不改变图片任何内容，仅改变分辨率",
-      imageBase64: [await urlToBase64(src)],
+      imageBase64: [await sourceToBase64(src)],
     },
     apiConfig,
   );
