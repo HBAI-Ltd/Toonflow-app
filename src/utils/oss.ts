@@ -22,6 +22,19 @@ function resolveSafeLocalPath(userPath: string, rootDir: string): string {
   return absPath;
 }
 
+function normalizeBaseUrl(baseUrl: string): string {
+  return baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+}
+
+function isLoopbackBaseUrl(baseUrl: string): boolean {
+  try {
+    const parsed = new URL(baseUrl);
+    return ["127.0.0.1", "localhost", "0.0.0.0", "::1"].includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 class OSS {
   private rootDir: string;
   private initPromise: Promise<void>;
@@ -55,8 +68,13 @@ class OSS {
     await this.ensureInit();
     const safePath = normalizeUserPath(userRelPath);
     // URL 始终使用 /，所以这里需要将系统分隔符转回 /
-    const url = process.env.OSSURL || `http://127.0.0.1:60000/`;
-    return `${url}${safePath.split(path.sep).join("/")}`;
+    const normalizedPath = safePath.split(path.sep).join("/");
+    const configuredBaseUrl = (process.env.OSSURL || "").trim();
+    // 未配置 OSSURL，或配置为回环地址时，返回相对路径，避免固定到 localhost:60000
+    if (!configuredBaseUrl || isLoopbackBaseUrl(configuredBaseUrl)) {
+      return `/${normalizedPath}`;
+    }
+    return `${normalizeBaseUrl(configuredBaseUrl)}${normalizedPath}`;
   }
 
   /**

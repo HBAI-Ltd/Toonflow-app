@@ -1,4 +1,4 @@
-// @routes-hash c97cf72361299980ea4b0c43549a0de8
+// @routes-hash 4cd93ad5367d09a822d276fa82cd1d90
 import { Express } from "express";
 
 import route1 from "./routes/assets/addAssets";
@@ -83,6 +83,8 @@ import route79 from "./routes/video/getVideoStoryboards";
 import route80 from "./routes/video/reviseVideoStoryboards";
 import route81 from "./routes/video/saveVideo";
 import route82 from "./routes/video/upDateVideoConfig";
+
+export const routeRootSegments = ["assets","index","novel","other","outline","project","prompt","script","setting","storyboard","task","user","video"] as const;
 
 export default async (app: Express) => {
   app.use("/assets/addAssets", route1);

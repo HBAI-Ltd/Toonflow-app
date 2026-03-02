@@ -14,37 +14,6 @@ import jwt from "jsonwebtoken";
 const app = express();
 let server: ReturnType<typeof app.listen> | null = null;
 const isElectron = typeof process.versions?.electron !== "undefined";
-const authRequiredRouteRoots = [
-  "assets",
-  "index",
-  "novel",
-  "other",
-  "outline",
-  "project",
-  "prompt",
-  "script",
-  "setting",
-  "storyboard",
-  "task",
-  "user",
-  "video",
-];
-
-const spaFallbackExcludePrefixes = [
-  "/assets/",
-  "/index",
-  "/novel/",
-  "/other/",
-  "/outline/",
-  "/project/",
-  "/prompt/",
-  "/script/",
-  "/setting/",
-  "/storyboard/",
-  "/task/",
-  "/user/",
-  "/video/",
-];
 
 const authExemptPathRegexes = [/^\/other\/login(?:\/|$)/];
 
@@ -53,13 +22,17 @@ const buildSegmentPrefixRegex = (roots: string[]): RegExp => {
   return new RegExp(`^/(?:${escapedRoots.join("|")})(?:/|$)`);
 };
 
-const authRequiredRouteRegex = buildSegmentPrefixRegex(authRequiredRouteRoots);
-
-const isAuthRequiredPath = (pathName: string) => authRequiredRouteRegex.test(pathName);
 const isAuthExemptPath = (pathName: string) => authExemptPathRegexes.some((regex) => regex.test(pathName));
 
 export default async function startServe(randomPort: Boolean = false) {
   if (process.env.NODE_ENV == "dev") await buildRoute();
+  const { default: mountRoutes, routeRootSegments } = await import("@/router");
+  const authRequiredRouteRoots = Array.from(new Set(routeRootSegments));
+  if (!authRequiredRouteRoots.length) {
+    throw new Error("路由根路径为空，无法初始化鉴权规则");
+  }
+  const authRequiredRouteRegex = buildSegmentPrefixRegex(authRequiredRouteRoots);
+  const isAuthRequiredPath = (pathName: string) => authRequiredRouteRegex.test(pathName);
 
   expressWs(app);
 
@@ -118,15 +91,14 @@ export default async function startServe(randomPort: Boolean = false) {
     }
   });
 
-  const router = await import("@/router");
-  await router.default(app);
+  await mountRoutes(app);
 
   if (!isElectron && webDir) {
     const indexPath = path.join(webDir, "index.html");
     if (fs.existsSync(indexPath)) {
       app.use((req, res, next) => {
         if (req.method === "GET") {
-          const shouldServeSpa = !spaFallbackExcludePrefixes.some((prefix) => req.path.startsWith(prefix));
+          const shouldServeSpa = !isAuthRequiredPath(req.path);
           if (shouldServeSpa) return res.sendFile(indexPath);
         }
         next();

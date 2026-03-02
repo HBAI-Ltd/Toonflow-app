@@ -34,11 +34,25 @@ export default async function generateRouter(): Promise<void> {
     const routePath = fileNameToRoutePath(routeKey);
     routeModulePairs.push({ routePath, varName, entry });
   });
-  const routerData = JSON.stringify(routeModulePairs.map(({ routePath, varName }) => ({ routePath, varName })));
+  const routeRootSegments = Array.from(
+    new Set(
+      routeModulePairs
+        .map(({ routePath }) => routePath.split("/").filter(Boolean)[0])
+        .filter((segment): segment is string => Boolean(segment)),
+    ),
+  ).sort((a, b) => a.localeCompare(b));
+  // formatVersion 用于在生成模板结构变化时强制刷新 router.ts
+  const formatVersion = 2;
+  const routerData = JSON.stringify({
+    formatVersion,
+    routeModules: routeModulePairs.map(({ routePath, varName }) => ({ routePath, varName })),
+    routeRootSegments,
+  });
   const hash = crypto.createHash("md5").update(routerData).digest("hex");
 
   let content = `// @routes-hash ${hash}\nimport { Express } from "express";\n\n`;
   content += `${importLines.join("\n")}\n\n`;
+  content += `export const routeRootSegments = ${JSON.stringify(routeRootSegments)} as const;\n\n`;
   content += `export default async (app: Express) => {\n`;
   for (const { routePath, varName } of routeModulePairs) {
     content += `  app.use("${routePath}", ${varName});\n`;
