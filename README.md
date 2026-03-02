@@ -177,13 +177,15 @@ docker-compose -f docker/docker-compose.local.yml up -d --build
 
 ### 数据持久化
 
-默认日志目录会挂载到宿主机 `./logs` 目录。如需持久化上传文件或数据库，可在 `docker-compose.yml` 中添加 volumes：
+默认日志目录会挂载到宿主机 `../logs` 目录（相对于 `docker/`）。如需持久化上传文件或数据库，可在 `docker-compose.yml` 中添加：
 
 ```yaml
 volumes:
-  - ./logs:/var/log
-  - ./uploads:/app/uploads # 持久化上传文件
-  - ./data:/app/data # 持久化数据库（如有）
+  - ../logs:/app/logs
+  - ../uploads:/app/uploads # 持久化上传文件
+  - ../data:/app/data # 持久化数据库目录
+environment:
+  - DB_PATH=/app/data/db.sqlite # 持久化 SQLite 文件
 ```
 
 ### 常用操作命令
@@ -265,7 +267,8 @@ yarn build
   "env": {
     "NODE_ENV": "prod",
     "PORT": 60000,
-    "OSSURL": ""
+    "OSSURL": "",
+    "DB_PATH": "/app/data/db.sqlite"
   }
 }
 ```
@@ -277,6 +280,7 @@ yarn build
 | `NODE_ENV` | 运行环境，`prod` 表示生产环境      |
 | `PORT`     | 服务监听端口                       |
 | `OSSURL`   | 文件存储访问地址（可选）。留空或配置为 localhost 时，接口返回相对路径 |
+| `DB_PATH`  | SQLite 文件路径（可选）。容器部署建议设置为 `/app/data/db.sqlite` |
 
 ---
 

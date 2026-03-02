@@ -14,9 +14,14 @@ services:
       - "8080:60000"
     environment:
       - NODE_ENV=prod
+      # 可选: 持久化上传文件和数据库（如果需要持久化，可以取消注释）
+      # - DB_PATH=/app/data/db.sqlite
     volumes:
-      # 可选: 持久化日志
-      - ../logs:/var/log
+    # 可选: 持久化日志
+      - ../logs:/app/logs
+      # 可选: 持久化上传文件和数据库（如果需要持久化，可以取消注释）
+      # - ../uploads:/app/uploads
+      # - ../data:/app/data
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:60000/"]
       interval: 30s

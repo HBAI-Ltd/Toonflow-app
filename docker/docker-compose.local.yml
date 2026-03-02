@@ -13,8 +13,11 @@ services:
       - "8080:60000"
     environment:
       - NODE_ENV=prod
+      - DB_PATH=/app/data/db.sqlite
     volumes:
-      - ../logs:/var/log
+      - ../logs:/app/logs
+      - ../uploads:/app/uploads
+      - ../data:/app/data
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:60000/"]
       interval: 30s

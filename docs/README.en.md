@@ -176,7 +176,8 @@ Create a `pm2.json` file:
   "env": {
     "NODE_ENV": "prod",
     "PORT": 60000,
-    "OSSURL": "http://127.0.0.1:60000/"
+    "OSSURL": "",
+    "DB_PATH": "/app/data/db.sqlite"
   }
 }
 ```
@@ -187,7 +188,8 @@ Create a `pm2.json` file:
 | ------------ | ------------------------------------------- |
 | `NODE_ENV`   | Runtime environment, `prod` means production|
 | `PORT`       | Service listening port                      |
-| `OSSURL`     | File storage access address for static files|
+| `OSSURL`     | Optional public file base URL. When empty or localhost, APIs return relative paths |
+| `DB_PATH`    | Optional SQLite file path. In Docker, use `/app/data/db.sqlite` for persistence |
 
 ---
 
@@ -440,4 +442,3 @@ Thanks to the following organizations/individuals for supporting Toonflow:
 </table>
 
 For the full list of third-party dependencies, see `NOTICES.txt`
-
