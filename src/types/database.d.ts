@@ -1,4 +1,4 @@
-// @db-hash a7e02eb0ccc2f0608c1cafc9191f3291
+// @db-hash 674b008771764f291435651cc6d65979
 //该文件由脚本自动生成，请勿手动修改
 
 export interface t_aiModelMap {
@@ -120,6 +120,15 @@ export interface t_storyline {
   'novelIds'?: string | null;
   'projectId'?: number | null;
 }
+export interface t_taskList {
+  'endTime'?: string | null;
+  'id'?: number;
+  'name'?: string | null;
+  'projectName'?: number | null;
+  'prompt'?: string | null;
+  'startTime'?: string | null;
+  'state'?: string | null;
+}
 export interface t_textModel {
   'id'?: number;
   'image'?: number | null;
@@ -165,6 +174,7 @@ export interface t_videoConfig {
   'scriptId'?: number | null;
   'selectedResultId'?: number | null;
   'startFrame'?: string | null;
+  'storyboardId'?: number | null;
   'updateTime'?: number | null;
 }
 export interface t_videoModel {
@@ -192,6 +202,7 @@ export interface DB {
   "t_script": t_script;
   "t_setting": t_setting;
   "t_storyline": t_storyline;
+  "t_taskList": t_taskList;
   "t_textModel": t_textModel;
   "t_user": t_user;
   "t_video": t_video;

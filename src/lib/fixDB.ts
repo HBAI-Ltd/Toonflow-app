@@ -30,6 +30,7 @@ export default async (knex: Knex): Promise<void> => {
   await addColumn("t_config", "modelType", "text");
   await addColumn("t_videoConfig", "audioEnabled", "integer");
   await addColumn("t_video", "errorReason", "text");
+  await addColumn("t_videoConfig", "storyboardId", "integer");
 
   //更正字段
   await alterColumnType("t_config", "modelType", "text");

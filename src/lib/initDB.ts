@@ -242,6 +242,7 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         table.integer("duration"); // 时长
         table.text("prompt"); // 提示词
         table.integer("selectedResultId"); // 选中的生成结果ID
+        table.integer("storyboardId"); // 关联的分镜头ID
         table.integer("createTime"); // 创建时间
         table.integer("updateTime"); // 更新时间
         table.primary(["id"]);

@@ -12,7 +12,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { id } = req.body;
-    await u.db("t_config").where("id", id).delete();
+    await u.db("t_config").where("id", id).del();
     await u.db("t_aiModelMap").where("configId", id).update("configId",null);
     res.status(200).send(success("删除成功"));
   },
