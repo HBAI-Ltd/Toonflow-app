@@ -54,7 +54,7 @@ const buildOptions = async (input: AIInput<any>, config: AIConfig = {}) => {
   };
 
   const output = input.output ? (outputBuilders[owned.responseFormat]?.(input.output) ?? null) : null;
-  const chatModelManufacturer = ["volcengine", "other", "openai", "modelScope","grsai"];
+  const chatModelManufacturer = ["volcengine", "other", "openai", "modelScope","grsai","minimax"];
   const modelFn = chatModelManufacturer.includes(owned.manufacturer) ? (modelInstance as OpenAIProvider).chat(model!) : modelInstance(model!);
 
   return {
