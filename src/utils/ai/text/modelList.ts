@@ -34,6 +34,7 @@ const instanceMap = {
   anthropic: createAnthropic,
   modelScope: (options: OpenAIProviderSettings) => createOpenAI({ ...options, headers: { ...options?.headers, "X-ModelScope-Async-Mode": "true" } }),
   xai: createXai,
+  minimax: createOpenAI,
   other: createOpenAI,
   grsai:createOpenAI
 };
@@ -460,6 +461,25 @@ const modelList: Owned[] = [
     image: true,
     think: false,
     instance: createXai,
+    tool: true,
+  },
+  // MiniMax
+  {
+    manufacturer: "minimax",
+    model: "MiniMax-M2.5",
+    responseFormat: "object",
+    image: false,
+    think: false,
+    instance: createOpenAI,
+    tool: true,
+  },
+  {
+    manufacturer: "minimax",
+    model: "MiniMax-M2.5-highspeed",
+    responseFormat: "object",
+    image: false,
+    think: false,
+    instance: createOpenAI,
     tool: true,
   },
   //其他
