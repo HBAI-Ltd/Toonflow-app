@@ -619,6 +619,8 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
           { manufacturer: "xai", model: "grok-3", responseFormat: "schema", image: 0, think: 0, tool: 1 },
           { manufacturer: "xai", model: "grok-4", responseFormat: "schema", image: 0, think: 0, tool: 1 },
           { manufacturer: "xai", model: "grok-4.1", responseFormat: "schema", image: 1, think: 0, tool: 1 },
+          { manufacturer: "minimax", model: "MiniMax-M2.5", responseFormat: "object", image: 0, think: 0, tool: 1 },
+          { manufacturer: "minimax", model: "MiniMax-M2.5-highspeed", responseFormat: "object", image: 0, think: 0, tool: 1 },
           { manufacturer: "other", model: "", responseFormat: "object", image: 1, think: 0, tool: 1 },
           { manufacturer: "modelScope", model: "deepseek-ai/DeepSeek-V3.2", responseFormat: "object", image: 0, think: 0, tool: 1 },
         ]);
