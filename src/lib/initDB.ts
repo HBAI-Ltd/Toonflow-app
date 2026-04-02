@@ -195,23 +195,38 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
       },
       initData: async (knex) => {},
     },
-    // {
-    //   name: "t_myTasks",
-    //   builder: (table) => {
-    //     table.integer("id").notNullable();
-    //     table.integer("projectId");
-    //     table.string("taskClass");
-    //     table.string("relatedObjects");
-    //     table.string("model");
-    //     table.text("describe");
-    //     table.string("state");
-    //     table.integer("startTime");
-    //     table.text("reason");
-    //     table.primary(["id"]);
-    //     table.unique(["id"]);
-    //   },
-    //   initData: async (knex) => {},
-    // },
+    {
+      name: "t_myTasks",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("projectId");
+        table.string("taskClass");
+        table.string("relatedObjects");
+        table.string("model");
+        table.text("describe");
+        table.string("state");
+        table.integer("startTime");
+        table.text("reason");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+      initData: async (knex) => {},
+    },
+    {
+      name: "t_taskList",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.text("name");
+        table.integer("projectName");
+        table.text("prompt");
+        table.string("state");
+        table.string("startTime");
+        table.string("endTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+      initData: async (knex) => {},
+    },
     {
       name: "t_artStyle",
       builder: (table) => {

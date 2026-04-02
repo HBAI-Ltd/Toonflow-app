@@ -24,6 +24,36 @@ export default async (knex: Knex): Promise<void> => {
     }
   };
 
+  //创建缺失的表
+  if (!(await knex.schema.hasTable("t_myTasks"))) {
+    await knex.schema.createTable("t_myTasks", (table) => {
+      table.integer("id").notNullable();
+      table.integer("projectId");
+      table.string("taskClass");
+      table.string("relatedObjects");
+      table.string("model");
+      table.text("describe");
+      table.string("state");
+      table.integer("startTime");
+      table.text("reason");
+      table.primary(["id"]);
+      table.unique(["id"]);
+    });
+  }
+  if (!(await knex.schema.hasTable("t_taskList"))) {
+    await knex.schema.createTable("t_taskList", (table) => {
+      table.integer("id").notNullable();
+      table.text("name");
+      table.integer("projectName");
+      table.text("prompt");
+      table.string("state");
+      table.string("startTime");
+      table.string("endTime");
+      table.primary(["id"]);
+      table.unique(["id"]);
+    });
+  }
+
   //添加字段
   await addColumn("t_video", "time", "integer");
   await addColumn("t_video", "aiConfigId", "integer");

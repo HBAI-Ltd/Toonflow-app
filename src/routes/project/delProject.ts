@@ -27,7 +27,7 @@ export default router.post(
     await u.db("t_novel").where("projectId", id).delete();
     await u.db("t_storyline").where("projectId", id).delete();
     await u.db("t_outline").where("projectId", id).delete();
-    // await u.db("t_myTasks").where("projectId", id).delete();
+    await u.db("t_myTasks").where("projectId", id).delete();
 
     await u.db("t_script").where("projectId", id).delete();
     await u.db("t_assets").where("projectId", id).delete();
