@@ -34,10 +34,17 @@ export default router.post(
     projectId: z.number(),
     name: z.string(),
     base64: z.string().optional().nullable(),
-    prompt: z.string(),
+    prompt: z.string().optional().default(""),
   }),
   async (req, res) => {
-    const { id, type, projectId, base64, prompt, name } = req.body;
+    const { id, type, projectId, base64, name } = req.body;
+    let prompt: string = req.body.prompt || "";
+
+    // If prompt is empty, fall back to the asset's stored prompt or intro from the database
+    if (!prompt) {
+      const asset = await u.db("t_assets").where("id", id).select("prompt", "intro").first();
+      prompt = asset?.prompt || asset?.intro || "";
+    }
 
     //获取风格
     const project = await u.db("t_project").where("id", projectId).select("artStyle", "type", "intro", "videoRatio").first();
