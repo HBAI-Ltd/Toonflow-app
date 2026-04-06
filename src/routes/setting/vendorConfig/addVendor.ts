@@ -47,6 +47,7 @@ const vendorConfigSchema = z.object({
             z.array(z.enum(["videoReference", "imageReference", "audioReference", "textReference"])),
           ]),
         ),
+        associationSkills: z.string().optional(),
         audio: z.union([z.literal("optional"), z.boolean()]),
         durationResolutionMap: z.array(
           z.object({
