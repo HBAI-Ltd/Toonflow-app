@@ -15,4 +15,9 @@ for (const name of ["debug.yml", "release.yml"]) {
     const workflow = fs.readFileSync(path.join(workflowDir, name), "utf8");
     assert.match(workflow, /name:\s*启用 Corepack[\s\S]*run:\s*corepack enable/);
   });
+
+  test(`${name} runs macOS Intel builds on macos-15-intel`, () => {
+    const workflow = fs.readFileSync(path.join(workflowDir, name), "utf8");
+    assert.match(workflow, /- arch:\s*x64[\s\S]*os:\s*macos-15-intel/);
+  });
 }
