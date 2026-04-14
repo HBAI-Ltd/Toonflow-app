@@ -14,7 +14,7 @@ import replaceUrl from "@/utils/replaceUrl";
 import writeVersion from "@/utils/writeVersion";
 import * as vendor from "@/utils/vendor";
 
-export default {
+const utils = {
   db,
   oss,
   getConfig,
@@ -31,3 +31,5 @@ export default {
   writeVersion,
   vendor,
 };
+
+export = utils;

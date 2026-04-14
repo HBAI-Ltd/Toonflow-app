@@ -1,5 +1,5 @@
 import express from "express";
-import u from "@/utils";
+import db from "@/utils/db";
 import jwt from "jsonwebtoken";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
@@ -23,11 +23,11 @@ export default router.post(
   async (req, res) => {
     const { username, password } = req.body;
 
-    const data = await u.db("o_user").where("name", "=", username).first();
+    const data = await db("o_user").where("name", "=", username).first();
     if (!data) return res.status(400).send(error("登录失败"));
 
     if (data!.password == password && data!.name == username) {
-      const tokenData = await u.db("o_setting").where("key", "tokenKey").first();
+      const tokenData = await db("o_setting").where("key", "tokenKey").first();
       if (!tokenData) return res.status(400).send(error("未找到tokenKey"));
       const token = setToken(
         {

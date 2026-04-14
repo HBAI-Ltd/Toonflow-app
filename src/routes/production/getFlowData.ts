@@ -1,5 +1,6 @@
 import express from "express";
 import u from "@/utils";
+import db from "@/utils/db";
 import { z } from "zod";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
@@ -14,18 +15,16 @@ export default router.post(
   }),
   async (req, res) => {
     const { projectId, episodesId }: { projectId: number; episodesId: number } = req.body;
-    const sqlData = await u
-      .db("o_agentWorkData")
-      .where("projectId", String(projectId))
-      .andWhere("episodesId", String(episodesId))
+    const sqlData = await db("o_agentWorkData")
+      .where("projectId", projectId)
+      .andWhere("episodesId", episodesId)
       .select("data")
       .first();
 
-    const scriptData = await u.db("o_script").where("projectId", projectId).where("id", episodesId).first();
-    const scriptAssets = await u.db("o_scriptAssets").where("scriptId", episodesId);
+    const scriptData = await db("o_script").where("projectId", projectId).where("id", episodesId).first();
+    const scriptAssets = await db("o_scriptAssets").where("scriptId", episodesId);
     const assetIds = scriptAssets.map((i) => i.assetId);
-    const assetsData = await u
-      .db("o_assets")
+    const assetsData = await db("o_assets")
       .leftJoin("o_image", "o_assets.imageId", "o_image.id")
       .select("o_assets.*", "o_image.filePath", "o_image.state", "o_image.errorReason")
       // @ts-ignore
@@ -33,8 +32,7 @@ export default router.post(
       .andWhere("o_assets.assetsId", null)
       .where("o_assets.projectId", projectId);
 
-    let childAssetsData = await u
-      .db("o_assets")
+    let childAssetsData = await db("o_assets")
       .leftJoin("o_image", "o_assets.imageId", "o_image.id")
       .select("o_assets.*", "o_image.filePath", "o_image.state", "o_image.errorReason")
       .where("o_assets.projectId", projectId)
@@ -85,7 +83,7 @@ export default router.post(
       return res.status(200).send(success(flowData));
     } else {
       try {
-        const storyboardData = await u.db("o_storyboard").where("scriptId", episodesId);
+        const storyboardData = await db("o_storyboard").where("scriptId", episodesId);
         await Promise.all(
           storyboardData.map(async (i) => {
             if (i.filePath) {
@@ -100,8 +98,7 @@ export default router.post(
           }),
         );
         const storyboardIds = storyboardData.map((i) => i.id);
-        const assetsIds = await u.db("o_assets2Storyboard").whereIn("storyboardId", storyboardIds).orderBy("rowid");
-
+        const assetsIds = await db("o_assets2Storyboard").whereIn("storyboardId", storyboardIds);
         const assets2StoryboardMap: Record<number, number[]> = {};
         assetsIds.forEach((i) => {
           if (!assets2StoryboardMap[i.storyboardId!]) {

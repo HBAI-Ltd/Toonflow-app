@@ -514,6 +514,22 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
     },
     //视频
     {
+      name: "o_agentConversationMessage",
+      builder: (table) => {
+        table.text("id").notNullable();
+        table.text("scopeKey").notNullable();
+        table.integer("projectId").notNullable();
+        table.integer("episodesId");
+        table.text("agentType").notNullable();
+        table.text("messageJson").notNullable();
+        table.integer("createTime").notNullable();
+        table.integer("updateTime").notNullable();
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.index(["scopeKey", "createTime"]);
+      },
+    },
+    {
       name: "o_video",
       builder: (table) => {
         table.integer("id").notNullable();
@@ -560,38 +576,38 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         await knex("o_vendorConfig").insert([
           {
             id: "toonflow",
-            inputValues: "",
-            models: [],
+            inputValues: "{}",
+            models: "[]",
             enable: 0,
           },
           {
             id: "volcengine",
-            inputValues: "",
-            models: [],
+            inputValues: "{}",
+            models: "[]",
             enable: 0,
           },
           {
             id: "minimax",
-            inputValues: "",
-            models: [],
+            inputValues: "{}",
+            models: "[]",
             enable: 0,
           },
           {
             id: "openai",
-            inputValues: "",
-            models: [],
+            inputValues: "{}",
+            models: "[]",
             enable: 0,
           },
           {
             id: "klingai",
-            inputValues: "",
-            models: [],
+            inputValues: "{}",
+            models: "[]",
             enable: 0,
           },
           {
             id: "vidu",
-            inputValues: "",
-            models: [],
+            inputValues: "{}",
+            models: "[]",
             enable: 0,
           },
         ]);

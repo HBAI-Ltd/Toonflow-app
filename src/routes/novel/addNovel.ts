@@ -1,8 +1,10 @@
 import express from "express";
-import u from "@/utils";
+import db from "@/utils/db";
+import CleanNovel from "@/utils/cleanNovel";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+
 const router = express.Router();
 
 // 新增原文数据
@@ -21,14 +23,20 @@ export default router.post(
   }),
   async (req, res) => {
     const { projectId, data } = req.body;
-    const totalNovelId = [];
-    const getLastChapterIndex = await u.db("o_novel").where("projectId", projectId).select("chapterIndex").orderBy("chapterIndex", "desc").first();
+    const totalNovelIds: number[] = [];
+    const getLastChapterIndex = await db("o_novel")
+      .where("projectId", projectId)
+      .select("chapterIndex")
+      .orderBy("chapterIndex", "desc")
+      .first();
+
     let lastChapterIndex = 0;
     if (getLastChapterIndex) {
       lastChapterIndex = getLastChapterIndex.chapterIndex!;
     }
+
     for (const item of data) {
-      const [id] = await u.db("o_novel").insert({
+      const [id] = await db("o_novel").insert({
         projectId,
         chapterIndex: ++lastChapterIndex,
         reel: item.reel,
@@ -37,18 +45,33 @@ export default router.post(
         createTime: Date.now(),
         eventState: 0,
       });
-      totalNovelId.push(id);
+      totalNovelIds.push(id as number);
     }
-    const chapterAllList = await u.db("o_novel").where("projectId", projectId).whereIn("id", totalNovelId);
-    const novelClass = new u.cleanNovel();
-    novelClass.emitter.on("item", async (item) => {
-      await u
-        .db("o_novel")
-        .where("id", item.id)
-        .update({ event: item.event, eventState: item.event ? 1 : -1, errorReason: item?.errReason ?? null });
-    });
-    novelClass.start(chapterAllList, projectId);
 
-    res.status(200).send(success({ message: "新增原文成功" }));
+    const chapterAllList = await db("o_novel").where("projectId", projectId).whereIn("id", totalNovelIds);
+
+    if (process.env.TOONFLOW_MOCK_CLEAN_NOVEL === "1") {
+      await Promise.all(
+        chapterAllList.map((item) =>
+          db("o_novel").where("id", item.id).update({
+            event: `[mock event] chapter-${item.chapterIndex}:${item.chapter}`,
+            eventState: 1,
+            errorReason: null,
+          }),
+        ),
+      );
+    } else {
+      const novelClass = new CleanNovel();
+      novelClass.emitter.on("item", async (item: { id: number; event: string | null; errorReason?: string | null }) => {
+        await db("o_novel").where("id", item.id).update({
+          event: item.event,
+          eventState: item.event ? 1 : -1,
+          errorReason: item.errorReason ?? null,
+        });
+      });
+      void novelClass.start(chapterAllList, projectId);
+    }
+
+    return res.status(200).send(success({ message: "新增原文成功" }));
   },
 );

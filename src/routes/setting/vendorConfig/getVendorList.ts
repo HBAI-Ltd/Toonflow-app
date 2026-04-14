@@ -1,19 +1,20 @@
 import express from "express";
 import { success } from "@/lib/responseFormat";
-import u from "@/utils";
+import db from "@/utils/db";
+import * as vendorUtils from "@/utils/vendor";
 const router = express.Router();
 
 export default router.post("/", async (req, res) => {
-  const data = await u.db("o_vendorConfig").select("*");
+  const data = await db("o_vendorConfig").select("*");
 
   const list = await Promise.all(
     data.map(async (item) => {
-      const vendor = u.vendor.getVendor(item.id!);
+      const vendor = vendorUtils.getVendor(item.id!);
       return {
         ...item,
         inputValues: JSON.parse(item.inputValues ?? "{}"),
-        models: await u.vendor.getModelList(item.id!),
-        code: u.vendor.getCode(item.id!),
+        models: await vendorUtils.getModelList(item.id!),
+        code: vendorUtils.getCode(item.id!),
         description: vendor.description,
         inputs: vendor.inputs,
         author: vendor.author,

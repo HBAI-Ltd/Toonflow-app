@@ -86,6 +86,10 @@ function getNodeModulesPaths(): string[] {
     const asarNodeModules = path.join(process.resourcesPath, "app.asar", "node_modules");
     paths.push(asarNodeModules);
   } else {
+    const electronRuntimeNodeModules = path.join(process.cwd(), ".electron-runtime", "node_modules");
+    if (fs.existsSync(path.join(electronRuntimeNodeModules, "better-sqlite3"))) {
+      paths.push(electronRuntimeNodeModules);
+    }
     paths.push(path.join(process.cwd(), "node_modules"));
   }
   return paths;

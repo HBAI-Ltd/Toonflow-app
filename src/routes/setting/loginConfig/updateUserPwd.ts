@@ -1,8 +1,9 @@
 import express from "express";
-import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import db from "@/utils/db";
+
 const router = express.Router();
 
 export default router.post(
@@ -14,10 +15,12 @@ export default router.post(
   }),
   async (req, res) => {
     const { name, password, id } = req.body;
-    await u.db("o_user").where("id", id).update({
+
+    await db("o_user").where("id", id).update({
       name,
       password,
     });
+
     res.status(200).send(success("保存设置成功"));
   },
 );

@@ -1,5 +1,5 @@
 import express from "express";
-import u from "@/utils";
+import db from "@/utils/db";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
@@ -12,7 +12,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { switchAiDevTool } = req.body;
-    await u.db("o_setting").where("key", "switchAiDevTool").update({
+    await db("o_setting").where("key", "switchAiDevTool").update({
       value: switchAiDevTool,
     });
     res.status(200).send(success("保存设置成功"));

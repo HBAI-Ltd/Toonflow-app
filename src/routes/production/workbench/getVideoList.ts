@@ -1,5 +1,6 @@
 import express from "express";
 import u from "@/utils";
+import db from "@/utils/db";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
@@ -13,8 +14,8 @@ export default router.post(
   }),
   async (req, res) => {
     const { projectId, scriptId } = req.body;
-    const storyboardList = await u.db("o_storyboard").where({ scriptId, projectId }).orderBy("index", "asc");
-    const videoList = await u.db("o_video").whereIn(
+    const storyboardList = await db("o_storyboard").where({ scriptId, projectId }).orderBy("index", "asc");
+    const videoList = await db("o_video").whereIn(
       "videoTrackId",
       storyboardList.map((s) => s.trackId),
     );

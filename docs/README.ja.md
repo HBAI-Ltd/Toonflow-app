@@ -167,12 +167,12 @@ Toonflow は、AI技術を活用して小説を自動的に脚本へ変換し、
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# docker-compose を使用してローカルでビルド・起動
-yarn docker:local
-
-# または手動でビルド
+# 現在このリポジトリには docker-compose.yml がないため、手動でビルドして起動してください
 docker build -t toonflow .
 docker run -d -p <ローカルポート>:10588 -v <ローカルデータパス>:/app/data toonflow
+
+# 現在の Docker イメージはビルド時にバックエンド成果物を生成し、コンテナ内では本番モードのバックエンドサービスを既定で起動します
+# Docker 経路には Electron デスクトップクライアントは含まれません
 
 # これで指定したポートの /web/index.html にアクセスできます
 # 例: http://localhost:10588/web/index.html
@@ -199,7 +199,7 @@ docker run -d -p <ローカルポート>:10588 -v <ローカルデータパス>:
 ### 1. サーバー環境の要件
 
 - **OS**：Ubuntu 20.04+ / CentOS 7+
-- **Node.js**：24.x（推奨、最低 23.11.1+）
+- **Node.js**：20+（ローカル工程基線に合わせて 20 LTS を推奨）
 - **メモリ**：2GB以上
 
 ### 2. サーバーへの配置
@@ -210,9 +210,10 @@ docker run -d -p <ローカルポート>:10588 -v <ローカルデータパス>:
 # Node.js のインストール
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
-nvm install 24
-# Yarn と PM2 のインストール
-npm install -g yarn pm2
+nvm install 20
+# Corepack を有効化し、PM2 をインストール
+corepack enable
+npm install -g pm2
 ```
 
 #### 2. プロジェクトの配置
@@ -223,8 +224,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 **Gitee からクローン（中国国内推奨）：**
@@ -233,8 +234,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 #### 3. PM2 の設定
@@ -310,7 +311,7 @@ pm2 monit             # 監視パネルの表示
 
 | カテゴリ   | 技術                                                                                      |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| 実行環境   | Node.js 23.11.1+                                                                          |
+| 実行環境   | Node.js 20+（ローカル開発では 20 LTS を推奨）                                             |
 | 言語       | TypeScript 5.x                                                                            |
 | バックエンド | Express 5                                                                                 |
 | データベース | SQLite（better-sqlite3 / knex）                                                           |
@@ -323,8 +324,10 @@ pm2 monit             # 監視パネルの表示
 
 ## 開発環境の準備
 
-- **Node.js**：バージョン 23.11.1 以上が必要
-- **Yarn**：プロジェクトのパッケージマネージャーとして推奨
+- **Node.js**：ローカル開発では `20 LTS` を推奨
+- **Yarn**：`1.x Classic`
+- **依存関係の初回インストール**：`corepack yarn install` を実行
+- **インストール後のデフォルトコマンド**：`node scripts/runLocalYarn.cjs <command>` を実行
 
 ## プロジェクトのクイックスタート
 
@@ -349,8 +352,10 @@ pm2 monit             # 監視パネルの表示
    プロジェクトのルートディレクトリで以下のコマンドを実行します：
 
    ```bash
-   yarn install
+   corepack yarn install
    ```
+
+   > `scripts/runLocalYarn.cjs` は、ローカルに配置された `node_modules/yarn/bin/yarn.js` に依存します。そのため、最初の依存関係インストールだけは `corepack yarn install` を使う必要があります。インストール完了後は、Corepack 同梱 Yarn 1 が出す `url.parse()` deprecation warning を避けるため、`node scripts/runLocalYarn.cjs ...` を標準経路として使う想定です。
 
 3. **開発環境の起動**
 
@@ -359,7 +364,7 @@ pm2 monit             # 監視パネルの表示
    - **方法1：バックエンドサービスのみ起動**
 
      ```bash
-     yarn dev
+     node scripts/runLocalYarn.cjs dev
      ```
 
      > ⚠️ このコマンドはバックエンド API サービス（ポート 10588）のみを起動し、**フロントエンド画面は含まれません**。直接 `http://localhost:10588` にアクセスしても API を呼び出せるだけで、完全な Web 画面は見えません。画面を利用する場合はフロントエンドプロジェクトを別途起動するか、以下の GUI モードを使用してください。
@@ -367,7 +372,7 @@ pm2 monit             # 監視パネルの表示
    - **方法2：Electron デスクトップクライアントの起動**
 
      ```bash
-     yarn dev:gui
+     node scripts/runLocalYarn.cjs dev:gui
      ```
 
      > このコマンドはバックエンドサービスと Electron のデスクトップウィンドウを同時に起動します。フロントエンド画面が内蔵されており、追加の設定なしですぐに使えます。すべての機能を体験したい開発者に最適です。
@@ -375,35 +380,35 @@ pm2 monit             # 監視パネルの表示
    - **方法3：本番（Production）モードで起動**
 
      ```bash
-     yarn start
+     node scripts/runLocalYarn.cjs start
      ```
 
-     > コンパイル済みのサービスを本番モードで直接実行します（事前に `yarn build` を実行しておく必要があります）。
+     > コンパイル済みのサービスを本番モードで直接実行します（事前に `node scripts/runLocalYarn.cjs build` を実行しておく必要があります）。
 
 4. **プロジェクトのパッケージ化（ビルド）**
 
    - コンパイルして TypeScript ファイルを生成：
 
      ```bash
-     yarn build
+     node scripts/runLocalYarn.cjs build
      ```
 
    - Windows 用の実行ファイルをパッケージ化：
 
      ```bash
-     yarn dist:win
+     node scripts/runLocalYarn.cjs dist:win
      ```
 
    - Mac 用の実行ファイルをパッケージ化：
 
      ```bash
-     yarn dist:mac
+     node scripts/runLocalYarn.cjs dist:mac
      ```
 
    - Linux 用の実行ファイルをパッケージ化：
 
      ```bash
-     yarn dist:linux
+     node scripts/runLocalYarn.cjs dist:linux
      ```
 
 5. **コード品質チェック（Lint）**
@@ -411,7 +416,7 @@ pm2 monit             # 監視パネルの表示
    - グローバルな構文およびコーディング規約のチェックを実行：
 
      ```bash
-     yarn lint
+     node scripts/runLocalYarn.cjs lint
      ```
 
 6. **AI デバッグパネル（オプション）**
@@ -419,7 +424,7 @@ pm2 monit             # 監視パネルの表示
    AI SDK のビジュアルデバッグツールを起動し、AI の呼び出しを簡単にデバッグできます：
 
    ```bash
-   yarn debug:ai
+   node scripts/runLocalYarn.cjs debug:ai
    ```
 
 ## フロントエンド開発
@@ -430,6 +435,14 @@ pm2 monit             # 監視パネルの表示
 - **Gitee**：[Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
 
 フロントエンドのビルド後、`dist` ディレクトリの内容を本プロジェクトの `data/web` ディレクトリにコピーするだけで統合できます。
+
+## エンジニアリング基線とバックエンド改修
+
+ローカルで安全なエンジニアリング基線を先に整えてからバックエンド改修へ入る場合は、まず [ENGINEERING_BASELINE.md](./ENGINEERING_BASELINE.md) を参照してください。
+
+最短の引き継ぎ入口だけ欲しい場合は、先に [HANDOFF_QUICK_REF.md](./HANDOFF_QUICK_REF.md) を読む想定です。
+
+この2つの文書は現在、簡体字中国語で保守されています。
 
 ## プロジェクト構成
 

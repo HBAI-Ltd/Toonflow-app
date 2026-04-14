@@ -1,8 +1,9 @@
 import express from "express";
-import u from "@/utils";
+import db from "@/utils/db";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+
 const router = express.Router();
 
 export default router.post(
@@ -13,9 +14,9 @@ export default router.post(
   async (req, res) => {
     const { id } = req.body;
 
-    await u.db("o_event").where("id", id).del();
-    await u.db("o_eventChapter").where("eventId", id).del();
+    await db("o_eventChapter").where("eventId", id).del();
+    await db("o_event").where("id", id).del();
 
-    res.status(200).send(success({ message: "删除事件成功" }));
+    return res.status(200).send(success({ message: "Delete event success" }));
   },
 );

@@ -1,11 +1,11 @@
 import express from "express";
-import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import db from "@/utils/db";
+
 const router = express.Router();
 
-// 获取用户
 export default router.post(
   "/",
   validateFields({
@@ -19,15 +19,25 @@ export default router.post(
     modelDtype: z.string(),
   }),
   async (req, res) => {
-    const { messagesPerSummary, shortTermLimit, summaryMaxLength, summaryLimit, ragLimit, deepRetrieveSummaryLimit, modelOnnxFile, modelDtype } =
-      req.body;
+    const {
+      messagesPerSummary,
+      shortTermLimit,
+      summaryMaxLength,
+      summaryLimit,
+      ragLimit,
+      deepRetrieveSummaryLimit,
+      modelOnnxFile,
+      modelDtype,
+    } = req.body;
 
-    const upsert = async (key: string, value: string) => {
-      const exists = await u.db("o_setting").where("key", key).first();
+    const upsert = async (key: string, value: string | number) => {
+      const normalizedValue = String(value);
+      const exists = await db("o_setting").where("key", key).first();
+
       if (exists) {
-        await u.db("o_setting").where("key", key).update({ value });
+        await db("o_setting").where("key", key).update({ value: normalizedValue });
       } else {
-        await u.db("o_setting").insert({ key, value });
+        await db("o_setting").insert({ key, value: normalizedValue });
       }
     };
 

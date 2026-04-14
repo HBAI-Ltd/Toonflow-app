@@ -170,12 +170,12 @@ Toonflow 是一款 AI 短劇與漫畫創作工具，能夠利用 AI 技術將小
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# 使用 docker-compose 進行本機建置並啟動
-yarn docker:local
-
-# 或者手動建置
+# 目前此倉庫未提供 docker-compose.yml，請直接手動建置並啟動
 docker build -t toonflow .
 docker run -d -p <本機 Port>:10588 -v <本機資料路徑>:/app/data toonflow
+
+# 目前 Docker 映像會在建置階段產生後端建置產物，並在容器內預設啟動正式模式後端服務
+# Docker 路徑不包含 Electron 桌面用戶端
 
 # 此時在相應 Port 的 /web/index.html 路徑即可存取頁面
 # 例如 http://localhost:10588/web/index.html
@@ -202,7 +202,7 @@ docker run -d -p <本機 Port>:10588 -v <本機資料路徑>:/app/data toonflow
 ### 一、伺服器環境要求
 
 - **系統**：Ubuntu 20.04+ / CentOS 7+
-- **Node.js**：24.x（推薦，最低 23.11.1+）
+- **Node.js**：20+（推薦 20 LTS，與本機工程基線一致）
 - **記憶體**：2GB+
 
 ### 二、伺服器部署
@@ -213,9 +213,10 @@ docker run -d -p <本機 Port>:10588 -v <本機資料路徑>:/app/data toonflow
 # 安裝 Node.js
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
-nvm install 24
-# 安裝 Yarn 和 PM2
-npm install -g yarn pm2
+nvm install 20
+# 啟用 Corepack，並安裝 PM2
+corepack enable
+npm install -g pm2
 ```
 
 #### 2. 部署專案
@@ -226,8 +227,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 **從 Gitee Clone（內地網路使用）：**
@@ -236,8 +237,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 #### 3. 設定 PM2
@@ -313,7 +314,7 @@ pm2 monit             # 監控面板
 
 | 類別       | 技術                                                                                      |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| 執行環境   | Node.js 23.11.1+                                                                          |
+| 執行環境   | Node.js 20+（本機開發建議 20 LTS）                                                        |
 | 語言       | TypeScript 5.x                                                                            |
 | 後端框架   | Express 5                                                                                 |
 | 資料庫     | SQLite（better-sqlite3 / knex）                                                           |
@@ -326,8 +327,10 @@ pm2 monit             # 監控面板
 
 ## 開發環境準備
 
-- **Node.js**：版本要求 23.11.1 及以上
-- **Yarn**：推薦作為專案套件管理員
+- **Node.js**：本機開發建議使用 `20 LTS`
+- **Yarn**：`1.x Classic`
+- **首次安裝相依套件**：執行 `corepack yarn install`
+- **安裝完成後的預設指令**：執行 `node scripts/runLocalYarn.cjs <command>`
 
 ## 快速啟動專案
 
@@ -352,8 +355,10 @@ pm2 monit             # 監控面板
    請先在專案根目錄下執行以下指令以安裝相依套件：
 
    ```bash
-   yarn install
+   corepack yarn install
    ```
+
+   > `scripts/runLocalYarn.cjs` 依賴專案內已安裝好的 `node_modules/yarn/bin/yarn.js`，所以第一次安裝相依套件必須先走一次 `corepack yarn install`。安裝完成後，建議將後續指令統一切到 `node scripts/runLocalYarn.cjs ...`，以避開 Corepack 內建 Yarn 1 的 `url.parse()` deprecation warning。
 
 3. **啟動開發環境**
 
@@ -362,7 +367,7 @@ pm2 monit             # 監控面板
    - **方式一：僅啟動後端服務**
 
      ```bash
-     yarn dev
+     node scripts/runLocalYarn.cjs dev
      ```
 
      > ⚠️ 此指令僅啟動後端 API 服務（Port 10588），**不包含前端頁面**。直接瀏覽 `http://localhost:10588` 只能呼叫 API 介面，無法看到完整的網頁介面。若需同時使用前端頁面，請配合前端專案單獨啟動，或使用下方的 GUI 模式。
@@ -370,7 +375,7 @@ pm2 monit             # 監控面板
    - **方式二：啟動 Electron 桌面用戶端**
 
      ```bash
-     yarn dev:gui
+     node scripts/runLocalYarn.cjs dev:gui
      ```
 
      > 此指令會同時啟動後端服務和 Electron 桌面視窗，內建前端頁面，開箱即用，無需額外設定。適合想要完整體驗所有功能的開發者。
@@ -378,35 +383,35 @@ pm2 monit             # 監控面板
    - **方式三：正式環境模式啟動**
 
      ```bash
-     yarn start
+     node scripts/runLocalYarn.cjs start
      ```
 
-     > 以生產模式直接執行編譯後的服務（需先執行 `yarn build`）。
+     > 以生產模式直接執行編譯後的服務（需先執行 `node scripts/runLocalYarn.cjs build`）。
 
 4. **專案打包建置**
 
    - 編譯並產生 TypeScript 檔案：
 
      ```bash
-     yarn build
+     node scripts/runLocalYarn.cjs build
      ```
 
    - 打包為 Windows 平台執行檔：
 
      ```bash
-     yarn dist:win
+     node scripts/runLocalYarn.cjs dist:win
      ```
 
    - 打包為 Mac 平台執行檔：
 
      ```bash
-     yarn dist:mac
+     node scripts/runLocalYarn.cjs dist:mac
      ```
 
    - 打包為 Linux 平台執行檔：
 
      ```bash
-     yarn dist:linux
+     node scripts/runLocalYarn.cjs dist:linux
      ```
 
 5. **程式碼品質檢查 (Lint)**
@@ -414,7 +419,7 @@ pm2 monit             # 監控面板
    - 進行全域語法和規範檢查：
 
      ```bash
-     yarn lint
+     node scripts/runLocalYarn.cjs lint
      ```
 
 6. **AI 除錯面板（選用）**
@@ -422,7 +427,7 @@ pm2 monit             # 監控面板
    啟動 AI SDK 的視覺化除錯工具，方便對 AI 呼叫進行除錯：
 
    ```bash
-   yarn debug:ai
+   node scripts/runLocalYarn.cjs debug:ai
    ```
 
 ## 前端開發
@@ -433,6 +438,14 @@ pm2 monit             # 監控面板
 - **Gitee**：[Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
 
 前端建置後，將 `dist` 目錄內容複製到本專案的 `data/web` 目錄即可整合。
+
+## 工程接手與後端二開
+
+如果你想先建立安全的本機工程基線，再進入後端二開，請先閱讀 [ENGINEERING_BASELINE.md](./ENGINEERING_BASELINE.md)。
+
+如果只需要最短的接手入口，請先看 [HANDOFF_QUICK_REF.md](./HANDOFF_QUICK_REF.md)。
+
+這兩份文件目前以簡體中文維護。
 
 ## 專案結構
 

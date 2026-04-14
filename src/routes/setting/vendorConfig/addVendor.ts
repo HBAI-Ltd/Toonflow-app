@@ -1,7 +1,9 @@
 import express from "express";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import u from "@/utils";
+import db from "@/utils/db";
+import runCode from "@/utils/vm";
+import * as vendorUtils from "@/utils/vendor";
 import { z } from "zod";
 import { transform } from "sucrase";
 const router = express.Router();
@@ -66,7 +68,7 @@ export default router.post(
   async (req, res) => {
     const { tsCode } = req.body;
     const jsCode = transform(tsCode, { transforms: ["typescript"] }).code;
-    const exports = u.vm(jsCode);
+    const exports = runCode(jsCode);
     if (!exports) return res.status(400).send(success("脚本文件必须导出对象"));
     if (!exports.textRequest) return res.status(400).send(success("脚本文件必须导出文本请求对象"));
     if (!exports.imageRequest) return res.status(400).send(success("脚本文件必须导出图像请求对象"));
@@ -99,15 +101,15 @@ export default router.post(
     }
 
     if ((vendor.id as string).includes(":")) return res.status(400).send(error("id不能包含英文冒号"));
-    const data = await u.db("o_vendorConfig").where("id", vendor.id).first();
+    const data = await db("o_vendorConfig").where("id", vendor.id).first();
     if (data) return res.status(500).send(error("供应商id已存在"));
-    const [id] = await u.db("o_vendorConfig").insert({
+    await db("o_vendorConfig").insert({
       id: vendor.id,
       inputValues: JSON.stringify(vendor.inputValues ?? {}),
       models: JSON.stringify([]),
       enable: vendor.id == "toonflow" ? 1 : 0,
     });
-    u.vendor.writeCode(vendor.id, tsCode);
+    vendorUtils.writeCode(vendor.id, tsCode);
     res.status(200).send(success(result.data));
   },
 );

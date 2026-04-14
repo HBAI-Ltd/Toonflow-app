@@ -3,6 +3,7 @@ import u from "@/utils";
 import { Namespace, Socket } from "socket.io";
 import * as agent from "@/agents/scriptAgent/index";
 import ResTool from "@/socket/resTool";
+import { persistUserConversationMessage } from "@/utils/agent/conversationStore";
 
 async function verifyToken(rawToken: string): Promise<Boolean> {
   const setting = await u.db("o_setting").where("key", "tokenKey").select("value").first();
@@ -37,6 +38,7 @@ export default (nsp: Namespace) => {
 
     const resTool = new ResTool(socket, {
       projectId: socket.handshake.auth.projectId,
+      agentType: "scriptAgent",
     });
     let abortController: AbortController | null = null;
 
@@ -47,16 +49,28 @@ export default (nsp: Namespace) => {
 
     socket.on("chat", async (data: { content: string }) => {
       const { content } = data;
+      const userMessageTime = Date.now();
       abortController?.abort();
       abortController = new AbortController();
       const currentController = abortController;
+
+      await persistUserConversationMessage(
+        {
+          projectId: socket.handshake.auth.projectId,
+          agentType: "scriptAgent",
+        },
+        {
+          content,
+          createTime: userMessageTime,
+        },
+      );
 
       const msg = resTool.newMessage("assistant", "统筹");
       const ctx: agent.AgentContext = {
         socket,
         isolationKey,
         text: content,
-        userMessageTime: new Date(msg.datetime).getTime() - 1,
+        userMessageTime,
         abortSignal: currentController.signal,
         resTool,
         msg,

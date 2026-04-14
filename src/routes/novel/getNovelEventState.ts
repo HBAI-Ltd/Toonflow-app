@@ -1,8 +1,9 @@
 import express from "express";
-import u from "@/utils";
+import db from "@/utils/db";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+
 const router = express.Router();
 
 export default router.post(
@@ -12,7 +13,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { ids } = req.body;
-    const data = await u.db("o_novel").whereIn("id", ids).whereNot("eventState", 0).select("id", "event", "eventState", "errorReason");
-    res.status(200).send(success(data));
+    const data = await db("o_novel").whereIn("id", ids).whereNot("eventState", 0).select("id", "event", "eventState", "errorReason");
+    return res.status(200).send(success(data));
   },
 );

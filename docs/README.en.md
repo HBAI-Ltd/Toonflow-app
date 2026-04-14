@@ -173,12 +173,12 @@ Build directly using the local source code. This is suitable for developers or u
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# Build and start locally using docker-compose
-yarn docker:local
-
-# Or build manually
+# This repository does not currently include a docker-compose.yml, so build and run it manually
 docker build -t toonflow .
 docker run -d -p <Local_Port>:10588 -v <Local_Data_Path>:/app/data toonflow
+
+# The image now builds backend artifacts during image build and starts the backend in production mode by default
+# The Docker path does not include the Electron desktop client
 
 # You can now access the page at the corresponding port at /web/index.html
 # Example: http://localhost:10588/web/index.html
@@ -205,7 +205,7 @@ docker run -d -p <Local_Port>:10588 -v <Local_Data_Path>:/app/data toonflow
 ### 1. Server Requirements
 
 - **OS**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: 24.x (Recommended, Minimum 23.11.1+)
+- **Node.js**: 20+ (`20 LTS` recommended to match the local engineering baseline)
 - **Memory**: 2GB+
 
 ### 2. Server Deployment
@@ -216,9 +216,10 @@ docker run -d -p <Local_Port>:10588 -v <Local_Data_Path>:/app/data toonflow
 # Install Node.js
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
-nvm install 24
-# Install Yarn and PM2
-npm install -g yarn pm2
+nvm install 20
+# Enable Corepack and install PM2
+corepack enable
+npm install -g pm2
 ```
 
 #### 2. Deploy Project
@@ -229,8 +230,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 **Clone from Gitee (Recommended for users in China):**
@@ -239,8 +240,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 #### 3. Configure PM2
@@ -319,7 +320,7 @@ If you're interested in joining, please contact the project maintainer (ACT) in 
 
 | Category   | Technology                                                                                |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| Runtime    | Node.js 23.11.1+                                                                          |
+| Runtime    | Node.js 20+ (20 LTS recommended for local development)                                    |
 | Language   | TypeScript 5.x                                                                            |
 | Backend    | Express 5                                                                                 |
 | Database   | SQLite (better-sqlite3 / knex)                                                            |
@@ -332,8 +333,10 @@ If you're interested in joining, please contact the project maintainer (ACT) in 
 
 ## Development Environment Prep
 
-- **Node.js**: Version 23.11.1 or higher required
-- **Yarn**: Recommended package manager
+- **Node.js**: `20 LTS` recommended for local development
+- **Yarn**: `1.x Classic`
+- **First dependency install**: run `corepack yarn install`
+- **Default commands after install**: run `node scripts/runLocalYarn.cjs <command>`
 
 ## Quick Start
 
@@ -358,8 +361,10 @@ If you're interested in joining, please contact the project maintainer (ACT) in 
    Run the following command in the project root directory:
 
    ```bash
-   yarn install
+   corepack yarn install
    ```
+
+   > `scripts/runLocalYarn.cjs` depends on the local `node_modules/yarn/bin/yarn.js`, so the first install must go through `corepack yarn install`. After that, the recommended path is `node scripts/runLocalYarn.cjs ...` to avoid the `url.parse()` deprecation warning emitted by Corepack's bundled Yarn 1.
 
 3. **Start the Development Environment**
 
@@ -368,7 +373,7 @@ If you're interested in joining, please contact the project maintainer (ACT) in 
    - **Method 1: Start Backend Service Only**
 
      ```bash
-     yarn dev
+     node scripts/runLocalYarn.cjs dev
      ```
 
      > ⚠️ This command only starts the backend API service (Port 10588) and **does not include the frontend pages**. Visiting `http://localhost:10588` directly will only allow API calls without a UI. To use the frontend, start the frontend project separately or use the GUI mode below.
@@ -376,7 +381,7 @@ If you're interested in joining, please contact the project maintainer (ACT) in 
    - **Method 2: Start Electron Desktop Client**
 
      ```bash
-     yarn dev:gui
+     node scripts/runLocalYarn.cjs dev:gui
      ```
 
      > This command launches both the backend service and the Electron desktop window simultaneously. It comes with built-in frontend pages ready out-of-the-box, requiring no extra configuration. Ideal for developers who want to experience the full feature set.
@@ -384,35 +389,35 @@ If you're interested in joining, please contact the project maintainer (ACT) in 
    - **Method 3: Start in Production Mode**
 
      ```bash
-     yarn start
+     node scripts/runLocalYarn.cjs start
      ```
 
-     > Run the compiled service directly in production mode (requires running `yarn build` first).
+     > Run the compiled service directly in production mode (requires running `node scripts/runLocalYarn.cjs build` first).
 
 4. **Project Build & Packaging**
 
    - Compile and generate TypeScript files:
 
      ```bash
-     yarn build
+     node scripts/runLocalYarn.cjs build
      ```
 
    - Package as a Windows executable:
 
      ```bash
-     yarn dist:win
+     node scripts/runLocalYarn.cjs dist:win
      ```
 
    - Package as a Mac executable:
 
      ```bash
-     yarn dist:mac
+     node scripts/runLocalYarn.cjs dist:mac
      ```
 
    - Package as a Linux executable:
 
      ```bash
-     yarn dist:linux
+     node scripts/runLocalYarn.cjs dist:linux
      ```
 
 5. **Code Quality Checks (Linting)**
@@ -420,7 +425,7 @@ If you're interested in joining, please contact the project maintainer (ACT) in 
    - Run global syntax and styling checks:
 
      ```bash
-     yarn lint
+     node scripts/runLocalYarn.cjs lint
      ```
 
 6. **AI Debug Panel (Optional)**
@@ -428,7 +433,7 @@ If you're interested in joining, please contact the project maintainer (ACT) in 
    Launch the AI SDK visual debugging tool to easily trace AI calls:
 
    ```bash
-   yarn debug:ai
+   node scripts/runLocalYarn.cjs debug:ai
    ```
 
 ## Frontend Development
@@ -439,6 +444,14 @@ If you need to modify or customize the frontend interface, please go to the fron
 - **Gitee**: [Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
 
 After building the frontend, copy the entire `dist` folder into the `data/web` directory of this project to integrate it.
+
+## Engineering Baseline & Backend Extension
+
+If you want to establish a safe local engineering baseline before backend customization, start with [ENGINEERING_BASELINE.md](./ENGINEERING_BASELINE.md).
+
+If you only need the shortest handoff entry point, read [HANDOFF_QUICK_REF.md](./HANDOFF_QUICK_REF.md) first.
+
+Both documents are currently maintained in Simplified Chinese.
 
 ## Project Structure
 

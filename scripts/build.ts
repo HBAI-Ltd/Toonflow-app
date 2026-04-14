@@ -68,12 +68,33 @@ const mainBuildConfig: esbuild.BuildOptions = {
   },
 };
 
+const smokeSupportBuildConfig: esbuild.BuildOptions = {
+  entryPoints: ["src/routes/production/workbench/getGenerateData.ts", "src/utils/db.ts"],
+  bundle: true,
+  minify: false,
+  format: "cjs",
+  outdir: "build",
+  outbase: "src",
+  allowOverwrite: true,
+  platform: "node",
+  target: "esnext",
+  tsconfig: "./tsconfig.json",
+  alias: {
+    "@": "./src",
+  },
+  sourcemap: false,
+  external,
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
+};
+
 (async () => {
   try {
     console.log("🔨 开始构建...\n");
 
     // 并行构建
-    await Promise.all([esbuild.build(appBuildConfig), esbuild.build(mainBuildConfig)]);
+    await Promise.all([esbuild.build(appBuildConfig), esbuild.build(mainBuildConfig), esbuild.build(smokeSupportBuildConfig)]);
 
     console.log("✅ 后端服务构建完成: build/app.js");
     console.log("✅ Electron主进程构建完成: build/main.js");

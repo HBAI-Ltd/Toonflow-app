@@ -1,5 +1,13 @@
 import u from "@/utils";
 import { Socket } from "socket.io";
+import {
+  addConversationMessageContent,
+  persistConversationMessage,
+  resolveConversationScope,
+  updateConversationMessageContent,
+  updateConversationMessageStatus,
+} from "@/utils/agent/conversationStore";
+import type { ConversationAgentType } from "@/utils/agent/conversationStore";
 import type {
   ChatMessageStatus,
   AIMessageContent,
@@ -15,13 +23,21 @@ import type {
 } from "./chatMessagesData";
 
 type ContentType = AIMessageContent["type"];
+type ResToolData = {
+  projectId?: number;
+  agentType?: ConversationAgentType;
+  episodesId?: number;
+  scriptId?: number;
+  [key: string]: any;
+};
 
 class ResTool {
   public socket: Socket;
-  public data: Record<string, any>;
+  public data: ResToolData;
+  private persistChain: Promise<void> = Promise.resolve();
 
-  constructor(socket: Socket, data: Record<string, any> = {}) {
-    this.socket = socket;
+  constructor(socket: Socket, data: ResToolData = {}) {
+    this.socket = this.createPersistedSocket(socket);
     this.data = data;
   }
 
@@ -57,6 +73,68 @@ class ResTool {
       id: messageId,
       status: "complete" as ChatMessageStatus,
     });
+  }
+
+  private createPersistedSocket(socket: Socket) {
+    return new Proxy(socket, {
+      get: (target, prop, receiver) => {
+        if (prop !== "emit") {
+          return Reflect.get(target, prop, receiver);
+        }
+
+        return ((eventName: string, payload: Record<string, any>) => {
+          const result = target.emit(eventName, payload);
+          this.persistSocketEvent(eventName, payload);
+          return result;
+        }) as Socket["emit"];
+      },
+    });
+  }
+
+  private persistSocketEvent(eventName: string, payload: Record<string, any>) {
+    const scope = resolveConversationScope({
+      projectId: this.data.projectId,
+      agentType: this.data.agentType,
+      episodesId: this.data.episodesId ?? this.data.scriptId,
+    });
+    if (!scope) {
+      return;
+    }
+
+    const persist = async () => {
+      if (eventName === "message") {
+        await persistConversationMessage(scope, payload as any);
+        return;
+      }
+
+      if (eventName === "message:update") {
+        await updateConversationMessageStatus(scope, payload.id, {
+          status: payload.status,
+          ext: payload.ext,
+        });
+        return;
+      }
+
+      if (eventName === "content:add") {
+        await addConversationMessageContent(scope, payload.messageId, payload.content);
+        return;
+      }
+
+      if (eventName === "content:update") {
+        await updateConversationMessageContent(scope, payload.messageId, payload.contentId, {
+          type: payload.type,
+          data: payload.data,
+          strategy: payload.strategy,
+          status: payload.status,
+        });
+      }
+    };
+
+    this.persistChain = this.persistChain
+      .then(() => persist())
+      .catch((error) => {
+        console.error("[ResTool] persist socket event failed:", error);
+      });
   }
 }
 

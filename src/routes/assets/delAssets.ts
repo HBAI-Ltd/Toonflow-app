@@ -1,8 +1,10 @@
 import express from "express";
-import u from "@/utils";
+import db from "@/utils/db";
+import oss from "@/utils/oss";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+
 const router = express.Router();
 
 export default router.post(
@@ -12,23 +14,27 @@ export default router.post(
   }),
   async (req, res) => {
     const { id } = req.body;
-    const assetsData = await u.db("o_image").where("assetsId", id);
+    const assetsData = await db("o_image").where("assetsId", id);
+
     await Promise.all(
-      assetsData.map((i) =>
-        i.filePath
-          ? u.oss.deleteFile(i.filePath).catch((e) => {
-              if (e?.code !== "ENOENT") throw e;
+      assetsData.map((item) =>
+        item.filePath
+          ? oss.deleteFile(item.filePath).catch((err) => {
+              if (err?.code !== "ENOENT") throw err;
             })
           : Promise.resolve(),
       ),
     );
-    const imageIds = assetsData.map((i) => i.id).filter(Boolean);
+
+    const imageIds = assetsData.map((item) => item.id).filter(Boolean);
     if (imageIds.length > 0) {
-      await u.db("o_assets").whereIn("imageId", imageIds).update({ imageId: null });
+      await db("o_assets").whereIn("imageId", imageIds).update({ imageId: null });
     }
-    await u.db("o_image").where({ assetsId: id }).delete();
-    await u.db("o_assets").where({ id }).delete();
-    await u.db("o_assets").where("assetsId", id).delete();
-    res.status(200).send(success({ message: "删除资产成功" }));
+
+    await db("o_image").where({ assetsId: id }).delete();
+    await db("o_assets").where({ id }).delete();
+    await db("o_assets").where("assetsId", id).delete();
+
+    return res.status(200).send(success({ message: "删除资产成功" }));
   },
 );

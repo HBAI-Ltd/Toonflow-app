@@ -3,6 +3,7 @@ import u from "@/utils";
 import { Namespace, Socket } from "socket.io";
 import * as agent from "@/agents/productionAgent/index";
 import ResTool from "@/socket/resTool";
+import { persistUserConversationMessage } from "@/utils/agent/conversationStore";
 
 async function verifyToken(rawToken: string): Promise<Boolean> {
   const setting = await u.db("o_setting").where("key", "tokenKey").select("value").first();
@@ -37,6 +38,8 @@ export default (nsp: Namespace) => {
 
     let resTool = new ResTool(socket, {
       projectId: socket.handshake.auth.projectId,
+      agentType: "productionAgent",
+      episodesId: socket.handshake.auth.scriptId,
       scriptId: socket.handshake.auth.scriptId,
     });
     let abortController: AbortController | null = null;
@@ -50,6 +53,8 @@ export default (nsp: Namespace) => {
       isolationKey = data.isolationKey;
       resTool = new ResTool(socket, {
         projectId: data.projectId,
+        agentType: "productionAgent",
+        episodesId: data.scriptId,
         scriptId: data.scriptId,
       });
       console.log("[productionAgent] 上下文已更新:", isolationKey);
@@ -58,16 +63,29 @@ export default (nsp: Namespace) => {
 
     socket.on("chat", async (data: { content: string }) => {
       const { content } = data;
+      const userMessageTime = Date.now();
       abortController?.abort();
       abortController = new AbortController();
       const currentController = abortController;
+
+      await persistUserConversationMessage(
+        {
+          projectId: resTool.data.projectId,
+          agentType: "productionAgent",
+          episodesId: resTool.data.scriptId,
+        },
+        {
+          content,
+          createTime: userMessageTime,
+        },
+      );
 
       const msg = resTool.newMessage("assistant", "视频策划");
       const ctx: agent.AgentContext = {
         socket,
         isolationKey,
         text: content,
-        userMessageTime: new Date(msg.datetime).getTime() - 1,
+        userMessageTime,
         abortSignal: currentController.signal,
         resTool,
         msg,

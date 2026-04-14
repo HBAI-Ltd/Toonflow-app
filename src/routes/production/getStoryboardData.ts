@@ -1,5 +1,6 @@
 import express from "express";
 import u from "@/utils";
+import db from "@/utils/db";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
@@ -12,7 +13,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { scriptId } = req.body;
-    const storyboardData = await u.db("o_storyboard").where({ scriptId }).orderBy("index", "asc");
+    const storyboardData = await db("o_storyboard").where({ scriptId }).orderBy("index", "asc");
     const data = await Promise.all(
       storyboardData.map(async (i) => {
         return {
@@ -26,8 +27,7 @@ export default router.post(
     const storyboardIds = storyboardData.map((s) => s.id as number);
 
     // 修复：o_assets.id 关联 o_assets2Storyboard.assetId，按 storyboardId 过滤
-    const storyboardConfigs = await u
-      .db("o_assets2Storyboard")
+    const storyboardConfigs = await db("o_assets2Storyboard")
       .leftJoin("o_assets", "o_assets2Storyboard.assetId", "o_assets.id")
       .leftJoin("o_image", "o_assets.imageId", "o_image.id")
       .whereIn("o_assets2Storyboard.storyboardId", storyboardIds)

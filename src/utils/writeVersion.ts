@@ -9,7 +9,9 @@ const APP_VERSION: string = (() => {
     return __APP_VERSION__;
   }
   // 开发环境回退：从 package.json 读取
-  const pkgPath = path.resolve(process.cwd(), "package.json");
+  const cwdPkgPath = path.resolve(process.cwd(), "package.json");
+  const repoPkgPath = path.resolve(__dirname, "..", "..", "package.json");
+  const pkgPath = fs.existsSync(cwdPkgPath) ? cwdPkgPath : repoPkgPath;
   const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
   return pkg.version;
 })();

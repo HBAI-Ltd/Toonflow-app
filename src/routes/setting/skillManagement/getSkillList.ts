@@ -1,13 +1,12 @@
 import express from "express";
-import { success, error } from "@/lib/responseFormat";
-import { validateFields } from "@/middleware/middleware";
+import { success } from "@/lib/responseFormat";
 import fg from "fast-glob";
-import u from "@/utils";
+import getPath from "@/utils/getPath";
 
 const router = express.Router();
 
 export default router.post("/", async (req, res) => {
-  const skillsRoot = u.getPath(["skills"]);
+  const skillsRoot = getPath(["skills"]);
 
   const entries = await fg("**/*.md", {
     cwd: skillsRoot.replace(/\\/g, "/"),

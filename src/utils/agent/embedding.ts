@@ -10,7 +10,12 @@ import db from "@/utils/db";
 // const modelDtype = "fp16" as const; // 量化类型：fp32
 let extractor: FeatureExtractionPipeline | null = null;
 
+function shouldSkipEmbedding(): boolean {
+  return process.env.TOONFLOW_SKIP_EMBEDDING === "1";
+}
+
 export async function initEmbedding(): Promise<void> {
+  if (shouldSkipEmbedding()) return;
   if (extractor) return;
 
   const modelConfigData = await db("o_setting").whereIn("key", ["modelOnnxFile", "modelDtype"]);
@@ -35,6 +40,7 @@ export async function initEmbedding(): Promise<void> {
 }
 
 export async function getEmbedding(text: string): Promise<number[]> {
+  if (shouldSkipEmbedding()) return [];
   if (!extractor) await initEmbedding();
   const output = await extractor!(text, { pooling: "mean", normalize: true });
   return Array.from(output.data as Float32Array);
@@ -45,6 +51,10 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 }
 
 export async function disposeEmbedding(): Promise<void> {
+  if (shouldSkipEmbedding()) {
+    extractor = null;
+    return;
+  }
   await extractor?.dispose?.();
   extractor = null;
 }

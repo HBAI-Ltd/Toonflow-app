@@ -1,4 +1,5 @@
 .devtools
+.electron-runtime
 # dependencies (bun install)
 node_modules
 .vscode

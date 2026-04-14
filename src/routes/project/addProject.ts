@@ -1,5 +1,5 @@
 import express from "express";
-import u from "@/utils";
+import db from "@/utils/db";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
@@ -24,7 +24,7 @@ export default router.post(
   async (req, res) => {
     const { projectType, name, intro, type, directorManual, artStyle, videoRatio, imageModel, videoModel, imageQuality, mode } = req.body;
 
-    await u.db("o_project").insert({
+    await db("o_project").insert({
       id: Date.now(),
       projectType,
       name,

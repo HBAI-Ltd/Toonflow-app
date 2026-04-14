@@ -17,17 +17,8 @@ env:
 jobs:
   # ==================== Windows 构建 ====================
   build-Windows:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x64
-            name: x64
-          - arch: arm64
-            name: ARM64
-
     runs-on: windows-latest
-    name: 构建 Windows (${{ matrix.name }})
+    name: 构建 Windows
 
     steps:
       - name: 检出代码
@@ -38,18 +29,21 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: 启用 Corepack
+        run: corepack enable
+
       - name: 安装依赖
-        run: yarn install --frozen-lockfile
+        run: corepack yarn install --frozen-lockfile
 
       - name: 打包 Windows 安装程序
-        run: yarn dist:win --${{ matrix.arch }}
+        run: corepack yarn dist:win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: windows-${{ matrix.arch }}
+          name: windows
           path: dist/*.exe
           retention-days: 7
 
@@ -63,7 +57,7 @@ jobs:
             os: macos-latest
             name: Apple Silicon
           - arch: x64
-            os: macos-latest
+            os: macos-15-intel
             name: Intel
 
     runs-on: ${{ matrix.os }}
@@ -78,8 +72,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: 启用 Corepack
+        run: corepack enable
+
       - name: 安装依赖
-        run: yarn install --frozen-lockfile
+        run: corepack yarn install --frozen-lockfile
         env:
           npm_config_arch: ${{ matrix.arch }}
 
@@ -89,7 +86,7 @@ jobs:
           npm install --no-save --ignore-scripts --force @img/sharp-darwin-x64 @img/sharp-libvips-darwin-x64
 
       - name: 打包 macOS 安装程序
-        run: yarn dist:mac --${{ matrix.arch }}
+        run: corepack yarn dist:mac --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -123,8 +120,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: 启用 Corepack
+        run: corepack enable
+
       - name: 安装依赖
-        run: yarn install --frozen-lockfile
+        run: corepack yarn install --frozen-lockfile
         env:
           npm_config_arch: ${{ matrix.arch }}
 
@@ -134,7 +134,7 @@ jobs:
           npm install --no-save --ignore-scripts --force @img/sharp-linux-arm64 @img/sharp-libvips-linux-arm64
 
       - name: 打包 Linux 安装程序
-        run: yarn dist:linux --${{ matrix.arch }}
+        run: corepack yarn dist:linux --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -14,22 +14,34 @@
     "email": "ltlctools@outlook.com"
   },
   "main": "build/main.js",
-  "packageManager": "yarn@1.0.0",
+  "packageManager": "yarn@1.22.22",
   "engines": {
-    "node": ">=1.0.0"
+    "node": ">=20.0.0",
+    "yarn": ">=1.22.0 <2"
   },
   "scripts": {
     "dev": "nodemon --inspect --exec tsx src/app.ts",
     "dev:gui": "electronmon -r tsx scripts/main.ts",
     "dev:gui-vite": "cross-env VITE_DEV=1 electronmon -r tsx scripts/main.ts",
+    "predev:gui": "node scripts/prepareElectronRuntime.cjs",
+    "predev:gui-vite": "node scripts/prepareElectronRuntime.cjs",
+    "rebuild:electron": "node scripts/prepareElectronRuntime.cjs",
     "start": "cross-env NODE_ENV=prod node data/serve/app.js",
     "lint": "tsc --noEmit",
+    "test": "tsx test/api-baseline.test.ts",
+    "test:dockerfile": "node --test test/dockerfile-smoke.test.cjs",
+    "test:workflows": "node --test test/docker-ci-workflow-smoke.test.cjs test/workflow-baseline-smoke.test.cjs",
+    "test:built:only": "tsx test/built-app-smoke.test.ts",
+    "test:built": "cross-env NODE_ENV=prod tsx scripts/build.ts && tsx test/built-app-smoke.test.ts",
+    "verify:baseline": "tsc --noEmit && node --test test/dockerfile-smoke.test.cjs test/docker-ci-workflow-smoke.test.cjs test/workflow-baseline-smoke.test.cjs && tsx test/api-baseline.test.ts && cross-env NODE_ENV=prod tsx scripts/build.ts && tsx test/built-app-smoke.test.ts",
     "build": "cross-env NODE_ENV=prod tsx scripts/build.ts",
     "pack": "electron-builder --dir",
-    "dist": "yarn build && electron-builder",
-    "dist:win": "yarn build && electron-builder --win",
-    "dist:mac": "yarn build && electron-builder --mac",
-    "dist:linux": "yarn build && electron-builder --linux",
+    "dist": "cross-env NODE_ENV=prod tsx scripts/build.ts && electron-builder",
+    "dist:win": "cross-env NODE_ENV=prod tsx scripts/build.ts && node scripts/dist-win.cjs x64",
+    "dist:win:arm64": "cross-env NODE_ENV=prod tsx scripts/build.ts && node scripts/dist-win.cjs arm64",
+    "dist:win:all": "cross-env NODE_ENV=prod tsx scripts/build.ts && node scripts/dist-win.cjs all",
+    "dist:mac": "cross-env NODE_ENV=prod tsx scripts/build.ts && electron-builder --mac",
+    "dist:linux": "cross-env NODE_ENV=prod tsx scripts/build.ts && electron-builder --linux",
     "debug:ai": "npx @ai-sdk/devtools",
     "license": "node scripts/license.ts",
     "vendor2json": "node scripts/vendor2json.ts"
@@ -43,7 +55,6 @@
     "@ai-sdk/openai-compatible": "^2.0.27",
     "@ai-sdk/xai": "^3.0.47",
     "@huggingface/transformers": "^3.8.1",
-    "@rmp135/sql-ts": "^2.2.0",
     "ai": "^6.0.67",
     "axios": "^1.13.2",
     "axios-retry": "^4.5.0",
@@ -67,7 +78,6 @@
     "serialize-error": "^13.0.1",
     "sharp": "^0.34.5",
     "socket.io": "^4.8.3",
-    "sqlite3": "^6.0.1",
     "sucrase": "^3.35.1",
     "uuid": "^13.0.0",
     "vercel-minimax-ai-provider": "^0.0.2",
@@ -76,6 +86,7 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@rmp135/sql-ts": "^2.2.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/express-ws": "^3.0.6",
@@ -92,7 +103,8 @@
     "license-checker": "^25.0.1",
     "nodemon": "^3.1.11",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "yarn": "1.22.22"
   },
   "overrides": {
     "@rmp135/sql-ts": {

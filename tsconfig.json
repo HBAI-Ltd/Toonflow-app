@@ -28,6 +28,7 @@
     "node_modules",
     "data/**/*.ts",
     "dist",
-    "build"
+    "build",
+    "output"
   ]
 }

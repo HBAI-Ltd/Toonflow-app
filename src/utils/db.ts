@@ -16,6 +16,8 @@ const dbPath = getPath("db2.sqlite");
 console.log("数据库目录:", dbPath);
 const dbDir = path.dirname(dbPath);
 
+restoreLegacyDbIfNeeded(dbPath);
+
 // 确保数据库目录存在
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
@@ -34,17 +36,48 @@ const db = knex({
   useNullAsDefault: true,
 });
 
-(async () => {
+export const dbReady = (async () => {
   await initDB(db);
   await fixDB(db);
-  if (process.env.NODE_ENV == "dev") initKnexType(db);
+  if (process.env.NODE_ENV == "dev") await initKnexType(db);
 })();
 
-const dbClient = Object.assign(<TName extends TableName>(table: TName) => db<RowType<TName>, RowType<TName>[]>(table), db);
-dbClient.schema = db.schema;
+const dbClient = Object.assign(<TName extends TableName>(table: TName) => db<RowType<TName>, RowType<TName>[]>(table), db, {
+  ready: dbReady,
+  schema: db.schema,
+  destroy: db.destroy.bind(db),
+});
 export default dbClient;
 
 export { db };
+
+function restoreLegacyDbIfNeeded(currentDbPath: string) {
+  const legacyDbPath = resolveLegacyDbPath(currentDbPath);
+  if (!legacyDbPath || legacyDbPath === currentDbPath || !fs.existsSync(legacyDbPath)) {
+    return;
+  }
+
+  const currentExists = fs.existsSync(currentDbPath);
+  const currentSize = currentExists ? fs.statSync(currentDbPath).size : 0;
+  if (currentExists && currentSize > 0) {
+    return;
+  }
+
+  fs.mkdirSync(path.dirname(currentDbPath), { recursive: true });
+  fs.copyFileSync(legacyDbPath, currentDbPath);
+  console.log("鏃ф暟鎹簱宸茶繕鍘熷埌鏂拌矾寰?", legacyDbPath, "->", currentDbPath);
+}
+
+function resolveLegacyDbPath(currentDbPath: string) {
+  if (typeof process.versions?.electron !== "undefined") {
+    const { app } = require("electron");
+    const legacyDbPath = path.join(app.getPath("userData"), "db2.sqlite");
+    return legacyDbPath === currentDbPath ? null : legacyDbPath;
+  }
+
+  const legacyDbPath = path.join(process.cwd(), "db2.sqlite");
+  return legacyDbPath === currentDbPath ? null : legacyDbPath;
+}
 
 async function initKnexType(knexDb: any) {
   const { Client } = await import("@rmp135/sql-ts");

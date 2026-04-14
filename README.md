@@ -180,12 +180,12 @@ https://www.bilibili.com/video/BV1oXD7BqEqJ
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# 使用 docker-compose 本地构建并启动
-yarn docker:local
-
-# 或者手动构建
+# 当前仓库未提供 docker-compose.yml，请直接手动构建并启动
 docker build -t toonflow .
 docker run -d -p <本地端口>:10588 -v <本地数据路径>:/app/data toonflow
+
+# 当前 Docker 镜像会在构建阶段生成后端构建产物，并在容器内默认启动生产模式后端服务
+# Docker 路径不包含 Electron 桌面客户端
 
 # 此时在相应端口的 /web/index.html 路径即可访问页面
 # 例如 http://localhost:10588/web/index.html
@@ -212,7 +212,7 @@ docker run -d -p <本地端口>:10588 -v <本地数据路径>:/app/data toonflow
 ### 一、服务器环境要求
 
 - **系统**：Ubuntu 20.04+ / CentOS 7+
-- **Node.js**：24.x（推荐，最低 23.11.1+）
+- **Node.js**：20+（推荐 20 LTS，与本地工程基线一致）
 - **内存**：2GB+
 
 ### 二、服务器部署
@@ -223,9 +223,10 @@ docker run -d -p <本地端口>:10588 -v <本地数据路径>:/app/data toonflow
 # 安装 Node.js
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
-nvm install 24
-# 安装 Yarn 和 PM2
-npm install -g yarn pm2
+nvm install 20
+# 启用 Corepack，并安装 PM2
+corepack enable
+npm install -g pm2
 ```
 
 #### 2. 部署项目
@@ -236,8 +237,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 **从 Gitee 克隆（国内推荐）：**
@@ -246,8 +247,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 #### 3. 配置 PM2
@@ -323,7 +324,7 @@ pm2 monit             # 监控面板
 
 | 类别       | 技术                                                                                      |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| 运行时     | Node.js 23.11.1+                                                                          |
+| 运行时     | Node.js 20+（本地开发推荐 20 LTS）                                                        |
 | 语言       | TypeScript 5.x                                                                            |
 | 后端框架   | Express 5                                                                                 |
 | 数据库     | SQLite（better-sqlite3 / knex）                                                           |
@@ -336,8 +337,10 @@ pm2 monit             # 监控面板
 
 ## 开发环境准备
 
-- **Node.js**：版本要求 23.11.1 及以上
-- **Yarn**：推荐作为项目包管理器
+- **Node.js**：推荐 `20 LTS`
+- **Yarn**：`1.x Classic`
+- **首次安装依赖**：执行 `corepack yarn install`
+- **后续默认命令**：执行 `node scripts/runLocalYarn.cjs <command>`
 
 ## 快速启动项目
 
@@ -362,8 +365,10 @@ pm2 monit             # 监控面板
    请先在项目根目录下执行以下命令以安装依赖项：
 
    ```bash
-   yarn install
+   corepack yarn install
    ```
+
+   > `scripts/runLocalYarn.cjs` 依赖仓库内已安装好的 `node_modules/yarn/bin/yarn.js`，所以第一次安装依赖必须先走一次 `corepack yarn install`。安装完成后，推荐把后续命令统一切到 `node scripts/runLocalYarn.cjs ...`，以绕开 Corepack 自带 Yarn 1 的 `url.parse()` deprecation warning。
 
 3. **启动开发环境**
 
@@ -372,7 +377,7 @@ pm2 monit             # 监控面板
    - **方式一：仅启动后端服务**
 
      ```bash
-     yarn dev
+     node scripts/runLocalYarn.cjs dev
      ```
 
      > ⚠️ 此命令仅启动后端 API 服务（端口 10588），**不包含前端页面**。直接访问 `http://localhost:10588` 只能调用 API 接口，无法看到完整的网页界面。如需同时使用前端页面，请配合前端项目单独启动，或使用下方的 GUI 模式。
@@ -380,7 +385,7 @@ pm2 monit             # 监控面板
    - **方式二：启动 Electron 桌面客户端**
 
      ```bash
-     yarn dev:gui
+     node scripts/runLocalYarn.cjs dev:gui
      ```
 
      > 此命令会同时启动后端服务和 Electron 桌面窗口，自带内置前端页面，开箱即用，无需额外配置。适合想要完整体验所有功能的开发者。
@@ -388,35 +393,35 @@ pm2 monit             # 监控面板
    - **方式三：生产模式启动**
 
      ```bash
-     yarn start
+     node scripts/runLocalYarn.cjs start
      ```
 
-     > 以生产模式直接运行编译后的服务（需先执行 `yarn build`）。
+     > 以生产模式直接运行编译后的服务（需先执行 `node scripts/runLocalYarn.cjs build`）。
 
 4. **项目打包**
 
    - 编译并生成 TypeScript 文件：
 
      ```bash
-     yarn build
+     node scripts/runLocalYarn.cjs build
      ```
 
    - 打包为 Windows 平台可执行程序：
 
      ```bash
-     yarn dist:win
+     node scripts/runLocalYarn.cjs dist:win
      ```
 
    - 打包为 Mac 平台可执行程序：
 
      ```bash
-     yarn dist:mac
+     node scripts/runLocalYarn.cjs dist:mac
      ```
 
    - 打包为 Linux 平台可执行程序：
 
      ```bash
-     yarn dist:linux
+     node scripts/runLocalYarn.cjs dist:linux
      ```
 
 5. **代码质量检查**
@@ -424,7 +429,7 @@ pm2 monit             # 监控面板
    - 进行全局语法和规范检查：
 
      ```bash
-     yarn lint
+     node scripts/runLocalYarn.cjs lint
      ```
 
 6. **AI 调试面板（可选）**
@@ -432,7 +437,7 @@ pm2 monit             # 监控面板
    启动 AI SDK 的可视化调试工具，方便调试 AI 调用：
 
    ```bash
-   yarn debug:ai
+   node scripts/runLocalYarn.cjs debug:ai
    ```
 
 ## 前端开发
@@ -443,6 +448,20 @@ pm2 monit             # 监控面板
 - **Gitee**：[Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
 
 前端构建后，将 `dist` 目录内容复制到本项目的 `data/web` 目录即可集成。
+
+## 工程接手与二开
+
+如需先建立本地工程基线，再进入后端二开，请优先阅读 [docs/ENGINEERING_BASELINE.md](./docs/ENGINEERING_BASELINE.md)。
+
+如需更短的接手入口，可先看 [docs/HANDOFF_QUICK_REF.md](./docs/HANDOFF_QUICK_REF.md)。
+
+该文档补充了以下内容：
+
+- 推荐运行环境与命令分工
+- `yarn dev`、`yarn dev:gui`、`yarn build`、`yarn start` 的使用边界
+- Electron 主进程、服务入口、路由生成与 `data/**` 目录的阅读顺序
+- 后续改动应该落在 Electron、`src/routes/**`、`data/**` 还是 `Toonflow-web`
+- 最小自动化测试和 GUI smoke 的验收方式
 
 ## 项目结构
 

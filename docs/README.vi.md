@@ -162,12 +162,12 @@ Sử dụng mã nguồn có sẵn để build trực tiếp. Phù hợp với l�
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# Sử dụng docker-compose để build và chạy
-yarn docker:local
-
-# Hoặc build thủ công
+# Repo hiện chưa có docker-compose.yml, vì vậy hãy build và chạy thủ công
 docker build -t toonflow .
 docker run -d -p <Port trên máy>:10588 -v <Đường dẫn dữ liệu trên máy>:/app/data toonflow
+
+# Docker image hiện tại sẽ build backend artifacts trong giai đoạn build và mặc định khởi động backend service ở chế độ production trong container
+# Đường chạy Docker này không bao gồm Electron desktop client
 
 # Sau đó, truy cập giao diện qua đường dẫn /web/index.html bằng Port đã thiết lập
 # Ví dụ: http://localhost:10588/web/index.html
@@ -194,7 +194,7 @@ docker run -d -p <Port trên máy>:10588 -v <Đường dẫn dữ liệu trên m
 ### 1. Yêu cầu Môi trường Máy chủ
 
 - **Hệ điều hành**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: 24.x (Khuyên dùng, Tối thiểu 23.11.1+)
+- **Node.js**: 20+ (khuyến nghị `20 LTS` để khớp với engineering baseline trên máy local)
 - **RAM**: 2GB+
 
 ### 2. Triển khai Máy chủ
@@ -205,9 +205,10 @@ docker run -d -p <Port trên máy>:10588 -v <Đường dẫn dữ liệu trên m
 # Cài đặt Node.js
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
-nvm install 24
-# Cài đặt Yarn và PM2
-npm install -g yarn pm2
+nvm install 20
+# Bật Corepack và cài PM2
+corepack enable
+npm install -g pm2
 ```
 
 #### 2. Triển khai Dự án
@@ -218,8 +219,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 **Clone từ Gitee (Khuyên dùng tại TQ):**
@@ -228,8 +229,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 #### 3. Cấu hình PM2
@@ -305,7 +306,7 @@ Nếu bạn cần triển khai riêng hoặc tùy chỉnh giao diện Frontend, 
 
 | Phân loại | Công nghệ |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| Môi trường | Node.js 23.11.1+                                                                          |
+| Môi trường | Node.js 20+ (khuyến nghị 20 LTS cho phát triển cục bộ)                                   |
 | Ngôn ngữ   | TypeScript 5.x                                                                            |
 | Backend    | Express 5                                                                                 |
 | Cơ sở dữ liệu | SQLite (better-sqlite3 / knex)                                                            |
@@ -318,8 +319,10 @@ Nếu bạn cần triển khai riêng hoặc tùy chỉnh giao diện Frontend, 
 
 ## Chuẩn bị Môi trường Phát triển
 
-- **Node.js**: Yêu cầu phiên bản 23.11.1 trở lên
-- **Yarn**: Khuyến nghị sử dụng làm Package Manager
+- **Node.js**: Khuyến nghị `20 LTS` cho phát triển cục bộ
+- **Yarn**: `1.x Classic`
+- **Cài dependencies lần đầu**: chạy `corepack yarn install`
+- **Lệnh mặc định sau khi cài xong**: chạy `node scripts/runLocalYarn.cjs <command>`
 
 ## Khởi chạy Dự án nhanh
 
@@ -344,8 +347,10 @@ Nếu bạn cần triển khai riêng hoặc tùy chỉnh giao diện Frontend, 
    Chạy lệnh sau tại thư mục gốc của dự án:
 
    ```bash
-   yarn install
+   corepack yarn install
    ```
+
+   > `scripts/runLocalYarn.cjs` phụ thuộc vào `node_modules/yarn/bin/yarn.js` đã được cài sẵn trong repo, nên lần cài đầu tiên bắt buộc phải dùng `corepack yarn install`. Sau đó, đường chạy được khuyến nghị là `node scripts/runLocalYarn.cjs ...` để tránh `url.parse()` deprecation warning do Yarn 1 đi kèm với Corepack phát ra.
 
 3. **Khởi chạy môi trường Dev**
 
@@ -354,7 +359,7 @@ Nếu bạn cần triển khai riêng hoặc tùy chỉnh giao diện Frontend, 
    - **Cách 1: Chỉ chạy Backend API**
 
      ```bash
-     yarn dev
+     node scripts/runLocalYarn.cjs dev
      ```
 
      > ⚠️ Lệnh này chỉ khởi chạy Backend API (Port 10588), không bao gồm giao diện Frontend. Khi truy cập http://localhost:10588 chỉ có thể gọi API. Nếu muốn sử dụng giao diện, vui lòng chạy Frontend riêng hoặc dùng chế độ GUI bên dưới.
@@ -362,7 +367,7 @@ Nếu bạn cần triển khai riêng hoặc tùy chỉnh giao diện Frontend, 
    - **Cách 2: Khởi chạy Client Desktop Electron (Khuyên dùng)**
 
      ```bash
-     yarn dev:gui
+     node scripts/runLocalYarn.cjs dev:gui
      ```
 
      > Lệnh này sẽ chạy đồng thời Backend và cửa sổ Desktop Electron với giao diện Frontend đã tích hợp sẵn. Mở lên là có thể sử dụng ngay mà không cần cấu hình thêm. Phù hợp nhất cho lập trình viên muốn trải nghiệm toàn bộ tính năng.
@@ -370,35 +375,35 @@ Nếu bạn cần triển khai riêng hoặc tùy chỉnh giao diện Frontend, 
    - **Cách 3: Chạy ở chế độ Product (Sản xuất)**
 
      ```bash
-     yarn start
+     node scripts/runLocalYarn.cjs start
      ```
 
-     > Chạy trực tiếp dịch vụ sau khi đã build (Cần chạy lệnh yarn build trước).
+     > Chạy trực tiếp dịch vụ sau khi đã build (cần chạy `node scripts/runLocalYarn.cjs build` trước).
 
 4. **Đóng gói dự án (Build / Pack)**
 
    - Biên dịch tệp TypeScript:
 
      ```bash
-     yarn build
+     node scripts/runLocalYarn.cjs build
      ```
 
    - Đóng gói thành tệp thực thi cho Windows:
 
      ```bash
-     yarn dist:win
+     node scripts/runLocalYarn.cjs dist:win
      ```
 
    - Đóng gói thành tệp thực thi cho MacOS:
 
      ```bash
-     yarn dist:mac
+     node scripts/runLocalYarn.cjs dist:mac
      ```
 
    - Đóng gói thành tệp thực thi cho Linux:
 
      ```bash
-     yarn dist:linux
+     node scripts/runLocalYarn.cjs dist:linux
      ```
 
 5. **Kiểm tra chất lượng mã (Lint)**
@@ -406,7 +411,7 @@ Nếu bạn cần triển khai riêng hoặc tùy chỉnh giao diện Frontend, 
    - Kiểm tra cú pháp và quy chuẩn toàn cục:
 
      ```bash
-     yarn lint
+     node scripts/runLocalYarn.cjs lint
      ```
 
 6. **Bảng điều khiển Debug AI (Tùy chọn)**
@@ -414,7 +419,7 @@ Nếu bạn cần triển khai riêng hoặc tùy chỉnh giao diện Frontend, 
    Mở công cụ Debug trực quan của AI SDK để tiện theo dõi các lời gọi AI:
 
    ```bash
-   yarn debug:ai
+   node scripts/runLocalYarn.cjs debug:ai
    ```
 
 ## Phát triển Frontend
@@ -425,6 +430,14 @@ Nếu bạn cần chỉnh sửa giao diện Frontend, vui lòng chuyển sang kh
 - **Gitee**: [Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
 
 Sau khi build Frontend xong, hãy copy toàn bộ thư mục dist vào thư mục data/web của dự án này để tích hợp.
+
+## Engineering Baseline và mở rộng Backend
+
+Nếu bạn muốn thiết lập một baseline kỹ thuật an toàn trên máy local trước khi bắt đầu chỉnh sửa backend, hãy đọc [ENGINEERING_BASELINE.md](./ENGINEERING_BASELINE.md) trước.
+
+Nếu chỉ cần điểm vào ngắn gọn nhất để bàn giao, hãy mở [HANDOFF_QUICK_REF.md](./HANDOFF_QUICK_REF.md) trước.
+
+Hai tài liệu này hiện đang được duy trì bằng tiếng Trung giản thể.
 
 ## Cấu trúc Dự án
 

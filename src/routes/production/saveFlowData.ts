@@ -1,5 +1,6 @@
 import express from "express";
 import u from "@/utils";
+import db from "@/utils/db";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
@@ -23,31 +24,30 @@ export default router.post(
       projectId: number;
       episodesId: number;
     } = req.body;
-    const sqlData = await u.db("o_agentWorkData").where("projectId", String(projectId)).andWhere("episodesId", String(episodesId)).first();
+    const sqlData = await db("o_agentWorkData").where("projectId", projectId).andWhere("episodesId", episodesId).first();
     const filterDatas = data.storyboard.filter((i) => !i.id);
     if (data.storyboard && data.storyboard.length && !filterDatas.length)
       await Promise.all(
         data.storyboard
           .filter((i) => i.id)
           .map(async (i, index) => {
-            await u.db("o_storyboard").where("id", i.id).update({
+            await db("o_storyboard").where("id", i.id).update({
               index: index,
             });
           }),
       );
     if (!sqlData) {
-      await u.db("o_agentWorkData").insert({
+      await db("o_agentWorkData").insert({
         projectId,
         episodesId,
         key: "productionAgent",
         data: JSON.stringify(data),
       });
     } else {
-      await u
-        .db("o_agentWorkData")
-        .where("projectId", String(projectId))
+      await db("o_agentWorkData")
+        .where("projectId", projectId)
         .where("key", "productionAgent")
-        .andWhere("episodesId", String(episodesId))
+        .andWhere("episodesId", episodesId)
         .update({
           data: JSON.stringify(data),
         });

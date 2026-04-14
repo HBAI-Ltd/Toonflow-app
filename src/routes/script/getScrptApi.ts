@@ -1,8 +1,9 @@
 import express from "express";
-import u from "@/utils";
+import db from "@/utils/db";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+
 const router = express.Router();
 
 export default router.post(
@@ -13,37 +14,39 @@ export default router.post(
   }),
   async (req, res) => {
     const { projectId, name } = req.body;
-    let query = u.db("o_script").where("projectId", projectId).select("*");
+    let query = db("o_script").where("projectId", projectId).select("*");
     if (name) {
       query = query.andWhere("name", "like", `%${name}%`);
     }
 
     const data = await query;
-    const assetsData = await u
-      .db("o_assets")
+    const assetsData = await db("o_assets")
       .leftJoin("o_scriptAssets", "o_assets.id", "o_scriptAssets.assetId")
       .whereIn(
         "o_scriptAssets.scriptId",
-        data.map((i) => i.id!),
+        data.map((item) => item.id!),
       )
       .select("o_assets.id", "o_assets.name", "o_scriptAssets.scriptId");
+
     const scriptAssetsMap: Record<number, { id: number; name: string }[]> = {};
-    assetsData.forEach((i) => {
-      if (scriptAssetsMap[i.scriptId]) {
-        scriptAssetsMap[i.scriptId].push({ id: i.id, name: i.name });
+    assetsData.forEach((item) => {
+      if (scriptAssetsMap[item.scriptId]) {
+        scriptAssetsMap[item.scriptId].push({ id: item.id, name: item.name });
       } else {
-        scriptAssetsMap[i.scriptId] = [{ id: i.id, name: i.name }];
+        scriptAssetsMap[item.scriptId] = [{ id: item.id, name: item.name }];
       }
     });
-    const returnData = data.map((i) => ({
-      id: i.id,
-      name: i.name,
-      content: i.content,
-      extractState: i.extractState,
-      errorReason: i.errorReason,
-      createTime: i.createTime,
-      relatedAssets: scriptAssetsMap[i.id!] || [],
+
+    const returnData = data.map((item) => ({
+      id: item.id,
+      name: item.name,
+      content: item.content,
+      extractState: item.extractState,
+      errorReason: item.errorReason,
+      createTime: item.createTime,
+      relatedAssets: scriptAssetsMap[item.id!] || [],
     }));
-    res.status(200).send(success(returnData));
+
+    return res.status(200).send(success(returnData));
   },
 );

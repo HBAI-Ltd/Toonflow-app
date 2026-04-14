@@ -1,0 +1,40 @@
+name: Docker Smoke
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  docker-smoke:
+    runs-on: ubuntu-latest
+    name: Baseline + Docker Build
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 启用 Corepack
+        run: corepack enable
+
+      - name: 安装依赖
+        run: corepack yarn install --frozen-lockfile
+
+      - name: 运行工程基线
+        run: node scripts/runLocalYarn.cjs verify:baseline
+
+      - name: Docker 构建 smoke
+        run: docker build -t toonflow:smoke .

@@ -1,9 +1,11 @@
 import express from "express";
-import u from "@/utils";
+import db from "@/utils/db";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import { number, z } from "zod";
+import { z } from "zod";
+
 const router = express.Router();
+
 export default router.post(
   "/",
   validateFields({
@@ -14,10 +16,16 @@ export default router.post(
     limit: z.number(),
   }),
   async (req, res) => {
-    const { taskClass, state, projectId, page = 1, limit = 10 }: any = req.body;
+    const { taskClass, state, projectId, page = 1, limit = 10 } = req.body as {
+      taskClass?: string | null;
+      state?: string | null;
+      projectId?: number | null;
+      page: number;
+      limit: number;
+    };
     const offset = (page - 1) * limit;
-    const data = await u
-      .db("o_tasks")
+
+    const data = await db("o_tasks")
       .leftJoin("o_project", "o_project.id", "o_tasks.projectId")
       .andWhere((qb) => {
         if (taskClass) {
@@ -34,8 +42,8 @@ export default router.post(
       .offset(offset)
       .limit(limit)
       .orderBy("o_tasks.id", "desc");
-    const totalQuery = (await u
-      .db("o_tasks")
+
+    const totalQuery = (await db("o_tasks")
       .andWhere((qb) => {
         if (taskClass) {
           qb.andWhere("o_tasks.taskClass", taskClass);
@@ -48,7 +56,8 @@ export default router.post(
         }
       })
       .count("* as total")
-      .first()) as any;
+      .first()) as { total?: number | string } | undefined;
+
     res.status(200).send(success({ data, total: totalQuery?.total }));
   },
 );

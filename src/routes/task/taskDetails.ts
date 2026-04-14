@@ -1,8 +1,9 @@
 import express from "express";
-import u from "@/utils";
+import db from "@/utils/db";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
+
 const router = express.Router();
 
 export default router.post(
@@ -12,7 +13,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { taskId } = req.body;
-    const data = await u.db("o_tasks").where("id", taskId).select("*").first();
+    const data = await db("o_tasks").where("id", taskId).select("*").first();
     res.status(200).send(success(data));
-  }
+  },
 );

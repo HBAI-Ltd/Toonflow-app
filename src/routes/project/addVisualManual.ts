@@ -74,7 +74,8 @@ export default router.post(
         if (!fs.existsSync(fileDir)) {
           fs.mkdirSync(fileDir, { recursive: true });
         }
-        fs.writeFileSync(filePath, item.data, "utf-8");
+        const content = item.value === "README" ? `${name}\n${item.data}` : item.data;
+        fs.writeFileSync(filePath, content, "utf-8");
       }
       const imagesDir = path.join(mainPath, "images");
 

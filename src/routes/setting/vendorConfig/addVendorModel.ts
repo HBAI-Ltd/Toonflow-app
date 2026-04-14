@@ -1,7 +1,7 @@
 import express from "express";
-import { success, error } from "@/lib/responseFormat";
+import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import u from "@/utils";
+import db from "@/utils/db";
 import { z } from "zod";
 const router = express.Router();
 
@@ -45,12 +45,12 @@ export default router.post(
   async (req, res) => {
     const { id, model } = req.body;
 
-    const models = await u.db("o_vendorConfig").where("id", id).first("models");
+    const models = await db("o_vendorConfig").where("id", id).first("models");
     if (models?.models) {
       const existingModels = JSON.parse(models.models);
       existingModels.push(model);
-      await u
-        .db("o_vendorConfig")
+      await db
+        ("o_vendorConfig")
         .where("id", id)
         .update({
           models: JSON.stringify(existingModels),

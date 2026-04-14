@@ -1,12 +1,46 @@
 import express from "express";
-import { z } from "zod";
 import { exec } from "child_process";
+import { z } from "zod";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import { isEletron } from "@/utils/getPath";
-import u from "@/utils";
-import path from "path";
+import getPath, { isEletron } from "@/utils/getPath";
+
 const router = express.Router();
+
+function getOpenFolderCommand(target: string): string {
+  if (process.platform === "win32") {
+    return `explorer "${target}"`;
+  }
+
+  if (process.platform === "darwin") {
+    return `open "${target}"`;
+  }
+
+  return `xdg-open "${target}"`;
+}
+
+async function runOpenFolderCommand(cmd: string): Promise<void> {
+  const mockMode = process.env.TOONFLOW_MOCK_OPEN_FOLDER;
+
+  if (mockMode === "success") {
+    return;
+  }
+
+  if (mockMode === "failure") {
+    throw new Error("mock open folder failure");
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    exec(cmd, (err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
 
 export default router.post(
   "/",
@@ -17,16 +51,17 @@ export default router.post(
     if (!isEletron()) {
       return res.status(400).send(error("仅支持客户端打开文件夹"));
     }
+
     const { path: folderPath } = req.body;
-    const platform = process.platform;
-    const target = u.getPath(folderPath);
-    console.log("%c Line:23 🎂 target", "background:#fca650", target);
-    const cmd = platform === "win32" ? `explorer "${target}"` : platform === "darwin" ? `open "${target}"` : `xdg-open "${target}"`;
-    exec(cmd, (err) => {
-      if (err) {
-        return res.status(200).send(error(err.message));
-      }
-      res.status(200).send(success("打开文件夹成功"));
-    });
+    const target = getPath(folderPath);
+    const cmd = getOpenFolderCommand(target);
+
+    try {
+      await runOpenFolderCommand(cmd);
+      return res.status(200).send(success("打开文件夹成功"));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "打开文件夹失败";
+      return res.status(200).send(error(message));
+    }
   },
 );

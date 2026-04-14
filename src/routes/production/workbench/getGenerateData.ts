@@ -1,166 +1,179 @@
 import express from "express";
-import u from "@/utils";
 import { z } from "zod";
+
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import db from "@/utils/db";
+import u from "@/utils";
+
 const router = express.Router();
 
 interface VideoItem {
-  id: number;
-  src: string;
-  state: "未生成" | "生成中" | "已完成" | "生成失败";
+ id: number;
+ src: string;
+ state: "未生成" | "生成中" | "已完成" | "生成失败";
 }
 
 interface TrackMedia {
-  src: string;
-  id?: number;
-  fileType: "image" | "video" | "audio";
-  videoDesc?: string;
+ src: string;
+ id?: number;
+ fileType: "image" | "video" | "audio";
+ videoDesc?: string;
 }
 
 interface TrackItem {
-  id?: number;
-  prompt: string;
-  state: "未生成" | "生成中" | "已完成" | "生成失败";
-  reason?: string;
-  duration?: number;
-  selectVideoId?: number;
-  medias: TrackMedia[];
-  videoList: VideoItem[];
+ id?: number;
+ prompt: string;
+ state: "未生成" | "生成中" | "已完成" | "生成失败";
+ reason?: string;
+ duration?: number;
+ selectVideoId?: number | null;
+ medias: TrackMedia[];
+ videoList: VideoItem[];
 }
 
-export default router.post(
-  "/",
-  validateFields({
-    projectId: z.number(),
-    scriptId: z.number(),
-  }),
-  async (req, res) => {
-    const { projectId, scriptId } = req.body;
-    const projectData = await u.db("o_project").where("id", projectId).select("id", "videoModel", "mode").first();
+router.post(
+ "/",
+ validateFields({
+  projectId: z.number(),
+  scriptId: z.number(),
+ }),
+ async (req, res) => {
+  const { projectId, scriptId } = req.body;
 
-    if (!projectData?.videoModel) {
-      return res.status(400).json(success("项目未配置视频模型"));
-    }
-    let videoMode = "";
-    try {
-      videoMode = JSON.parse(projectData?.mode ?? "");
-    } catch (e) {
-      videoMode = projectData?.mode ?? "";
-    }
-    const isRef = Array.isArray(videoMode) ? true : false;
+  const projectData = await db("o_project").where("id", projectId).select("id", "videoModel").first();
+  if (!projectData?.videoModel) {
+   return res.status(400).json(success("项目未配置视频模型"));
+  }
 
-    const storyboardList = await u.db("o_storyboard").where({ scriptId, projectId }).orderBy("index", "asc");
-    await Promise.all(
-      storyboardList.map(async (i) => {
-        i.filePath = i.filePath ? await u.oss.getFileUrl(i.filePath) : "";
-      }),
-    );
-    const storyboardTrackRecord: Record<number, any[]> = {};
-    storyboardList.forEach((i) => {
-      if (storyboardTrackRecord[i.trackId!]) {
-        storyboardTrackRecord[i.trackId!].push({
-          src: i.filePath,
-          fileType: "image",
-          sources: "storyboard",
-          ...(i.prompt != null ? { prompt: i.videoDesc } : {}),
-          ...(i.id != null ? { id: i.id } : {}),
-          index: i.index,
-        });
-      } else {
-        storyboardTrackRecord[i.trackId!] = [
-          {
-            src: i.filePath,
-            fileType: "image",
-            sources: "storyboard",
-            ...(i.prompt != null ? { prompt: i.videoDesc } : {}),
-            ...(i.id != null ? { id: i.id } : {}),
-            index: i.index,
-          },
-        ];
-      }
-    });
-    // 按 storyboardId 分组的资产数据，key 为 storyboardId
-    const otherDataMap: Record<number, any[]> = {};
-    if (isRef) {
-      const storyIds = storyboardList.map((s) => s.id);
-      const assetDatas = await u
-        .db("o_assets2Storyboard")
-        .leftJoin("o_assets", "o_assets2Storyboard.assetId", "o_assets.id")
-        .leftJoin("o_image", "o_image.id", "o_assets.imageId")
-        .whereIn("o_assets2Storyboard.storyboardId", storyIds as number[])
-        .select("o_assets.*", "o_image.filePath", "o_assets2Storyboard.storyboardId");
+  const [videoId, videoModelName] = projectData.videoModel.split(":");
+  const models = await u.vendor.getModelList(videoId);
+  const findData = models.find((item: any) => item.modelName === videoModelName);
+  if (!findData?.mode) {
+   return res.status(400).json(success("项目配置的视频模型不存在"));
+  }
 
-      await Promise.all(
-        assetDatas.map(async (i) => {
-          const item = {
-            id: i.id,
-            name: i.name,
-            describe: i.describe,
-            type: i.type,
-            fileType: "image" as const,
-            sources: "assets",
-            src: i.filePath ? await u.oss.getFileUrl(i.filePath) : "",
-          };
-          const sid = i.storyboardId as number;
-          if (!otherDataMap[sid]) otherDataMap[sid] = [];
-          otherDataMap[sid].push(item);
-        }),
-      );
-    }
+  const isRef = findData.mode.every((item: any) => Array.isArray(item));
 
-    const trackData = await u.db("o_videoTrack").where({ projectId, scriptId });
-    const videoList = await u.db("o_video").whereIn(
-      "videoTrackId",
-      trackData.map((t) => t.id),
-    );
-    const trackList: TrackItem[] = [];
-    const trackIdMap = [...new Set<number>(trackData.map((t) => t.id!))];
-    for (const trackId of trackIdMap) {
-      const item = trackData.find((t) => t.id === trackId);
-      trackList.push({
-        id: trackId,
-        duration: item?.duration ?? 0,
-        prompt: item?.prompt || "",
-        state: (item?.state as "未生成" | "生成中" | "已完成" | "生成失败") ?? "未生成",
-        reason: item?.reason ?? "",
-        selectVideoId: Number(item?.videoId)!,
-        medias: (() => {
-          const storyboardMedias = storyboardTrackRecord[trackId] ?? [];
-          const assetMedias = storyboardMedias.flatMap((s) => otherDataMap[s.id] ?? []);
-          const seenAssetIds = new Set<number>();
-          const uniqueAssets = assetMedias.filter((a) => {
-            if (seenAssetIds.has(a.id)) return false;
-            seenAssetIds.add(a.id);
-            return true;
-          });
-          const hasImageAssetData = uniqueAssets.filter((i) => i.src);
-          const notHasImageAssetData = uniqueAssets.filter((i) => !i.src);
+  const storyboardList = await db("o_storyboard").where({ scriptId, projectId }).orderBy("index", "asc");
+  await Promise.all(
+   storyboardList.map(async (item) => {
+    item.filePath = item.filePath ? await u.oss.getFileUrl(item.filePath) : "";
+   }),
+  );
 
-          return [...hasImageAssetData, ...storyboardMedias, ...notHasImageAssetData];
-        })(),
-        videoList: await Promise.all(
-          videoList
-            .filter((v) => v.videoTrackId === trackId)
-            .map(async (v) => ({
-              id: v.id!,
-              src: v.filePath ? await u.oss.getFileUrl(v.filePath) : "",
-              state: v.state === "已完成" ? "已完成" : v.state === "生成中" ? "生成中" : v.state === "生成失败" ? "生成失败" : "未生成",
-              errorReason: v?.errorReason ?? "",
-            })),
-        ),
-      });
-    }
-    res.status(200).send(
-      success({
-        storyboardList: await Promise.all(
-          storyboardList.map(async (s) => ({
-            ...s,
-            src: s.filePath,
-          })),
-        ),
-        trackList,
-      }),
-    );
-  },
+  const storyboardTrackRecord: Record<number, Array<any>> = {};
+  storyboardList.forEach((item) => {
+   const trackId = item.trackId;
+   if (trackId == null) return;
+
+   const mediaItem = {
+    src: item.filePath,
+    fileType: "image" as const,
+    sources: "storyboard",
+    ...(item.prompt != null ? { prompt: item.videoDesc } : {}),
+    ...(item.id != null ? { id: item.id } : {}),
+    index: item.index,
+   };
+
+   if (storyboardTrackRecord[trackId]) {
+    storyboardTrackRecord[trackId].push(mediaItem);
+    return;
+   }
+
+   storyboardTrackRecord[trackId] = [mediaItem];
+  });
+
+  const otherDataMap: Record<number, Array<any>> = {};
+  if (isRef && storyboardList.length > 0) {
+   const storyIds = storyboardList.map((storyboard) => storyboard.id).filter((id): id is number => id != null);
+   const assetDatas = await db("o_assets2Storyboard")
+    .leftJoin("o_assets", "o_assets2Storyboard.assetId", "o_assets.id")
+    .leftJoin("o_image", "o_image.id", "o_assets.imageId")
+    .whereIn("o_assets2Storyboard.storyboardId", storyIds)
+    .select("o_assets.*", "o_image.filePath", "o_assets2Storyboard.storyboardId");
+
+   await Promise.all(
+    assetDatas.map(async (item) => {
+     const assetItem = {
+      id: item.id,
+      name: item.name,
+      describe: item.describe,
+      type: item.type,
+      fileType: "image" as const,
+      sources: "assets",
+      src: item.filePath ? await u.oss.getFileUrl(item.filePath) : "",
+     };
+
+     const storyboardId = item.storyboardId as number;
+     if (!otherDataMap[storyboardId]) {
+      otherDataMap[storyboardId] = [];
+     }
+     otherDataMap[storyboardId].push(assetItem);
+    }),
+   );
+  }
+
+  const trackData = await db("o_videoTrack").where({ projectId, scriptId });
+  const trackIds = trackData.map((track) => track.id).filter((id): id is number => id != null);
+  const videoList = trackIds.length > 0 ? await db("o_video").whereIn("videoTrackId", trackIds) : [];
+  const trackList: TrackItem[] = [];
+  const trackIdMap = [...new Set(trackIds)];
+
+  for (const trackId of trackIdMap) {
+   const item = trackData.find((track) => track.id === trackId);
+   trackList.push({
+    id: trackId,
+    duration: item?.duration ?? 0,
+    prompt: item?.prompt || "",
+    state: (item?.state as "未生成" | "生成中" | "已完成" | "生成失败") ?? "未生成",
+    reason: item?.reason ?? "",
+    selectVideoId: item?.selectVideoId ?? null,
+    medias: (() => {
+     const storyboardMedias = storyboardTrackRecord[trackId] ?? [];
+     const assetMedias = storyboardMedias.flatMap((storyboard) => otherDataMap[storyboard.id] ?? []);
+     const seenAssetIds = new Set();
+     const uniqueAssets = assetMedias.filter((asset) => {
+      if (seenAssetIds.has(asset.id)) return false;
+      seenAssetIds.add(asset.id);
+      return true;
+     });
+
+     const hasImageAssetData = uniqueAssets.filter((asset) => asset.src);
+     const notHasImageAssetData = uniqueAssets.filter((asset) => !asset.src);
+     return [...hasImageAssetData, ...storyboardMedias, ...notHasImageAssetData];
+    })(),
+    videoList: await Promise.all(
+     videoList
+      .filter((video) => video.videoTrackId === trackId)
+      .map(async (video) => ({
+       id: video.id!,
+       src: video.filePath ? await u.oss.getFileUrl(video.filePath) : "",
+       state:
+        video.state === "已完成"
+         ? "已完成"
+         : video.state === "生成中"
+           ? "生成中"
+           : video.state === "生成失败"
+             ? "生成失败"
+             : "未生成",
+      })),
+    ),
+   });
+  }
+
+  res.status(200).send(
+   success({
+    storyboardList: await Promise.all(
+     storyboardList.map(async (storyboard) => ({
+      ...storyboard,
+      src: storyboard.filePath,
+     })),
+    ),
+    trackList,
+   }),
+  );
+ },
 );
+
+export default router;

@@ -173,12 +173,12 @@ Toonflow — это мощный ИИ-инструмент для создани
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# Локальная сборка и запуск с помощью docker-compose
-yarn docker:local
-
-# Или ручная сборка
+# В репозитории сейчас нет docker-compose.yml, поэтому используйте ручную сборку и запуск
 docker build -t toonflow .
 docker run -d -p <локальный_порт>:10588 -v <путь_к_локальным_данным>:/app/data toonflow
+
+# Текущий Docker-образ собирает backend-артефакты во время сборки и по умолчанию запускает backend-сервис в production-режиме
+# Docker-путь не включает Electron desktop client
 
 # После этого интерфейс будет доступен по пути /web/index.html на указанном порту
 # Пример: http://localhost:10588/web/index.html
@@ -205,7 +205,7 @@ docker run -d -p <локальный_порт>:10588 -v <путь_к_локал�
 ### I. Требования к серверу
 
 - **Операционная система**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: 24.x (рекомендуется, минимум 23.11.1+)
+- **Node.js**: 20+ (`20 LTS` рекомендуется, чтобы совпадать с локальной инженерной базой)
 - **ОЗУ**: 2 ГБ и более
 
 ### II. Развертывание
@@ -216,9 +216,10 @@ docker run -d -p <локальный_порт>:10588 -v <путь_к_локал�
 # Установка Node.js
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
-nvm install 24
-# Установка Yarn и PM2
-npm install -g yarn pm2
+nvm install 20
+# Включение Corepack и установка PM2
+corepack enable
+npm install -g pm2
 ```
 
 #### 2. Загрузка и сборка проекта
@@ -229,8 +230,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 **Клонирование с Gitee (рекомендуется для Китая):**
@@ -239,8 +240,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 #### 3. Настройка PM2
@@ -317,7 +318,7 @@ pm2 monit             # Панель мониторинга
 
 | Категория              | Технология |
 |------------------------|-----------------------------------------------------------------------------------------|
-| Runtime                | Node.js 23.11.1+ |
+| Runtime                | Node.js 20+ (для локальной разработки рекомендуется 20 LTS) |
 | Язык                   | TypeScript 5.x |
 | Backend-фреймворк      | Express 5 |
 | База данных            | SQLite (better-sqlite3 / knex) |
@@ -330,8 +331,10 @@ pm2 monit             # Панель мониторинга
 
 ## Подготовка среды разработки
 
-- **Node.js**: версия 23.11.1 и выше
-- **Yarn**: рекомендуется использовать в качестве пакетного менеджера
+- **Node.js**: для локальной разработки рекомендуется `20 LTS`
+- **Yarn**: `1.x Classic`
+- **Первичная установка зависимостей**: выполните `corepack yarn install`
+- **Команды по умолчанию после установки**: используйте `node scripts/runLocalYarn.cjs <command>`
 
 ## Быстрый запуск проекта
 
@@ -356,8 +359,10 @@ pm2 monit             # Панель мониторинга
    Выполните следующую команду в корневой папке проекта:
 
    ```bash
-   yarn install
+   corepack yarn install
    ```
+
+   > `scripts/runLocalYarn.cjs` зависит от локально установленного `node_modules/yarn/bin/yarn.js`, поэтому первая установка зависимостей должна пройти через `corepack yarn install`. После этого рекомендуемый путь — `node scripts/runLocalYarn.cjs ...`, чтобы не получать `url.parse()` deprecation warning от Yarn 1, встроенного в Corepack.
 
 3. **Запуск среды разработки**
 
@@ -366,7 +371,7 @@ pm2 monit             # Панель мониторинга
    - **Способ 1: Запуск только Backend**
 
      ```bash
-     yarn dev
+     node scripts/runLocalYarn.cjs dev
      ```
 
     > ⚠️ Эта команда запускает **только Backend API** (порт 10588) **без интерфейса Frontend**.  
@@ -376,7 +381,7 @@ pm2 monit             # Панель мониторинга
    - **Способ 2: Запуск клиента Electron (GUI)**
 
      ```bash
-     yarn dev:gui
+     node scripts/runLocalYarn.cjs dev:gui
      ```
 
     > Эта команда одновременно запускает Backend и десктопное приложение Electron со встроенным Frontend.  
@@ -386,35 +391,35 @@ pm2 monit             # Панель мониторинга
    - **Способ 3: Запуск в режиме Production**
 
      ```bash
-     yarn start
+     node scripts/runLocalYarn.cjs start
      ```
 
-     > Запуск скомпилированного сервиса в режиме Production (сначала необходимо выполнить `yarn build`).
+     > Запуск скомпилированного сервиса в режиме Production (сначала необходимо выполнить `node scripts/runLocalYarn.cjs build`).
 
 4. **Сборка проекта (Build & Package)**
 
    - Компиляция и генерация TypeScript:
 
      ```bash
-     yarn build
+     node scripts/runLocalYarn.cjs build
      ```
 
    - Сборка исполняемого файла для Windows:
 
      ```bash
-     yarn dist:win
+     node scripts/runLocalYarn.cjs dist:win
      ```
 
    - Сборка исполняемого файла для Mac:
 
      ```bash
-     yarn dist:mac
+     node scripts/runLocalYarn.cjs dist:mac
      ```
 
    - Сборка исполняемого файла для Linux:
 
      ```bash
-     yarn dist:linux
+     node scripts/runLocalYarn.cjs dist:linux
      ```
 
 5. **Проверка качества кода (Linting)**
@@ -422,7 +427,7 @@ pm2 monit             # Панель мониторинга
    - Запуск глобальной проверки синтаксиса:
 
      ```bash
-     yarn lint
+     node scripts/runLocalYarn.cjs lint
      ```
 
 6. **Панель отладки AI (Опционально)**
@@ -430,7 +435,7 @@ pm2 monit             # Панель мониторинга
    Запуск визуального инструмента отладки AI SDK:
 
    ```bash
-   yarn debug:ai
+   node scripts/runLocalYarn.cjs debug:ai
    ```
 
 ## Разработка Frontend
@@ -441,6 +446,14 @@ pm2 monit             # Панель мониторинга
 - **Gitee**: [Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
 
 После сборки (build) фронтенда скопируйте всю папку `dist` в директорию `data/web` этого проекта для интеграции.
+
+## Инженерная базовая линия и backend-доработка
+
+Если вы хотите сначала выстроить безопасную локальную инженерную базу, а уже потом переходить к backend-доработке, начните с [ENGINEERING_BASELINE.md](./ENGINEERING_BASELINE.md).
+
+Если нужен только самый короткий вход для передачи проекта, сначала откройте [HANDOFF_QUICK_REF.md](./HANDOFF_QUICK_REF.md).
+
+Оба документа сейчас поддерживаются на упрощённом китайском языке.
 
 ## Структура проекта
 

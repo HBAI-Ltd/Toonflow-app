@@ -1,11 +1,11 @@
 import express from "express";
-import u from "@/utils";
-import { success, error } from "@/lib/responseFormat";
+import db from "@/utils/db";
+import { success } from "@/lib/responseFormat";
 
 const router = express.Router();
 
 export default router.post("/", async (req, res) => {
-  const list = await u.db("o_prompt").select("*");
+  const list = await db("o_prompt").select("*");
   const data = await Promise.all(
     list.map(async (item) => {
       return {

@@ -170,12 +170,12 @@ Toonflow เป็นเครื่องมือ AI สำหรับสร�
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
 
-# ใช้ docker-compose ในการ Build และรันบนเครื่อง
-yarn docker:local
-
-# หรือทำการ Build แบบแมนนวล
+# ขณะนี้ repository นี้ยังไม่มี docker-compose.yml ดังนั้นให้ build และ run แบบ manual โดยตรง
 docker build -t toonflow .
 docker run -d -p <พอร์ตบนเครื่อง>:10588 -v <พาธข้อมูลบนเครื่อง>:/app/data toonflow
+
+# ปัจจุบัน Docker image จะ build backend artifacts ระหว่างขั้นตอน build และเริ่ม backend service โหมด production ภายใน container เป็นค่าเริ่มต้น
+# เส้นทาง Docker นี้ไม่รวม Electron desktop client
 
 # จากนั้นสามารถเข้าถึงหน้าเว็บผ่านพอร์ตที่ระบุ ที่พาธ /web/index.html
 # ตัวอย่าง: http://localhost:10588/web/index.html
@@ -202,7 +202,7 @@ docker run -d -p <พอร์ตบนเครื่อง>:10588 -v <พา�
 ### 1. ข้อกำหนดสภาพแวดล้อมเซิร์ฟเวอร์
 
 - **ระบบปฏิบัติการ**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: 24.x (แนะนำ, ขั้นต่ำ 23.11.1+)
+- **Node.js**: 20+ (แนะนำ `20 LTS` ให้สอดคล้องกับ engineering baseline บนเครื่อง)
 - **RAM**: 2GB+
 
 ### 2. การติดตั้งบนเซิร์ฟเวอร์
@@ -213,9 +213,10 @@ docker run -d -p <พอร์ตบนเครื่อง>:10588 -v <พา�
 # ติดตั้ง Node.js
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
-nvm install 24
-# ติดตั้ง Yarn และ PM2
-npm install -g yarn pm2
+nvm install 20
+# เปิดใช้ Corepack และติดตั้ง PM2
+corepack enable
+npm install -g pm2
 ```
 
 #### 2. ดึงโค้ดโปรเจกต์
@@ -226,8 +227,8 @@ npm install -g yarn pm2
 cd /opt
 git clone https://github.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 **โคลนจาก Gitee (แนะนำสำหรับประเทศจีน):**
@@ -236,8 +237,8 @@ yarn build
 cd /opt
 git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
 cd Toonflow-app
-yarn install
-yarn build
+corepack yarn install
+node scripts/runLocalYarn.cjs build
 ```
 
 #### 3. ตั้งค่า PM2
@@ -315,7 +316,7 @@ pm2 monit             # เปิดหน้าต่าง Monitoring
 
 | ประเภท     | เทคโนโลยี                                                                                 |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| Runtime    | Node.js 23.11.1+                                                                          |
+| Runtime    | Node.js 20+ (แนะนำ 20 LTS สำหรับการพัฒนาในเครื่อง)                                      |
 | Language   | TypeScript 5.x                                                                            |
 | Backend    | Express 5                                                                                 |
 | Database   | SQLite (better-sqlite3 / knex)                                                            |
@@ -328,8 +329,10 @@ pm2 monit             # เปิดหน้าต่าง Monitoring
 
 ## การเตรียมสภาพแวดล้อมการพัฒนา
 
-- **Node.js**: ต้องใช้เวอร์ชัน 23.11.1 ขึ้นไป
-- **Yarn**: แนะนำให้ใช้เป็น Package Manager
+- **Node.js**: แนะนำ `20 LTS` สำหรับการพัฒนาในเครื่อง
+- **Yarn**: `1.x Classic`
+- **การติดตั้ง dependencies ครั้งแรก**: ใช้ `corepack yarn install`
+- **คำสั่งหลักหลังติดตั้งเสร็จ**: ใช้ `node scripts/runLocalYarn.cjs <command>`
 
 ## การเริ่มโปรเจกต์อย่างรวดเร็ว
 
@@ -354,8 +357,10 @@ pm2 monit             # เปิดหน้าต่าง Monitoring
    ให้รันคำสั่งด้านล่างนี้ใน root ของโปรเจกต์เพื่อติดตั้ง Dependencies:
 
    ```bash
-   yarn install
+   corepack yarn install
    ```
+
+   > `scripts/runLocalYarn.cjs` ต้องอาศัย `node_modules/yarn/bin/yarn.js` ที่ติดตั้งไว้ในโปรเจกต์ก่อน ดังนั้นการติดตั้งครั้งแรกต้องใช้ `corepack yarn install` ก่อน หลังจากนั้นแนะนำให้ใช้ `node scripts/runLocalYarn.cjs ...` เพื่อหลีกเลี่ยง `url.parse()` deprecation warning จาก Yarn 1 ที่มากับ Corepack
 
 3. **เริ่มใช้งานในโหมด Development**
 
@@ -364,7 +369,7 @@ pm2 monit             # เปิดหน้าต่าง Monitoring
    - **วิธีที่ 1: รันเฉพาะ Backend อย่างเดียว**
 
      ```bash
-     yarn dev
+     node scripts/runLocalYarn.cjs dev
      ```
 
     > ⚠️ คำสั่งนี้จะรัน **เฉพาะ Backend API** (พอร์ต 10588) **โดยไม่มีหน้า Frontend**  
@@ -374,7 +379,7 @@ pm2 monit             # เปิดหน้าต่าง Monitoring
    - **วิธีที่ 2: รัน Electron Desktop Client**
 
      ```bash
-     yarn dev:gui
+     node scripts/runLocalYarn.cjs dev:gui
      ```
 
     > คำสั่งนี้จะรันทั้ง Backend และหน้าต่าง Electron Desktop พร้อมกัน โดยมี Frontend ฝังมาในตัว  
@@ -384,35 +389,35 @@ pm2 monit             # เปิดหน้าต่าง Monitoring
    - **วิธีที่ 3: รันโหมด Production**
 
      ```bash
-     yarn start
+     node scripts/runLocalYarn.cjs start
      ```
 
-     > รันโปรแกรมในโหมด Production ทันทีหลังจากที่คอมไพล์เสร็จ (ต้องรัน `yarn build` ก่อน)
+     > รันโปรแกรมในโหมด Production ทันทีหลังจากที่คอมไพล์เสร็จ (ต้องรัน `node scripts/runLocalYarn.cjs build` ก่อน)
 
 4. **การแพ็คโปรเจกต์ (Build/Dist)**
 
    - คอมไพล์และสร้างไฟล์ TypeScript:
 
      ```bash
-     yarn build
+     node scripts/runLocalYarn.cjs build
      ```
 
    - แพ็คโปรเจกต์เป็นไฟล์รัน (Executable) สำหรับ Windows:
 
      ```bash
-     yarn dist:win
+     node scripts/runLocalYarn.cjs dist:win
      ```
 
    - แพ็คโปรเจกต์สำหรับ macOS:
 
      ```bash
-     yarn dist:mac
+     node scripts/runLocalYarn.cjs dist:mac
      ```
 
    - แพ็คโปรเจกต์สำหรับ Linux:
 
      ```bash
-     yarn dist:linux
+     node scripts/runLocalYarn.cjs dist:linux
      ```
 
 5. **ตรวจสอบคุณภาพโค้ด (Lint)**
@@ -420,7 +425,7 @@ pm2 monit             # เปิดหน้าต่าง Monitoring
    - ทำการตรวจสอบไวยากรณ์และข้อกำหนดโค้ด (Linting) ทั้งหมด:
 
      ```bash
-     yarn lint
+     node scripts/runLocalYarn.cjs lint
      ```
 
 6. **แผงควบคุมดีบัก AI (ตัวเลือก)**
@@ -428,7 +433,7 @@ pm2 monit             # เปิดหน้าต่าง Monitoring
    เปิดใช้งานเครื่องมือดีบักแบบ Visual ของ AI SDK เพื่อความสะดวกในการดีบักการเรียกใช้ AI:
 
    ```bash
-   yarn debug:ai
+   node scripts/runLocalYarn.cjs debug:ai
    ```
 
 ## การพัฒนาฟรอนต์เอนด์ (Frontend)
@@ -439,6 +444,14 @@ pm2 monit             # เปิดหน้าต่าง Monitoring
 - **Gitee**: [Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
 
 หลังจาก Build ฟรอนต์เอนด์เสร็จสิ้นแล้ว ให้คัดลอกโฟลเดอร์ `dist` ทั้งหมดไปวางในโฟลเดอร์ `data/web` ของโปรเจกต์นี้เพื่อทำการรวมเข้ากับระบบ
+
+## Engineering Baseline และการต่อยอด Backend
+
+หากต้องการตั้ง engineering baseline ในเครื่องให้ปลอดภัยก่อนเริ่มแก้ backend ให้เริ่มจาก [ENGINEERING_BASELINE.md](./ENGINEERING_BASELINE.md)
+
+หากต้องการเพียงจุดเริ่มต้นแบบสั้นที่สุดสำหรับการรับช่วงงาน ให้ดู [HANDOFF_QUICK_REF.md](./HANDOFF_QUICK_REF.md) ก่อน
+
+เอกสารทั้งสองฉบับปัจจุบันดูแลเป็นภาษาจีนตัวย่อ
 
 ## โครงสร้างโปรเจกต์
 
