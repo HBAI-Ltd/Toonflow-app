@@ -9,7 +9,7 @@
 
 ## 1. 推荐环境
 
-- Node：`20 LTS`
+- Node：`24 LTS`（完整仓库安装/构建默认基线）
 - Yarn：`1.x Classic`
 - 首次安装依赖使用 `corepack yarn install`
 - 安装完成后，默认通过 `node scripts/runLocalYarn.cjs` 执行

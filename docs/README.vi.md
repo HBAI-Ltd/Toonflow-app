@@ -194,7 +194,7 @@ docker run -d -p <Port trên máy>:10588 -v <Đường dẫn dữ liệu trên m
 ### 1. Yêu cầu Môi trường Máy chủ
 
 - **Hệ điều hành**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: 20+ (khuyến nghị `20 LTS` để khớp với engineering baseline trên máy local)
+- **Node.js**: 24.x (khuyến nghị `24 LTS` cho baseline cài đặt và build đầy đủ của repo)
 - **RAM**: 2GB+
 
 ### 2. Triển khai Máy chủ
@@ -306,7 +306,7 @@ Nếu bạn cần triển khai riêng hoặc tùy chỉnh giao diện Frontend, 
 
 | Phân loại | Công nghệ |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| Môi trường | Node.js 20+ (khuyến nghị 20 LTS cho phát triển cục bộ)                                   |
+| Môi trường | Node.js 24.x (khuyến nghị 24 LTS cho phát triển cục bộ)                                  |
 | Ngôn ngữ   | TypeScript 5.x                                                                            |
 | Backend    | Express 5                                                                                 |
 | Cơ sở dữ liệu | SQLite (better-sqlite3 / knex)                                                            |
@@ -319,7 +319,7 @@ Nếu bạn cần triển khai riêng hoặc tùy chỉnh giao diện Frontend, 
 
 ## Chuẩn bị Môi trường Phát triển
 
-- **Node.js**: Khuyến nghị `20 LTS` cho phát triển cục bộ
+- **Node.js**: Khuyến nghị `24 LTS` cho phát triển cục bộ
 - **Yarn**: `1.x Classic`
 - **Cài dependencies lần đầu**: chạy `corepack yarn install`
 - **Lệnh mặc định sau khi cài xong**: chạy `node scripts/runLocalYarn.cjs <command>`

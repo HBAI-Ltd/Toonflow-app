@@ -212,7 +212,7 @@ docker run -d -p <本地端口>:10588 -v <本地数据路径>:/app/data toonflow
 ### 一、服务器环境要求
 
 - **系统**：Ubuntu 20.04+ / CentOS 7+
-- **Node.js**：20+（推荐 20 LTS，与本地工程基线一致）
+- **Node.js**：24.x（推荐 24 LTS，作为完整仓库安装与构建基线）
 - **内存**：2GB+
 
 ### 二、服务器部署
@@ -324,7 +324,7 @@ pm2 monit             # 监控面板
 
 | 类别       | 技术                                                                                      |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| 运行时     | Node.js 20+（本地开发推荐 20 LTS）                                                        |
+| 运行时     | Node.js 24.x（本地开发推荐 24 LTS）                                                       |
 | 语言       | TypeScript 5.x                                                                            |
 | 后端框架   | Express 5                                                                                 |
 | 数据库     | SQLite（better-sqlite3 / knex）                                                           |
@@ -337,7 +337,7 @@ pm2 monit             # 监控面板
 
 ## 开发环境准备
 
-- **Node.js**：推荐 `20 LTS`
+- **Node.js**：推荐 `24 LTS`
 - **Yarn**：`1.x Classic`
 - **首次安装依赖**：执行 `corepack yarn install`
 - **后续默认命令**：执行 `node scripts/runLocalYarn.cjs <command>`

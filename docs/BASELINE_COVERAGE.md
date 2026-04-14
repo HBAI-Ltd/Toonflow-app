@@ -27,7 +27,7 @@
 补充说明：
 
 - `test:dockerfile` 当前钉住的容器基线包括：`Node 20` 基础镜像、`corepack enable`、镜像构建期执行后端 build、`NODE_ENV=prod`，以及容器默认启动 `data/serve/app.js`
-- `test:workflows` 当前钉住的 CI 基线包括：`.github/workflows/docker-smoke.yml` 存在且会执行 `verify:baseline + docker build`，以及 `debug.yml` / `release.yml` 都统一使用 `Node 20 + Corepack`
+- `test:workflows` 当前钉住的 CI 基线包括：`.github/workflows/docker-smoke.yml` 存在且会执行 `verify:baseline + docker build`，以及 `debug.yml` / `release.yml` 都统一使用 `Node 24 + Corepack`
 - 它不能替代真实 `docker build`；真实镜像构建仍需在安装了 Docker CLI 的机器上单独执行
 
 ## 已纳入源码 smoke

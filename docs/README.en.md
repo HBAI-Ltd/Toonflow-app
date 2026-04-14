@@ -205,7 +205,7 @@ docker run -d -p <Local_Port>:10588 -v <Local_Data_Path>:/app/data toonflow
 ### 1. Server Requirements
 
 - **OS**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: 20+ (`20 LTS` recommended to match the local engineering baseline)
+- **Node.js**: 24.x (`24 LTS` recommended for full repository install/build)
 - **Memory**: 2GB+
 
 ### 2. Server Deployment
@@ -320,7 +320,7 @@ If you're interested in joining, please contact the project maintainer (ACT) in 
 
 | Category   | Technology                                                                                |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| Runtime    | Node.js 20+ (20 LTS recommended for local development)                                    |
+| Runtime    | Node.js 24.x (24 LTS recommended for local development)                                   |
 | Language   | TypeScript 5.x                                                                            |
 | Backend    | Express 5                                                                                 |
 | Database   | SQLite (better-sqlite3 / knex)                                                            |
@@ -333,7 +333,7 @@ If you're interested in joining, please contact the project maintainer (ACT) in 
 
 ## Development Environment Prep
 
-- **Node.js**: `20 LTS` recommended for local development
+- **Node.js**: `24 LTS` recommended for local development
 - **Yarn**: `1.x Classic`
 - **First dependency install**: run `corepack yarn install`
 - **Default commands after install**: run `node scripts/runLocalYarn.cjs <command>`

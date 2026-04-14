@@ -36,7 +36,7 @@ node scripts/runLocalYarn.cjs verify:baseline
 
 ## 前置准备
 
-- 推荐环境：`Node 20 LTS` + `Yarn Classic 1.x`
+- 推荐环境：`Node 24 LTS` + `Yarn Classic 1.x`
 - 工作目录：仓库根目录 `Toonflow-app`
 - 默认登录账号：`admin / admin123`
 - `yarn dev` 与 `yarn start` 默认监听 `10588`

@@ -9,10 +9,10 @@ test("docker smoke workflow exists", () => {
   assert.equal(fs.existsSync(workflowPath), true);
 });
 
-test("docker smoke workflow uses Node 20 on ubuntu", () => {
+test("docker smoke workflow uses Node 24 on ubuntu", () => {
   const workflow = fs.readFileSync(workflowPath, "utf8");
   assert.match(workflow, /runs-on:\s*ubuntu-latest/);
-  assert.match(workflow, /NODE_VERSION:\s*"20"/);
+  assert.match(workflow, /NODE_VERSION:\s*"24"/);
 });
 
 test("docker smoke workflow runs baseline verification", () => {

@@ -202,7 +202,7 @@ docker run -d -p <พอร์ตบนเครื่อง>:10588 -v <พา�
 ### 1. ข้อกำหนดสภาพแวดล้อมเซิร์ฟเวอร์
 
 - **ระบบปฏิบัติการ**: Ubuntu 20.04+ / CentOS 7+
-- **Node.js**: 20+ (แนะนำ `20 LTS` ให้สอดคล้องกับ engineering baseline บนเครื่อง)
+- **Node.js**: 24.x (แนะนำ `24 LTS` สำหรับ baseline การติดตั้งและ build แบบเต็มของ repo)
 - **RAM**: 2GB+
 
 ### 2. การติดตั้งบนเซิร์ฟเวอร์
@@ -316,7 +316,7 @@ pm2 monit             # เปิดหน้าต่าง Monitoring
 
 | ประเภท     | เทคโนโลยี                                                                                 |
 | ---------- | ----------------------------------------------------------------------------------------- |
-| Runtime    | Node.js 20+ (แนะนำ 20 LTS สำหรับการพัฒนาในเครื่อง)                                      |
+| Runtime    | Node.js 24.x (แนะนำ 24 LTS สำหรับการพัฒนาในเครื่อง)                                      |
 | Language   | TypeScript 5.x                                                                            |
 | Backend    | Express 5                                                                                 |
 | Database   | SQLite (better-sqlite3 / knex)                                                            |
@@ -329,7 +329,7 @@ pm2 monit             # เปิดหน้าต่าง Monitoring
 
 ## การเตรียมสภาพแวดล้อมการพัฒนา
 
-- **Node.js**: แนะนำ `20 LTS` สำหรับการพัฒนาในเครื่อง
+- **Node.js**: แนะนำ `24 LTS` สำหรับการพัฒนาในเครื่อง
 - **Yarn**: `1.x Classic`
 - **การติดตั้ง dependencies ครั้งแรก**: ใช้ `corepack yarn install`
 - **คำสั่งหลักหลังติดตั้งเสร็จ**: ใช้ `node scripts/runLocalYarn.cjs <command>`

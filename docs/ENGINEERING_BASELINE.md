@@ -4,7 +4,7 @@
 
 ## 推荐环境
 
-- Node.js: `20 LTS`
+- Node.js: `24 LTS`（完整仓库安装/构建默认基线）
 - Yarn: `1.x (Classic)`，首次安装依赖使用 `corepack yarn install`，安装完成后默认通过 `node scripts/runLocalYarn.cjs` 使用
 - 首轮健康检查顺序:
   - `corepack yarn install`
@@ -15,11 +15,14 @@
 
 说明:
 
-- 当前仓库的 Electron、TypeScript 和原生依赖，以 Node 20 作为团队统一开发基线更稳妥。
+- 当前仓库的完整依赖安装链以 Node 24 更稳妥；远端 CI 已验证 `Node 20` 下会被 `@electron/rebuild@4.x` 的 engine 约束拦住。
 - `yarn test` 会在临时数据目录中启动源码服务，并跳过 embedding 初始化，只用于 API smoke。
+- `yarn test:dockerfile` 只验证 `Dockerfile` 的配置基线，不依赖本机已安装 Docker。
+- `yarn test:workflows` 只验证 GitHub Actions workflow 配置基线，不依赖本机真实触发远端 CI。
 - `yarn test:built` 会验证构建产物 `data/serve/app.js`，用于兜住“源码可跑但打包产物回归”的问题。
 - 首次依赖安装后，默认建议直接执行 `node scripts/runLocalYarn.cjs <command>`，仓库已固定本地 `yarn@1.22.22`
 - 如仍使用 `corepack yarn <command>`，可能看到 `url.parse()` deprecation warning；该 warning 来自 Corepack 自带 Yarn 1，而不是仓库代码
+- Docker 运行时镜像单独固定为 `Node 20`，因为镜像安装前会剥离 Electron 构建依赖，只保留后端运行态所需部分。
 
 ## 命令分工
 
