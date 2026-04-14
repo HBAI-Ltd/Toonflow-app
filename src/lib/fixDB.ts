@@ -4,6 +4,8 @@ import fs from "fs";
 import { Knex } from "knex";
 import db from "@/utils/db";
 import { transform } from "sucrase";
+import getPath from "@/utils/getPath";
+import vm from "@/utils/vm";
 import rawVendorData from "./vendor.json";
 
 const vendorData = rawVendorData as Record<string, string>;
@@ -111,7 +113,7 @@ export default async (knex: Knex): Promise<void> => {
   for (const item of data) {
     let { id, code } = item;
     const filename = `${id}.ts`;
-    const rootDir = u.getPath("vendor");
+    const rootDir = getPath("vendor");
     if (!code && fs.existsSync(path.join(rootDir, filename))) continue;
     if (!fs.existsSync(rootDir)) fs.mkdirSync(rootDir, { recursive: true });
     if (!fs.existsSync(path.join(rootDir, filename))) {
@@ -148,11 +150,11 @@ export default async (knex: Knex): Promise<void> => {
 
 async function tempOnsert(tsCode: string) {
   const jsCode = transform(tsCode, { transforms: ["typescript"] }).code;
-  const exports = u.vm(jsCode);
+  const exports = vm(jsCode);
   const vendor = exports.vendor;
-  const data = await u.db("o_vendorConfig").where("id", vendor.id).first();
+  const data = await db("o_vendorConfig").where("id", vendor.id).first();
   if (data) return;
-  await u.db("o_vendorConfig").insert({
+  await db("o_vendorConfig").insert({
     id: vendor.id,
     inputValues: JSON.stringify(vendor.inputValues ?? {}),
     models: JSON.stringify([]),

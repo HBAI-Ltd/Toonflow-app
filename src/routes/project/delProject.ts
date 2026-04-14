@@ -14,13 +14,14 @@ export default router.post(
   }),
   async (req, res) => {
     const { id } = req.body;
+    const hasTable = async (tableName: string) => db.schema.hasTable(tableName);
 
     await db("o_project").where("id", id).delete();
     await db("o_agentWorkData").where("projectId", id).delete();
 
     const novelData = await db("o_novel").where("projectId", id).select("id");
     const novelIds = novelData.map((item: any) => item.id);
-    if (novelIds.length > 0) {
+    if (novelIds.length > 0 && (await hasTable("o_outlineNovel"))) {
       await db("o_outlineNovel").whereIn("novelId", novelIds).delete();
     }
     await db("o_novel").where("projectId", id).delete();
@@ -32,7 +33,9 @@ export default router.post(
     }
     await db("o_script").where("projectId", id).delete();
 
-    await db("o_outline").where("projectId", id).delete();
+    if (await hasTable("o_outline")) {
+      await db("o_outline").where("projectId", id).delete();
+    }
     await db("o_tasks").where("projectId", id).delete();
 
     const storyboardData = await db("o_storyboard").where("projectId", id).select("id");

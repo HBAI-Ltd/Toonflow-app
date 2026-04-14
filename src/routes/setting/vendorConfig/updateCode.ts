@@ -99,6 +99,7 @@ export default router.post(
       await db("o_vendorConfig")
         .where("id", id)
         .update({
+          inputValues: JSON.stringify(vendor.inputValues ?? {}),
           models: JSON.stringify(vendor.models ?? []),
         });
       vendorUtils.writeCode(id, tsCode);
