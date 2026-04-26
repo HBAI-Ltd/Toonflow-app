@@ -110,11 +110,11 @@ declare const exports: {
 // ============================================================
 const vendor: VendorConfig = {
   id: "jimeng-cli",
-  version: "1.0",
+  version: "2.0",
   author: "gog5-ops",
   name: "即梦 CLI (官方)",
   description:
-    "通过自部署 jimeng-cli-api wrapper 调用即梦官方 dreamina CLI，OAuth Device Flow 登录，合规，不会风控封号。仅文生图，不需要 API key（容器内 OAuth 持久化）。",
+    "通过自部署 jimeng-cli-api wrapper 调用即梦官方 dreamina CLI，OAuth Device Flow 登录，合规，不会风控封号。支持文生图 + 视频（image2video / multimodal2video / multiframe2video / frames2video）。不需要 API key（容器内 OAuth 持久化）。",
   icon: "",
   inputs: [
     { key: "baseUrl", label: "baseURL（含 /v1）", type: "url", required: true, placeholder: "http://jimeng-cli-api:8000/v1" },
@@ -123,10 +123,53 @@ const vendor: VendorConfig = {
     baseUrl: "http://jimeng-cli-api:8000/v1",
   },
   models: [
+    // 文生图 (text2image) — opshub#92
     { name: "即梦 3.0 (1k)", modelName: "jimeng-3.0", type: "image", mode: ["text"] },
     { name: "即梦 4.0 (2k)", modelName: "jimeng-4.0", type: "image", mode: ["text"] },
     { name: "即梦 4.6 (2k)", modelName: "jimeng-4.6", type: "image", mode: ["text"] },
     { name: "即梦 5.0 (2k)", modelName: "jimeng-5.0", type: "image", mode: ["text"] },
+
+    // 视频 — opshub#94 — 模型 ID 跟 wrapper /v1/videos model 字段一一对应
+    {
+      name: "即梦 image2video 3.0 (单图)",
+      modelName: "dreamina-image2video-3.0",
+      type: "video",
+      mode: ["singleImage"],
+      audio: false,
+      durationResolutionMap: [{ duration: [3, 4, 5, 6, 7, 8, 9, 10], resolution: ["720p", "1080p"] }],
+    },
+    {
+      name: "即梦 image2video Seedance 2.0 Fast (单图)",
+      modelName: "dreamina-image2video-seedance2.0fast",
+      type: "video",
+      mode: ["singleImage"],
+      audio: false,
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
+    {
+      name: "即梦 frames2video Seedance 2.0 Fast (首尾帧)",
+      modelName: "dreamina-frames2video-seedance2.0fast",
+      type: "video",
+      mode: ["startEndRequired"],
+      audio: false,
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
+    {
+      name: "即梦 multimodal2video Seedance 2.0 Fast (全能参考)",
+      modelName: "dreamina-multimodal2video-seedance2.0fast",
+      type: "video",
+      mode: ["singleImage", ["imageReference:9", "videoReference:3", "audioReference:3"]],
+      audio: "optional",
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
+    {
+      name: "即梦 multiframe2video (多图叙事)",
+      modelName: "dreamina-multiframe2video",
+      type: "video",
+      mode: [["imageReference:20"]],
+      audio: false,
+      durationResolutionMap: [{ duration: [2, 3, 4, 5, 6, 7, 8, 9, 10], resolution: ["720p"] }],
+    },
   ],
 };
 
@@ -179,13 +222,92 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
   return `data:image/png;base64,${b64}`;
 };
 
-const videoRequest = async (_config: VideoConfig, _model: VideoModel): Promise<string> => {
-  throw new Error("即梦 CLI image MVP 不支持视频；视频走单独 issue");
+// 把 toonflow VideoConfig 翻译成 wrapper /v1/videos request body。
+function buildVideoBody(config: VideoConfig, modelName: string): Record<string, any> {
+  // 收集多 input：v2 referenceList 优先（按 type 分组），fallback 到 imageBase64
+  const refList: any[] = (config as any).referenceList ?? [];
+  const imageRefs: string[] = refList.filter((r) => r?.type === "image").map((r) => r.base64);
+  const videoRefs: string[] = refList.filter((r) => r?.type === "video").map((r) => r.base64);
+  const audioRefs: string[] = refList.filter((r) => r?.type === "audio").map((r) => r.base64);
+  const fallbackImages: string[] = (config as any).imageBase64 ?? [];
+  const allImages = imageRefs.length ? imageRefs : fallbackImages;
+
+  const body: Record<string, any> = {
+    model: modelName,
+    prompt: config.prompt,
+    duration: config.duration,
+    resolution: config.resolution,
+  };
+
+  if (modelName.startsWith("dreamina-image2video-")) {
+    if (allImages.length < 1) throw new Error("image2video 需要 1 张参考图");
+    body.image = allImages[0];
+  } else if (modelName.startsWith("dreamina-frames2video-")) {
+    if (allImages.length < 2) throw new Error("frames2video 需要首尾两张图");
+    body.first = allImages[0];
+    body.last = allImages[1];
+  } else if (modelName === "dreamina-multiframe2video") {
+    if (allImages.length < 2) throw new Error("multiframe2video 需要至少 2 张图（最多 20）");
+    body.images = allImages;
+  } else if (modelName.startsWith("dreamina-multimodal2video-")) {
+    body.images = allImages;
+    if (videoRefs.length) body.videos = videoRefs;
+    if (audioRefs.length) body.audios = audioRefs;
+    body.size = pickOpenAISize("1K", config.aspectRatio); // multimodal 用 size→ratio
+  } else {
+    throw new Error(`未知视频模型: ${modelName}`);
+  }
+  return body;
+}
+
+const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<string> => {
+  const baseUrl = vendor.inputValues.baseUrl;
+  const body = buildVideoBody(config, model.modelName);
+
+  logger(`[videoRequest] jimeng-cli ${model.modelName} duration=${config.duration} resolution=${config.resolution}`);
+
+  const submitResp = await fetch(`${baseUrl}/videos`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!submitResp.ok) {
+    const errorText = await submitResp.text();
+    throw new Error(`视频提交失败 ${submitResp.status}: ${errorText}`);
+  }
+  const submit = await submitResp.json();
+  const taskId = submit.id;
+  if (!taskId) throw new Error("视频提交响应缺少 id");
+  logger(`[videoRequest] submitted taskId=${taskId}`);
+
+  const result = await pollTask(
+    async () => {
+      const resp = await fetch(`${baseUrl}/videos/${taskId}`, { method: "GET" });
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        return { completed: true, error: `视频查询失败 ${resp.status}: ${errorText}` };
+      }
+      const data = await resp.json();
+      if (data.status === "completed") {
+        return { completed: true, data: data.result_url };
+      }
+      if (data.status === "failed") {
+        return { completed: true, error: data.fail_reason ?? "视频生成失败" };
+      }
+      return { completed: false };
+    },
+    5000,
+    600000, // 10min timeout for video generation
+  );
+
+  if (result.error) throw new Error(result.error);
+  if (!result.data) throw new Error("视频生成完成但 wrapper 缺少 result_url");
+  return result.data; // data:video/mp4;base64,... 直接返回
 };
 
 const ttsRequest = async (_config: TTSConfig, _model: TTSModel): Promise<string> => "";
 
-const checkForUpdates = async () => ({ hasUpdate: false, latestVersion: "1.0", notice: "" });
+const checkForUpdates = async () => ({ hasUpdate: false, latestVersion: "2.0", notice: "" });
 const updateVendor = async () => "";
 
 // ============================================================
