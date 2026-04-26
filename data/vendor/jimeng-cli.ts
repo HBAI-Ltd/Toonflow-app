@@ -110,7 +110,7 @@ declare const exports: {
 // ============================================================
 const vendor: VendorConfig = {
   id: "jimeng-cli",
-  version: "2.1",
+  version: "2.2",
   author: "gog5-ops",
   name: "即梦 CLI (官方)",
   description:
@@ -168,6 +168,22 @@ const vendor: VendorConfig = {
       audio: false,
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
     },
+    {
+      name: "image2video Seedance 2.0 Fast VIP (会员 fast)",
+      modelName: "dreamina-image2video-seedance2.0fast_vip",
+      type: "video",
+      mode: ["singleImage"],
+      audio: false,
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
+    {
+      name: "image2video Seedance 2.0 VIP (会员高质量)",
+      modelName: "dreamina-image2video-seedance2.0_vip",
+      type: "video",
+      mode: ["singleImage"],
+      audio: false,
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
 
     // frames2video — 首尾帧视频
     {
@@ -186,11 +202,59 @@ const vendor: VendorConfig = {
       audio: false,
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
     },
+    {
+      name: "frames2video Seedance 2.0 (hero shot 首尾帧)",
+      modelName: "dreamina-frames2video-seedance2.0",
+      type: "video",
+      mode: ["startEndRequired"],
+      audio: false,
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
+    {
+      name: "frames2video Seedance 2.0 Fast VIP",
+      modelName: "dreamina-frames2video-seedance2.0fast_vip",
+      type: "video",
+      mode: ["startEndRequired"],
+      audio: false,
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
+    {
+      name: "frames2video Seedance 2.0 VIP",
+      modelName: "dreamina-frames2video-seedance2.0_vip",
+      type: "video",
+      mode: ["startEndRequired"],
+      audio: false,
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
 
-    // multimodal2video — 旗舰全能参考
+    // multimodal2video — 旗舰全能参考（4 variants 全暴露）
     {
       name: "multimodal2video Seedance 2.0 Fast ⭐ (~25 积分, 全能参考)",
       modelName: "dreamina-multimodal2video-seedance2.0fast",
+      type: "video",
+      mode: ["singleImage", ["imageReference:9", "videoReference:3", "audioReference:3"]],
+      audio: "optional",
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
+    {
+      name: "multimodal2video Seedance 2.0 (旗舰高质量)",
+      modelName: "dreamina-multimodal2video-seedance2.0",
+      type: "video",
+      mode: ["singleImage", ["imageReference:9", "videoReference:3", "audioReference:3"]],
+      audio: "optional",
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
+    {
+      name: "multimodal2video Seedance 2.0 Fast VIP (会员 fast)",
+      modelName: "dreamina-multimodal2video-seedance2.0fast_vip",
+      type: "video",
+      mode: ["singleImage", ["imageReference:9", "videoReference:3", "audioReference:3"]],
+      audio: "optional",
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
+    {
+      name: "multimodal2video Seedance 2.0 VIP (会员旗舰)",
+      modelName: "dreamina-multimodal2video-seedance2.0_vip",
       type: "video",
       mode: ["singleImage", ["imageReference:9", "videoReference:3", "audioReference:3"]],
       audio: "optional",
@@ -343,7 +407,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
 
 const ttsRequest = async (_config: TTSConfig, _model: TTSModel): Promise<string> => "";
 
-const checkForUpdates = async () => ({ hasUpdate: false, latestVersion: "2.1", notice: "" });
+const checkForUpdates = async () => ({ hasUpdate: false, latestVersion: "2.2", notice: "" });
 const updateVendor = async () => "";
 
 // ============================================================
