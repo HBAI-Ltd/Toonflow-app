@@ -110,7 +110,7 @@ declare const exports: {
 // ============================================================
 const vendor: VendorConfig = {
   id: "jimeng-cli",
-  version: "2.2",
+  version: "2.3",
   author: "gog5-ops",
   name: "即梦 CLI (官方)",
   description:
@@ -394,10 +394,13 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       if (data.status === "failed") {
         return { completed: true, error: data.fail_reason ?? "视频生成失败" };
       }
+      // 'queued' / 'in_progress' — keep polling. Seedance 2.0 normal/fast queues
+      // can hold tens of thousands of tasks; observed ~50/min advance speed,
+      // so a single 5s job may sit queued for 20-50 min before processing.
       return { completed: false };
     },
     5000,
-    600000, // 10min timeout for video generation
+    3600000, // 60min timeout — 实测 Seedance 2.0 队列可能 50min+
   );
 
   if (result.error) throw new Error(result.error);
@@ -407,7 +410,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
 
 const ttsRequest = async (_config: TTSConfig, _model: TTSModel): Promise<string> => "";
 
-const checkForUpdates = async () => ({ hasUpdate: false, latestVersion: "2.2", notice: "" });
+const checkForUpdates = async () => ({ hasUpdate: false, latestVersion: "2.3", notice: "" });
 const updateVendor = async () => "";
 
 // ============================================================
