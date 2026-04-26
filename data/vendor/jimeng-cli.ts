@@ -110,7 +110,7 @@ declare const exports: {
 // ============================================================
 const vendor: VendorConfig = {
   id: "jimeng-cli",
-  version: "2.3",
+  version: "2.4",
   author: "gog5-ops",
   name: "即梦 CLI (官方)",
   description:
@@ -153,16 +153,16 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12], resolution: ["720p", "1080p"] }],
     },
     {
-      name: "image2video Seedance 2.0 Fast ⭐ (~10-15 积分, 720p, 4-15s)",
-      modelName: "dreamina-image2video-seedance2.0fast",
+      name: "image2video Seedance 2.0 ⭐ 推荐 (15 积分/5s, 720p, 4-15s)",
+      modelName: "dreamina-image2video-seedance2.0",
       type: "video",
       mode: ["singleImage"],
       audio: false,
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
     },
     {
-      name: "image2video Seedance 2.0 (~25 积分, 720p, 4-15s, hero shot)",
-      modelName: "dreamina-image2video-seedance2.0",
+      name: "image2video Seedance 2.0 Fast (10 积分/5s, 质量较低)",
+      modelName: "dreamina-image2video-seedance2.0fast",
       type: "video",
       mode: ["singleImage"],
       audio: false,
@@ -195,7 +195,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [3, 4, 5, 6, 7, 8, 9, 10], resolution: ["720p", "1080p"] }],
     },
     {
-      name: "frames2video Seedance 2.0 Fast ⭐ (~15 积分, 720p, 4-15s)",
+      name: "frames2video Seedance 2.0 Fast (15 积分/5s, 质量较低)",
       modelName: "dreamina-frames2video-seedance2.0fast",
       type: "video",
       mode: ["startEndRequired"],
@@ -203,7 +203,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
     },
     {
-      name: "frames2video Seedance 2.0 (hero shot 首尾帧)",
+      name: "frames2video Seedance 2.0 ⭐ 推荐 (15 积分/5s, 720p, hero shot 首尾帧)",
       modelName: "dreamina-frames2video-seedance2.0",
       type: "video",
       mode: ["startEndRequired"],
@@ -229,7 +229,7 @@ const vendor: VendorConfig = {
 
     // multimodal2video — 旗舰全能参考（4 variants 全暴露）
     {
-      name: "multimodal2video Seedance 2.0 Fast ⭐ (~25 积分, 全能参考)",
+      name: "multimodal2video Seedance 2.0 Fast (~25 积分, 全能参考, 质量较低)",
       modelName: "dreamina-multimodal2video-seedance2.0fast",
       type: "video",
       mode: ["singleImage", ["imageReference:9", "videoReference:3", "audioReference:3"]],
@@ -237,7 +237,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
     },
     {
-      name: "multimodal2video Seedance 2.0 (旗舰高质量)",
+      name: "multimodal2video Seedance 2.0 ⭐ 推荐 (旗舰高质量, 全能参考)",
       modelName: "dreamina-multimodal2video-seedance2.0",
       type: "video",
       mode: ["singleImage", ["imageReference:9", "videoReference:3", "audioReference:3"]],
@@ -410,7 +410,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
 
 const ttsRequest = async (_config: TTSConfig, _model: TTSModel): Promise<string> => "";
 
-const checkForUpdates = async () => ({ hasUpdate: false, latestVersion: "2.3", notice: "" });
+const checkForUpdates = async () => ({ hasUpdate: false, latestVersion: "2.4", notice: "" });
 const updateVendor = async () => "";
 
 // ============================================================
