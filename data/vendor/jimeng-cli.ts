@@ -110,7 +110,7 @@ declare const exports: {
 // ============================================================
 const vendor: VendorConfig = {
   id: "jimeng-cli",
-  version: "2.0",
+  version: "2.1",
   author: "gog5-ops",
   name: "即梦 CLI (官方)",
   description:
@@ -124,14 +124,20 @@ const vendor: VendorConfig = {
   },
   models: [
     // 文生图 (text2image) — opshub#92
-    { name: "即梦 3.0 (1k)", modelName: "jimeng-3.0", type: "image", mode: ["text"] },
+    // 价目参考: opshub wiki/ops/jimeng-pricing.md
+    // 4.5 是会员 0 积分通道（普通用户 2 积分），生产首选
+    { name: "即梦 3.0 (1k, 1 积分)", modelName: "jimeng-3.0", type: "image", mode: ["text"] },
     { name: "即梦 4.0 (2k)", modelName: "jimeng-4.0", type: "image", mode: ["text"] },
+    { name: "即梦 4.5 (2k, 会员 0 积分 ⭐)", modelName: "jimeng-4.5", type: "image", mode: ["text"] },
     { name: "即梦 4.6 (2k)", modelName: "jimeng-4.6", type: "image", mode: ["text"] },
     { name: "即梦 5.0 (2k)", modelName: "jimeng-5.0", type: "image", mode: ["text"] },
 
     // 视频 — opshub#94 — 模型 ID 跟 wrapper /v1/videos model 字段一一对应
+    // 价目参考: opshub wiki/ops/jimeng-pricing.md (Seedance 2.0 5s ≈ 25 积分, Fast ≈ 10-15)
+
+    // image2video — 单图生视频
     {
-      name: "即梦 image2video 3.0 (单图)",
+      name: "image2video 3.0 (~3 积分, 720p/1080p, 3-10s)",
       modelName: "dreamina-image2video-3.0",
       type: "video",
       mode: ["singleImage"],
@@ -139,7 +145,15 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [3, 4, 5, 6, 7, 8, 9, 10], resolution: ["720p", "1080p"] }],
     },
     {
-      name: "即梦 image2video Seedance 2.0 Fast (单图)",
+      name: "image2video 3.5pro (~5 积分, 720p/1080p, 4-12s)",
+      modelName: "dreamina-image2video-3.5pro",
+      type: "video",
+      mode: ["singleImage"],
+      audio: false,
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12], resolution: ["720p", "1080p"] }],
+    },
+    {
+      name: "image2video Seedance 2.0 Fast ⭐ (~10-15 积分, 720p, 4-15s)",
       modelName: "dreamina-image2video-seedance2.0fast",
       type: "video",
       mode: ["singleImage"],
@@ -147,23 +161,45 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
     },
     {
-      name: "即梦 frames2video Seedance 2.0 Fast (首尾帧)",
+      name: "image2video Seedance 2.0 (~25 积分, 720p, 4-15s, hero shot)",
+      modelName: "dreamina-image2video-seedance2.0",
+      type: "video",
+      mode: ["singleImage"],
+      audio: false,
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
+    },
+
+    // frames2video — 首尾帧视频
+    {
+      name: "frames2video 3.0 (~3 积分, 720p/1080p, 3-10s)",
+      modelName: "dreamina-frames2video-3.0",
+      type: "video",
+      mode: ["startEndRequired"],
+      audio: false,
+      durationResolutionMap: [{ duration: [3, 4, 5, 6, 7, 8, 9, 10], resolution: ["720p", "1080p"] }],
+    },
+    {
+      name: "frames2video Seedance 2.0 Fast ⭐ (~15 积分, 720p, 4-15s)",
       modelName: "dreamina-frames2video-seedance2.0fast",
       type: "video",
       mode: ["startEndRequired"],
       audio: false,
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
     },
+
+    // multimodal2video — 旗舰全能参考
     {
-      name: "即梦 multimodal2video Seedance 2.0 Fast (全能参考)",
+      name: "multimodal2video Seedance 2.0 Fast ⭐ (~25 积分, 全能参考)",
       modelName: "dreamina-multimodal2video-seedance2.0fast",
       type: "video",
       mode: ["singleImage", ["imageReference:9", "videoReference:3", "audioReference:3"]],
       audio: "optional",
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
     },
+
+    // multiframe2video — 多图叙事
     {
-      name: "即梦 multiframe2video (多图叙事)",
+      name: "multiframe2video (~10-20 积分, 多图叙事 2-20 张)",
       modelName: "dreamina-multiframe2video",
       type: "video",
       mode: [["imageReference:20"]],
@@ -307,7 +343,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
 
 const ttsRequest = async (_config: TTSConfig, _model: TTSModel): Promise<string> => "";
 
-const checkForUpdates = async () => ({ hasUpdate: false, latestVersion: "2.0", notice: "" });
+const checkForUpdates = async () => ({ hasUpdate: false, latestVersion: "2.1", notice: "" });
 const updateVendor = async () => "";
 
 // ============================================================
