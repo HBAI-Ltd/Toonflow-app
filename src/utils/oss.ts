@@ -7,7 +7,7 @@ import sharp from "sharp";
 // 规范化路径：去除前导斜杠，并将路径分隔符统一转换为系统分隔符
 function normalizeUserPath(userPath: string): string {
   // 去除前导的 / 或 \
-  const trimmedPath = userPath.replace(/^[/\\]+/, "");
+  const trimmedPath = userPath.replace(/^[/\\]+/, "").replace(/^oss[/\\]+/, "");
   // 将所有 / 替换为系统路径分隔符（path.sep）
   // 这样在 Windows 上会转为 \，在 Unix 上保持 /
   return trimmedPath.split("/").join(path.sep);
