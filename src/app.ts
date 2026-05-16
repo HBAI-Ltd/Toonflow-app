@@ -13,6 +13,7 @@ import fs from "fs";
 import u from "@/utils";
 import jwt from "jsonwebtoken";
 import socketInit from "@/socket/index";
+import routerDefault from "@/router";
 import { isEletron } from "@/utils/getPath";
 
 const app = express();
@@ -117,8 +118,7 @@ export default async function startServe(randomPort: Boolean = false) {
     }
   });
 
-  const router = await import("@/router");
-  await router.default(app);
+  await routerDefault(app);
 
   // 404 处理
   app.use((_, res, next: NextFunction) => {
