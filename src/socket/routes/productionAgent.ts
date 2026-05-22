@@ -43,7 +43,7 @@ export default (nsp: Namespace) => {
 
     const thinkConfig: agent.AgentContext["thinkConfig"] = {
       think: false,
-      thinlLevel: 0,
+      thinkLevel: 0,
     };
 
     socket.on("updateContext", (data: { isolationKey: string; projectId: number; scriptId: number }, callback) => {
@@ -87,9 +87,10 @@ export default (nsp: Namespace) => {
       }
     });
 
-    socket.on("updateThinkConfig", (data: { think: boolean; thinlLevel: 0 | 1 | 2 | 3 }) => {
+    // 兼容：新前端发送 thinkLevel，旧（预构建）前端仍发送 thinlLevel
+    socket.on("updateThinkConfig", (data: { think: boolean; thinkLevel?: 0 | 1 | 2 | 3; thinlLevel?: 0 | 1 | 2 | 3 }) => {
       thinkConfig.think = data.think;
-      thinkConfig.thinlLevel = data.thinlLevel;
+      thinkConfig.thinkLevel = data.thinkLevel ?? data.thinlLevel ?? 0;
       console.log("[productionAgent] 更新思考配置:", thinkConfig);
     });
 
