@@ -7,7 +7,7 @@ type ConsoleMethod = (...args: unknown[]) => void;
 
 const LOG_DIR = getPath("logs");
 const LOG_FILE = path.join(LOG_DIR, "app.log");
-const MAX_SIZE = 1000 * 1024 * 1024;
+const MAX_SIZE = 100 * 1024 * 1024;
 const LEVELS: LogLevel[] = ["log", "info", "warn", "error", "debug"];
 
 class Logger {
@@ -47,6 +47,7 @@ class Logger {
   }
 
   private writing = false;
+  private rotating = false;
 
   private write(level: LogLevel, args: unknown[]): void {
     const line = `[${this.formatTime()}] [${level.toUpperCase()}] ${args.map((a) => this.stringify(a)).join(" ")}\n`;
@@ -67,16 +68,57 @@ class Logger {
   }
 
   private checkRotate(): void {
+    if (this.rotating) return;
     try {
       if (!fs.existsSync(LOG_FILE) || fs.statSync(LOG_FILE).size < MAX_SIZE) return;
+      this.rotating = true;
       this.stream?.end();
-      // 单文件轮转：保留后半部分日志
-      const content = fs.readFileSync(LOG_FILE, "utf-8");
-      const half = content.slice(content.length >>> 1);
-      const firstNewline = half.indexOf("\n");
-      fs.writeFileSync(LOG_FILE, firstNewline >= 0 ? half.slice(firstNewline + 1) : half);
-      this.stream = fs.createWriteStream(LOG_FILE, { flags: "a" });
-    } catch {}
+
+      // 使用流式读取截断，避免将整个日志文件加载到内存
+      const ROTATE_SUFFIX = ".old";
+      const oldFile = LOG_FILE + ROTATE_SUFFIX;
+      fs.renameSync(LOG_FILE, oldFile);
+
+      // 读取后半部分：先获取总行数的大致位置，然后流式跳过前半部分
+      const totalSize = fs.statSync(oldFile).size;
+      const startByte = totalSize >>> 1;
+
+      const readFd = fs.openSync(oldFile, "r");
+      const writeStream = fs.createWriteStream(LOG_FILE, { flags: "w" });
+
+      // 从中间位置开始找第一个换行符
+      const seekBuf = Buffer.alloc(4096);
+      let offset = startByte;
+      let foundNewline = false;
+      while (!foundNewline) {
+        const bytesRead = fs.readSync(readFd, seekBuf, 0, seekBuf.length, offset);
+        if (bytesRead === 0) break;
+        for (let i = 0; i < bytesRead; i++) {
+          if (seekBuf[i] === 0x0A) { // '\n'
+            offset += i + 1;
+            foundNewline = true;
+            break;
+          }
+        }
+        if (!foundNewline) offset += bytesRead;
+      }
+
+      // 从找到的位置开始，将剩余内容通过管道写入新文件
+      const readStream = fs.createReadStream(oldFile, { start: offset, fd: readFd, autoClose: true });
+      readStream.pipe(writeStream).on("finish", () => {
+        try { fs.unlinkSync(oldFile); } catch {}
+        this.stream = fs.createWriteStream(LOG_FILE, { flags: "a" });
+        this.rotating = false;
+      }).on("error", () => {
+        this.stream = fs.createWriteStream(LOG_FILE, { flags: "a" });
+        this.rotating = false;
+      });
+    } catch {
+      try {
+        this.stream = fs.createWriteStream(LOG_FILE, { flags: "a" });
+      } catch {}
+      this.rotating = false;
+    }
   }
 
   private hijack(): void {
@@ -87,6 +129,10 @@ class Logger {
       if (typeof original !== "function") continue;
       this.originalConsole[level] = original.bind(console);
       (console as any)[level] = (...args: unknown[]) => {
+        if (this.writing) {
+          this.originalConsole[level]!(...args);
+          return;
+        }
         this.writing = true;
         try {
           this.write(level, args);
