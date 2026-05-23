@@ -45,6 +45,14 @@ export default (nsp: Namespace) => {
       thinlLevel: 0,
     };
 
+    // 在 connection handler 内部监听 disconnect 事件
+    // nsp.on("disconnect") 的回调签名不接收 Socket 参数，会导致 socket.id 为 undefined
+    socket.on("disconnect", (reason) => {
+      console.log("[scriptAgent] 已断开连接:", socket.id, "原因:", reason);
+      abortController?.abort();
+      abortController = null;
+    });
+
     socket.on("chat", async (data: { content: string }) => {
       const { content } = data;
       abortController?.abort();
@@ -87,8 +95,5 @@ export default (nsp: Namespace) => {
       abortController?.abort();
       abortController = null;
     });
-  });
-  nsp.on("disconnect", (socket: Socket) => {
-    console.log("[scriptAgent] 已断开连接:", socket.id);
   });
 };
