@@ -13,43 +13,45 @@ export default router.post(
   }),
   async (req, res) => {
     const { id } = req.body;
-    //删除项目
-    await u.db("o_project").where("id", id).delete();
-    await u.db("o_agentWorkData").where("projectId", id).delete();
-    //删除项目下的原文
-    await u.db("o_novel").where("projectId", id).delete();
-    // 删除项目下的剧本信息
-    const scriptData = await u.db("o_script").where("projectId", id).select("id");
-    const scriptIds = scriptData.map((item: any) => item.id);
-    if (scriptIds.length > 0) {
-      await u.db("o_scriptAssets").whereIn("scriptId", scriptIds).delete();
-    }
-    await u.db("o_script").where("projectId", id).delete();
-    // 删除项目下的任务
-    await u.db("o_tasks").where("projectId", id).delete();
-    // 删除项目下的分镜
-    const storyboardData = await u.db("o_storyboard").where("projectId", id).select("id");
-    const storyboardIds = storyboardData.map((item: any) => item.id);
-    if (storyboardIds.length > 0) {
-      await u.db("o_assets2Storyboard").whereIn("storyboardId", storyboardIds).delete();
-    }
-    await u.db("o_storyboard").where("projectId", id).delete();
-    //删除需要删除资产的归属图片
-    const assetsData = await u.db("o_assets").where("projectId", id).select("id");
-    const assetsIds = assetsData.map((item: any) => item.id);
-    if (assetsIds.length > 0) {
-      // 先将 o_assets.imageId 置空，解除对 o_image 的外键引用
-      await u.db("o_assets").whereIn("id", assetsIds).update({ imageId: null });
-      await u.db("o_image").whereIn("assetsId", assetsIds).delete();
-    }
-    // 删除项目下的资产
-    await u.db("o_assets").where("projectId", id).delete();
-    //删除项目下的视频轨道和视频
-    await u.db("o_videoTrack").where("projectId", id).delete();
-    await u.db("o_video").where("projectId", id).delete();
-    //删除项目下的资源
 
-    await u.db("memories").where("isolationKey", "like", `${id}:%`).delete();
+    await u.db.transaction(async (trx) => {
+      // 删除项目
+      await trx("o_project").where("id", id).delete();
+      await trx("o_agentWorkData").where("projectId", id).delete();
+      // 删除项目下的原文
+      await trx("o_novel").where("projectId", id).delete();
+      // 删除项目下的剧本信息
+      const scriptData = await trx("o_script").where("projectId", id).select("id");
+      const scriptIds = scriptData.map((item: any) => item.id);
+      if (scriptIds.length > 0) {
+        await trx("o_scriptAssets").whereIn("scriptId", scriptIds).delete();
+      }
+      await trx("o_script").where("projectId", id).delete();
+      // 删除项目下的任务
+      await trx("o_tasks").where("projectId", id).delete();
+      // 删除项目下的分镜
+      const storyboardData = await trx("o_storyboard").where("projectId", id).select("id");
+      const storyboardIds = storyboardData.map((item: any) => item.id);
+      if (storyboardIds.length > 0) {
+        await trx("o_assets2Storyboard").whereIn("storyboardId", storyboardIds).delete();
+      }
+      await trx("o_storyboard").where("projectId", id).delete();
+      // 删除需要删除资产的归属图片
+      const assetsData = await trx("o_assets").where("projectId", id).select("id");
+      const assetsIds = assetsData.map((item: any) => item.id);
+      if (assetsIds.length > 0) {
+        // 先将 o_assets.imageId 置空，解除对 o_image 的外键引用
+        await trx("o_assets").whereIn("id", assetsIds).update({ imageId: null });
+        await trx("o_image").whereIn("assetsId", assetsIds).delete();
+      }
+      // 删除项目下的资产
+      await trx("o_assets").where("projectId", id).delete();
+      // 删除项目下的视频轨道和视频
+      await trx("o_videoTrack").where("projectId", id).delete();
+      await trx("o_video").where("projectId", id).delete();
+      // 删除项目下的资源
+      await trx("memories").where("isolationKey", "like", `${id}:%`).delete();
+    });
 
     try {
       await u.oss.deleteDirectory(`${id}/`);

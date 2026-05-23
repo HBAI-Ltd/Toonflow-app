@@ -15,12 +15,15 @@ export default router.post(
     if (!ids.length) {
       return res.status(400).send(error("请先选择需要删除的内容"));
     }
-    const chapterData = await u.db("o_eventChapter").whereIn("novelId", ids);
-    await u.db("o_eventChapter").whereIn("novelId", ids).delete();
-    const eventIds = chapterData.map((i) => i.id);
-    if (eventIds.length) await u.db("o_event").whereIn("id", eventIds).delete();
 
-    await u.db("o_novel").whereIn("id", ids).del();
+    const chapterData = await u.db("o_eventChapter").whereIn("novelId", ids);
+    const eventIds = chapterData.map((i) => i.id);
+
+    await u.db.transaction(async (trx) => {
+      await trx("o_eventChapter").whereIn("novelId", ids).delete();
+      if (eventIds.length) await trx("o_event").whereIn("id", eventIds).delete();
+      await trx("o_novel").whereIn("id", ids).del();
+    });
 
     res.status(200).send(success({ message: "删除原文成功" }));
   },
