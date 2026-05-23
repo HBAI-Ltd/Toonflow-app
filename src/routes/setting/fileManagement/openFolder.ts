@@ -1,11 +1,10 @@
 import express from "express";
 import { z } from "zod";
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { isEletron } from "@/utils/getPath";
 import u from "@/utils";
-import path from "path";
 const router = express.Router();
 
 export default router.post(
@@ -20,8 +19,11 @@ export default router.post(
     const { path: folderPath } = req.body;
     const platform = process.platform;
     const target = u.getPath(folderPath);
-    const cmd = platform === "win32" ? `explorer "${target}"` : platform === "darwin" ? `open "${target}"` : `xdg-open "${target}"`;
-    exec(cmd, (err) => {
+
+    // 使用 execFile 代替 exec 避免命令注入
+    // execFile 不通过 shell 解释器，直接传递参数数组
+    const cmd = platform === "win32" ? "explorer" : platform === "darwin" ? "open" : "xdg-open";
+    execFile(cmd, [target], (err) => {
       if (err) {
         return res.status(200).send(error(err.message));
       }
