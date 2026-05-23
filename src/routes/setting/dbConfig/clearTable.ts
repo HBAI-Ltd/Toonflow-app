@@ -20,7 +20,8 @@ export default router.post("/", async (req, res) => {
       return res.status(400).send(error("表不存在"));
     }
 
-    await db.raw(`DELETE FROM "${tableName}"`);
+    // 使用 Knex 的 ref() 安全引用标识符，避免字符串拼接注入
+    await db(db.ref(tableName)).del();
 
     res.status(200).send(success(`表 ${tableName} 已清空`));
   } catch (err: any) {

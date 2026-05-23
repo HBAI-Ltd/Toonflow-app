@@ -12,7 +12,8 @@ export default router.get("/", async (req, res) => {
 
     const data: Record<string, any[]> = {};
     for (const table of tables) {
-      data[table.name] = await db.raw(`SELECT * FROM "${table.name}"`);
+      // 使用 Knex 查询构建器代替原始 SQL 拼接
+      data[table.name] = await db(table.name).select("*");
     }
 
     const exportData = {

@@ -38,8 +38,8 @@ export default router.post("/", async (req, res) => {
       );
       if (tableExists.length === 0) continue;
 
-      // 清空表数据后插入导入数据
-      await db.raw(`DELETE FROM "${tableName}"`);
+      // 使用 Knex 的 ref() 安全引用标识符，避免字符串拼接注入
+      await db(db.ref(tableName)).del();
       // 分批插入，每批100条
       for (let i = 0; i < rows.length; i += 100) {
         const batch = rows.slice(i, i + 100);
