@@ -21,10 +21,13 @@ process.on("unhandledRejection", (reason, promise) => {
 });
 
 // 处理未捕获的异常
+// Node.js 文档明确建议：uncaughtException 后应退出进程，
+// 因为此时进程状态不可预测，继续运行可能导致数据损坏。
 process.on("uncaughtException", (error) => {
   console.error("[未捕获的异常]");
   console.error("错误名称:", error.name);
   console.error("错误消息:", error.message);
   console.error("堆栈信息:", error.stack);
   console.error("序列化详情:", JSON.stringify(serializeError(error), null, 2));
+  process.exit(1);
 });

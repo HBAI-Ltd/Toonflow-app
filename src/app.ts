@@ -127,10 +127,10 @@ export default async function startServe(randomPort: Boolean = false) {
 
   // 错误处理
   app.use((err: any, _: Request, res: Response, __: NextFunction) => {
-    res.locals.message = err.message;
-    res.locals.error = err;
     console.error(err);
-    res.status(err.status || 500).send(err);
+    const status = err.status || 500;
+    const message = status === 500 ? "服务器内部错误" : (err.message || "服务器内部错误");
+    res.status(status).send({ message });
   });
 
   const port = randomPort ? 0 : 10588;
