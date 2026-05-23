@@ -50,8 +50,11 @@ export async function runDecisionAI(ctx: AgentContext) {
 
   const projectInfo = await u.db("o_project").where("id", ctx.resTool.data.projectId).first();
   if (!projectInfo) throw new Error(`项目不存在，ID: ${ctx.resTool.data.projectId}`);
-  const [_, imageModelName] = projectInfo.imageModel!.split(/:(.+)/);
-  const [id, videoModelName] = projectInfo.videoModel!.split(/:(.+)/);
+  if (!projectInfo.imageModel || !projectInfo.videoModel) {
+    throw new Error(`项目未配置图像或视频模型，请先在项目设置中配置模型`);
+  }
+  const [_, imageModelName] = projectInfo.imageModel.split(/:(.+)/);
+  const [id, videoModelName] = projectInfo.videoModel.split(/:(.+)/);
   const models = await u.vendor.getModelList(id);
   if (!models.length) throw new Error(`项目使用的模型不存在，ID: ${projectInfo.videoModel}`);
   let videoMode = "";
@@ -147,8 +150,11 @@ async function createSubAgent(parentCtx: AgentContext) {
   if (!projectInfo) throw new Error(`项目不存在，ID: ${resTool.data.projectId}`);
   const artSkills = await createArtSkills(projectInfo?.artStyle!, projectInfo?.directorManual!);
 
-  const [_, imageModelName] = projectInfo.imageModel!.split(/:(.+)/);
-  const [id, videoModelName] = projectInfo.videoModel!.split(/:(.+)/);
+  if (!projectInfo.imageModel || !projectInfo.videoModel) {
+    throw new Error(`项目未配置图像或视频模型，请先在项目设置中配置模型`);
+  }
+  const [_, imageModelName] = projectInfo.imageModel.split(/:(.+)/);
+  const [id, videoModelName] = projectInfo.videoModel.split(/:(.+)/);
   const models = await u.vendor.getModelList(id);
   if (!models.length) throw new Error(`项目使用的模型不存在，ID: ${projectInfo.videoModel}`);
   // const findData = models.find((i: any) => i.modelName == videoModelName);
