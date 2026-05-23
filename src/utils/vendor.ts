@@ -3,18 +3,30 @@ import fs from "fs";
 import path from "path";
 import u from "@/utils";
 
-export function writeCode(id: string | number, tsCode: string) {
-  const rootDir = u.getPath("vendor")
-  fs.mkdirSync(rootDir, { recursive: true })
-  if (fs.existsSync(path.join(rootDir,  `${id}.ts`))) {
-    fs.writeFileSync(path.join(rootDir,  `${id}.ts`), tsCode);
+function safeVendorPath(id: string | number): string {
+  const idStr = String(id);
+  // 防止路径遍历：只允许字母、数字、下划线、短横线、点号
+  if (!/^[a-zA-Z0-9._-]+$/.test(idStr)) {
+    throw new Error(`Invalid vendor id: ${idStr}`);
   }
-  fs.writeFileSync(path.join(rootDir,  `${id}.ts`), tsCode);
+  const rootDir = u.getPath("vendor");
+  const targetFile = path.join(rootDir, `${idStr}.ts`);
+  // 二次验证路径在 vendor 目录内
+  if (!targetFile.startsWith(path.resolve(rootDir))) {
+    throw new Error(`Path traversal detected in vendor id: ${idStr}`);
+  }
+  return targetFile;
+}
+
+export function writeCode(id: string | number, tsCode: string) {
+  const targetFile = safeVendorPath(id);
+  const rootDir = path.dirname(targetFile);
+  fs.mkdirSync(rootDir, { recursive: true });
+  fs.writeFileSync(targetFile, tsCode);
 }
 
 export function getCode(id: string): string {
-  const rootDir = u.getPath("vendor");
-  const targetFile = path.join(rootDir, `${id}.ts`);
+  const targetFile = safeVendorPath(id);
   if (!fs.existsSync(targetFile)) return "";
   return fs.readFileSync(targetFile, "utf-8");
 }
