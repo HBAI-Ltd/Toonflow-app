@@ -289,6 +289,15 @@ interface VideoConfig {
   mode: VideoMode[];
 }
 
+interface TTSConfig {
+  text: string;
+  voice: string;
+  speechRate: number;
+  pitchRate: number;
+  volume: number;
+  referenceList?: Extract<ReferenceList, { type: "audio" }>[];
+}
+
 class AiVideo {
   private key: `${string}:${string}`;
   private result: string = "";
@@ -327,22 +336,20 @@ class AiAudio {
   constructor(key: `${string}:${string}`) {
     this.key = key;
   }
-  async run(input: VideoConfig, taskRecord?: TaskRecord) {
+  async run(input: TTSConfig, taskRecord?: TaskRecord) {
     const modelName = await resolveModelName(this.key);
     const exec = async (mn: `${string}:${string}`) => {
-      try {
-        const fn = await getVendorTemplateFn("ttsRequest", mn);
-        await referenceList2imageBase642(mn.split(/:(.+)/)[0], input);
-        this.result = await fn(input);
-
-        if (this.result.startsWith("http")) this.result = await urlToBase64(this.result);
-        return this;
-      } catch (e) {}
+      const fn = await getVendorTemplateFn("ttsRequest", mn);
+      this.result = await fn(input);
+      if (this.result.startsWith("http")) this.result = await urlToBase64(this.result);
+      return this;
     };
     if (taskRecord) {
-      return withTaskRecord(this.key, taskRecord.taskClass, taskRecord.describe, taskRecord.relatedObjects, taskRecord.projectId, exec);
+      await withTaskRecord(this.key, taskRecord.taskClass, taskRecord.describe, taskRecord.relatedObjects, taskRecord.projectId, exec);
+      return this;
     }
-    return await exec(modelName);
+    await exec(modelName);
+    return this;
   }
   async save(path: string) {
     await u.oss.writeFile(path, this.result);

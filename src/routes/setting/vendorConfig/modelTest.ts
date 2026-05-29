@@ -11,7 +11,7 @@ export default router.post(
   "/",
   validateFields({
     modelName: z.string(),
-    type: z.enum(["text", "video", "image"]),
+    type: z.enum(["text", "video", "image", "tts"]),
     id: z.string(),
   }),
   async (req, res) => {
@@ -31,6 +31,7 @@ export default router.post(
           },
         },
         video: { fnName: "videoRequest", modelData: {} },
+        tts: { fnName: "ttsRequest" },
       } as const;
       const vendorConfigData = await u.db("o_vendorConfig").where("id", id).first();
 
@@ -83,6 +84,17 @@ export default router.post(
         }
         if (!fullResponse) return res.status(500).send(error("模型未返回结果"));
         res.status(200).send(success(fullResponse));
+      } else if (type == "tts") {
+        const reqFn = await u.Ai.Audio(`${id}:${modelName}`).run({
+          text: "Halo, ini adalah tes suara F5-TTS dari Toonflow.",
+          voice: "default",
+          speechRate: 1.0,
+          pitchRate: 1.0,
+          volume: 50,
+        });
+        await reqFn.save("testAudio.wav");
+        const resultUrl = await u.oss.getFileUrl("testAudio.wav");
+        res.status(200).send(success(resultUrl));
       } else {
         const aiTypeFn = {
           image: "Image",
