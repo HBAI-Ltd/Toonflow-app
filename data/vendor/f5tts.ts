@@ -353,19 +353,37 @@ const ttsRequest = async (config: TTSConfig, _model: TTSModel): Promise<string> 
   const pollResult = await pollTask(async () => {
     try {
       const resultResp = await axios.get(`${baseUrl}/gradio_api/call/${apiName}/${eventId}`, {
-        timeout: 30000,
+        timeout: 300000,
       });
 
       const resultData = resultResp.data;
+      logger(`[f5tts] Poll status: ${resultResp.status}, data preview: ${JSON.stringify(resultData).substring(0, 300)}`);
 
       // ===== SSE 文本格式 =====
       if (typeof resultData === "string") {
+        // 检查 event: error 行
+        if (resultData.includes("event: error")) {
+          const errorData = parseGradioSSE(resultData);
+          const errorMsg = typeof errorData === "string" ? errorData : (errorData?.error || JSON.stringify(errorData));
+          return { completed: true, error: `[f5tts] Gradio event error: ${errorMsg}` };
+        }
+
         const parsed = parseGradioSSE(resultData);
+
+        // parsed 是错误字符串（如 "404: Not Found"）
+        if (typeof parsed === "string") {
+          return { completed: true, error: `[f5tts] Gradio 返回错误: ${parsed}` };
+        }
+
         if (parsed) {
           const msg = parsed.msg || "";
 
           if (msg === "process_generating" || msg === "estimation" || msg === "heartbeat") {
             return { completed: false };
+          }
+
+          if (msg === "error") {
+            return { completed: true, error: `[f5tts] Gradio msg=error: ${JSON.stringify(parsed).substring(0, 300)}` };
           }
 
           if (msg === "process_completed" || msg === "complete") {
@@ -404,6 +422,9 @@ const ttsRequest = async (config: TTSConfig, _model: TTSModel): Promise<string> 
       if (resultData?.msg === "process_generating" || resultData?.msg === "estimation" || resultData?.msg === "heartbeat") {
         return { completed: false };
       }
+      if (resultData?.msg === "error") {
+        return { completed: true, error: `[f5tts] Gradio msg=error: ${JSON.stringify(resultData).substring(0, 300)}` };
+      }
 
       // 直接数组
       if (Array.isArray(resultData)) {
@@ -416,6 +437,10 @@ const ttsRequest = async (config: TTSConfig, _model: TTSModel): Promise<string> 
 
       return { completed: false };
     } catch (e: any) {
+      // 404 = event_id 已过期/不存在，停止轮询
+      if (e?.response?.status === 404) {
+        return { completed: true, error: "[f5tts] Gradio event not found / expired (404)" };
+      }
       logger(`[f5tts] 轮询出错: ${e.message}`);
       return { completed: false };
     }
