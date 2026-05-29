@@ -1,6 +1,6 @@
 /**
  * Toonflow AI供应商模板 - Ollama 本地模型
- * @version 1.0
+ * @version 2.0
  *
  * 说明：
  * 1) 连接本地 Ollama 服务，使用 OpenAI 兼容接口
@@ -119,7 +119,7 @@ declare const exports: {
 
 const vendor: VendorConfig = {
   id: "ollama",
-  version: "1.0",
+  version: "2.0",
   author: "Local AI",
   name: "Ollama 本地模型",
   description:
@@ -169,7 +169,7 @@ const ttsRequest = async (_config: TTSConfig, _model: TTSModel): Promise<string>
 };
 
 const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }> => {
-  return { hasUpdate: false, latestVersion: "1.0", notice: "" };
+  return { hasUpdate: false, latestVersion: "2.0", notice: "" };
 };
 
 const updateVendor = async (): Promise<string> => {
