@@ -195,6 +195,27 @@ const parseGradioSSE = (sseText: string): any => {
   return lastData;
 };
 
+/** 从文件路径提取文件名（不使用 path 模块） */
+const getFileName = (filePath: string): string => {
+  const normalized = filePath.replace(/\\/g, "/");
+  const segments = normalized.split("/");
+  return segments[segments.length - 1] || "audio.wav";
+};
+
+/** 根据文件扩展名推断 MIME 类型 */
+const getMimeType = (filePath: string): string => {
+  const ext = (filePath.split(".").pop() || "wav").toLowerCase();
+  const mimeMap: Record<string, string> = {
+    wav: "audio/wav",
+    mp3: "audio/mpeg",
+    m4a: "audio/mp4",
+    flac: "audio/flac",
+    ogg: "audio/ogg",
+    aac: "audio/aac",
+  };
+  return mimeMap[ext] || "audio/wav";
+};
+
 /** 修正 MIME 类型：urlToBase64 可能返回 image/jpeg 如果服务器没设 content-type */
 const fixAudioMime = (dataUri: string, ext: string = "wav"): string => {
   if (!dataUri.startsWith("data:")) return dataUri;
@@ -302,7 +323,7 @@ const ttsRequest = async (config: TTSConfig, _model: TTSModel): Promise<string> 
 
   // ===== 构建 Gradio Payload =====
   // F5-TTS basic_tts 参数顺序（来自 /gradio_api/info）：
-  // 1. ref_audio_input:  FileData { path, meta }
+  // 1. ref_audio_input:  FileData { path, orig_name, mime_type, meta }
   // 2. ref_text_input:   string (空=自动Whisper识别)
   // 3. gen_text_input:   string
   // 4. remove_silence:   boolean
@@ -311,9 +332,19 @@ const ttsRequest = async (config: TTSConfig, _model: TTSModel): Promise<string> 
   // 7. cross_fade_duration_slider: number
   // 8. nfe_slider:       number
   // 9. speed_slider:     number
+  const refFileName = getFileName(refAudioPath);
+  const refMimeType = getMimeType(refAudioPath);
+  const refAudioInput = {
+    path: refAudioPath,
+    orig_name: refFileName,
+    mime_type: refMimeType,
+    meta: { _type: "gradio.FileData" },
+  };
+  logger(`[f5tts] refAudioInput: path="${refAudioPath}", orig_name="${refFileName}", mime_type="${refMimeType}"`);
+
   const gradioPayload = {
     data: [
-      { path: refAudioPath, meta: { _type: "gradio.FileData" } },
+      refAudioInput,
       refText,
       genText,
       removeSilence,
