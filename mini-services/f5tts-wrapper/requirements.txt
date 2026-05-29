@@ -1,0 +1,4 @@
+gradio_client>=1.0.0
+fastapi>=0.100.0
+uvicorn>=0.20.0
+requests>=2.28.0
