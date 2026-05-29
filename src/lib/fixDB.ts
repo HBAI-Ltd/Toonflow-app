@@ -68,7 +68,7 @@ export default async (knex: Knex): Promise<void> => {
   await addColumn("o_assets", "audioBindState", "integer");
   await addColumn("o_modelPrompt", "fileName", "string");
   await addColumn("o_modelPrompt", "path", "string");
-  const vendorDataSelect = await u.db("o_vendorConfig").whereIn("id", ["deepseek", "atlascloud"]).select("*");
+  const vendorDataSelect = await u.db("o_vendorConfig").whereIn("id", ["deepseek", "atlascloud", "ollama"]).select("*");
   if (!vendorDataSelect.find((i) => i.id == "deepseek")) {
     await u.db("o_vendorConfig").insert({
       id: "deepseek",
@@ -80,6 +80,14 @@ export default async (knex: Knex): Promise<void> => {
   if (!vendorDataSelect.find((i) => i.id == "atlascloud")) {
     await u.db("o_vendorConfig").insert({
       id: "atlascloud",
+      inputValues: "{}",
+      models: "[]",
+      enable: 0,
+    });
+  }
+  if (!vendorDataSelect.find((i) => i.id == "ollama")) {
+    await u.db("o_vendorConfig").insert({
+      id: "ollama",
       inputValues: "{}",
       models: "[]",
       enable: 0,
