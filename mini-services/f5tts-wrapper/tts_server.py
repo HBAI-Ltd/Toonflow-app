@@ -67,7 +67,7 @@ def get_gradio_client():
     global _gradio_client
     if _gradio_client is None:
         try:
-            from gradio_client import Client
+            from gradio_client import Client, handle_file
             print(f"[f5tts-wrapper] Connecting to F5-TTS Gradio at {GRADIO_URL} ...")
             _gradio_client = Client(GRADIO_URL, verbose=False)
             print("[f5tts-wrapper] Connected to F5-TTS Gradio!")
@@ -147,7 +147,7 @@ async def tts(req: TTSRequest):
         )
 
         result = client.predict(
-            ref_audio_input=req.refAudioPath,
+            ref_audio_input=handle_file(req.refAudioPath),
             ref_text_input=req.refText,
             gen_text_input=req.genText,
             remove_silence=req.removeSilence,
