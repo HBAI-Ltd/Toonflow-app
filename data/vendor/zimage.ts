@@ -371,7 +371,7 @@ const imageRequest = async (config: ImageConfig, _model: ImageModel): Promise<st
     logger(`[zimage] submit endpoint used: POST ${v2Endpoint}`);
     const submitResp = await axios.post(v2Endpoint, v2Payload, {
       headers: { "Content-Type": "application/json" },
-      timeout: 30000,
+      timeout: 300000,
     });
 
     logger(`[zimage] v2 submit status: ${submitResp.status}`);
@@ -405,7 +405,7 @@ const imageRequest = async (config: ImageConfig, _model: ImageModel): Promise<st
     logger(`[zimage] submit endpoint used: POST ${v1Endpoint} (fallback)`);
     const submitResp = await axios.post(v1Endpoint, v1Payload, {
       headers: { "Content-Type": "application/json" },
-      timeout: 30000,
+      timeout: 300000,
     });
 
     logger(`[zimage] v1 submit status: ${submitResp.status}`);
@@ -491,7 +491,7 @@ const pollGradioResult = async (baseUrl: string, apiPath: string, eventId: strin
   const pollResult = await pollTask(async () => {
     try {
       const resultResp = await axios.get(pollUrl, {
-        timeout: 30000,
+        timeout: 300000,
       });
 
       const resultData = resultResp.data;
