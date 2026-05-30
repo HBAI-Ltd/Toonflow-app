@@ -22,6 +22,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+from gradio_client import Client, handle_file
 
 # ============================================================
 # App setup
@@ -67,7 +68,6 @@ def get_gradio_client():
     global _gradio_client
     if _gradio_client is None:
         try:
-            from gradio_client import Client, handle_file
             print(f"[f5tts-wrapper] Connecting to F5-TTS Gradio at {GRADIO_URL} ...")
             _gradio_client = Client(GRADIO_URL, verbose=False)
             print("[f5tts-wrapper] Connected to F5-TTS Gradio!")
