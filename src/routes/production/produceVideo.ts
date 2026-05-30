@@ -29,15 +29,8 @@ export default router.post(
     title: z.string().optional(),
     imageModelKey: z.string().min(1),
     ttsModelKey: z.string().min(1),
-    imageConfig: z.record(z.any()).optional(),
-    ttsConfig: z
-      .object({
-        voice: z.string().default("default"),
-        speechRate: z.number().default(1.0),
-        pitchRate: z.number().default(1.0),
-        volume: z.number().default(50),
-      })
-      .optional(),
+    imageConfig: z.any().optional(),
+    ttsConfig: z.any().optional(),
     scenes: z
       .array(
         z.object({
@@ -58,6 +51,14 @@ export default router.post(
       ttsConfig,
       scenes,
     } = req.body;
+
+    console.log("[produceVideo] Request received", {
+      projectId,
+      title,
+      imageModelKey,
+      ttsModelKey,
+      sceneCount: scenes?.length,
+    });
 
     try {
       // ── 1. Check FFmpeg availability ──
@@ -285,14 +286,11 @@ export default router.post(
           // Directory not empty or already deleted
         }
       }
-    } catch (err) {
-      console.error(err);
-      const msg = u.error(err).message;
-      if (msg.includes("not found")) {
-        res.status(400).send(error(msg));
-      } else {
-        res.status(500).send(error(msg));
-      }
+    } catch (err: any) {
+      console.error("[produceVideo] Fatal error:", err);
+      console.error("[produceVideo] Fatal stack:", err?.stack);
+      const msg = err instanceof Error ? err.message : String(err);
+      return res.status(500).send(error(`[produceVideo] Fatal error: ${msg}`));
     }
   }
 );
