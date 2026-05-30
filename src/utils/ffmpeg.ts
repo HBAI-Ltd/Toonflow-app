@@ -4,7 +4,7 @@
  * Uses system FFmpeg from PATH (or FFMPEG_PATH env).
  * No npm dependencies required.
  *
- * @version 1.0
+ * @version 1.1 — Added video normalize filter (1080x1920) + concatVideos
  */
 
 import { execFile } from "node:child_process";
@@ -55,7 +55,9 @@ export async function checkFfmpeg(): Promise<string> {
  * Compose video from a still image + audio track.
  *
  * ffmpeg -y -loop 1 -i image -i audio
- *   -c:v libx264 -tune stillimage -c:a aac -b:a 192k
+ *   -vf scale=1080:1920:force_original_aspect_ratio=decrease,
+ *          pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1
+ *   -r 30 -c:v libx264 -tune stillimage -c:a aac -b:a 192k
  *   -pix_fmt yuv420p -shortest -movflags +faststart output.mp4
  *
  * @param imageOssPath  OSS relative path of input image (e.g., "testImage.jpg")
@@ -95,6 +97,8 @@ export async function composeImageAudio(
     "-loop", "1",               // Loop the image
     "-i", imageAbs,             // Input image
     "-i", audioAbs,             // Input audio
+    "-vf", "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1",  // Normalize to 1080x1920
+    "-r", "30",                 // Consistent frame rate for concat
     "-c:v", "libx264",         // H.264 video codec
     "-tune", "stillimage",     // Optimize for still image
     "-c:a", "aac",              // AAC audio codec
@@ -127,4 +131,87 @@ export async function composeImageAudio(
       u.oss.getFileUrl(outputOssPath).then(resolve).catch(reject);
     });
   });
+}
+
+/**
+ * Concatenate multiple MP4 files into one using FFmpeg concat demuxer.
+ *
+ * All input clips should have consistent resolution/codec/fps/audio
+ * (normalized via composeImageAudio) for seamless concatenation.
+ *
+ * ffmpeg -y -f concat -safe 0 -i list.txt
+ *   -c:v libx264 -c:a aac -b:a 192k -pix_fmt yuv420p
+ *   -movflags +faststart output.mp4
+ *
+ * @param videoOssPaths  Array of OSS relative paths for input clips
+ * @param outputOssPath  OSS relative path for output MP4
+ * @returns OSS URL of the output video
+ */
+export async function concatVideos(
+  videoOssPaths: string[],
+  outputOssPath: string
+): Promise<string> {
+  if (videoOssPaths.length === 0) {
+    throw new Error("No video paths provided for concatenation");
+  }
+  if (videoOssPaths.length === 1) {
+    return u.oss.getFileUrl(videoOssPaths[0]);
+  }
+
+  const ffmpegCmd = getFfmpegCommand();
+  const outputAbs = ossToAbs(outputOssPath);
+
+  // Ensure output directory exists
+  await fs.mkdir(path.dirname(outputAbs), { recursive: true });
+
+  // Build concat file list
+  const concatContent = videoOssPaths
+    .map((p) => `file '${ossToAbs(p).replace(/'/g, "'\\''")}'`)
+    .join("\n");
+
+  // Write concat list to temp file
+  const ts = Date.now();
+  const concatListPath = path.join(path.dirname(outputAbs), `_concat_list_${ts}.txt`);
+
+  try {
+    await fs.writeFile(concatListPath, concatContent, "utf-8");
+
+    const args = [
+      "-y",
+      "-f", "concat",
+      "-safe", "0",
+      "-i", concatListPath,
+      "-c:v", "libx264",
+      "-c:a", "aac",
+      "-b:a", "192k",
+      "-pix_fmt", "yuv420p",
+      "-movflags", "+faststart",
+      outputAbs,
+    ];
+
+    console.log(`[ffmpeg] Concat: ${ffmpegCmd} ${args.join(" ")}`);
+
+    const resultUrl = await new Promise<string>((resolve, reject) => {
+      execFile(ffmpegCmd, args, { timeout: 600000 }, (error, stdout, stderr) => {
+        if (error) {
+          const errMsg = stderr || error.message;
+          console.error(`[ffmpeg] Concat error: ${errMsg}`);
+          reject(new Error(`FFmpeg concat failed: ${errMsg}`));
+          return;
+        }
+
+        if (stderr) {
+          console.log(`[ffmpeg] Concat stderr: ${stderr.slice(-500)}`);
+        }
+
+        console.log(`[ffmpeg] Concat output: ${outputAbs}`);
+        u.oss.getFileUrl(outputOssPath).then(resolve).catch(reject);
+      });
+    });
+
+    return resultUrl;
+  } finally {
+    // Cleanup concat list file — runs AFTER FFmpeg finishes
+    try { await fs.unlink(concatListPath); } catch {}
+  }
 }
