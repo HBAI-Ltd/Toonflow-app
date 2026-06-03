@@ -1,6 +1,6 @@
 /**
  * Toonflow AI供应商模板 - MiniMax(海螺AI)
- * @version 2.0
+ * @version 2.2
  */
 
 // ============================================================
@@ -134,7 +134,7 @@ declare const exports: {
 
 const vendor: VendorConfig = {
   id: "minimax",
-  version: "2.1",
+  version: "2.2",
   author: "Toonflow",
   name: "MiniMax(海螺AI)",
   description: "MiniMax官方接口适配，支持M系列推理文本模型、文生图/图生图、视频生成（文生视频、图生视频、首尾帧生成）能力 \n [前往平台](https://minimaxi.com/)",
@@ -145,13 +145,9 @@ const vendor: VendorConfig = {
   inputValues: { apiKey: "", baseUrl: "https://api.minimaxi.com" },
   models: [
     // 文本模型
+    { name: "MiniMax-M3 (推理版)", modelName: "MiniMax-M3", type: "text", think: true },
     { name: "MiniMax-M2.7 (推理版)", modelName: "MiniMax-M2.7", type: "text", think: true },
     { name: "MiniMax-M2.7 极速版 (推理版)", modelName: "MiniMax-M2.7-highspeed", type: "text", think: true },
-    { name: "MiniMax-M2.5 (推理版)", modelName: "MiniMax-M2.5", type: "text", think: true },
-    { name: "MiniMax-M2.5 极速版 (推理版)", modelName: "MiniMax-M2.5-highspeed", type: "text", think: true },
-    { name: "MiniMax-M2.1 (编程版)", modelName: "MiniMax-M2.1", type: "text", think: true },
-    { name: "MiniMax-M2.1 极速版 (编程版)", modelName: "MiniMax-M2.1-highspeed", type: "text", think: true },
-    { name: "MiniMax-M2 (Agent版)", modelName: "MiniMax-M2", type: "text", think: false },
     // 图片模型
     { name: "海螺图像V1", modelName: "image-01", type: "image", mode: ["text", "singleImage"] },
     { name: "海螺图像V1 Live版", modelName: "image-01-live", type: "image", mode: ["text", "singleImage"], associationSkills: "支持自定义画风" },
@@ -372,9 +368,9 @@ const ttsRequest = async (config: TTSConfig, model: TTSModel): Promise<string> =
 const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }> => {
   return {
     hasUpdate: false,
-    latestVersion: "2.0",
+    latestVersion: "2.2",
     notice:
-      "## 新版本更新公告\n1. 适配新版模板架构，支持 ReferenceList 统一引用类型\n2. 新增 uploadReference 前置处理器\n3. 优化图片压缩和引用提取逻辑",
+      "## 新版本更新公告\n1. 升级默认模型至 MiniMax-M3（512K 上下文，128K 最大输出，支持图片输入）\n2. 保留 MiniMax-M2.7 与 MiniMax-M2.7-highspeed\n3. 移除更早的 MiniMax-M2.5 / M2.1 / M2 / M1 模型",
   };
 };
 
