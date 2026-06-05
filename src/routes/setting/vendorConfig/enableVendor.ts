@@ -8,11 +8,14 @@ export default router.post(
   "/",
   validateFields({
     id: z.string(),
-    enable: z.number(),
+    enable: z.union([z.number(), z.boolean()]),
   }),
   async (req, res) => {
     const { id, enable } = req.body;
-    await u.db("o_vendorConfig").where("id", id).update({ enable });
+    const existing = await u.db("o_vendorConfig").where("id", id).first("id");
+    if (!existing) return res.status(404).send(error(`供应商 ${id} 不存在，请先添加供应商`));
+
+    await u.db("o_vendorConfig").where("id", id).update({ enable: Number(enable) });
     res.status(200).send(success("更新成功"));
   },
 );

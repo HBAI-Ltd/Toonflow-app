@@ -76,17 +76,30 @@ export default router.post(
       if (!exports.videoRequest) return res.status(400).send(success("脚本文件必须导出视频请求对象"));
       if (!exports.vendor) return res.status(400).send(success("脚本文件必须导出vendor对象"));
       const vendor = exports.vendor;
+      if ((vendor.id as string).includes(":")) return res.status(400).send(error("id不能包含英文冒号"));
+      if (vendor.id !== id) return res.status(400).send(error(`请求 id(${id}) 与脚本 vendor.id(${vendor.id}) 不一致`));
       const result = vendorConfigSchema.safeParse(vendor);
       if (!result.success) {
         const errorMsg = result.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; ");
         return res.status(400).send(error(`vendor配置校验失败: ${errorMsg}`));
       }
-      await u
-        .db("o_vendorConfig")
-        .where("id", id)
-        .update({
+
+      const existing = await u.db("o_vendorConfig").where("id", id).first("id");
+      if (existing) {
+        await u
+          .db("o_vendorConfig")
+          .where("id", id)
+          .update({
+            models: JSON.stringify(vendor.models ?? []),
+          });
+      } else {
+        await u.db("o_vendorConfig").insert({
+          id,
+          inputValues: JSON.stringify(vendor.inputValues ?? {}),
           models: JSON.stringify(vendor.models ?? []),
+          enable: id == "toonflow" ? 1 : 0,
         });
+      }
       u.vendor.writeCode(id, tsCode);
 
       res.status(200).send(success(result.data));
