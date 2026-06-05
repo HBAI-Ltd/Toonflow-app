@@ -221,7 +221,9 @@ class AiText {
 function referenceList2imageBase642(id: string, input: any) {
   const version = u.vendor.getVendor(id).version;
   if (!version || isNaN(parseFloat(version)) || parseFloat(version) < 2.0) {
-    input.imageBase64 = input.referenceList.map((item: any) => item.base64);
+    if (Array.isArray(input.referenceList)) {
+      input.imageBase64 = input.referenceList.map((item: any) => item.base64).filter(Boolean);
+    }
     return input;
   }
   return input;

@@ -26,7 +26,7 @@ export default router.post(
 
       const reqFn = await u.Ai.Image(`${id}:${modelName}`).run({
         prompt: prompt,
-        referenceList: [{type:"image",base64:imageBase64}], //输入的图片提示词
+        ...(imageBase64 ? { referenceList: [{ type: "image", base64: imageBase64 }] } : {}), //输入的图片提示词
         size: "1K", // 图片尺寸
         aspectRatio: "16:9",
       });
