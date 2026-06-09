@@ -2,8 +2,8 @@ import "@/env";
 import u from "@/utils";
 import { md5 } from "js-md5";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { db } from "./index";
-import { users, setting } from "./schema/schema";
+import { db } from "@/utils/db/index";
+import { users, setting } from "@/utils/db/schema";
 
 async function seed() {
   console.log("🔄 执行迁移...");

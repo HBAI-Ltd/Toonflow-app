@@ -247,15 +247,6 @@ importers:
         specifier: ^2.9.0
         version: 2.9.0
 
-  packages/vendor-sdk:
-    dependencies:
-      esbuild:
-        specifier: ^0.28.0
-        version: 0.28.0
-      sharp:
-        specifier: ^0.34.5
-        version: 0.34.5
-
   packages/web:
     dependencies:
       '@dagrejs/dagre':

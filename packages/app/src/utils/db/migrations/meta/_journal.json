@@ -8,6 +8,13 @@
       "when": 1780841684477,
       "tag": "0000_serious_katie_power",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1780989652638,
+      "tag": "0001_whole_salo",
+      "breakpoints": true
     }
   ]
 }

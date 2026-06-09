@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/utils/db/index";
-import { users } from "../schema/schema";
+import { users } from "@/utils/db/schema";
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

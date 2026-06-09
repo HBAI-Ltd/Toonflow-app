@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/utils/db/index";
-import { setting } from "../schema/schema";
+import { setting } from "@/utils/db/schema";
 
 export type Setting = typeof setting.$inferSelect;
 export type NewSetting = typeof setting.$inferInsert;
