@@ -30,6 +30,28 @@
   z-index: 3100;
 }
 
+.tf-desk-project-float-entry {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 3100;
+}
+
+.tf-desk-project-entry {
+  height: 40px;
+  background: #1d5be3;
+  border-color: #1d5be3;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(29, 91, 227, 0.24);
+}
+
+.tf-desk-project-entry:hover,
+.tf-desk-project-entry.is-open {
+  background: #164ec5;
+  border-color: #164ec5;
+  color: #ffffff;
+}
+
 .tf-desk-panel {
   position: fixed;
   right: 18px;

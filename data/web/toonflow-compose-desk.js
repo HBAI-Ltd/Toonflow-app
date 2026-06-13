@@ -2,12 +2,16 @@
   "use strict";
 
   var ENTRY_ID = "tf-desk-compose-entry";
+  var PROJECT_ENTRY_ID = "tf-desk-compose-project-entry";
   var FLOAT_ID = "tf-desk-compose-float";
+  var PROJECT_FLOAT_ID = "tf-desk-compose-project-float";
   var PANEL_ID = "tf-desk-compose-panel";
   var CONTEXT_KEY = "toonflow-compose-desk-context";
   var POLL_INTERVAL_MS = 3000;
-  var POLL_TICKS = 10;
+  var POLL_TICKS = 24;
   var MAX_CONTEXTS = 24;
+  var DEMO_PROJECT_ID = 1781118846784;
+  var DEMO_SCRIPT_ID = 1781118846785;
   var CUT_MARKERS = ["剪辑素材", "属性面板", "导出视频"];
   var CUT_TAB_MARKERS = ["视频", "媒体", "图片", "音频", "字幕", "转场", "特效", "滤镜"];
 
@@ -139,6 +143,10 @@
     return location.hash.indexOf("/production") !== -1;
   }
 
+  function isProjectRoute() {
+    return location.hash.indexOf("/project") !== -1;
+  }
+
   function bodyText() {
     return document.body ? document.body.innerText || "" : "";
   }
@@ -155,6 +163,14 @@
     return hasMarkers && tabMatches >= 5;
   }
 
+  function isProjectDemoVisible() {
+    return isProjectRoute() && bodyText().indexOf("视频合成演示项目") !== -1;
+  }
+
+  function isPanelAllowed() {
+    return isCutDeskOpen() || isProjectDemoVisible();
+  }
+
   function findExportButton() {
     return all("button, [role='button'], .t-button").find(function (element) {
       var text = (element.innerText || element.textContent || "").trim();
@@ -169,6 +185,27 @@
     button.className = "tf-desk-entry";
     button.textContent = "合成任务";
     button.title = "查看合成任务并执行首条轨道合成或整集拼接";
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      state.open = !state.open;
+      if (state.open && !state.hasLoaded) {
+        loadAutoContext();
+      } else {
+        renderPanel();
+      }
+      syncEntry();
+    });
+    return button;
+  }
+
+  function buildProjectEntry() {
+    var button = document.createElement("button");
+    button.id = PROJECT_ENTRY_ID;
+    button.type = "button";
+    button.className = "tf-desk-entry tf-desk-project-entry";
+    button.textContent = "合成演示";
+    button.title = "打开演示项目的合成任务面板";
     button.addEventListener("click", function (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -200,14 +237,46 @@
     if (float) float.remove();
   }
 
+  function removeProjectEntry() {
+    var entry = $("#" + PROJECT_ENTRY_ID);
+    if (entry) entry.remove();
+    var float = $("#" + PROJECT_FLOAT_ID);
+    if (float) float.remove();
+  }
+
+  function ensureProjectEntry() {
+    if (!isProjectDemoVisible()) {
+      removeProjectEntry();
+      if (!isCutDeskOpen()) {
+        state.open = false;
+        stopPolling();
+        renderPanel();
+      }
+      return;
+    }
+    ensurePanel();
+    var entry = $("#" + PROJECT_ENTRY_ID) || buildProjectEntry();
+    if (!$("#" + PROJECT_FLOAT_ID)) {
+      var wrapper = document.createElement("div");
+      wrapper.id = PROJECT_FLOAT_ID;
+      wrapper.className = "tf-desk-project-float-entry";
+      wrapper.appendChild(entry);
+      document.body.appendChild(wrapper);
+    }
+    syncEntry();
+  }
+
   function ensureEntry() {
     if (!isCutDeskOpen()) {
       removeEntry();
-      state.open = false;
-      stopPolling();
-      renderPanel();
+      if (!isProjectDemoVisible()) {
+        state.open = false;
+        stopPolling();
+        renderPanel();
+      }
       return;
     }
+    removeProjectEntry();
     ensurePanel();
     var entry = $("#" + ENTRY_ID) || buildEntry();
     var exportButton = findExportButton();
@@ -233,6 +302,8 @@
   function syncEntry() {
     var entry = $("#" + ENTRY_ID);
     if (entry) entry.classList.toggle("is-open", state.open);
+    var projectEntry = $("#" + PROJECT_ENTRY_ID);
+    if (projectEntry) projectEntry.classList.toggle("is-open", state.open);
   }
 
   function contextName(context, type) {
@@ -246,7 +317,7 @@
 
   function renderPanel() {
     var panel = ensurePanel();
-    var visible = state.open && isCutDeskOpen();
+    var visible = state.open && isPanelAllowed();
     panel.classList.toggle("is-open", visible);
     if (!visible) return;
     var context = state.context;
@@ -503,7 +574,7 @@
     } catch (error) {
       if (!candidates.length) throw error;
     }
-    addContext(candidates, { projectId: 1781118846784, scriptId: 1 }, "demo fallback", "demo");
+    addContext(candidates, { projectId: DEMO_PROJECT_ID, scriptId: DEMO_SCRIPT_ID }, "demo fallback", "demo");
     return dedupeContexts(candidates).slice(0, MAX_CONTEXTS);
   }
 
@@ -778,7 +849,7 @@
     state.pollKind = kind;
     state.pollRemaining = POLL_TICKS;
     state.pollTimer = window.setInterval(async function () {
-      if (!state.context || !isCutDeskOpen()) {
+      if (!state.context || !isPanelAllowed()) {
         stopPolling();
         renderPanel();
         return;
@@ -844,6 +915,7 @@
 
   function tick() {
     ensureEntry();
+    ensureProjectEntry();
   }
 
   function boot() {
