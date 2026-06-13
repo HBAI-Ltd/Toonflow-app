@@ -33,7 +33,7 @@ Estimated completion:
 | Structured storyboard metadata | 70% | Backend fields/API exist; native frontend editing experience is incomplete. |
 | Frontend product integration | 55% | Usable compose panel exists, but it is still an injected web script rather than native UI. |
 | Agent workflow integration | 25% | Some ideas were absorbed; huobao agents were not migrated. |
-| Clean release readiness | 70% | Local verification passed; clean-clone and release documentation are still pending. |
+| Clean release readiness | 80% | Clean-clone install/lint/startup/API verification passed with a seeded demo DB; native frontend entry remains brittle. |
 | Upstream PR readiness | 30% | Needs decomposition into smaller PRs and stronger tests/docs. |
 
 ## Source Capability Map
@@ -116,16 +116,23 @@ Already verified in the current working project:
 - The duplicate-entry flicker was fixed by removing the old `compose-workbench.js` script reference.
 - Git branch `codex/video-compose-integration` was pushed to `let5sne/Toonflow-app`.
 
+Additional clean-clone verification completed:
+
+- Clean clone from `let5sne/Toonflow-app` on branch `codex/video-compose-integration`.
+- `yarn install --frozen-lockfile` passed when Electron binary download was skipped for the local check environment.
+- `yarn lint` passed.
+- `PORT=10590 yarn dev` started successfully, confirming the dev service no longer hard-codes only `10588`.
+- `yarn seed:compose-demo` created a minimal local project/script/track/video fixture.
+- Browser login against `http://127.0.0.1:10590/#/project` succeeded and displayed `视频合成演示项目`.
+- `getGenerateData` returned one storyboard and one ready track.
+- `composeVideo` generated a completed `/{projectId}/compose/*.mp4` and subtitle `.srt`; the demo run took about 30 seconds.
+- `mergeEpisode` generated a completed `/{projectId}/merge/*.mp4` with duration written back.
+
 Verification still needed:
 
-- Clean clone from `let5sne/Toonflow-app`.
-- Fresh `yarn install`.
-- Fresh `yarn lint`.
-- Fresh `yarn dev`.
-- Browser test from an empty/new DB or seeded demo DB.
 - FFmpeg absence test and user-facing error state.
-- Real compose job from selected raw video to generated MP4 in a clean environment.
 - Real merge job after several generated clips in a clean environment.
+- Native browser navigation from project canvas/card into the video workbench remains hard to automate because the current project-card entry is not a standard accessible control.
 
 ## Gap Analysis
 
@@ -202,18 +209,19 @@ Run from a separate temp directory:
 git clone git@github.com:let5sne/Toonflow-app.git Toonflow-app-compose-check
 cd Toonflow-app-compose-check
 git checkout codex/video-compose-integration
-yarn install
+yarn install --frozen-lockfile
 yarn lint
-yarn dev
+yarn seed:compose-demo
+PORT=10590 yarn dev
 ```
 
 Then verify in browser:
 
-1. Open `http://127.0.0.1:10588/#/production`.
-2. Enter `视频工作台`.
-3. Open `剪辑台`.
-4. Confirm only `合成任务` appears.
-5. Open the panel and confirm the route/API calls do not depend on old local state.
+1. Open `http://127.0.0.1:10590/#/project`.
+2. Login with `admin / admin123`.
+3. Confirm `视频合成演示项目` appears.
+4. Use the API commands in `docs/video-compose-features.md` to verify `getGenerateData`, `composeVideo`, `getComposeList`, `mergeEpisode`, and `getMergeList`.
+5. Confirm returned media URLs use the active port, not a hard-coded `10588`.
 
 ### Step 2: Migrate Grid Prompt Generator
 

@@ -16,12 +16,99 @@
 ## 环境要求
 
 - 本机需安装 **ffmpeg / ffprobe**（PATH 中可用），可通过环境变量 `FFMPEG_PATH` / `FFPROBE_PATH` 覆盖二进制路径。
+- 开发服务默认端口为 `10588`，也支持通过 `PORT` 覆盖，例如 `PORT=10590 yarn dev`。
+- 静态页面默认 API 地址会使用当前页面的 `location.origin + "/api"`，因此 clean clone 可以用非默认端口启动并登录。
 - macOS 注意：homebrew 安装的 ffmpeg 若被系统 AMFI 以 SIGKILL 拦截（运行即 `killed`，exit 137），需重新 adhoc 签名：
 
 ```bash
 codesign --force --sign - "$(readlink -f /opt/homebrew/bin/ffmpeg)" "$(readlink -f /opt/homebrew/bin/ffprobe)"
 find /opt/homebrew/Cellar -name "*.dylib" -type f | xargs -n 20 codesign --force --sign -
 ```
+
+## 开发模式与演示数据
+
+### 启动开发服务
+
+```bash
+yarn install
+yarn lint
+yarn dev
+```
+
+如需和另一个 Toonflow 实例并行运行：
+
+```bash
+PORT=10590 yarn dev
+```
+
+### 写入最小合成演示数据
+
+clean clone 的数据库默认没有项目、剧本、分镜、轨道和可选视频，因此无法直接演示剪辑台合成入口。可运行：
+
+```bash
+yarn seed:compose-demo
+PORT=10590 yarn dev
+```
+
+脚本会向当前工作目录的 `data/db2.sqlite` 写入一个本地演示项目，并复制 `data/assets/ending.mp4` 到 `data/oss/{projectId}/video/` 作为已生成视频。它只写当前仓库的本地数据库，不会影响其他 clone。
+
+演示固定 ID：
+
+```json
+{
+  "projectId": 1781118846784,
+  "scriptId": 1781118846785,
+  "trackId": 1781122908334,
+  "videoId": 1781122908335
+}
+```
+
+浏览器访问 `http://127.0.0.1:10590/#/project`，默认账号 `admin / admin123`。登录后可看到项目 `视频合成演示项目`。
+
+### API 验收命令
+
+登录并检查剪辑台数据：
+
+```bash
+TOKEN=$(curl -s -X POST http://127.0.0.1:10590/api/login/login \
+  -H 'content-type: application/json' \
+  -d '{"username":"admin","password":"admin123"}' \
+  | node -e 'let s="";process.stdin.on("data",d=>s+=d);process.stdin.on("end",()=>console.log(JSON.parse(s).data.token))')
+
+curl -s -X POST http://127.0.0.1:10590/api/production/workbench/getGenerateData \
+  -H "content-type: application/json" \
+  -H "authorization: $TOKEN" \
+  -d '{"projectId":1781118846784,"scriptId":1781118846785}'
+```
+
+发起单镜合成：
+
+```bash
+curl -s -X POST http://127.0.0.1:10590/api/production/workbench/composeVideo \
+  -H "content-type: application/json" \
+  -H "authorization: $TOKEN" \
+  -d '{"projectId":1781118846784,"scriptId":1781118846785,"trackIds":[1781122908334]}'
+```
+
+轮询合成结果：
+
+```bash
+curl -s -X POST http://127.0.0.1:10590/api/production/workbench/getComposeList \
+  -H "content-type: application/json" \
+  -H "authorization: $TOKEN" \
+  -d '{"projectId":1781118846784,"scriptId":1781118846785}'
+```
+
+发起整集拼接：
+
+```bash
+curl -s -X POST http://127.0.0.1:10590/api/production/workbench/mergeEpisode \
+  -H "content-type: application/json" \
+  -H "authorization: $TOKEN" \
+  -d '{"projectId":1781118846784,"scriptId":1781118846785}'
+```
+
+> 合成任务不是同步接口。以演示视频为例，单镜合成含字幕烧录时约 30 秒完成；整集拼接约数秒完成。验收时应轮询到 `已完成` / `合成失败` / `拼接失败`，不要用 10 秒左右的固定等待直接判断卡死。
 
 ## API 接口
 
