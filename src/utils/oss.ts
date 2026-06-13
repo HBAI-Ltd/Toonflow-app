@@ -4,6 +4,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
+const DEFAULT_PORT = "10588";
+
+function getLocalServeOrigin() {
+  return `http://localhost:${process.env.PORT || DEFAULT_PORT}`;
+}
+
 // 规范化路径：去除前导斜杠，并将路径分隔符统一转换为系统分隔符
 function normalizeUserPath(userPath: string): string {
   // 去除前导的 / 或 \
@@ -53,8 +59,8 @@ class OSS {
     // URL 始终使用 /，所以这里需要将系统分隔符转回 /
     let url = `/${prefix}/`;
     if (process.env.ossURL && process.env.ossURL !== "") url = process.env.ossURL + `/${prefix}/`;
-    if (process.env.NODE_ENV == "dev") url = `http://localhost:10588/${prefix}/`;
-    if (isEletron()) url = `http://localhost:${process.env.PORT}/${prefix}/`;
+    if (process.env.NODE_ENV == "dev") url = `${getLocalServeOrigin()}/${prefix}/`;
+    if (isEletron()) url = `${getLocalServeOrigin()}/${prefix}/`;
     return `${url}${safePath.split(path.sep).join("/")}`;
   }
 

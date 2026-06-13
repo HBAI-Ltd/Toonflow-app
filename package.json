@@ -20,6 +20,7 @@
   },
   "scripts": {
     "dev": "nodemon --inspect --exec tsx src/app.ts",
+    "seed:compose-demo": "tsx scripts/seed-compose-demo.ts",
     "dev:gui": "electronmon -r tsx scripts/main.ts",
     "dev:gui-vite": "cross-env VITE_DEV=1 electronmon -r tsx scripts/main.ts",
     "start": "cross-env NODE_ENV=prod node data/serve/app.js",

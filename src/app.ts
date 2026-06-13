@@ -21,6 +21,18 @@ import { recoverQueue } from "@/utils/genQueue";
 const app = express();
 const server = http.createServer(app);
 const LOOPBACK_ORIGIN_RE = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/;
+const DEFAULT_PORT = 10588;
+
+function getConfiguredPort(randomPort: Boolean): number {
+  if (randomPort) return 0;
+  const rawPort = process.env.PORT;
+  if (!rawPort) return DEFAULT_PORT;
+  const parsedPort = Number(rawPort);
+  if (!Number.isInteger(parsedPort) || parsedPort <= 0 || parsedPort > 65535) {
+    throw new Error(`Invalid PORT: ${rawPort}`);
+  }
+  return parsedPort;
+}
 
 function allowLocalOrigin(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
   if (!origin || LOOPBACK_ORIGIN_RE.test(origin)) {
@@ -212,7 +224,7 @@ export default async function startServe(randomPort: Boolean = false) {
     res.status(err.status || 500).send(err);
   });
 
-  const port = randomPort ? 0 : 10588;
+  const port = getConfiguredPort(randomPort);
   return await new Promise((resolve) => {
     server.listen(port, async () => {
       const address = server.address();
