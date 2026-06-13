@@ -56,9 +56,39 @@ export default async (knex: Knex): Promise<void> => {
     state: "生成失败",
     errorReason: "软件退出导致失败",
   });
+  //队列任务恢复：异常退出时执行中的任务重新排队（在调度器启动前执行）
+  if (await knex.schema.hasTable("o_genQueue")) {
+    await db("o_genQueue").where("state", "执行中").update({
+      state: "排队中",
+      updateTime: Date.now(),
+    });
+  }
+  //合成/拼接记录状态矫正（队列恢复后会重新执行并覆盖状态）
+  if (await knex.schema.hasTable("o_videoCompose")) {
+    await db("o_videoCompose").where("state", "合成中").update({
+      state: "合成失败",
+      errorReason: "软件退出导致失败",
+    });
+  }
+  if (await knex.schema.hasTable("o_episodeMerge")) {
+    await db("o_episodeMerge").where("state", "拼接中").update({
+      state: "拼接失败",
+      errorReason: "软件退出导致失败",
+    });
+  }
 
   // 添加新字段
   await addColumn("o_prompt", "useData", "text");
+  // 抽卡候选组字段
+  await addColumn("o_image", "batchId", "text");
+  await addColumn("o_image", "selected", "integer");
+  await addColumn("o_image", "score", "integer");
+  await addColumn("o_image", "scoreReason", "text");
+  // 分镜结构化字段（台词/音效/景别/运镜）
+  await addColumn("o_storyboard", "dialogue", "text");
+  await addColumn("o_storyboard", "soundEffect", "text");
+  await addColumn("o_storyboard", "shotType", "text");
+  await addColumn("o_storyboard", "cameraMovement", "text");
   // 添加新字段
   await addColumn("o_agentDeploy", "type", "string");
   // 添加新字段

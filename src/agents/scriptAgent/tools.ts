@@ -42,6 +42,9 @@ export default (toolCpnfig: ToolConfig) => {
       ),
       execute: async ({ chapterIndexs }) => {
         console.log("[tools] get_novel_events", chapterIndexs);
+        if (!Array.isArray(chapterIndexs) || chapterIndexs.length === 0) {
+          return "参数错误：chapterIndexs 缺失或为空，请传入章节编号数组，例如 {\"chapterIndexs\": [1]}";
+        }
         const thinking = msg.thinking("正在查询章节事件...");
         const data = await u
           .db("o_novel")
@@ -53,7 +56,7 @@ export default (toolCpnfig: ToolConfig) => {
         thinking.appendText("查询结果:\n" + eventString);
         thinking.updateTitle("查询章节事件完成");
         thinking.complete();
-        return eventString ?? "无数据";
+        return eventString || "无数据";
       },
     }),
     get_planData: tool({
@@ -67,12 +70,15 @@ export default (toolCpnfig: ToolConfig) => {
       ),
       execute: async ({ key }) => {
         console.log("[tools] get_planData", key);
+        if (!key || !(key in planData.shape)) {
+          return `参数错误：key 缺失或无效，可选值: ${Object.keys(planData.shape).join(", ")}`;
+        }
         const thinking = msg.thinking(`正在获取${planDataKeyLabels[key]}工作区数据...`);
-        const planData: planData = await new Promise((resolve) => socket.emit("getPlanData", { key }, (res: any) => resolve(res)));
-        thinking.appendText(`获取到${planDataKeyLabels[key]}:\n` + planData[key]);
+        const data: planData = await new Promise((resolve) => socket.emit("getPlanData", { key }, (res: any) => resolve(res)));
+        thinking.appendText(`获取到${planDataKeyLabels[key]}:\n` + data[key]);
         thinking.updateTitle(`获取${planDataKeyLabels[key]}完成`);
         thinking.complete();
-        return planData[key] ?? "无数据";
+        return data[key] || "无数据";
       },
     }),
     get_novel_text: tool({
@@ -85,14 +91,17 @@ export default (toolCpnfig: ToolConfig) => {
           .toJSONSchema(),
       ),
       execute: async ({ chapterIndex }) => {
-        console.log("[tools] get_novel_text", "[tools] get_novel_text", chapterIndex);
+        console.log("[tools] get_novel_text", chapterIndex);
+        if (chapterIndex === undefined || chapterIndex === null || chapterIndex === "") {
+          return "参数错误：chapterIndex 缺失，请传入章节编号，例如 {\"chapterIndex\": \"1\"}";
+        }
         const thinking = msg.thinking(`正在获取小说章节原文...`);
         const data = await u.db("o_novel").where("projectId", resTool.data.projectId).where({ chapterIndex }).select("chapterData").first();
         const text = data && data?.chapterData ? data.chapterData : "";
         thinking.appendText(`获取到原文:\n` + text);
         thinking.updateTitle(`获取小说章节原文完成`);
         thinking.complete();
-        return text ?? "无数据";
+        return text || "无数据";
       },
     }),
     get_script_content: tool({
@@ -105,14 +114,17 @@ export default (toolCpnfig: ToolConfig) => {
           .toJSONSchema(),
       ),
       execute: async ({ ids }) => {
-        console.log("[tools] get_script_content", "[tools] get_script_content", ids);
+        console.log("[tools] get_script_content", ids);
+        if (!Array.isArray(ids) || ids.length === 0) {
+          return "参数错误：ids 缺失或为空，请传入脚本 id 数组";
+        }
         const thinking = msg.thinking(`正在获取脚本内容...`);
         const data = await u.db("o_script").whereIn("id", ids).select("content", "name");
         const text = data && data.length ? data.map((d) => `<scriptItem name="${d.name}">${d.content}</scriptItem>`).join("\n") : "";
         thinking.appendText(`获取到脚本内容:\n` + JSON.stringify(data, null, 2));
         thinking.updateTitle(`获取脚本内容完成`);
         thinking.complete();
-        return text ?? "无数据";
+        return text || "无数据";
       },
     }),
   };

@@ -32,6 +32,7 @@
     "dist:linux": "yarn build && electron-builder --linux",
     "debug:ai": "npx @ai-sdk/devtools",
     "license": "node scripts/license.ts",
+    "docker:local": "docker compose up --build",
     "vendor2json": "node scripts/vendor2json.ts"
   },
   "dependencies": {
@@ -71,7 +72,7 @@
     "sucrase": "^3.35.1",
     "uuid": "^13.0.0",
     "vercel-minimax-ai-provider": "^0.0.2",
-    "vm2": "^3.10.5",
+    "vm2": "^3.11.4",
     "zhipu-ai-provider": "^0.2.2",
     "zod": "^4.3.5"
   },
@@ -98,5 +99,8 @@
     "@rmp135/sql-ts": {
       "better-sqlite3": "^12.8.0"
     }
+  },
+  "resolutions": {
+    "protobufjs": "^7.5.5"
   }
 }

@@ -1,10 +1,11 @@
 import express from "express";
 import u from "@/utils";
-import { success } from "@/lib/responseFormat";
+import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
 import { v4 as uuid } from "uuid";
 const router = express.Router();
+const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 
 // 根据 base64 头部获取文件扩展名
 function getExtFromBase64(base64Data: string): string {
@@ -22,14 +23,14 @@ function getExtFromBase64(base64Data: string): string {
     "video/mp4": "mp4",
     "video/webm": "webm",
   };
-  return mimeMap[mime] ?? "bin";
+  return mimeMap[mime] ?? "";
 }
 
 // 文件上传（支持图片、音频、视频）
 export default router.post(
   "/",
   validateFields({
-    projectId: z.number(),
+    projectId: z.number().int(),
     base64Data: z.string(),
     type: z.string().optional().default("clip"),
     name: z.string(),
@@ -37,9 +38,14 @@ export default router.post(
   async (req, res) => {
     const { base64Data, projectId, type = "clip", name } = req.body;
     const ext = getExtFromBase64(base64Data);
+    if (!ext) return res.status(400).send(error("不支持的文件类型"));
+    const base64Match = base64Data.match(/^data:[^;]+;base64,([A-Za-z0-9+/=]+)$/);
+    if (!base64Match) return res.status(400).send(error("文件数据格式错误"));
+    const buffer = Buffer.from(base64Match[1], "base64");
+    if (buffer.length > MAX_UPLOAD_BYTES) return res.status(400).send(error("文件超过大小上限"));
     const savePath = `/${projectId}/assets/${uuid()}.${ext}`;
 
-    await u.oss.writeFile(savePath, Buffer.from(base64Data.match(/base64,([A-Za-z0-9+/=]+)/)[1] ?? "", "base64"));
+    await u.oss.writeFile(savePath, buffer);
     const [id] = await u.db("o_assets").insert({
       type: type,
       projectId: projectId,

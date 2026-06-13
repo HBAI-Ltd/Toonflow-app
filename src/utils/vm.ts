@@ -14,6 +14,14 @@ import FormData from "form-data";
 import jsonwebtoken from "jsonwebtoken";
 import u from "@/utils";
 import crypto from "node:crypto";
+
+const DEFAULT_VM_TIMEOUT_MS = 5000;
+
+function getVmTimeout(): number {
+  const value = Number(process.env.VENDOR_VM_TIMEOUT_MS);
+  return Number.isFinite(value) && value > 0 ? value : DEFAULT_VM_TIMEOUT_MS;
+}
+
 export default function runCode(code: string, vendor?: Record<string, any>) {
   code = code.replace(/export\s*\{\s*\};?/g, ""); // 去掉 export {} 以免沙盒环境报错
   // 创建一个沙盒
@@ -45,7 +53,7 @@ export default function runCode(code: string, vendor?: Record<string, any>) {
     sandbox.vendor = vendor;
   }
   const vm = new VM({
-    timeout: 0,
+    timeout: getVmTimeout(),
     sandbox,
     compiler: "javascript",
     eval: false,

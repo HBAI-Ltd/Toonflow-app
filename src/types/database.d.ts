@@ -1,4 +1,4 @@
-// @db-hash f5d050145d03a52b5b502043bc559ec0
+// @db-hash ffc94728251a1b7419fa70caf277129a
 //该文件由脚本自动生成，请勿手动修改
 
 export interface memories {
@@ -67,6 +67,16 @@ export interface o_assetsRole2Audio {
   'assetsAudioId'?: number;
   'assetsRoleId'?: number;
 }
+export interface o_episodeMerge {
+  'createTime'?: number | null;
+  'duration'?: number | null;
+  'errorReason'?: string | null;
+  'filePath'?: string | null;
+  'id'?: number;
+  'projectId'?: number | null;
+  'scriptId'?: number | null;
+  'state'?: string | null;
+}
 export interface o_event {
   'createTime'?: number | null;
   'detail'?: string | null;
@@ -78,13 +88,31 @@ export interface o_eventChapter {
   'id'?: number;
   'novelId'?: number | null;
 }
+export interface o_genQueue {
+  'createTime'?: number | null;
+  'errorReason'?: string | null;
+  'id'?: number;
+  'kind'?: string | null;
+  'maxRetry'?: number | null;
+  'payload'?: string | null;
+  'priority'?: number | null;
+  'projectId'?: number | null;
+  'retryCount'?: number | null;
+  'state'?: string | null;
+  'updateTime'?: number | null;
+  'vendorId'?: string | null;
+}
 export interface o_image {
   'assetsId'?: number | null;
+  'batchId'?: string | null;
   'errorReason'?: string | null;
   'filePath'?: string | null;
   'id'?: number;
   'model'?: string | null;
   'resolution'?: string | null;
+  'score'?: number | null;
+  'scoreReason'?: string | null;
+  'selected'?: number | null;
   'state'?: string | null;
   'type'?: string | null;
 }
@@ -97,7 +125,6 @@ export interface o_modelPrompt {
   'id'?: number;
   'model'?: string | null;
   'path'?: string | null;
-  'prompt'?: string | null;
   'vendorId'?: string | null;
 }
 export interface o_novel {
@@ -169,7 +196,9 @@ export interface o_skillList {
   'updateTime': number;
 }
 export interface o_storyboard {
+  'cameraMovement'?: string | null;
   'createTime'?: number | null;
+  'dialogue'?: string | null;
   'duration'?: string | null;
   'filePath'?: string | null;
   'flowId'?: number | null;
@@ -179,7 +208,9 @@ export interface o_storyboard {
   'prompt'?: string | null;
   'reason'?: string | null;
   'scriptId'?: number | null;
+  'shotType'?: string | null;
   'shouldGenerateImage'?: number | null;
+  'soundEffect'?: string | null;
   'state'?: string | null;
   'track'?: string | null;
   'trackId'?: number | null;
@@ -217,6 +248,20 @@ export interface o_video {
   'time'?: number | null;
   'videoTrackId'?: number | null;
 }
+export interface o_videoCompose {
+  'audioPath'?: string | null;
+  'createTime'?: number | null;
+  'dialogue'?: string | null;
+  'errorReason'?: string | null;
+  'filePath'?: string | null;
+  'id'?: number;
+  'projectId'?: number | null;
+  'scriptId'?: number | null;
+  'state'?: string | null;
+  'subtitlePath'?: string | null;
+  'trackId'?: number | null;
+  'videoId'?: number | null;
+}
 export interface o_videoTrack {
   'duration'?: number | null;
   'id'?: number;
@@ -237,8 +282,10 @@ export interface DB {
   "o_assets": o_assets;
   "o_assets2Storyboard": o_assets2Storyboard;
   "o_assetsRole2Audio": o_assetsRole2Audio;
+  "o_episodeMerge": o_episodeMerge;
   "o_event": o_event;
   "o_eventChapter": o_eventChapter;
+  "o_genQueue": o_genQueue;
   "o_image": o_image;
   "o_imageFlow": o_imageFlow;
   "o_modelPrompt": o_modelPrompt;
@@ -255,5 +302,6 @@ export interface DB {
   "o_user": o_user;
   "o_vendorConfig": o_vendorConfig;
   "o_video": o_video;
+  "o_videoCompose": o_videoCompose;
   "o_videoTrack": o_videoTrack;
 }

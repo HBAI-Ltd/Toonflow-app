@@ -93,7 +93,7 @@
 ### 阶段1：故事骨架（Story Skeleton）
 
 ```
-输入：事件表（通过 get_novel_events(ids:number[]) 获取）
+输入：事件表（通过 get_novel_events(chapterIndexs:number[]) 获取）
 处理：三幕分割、按项目配置分集、删减决策、钩子设计
 输出：planData.storySkeleton
 工具：get_planData → set_planData_storySkeleton

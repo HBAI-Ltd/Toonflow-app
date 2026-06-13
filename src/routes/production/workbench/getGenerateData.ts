@@ -158,7 +158,15 @@ export default router.post(
       trackData.map((t) => t.id),
     );
     const trackList: TrackItem[] = [];
-    const trackIdMap = [...new Set<number>(trackData.map((t) => t.id!))];
+    // 轨道顺序严格跟随分镜表：按「每条轨道下最小分镜 index」升序排列，
+    // 而非依赖 o_videoTrack 的插入顺序(rowid)。这样在分镜流程中拖动重排后，
+    // 底部轨道 #N 仍与分镜表顺序一致。无分镜的轨道(理论上不应存在)排到末尾。
+    const trackMinIndex = (tid: number): number => {
+      const medias = storyboardTrackRecord[tid] ?? [];
+      const indexes = medias.map((m: any) => m.index).filter((n: any) => typeof n === "number");
+      return indexes.length ? Math.min(...indexes) : Number.MAX_SAFE_INTEGER;
+    };
+    const trackIdMap = [...new Set<number>(trackData.map((t) => t.id!))].sort((a, b) => trackMinIndex(a) - trackMinIndex(b));
     for (const trackId of trackIdMap) {
       const item = trackData.find((t) => t.id === trackId);
       trackList.push({

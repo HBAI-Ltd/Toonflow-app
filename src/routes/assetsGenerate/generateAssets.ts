@@ -1,9 +1,9 @@
 import express from "express";
 import u from "@/utils";
 import { z } from "zod";
-import { v4 as uuidv4 } from "uuid";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { enqueueAssetCandidates } from "@/utils/queueHandlers";
 
 const router = express.Router();
 
@@ -69,10 +69,12 @@ const requestSchema = {
   name: z.string(),
   prompt: z.string(),
   base64: z.string().optional().nullable(),
+  candidateCount: z.number().int().min(1).max(4).optional(), // 抽卡候选张数，默认 1
+  enableScore: z.boolean().optional(), // 是否启用 VLM 自动打分预筛
 };
 
 export default router.post("/", validateFields(requestSchema), async (req, res) => {
-  const { projectId, model, resolution, id, type, name, prompt, base64 } = req.body;
+  const { projectId, model, resolution, id, type, name, prompt, base64, candidateCount, enableScore } = req.body;
 
   // 1. 查询项目 & 获取类型配置
   const project = await u.db("o_project").where("id", projectId).select("artStyle", "type", "intro").first();
@@ -81,63 +83,40 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
   const cfg = assetTypeConfig[type as AssetType];
   if (!cfg) return res.status(400).send(error("不支持的类型"));
 
-  // 2. 创建图片占位记录
-  const [imageId] = await u.db("o_image").insert({
-    type,
-    state: "生成中",
-    assetsId: id,
-    model: model.split(/:(.+)/)[1],
-    resolution,
-  });
-  await u.db("o_assets").where("id", id).update({ imageId });
-
-  // 3. 准备生成参数
-  const imagePath = `/${projectId}/${cfg.dir}/${uuidv4()}.jpg`;
+  // 2. 创建候选占位记录并入队（含 vendor 并发限流、失败自动重试）
   const userPrompt = buildPrompt(cfg, project.artStyle!, name, prompt);
   const describe = `生成${cfg.label}图，名称：${name}，提示词：${prompt}`;
-  const relatedObjects = { id, projectId, type: cfg.label };
+  const count = candidateCount ?? 1;
 
+  const { batchId, imageIds, jobs } = await enqueueAssetCandidates({
+    projectId,
+    assetsId: id,
+    type,
+    model,
+    resolution: resolution as "1K" | "2K" | "4K",
+    aspectRatio: "16:9",
+    prompt: userPrompt,
+    referenceBase64: base64 ?? null,
+    dir: cfg.dir,
+    taskClass: cfg.taskClass,
+    describe,
+    candidateCount: count,
+    enableScore: enableScore ?? false,
+  });
+
+  // 多候选抽卡：立即返回候选组信息，前端通过 getCandidates 轮询并选定
+  if (count > 1) {
+    return res.status(200).send(success({ batchId, imageIds, assetsId: id }));
+  }
+
+  // 单张：保持原同步响应语义
   try {
-    const aiImage = u.Ai.Image(model);
-    await aiImage.run(
-      {
-        prompt: userPrompt,
-        referenceList: base64 ? [{ type: "image", base64 }] : [],
-        size: resolution,
-        aspectRatio: "16:9",
-      },
-      {
-        taskClass: cfg.taskClass,
-        describe,
-        projectId,
-        relatedObjects: JSON.stringify(relatedObjects),
-      },
-    );
-    aiImage.save(imagePath);
-    // 5. 更新记录 & 返回结果
-    const imageData = await u.db("o_image").where("id", imageId).select("*").first();
-    if (!imageData) return res.status(500).send("资产已被删除");
-    if (imageData.state === "生成失败") return;
-    await u
-      .db("o_image")
-      .where("id", imageId)
-      .update({
-        state: "已完成",
-        filePath: imagePath,
-        type,
-        model: model.split(/:(.+)/)[1],
-        resolution,
-      });
-
-    const path = await u.oss.getSmallImageUrl(imagePath);
-    await u.db("o_assets").where("id", id).update({ imageId });
-
+    await jobs[0].done;
+    const imageData = await u.db("o_image").where("id", imageIds[0]).select("filePath").first();
+    if (!imageData?.filePath) return res.status(400).send(error("图片生成失败"));
+    const path = await u.oss.getSmallImageUrl(imageData.filePath);
     return res.status(200).send(success({ path, assetsId: id }));
   } catch (e) {
-    await u
-      .db("o_image")
-      .where("id", imageId)
-      .update({ state: "生成失败", errorReason: u.error(e).message });
     return res.status(400).send(error(u.error(e).message || "图片生成失败"));
   }
 });

@@ -156,6 +156,18 @@ class OSS {
   }
 
   /**
+   * 获取指定相对路径在本机磁盘上的绝对路径（含安全校验）。
+   * 供 ffmpeg/sharp 等需要直接读写磁盘文件的本地处理工具使用。
+   * @param userRelPath 用户传入的相对文件路径（使用 / 作为分隔符）
+   * @returns 文件的绝对路径
+   * @throws 路径不在 OSS 根目录内等错误
+   */
+  async getAbsolutePath(userRelPath: string): Promise<string> {
+    await this.ensureInit();
+    return resolveSafeLocalPath(userRelPath, this.rootDir);
+  }
+
+  /**
    * 检查指定路径文件是否存在。
    * @param userRelPath 用户传入的相对文件路径（使用 / 作为分隔符）
    * @returns 文件存在返回 true，否则 false

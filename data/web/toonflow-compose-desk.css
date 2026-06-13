@@ -1,0 +1,264 @@
+.tf-desk-entry {
+  height: 38px;
+  border: 1px solid #d6dbe4;
+  background: #ffffff;
+  color: #202733;
+  border-radius: 6px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  white-space: nowrap;
+}
+
+.tf-desk-entry:hover,
+.tf-desk-entry.is-open {
+  border-color: #1d5be3;
+  background: #f6f9ff;
+  color: #164ec5;
+}
+
+.tf-desk-float-entry {
+  position: fixed;
+  right: 104px;
+  bottom: 24px;
+  z-index: 3100;
+}
+
+.tf-desk-panel {
+  position: fixed;
+  right: 18px;
+  bottom: 78px;
+  width: min(440px, calc(100vw - 36px));
+  max-height: min(640px, calc(100vh - 118px));
+  z-index: 3101;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  background: #ffffff;
+  color: #202733;
+  border: 1px solid #dfe4ec;
+  border-radius: 8px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.2);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.tf-desk-panel.is-open {
+  display: flex;
+}
+
+.tf-desk-head {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-bottom: 1px solid #edf0f5;
+  background: #fafbfc;
+}
+
+.tf-desk-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.tf-desk-close {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #626b7a;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 26px;
+}
+
+.tf-desk-close:hover {
+  background: #edf2f7;
+  color: #202733;
+}
+
+.tf-desk-body {
+  padding: 12px;
+  overflow: auto;
+  font-size: 13px;
+}
+
+.tf-desk-context {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 10px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+
+.tf-desk-label {
+  color: #697386;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.tf-desk-value {
+  color: #202733;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: right;
+  word-break: break-word;
+}
+
+.tf-desk-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.tf-desk-btn {
+  height: 30px;
+  border: 1px solid #d6dbe4;
+  background: #ffffff;
+  color: #202733;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tf-desk-btn:hover {
+  border-color: #1d5be3;
+  background: #f6f9ff;
+  color: #164ec5;
+}
+
+.tf-desk-btn.primary {
+  border-color: #1d5be3;
+  background: #1d5be3;
+  color: #ffffff;
+}
+
+.tf-desk-btn.primary:hover {
+  background: #164ec5;
+  color: #ffffff;
+}
+
+.tf-desk-btn:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.tf-desk-msg {
+  margin: 8px 0;
+  padding: 8px 9px;
+  border-radius: 6px;
+  background: #f6f8fb;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.tf-desk-msg.error {
+  border: 1px solid #ffd8d4;
+  background: #fff1f0;
+  color: #b42318;
+}
+
+.tf-desk-section {
+  padding-top: 10px;
+  margin-top: 10px;
+  border-top: 1px solid #edf0f5;
+}
+
+.tf-desk-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tf-desk-item {
+  border: 1px solid #e4e9f1;
+  border-radius: 7px;
+  padding: 9px 10px;
+  margin-bottom: 8px;
+  background: #ffffff;
+}
+
+.tf-desk-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.tf-desk-muted {
+  color: #697386;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.tf-desk-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #264eb8;
+  padding: 2px 7px;
+  font-size: 12px;
+  margin-left: 6px;
+}
+
+.tf-desk-pill.warn {
+  background: #fff7ed;
+  color: #b45309;
+}
+
+.tf-desk-pill.ok {
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.tf-desk-link {
+  color: #185ee0;
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tf-desk-link:hover {
+  text-decoration: underline;
+}
+
+.tf-desk-empty {
+  padding: 13px;
+  border: 1px dashed #d6dbe4;
+  border-radius: 7px;
+  background: #fafbfc;
+  color: #697386;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .tf-desk-panel {
+    right: 10px;
+    bottom: 68px;
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 92px);
+  }
+
+  .tf-desk-float-entry {
+    right: 12px;
+    bottom: 16px;
+  }
+}

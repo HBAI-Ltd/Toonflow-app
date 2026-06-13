@@ -1,0 +1,16 @@
+services:
+  toonflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: toonflow:local
+    container_name: toonflow
+    ports:
+      - "127.0.0.1:10588:10588"
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    environment:
+      NODE_ENV: dev
+      PORT: "10588"
+    restart: unless-stopped

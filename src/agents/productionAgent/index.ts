@@ -5,6 +5,7 @@ import u from "@/utils";
 import Memory from "@/utils/agent/memory";
 import { createSkillTools, parseFrontmatter, scanSkills, useSkill } from "@/utils/agent/skillsTools";
 import useTools from "@/agents/productionAgent/tools";
+import { createToolUseCounter, SUPERVISION_INVALID_MESSAGE } from "@/utils/agent/toolUseGuard";
 import ResTool from "@/socket/resTool";
 import * as fs from "fs";
 import path from "path";
@@ -105,6 +106,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     memoryKey,
     tools: extraTools,
     messages,
+    requireToolUse,
   }: {
     key: `${string}:${string}`;
     prompt: string;
@@ -113,18 +115,30 @@ async function createSubAgent(parentCtx: AgentContext) {
     memoryKey: string;
     tools?: Record<string, any>;
     messages?: { role: "user" | "assistant" | "system"; content: string }[];
+    requireToolUse?: boolean;
   }) {
     parentCtx.msg.complete();
     const subMsg = resTool.newMessage("assistant", name);
+
+    const counter = createToolUseCounter({ ...extraTools, ...useTools({ resTool, msg: subMsg }) });
 
     const { fullStream } = await u.Ai.Text(key, parentCtx.thinkConfig.think, parentCtx.thinkConfig.thinlLevel).stream({
       system,
       messages: messages ?? [{ role: "user", content: prompt }],
       abortSignal,
-      tools: { ...extraTools, ...useTools({ resTool, msg: subMsg }) },
+      tools: counter.tools,
     });
 
     const fullResponse = await consumeFullStream(fullStream, subMsg);
+
+    if (requireToolUse && counter.getCount() === 0) {
+      console.warn(`[${key}] 审核无效：零工具调用，结论作废`);
+      const invalidMsg = resTool.newMessage("assistant", name);
+      invalidMsg.text().append(SUPERVISION_INVALID_MESSAGE).complete();
+      invalidMsg.complete();
+      parentCtx.msg = resTool.newMessage("assistant", "视频策划");
+      return SUPERVISION_INVALID_MESSAGE;
+    }
 
     if (fullResponse.trim()) {
       await memory.add(memoryKey, removeAllXmlTags(fullResponse), {
@@ -359,6 +373,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         system: systemPrompt,
         name: "监制",
         memoryKey: "assistant:supervision",
+        requireToolUse: true,
       });
     },
   });

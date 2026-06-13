@@ -15,9 +15,37 @@ import jwt from "jsonwebtoken";
 import socketInit from "@/socket/index";
 import { isEletron } from "@/utils/getPath";
 import { ensureThumbnail, ThumbnailSize } from "@/utils/image";
+import { registerQueueHandlers } from "@/utils/queueHandlers";
+import { recoverQueue } from "@/utils/genQueue";
 
 const app = express();
 const server = http.createServer(app);
+const LOOPBACK_ORIGIN_RE = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/;
+
+function allowLocalOrigin(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+  if (!origin || LOOPBACK_ORIGIN_RE.test(origin)) {
+    callback(null, true);
+    return;
+  }
+  callback(null, false);
+}
+
+function isSensitiveOssPath(reqPath: string): boolean {
+  return /^\/[^/]+\/(compose|merge)\//.test(reqPath);
+}
+
+async function verifyRequestToken(req: Request): Promise<{ ok: true; decoded: string | jwt.JwtPayload } | { ok: false; status: number; message: string }> {
+  const setting = await u.db("o_setting").where("key", "tokenKey").select("value").first();
+  if (!setting) return { ok: false, status: 444, message: "服务器秘钥未配置，请联系管理员" };
+  const rawToken = req.headers.authorization || (req.query.token as string) || "";
+  const token = rawToken.replace("Bearer ", "");
+  if (!token) return { ok: false, status: 401, message: "未提供token" };
+  try {
+    return { ok: true, decoded: jwt.verify(token, setting.value as string) };
+  } catch {
+    return { ok: false, status: 401, message: "无效的token" };
+  }
+}
 
 async function checkPermissions() {
   if (!isEletron()) return true;
@@ -47,7 +75,7 @@ export default async function startServe(randomPort: Boolean = false) {
   await checkPermissions();
 
   await u.writeVersion();
-  const io = new Server(server, { cors: { origin: "*" } });
+  const io = new Server(server, { cors: { origin: allowLocalOrigin } });
   socketInit(io);
 
   if (process.env.NODE_ENV == "dev") await buildRoute();
@@ -55,7 +83,7 @@ export default async function startServe(randomPort: Boolean = false) {
   expressWs(app);
 
   app.use(logger("dev"));
-  app.use(cors({ origin: "*" }));
+  app.use(cors({ origin: allowLocalOrigin }));
   app.use(express.json({ limit: "100mb" }));
   app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 
@@ -67,7 +95,12 @@ export default async function startServe(randomPort: Boolean = false) {
   console.log("文件目录:", ossDir);
   app.use(
     "/oss",
-    (req, res, next) => {
+    async (req, res, next) => {
+      if (isSensitiveOssPath(req.path)) {
+        const verified = await verifyRequestToken(req);
+        if (!verified.ok) return res.status(verified.status).send({ message: verified.message });
+        (req as any).user = verified.decoded;
+      }
       // 如果传参 type=small，则返回小图
       if (req.query.size) {
         const size = req.query.size as string;
@@ -150,27 +183,21 @@ export default async function startServe(randomPort: Boolean = false) {
   }
 
   app.use(async (req, res, next) => {
-    const setting = await u.db("o_setting").where("key", "tokenKey").select("value").first();
-    if (!setting) return res.status(444).send({ message: "服务器秘钥未配置，请联系管理员" });
-    const { value: tokenKey } = setting;
-    // 从 header 或 query 参数获取 token
-    const rawToken = req.headers.authorization || (req.query.token as string) || "";
-    const token = rawToken.replace("Bearer ", "");
     // 白名单路径
     if (req.path === "/api/login/login") return next();
 
-    if (!token) return res.status(401).send({ message: "未提供token" });
-    try {
-      const decoded = jwt.verify(token, tokenKey as string);
-      (req as any).user = decoded;
-      next();
-    } catch (err) {
-      return res.status(401).send({ message: "无效的token" });
-    }
+    const verified = await verifyRequestToken(req);
+    if (!verified.ok) return res.status(verified.status).send({ message: verified.message });
+    (req as any).user = verified.decoded;
+    next();
   });
 
   const router = await import("@/router");
   await router.default(app);
+
+  // 生成队列：注册处理器并恢复重启前未完成的任务
+  registerQueueHandlers();
+  await recoverQueue();
 
   // 404 处理
   app.use((_, res, next: NextFunction) => {

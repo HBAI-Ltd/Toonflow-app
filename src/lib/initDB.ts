@@ -476,8 +476,33 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         table.text("resolution");
         table.text("state");
         table.text("errorReason");
+        table.text("batchId"); //抽卡候选组ID，同一次生成的多张候选图共享
+        table.integer("selected"); //是否为该候选组中被选定的图 0/1
+        table.integer("score"); //VLM 自动打分 0-100
+        table.text("scoreReason"); //打分理由
         table.primary(["id"]);
         table.unique(["id"]);
+      },
+    },
+    //生成任务队列表（持久化，重启可恢复）
+    {
+      name: "o_genQueue",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("projectId");
+        table.string("kind"); //任务类型：assetImage / storyboardImage
+        table.text("payload"); //任务参数 JSON
+        table.string("vendorId"); //供应商ID，用于按 vendor 限流
+        table.integer("priority"); //优先级，越大越先执行
+        table.string("state"); //排队中 / 执行中 / 已完成 / 失败
+        table.integer("retryCount"); //已重试次数
+        table.integer("maxRetry"); //最大重试次数
+        table.text("errorReason");
+        table.integer("createTime");
+        table.integer("updateTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.index(["state", "priority"]);
       },
     },
     //分镜
@@ -499,8 +524,50 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         table.integer("flowId"); //工作流id
         table.integer("index");
         table.integer("createTime");
+        table.text("dialogue"); //台词（结构化，优先于 videoDesc 中的台词段）
+        table.text("soundEffect"); //音效描述
+        table.text("shotType"); //景别（远景/全景/中景/近景/特写）
+        table.text("cameraMovement"); //运镜（固定/推/拉/摇/跟/移）
         table.primary(["id"]);
         table.unique(["id"]);
+      },
+    },
+    //单镜头合成记录（视频 + TTS配音 + 烧录字幕）
+    {
+      name: "o_videoCompose",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("projectId");
+        table.integer("scriptId");
+        table.integer("trackId"); //对应 o_videoTrack.id
+        table.integer("videoId"); //合成所用的源视频 o_video.id
+        table.text("state"); //合成中 / 已完成 / 合成失败
+        table.text("filePath"); //合成后视频路径
+        table.text("audioPath"); //TTS 音频路径
+        table.text("subtitlePath"); //SRT 字幕路径
+        table.text("dialogue"); //合成时使用的台词
+        table.text("errorReason");
+        table.integer("createTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.index(["scriptId", "trackId"]);
+      },
+    },
+    //整集拼接导出记录
+    {
+      name: "o_episodeMerge",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("projectId");
+        table.integer("scriptId");
+        table.text("state"); //拼接中 / 已完成 / 拼接失败
+        table.text("filePath"); //成片路径
+        table.integer("duration"); //成片时长（秒）
+        table.text("errorReason");
+        table.integer("createTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.index(["scriptId"]);
       },
     },
     //flowData-剧本

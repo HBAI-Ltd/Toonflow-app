@@ -1,4 +1,4 @@
-import { generateText, streamText, wrapLanguageModel, stepCountIs, extractReasoningMiddleware } from "ai";
+import { generateText, streamText, wrapLanguageModel, stepCountIs, extractReasoningMiddleware, NoSuchToolError } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 import axios from "axios";
 import { transform } from "sucrase";
@@ -174,6 +174,19 @@ async function urlToBase64(url: string, retries = 3, delay = 1000): Promise<stri
   }
   throw new Error("urlToBase64 failed");
 }
+// 部分中转模型会用 PascalCase/camelCase 调用工具（如 GetNovelEvents），
+// 归一化大小写和分隔符后匹配回实际注册的工具名
+function repairToolName(options: { toolCall: any; tools: Record<string, any>; error: Error }): Promise<any> {
+  const { toolCall, tools, error } = options;
+  if (!NoSuchToolError.isInstance(error)) return Promise.resolve(null);
+  const normalize = (s: string) => s.toLowerCase().replace(/[_\-\s]/g, "");
+  const target = normalize(toolCall.toolName);
+  const matched = Object.keys(tools).find((name) => normalize(name) === target);
+  if (!matched) return Promise.resolve(null);
+  console.warn(`[ai] 修复工具名: ${toolCall.toolName} -> ${matched}`);
+  return Promise.resolve({ ...toolCall, toolName: matched });
+}
+
 class AiText {
   private AiType: AiType | `${string}:${string}`;
   private think?: boolean;
@@ -199,6 +212,7 @@ class AiText {
 
     return generateText({
       ...(input.tools && { stopWhen: stepCountIs(Object.keys(input.tools).length * 50) }),
+      experimental_repairToolCall: repairToolName,
       ...input,
       model: await this.resolveModel(),
       ...(config?.temperature && { temperature: config.temperature }),
@@ -210,6 +224,7 @@ class AiText {
 
     return streamText({
       ...(input.tools && { stopWhen: stepCountIs(Object.keys(input.tools).length * 50) }),
+      experimental_repairToolCall: repairToolName,
       ...input,
       model: await this.resolveModel(extractReasoningMiddleware({ tagName: "reasoning_content", separator: "\n" })),
       ...(config?.temperature && { temperature: config.temperature }),

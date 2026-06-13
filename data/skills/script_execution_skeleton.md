@@ -7,11 +7,11 @@
 | 操作 | 调用 |
 |------|------|
 | 读取工作区 | `get_planData` |
-| 读取事件 | `get_novel_events(ids:number[])` |
+| 读取事件 | `get_novel_events(chapterIndexs:number[])` |
 
 ## 执行流程
 
-1. 先调用 `get_planData` 确认工作区状态（已有内容在其基础上修改，除非指令要求重写），再调用 `get_novel_events(ids)` 获取事件表
+1. 先调用 `get_planData` 确认工作区状态（已有内容在其基础上修改，除非指令要求重写），再调用 `get_novel_events(chapterIndexs)` 获取事件表
 
 2. **阐述思路**（200-300字）：核心吸引力判断、核心爽点与金手指原创性、三幕划分思路、分集策略方向
 3. 构建骨架内容（严格按照XML格式写出故事骨架，格式为<storySkeleton>故事骨架内容</storySkeleton>。XML 标签及其全部内容必须一次性完整输出，禁止拆分为多次 XML 输出。）：

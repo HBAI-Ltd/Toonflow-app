@@ -1,11 +1,11 @@
 import express from "express";
 import u from "@/utils";
 import { z } from "zod";
-import sharp from "sharp";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import { Output, tool } from "ai";
 import { assetItemSchema } from "@/agents/productionAgent/tools";
+import { enqueueJob } from "@/utils/genQueue";
+import type { StoryboardImagePayload } from "@/utils/queueHandlers";
 const router = express.Router();
 export type AssetData = z.infer<typeof assetItemSchema>;
 
@@ -91,79 +91,34 @@ export default router.post(
       ),
     );
 
-    const generateTask = async (item: (typeof storyboardData)[number]) => {
-      const repeloadObj = {
-        prompt: item.prompt!,
-        size: projectSettingData?.imageQuality as "1K" | "2K" | "4K",
-        aspectRatio: projectSettingData?.videoRatio as `${number}:${number}`,
-      };
-      try {
-        const imageCls = await u.Ai.Image(projectSettingData?.imageModel as `${string}:${string}`).run(
-          {
-            referenceList: await getAssetsImageBase64(assetRecord[item.id!] || []),
-            ...repeloadObj,
-          },
-          {
-            taskClass: "生成分镜图片",
-            describe: "分镜图片生成",
-            relatedObjects: JSON.stringify(repeloadObj),
-            projectId: projectId,
-          },
-        );
-        const savePath = `/${projectId}/assets/${scriptId}/${u.uuid()}.jpg`;
-        await imageCls.save(savePath);
-        await u.db("o_storyboard").where("id", item.id).update({
-          filePath: savePath,
-          state: "已完成",
-        });
-      } catch (e) {
-        u.db("o_storyboard")
-          .where("id", item.id)
-          .update({
-            filePath: "",
-            reason: u.error(e).message,
-            state: "生成失败",
-          });
-      }
-    };
-    // 按 concurrentCount 控制并发数，分批执行；跳过 shouldGenerateImage === 0 的分镜
+    // 入队生成（队列按 vendor 限流 + 失败自动重试，参考图在执行时按 refImageIds 实时解析）
+    // concurrentCount 参数保留兼容老前端，实际并发由队列 vendor 限流控制
+    void concurrentCount;
     let generateList = [];
     if (compulsory) {
       generateList = storyboardData;
     } else {
       generateList = storyboardData.filter((item) => item.shouldGenerateImage !== 0);
     }
-    for (let i = 0; i < generateList.length; i += concurrentCount) {
-      const batch = generateList.slice(i, i + concurrentCount);
-      await Promise.all(batch.map(generateTask));
+    const model = projectSettingData?.imageModel as `${string}:${string}`;
+    const vendorId = model?.split(/:(.+)/)[0] ?? "default";
+    for (const item of generateList) {
+      const payload: StoryboardImagePayload = {
+        storyboardId: item.id!,
+        scriptId,
+        projectId,
+        prompt: item.prompt!,
+        refImageIds: assetRecord[item.id!] || [],
+        model,
+        size: projectSettingData?.imageQuality as "1K" | "2K" | "4K",
+        aspectRatio: projectSettingData?.videoRatio as `${number}:${number}`,
+      };
+      await enqueueJob({
+        projectId,
+        kind: "storyboardImage",
+        payload: payload as unknown as Record<string, unknown>,
+        vendorId,
+      });
     }
   },
 );
-async function getAssetsImageBase64(imageIds: number[]) {
-  if (!imageIds.length) return [];
-
-  const imagePaths = await u.db("o_image").whereIn("o_image.id", imageIds).select("o_image.id", "o_image.filePath");
-
-  // 建立 id 到 filePath 的映射
-  const id2Path = new Map<number, string>();
-  for (const row of imagePaths) {
-    id2Path.set(row.id, row.filePath);
-  }
-
-  // 保证输出顺序与 imageIds 一致
-  const imageUrls = await Promise.all(
-    imageIds.map(async (id) => {
-      const filePath = id2Path.get(id);
-      if (filePath) {
-        try {
-          return await u.oss.getImageBase64(filePath);
-        } catch {
-          return null;
-        }
-      }
-      return null;
-    }),
-  );
-  // 保留顺序，并且过滤掉无效项
-  return (imageUrls.filter(Boolean) as string[]).map((url) => ({ type: "image" as const, base64: url }));
-}
