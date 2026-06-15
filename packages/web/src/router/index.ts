@@ -21,12 +21,12 @@ const router = createRouter({
     {
       path: "/workbench",
       component: () => import("@/pages/workbench/index.vue"),
-      // redirect: "/project",
+      redirect: "/project",
       children: [
-        // {
-        //   path: "/project",
-        //   component: () => import("@/views/project/index.vue"),
-        // },
+        {
+          path: "/project",
+          component: () => import("@/views/project/index.vue"),
+        },
         // {
         //   path: "/task",
         //   component: () => import("@/views/task/index.vue"),

@@ -56,6 +56,10 @@ export async function compile() {
     esbuild.build({ ...baseConfig, entryPoints: [path.resolve(rootDir, "packages/app/src/app.ts")], outfile: appFile }),
     esbuild.build({ ...baseConfig, entryPoints: [path.resolve(rootDir, "packages/app/scripts/main.ts")], outfile: mainFile }),
   ]);
+
+  // 主进程通过 __dirname 读取窗口图标，需将 logo.ico 拷贝到 main.cjs 同级目录。
+  fs.copyFileSync(path.resolve(rootDir, "packages/assets/logo.ico"), path.resolve(path.dirname(mainFile), "logo.ico"));
+
   console.log("✅ 编译完成");
 }
 

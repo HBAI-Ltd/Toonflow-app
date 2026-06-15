@@ -11,6 +11,8 @@ const cpus = process.env.NODE_ENV === "dev" ? 1 : os.cpus().length;
 const isElectron = process.env.NODE_ENV === "electron";
 const webDir = isElectron ? path.join(exeDir, "resources", "app", "build", "web") : "";
 
+const logo = app.isPackaged ? path.join(__dirname, "logo.ico") : path.resolve(__dirname, "../../assets/logo.ico");
+
 let baseUrl = "http://localhost:50188";
 let mainWindow: BrowserWindow | null = null;
 const workers: ChildProcess[] = [];
@@ -119,7 +121,7 @@ function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
-    icon: "../../assets/logo.ico",
+    icon: logo,
     webPreferences: {
       contextIsolation: false,
       backgroundThrottling: false,
@@ -158,21 +160,22 @@ app.whenReady().then(() => {
   createWindow();
   mainWindow?.loadURL(`${baseUrl}/web/#/loading`);
 
-  startServe()
-    .then((ports) => {
-      setupProxy(ports);
-      console.log(`[主进程] 服务就绪 ${baseUrl}`);
+  if (process.env.NODE_ENV === "prod" || process.env.NODE_ENV === "electron")
+    startServe()
+      .then((ports) => {
+        setupProxy(ports);
+        console.log(`[主进程] 服务就绪 ${baseUrl}`);
 
-      const inject = () =>
-        mainWindow?.webContents.executeJavaScript(`window.__serverReady = true; window.dispatchEvent(new CustomEvent('server-ready'));`);
+        const inject = () =>
+          mainWindow?.webContents.executeJavaScript(`window.__serverReady = true; window.dispatchEvent(new CustomEvent('server-ready'));`);
 
-      if (mainWindow?.webContents.isLoading()) mainWindow.webContents.once("did-finish-load", inject);
-      else inject();
-    })
-    .catch((err) => {
-      console.error("[主进程] 启动服务失败:", err);
-      mainWindow?.loadURL(`${baseUrl}/web/#/error?err=${encodeURIComponent(String(err))}`);
-    });
+        if (mainWindow?.webContents.isLoading()) mainWindow.webContents.once("did-finish-load", inject);
+        else inject();
+      })
+      .catch((err) => {
+        console.error("[主进程] 启动服务失败:", err);
+        mainWindow?.loadURL(`${baseUrl}/web/#/error?err=${encodeURIComponent(String(err))}`);
+      });
 
   protocol.handle("toonflow", (request) => {
     const url = new URL(request.url);

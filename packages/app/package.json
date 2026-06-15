@@ -5,6 +5,7 @@
     "prod": "cross-env NODE_ENV=prod nodemon --inspect --exec tsx src/app.ts",
     "electron": "cross-env NODE_ENV=electron nodemon --inspect --exec tsx src/app.ts",
     "gui:dev": "chcp 65001 && cross-env NODE_ENV=dev electronmon -r tsx scripts/main.ts",
+    "gui:build": "chcp 65001 && cross-env NODE_ENV=prod electronmon -r tsx scripts/main.ts",
     "dist": "cross-env NODE_ENV=prod tsx ./scripts/dist.ts",
     "pack": "cross-env NODE_ENV=prod tsx ./scripts/pack.ts",
     "debug:ai": "npx @ai-sdk/devtools",
