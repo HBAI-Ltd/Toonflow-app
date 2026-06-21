@@ -69,12 +69,21 @@ const requestSchema = {
   name: z.string(),
   prompt: z.string(),
   base64: z.string().optional().nullable(),
+  references: z
+    .array(
+      z.object({
+        assetId: z.number().optional().nullable(),
+        url: z.string().optional().nullable(),
+      }),
+    )
+    .optional()
+    .nullable(), // @ 图文引用：assetId 指向项目内资产，url 指向任意图片
   candidateCount: z.number().int().min(1).max(4).optional(), // 抽卡候选张数，默认 1
   enableScore: z.boolean().optional(), // 是否启用 VLM 自动打分预筛
 };
 
 export default router.post("/", validateFields(requestSchema), async (req, res) => {
-  const { projectId, model, resolution, id, type, name, prompt, base64, candidateCount, enableScore } = req.body;
+  const { projectId, model, resolution, id, type, name, prompt, base64, references, candidateCount, enableScore } = req.body;
 
   // 1. 查询项目 & 获取类型配置
   const project = await u.db("o_project").where("id", projectId).select("artStyle", "type", "intro").first();
@@ -97,6 +106,7 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
     aspectRatio: "16:9",
     prompt: userPrompt,
     referenceBase64: base64 ?? null,
+    references: (references ?? []).filter((r: { assetId?: number | null; url?: string | null }) => r?.assetId || r?.url),
     dir: cfg.dir,
     taskClass: cfg.taskClass,
     describe,

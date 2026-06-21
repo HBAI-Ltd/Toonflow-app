@@ -1,11 +1,19 @@
 import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 import db from "@/utils/db";
 import Ai from "@/utils/ai";
 import oss from "@/utils/oss";
+import u from "@/utils";
 import errorUtil from "@/utils/error";
 import { scoreImage } from "@/utils/scoreImage";
 import { enqueueJob, registerQueueHandler, QueueJob } from "@/utils/genQueue";
 import { registerComposeHandlers } from "@/utils/composeHandlers";
+
+/** 资产 prompt 中 @ 图文引用的解析来源：assetId 指向项目内资产，url 指向任意图片 */
+interface AssetReference {
+  assetId?: number | null;
+  url?: string | null;
+}
 
 /**
  * 生成队列任务处理器 + 抽卡（多候选）入队辅助
@@ -25,6 +33,7 @@ interface AssetImagePayload {
   aspectRatio: `${number}:${number}`;
   prompt: string;
   referenceBase64?: string | null;
+  references?: AssetReference[];
   dir: string;
   taskClass: string;
   describe: string;
@@ -53,6 +62,7 @@ export interface AssetCandidateOptions {
   aspectRatio?: `${number}:${number}`;
   prompt: string;
   referenceBase64?: string | null;
+  references?: AssetReference[];
   dir: string;
   taskClass: string;
   describe: string;
@@ -95,6 +105,7 @@ export async function enqueueAssetCandidates(options: AssetCandidateOptions) {
       aspectRatio: options.aspectRatio ?? "16:9",
       prompt: options.prompt,
       referenceBase64: options.referenceBase64 ?? null,
+      references: options.references ?? [],
       dir: options.dir,
       taskClass: options.taskClass,
       describe: options.describe,
@@ -124,10 +135,12 @@ async function handleAssetImage(payload: AssetImagePayload, job: QueueJob): Prom
 
   try {
     const aiImage = Ai.Image(payload.model as `${string}:${string}`);
+    const referenceList = await resolveAssetReferences(payload.references ?? []);
+    if (payload.referenceBase64) referenceList.push({ type: "image", base64: payload.referenceBase64 });
     await aiImage.run(
       {
         prompt: payload.prompt,
-        referenceList: payload.referenceBase64 ? [{ type: "image", base64: payload.referenceBase64 }] : [],
+        referenceList,
         size: payload.resolution,
         aspectRatio: payload.aspectRatio,
       },
@@ -241,6 +254,71 @@ async function getReferenceImages(imageIds: number[]): Promise<{ type: "image"; 
     }),
   );
   return (images.filter(Boolean) as string[]).map((base64) => ({ type: "image" as const, base64 }));
+}
+
+/** 把 url 形式的引用转成 base64 data URL（data: 直接透传，/oss/ 走本地 OSS，其余按 HTTP 取） */
+async function urlToImageBase64(imageUrl: string): Promise<string | null> {
+  try {
+    if (imageUrl.startsWith("data:")) return imageUrl;
+    if (imageUrl.startsWith("/oss/")) {
+      return await oss.getImageBase64(u.replaceUrl(imageUrl).replace("/smallImage", ""));
+    }
+    const fileUrl = await oss.getFileUrl(u.replaceUrl(imageUrl));
+    const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
+    const contentType = response.headers["content-type"] || "image/png";
+    const base64 = Buffer.from(response.data, "binary").toString("base64");
+    return `data:${contentType};base64,${base64}`;
+  } catch {
+    return null;
+  }
+}
+
+/** 解析资产 prompt 中的 @ 图文引用为 referenceList（执行时实时解析，payload 只存 assetId/url） */
+async function resolveAssetReferences(references: AssetReference[]): Promise<{ type: "image"; base64: string }[]> {
+  if (!references.length) return [];
+  // assetId → imageId 一次性查表
+  const assetRefs = references.filter((r) => r.assetId).map((r) => Number(r.assetId));
+  const assetIdToImageId = new Map<number, number>();
+  if (assetRefs.length) {
+    const rows = await db("o_assets").whereIn("id", assetRefs).select("id", "imageId");
+    for (const row of rows) {
+      if (row.imageId) assetIdToImageId.set(Number(row.id), Number(row.imageId));
+    }
+  }
+  // imageId → base64（按 key 建图，避免 getReferenceImages 过滤 null 后索引错位）
+  const imageIds = [...new Set([...assetIdToImageId.values()])];
+  const imageBase64Map = new Map<number, string>();
+  if (imageIds.length) {
+    const rows = await db("o_image").whereIn("id", imageIds).select("id", "filePath");
+    const id2Path = new Map<number, string>();
+    for (const row of rows) if (row.filePath) id2Path.set(Number(row.id), row.filePath);
+    const base64s = await Promise.all(
+      imageIds.map(async (id) => {
+        const filePath = id2Path.get(id);
+        if (!filePath) return null;
+        try {
+          return await oss.getImageBase64(filePath);
+        } catch {
+          return null;
+        }
+      }),
+    );
+    imageIds.forEach((id, idx) => {
+      if (base64s[idx]) imageBase64Map.set(id, base64s[idx] as string);
+    });
+  }
+  const list: { type: "image"; base64: string }[] = [];
+  for (const ref of references) {
+    let base64: string | null = null;
+    if (ref.assetId) {
+      const imageId = assetIdToImageId.get(Number(ref.assetId));
+      if (imageId) base64 = imageBase64Map.get(imageId) ?? null;
+    } else if (ref.url) {
+      base64 = await urlToImageBase64(ref.url);
+    }
+    if (base64) list.push({ type: "image" as const, base64 });
+  }
+  return list;
 }
 
 // ─── 注册 ───────────────────────────────────────────────────

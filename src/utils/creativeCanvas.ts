@@ -589,9 +589,12 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
             name: asset.name,
             type: asset.type,
             thumbnail: assetThumbMap.get(Number(asset.id)) || "",
+            prompt: asset.prompt || asset.describe || "",
             promptPreview: previewText(asset.prompt || asset.describe, 160),
             promptState: asset.promptState ?? null,
             flowId: assetFlowMap.get(Number(asset.id)) ?? null,
+            remark: asset.remark ?? null,
+            describe: asset.describe || "",
           })),
         },
       });

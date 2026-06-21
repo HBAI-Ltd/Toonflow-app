@@ -111,6 +111,18 @@
 - [x] **清理过期布局**：删除 demo 项目 `o_creativeCanvasState` 的 overview 行（早期测试时以旧坐标保存,会经 `applySavedPosition` 复活乱布局）；新 fallback 生效,后续保存按新布局走。
 - Verification: `node --check`、`yarn lint`、`yarn test:creative-canvas` 通过；真实浏览器确认总览 18 节点排成 7 列互不重叠的左→右流水线、连线在列间流动、适配视图(⛶)可整体取景；切「分镜」视图仍展开全部 18 个个体分镜。cache-buster 升级到 `20260617020000`。
 
+## v2.6 资产图文 Prompt 与生成链路（2026-06-22）
+
+围绕「角色/场景/道具」与「分镜/视频」标签补齐画布内可编辑生成链路：
+
+- [x] **资产组可展开生成过程**：角色/场景/道具组卡点击后展开个体资产；个体资产可继续展开对应 `imageFlow` 生成过程，保留资产 → 参考图/上传图 → 图片生成结果的画布连线。
+- [x] **图片生成节点可编辑图文 Prompt**：图片生成卡内 Prompt 改为 contenteditable 图文块，`@图片N`/角色/场景/道具引用以内嵌 chip 呈现，不再在节点下方单独列出候选。
+- [x] **`@` 候选固定浮层**：在 Prompt 内输入 `@` 时，候选菜单按光标位置以 fixed popover 弹出，可选当前资产、项目资产和 imageFlow 参考图；候选不会撑开节点内容。
+- [x] **模型/比例/质量控件**：图片生成卡暴露模型、比例、质量下拉；模型选项来自 `vendorConfig` 中启用的 image 模型，保存仍走 `production/editImage/updateImageFlow`。
+- [x] **生成时携带引用图**：资产图生成会把 Prompt 中的 `@` 引用解析为 `references`，队列执行时按 `assetId`/URL 取 base64 并传入模型 `referenceList`，避免只靠纯文本生成。
+- [x] **分镜/视频链路同步**：分镜、视频 Prompt、视频结果节点保持图文 Prompt 渲染和镜头→Prompt→视频连接线；分类视图布局继续使用一键优化后的列式排布。
+- Verification: `node --check data/web/creative-canvas.js`、`yarn test:creative-canvas`、`yarn lint` 通过；本地 dev 服务需用 `yarn dev` 跑当前源码，旧 `data/serve/app.js` 不含新增 creativeCanvas API，直接 serve 会出现 404。
+
 ## Test Plan
 
 - 单元：`yarn test:creative-canvas` 覆盖组卡聚合（按 type 分组与计数）、缩略图/海报 URL 字段、status 字段、缺图 fallback、stale 传播不回归。

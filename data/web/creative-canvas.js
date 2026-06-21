@@ -78,6 +78,8 @@
     expandedAssetGroups: {},
     expandedImageFlows: {},
     imageFlowCache: {},
+    imageModelOptions: [],
+    promptMentionPicker: null,
     agentPlanData: null,
     agentPlanDataId: null,
     syncedAgentMessages: {},
@@ -91,6 +93,9 @@
     // 深度思考开关
     agentThink: false,
   };
+
+  const IMAGE_RATIOS = ["16:9", "9:16", "1:1", "4:3", "3:4"];
+  const IMAGE_QUALITIES = ["1K", "2K", "4K"];
 
   function apiBase() {
     let base = `${location.origin || "http://localhost:10588"}/api`;
@@ -391,8 +396,8 @@
                 ...item,
                 projectId: projectId(),
                 scriptId: scriptId(),
-                prompt: promptPreview,
-                describe: promptPreview,
+                prompt: item.prompt || promptPreview,
+                describe: item.describe || promptPreview,
               },
             },
           });
@@ -840,6 +845,24 @@
     state.projects = await api("/project/getProject", { method: "POST", body: {} }).catch(() => []);
   }
 
+  async function loadImageModelOptions() {
+    const vendors = await api("/setting/vendorConfig/getVendorList", { method: "POST", body: {} }).catch(() => []);
+    state.imageModelOptions = (Array.isArray(vendors) ? vendors : []).flatMap((vendor) => {
+      if (!vendor || vendor.enable === 0 || vendor.enable === false) return [];
+      const vendorId = vendor.id || "";
+      const vendorName = vendor.name || vendorId;
+      return (vendor.models || [])
+        .filter((model) => model?.type === "image" && (model.modelName || model.model))
+        .map((model) => {
+          const modelName = model.modelName || model.model;
+          return {
+            value: `${vendorId}:${modelName}`,
+            label: `${vendorName} / ${model.name || modelName}`,
+          };
+        });
+    });
+  }
+
   async function loadGraph() {
     persistAgentThread();
     const body = {
@@ -960,6 +983,7 @@
     document.body.classList.add("tfcc-lock");
     await withLoading(async () => {
       await loadProjects();
+      await loadImageModelOptions();
       await loadGraph();
     });
   }
@@ -1264,6 +1288,8 @@
 
   function selectNode(nodeId) {
     state.selectedNodeId = nodeId;
+    state.promptMentionPicker = null;
+    document.querySelectorAll(".tfcc-mention-menu").forEach((el) => el.remove());
     const node = selectedNode();
     state.editText = node?.data?.segment?.text || "";
     document.querySelectorAll(".tfcc-node").forEach((el) => el.classList.toggle("is-selected", el.getAttribute("data-tfcc-node") === nodeId));
@@ -1294,12 +1320,17 @@
   }
 
   function updateImageFlowPrompt(node, value) {
+    updateImageFlowField(node, "prompt", value);
+  }
+
+  function updateImageFlowField(node, field, value) {
     const flow = state.imageFlowCache[node.data?.flowId];
     const flowNode = flow?.nodes?.find((item) => String(item.id) === String(node.data?.flowNodeId));
     if (!flowNode) return;
     flowNode.data = flowNode.data || {};
-    flowNode.data.prompt = value;
-    node.data.promptPreview = value;
+    flowNode.data[field] = value;
+    if (field === "prompt") node.data.promptPreview = value;
+    else node.data[field] = value;
   }
 
   async function saveImageFlowPrompt(node) {
@@ -1430,6 +1461,7 @@
           state.message = "请选择具体资产再生成资产图";
           return;
         }
+        const references = resolveAssetReferences(asset.prompt || "", assetMentions(node));
         await api("/assetsGenerate/generateAssets", {
           method: "POST",
           body: {
@@ -1440,6 +1472,7 @@
             type: asset.type || "scene",
             name: asset.name || "",
             prompt: asset.prompt || asset.describe || "",
+            references,
             candidateCount: 1,
           },
         });
@@ -1580,7 +1613,319 @@
     ].filter(Boolean));
   }
 
-  function renderPromptGraphic(value, mentions) {
+  function promptGraphicTextFromNode(node) {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent || "";
+    if (node.nodeType !== Node.ELEMENT_NODE) return "";
+    if (node.dataset?.token) return node.dataset.token;
+    return [...node.childNodes].map(promptGraphicTextFromNode).join("");
+  }
+
+  function promptGraphicText(el) {
+    return [...el.childNodes].map(promptGraphicTextFromNode).join("");
+  }
+
+  function promptGraphicTextBeforeCaret(el) {
+    const selection = window.getSelection?.();
+    if (!selection?.rangeCount) return promptGraphicText(el);
+    const range = selection.getRangeAt(0);
+    if (!el.contains(range.endContainer)) return promptGraphicText(el);
+    if (range.endContainer === el) return [...el.childNodes].slice(0, range.endOffset).map(promptGraphicTextFromNode).join("");
+    let text = "";
+    let done = false;
+    const visit = (node) => {
+      if (done) return;
+      if (node === range.endContainer) {
+        if (node.nodeType === Node.TEXT_NODE) text += (node.textContent || "").slice(0, range.endOffset);
+        else text += [...node.childNodes].slice(0, range.endOffset).map(promptGraphicTextFromNode).join("");
+        done = true;
+        return;
+      }
+      if (node.nodeType === Node.ELEMENT_NODE && node.contains(range.endContainer) && !node.dataset?.token) {
+        [...node.childNodes].forEach(visit);
+        return;
+      }
+      text += promptGraphicTextFromNode(node);
+    };
+    [...el.childNodes].forEach(visit);
+    return text;
+  }
+
+  function addUniqueOption(options, value, label) {
+    const normalized = String(value || "").trim();
+    if (!normalized || options.some((option) => option.value === normalized)) return;
+    options.push({ value: normalized, label: label || normalized });
+  }
+
+  function imageModelOptions(currentValue) {
+    const options = [];
+    (state.imageModelOptions || []).forEach((option) => addUniqueOption(options, option.value, option.label));
+    addUniqueOption(options, state.graph?.project?.imageModel, state.graph?.project?.imageModel);
+    addUniqueOption(options, currentValue, currentValue);
+    if (!options.length) options.push({ value: "", label: "未配置模型" });
+    return options;
+  }
+
+  function selectOptions(values, currentValue) {
+    const options = [];
+    values.forEach((value) => addUniqueOption(options, value, value));
+    addUniqueOption(options, currentValue, currentValue);
+    return options;
+  }
+
+  function saveImageFlowField(node, field, value) {
+    updateImageFlowField(node, field, value);
+    saveImageFlowPrompt(node).catch((err) => {
+      state.message = err?.message || String(err);
+      render();
+    });
+  }
+
+  function renderFlowSelect(label, value, options, onChange, extraClass = "") {
+    return h("label", { class: `tfcc-flow-select-field ${extraClass}`.trim() }, [
+      h("span", { text: label }),
+      h("select", {
+        value: value || "",
+        title: label,
+        onMouseDown: (event) => event.stopPropagation(),
+        onClick: (event) => event.stopPropagation(),
+        onChange,
+      }, options.map((option) => h("option", { value: option.value, text: option.label }))),
+    ]);
+  }
+
+  function renderImageFlowControls(node, data) {
+    return h("div", { class: "tfcc-flow-node-controls", onMouseDown: (event) => event.stopPropagation(), onClick: (event) => event.stopPropagation() }, [
+      renderFlowSelect("模型", data.model || "", imageModelOptions(data.model), (event) => saveImageFlowField(node, "model", event.target.value), "is-model"),
+      renderFlowSelect("比例", data.ratio || "", selectOptions(IMAGE_RATIOS, data.ratio), (event) => saveImageFlowField(node, "ratio", event.target.value)),
+      renderFlowSelect("质量", data.quality || "", selectOptions(IMAGE_QUALITIES, data.quality), (event) => saveImageFlowField(node, "quality", event.target.value)),
+    ]);
+  }
+
+  function promptMentionTrigger(value) {
+    const match = String(value || "").match(/@[\u4e00-\u9fa5\w]*$/);
+    return match ? match[0].slice(1) : null;
+  }
+
+  function mentionPickerPosition(el) {
+    const editorRect = el.getBoundingClientRect();
+    let rect = editorRect;
+    const selection = window.getSelection?.();
+    if (selection?.rangeCount) {
+      const range = selection.getRangeAt(0);
+      if (el.contains(range.endContainer)) {
+        rect = range.cloneRange().getBoundingClientRect();
+        if (!rect.width && !rect.height) rect = editorRect;
+      }
+    }
+    const width = 280;
+    const height = 230;
+    const x = Math.min(window.innerWidth - width - 12, Math.max(12, rect.left || editorRect.left));
+    const below = (rect.bottom || editorRect.bottom) + 6;
+    const above = (rect.top || editorRect.top) - height - 6;
+    const y = below + height > window.innerHeight && above > 12 ? above : below;
+    return { x: Math.round(x), y: Math.round(Math.max(12, y)) };
+  }
+
+  function imageFlowMentionItems(mentions, query) {
+    const needle = String(query || "").toLowerCase();
+    return (mentions || [])
+      .filter((item) => item?.token)
+      .filter((item) => {
+        if (!needle) return true;
+        return `${item.token || ""} ${item.label || ""}`.toLowerCase().includes(needle);
+      })
+      .slice(0, 8);
+  }
+
+  function handleImageFlowPromptInput(node, el, mentions) {
+    const value = promptGraphicText(el);
+    updateImageFlowPrompt(node, value);
+    const beforeCaret = promptGraphicTextBeforeCaret(el);
+    const query = promptMentionTrigger(beforeCaret);
+    if (query === null) {
+      if (state.promptMentionPicker?.nodeId === node.id) {
+        state.promptMentionPicker = null;
+        render();
+      }
+      return;
+    }
+    const items = imageFlowMentionItems(mentions, query);
+    state.promptMentionPicker = { nodeId: node.id, kind: "imageFlow", query, items, at: beforeCaret.length - query.length - 1, ...mentionPickerPosition(el) };
+    render();
+  }
+
+  function insertImageFlowMention(node, item, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const token = item?.token || "";
+    if (!token) return;
+    const picker = state.promptMentionPicker;
+    const current = node.data?.promptPreview || "";
+    const next = picker?.nodeId === node.id && Number.isFinite(picker.at)
+      ? `${current.slice(0, picker.at)}${token} ${current.slice(picker.at + picker.query.length + 1)}`
+      : promptMentionTrigger(current) === null
+      ? `${current}${current && !/\s$/.test(current) ? " " : ""}${token} `
+      : current.replace(/(^|\s)@[\u4e00-\u9fa5\w]*$/, `$1${token} `);
+    updateImageFlowPrompt(node, next);
+    state.promptMentionPicker = null;
+    saveImageFlowPrompt(node).catch((err) => { state.message = err?.message || String(err); });
+    render();
+  }
+
+  function renderImageFlowMentionPicker(node) {
+    return null;
+  }
+
+  // ─── 资产节点 prompt 的 @ 图文引用 ────────────────────────
+  // 候选：项目资产库（角色/场景/道具图，按类型编号 @角色N/@场景N/@道具N）
+  //       + 该资产自身 imageFlow 的参考图节点（@图片N）
+  function assetMentions(node) {
+    const out = [];
+    const typeToken = { role: "@角色", scene: "@场景", tool: "@道具" };
+    const counters = { role: 0, scene: 0, tool: 0 };
+    (state.graph?.nodes || []).forEach((group) => {
+      if (group.type !== "assetGroup") return;
+      (group.data?.items || []).forEach((item) => {
+        if (!item.thumbnail) return;
+        const key = item.type === "scene" || item.type === "tool" ? item.type : "role";
+        counters[key] += 1;
+        out.push({
+          token: `${typeToken[key]}${counters[key]}`,
+          label: item.name || `资产${item.id}`,
+          image: item.thumbnail,
+          assetId: item.id,
+        });
+      });
+    });
+    const flowId = Number(node?.data?.asset?.flowId || 0);
+    const flow = state.imageFlowCache?.[flowId];
+    if (flow) {
+      const flowNodes = flow.nodes || [];
+      const generatedPrompt = (flowNodes.find((n) => n.type === "generated")?.data?.prompt) || "";
+      let picIdx = 0;
+      flowNodes.forEach((fn) => {
+        if (fn.type === "generated") return;
+        picIdx += 1;
+        const img = imageFlowNodeImage(fn);
+        if (!img) return;
+        out.push({
+          token: `@图片${picIdx}`,
+          label: imageFlowMentionName(generatedPrompt, picIdx) || `参考图 ${picIdx}`,
+          image: img,
+          url: img,
+        });
+      });
+    }
+    return out;
+  }
+
+  function handleAssetPromptInput(node, el, mentions) {
+    const value = promptGraphicText(el);
+    if (node.data.asset) {
+      node.data.asset.prompt = value;
+      node.data.promptPreview = value;
+    }
+    const beforeCaret = promptGraphicTextBeforeCaret(el);
+    const query = promptMentionTrigger(beforeCaret);
+    if (query === null) {
+      if (state.promptMentionPicker?.nodeId === node.id) {
+        state.promptMentionPicker = null;
+        render();
+      }
+      return;
+    }
+    const items = imageFlowMentionItems(mentions, query);
+    state.promptMentionPicker = { nodeId: node.id, kind: "asset", query, items, at: beforeCaret.length - query.length - 1, ...mentionPickerPosition(el) };
+    render();
+  }
+
+  function insertAssetMention(node, item, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const token = item?.token || "";
+    if (!token) return;
+    const picker = state.promptMentionPicker;
+    const current = node.data?.asset?.prompt || "";
+    const next = picker?.nodeId === node.id && Number.isFinite(picker.at)
+      ? `${current.slice(0, picker.at)}${token} ${current.slice(picker.at + picker.query.length + 1)}`
+      : promptMentionTrigger(current) === null
+      ? `${current}${current && !/\s$/.test(current) ? " " : ""}${token} `
+      : current.replace(/(^|\s)@[\u4e00-\u9fa5\w]*$/, `$1${token} `);
+    if (node.data.asset) {
+      node.data.asset.prompt = next;
+      node.data.promptPreview = next;
+    }
+    state.promptMentionPicker = null;
+    saveAssetPrompt(node).catch((err) => { state.message = err?.message || String(err); render(); });
+    render();
+  }
+
+  function renderAssetMentionPicker(node) {
+    return null;
+  }
+
+  function renderPromptMentionPicker() {
+    const picker = state.promptMentionPicker;
+    if (!picker) return null;
+    const node = graphNodes().find((item) => item.id === picker.nodeId);
+    if (!node) return null;
+    const items = picker.items || [];
+    const insert = picker.kind === "asset" ? insertAssetMention : insertImageFlowMention;
+    return h("div", {
+      class: "tfcc-mention-menu",
+      style: { left: `${picker.x || 12}px`, top: `${picker.y || 12}px` },
+      onMouseDown: (event) => event.stopPropagation(),
+    }, items.length
+      ? items.map((item) => h("button", { onMouseDown: (event) => insert(node, item, event) }, [
+          item.image ? h("img", { src: item.image, loading: "lazy", alt: "" }) : null,
+          h("span", { text: `${item.token} ${item.label || ""}`.trim() }),
+        ].filter(Boolean)))
+      : [h("div", { class: "tfcc-mention-empty", text: "没有匹配的角色或参考图" })]);
+  }
+
+  async function saveAssetPrompt(node) {
+    const asset = node.data?.asset;
+    if (!asset?.id) return;
+    await api("/assets/updateAssets", {
+      method: "POST",
+      body: {
+        id: Number(asset.id),
+        name: asset.name || "",
+        describe: asset.describe || "",
+        remark: asset.remark ?? "",
+        prompt: asset.prompt || "",
+      },
+    });
+  }
+
+  // 按 prompt 中 @ token 出现顺序解析引用，去重后返回 {assetId?,url?} 列表
+  function resolveAssetReferences(prompt, mentions) {
+    const text = String(prompt || "");
+    const byToken = new Map();
+    (mentions || []).forEach((item) => {
+      if (item?.token) byToken.set(String(item.token), item);
+    });
+    // 按长度倒序匹配，避免 @图1 抢先于 @图片1 / @角色1
+    const tokens = [...byToken.keys()].sort((a, b) => b.length - a.length).map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const out = [];
+    const seen = new Set();
+    if (tokens.length) {
+      const re = new RegExp(`(${tokens.join("|")})`, "g");
+      let match;
+      while ((match = re.exec(text)) !== null) {
+        const item = byToken.get(match[0]);
+        if (!item) continue;
+        const key = item.assetId ? `a:${item.assetId}` : `u:${item.url || ""}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (item.assetId) out.push({ assetId: Number(item.assetId) });
+        else if (item.url) out.push({ url: item.url });
+      }
+    }
+    return out;
+  }
+
+  function renderPromptGraphic(value, mentions, options = {}) {
     const refs = new Map();
     (mentions || []).forEach((item) => {
       if (!item?.token) return;
@@ -1593,12 +1938,22 @@
       aliases.forEach((alias) => refs.set(alias, item));
     });
     const tokens = [...refs.keys()].sort((a, b) => b.length - a.length);
-    if (!tokens.length) return h("div", { class: "tfcc-prompt-graphic", text: value || "" });
+    const attrs = {
+      class: `tfcc-prompt-graphic ${options.editable ? "is-editable" : ""}`.trim(),
+      contenteditable: options.editable ? "true" : null,
+      role: options.editable ? "textbox" : null,
+      spellcheck: options.editable ? "false" : null,
+      onInput: options.onInput,
+      onBlur: options.onBlur,
+      onMouseDown: (event) => { if (options.editable) event.stopPropagation(); },
+      onClick: (event) => { if (options.editable) event.stopPropagation(); },
+    };
+    if (!tokens.length) return h("div", { ...attrs, text: value || "" });
     const pattern = new RegExp(`(${tokens.map((token) => token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "g");
-    return h("div", { class: "tfcc-prompt-graphic" }, String(value || "").split(pattern).map((part) => {
+    return h("div", attrs, String(value || "").split(pattern).map((part) => {
       const ref = refs.get(part);
       if (!ref) return part;
-      return h("span", { class: "tfcc-prompt-ref", title: ref.label }, [
+      return h("span", { class: "tfcc-prompt-ref", title: ref.label, contenteditable: "false", "data-token": part }, [
         ref.image ? h("img", { src: ref.image, loading: "lazy", alt: "" }) : null,
         h("span", { text: `${part} ${ref.label}` }),
       ].filter(Boolean));
@@ -1659,7 +2014,26 @@
       if (data.expandedFromGroup) {
         const opened = !!state.expandedImageFlows[node.id];
         const hint = asset.flowId ? (opened ? "点击收起生成过程" : "点击展开生成过程") : (asset.type || "-");
-        return [title, data.thumbnail ? thumbTile(data.thumbnail, "tfcc-asset-node-thumb") : null, h("div", { class: "tfcc-node-sub", text: hint })].filter(Boolean);
+        const mentions = assetMentions(node);
+        const promptText = asset.prompt || data.promptPreview || "";
+        return [
+          title,
+          data.thumbnail ? thumbTile(data.thumbnail, "tfcc-asset-node-thumb") : null,
+          renderPromptGraphic(promptText, mentions, {
+            editable: true,
+            onInput: (event) => handleAssetPromptInput(node, event.currentTarget, mentions),
+            onBlur: (event) => {
+              const value = promptGraphicText(event.currentTarget);
+              if (node.data.asset) {
+                node.data.asset.prompt = value;
+                node.data.promptPreview = value;
+              }
+              saveAssetPrompt(node).catch((err) => { state.message = err?.message || String(err); render(); });
+            },
+          }),
+          renderAssetMentionPicker(node),
+          h("div", { class: "tfcc-node-sub", text: hint }),
+        ].filter(Boolean);
       }
       return [title, data.thumbnail ? thumbTile(data.thumbnail, "tfcc-asset-node-thumb") : null, h("div", { class: "tfcc-node-sub", text: asset.type || "-" }), h("p", { text: short(data.promptPreview, 180) }), nodeSource(node)].filter(Boolean);
     }
@@ -1672,21 +2046,18 @@
       return [
         title,
         data.image ? thumbTile(data.image, "tfcc-flow-node-wide") : h("div", { class: "tfcc-thumb is-empty tfcc-flow-node-wide", text: "暂无生成图" }),
-        h("div", { class: "tfcc-chips" }, [data.model ? chip(data.model, "模型") : null, data.ratio ? chip(data.ratio, "比例") : null, data.quality ? chip(data.quality, "质量") : null].filter(Boolean)),
-        renderPromptGraphic(promptText, mentions),
-        h("textarea", {
-          class: "tfcc-flow-prompt-inline",
-          value: promptText,
-          placeholder: "输入 @ 选择左侧关联参考图",
+        renderImageFlowControls(node, data),
+        renderPromptGraphic(promptText, mentions, {
+          editable: true,
           onInput: (event) => {
-            updateImageFlowPrompt(node, event.target.value);
-            const graphic = event.currentTarget.closest(".tfcc-node")?.querySelector(".tfcc-prompt-graphic");
-            if (graphic) graphic.replaceWith(renderPromptGraphic(event.target.value, mentions));
+            handleImageFlowPromptInput(node, event.currentTarget, mentions);
           },
-          onBlur: () => saveImageFlowPrompt(node).catch((err) => { state.message = err?.message || String(err); render(); }),
-          onMouseDown: (event) => event.stopPropagation(),
-          onClick: (event) => event.stopPropagation(),
+          onBlur: (event) => {
+            updateImageFlowPrompt(node, promptGraphicText(event.currentTarget));
+            saveImageFlowPrompt(node).catch((err) => { state.message = err?.message || String(err); render(); });
+          },
         }),
+        renderImageFlowMentionPicker(node),
       ].filter(Boolean);
     }
     if (node.type === "script") return [title, h("p", { text: short(data.contentPreview, 220) }), nodeSource(node)];
@@ -2808,14 +3179,12 @@
       h("div", { class: "tfcc-flow-cell-label", text: "参考图" }),
       h("div", { class: "tfcc-flow-ref-row" }, (d.references.length ? d.references : [""]).map((src) => src ? h("div", { class: "tfcc-flow-ref" }, [h("img", { src, loading: "lazy", alt: "" })]) : h("div", { class: "tfcc-flow-ref is-empty", text: "—" }))),
     ]);
-    const ratios = ["16:9", "9:16", "1:1", "4:3", "3:4"];
-    const qualities = ["1K", "2K", "4K"];
     const form = h("div", { class: "tfcc-flow-form" }, [
       h("textarea", { class: "tfcc-flow-prompt", value: d.prompt, placeholder: "画面 prompt…", onInput: (e) => { d.prompt = e.target.value; } }),
       h("div", { class: "tfcc-flow-controls" }, [
-        h("input", { class: "tfcc-flow-model", value: d.model, placeholder: "vendorId:model", title: "图像模型", onInput: (e) => { d.model = e.target.value; } }),
-        h("select", { value: d.ratio, title: "比例", onChange: (e) => { d.ratio = e.target.value; } }, ratios.map((r) => h("option", { value: r, text: r }))),
-        h("select", { value: d.quality, title: "质量", onChange: (e) => { d.quality = e.target.value; } }, qualities.map((q) => h("option", { value: q, text: q }))),
+        h("select", { class: "tfcc-flow-model", value: d.model, title: "图像模型", onChange: (e) => { d.model = e.target.value; } }, imageModelOptions(d.model).map((option) => h("option", { value: option.value, text: option.label }))),
+        h("select", { value: d.ratio, title: "比例", onChange: (e) => { d.ratio = e.target.value; } }, selectOptions(IMAGE_RATIOS, d.ratio).map((r) => h("option", { value: r.value, text: r.label }))),
+        h("select", { value: d.quality, title: "质量", onChange: (e) => { d.quality = e.target.value; } }, selectOptions(IMAGE_QUALITIES, d.quality).map((q) => h("option", { value: q.value, text: q.label }))),
       ]),
       d.error ? h("div", { class: "tfcc-flow-error", text: d.error }) : null,
       h("div", { class: "tfcc-flow-actions" }, [
@@ -2838,6 +3207,7 @@
       state.message ? h("div", { class: "tfcc-message", text: state.message }) : null,
       state.loading ? h("div", { class: "tfcc-loading", text: "Loading..." }) : null,
       h("div", { class: "tfcc-layout" }, [renderIconRail(), renderAgentPanel(), renderCanvas(), renderInspectorPanel()]),
+      renderPromptMentionPicker(),
     ]);
   }
 
