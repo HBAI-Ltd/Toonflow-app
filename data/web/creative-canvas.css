@@ -1,0 +1,2049 @@
+.tfcc-lock {
+  overflow: hidden;
+}
+
+.tfcc-entry {
+  position: fixed;
+  right: 24px;
+  bottom: 92px;
+  z-index: 2800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(30, 40, 56, .14);
+  border-radius: 6px;
+  background: #111318;
+  color: #f6f7fb;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.tfcc-entry.is-hidden {
+  display: none;
+}
+
+.tfcc-entry-icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  color: #ff4fc3;
+}
+
+.tfcc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4200;
+  display: grid;
+  grid-template-rows: 58px minmax(0, 1fr);
+  background: #050609;
+  color: #f1f3f8;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.tfcc-header {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  background: rgba(10, 12, 16, .94);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .28);
+}
+
+.tfcc-header .tfcc-tabs {
+  margin: 0 auto;
+}
+
+.tfcc-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.tfcc-brand strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 16px;
+}
+
+.tfcc-logo {
+  color: #ff4fc3;
+  font-size: 19px;
+  font-weight: 850;
+}
+
+.tfcc-header select,
+.tfcc-header button,
+.tfcc-actions button,
+.tfcc-edit button,
+.tfcc-zoom button {
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .08);
+  color: #f2f4f8;
+  padding: 0 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tfcc-header select {
+  min-width: 0;
+  width: 100%;
+  color: #f2f4f8;
+  background: #171a21;
+}
+
+.tfcc-header button.primary,
+.tfcc-edit button.primary {
+  background: #e83fb4;
+  border-color: #e83fb4;
+  color: #fff;
+}
+
+.tfcc-tabs {
+  display: inline-flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.tfcc-tabs button {
+  min-width: 58px;
+  background: transparent;
+  border-color: transparent;
+  color: rgba(241, 243, 248, .72);
+}
+
+.tfcc-tabs button.is-active {
+  color: #fff;
+  background: rgba(255, 255, 255, .11);
+  border-color: rgba(255, 255, 255, .12);
+}
+
+.tfcc-header-actions {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.tfcc-message {
+  position: absolute;
+  top: 58px;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  background: rgba(232, 63, 180, .13);
+  border-bottom: 1px solid rgba(232, 63, 180, .2);
+  color: #ffd7f3;
+  font-size: 13px;
+}
+
+.tfcc-loading {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  z-index: 5;
+  transform: translateX(-50%);
+  height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
+  font-size: 12px;
+}
+
+.tfcc-layout {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 56px 330px minmax(0, 1fr) 360px;
+}
+
+.tfcc-agent,
+.tfcc-side {
+  position: relative;
+  z-index: 2;
+  min-height: 0;
+  border-right: 1px solid rgba(255, 255, 255, .08);
+  background: rgba(12, 14, 18, .84);
+  backdrop-filter: blur(12px);
+}
+
+.tfcc-side {
+  border-right: 0;
+  border-left: 1px solid rgba(255, 255, 255, .08);
+  overflow: auto;
+}
+
+.tfcc-agent {
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+}
+
+.tfcc-panel-title {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  font-weight: 760;
+  font-size: 14px;
+  color: #fff;
+}
+
+.tfcc-agent-mode {
+  margin-top: 2px;
+  color: rgba(242, 246, 255, .54);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.tfcc-agent-status {
+  margin-top: 8px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, .045);
+  color: rgba(242, 246, 255, .58);
+  font-size: 12px;
+}
+
+.tfcc-agent-status.is-connected {
+  border-color: rgba(67, 209, 141, .28);
+  color: #67d99f;
+  background: rgba(67, 209, 141, .08);
+}
+
+.tfcc-agent-card,
+.tfcc-inspector,
+.tfcc-task-panel {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .09);
+  background: rgba(255, 255, 255, .045);
+}
+
+.tfcc-agent-card {
+  margin-top: 12px;
+  padding: 14px;
+}
+
+.tfcc-agent-stream {
+  min-height: 0;
+  margin-top: 12px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tfcc-agent-empty {
+  padding: 12px;
+  border: 1px dashed rgba(255, 255, 255, .12);
+  border-radius: 8px;
+  color: rgba(242, 246, 255, .52);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.tfcc-agent-msg {
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .04);
+  padding: 10px;
+}
+
+.tfcc-agent-msg.user {
+  border-color: rgba(237, 62, 190, .24);
+  background: rgba(237, 62, 190, .08);
+}
+
+.tfcc-agent-msg.is-running {
+  border-color: rgba(97, 165, 255, .24);
+  background: rgba(97, 165, 255, .06);
+}
+
+.tfcc-agent-msg.is-warning {
+  border-color: rgba(255, 190, 85, .3);
+  background: rgba(255, 190, 85, .07);
+}
+
+.tfcc-agent-msg.is-error {
+  border-color: rgba(255, 107, 107, .32);
+  background: rgba(255, 107, 107, .07);
+}
+
+.tfcc-agent-msg.is-complete {
+  border-color: rgba(57, 217, 138, .2);
+  background: rgba(57, 217, 138, .045);
+}
+
+.tfcc-agent-progress {
+  max-height: 42vh;
+}
+
+.tfcc-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .09);
+  background: rgba(255, 255, 255, .04);
+  padding: 10px;
+  color: rgba(244, 246, 251, .88);
+  font-size: 12px;
+}
+
+.tfcc-progress-head span {
+  color: rgba(244, 246, 251, .5);
+}
+
+.tfcc-agent-steps {
+  display: grid;
+  gap: 8px;
+}
+
+.tfcc-agent-step {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, .035);
+  padding: 10px;
+}
+
+.tfcc-agent-step-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #8d95a6;
+}
+
+.tfcc-agent-step.is-running .tfcc-agent-step-dot {
+  background: #61a5ff;
+}
+
+.tfcc-agent-step.is-complete .tfcc-agent-step-dot {
+  background: #39d98a;
+}
+
+.tfcc-agent-step.is-warning .tfcc-agent-step-dot {
+  background: #ffbe55;
+}
+
+.tfcc-agent-step.is-error .tfcc-agent-step-dot {
+  background: #ff6b6b;
+}
+
+.tfcc-agent-step-body {
+  min-width: 0;
+}
+
+.tfcc-agent-step-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: rgba(244, 246, 251, .82);
+  font-size: 12px;
+}
+
+.tfcc-agent-step-meta span {
+  color: rgba(244, 246, 251, .42);
+  font-size: 11px;
+}
+
+.tfcc-agent-step p {
+  margin: 6px 0 0;
+  color: rgba(244, 246, 251, .64);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.tfcc-agent-step em {
+  display: inline-block;
+  margin-top: 6px;
+  color: rgba(244, 246, 251, .42);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.tfcc-agent-msg-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(244, 246, 251, .88);
+  font-size: 12px;
+}
+
+.tfcc-agent-msg-head span {
+  color: rgba(244, 246, 251, .44);
+}
+
+.tfcc-agent-msg-body {
+  margin-top: 8px;
+  white-space: normal;
+  word-break: break-word;
+  color: rgba(244, 246, 251, .72);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* 会话区内的消息体不单独截断（整个 body 已滚动） */
+.tfcc-chat-body .tfcc-agent-msg-body {
+  max-height: none;
+  overflow: visible;
+  color: rgba(244, 246, 251, .9);
+  font-size: 13px;
+}
+
+.tfcc-markdown > :first-child {
+  margin-top: 0;
+}
+
+.tfcc-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.tfcc-markdown p {
+  margin: 0 0 10px;
+}
+
+.tfcc-markdown h3,
+.tfcc-markdown h4,
+.tfcc-markdown h5,
+.tfcc-markdown h6 {
+  margin: 12px 0 6px;
+  color: rgba(244, 246, 251, .9);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.tfcc-markdown ul,
+.tfcc-markdown ol {
+  margin: 6px 0 10px;
+  padding-left: 18px;
+}
+
+.tfcc-markdown li {
+  margin: 3px 0;
+}
+
+.tfcc-markdown table {
+  width: 100%;
+  margin: 8px 0 12px;
+  border-collapse: collapse;
+  table-layout: auto;
+  font-size: 11px;
+}
+
+.tfcc-markdown th,
+.tfcc-markdown td {
+  border: 1px solid rgba(255, 255, 255, .12);
+  padding: 5px 7px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.tfcc-markdown th {
+  color: rgba(244, 246, 251, .9);
+  background: rgba(255, 255, 255, .07);
+  font-weight: 700;
+}
+
+.tfcc-markdown code {
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, .24);
+  padding: 1px 4px;
+  color: rgba(244, 246, 251, .88);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+}
+
+.tfcc-markdown pre {
+  overflow: auto;
+  margin: 8px 0 12px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .28);
+  padding: 8px;
+}
+
+.tfcc-markdown pre code {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  white-space: pre;
+}
+
+.tfcc-markdown blockquote {
+  margin: 8px 0 12px;
+  border-left: 3px solid rgba(237, 62, 190, .55);
+  padding-left: 10px;
+  color: rgba(244, 246, 251, .68);
+}
+
+.tfcc-agent-input,
+.tfcc-edit textarea {
+  width: 100%;
+  min-height: 116px;
+  box-sizing: border-box;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 255, 255, .11);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .24);
+  color: #f4f6fb;
+  padding: 10px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+
+.tfcc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tfcc-canvas {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  cursor: grab;
+  background-color: #050609;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, .15) 1px, transparent 0),
+    radial-gradient(circle at 1px 1px, rgba(232, 63, 180, .12) 1px, transparent 0);
+  background-size: 24px 24px, 120px 120px;
+}
+
+.tfcc-canvas:active {
+  cursor: grabbing;
+}
+
+.tfcc-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4200px;
+  height: 2600px;
+  transform-origin: 0 0;
+}
+
+.tfcc-edges {
+  position: absolute;
+  left: -320px;
+  top: -520px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.tfcc-edge {
+  fill: none;
+  stroke: rgba(255, 255, 255, .34);
+  stroke-width: 2;
+  stroke-dasharray: 3 7;
+  stroke-linecap: round;
+}
+
+.tfcc-edge-generates,
+.tfcc-edge-renders {
+  stroke: rgba(255, 79, 195, .7);
+}
+
+.tfcc-node-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.tfcc-node {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  background: rgba(22, 24, 29, .95);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .34);
+  padding: 14px;
+  color: #f3f5fb;
+  cursor: move;
+  user-select: none;
+  overflow: hidden;
+}
+
+.tfcc-node:hover,
+.tfcc-node.is-selected {
+  border-color: rgba(255, 79, 195, .72);
+  box-shadow: 0 0 0 1px rgba(255, 79, 195, .24), 0 18px 46px rgba(0, 0, 0, .4);
+}
+
+.tfcc-node.is-stale {
+  border-color: rgba(255, 181, 71, .65);
+}
+
+.tfcc-node-assetGroup {
+  cursor: pointer;
+}
+
+.tfcc-node-asset.is-expanded-child {
+  padding: 10px;
+}
+
+.tfcc-node-imageFlowUpload,
+.tfcc-node-imageFlowGenerated {
+  cursor: default;
+  background: rgba(24, 26, 31, .96);
+}
+
+.tfcc-node-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 22px;
+  font-weight: 780;
+  font-size: 14px;
+}
+
+.tfcc-node-title span:first-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tfcc-node-sub {
+  margin-top: 6px;
+  color: rgba(243, 245, 251, .64);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.tfcc-node p {
+  margin: 10px 0 0;
+  color: rgba(243, 245, 251, .82);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.tfcc-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  height: 20px;
+  align-items: center;
+  border-radius: 10px;
+  padding: 0 8px;
+  font-size: 11px;
+  color: #15110b;
+  background: #ffbe55;
+}
+
+.tfcc-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.tfcc-metric {
+  min-width: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .07);
+  padding: 8px;
+}
+
+.tfcc-metric strong,
+.tfcc-metric span {
+  display: block;
+}
+
+.tfcc-metric strong {
+  font-size: 18px;
+}
+
+.tfcc-metric span {
+  margin-top: 2px;
+  color: rgba(243, 245, 251, .62);
+  font-size: 11px;
+}
+
+.tfcc-node-storyboardAnalysis {
+  background: rgba(18, 19, 22, .98);
+}
+
+.tfcc-shot-table {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.tfcc-shot-head,
+.tfcc-shot-row {
+  display: grid;
+  grid-template-columns: 52px 1.35fr 70px 100px 1.2fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.tfcc-shot-head {
+  color: rgba(243, 245, 251, .62);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tfcc-shot-row {
+  min-height: 52px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+  color: rgba(243, 245, 251, .86);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.tfcc-shot-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tfcc-zoom {
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 8px;
+  border-radius: 19px;
+  background: rgba(16, 18, 23, .88);
+  border: 1px solid rgba(255, 255, 255, .1);
+}
+
+.tfcc-zoom button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 14px;
+}
+
+.tfcc-zoom-value {
+  width: 48px;
+  text-align: center;
+  color: rgba(243, 245, 251, .78);
+  font-weight: 700;
+}
+
+.tfcc-inspector,
+.tfcc-task-panel {
+  margin: 16px;
+  padding: 14px;
+}
+
+.tfcc-panel-subtitle {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+  color: rgba(243, 245, 251, .72);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tfcc-progress-sub {
+  margin-top: 4px;
+  color: rgba(243, 245, 251, .48);
+  font-size: 12px;
+}
+
+.tfcc-progress-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tfcc-progress-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .035);
+  color: rgba(243, 245, 251, .82);
+  padding: 9px 10px;
+  text-align: left;
+  cursor: default;
+}
+
+.tfcc-progress-item.is-clickable {
+  cursor: pointer;
+}
+
+.tfcc-progress-item.is-disabled {
+  cursor: default;
+  opacity: .72;
+}
+
+.tfcc-progress-item.is-clickable:hover {
+  border-color: rgba(237, 62, 190, .42);
+  background: rgba(237, 62, 190, .08);
+}
+
+.tfcc-progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(243, 245, 251, .4);
+}
+
+.tfcc-progress-item.is-complete .tfcc-progress-dot {
+  background: #39d98a;
+}
+
+.tfcc-progress-item.is-missing .tfcc-progress-dot {
+  background: #ffbe55;
+}
+
+.tfcc-progress-item.is-warning .tfcc-progress-dot {
+  background: #ffbe55;
+}
+
+.tfcc-progress-item.is-stale .tfcc-progress-dot {
+  background: #ed3ebe;
+}
+
+.tfcc-progress-item.is-running .tfcc-progress-dot {
+  background: #61a5ff;
+}
+
+.tfcc-progress-item.is-error .tfcc-progress-dot {
+  background: #ff6b6b;
+}
+
+.tfcc-progress-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.tfcc-progress-main strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+
+.tfcc-progress-main em {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: rgba(243, 245, 251, .48);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.tfcc-progress-status {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .07);
+  color: rgba(243, 245, 251, .72);
+  padding: 3px 7px;
+  font-size: 11px;
+}
+
+.tfcc-progress-side {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tfcc-progress-item.is-missing .tfcc-progress-status {
+  color: #ffbe55;
+}
+
+.tfcc-progress-item.is-warning .tfcc-progress-status {
+  color: #ffd27a;
+}
+
+.tfcc-progress-item.is-stale .tfcc-progress-status {
+  color: #ff85dc;
+}
+
+.tfcc-progress-item.is-running .tfcc-progress-status {
+  color: #8dbdff;
+}
+
+.tfcc-progress-item.is-error .tfcc-progress-status {
+  color: #ff8e8e;
+}
+
+.tfcc-progress-action {
+  height: 24px;
+  border: 1px solid rgba(237, 62, 190, .28);
+  border-radius: 6px;
+  background: rgba(237, 62, 190, .14);
+  color: #ffd7f3;
+  padding: 0 7px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tfcc-progress-action:disabled {
+  cursor: default;
+  opacity: .5;
+}
+
+.tfcc-actions button:disabled,
+.tfcc-edit button:disabled {
+  cursor: default;
+  opacity: .5;
+}
+
+.tfcc-kv {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tfcc-kv-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  font-size: 12px;
+}
+
+.tfcc-kv-row span {
+  color: rgba(243, 245, 251, .58);
+}
+
+.tfcc-kv-row strong {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.tfcc-json {
+  max-height: 250px;
+  overflow: auto;
+  margin: 12px 0 0;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, .2);
+  color: rgba(243, 245, 251, .8);
+  padding: 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tfcc-edit {
+  margin-top: 12px;
+}
+
+.tfcc-edit textarea {
+  min-height: 160px;
+  margin-top: 0;
+}
+
+.tfcc-task-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tfcc-task {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .025);
+  color: rgba(243, 245, 251, .8);
+  padding: 7px 8px;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tfcc-task:disabled {
+  cursor: default;
+  opacity: .75;
+}
+
+.tfcc-task:not(:disabled):hover {
+  border-color: rgba(237, 62, 190, .3);
+}
+
+.tfcc-task-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tfcc-task strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tfcc-task span {
+  color: rgba(243, 245, 251, .62);
+}
+
+.tfcc-task em {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: rgba(243, 245, 251, .42);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.tfcc-task.is-running span {
+  color: #ffbe55;
+}
+
+.tfcc-task.is-error span {
+  color: #ff6b6b;
+}
+
+.tfcc-task.is-complete span {
+  color: #39d98a;
+}
+
+.tfcc-empty {
+  margin-top: 12px;
+  color: rgba(243, 245, 251, .5);
+  font-size: 12px;
+}
+
+@media (max-width: 1180px) {
+  .tfcc-header {
+    grid-template-columns: minmax(180px, 1fr) 180px 150px;
+    grid-auto-rows: auto;
+  }
+
+  .tfcc-tabs,
+  .tfcc-header-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .tfcc-layout {
+    grid-template-columns: 56px 250px minmax(0, 1fr) 320px;
+  }
+
+  .tfcc-agent {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 760px) {
+  .tfcc-layout {
+    grid-template-columns: 48px 220px minmax(0, 1fr);
+  }
+
+  .tfcc-side {
+    position: absolute;
+    right: 16px;
+    top: 92px;
+    bottom: 16px;
+    width: 320px;
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 8px;
+  }
+}
+
+/* ─── v2 创作级精修 ─────────────────────────────────────────── */
+
+/* 品牌 */
+.tfcc-brand-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ff4fc3;
+}
+.tfcc-brand-sep {
+  color: rgba(243, 245, 251, .3);
+}
+.tfcc-brand-project {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 650;
+  color: rgba(243, 245, 251, .82);
+  max-width: 220px;
+}
+
+/* 头部按钮 */
+.tfcc-header-actions .tfcc-ghost {
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 255, 255, .12);
+  color: rgba(243, 245, 251, .86);
+}
+.tfcc-header-actions .tfcc-ghost:hover {
+  background: rgba(255, 255, 255, .09);
+}
+.tfcc-header-actions .tfcc-publish {
+  background: linear-gradient(135deg, #ff4fc3, #b15bff);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+}
+.tfcc-header-actions .tfcc-publish:hover {
+  filter: brightness(1.08);
+}
+
+/* 语义化连线配色 */
+.tfcc-edge-uses,
+.tfcc-edge-references {
+  stroke: rgba(94, 234, 212, .6);
+  stroke-dasharray: 4 6;
+}
+.tfcc-edge-contains,
+.tfcc-edge-analysis,
+.tfcc-edge-expands {
+  stroke: rgba(120, 160, 255, .5);
+  stroke-dasharray: 2 6;
+}
+.tfcc-edge-generates,
+.tfcc-edge-renders {
+  stroke: rgba(255, 79, 195, .72);
+  stroke-dasharray: none;
+}
+.tfcc-edge-auditedBy,
+.tfcc-edge-task {
+  stroke: rgba(255, 255, 255, .22);
+}
+.tfcc-edge-videoTask {
+  stroke: rgba(255, 79, 195, .86);
+  stroke-width: 2.4;
+  stroke-dasharray: 8 6;
+}
+
+/* 状态徽章配色 */
+.tfcc-badge.warn { background: #ffbe55; color: #15110b; }
+.tfcc-badge.running { background: #6aa8ff; color: #0a1326; }
+.tfcc-badge.done { background: rgba(94, 234, 212, .22); color: #5eead4; }
+.tfcc-badge.pending { background: rgba(255, 255, 255, .14); color: rgba(243, 245, 251, .82); }
+
+/* 节点来源/计数 */
+.tfcc-node-source {
+  margin-top: 10px;
+  font-size: 11px;
+  color: rgba(243, 245, 251, .5);
+}
+.tfcc-node-count {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(243, 245, 251, .9);
+}
+.tfcc-node-title-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 缩略图网格（资产组卡 / 分镜分析） */
+.tfcc-thumb-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.tfcc-thumb {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .08);
+}
+.tfcc-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.tfcc-thumb.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: rgba(243, 245, 251, .4);
+}
+.tfcc-thumb.is-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: rgba(243, 245, 251, .82);
+  background: rgba(255, 255, 255, .08);
+}
+.tfcc-thumb-wide {
+  aspect-ratio: 16 / 9;
+  margin-top: 8px;
+}
+
+.tfcc-asset-node-thumb {
+  width: 64px;
+  height: 64px;
+  aspect-ratio: auto;
+}
+
+.tfcc-flow-node-thumb {
+  width: 132px;
+  height: 92px;
+  aspect-ratio: auto;
+}
+
+.tfcc-flow-node-wide {
+  aspect-ratio: 16 / 9;
+  margin-top: 8px;
+}
+
+.tfcc-flow-prompt-inline {
+  width: 100%;
+  min-height: 118px;
+  margin-top: 8px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .22);
+  color: #f3f5fb;
+  padding: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+/* 视频 tile（单个 + 概览行） */
+.tfcc-video-tile {
+  position: relative;
+  margin-top: 8px;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #05070d;
+  border: 1px solid rgba(255, 255, 255, .08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tfcc-video-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tfcc-video-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tfcc-video-play {
+  position: absolute;
+  font-size: 18px;
+  color: rgba(255, 255, 255, .9);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, .6);
+}
+.tfcc-video-row {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.tfcc-video-row .tfcc-video-tile {
+  margin-top: 0;
+}
+.tfcc-video-tile.is-more {
+  font-weight: 700;
+  color: rgba(243, 245, 251, .82);
+  background: rgba(255, 255, 255, .08);
+}
+
+/* 视频 Prompt 概览三栏 */
+.tfcc-prompt-cols {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.tfcc-prompt-col {
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 255, 255, .07);
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(243, 245, 251, .76);
+  max-height: 88px;
+  overflow: hidden;
+}
+
+.tfcc-video-prompt-inline {
+  width: 100%;
+  min-height: 92px;
+  margin-top: 8px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .22);
+  color: #f3f5fb;
+  padding: 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  resize: vertical;
+}
+.tfcc-prompt-graphic {
+  margin-top: 8px;
+  max-height: 150px;
+  overflow: auto;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 255, 255, .08);
+  color: rgba(243, 245, 251, .84);
+  font-size: 11px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+.tfcc-prompt-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  margin: 0 2px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(94, 234, 212, .28);
+  background: rgba(94, 234, 212, .1);
+  color: rgba(225, 255, 250, .95);
+  vertical-align: middle;
+}
+.tfcc-prompt-ref img {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+.tfcc-prompt-text {
+  white-space: pre-wrap;
+}
+
+/* Inspector 精修 */
+.tfcc-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tfcc-copy {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .04);
+  color: rgba(243, 245, 251, .8);
+  cursor: pointer;
+}
+.tfcc-copy:hover { background: rgba(255, 255, 255, .1); }
+.tfcc-status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tfcc-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .4);
+}
+.tfcc-status-dot.is-warn { background: #ffbe55; }
+.tfcc-status-dot.is-running { background: #6aa8ff; }
+.tfcc-status-dot.is-done { background: #5eead4; }
+.tfcc-hash {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tfcc-hash strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+.tfcc-panel-subtitle {
+  margin: 12px 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(243, 245, 251, .7);
+}
+.tfcc-inspect-text {
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(243, 245, 251, .82);
+}
+
+/* Inspector 资产成员列表 */
+.tfcc-asset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.tfcc-asset-list-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tfcc-asset-list-row img {
+  width: 30px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+.tfcc-asset-list-noimg {
+  width: 30px;
+  height: 40px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(243, 245, 251, .4);
+  flex: 0 0 auto;
+}
+.tfcc-asset-list-name {
+  font-size: 12px;
+  color: rgba(243, 245, 251, .85);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Agent 历史内联进度条 */
+.tfcc-progress-bar {
+  margin: 4px 0 2px;
+}
+.tfcc-progress-bar-label {
+  font-size: 11px;
+  color: rgba(243, 245, 251, .68);
+  margin-bottom: 4px;
+}
+.tfcc-progress-bar-track {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, .1);
+  overflow: hidden;
+}
+.tfcc-progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #ff4fc3, #b15bff);
+  transition: width .3s ease;
+}
+
+/* 当前剧集进度：生成中状态点呼吸动效 */
+.tfcc-progress-item.is-running .tfcc-progress-dot {
+  animation: tfcc-pulse 1.4s ease-in-out infinite;
+}
+@keyframes tfcc-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+
+/* ─── v2.1 设计图对齐 ───────────────────────────────────────── */
+
+/* 左侧图标导航 rail */
+.tfcc-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0;
+  background: rgba(12, 13, 17, .6);
+  border-right: 1px solid rgba(255, 255, 255, .06);
+}
+.tfcc-rail-btn {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, .04);
+  color: rgba(243, 245, 251, .6);
+  font-size: 17px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.tfcc-rail-btn:hover {
+  background: rgba(255, 255, 255, .09);
+  color: rgba(243, 245, 251, .9);
+}
+.tfcc-rail-btn.is-active {
+  background: rgba(255, 79, 195, .16);
+  border-color: rgba(255, 79, 195, .5);
+  color: #ff4fc3;
+}
+
+/* 头部选择器组 + EP pill */
+.tfcc-selectors {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tfcc-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.tfcc-select-icon {
+  position: absolute;
+  left: 10px;
+  pointer-events: none;
+  color: rgba(243, 245, 251, .55);
+  font-size: 13px;
+}
+.tfcc-select-project select {
+  padding-left: 30px;
+}
+.tfcc-select-ep select {
+  background: rgba(255, 79, 195, .1);
+  border-color: rgba(255, 79, 195, .32);
+  color: #ffd6f0;
+  font-weight: 650;
+}
+
+/* Inspector 头部段标题 + 图标行 */
+.tfcc-inspector-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.tfcc-inspector-section {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(243, 245, 251, .9);
+}
+.tfcc-inspector-icons {
+  display: inline-flex;
+  gap: 4px;
+}
+.tfcc-icon-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  background: rgba(255, 255, 255, .04);
+  color: rgba(243, 245, 251, .7);
+  cursor: pointer;
+  font-size: 13px;
+}
+.tfcc-icon-btn:hover { background: rgba(255, 255, 255, .1); }
+
+/* 项目总览 pill chips */
+.tfcc-chips {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tfcc-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .08);
+  font-size: 11px;
+  color: rgba(243, 245, 251, .7);
+}
+.tfcc-chip strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(243, 245, 251, .95);
+}
+
+/* 缩放控件适配按钮 */
+.tfcc-zoom-fit {
+  margin-left: 4px;
+}
+
+/* 资产组卡单行缩略图 */
+.tfcc-thumb-grid.is-row {
+  display: flex;
+  gap: 6px;
+}
+.tfcc-thumb-grid.is-row .tfcc-thumb {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ─── 图片流抽屉 ─────────────────────────────────────────────── */
+.tfcc-flow-drawer-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 3200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 6, 10, .58);
+  backdrop-filter: blur(2px);
+}
+.tfcc-flow-drawer {
+  width: min(640px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 18px;
+  border-radius: 14px;
+  background: rgba(20, 22, 28, .98);
+  border: 1px solid rgba(255, 255, 255, .1);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, .5);
+  color: #f3f5fb;
+}
+.tfcc-flow-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.tfcc-flow-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+.tfcc-flow-ico { color: #ff4fc3; }
+.tfcc-flow-empty {
+  padding: 40px 0;
+  text-align: center;
+  color: rgba(243, 245, 251, .55);
+}
+.tfcc-flow-stage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tfcc-flow-cell {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.tfcc-flow-cell-label {
+  font-size: 12px;
+  color: rgba(243, 245, 251, .6);
+  margin-bottom: 6px;
+}
+.tfcc-flow-cell img {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  display: block;
+}
+.tfcc-flow-cell.is-out img { border-color: rgba(255, 79, 195, .4); }
+.tfcc-flow-cell-empty {
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, .16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(243, 245, 251, .4);
+  font-size: 12px;
+}
+.tfcc-flow-arrow { color: rgba(255, 255, 255, .4); font-size: 18px; }
+
+.tfcc-flow-refs { margin-top: 14px; }
+.tfcc-flow-ref-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tfcc-flow-ref {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .1);
+}
+.tfcc-flow-ref img { width: 100%; height: 100%; object-fit: cover; }
+.tfcc-flow-ref.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  color: rgba(243, 245, 251, .4);
+}
+.tfcc-flow-form { margin-top: 16px; }
+.tfcc-flow-prompt {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .04);
+  color: #f3f5fb;
+  font-size: 13px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+.tfcc-flow-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.tfcc-flow-controls .tfcc-flow-model {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .04);
+  color: #f3f5fb;
+  font-size: 12px;
+}
+.tfcc-flow-controls select {
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .04);
+  color: #f3f5fb;
+  font-size: 12px;
+}
+.tfcc-flow-error {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(255, 107, 107, .12);
+  border: 1px solid rgba(255, 107, 107, .3);
+  color: #ff9b9b;
+  font-size: 12px;
+}
+.tfcc-flow-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.tfcc-flow-actions button {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, .05);
+  color: #f3f5fb;
+  cursor: pointer;
+  font-size: 13px;
+}
+.tfcc-flow-actions button.primary {
+  background: linear-gradient(135deg, #ff4fc3, #b15bff);
+  border: none;
+  color: #fff;
+  font-weight: 650;
+}
+.tfcc-flow-actions button:disabled { opacity: .5; cursor: not-allowed; }
+
+/* 资产成员行可点击 */
+.tfcc-asset-list-row.is-clickable { cursor: pointer; border-radius: 6px; padding: 2px 4px; }
+.tfcc-asset-list-row.is-clickable:hover { background: rgba(255, 255, 255, .06); }
+.tfcc-asset-list-go { margin-left: auto; color: #ff4fc3; font-size: 13px; }
+
+/* ─── 会话式 Agent 面板 ──────────────────────────────────────── */
+.tfcc-agent.tfcc-chat {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+}
+.tfcc-chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+.tfcc-chat-head-main { min-width: 0; }
+.tfcc-chat-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 760;
+  color: #fff;
+}
+.tfcc-chat-role {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: rgba(242, 246, 255, .5);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tfcc-chat-status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .1);
+  font-size: 11px;
+  color: rgba(242, 246, 255, .6);
+}
+.tfcc-chat-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .4);
+}
+.tfcc-chat-status.is-connected {
+  border-color: rgba(67, 209, 141, .3);
+  background: rgba(67, 209, 141, .1);
+  color: #67d99f;
+}
+.tfcc-chat-status.is-connected .tfcc-chat-status-dot { background: #43d18d; }
+.tfcc-chat-status.is-connecting .tfcc-chat-status-dot {
+  background: #ffbe55;
+  animation: tfcc-pulse 1.2s ease-in-out infinite;
+}
+
+/* 锁定上下文横幅 */
+.tfcc-chat-lock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 14px;
+  background: rgba(237, 62, 190, .1);
+  border-bottom: 1px solid rgba(237, 62, 190, .2);
+  font-size: 11px;
+  color: #ffd6f0;
+}
+.tfcc-chat-lock-text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tfcc-chat-lock-clear {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: rgba(255, 255, 255, .06);
+  color: #ffd6f0;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* 会话历史滚动区 */
+.tfcc-chat-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tfcc-chat-readonly {
+  flex: 0 0 auto;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, .07);
+  color: rgba(242, 246, 255, .5);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* 底部 composer */
+.tfcc-chat-composer {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+  background: rgba(10, 12, 16, .6);
+}
+.tfcc-chat-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tfcc-chat-think, .tfcc-chat-lockchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, .05);
+  color: rgba(243, 245, 251, .72);
+  font-size: 11px;
+  cursor: pointer;
+}
+.tfcc-chat-think:hover, .tfcc-chat-lockchip:hover { background: rgba(255, 255, 255, .1); }
+.tfcc-chat-think.is-on {
+  border-color: rgba(122, 162, 255, .5);
+  background: rgba(122, 162, 255, .16);
+  color: #9cc0ff;
+}
+.tfcc-chat-lockchip.is-on {
+  border-color: rgba(237, 62, 190, .5);
+  background: rgba(237, 62, 190, .16);
+  color: #ff4fc3;
+}
+.tfcc-chat-inputrow {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.tfcc-chat-input {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 40px;
+  max-height: 140px;
+  resize: none;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, .05);
+  color: #f3f5fb;
+  font-size: 13px;
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+.tfcc-chat-input:focus {
+  outline: none;
+  border-color: rgba(255, 79, 195, .5);
+}
+.tfcc-chat-lockbtn, .tfcc-chat-send {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, .06);
+  color: rgba(243, 245, 251, .8);
+  cursor: pointer;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tfcc-chat-lockbtn.is-on {
+  border-color: rgba(237, 62, 190, .5);
+  background: rgba(237, 62, 190, .16);
+  color: #ff4fc3;
+}
+.tfcc-chat-send {
+  background: linear-gradient(135deg, #ff4fc3, #b15bff);
+  border: none;
+  color: #fff;
+}
+.tfcc-chat-send.is-stop {
+  background: rgba(255, 107, 107, .9);
+  font-size: 12px;
+}
+.tfcc-chat-send:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, .08);
+  color: rgba(243, 245, 251, .5);
+}
+
+/* 会话气泡对齐(在 chat-body 内) */
+.tfcc-chat-body .tfcc-agent-msg {
+  max-width: 92%;
+  margin: 0;
+}
+.tfcc-chat-body .tfcc-agent-msg.user {
+  align-self: flex-end;
+  border-bottom-right-radius: 3px;
+}
+.tfcc-chat-body .tfcc-agent-msg.assistant,
+.tfcc-chat-body .tfcc-agent-msg:not(.user) {
+  align-self: flex-start;
+  border-bottom-left-radius: 3px;
+}
+.tfcc-chat-body .tfcc-agent-empty,
+.tfcc-chat-body .tfcc-agent-stream {
+  align-self: stretch;
+}
+.tfcc-chat-body .tfcc-agent-stream {
+  margin: 0;
+  gap: 10px;
+}
+
+/* 会话消息头:头像 + 名称 + 状态 */
+.tfcc-msg-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.tfcc-msg-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ff4fc3, #b15bff);
+  color: #fff;
+  flex: 0 0 auto;
+}
+.tfcc-msg-avatar.is-user {
+  background: rgba(255, 255, 255, .12);
+  color: rgba(243, 245, 251, .85);
+}
+.tfcc-msg-status {
+  font-size: 11px;
+  color: rgba(244, 246, 251, .44);
+}
+.tfcc-agent-msg.is-running .tfcc-msg-status { color: #6aa8ff; }
+.tfcc-agent-msg.is-error .tfcc-msg-status { color: #ff6b6b; }
+.tfcc-agent-msg.is-warning .tfcc-msg-status { color: #ffbe55; }
+
+/* 会话气泡更接近 LLM 聊天 */
+.tfcc-chat-body .tfcc-agent-msg {
+  padding: 11px 13px;
+  border-radius: 12px;
+}
+.tfcc-chat-body .tfcc-agent-msg.user {
+  background: rgba(237, 62, 190, .12);
+  border-color: rgba(237, 62, 190, .28);
+}
