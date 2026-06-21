@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { recordGenerationArtifact } from "@/utils/contentAudit";
 const router = express.Router();
 const MAX_STORYBOARD_FIELD_LENGTH = 2000;
 
@@ -38,6 +39,20 @@ export default router.post(
 
     const count = await u.db("o_storyboard").where({ id: storyboardId, projectId, scriptId }).update(update);
     if (!count) return res.status(400).send(error("分镜不存在"));
+    await Promise.all(
+      Object.entries(update).map(([field, content]) =>
+        recordGenerationArtifact({
+          projectId,
+          artifactType: "manual",
+          targetType: "o_storyboard",
+          targetId: storyboardId,
+          targetField: field,
+          title: `分镜 ${storyboardId} ${field}`,
+          content,
+          meta: { source: "manual:updateStoryboardInfo", scriptId },
+        }),
+      ),
+    );
 
     res.status(200).send(success({ message: "分镜信息更新成功" }));
   },

@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { recordGenerationArtifact } from "@/utils/contentAudit";
 const router = express.Router();
 
 // 新增剧本
@@ -21,6 +22,16 @@ export default router.post(
       content,
       projectId,
       createTime: Date.now(),
+    });
+    await recordGenerationArtifact({
+      projectId,
+      artifactType: "script",
+      targetType: "o_script",
+      targetId: scriptId,
+      targetField: "content",
+      title: name,
+      content,
+      meta: { source: "manual:addScript" },
     });
     if (assets.length) {
       const assetsData = await u.db("o_assets").whereIn("id", assets).select();

@@ -9,6 +9,7 @@ import { createToolUseCounter, SUPERVISION_INVALID_MESSAGE } from "@/utils/agent
 import ResTool from "@/socket/resTool";
 import * as fs from "fs";
 import path from "path";
+import { recordPromptUsage, resolveAgentPrompt } from "@/utils/promptCenter";
 
 export interface AgentContext {
   socket: Socket;
@@ -46,8 +47,15 @@ export async function runDecisionAI(ctx: AgentContext) {
   const memory = new Memory("productionAgent", isolationKey);
   await memory.add("user", text);
 
-  const skill = path.join(u.getPath("skills"), "production_agent_decision.md");
-  const prompt = await fs.promises.readFile(skill, "utf-8");
+  const promptSnapshot = await resolveAgentPrompt("productionAgent:decisionAgent");
+  const prompt = promptSnapshot.content;
+  await recordPromptUsage({
+    effectivePrompt: promptSnapshot,
+    modelName: await u.Ai.resolveModelName("productionAgent:decisionAgent").catch(() => "productionAgent:decisionAgent"),
+    relatedType: "agent:productionDecision",
+    relatedId: ctx.resTool.data.projectId ?? isolationKey,
+    meta: { isolationKey },
+  });
 
   const projectInfo = await u.db("o_project").where("id", ctx.resTool.data.projectId).first();
   if (!projectInfo) throw new Error(`项目不存在，ID: ${ctx.resTool.data.projectId}`);
@@ -98,6 +106,17 @@ export async function runDecisionAI(ctx: AgentContext) {
 async function createSubAgent(parentCtx: AgentContext) {
   const { resTool, abortSignal } = parentCtx;
   const memory = new Memory("productionAgent", parentCtx.isolationKey);
+  async function loadAgentPrompt(key: string) {
+    const promptSnapshot = await resolveAgentPrompt(key);
+    await recordPromptUsage({
+      effectivePrompt: promptSnapshot,
+      modelName: await u.Ai.resolveModelName(key as any).catch(() => key),
+      relatedType: "agent:productionSubAgent",
+      relatedId: resTool.data.projectId ?? parentCtx.isolationKey,
+      meta: { isolationKey: parentCtx.isolationKey, agentKey: key },
+    });
+    return promptSnapshot.content;
+  }
   async function runAgent({
     key,
     prompt,
@@ -212,8 +231,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     description: "运行执行subAgent来完成衍生资产分析与信息写入相关任务",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "production_execution_derive_assets.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = await loadAgentPrompt("productionAgent:deriveAssetsAgent");
       return runAgent({
         key: "productionAgent:deriveAssetsAgent",
         prompt,
@@ -234,8 +252,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     description: "运行执行subAgent来完成衍生资产图片生成相关任务",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "production_execution_generate_assets.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = await loadAgentPrompt("productionAgent:generateAssetsAgent");
       return runAgent({
         key: "productionAgent:generateAssetsAgent",
         prompt,
@@ -256,8 +273,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     description: "运行执行subAgent来完成导演规划相关任务",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "production_execution_director_plan.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = await loadAgentPrompt("productionAgent:directorPlanAgent");
 
       const addPrompt = "\n你必须使用如下XML格式写入工作区：\n```\n<scriptPlan>内容</scriptPlan>\n```";
 
@@ -281,8 +297,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     description: "运行执行subAgent来完成分镜图生成相关任务",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "production_execution_storyboard_gen.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = await loadAgentPrompt("productionAgent:storyboardGenAgent");
       return runAgent({
         key: "productionAgent:storyboardGenAgent",
         prompt,
@@ -315,8 +330,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     description: "运行执行subAgent来完成分镜面板写入相关任务",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "production_execution_storyboard_panel.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = await loadAgentPrompt("productionAgent:storyboardPanelAgent");
 
       const addPrompt =
         "\n你必须使用如下XML格式写入工作区：\n```\n<storyboardItem videoDesc='视频描述' prompt=提示词内容 track='分组' shouldGenerateImage='true/false' duration='视频推荐时间' associateAssetsIds='[该分镜所需的资产ID列表]'></storyboardItem>\n```";
@@ -341,8 +355,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     description: "运行执行subAgent来完成分镜表构建相关任务",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "production_execution_storyboard_table.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = await loadAgentPrompt("productionAgent:storyboardTableAgent");
 
       const addPrompt = "\n你必须使用如下XML格式写入工作区：\n```\n<storyboardTable>内容</storyboardTable>\n```";
 
@@ -365,8 +378,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     description: "运行监督层subAgent执行独立任务，完成后返回结果",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "production_agent_supervision.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = await loadAgentPrompt("productionAgent:supervisionAgent");
       return runAgent({
         key: "productionAgent:supervisionAgent",
         prompt,

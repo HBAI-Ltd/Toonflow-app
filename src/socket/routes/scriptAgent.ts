@@ -45,8 +45,10 @@ export default (nsp: Namespace) => {
       thinlLevel: 0,
     };
 
-    socket.on("chat", async (data: { content: string }) => {
+    socket.on("chat", async (data: { content: string; think?: boolean; thinkLevel?: 0 | 1 | 2 | 3 }) => {
       const { content } = data;
+      if (typeof data.think === "boolean") thinkConfig.think = data.think;
+      if (typeof data.thinkLevel === "number") thinkConfig.thinlLevel = data.thinkLevel;
       abortController?.abort();
       abortController = new AbortController();
       const currentController = abortController;

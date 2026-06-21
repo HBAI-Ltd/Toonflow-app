@@ -1,10 +1,8 @@
 import express from "express";
 import { error, success } from "@/lib/responseFormat";
-import u from "@/utils";
 import { z } from "zod";
 import { validateFields } from "@/middleware/middleware";
-import fs from "fs/promises";
-import path from "path";
+import { createPromptDraft } from "@/utils/promptCenter";
 
 const router = express.Router();
 
@@ -17,15 +15,19 @@ export default router.post(
   }),
   async (req, res) => {
     const { name, data, type } = req.body;
-
-    const modelPromptRoot = u.getPath(["modelPrompt"]);
-    const dir = path.join(modelPromptRoot, type);
-
-    await fs.mkdir(dir, { recursive: true });
-
-    const filePath = path.join(dir, `${name}.md`);
-    await fs.writeFile(filePath, data, "utf-8");
-
-    res.status(200).send(success("保存成功"));
+    try {
+      const sourcePath = `${type}/${name}.md`;
+      const draft = await createPromptDraft({
+        scope: "modelPrompt",
+        key: sourcePath,
+        sourceType: "modelPromptFile",
+        sourcePath,
+        content: data,
+        note: "legacy modelMap/savePrompt",
+      });
+      res.status(200).send(success({ draftId: draft.id, status: draft.status }, "草稿已保存，发布后生效"));
+    } catch (err: any) {
+      res.status(400).send(error(err?.message ?? String(err)));
+    }
   },
 );

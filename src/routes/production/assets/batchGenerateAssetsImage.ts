@@ -5,6 +5,7 @@ import sharp from "sharp";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { Output } from "ai";
+import { recordGenerationArtifact } from "@/utils/contentAudit";
 const router = express.Router();
 
 export default router.post(
@@ -82,7 +83,18 @@ export default router.post(
           },
         ],
       });
-        await u.db("o_assets").where("id", item.id).update({ prompt: text });
+      await u.db("o_assets").where("id", item.id).update({ prompt: text });
+      await recordGenerationArtifact({
+        projectId,
+        artifactType: "assetPrompt",
+        targetType: "o_assets",
+        targetId: item.id,
+        targetField: "prompt",
+        title: `${item.name ?? item.id} 资产提示词`,
+        content: text,
+        modelName: await u.Ai.resolveModelName("universalAi").catch(() => "universalAi"),
+        meta: { source: "asset:batchGenerateAssetsImage", scriptId, type: item.type },
+      });
 
       const imageBase64 = imageUrlRecord[item.assetsId!] ? await u.oss.getImageBase64(imageUrlRecord[item.assetsId!]) : null;
       try {

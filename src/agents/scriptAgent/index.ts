@@ -6,8 +6,7 @@ import Memory from "@/utils/agent/memory";
 import useTools from "@/agents/scriptAgent/tools";
 import { createToolUseCounter, SUPERVISION_INVALID_MESSAGE } from "@/utils/agent/toolUseGuard";
 import ResTool from "@/socket/resTool";
-import * as fs from "fs";
-import path from "path";
+import { recordPromptUsage, resolveAgentPrompt } from "@/utils/promptCenter";
 
 export interface AgentContext {
   socket: Socket;
@@ -44,8 +43,15 @@ export async function runDecisionAI(ctx: AgentContext) {
   const memory = new Memory("scriptAgent", isolationKey);
   await memory.add("user", text, { createTime: userMessageTime });
 
-  const skill = path.join(u.getPath("skills"), "script_agent_decision.md");
-  const prompt = await fs.promises.readFile(skill, "utf-8");
+  const promptSnapshot = await resolveAgentPrompt("scriptAgent:decisionAgent");
+  const prompt = promptSnapshot.content;
+  await recordPromptUsage({
+    effectivePrompt: promptSnapshot,
+    modelName: await u.Ai.resolveModelName("scriptAgent:decisionAgent").catch(() => "scriptAgent:decisionAgent"),
+    relatedType: "agent:scriptDecision",
+    relatedId: resTool.data.projectId ?? isolationKey,
+    meta: { isolationKey },
+  });
 
   const mem = buildMemPrompt(await memory.get(text));
 
@@ -92,6 +98,18 @@ export async function runDecisionAI(ctx: AgentContext) {
 function createSubAgent(parentCtx: AgentContext) {
   const { resTool, abortSignal } = parentCtx;
   const memory = new Memory("scriptAgent", parentCtx.isolationKey);
+
+  async function loadAgentPrompt(key: string) {
+    const promptSnapshot = await resolveAgentPrompt(key);
+    await recordPromptUsage({
+      effectivePrompt: promptSnapshot,
+      modelName: await u.Ai.resolveModelName(key as any).catch(() => key),
+      relatedType: "agent:scriptSubAgent",
+      relatedId: resTool.data.projectId ?? parentCtx.isolationKey,
+      meta: { isolationKey: parentCtx.isolationKey, agentKey: key },
+    });
+    return promptSnapshot.content;
+  }
 
   async function runAgent({
     key,
@@ -156,8 +174,7 @@ function createSubAgent(parentCtx: AgentContext) {
     description: "运行执行subAgent来完成故事骨架相关任务",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "script_execution_skeleton.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = await loadAgentPrompt("scriptAgent:storySkeletonAgent");
 
       const formatPrompt = "\n你必须使用如下XML格式写入工作区：\n<storySkeleton>故事骨架内容</storySkeleton>";
 
@@ -176,8 +193,7 @@ function createSubAgent(parentCtx: AgentContext) {
     description: "运行执行subAgent来完成改编策略相关任务",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "script_execution_adaptation.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = await loadAgentPrompt("scriptAgent:adaptationStrategyAgent");
 
       const formatPrompt = "\n你必须使用如下XML格式写入工作区：\n<adaptationStrategy>改编策略内容</adaptationStrategy>";
 
@@ -196,8 +212,7 @@ function createSubAgent(parentCtx: AgentContext) {
     description: "运行执行subAgent来完成剧本相关任务",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "script_execution_script.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = await loadAgentPrompt("scriptAgent:scriptAgent");
 
       const scriptList = await u.db("o_script").where("projectId", resTool.data.projectId).select("id", "name");
       const scriptPrompt = ["## 可用剧本(ID:名称)", scriptList.map((s: any) => `${s.id}:${(s.name || "").replace(/[,:]/g, "")}`).join(","), ""].join(
@@ -226,8 +241,7 @@ function createSubAgent(parentCtx: AgentContext) {
     description: "运行监督层subAgent执行独立任务，完成后返回结果",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "script_agent_supervision.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = await loadAgentPrompt("scriptAgent:supervisionAgent");
 
       return runAgent({
         key: "scriptAgent:supervisionAgent",

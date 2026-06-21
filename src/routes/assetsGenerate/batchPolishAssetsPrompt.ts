@@ -4,6 +4,7 @@ import pLimit from "p-limit";
 import * as zod from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { recordGenerationArtifact } from "@/utils/contentAudit";
 const router = express.Router();
 interface OutlineItem {
   description: string;
@@ -122,6 +123,17 @@ export default router.post(
           }
 
           await u.db("o_assets").where("id", item.assetsId).update({ prompt: _output, promptState: "已完成" });
+          await recordGenerationArtifact({
+            projectId,
+            artifactType: "assetPrompt",
+            targetType: "o_assets",
+            targetId: item.assetsId,
+            targetField: "prompt",
+            title: `${item.name} 资产提示词`,
+            content: _output,
+            modelName: await u.Ai.resolveModelName("universalAi").catch(() => "universalAi"),
+            meta: { source: "asset:batchPolishPrompt", type: item.type, describe: item.describe },
+          });
         } catch (e: any) {
           await u
             .db("o_assets")

@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { recordGenerationArtifact } from "@/utils/contentAudit";
 const router = express.Router();
 
 // 新增剧本
@@ -19,16 +20,24 @@ export default router.post(
   }),
   async (req, res) => {
     const { data, projectId } = req.body;
-    await u.db("o_script").insert(
-      data.map((i: { scriptName: string; scriptData: string }) => {
-        return {
-          name: i.scriptName,
-          content: i.scriptData,
-          projectId,
-          createTime: Date.now(),
-        };
-      }),
-    );
+    for (const item of data) {
+      const [scriptId] = await u.db("o_script").insert({
+        name: item.scriptName,
+        content: item.scriptData,
+        projectId,
+        createTime: Date.now(),
+      });
+      await recordGenerationArtifact({
+        projectId,
+        artifactType: "script",
+        targetType: "o_script",
+        targetId: scriptId,
+        targetField: "content",
+        title: item.scriptName,
+        content: item.scriptData,
+        meta: { source: "manual:batchAddScript" },
+      });
+    }
 
     res.status(200).send(success({ message: "添加剧本成功" }));
   },

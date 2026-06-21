@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { recordGenerationArtifact } from "@/utils/contentAudit";
 const router = express.Router();
 
 // 编辑剧本
@@ -19,6 +20,17 @@ export default router.post(
     await u.db("o_script").where({ id }).update({
       name,
       content,
+    });
+    const script = await u.db("o_script").where({ id }).select("projectId").first();
+    await recordGenerationArtifact({
+      projectId: script?.projectId ?? null,
+      artifactType: "script",
+      targetType: "o_script",
+      targetId: id,
+      targetField: "content",
+      title: name,
+      content,
+      meta: { source: "manual:updateScript" },
     });
     if (assets.length) {
       const assetsData = await u.db("o_assets").whereIn("id", assets).select();

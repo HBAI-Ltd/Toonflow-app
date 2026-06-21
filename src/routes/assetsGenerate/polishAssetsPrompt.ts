@@ -3,6 +3,7 @@ import u from "@/utils";
 import * as zod from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { recordGenerationArtifact } from "@/utils/contentAudit";
 const router = express.Router();
 
 
@@ -77,6 +78,17 @@ export default router.post(
 
       if (!_output) return res.status(500).send("失败");
       await u.db("o_assets").where("id", assetsId).update({ prompt: _output, promptState: "已完成" });
+      await recordGenerationArtifact({
+        projectId,
+        artifactType: "assetPrompt",
+        targetType: "o_assets",
+        targetId: assetsId,
+        targetField: "prompt",
+        title: `${name} 资产提示词`,
+        content: _output,
+        modelName: await u.Ai.resolveModelName("universalAi").catch(() => "universalAi"),
+        meta: { source: "asset:polishPrompt", type, describe },
+      });
 
       res.status(200).send(success({ prompt: _output, assetsId }));
     } catch (e: any) {

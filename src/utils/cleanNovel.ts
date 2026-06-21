@@ -2,6 +2,8 @@ import { EventEmitter } from "events";
 import { o_novel } from "@/types/database";
 import u from "@/utils";
 import { stripThink } from "@/utils/stripThink";
+import { recordGenerationArtifact } from "@/utils/contentAudit";
+import { recordPromptUsage, resolveFunctionPrompt } from "@/utils/promptCenter";
 export interface EventType {
   id: number;
   event: string;
@@ -24,18 +26,20 @@ class CleanNovel {
     this.concurrency = concurrency;
   }
 
-  private async processChapter(novel: o_novel): Promise<EventType | null> {
+  private async processChapter(novel: o_novel, projectId: number): Promise<EventType | null> {
     try {
       const prompt = await u.getPrompts("event");
-      const promptData = await u.db("o_prompt").where("type", "eventExtraction").first();
-      let eventExtraction = "" as string | undefined;
-      if (promptData && promptData.useData) {
-        eventExtraction = promptData.useData;
-      } else {
-        eventExtraction = promptData?.data ?? undefined;
-      }
+      const eventExtraction = await resolveFunctionPrompt("eventExtraction");
+      const modelName = await u.Ai.resolveModelName("universalAi").catch(() => "universalAi");
+      const promptUsageId = await recordPromptUsage({
+        effectivePrompt: eventExtraction,
+        modelName,
+        relatedType: "novel:eventExtraction",
+        relatedId: novel.id,
+        meta: { projectId, chapterIndex: novel.chapterIndex },
+      });
       const resData = await u.Ai.Text("universalAi").invoke({
-        system: eventExtraction ? JSON.stringify(eventExtraction) : (prompt as string),
+        system: eventExtraction.content ? JSON.stringify(eventExtraction.content) : (prompt as string),
         messages: [
           {
             role: "user",
@@ -52,6 +56,19 @@ class CleanNovel {
         ],
       });
       const preData = stripThink(resData.text);
+      await recordGenerationArtifact({
+        projectId,
+        artifactType: "event",
+        targetType: "o_novel",
+        targetId: novel.id!,
+        targetField: "event",
+        title: `第${novel.chapterIndex ?? ""}章事件`,
+        content: preData,
+        effectivePrompt: eventExtraction,
+        promptUsageId,
+        modelName,
+        meta: { chapterIndex: novel.chapterIndex, chapter: novel.chapter },
+      });
       this.emitter.emit("item", { id: novel.id, event: preData });
       return { id: novel.id!, event: preData };
     } catch (e) {
@@ -73,7 +90,7 @@ class CleanNovel {
       const novel = allChapters[index++];
       running++;
 
-      return this.processChapter(novel).then((result) => {
+      return this.processChapter(novel, projectId).then((result) => {
         if (result) totalEvent.push(result);
         running--;
         return runNext();

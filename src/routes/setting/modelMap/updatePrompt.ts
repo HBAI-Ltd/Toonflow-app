@@ -5,6 +5,7 @@ import { z } from "zod";
 import { validateFields } from "@/middleware/middleware";
 import fs from "fs/promises";
 import path from "path";
+import { createPromptDraft } from "@/utils/promptCenter";
 
 const router = express.Router();
 
@@ -35,7 +36,15 @@ export default router.post(
       return res.status(404).send(error("文件不存在"));
     }
 
-    await fs.writeFile(resolvedFile, data, "utf-8");
-    res.status(200).send(success("更新成功"));
+    const sourcePath = `${type}/${name}.md`;
+    const draft = await createPromptDraft({
+      scope: "modelPrompt",
+      key: sourcePath,
+      sourceType: "modelPromptFile",
+      sourcePath,
+      content: data,
+      note: "legacy modelMap/updatePrompt",
+    });
+    res.status(200).send(success({ draftId: draft.id, status: draft.status }, "草稿已保存，发布后生效"));
   },
 );

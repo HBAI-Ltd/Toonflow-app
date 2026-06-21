@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { recordGenerationArtifact } from "@/utils/contentAudit";
 const router = express.Router();
 export default router.post(
   "/",
@@ -45,6 +46,26 @@ export default router.post(
           })),
         );
       }
+      await recordGenerationArtifact({
+        projectId,
+        artifactType: "storyboardPrompt",
+        targetType: "o_storyboard",
+        targetId: id,
+        targetField: "prompt",
+        title: `分镜 ${id} 图片提示词`,
+        content: item.prompt,
+        meta: { source: "manual:batchAddStoryboardInfo", scriptId, track: item.track },
+      });
+      await recordGenerationArtifact({
+        projectId,
+        artifactType: "storyboardVideoDesc",
+        targetType: "o_storyboard",
+        targetId: id,
+        targetField: "videoDesc",
+        title: `分镜 ${id} 视频描述`,
+        content: item.videoDesc,
+        meta: { source: "manual:batchAddStoryboardInfo", scriptId, track: item.track },
+      });
       item.id = id;
     }
     const lastStoryboard = await u.db("o_storyboard").where("scriptId", scriptId);

@@ -3,8 +3,8 @@ import u from "@/utils";
 import { z } from "zod";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import fs from "fs/promises";
-import path from "path";
+import { recordGenerationArtifact } from "@/utils/contentAudit";
+import { recordPromptUsage, resolveVideoModelPrompt } from "@/utils/promptCenter";
 const router = express.Router();
 
 export default router.post(
@@ -194,59 +194,14 @@ export default router.post(
 
     const [id, modelData] = model.split(/:(.+)/);
     const projectData = await u.db("o_project").select("*").where({ id: projectId }).first();
-    const videoPrompt = await u.db("o_prompt").where("type", "videoPromptGeneration").first();
-    let videoPromptGeneration = "" as string | undefined;
-
-    const modelPromptData = await u.db("o_modelPrompt").where("vendorId", id).where("model", modelData).first();
-    //查询到 有绑定对应视频提示词
-    if (modelPromptData) {
-      const modelPromptRoot = u.getPath(["modelPrompt"]);
-      try {
-        const fullPath = path.join(modelPromptRoot, modelPromptData?.path!);
-        const content = await fs.readFile(fullPath, "utf-8");
-        videoPromptGeneration = content ?? "";
-      } catch {}
-    }
-
-    // 未查询到绑定，根据模型名称 + mode 自动匹配 modelPrompt/video/ 下的文件
-    if (!videoPromptGeneration) {
-      const modelPromptRoot = u.getPath(["modelPrompt"]);
-      const videoPromptDir = path.join(modelPromptRoot, "video");
-      const modelLower = (modelData ?? "").toLowerCase();
-
-      let fileName: string | null = null;
-
-      if (modelLower.includes("wan") && modelLower.includes("2.6")) {
-        // wan2.6 系列 => 单图首尾帧模式
-        fileName = "wan2.6Single-imageFirstFrameMode.md";
-      } else if (/seedance.*2[.\-]0/i.test(modelData)) {
-        // seedance 2.0 / 2-0 系列
-        fileName = "seedance2Multi-parameterMode.md";
-      } else if (mode === "startEndRequired" || mode === "endFrameOptional" || mode === "startFrameOptional") {
-        // body.mode 为首尾帧相关 => 通用首尾帧模式
-        fileName = "universalFirstAndLastFrameMode.md";
-      } else if (typeof mode === "string" && mode.startsWith('["') && mode.endsWith('"]')) {
-        // 其他 => 通用多参模式
-        fileName = "universalMulti-parameterMode.md";
-      }
-      if (fileName) {
-        try {
-          const fullPath = path.join(videoPromptDir, fileName);
-          videoPromptGeneration = await fs.readFile(fullPath, "utf-8");
-        } catch {
-          // 文件不存在则忽略，继续用备选
-        }
-      }
-    }
-
-    //备选
-    if (!videoPromptGeneration) {
-      if (videoPrompt && videoPrompt.useData) {
-        videoPromptGeneration = videoPrompt.useData;
-      } else {
-        videoPromptGeneration = videoPrompt?.data ?? undefined;
-      }
-    }
+    const videoPromptGeneration = await resolveVideoModelPrompt({ vendorId: id, model: modelData, mode });
+    const promptUsageId = await recordPromptUsage({
+      effectivePrompt: videoPromptGeneration,
+      modelName: await u.Ai.resolveModelName("universalAi").catch(() => "universalAi"),
+      relatedType: "videoTrack:generatePrompt",
+      relatedId: trackId,
+      meta: { projectId, model, mode },
+    });
 
     const artStyle = projectData?.artStyle || "无";
 
@@ -268,7 +223,7 @@ export default router.post(
 
     try {
       const { text } = await u.Ai.Text("universalAi").invoke({
-        system: videoPromptGeneration,
+        system: videoPromptGeneration.content,
         messages: [
           {
             role: "assistant",
@@ -283,6 +238,19 @@ export default router.post(
       await u.db("o_videoTrack").where({ id: trackId }).update({
         state: "已完成",
         prompt: text,
+      });
+      await recordGenerationArtifact({
+        projectId,
+        artifactType: "videoPrompt",
+        targetType: "o_videoTrack",
+        targetId: trackId,
+        targetField: "prompt",
+        title: `视频轨道 ${trackId} 提示词`,
+        content: text,
+        effectivePrompt: videoPromptGeneration,
+        promptUsageId,
+        modelName: await u.Ai.resolveModelName("universalAi").catch(() => "universalAi"),
+        meta: { model, mode, storyboardCount: storyboard.length, assetCount: assets.length },
       });
       res.status(200).send(success(text));
     } catch (e) {

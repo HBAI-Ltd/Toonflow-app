@@ -1,5 +1,7 @@
 import db from "@/utils/db";
 
+export type TaskDone = ((state: 1 | -1, reason?: string) => Promise<void>) & { id: number };
+
 const taskStateMap = {
   "0": "进行中",
   "1": "已完成",
@@ -19,9 +21,12 @@ export default async function taskRecord(
   opts: {
     describe?: string;
     content?: any;
+    promptHash?: string;
+    promptVersionId?: number | null;
+    promptSource?: string;
   } = {},
 ) {
-  const { content, describe = "" } = opts;
+  const { content, describe = "", promptHash, promptVersionId, promptSource } = opts;
 
   let opteorContent: string | undefined;
   if (content === undefined || content === null) {
@@ -46,15 +51,20 @@ export default async function taskRecord(
     describe,
     state: taskStateMap[0],
     startTime: Date.now(),
+    promptHash,
+    promptVersionId,
+    promptSource,
   });
 
   /** 任务成功时调用 done(1)，失败时调用 done(-1, '原因') */
-  return async function done(state: 1 | -1, reason?: string) {
+  const done = (async function done(state: 1 | -1, reason?: string) {
     await db("o_tasks")
       .where("id", id)
       .update({
         state: taskStateMap[state],
         reason: state === -1 ? (reason ?? "") : null,
       });
-  };
+  }) as TaskDone;
+  done.id = Number(id);
+  return done;
 }

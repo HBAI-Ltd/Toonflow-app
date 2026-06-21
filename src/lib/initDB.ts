@@ -328,8 +328,34 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         table.string("state");
         table.integer("startTime");
         table.text("reason");
+        table.text("promptHash");
+        table.integer("promptVersionId");
+        table.text("promptSource");
         table.primary(["id"]);
         table.unique(["id"]);
+      },
+      initData: async (knex) => {},
+    },
+    //任务进度事件表
+    {
+      name: "o_taskProgress",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId").notNullable();
+        table.integer("projectId").notNullable();
+        table.integer("scriptId");
+        table.string("phase");
+        table.string("status");
+        table.text("message");
+        table.integer("current");
+        table.integer("total");
+        table.text("meta");
+        table.integer("createTime");
+        table.integer("updateTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.index(["taskId"]);
+        table.index(["projectId", "scriptId"]);
       },
       initData: async (knex) => {},
     },
@@ -381,6 +407,132 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         table.text("path");
         table.primary(["id"]);
         table.unique(["id"]);
+      },
+      initData: async (knex) => {},
+    },
+    //提示词版本表
+    {
+      name: "o_promptVersion",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.string("scope");
+        table.string("key");
+        table.string("sourceType");
+        table.text("sourcePath");
+        table.string("promptType");
+        table.text("content");
+        table.string("hash");
+        table.string("status");
+        table.text("note");
+        table.string("createdBy");
+        table.integer("createTime");
+        table.integer("publishTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.index(["scope", "key", "status"]);
+      },
+      initData: async (knex) => {},
+    },
+    //提示词使用快照表
+    {
+      name: "o_promptUsage",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.string("scope");
+        table.string("key");
+        table.string("promptHash");
+        table.integer("promptVersionId");
+        table.text("promptSource");
+        table.text("modelName");
+        table.integer("taskId");
+        table.string("relatedType");
+        table.text("relatedId");
+        table.text("meta");
+        table.integer("createTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.index(["scope", "key"]);
+        table.index(["promptHash"]);
+        table.index(["relatedType", "relatedId"]);
+      },
+      initData: async (knex) => {},
+    },
+    //生成内容审计表
+    {
+      name: "o_generationArtifact",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("projectId");
+        table.string("artifactType");
+        table.string("targetType");
+        table.text("targetId");
+        table.string("targetField");
+        table.text("title");
+        table.text("content");
+        table.string("contentHash");
+        table.text("promptHash");
+        table.integer("promptVersionId");
+        table.text("promptSource");
+        table.text("modelName");
+        table.integer("taskId");
+        table.integer("promptUsageId");
+        table.integer("parentArtifactId");
+        table.text("meta");
+        table.integer("createTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.index(["projectId", "artifactType"]);
+        table.index(["targetType", "targetId", "targetField"]);
+        table.index(["contentHash"]);
+      },
+      initData: async (knex) => {},
+    },
+    //生成内容片段表
+    {
+      name: "o_generationSegment",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("artifactId");
+        table.integer("projectId");
+        table.string("artifactType");
+        table.integer("segmentIndex");
+        table.string("segmentType");
+        table.integer("startOffset");
+        table.integer("endOffset");
+        table.text("text");
+        table.string("hash");
+        table.integer("createTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.index(["artifactId"]);
+        table.index(["projectId", "artifactType"]);
+        table.index(["hash"]);
+      },
+      initData: async (knex) => {},
+    },
+    //生成内容修订表
+    {
+      name: "o_generationRevision",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("artifactId");
+        table.integer("segmentId");
+        table.integer("projectId");
+        table.string("targetType");
+        table.text("targetId");
+        table.string("targetField");
+        table.text("beforeText");
+        table.text("afterText");
+        table.string("beforeHash");
+        table.string("afterHash");
+        table.text("note");
+        table.string("createdBy");
+        table.integer("createTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.index(["artifactId"]);
+        table.index(["segmentId"]);
+        table.index(["projectId"]);
       },
       initData: async (knex) => {},
     },
@@ -583,6 +735,44 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         table.integer("updateTime");
         table.primary(["id"]);
         table.unique(["id"]);
+      },
+    },
+    //创作级画布布局状态
+    {
+      name: "o_creativeCanvasState",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("projectId").notNullable();
+        table.integer("scriptId");
+        table.string("viewKey");
+        table.text("nodesLayout");
+        table.text("edgesLayout");
+        table.text("viewport");
+        table.integer("createTime");
+        table.integer("updateTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.index(["projectId", "scriptId", "viewKey"]);
+      },
+    },
+    //Creative Canvas Agent 会话历史
+    {
+      name: "o_agentChatHistory",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("projectId").notNullable();
+        table.integer("scriptId");
+        table.string("threadKey").notNullable();
+        table.string("agentMode");
+        table.text("messages");
+        table.text("draft");
+        table.text("lockedContext");
+        table.integer("createTime");
+        table.integer("updateTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.unique(["threadKey"]);
+        table.index(["projectId", "scriptId"]);
       },
     },
     //视频

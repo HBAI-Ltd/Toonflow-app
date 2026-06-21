@@ -146,10 +146,17 @@ async function withTaskRecord<T>(
   relatedObjects: string,
   projectId: number,
   fn: (modelName: `${string}:${string}`, think: Boolean, thinkLevel: 0 | 1 | 2 | 3) => Promise<T>,
+  promptSnapshot?: Pick<TaskRecord, "promptHash" | "promptVersionId" | "promptSource">,
 ): Promise<T> {
   const modelName = await resolveModelName(modelKey);
   const [_, model] = modelName.split(/:(.+)/);
-  const taskRecord = await u.task(projectId, taskClass, model, { describe: describe, content: relatedObjects });
+  const taskRecord = await u.task(projectId, taskClass, model, {
+    describe: describe,
+    content: relatedObjects,
+    promptHash: promptSnapshot?.promptHash,
+    promptVersionId: promptSnapshot?.promptVersionId,
+    promptSource: promptSnapshot?.promptSource,
+  });
   try {
     const result = await fn(modelName, false, 0);
 
@@ -256,6 +263,9 @@ interface TaskRecord {
   describe: string; // 任务描述
   relatedObjects: string; // 相关对象信息，便于后续分析和追踪
   projectId: number; // 项目ID
+  promptHash?: string;
+  promptVersionId?: number | null;
+  promptSource?: string;
 }
 
 class AiImage {
@@ -274,7 +284,7 @@ class AiImage {
       return this;
     };
     if (taskRecord) {
-      await withTaskRecord(this.key, taskRecord.taskClass, taskRecord.describe, taskRecord.relatedObjects, taskRecord.projectId, exec);
+      await withTaskRecord(this.key, taskRecord.taskClass, taskRecord.describe, taskRecord.relatedObjects, taskRecord.projectId, exec, taskRecord);
       return this;
     }
     await exec(modelName);
@@ -322,7 +332,7 @@ class AiVideo {
         if (this.result.startsWith("http")) this.result = await urlToBase64(this.result);
       };
       if (taskRecord) {
-        await withTaskRecord(this.key, taskRecord.taskClass, taskRecord.describe, taskRecord.relatedObjects, taskRecord.projectId, exec);
+        await withTaskRecord(this.key, taskRecord.taskClass, taskRecord.describe, taskRecord.relatedObjects, taskRecord.projectId, exec, taskRecord);
         return this;
       }
       await exec(modelName);
@@ -355,7 +365,7 @@ class AiAudio {
       } catch (e) {}
     };
     if (taskRecord) {
-      return withTaskRecord(this.key, taskRecord.taskClass, taskRecord.describe, taskRecord.relatedObjects, taskRecord.projectId, exec);
+      return withTaskRecord(this.key, taskRecord.taskClass, taskRecord.describe, taskRecord.relatedObjects, taskRecord.projectId, exec, taskRecord);
     }
     return await exec(modelName);
   }
@@ -370,4 +380,5 @@ export default {
   Image: (key: `${string}:${string}`) => new AiImage(key),
   Video: (key: `${string}:${string}`) => new AiVideo(key),
   Audio: (key: `${string}:${string}`) => new AiAudio(key),
+  resolveModelName,
 };
