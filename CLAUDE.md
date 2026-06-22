@@ -24,6 +24,7 @@ AI 短剧/漫剧生产工具：小说 → 剧本 → 资产/分镜图 → 视频
 - **耗时任务必须走生成队列**（`o_genQueue`，见 `src/utils/genQueue.ts`），不要在路由里裸跑 pLimit。新 kind 在 `queueHandlers.ts` / `composeHandlers.ts` 注册。
 - **接入新模型供应商是纯配置**：编辑 `data/vendor/<id>.ts`（vm2 沙盒执行），实现 `textRequest/imageRequest/videoRequest/ttsRequest`，不改主代码。
 - **AI 调用统一走 `src/utils/ai.ts`** 的 `Ai.Text/Image/Video/Audio(key)`，`key` 用 agent 语义名或 `vendorId:modelName`。
+- **Creative Canvas 前端在 `data/web/creative-canvas.*` 注入实现**；改 JS/CSS 后同步改 `data/web/index.html` cache-buster，并跑 `node --check data/web/creative-canvas.js` + `yarn test:creative-canvas`。
 - **鉴权**：除 `/api/login/login` 外所有 API 需 JWT。CORS 仅 loopback。`/oss` 下 `compose/`、`merge/` 敏感路径额外校验 token。
 - 视频合成需本机 **ffmpeg/ffprobe** 在 PATH（或 `FFMPEG_PATH`/`FFPROBE_PATH`）。macOS 若 ffmpeg 被 AMFI SIGKILL（exit 137），需 adhoc 重签名，见 [docs/video-compose-features.md](docs/video-compose-features.md)。
 
@@ -48,4 +49,5 @@ AI 短剧/漫剧生产工具：小说 → 剧本 → 资产/分镜图 → 视频
 | 整体架构 / 数据流 / Agent / 队列 | [docs/architecture.md](docs/architecture.md) |
 | 视频合成 / 宫格分镜 | [docs/video-compose-features.md](docs/video-compose-features.md) |
 | huobao-drama 集成审计 | [docs/huobao-drama-integration-audit.md](docs/huobao-drama-integration-audit.md) |
-| Creative Canvas 计划 | [docs/creative-canvas-requirements-plan.md](docs/creative-canvas-requirements-plan.md) |
+| Creative Canvas v1 计划 | [docs/creative-canvas-requirements-plan.md](docs/creative-canvas-requirements-plan.md) |
+| Creative Canvas 当前实现 / Agent 驱动工作台 | [docs/creative-canvas-v2-plan.md](docs/creative-canvas-v2-plan.md) |

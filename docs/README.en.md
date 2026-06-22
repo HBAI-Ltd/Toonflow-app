@@ -124,7 +124,7 @@ Toonflow supports the following interface languages:
 Toonflow is an AI workstation designed for short drama production, building a complete closed loop around "Planning → Scriptwriting → Storyboarding → Final Output," supporting a localized, programmable, and continuously iterable production workflow.
 
 - ✅ **Infinite Canvas Production Workbench**  
-  Organize scripts, characters, storyboards, assets, and video nodes in an infinite canvas-like layout, supporting free arrangement, backtracking, and parallel production without linear constraints.
+  Organize scripts, characters, storyboards, assets, and video nodes in an infinite canvas-like layout; the left Agent chat drives tasks, the central canvas tracks generation links, and the right Inspector keeps node facts, versions, sources, and deterministic actions.
 - ✅ **Three-layer Agent Collaboration System**  
   Decision, execution, and supervision layers work together, covering task decomposition, content generation, quality review, and revision feedback, improving stability and output consistency.
 - ✅ **Persistent Agent Memory**  
@@ -156,7 +156,7 @@ Toonflow is an AI workstation designed for short drama production, building a co
 2. Complete model vendor configuration in the settings center (text/image/video models).
 3. Create a new project and import the original novel, then execute chapter event extraction.
 4. Enter ScriptAgent to generate the story skeleton, adaptation strategy, and structured script.
-5. Switch to ProductionAgent to organize storyboards, assets, and video nodes on the infinite canvas.
+5. Enter the creative canvas, switch between Script / Assets / Storyboard / Video / Audit tabs, and move each stage forward through the left Agent chat and canvas node actions.
 6. Perform node-based refinement on storyboard images, then return them to the workbench for video stitching and export.
 
 ## 📺 Video Tutorial

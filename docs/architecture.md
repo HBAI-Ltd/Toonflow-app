@@ -60,7 +60,7 @@ o_project（项目：画风/导演手册/图像&视频模型/画幅）
 
 - **Prompt 治理**：`o_promptVersion`（版本：草稿/发布/回滚）、`o_promptUsage`（每次使用记录）。
 - **生成内容审计**：`o_generationArtifact` / `o_generationSegment` / `o_generationRevision`（句子级来源与修订追踪）。
-- **画布布局**：`o_creativeCanvasState`（只存 UI 布局，不覆盖业务事实）。Creative Canvas 的 graph 由 `src/utils/creativeCanvas.ts` 实时聚合业务表生成：概览视图用组卡（`assetGroup` 按角色/场景/道具聚合、`videoPromptGroup`/`videoGroup` 聚合视频链路），分类视图展开个体节点；节点携带缩略图/海报 URL（复用 `/oss?size=` 缩略图）、status、version/sourceHash（由审计快照推导）。
+- **画布布局**：`o_creativeCanvasState`（只存 UI 布局，不覆盖业务事实）。Creative Canvas 的 graph 由 `src/utils/creativeCanvas.ts` 实时聚合业务表生成：概览视图用组卡（`assetGroup` 按角色/场景/道具聚合、`videoPromptGroup`/`videoGroup` 聚合视频链路），分类视图展开个体节点；节点携带缩略图/海报 URL（复用 `/oss?size=` 缩略图）、status、version/sourceHash（由审计快照推导）。前端是 `data/web/creative-canvas.js/css` 注入层，改动后需同步 `data/web/index.html` cache-buster。
 - **任务**：`o_tasks`（AI 调用记录）、`o_genQueue`（生成队列）、`o_taskProgress`（阶段日志）。
 - **配置**：`o_setting`（KV）、`o_vendorConfig`（供应商）、`o_agentDeploy`（agent→模型映射）、`memories`（Agent 记忆）。
 
@@ -78,6 +78,14 @@ o_project（项目：画风/导演手册/图像&视频模型/画幅）
 - **记忆系统**（`src/utils/agent/memory`）：RAG 检索 + 历史摘要 + 近期对话三层，带 embedding，存 `memories` 表。
 - **技能系统**：Markdown frontmatter 描述 + `activate_skill` 工具按需加载完整指令（类似 Claude Skills 机制）。技能存于 `data/skills/`。
 - **监督守卫**（`src/utils/agent/toolUseGuard`）：监督类 agent 若零工具调用则结论作废，强制其实际查证。
+
+## 6.1 Creative Canvas 工作台布局
+
+创作画布的各标签保持同一交互骨架：
+
+- **左侧 Agent 会话区**：随当前标签切换角色（剧本、角色/场景/道具、分镜、视频、审计），composer 可拖拽调宽并持久化到 `localStorage`。剧本标签仍接 `scriptAgent` socket；其他标签先把自然语言指令路由到现有确定性动作，如资产提取、资产图生成、分镜图生成、视频 Prompt 重生、审计片段改写。
+- **中间画布区**：展示当前标签相关节点和真实生成链路。Prompt 节点是可编辑图文块，`@` 引用以内嵌 chip 呈现，并通过 fixed 候选浮层选择角色、场景、道具或参考图。
+- **右侧 Inspector / 进度区**：不做聊天，负责节点事实、版本、来源 Hash、内容预览、当前剧集进度和确定性按钮。它是可审计状态面板，避免 Agent 回复替代真实业务状态。
 
 ## 7. AI 抽象层 + Vendor 沙盒（最关键的扩展点）
 

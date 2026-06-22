@@ -124,7 +124,7 @@ Toonflow hỗ trợ giao diện các ngôn ngữ sau:
 Toonflow là một bàn làm việc AI dành cho sản xuất phim ngắn, xoay quanh quy trình "Lên kế hoạch → Viết kịch bản → Phân cảnh → Xuất phim" để tạo thành một vòng lặp hoàn chỉnh, đồng thời hỗ trợ quy trình sản xuất có thể bản địa hóa, có thể lập trình và liên tục cải tiến.
 
 - ✅ **Bàn làm việc sản xuất trên Canvas vô hạn**  
-  Tổ chức kịch bản, nhân vật, phân cảnh, tài liệu và nút video dưới dạng canvas vô hạn, hỗ trợ sắp xếp tự do, quay lui và sản xuất song song, không bị giới hạn bởi các bước tuyến tính.
+  Tổ chức kịch bản, nhân vật, phân cảnh, tài nguyên và nút video dưới dạng canvas vô hạn; khung chat Agent bên trái điều phối tác vụ, canvas trung tâm theo dõi chuỗi sinh nội dung, còn Inspector bên phải giữ sự thật nút, phiên bản, nguồn và thao tác xác định.
 - ✅ **Hệ thống cộng tác Agent ba lớp**  
   Lớp ra quyết định, lớp thực thi và lớp giám sát làm việc cùng nhau, bao gồm phân rã nhiệm vụ, tạo nội dung, đánh giá chất lượng và phản hồi sửa đổi, nâng cao tính ổn định và nhất quán của thành phẩm.
 - ✅ **Bộ nhớ Agent bền vững**  
@@ -156,7 +156,7 @@ Toonflow là một bàn làm việc AI dành cho sản xuất phim ngắn, xoay 
 2. Hoàn tất cấu hình nhà cung cấp mô hình trong trung tâm cài đặt (mô hình văn bản/hình ảnh/video).
 3. Tạo dự án mới và nhập tác phẩm gốc, thực hiện trích xuất sự kiện chương.
 4. Vào ScriptAgent để tạo khung cốt truyện, chiến lược chuyển thể và kịch bản có cấu trúc.
-5. Chuyển sang ProductionAgent, tổ chức các nút phân cảnh, tài liệu và video trong canvas vô hạn.
+5. Vào canvas sáng tạo, chuyển giữa các tab Script / Assets / Storyboard / Video / Audit, rồi đẩy từng giai đoạn bằng chat Agent bên trái và thao tác trên nút canvas.
 6. Tinh chỉnh từng nút cho ảnh phân cảnh rồi đưa trở lại bàn làm việc, hoàn tất ghép nối và xuất video.
 
 ## 📺 Hướng dẫn bằng video
