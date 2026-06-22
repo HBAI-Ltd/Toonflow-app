@@ -6,11 +6,11 @@
 
 执行规则：每完成一个 Phase 并通过验收后，把 `- [ ]` 改为 `- [x]`，补充完成日期、验证命令、浏览器检查结果。
 
-## Current Facts（v1 已就位，不重建）
+## Current Facts（v2 已就位，继续小步精修）
 
-- 布局骨架已全：`renderHeader`（项目/剧本选择 + 视图 tab + 刷新/保存布局/关闭）、左侧 Agent 面板 + 执行历史、中部 pan/zoom 节点图 + 贝塞尔曲线连线、右侧 Inspector + 当前剧集进度板。代码在 `data/web/creative-canvas.js`（1876 行）/ `creative-canvas.css`（1059 行）。
-- 后端 graph builder `src/utils/creativeCanvas.ts`（658 行）已输出 project/script/storyboardAnalysis/asset/storyboard/videoPrompt/video/auditArtifact/auditSegment/task 节点与语义边、stale 传播、layout 合并。
-- **关键缺口**：后端 graph **完全不输出任何图片/缩略图/视频 URL**。资产/分镜/视频节点都是纯文本预览。这是 v2 最大的真实工作量。
+- 布局骨架已全：`renderHeader`（项目/剧本选择 + 视图 tab + 刷新/优化布局/保存布局/发布/关闭）、可拖拽调宽的左侧 Agent 会话区、中部 pan/zoom 节点图 + 贝塞尔曲线连线、右侧 Inspector + 当前剧集进度板。前端注入层在 `data/web/creative-canvas.js/css`。
+- 后端 graph builder `src/utils/creativeCanvas.ts` 已输出 project/script/storyboardAnalysis/assetGroup/storyboard/videoPrompt/video/videoPromptGroup/videoGroup/auditArtifact/auditSegment/task 节点与语义边、stale 传播、layout 合并。
+- 资产、分镜、视频节点已携带缩略图/海报 URL；Prompt 节点可直接编辑图文内容，`@` 引用通过 fixed 浮层选择资产或参考图，并以内嵌 chip 呈现。
 - 资产类型字段 `o_assets.type ∈ {role, scene, tool}`；缩略图 URL 用 `oss.getSmallImageUrl(filePath)`（返回 `/oss/...?size=20`），视频/海报用 `oss.getFileUrl(filePath)`。资产候选图在 `o_image`（`assetsId` 关联，`o_assets.imageId` 为选定图）。
 
 ## 确认的产品决策
@@ -129,6 +129,14 @@
 - [x] 非剧本标签的 Agent 指令不会新造后端黑盒：资产标签触发资产提取或当前资产图生成；分镜标签触发当前分镜图生成；视频标签触发当前视频 Prompt 重生；审计标签仅接受 `修改为：...` 改写当前审计片段。
 - [x] 左侧 Agent 区宽度可拖拽调整并写入 `localStorage`，需要查看长对话/执行日志时可临时扩展显示面积。
 - [x] 五个业务标签统一为「左侧 Agent 会话区 / 中间生成链路画布 / 右侧 Inspector 与剧集进度」三栏：左侧负责发起和解释任务，中间负责看清内容与依赖，右侧负责状态、来源、版本和确定性操作。
+
+## v2.8 优化布局增强（2026-06-22）
+
+- [x] `优化布局` 从固定索引间距升级为按节点声明高度堆叠，避免 prompt 变长或节点高度不同后同列卡片互相压住。
+- [x] 分镜/视频视图按直接连线做行布局：分镜 → 视频 Prompt → 视频结果 → 相关任务尽量保持同一水平带，关系链路更容易读。
+- [x] 图片生成展开过程改为 staged columns：资产 → 参考图列 → 生成图列，不再复用原图片流坐标缩放，减少重叠和斜向堆叠。
+- [x] 总览视图继续保持左到右流水线，并把视频 Prompt 聚合卡与视频结果聚合卡拆到相邻两列。
+- 边界：当前实现是确定性业务布局，不是通用图布局引擎；它按直接业务关系对齐和按卡片高度避让，不做全局最少交叉线求解。
 
 ## Test Plan
 

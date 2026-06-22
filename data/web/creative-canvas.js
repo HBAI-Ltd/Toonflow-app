@@ -451,20 +451,21 @@
           label: imageFlowMentionName(generatedPrompt, index + 1) || `参考图 ${index + 1}`,
           image: imageFlowNodeImage(node),
         }));
-      const minX = Math.min(...flowNodes.map((node) => Number(node.position?.x || 0)));
-      const minY = Math.min(...flowNodes.map((node) => Number(node.position?.y || 0)));
       const baseX = assetNode.position.x + (assetNode.width || 180) + 120;
-      const baseY = assetNode.position.y - 20;
+      const baseY = assetNode.position.y - 12;
+      const uploadNodes = flowNodes.filter((node) => node.type !== "generated");
+      const flowHeight = Math.max(150, uploadNodes.length * 178 - 28);
       flowNodes.forEach((flowNode, index) => {
         const isGenerated = flowNode.type === "generated";
         const data = flowNode.data || {};
+        const uploadIndex = uploadNodes.findIndex((node) => node === flowNode);
         out.push({
           id: imageFlowNodeId(assetNodeId, flowNode.id || index),
           type: isGenerated ? "imageFlowGenerated" : "imageFlowUpload",
           label: isGenerated ? "图片生成" : `参考图 ${index + 1}`,
           position: {
-            x: baseX + (Number(flowNode.position?.x || 0) - minX) * 0.45,
-            y: baseY + (Number(flowNode.position?.y || 0) - minY) * 0.22,
+            x: isGenerated ? baseX + 240 : baseX,
+            y: isGenerated ? baseY + Math.max(0, Math.round((flowHeight - 260) / 2)) : baseY + uploadIndex * 178,
           },
           width: isGenerated ? 320 : 160,
           height: isGenerated ? 260 : 150,
@@ -1176,25 +1177,142 @@
     saveLayoutDebounced();
   }
 
-  function layoutColumn(nodes, x, y, gap = 260) {
-    nodes.forEach((node, index) => {
-      node.position = { x, y: y + index * gap };
+  function layoutNodeHeight(node) {
+    return Number(node?.height || 150);
+  }
+
+  function layoutOrderValue(node) {
+    const data = node?.data || {};
+    const raw =
+      data.storyboard?.index ??
+      data.script?.id ??
+      data.videoTrack?.id ??
+      data.video?.id ??
+      data.task?.id ??
+      String(node?.id || "").match(/(\d+)/)?.[1];
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  function orderedLayoutNodes(nodes) {
+    return [...nodes].sort((a, b) => layoutOrderValue(a) - layoutOrderValue(b) || String(a.id).localeCompare(String(b.id)));
+  }
+
+  function stackHeight(nodes, gap = 28) {
+    if (!nodes.length) return 0;
+    return nodes.reduce((sum, node, index) => sum + layoutNodeHeight(node) + (index ? gap : 0), 0);
+  }
+
+  function stackY(rowY, rowHeight, contentHeight) {
+    return Math.round(rowY + Math.max(0, (rowHeight - contentHeight) / 2));
+  }
+
+  function stackAt(nodes, x, y, gap = 28) {
+    let cursor = y;
+    orderedLayoutNodes(nodes).forEach((node) => {
+      node.position = { x, y: cursor };
+      cursor += layoutNodeHeight(node) + gap;
+    });
+    return cursor;
+  }
+
+  function placeStack(nodes, x, y, gap = 36) {
+    return stackAt(nodes, x, y, gap);
+  }
+
+  function placeWrappedStack(nodes, x, y, gapY = 28, rows = 8, gapX = 340) {
+    const cursors = [];
+    orderedLayoutNodes(nodes).forEach((node, index) => {
+      const column = Math.floor(index / rows);
+      const cursor = cursors[column] ?? y;
+      node.position = {
+        x: x + column * gapX,
+        y: cursor,
+      };
+      cursors[column] = cursor + layoutNodeHeight(node) + gapY;
     });
   }
 
-  function layoutWrappedColumn(nodes, x, y, gapY = 140, rows = 10, gapX = 320) {
-    nodes.forEach((node, index) => {
-      node.position = {
-        x: x + Math.floor(index / rows) * gapX,
-        y: y + (index % rows) * gapY,
-      };
+  function uniqueLayoutNodes(nodes) {
+    const seen = new Set();
+    return nodes.filter((node) => {
+      if (!node || seen.has(node.id)) return false;
+      seen.add(node.id);
+      return true;
     });
+  }
+
+  function edgeTargets(sourceId, type, nodeMap) {
+    return orderedLayoutNodes(uniqueLayoutNodes(graphEdges()
+      .filter((edge) => edge.source === sourceId)
+      .map((edge) => nodeMap.get(edge.target))
+      .filter((node) => node && (!type || node.type === type))));
+  }
+
+  function layoutStoryboardRows(storyboards, tasks, nodeMap, options) {
+    const usedTasks = new Set();
+    let cursor = options.y;
+    orderedLayoutNodes(storyboards).forEach((storyboard) => {
+      const rowTasks = edgeTargets(storyboard.id, "task", nodeMap);
+      rowTasks.forEach((task) => usedTasks.add(task.id));
+      const tasksHeight = stackHeight(rowTasks, 24);
+      const rowHeight = Math.max(layoutNodeHeight(storyboard), tasksHeight, 210);
+      storyboard.position = { x: options.storyboardX, y: cursor };
+      stackAt(rowTasks, options.taskX, stackY(cursor, rowHeight, tasksHeight), 24);
+      cursor += rowHeight + (options.gap || 52);
+    });
+    const leftovers = tasks.filter((task) => !usedTasks.has(task.id));
+    placeWrappedStack(leftovers, options.taskX, cursor, 28, 8, 340);
+  }
+
+  function layoutVideoRows(storyboards, videoPrompts, videos, tasks, nodeMap, options) {
+    const usedPrompts = new Set();
+    const usedVideos = new Set();
+    const usedTasks = new Set();
+    let cursor = options.y;
+
+    orderedLayoutNodes(storyboards).forEach((storyboard) => {
+      const prompt = edgeTargets(storyboard.id, "videoPrompt", nodeMap)[0];
+      const rowVideos = prompt ? edgeTargets(prompt.id, "video", nodeMap) : [];
+      const rowTasks = uniqueLayoutNodes([
+        ...edgeTargets(storyboard.id, "task", nodeMap),
+        ...(prompt ? edgeTargets(prompt.id, "task", nodeMap) : []),
+        ...rowVideos.flatMap((video) => edgeTargets(video.id, "task", nodeMap)),
+      ]);
+      if (prompt) usedPrompts.add(prompt.id);
+      rowVideos.forEach((video) => usedVideos.add(video.id));
+      rowTasks.forEach((task) => usedTasks.add(task.id));
+
+      const videoHeight = stackHeight(rowVideos, 24);
+      const taskHeight = stackHeight(rowTasks, 24);
+      const rowHeight = Math.max(layoutNodeHeight(storyboard), prompt ? layoutNodeHeight(prompt) : 0, videoHeight, taskHeight, 210);
+      storyboard.position = { x: options.storyboardX, y: cursor };
+      if (prompt) prompt.position = { x: options.promptX, y: stackY(cursor, rowHeight, layoutNodeHeight(prompt)) };
+      stackAt(rowVideos, options.videoX, stackY(cursor, rowHeight, videoHeight), 24);
+      stackAt(rowTasks, options.taskX, stackY(cursor, rowHeight, taskHeight), 24);
+      cursor += rowHeight + (options.gap || 54);
+    });
+
+    const orphanPrompts = videoPrompts.filter((prompt) => !usedPrompts.has(prompt.id));
+    orderedLayoutNodes(orphanPrompts).forEach((prompt) => {
+      const rowVideos = edgeTargets(prompt.id, "video", nodeMap).filter((video) => !usedVideos.has(video.id));
+      rowVideos.forEach((video) => usedVideos.add(video.id));
+      const videoHeight = stackHeight(rowVideos, 24);
+      const rowHeight = Math.max(layoutNodeHeight(prompt), videoHeight, 190);
+      prompt.position = { x: options.promptX, y: cursor };
+      stackAt(rowVideos, options.videoX, stackY(cursor, rowHeight, videoHeight), 24);
+      cursor += rowHeight + (options.gap || 54);
+    });
+
+    placeWrappedStack(videos.filter((video) => !usedVideos.has(video.id)), options.videoX, cursor, 28, 8, 340);
+    placeWrappedStack(tasks.filter((task) => !usedTasks.has(task.id)), options.taskX, cursor, 28, 8, 340);
   }
 
   function optimizeLayout() {
     if (!state.graph) return;
     const visible = visibleNodeIds();
     const nodes = baseGraphNodes().filter((node) => visible.has(node.id));
+    const nodeMap = new Map(nodes.map((node) => [node.id, node]));
     const byType = (type) => nodes.filter((node) => node.type === type);
     const project = byType("project");
     const scripts = byType("script");
@@ -1210,37 +1328,39 @@
     const auditSegments = byType("auditSegment");
 
     if (state.view === "script") {
-      layoutColumn(project, -80, -140, 260);
-      layoutColumn(scripts, 300, -140, 260);
-      layoutWrappedColumn(tasks, 760, -140, 140);
+      placeStack(project, -80, -140);
+      placeStack(scripts, 300, -140);
+      placeWrappedStack(tasks, 760, -140);
     } else if (state.view === "asset") {
-      layoutColumn(project, -80, -160, 260);
-      layoutColumn(assetGroups, 340, -220, 260);
-      layoutWrappedColumn(tasks, 1120, -220, 140);
+      placeStack(project, -80, -160);
+      placeStack(assetGroups, 340, -220, 54);
+      placeWrappedStack(tasks, 1120, -220);
     } else if (state.view === "storyboard") {
-      layoutColumn(project, -80, -160, 260);
-      layoutColumn(assetGroups, 300, -240, 250);
-      layoutColumn(storyboardAnalysis, 700, -240, 620);
-      layoutColumn(storyboards, 1660, -260, 380);
-      layoutWrappedColumn(tasks, 2020, -240, 140);
+      placeStack(project, -80, -160);
+      placeStack(assetGroups, 300, -240, 54);
+      placeStack(storyboardAnalysis, 700, -240, 70);
+      layoutStoryboardRows(storyboards, tasks, nodeMap, { storyboardX: 1660, taskX: 2020, y: -260 });
     } else if (state.view === "video") {
-      layoutColumn(project, -80, -160, 260);
-      layoutColumn(storyboards, 320, -260, 380);
-      layoutColumn(videoPrompts, 720, -260, 390);
-      layoutColumn(videos, 1120, -260, 180);
-      layoutWrappedColumn(tasks, 1460, -260, 130);
+      placeStack(project, -80, -160);
+      layoutVideoRows(storyboards, videoPrompts, videos, tasks, nodeMap, {
+        storyboardX: 320,
+        promptX: 760,
+        videoX: 1180,
+        taskX: 1540,
+        y: -260,
+      });
     } else if (state.view === "audit") {
-      layoutColumn(project, -80, -160, 260);
-      layoutColumn(auditArtifacts, 300, -240, 190);
-      layoutColumn(auditSegments, 720, -240, 140);
-      layoutWrappedColumn(tasks, 1160, -240, 140);
+      placeStack(project, -80, -160);
+      placeStack(auditArtifacts, 300, -240, 40);
+      placeStack(auditSegments, 720, -240, 32);
+      placeWrappedStack(tasks, 1160, -240);
     } else {
-      layoutColumn(project, -80, -120, 260);
-      layoutColumn(scripts, 300, -120, 260);
-      layoutColumn(assetGroups, 680, -260, 250);
-      layoutColumn(storyboardAnalysis, 1040, -260, 620);
-      layoutColumn(videoPromptGroups, 2040, -260, 260);
-      layoutColumn(videoGroups, 2040, 20, 260);
+      placeStack(project, -80, -120);
+      placeStack(scripts, 300, -120);
+      placeStack(assetGroups, 680, -260, 54);
+      placeStack(storyboardAnalysis, 1040, -260, 70);
+      placeStack(videoPromptGroups, 2040, -260, 54);
+      placeStack(videoGroups, 2440, -260, 54);
     }
     render();
     fitView();

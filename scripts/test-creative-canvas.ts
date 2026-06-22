@@ -54,6 +54,9 @@ async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes('kind: "videoPrompt"'), "video prompt editor should use the shared floating mention picker");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("routeStageAgentMessage"), "non-script tabs should route agent composer commands to existing actions");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("startAgentResize"), "agent panel should expose a drag resize handler");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("layoutVideoRows"), "layout optimizer should align storyboard, video prompt, video, and task rows by graph links");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("layoutNodeHeight"), "layout optimizer should stack cards by their declared heights");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("flowHeight"), "expanded image generation flows should use staged non-overlapping columns");
   assert.ok(fs.readFileSync("data/web/creative-canvas.css", "utf8").includes("--tfcc-agent-width"), "agent panel width should be controlled by a CSS variable");
   assert.ok(fs.readFileSync("data/web/creative-canvas.css", "utf8").includes("position: fixed;"), "prompt mention menu should float instead of expanding the node");
 
