@@ -52,6 +52,9 @@ async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("match[0].slice(1)"), "prompt @ mention trigger should read the matched token");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes('kind: "storyboard"'), "storyboard prompt editor should use the shared floating mention picker");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes('kind: "videoPrompt"'), "video prompt editor should use the shared floating mention picker");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("routeStageAgentMessage"), "non-script tabs should route agent composer commands to existing actions");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("startAgentResize"), "agent panel should expose a drag resize handler");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.css", "utf8").includes("--tfcc-agent-width"), "agent panel width should be controlled by a CSS variable");
   assert.ok(fs.readFileSync("data/web/creative-canvas.css", "utf8").includes("position: fixed;"), "prompt mention menu should float instead of expanding the node");
 
   await new Promise((resolve) => setTimeout(resolve, 2000));

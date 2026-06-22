@@ -47,6 +47,19 @@
     },
   };
 
+  const AGENT_WIDTH_KEY = "tfcc.agentWidth";
+  const AGENT_WIDTH_MIN = 220;
+  const AGENT_WIDTH_MAX = 620;
+
+  function savedAgentWidth() {
+    try {
+      const width = Number(localStorage.getItem(AGENT_WIDTH_KEY));
+      return Number.isFinite(width) ? Math.max(AGENT_WIDTH_MIN, Math.min(AGENT_WIDTH_MAX, width)) : 330;
+    } catch {
+      return 330;
+    }
+  }
+
   const state = {
     installed: false,
     active: false,
@@ -67,6 +80,7 @@
     agentConnecting: false,
     agentRunning: false,
     agentError: "",
+    agentPanelWidth: savedAgentWidth(),
     agentMessages: [],
     agentThreadKey: "",
     agentThreads: {},
@@ -825,6 +839,29 @@
     const panel = document.querySelector(".tfcc-agent");
     if (!panel) return;
     panel.replaceWith(renderAgentPanel());
+  }
+
+  function setAgentPanelWidth(width) {
+    const next = Math.max(AGENT_WIDTH_MIN, Math.min(AGENT_WIDTH_MAX, Math.round(width)));
+    state.agentPanelWidth = next;
+    document.querySelector(".tfcc-layout")?.style.setProperty("--tfcc-agent-width", `${next}px`);
+    try { localStorage.setItem(AGENT_WIDTH_KEY, String(next)); } catch {}
+  }
+
+  function startAgentResize(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const startX = event.clientX;
+    const startWidth = state.agentPanelWidth || 330;
+    const move = (moveEvent) => setAgentPanelWidth(startWidth + moveEvent.clientX - startX);
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      document.body.classList.remove("tfcc-resizing-agent");
+    };
+    document.body.classList.add("tfcc-resizing-agent");
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
   }
 
   async function withLoading(task) {
@@ -2382,6 +2419,18 @@
     return (message?.content || []).map(contentText).join("\n").trim();
   }
 
+  function pushLocalAgentMessage(role, text, status = "complete", name) {
+    state.agentMessages.push({
+      id: `local-${role}:${Date.now()}:${Math.random().toString(36).slice(2, 7)}`,
+      role,
+      name,
+      status,
+      datetime: new Date().toISOString(),
+      content: [{ type: "text", id: `local-content:${Date.now()}`, data: text, status }],
+    });
+    persistAgentThread();
+  }
+
   function parseScriptAgentArtifacts(text) {
     const result = { storySkeleton: null, adaptationStrategy: null, scripts: [] };
     const skeleton = text.match(/<storySkeleton>([\s\S]*?)<\/storySkeleton>/);
@@ -2509,30 +2558,65 @@
 
   async function sendAgentMessage() {
     const profile = agentProfile();
-    if (agentModeKey() !== "script") {
-      markMessage(`${profile.title} 暂未接入执行链路`);
-      return;
-    }
     const text = state.agentText.trim();
     if (!text) {
-      markMessage("请输入要发送给剧本 Agent 的内容");
+      markMessage(`请输入要发送给${profile.title}的内容`);
+      return;
+    }
+    if (agentModeKey() !== "script") {
+      await routeStageAgentMessage(text);
       return;
     }
     const socket = await ensureScriptAgentSocket();
     const context = state.lockedAgentContext || buildAgentNodeContext(selectedNode());
     const content = [text, context].filter(Boolean).join("\n\n");
-    state.agentMessages.push({
-      id: `local-user:${Date.now()}`,
-      role: "user",
-      status: "complete",
-      datetime: new Date().toISOString(),
-      content: [{ type: "text", id: `local-content:${Date.now()}`, data: text, status: "complete" }],
-    });
+    pushLocalAgentMessage("user", text);
     state.agentText = "";
     state.agentRunning = true;
     persistAgentThread();
     socket.emit("chat", { content, think: state.agentThink, thinkLevel: state.agentThink ? 1 : 0 });
     renderAgentOnly();
+  }
+
+  async function routeStageAgentMessage(text) {
+    const mode = agentModeKey();
+    const node = selectedNode();
+    const profile = agentProfile();
+    pushLocalAgentMessage("user", text);
+    state.agentText = "";
+    state.agentRunning = true;
+    renderAgentOnly();
+    try {
+      if (mode === "asset") {
+        if (node?.type === "asset") {
+          await runNodeAction("assetImage");
+          pushLocalAgentMessage("assistant", `已根据当前资产「${node.label}」提交资产图生成任务。`, "complete", profile.title);
+        } else {
+          await extractAssetsForScript(scriptId());
+          pushLocalAgentMessage("assistant", `已提交「${activeScriptLabel()}」角色/场景/道具资产提取任务。`, "complete", profile.title);
+        }
+      } else if (mode === "storyboard" && node?.type === "storyboard") {
+        await runNodeAction("storyboardImage");
+        pushLocalAgentMessage("assistant", `已根据当前分镜「${node.label}」提交分镜图生成任务。`, "complete", profile.title);
+      } else if (mode === "video" && node?.type === "videoPrompt") {
+        await runNodeAction("videoPrompt");
+        pushLocalAgentMessage("assistant", `已根据当前节点「${node.label}」提交视频 Prompt 重生任务。`, "complete", profile.title);
+      } else if (mode === "audit" && node?.data?.segment) {
+        const rewrite = text.match(/^(?:改为|修改为|替换为)[:：]?\s*([\s\S]+)/);
+        if (!rewrite) throw new Error("审计 Agent 当前只接受「修改为：...」来改写选中的审计片段。");
+        state.editText = rewrite[1].trim();
+        await patchSelectedSegment();
+        pushLocalAgentMessage("assistant", `已提交审计片段修改，并刷新受影响下游节点。`, "complete", profile.title);
+      } else {
+        pushLocalAgentMessage("assistant", `请选择当前标签下的具体节点后再发送任务。`, "warning", profile.title);
+      }
+    } catch (err) {
+      pushLocalAgentMessage("assistant", err?.message || String(err), "error", profile.title);
+    } finally {
+      state.agentRunning = false;
+      persistAgentThread();
+      render();
+    }
   }
 
   function stopAgentMessage() {
@@ -2837,8 +2921,7 @@
     const mode = agentModeKey();
     const isScriptMode = mode === "script";
     const isAssetMode = mode === "asset";
-    const assetAction = isAssetMode ? currentScriptAssetMeta() : null;
-    const connected = state.agentConnected || isAssetMode;
+    const connected = isScriptMode ? state.agentConnected : true;
     const locked = !!state.lockedAgentContext;
 
     // 顶部:agent 名 + 连接状态点
@@ -2862,12 +2945,13 @@
       : null;
 
     // 中部:可滚动会话历史
+    const localMessages = state.agentMessages.length ? renderAgentMessages() : [];
     const body = isAssetMode
-      ? h("div", { class: "tfcc-chat-body" }, [renderAssetAgentProgress()])
+      ? h("div", { class: "tfcc-chat-body" }, [...(Array.isArray(localMessages) ? localMessages : [localMessages]), renderAssetAgentProgress()])
       : h("div", { class: "tfcc-chat-body" }, renderAgentMessages());
 
     // 底部:固定 composer
-    const canSend = isScriptMode;
+    const canSend = true;
     const composer = h("div", { class: "tfcc-chat-composer" }, [
       h("div", { class: "tfcc-chat-tools" }, [
         isScriptMode
@@ -2878,9 +2962,7 @@
               text: state.agentThink ? "🧠 深度思考 开" : "🧠 深度思考",
             })
           : null,
-        (isScriptMode || isAssetMode)
-          ? h("button", { class: `tfcc-chat-lockchip ${locked ? "is-on" : ""}`, title: profile.lockLabel, onClick: () => { if (locked) { state.lockedAgentContext = ""; if (state.agentThreadKey) state.agentLocks[state.agentThreadKey] = ""; persistAgentThread(); } else { lockAgentContext(); } renderAgentOnly(); }, text: locked ? "⌖ 已锁定上下文" : "⌖ 锁定上下文" })
-          : null,
+        h("button", { class: `tfcc-chat-lockchip ${locked ? "is-on" : ""}`, title: profile.lockLabel, onClick: () => { if (locked) { state.lockedAgentContext = ""; if (state.agentThreadKey) state.agentLocks[state.agentThreadKey] = ""; persistAgentThread(); } else { lockAgentContext(); } renderAgentOnly(); }, text: locked ? "⌖ 已锁定上下文" : "⌖ 锁定上下文" }),
       ].filter(Boolean)),
       h("div", { class: "tfcc-chat-inputrow" }, [
         h("textarea", {
@@ -2901,28 +2983,13 @@
             }
           },
         }),
-        isScriptMode
-          ? (state.agentRunning
-              ? h("button", { class: "tfcc-chat-send is-stop", title: "停止", onClick: stopAgentMessage, text: "■" })
-              : h("button", { class: "tfcc-chat-send", title: "发送 (⌘/Ctrl+Enter)", disabled: !state.agentText.trim(), onClick: () => withLoading(sendAgentMessage), text: "➤" }))
-          : null,
-        isAssetMode
-          ? h("button", {
-              class: "tfcc-chat-send",
-              title: assetAction?.meta?.actionLabel || "资产提取中",
-              disabled: !assetAction?.meta?.actionLabel || assetAction?.meta?.actionDisabled,
-              onClick: () => withLoading(() => extractAssetsForScript(scriptId())),
-              text: "➤",
-            })
-          : null,
+        state.agentRunning && isScriptMode
+          ? h("button", { class: "tfcc-chat-send is-stop", title: "停止", onClick: stopAgentMessage, text: "■" })
+          : h("button", { class: "tfcc-chat-send", title: "发送 (⌘/Ctrl+Enter)", disabled: !state.agentText.trim(), onClick: () => withLoading(sendAgentMessage), text: "➤" }),
       ].filter(Boolean)),
     ]);
 
-    const composerHint = (isScriptMode || isAssetMode)
-      ? composer
-      : h("div", { class: "tfcc-chat-readonly", text: "当前模式支持查看节点上下文，生成动作在右侧节点详情中触发" });
-
-    return h("aside", { class: "tfcc-agent tfcc-chat" }, [header, lockBanner, body, composerHint].filter(Boolean));
+    return h("aside", { class: "tfcc-agent tfcc-chat" }, [header, lockBanner, body, composer, h("div", { class: "tfcc-agent-resizer", title: "拖动调整 Agent 区宽度", onPointerdown: startAgentResize })].filter(Boolean));
   }
 
   function renderInspectorPanel() {
@@ -3264,7 +3331,7 @@
       renderHeader(),
       state.message ? h("div", { class: "tfcc-message", text: state.message }) : null,
       state.loading ? h("div", { class: "tfcc-loading", text: "Loading..." }) : null,
-      h("div", { class: "tfcc-layout" }, [renderIconRail(), renderAgentPanel(), renderCanvas(), renderInspectorPanel()]),
+      h("div", { class: "tfcc-layout", style: { "--tfcc-agent-width": `${state.agentPanelWidth}px` } }, [renderIconRail(), renderAgentPanel(), renderCanvas(), renderInspectorPanel()]),
       renderPromptMentionPicker(),
     ]);
   }

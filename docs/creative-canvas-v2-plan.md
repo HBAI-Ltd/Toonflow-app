@@ -123,6 +123,13 @@
 - [x] **分镜/视频链路同步**：分镜、视频 Prompt、视频结果节点保持图文 Prompt 渲染和镜头→Prompt→视频连接线；分类视图布局继续使用一键优化后的列式排布。
 - Verification: `node --check data/web/creative-canvas.js`、`yarn test:creative-canvas`、`yarn lint` 通过；本地 dev 服务需用 `yarn dev` 跑当前源码，旧 `data/serve/app.js` 不含新增 creativeCanvas API，直接 serve 会出现 404。
 
+## v2.7 统一 Agent 指令入口（2026-06-22）
+
+- [x] 左侧 Agent composer 对剧本、角色/场景/道具、分镜、视频、审计标签统一开放；剧本仍走 scriptAgent socket，其余标签先路由到已有确定性动作。
+- [x] 非剧本标签的 Agent 指令不会新造后端黑盒：资产标签触发资产提取或当前资产图生成；分镜标签触发当前分镜图生成；视频标签触发当前视频 Prompt 重生；审计标签仅接受 `修改为：...` 改写当前审计片段。
+- [x] 左侧 Agent 区宽度可拖拽调整并写入 `localStorage`，需要查看长对话/执行日志时可临时扩展显示面积。
+- [x] 五个业务标签统一为「左侧 Agent 会话区 / 中间生成链路画布 / 右侧 Inspector 与剧集进度」三栏：左侧负责发起和解释任务，中间负责看清内容与依赖，右侧负责状态、来源、版本和确定性操作。
+
 ## Test Plan
 
 - 单元：`yarn test:creative-canvas` 覆盖组卡聚合（按 type 分组与计数）、缩略图/海报 URL 字段、status 字段、缺图 fallback、stale 传播不回归。
