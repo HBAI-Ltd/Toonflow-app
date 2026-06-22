@@ -116,7 +116,7 @@
 围绕「角色/场景/道具」与「分镜/视频」标签补齐画布内可编辑生成链路：
 
 - [x] **资产组可展开生成过程**：角色/场景/道具组卡点击后展开个体资产；个体资产可继续展开对应 `imageFlow` 生成过程，保留资产 → 参考图/上传图 → 图片生成结果的画布连线。
-- [x] **图片生成节点可编辑图文 Prompt**：图片生成卡内 Prompt 改为 contenteditable 图文块，`@图片N`/角色/场景/道具引用以内嵌 chip 呈现，不再在节点下方单独列出候选。
+- [x] **生成链路节点可编辑图文 Prompt**：图片生成卡、分镜卡、视频 Prompt 卡内 Prompt 均为 contenteditable 图文块，`@图片N`/角色/场景/道具引用以内嵌 chip 呈现，不再在节点下方单独列出候选。
 - [x] **`@` 候选固定浮层**：在 Prompt 内输入 `@` 时，候选菜单按光标位置以 fixed popover 弹出，可选当前资产、项目资产和 imageFlow 参考图；候选不会撑开节点内容。
 - [x] **模型/比例/质量控件**：图片生成卡暴露模型、比例、质量下拉；模型选项来自 `vendorConfig` 中启用的 image 模型，保存仍走 `production/editImage/updateImageFlow`。
 - [x] **生成时携带引用图**：资产图生成会把 Prompt 中的 `@` 引用解析为 `references`，队列执行时按 `assetId`/URL 取 base64 并传入模型 `referenceList`，避免只靠纯文本生成。

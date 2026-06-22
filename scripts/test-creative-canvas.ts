@@ -50,6 +50,8 @@ function findNode(graph: Awaited<ReturnType<typeof getCreativeCanvasGraph>>, id:
 
 async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("match[0].slice(1)"), "prompt @ mention trigger should read the matched token");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes('kind: "storyboard"'), "storyboard prompt editor should use the shared floating mention picker");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes('kind: "videoPrompt"'), "video prompt editor should use the shared floating mention picker");
   assert.ok(fs.readFileSync("data/web/creative-canvas.css", "utf8").includes("position: fixed;"), "prompt mention menu should float instead of expanding the node");
 
   await new Promise((resolve) => setTimeout(resolve, 2000));

@@ -1776,6 +1776,76 @@
     return null;
   }
 
+  function handleStoryboardPromptInput(node, el, mentions) {
+    const value = promptGraphicText(el);
+    updateStoryboardPromptText(node, value);
+    const beforeCaret = promptGraphicTextBeforeCaret(el);
+    const query = promptMentionTrigger(beforeCaret);
+    if (query === null) {
+      if (state.promptMentionPicker?.nodeId === node.id) {
+        state.promptMentionPicker = null;
+        render();
+      }
+      return;
+    }
+    const items = imageFlowMentionItems(mentions, query);
+    state.promptMentionPicker = { nodeId: node.id, kind: "storyboard", query, items, at: beforeCaret.length - query.length - 1, ...mentionPickerPosition(el) };
+    render();
+  }
+
+  function insertStoryboardMention(node, item, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const token = item?.token || "";
+    if (!token) return;
+    const picker = state.promptMentionPicker;
+    const current = node.data?.prompt || "";
+    const next = picker?.nodeId === node.id && Number.isFinite(picker.at)
+      ? `${current.slice(0, picker.at)}${token} ${current.slice(picker.at + picker.query.length + 1)}`
+      : promptMentionTrigger(current) === null
+      ? `${current}${current && !/\s$/.test(current) ? " " : ""}${token} `
+      : current.replace(/(^|\s)@[\u4e00-\u9fa5\w]*$/, `$1${token} `);
+    updateStoryboardPromptText(node, next);
+    state.promptMentionPicker = null;
+    saveStoryboardPromptText(node).catch((err) => { state.message = err?.message || String(err); render(); });
+    render();
+  }
+
+  function handleVideoPromptInput(node, el, mentions) {
+    const value = promptGraphicText(el);
+    updateVideoPromptText(node, value);
+    const beforeCaret = promptGraphicTextBeforeCaret(el);
+    const query = promptMentionTrigger(beforeCaret);
+    if (query === null) {
+      if (state.promptMentionPicker?.nodeId === node.id) {
+        state.promptMentionPicker = null;
+        render();
+      }
+      return;
+    }
+    const items = imageFlowMentionItems(mentions, query);
+    state.promptMentionPicker = { nodeId: node.id, kind: "videoPrompt", query, items, at: beforeCaret.length - query.length - 1, ...mentionPickerPosition(el) };
+    render();
+  }
+
+  function insertVideoPromptMention(node, item, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const token = item?.token || "";
+    if (!token) return;
+    const picker = state.promptMentionPicker;
+    const current = node.data?.prompt || "";
+    const next = picker?.nodeId === node.id && Number.isFinite(picker.at)
+      ? `${current.slice(0, picker.at)}${token} ${current.slice(picker.at + picker.query.length + 1)}`
+      : promptMentionTrigger(current) === null
+      ? `${current}${current && !/\s$/.test(current) ? " " : ""}${token} `
+      : current.replace(/(^|\s)@[\u4e00-\u9fa5\w]*$/, `$1${token} `);
+    updateVideoPromptText(node, next);
+    state.promptMentionPicker = null;
+    saveVideoPromptText(node).catch((err) => { state.message = err?.message || String(err); render(); });
+    render();
+  }
+
   // ─── 资产节点 prompt 的 @ 图文引用 ────────────────────────
   // 候选：项目资产库（角色/场景/道具图，按类型编号 @角色N/@场景N/@道具N）
   //       + 该资产自身 imageFlow 的参考图节点（@图片N）
@@ -1870,7 +1940,7 @@
     const node = graphNodes().find((item) => item.id === picker.nodeId);
     if (!node) return null;
     const items = picker.items || [];
-    const insert = picker.kind === "asset" ? insertAssetMention : insertImageFlowMention;
+    const insert = picker.kind === "asset" ? insertAssetMention : picker.kind === "storyboard" ? insertStoryboardMention : picker.kind === "videoPrompt" ? insertVideoPromptMention : insertImageFlowMention;
     return h("div", {
       class: "tfcc-mention-menu",
       style: { left: `${picker.x || 12}px`, top: `${picker.y || 12}px` },
@@ -2066,19 +2136,13 @@
       const promptText = data.prompt || data.promptPreview || "";
       const children = [title];
       if (data.thumbnail) children.push(thumbTile(data.thumbnail, "tfcc-thumb-wide"));
-      children.push(renderPromptGraphic(promptText, mentions));
-      children.push(h("textarea", {
-        class: "tfcc-video-prompt-inline",
-        value: promptText,
-        placeholder: "输入 @图1 / @图片1 修改引用",
-        onInput: (event) => {
-          updateStoryboardPromptText(node, event.target.value);
-          const graphic = event.currentTarget.closest(".tfcc-node")?.querySelector(".tfcc-prompt-graphic");
-          if (graphic) graphic.replaceWith(renderPromptGraphic(event.target.value, mentions));
+      children.push(renderPromptGraphic(promptText, mentions, {
+        editable: true,
+        onInput: (event) => handleStoryboardPromptInput(node, event.currentTarget, mentions),
+        onBlur: (event) => {
+          updateStoryboardPromptText(node, promptGraphicText(event.currentTarget));
+          saveStoryboardPromptText(node).catch((err) => { state.message = err?.message || String(err); render(); });
         },
-        onBlur: () => saveStoryboardPromptText(node).catch((err) => { state.message = err?.message || String(err); render(); }),
-        onMouseDown: (event) => event.stopPropagation(),
-        onClick: (event) => event.stopPropagation(),
       }));
       children.push(nodeSource(node));
       return children.filter(Boolean);
@@ -2088,19 +2152,13 @@
       const promptText = data.prompt || data.promptPreview || "";
       return [
         title,
-        renderPromptGraphic(promptText, mentions),
-        h("textarea", {
-          class: "tfcc-video-prompt-inline",
-          value: promptText,
-          placeholder: "输入 @图片1 / @镜头33 修改引用",
-          onInput: (event) => {
-            updateVideoPromptText(node, event.target.value);
-            const graphic = event.currentTarget.closest(".tfcc-node")?.querySelector(".tfcc-prompt-graphic");
-            if (graphic) graphic.replaceWith(renderPromptGraphic(event.target.value, mentions));
+        renderPromptGraphic(promptText, mentions, {
+          editable: true,
+          onInput: (event) => handleVideoPromptInput(node, event.currentTarget, mentions),
+          onBlur: (event) => {
+            updateVideoPromptText(node, promptGraphicText(event.currentTarget));
+            saveVideoPromptText(node).catch((err) => { state.message = err?.message || String(err); render(); });
           },
-          onBlur: () => saveVideoPromptText(node).catch((err) => { state.message = err?.message || String(err); render(); }),
-          onMouseDown: (event) => event.stopPropagation(),
-          onClick: (event) => event.stopPropagation(),
         }),
         nodeSource(node),
       ].filter(Boolean);
