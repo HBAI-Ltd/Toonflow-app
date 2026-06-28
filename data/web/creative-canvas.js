@@ -2372,6 +2372,43 @@
         await submitVideos([node]);
         state.message = "视频生成任务已提交";
       }
+      if (action === "videoReview") {
+        const video = node.data?.video || {};
+        if (!video.id) throw new Error("当前节点没有可复核的视频");
+        await api("/production/workbench/reviewVideo", {
+          method: "POST",
+          body: { videoId: Number(video.id) },
+        });
+        state.message = "视频 QA 已刷新";
+      }
+      if (action === "acceptVideoReview") {
+        const video = node.data?.video || {};
+        if (!video.id) throw new Error("当前节点没有可接受的视频 QA 警告");
+        await api("/production/workbench/acceptVideoReview", {
+          method: "POST",
+          body: { videoId: Number(video.id) },
+        });
+        state.message = "已接受该视频 QA 警告，合成时允许通过";
+      }
+      if (action === "selectVideo") {
+        const video = node.data?.video || {};
+        const trackId = Number(video.videoTrackId);
+        const videoId = Number(video.id);
+        if (!trackId || !videoId) throw new Error("当前视频缺少轨道或视频 ID");
+        await api("/production/workbench/selectVideo", {
+          method: "POST",
+          body: { trackId, videoId },
+        });
+        state.message = "已设为轨道选中视频";
+      }
+      if (action === "regenerateVideo") {
+        const video = node.data?.video || {};
+        const trackId = Number(video.videoTrackId);
+        const promptNode = graphNodes().find((item) => item.type === "videoPrompt" && Number(item.data?.videoTrack?.id) === trackId);
+        if (!promptNode) throw new Error("未找到该视频对应的视频 Prompt 卡");
+        await submitVideos([promptNode]);
+        state.message = "视频重生任务已提交";
+      }
       await loadGraph();
     });
   }
@@ -4007,6 +4044,17 @@
     return Number.isFinite(value) && value > 0 ? value : null;
   }
 
+  function videoReviewAccepted(review) {
+    return Boolean(review?.report?.acceptedAt);
+  }
+
+  function videoReviewBlocksCompose(review) {
+    const status = String(review?.status || "");
+    if (status === "failed") return true;
+    if (status === "warning" && !videoReviewAccepted(review)) return true;
+    return false;
+  }
+
   function videoWorkflowSnapshot() {
     const prompts = orderedLayoutNodes(graphNodes().filter((node) => node.type === "videoPrompt"));
     const videos = graphNodes().filter((node) => node.type === "video");
@@ -4023,7 +4071,7 @@
       videos,
       tasks,
       promptRows,
-      reviewWarnings: videos.filter((node) => ["failed", "warning"].includes(String(node.data?.review?.status || ""))),
+      reviewWarnings: videos.filter((node) => videoReviewBlocksCompose(node.data?.review)),
       missingPrompts: promptRows.filter((row) => !String(row.track.prompt || "").trim()),
       missingVideos: promptRows.filter((row) => !row.linkedVideos.length),
       missingSelected: promptRows.filter((row) => row.successfulVideos.length && !row.selectedId),
@@ -4634,6 +4682,12 @@
     if (!snapshot.promptRows.length) throw new Error("当前剧集还没有视频 Prompt，无法合成。");
     if (missing.length) {
       throw new Error(`还有 ${missing.length} 条视频 Prompt 未选定成功视频，先完成生成/选片。`);
+    }
+    const qaBlocked = snapshot.readyRows
+      .map((row) => row.linkedVideos.find((video) => Number(video.data?.video?.id) === Number(row.selectedId)))
+      .filter((video) => videoReviewBlocksCompose(video?.data?.review));
+    if (qaBlocked.length) {
+      throw new Error(`还有 ${qaBlocked.length} 个选中视频 QA 未通过或未接受警告，先在视频卡右侧处理 QA。`);
     }
     if (/整集|拼接|导出/.test(String(text || ""))) {
       await api("/production/workbench/mergeEpisode", {
@@ -5339,11 +5393,19 @@
     return labels[value] || String(value || "-");
   }
 
-  function renderVideoReviewBlock(review) {
+  function renderVideoReviewBlock(node) {
+    const review = node?.data?.review || null;
     const issues = Array.isArray(review?.issues) ? review.issues : [];
     const action = review?.report?.suggestedAction || review?.suggestedAction || "";
     const visual = review?.report?.visualConsistency || null;
     const bestRef = visual?.bestReference || null;
+    const acceptedAt = review?.report?.acceptedAt;
+    const actions = [
+      h("button", { onClick: () => runNodeAction("videoReview", node), text: "重新 QA" }),
+      review?.status === "warning" && !videoReviewAccepted(review) ? h("button", { class: "primary", onClick: () => runNodeAction("acceptVideoReview", node), text: "接受警告" }) : null,
+      h("button", { onClick: () => runNodeAction("selectVideo", node), text: "设为选中" }),
+      h("button", { onClick: () => runNodeAction("regenerateVideo", node), text: "重生视频" }),
+    ].filter(Boolean);
     return h("div", { class: "tfcc-source-inspector-block" }, [
       h("div", { class: "tfcc-panel-subtitle", text: "视频 QA" }),
       review ? h("div", { class: "tfcc-kv" }, [
@@ -5351,10 +5413,12 @@
         kv("分数", review.score == null ? "-" : `${review.score}`),
         kv("可重试", review.retryable ? "是" : "否"),
         kv("建议", videoReviewText(action)),
+        acceptedAt ? kv("人工接受", formatTime(acceptedAt)) : null,
         visual ? kv("视觉匹配", visual.bestSimilarity == null ? videoReviewText(visual.status) : `${Math.round(Number(visual.bestSimilarity) * 100)}%`) : null,
         bestRef ? kv("最佳参考", bestRef.name || `${bestRef.source}:${bestRef.id}`) : null,
-      ]) : h("p", { class: "tfcc-inspect-text", text: "尚未运行视频 QA。" }),
+      ].filter(Boolean)) : h("p", { class: "tfcc-inspect-text", text: "尚未运行视频 QA。" }),
       issues.length ? h("p", { class: "tfcc-inspect-text", text: `问题：${issues.map(videoReviewText).join("；")}` }) : null,
+      h("div", { class: "tfcc-source-inspector-actions" }, actions),
     ].filter(Boolean));
   }
 
@@ -5559,7 +5623,7 @@
       rows.push(kv("hash", segment.hash));
       rows.push(kv("artifact", segment.artifactId));
     }
-    const reviewBlock = node.type === "video" ? renderVideoReviewBlock(node.data?.review) : null;
+    const reviewBlock = node.type === "video" ? renderVideoReviewBlock(node) : null;
     const actions = [];
     if (node.type === "script") {
       const targetScriptId = scriptIdFromNode(node);

@@ -10,6 +10,7 @@ import { registerQueueHandler } from "@/utils/genQueue";
 import { composeShot, concatSegments, normalizeSegment, probeDuration, probeVideoInfo } from "@/utils/ffmpegTool";
 import { buildSrt, extractDialogue, isIgnorableDialogue } from "@/utils/subtitle";
 import { splitGridImage } from "@/utils/gridImage";
+import { assertVideoReviewAllowsCompose } from "@/utils/videoReview";
 
 /**
  * 成片管线队列处理器（借鉴 huobao-drama 的 FFmpeg 合成/TTS/宫格图能力）
@@ -101,6 +102,7 @@ async function handleComposeVideo(payload: ComposeVideoPayload): Promise<void> {
       .where({ id: track.videoId, projectId: payload.projectId, scriptId: payload.scriptId })
       .first();
     if (!video?.filePath || video.state !== "生成成功") throw new Error("选定的视频未生成成功");
+    await assertVideoReviewAllowsCompose(Number(video.id));
 
     // 2. 汇总该轨道下分镜的台词
     const storyboards = await db("o_storyboard")
@@ -192,6 +194,7 @@ async function getTrackSegmentPath(trackId: number, projectId: number, scriptId:
   const track = await db("o_videoTrack").where({ id: trackId, projectId, scriptId }).first();
   if (!track?.videoId) return null;
   const video = await db("o_video").where({ id: track.videoId, projectId, scriptId }).first();
+  if (video?.state === "生成成功" && video.filePath) await assertVideoReviewAllowsCompose(Number(video.id));
   return video?.state === "生成成功" && video.filePath ? video.filePath : null;
 }
 

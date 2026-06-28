@@ -5,6 +5,7 @@ import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { enqueueJob } from "@/utils/genQueue";
 import type { ComposeVideoPayload } from "@/utils/composeHandlers";
+import { assertTrackVideosAllowCompose } from "@/utils/videoReview";
 const router = express.Router();
 const MAX_COMPOSE_TRACKS = 20;
 
@@ -31,29 +32,11 @@ export default router.post(
     };
     const uniqueTrackIds = [...new Set(trackIds)];
 
-    // 校验各轨道均属于当前项目/剧集，且已选定同项目/同剧集的视频
-    const tracks = await u
-      .db("o_videoTrack")
-      .whereIn("id", uniqueTrackIds)
-      .where({ projectId, scriptId })
-      .select("id", "videoId");
-    const trackMap = new Map(tracks.map((t) => [t.id!, t]));
-    const missingTracks = uniqueTrackIds.filter((id) => !trackMap.has(id));
-    if (missingTracks.length) return res.status(400).send(error(`以下分镜轨道不属于当前项目或剧集：${missingTracks.join("、")}`));
-
-    const noVideo = uniqueTrackIds.filter((id) => !trackMap.get(id)?.videoId);
-    if (noVideo.length) return res.status(400).send(error(`以下分镜轨道尚未选定视频：${noVideo.join("、")}`));
-
-    const videoIds = tracks.map((t) => t.videoId!).filter((id): id is number => typeof id === "number");
-    const videos = await u.db("o_video").whereIn("id", videoIds).where({ projectId, scriptId }).select("id", "state", "filePath");
-    const videoMap = new Map(videos.map((v) => [v.id!, v]));
-    const invalidVideos = tracks
-      .filter((t) => {
-        const video = t.videoId != null ? videoMap.get(t.videoId) : null;
-        return !video?.filePath || video.state !== "生成成功";
-      })
-      .map((t) => t.id!);
-    if (invalidVideos.length) return res.status(400).send(error(`以下分镜轨道选定的视频无效或未生成成功：${invalidVideos.join("、")}`));
+    try {
+      await assertTrackVideosAllowCompose({ projectId, scriptId, trackIds: uniqueTrackIds });
+    } catch (e) {
+      return res.status(400).send(error(e instanceof Error ? e.message : String(e)));
+    }
 
     const composeIds: number[] = [];
     for (const trackId of uniqueTrackIds) {

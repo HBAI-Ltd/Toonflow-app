@@ -9,7 +9,7 @@ import db, { db as knexDb } from "@/utils/db";
 import { getCreativeCanvasGraph, patchCreativeCanvasText, saveCreativeCanvasLayout } from "@/utils/creativeCanvas";
 import { recordGenerationArtifact } from "@/utils/contentAudit";
 import { loadAgentChatHistory, saveAgentChatHistory } from "@/utils/agentChatHistory";
-import { autoSelectBestVideoForTrack, recordFailedVideoReview, shouldRetryVideoGeneration } from "@/utils/videoReview";
+import { acceptVideoReviewWarning, assertVideoReviewAllowsCompose, autoSelectBestVideoForTrack, recordFailedVideoReview, shouldRetryVideoGeneration } from "@/utils/videoReview";
 import { compareImageFiles } from "@/utils/visualSimilarity";
 import updateNovelRouter from "@/routes/novel/updateNovel";
 
@@ -111,6 +111,11 @@ async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("reviewWarnings"), "video agent should include video QA review warnings in status answers");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("renderVideoReviewBlock"), "video inspector should expose QA review details");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("visual_reference_low_similarity"), "video inspector should explain visual consistency warnings");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/production/workbench/reviewVideo"), "video inspector should rerun QA through the backend");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/production/workbench/acceptVideoReview"), "video inspector should allow accepted QA warnings");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("QA 未通过或未接受警告"), "video compose submission should block unresolved QA issues client-side");
+  assert.ok(fs.existsSync("src/routes/production/workbench/reviewVideo.ts"), "video QA review route should exist");
+  assert.ok(fs.existsSync("src/routes/production/workbench/acceptVideoReview.ts"), "video QA accept route should exist");
   assert.ok(fs.existsSync("src/utils/videoReview.ts"), "video QA review utility should exist");
   assert.equal(shouldRetryVideoGeneration("ETIMEDOUT 500"), true, "transient provider errors should be retryable");
   assert.equal(shouldRetryVideoGeneration("余额不足"), false, "account/balance errors should not be retried automatically");
@@ -503,18 +508,25 @@ async function main() {
   const failedReview = await recordFailedVideoReview({ videoId: failedVideoId, reason: "ETIMEDOUT 500" });
   assert.equal(failedReview.retryable, true, "failed video review should mark transient errors retryable");
   assert.equal((await db("o_videoReview").where("videoId", failedVideoId).first())?.status, "failed", "failed video review should be persisted");
+  await assert.rejects(() => acceptVideoReviewWarning(failedVideoId), /QA 未通过/, "failed video QA should not be manually accepted");
   await db("o_videoReview").where("videoId", failedVideoId).delete();
   await db("o_video").where("id", failedVideoId).delete();
   const [selectTrackId] = await db("o_videoTrack").insert({ projectId, scriptId, prompt: "select best", state: "未生成" });
   const [lowVideoId] = await db("o_video").insert({ projectId, scriptId, videoTrackId: selectTrackId, state: "生成成功", filePath: "low.mp4" });
   const [highVideoId] = await db("o_video").insert({ projectId, scriptId, videoTrackId: selectTrackId, state: "生成成功", filePath: "high.mp4" });
+  const [warningVideoId] = await db("o_video").insert({ projectId, scriptId, videoTrackId: selectTrackId, state: "生成成功", filePath: "warning.mp4" });
   await db("o_videoReview").insert([
     { id: projectId + 9201, projectId, scriptId, trackId: selectTrackId, videoId: lowVideoId, score: 60, status: "passed", issues: "[]", report: "{}", retryable: 0, createTime: Date.now(), updateTime: Date.now() },
     { id: projectId + 9202, projectId, scriptId, trackId: selectTrackId, videoId: highVideoId, score: 95, status: "passed", issues: "[]", report: "{}", retryable: 0, createTime: Date.now(), updateTime: Date.now() },
+    { id: projectId + 9203, projectId, scriptId, trackId: selectTrackId, videoId: warningVideoId, score: 80, status: "warning", issues: JSON.stringify(["missing_audio"]), report: JSON.stringify({ suggestedAction: "regenerate_with_audio_or_add_tts" }), retryable: 0, createTime: Date.now(), updateTime: Date.now() },
   ]);
   assert.equal(await autoSelectBestVideoForTrack(selectTrackId), highVideoId, "auto selection should choose the highest scored reviewed video");
+  await assert.rejects(() => assertVideoReviewAllowsCompose(warningVideoId), /QA 需复核/, "unaccepted warning QA should block compose");
+  const acceptedWarning = await acceptVideoReviewWarning(warningVideoId);
+  assert.ok(acceptedWarning.report.acceptedAt, "accepted warning QA should record the acceptance timestamp");
+  await assert.doesNotReject(() => assertVideoReviewAllowsCompose(warningVideoId), "accepted warning QA should allow compose");
   await db("o_videoReview").where("trackId", selectTrackId).delete();
-  await db("o_video").whereIn("id", [lowVideoId, highVideoId]).delete();
+  await db("o_video").whereIn("id", [lowVideoId, highVideoId, warningVideoId]).delete();
   await db("o_videoTrack").where("id", selectTrackId).delete();
   await db("o_videoTrack").where("id", trackId).update({ videoId });
   await db("o_videoReview").insert({

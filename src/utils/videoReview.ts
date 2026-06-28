@@ -193,6 +193,83 @@ export async function autoSelectBestVideoForTrack(trackId: number): Promise<numb
   return selected;
 }
 
+export async function loadVideoReview(videoId: number): Promise<VideoReview | null> {
+  if (!(await hasReviewTable())) return null;
+  const row = await db("o_videoReview").where("videoId", videoId).first();
+  return row ? normalizeVideoReview(row) : null;
+}
+
+export function isVideoReviewAccepted(review: VideoReview | null | undefined): boolean {
+  return Boolean(review?.report?.acceptedAt);
+}
+
+export async function acceptVideoReviewWarning(videoId: number): Promise<VideoReview> {
+  const review = (await loadVideoReview(videoId)) ?? (await reviewVideoById({ videoId }));
+  if (review.status === "failed") {
+    throw new Error(`视频 ${videoId} QA 未通过，不能接受警告`);
+  }
+  if (review.status === "passed") return review;
+  const accepted: VideoReview = {
+    ...review,
+    report: {
+      ...review.report,
+      acceptedAt: Date.now(),
+      acceptedBy: "manual",
+    },
+  };
+  await saveVideoReview(accepted);
+  return accepted;
+}
+
+export async function assertVideoReviewAllowsCompose(videoId: number): Promise<VideoReview> {
+  const review = (await loadVideoReview(videoId)) ?? (await reviewVideoById({ videoId }));
+  if (review.status === "passed") return review;
+  if (review.status === "warning" && isVideoReviewAccepted(review)) return review;
+
+  const issueText = review.issues.length ? review.issues.join("、") : review.status;
+  if (review.status === "warning") throw new Error(`视频 ${videoId} QA 需复核：${issueText}`);
+  throw new Error(`视频 ${videoId} QA 未通过：${issueText}`);
+}
+
+export async function assertTrackVideosAllowCompose(input: { projectId: number; scriptId: number; trackIds: number[] }) {
+  const uniqueTrackIds = [...new Set(input.trackIds.map(Number).filter((id) => Number.isFinite(id) && id > 0))];
+  if (!uniqueTrackIds.length) throw new Error("没有可合成的分镜轨道");
+
+  const tracks = await db("o_videoTrack")
+    .whereIn("id", uniqueTrackIds)
+    .where({ projectId: input.projectId, scriptId: input.scriptId })
+    .select("id", "videoId");
+  const trackMap = new Map(tracks.map((track: any) => [Number(track.id), track]));
+  const missingTracks = uniqueTrackIds.filter((id) => !trackMap.has(id));
+  if (missingTracks.length) throw new Error(`以下分镜轨道不属于当前项目或剧集：${missingTracks.join("、")}`);
+
+  const noVideo = uniqueTrackIds.filter((id) => !trackMap.get(id)?.videoId);
+  if (noVideo.length) throw new Error(`以下分镜轨道尚未选定视频：${noVideo.join("、")}`);
+
+  const videoIds = tracks.map((track: any) => Number(track.videoId)).filter((id: number) => Number.isFinite(id));
+  const videos = await db("o_video").whereIn("id", videoIds).where({ projectId: input.projectId, scriptId: input.scriptId }).select("id", "state", "filePath");
+  const videoMap = new Map(videos.map((video: any) => [Number(video.id), video]));
+  const invalidTracks = tracks
+    .filter((track: any) => {
+      const video = videoMap.get(Number(track.videoId));
+      return !video?.filePath || video.state !== "生成成功";
+    })
+    .map((track: any) => Number(track.id));
+  if (invalidTracks.length) throw new Error(`以下分镜轨道选定的视频无效或未生成成功：${invalidTracks.join("、")}`);
+
+  const qaErrors: string[] = [];
+  for (const track of tracks) {
+    try {
+      await assertVideoReviewAllowsCompose(Number(track.videoId));
+    } catch (e) {
+      qaErrors.push(`轨道 ${track.id}: ${error(e).message}`);
+    }
+  }
+  if (qaErrors.length) throw new Error(`以下选定视频未通过合成前 QA：${qaErrors.join("；")}`);
+
+  return tracks.map((track: any) => ({ trackId: Number(track.id), videoId: Number(track.videoId) }));
+}
+
 async function saveVideoReview(review: VideoReview) {
   if (!(await hasReviewTable())) return;
   const now = Date.now();
@@ -210,6 +287,35 @@ async function saveVideoReview(review: VideoReview) {
     createTime: now,
     updateTime: now,
   } as any);
+}
+
+function normalizeVideoReview(row: any): VideoReview {
+  const issues = parseJsonValue<string[]>(row.issues, []);
+  const report = parseJsonValue<Record<string, unknown>>(row.report, {});
+  const status = ["passed", "warning", "failed"].includes(String(row.status)) ? String(row.status) as VideoReviewStatus : "failed";
+  const suggestedAction = String(row.suggestedAction || report.suggestedAction || suggestedActionFor(issues, Boolean(row.retryable)));
+  return {
+    projectId: Number(row.projectId || 0),
+    scriptId: row.scriptId ?? null,
+    trackId: row.trackId ?? null,
+    videoId: Number(row.videoId),
+    score: Number(row.score ?? 0),
+    status,
+    issues: Array.isArray(issues) ? issues : [],
+    report: { ...report, suggestedAction },
+    retryable: Boolean(row.retryable),
+    suggestedAction,
+  };
+}
+
+function parseJsonValue<T>(value: unknown, fallback: T): T {
+  if (value == null || value === "") return fallback;
+  if (typeof value !== "string") return value as T;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
 }
 
 async function inspectTrackConsistency(trackId: number, projectId: number) {
