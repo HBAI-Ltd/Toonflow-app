@@ -359,6 +359,30 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
       },
       initData: async (knex) => {},
     },
+    // 视频评审/选片依据
+    {
+      name: "o_videoReview",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("projectId").notNullable();
+        table.integer("scriptId");
+        table.integer("trackId");
+        table.integer("videoId").notNullable();
+        table.integer("score");
+        table.string("status");
+        table.text("issues");
+        table.text("report");
+        table.integer("retryable");
+        table.integer("createTime");
+        table.integer("updateTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.unique(["videoId"]);
+        table.index(["projectId", "scriptId"]);
+        table.index(["trackId"]);
+      },
+      initData: async (knex) => {},
+    },
     //提示词表
     {
       name: "o_prompt",

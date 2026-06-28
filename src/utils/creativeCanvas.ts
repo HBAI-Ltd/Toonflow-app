@@ -511,6 +511,18 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
   let videoQuery = db("o_video").where("projectId", projectId).orderBy("id", "asc").limit(limit);
   if (activeScriptId != null) videoQuery = videoQuery.where("scriptId", activeScriptId);
   const videos = await videoQuery;
+  const videoIds = videos.map((item: any) => Number(item.id)).filter((id: number) => Number.isFinite(id));
+  const hasVideoReviewTable = videoIds.length ? await db.schema.hasTable("o_videoReview") : false;
+  const videoReviews = hasVideoReviewTable ? await db("o_videoReview").whereIn("videoId", videoIds) : [];
+  const videoReviewByVideoId = new Map<number, any>();
+  for (const review of videoReviews as any[]) {
+    videoReviewByVideoId.set(Number(review.videoId), {
+      ...compactRow(review),
+      issues: parseJson(review.issues, []),
+      report: parseJson(review.report, {}),
+      retryable: Boolean(review.retryable),
+    });
+  }
   const tasks = await db("o_tasks").where("projectId", projectId).orderBy("id", "desc").limit(12);
   const taskIds = tasks.map((item: any) => Number(item.id)).filter((id) => Number.isFinite(id));
   const taskProgress = await listTaskProgress(projectId, taskIds);
@@ -944,7 +956,10 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
   });
 
   videos.forEach((video: any, index: number) => {
-    const status = video.state === "生成成功" || video.state === "已完成" ? "已完成" : video.state === "生成中" ? "生成中" : video.state === "生成失败" ? "需复核" : undefined;
+    const review = videoReviewByVideoId.get(Number(video.id));
+    const status = review?.status === "failed" || review?.status === "warning"
+      ? "需复核"
+      : video.state === "生成成功" || video.state === "已完成" ? "已完成" : video.state === "生成中" ? "生成中" : video.state === "生成失败" ? "需复核" : undefined;
     createNode(nodes, staleMap, layout, {
       id: `video:${video.id}`,
       type: "video",
@@ -954,7 +969,7 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
       height: 140,
       status,
       sourceLabel: "来源：视频 Prompt",
-      data: { video: compactRow(video), poster: videoUrlMap.get(Number(video.id)) || "", src: videoUrlMap.get(Number(video.id)) || "" },
+      data: { video: compactRow(video), review, poster: videoUrlMap.get(Number(video.id)) || "", src: videoUrlMap.get(Number(video.id)) || "" },
     });
     if (video.videoTrackId) {
       edges.push({
@@ -1189,6 +1204,8 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
       storyboardCount: storyboards.length,
       videoPromptCount: videoTracks.length,
       videoCount: videos.length,
+      videoReviewCount: videoReviews.length,
+      videoReviewWarningCount: videoReviews.filter((item: any) => item.status === "warning" || item.status === "failed").length,
       auditArtifactCount: audit.artifacts.length,
       auditSegmentCount: audit.segments.length,
       revisionCount: audit.revisions.length,

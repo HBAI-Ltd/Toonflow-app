@@ -1,4 +1,4 @@
-// @db-hash 95fa033f929f6ef666b54a5370bd43f1
+// @db-hash 4b037418750b28aebf2ca6240d39526e
 //该文件由脚本自动生成，请勿手动修改
 
 export interface memories {
@@ -383,6 +383,20 @@ export interface o_videoCompose {
   'trackId'?: number | null;
   'videoId'?: number | null;
 }
+export interface o_videoReview {
+  'createTime'?: number | null;
+  'id'?: number;
+  'issues'?: string | null;
+  'projectId': number;
+  'report'?: string | null;
+  'retryable'?: number | null;
+  'score'?: number | null;
+  'scriptId'?: number | null;
+  'status'?: string | null;
+  'trackId'?: number | null;
+  'updateTime'?: number | null;
+  'videoId': number;
+}
 export interface o_videoTrack {
   'duration'?: number | null;
   'id'?: number;
@@ -432,5 +446,6 @@ export interface DB {
   "o_vendorConfig": o_vendorConfig;
   "o_video": o_video;
   "o_videoCompose": o_videoCompose;
+  "o_videoReview": o_videoReview;
   "o_videoTrack": o_videoTrack;
 }

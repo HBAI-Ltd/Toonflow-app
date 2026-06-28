@@ -6,6 +6,7 @@ import db, { db as knexDb } from "@/utils/db";
 import { getCreativeCanvasGraph, patchCreativeCanvasText, saveCreativeCanvasLayout } from "@/utils/creativeCanvas";
 import { recordGenerationArtifact } from "@/utils/contentAudit";
 import { loadAgentChatHistory, saveAgentChatHistory } from "@/utils/agentChatHistory";
+import { autoSelectBestVideoForTrack, recordFailedVideoReview, shouldRetryVideoGeneration } from "@/utils/videoReview";
 import updateNovelRouter from "@/routes/novel/updateNovel";
 
 async function waitForTables() {
@@ -15,12 +16,13 @@ async function waitForTables() {
     const hasSegment = await db.schema.hasTable("o_generationSegment");
     const hasRevision = await db.schema.hasTable("o_generationRevision");
     const hasTaskProgress = await db.schema.hasTable("o_taskProgress");
+    const hasVideoReview = await db.schema.hasTable("o_videoReview");
     const hasChatHistory = await db.schema.hasTable("o_agentChatHistory");
     const hasNovel = await db.schema.hasTable("o_novel");
     const hasChapterOrder = hasNovel && (await db.schema.hasColumn("o_novel", "chapterOrder"));
     const hasSectionOrder = hasNovel && (await db.schema.hasColumn("o_novel", "sectionOrder"));
     const hasSection = hasNovel && (await db.schema.hasColumn("o_novel", "section"));
-    if (hasCanvas && hasArtifact && hasSegment && hasRevision && hasTaskProgress && hasChatHistory && hasChapterOrder && hasSectionOrder && hasSection) return;
+    if (hasCanvas && hasArtifact && hasSegment && hasRevision && hasTaskProgress && hasVideoReview && hasChatHistory && hasChapterOrder && hasSectionOrder && hasSection) return;
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   throw new Error("creative canvas tables were not created");
@@ -44,6 +46,7 @@ async function cleanup(projectId: number) {
   await knexDb("o_agentChatHistory").where("projectId", projectId).delete();
   await db("o_agentWorkData").where("projectId", projectId).delete();
   if (await db.schema.hasTable("o_taskProgress")) await db("o_taskProgress").where("projectId", projectId).delete();
+  if (await db.schema.hasTable("o_videoReview")) await db("o_videoReview").where("projectId", projectId).delete();
   await db("o_video").where("projectId", projectId).delete();
   await db("o_videoTrack").where("projectId", projectId).delete();
   await db("o_storyboard").where("projectId", projectId).delete();
@@ -101,6 +104,10 @@ async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("isVideoCountQuestion"), "video agent should treat video count questions as queries");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("videoPromptTargetsByShotNumber"), "video agent should map 镜头N wording to the linked video prompt");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("videoStatusAnswer"), "video agent should summarize generation, selection, and compose readiness");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("reviewWarnings"), "video agent should include video QA review warnings in status answers");
+  assert.ok(fs.existsSync("src/utils/videoReview.ts"), "video QA review utility should exist");
+  assert.equal(shouldRetryVideoGeneration("ETIMEDOUT 500"), true, "transient provider errors should be retryable");
+  assert.equal(shouldRetryVideoGeneration("余额不足"), false, "account/balance errors should not be retried automatically");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("submitVideoCompose"), "video agent should submit selected tracks to compose/merge endpoints");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/production/workbench/generateVideo"), "video agent should submit real video generation separately from prompt regeneration");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("已收到，开始提交"), "stage agent should acknowledge long-running video actions before awaiting backend work");
@@ -467,7 +474,44 @@ async function main() {
     state: "已完成",
     filePath: "test-video.mp4",
   });
+  const [failedVideoId] = await db("o_video").insert({
+    projectId,
+    scriptId,
+    videoTrackId: trackId,
+    state: "生成失败",
+    filePath: "failed-video.mp4",
+  });
+  const failedReview = await recordFailedVideoReview({ videoId: failedVideoId, reason: "ETIMEDOUT 500" });
+  assert.equal(failedReview.retryable, true, "failed video review should mark transient errors retryable");
+  assert.equal((await db("o_videoReview").where("videoId", failedVideoId).first())?.status, "failed", "failed video review should be persisted");
+  await db("o_videoReview").where("videoId", failedVideoId).delete();
+  await db("o_video").where("id", failedVideoId).delete();
+  const [selectTrackId] = await db("o_videoTrack").insert({ projectId, scriptId, prompt: "select best", state: "未生成" });
+  const [lowVideoId] = await db("o_video").insert({ projectId, scriptId, videoTrackId: selectTrackId, state: "生成成功", filePath: "low.mp4" });
+  const [highVideoId] = await db("o_video").insert({ projectId, scriptId, videoTrackId: selectTrackId, state: "生成成功", filePath: "high.mp4" });
+  await db("o_videoReview").insert([
+    { id: projectId + 9201, projectId, scriptId, trackId: selectTrackId, videoId: lowVideoId, score: 60, status: "passed", issues: "[]", report: "{}", retryable: 0, createTime: Date.now(), updateTime: Date.now() },
+    { id: projectId + 9202, projectId, scriptId, trackId: selectTrackId, videoId: highVideoId, score: 95, status: "passed", issues: "[]", report: "{}", retryable: 0, createTime: Date.now(), updateTime: Date.now() },
+  ]);
+  assert.equal(await autoSelectBestVideoForTrack(selectTrackId), highVideoId, "auto selection should choose the highest scored reviewed video");
+  await db("o_videoReview").where("trackId", selectTrackId).delete();
+  await db("o_video").whereIn("id", [lowVideoId, highVideoId]).delete();
+  await db("o_videoTrack").where("id", selectTrackId).delete();
   await db("o_videoTrack").where("id", trackId).update({ videoId });
+  await db("o_videoReview").insert({
+    id: projectId + 9100,
+    projectId,
+    scriptId,
+    trackId,
+    videoId,
+    score: 88,
+    status: "passed",
+    issues: "[]",
+    report: JSON.stringify({ media: { hasAudio: true }, suggestedAction: "select_for_compose" }),
+    retryable: 0,
+    createTime: Date.now(),
+    updateTime: Date.now(),
+  });
   const [videoTaskId] = await db("o_tasks").insert({
     projectId,
     taskClass: "视频生成",
@@ -609,6 +653,9 @@ async function main() {
   assert.ok(Array.isArray((videoPromptNode.data as any).mentions), "video prompt node should expose insertable references");
   const videoNode = findNode(graph, `video:${videoId}`);
   assert.ok("poster" in (videoNode.data as any), "video node should expose a poster field");
+  assert.equal((videoNode.data as any).review.status, "passed", "video node should expose QA review status");
+  assert.equal((videoNode.data as any).review.score, 88, "video node should expose QA review score");
+  assert.equal((graph.summary as any).videoReviewCount, 1, "canvas summary should count video QA reviews");
   // 概览聚合卡
   const videoGroup = findNode(graph, "videoGroup");
   assert.equal((videoGroup.data as any).count, 1, "video group should count videos");

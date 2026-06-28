@@ -225,6 +225,29 @@ export default async (knex: Knex): Promise<void> => {
       });
     }
   };
+  const createVideoReviewTables = async () => {
+    if (!(await knex.schema.hasTable("o_videoReview"))) {
+      await knex.schema.createTable("o_videoReview", (table) => {
+        table.integer("id").notNullable();
+        table.integer("projectId").notNullable();
+        table.integer("scriptId");
+        table.integer("trackId");
+        table.integer("videoId").notNullable();
+        table.integer("score");
+        table.string("status");
+        table.text("issues");
+        table.text("report");
+        table.integer("retryable");
+        table.integer("createTime");
+        table.integer("updateTime");
+        table.primary(["id"]);
+        table.unique(["id"]);
+        table.unique(["videoId"]);
+        table.index(["projectId", "scriptId"]);
+        table.index(["trackId"]);
+      });
+    }
+  };
   const recoverInterruptedTasks = async () => {
     if (!(await knex.schema.hasTable("o_tasks"))) return;
     const runningTasks = await knex("o_tasks").where("state", "进行中").select("id", "projectId", "relatedObjects");
@@ -321,6 +344,7 @@ export default async (knex: Knex): Promise<void> => {
   await createGenerationAuditTables();
   await createCreativeCanvasTables();
   await createTaskProgressTables();
+  await createVideoReviewTables();
   await recoverInterruptedTasks();
   await addColumn("o_tasks", "promptHash", "text");
   await addColumn("o_tasks", "promptVersionId", "integer");

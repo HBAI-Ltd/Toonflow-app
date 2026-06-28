@@ -151,39 +151,51 @@ export default router.post(
       videoTrackId: trackId,
     });
     res.status(200).send(success(videoId));
-    const relatedObjects = {
-      projectId,
-      videoId,
-      scriptId,
-      type: "视频",
-    };
-    const aiVideo = u.Ai.Video(model);
-    let taskId: number | null = null;
-    aiVideo
-      .run(
-        {
-          prompt,
-          referenceList: orderedReferenceList as ReferenceList[],
-          mode: modeData.length > 0 ? modeData : mode,
-          duration,
-          aspectRatio: (ratio?.videoRatio as "16:9" | "9:16") || "16:9",
-          resolution,
-          audio,
-        },
-        {
-          projectId,
-          taskClass: "视频生成",
-          describe: "根据提示词生成视频",
-          relatedObjects: JSON.stringify(relatedObjects),
-          onTaskStart: (id) => {
-            taskId = id;
+
+    const runAttempt = async (currentVideoId: number, currentVideoPath: string, attempt: number) => {
+      const aiVideo = u.Ai.Video(model);
+      let taskId: number | null = null;
+      try {
+        await aiVideo.run(
+          {
+            prompt,
+            referenceList: orderedReferenceList as ReferenceList[],
+            mode: modeData.length > 0 ? modeData : mode,
+            duration,
+            aspectRatio: (ratio?.videoRatio as "16:9" | "9:16") || "16:9",
+            resolution,
+            audio,
           },
-        },
-      )
-      .then(async () => await aiVideo.save(videoPath))
-      .then(async () => await markGeneratedVideoComplete({ videoId, videoPath, projectId, scriptId, taskId, audioRequested: audio }))
-      .catch(async (error: any) => {
-        await markGeneratedVideoFailed(videoId, u.error(error).message);
-      });
+          {
+            projectId,
+            taskClass: "视频生成",
+            describe: "根据提示词生成视频",
+            relatedObjects: JSON.stringify({ projectId, videoId: currentVideoId, scriptId, type: "视频" }),
+            onTaskStart: (id) => {
+              taskId = id;
+            },
+          },
+        );
+        await aiVideo.save(currentVideoPath);
+        await markGeneratedVideoComplete({ videoId: currentVideoId, videoPath: currentVideoPath, projectId, scriptId, trackId, taskId, audioRequested: audio });
+      } catch (e: any) {
+        const review = await markGeneratedVideoFailed(currentVideoId, u.error(e).message);
+        if (review.retryable && attempt < 1) {
+          const retryPath = `/${projectId}/video/${uuidv4()}.mp4`;
+          const [retryVideoId] = await u.db("o_video").insert({
+            filePath: retryPath,
+            time: Date.now(),
+            state: "生成中",
+            scriptId,
+            projectId,
+            videoTrackId: trackId,
+          });
+          await runAttempt(retryVideoId, retryPath, attempt + 1);
+        }
+      }
+    };
+    runAttempt(videoId, videoPath, 0).catch((e) => {
+      console.warn(`[generateVideo] ${u.error(e).message}`);
+    });
   },
 );

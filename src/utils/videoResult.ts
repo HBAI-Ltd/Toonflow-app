@@ -1,49 +1,46 @@
 import db from "@/utils/db";
-import oss from "@/utils/oss";
 import error from "@/utils/error";
 import { addTaskProgress } from "@/utils/taskProgress";
-import { probeDuration, probeVideoInfo } from "@/utils/ffmpegTool";
+import { autoSelectBestVideoForTrack, recordFailedVideoReview, reviewGeneratedVideo } from "@/utils/videoReview";
 
 export async function markGeneratedVideoComplete(input: {
   videoId: number;
   videoPath: string;
   projectId: number;
   scriptId: number;
+  trackId?: number | null;
   taskId?: number | null;
   audioRequested?: boolean;
 }) {
   const { videoId, videoPath, projectId, scriptId, taskId, audioRequested } = input;
-  let status: "complete" | "warning" = "complete";
-  let message = "视频文件已保存并通过基础质检";
-  let meta: Record<string, unknown> = { videoId, videoPath };
-
-  try {
-    const absPath = await oss.getAbsolutePath(videoPath);
-    const [info, duration] = await Promise.all([probeVideoInfo(absPath), probeDuration(absPath)]);
-    const expectsAudio = audioRequested !== false;
-    status = expectsAudio && !info.hasAudio ? "warning" : "complete";
-    message = status === "warning" ? "视频已保存，但未检测到音轨" : message;
-    meta = { ...meta, ...info, duration };
-  } catch (e) {
-    status = "warning";
-    message = `视频已保存，但基础质检失败：${error(e).message}`;
-    meta = { ...meta, probeError: error(e).message };
-  }
+  const video = await db("o_video").where("id", videoId).select("videoTrackId").first();
+  const trackId = Number(input.trackId ?? video?.videoTrackId);
+  const review = await reviewGeneratedVideo({ videoId, videoPath, projectId, scriptId, trackId, audioRequested });
+  const status = review.status === "failed" ? "error" : review.status === "warning" ? "warning" : "complete";
+  const message = review.status === "passed"
+    ? "视频文件已保存并通过 QA"
+    : `视频 QA ${review.status === "failed" ? "未通过" : "需复核"}：${review.issues.join(", ")}`;
 
   if (taskId) {
     await addTaskProgress({
       taskId,
       projectId,
       scriptId,
-      phase: "video_probe",
+      phase: "video_review",
       status,
       message,
-      meta,
+      meta: { videoId, videoPath, review },
     }).catch((e) => console.warn(`[taskProgress] ${error(e).message}`));
   }
 
-  await db("o_video").where("id", videoId).update({ state: "生成成功" });
-  await selectFirstSuccessfulVideo(videoId);
+  await db("o_video").where("id", videoId).update({
+    state: review.status === "failed" ? "生成失败" : "生成成功",
+    errorReason: review.status === "failed" ? review.issues.join(", ") : null,
+  });
+  if (review.status !== "failed" && Number.isFinite(trackId) && trackId > 0) {
+    await autoSelectBestVideoForTrack(trackId);
+  }
+  return review;
 }
 
 export async function markGeneratedVideoFailed(videoId: number, reason: string) {
@@ -51,22 +48,5 @@ export async function markGeneratedVideoFailed(videoId: number, reason: string) 
     state: "生成失败",
     errorReason: reason,
   });
-}
-
-async function selectFirstSuccessfulVideo(videoId: number) {
-  const video = await db("o_video").where("id", videoId).select("videoTrackId").first();
-  if (!video?.videoTrackId) return;
-  const track = await db("o_videoTrack").where("id", video.videoTrackId).select("videoId", "selectVideoId").first();
-  const selected = track?.videoId ?? track?.selectVideoId;
-  if (selected) {
-    await db("o_videoTrack").where("id", video.videoTrackId).update({
-      videoId: track?.videoId ?? selected,
-      selectVideoId: track?.selectVideoId ?? selected,
-    });
-    return;
-  }
-  await db("o_videoTrack").where("id", video.videoTrackId).update({
-    videoId,
-    selectVideoId: videoId,
-  });
+  return recordFailedVideoReview({ videoId, reason });
 }

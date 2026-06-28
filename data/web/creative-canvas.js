@@ -4023,6 +4023,7 @@
       videos,
       tasks,
       promptRows,
+      reviewWarnings: videos.filter((node) => ["failed", "warning"].includes(String(node.data?.review?.status || ""))),
       missingPrompts: promptRows.filter((row) => !String(row.track.prompt || "").trim()),
       missingVideos: promptRows.filter((row) => !row.linkedVideos.length),
       missingSelected: promptRows.filter((row) => row.successfulVideos.length && !row.selectedId),
@@ -4047,6 +4048,7 @@
       snapshot.missingVideos.length ? `${snapshot.missingVideos.length} 条 Prompt 还没有视频结果` : "",
       snapshot.missingSelected.length ? `${snapshot.missingSelected.length} 条已有成功视频但未选片` : "",
       failedVideos.length ? `${failedVideos.length} 个视频失败` : "",
+      snapshot.reviewWarnings.length ? `${snapshot.reviewWarnings.length} 个视频 QA 需复核` : "",
       warningTasks.length ? `${warningTasks.length} 个视频任务有质检警告` : "",
     ].filter(Boolean);
     const canCompose = snapshot.prompts.length > 0 && snapshot.readyRows.length === snapshot.prompts.length;
