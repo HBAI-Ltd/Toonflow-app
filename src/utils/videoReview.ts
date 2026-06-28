@@ -1,7 +1,11 @@
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import db from "@/utils/db";
 import oss from "@/utils/oss";
 import error from "@/utils/error";
-import { probeDuration, probeVideoInfo } from "@/utils/ffmpegTool";
+import { extractVideoFrame, probeDuration, probeVideoInfo } from "@/utils/ffmpegTool";
+import { compareVisualFingerprints, createVisualFingerprint } from "@/utils/visualSimilarity";
 
 export type VideoReviewStatus = "passed" | "warning" | "failed";
 
@@ -17,6 +21,16 @@ export interface VideoReview {
   retryable: boolean;
   suggestedAction: string;
 }
+
+interface VisualReference {
+  id: number;
+  name: string;
+  source: "asset" | "storyboard";
+  type?: string | null;
+  filePath: string;
+}
+
+const VISUAL_LOW_SIMILARITY_THRESHOLD = 0.55;
 
 async function hasReviewTable() {
   return db.schema.hasTable("o_videoReview");
@@ -75,9 +89,11 @@ export async function reviewGeneratedVideo(input: {
     videoId: input.videoId,
     videoPath: input.videoPath,
   };
+  let videoAbsPath = "";
 
   try {
     const absPath = await oss.getAbsolutePath(input.videoPath);
+    videoAbsPath = absPath;
     const [info, duration] = await Promise.all([probeVideoInfo(absPath), probeDuration(absPath)]);
     report.media = { ...info, duration };
     if (input.audioRequested !== false && !info.hasAudio) {
@@ -92,6 +108,18 @@ export async function reviewGeneratedVideo(input: {
 
   const consistency = await inspectTrackConsistency(input.trackId, input.projectId);
   report.consistency = consistency;
+  if (videoAbsPath && !issues.includes("video_unplayable")) {
+    const visualConsistency = await inspectVisualConsistency(videoAbsPath, consistency.visualReferences);
+    report.visualConsistency = visualConsistency;
+    if (visualConsistency.status === "checked" && visualConsistency.bestSimilarity != null && visualConsistency.bestSimilarity < VISUAL_LOW_SIMILARITY_THRESHOLD) {
+      issues.push("visual_reference_low_similarity");
+      score -= 10;
+    }
+    if (visualConsistency.status === "failed") {
+      issues.push("visual_probe_failed");
+      score -= 5;
+    }
+  }
   if (!consistency.storyboardCount) {
     issues.push("missing_storyboard_binding");
     score -= 30;
@@ -186,7 +214,7 @@ async function saveVideoReview(review: VideoReview) {
 
 async function inspectTrackConsistency(trackId: number, projectId: number) {
   const track = await db("o_videoTrack").where("id", trackId).select("prompt").first();
-  const storyboards = await db("o_storyboard").where({ trackId, projectId }).select("id").orderBy("index", "asc");
+  const storyboards = await db("o_storyboard").where({ trackId, projectId }).select("id", "index", "filePath").orderBy("index", "asc");
   const storyboardIds = storyboards.map((item: any) => item.id).filter((id: any) => typeof id === "number");
   const assetRows = storyboardIds.length
     ? await db("o_assets2Storyboard")
@@ -212,6 +240,26 @@ async function inspectTrackConsistency(trackId: number, projectId: number) {
     .map((item: any) => String(item.name || "").trim())
     .filter((name: string) => name && promptRefs.length > 0 && !promptNames.has(name));
   const promptForeignAssetNames = [...promptNames].filter((name) => name && !assetNames.has(name));
+  const visualReferences: VisualReference[] = [
+    ...imageAssets
+      .filter((item: any) => item.filePath)
+      .map((item: any) => ({
+        id: Number(item.id),
+        name: String(item.name || `资产 ${item.id}`),
+        source: "asset" as const,
+        type: item.type ?? null,
+        filePath: String(item.filePath),
+      })),
+    ...storyboards
+      .filter((item: any) => item.filePath)
+      .map((item: any) => ({
+        id: Number(item.id),
+        name: `镜头 ${item.index ?? item.id}`,
+        source: "storyboard" as const,
+        type: "storyboard",
+        filePath: String(item.filePath),
+      })),
+  ];
   return {
     storyboardCount: storyboards.length,
     boundAssetCount: deduped.length,
@@ -220,7 +268,43 @@ async function inspectTrackConsistency(trackId: number, projectId: number) {
     promptReferenceCount: promptRefs.length,
     promptMissingAssetNames,
     promptForeignAssetNames,
+    visualReferences,
   };
+}
+
+async function inspectVisualConsistency(videoAbsPath: string, references: VisualReference[]) {
+  const refs = uniqueBy(references.filter((item) => item.filePath), (item) => `${item.source}:${item.id}`).slice(0, 12);
+  if (!refs.length) return { status: "skipped" as const, reason: "no_visual_references", references: [] };
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "toonflow-video-review-"));
+  const framePath = path.join(tmpDir, "frame.jpg");
+  try {
+    await extractVideoFrame(videoAbsPath, framePath);
+    const frameFingerprint = await createVisualFingerprint(framePath);
+    const checked = await Promise.all(refs.map(async (ref) => {
+      try {
+        const refAbsPath = await oss.getAbsolutePath(ref.filePath);
+        const similarity = compareVisualFingerprints(frameFingerprint, await createVisualFingerprint(refAbsPath));
+        return { ...ref, similarity: Number(similarity.toFixed(3)) };
+      } catch (e) {
+        return { ...ref, error: error(e).message };
+      }
+    }));
+    const valid = (checked as any[])
+      .filter((item: any) => typeof item.similarity === "number")
+      .sort((a: any, b: any) => b.similarity - a.similarity);
+    return {
+      status: "checked" as const,
+      frameTime: 0.5,
+      checkedCount: valid.length,
+      bestSimilarity: valid[0]?.similarity ?? null,
+      bestReference: valid[0] ?? null,
+      references: checked,
+    };
+  } catch (e) {
+    return { status: "failed" as const, error: error(e).message, references: refs };
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+  }
 }
 
 function parsePromptImageRefs(prompt: string) {
@@ -243,6 +327,7 @@ function uniqueBy<T>(items: T[], key: (item: T) => unknown): T[] {
 function suggestedActionFor(issues: string[], retryable: boolean) {
   if (issues.includes("missing_asset_selected_image")) return "generate_or_select_asset_images";
   if (issues.includes("prompt_missing_asset_reference") || issues.includes("prompt_foreign_asset_reference")) return "regenerate_video_prompt";
+  if (issues.includes("visual_reference_low_similarity")) return "review_or_regenerate_video";
   if (issues.includes("missing_audio")) return "regenerate_with_audio_or_add_tts";
   if (retryable) return "retry_same_parameters";
   return issues.length ? "manual_review" : "select_for_compose";

@@ -1,12 +1,16 @@
 import assert from "assert";
 import fs from "fs";
+import os from "node:os";
+import path from "node:path";
 import express from "express";
 import type { AddressInfo } from "net";
+import sharp from "sharp";
 import db, { db as knexDb } from "@/utils/db";
 import { getCreativeCanvasGraph, patchCreativeCanvasText, saveCreativeCanvasLayout } from "@/utils/creativeCanvas";
 import { recordGenerationArtifact } from "@/utils/contentAudit";
 import { loadAgentChatHistory, saveAgentChatHistory } from "@/utils/agentChatHistory";
 import { autoSelectBestVideoForTrack, recordFailedVideoReview, shouldRetryVideoGeneration } from "@/utils/videoReview";
+import { compareImageFiles } from "@/utils/visualSimilarity";
 import updateNovelRouter from "@/routes/novel/updateNovel";
 
 async function waitForTables() {
@@ -106,9 +110,23 @@ async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("videoStatusAnswer"), "video agent should summarize generation, selection, and compose readiness");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("reviewWarnings"), "video agent should include video QA review warnings in status answers");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("renderVideoReviewBlock"), "video inspector should expose QA review details");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("visual_reference_low_similarity"), "video inspector should explain visual consistency warnings");
   assert.ok(fs.existsSync("src/utils/videoReview.ts"), "video QA review utility should exist");
   assert.equal(shouldRetryVideoGeneration("ETIMEDOUT 500"), true, "transient provider errors should be retryable");
   assert.equal(shouldRetryVideoGeneration("余额不足"), false, "account/balance errors should not be retried automatically");
+  const visualTmp = await fs.promises.mkdtemp(path.join(os.tmpdir(), "toonflow-visual-test-"));
+  try {
+    const redA = path.join(visualTmp, "red-a.png");
+    const redB = path.join(visualTmp, "red-b.png");
+    const blue = path.join(visualTmp, "blue.png");
+    await sharp({ create: { width: 24, height: 24, channels: 3, background: { r: 255, g: 0, b: 0 } } }).png().toFile(redA);
+    await sharp({ create: { width: 24, height: 24, channels: 3, background: { r: 240, g: 0, b: 0 } } }).png().toFile(redB);
+    await sharp({ create: { width: 24, height: 24, channels: 3, background: { r: 0, g: 0, b: 255 } } }).png().toFile(blue);
+    assert.ok(await compareImageFiles(redA, redB) > 0.95, "visual similarity should score near-identical images high");
+    assert.ok(await compareImageFiles(redA, blue) < 0.8, "visual similarity should score different images lower");
+  } finally {
+    await fs.promises.rm(visualTmp, { recursive: true, force: true });
+  }
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("submitVideoCompose"), "video agent should submit selected tracks to compose/merge endpoints");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/production/workbench/generateVideo"), "video agent should submit real video generation separately from prompt regeneration");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("已收到，开始提交"), "stage agent should acknowledge long-running video actions before awaiting backend work");

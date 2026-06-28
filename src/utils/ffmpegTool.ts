@@ -88,6 +88,11 @@ export async function probeVideoInfo(absPath: string): Promise<ProbeInfo> {
   };
 }
 
+/** 抽取视频单帧为图片，供质量检查/预览使用。 */
+export async function extractVideoFrame(inAbs: string, outAbs: string, atSeconds = 0.5): Promise<void> {
+  await runFfmpeg(["-ss", String(Math.max(0, atSeconds)), "-i", inAbs, "-frames:v", "1", "-q:v", "2", outAbs]);
+}
+
 /** subtitles 滤镜的路径转义（: \ ' 需要转义） */
 function escapeSubtitlePath(absPath: string): string {
   return absPath.replace(/\\/g, "\\\\").replace(/:/g, "\\:").replace(/'/g, "\\'");

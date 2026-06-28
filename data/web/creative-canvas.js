@@ -5325,12 +5325,15 @@
       prompt_missing_asset_reference: "Prompt 未引用绑定资产",
       prompt_foreign_asset_reference: "Prompt 引用了未绑定资产",
       prompt_reference_over_limit: "参考图超过上限",
+      visual_reference_low_similarity: "视觉参考相似度偏低",
+      visual_probe_failed: "视觉一致性检查失败",
       select_for_compose: "可用于合成",
       retry_same_parameters: "可按相同参数重试",
       fix_provider_or_prompt_before_retry: "先修复供应商或 Prompt",
       generate_or_select_asset_images: "先生成或选定资产图",
       regenerate_video_prompt: "重生视频 Prompt",
       regenerate_with_audio_or_add_tts: "重生带音轨视频或补 TTS",
+      review_or_regenerate_video: "复核或重生视频",
       manual_review: "人工复核",
     };
     return labels[value] || String(value || "-");
@@ -5339,6 +5342,8 @@
   function renderVideoReviewBlock(review) {
     const issues = Array.isArray(review?.issues) ? review.issues : [];
     const action = review?.report?.suggestedAction || review?.suggestedAction || "";
+    const visual = review?.report?.visualConsistency || null;
+    const bestRef = visual?.bestReference || null;
     return h("div", { class: "tfcc-source-inspector-block" }, [
       h("div", { class: "tfcc-panel-subtitle", text: "视频 QA" }),
       review ? h("div", { class: "tfcc-kv" }, [
@@ -5346,6 +5351,8 @@
         kv("分数", review.score == null ? "-" : `${review.score}`),
         kv("可重试", review.retryable ? "是" : "否"),
         kv("建议", videoReviewText(action)),
+        visual ? kv("视觉匹配", visual.bestSimilarity == null ? videoReviewText(visual.status) : `${Math.round(Number(visual.bestSimilarity) * 100)}%`) : null,
+        bestRef ? kv("最佳参考", bestRef.name || `${bestRef.source}:${bestRef.id}`) : null,
       ]) : h("p", { class: "tfcc-inspect-text", text: "尚未运行视频 QA。" }),
       issues.length ? h("p", { class: "tfcc-inspect-text", text: `问题：${issues.map(videoReviewText).join("；")}` }) : null,
     ].filter(Boolean));
