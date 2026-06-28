@@ -13,8 +13,11 @@ export default router.post(
     data: z.array(
       z.object({
         index: z.number(),
+        chapterOrder: z.number().optional(),
+        sectionOrder: z.number().optional(),
         reel: z.string(),
         chapter: z.string(),
+        section: z.string().optional(),
         chapterData: z.string(),
       }),
     ),
@@ -22,24 +25,36 @@ export default router.post(
   async (req, res) => {
     const { projectId, data } = req.body;
     const totalNovelId = [];
-    const getLastChapterIndex = await u.db("o_novel").where("projectId", projectId).select("chapterIndex").orderBy("chapterIndex", "desc").first();
-    let lastChapterIndex = 0;
-    if (getLastChapterIndex) {
-      lastChapterIndex = getLastChapterIndex.chapterIndex!;
-    }
+    const lastChapter = await u
+      .db("o_novel")
+      .where("projectId", projectId)
+      .select("chapterOrder", "chapterIndex")
+      .orderByRaw("COALESCE(chapterOrder, chapterIndex, id) desc")
+      .orderByRaw("COALESCE(sectionOrder, 0) desc")
+      .orderBy("id", "desc")
+      .first();
+    let lastChapterOrder = Number(lastChapter?.chapterOrder ?? lastChapter?.chapterIndex ?? 0);
     for (const item of data) {
+      const itemChapterOrder = Number.isFinite(Number(item.chapterOrder)) && Number(item.chapterOrder) > 0 ? Number(item.chapterOrder) : null;
+      const nextChapterOrder = itemChapterOrder ?? lastChapterOrder + 1;
+      lastChapterOrder = Math.max(lastChapterOrder, nextChapterOrder);
+      const sourceChapterIndex = Number.isFinite(Number(item.index)) && Number(item.index) > 0 ? Number(item.index) : nextChapterOrder;
+      const sectionOrder = Number.isFinite(Number(item.sectionOrder)) && Number(item.sectionOrder) >= 0 ? Number(item.sectionOrder) : 0;
       const [id] = await u.db("o_novel").insert({
         projectId,
-        chapterIndex: ++lastChapterIndex,
+        chapterIndex: sourceChapterIndex,
+        chapterOrder: nextChapterOrder,
+        sectionOrder,
         reel: item.reel,
         chapter: item.chapter,
+        section: item.section || "",
         chapterData: item.chapterData,
         createTime: Date.now(),
         eventState: 0,
       });
       totalNovelId.push(id);
     }
-    const chapterAllList = await u.db("o_novel").where("projectId", projectId).whereIn("id", totalNovelId);
+    const chapterAllList = await u.db("o_novel").where("projectId", projectId).whereIn("id", totalNovelId).orderByRaw("COALESCE(chapterOrder, chapterIndex, id) asc").orderByRaw("COALESCE(sectionOrder, 0) asc").orderBy("id", "asc");
     const novelClass = new u.cleanNovel();
     novelClass.emitter.on("item", async (item) => {
       await u

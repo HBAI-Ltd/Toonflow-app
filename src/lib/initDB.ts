@@ -542,8 +542,11 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
       builder: (table) => {
         table.integer("id").notNullable();
         table.integer("chapterIndex");
+        table.integer("chapterOrder");
+        table.integer("sectionOrder");
         table.text("reel");
         table.text("chapter");
+        table.text("section");
         table.text("chapterData");
         table.integer("projectId");
         table.integer("eventState");

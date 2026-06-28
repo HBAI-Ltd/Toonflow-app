@@ -13,7 +13,13 @@ export default router.post(
   }),
   async (req, res) => {
     const { projectId } = req.body;
-    const data = await u.db("o_novel").where("projectId", projectId).select("*");
+    const data = await u
+      .db("o_novel")
+      .where("projectId", projectId)
+      .select("*", "chapterIndex as index")
+      .orderByRaw("COALESCE(chapterOrder, chapterIndex, id) asc")
+      .orderByRaw("COALESCE(sectionOrder, 0) asc")
+      .orderBy("id", "asc");
     res.status(200).send(success(data));
   },
 );

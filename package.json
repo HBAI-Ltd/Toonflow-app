@@ -19,10 +19,11 @@
     "node": ">=1.0.0"
   },
   "scripts": {
-    "dev": "nodemon --inspect --exec tsx src/app.ts",
+    "dev": "cross-env NODE_ENV=dev nodemon --inspect --exec tsx src/app.ts",
     "seed:compose-demo": "tsx scripts/seed-compose-demo.ts",
-    "dev:gui": "electronmon -r tsx scripts/main.ts",
-    "dev:gui-vite": "cross-env VITE_DEV=1 electronmon -r tsx scripts/main.ts",
+    "dev:gui": "cross-env NODE_ENV=dev electronmon -r tsx scripts/main.ts",
+    "dev:gui-vite": "cross-env NODE_ENV=dev VITE_DEV=1 electronmon -r tsx scripts/main.ts",
+    "rebuild:electron": "electron-rebuild -f",
     "start": "cross-env NODE_ENV=prod node data/serve/app.js",
     "lint": "tsc --noEmit",
     "test:prompt-center": "tsx scripts/test-prompt-center.ts",

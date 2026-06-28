@@ -1,4 +1,5 @@
 import express from "express";
+import type { Request } from "express";
 import u from "@/utils";
 import { success } from "@/lib/responseFormat";
 import fs from "fs";
@@ -21,17 +22,20 @@ function readMd(filePath: string): string {
   }
 }
 
+function skillImageUrl(req: Request, ...parts: string[]) {
+  const host = req.get("host") || "localhost:10588";
+  const proto = req.protocol || "http";
+  return encodeURI(`${proto}://${host}/${path.posix.join("skills", ...parts)}`);
+}
+
 // 获取 images 文件夹下所有图片文件路径列表
-async function readAllImages(imagesDir: string) {
+async function readAllImages(req: Request, imagesDir: string) {
   try {
     const ossPath = u.getPath(path.join("skills", "story_skills", imagesDir, "images"));
     const files = fs.readdirSync(ossPath);
-    const images = files.filter((f) => /\.(png|jpe?g|gif|webp|svg)$/i.test(f)).map((f) => path.join("story_skills", imagesDir, "images", f));
-    if (images.length) {
-      return Promise.all(images.map(async (i) => await u.oss.getFileUrl(i, "skills")));
-    } else {
-      return [];
-    }
+    return files
+      .filter((f) => /\.(png|jpe?g|gif|webp|svg)$/i.test(f))
+      .map((f) => skillImageUrl(req, "story_skills", imagesDir, "images", f));
   } catch {
     return [];
   }
@@ -51,7 +55,7 @@ export default router.post("/", async (req, res) => {
     const result = await Promise.all(
       styleDirs.map(async (directorManual) => {
         const styleDir = path.join(artPromptsDir, directorManual);
-        const images = await readAllImages(directorManual);
+        const images = await readAllImages(req, directorManual);
         const readmePath = path.join(styleDir, "README.md");
         const readmeContent = fs.readFileSync(readmePath, "utf-8");
         const firstLine = readmeContent.split("\n")[0].replace(/--/g, "");

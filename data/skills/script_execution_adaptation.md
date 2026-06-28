@@ -7,11 +7,11 @@
 | 操作 | 调用 |
 |------|------|
 | 读取工作区 | `get_planData` |
-| 读取事件 | `get_novel_events(chapterIndexs:number[])` |
+| 读取事件 | `get_novel_events(chapterIndexs:number[])`（传入章节 Order / 展示章号） |
 
 ## 执行流程
 
-1. 调用 `get_novel_events(chapterIndexs)` 获取事件表，调用 `get_planData` 获取故事骨架
+1. 调用 `get_novel_events(chapterIndexs)` 获取事件表，调用 `get_planData` 获取故事骨架；`chapterIndexs` 指章节 Order / 展示章号，不是数据库导入序号
 
 2. **阐述思路**（200-300字）：核心改编原则方向、删减大方向、世界观呈现思路
 3. 严格按照XML格式写出改编策略，格式为<adaptationStrategy>改编策略内容</adaptationStrategy>。XML 标签及其全部内容必须一次性完整输出，禁止拆分为多次 XML 输出，依次完成：

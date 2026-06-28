@@ -7,6 +7,7 @@ import useTools from "@/agents/scriptAgent/tools";
 import { createToolUseCounter, SUPERVISION_INVALID_MESSAGE } from "@/utils/agent/toolUseGuard";
 import ResTool from "@/socket/resTool";
 import { recordPromptUsage, resolveAgentPrompt } from "@/utils/promptCenter";
+import { persistScriptAgentArtifacts } from "@/utils/scriptAgentPlan";
 
 export interface AgentContext {
   socket: Socket;
@@ -158,6 +159,7 @@ function createSubAgent(parentCtx: AgentContext) {
         name,
         createTime: new Date(subMsg.datetime).getTime(),
       });
+      await persistScriptAgentArtifacts(Number(resTool.data.projectId), fullResponse);
     }
 
     parentCtx.msg = resTool.newMessage("assistant", "视频策划");

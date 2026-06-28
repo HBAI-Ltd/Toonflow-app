@@ -129,7 +129,7 @@
 
 1. 调用 `get_planData` 获取骨架数据（含《股价级反转登记表》与付费卡点设计的投流素材点）
 2. 从【项目配置】读取：集数、单集时长、付费策略、章节范围
-3. 调用 `get_novel_events(chapterIndexs:number[])` 获取事件表数据
+3. 调用 `get_novel_events(chapterIndexs:number[])` 获取事件表数据；`chapterIndexs` 指章节 Order / 展示章号，不是数据库导入序号
 
 ### 审核维度
 

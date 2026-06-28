@@ -46,23 +46,12 @@ export default (nsp: Namespace) => {
       thinlLevel: 0,
     };
 
-    socket.on("updateContext", (data: { isolationKey: string; projectId: number; scriptId: number }, callback) => {
-      isolationKey = data.isolationKey;
-      resTool = new ResTool(socket, {
-        projectId: data.projectId,
-        scriptId: data.scriptId,
-      });
-      console.log("[productionAgent] 上下文已更新:", isolationKey);
-      callback?.({ success: true });
-    });
-
-    socket.on("chat", async (data: { content: string }) => {
-      const { content } = data;
+    const runProductionAgent = async (content: string, agentName = "视频策划") => {
       abortController?.abort();
       abortController = new AbortController();
       const currentController = abortController;
 
-      const msg = resTool.newMessage("assistant", "视频策划");
+      const msg = resTool.newMessage("assistant", agentName);
       const ctx: agent.AgentContext = {
         socket,
         isolationKey,
@@ -85,6 +74,24 @@ export default (nsp: Namespace) => {
           abortController = null;
         }
       }
+    };
+
+    socket.on("updateContext", (data: { isolationKey: string; projectId: number; scriptId: number }, callback) => {
+      isolationKey = data.isolationKey;
+      resTool = new ResTool(socket, {
+        projectId: data.projectId,
+        scriptId: data.scriptId,
+      });
+      console.log("[productionAgent] 上下文已更新:", isolationKey);
+      callback?.({ success: true });
+    });
+
+    socket.on("chat", async (data: { content: string }) => {
+      await runProductionAgent(data.content, "视频策划");
+    });
+
+    socket.on("storyboardPipeline", async (data: { content: string }) => {
+      await runProductionAgent(data.content, "分镜 Agent");
     });
 
     socket.on("updateThinkConfig", (data: { think: boolean; thinlLevel: 0 | 1 | 2 | 3 }) => {

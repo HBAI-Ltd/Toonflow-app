@@ -30,6 +30,14 @@ const storyboardSchema = z.object({
   src: z.string().nullable().describe("分镜资源路径"),
   index: z.number().nullable().optional().describe("分镜排序字段"),
 });
+const flexibleNumberArraySchema = z
+  .union([z.array(z.number()), z.array(z.string()), z.string(), z.null()])
+  .optional()
+  .describe("该分镜所需的资产ID列表，支持数组、JSON数组字符串或逗号分隔字符串");
+const flexibleBooleanSchema = z
+  .union([z.boolean(), z.number(), z.string(), z.null()])
+  .optional()
+  .describe("是否需要生成分镜图片，支持 true/false、0/1 或字符串");
 const workbenchDataSchema = z.object({
   name: z.string().describe("项目名称"),
   duration: z.string().describe("视频时长"),
@@ -85,6 +93,18 @@ export default (toolCpnfig: ToolConfig) => {
   const { socket } = resTool;
   const socketQueue = createSocketQueue(800);
   const workMap: Record<any, any> = {};
+  const readFlowData = () =>
+    new Promise<FlowData>((resolve) => socket.emit("getFlowData", { key: "all" }, (res: FlowData) => resolve(res)));
+  const persistFlowData = (data: FlowData) =>
+    socketQueue(
+      () =>
+        new Promise((resolve, reject) =>
+          socket.emit("saveFlowData", { data }, (res: any) => {
+            if (res?.error) return reject(new Error(res.error));
+            resolve(res);
+          }),
+        ),
+    );
   const tools: Record<string, Tool> = {
     get_flowData: tool({
       description: "获取工作区数据",
@@ -108,6 +128,55 @@ export default (toolCpnfig: ToolConfig) => {
         }
         workMap[key] = flowData[key];
         return flowData[key];
+      },
+    }),
+    save_flowData: tool({
+      description: "保存生产流水线工作区数据。导演规划必须写入 scriptPlan，分镜表必须写入 storyboardTable，保存后画布会生成对应卡片。",
+      inputSchema: jsonSchema<{ scriptPlan?: string | null; storyboardTable?: string | null }>(
+        z
+          .object({
+            scriptPlan: z.string().nullable().optional().describe("导演规划/拍摄计划完整内容"),
+            storyboardTable: z.string().nullable().optional().describe("分镜表/镜头拆解表完整内容"),
+          })
+          .toJSONSchema(),
+      ),
+      execute: async (raw) => {
+        const thinking = msg.thinking("正在保存生产工作区数据...");
+        try {
+          const current = await readFlowData();
+          const next: FlowData = {
+            script: current?.script ?? "",
+            scriptPlan: current?.scriptPlan ?? "",
+            assets: Array.isArray(current?.assets) ? current.assets : [],
+            storyboardTable: current?.storyboardTable ?? "",
+            storyboard: Array.isArray(current?.storyboard) ? current.storyboard : [],
+          };
+          const fields: string[] = [];
+          if (raw.scriptPlan != null && String(raw.scriptPlan).trim()) {
+            next.scriptPlan = String(raw.scriptPlan).trim();
+            fields.push("导演规划");
+          }
+          if (raw.storyboardTable != null && String(raw.storyboardTable).trim()) {
+            next.storyboardTable = String(raw.storyboardTable).trim();
+            fields.push("分镜表");
+          }
+          if (!fields.length) {
+            thinking.appendText("没有收到可保存的导演规划或分镜表内容。");
+            thinking.updateTitle("生产工作区未更新");
+            thinking.complete();
+            return "没有可保存内容";
+          }
+          const res = await persistFlowData(next);
+          thinking.appendText(`已保存：${fields.join("、")}`);
+          thinking.updateTitle("生产工作区保存完成");
+          thinking.complete();
+          return res ?? true;
+        } catch (e) {
+          thinking.appendText("生产工作区保存失败:\n" + u.error(e).message);
+          thinking.updateTitle("生产工作区保存失败");
+          thinking.complete();
+          throw e;
+        }
       },
     }),
     add_deriveAsset: tool({
@@ -244,53 +313,68 @@ export default (toolCpnfig: ToolConfig) => {
       description: "新增分镜面板到工作区",
       inputSchema: jsonSchema<{
         videoDesc: string;
-        prompt: string | null;
-        track: string;
-        duration: number;
-        associateAssetsIds: number[] | null;
-        shouldGenerateImage: string;
+        prompt?: string | null;
+        track?: string | number;
+        duration?: string | number;
+        associateAssetsIds?: number[] | string[] | string | null;
+        shouldGenerateImage?: string | number | boolean | null;
       }>(
         z
           .object({
             videoDesc: z.string().describe("画面描述、场景、关联资产名称、时长、景别、运镜、角色动作、情绪、光影氛围、台词、音效、关联资产ID"),
-            prompt: z.string().nullable().describe("分镜图片提示词"),
-            track: z.string().describe("分组"),
-            duration: z.number().describe("视频推荐时间"),
-            associateAssetsIds: z.array(z.number()).nullable().describe("该分镜所需的资产ID列表"),
-            shouldGenerateImage: z.enum(["true", "false"]).describe("是否需要生成分镜图片"),
+            prompt: z.string().nullable().optional().describe("分镜图片提示词"),
+            track: z.union([z.string(), z.number()]).optional().describe("分组"),
+            duration: z.union([z.number(), z.string()]).optional().describe("视频推荐时间"),
+            associateAssetsIds: flexibleNumberArraySchema,
+            shouldGenerateImage: flexibleBooleanSchema,
           })
           .toJSONSchema(),
       ),
       execute: async (raw) => {
         const thinking = msg.thinking("正在新增 分镜面板 数据...");
+        const associateAssetsIds = (() => {
+          const value = raw.associateAssetsIds;
+          if (Array.isArray(value)) return value.map(Number).filter(Number.isFinite);
+          if (typeof value === "string") {
+            try {
+              const parsed = JSON.parse(value);
+              if (Array.isArray(parsed)) return parsed.map(Number).filter(Number.isFinite);
+            } catch {}
+            return value.split(/[,\s，、]+/).map(Number).filter(Number.isFinite);
+          }
+          return [];
+        })();
+        const shouldGenerateImage = /^(?:true|1|yes|y|是|需要|生成)$/i.test(String(raw.shouldGenerateImage ?? "false").trim()) ? "true" : "false";
+        const duration = Number(raw.duration ?? 3);
         const data = {
           videoDesc: raw.videoDesc,
-          prompt: raw.prompt,
-          track: raw.track,
-          duration: raw.duration,
-          associateAssetsIds: raw.associateAssetsIds ?? [],
-          shouldGenerateImage: raw.shouldGenerateImage,
+          prompt: raw.prompt ?? "",
+          track: String(raw.track ?? "主轨道"),
+          duration: Number.isFinite(duration) && duration > 0 ? duration : 3,
+          associateAssetsIds,
+          shouldGenerateImage,
         };
-        socketQueue(
-          () =>
-            new Promise((resolve, reject) =>
-              socket.emit("addStoryboard", { ...data }, (res: any) => {
-                if (res?.error) return reject(new Error(res.error));
-                resolve(res);
-              }),
-            ),
-        )
-          .then((res) => {
-            thinking.appendText("新增的分镜数据:\n" + JSON.stringify(data, null, 2));
-            thinking.updateTitle("新增分镜成功");
-            thinking.complete();
-          })
-          .catch((e) => {
-            thinking.appendText("新增的分镜数据:\n" + JSON.stringify(data, null, 2));
-            thinking.updateTitle("新增分镜失败");
-            thinking.complete();
-          });
-        return true;
+        try {
+          const res = await socketQueue(
+            () =>
+              new Promise((resolve, reject) =>
+                socket.emit("addStoryboard", { ...data }, (res: any) => {
+                  if (res?.error) return reject(new Error(res.error));
+                  resolve(res);
+                }),
+              ),
+          );
+          thinking.appendText("新增的分镜数据:\n" + JSON.stringify(data, null, 2));
+          thinking.updateTitle("新增分镜成功");
+          thinking.complete();
+          return res ?? true;
+        } catch (e) {
+          thinking.appendText("新增的分镜数据:\n" + JSON.stringify(data, null, 2));
+          thinking.appendText("\n新增分镜失败:\n" + u.error(e).message);
+          thinking.updateTitle("新增分镜失败");
+          thinking.complete();
+          throw e;
+        }
       },
     }),
   };

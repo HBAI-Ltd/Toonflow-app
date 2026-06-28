@@ -3,7 +3,7 @@ import isPathInside from "is-path-inside";
 
 export default (fileName?: string[] | string) => {
   let basePath: string;
-  if (typeof process.versions?.electron !== "undefined") {
+  if (typeof process.versions?.electron !== "undefined" && process.env.NODE_ENV !== "dev") {
     const { app } = require("electron");
     const userDataDir: string = app.getPath("userData");
     basePath = path.join(userDataDir, "data");

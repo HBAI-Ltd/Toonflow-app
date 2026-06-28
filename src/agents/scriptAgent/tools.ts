@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import _ from "lodash";
 import ResTool from "@/socket/resTool";
+import { getScriptAgentPlanData } from "@/utils/scriptAgentPlan";
 
 export const ScriptSchema = z.object({
   name: z.string().describe("剧本名称"),
@@ -27,32 +28,64 @@ interface ToolConfig {
   msg: ReturnType<ResTool["newMessage"]>;
 }
 
+const formatNovelLocation = (row: any, fallbackOrder?: number) => {
+  const chapterOrder = row.index ?? row.chapterOrder ?? row.chapterIndex ?? fallbackOrder;
+  const chapterPart = chapterOrder ? `第${chapterOrder}章${row.chapter ? ` ${row.chapter}` : ""}` : row.chapter || "未编号章节";
+  const sectionOrder = Number(row.sectionOrder);
+  const sectionPart = Number.isFinite(sectionOrder) && sectionOrder > 0 ? ` 第${sectionOrder}节${row.section ? ` ${row.section}` : ""}` : "";
+  return `${chapterPart}${sectionPart}`;
+};
+
 export default (toolCpnfig: ToolConfig) => {
   const { resTool, toolsNames, msg } = toolCpnfig;
-  const { socket } = resTool;
   const tools: Record<string, Tool> = {
     get_novel_events: tool({
-      description: "获取章节事件",
+      description: "按章节展示序号获取章节事件",
       inputSchema: jsonSchema<{ chapterIndexs: number[] }>(
         z
           .object({
-            chapterIndexs: z.array(z.number()).describe("章节的编号"),
+            chapterIndexs: z.array(z.number()).describe("章节展示序号（chapterOrder，不是数据库导入序号 chapterIndex）"),
           })
           .toJSONSchema(),
       ),
       execute: async ({ chapterIndexs }) => {
         console.log("[tools] get_novel_events", chapterIndexs);
         if (!Array.isArray(chapterIndexs) || chapterIndexs.length === 0) {
-          return "参数错误：chapterIndexs 缺失或为空，请传入章节编号数组，例如 {\"chapterIndexs\": [1]}";
+          return "参数错误：chapterIndexs 缺失或为空，请传入章节 Order 数组，例如 {\"chapterIndexs\": [1]}";
+        }
+        const chapterOrders = chapterIndexs.map(Number).filter((i) => Number.isFinite(i));
+        if (chapterOrders.length === 0) {
+          return "参数错误：chapterIndexs 必须是数字章节 Order 数组，例如 {\"chapterIndexs\": [1]}";
         }
         const thinking = msg.thinking("正在查询章节事件...");
         const data = await u
           .db("o_novel")
           .where("projectId", resTool.data.projectId)
-          .select("id", "chapterIndex as index", "reel", "chapter", "chapterData", "event", "eventState")
-          .whereIn("chapterIndex", chapterIndexs);
-        thinking.appendText("正在查询章节编号: " + chapterIndexs.join(","));
-        const eventString = data.map((i: any) => [`第${i.index}章，标题:${i.chapter}，事件:${i.event}`].join("\n")).join("\n");
+          .where((builder: any) => {
+            builder.whereIn("chapterOrder", chapterOrders).orWhere((fallback: any) => {
+              fallback.whereNull("chapterOrder").whereIn("chapterIndex", chapterOrders);
+            });
+          })
+          .select(
+            "id",
+            u.db.raw("COALESCE(chapterOrder, chapterIndex) as `index`"),
+            "chapterIndex",
+            "chapterOrder",
+            "sectionOrder",
+            "reel",
+            "chapter",
+            "section",
+            "chapterData",
+            "event",
+            "eventState",
+          )
+          .orderByRaw("COALESCE(chapterOrder, chapterIndex, id) asc")
+          .orderByRaw("COALESCE(sectionOrder, 0) asc")
+          .orderBy("id", "asc");
+        thinking.appendText("正在查询章节 Order: " + chapterOrders.join(","));
+        const eventString = data
+          .map((i: any) => `${formatNovelLocation(i)}，事件:${i.event || "未分析"}`)
+          .join("\n");
         thinking.appendText("查询结果:\n" + eventString);
         thinking.updateTitle("查询章节事件完成");
         thinking.complete();
@@ -74,30 +107,48 @@ export default (toolCpnfig: ToolConfig) => {
           return `参数错误：key 缺失或无效，可选值: ${Object.keys(planData.shape).join(", ")}`;
         }
         const thinking = msg.thinking(`正在获取${planDataKeyLabels[key]}工作区数据...`);
-        const data: planData = await new Promise((resolve) => socket.emit("getPlanData", { key }, (res: any) => resolve(res)));
-        thinking.appendText(`获取到${planDataKeyLabels[key]}:\n` + data[key]);
+        const result = await getScriptAgentPlanData(Number(resTool.data.projectId));
+        const value = (result.data as Record<string, any>)[key];
+        const text = typeof value === "string" ? value : JSON.stringify(value || [], null, 2);
+        thinking.appendText(`获取到${planDataKeyLabels[key]}:\n` + text);
         thinking.updateTitle(`获取${planDataKeyLabels[key]}完成`);
         thinking.complete();
-        return data[key] || "无数据";
+        return text || "无数据";
       },
     }),
     get_novel_text: tool({
-      description: "获取小说章节原始文本内容",
+      description: "按章节展示序号获取小说章节原始文本内容",
       inputSchema: jsonSchema<{ chapterIndex: string }>(
         z
           .object({
-            chapterIndex: z.string().describe("章节编号"),
+            chapterIndex: z.string().describe("章节展示序号（chapterOrder，不是数据库导入序号 chapterIndex）"),
           })
           .toJSONSchema(),
       ),
       execute: async ({ chapterIndex }) => {
         console.log("[tools] get_novel_text", chapterIndex);
         if (chapterIndex === undefined || chapterIndex === null || chapterIndex === "") {
-          return "参数错误：chapterIndex 缺失，请传入章节编号，例如 {\"chapterIndex\": \"1\"}";
+          return "参数错误：chapterIndex 缺失，请传入章节 Order，例如 {\"chapterIndex\": \"1\"}";
+        }
+        const chapterOrder = Number(chapterIndex);
+        if (!Number.isFinite(chapterOrder)) {
+          return "参数错误：chapterIndex 必须是数字章节 Order，例如 {\"chapterIndex\": \"1\"}";
         }
         const thinking = msg.thinking(`正在获取小说章节原文...`);
-        const data = await u.db("o_novel").where("projectId", resTool.data.projectId).where({ chapterIndex }).select("chapterData").first();
-        const text = data && data?.chapterData ? data.chapterData : "";
+        const data = await u
+          .db("o_novel")
+          .where("projectId", resTool.data.projectId)
+          .where((builder: any) => {
+            builder.where("chapterOrder", chapterOrder).orWhere((fallback: any) => {
+              fallback.whereNull("chapterOrder").where("chapterIndex", chapterOrder);
+            });
+          })
+          .select("chapterIndex", "chapterOrder", "sectionOrder", "chapter", "section", "chapterData")
+          .orderByRaw("COALESCE(sectionOrder, 0) asc")
+          .orderBy("id", "asc");
+        const text = data
+          .map((i: any) => [formatNovelLocation(i, chapterOrder), i.chapterData || ""].filter(Boolean).join("\n"))
+          .join("\n\n");
         thinking.appendText(`获取到原文:\n` + text);
         thinking.updateTitle(`获取小说章节原文完成`);
         thinking.complete();

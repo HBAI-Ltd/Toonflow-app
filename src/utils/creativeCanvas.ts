@@ -36,6 +36,23 @@ function normalizeMediaPath(value: unknown): string {
   return String(value ?? "").trim().replace(/^\/+/, "");
 }
 
+function scriptEpisodeOrder(row: any) {
+  const text = `${row?.name || ""} ${row?.content || ""}`;
+  const match = text.match(/\bEP\s*0*(\d+)\b/i) || text.match(/第\s*0*(\d+)\s*集/);
+  if (!match) return Number.MAX_SAFE_INTEGER;
+  const value = Number(match[1]);
+  return Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER;
+}
+
+function sortScriptRows<T extends { id?: number | null; name?: string | null; content?: string | null }>(rows: T[] = []) {
+  return [...rows].sort((a, b) => (
+    scriptEpisodeOrder(a)
+    - scriptEpisodeOrder(b)
+    || Number(a.id || 0) - Number(b.id || 0)
+    || String(a.name || "").localeCompare(String(b.name || ""))
+  ));
+}
+
 export interface CanvasPosition {
   x: number;
   y: number;
@@ -385,7 +402,7 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
       tasks: [],
       queues: [],
       scriptOptions: [],
-      summary: { projectCount: 0, scriptCount: 0, assetCount: 0, storyboardCount: 0, videoPromptCount: 0, videoCount: 0 },
+      summary: { projectCount: 0, novelCount: 0, eventCount: 0, scriptCount: 0, assetCount: 0, storyboardCount: 0, videoPromptCount: 0, videoCount: 0 },
       staleNodeIds: [],
       audit: { artifacts: [], segments: [], revisions: [] },
     };
@@ -401,13 +418,79 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
     data: { project: compactRow(project), introPreview: previewText(project.intro) },
   });
 
-  const allScripts = await db("o_script").where("projectId", projectId).select("id", "name").orderBy("id", "asc").limit(100);
+  const novels = await db("o_novel").where("projectId", projectId).orderByRaw("COALESCE(chapterOrder, chapterIndex, id) asc").orderByRaw("COALESCE(sectionOrder, 0) asc").orderBy("id", "asc").limit(limit);
+
+  const novelEvents = novels.filter((item: any) => String(item.event ?? "").trim());
+
+  novels.forEach((item: any, i: number) => {
+    const nodeId = `novelChapter:${item.id}`;
+    createNode(nodes, staleMap, layout, {
+      id: nodeId,
+      type: "novelChapter",
+      label: item.chapter || `章节 ${i + 1}`,
+      fallbackPosition: { x: 320, y: -160 + i * 240 },
+      width: 360,
+      height: 200,
+      status: item.errorReason ? "需复核" : "已完成",
+      sourceLabel: "来源：导入原文",
+      data: {
+        id: item.id,
+        chapterIndex: item.chapterIndex,
+        chapterOrder: item.chapterOrder ?? item.chapterIndex ?? i + 1,
+        sectionOrder: item.sectionOrder ?? 0,
+        reel: item.reel,
+        chapter: item.chapter,
+        section: item.section || "",
+        chapterData: previewText(item.chapterData, 220),
+        event: previewText(item.event, 160),
+        eventState: item.eventState ?? null,
+        errorReason: item.errorReason ?? null,
+      },
+    });
+    edges.push({ id: `project:${project.id}->${nodeId}`, source: `project:${project.id}`, target: nodeId, type: "contains", label: "原文" });
+  });
+
+  novelEvents.forEach((item: any, i: number) => {
+    const nodeId = `novelSection:${item.id}`;
+    const chapterNodeId = `novelChapter:${item.id}`;
+    createNode(nodes, staleMap, layout, {
+      id: nodeId,
+      type: "novelSection",
+      label: `事件 ${i + 1}`,
+      fallbackPosition: { x: 720, y: -160 + i * 240 },
+      width: 360,
+      height: 200,
+      status: "已完成",
+      sourceLabel: "来源：原文管理",
+      data: {
+        id: item.id,
+        eventIndex: i + 1,
+        chapterIndex: item.chapterIndex,
+        chapterOrder: item.chapterOrder ?? item.chapterIndex ?? i + 1,
+        sectionOrder: item.sectionOrder ?? 0,
+        reel: item.reel,
+        chapter: item.chapter,
+        section: item.section || "",
+        event: previewText(item.event, 220),
+      },
+    });
+    const eventSource = novels.length ? chapterNodeId : `project:${project.id}`;
+    edges.push({ id: `${eventSource}->${nodeId}`, source: eventSource, target: nodeId, type: "generates", label: "事件分析" });
+  });
+
+  const allScripts = sortScriptRows(await db("o_script").where("projectId", projectId).select("id", "name").orderBy("id", "asc").limit(100));
   let scriptsQuery = db("o_script").where("projectId", projectId).orderBy("id", "asc").limit(12);
-  if (scriptFilter != null) scriptsQuery = scriptsQuery.where("id", scriptFilter);
-  const scripts = await scriptsQuery;
+  if (scriptFilter != null && viewKey !== "script") scriptsQuery = scriptsQuery.where("id", scriptFilter);
+  const scripts = sortScriptRows(await scriptsQuery);
   const activeScriptId = scriptFilter ?? scripts[0]?.id ?? null;
-  const assets = await db("o_assets").where("projectId", projectId).orderBy("id", "asc").limit(limit);
   const scriptAssets = activeScriptId != null ? await db("o_scriptAssets").where("scriptId", activeScriptId) : [];
+  const activeAssetIds = scriptAssets.map((item: any) => Number(item.assetId)).filter((id: number) => Number.isFinite(id));
+  const assetsQuery = db("o_assets").where("projectId", projectId).orderBy("id", "asc").limit(limit);
+  if (activeScriptId != null) {
+    if (activeAssetIds.length) assetsQuery.whereIn("id", activeAssetIds);
+    else assetsQuery.whereRaw("1 = 0");
+  }
+  const assets = await assetsQuery;
   let storyboardQuery = db("o_storyboard").where("projectId", projectId).orderBy("index", "asc").orderBy("id", "asc").limit(limit);
   if (activeScriptId != null) storyboardQuery = storyboardQuery.where("scriptId", activeScriptId);
   const storyboards = await storyboardQuery;
@@ -425,14 +508,21 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
   const queues = (await db.schema.hasTable("o_genQueue"))
     ? await db("o_genQueue").where("projectId", projectId).orderBy("id", "desc").limit(12)
     : [];
+  const scriptAgentWork = await db("o_agentWorkData").where({ projectId, key: "scriptAgent" }).first();
+  const scriptAgentData = parseJson<Record<string, any>>(scriptAgentWork?.data, {});
+  const productionAgentWork = activeScriptId != null
+    ? await db("o_agentWorkData").where({ projectId, key: "productionAgent", episodesId: activeScriptId }).first()
+    : null;
+  const productionAgentData = parseJson<Record<string, any>>(productionAgentWork?.data, {});
   const audit = await getGenerationAuditGraph({ projectId, limit });
   const auditIndex = buildAuditIndex(audit.artifacts);
 
   // ─── 媒体缩略图聚合 ───────────────────────────────────────────
   // 资产候选图：选定图(o_assets.imageId)优先，否则取该资产任意一张已生成图
   const assetIds = assets.map((item: any) => Number(item.id)).filter((id: number) => Number.isFinite(id));
-  const assetImages = assetIds.length ? await db("o_image").whereIn("assetsId", assetIds).select("id", "assetsId", "filePath", "state") : [];
+  const assetImages = assetIds.length ? await db("o_image").whereIn("assetsId", assetIds).select("id", "assetsId", "filePath", "state", "batchId", "score", "scoreReason", "errorReason") : [];
   const assetThumbMap = new Map<number, string>();
+  const assetImageMap = new Map<number, any[]>();
   const assetImagePathMap = new Map<number, string[]>();
   const assetFlowMap = new Map<number, number>();
   {
@@ -453,6 +543,21 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
       if (chosen?.filePath) {
         assetThumbMap.set(aid, await toThumbUrl(chosen.filePath));
       }
+      assetImageMap.set(aid, await Promise.all(
+        imgs
+          .map(async (img: any, index: number) => ({
+            id: img.id,
+            index,
+            thumbnail: img.filePath ? await toThumbUrl(img.filePath) : "",
+            filePath: img.filePath,
+            state: img.state || "",
+            batchId: img.batchId || "",
+            score: img.score ?? null,
+            scoreReason: img.scoreReason || "",
+            errorReason: img.errorReason || "",
+            selected: selId != null && Number(img.id) === selId,
+          })),
+      ));
       const paths = imgs.map((img: any) => normalizeMediaPath(img.filePath)).filter(Boolean);
       if (paths.length) assetImagePathMap.set(aid, paths);
     }
@@ -466,7 +571,7 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         const flow = JSON.parse(row.flowData || "{}");
         for (const node of flow.nodes || []) {
           const data = node.data || {};
-          [data.image, data.generatedImage, ...(data.references || []).map((item: any) => item.image)]
+          [data.generatedImage]
             .map(normalizeMediaPath)
             .filter(Boolean)
             .forEach((path) => {
@@ -493,6 +598,59 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
     if (video.filePath) videoUrlMap.set(Number(video.id), await toFileUrl(video.filePath));
   }
 
+  const lastNovelEvent = novelEvents[novelEvents.length - 1];
+  const lastNovel = novels[novels.length - 1];
+  const scriptParentId = lastNovelEvent ? `novelSection:${lastNovelEvent.id}` : lastNovel ? `novelChapter:${lastNovel.id}` : `project:${project.id}`;
+  const scriptSourceLabel = novelEvents.length ? "来源：事件分析" : novels.length ? "来源：原文管理" : project.name ? `来源：${project.name}` : "来源：项目";
+  const storySkeletonText = String(scriptAgentData.storySkeleton ?? "").trim();
+  const adaptationStrategyText = String(scriptAgentData.adaptationStrategy ?? "").trim();
+  const storySkeletonNodeId = storySkeletonText ? "scriptPlan:storySkeleton" : null;
+  const adaptationStrategyNodeId = adaptationStrategyText ? "scriptPlan:adaptationStrategy" : null;
+  if (storySkeletonNodeId) {
+    createNode(nodes, staleMap, layout, {
+      id: storySkeletonNodeId,
+      type: "storySkeleton",
+      label: "故事骨架",
+      fallbackPosition: { x: 400, y: -140 },
+      width: 360,
+      height: 220,
+      status: "已完成",
+      sourceLabel: "来源：剧本 Agent",
+      data: {
+        workDataId: scriptAgentWork?.id ?? null,
+        planType: "storySkeleton",
+        content: storySkeletonText,
+        contentPreview: previewText(storySkeletonText, 300),
+      },
+    });
+    edges.push({ id: `${scriptParentId}->${storySkeletonNodeId}`, source: scriptParentId, target: storySkeletonNodeId, type: "generates", label: "故事骨架" });
+  }
+  if (adaptationStrategyNodeId) {
+    createNode(nodes, staleMap, layout, {
+      id: adaptationStrategyNodeId,
+      type: "adaptationStrategy",
+      label: "改编策略",
+      fallbackPosition: { x: 800, y: -140 },
+      width: 360,
+      height: 220,
+      status: "已完成",
+      sourceLabel: "来源：剧本 Agent",
+      data: {
+        workDataId: scriptAgentWork?.id ?? null,
+        planType: "adaptationStrategy",
+        content: adaptationStrategyText,
+        contentPreview: previewText(adaptationStrategyText, 300),
+      },
+    });
+    edges.push({
+      id: `${storySkeletonNodeId || scriptParentId}->${adaptationStrategyNodeId}`,
+      source: storySkeletonNodeId || scriptParentId,
+      target: adaptationStrategyNodeId,
+      type: "generates",
+      label: "改编策略",
+    });
+  }
+  const scriptPlanParentId = adaptationStrategyNodeId || storySkeletonNodeId;
   scripts.forEach((script: any, index: number) => {
     createNode(nodes, staleMap, layout, {
       id: `script:${script.id}`,
@@ -501,15 +659,76 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
       fallbackPosition: { x: 400, y: index * 260 },
       width: 360,
       height: 220,
-      sourceLabel: project.name ? `来源：${project.name}` : "来源：项目",
+      sourceLabel: scriptSourceLabel,
       ...auditMetaFor(auditIndex, "o_script", script.id),
       data: { script: compactRow(script), contentPreview: previewText(script.content, 260) },
     });
-    edges.push({ id: `project:${project.id}->script:${script.id}`, source: `project:${project.id}`, target: `script:${script.id}`, type: "contains", label: "剧本" });
+    edges.push({ id: `${scriptParentId}->script:${script.id}`, source: scriptParentId, target: `script:${script.id}`, type: "contains", label: "剧本" });
+    if (scriptPlanParentId) {
+      edges.push({ id: `${scriptPlanParentId}->script:${script.id}`, source: scriptPlanParentId, target: `script:${script.id}`, type: "generates", label: "生成剧本" });
+    }
   });
 
   const activeScriptLabel = scripts.find((item: any) => item.id === activeScriptId)?.name || (activeScriptId != null ? `剧本 ${activeScriptId}` : "");
   const assetSourceLabel = activeScriptLabel ? `来源：${activeScriptLabel}` : "来源：当前剧本";
+  const productionScriptPlanText = String(productionAgentData.scriptPlan ?? "").trim();
+  const productionStoryboardTableText = String(productionAgentData.storyboardTable ?? "").trim();
+  const productionScriptPlanNodeId = activeScriptId != null && productionScriptPlanText ? `scriptPlan:production:${activeScriptId}` : null;
+  const productionStoryboardTableNodeId = activeScriptId != null && productionStoryboardTableText ? `storyboardTable:${activeScriptId}` : null;
+
+  if (productionScriptPlanNodeId) {
+    createNode(nodes, staleMap, layout, {
+      id: productionScriptPlanNodeId,
+      type: "scriptPlan",
+      label: "导演规划",
+      fallbackPosition: { x: 820, y: -200 },
+      width: 380,
+      height: 240,
+      status: "已完成",
+      sourceLabel: "来源：分镜 Agent",
+      data: {
+        scriptId: activeScriptId,
+        workDataId: productionAgentWork?.id ?? null,
+        planType: "scriptPlan",
+        content: productionScriptPlanText,
+        contentPreview: previewText(productionScriptPlanText, 320),
+      },
+    });
+    edges.push({
+      id: `script:${activeScriptId}->${productionScriptPlanNodeId}`,
+      source: `script:${activeScriptId}`,
+      target: productionScriptPlanNodeId,
+      type: "generates",
+      label: "导演规划",
+    });
+  }
+
+  if (productionStoryboardTableNodeId) {
+    createNode(nodes, staleMap, layout, {
+      id: productionStoryboardTableNodeId,
+      type: "storyboardTable",
+      label: "分镜表",
+      fallbackPosition: { x: 1240, y: -200 },
+      width: 420,
+      height: 260,
+      status: "已完成",
+      sourceLabel: "来源：分镜 Agent",
+      data: {
+        scriptId: activeScriptId,
+        workDataId: productionAgentWork?.id ?? null,
+        planType: "storyboardTable",
+        content: productionStoryboardTableText,
+        contentPreview: previewText(productionStoryboardTableText, 360),
+      },
+    });
+    edges.push({
+      id: `${productionScriptPlanNodeId || `script:${activeScriptId}`}->${productionStoryboardTableNodeId}`,
+      source: productionScriptPlanNodeId || `script:${activeScriptId}`,
+      target: productionStoryboardTableNodeId,
+      type: "generates",
+      label: "分镜表",
+    });
+  }
 
   if (activeScriptId != null) {
     createNode(nodes, staleMap, layout, {
@@ -540,9 +759,10 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         })),
       },
     });
+    const storyboardAnalysisSourceId = productionStoryboardTableNodeId || productionScriptPlanNodeId || `script:${activeScriptId}`;
     edges.push({
-      id: `script:${activeScriptId}->storyboardAnalysis:${activeScriptId}`,
-      source: `script:${activeScriptId}`,
+      id: `${storyboardAnalysisSourceId}->storyboardAnalysis:${activeScriptId}`,
+      source: storyboardAnalysisSourceId,
       target: `storyboardAnalysis:${activeScriptId}`,
       type: "analysis",
       label: "结构化分镜",
@@ -589,6 +809,7 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
             name: asset.name,
             type: asset.type,
             thumbnail: assetThumbMap.get(Number(asset.id)) || "",
+            images: assetImageMap.get(Number(asset.id)) || [],
             prompt: asset.prompt || asset.describe || "",
             promptPreview: previewText(asset.prompt || asset.describe, 160),
             promptState: asset.promptState ?? null,
@@ -931,13 +1152,20 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
     nodes,
     edges: uniqueEdges(edges).filter((edge) => nodes.some((node) => node.id === edge.source) && nodes.some((node) => node.id === edge.target)),
     viewport,
+    layout: { nodesLayout: layout },
     tasks: tasks.map(compactRow),
     taskProgress: taskProgress.map(compactRow),
     queues: queues.map(compactRow),
     scriptOptions: allScripts.map(compactRow),
     summary: {
       projectCount: 1,
+      novelCount: novels.length,
+      eventCount: novelEvents.length,
       scriptCount: allScripts.length,
+      storySkeletonCount: storySkeletonText ? 1 : 0,
+      adaptationStrategyCount: adaptationStrategyText ? 1 : 0,
+      productionScriptPlanCount: productionScriptPlanText ? 1 : 0,
+      productionStoryboardTableCount: productionStoryboardTableText ? 1 : 0,
       assetCount: assets.length,
       storyboardCount: storyboards.length,
       videoPromptCount: videoTracks.length,

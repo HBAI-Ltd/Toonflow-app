@@ -7,12 +7,12 @@
 | 操作 | 调用 |
 |------|------|
 | 读取工作区 | `get_planData` |
-| 读取事件 | `get_novel_events(chapterIndexs:number[])` |
-| 读取原文 | `get_novel_text` |
+| 读取事件 | `get_novel_events(chapterIndexs:number[])`（传入章节 Order / 展示章号） |
+| 读取原文 | `get_novel_text`（传入章节 Order / 展示章号） |
 | 读取剧本内容 | `get_script_content(ids:string[])` |
 ## 执行流程
 
-1. 调用 `get_planData` 获取骨架与改编策略；若存在上一集剧本id，调用 `get_script_content(ids)` 获取最后一集剧本内容，用于衔接剧情与角色状态,调用 `get_novel_text` 获取对应章节原文，调用 `get_novel_events(chapterIndexs)` 获取事件表
+1. 调用 `get_planData` 获取骨架与改编策略；若存在上一集剧本id，调用 `get_script_content(ids)` 获取最后一集剧本内容，用于衔接剧情与角色状态，调用 `get_novel_text` 获取对应章节原文，调用 `get_novel_events(chapterIndexs)` 获取事件表；章节参数统一使用章节 Order / 展示章号，不是数据库导入序号
 2. 从骨架中**仅提取当前任务集**的信息：覆盖章节、戏剧功能、场景核心、删减决策、集末钩子。**忽略其他已完成或未分配的集**
 3. **阐述思路**（200-300字）：场景组织方式、重点情绪与冲突、节奏把控思路
 4. 将完整剧本包裹在 **`<scriptItem>`** 标签中输出，具体要求：

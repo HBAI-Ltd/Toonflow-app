@@ -56,7 +56,7 @@
 - 集数：{totalEpisodes}集
 - 单集时长：{episodeDuration}分钟（约{wordsPerEpisode}字台词）
 - 原著范围：第{startChapter}-{endChapter}章
-- 章节范围：{chapterIndexs}
+- 章节范围：{chapterIndexs}（章节 Order / 展示章号）
 - 平台规格：{platform}
 - 风格定位：{style}
 - 付费策略：{paywall}
@@ -93,7 +93,7 @@
 ### 阶段1：故事骨架（Story Skeleton）
 
 ```
-输入：事件表（通过 get_novel_events(chapterIndexs:number[]) 获取）
+输入：事件表（通过 get_novel_events(chapterIndexs:number[]，传入章节 Order / 展示章号) 获取）
 处理：三幕分割、按项目配置分集、删减决策、钩子设计
 输出：planData.storySkeleton
 工具：get_planData → set_planData_storySkeleton

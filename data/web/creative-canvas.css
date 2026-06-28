@@ -37,7 +37,7 @@
 
 .tfcc-overlay {
   position: fixed;
-  inset: 0;
+  inset: var(--tfcc-host-top, 0px) 0 0 0;
   z-index: 4200;
   display: grid;
   grid-template-rows: 58px minmax(0, 1fr);
@@ -610,6 +610,23 @@
   overflow: hidden;
 }
 
+.tfcc-node-resize {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 14px;
+  height: 14px;
+  border-right: 2px solid rgba(244, 246, 251, .36);
+  border-bottom: 2px solid rgba(244, 246, 251, .36);
+  cursor: nwse-resize;
+  opacity: .7;
+}
+
+.tfcc-node-resize:hover {
+  border-color: rgba(255, 79, 195, .85);
+  opacity: 1;
+}
+
 .tfcc-node:hover,
 .tfcc-node.is-selected {
   border-color: rgba(255, 79, 195, .72);
@@ -621,16 +638,41 @@
 }
 
 .tfcc-node-assetGroup {
-  cursor: pointer;
+  cursor: move;
 }
 
 .tfcc-node-asset.is-expanded-child {
+  height: 210px;
+  max-height: 210px;
   padding: 10px;
+}
+
+.tfcc-node-asset.is-expanded-child .tfcc-asset-node-thumb {
+  width: 64px;
+  height: 64px;
+}
+
+.tfcc-node-assetImage {
+  padding: 10px;
+}
+
+.tfcc-asset-image-thumb {
+  width: 118px;
+  height: 118px;
+  aspect-ratio: auto;
+}
+
+.tfcc-asset-prompt-preview {
+  display: -webkit-box;
+  max-height: 4.5em;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .tfcc-node-imageFlowUpload,
 .tfcc-node-imageFlowGenerated {
-  cursor: default;
+  cursor: move;
   background: rgba(24, 26, 31, .96);
 }
 
@@ -664,6 +706,33 @@
   font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;
+}
+
+.tfcc-node-markdown {
+  margin-top: 10px;
+  color: rgba(243, 245, 251, .82);
+  font-size: 12px;
+  line-height: 1.48;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.tfcc-node-markdown h3,
+.tfcc-node-markdown h4,
+.tfcc-node-markdown h5,
+.tfcc-node-markdown h6 {
+  margin: 8px 0 5px;
+  font-size: 12px;
+}
+
+.tfcc-node-markdown table {
+  margin: 6px 0;
+  font-size: 10px;
+}
+
+.tfcc-node-markdown th,
+.tfcc-node-markdown td {
+  padding: 4px 5px;
 }
 
 .tfcc-badge {
@@ -1346,6 +1415,8 @@
 }
 .tfcc-prompt-graphic.is-editable {
   min-height: 118px;
+  max-height: none;
+  resize: vertical;
   cursor: text;
 }
 .tfcc-prompt-graphic.is-editable:focus {
@@ -1521,8 +1592,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 240px;
-  overflow-y: auto;
 }
 .tfcc-asset-list-row {
   display: flex;
@@ -1555,7 +1624,296 @@
   text-overflow: ellipsis;
 }
 
-/* Agent 历史内联进度条 */
+/* Inspector 章节列表 */
+.tfcc-novel-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.tfcc-novel-card { border: 1px solid rgba(255,255,255,.08); border-radius: 6px; padding: 8px 10px; cursor: pointer; transition: background .15s; }
+.tfcc-novel-card:hover { background: rgba(255,255,255,.05); }
+.tfcc-novel-card.is-editing { cursor: default; background: rgba(255,255,255,.04); display: flex; flex-direction: column; gap: 6px; }
+.tfcc-novel-card-hd { display: flex; align-items: center; gap: 6px; }
+.tfcc-novel-idx { font-size: 11px; font-weight: 600; color: #ff4fc3; }
+.tfcc-novel-reel { font-size: 11px; color: rgba(243,245,251,.5); }
+.tfcc-novel-edit-hint { margin-left: auto; font-size: 10px; color: rgba(243,245,251,.3); }
+.tfcc-novel-cancel { margin-left: auto; font-size: 11px; color: rgba(243,245,251,.5); background: none; border: none; cursor: pointer; padding: 0; }
+.tfcc-novel-cancel:hover { color: rgba(243,245,251,.85); }
+.tfcc-novel-title { font-size: 12px; font-weight: 500; color: rgba(243,245,251,.85); margin-top: 2px; }
+.tfcc-novel-preview { font-size: 11px; color: rgba(243,245,251,.45); line-height: 1.5; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tfcc-novel-input { width: 100%; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 4px; color: rgba(243,245,251,.9); font-size: 12px; padding: 5px 8px; box-sizing: border-box; }
+.tfcc-novel-textarea { width: 100%; min-height: 120px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 4px; color: rgba(243,245,251,.9); font-size: 12px; padding: 5px 8px; box-sizing: border-box; line-height: 1.5; resize: vertical; }
+.tfcc-novel-actions { display: flex; justify-content: flex-end; }
+.tfcc-panel-subtitle { display: flex; align-items: center; justify-content: space-between; }
+.tfcc-novel-load-btn { font-size: 11px; color: rgba(243,245,251,.5); background: none; border: none; cursor: pointer; padding: 0; }
+.tfcc-novel-load-btn:hover { color: #ff4fc3; }
+
+.tfcc-node-novelChapter,
+.tfcc-node-novelSection,
+.tfcc-node-sourceReference {
+  background: rgba(26, 28, 34, .92);
+  border-color: rgba(255, 255, 255, .1);
+}
+.tfcc-node-novelChapter.is-selected,
+.tfcc-node-novelSection.is-selected,
+.tfcc-node-sourceReference.is-selected {
+  border-color: rgba(255, 79, 195, .9);
+  box-shadow: 0 0 0 1px rgba(255, 79, 195, .35), 0 18px 50px rgba(0, 0, 0, .34);
+}
+.tfcc-source-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.tfcc-source-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #45e0a4;
+  box-shadow: 0 0 0 3px rgba(69, 224, 164, .12);
+  flex: 0 0 auto;
+}
+.tfcc-source-title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(243, 245, 251, .95);
+}
+.tfcc-source-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 11px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(243, 245, 251, .84);
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .08);
+  white-space: nowrap;
+}
+.tfcc-source-pill.is-done {
+  color: #5de1b3;
+  background: rgba(42, 187, 144, .17);
+  border-color: rgba(42, 187, 144, .32);
+}
+.tfcc-source-pill.is-pending {
+  color: #ffc95d;
+  background: rgba(255, 193, 77, .14);
+  border-color: rgba(255, 193, 77, .3);
+}
+.tfcc-source-preview {
+  margin-top: 14px;
+  min-height: 48px;
+  color: rgba(243, 245, 251, .64);
+  font-size: 12px;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tfcc-source-error {
+  margin-top: 8px;
+  color: rgba(255, 126, 126, .78);
+  font-size: 11px;
+}
+.tfcc-source-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 16px;
+}
+.tfcc-source-action {
+  min-width: 0;
+  min-height: 30px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  background: rgba(255, 255, 255, .045);
+  color: rgba(243, 245, 251, .78);
+  font-size: 11px;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tfcc-source-action:hover {
+  color: rgba(243, 245, 251, .95);
+  background: rgba(255, 255, 255, .08);
+}
+.tfcc-source-action.primary {
+  border-color: rgba(255, 79, 195, .34);
+  background: rgba(255, 79, 195, .12);
+  color: #ffd6f0;
+}
+.tfcc-source-ref-image {
+  margin-top: 12px;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 7px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .1);
+  background: rgba(255, 255, 255, .045);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(243, 245, 251, .45);
+  font-size: 12px;
+}
+.tfcc-source-ref-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.tfcc-source-ref-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 12px;
+}
+.tfcc-source-ref-chips span {
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, .06);
+  color: rgba(243, 245, 251, .72);
+  font-size: 11px;
+}
+.tfcc-source-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tfcc-source-label {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(243, 245, 251, .74);
+}
+.tfcc-source-field,
+.tfcc-source-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  background: rgba(255, 255, 255, .045);
+  color: rgba(243, 245, 251, .9);
+  font-size: 12px;
+  line-height: 1.55;
+  padding: 9px 10px;
+  outline: none;
+}
+.tfcc-source-field:focus,
+.tfcc-source-textarea:focus {
+  border-color: rgba(255, 79, 195, .55);
+  box-shadow: 0 0 0 2px rgba(255, 79, 195, .14);
+}
+.tfcc-source-field:disabled,
+.tfcc-source-textarea:disabled {
+  color: rgba(243, 245, 251, .56);
+}
+.tfcc-source-textarea {
+  min-height: 172px;
+  resize: vertical;
+}
+.tfcc-source-count {
+  align-self: flex-end;
+  margin-top: -4px;
+  font-size: 11px;
+  color: rgba(243, 245, 251, .38);
+}
+.tfcc-source-inspector-block {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+}
+.tfcc-source-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tfcc-source-status-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: rgba(243, 245, 251, .86);
+}
+.tfcc-source-mini-btn {
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .05);
+  color: rgba(243, 245, 251, .72);
+  font-size: 11px;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+.tfcc-source-mini-btn:disabled {
+  opacity: .45;
+  cursor: default;
+}
+.tfcc-source-inspector-ref {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  background: rgba(255, 255, 255, .045);
+}
+.tfcc-source-inspector-ref.is-large {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+.tfcc-source-inspector-ref img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 5px;
+  display: block;
+}
+.tfcc-source-inspector-ref div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: rgba(243, 245, 251, .58);
+  font-size: 12px;
+}
+.tfcc-source-inspector-ref strong {
+  color: rgba(243, 245, 251, .9);
+}
+.tfcc-source-inspector-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+.tfcc-source-inspector-actions button {
+  min-height: 38px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .04);
+  color: rgba(243, 245, 251, .82);
+  font-weight: 650;
+  cursor: pointer;
+}
+.tfcc-source-inspector-actions button.primary {
+  border: 0;
+  color: white;
+  background: linear-gradient(90deg, #e436c7, #ff4fc3);
+}
+.tfcc-source-inspector-actions button:hover {
+  filter: brightness(1.08);
+}
+
 .tfcc-progress-bar {
   margin: 4px 0 2px;
 }
@@ -2109,6 +2467,7 @@
 .tfcc-chat-body .tfcc-agent-stream {
   margin: 0;
   gap: 10px;
+  overflow: visible;
 }
 
 /* 会话消息头:头像 + 名称 + 状态 */

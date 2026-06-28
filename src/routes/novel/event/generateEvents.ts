@@ -18,7 +18,7 @@ export default router.post(
     const { projectId, novelIds, concurrentCount = 5 } = req.body;
 
     const [allChapters, novel] = await Promise.all([
-      u.db("o_novel").where("projectId", projectId).whereIn("id", novelIds),
+      u.db("o_novel").where("projectId", projectId).whereIn("id", novelIds).orderByRaw("COALESCE(chapterOrder, chapterIndex, id) asc").orderByRaw("COALESCE(sectionOrder, 0) asc").orderBy("id", "asc"),
       Promise.resolve(new u.cleanNovel(concurrentCount)),
     ]);
     if (allChapters.length === 0) {

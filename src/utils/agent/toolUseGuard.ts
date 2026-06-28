@@ -7,8 +7,10 @@ import { Tool } from "ai";
 export function createToolUseCounter(tools: Record<string, Tool>): {
   tools: Record<string, Tool>;
   getCount: () => number;
+  getToolCount: (name: string) => number;
 } {
   let count = 0;
+  const counts: Record<string, number> = {};
   const wrapped = Object.fromEntries(
     Object.entries(tools).map(([name, t]) => {
       if (typeof t.execute !== "function") return [name, t];
@@ -19,13 +21,14 @@ export function createToolUseCounter(tools: Record<string, Tool>): {
           ...t,
           execute: async (...args: Parameters<NonNullable<Tool["execute"]>>) => {
             count++;
+            counts[name] = (counts[name] ?? 0) + 1;
             return originalExecute(...args);
           },
         },
       ];
     }),
   );
-  return { tools: wrapped, getCount: () => count };
+  return { tools: wrapped, getCount: () => count, getToolCount: (name) => counts[name] ?? 0 };
 }
 
 export const SUPERVISION_INVALID_MESSAGE = [

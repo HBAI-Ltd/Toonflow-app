@@ -1,4 +1,4 @@
-// @db-hash d19fd5ec18daa98fdded8c91ca6ad847
+// @db-hash 95fa033f929f6ef666b54a5370bd43f1
 //该文件由脚本自动生成，请勿手动修改
 
 export interface memories {
@@ -203,6 +203,7 @@ export interface o_novel {
   'chapter'?: string | null;
   'chapterData'?: string | null;
   'chapterIndex'?: number | null;
+  'chapterOrder'?: number | null;
   'createTime'?: number | null;
   'errorReason'?: string | null;
   'event'?: string | null;
@@ -210,6 +211,8 @@ export interface o_novel {
   'id'?: number;
   'projectId'?: number | null;
   'reel'?: string | null;
+  'section'?: string | null;
+  'sectionOrder'?: number | null;
 }
 export interface o_project {
   'artStyle'?: string | null;

@@ -28,6 +28,8 @@ class CleanNovel {
 
   private async processChapter(novel: o_novel, projectId: number): Promise<EventType | null> {
     try {
+      const chapterOrder = novel.chapterOrder ?? novel.chapterIndex ?? "";
+      const sectionOrder = novel.sectionOrder ?? 0;
       const prompt = await u.getPrompts("event");
       const eventExtraction = await resolveFunctionPrompt("eventExtraction");
       const modelName = await u.Ai.resolveModelName("universalAi").catch(() => "universalAi");
@@ -36,7 +38,7 @@ class CleanNovel {
         modelName,
         relatedType: "novel:eventExtraction",
         relatedId: novel.id,
-        meta: { projectId, chapterIndex: novel.chapterIndex },
+        meta: { projectId, chapterIndex: novel.chapterIndex, chapterOrder, sectionOrder },
       });
       const resData = await u.Ai.Text("universalAi").invoke({
         system: eventExtraction.content ? JSON.stringify(eventExtraction.content) : (prompt as string),
@@ -45,11 +47,13 @@ class CleanNovel {
             role: "user",
             content:
               "请根据以下小说章节数：" +
-              novel.chapterIndex +
+              chapterOrder +
               "小说章节券：" +
               novel.reel +
               "小说章节名称：" +
               novel.chapter +
+              "小说小节名称：" +
+              (novel.section || "") +
               "、小说章节内容生成事件摘要：\n" +
               novel.chapterData!,
           },
@@ -62,12 +66,12 @@ class CleanNovel {
         targetType: "o_novel",
         targetId: novel.id!,
         targetField: "event",
-        title: `第${novel.chapterIndex ?? ""}章事件`,
+        title: `第${chapterOrder}章第${sectionOrder}节事件`,
         content: preData,
         effectivePrompt: eventExtraction,
         promptUsageId,
         modelName,
-        meta: { chapterIndex: novel.chapterIndex, chapter: novel.chapter },
+        meta: { chapterIndex: novel.chapterIndex, chapterOrder, sectionOrder, chapter: novel.chapter, section: novel.section },
       });
       this.emitter.emit("item", { id: novel.id, event: preData });
       return { id: novel.id!, event: preData };

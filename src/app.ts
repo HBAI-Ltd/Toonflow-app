@@ -28,7 +28,7 @@ function getConfiguredPort(randomPort: Boolean): number {
   const rawPort = process.env.PORT;
   if (!rawPort) return DEFAULT_PORT;
   const parsedPort = Number(rawPort);
-  if (!Number.isInteger(parsedPort) || parsedPort <= 0 || parsedPort > 65535) {
+  if (!Number.isInteger(parsedPort) || parsedPort < 0 || parsedPort > 65535) {
     throw new Error(`Invalid PORT: ${rawPort}`);
   }
   return parsedPort;
@@ -229,6 +229,7 @@ export default async function startServe(randomPort: Boolean = false) {
     server.listen(port, async () => {
       const address = server.address();
       const realPort = typeof address === "string" ? address : address?.port;
+      if (realPort) process.env.PORT = String(realPort);
       console.log(`[服务启动成功]: http://localhost:${realPort}`);
       resolve(realPort);
     });

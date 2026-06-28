@@ -126,6 +126,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     tools: extraTools,
     messages,
     requireToolUse,
+    requiredToolName,
   }: {
     key: `${string}:${string}`;
     prompt: string;
@@ -135,6 +136,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     tools?: Record<string, any>;
     messages?: { role: "user" | "assistant" | "system"; content: string }[];
     requireToolUse?: boolean;
+    requiredToolName?: string;
   }) {
     parentCtx.msg.complete();
     const subMsg = resTool.newMessage("assistant", name);
@@ -150,13 +152,15 @@ async function createSubAgent(parentCtx: AgentContext) {
 
     const fullResponse = await consumeFullStream(fullStream, subMsg);
 
-    if (requireToolUse && counter.getCount() === 0) {
-      console.warn(`[${key}] 审核无效：零工具调用，结论作废`);
+    const missingRequiredTool = requiredToolName && counter.getToolCount(requiredToolName) === 0;
+    if ((requireToolUse && counter.getCount() === 0) || missingRequiredTool) {
+      console.warn(`[${key}] 执行无效：未调用必要工具 ${requiredToolName || ""}`);
+      const invalidText = missingRequiredTool ? `【执行无效】本次执行没有调用必要工具 ${requiredToolName}，结果未写入画布。请重新执行。` : SUPERVISION_INVALID_MESSAGE;
       const invalidMsg = resTool.newMessage("assistant", name);
-      invalidMsg.text().append(SUPERVISION_INVALID_MESSAGE).complete();
+      invalidMsg.text().append(invalidText).complete();
       invalidMsg.complete();
       parentCtx.msg = resTool.newMessage("assistant", "视频策划");
-      return SUPERVISION_INVALID_MESSAGE;
+      return invalidText;
     }
 
     if (fullResponse.trim()) {
@@ -275,7 +279,8 @@ async function createSubAgent(parentCtx: AgentContext) {
     execute: async ({ prompt }) => {
       const systemPrompt = await loadAgentPrompt("productionAgent:directorPlanAgent");
 
-      const addPrompt = "\n你必须使用如下XML格式写入工作区：\n```\n<scriptPlan>内容</scriptPlan>\n```";
+      const addPrompt =
+        "\n你必须先输出如下XML格式，然后调用工具 save_flowData 写入工作区：\n```\n<scriptPlan>内容</scriptPlan>\n```\n保存要求：把完整导演规划作为 scriptPlan 参数传入 save_flowData；不要只回复文本，否则画布不会生成导演规划卡。";
 
       return runAgent({
         key: "productionAgent:directorPlanAgent",
@@ -288,6 +293,7 @@ async function createSubAgent(parentCtx: AgentContext) {
           { role: "user", content: prompt + addPrompt },
         ],
         tools: { activate_skill: artSkills.tools.activate_skill },
+        requiredToolName: "save_flowData",
       });
     },
   });
@@ -333,7 +339,7 @@ async function createSubAgent(parentCtx: AgentContext) {
       const systemPrompt = await loadAgentPrompt("productionAgent:storyboardPanelAgent");
 
       const addPrompt =
-        "\n你必须使用如下XML格式写入工作区：\n```\n<storyboardItem videoDesc='视频描述' prompt=提示词内容 track='分组' shouldGenerateImage='true/false' duration='视频推荐时间' associateAssetsIds='[该分镜所需的资产ID列表]'></storyboardItem>\n```";
+        "\n你必须使用 add_flowData_storyboard 工具写入真实分镜卡片。禁止在正文输出分镜 XML、分镜表或长篇解释；每个镜头都要调用一次 add_flowData_storyboard，必须等待工具返回成功后再继续，全部写入后只用一句话汇报写入数量。";
 
       return runAgent({
         key: "productionAgent:storyboardPanelAgent",
@@ -346,6 +352,7 @@ async function createSubAgent(parentCtx: AgentContext) {
           { role: "user", content: prompt + addPrompt },
         ],
         tools: { activate_skill: productionSkills.tools.activate_skill },
+        requiredToolName: "add_flowData_storyboard",
       });
     },
   });
@@ -357,7 +364,8 @@ async function createSubAgent(parentCtx: AgentContext) {
     execute: async ({ prompt }) => {
       const systemPrompt = await loadAgentPrompt("productionAgent:storyboardTableAgent");
 
-      const addPrompt = "\n你必须使用如下XML格式写入工作区：\n```\n<storyboardTable>内容</storyboardTable>\n```";
+      const addPrompt =
+        "\n你必须调用工具 save_flowData 写入工作区。禁止在正文输出完整分镜表或 XML；把完整分镜表作为 storyboardTable 参数传入 save_flowData，工具返回成功后只用一句话汇报已保存。不要只回复文本，否则画布不会生成分镜表卡。";
 
       return runAgent({
         key: "productionAgent:storyboardTableAgent",
@@ -370,6 +378,7 @@ async function createSubAgent(parentCtx: AgentContext) {
           { role: "user", content: prompt + addPrompt },
         ],
         tools: { activate_skill: productionSkills.tools.activate_skill },
+        requiredToolName: "save_flowData",
       });
     },
   });

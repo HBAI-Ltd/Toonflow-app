@@ -9,10 +9,12 @@ const vendorData = rawVendorData as Record<string, string>;
 
 export default async (knex: Knex): Promise<void> => {
   const addColumn = async (table: string, column: string, type: string) => {
-    if (!(await knex.schema.hasTable(table))) return;
+    if (!(await knex.schema.hasTable(table))) return false;
     if (!(await knex.schema.hasColumn(table, column))) {
       await knex.schema.alterTable(table, (t) => (t as any)[type](column));
+      return true;
     }
+    return false;
   };
 
   const dropColumn = async (table: string, column: string) => {
@@ -29,6 +31,26 @@ export default async (knex: Knex): Promise<void> => {
         (t as any)[type](column).alter();
       });
     }
+  };
+  const backfillNovelChapterOrder = async () => {
+    if (!(await knex.schema.hasTable("o_novel")) || !(await knex.schema.hasColumn("o_novel", "chapterOrder"))) return;
+    const rows = await knex("o_novel").whereNull("chapterOrder").select("id", "projectId", "chapterIndex").orderBy("projectId", "asc").orderByRaw("COALESCE(chapterIndex, id) asc").orderBy("id", "asc");
+    if (rows.length === 0) return;
+    const maxRows = await knex("o_novel").whereNotNull("chapterOrder").select("projectId").max({ maxOrder: "chapterOrder" }).groupBy("projectId");
+    const nextByProject = new Map<string, number>();
+    maxRows.forEach((row: any) => {
+      nextByProject.set(String(row.projectId ?? ""), Number(row.maxOrder ?? 0) + 1);
+    });
+    for (const row of rows) {
+      const key = String(row.projectId ?? "");
+      const nextOrder = nextByProject.get(key) ?? 1;
+      await knex("o_novel").where("id", row.id).update({ chapterOrder: nextOrder });
+      nextByProject.set(key, nextOrder + 1);
+    }
+  };
+  const backfillNovelSectionOrder = async () => {
+    if (!(await knex.schema.hasTable("o_novel")) || !(await knex.schema.hasColumn("o_novel", "sectionOrder"))) return;
+    await knex("o_novel").whereNull("sectionOrder").update({ sectionOrder: 0 });
   };
   const createPromptGovernanceTables = async () => {
     if (!(await knex.schema.hasTable("o_promptVersion"))) {
@@ -290,6 +312,11 @@ export default async (knex: Knex): Promise<void> => {
 
   // 添加新字段
   await addColumn("o_prompt", "useData", "text");
+  await addColumn("o_novel", "chapterOrder", "integer");
+  await addColumn("o_novel", "sectionOrder", "integer");
+  await addColumn("o_novel", "section", "text");
+  await backfillNovelChapterOrder();
+  await backfillNovelSectionOrder();
   await createPromptGovernanceTables();
   await createGenerationAuditTables();
   await createCreativeCanvasTables();
