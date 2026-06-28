@@ -1081,7 +1081,8 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
     const nodeId = assetTask ? `assetExtractionTask:${task.id}` : `task:${task.id}`;
     const related = taskRelatedData(task);
     const relatedVideo = related.videoId ? videoById.get(Number(related.videoId)) : null;
-    const relatedVideoSrc = relatedVideo ? videoUrlMap.get(Number(relatedVideo.id)) || "" : "";
+    const isVideoGenerationTask = relatedVideo && /视频生成/.test(String(task.taskClass || ""));
+    const relatedVideoSrc = relatedVideo && !isVideoGenerationTask ? videoUrlMap.get(Number(relatedVideo.id)) || "" : "";
     createNode(nodes, staleMap, layout, {
       id: nodeId,
       type: assetTask ? "assetExtractionTask" : "task",
@@ -1096,8 +1097,17 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         src: relatedVideoSrc,
       },
     });
+    const relatedVideoPromptId = isVideoGenerationTask && relatedVideo?.videoTrackId ? `videoPrompt:${relatedVideo.videoTrackId}` : null;
     const videoTaskStoryboard = related.videoId ? storyboardByVideoId.get(Number(related.videoId)) : null;
-    if (videoTaskStoryboard) {
+    if (relatedVideoPromptId) {
+      edges.push({
+        id: `${relatedVideoPromptId}->${nodeId}`,
+        source: relatedVideoPromptId,
+        target: nodeId,
+        type: "videoTask",
+        label: "视频生成",
+      });
+    } else if (videoTaskStoryboard) {
       edges.push({
         id: `storyboard:${videoTaskStoryboard.id}->${nodeId}`,
         source: `storyboard:${videoTaskStoryboard.id}`,

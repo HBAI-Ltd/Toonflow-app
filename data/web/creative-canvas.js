@@ -2368,6 +2368,10 @@
         });
         state.message = "视频 prompt 生成任务已提交";
       }
+      if (action === "video") {
+        await submitVideos([node]);
+        state.message = "视频生成任务已提交";
+      }
       await loadGraph();
     });
   }
@@ -3998,6 +4002,37 @@
     return uniqueLayoutNodes(videos);
   }
 
+  function shotNumbersInText(text) {
+    const nums = [];
+    String(text || "").replace(/(?:镜头|第)\s*(\d+)/g, (_, raw) => {
+      const n = Number(raw);
+      if (Number.isFinite(n) && n > 0) nums.push(n);
+      return "";
+    });
+    return [...new Set(nums)];
+  }
+
+  function videoPromptTargetsByShotNumber(text) {
+    const nums = shotNumbersInText(text);
+    if (!nums.length) return [];
+    const storyboards = orderedLayoutNodes(graphNodes().filter((node) => node.type === "storyboard"));
+    return uniqueLayoutNodes(nums.flatMap((num) => {
+      const storyboard = storyboards.find((node) => Number(node.data?.storyboard?.index) === num) || storyboards[num - 1];
+      return storyboard ? videoPromptTargets([storyboard]) : [];
+    }));
+  }
+
+  function wantsVideoPromptRegeneration(text) {
+    const value = String(text || "");
+    return /(视频\s*Prompt|视频prompt|video\s*prompt|提示词|prompt)/i.test(value) && /生成|重生|重新|刷新|补齐|执行/.test(value);
+  }
+
+  function wantsVideoGeneration(text) {
+    const value = String(text || "");
+    if (wantsVideoPromptRegeneration(value)) return false;
+    return (/视频|成片|渲染/.test(value) || shotNumbersInText(value).length > 0) && /生成|执行|提交|开始/.test(value) && !isStatusQuestion(value);
+  }
+
   function agentTargetStatusAnswer(text, targets) {
     if (!isStatusQuestion(text) || !targets.length) return "";
     if (isVideoCountQuestion(text)) {
@@ -4501,6 +4536,31 @@
     await loadGraph();
   }
 
+  async function submitVideos(nodes) {
+    const project = state.graph?.project || {};
+    if (!project.videoModel) throw new Error("当前项目未配置视频模型，无法生成视频。");
+    const tracks = nodes.map((node) => node.data?.videoTrack).filter((item) => item?.id);
+    if (!tracks.length) throw new Error("当前视频标签下没有可生成的视频 Prompt。");
+    for (const track of tracks) {
+      if (!track.prompt) throw new Error(`视频 Prompt ${track.id} 还没有提示词，先生成视频 Prompt。`);
+      await api("/production/workbench/generateVideo", {
+        method: "POST",
+        body: {
+          trackId: Number(track.id),
+          projectId: Number(track.projectId),
+          scriptId: Number(track.scriptId || scriptId()),
+          uploadData: [],
+          prompt: track.prompt || "",
+          model: project.videoModel || "",
+          mode: project.mode || "text",
+          resolution: project.videoResolution || "720p",
+          duration: Number(track.duration || 5),
+        },
+      });
+    }
+    await loadGraph();
+  }
+
   async function sendAgentMessage() {
     const profile = agentProfile();
     const text = state.agentText.trim();
@@ -4605,19 +4665,33 @@
             pushLocalAgentMessage("assistant", storyboardStatusAnswer("分镜状态") || "请说明要做「分镜分析」还是「生成分镜图」，也可以输入 @ 选择具体分镜卡。", "warning", profile.title);
           }
         } else if (mode === "video") {
-          const targets = videoPromptTargets(mentionedNodes);
-          const prompts = targets.length
-            ? targets
+          const directTargets = videoPromptTargets(mentionedNodes);
+          const shotTargets = videoPromptTargetsByShotNumber(text);
+          const prompts = directTargets.length
+            ? directTargets
+            : shotTargets.length
+            ? shotTargets
             : wantsSelectedTarget(text) && node?.type === "videoPrompt"
             ? [node]
             : wantsSelectedTarget(text) && node?.type === "storyboard"
             ? videoPromptTargets([node])
-            : wantsStageGeneration(text)
+            : wantsVideoGeneration(text) || wantsVideoPromptRegeneration(text)
             ? graphNodes().filter((item) => item.type === "videoPrompt")
             : [];
           if (prompts.length) {
-            await submitVideoPrompts(prompts);
-            pushLocalAgentMessage("assistant", `已提交 ${prompts.length} 条视频 Prompt 重生任务。`, "complete", profile.title);
+            if (wantsVideoGeneration(text)) {
+              pushLocalAgentMessage("assistant", `已收到，开始提交 ${prompts.length} 个视频生成任务。`, "complete", profile.title);
+              persistAgentThread();
+              renderAgentOnly(true);
+              await submitVideos(prompts);
+              pushLocalAgentMessage("assistant", `已提交 ${prompts.length} 个视频生成任务。`, "complete", profile.title);
+            } else {
+              pushLocalAgentMessage("assistant", `已收到，开始提交 ${prompts.length} 条视频 Prompt 重生任务。`, "complete", profile.title);
+              persistAgentThread();
+              renderAgentOnly(true);
+              await submitVideoPrompts(prompts);
+              pushLocalAgentMessage("assistant", `已提交 ${prompts.length} 条视频 Prompt 重生任务。`, "complete", profile.title);
+            }
           } else if (!(await handleFallbackIntent())) {
             throw new Error("请描述要处理的视频任务，或在会话框输入 @ 选择视频 Prompt 卡。");
           }
@@ -5351,7 +5425,10 @@
       const sbFlowId = node.data?.storyboard?.flowId;
       actions.push(h("button", { class: "primary", title: sbFlowId ? "" : "尚未建立图片流", onClick: () => openFlowDrawer("storyboard", node.data?.storyboard?.id, sbFlowId, node.label), text: "展开图片流" }));
     }
-    if (node.type === "videoPrompt") actions.push(h("button", { onClick: () => runNodeAction("videoPrompt"), text: "重生视频 Prompt" }));
+    if (node.type === "videoPrompt") {
+      actions.push(h("button", { class: "primary", onClick: () => runNodeAction("video"), text: "生成视频" }));
+      actions.push(h("button", { onClick: () => runNodeAction("videoPrompt"), text: "重生视频 Prompt" }));
+    }
     // 内容预览（组卡展示成员列表，其余展示来源内容预览）
     let preview = null;
     if (node.type === "novelChapter" || node.type === "novelSection") {

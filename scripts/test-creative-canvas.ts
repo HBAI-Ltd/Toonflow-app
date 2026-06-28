@@ -99,6 +99,9 @@ async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("agentTargetStatusAnswer"), "agent composer should answer status questions for mentioned canvas nodes");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("videoPromptTargets"), "video agent should map mentioned storyboards to linked video prompt cards");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("isVideoCountQuestion"), "video agent should treat video count questions as queries");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("videoPromptTargetsByShotNumber"), "video agent should map 镜头N wording to the linked video prompt");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/production/workbench/generateVideo"), "video agent should submit real video generation separately from prompt regeneration");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("已收到，开始提交"), "stage agent should acknowledge long-running video actions before awaiting backend work");
   assert.ok(fs.existsSync("src/routes/creativeCanvas/resolveIntent.ts"), "creative canvas should expose an LLM intent resolver endpoint");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/creativeCanvas/resolveIntent"), "agent composer should call the LLM intent fallback");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("nodePositionOverrides"), "expanded asset and image-flow cards should keep drag positions");
@@ -128,6 +131,8 @@ async function main() {
   assert.ok(canvasJs.includes('node.type === "sourceReference"'), "source reference images should render as canvas nodes");
   assert.ok(canvasJs.includes("/novel/event/generateEvents"), "source chapter cards should be able to trigger event analysis");
   assert.ok(canvasJs.includes("/production/editImage/generateFlowImage"), "source chapter cards should be able to generate reference images");
+  const submitVideosBlock = canvasJs.slice(canvasJs.indexOf("async function submitVideos"), canvasJs.indexOf("async function sendAgentMessage"));
+  assert.ok(!submitVideosBlock.includes("audio: false"), "video generation should not force optional audio off");
   assert.ok(canvasJs.includes("Array.isArray(result)"), "source chapter inspector should accept the actual getNovelData array response");
   assert.ok(canvasJs.includes("chapterOrder: full.chapterOrder"), "source chapter save should persist the editable chapterOrder");
   assert.ok(canvasJs.includes("sectionOrder: full.sectionOrder"), "source chapter save should persist the editable sectionOrder");
@@ -156,7 +161,7 @@ async function main() {
   assert.ok(canvasJs.includes("window.__tfccSocketIoPromise = null"), "failed Socket.IO client loads should be retryable");
   assert.ok(!canvasJs.includes("${location.origin}/socket.io/socket.io.js"), "script agent should not load Socket.IO from the frontend origin");
   assert.ok(!canvasJs.includes("${location.origin}/api/socket/scriptAgent"), "script agent should not connect sockets through the frontend origin");
-  assert.ok(fs.readFileSync("data/web/index.html", "utf8").includes("creative-canvas.js?v=20260628235600"), "creative canvas script URL should bust stale renderer cache");
+  assert.ok(fs.readFileSync("data/web/index.html", "utf8").includes("creative-canvas.js?v=20260629000100"), "creative canvas script URL should bust stale renderer cache");
   assert.ok(fs.readFileSync("src/app.ts", "utf8").includes("process.env.PORT = String(realPort)"), "random-port backend startup should expose the real port to OSS URL generation");
   const updateAgentMessageBlock = canvasJs.slice(canvasJs.indexOf("function updateAgentMessage"), canvasJs.indexOf("function addAgentContent"));
   assert.ok(updateAgentMessageBlock.includes("state.agentRunning = false;"), "script agent terminal message updates should clear the current running state");
@@ -621,10 +626,10 @@ async function main() {
   assert.ok(graph.edges.some((edge) => edge.source === `script:${scriptId}` && edge.target === "assetGroup:scene"), "script should link to asset group");
   assert.ok(graph.edges.some((edge) => edge.source === `script:${scriptId}` && edge.target === `assetExtractionTask:${assetTaskId}`), "script should link to its asset extraction task");
   assert.ok(graph.edges.some((edge) => edge.source === `assetExtractionTask:${assetTaskId}` && edge.target === "assetGroup:scene"), "asset extraction task should link to produced asset group");
-  assert.ok(graph.edges.some((edge) => edge.source === `storyboard:${storyboardId}` && edge.target === `task:${videoTaskId}`), "video generation task should link to its storyboard");
+  assert.ok(graph.edges.some((edge) => edge.source === `videoPrompt:${trackId}` && edge.target === `task:${videoTaskId}`), "video generation task should link from its video prompt");
   const videoTaskNode = findNode(graph, `task:${videoTaskId}`);
   assert.equal((videoTaskNode.data as any).video.id, videoId, "video generation task should expose its generated video");
-  assert.ok((videoTaskNode.data as any).src, "video generation task should expose a playable video src");
+  assert.equal((videoTaskNode.data as any).src, "", "video generation task should not duplicate the playable video node");
   assert.ok((graph.taskProgress || []).some((item: any) => Number(item.taskId) === Number(assetTaskId) && item.phase === "ai_extract"), "graph should expose task progress rows");
 
   await saveCreativeCanvasLayout({
