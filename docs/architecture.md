@@ -29,6 +29,7 @@ Toonflow 是一款 **AI 短剧/漫剧生产工具**：把小说自动转化为�
 ## 3. 请求生命周期（`src/app.ts`）
 
 1. 默认端口 `10588`（`PORT` 可覆盖）。CORS 仅允许 loopback 来源（`localhost` / `127.0.0.1` / `[::1]`）。
+   - Electron / GUI 模式若随机端口启动，会在实际 bind 后回写 `process.env.PORT`；Creative Canvas 前端通过 `toonflow://getappurl` 解析当前 API origin，避免继续打旧的 `localhost:0` 或错误端口。
 2. 静态资源：`/oss`（生成产物）、`/skills`（仅图片）、`/assets`、`data/web`（前端站点）。
 3. `/oss` 下 `compose/`、`merge/` 为敏感路径，额外要求 JWT。`/oss?size=` 支持按需生成缩略图。
 4. **全局 JWT 鉴权中间件**：除 `/api/login/login` 白名单外，所有请求校验 token（密钥取自 `o_setting.tokenKey`）。
@@ -71,21 +72,22 @@ o_project（项目：画风/导演手册/图像&视频模型/画幅）
 两个 Socket.IO 命名空间 `/api/socket/scriptAgent` 与 `/api/socket/productionAgent`，各自是一个**「决策层 + 子 Agent」的分层多智能体**：
 
 - **scriptAgent（编剧）**：`decisionAgent` 统筹 → 子 agent：`storySkeleton`（故事骨架）、`adaptationStrategy`（改编策略）、`script`（剧本）、`supervision`（监督审核）。子 agent 通过 XML 标签（`<storySkeleton>` / `<scriptItem>` 等）写回工作区。
-- **productionAgent（视频策划）**：`decisionAgent` → 子 agent：衍生资产分析(`deriveAssets`)/生成(`generateAssets`)、导演规划(`directorPlan`)、分镜图生成(`storyboardGen`)、分镜面板(`storyboardPanel`)/表(`storyboardTable`)写入、监制(`supervision`)。结合**项目画风技能(`art_skills`) + 导演手册技能(`story_skills`)** 动态加载 SKILL.md。
+- **productionAgent（视频策划）**：`decisionAgent` → 子 agent：衍生资产分析(`deriveAssets`)/生成(`generateAssets`)、导演规划(`directorPlan`)、分镜图生成(`storyboardGen`)、分镜面板(`storyboardPanel`)/表(`storyboardTable`)写入、监制(`supervision`)。分镜标签使用 `storyboardPipeline` 场景，把导演规划、分镜表和分镜节点写入串成一条工作流。结合**项目画风技能(`art_skills`) + 导演手册技能(`story_skills`)** 动态加载 SKILL.md。
 
 关键设计：
 
 - **记忆系统**（`src/utils/agent/memory`）：RAG 检索 + 历史摘要 + 近期对话三层，带 embedding，存 `memories` 表。
 - **技能系统**：Markdown frontmatter 描述 + `activate_skill` 工具按需加载完整指令（类似 Claude Skills 机制）。技能存于 `data/skills/`。
-- **监督守卫**（`src/utils/agent/toolUseGuard`）：监督类 agent 若零工具调用则结论作废，强制其实际查证。
+- **工具调用守卫**（`src/utils/agent/toolUseGuard`）：按工具名统计调用次数。监督类 agent 若零工具调用则结论作废；生产类子 Agent 可要求必须调用指定工具，例如 `save_flowData` 或 `add_flowData_storyboard`，避免只在聊天里声称完成。
 
 ## 6.1 Creative Canvas 工作台布局
 
 创作画布的各标签保持同一交互骨架：
 
-- **左侧 Agent 会话区**：随当前标签切换角色（剧本、角色/场景/道具、分镜、视频、审计），composer 可拖拽调宽并持久化到 `localStorage`。剧本标签仍接 `scriptAgent` socket；其他标签先把自然语言指令路由到现有确定性动作，如资产提取、资产图生成、分镜图生成、视频 Prompt 重生、审计片段改写。
+- **左侧 Agent 会话区**：随当前标签切换角色（剧本、角色/场景/道具、分镜、视频、审计），composer 可拖拽调宽并持久化到 `localStorage`。剧本标签接 `scriptAgent` socket；角色/场景/道具与分镜标签接 `productionAgent` socket。分镜链路通过 `save_flowData` 写导演规划/分镜表，通过 `add_flowData_storyboard` 调 `/production/storyboard/batchAddStoryboardInfo` 写真实 `o_storyboard` 行。
 - **中间画布区**：展示当前标签相关节点和真实生成链路。Prompt 节点是可编辑图文块，`@` 引用以内嵌 chip 呈现，并通过 fixed 候选浮层选择角色、场景、道具或参考图；`优化布局` 按业务列和直接连线做确定性排布，分镜→视频 Prompt→视频结果尽量同排，并按节点高度避让重叠。
 - **右侧 Inspector / 进度区**：不做聊天，负责节点事实、版本、来源 Hash、内容预览、当前剧集进度和确定性按钮。它是可审计状态面板，避免 Agent 回复替代真实业务状态。
+- **前端 socket 桥接**：`data/web/creative-canvas.js` 的 Agent bridge 提供 `getFlowData`、`saveFlowData`、`addStoryboard`、`generateStoryboard` 等动作。`addStoryboard` 会把 `shouldGenerateImage` 规范成 REST 接口要求的数字 `0/1`，否则后端参数校验会拒绝写入。
 
 ## 7. AI 抽象层 + Vendor 沙盒（最关键的扩展点）
 

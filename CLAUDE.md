@@ -25,6 +25,7 @@ AI 短剧/漫剧生产工具：小说 → 剧本 → 资产/分镜图 → 视频
 - **接入新模型供应商是纯配置**：编辑 `data/vendor/<id>.ts`（vm2 沙盒执行），实现 `textRequest/imageRequest/videoRequest/ttsRequest`，不改主代码。
 - **AI 调用统一走 `src/utils/ai.ts`** 的 `Ai.Text/Image/Video/Audio(key)`，`key` 用 agent 语义名或 `vendorId:modelName`。
 - **Creative Canvas 前端在 `data/web/creative-canvas.*` 注入实现**；改 JS/CSS 后同步改 `data/web/index.html` cache-buster，并跑 `node --check data/web/creative-canvas.js` + `yarn test:creative-canvas`。
+- **Creative Canvas Agent 工作流要验证真实业务写入**：不要只看会话文本。分镜生产链路走 `/api/socket/productionAgent` 的 `storyboardPipeline`，持久化工具是 `save_flowData` / `add_flowData_storyboard`；`add_flowData_storyboard` 里的 `shouldGenerateImage` 必须传数字 `0/1`，后端 REST 校验不收 boolean/string。
 - **鉴权**：除 `/api/login/login` 外所有 API 需 JWT。CORS 仅 loopback。`/oss` 下 `compose/`、`merge/` 敏感路径额外校验 token。
 - 视频合成需本机 **ffmpeg/ffprobe** 在 PATH（或 `FFMPEG_PATH`/`FFPROBE_PATH`）。macOS 若 ffmpeg 被 AMFI SIGKILL（exit 137），需 adhoc 重签名，见 [docs/video-compose-features.md](docs/video-compose-features.md)。
 

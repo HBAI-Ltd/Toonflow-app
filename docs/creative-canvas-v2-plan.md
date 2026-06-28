@@ -12,6 +12,8 @@
 - 后端 graph builder `src/utils/creativeCanvas.ts` 已输出 project/script/storyboardAnalysis/assetGroup/storyboard/videoPrompt/video/videoPromptGroup/videoGroup/auditArtifact/auditSegment/task 节点与语义边、stale 传播、layout 合并。
 - 资产、分镜、视频节点已携带缩略图/海报 URL；Prompt 节点可直接编辑图文内容，`@` 引用通过 fixed 浮层选择资产或参考图，并以内嵌 chip 呈现。
 - 资产类型字段 `o_assets.type ∈ {role, scene, tool}`；缩略图 URL 用 `oss.getSmallImageUrl(filePath)`（返回 `/oss/...?size=20`），视频/海报用 `oss.getFileUrl(filePath)`。资产候选图在 `o_image`（`assetsId` 关联，`o_assets.imageId` 为选定图）。
+- 画布已补 `source` 标签；来源章节/事件节点与资产、分镜、视频链路同一套 graph/layout 渲染。
+- 分镜标签已接入 `productionAgent` 的 `storyboardPipeline`：Agent 可读取当前剧本与资产、生成导演规划/分镜表，并通过工具把分镜写入真实业务表；是否成功以画布节点和 `o_storyboard` 为准，不以聊天文本为准。
 
 ## 确认的产品决策
 
@@ -126,7 +128,7 @@
 ## v2.7 统一 Agent 指令入口（2026-06-22）
 
 - [x] 左侧 Agent composer 对剧本、角色/场景/道具、分镜、视频、审计标签统一开放；剧本仍走 scriptAgent socket，其余标签先路由到已有确定性动作。
-- [x] 非剧本标签的 Agent 指令不会新造后端黑盒：资产标签触发资产提取或当前资产图生成；分镜标签触发当前分镜图生成；视频标签触发当前视频 Prompt 重生；审计标签仅接受 `修改为：...` 改写当前审计片段。
+- [x] 非剧本标签的 Agent 指令不会新造后端黑盒：资产标签触发资产提取或当前资产图生成；分镜标签走 `productionAgent` 的 `storyboardPipeline` 写导演规划/分镜表/分镜节点；视频标签触发当前视频 Prompt 重生；审计标签仅接受 `修改为：...` 改写当前审计片段。
 - [x] 左侧 Agent 区宽度可拖拽调整并写入 `localStorage`，需要查看长对话/执行日志时可临时扩展显示面积。
 - [x] 五个业务标签统一为「左侧 Agent 会话区 / 中间生成链路画布 / 右侧 Inspector 与剧集进度」三栏：左侧负责发起和解释任务，中间负责看清内容与依赖，右侧负责状态、来源、版本和确定性操作。
 
@@ -138,10 +140,18 @@
 - [x] 总览视图继续保持左到右流水线，并把视频 Prompt 聚合卡与视频结果聚合卡拆到相邻两列。
 - 边界：当前实现是确定性业务布局，不是通用图布局引擎；它按直接业务关系对齐和按卡片高度避让，不做全局最少交叉线求解。
 
+## v2.9 productionAgent 分镜写入链路（2026-06-28）
+
+- [x] **分镜 Agent 真实写入**：`productionAgent` 增加 `storyboardPipeline` 上下文，分阶段生成导演规划、分镜表和分镜节点。`save_flowData` 负责保存导演规划/分镜表，`add_flowData_storyboard` 负责调用前端 bridge 写入真实 `o_storyboard`。
+- [x] **工具调用约束**：`toolUseGuard` 支持按工具名计数，分镜写入阶段可要求具体工具被调用，避免 Agent 只输出文本结果但不落库。
+- [x] **前端 bridge 修复**：`data/web/creative-canvas.js` 的 `addStoryboard` 会把 Agent 传入的 `shouldGenerateImage` 统一转成数字 `0/1`；后端 `/production/storyboard/batchAddStoryboardInfo` 的参数校验不接受 boolean/string。
+- [x] **运行时 API origin 修复**：Electron / GUI 随机端口启动后，`src/app.ts` 回写实际 `PORT`，Creative Canvas 通过 `toonflow://getappurl` 获取当前 API base，避免生成图片或媒体 URL 指到错误端口。
+- [x] **验收结果**：`yarn test:creative-canvas` 与 `npx tsc --noEmit --pretty false` 通过；真实项目中分镜阶段已写入 9 条 `o_storyboard` 和 46 条资产关联，画布显示 9 个分镜节点。分镜图片生成仍是下一阶段，当前写入的分镜行未自动入图像生成队列。
+
 ## Test Plan
 
 - 单元：`yarn test:creative-canvas` 覆盖组卡聚合（按 type 分组与计数）、缩略图/海报 URL 字段、status 字段、缺图 fallback、stale 传播不回归。
-- 回归：`yarn test:content-audit`、`yarn test:prompt-center` 继续通过；`yarn lint` 通过。
+- 回归：`yarn test:content-audit`、`yarn test:prompt-center` 继续通过；`yarn lint` 或 `npx tsc --noEmit --pretty false` 通过。
 - 浏览器：对照设计稿核对富节点、徽章、连线、Inspector、进度板、品牌；缩放/拖拽/刷新后布局保持。
 
 ## Assumptions
