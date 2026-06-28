@@ -105,6 +105,7 @@ async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("videoPromptTargetsByShotNumber"), "video agent should map 镜头N wording to the linked video prompt");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("videoStatusAnswer"), "video agent should summarize generation, selection, and compose readiness");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("reviewWarnings"), "video agent should include video QA review warnings in status answers");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("renderVideoReviewBlock"), "video inspector should expose QA review details");
   assert.ok(fs.existsSync("src/utils/videoReview.ts"), "video QA review utility should exist");
   assert.equal(shouldRetryVideoGeneration("ETIMEDOUT 500"), true, "transient provider errors should be retryable");
   assert.equal(shouldRetryVideoGeneration("余额不足"), false, "account/balance errors should not be retried automatically");

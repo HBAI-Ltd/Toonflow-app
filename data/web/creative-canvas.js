@@ -5311,6 +5311,46 @@
     return h("div", { class: "tfcc-kv-row" }, [h("span", { text: label }), h("strong", { text: value == null || value === "" ? "-" : String(value) })]);
   }
 
+  function videoReviewText(value) {
+    const labels = {
+      passed: "通过",
+      warning: "需复核",
+      failed: "未通过",
+      generation_failed: "生成失败",
+      missing_audio: "缺少音轨",
+      video_unplayable: "视频不可播放",
+      missing_storyboard_binding: "缺少分镜绑定",
+      missing_asset_binding: "缺少资产绑定",
+      missing_asset_selected_image: "资产缺少选定图",
+      prompt_missing_asset_reference: "Prompt 未引用绑定资产",
+      prompt_foreign_asset_reference: "Prompt 引用了未绑定资产",
+      prompt_reference_over_limit: "参考图超过上限",
+      select_for_compose: "可用于合成",
+      retry_same_parameters: "可按相同参数重试",
+      fix_provider_or_prompt_before_retry: "先修复供应商或 Prompt",
+      generate_or_select_asset_images: "先生成或选定资产图",
+      regenerate_video_prompt: "重生视频 Prompt",
+      regenerate_with_audio_or_add_tts: "重生带音轨视频或补 TTS",
+      manual_review: "人工复核",
+    };
+    return labels[value] || String(value || "-");
+  }
+
+  function renderVideoReviewBlock(review) {
+    const issues = Array.isArray(review?.issues) ? review.issues : [];
+    const action = review?.report?.suggestedAction || review?.suggestedAction || "";
+    return h("div", { class: "tfcc-source-inspector-block" }, [
+      h("div", { class: "tfcc-panel-subtitle", text: "视频 QA" }),
+      review ? h("div", { class: "tfcc-kv" }, [
+        kv("状态", videoReviewText(review.status)),
+        kv("分数", review.score == null ? "-" : `${review.score}`),
+        kv("可重试", review.retryable ? "是" : "否"),
+        kv("建议", videoReviewText(action)),
+      ]) : h("p", { class: "tfcc-inspect-text", text: "尚未运行视频 QA。" }),
+      issues.length ? h("p", { class: "tfcc-inspect-text", text: `问题：${issues.map(videoReviewText).join("；")}` }) : null,
+    ].filter(Boolean));
+  }
+
   function sourceReferenceFor(data) {
     const key = sourceReferenceKey(data || {});
     return key ? state.sourceReferences[key] || null : null;
@@ -5512,6 +5552,7 @@
       rows.push(kv("hash", segment.hash));
       rows.push(kv("artifact", segment.artifactId));
     }
+    const reviewBlock = node.type === "video" ? renderVideoReviewBlock(node.data?.review) : null;
     const actions = [];
     if (node.type === "script") {
       const targetScriptId = scriptIdFromNode(node);
@@ -5598,6 +5639,7 @@
       ]),
       h("div", { class: "tfcc-panel-title", text: node.label }),
       h("div", { class: "tfcc-kv" }, rows),
+      reviewBlock,
       preview,
       segment
         ? h("div", { class: "tfcc-edit" }, [
