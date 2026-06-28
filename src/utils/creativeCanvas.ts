@@ -161,6 +161,12 @@ function compactRow(row: any) {
   return result;
 }
 
+function selectedVideoId(row: any): number | null {
+  const id = row?.videoId ?? row?.selectVideoId;
+  const value = Number(id);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
 function normalizeLayoutMap(input: unknown): Record<string, LayoutItem> {
   const parsed = parseJson<any>(input, {});
   if (Array.isArray(parsed)) {
@@ -260,7 +266,7 @@ async function collectDownstreamStale(targetType: string | null | undefined, tar
   if (targetType === "o_script") {
     add(`storyboardAnalysis:${id}`, "剧本文本已修改，下游分镜分析需要复核");
     const storyboards = await db("o_storyboard").where("scriptId", id).select("id", "trackId");
-    const tracks = await db("o_videoTrack").where("scriptId", id).select("id", "selectVideoId");
+    const tracks = await db("o_videoTrack").where("scriptId", id).select("id", "videoId", "selectVideoId");
     const videos = await db("o_video").where("scriptId", id).select("id");
     const assets = await db("o_assets").where("scriptId", id).select("id");
     storyboards.forEach((item: any) => {
@@ -270,7 +276,8 @@ async function collectDownstreamStale(targetType: string | null | undefined, tar
     assets.forEach((item: any) => add(`asset:${item.id}`, "剧本文本已修改，资产抽取可能需要复核"));
     tracks.forEach((item: any) => {
       add(`videoPrompt:${item.id}`, "剧本文本已修改，视频 prompt 可能过期");
-      if (item.selectVideoId) add(`video:${item.selectVideoId}`, "上游 prompt 已变化，视频结果可能过期");
+      const videoId = selectedVideoId(item);
+      if (videoId) add(`video:${videoId}`, "上游 prompt 已变化，视频结果可能过期");
     });
     videos.forEach((item: any) => add(`video:${item.id}`, "剧本文本已修改，视频结果可能过期"));
   }
@@ -290,9 +297,10 @@ async function collectDownstreamStale(targetType: string | null | undefined, tar
     const storyboard = await db("o_storyboard").where("id", id).first();
     if (storyboard?.trackId) {
       add(`videoPrompt:${storyboard.trackId}`, "分镜内容已修改，视频 prompt 可能过期");
-      const tracks = await db("o_videoTrack").where("id", storyboard.trackId).select("id", "selectVideoId");
+      const tracks = await db("o_videoTrack").where("id", storyboard.trackId).select("id", "videoId", "selectVideoId");
       tracks.forEach((item: any) => {
-        if (item.selectVideoId) add(`video:${item.selectVideoId}`, "上游分镜已变化，视频结果可能过期");
+        const videoId = selectedVideoId(item);
+        if (videoId) add(`video:${videoId}`, "上游分镜已变化，视频结果可能过期");
       });
       const videos = await db("o_video").where("videoTrackId", storyboard.trackId).select("id");
       videos.forEach((item: any) => add(`video:${item.id}`, "上游分镜已变化，视频结果可能过期"));
@@ -301,7 +309,8 @@ async function collectDownstreamStale(targetType: string | null | undefined, tar
 
   if (targetType === "o_videoTrack") {
     const track = await db("o_videoTrack").where("id", id).first();
-    if (track?.selectVideoId) add(`video:${track.selectVideoId}`, "视频 prompt 已修改，选中视频可能过期");
+    const videoId = selectedVideoId(track);
+    if (videoId) add(`video:${videoId}`, "视频 prompt 已修改，选中视频可能过期");
     const videos = await db("o_video").where("videoTrackId", id).select("id");
     videos.forEach((item: any) => add(`video:${item.id}`, "视频 prompt 已修改，视频结果可能过期"));
   }

@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { ReferenceList } from "@/utils/ai";
+import { markGeneratedVideoComplete, markGeneratedVideoFailed } from "@/utils/videoResult";
 const router = express.Router();
 
 type Type = "imageReference" | "startImage" | "endImage" | "videoReference" | "audioReference";
@@ -157,6 +158,7 @@ export default router.post(
       type: "视频",
     };
     const aiVideo = u.Ai.Video(model);
+    let taskId: number | null = null;
     aiVideo
       .run(
         {
@@ -173,18 +175,15 @@ export default router.post(
           taskClass: "视频生成",
           describe: "根据提示词生成视频",
           relatedObjects: JSON.stringify(relatedObjects),
+          onTaskStart: (id) => {
+            taskId = id;
+          },
         },
       )
       .then(async () => await aiVideo.save(videoPath))
-      .then(async () => await u.db("o_video").where("id", videoId).update({ state: "生成成功" }))
+      .then(async () => await markGeneratedVideoComplete({ videoId, videoPath, projectId, scriptId, taskId, audioRequested: audio }))
       .catch(async (error: any) => {
-        await u
-          .db("o_video")
-          .where("id", videoId)
-          .update({
-            state: "生成失败",
-            errorReason: u.error(error).message,
-          });
+        await markGeneratedVideoFailed(videoId, u.error(error).message);
       });
   },
 );

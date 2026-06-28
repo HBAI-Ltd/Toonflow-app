@@ -13,8 +13,9 @@ export default router.post(
   async (req, res) => {
     const { id } = req.body;
     await u.db("o_video").where("id", id).delete();
-    await u.db("o_videoTrack").where("videoId", id).update({
+    await u.db("o_videoTrack").where("videoId", id).orWhere("selectVideoId", id).update({
       videoId: null,
+      selectVideoId: null,
     });
     res.status(200).send(success({ message: "视频删除成功" }));
   },

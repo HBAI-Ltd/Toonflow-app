@@ -100,6 +100,8 @@ async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("videoPromptTargets"), "video agent should map mentioned storyboards to linked video prompt cards");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("isVideoCountQuestion"), "video agent should treat video count questions as queries");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("videoPromptTargetsByShotNumber"), "video agent should map 镜头N wording to the linked video prompt");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("videoStatusAnswer"), "video agent should summarize generation, selection, and compose readiness");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("submitVideoCompose"), "video agent should submit selected tracks to compose/merge endpoints");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/production/workbench/generateVideo"), "video agent should submit real video generation separately from prompt regeneration");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("已收到，开始提交"), "stage agent should acknowledge long-running video actions before awaiting backend work");
   assert.ok(fs.existsSync("src/routes/creativeCanvas/resolveIntent.ts"), "creative canvas should expose an LLM intent resolver endpoint");
@@ -465,7 +467,7 @@ async function main() {
     state: "已完成",
     filePath: "test-video.mp4",
   });
-  await db("o_videoTrack").where("id", trackId).update({ selectVideoId: videoId });
+  await db("o_videoTrack").where("id", trackId).update({ videoId });
   const [videoTaskId] = await db("o_tasks").insert({
     projectId,
     taskClass: "视频生成",
@@ -711,12 +713,14 @@ async function main() {
   assert.ok(patch.revisionId, "patch should create revision");
   assert.ok(patch.staleNodeIds.includes(`storyboardAnalysis:${scriptId}`), "script patch should mark storyboard analysis stale");
   assert.ok(patch.staleNodeIds.includes(`videoPrompt:${trackId}`), "script patch should mark video prompt stale");
+  assert.ok(patch.staleNodeIds.includes(`video:${videoId}`), "script patch should mark selected video stale through videoId");
 
   const updated = await db("o_script").where("id", scriptId).first();
   assert.equal(updated?.content, "林澈推开旧剧院的沉重大门。纸条在桌上发光。");
   const graphAfterPatch = await getCreativeCanvasGraph({ projectId, scriptId });
   assert.equal(findNode(graphAfterPatch, `storyboardAnalysis:${scriptId}`).stale, true, "graph should keep stale marker after patch");
   assert.equal(findNode(graphAfterPatch, `videoPrompt:${trackId}`).stale, true, "video prompt node should be stale after upstream edit");
+  assert.equal(findNode(graphAfterPatch, `video:${videoId}`).stale, true, "selected video node should be stale after upstream edit");
 
   await cleanup(projectId);
   await knexDb.destroy();

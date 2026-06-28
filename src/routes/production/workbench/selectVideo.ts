@@ -24,7 +24,8 @@ export default router.post(
     if (video.state !== "生成成功") return res.status(400).send(error("只能选择已生成成功的视频"));
 
     await u.db("o_videoTrack").where("id", trackId).update({
-      videoId: videoId,
+      videoId,
+      selectVideoId: videoId,
     });
     res.status(200).send(success({ message: "视频选择成功" }));
   },

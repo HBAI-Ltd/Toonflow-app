@@ -4002,6 +4002,63 @@
     return uniqueLayoutNodes(videos);
   }
 
+  function selectedTrackVideoId(track) {
+    const value = Number(track?.videoId || track?.selectVideoId);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  function videoWorkflowSnapshot() {
+    const prompts = orderedLayoutNodes(graphNodes().filter((node) => node.type === "videoPrompt"));
+    const videos = graphNodes().filter((node) => node.type === "video");
+    const tasks = (state.graph?.tasks || []).filter((task) => /视频生成/.test(String(task.taskClass || "")) || taskRelatedData(task).videoId);
+    const promptRows = prompts.map((node) => {
+      const track = node.data?.videoTrack || {};
+      const linkedVideos = linkedCanvasNodes(node, "video");
+      const selectedId = selectedTrackVideoId(track);
+      const successfulVideos = linkedVideos.filter((video) => /生成成功|已完成|成功/.test(nodeStatusText(video)));
+      return { node, track, linkedVideos, selectedId, successfulVideos };
+    });
+    return {
+      prompts,
+      videos,
+      tasks,
+      promptRows,
+      missingPrompts: promptRows.filter((row) => !String(row.track.prompt || "").trim()),
+      missingVideos: promptRows.filter((row) => !row.linkedVideos.length),
+      missingSelected: promptRows.filter((row) => row.successfulVideos.length && !row.selectedId),
+      readyRows: promptRows.filter((row) => row.selectedId),
+    };
+  }
+
+  function videoStatusAnswer(text) {
+    const value = String(text || "");
+    if (!isStatusQuestion(value) && !/(?:视频|成片|合成|拼接).*(?:如何|怎样|怎么样|咋样|什么情况|进展)|(?:如何|怎样|怎么样|咋样|什么情况|进展).*(?:视频|成片|合成|拼接)/.test(value)) return "";
+    const snapshot = videoWorkflowSnapshot();
+    const successVideos = snapshot.videos.filter((node) => /生成成功|已完成|成功/.test(nodeStatusText(node)));
+    const failedVideos = snapshot.videos.filter((node) => /失败|生成失败/.test(nodeStatusText(node)));
+    const runningTasks = snapshot.tasks.filter((task) => /进行中|生成中|running|pending/i.test(String(task.state || "")));
+    const warningTasks = snapshot.tasks.filter((task) => taskProgressFor(task.id).some((item) => item.status === "warning"));
+    const latestLines = runningTasks.slice(0, 3).map((task) => {
+      const latest = taskProgressFor(task.id).slice(-1)[0];
+      return `- 任务 #${task.id}：${latest?.message || task.state || "进行中"}`;
+    });
+    const blockers = [
+      snapshot.missingPrompts.length ? `${snapshot.missingPrompts.length} 条视频 Prompt 缺提示词` : "",
+      snapshot.missingVideos.length ? `${snapshot.missingVideos.length} 条 Prompt 还没有视频结果` : "",
+      snapshot.missingSelected.length ? `${snapshot.missingSelected.length} 条已有成功视频但未选片` : "",
+      failedVideos.length ? `${failedVideos.length} 个视频失败` : "",
+      warningTasks.length ? `${warningTasks.length} 个视频任务有质检警告` : "",
+    ].filter(Boolean);
+    const canCompose = snapshot.prompts.length > 0 && snapshot.readyRows.length === snapshot.prompts.length;
+    return [
+      `当前「${activeScriptLabel()}」视频阶段：${snapshot.prompts.length} 条视频 Prompt，${successVideos.length}/${snapshot.prompts.length || 0} 条已有成功视频，${snapshot.readyRows.length}/${snapshot.prompts.length || 0} 条已选片。`,
+      runningTasks.length ? `进行中任务：${runningTasks.length} 个` : "当前没有进行中的视频生成任务。",
+      latestLines.length ? latestLines.join("\n") : "",
+      blockers.length ? `缺口：${blockers.join("；")}。` : "缺口：暂无。",
+      canCompose ? "下一步：可以提交单镜头合成或整集拼接。" : "下一步：先补齐缺口，再合成。",
+    ].filter(Boolean).join("\n");
+  }
+
   function shotNumbersInText(text) {
     const nums = [];
     String(text || "").replace(/(?:镜头|第)\s*(\d+)/g, (_, raw) => {
@@ -4031,6 +4088,11 @@
     const value = String(text || "");
     if (wantsVideoPromptRegeneration(value)) return false;
     return (/视频|成片|渲染/.test(value) || shotNumbersInText(value).length > 0) && /生成|执行|提交|开始/.test(value) && !isStatusQuestion(value);
+  }
+
+  function wantsVideoCompose(text) {
+    const value = String(text || "");
+    return /合成|拼接|整集|导出/.test(value) && !/(视频\s*Prompt|视频prompt|video\s*prompt|提示词|prompt)/i.test(value) && !isStatusQuestion(value);
   }
 
   function agentTargetStatusAnswer(text, targets) {
@@ -4561,6 +4623,33 @@
     await loadGraph();
   }
 
+  async function submitVideoCompose(text) {
+    const pid = Number(projectId());
+    const sid = Number(scriptId());
+    if (!pid || !sid) throw new Error("缺少项目或剧集上下文，无法提交合成。");
+    const snapshot = videoWorkflowSnapshot();
+    const missing = snapshot.promptRows.filter((row) => !row.selectedId);
+    if (!snapshot.promptRows.length) throw new Error("当前剧集还没有视频 Prompt，无法合成。");
+    if (missing.length) {
+      throw new Error(`还有 ${missing.length} 条视频 Prompt 未选定成功视频，先完成生成/选片。`);
+    }
+    if (/整集|拼接|导出/.test(String(text || ""))) {
+      await api("/production/workbench/mergeEpisode", {
+        method: "POST",
+        body: { projectId: pid, scriptId: sid },
+      });
+      await loadGraph();
+      return "已提交整集拼接任务。";
+    }
+    const trackIds = snapshot.readyRows.map((row) => Number(row.track.id)).filter((id) => Number.isFinite(id));
+    await api("/production/workbench/composeVideo", {
+      method: "POST",
+      body: { projectId: pid, scriptId: sid, trackIds },
+    });
+    await loadGraph();
+    return `已提交 ${trackIds.length} 个单镜头合成任务。`;
+  }
+
   async function sendAgentMessage() {
     const profile = agentProfile();
     const text = state.agentText.trim();
@@ -4603,6 +4692,7 @@
       const storyboardDecisionAnswer = mode === "storyboard" && !shouldRunStoryboardPipeline ? storyboardDecisionReplyAnswer(text) : "";
       const stageAnswer = mode === "storyboard" && !shouldRunStoryboardPipeline ? storyboardStatusAnswer(text) : "";
       const assetAnswer = mode === "asset" ? assetStatusAnswer(text) : "";
+      const videoAnswer = mode === "video" ? videoStatusAnswer(text) : "";
       const shouldSubmitAllAssetImages = mode === "asset" && (wantsAllAssetImageAction(text) || confirmsAssetImageNextStage(text));
       const targetAnswer = agentTargetStatusAnswer(text, mentionedNodes);
       if (targetAnswer) {
@@ -4622,6 +4712,8 @@
         pushLocalAgentMessage("assistant", stageAnswer, "complete", profile.title);
       } else if (assetAnswer) {
         pushLocalAgentMessage("assistant", assetAnswer, "complete", profile.title);
+      } else if (videoAnswer) {
+        pushLocalAgentMessage("assistant", videoAnswer, "complete", profile.title);
       } else if (mentionedNodes.length && /查看|定位|打开|选中|聚焦/.test(text)) {
         focusCanvasNode(mentionedNodes[0].id);
         pushLocalAgentMessage("assistant", `已定位到「${mentionedNodes[0].label}」。`, "complete", profile.title);
@@ -4665,6 +4757,11 @@
             pushLocalAgentMessage("assistant", storyboardStatusAnswer("分镜状态") || "请说明要做「分镜分析」还是「生成分镜图」，也可以输入 @ 选择具体分镜卡。", "warning", profile.title);
           }
         } else if (mode === "video") {
+          if (wantsVideoCompose(text)) {
+            const message = await submitVideoCompose(text);
+            pushLocalAgentMessage("assistant", message, "complete", profile.title);
+            return;
+          }
           const directTargets = videoPromptTargets(mentionedNodes);
           const shotTargets = videoPromptTargetsByShotNumber(text);
           const prompts = directTargets.length

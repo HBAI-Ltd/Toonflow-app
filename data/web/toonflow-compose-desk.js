@@ -803,6 +803,7 @@
       if (!first) throw new Error("未找到带 src/id 的视频候选，需先完成视频生成。");
       if (!first.hasSelectedVideo) {
         await apiPost("/api/production/workbench/selectVideo", { trackId: first.trackId, videoId: first.videoId });
+        first.track.videoId = first.videoId;
         first.track.selectVideoId = first.videoId;
       }
       var result = await apiPost("/api/production/workbench/composeVideo", {

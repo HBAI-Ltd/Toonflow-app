@@ -14,6 +14,7 @@ import FormData from "form-data";
 import jsonwebtoken from "jsonwebtoken";
 import u from "@/utils";
 import crypto from "node:crypto";
+import { recordVendorLogProgress } from "@/utils/vendorTaskProgress";
 
 const DEFAULT_VM_TIMEOUT_MS = 5000;
 
@@ -66,6 +67,7 @@ export default function runCode(code: string, vendor?: Record<string, any>) {
 }
 export function logger(logstring: any) {
   console.log("【VM】" + JSON.stringify(logstring));
+  recordVendorLogProgress(logstring);
 }
 /**
  * 压缩图片，目标字节数不高于 size

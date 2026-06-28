@@ -3,6 +3,8 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 import axios from "axios";
 import { transform } from "sucrase";
 import u from "@/utils";
+import { addTaskProgress } from "@/utils/taskProgress";
+import { runWithVendorTaskContext } from "@/utils/vendorTaskProgress";
 
 type AiType =
   | "scriptAgent"
@@ -146,7 +148,7 @@ async function withTaskRecord<T>(
   relatedObjects: string,
   projectId: number,
   fn: (modelName: `${string}:${string}`, think: Boolean, thinkLevel: 0 | 1 | 2 | 3) => Promise<T>,
-  promptSnapshot?: Pick<TaskRecord, "promptHash" | "promptVersionId" | "promptSource">,
+  promptSnapshot?: Pick<TaskRecord, "promptHash" | "promptVersionId" | "promptSource" | "onTaskStart">,
 ): Promise<T> {
   const modelName = await resolveModelName(modelKey);
   const [_, model] = modelName.split(/:(.+)/);
@@ -157,14 +159,62 @@ async function withTaskRecord<T>(
     promptVersionId: promptSnapshot?.promptVersionId,
     promptSource: promptSnapshot?.promptSource,
   });
+  const related = parseRelatedObjects(relatedObjects);
+  promptSnapshot?.onTaskStart?.(taskRecord.id);
+  await recordTaskProgress({
+    taskId: taskRecord.id,
+    projectId,
+    scriptId: related.scriptId ?? null,
+    phase: "submitted",
+    status: "running",
+    message: `${taskClass}任务已提交`,
+    meta: { related },
+  });
   try {
-    const result = await fn(modelName, false, 0);
+    const result = await runWithVendorTaskContext(
+      { taskId: taskRecord.id, projectId, scriptId: related.scriptId ?? null },
+      () => fn(modelName, false, 0),
+    );
 
-    taskRecord(1);
+    await taskRecord(1);
+    await recordTaskProgress({
+      taskId: taskRecord.id,
+      projectId,
+      scriptId: related.scriptId ?? null,
+      phase: "completed",
+      status: "complete",
+      message: `${taskClass}任务已完成`,
+      meta: { related },
+    });
     return result;
   } catch (e) {
-    taskRecord(-1, u.error(e).message);
+    await taskRecord(-1, u.error(e).message);
+    await recordTaskProgress({
+      taskId: taskRecord.id,
+      projectId,
+      scriptId: related.scriptId ?? null,
+      phase: "failed",
+      status: "error",
+      message: u.error(e).message,
+      meta: { related },
+    });
     throw new Error(u.error(e).message);
+  }
+}
+
+function parseRelatedObjects(value: string): any {
+  try {
+    return JSON.parse(value || "{}");
+  } catch {
+    return {};
+  }
+}
+
+async function recordTaskProgress(input: Parameters<typeof addTaskProgress>[0]) {
+  try {
+    await addTaskProgress(input);
+  } catch (e) {
+    console.warn(`[taskProgress] ${u.error(e).message}`);
   }
 }
 
@@ -266,6 +316,7 @@ interface TaskRecord {
   promptHash?: string;
   promptVersionId?: number | null;
   promptSource?: string;
+  onTaskStart?: (taskId: number) => void;
 }
 
 class AiImage {
