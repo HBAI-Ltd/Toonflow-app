@@ -4,6 +4,7 @@ import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { enqueueAssetCandidates } from "@/utils/queueHandlers";
+import { assetCardPrompt } from "@/utils/characterSpec";
 
 const router = express.Router();
 
@@ -43,7 +44,7 @@ const assetTypeConfig: Record<AssetType, AssetTypeConfig> = {
 
 // ─── 构建生成提示词 ──────────────────────────────────────────
 
-function buildPrompt(cfg: AssetTypeConfig, artStyle: string, name: string, prompt: string): string {
+function buildPrompt(cfg: AssetTypeConfig, artStyle: string, name: string, prompt: string, assetCard = ""): string {
   return `
     请根据以下参数生成${cfg.promptTitle}：
 
@@ -53,6 +54,7 @@ function buildPrompt(cfg: AssetTypeConfig, artStyle: string, name: string, promp
     **${cfg.label}设定：**
     - 名称:${name},
     - 提示词:${prompt},
+    ${assetCard ? `\n    **资产卡规格：**\n${assetCard}` : ""}
 
     请严格按照系统规范生成${cfg.promptEnd}。
   `;
@@ -93,7 +95,8 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
   if (!cfg) return res.status(400).send(error("不支持的类型"));
 
   // 2. 创建候选占位记录并入队（含 vendor 并发限流、失败自动重试）
-  const userPrompt = buildPrompt(cfg, project.artStyle!, name, prompt);
+  const asset = await u.db("o_assets").where({ id, projectId }).select("remark").first();
+  const userPrompt = buildPrompt(cfg, project.artStyle!, name, prompt, assetCardPrompt(asset?.remark));
   const describe = `生成${cfg.label}图，名称：${name}，提示词：${prompt}`;
   const count = candidateCount ?? 1;
 

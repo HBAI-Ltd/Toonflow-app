@@ -69,6 +69,14 @@ export default router.post(
         modeData = JSON.parse(mode);
       } catch (e) {}
     }
+    const generationMode = modeData.length > 0 ? JSON.stringify(modeData) : String(mode || "");
+    const generationMeta = {
+      generationModel: model,
+      generationMode,
+      generationResolution: resolution,
+      generationDuration: duration,
+      audioRequested: audio ? 1 : 0,
+    };
     //获取生成视频比例
     const ratio = await u.db("o_project").select("videoRatio").where("id", projectId).first();
     const videoPath = `/${projectId}/video/${uuidv4()}.mp4`; //视频保存路径
@@ -76,8 +84,8 @@ export default router.post(
     const images = await Promise.all(
       resolvedUploadData.map(async (item: { id: number; sources: string }) => {
         if (item.sources === "storyboard") {
-          const filePath = await u.db("o_storyboard").where("id", item.id).select("filePath").first();
-          return { path: filePath?.filePath, sources: "storyBoard", name: "", kind: "storyboard" as const };
+          const storyboard = await u.db("o_storyboard").where("id", item.id).select("filePath", "state").first();
+          return { path: storyboard?.state === "已完成" ? storyboard.filePath : "", sources: "storyBoard", name: "", kind: "storyboard" as const };
         }
         if (item.sources === "assets") {
           const filePath = await u
@@ -93,7 +101,7 @@ export default router.post(
     //把images里面的图片转成base64格式
     const base64 = await Promise.all(
       images.map(async (item) => {
-        if (!item) return null;
+        if (!item?.path) return null;
         return {
           base64: await u.oss.getImageBase64(item.path),
           type: item.sources == "audio" ? "audio" : "image",
@@ -149,7 +157,8 @@ export default router.post(
       scriptId,
       projectId,
       videoTrackId: trackId,
-    });
+      ...generationMeta,
+    } as any);
     res.status(200).send(success(videoId));
 
     const runAttempt = async (currentVideoId: number, currentVideoPath: string, attempt: number) => {
@@ -189,7 +198,8 @@ export default router.post(
             scriptId,
             projectId,
             videoTrackId: trackId,
-          });
+            ...generationMeta,
+          } as any);
           await runAttempt(retryVideoId, retryPath, attempt + 1);
         }
       }

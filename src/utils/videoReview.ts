@@ -6,6 +6,7 @@ import oss from "@/utils/oss";
 import error from "@/utils/error";
 import { extractVideoFrame, probeDuration, probeVideoInfo } from "@/utils/ffmpegTool";
 import { compareVisualFingerprints, createVisualFingerprint } from "@/utils/visualSimilarity";
+import { assetCardPrompt } from "@/utils/characterSpec";
 
 export type VideoReviewStatus = "passed" | "warning" | "failed";
 
@@ -320,7 +321,7 @@ function parseJsonValue<T>(value: unknown, fallback: T): T {
 
 async function inspectTrackConsistency(trackId: number, projectId: number) {
   const track = await db("o_videoTrack").where("id", trackId).select("prompt").first();
-  const storyboards = await db("o_storyboard").where({ trackId, projectId }).select("id", "index", "filePath").orderBy("index", "asc");
+  const storyboards = await db("o_storyboard").where({ trackId, projectId }).select("id", "index", "filePath", "state").orderBy("index", "asc");
   const storyboardIds = storyboards.map((item: any) => item.id).filter((id: any) => typeof id === "number");
   const assetRows = storyboardIds.length
     ? await db("o_assets2Storyboard")
@@ -333,11 +334,21 @@ async function inspectTrackConsistency(trackId: number, projectId: number) {
           "o_assets.name as name",
           "o_assets.type as type",
           "o_assets.imageId as imageId",
+          "o_assets.remark as remark",
           "o_image.filePath as filePath",
         )
     : [];
   const deduped = uniqueBy(assetRows, (item: any) => Number(item.id)).filter((item: any) => item.id != null);
   const imageAssets = deduped.filter((item: any) => item.type !== "audio");
+  const assetCards = imageAssets
+    .map((item: any) => ({
+      id: Number(item.id),
+      name: String(item.name || ""),
+      type: String(item.type || ""),
+      spec: assetCardPrompt(item.remark),
+    }))
+    .filter((item) => item.spec);
+  const roleCharacterSpecs = assetCards.filter((item) => item.type === "role");
   const missingAssetImageIds = imageAssets.filter((item: any) => !item.imageId || !item.filePath).map((item: any) => Number(item.id));
   const promptRefs = parsePromptImageRefs(String(track?.prompt || ""));
   const promptNames = new Set(promptRefs.map((item) => item.name).filter(Boolean));
@@ -355,9 +366,9 @@ async function inspectTrackConsistency(trackId: number, projectId: number) {
         source: "asset" as const,
         type: item.type ?? null,
         filePath: String(item.filePath),
-      })),
+    })),
     ...storyboards
-      .filter((item: any) => item.filePath)
+      .filter((item: any) => item.filePath && item.state === "已完成")
       .map((item: any) => ({
         id: Number(item.id),
         name: `镜头 ${item.index ?? item.id}`,
@@ -374,6 +385,10 @@ async function inspectTrackConsistency(trackId: number, projectId: number) {
     promptReferenceCount: promptRefs.length,
     promptMissingAssetNames,
     promptForeignAssetNames,
+    assetCardCount: assetCards.length,
+    assetCards,
+    characterSpecCount: roleCharacterSpecs.length,
+    characterSpecs: roleCharacterSpecs,
     visualReferences,
   };
 }

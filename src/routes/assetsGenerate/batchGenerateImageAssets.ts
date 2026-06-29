@@ -4,6 +4,7 @@ import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { enqueueAssetCandidates } from "@/utils/queueHandlers";
+import { assetCardPrompt } from "@/utils/characterSpec";
 
 const router = express.Router();
 
@@ -41,7 +42,7 @@ const assetTypeConfig: Record<AssetType, AssetTypeConfig> = {
   },
 };
 
-function buildPrompt(cfg: AssetTypeConfig, artStyle: string, name: string, prompt: string): string {
+function buildPrompt(cfg: AssetTypeConfig, artStyle: string, name: string, prompt: string, assetCard = ""): string {
   return `
     请根据以下参数生成${cfg.promptTitle}：
 
@@ -51,6 +52,7 @@ function buildPrompt(cfg: AssetTypeConfig, artStyle: string, name: string, promp
     **${cfg.label}设定：**
     - 名称:${name},
     - 提示词:${prompt},
+    ${assetCard ? `\n    **资产卡规格：**\n${assetCard}` : ""}
 
     请严格按照系统规范生成${cfg.promptEnd}。
   `;
@@ -81,13 +83,17 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
   const project = await u.db("o_project").where("id", projectId).select("artStyle", "type", "intro").first();
   if (!project) return res.status(500).send(error("项目为空"));
 
+  const assetIds = (items as { id: number }[]).map((item) => item.id);
+  const assetRemarks = assetIds.length ? await u.db("o_assets").whereIn("id", assetIds).where({ projectId }).select("id", "remark") : [];
+  const remarkByAssetId = new Map(assetRemarks.map((row: any) => [Number(row.id), row.remark]));
+
   // 2. 逐条创建候选占位记录并入队（队列按 vendor 限流，失败自动重试）
   const batches: { assetsId: number; batchId: string; imageIds: number[] }[] = [];
   for (const item of items as { id: number; type: string; name: string; prompt: string; base64?: string | null }[]) {
     const cfg = assetTypeConfig[item.type as AssetType];
     if (!cfg) continue;
 
-    const userPrompt = buildPrompt(cfg, project.artStyle ?? "", item.name, item.prompt);
+    const userPrompt = buildPrompt(cfg, project.artStyle ?? "", item.name, item.prompt, assetCardPrompt(remarkByAssetId.get(item.id)));
     const describe = `生成${cfg.label}图，名称：${item.name}，提示词：${item.prompt}`;
 
     const { batchId, imageIds } = await enqueueAssetCandidates({

@@ -52,6 +52,13 @@ export default router.post(
         modeData = JSON.parse(mode);
       } catch (e) {}
     }
+    const generationMode = modeData.length > 0 ? JSON.stringify(modeData) : String(mode || "");
+    const generationMeta = {
+      generationModel: model,
+      generationMode,
+      generationResolution: resolution,
+      audioRequested: audio ? 1 : 0,
+    };
 
     // 获取生成视频比例
     const ratio = await u.db("o_project").select("videoRatio").where("id", projectId).first();
@@ -65,8 +72,8 @@ export default router.post(
         const images = await Promise.all(
           uploadData.map(async (item) => {
             if (item.sources === "storyboard") {
-              const filePath = await u.db("o_storyboard").where("id", item.id).select("filePath").first();
-              return { path: filePath?.filePath, sources: "storyBoard" };
+              const storyboard = await u.db("o_storyboard").where("id", item.id).select("filePath", "state").first();
+              return { path: storyboard?.state === "已完成" ? storyboard.filePath : "", sources: "storyBoard" };
             }
             if (item.sources === "assets") {
               const filePath = await u
@@ -88,7 +95,9 @@ export default router.post(
           scriptId,
           projectId,
           videoTrackId: trackId,
-        });
+          generationDuration: duration,
+          ...generationMeta,
+        } as any);
 
         return { videoId, videoPath, prompt, duration, images, trackId };
       }),
@@ -99,7 +108,7 @@ export default router.post(
       // 所有任务全部并发后台执行，完全不阻塞任何进程
       const base64 = await Promise.all(
         images.map(async (item) => {
-          if (!item) return null;
+          if (!item?.path) return null;
           return { base64: await u.oss.getImageBase64(item.path), type: item.sources == "audio" ? "audio" : "image" };
         }),
       );
@@ -141,7 +150,9 @@ export default router.post(
               scriptId,
               projectId,
               videoTrackId: trackId,
-            });
+              generationDuration: duration,
+              ...generationMeta,
+            } as any);
             await runAttempt(retryVideoId, retryPath, attempt + 1);
           }
         }

@@ -91,6 +91,7 @@
     selectedProjectId: null,
     selectedScriptId: null,
     selectedNodeId: null,
+    nodeActionKey: "",
     editText: "",
     agentText: "",
     lockedAgentContext: "",
@@ -117,7 +118,10 @@
     nodePositionOverrides: {},
     sourceReferences: savedSourceReferences(),
     imageModelOptions: [],
+    videoModelOptions: [],
+    videoGenerationSettings: {},
     promptMentionPicker: null,
+    imagePreview: null,
     agentPlanData: null,
     agentPlanDataId: null,
     syncedAgentMessages: {},
@@ -370,8 +374,16 @@
     ].join("");
   }
 
+  function normalizeMarkdownText(text) {
+    return String(text || "")
+      .replace(/\\r\\n/g, "\n")
+      .replace(/\\n/g, "\n")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n");
+  }
+
   function renderMarkdown(text) {
-    const lines = String(text || "").replace(/\r\n/g, "\n").split("\n");
+    const lines = normalizeMarkdownText(text).split("\n");
     const html = [];
     let paragraph = [];
     let list = null;
@@ -1050,15 +1062,15 @@
     if (node.type === "novelChapter" || node.type === "novelSection" || node.type === "sourceReference") return "source";
     if (node.type === "storySkeleton" || node.type === "adaptationStrategy" || node.type === "script") return "script";
     if (node.type === "asset" || node.type === "assetGroup") return "asset";
-    if (node.type === "scriptPlan" || node.type === "storyboardTable" || node.type === "storyboard" || node.type === "storyboardAnalysis") return "storyboard";
-    if (node.type === "videoPrompt" || node.type === "video" || node.type === "videoPromptGroup" || node.type === "videoGroup") return "video";
+    if (node.type === "scriptPlan" || node.type === "storyboardTable" || node.type === "storyboard" || node.type === "storyboardImage" || node.type === "storyboardAnalysis") return "storyboard";
+    if (node.type === "videoReference" || node.type === "videoPrompt" || node.type === "video" || node.type === "videoPromptGroup" || node.type === "videoGroup") return "video";
     if (node.type === "auditArtifact" || node.type === "auditSegment") return "audit";
     return "overview";
   }
 
   // 概览视图：聚合卡（assetGroup / videoPromptGroup / videoGroup）代表整组；
   // 个体卡（asset / videoPrompt / video）只在各自分类视图里展开。
-  const OVERVIEW_HIDDEN_TYPES = new Set(["assetExtractionTask", "task", "asset", "assetImage", "videoPrompt", "video", "storyboard", "auditArtifact", "auditSegment"]);
+  const OVERVIEW_HIDDEN_TYPES = new Set(["assetExtractionTask", "task", "asset", "assetImage", "videoReference", "videoPrompt", "video", "storyboard", "storyboardImage", "auditArtifact", "auditSegment"]);
   const GROUP_TYPES = new Set(["assetGroup", "videoPromptGroup", "videoGroup"]);
 
   function agentProfile() {
@@ -1097,15 +1109,14 @@
       }
       if (node.type === "project") keep.add(node.id);
       if (node.type === "task") {
-        if (state.view === "asset") return;
+        if (state.view === "asset" || state.view === "storyboard") return;
         const category = taskNodeCategory(node);
-        if (category === state.view || (state.view === "storyboard" && category === "video")) keep.add(node.id);
+        if (category === state.view) keep.add(node.id);
         return;
       }
       if (state.view === "script" && (node.type === "novelChapter" || node.type === "novelSection")) keep.add(node.id);
       if (nodeCategory(node) === state.view) keep.add(node.id);
       if (state.view === "storyboard" && node.type === "assetGroup") keep.add(node.id);
-      if (state.view === "video" && node.type === "storyboard") keep.add(node.id);
     });
     return keep;
   }
@@ -1189,8 +1200,8 @@
 
   async function loadImageModelOptions() {
     const vendors = await api("/setting/vendorConfig/getVendorList", { method: "POST", body: {} }).catch(() => []);
-    state.imageModelOptions = (Array.isArray(vendors) ? vendors : []).flatMap((vendor) => {
-      if (!vendor || vendor.enable === 0 || vendor.enable === false) return [];
+    const enabledVendors = (Array.isArray(vendors) ? vendors : []).filter((vendor) => vendor && vendor.enable !== 0 && vendor.enable !== false);
+    state.imageModelOptions = enabledVendors.flatMap((vendor) => {
       const vendorId = vendor.id || "";
       const vendorName = vendor.name || vendorId;
       return (vendor.models || [])
@@ -1200,6 +1211,22 @@
           return {
             value: `${vendorId}:${modelName}`,
             label: `${vendorName} / ${model.name || modelName}`,
+            model,
+          };
+        });
+    });
+    state.videoModelOptions = enabledVendors.flatMap((vendor) => {
+      if (!vendor || vendor.enable === 0 || vendor.enable === false) return [];
+      const vendorId = vendor.id || "";
+      const vendorName = vendor.name || vendorId;
+      return (vendor.models || [])
+        .filter((model) => model?.type === "video" && (model.modelName || model.model))
+        .map((model) => {
+          const modelName = model.modelName || model.model;
+          return {
+            value: `${vendorId}:${modelName}`,
+            label: `${vendorName} / ${model.name || modelName}`,
+            model,
           };
         });
     });
@@ -1656,61 +1683,67 @@
       .filter((node) => node && (!type || node.type === type))));
   }
 
-  function layoutStoryboardRows(storyboards, tasks, nodeMap, options) {
+  function edgeSources(targetId, type, nodeMap) {
+    return orderedLayoutNodes(uniqueLayoutNodes(graphEdges()
+      .filter((edge) => edge.target === targetId)
+      .map((edge) => nodeMap.get(edge.source))
+      .filter((node) => node && (!type || node.type === type))));
+  }
+
+  function layoutStoryboardRows(storyboards, storyboardImages, tasks, nodeMap, options) {
+    const usedImages = new Set();
     const usedTasks = new Set();
     let cursor = options.y;
     orderedLayoutNodes(storyboards).forEach((storyboard) => {
+      const images = edgeTargets(storyboard.id, "storyboardImage", nodeMap);
       const rowTasks = edgeTargets(storyboard.id, "task", nodeMap);
+      images.forEach((image) => usedImages.add(image.id));
       rowTasks.forEach((task) => usedTasks.add(task.id));
+      const imagesHeight = stackHeight(images, 24);
       const tasksHeight = stackHeight(rowTasks, 24);
-      const rowHeight = Math.max(layoutNodeHeight(storyboard), tasksHeight, 210);
+      const rowHeight = Math.max(layoutNodeHeight(storyboard), imagesHeight, tasksHeight, 210);
       storyboard.position = { x: options.storyboardX, y: cursor };
+      stackAt(images, options.imageX, stackY(cursor, rowHeight, imagesHeight), 24);
       stackAt(rowTasks, options.taskX, stackY(cursor, rowHeight, tasksHeight), 24);
       cursor += rowHeight + (options.gap || 52);
     });
+    const orphanImages = storyboardImages.filter((image) => !usedImages.has(image.id));
+    placeWrappedStack(orphanImages, options.imageX, cursor, 28, 8, 320);
     const leftovers = tasks.filter((task) => !usedTasks.has(task.id));
     placeWrappedStack(leftovers, options.taskX, cursor, 28, 8, 340);
   }
 
-  function layoutVideoRows(storyboards, videoPrompts, videos, tasks, nodeMap, options) {
+  function layoutVideoRows(videoReferences, videoPrompts, videos, tasks, nodeMap, options) {
+    const usedReferences = new Set();
     const usedPrompts = new Set();
     const usedVideos = new Set();
     const usedTasks = new Set();
     let cursor = options.y;
 
-    orderedLayoutNodes(storyboards).forEach((storyboard) => {
-      const prompt = edgeTargets(storyboard.id, "videoPrompt", nodeMap)[0];
-      const rowVideos = prompt ? edgeTargets(prompt.id, "video", nodeMap) : [];
+    orderedLayoutNodes(videoPrompts).forEach((prompt) => {
+      const references = edgeSources(prompt.id, "videoReference", nodeMap);
+      const rowVideos = edgeTargets(prompt.id, "video", nodeMap);
       const rowTasks = uniqueLayoutNodes([
-        ...edgeTargets(storyboard.id, "task", nodeMap),
-        ...(prompt ? edgeTargets(prompt.id, "task", nodeMap) : []),
+        ...edgeTargets(prompt.id, "task", nodeMap),
         ...rowVideos.flatMap((video) => edgeTargets(video.id, "task", nodeMap)),
       ]);
-      if (prompt) usedPrompts.add(prompt.id);
+      references.forEach((reference) => usedReferences.add(reference.id));
+      usedPrompts.add(prompt.id);
       rowVideos.forEach((video) => usedVideos.add(video.id));
       rowTasks.forEach((task) => usedTasks.add(task.id));
 
+      const referenceHeight = stackHeight(references, 20);
       const videoHeight = stackHeight(rowVideos, 24);
       const taskHeight = stackHeight(rowTasks, 24);
-      const rowHeight = Math.max(layoutNodeHeight(storyboard), prompt ? layoutNodeHeight(prompt) : 0, videoHeight, taskHeight, 210);
-      storyboard.position = { x: options.storyboardX, y: cursor };
-      if (prompt) prompt.position = { x: options.promptX, y: stackY(cursor, rowHeight, layoutNodeHeight(prompt)) };
+      const rowHeight = Math.max(referenceHeight, layoutNodeHeight(prompt), videoHeight, taskHeight, 210);
+      stackAt(references, options.referenceX, stackY(cursor, rowHeight, referenceHeight), 20);
+      prompt.position = { x: options.promptX, y: stackY(cursor, rowHeight, layoutNodeHeight(prompt)) };
       stackAt(rowVideos, options.videoX, stackY(cursor, rowHeight, videoHeight), 24);
       stackAt(rowTasks, options.taskX, stackY(cursor, rowHeight, taskHeight), 24);
       cursor += rowHeight + (options.gap || 54);
     });
 
-    const orphanPrompts = videoPrompts.filter((prompt) => !usedPrompts.has(prompt.id));
-    orderedLayoutNodes(orphanPrompts).forEach((prompt) => {
-      const rowVideos = edgeTargets(prompt.id, "video", nodeMap).filter((video) => !usedVideos.has(video.id));
-      rowVideos.forEach((video) => usedVideos.add(video.id));
-      const videoHeight = stackHeight(rowVideos, 24);
-      const rowHeight = Math.max(layoutNodeHeight(prompt), videoHeight, 190);
-      prompt.position = { x: options.promptX, y: cursor };
-      stackAt(rowVideos, options.videoX, stackY(cursor, rowHeight, videoHeight), 24);
-      cursor += rowHeight + (options.gap || 54);
-    });
-
+    placeWrappedStack(videoReferences.filter((reference) => !usedReferences.has(reference.id)), options.referenceX, cursor, 28, 8, 260);
     placeWrappedStack(videos.filter((video) => !usedVideos.has(video.id)), options.videoX, cursor, 28, 8, 340);
     placeWrappedStack(tasks.filter((task) => !usedTasks.has(task.id)), options.taskX, cursor, 28, 8, 340);
   }
@@ -1734,6 +1767,8 @@
     const assetGroups = byType("assetGroup");
     const storyboardAnalysis = byType("storyboardAnalysis");
     const storyboards = byType("storyboard");
+    const storyboardImages = byType("storyboardImage");
+    const videoReferences = byType("videoReference");
     const videoPrompts = byType("videoPrompt");
     const videoPromptGroups = byType("videoPromptGroup");
     const videoGroups = byType("videoGroup");
@@ -1767,11 +1802,11 @@
       placeStack(storyboardTables, 1180, -240, 58);
       placeStack(assetGroups, 320, 160, 54);
       placeStack(storyboardAnalysis, 1640, -240, 70);
-      layoutStoryboardRows(storyboards, tasks, nodeMap, { storyboardX: 2640, taskX: 3000, y: -260 });
+      layoutStoryboardRows(storyboards, storyboardImages, tasks, nodeMap, { storyboardX: 2640, imageX: 2980, taskX: 3320, y: -260 });
     } else if (state.view === "video") {
       placeStack(project, -80, -160);
-      layoutVideoRows(storyboards, videoPrompts, videos, tasks, nodeMap, {
-        storyboardX: 320,
+      layoutVideoRows(videoReferences, videoPrompts, videos, tasks, nodeMap, {
+        referenceX: 320,
         promptX: 760,
         videoX: 1180,
         taskX: 1540,
@@ -2310,6 +2345,9 @@
     const node = targetNode || selectedNode();
     if (!node || !state.graph?.project) return;
     const project = state.graph.project;
+    const actionKey = `${action}:${node.id}`;
+    if (state.nodeActionKey === actionKey) return;
+    state.nodeActionKey = actionKey;
     await withLoading(async () => {
       if (action === "extractAssets") {
         await extractAssetsForScript(scriptIdFromNode(node));
@@ -2340,6 +2378,20 @@
         await loadGraph();
         state.message = "候选图生成任务已提交，完成后会自动按评分选中一张";
       }
+      if (action === "assetCard") {
+        const asset = node.data?.asset;
+        if (!asset?.id) throw new Error("请选择具体资产卡");
+        const force = !!parseAssetCardRemark(asset.remark);
+        await api("/assetsGenerate/generateAssetCard", {
+          method: "POST",
+          body: {
+            id: Number(asset.id),
+            projectId: Number(asset.projectId || project.id || projectId()),
+            force,
+          },
+        });
+        state.message = force ? "资产卡规格已刷新" : "资产卡规格已生成";
+      }
       if (action === "storyboardImage") {
         const storyboard = node.data.storyboard;
         await api("/production/storyboard/batchGenerateImage", {
@@ -2356,14 +2408,15 @@
       }
       if (action === "videoPrompt") {
         const track = node.data.videoTrack;
+        const settings = videoGenerationSettingsForNode(node);
         await api("/production/workbench/generateVideoPrompt", {
           method: "POST",
           body: {
             trackId: Number(track.id),
             projectId: Number(track.projectId),
             info: [],
-            model: project.videoModel || "",
-            mode: "text",
+            model: settings.model,
+            mode: settings.mode,
           },
         });
         state.message = "视频 prompt 生成任务已提交";
@@ -2411,6 +2464,8 @@
       }
       await loadGraph();
     });
+    if (state.nodeActionKey === actionKey) state.nodeActionKey = "";
+    render();
   }
 
   function renderEdges() {
@@ -2510,6 +2565,32 @@
     return h("div", { class: `tfcc-thumb is-empty ${extraClass || ""}`.trim() }, []);
   }
 
+  function openImagePreview(src, title) {
+    if (!src) return;
+    state.imagePreview = { src, title: title || "图片预览" };
+    render();
+  }
+
+  function closeImagePreview() {
+    state.imagePreview = null;
+    render();
+  }
+
+  function previewImageTile(src, title, extraClass) {
+    if (!src) return h("div", { class: `tfcc-thumb is-empty ${extraClass || ""}`.trim(), text: "暂无图" });
+    return h("button", {
+      type: "button",
+      class: `tfcc-thumb is-clickable ${extraClass || ""}`.trim(),
+      title: "查看大图",
+      onMouseDown: (event) => event.stopPropagation(),
+      onClick: (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openImagePreview(src, title);
+      },
+    }, [h("img", { src, loading: "lazy", alt: title || "" })]);
+  }
+
   function videoTile(src) {
     return h("div", { class: "tfcc-video-tile", onMouseDown: (event) => event.stopPropagation(), onClick: (event) => event.stopPropagation() }, [
       src ? h("video", { src, controls: true, preload: "metadata" }) : null,
@@ -2567,6 +2648,170 @@
     addUniqueOption(options, currentValue, currentValue);
     if (!options.length) options.push({ value: "", label: "未配置模型" });
     return options;
+  }
+
+  function videoModelOptions(currentValue) {
+    const options = [];
+    (state.videoModelOptions || []).forEach((option) => addUniqueOption(options, option.value, option.label));
+    addUniqueOption(options, state.graph?.project?.videoModel, state.graph?.project?.videoModel);
+    addUniqueOption(options, currentValue, currentValue);
+    if (!options.length) options.push({ value: "", label: "未配置模型" });
+    return options;
+  }
+
+  function findVideoModelOption(value) {
+    const normalized = String(value || "").trim();
+    return (state.videoModelOptions || []).find((option) => option.value === normalized) || null;
+  }
+
+  function normalizeVideoModeValue(value) {
+    if (Array.isArray(value)) return JSON.stringify(value);
+    return String(value || "text");
+  }
+
+  function videoModeLabel(value) {
+    const raw = normalizeVideoModeValue(value);
+    const labels = {
+      text: "文本",
+      singleImage: "单图参考",
+      startEndRequired: "首尾帧",
+      startFrameOptional: "首帧可选",
+      endFrameOptional: "尾帧可选",
+    };
+    if (raw.startsWith("[") && raw.endsWith("]")) return "多参考素材";
+    return labels[raw] || raw;
+  }
+
+  function videoModeOptionsForModel(modelValue, currentValue) {
+    const options = [];
+    const modes = findVideoModelOption(modelValue)?.model?.mode;
+    (Array.isArray(modes) ? modes : [modes || "text"]).forEach((mode) => {
+      const value = normalizeVideoModeValue(mode);
+      addUniqueOption(options, value, videoModeLabel(value));
+    });
+    addUniqueOption(options, currentValue, videoModeLabel(currentValue));
+    if (!options.length) options.push({ value: "text", label: "文本" });
+    return options;
+  }
+
+  function defaultVideoModeForModel(modelValue, fallback = "text") {
+    const modes = findVideoModelOption(modelValue)?.model?.mode;
+    if (Array.isArray(modes)) {
+      const multiReferenceMode = modes.find((mode) => Array.isArray(mode));
+      if (multiReferenceMode) return normalizeVideoModeValue(multiReferenceMode);
+      const preferred = ["startFrameOptional", "singleImage", "startEndRequired", "text"].find((mode) => modes.includes(mode));
+      if (preferred) return preferred;
+      if (modes.length) return normalizeVideoModeValue(modes[0]);
+    }
+    return normalizeVideoModeValue(modes || fallback);
+  }
+
+  function videoDurationResolutionMaps(modelValue) {
+    const maps = findVideoModelOption(modelValue)?.model?.durationResolutionMap;
+    return Array.isArray(maps) ? maps : [];
+  }
+
+  function videoDurationValuesForModel(modelValue) {
+    const values = [];
+    videoDurationResolutionMaps(modelValue).forEach((entry) => {
+      (entry?.duration || []).forEach((value) => {
+        const num = Number(value);
+        if (Number.isFinite(num) && !values.includes(num)) values.push(num);
+      });
+    });
+    return values.sort((a, b) => a - b);
+  }
+
+  function isContinuousDurationValues(values) {
+    return values.length > 2 && values.every((value, index) => index === 0 || value === values[index - 1] + 1);
+  }
+
+  function videoResolutionOptionsForModel(modelValue, currentValue) {
+    const options = [];
+    videoDurationResolutionMaps(modelValue).forEach((entry) => {
+      (entry?.resolution || []).forEach((value) => addUniqueOption(options, value, value));
+    });
+    addUniqueOption(options, currentValue, currentValue);
+    if (!options.length) addUniqueOption(options, "720p", "720p");
+    return options;
+  }
+
+  function defaultVideoResolutionForModel(modelValue, fallback = "720p") {
+    const options = videoResolutionOptionsForModel(modelValue, fallback).map((option) => option.value);
+    if (fallback && options.includes(String(fallback))) return String(fallback);
+    if (options.includes("720p")) return "720p";
+    return options[0] || "720p";
+  }
+
+  function videoDurationOptionsForModel(modelValue, currentValue) {
+    const options = [];
+    videoDurationValuesForModel(modelValue).forEach((value) => addUniqueOption(options, String(value), `${value}s`));
+    addUniqueOption(options, currentValue, currentValue ? `${currentValue}s` : "");
+    if (!options.length) [3, 5, 8, 10, 15].forEach((value) => addUniqueOption(options, String(value), `${value}s`));
+    return options.sort((a, b) => Number(a.value) - Number(b.value));
+  }
+
+  function normalizeVideoDurationForModel(modelValue, value) {
+    const allowed = videoDurationValuesForModel(modelValue);
+    const current = Math.round(Number(value || 5));
+    if (!allowed.length) return Number.isFinite(current) && current > 0 ? current : 5;
+    if (isContinuousDurationValues(allowed)) return Math.min(allowed[allowed.length - 1], Math.max(allowed[0], current));
+    if (allowed.includes(current)) return current;
+    if (allowed.includes(5)) return 5;
+    return allowed.reduce((best, item) => Math.abs(item - current) < Math.abs(best - current) ? item : best, allowed[0]);
+  }
+
+  function videoGenerationSettingsForNode(node, override = {}) {
+    const project = state.graph?.project || {};
+    const track = node?.data?.videoTrack || {};
+    const stored = state.videoGenerationSettings[node?.id] || {};
+    const model = override.model || stored.model || project.videoModel || state.videoModelOptions?.[0]?.value || "";
+    const mode = override.mode || stored.mode || defaultVideoModeForModel(model, project.mode || "text");
+    const resolution = override.resolution || stored.resolution || defaultVideoResolutionForModel(model, project.videoResolution || "720p");
+    const duration = normalizeVideoDurationForModel(model, override.duration || stored.duration || track.duration || 5);
+    const audioMode = findVideoModelOption(model)?.model?.audio;
+    const audio = override.audio != null ? Boolean(override.audio) : stored.audio != null ? Boolean(stored.audio) : audioMode === true || audioMode === "required";
+    return { model, mode, resolution, duration, audio };
+  }
+
+  function updateVideoGenerationSetting(node, field, value) {
+    const key = node?.id;
+    if (!key) return;
+    const current = videoGenerationSettingsForNode(node);
+    const next = { ...current, ...(state.videoGenerationSettings[key] || {}) };
+    if (field === "model") {
+      next.model = value;
+      next.mode = defaultVideoModeForModel(value, next.mode);
+      next.resolution = defaultVideoResolutionForModel(value, next.resolution);
+      next.duration = normalizeVideoDurationForModel(value, next.duration);
+    } else if (field === "duration") {
+      next.duration = normalizeVideoDurationForModel(next.model, value);
+    } else {
+      next[field] = value;
+    }
+    state.videoGenerationSettings[key] = next;
+    renderInspector();
+  }
+
+  function inferVideoSettingsOverride(text) {
+    const value = String(text || "");
+    const lower = value.toLowerCase();
+    let option = null;
+    if (/kling|可灵/.test(lower)) {
+      const wantsPro = /pro|专家|高质量|高质|精细/.test(lower);
+      option = (state.videoModelOptions || []).find((item) => item.value.toLowerCase().includes("kling-v3-omni") && item.value.toLowerCase().includes(wantsPro ? ":pro" : ":std"))
+        || (state.videoModelOptions || []).find((item) => item.value.toLowerCase().includes("kling-v3-omni"))
+        || (state.videoModelOptions || []).find((item) => item.value.toLowerCase().includes("kling"));
+    } else if (/seedance|即梦|豆包/.test(lower)) {
+      option = (state.videoModelOptions || []).find((item) => /seedance.*2[-.]0|seedance-2|seedance 2/i.test(`${item.value} ${item.label}`))
+        || (state.videoModelOptions || []).find((item) => item.value.toLowerCase().includes("seedance"));
+    }
+    if (!option) return {};
+    return {
+      model: option.value,
+      mode: defaultVideoModeForModel(option.value),
+      resolution: defaultVideoResolutionForModel(option.value),
+    };
   }
 
   function selectOptions(values, currentValue) {
@@ -2872,6 +3117,69 @@
     });
   }
 
+  const ASSET_CARD_SCHEMAS = new Set(["toonflow.roleCard.v1", "toonflow.sceneCard.v1", "toonflow.propCard.v1", "toonflow.characterSpec.v1"]);
+
+  function parseAssetCardRemark(remark) {
+    const text = String(remark || "").trim();
+    if (!text) return null;
+    try {
+      const data = JSON.parse(text);
+      const spec = data?.assetCard || data?.characterSpec || (ASSET_CARD_SCHEMAS.has(data?.schema) ? data : null);
+      return spec && typeof spec === "object" && !Array.isArray(spec) ? spec : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function parseCharacterSpecRemark(remark) {
+    return parseAssetCardRemark(remark);
+  }
+
+  function characterSpecValueText(value) {
+    if (value == null || value === "") return "";
+    if (Array.isArray(value)) return value.map(characterSpecValueText).filter(Boolean).join("、");
+    if (typeof value === "object") {
+      return Object.entries(value).map(([key, val]) => `${key}=${characterSpecValueText(val)}`).filter((item) => !item.endsWith("=")).join("、");
+    }
+    return String(value).trim();
+  }
+
+  function characterSpecRows(spec) {
+    if (!spec) return [];
+    const constraints = spec.constraints || {};
+    return [
+      ["摘要", spec.summary],
+      ["面部", spec.faceReference || spec.face],
+      ["体型/身高", spec.bodyReference || spec.height || spec.body],
+      ["发型", spec.hair],
+      ["服装", spec.costume],
+      ["空间结构", spec.spatialLayout || spec.layout],
+      ["光源", spec.lighting],
+      ["固定陈设", spec.fixedElements || spec.setDressing],
+      ["形状", spec.shape],
+      ["材质", spec.material],
+      ["尺寸", spec.size],
+      ["使用方式", spec.usage],
+      ["配色", spec.palette || spec.colors],
+      ["细节", spec.details || spec.costumeDetails],
+      ["备注", spec.sourceRemark],
+      ["氛围", spec.atmosphere],
+      ["表情", spec.expressions],
+      ["必须保持", constraints.must || spec.must],
+      ["禁止", constraints.avoid || spec.avoid || spec.negative],
+    ].map(([label, value]) => [label, characterSpecValueText(value)]).filter((row) => row[1]);
+  }
+
+  function renderCharacterSpecBlock(asset) {
+    const rows = characterSpecRows(parseAssetCardRemark(asset?.remark));
+    if (!rows.length) return null;
+    const title = asset?.type === "scene" ? "场景卡规格" : asset?.type === "tool" ? "道具卡规格" : "人物卡规格";
+    return h("div", { class: "tfcc-source-inspector-block" }, [
+      h("div", { class: "tfcc-panel-subtitle", text: title }),
+      h("div", { class: "tfcc-kv" }, rows.map(([label, value]) => kv(label, value))),
+    ]);
+  }
+
   // 按 prompt 中 @ token 出现顺序解析引用，去重后返回 {assetId?,url?} 列表
   function resolveAssetReferences(prompt, mentions) {
     const text = String(prompt || "");
@@ -3175,6 +3483,26 @@
         nodeSource(node),
       ].filter(Boolean);
     }
+    if (node.type === "storyboardImage") {
+      const image = data.image || {};
+      const status = image.selected ? "已选中" : image.state || "未生成";
+      return [
+        title,
+        previewImageTile(data.thumbnail, node.label, "tfcc-storyboard-image-thumb"),
+        h("div", { class: "tfcc-node-sub", text: status }),
+        image.reason ? h("p", { text: short(image.reason, 72) }) : null,
+      ].filter(Boolean);
+    }
+    if (node.type === "videoReference") {
+      const reference = data.reference || {};
+      const sourceText = reference.source === "storyboard" ? "已选分镜图" : `${reference.type || "资产"}参考`;
+      return [
+        title,
+        previewImageTile(data.thumbnail, node.label, "tfcc-video-reference-thumb"),
+        h("div", { class: "tfcc-node-sub", text: `${reference.token || ""} ${sourceText}`.trim() || "参考输入" }),
+        data.promptPreview ? h("p", { text: short(data.promptPreview, 72) }) : null,
+      ].filter(Boolean);
+    }
     if (node.type === "imageFlowUpload") {
       return [title, data.image ? thumbTile(data.image, "tfcc-flow-node-thumb") : h("div", { class: "tfcc-thumb is-empty tfcc-flow-node-thumb", text: "暂无图" }), nodeSource(node)].filter(Boolean);
     }
@@ -3203,7 +3531,6 @@
       const mentions = data.mentions || [];
       const promptText = data.prompt || data.promptPreview || "";
       const children = [title];
-      if (data.thumbnail) children.push(thumbTile(data.thumbnail, "tfcc-thumb-wide"));
       children.push(renderPromptGraphic(promptText, mentions, {
         editable: true,
         onInput: (event) => handleStoryboardPromptInput(node, event.currentTarget, mentions),
@@ -3257,10 +3584,11 @@
     if (node.type === "video") {
       const video = data.video || {};
       const poster = data.poster || "";
+      const modelText = video.generationModel ? ` · ${short(video.generationModel, 34)}` : "";
       return [
         title,
         videoTile(poster),
-        h("div", { class: "tfcc-node-sub", text: video.state || "-" }),
+        h("div", { class: "tfcc-node-sub", text: `${video.state || "-"}${modelText}` }),
         nodeSource(node),
       ];
     }
@@ -3606,6 +3934,10 @@
     const message = state.agentMessages.find((item) => item.id === messageId);
     const parsed = parseProductionAgentArtifacts(messagePlainText(message));
     if (!parsed.scriptPlan && !parsed.storyboardTable) return;
+    if ((parsed.scriptPlan && storyboardTaskForbids("rewrite_script_plan")) || (parsed.storyboardTable && storyboardTaskForbids("rewrite_storyboard_table"))) {
+      state.message = "已阻止分镜 Agent 越权重写导演规划或分镜表";
+      return;
+    }
     const fingerprint = JSON.stringify(parsed);
     const syncKey = `production:${messageId}`;
     if (state.syncedAgentMessages[syncKey] === fingerprint) return;
@@ -3713,6 +4045,67 @@
     return { projectId: Number(pid), scriptId: Number(sid) };
   }
 
+  function normalizeTrackNumber(value) {
+    const match = String(value ?? "").match(/\d+/);
+    return match ? Number(match[0]) : NaN;
+  }
+
+  function extractStoryboardTrackScope(text) {
+    const value = String(text || "");
+    const tracks = new Set();
+    const addRange = (startValue, endValue, target = tracks) => {
+      const start = Number(startValue);
+      const end = Number(endValue);
+      if (Number.isFinite(start) && Number.isFinite(end)) {
+        for (let item = Math.min(start, end); item <= Math.max(start, end); item++) target.add(item);
+      }
+    };
+    for (const match of value.matchAll(/(?:只处理|处理剩余|剩余|更新|重写).{0,20}(?:track|镜头)\s*(\d+)\s*(?:-|到|至|~)\s*(\d+)/gi)) {
+      addRange(match[1], match[2]);
+    }
+    if (!tracks.size) {
+      const range = value.match(/(?:track|镜头)\s*(\d+)\s*(?:-|到|至|~)\s*(\d+)/i);
+      if (range) addRange(range[1], range[2]);
+    }
+    if (!tracks.size) {
+      for (const match of value.matchAll(/(?:track|镜头)\s*(\d+)/gi)) {
+        const track = Number(match[1]);
+        if (Number.isFinite(track)) tracks.add(track);
+      }
+    }
+    const skipped = new Set();
+    for (const match of value.matchAll(/(?:跳过|不要|不处理).{0,12}(?:track|镜头)\s*(\d+)\s*(?:-|到|至|~)\s*(\d+)/gi)) {
+      addRange(match[1], match[2], skipped);
+    }
+    skipped.forEach((track) => tracks.delete(track));
+    return [...tracks].sort((a, b) => a - b);
+  }
+
+  function createStoryboardAgentTask(text) {
+    const value = String(text || "");
+    const scopedStage5 = isScopedStoryboardStage5Request(value);
+    if (wantsStoryboardImageAction(value)) return { intent: "generate_images", scope: {}, forbiddenActions: [] };
+    if (isStatusQuestion(value) && !wantsStoryboardPipelineContinuation(value)) return { intent: "status_check", scope: {}, forbiddenActions: [] };
+    if (scopedStage5) {
+      return {
+        intent: "stage5_rewrite_cards",
+        scope: { tracks: extractStoryboardTrackScope(value) },
+        forbiddenActions: ["rewrite_script_plan", "rewrite_storyboard_table", "generate_images"],
+        mode: /首位帧|首帧|first\s*frame/i.test(value) ? "first_frame" : "multi_shot",
+      };
+    }
+    return { intent: "full_pipeline", scope: {}, forbiddenActions: [] };
+  }
+
+  function currentStoryboardAgentTask() {
+    return state.agentSocket?.__tfccStoryboardTask || null;
+  }
+
+  function storyboardTaskForbids(action) {
+    const task = currentStoryboardAgentTask();
+    return Boolean(task?.forbiddenActions?.includes(action));
+  }
+
   async function getProductionFlowData(context) {
     const { projectId: pid, scriptId: sid } = context || productionAgentContext();
     return api("/production/getFlowData", {
@@ -3727,6 +4120,12 @@
       method: "POST",
       body: { projectId: pid, episodesId: sid, data },
     });
+  }
+
+  function assertProductionFlowSaveAllowed() {
+    if (storyboardTaskForbids("rewrite_script_plan") || storyboardTaskForbids("rewrite_storyboard_table")) {
+      throw new Error("当前任务禁止重写导演规划或分镜表");
+    }
   }
 
   function normalizeNumberArray(value) {
@@ -3747,8 +4146,8 @@
   function normalizeStoryboardToolItem(raw = {}) {
     const duration = Number(raw.duration || raw.seconds || 3);
     const src = raw.src || raw.image || null;
-    const prompt = String(raw.prompt || raw.videoDesc || raw.desc || "").trim() || "待补充分镜图片提示词";
-    const videoDesc = String(raw.videoDesc || raw.desc || raw.prompt || "").trim() || prompt;
+    const prompt = raw.prompt == null ? "" : String(raw.prompt).trim();
+    const videoDesc = String(raw.videoDesc || raw.desc || "").trim() || prompt;
     const shouldGenerateImage = typeof raw.shouldGenerateImage === "string"
       ? (/^(?:true|1|yes|y|是|需要|生成)$/i.test(raw.shouldGenerateImage.trim()) ? 1 : 0)
       : Number(raw.shouldGenerateImage || 0) ? 1 : 0;
@@ -3766,6 +4165,15 @@
 
   async function addStoryboardFromProductionTool(raw, context) {
     const { projectId: pid, scriptId: sid } = context || productionAgentContext();
+    const task = currentStoryboardAgentTask();
+    const scopedTracks = task?.intent === "stage5_rewrite_cards" ? task.scope?.tracks || [] : [];
+    const track = normalizeTrackNumber(raw?.track);
+    if (scopedTracks.length && !scopedTracks.includes(track)) {
+      throw new Error(`当前任务只允许更新 track ${scopedTracks.join(", ")}，拒绝写入 track ${raw?.track ?? "未知"}`);
+    }
+    if (storyboardTaskForbids("generate_images") && Number(normalizeStoryboardToolItem(raw).shouldGenerateImage)) {
+      throw new Error("当前任务禁止生成分镜图片");
+    }
     const data = [normalizeStoryboardToolItem(raw)];
     const result = await api("/production/storyboard/batchAddStoryboardInfo", {
       method: "POST",
@@ -3778,6 +4186,7 @@
 
   async function generateStoryboardFromProductionTool(raw = {}, context) {
     const { projectId: pid, scriptId: sid } = context || productionAgentContext();
+    if (storyboardTaskForbids("generate_images")) throw new Error("当前任务禁止生成分镜图片");
     const ids = normalizeNumberArray(raw.ids || raw.storyboardIds || raw.id);
     if (!ids.length) throw new Error("缺少要生成图片的分镜 ID");
     const result = await api("/production/storyboard/batchGenerateImage", {
@@ -3874,6 +4283,7 @@
     });
     socket.on("saveFlowData", async (payload, callback) => {
       try {
+        assertProductionFlowSaveAllowed();
         callbackSuccess(callback, await saveProductionFlowData(payload?.data || payload, productionContext));
       } catch (err) {
         callbackError(callback, err);
@@ -4527,10 +4937,24 @@
     return /方案\s*[A-CＡ-Ｃ]|完整修复|审[计核]修复|修复审[计核]|按.*审[计核].*修复|(?:^|[，,。；;\s])(?:修复|完整分镜|完善分镜)(?:$|[，,。；;\s])|按.*方案|确认(?:执行|修复)?|继续(?:处理|修复|推进|执行)?|开始(?:处理|执行)|执行(?:修复|方案)?|可以(?:继续|执行|修复)?/.test(value);
   }
 
+  function hasNegativeStoryboardImageIntent(text) {
+    const value = String(text || "");
+    return /(?:不要|不|无需|别|禁止|跳过).{0,8}(?:生成)?(?:分镜图|图片|图像|出图|生图)|只(?:处理|重写|生成|更新).{0,12}(?:prompt|阶段5|分镜面板|分镜卡)|(?:prompt|阶段5|分镜面板|分镜卡).{0,12}(?:不要|不|无需|别|禁止|跳过).{0,8}(?:生成)?(?:分镜图|图片|图像|出图|生图)/i.test(value);
+  }
+
   function wantsStoryboardImageAction(text) {
     const value = String(text || "");
+    if (hasNegativeStoryboardImageIntent(value)) return false;
     if (!/分镜|镜头|图片|图像|出图|生图/.test(value)) return false;
-    return /分镜图|图片|图像|出图|生图|重生|重新生成/.test(value) && !/分析|拆解|面板|卡片/.test(value);
+    return /分镜图|图片|图像|出图|生图|重生|重新生成/.test(value) && !/分析|拆解|面板|卡片|分镜卡|prompt|阶段5|add_flowData_storyboard/i.test(value);
+  }
+
+  function isScopedStoryboardStage5Request(text) {
+    const value = String(text || "");
+    if (!value.trim()) return false;
+    const hasStage5Target = /阶段\s*5|stage\s*5|add_flowData_storyboard|分镜面板|分镜卡|storyboard\s*panel|track\s*\d+|镜头\s*\d+\s*[-到至~]\s*\d+/i.test(value);
+    const hasScopeLimiter = /只|剩余|跳过|不要重做|不重做|不要生成|不生成|prompt|首位帧|首帧|更新现有|重写/i.test(value);
+    return hasStage5Target && hasScopeLimiter;
   }
 
   function isHowToActionQuestion(text) {
@@ -4617,43 +5041,57 @@
   async function submitStoryboardAnalysis(text) {
     const socket = await ensureProductionAgentSocket();
     const label = activeScriptLabel();
-    const content = [
-      `请基于当前剧本「${label}」执行分镜 Agent 的完整生产流水线，并把阶段结果写入画布。`,
-      "流水线要求：1. 先读取工作区数据 get_flowData；2. 若导演规划 scriptPlan 为空或用户要求重做，运行导演规划并调用 save_flowData 保存 scriptPlan；3. 基于剧本和已有角色/场景/道具资产进行可用性检查，缺失资产只提出补齐建议，不要阻塞分镜拆解；4. 若分镜表 storyboardTable 为空或用户要求重做，构建分镜表并调用 save_flowData 保存 storyboardTable；5. 必须调用 add_flowData_storyboard 写入真实分镜卡片，不要只回复文本；每个镜头需要包含 videoDesc、prompt、track、duration、associateAssetsIds、shouldGenerateImage。",
-      "画布映射要求：导演规划、分镜表、分镜卡都必须有可持久化数据；完成后画布应形成 剧本 -> 导演规划 -> 分镜表 -> 分镜分析 -> 分镜卡 的链路。",
-      "默认不要生成分镜图片；只有用户明确要求出图时才调用 generate_storyboard。",
-      `最近对话上下文：\n${recentAgentDialogueText(8) || "无"}`,
-      `用户原始请求：${text}`,
-    ].join("\n");
+    const task = createStoryboardAgentTask(text);
+    socket.__tfccStoryboardTask = task;
+    const scopedStage5 = isScopedStoryboardStage5Request(text);
+    const content = scopedStage5
+      ? [
+          `请基于当前剧本「${label}」只执行用户指定的分镜阶段5局部任务。`,
+          "局部任务硬约束：可以调用 get_flowData 读取当前工作区；不要把本请求解释为完整生产流水线；不要重做导演规划 scriptPlan；不要重建或重写分镜表 storyboardTable；不要调用 generate_storyboard；不要生成分镜图片；只按用户指定范围调用 add_flowData_storyboard 更新现有分镜卡。",
+          "范围约束：如果用户指定 track 范围，严格只处理这些 track，跳过其他 track；例如 track 5-9 只更新 5、6、7、8、9，必须跳过 track 1-4。若无法识别范围或缺少当前分镜表数据，先回复阻塞原因，不要改写范围外分镜。",
+          "prompt 约束：prompt 必须是单张静态关键帧提示词，不得复制 videoDesc，不得包含承接上镜、编号镜头列表、多段动作、台词、音效或运镜；多人画面必须明确角色数量、唯一性和间距。",
+          "完成要求：完成后只汇报更新数量、更新 track 列表、跳过 track 列表，不要额外提交图片任务。",
+          `最近对话上下文：\n${recentAgentDialogueText(8) || "无"}`,
+          `用户原始请求：${text}`,
+        ].join("\n")
+      : [
+          `请基于当前剧本「${label}」执行分镜 Agent 的完整生产流水线，并把阶段结果写入画布。`,
+          "流水线要求：1. 先读取工作区数据 get_flowData；2. 若导演规划 scriptPlan 为空或用户要求重做，运行导演规划并调用 save_flowData 保存 scriptPlan；3. 基于剧本和已有角色/场景/道具资产进行可用性检查，缺失资产只提出补齐建议，不要阻塞分镜拆解；4. 若分镜表 storyboardTable 为空或用户要求重做，构建分镜表并调用 save_flowData 保存 storyboardTable；5. 必须调用 add_flowData_storyboard 写入真实分镜卡片，不要只回复文本；每个镜头需要包含 videoDesc、prompt、track、duration、associateAssetsIds、shouldGenerateImage。",
+          "画布映射要求：导演规划、分镜表、分镜卡都必须有可持久化数据；完成后画布应形成 剧本 -> 导演规划 -> 分镜表 -> 分镜分析 -> 分镜卡 的链路。",
+          "默认不要生成分镜图片；只有用户明确要求出图时才调用 generate_storyboard。",
+          `最近对话上下文：\n${recentAgentDialogueText(8) || "无"}`,
+          `用户原始请求：${text}`,
+        ].join("\n");
     socket.emit("updateThinkConfig", { think: Boolean(state.agentThink), thinlLevel: state.agentThink ? 1 : 0 });
-    socket.emit("storyboardPipeline", { content });
+    socket.emit("storyboardPipeline", { content, task });
   }
 
-  async function submitVideoPrompts(nodes) {
-    const project = state.graph?.project || {};
-    const prompts = nodes.map((node) => node.data?.videoTrack).filter((item) => item?.id);
+  async function submitVideoPrompts(nodes, override = {}) {
+    const prompts = nodes.map((node) => ({ node, track: node.data?.videoTrack })).filter((item) => item.track?.id);
     if (!prompts.length) throw new Error("当前视频标签下没有可重生的视频 Prompt。");
-    for (const track of prompts) {
+    for (const { node, track } of prompts) {
+      const settings = videoGenerationSettingsForNode(node, override);
+      if (!settings.model) throw new Error("当前项目未配置视频模型，无法生成视频 Prompt。");
       await api("/production/workbench/generateVideoPrompt", {
         method: "POST",
         body: {
           trackId: Number(track.id),
           projectId: Number(track.projectId),
           info: [],
-          model: project.videoModel || "",
-          mode: "text",
+          model: settings.model,
+          mode: settings.mode,
         },
       });
     }
     await loadGraph();
   }
 
-  async function submitVideos(nodes) {
-    const project = state.graph?.project || {};
-    if (!project.videoModel) throw new Error("当前项目未配置视频模型，无法生成视频。");
-    const tracks = nodes.map((node) => node.data?.videoTrack).filter((item) => item?.id);
+  async function submitVideos(nodes, override = {}) {
+    const tracks = nodes.map((node) => ({ node, track: node.data?.videoTrack })).filter((item) => item.track?.id);
     if (!tracks.length) throw new Error("当前视频标签下没有可生成的视频 Prompt。");
-    for (const track of tracks) {
+    for (const { node, track } of tracks) {
+      const settings = videoGenerationSettingsForNode(node, override);
+      if (!settings.model) throw new Error("当前项目未配置视频模型，无法生成视频。");
       if (!track.prompt) throw new Error(`视频 Prompt ${track.id} 还没有提示词，先生成视频 Prompt。`);
       await api("/production/workbench/generateVideo", {
         method: "POST",
@@ -4663,10 +5101,11 @@
           scriptId: Number(track.scriptId || scriptId()),
           uploadData: [],
           prompt: track.prompt || "",
-          model: project.videoModel || "",
-          mode: project.mode || "text",
-          resolution: project.videoResolution || "720p",
-          duration: Number(track.duration || 5),
+          model: settings.model,
+          mode: settings.mode,
+          resolution: settings.resolution,
+          duration: Number(settings.duration || 5),
+          audio: Boolean(settings.audio),
         },
       });
     }
@@ -4832,17 +5271,19 @@
             ? graphNodes().filter((item) => item.type === "videoPrompt")
             : [];
           if (prompts.length) {
+            const videoOverride = inferVideoSettingsOverride(text);
+            const overrideModel = videoOverride.model ? findVideoModelOption(videoOverride.model)?.label || videoOverride.model : "";
             if (wantsVideoGeneration(text)) {
-              pushLocalAgentMessage("assistant", `已收到，开始提交 ${prompts.length} 个视频生成任务。`, "complete", profile.title);
+              pushLocalAgentMessage("assistant", `已收到，开始提交 ${prompts.length} 个视频生成任务${overrideModel ? `（${overrideModel}）` : ""}。`, "complete", profile.title);
               persistAgentThread();
               renderAgentOnly(true);
-              await submitVideos(prompts);
+              await submitVideos(prompts, videoOverride);
               pushLocalAgentMessage("assistant", `已提交 ${prompts.length} 个视频生成任务。`, "complete", profile.title);
             } else {
-              pushLocalAgentMessage("assistant", `已收到，开始提交 ${prompts.length} 条视频 Prompt 重生任务。`, "complete", profile.title);
+              pushLocalAgentMessage("assistant", `已收到，开始提交 ${prompts.length} 条视频 Prompt 重生任务${overrideModel ? `（${overrideModel}）` : ""}。`, "complete", profile.title);
               persistAgentThread();
               renderAgentOnly(true);
-              await submitVideoPrompts(prompts);
+              await submitVideoPrompts(prompts, videoOverride);
               pushLocalAgentMessage("assistant", `已提交 ${prompts.length} 条视频 Prompt 重生任务。`, "complete", profile.title);
             }
           } else if (!(await handleFallbackIntent())) {
@@ -5393,6 +5834,47 @@
     return labels[value] || String(value || "-");
   }
 
+  function renderVideoGenerationSettings(node) {
+    const settings = videoGenerationSettingsForNode(node);
+    const modelOption = findVideoModelOption(settings.model);
+    const modeOptions = videoModeOptionsForModel(settings.model, settings.mode);
+    const resolutionOptions = videoResolutionOptionsForModel(settings.model, settings.resolution);
+    const durationValues = videoDurationValuesForModel(settings.model);
+    const durationControl = isContinuousDurationValues(durationValues)
+      ? h("label", { class: "tfcc-flow-select-field" }, [
+          h("span", { text: "时长(s)" }),
+          h("input", {
+            type: "number",
+            min: durationValues[0],
+            max: durationValues[durationValues.length - 1],
+            step: 1,
+            value: String(settings.duration),
+            title: "时长(s)",
+            onMouseDown: (event) => event.stopPropagation(),
+            onClick: (event) => event.stopPropagation(),
+            onChange: (event) => updateVideoGenerationSetting(node, "duration", event.target.value),
+          }),
+        ])
+      : renderFlowSelect("时长", String(settings.duration), videoDurationOptionsForModel(settings.model, settings.duration), (event) => updateVideoGenerationSetting(node, "duration", event.target.value));
+    return h("div", {
+      class: "tfcc-source-inspector-block tfcc-video-settings",
+      onMouseDown: (event) => event.stopPropagation(),
+      onClick: (event) => event.stopPropagation(),
+    }, [
+      h("div", { class: "tfcc-panel-subtitle", text: "生成设置" }),
+      h("div", { class: "tfcc-video-settings-grid" }, [
+        renderFlowSelect("模型", settings.model, videoModelOptions(settings.model), (event) => updateVideoGenerationSetting(node, "model", event.target.value), "is-video-model"),
+        renderFlowSelect("模式", settings.mode, modeOptions, (event) => updateVideoGenerationSetting(node, "mode", event.target.value)),
+        renderFlowSelect("清晰度", settings.resolution, resolutionOptions, (event) => updateVideoGenerationSetting(node, "resolution", event.target.value)),
+        durationControl,
+      ]),
+      h("p", {
+        class: "tfcc-video-settings-hint",
+        text: modelOption ? `${modelOption.label} · ${videoModeLabel(settings.mode)} · ${settings.resolution} · ${settings.duration}s` : "未配置视频模型",
+      }),
+    ]);
+  }
+
   function renderVideoReviewBlock(node) {
     const review = node?.data?.review || null;
     const issues = Array.isArray(review?.issues) ? review.issues : [];
@@ -5619,11 +6101,22 @@
       rows.push(kv("source", artifact.promptSource));
       rows.push(kv("model", artifact.modelName));
     }
+    if (node.type === "video") {
+      const video = node.data?.video || {};
+      rows.push(kv("模型", video.generationModel || video.model || ""));
+      rows.push(kv("生成设置", [
+        video.generationMode ? videoModeLabel(video.generationMode) : "",
+        video.generationResolution || "",
+        video.generationDuration ? `${video.generationDuration}s` : "",
+      ].filter(Boolean).join(" / ")));
+    }
     if (segment) {
       rows.push(kv("hash", segment.hash));
       rows.push(kv("artifact", segment.artifactId));
     }
     const reviewBlock = node.type === "video" ? renderVideoReviewBlock(node) : null;
+    const videoSettingsBlock = node.type === "videoPrompt" ? renderVideoGenerationSettings(node) : null;
+    const characterSpecBlock = node.type === "asset" ? renderCharacterSpecBlock(node.data?.asset) : null;
     const actions = [];
     if (node.type === "script") {
       const targetScriptId = scriptIdFromNode(node);
@@ -5635,6 +6128,11 @@
       actions.push(h("button", { onClick: () => runNodeAction("storyboardImage"), text: "生成分镜图" }));
       const sbFlowId = node.data?.storyboard?.flowId;
       actions.push(h("button", { class: "primary", title: sbFlowId ? "" : "尚未建立图片流", onClick: () => openFlowDrawer("storyboard", node.data?.storyboard?.id, sbFlowId, node.label), text: "展开图片流" }));
+    }
+    if (node.type === "asset" && ["role", "scene", "tool"].includes(node.data?.asset?.type)) {
+      const hasAssetCard = !!parseAssetCardRemark(node.data?.asset?.remark);
+      const busy = state.nodeActionKey === `assetCard:${node.id}`;
+      actions.push(h("button", { disabled: busy, onClick: () => runNodeAction("assetCard"), text: busy ? (hasAssetCard ? "刷新中..." : "生成中...") : hasAssetCard ? "刷新资产卡规格" : "生成资产卡规格" }));
     }
     if (node.type === "videoPrompt") {
       actions.push(h("button", { class: "primary", onClick: () => runNodeAction("video"), text: "生成视频" }));
@@ -5690,6 +6188,11 @@
         h("div", { class: "tfcc-panel-subtitle", text: "内容预览" }),
         renderPromptGraphic(node.data?.prompt || node.data?.promptPreview || "", node.data?.mentions || []),
       ]);
+    } else if (["storySkeleton", "adaptationStrategy", "scriptPlan", "storyboardTable"].includes(node.type) && (node.data?.content || node.data?.contentPreview)) {
+      preview = h("div", { class: "tfcc-inspect-preview" }, [
+        h("div", { class: "tfcc-panel-subtitle", text: "内容预览" }),
+        h("div", { class: "tfcc-inspect-markdown tfcc-markdown", html: renderMarkdown(node.data?.content || node.data?.contentPreview || "") }),
+      ]);
     } else {
       const previewText = node.data?.contentPreview || node.data?.promptPreview || node.data?.introPreview || "";
       if (previewText) {
@@ -5711,6 +6214,8 @@
       h("div", { class: "tfcc-panel-title", text: node.label }),
       h("div", { class: "tfcc-kv" }, rows),
       reviewBlock,
+      videoSettingsBlock,
+      characterSpecBlock,
       preview,
       segment
         ? h("div", { class: "tfcc-edit" }, [
@@ -5944,6 +6449,26 @@
       state.loading ? h("div", { class: "tfcc-loading", text: "Loading..." }) : null,
       h("div", { class: "tfcc-layout", style: { "--tfcc-agent-width": `${state.agentPanelWidth}px` } }, [renderIconRail(), renderAgentPanel(), renderCanvas(), renderInspectorPanel()]),
       renderPromptMentionPicker(),
+      renderImagePreview(),
+    ]);
+  }
+
+  function renderImagePreview() {
+    const preview = state.imagePreview;
+    if (!preview?.src) return null;
+    return h("div", {
+      class: "tfcc-image-preview",
+      onMouseDown: (event) => {
+        if (event.target === event.currentTarget) closeImagePreview();
+      },
+    }, [
+      h("div", { class: "tfcc-image-preview-head" }, [
+        h("strong", { text: preview.title || "图片预览" }),
+        h("button", { type: "button", onClick: closeImagePreview, text: "关闭" }),
+      ]),
+      h("div", { class: "tfcc-image-preview-body" }, [
+        h("img", { src: preview.src, alt: preview.title || "图片预览" }),
+      ]),
     ]);
   }
 

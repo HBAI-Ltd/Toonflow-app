@@ -11,6 +11,7 @@ import { recordGenerationArtifact } from "@/utils/contentAudit";
 import { loadAgentChatHistory, saveAgentChatHistory } from "@/utils/agentChatHistory";
 import { acceptVideoReviewWarning, assertVideoReviewAllowsCompose, autoSelectBestVideoForTrack, recordFailedVideoReview, shouldRetryVideoGeneration } from "@/utils/videoReview";
 import { compareImageFiles } from "@/utils/visualSimilarity";
+import { assetCardPrompt, characterSpecPrompt, parseAssetCard, parseCharacterSpec } from "@/utils/characterSpec";
 import updateNovelRouter from "@/routes/novel/updateNovel";
 
 async function waitForTables() {
@@ -99,6 +100,8 @@ async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("routeStageAgentMessage"), "non-script tabs should route agent composer commands to existing actions");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("startAgentResize"), "agent panel should expose a drag resize handler");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("layoutVideoRows"), "layout optimizer should align storyboard, video prompt, video, and task rows by graph links");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("videoReference"), "video canvas should render reference input cards before video prompts");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes('edgeSources(prompt.id, "videoReference"'), "video layout should place reference input cards from incoming prompt edges");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("layoutNodeHeight"), "layout optimizer should stack cards by their declared heights");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("flowHeight"), "expanded image generation flows should use staged non-overlapping columns");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("storyboardStatusAnswer"), "storyboard agent should answer stage-level status questions without requiring a selected node");
@@ -114,9 +117,53 @@ async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/production/workbench/reviewVideo"), "video inspector should rerun QA through the backend");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/production/workbench/acceptVideoReview"), "video inspector should allow accepted QA warnings");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("QA 未通过或未接受警告"), "video compose submission should block unresolved QA issues client-side");
+  assert.ok(fs.readFileSync("src/utils/queueHandlers.ts", "utf8").includes("markStoryboardPromptForReviewAfterRepeatedFailures"), "repeated failed storyboard images should trigger upstream prompt review");
+  assert.ok(fs.readFileSync("src/utils/queueHandlers.ts", "utf8").includes("建议反向复核分镜Prompt"), "storyboard failure reason should explain prompt-level review");
+  assert.ok(fs.readFileSync("src/utils/queueHandlers.ts", "utf8").includes("reason: null"), "successful storyboard image generation should clear stale QA review reasons");
+  assert.ok(fs.readFileSync("src/routes/production/storyboard/batchGenerateImage.ts", "utf8").includes("scopeStoryboardPromptReferences"), "storyboard image generation should scope references to assets actually used by the keyframe prompt");
+  assert.ok(fs.readFileSync("src/routes/production/storyboard/batchGenerateImage.ts", "utf8").includes("promptData.refImageIds"), "storyboard image generation should keep reference images aligned with rewritten @图 labels");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("renderCharacterSpecBlock"), "asset inspector should expose structured asset card specs when present");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/assetsGenerate/generateAssetCard"), "asset inspector should generate asset card specs on demand");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("场景卡规格"), "scene assets should render scene card specs when present");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("道具卡规格"), "tool assets should render prop card specs when present");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("nodeActionKey"), "asset card generation button should expose a pending state");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("生成中..."), "asset card generation button should change text while running");
+  const canvasWeb = fs.readFileSync("data/web/creative-canvas.js", "utf8");
+  const canvasCssForPreview = fs.readFileSync("data/web/creative-canvas.css", "utf8");
+  assert.ok(canvasWeb.includes("openImagePreview"), "storyboard image cards should open a large image preview");
+  assert.ok(canvasWeb.includes("previewImageTile"), "storyboard image cards should render clickable preview thumbnails");
+  assert.ok(canvasCssForPreview.includes("grid-template-rows: auto minmax(0, 1fr) auto"), "storyboard image cards should scale thumbnail area with the card");
+  assert.ok(canvasCssForPreview.includes(".tfcc-storyboard-image-thumb img") && canvasCssForPreview.includes("object-fit: contain"), "storyboard image thumbnails should preserve the image ratio");
+  assert.ok(canvasCssForPreview.includes(".tfcc-image-preview"), "large image preview overlay should be styled");
+  assert.ok(fs.existsSync("src/routes/assetsGenerate/generateAssetCard.ts"), "asset card generation route should exist");
+  assert.ok(fs.readFileSync("src/routes/assetsGenerate/generateAssets.ts", "utf8").includes("资产卡规格"), "single asset image generation should include asset card specs");
+  assert.ok(fs.readFileSync("src/routes/assetsGenerate/batchGenerateImageAssets.ts", "utf8").includes("资产卡规格"), "batch asset image generation should include asset card specs");
+  assert.ok(fs.readFileSync("src/routes/production/workbench/generateVideoPrompt.ts", "utf8").includes("assetCard"), "video prompt generation should include asset card specs");
+  assert.ok(fs.readFileSync("src/routes/production/workbench/generateVideo.ts", "utf8").includes('storyboard?.state === "已完成"'), "single video generation should only use QA-passed storyboard images as references");
+  assert.ok(fs.readFileSync("src/routes/production/workbench/batchGenerateVideo.ts", "utf8").includes('storyboard?.state === "已完成"'), "batch video generation should only use QA-passed storyboard images as references");
+  assert.ok(fs.readFileSync("src/utils/videoReview.ts", "utf8").includes('item.filePath && item.state === "已完成"'), "video QA should only compare against QA-passed storyboard images");
   assert.ok(fs.existsSync("src/routes/production/workbench/reviewVideo.ts"), "video QA review route should exist");
   assert.ok(fs.existsSync("src/routes/production/workbench/acceptVideoReview.ts"), "video QA accept route should exist");
   assert.ok(fs.existsSync("src/utils/videoReview.ts"), "video QA review utility should exist");
+  const characterSpecRemark = JSON.stringify({
+    schema: "toonflow.characterSpec.v1",
+    faceReference: "清冷少女脸型",
+    height: "165cm",
+    palette: { hair: "#000000", costume: "#B3EC16" },
+    constraints: { must: ["黑长发"], avoid: ["短发"] },
+  });
+  assert.ok(parseCharacterSpec(characterSpecRemark), "character spec should parse from role asset remark");
+  assert.ok(characterSpecPrompt(characterSpecRemark).includes("黑长发"), "character spec prompt should include continuity constraints");
+  const sceneCardRemark = JSON.stringify({
+    schema: "toonflow.sceneCard.v1",
+    summary: "古风茶室",
+    spatialLayout: "窗边茶桌居中，屏风在后景",
+    lighting: "暖色室内灯与冷色窗外天光",
+    fixedElements: ["茶桌", "屏风", "窗棂"],
+    constraints: { must: ["窗边茶桌"], avoid: ["现代家具"] },
+  });
+  assert.ok(parseAssetCard(sceneCardRemark), "asset card should parse scene card remark");
+  assert.ok(assetCardPrompt(sceneCardRemark).includes("空间结构"), "asset card prompt should include scene continuity fields");
   assert.equal(shouldRetryVideoGeneration("ETIMEDOUT 500"), true, "transient provider errors should be retryable");
   assert.equal(shouldRetryVideoGeneration("余额不足"), false, "account/balance errors should not be retried automatically");
   const visualTmp = await fs.promises.mkdtemp(path.join(os.tmpdir(), "toonflow-visual-test-"));
@@ -264,6 +311,21 @@ async function main() {
   assert.ok(canvasJs.includes('socket.on("addStoryboard"'), "productionAgent socket should be able to write storyboard cards back to the canvas");
   assert.ok(canvasJs.includes("wantsStoryboardAnalysisAction"), "storyboard agent should recognize analysis and shot-breakdown requests");
   assert.ok(canvasJs.includes("wantsStoryboardPipelineContinuation"), "storyboard agent should treat plan confirmations as pipeline continuations");
+  assert.ok(canvasJs.includes("hasNegativeStoryboardImageIntent"), "storyboard agent should not turn negative image-generation wording into image jobs");
+  assert.ok(canvasJs.includes("prompt|阶段5|分镜面板|分镜卡"), "storyboard prompt rewrite requests should not trigger storyboard image generation");
+  assert.ok(canvasJs.includes("isScopedStoryboardStage5Request"), "stage 5 scoped storyboard requests should not be submitted as full pipeline tasks");
+  assert.ok(canvasJs.includes("局部任务硬约束"), "stage 5 scoped storyboard requests should include hard local-task constraints");
+  assert.ok(canvasJs.includes("严格只处理这些 track"), "stage 5 scoped storyboard requests should skip tracks outside the user range");
+  assert.ok(canvasJs.includes("createStoryboardAgentTask"), "storyboard routing should produce a structured task envelope");
+  assert.ok(canvasJs.includes("extractStoryboardTrackScope"), "storyboard routing should extract scoped track ranges");
+  assert.ok(canvasJs.includes("skipped.forEach((track) => tracks.delete(track))"), "storyboard track scope should subtract explicitly skipped tracks");
+  assert.ok(canvasJs.includes("socket.__tfccStoryboardTask = task"), "storyboard socket should retain the current task envelope for tool guards");
+  assert.ok(canvasJs.includes('socket.emit("storyboardPipeline", { content, task })'), "storyboard pipeline should submit the task envelope with the prompt");
+  assert.ok(canvasJs.includes("assertProductionFlowSaveAllowed"), "storyboard tool bridge should guard forbidden flow-data writes");
+  assert.ok(canvasJs.includes("当前任务只允许更新 track"), "storyboard tool bridge should reject out-of-scope storyboard writes");
+  assert.ok(canvasJs.includes("当前任务禁止生成分镜图片"), "storyboard tool bridge should reject forbidden image generation");
+  assert.ok(canvasJs.includes("已阻止分镜 Agent 越权重写导演规划或分镜表"), "storyboard XML fallback should not bypass task guards");
+  assert.ok(fs.existsSync("docs/storyboard-agent-task-protocol-plan.md"), "storyboard task protocol plan should be written to docs");
   assert.ok(canvasJs.includes("shouldRunStoryboardPipeline"), "storyboard pipeline confirmations should be routed before status answers");
   assert.ok(canvasJs.includes("recentStoryboardDecisionPrompt"), "storyboard agent should inspect recent decision prompts before routing short replies");
   assert.ok(canvasJs.includes("wantsStoryboardDecisionExecution"), "complete storyboard decision replies should continue the production pipeline");
@@ -279,6 +341,10 @@ async function main() {
   assert.ok(canvasJs.includes('socket.emit("storyboardPipeline"'), "storyboard agent should submit the full production pipeline instead of a generic chat request");
   assert.ok(canvasJs.includes("nodeMarkdownPreview"), "canvas nodes should render markdown previews instead of raw markdown text");
   assert.ok(canvasJs.includes("shortMarkdown"), "canvas markdown previews should preserve line breaks for tables and headings");
+  assert.ok(canvasJs.includes("normalizeMarkdownText"), "markdown renderer should normalize escaped newlines from persisted agent data");
+  assert.ok(canvasJs.includes('replace(/\\\\n/g, "\\n")'), "markdown renderer should turn literal escaped newlines into real markdown lines");
+  assert.ok(canvasJs.includes("tfcc-inspect-markdown"), "inspector should render storyboard planning markdown");
+  assert.ok(canvasJs.includes('state.view === "asset" || state.view === "storyboard"'), "storyboard canvas should not show detached task cards");
   assert.ok(canvasJs.includes("beginNodeResize"), "canvas nodes should expose a manual resize handler");
   assert.ok(canvasJs.includes("tfcc-node-resize"), "canvas nodes should render a resize handle");
   assert.ok(canvasJs.includes("nodePreviewLimit"), "resized canvas nodes should reveal more markdown preview content");
@@ -487,8 +553,25 @@ async function main() {
     cameraMovement: "推镜",
     dialogue: "",
     soundEffect: "门轴吱呀声",
-    state: "未生成",
+    state: "已完成",
+    filePath: "/creative-canvas-test/storyboard-frame.png",
     flowId: 909002,
+  });
+  const [failedStoryboardId] = await db("o_storyboard").insert({
+    projectId,
+    scriptId,
+    trackId,
+    index: 1,
+    prompt: "@图1 旧剧院多人中景",
+    videoDesc: "多人站在旧剧院中对视。",
+    duration: "4",
+    shotType: "中景",
+    cameraMovement: "固定",
+    dialogue: "",
+    soundEffect: "",
+    state: "生成失败",
+    reason: "图片QA未通过：人物重复",
+    filePath: "/creative-canvas-test/storyboard-frame-failed.png",
   });
   await db("o_assets2Storyboard").insert({ storyboardId, assetId });
   const [videoId] = await db("o_video").insert({
@@ -609,6 +692,21 @@ async function main() {
     modelName: "test-model",
     taskId,
   });
+  const oldStoryboardImageArtifact = await recordGenerationArtifact({
+    projectId,
+    artifactType: "storyboardImage",
+    targetType: "o_storyboard",
+    targetId: storyboardId,
+    targetField: "prompt",
+    title: "旧分镜图",
+    content: "@图1 旧剧院远景，桌上纸条发光",
+    meta: {
+      filePath: "/creative-canvas-test/storyboard-frame-old.png",
+      state: "已完成",
+      selected: true,
+      reason: "旧图",
+    },
+  });
 
   const graph = await getCreativeCanvasGraph({ projectId, scriptId });
   findNode(graph, `project:${projectId}`);
@@ -679,9 +777,29 @@ async function main() {
   assert.ok(Array.isArray((storyboardNode.data as any).mentions), "storyboard node should expose prompt references");
   assert.ok((storyboardNode.data as any).mentions.length > 0, "storyboard prompt references should include linked assets");
   assert.equal((storyboardNode.data as any).storyboard.flowId, 909002, "storyboard node should expose its flowId for the image-flow drawer");
+  const storyboardImageNode = findNode(graph, `storyboardImage:${storyboardId}`);
+  assert.equal(storyboardImageNode.type, "storyboardImage", "storyboard images should render as separate image cards");
+  assert.equal(storyboardImageNode.status, "已选中", "completed storyboard image card should show selected state when it has a filePath");
+  assert.ok("thumbnail" in (storyboardImageNode.data as any), "storyboard image card should expose its thumbnail");
+  const oldStoryboardImageNode = findNode(graph, `storyboardImage:${storyboardId}:artifact:${oldStoryboardImageArtifact.id}`);
+  assert.equal(oldStoryboardImageNode.status, "已完成", "previous storyboard image card should remain linked without staying selected after a newer pass exists");
+  assert.ok(graph.edges.some((edge: any) => edge.source === `storyboard:${storyboardId}` && edge.target === oldStoryboardImageNode.id), "storyboard should retain links to previous image cards");
+  const failedStoryboardImageNode = findNode(graph, `storyboardImage:${failedStoryboardId}`);
+  assert.equal(failedStoryboardImageNode.status, "需复核", "failed storyboard image card should not be selected even when it has a filePath");
+  assert.equal((failedStoryboardImageNode.data as any).image.selected, false, "QA-failed storyboard image should not be marked selected");
+  assert.ok((failedStoryboardImageNode.data as any).thumbnail, "QA-failed storyboard image should still expose its thumbnail for review");
+  assert.ok(graph.edges.some((edge: any) => edge.source === `storyboard:${storyboardId}` && edge.target === `storyboardImage:${storyboardId}`), "storyboard should link to its generated image card");
   const videoPromptNode = findNode(graph, `videoPrompt:${trackId}`);
   assert.equal((videoPromptNode.data as any).prompt, "A cinematic shot of an old theater.", "video prompt node should expose editable full prompt");
   assert.ok(Array.isArray((videoPromptNode.data as any).mentions), "video prompt node should expose insertable references");
+  const videoAssetReferenceNode = findNode(graph, `videoReference:${trackId}:asset:${assetId}`);
+  assert.equal(videoAssetReferenceNode.type, "videoReference", "video view should expose track asset references as input cards");
+  assert.equal((videoAssetReferenceNode.data as any).reference.source, "asset", "asset reference card should identify its source");
+  const videoStoryboardReferenceNode = findNode(graph, `videoReference:${trackId}:storyboard:${storyboardId}`);
+  assert.equal((videoStoryboardReferenceNode.data as any).reference.source, "storyboard", "selected storyboard image should feed the video prompt as a reference card");
+  assert.ok(!graph.nodes.some((node) => node.id === `videoReference:${trackId}:storyboard:${failedStoryboardId}`), "QA-failed storyboard images should not feed video prompt references");
+  assert.ok(graph.edges.some((edge: any) => edge.source === videoAssetReferenceNode.id && edge.target === `videoPrompt:${trackId}`), "asset reference card should connect into the video prompt");
+  assert.ok(graph.edges.some((edge: any) => edge.source === videoStoryboardReferenceNode.id && edge.target === `videoPrompt:${trackId}`), "selected storyboard reference card should connect into the video prompt");
   const videoNode = findNode(graph, `video:${videoId}`);
   assert.ok("poster" in (videoNode.data as any), "video node should expose a poster field");
   assert.equal((videoNode.data as any).review.status, "passed", "video node should expose QA review status");

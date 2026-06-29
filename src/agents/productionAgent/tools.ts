@@ -322,7 +322,13 @@ export default (toolCpnfig: ToolConfig) => {
         z
           .object({
             videoDesc: z.string().describe("画面描述、场景、关联资产名称、时长、景别、运镜、角色动作、情绪、光影氛围、台词、音效、关联资产ID"),
-            prompt: z.string().nullable().optional().describe("分镜图片提示词"),
+            prompt: z
+              .string()
+              .nullable()
+              .optional()
+              .describe(
+                "分镜图片提示词。纯文本/多参模式无分镜图时传 null；需要生成分镜图时必须是单张静态关键帧提示词，不得复制 videoDesc，不得包含多段动作、编号镜头、台词或音效。多人画面必须明确每个角色只出现一次，背影/侧脸/边缘半截人物都计入人数。",
+              ),
             track: z.union([z.string(), z.number()]).optional().describe("分组"),
             duration: z.union([z.number(), z.string()]).optional().describe("视频推荐时间"),
             associateAssetsIds: flexibleNumberArraySchema,

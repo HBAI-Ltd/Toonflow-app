@@ -5,6 +5,7 @@ import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { recordGenerationArtifact } from "@/utils/contentAudit";
 import { recordPromptUsage, resolveVideoModelPrompt } from "@/utils/promptCenter";
+import { assetCardPrompt } from "@/utils/characterSpec";
 const router = express.Router();
 
 export default router.post(
@@ -72,7 +73,7 @@ export default router.post(
             .db("o_assets")
             .leftJoin("o_image", "o_image.id", "o_assets.imageId")
             .where("o_assets.id", item.id)
-            .select("o_assets.id", "o_assets.type", "o_assets.name", "o_image.filePath")
+            .select("o_assets.id", "o_assets.type", "o_assets.name", "o_assets.remark", "o_image.filePath")
             .first();
           return {
             ...assetsData,
@@ -93,6 +94,7 @@ export default router.post(
           type: item.type,
           name: item.name,
           filePath: item.filePath,
+          assetCard: assetCardPrompt(item.remark),
         });
       if (item._type === "storyboard")
         storyboard.push({
@@ -211,7 +213,7 @@ export default router.post(
 
           **资产信息**（角色、场景、道具、音频):${assets
             .filter((i) => i.filePath)
-            .map((i) => `[${i.id},${i.type},${i.name} ${assetsAudioRecord[i.id] ? `audio:${assetsAudioRecord[i.id]}` : ""} ] `)
+            .map((i) => `[${i.id},${i.type},${i.name} ${assetsAudioRecord[i.id] ? `audio:${assetsAudioRecord[i.id]}` : ""} ]${i.assetCard ? `\n资产卡规格：${i.assetCard}` : ""}`)
             .join("，")},
           **分镜信息**：${storyboard.map(
             (i) => `<storyboardItem

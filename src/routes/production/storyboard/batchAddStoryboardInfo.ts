@@ -5,6 +5,14 @@ import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { recordGenerationArtifact } from "@/utils/contentAudit";
 const router = express.Router();
+
+function normalizeStoredStoryboardPrompt(prompt: string, videoDesc: string): string {
+  const cleanPrompt = String(prompt || "").trim();
+  const cleanVideoDesc = String(videoDesc || "").trim();
+  if (!cleanPrompt || cleanPrompt === cleanVideoDesc) return "";
+  return cleanPrompt;
+}
+
 export default router.post(
   "/",
   validateFields({
@@ -27,8 +35,10 @@ export default router.post(
     const { data, scriptId, projectId } = req.body;
     if (!data.length) return res.status(400).send({ success: false, message: "数据不能为空" });
     for (const item of data) {
-      const [id] = await u.db("o_storyboard").insert({
-        prompt: item.prompt,
+      const prompt = normalizeStoredStoryboardPrompt(item.prompt, item.videoDesc);
+      const existing = await u.db("o_storyboard").where({ scriptId, projectId, track: item.track }).first();
+      const row = {
+        prompt,
         duration: String(item.duration),
         state: item.state,
         scriptId,
@@ -36,8 +46,16 @@ export default router.post(
         track: item.track,
         videoDesc: item.videoDesc,
         shouldGenerateImage: item.shouldGenerateImage,
+        filePath: null,
+        reason: null,
+        flowId: null,
         createTime: Date.now(),
-      });
+      };
+      const id = existing?.id ?? (await u.db("o_storyboard").insert(row))[0];
+      if (existing?.id) {
+        await u.db("o_storyboard").where("id", id).update(row);
+        await u.db("o_assets2Storyboard").where("storyboardId", id).delete();
+      }
       if (item.associateAssetsIds?.length) {
         await u.db("o_assets2Storyboard").insert(
           item.associateAssetsIds.map((assetId: number) => ({
@@ -53,7 +71,7 @@ export default router.post(
         targetId: id,
         targetField: "prompt",
         title: `分镜 ${id} 图片提示词`,
-        content: item.prompt,
+        content: prompt,
         meta: { source: "manual:batchAddStoryboardInfo", scriptId, track: item.track },
       });
       await recordGenerationArtifact({
@@ -68,7 +86,7 @@ export default router.post(
       });
       item.id = id;
     }
-    const lastStoryboard = await u.db("o_storyboard").where("scriptId", scriptId);
+    const lastStoryboard = await u.db("o_storyboard").where({ scriptId, projectId });
     if (!lastStoryboard || !lastStoryboard.length) return res.status(400).send(error("未查到分镜数据"));
     //根据track分组
     const storyboardGroupByTrack: Record<string, number[]> = {};

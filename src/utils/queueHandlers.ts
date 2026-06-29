@@ -8,6 +8,7 @@ import errorUtil from "@/utils/error";
 import { scoreImage } from "@/utils/scoreImage";
 import { enqueueJob, registerQueueHandler, QueueJob } from "@/utils/genQueue";
 import { registerComposeHandlers } from "@/utils/composeHandlers";
+import { recordGenerationArtifact } from "@/utils/contentAudit";
 
 /** 资产 prompt 中 @ 图文引用的解析来源：assetId 指向项目内资产，url 指向任意图片 */
 interface AssetReference {
@@ -49,6 +50,134 @@ interface StoryboardImagePayload {
   model: string;
   size: "1K" | "2K" | "4K";
   aspectRatio: `${number}:${number}`;
+}
+
+const STORYBOARD_IMAGE_MIN_SCORE = 60;
+const STORYBOARD_IMAGE_FAILURE_REVIEW_THRESHOLD = 2;
+const STORYBOARD_IMAGE_SCORE_CRITERIA = `4. 多人构图：人物数量是否正确，是否存在人物重叠、融合、遮挡、重复生成或半截人物
+5. 人物计数：背影、侧脸、边缘半截人物都计入可见人物；同一角色不得在同一张关键帧中前后重复出现
+6. 视频可用性：画面是否像单张关键帧，而不是多格漫画、拼贴图或连续动作合成`;
+
+interface StoryboardImageArtifactInput {
+  storyboardId: number;
+  projectId: number;
+  prompt: string;
+  filePath?: string | null;
+  state: string;
+  reason?: string | null;
+  selected?: boolean;
+  score?: number | null;
+  source?: string;
+  jobId?: number | null;
+}
+
+export async function recordStoryboardImageArtifact(input: StoryboardImageArtifactInput): Promise<void> {
+  const filePath = String(input.filePath ?? "").trim();
+  if (!filePath) return;
+  const rows = await db("o_generationArtifact")
+    .where({
+      projectId: input.projectId,
+      artifactType: "storyboardImage",
+      targetType: "o_storyboard",
+      targetId: String(input.storyboardId),
+    })
+    .select("meta")
+    .limit(100);
+  if (rows.some((row: any) => {
+    try {
+      return JSON.parse(row.meta || "{}")?.filePath === filePath;
+    } catch {
+      return false;
+    }
+  })) return;
+
+  await recordGenerationArtifact({
+    projectId: input.projectId,
+    artifactType: "storyboardImage",
+    targetType: "o_storyboard",
+    targetId: input.storyboardId,
+    targetField: "prompt",
+    title: "分镜图",
+    content: input.prompt || filePath,
+    taskId: input.jobId ?? null,
+    meta: {
+      filePath,
+      state: input.state,
+      reason: input.reason || "",
+      selected: Boolean(input.selected),
+      score: input.score ?? null,
+      source: input.source || "generated",
+    },
+  });
+}
+
+function extractStoryboardPromptRoles(prompt: string): string[] {
+  const roleMap = new Map<string, string>();
+  for (const match of prompt.matchAll(/@图(\d+)\s+为([^@\n，,。]+?)角色/g)) {
+    roleMap.set(match[1], match[2].trim());
+  }
+  if (!roleMap.size) return [];
+
+  const frameText = prompt.match(/【画面】([\s\S]*?)(?:\n\n【|$)/)?.[1] || prompt;
+  const visibleRoles = Array.from(roleMap.entries())
+    .filter(([imageNo]) => new RegExp(`@图${imageNo}(?!\\d)`).test(frameText))
+    .map(([, roleName]) => roleName);
+  return Array.from(new Set(visibleRoles.length ? visibleRoles : roleMap.values()));
+}
+
+function diagnoseStoryboardPromptIssue(prompt: string, qaReason: string): string {
+  const roles = extractStoryboardPromptRoles(prompt);
+  const hints: string[] = [];
+
+  if (roles.length >= 3 && /中景|近景|中近景/.test(prompt)) {
+    hints.push(`单帧中近景要求 ${roles.length} 个角色同框，人物计数和身份区分风险较高`);
+  }
+  if (/反打|背对|背向|3\/4|侧面|望向画外/.test(prompt) && roles.length >= 3) {
+    hints.push("多人反打、侧脸和画外视线约束叠加，容易导致站位、朝向或身份混淆");
+  }
+  if (/坐|坐于|坐在|落座/.test(prompt) && /站|站立|全部站立/.test(qaReason)) {
+    hints.push("坐姿要求已被生成结果反复偏离，建议把坐姿/前后排关系写得更简单");
+  }
+  if (/重复|多余|人数|人物数量|超过|出现\d+人|疑似复制/.test(qaReason)) {
+    hints.push("QA 问题集中在人像计数或重复角色，优先复核分镜 Prompt 的可见人物数量和空间关系");
+  }
+
+  return hints.length
+    ? hints.join("；")
+    : "连续图片 QA 失败，建议复核分镜 Prompt 是否人物过多、站位/朝向/动作约束冲突";
+}
+
+async function countFailedStoryboardImageArtifacts(projectId: number, storyboardId: number): Promise<number> {
+  const rows = await db("o_generationArtifact")
+    .where({
+      projectId,
+      artifactType: "storyboardImage",
+      targetType: "o_storyboard",
+      targetId: String(storyboardId),
+    })
+    .select("meta")
+    .limit(100);
+
+  return rows.filter((row: any) => {
+    try {
+      return JSON.parse(row.meta || "{}")?.state === "生成失败";
+    } catch {
+      return false;
+    }
+  }).length;
+}
+
+async function markStoryboardPromptForReviewAfterRepeatedFailures(payload: StoryboardImagePayload, reason: string): Promise<void> {
+  const failedCount = await countFailedStoryboardImageArtifacts(payload.projectId, payload.storyboardId);
+  if (failedCount < STORYBOARD_IMAGE_FAILURE_REVIEW_THRESHOLD) return;
+
+  const diagnosis = diagnoseStoryboardPromptIssue(payload.prompt, reason);
+  await db("o_storyboard")
+    .where("id", payload.storyboardId)
+    .update({
+      state: "生成失败",
+      reason: `${reason}\n连续 ${failedCount} 次图片QA未通过，建议反向复核分镜Prompt：${diagnosis}`,
+    });
 }
 
 // ─── 抽卡入队 ────────────────────────────────────────────────
@@ -201,10 +330,20 @@ async function finalizeBatch(batchId: string, assetsId: number): Promise<void> {
 
 // ─── 分镜图处理器 ────────────────────────────────────────────
 
-async function handleStoryboardImage(payload: StoryboardImagePayload): Promise<void> {
+async function handleStoryboardImage(payload: StoryboardImagePayload, job?: QueueJob): Promise<void> {
   const storyboard = await db("o_storyboard").where("id", payload.storyboardId).first();
   if (!storyboard) return; // 分镜已被删除
 
+  await recordStoryboardImageArtifact({
+    storyboardId: payload.storyboardId,
+    projectId: payload.projectId,
+    prompt: payload.prompt,
+    filePath: storyboard.filePath,
+    state: storyboard.state || "已完成",
+    reason: storyboard.reason,
+    selected: storyboard.state === "已完成",
+    source: "regenerateSnapshot",
+  });
   await db("o_storyboard").where("id", payload.storyboardId).update({ state: "生成中", reason: null });
 
   try {
@@ -226,7 +365,62 @@ async function handleStoryboardImage(payload: StoryboardImagePayload): Promise<v
     );
     const savePath = `/${payload.projectId}/assets/${payload.scriptId}/${uuidv4()}.jpg`;
     await aiImage.save(savePath);
-    await db("o_storyboard").where("id", payload.storyboardId).update({ filePath: savePath, state: "已完成" });
+    let result: Awaited<ReturnType<typeof scoreImage>>;
+    try {
+      result = await scoreImage(savePath, payload.prompt, STORYBOARD_IMAGE_SCORE_CRITERIA, { throwOnError: true });
+    } catch (e) {
+      const message = errorUtil(e).message;
+      const reason = `图片QA未执行：${message}`;
+      await db("o_storyboard")
+        .where("id", payload.storyboardId)
+        .update({ filePath: savePath, reason, state: "生成失败" });
+      await recordStoryboardImageArtifact({
+        storyboardId: payload.storyboardId,
+        projectId: payload.projectId,
+        prompt: payload.prompt,
+        filePath: savePath,
+        state: "生成失败",
+        reason,
+        selected: false,
+        source: "generated",
+        jobId: job?.id ?? null,
+      });
+      await markStoryboardPromptForReviewAfterRepeatedFailures(payload, reason);
+      return;
+    }
+    if (result && result.score < STORYBOARD_IMAGE_MIN_SCORE) {
+      const reason = `图片QA未通过：${result.reason || `评分${result.score}`}`;
+      await db("o_storyboard")
+        .where("id", payload.storyboardId)
+        .update({ filePath: savePath, reason, state: "生成失败" });
+      await recordStoryboardImageArtifact({
+        storyboardId: payload.storyboardId,
+        projectId: payload.projectId,
+        prompt: payload.prompt,
+        filePath: savePath,
+        state: "生成失败",
+        reason,
+        selected: false,
+        score: result.score,
+        source: "generated",
+        jobId: job?.id ?? null,
+      });
+      await markStoryboardPromptForReviewAfterRepeatedFailures(payload, reason);
+      return;
+    }
+    await db("o_storyboard").where("id", payload.storyboardId).update({ filePath: savePath, state: "已完成", reason: null });
+    await recordStoryboardImageArtifact({
+      storyboardId: payload.storyboardId,
+      projectId: payload.projectId,
+      prompt: payload.prompt,
+      filePath: savePath,
+      state: "已完成",
+      reason: result?.reason || "",
+      selected: true,
+      score: result?.score ?? null,
+      source: "generated",
+      jobId: job?.id ?? null,
+    });
   } catch (e) {
     const message = errorUtil(e).message;
     await db("o_storyboard").where("id", payload.storyboardId).update({ filePath: "", reason: message, state: "生成失败" });
@@ -325,7 +519,7 @@ async function resolveAssetReferences(references: AssetReference[]): Promise<{ t
 
 export function registerQueueHandlers(): void {
   registerQueueHandler("assetImage", handleAssetImage);
-  registerQueueHandler("storyboardImage", (payload) => handleStoryboardImage(payload));
+  registerQueueHandler("storyboardImage", (payload, job) => handleStoryboardImage(payload, job));
   registerComposeHandlers();
 }
 

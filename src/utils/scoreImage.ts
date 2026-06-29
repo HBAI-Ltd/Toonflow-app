@@ -13,6 +13,10 @@ export interface ImageScore {
   reason: string;
 }
 
+interface ScoreImageOptions {
+  throwOnError?: boolean;
+}
+
 const SCORE_PROMPT = `你是 AI 绘画质检员。请根据下方「生成提示词」评估这张 AI 生成的图片，从以下维度打分：
 1. 提示词一致性：画面内容、角色特征、场景元素是否符合提示词描述（权重最高）
 2. 画面质量：是否存在肢体错误、面部畸变、多余肢体、明显伪影
@@ -22,26 +26,25 @@ const SCORE_PROMPT = `你是 AI 绘画质检员。请根据下方「生成提示
 {"score": 85, "reason": "简短中文理由，50字以内"}
 
 score 为 0-100 的整数，60 分以下表示有明显缺陷不建议采用。
-
-生成提示词：
 `;
 
-export async function scoreImage(filePath: string, prompt: string): Promise<ImageScore | null> {
+export async function scoreImage(filePath: string, prompt: string, extraCriteria = "", options: ScoreImageOptions = {}): Promise<ImageScore | null> {
   try {
-    const base64 = await oss.getImageBase64(filePath);
+    const image = await oss.getFile(filePath);
     const result = await Ai.Text("universalAi").invoke({
       messages: [
         {
           role: "user",
           content: [
-            { type: "text", text: `${SCORE_PROMPT}${prompt}` },
-            { type: "image", image: base64 },
+            { type: "text", text: `${SCORE_PROMPT}${extraCriteria ? `\n补充评估维度：\n${extraCriteria}\n` : ""}\n生成提示词：\n${prompt}` },
+            { type: "image", image },
           ],
         },
       ],
     });
     return parseScore(result.text);
   } catch (e) {
+    if (options.throwOnError) throw e;
     console.warn("[图片打分] 失败，跳过打分:", e instanceof Error ? e.message : e);
     return null;
   }

@@ -814,6 +814,11 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         table.integer("scriptId");
         table.integer("projectId");
         table.integer("videoTrackId");
+        table.text("generationModel");
+        table.text("generationMode");
+        table.text("generationResolution");
+        table.integer("generationDuration");
+        table.integer("audioRequested");
         table.primary(["id"]);
         table.unique(["id"]);
       },

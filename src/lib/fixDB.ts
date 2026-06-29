@@ -354,6 +354,12 @@ export default async (knex: Knex): Promise<void> => {
   await addColumn("o_image", "selected", "integer");
   await addColumn("o_image", "score", "integer");
   await addColumn("o_image", "scoreReason", "text");
+  // 视频生成元数据，供成片筛选与失败重试追踪使用
+  await addColumn("o_video", "generationModel", "text");
+  await addColumn("o_video", "generationMode", "text");
+  await addColumn("o_video", "generationResolution", "text");
+  await addColumn("o_video", "generationDuration", "integer");
+  await addColumn("o_video", "audioRequested", "integer");
   // 分镜结构化字段（台词/音效/景别/运镜）
   await addColumn("o_storyboard", "dialogue", "text");
   await addColumn("o_storyboard", "soundEffect", "text");

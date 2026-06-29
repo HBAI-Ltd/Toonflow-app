@@ -1,4 +1,4 @@
-// @db-hash 4b037418750b28aebf2ca6240d39526e
+// @db-hash ffaeb643b52ef37eef50c37246807320
 //该文件由脚本自动生成，请勿手动修改
 
 export interface memories {
@@ -360,8 +360,13 @@ export interface o_vendorConfig {
   'models'?: string | null;
 }
 export interface o_video {
+  'audioRequested'?: number | null;
   'errorReason'?: string | null;
   'filePath'?: string | null;
+  'generationDuration'?: number | null;
+  'generationMode'?: string | null;
+  'generationModel'?: string | null;
+  'generationResolution'?: string | null;
   'id'?: number;
   'projectId'?: number | null;
   'scriptId'?: number | null;

@@ -132,6 +132,16 @@ interface StaleInfo {
   reason: string;
 }
 
+interface StoryboardImageAttempt {
+  id: string;
+  filePath: string;
+  thumbnail: string;
+  state: string;
+  reason: string;
+  selected: boolean;
+  createTime?: number | null;
+}
+
 function parseJson<T>(value: unknown, fallback: T): T {
   if (value == null || value === "") return fallback;
   if (typeof value !== "string") return value as T;
@@ -165,6 +175,19 @@ function selectedVideoId(row: any): number | null {
   const id = row?.videoId ?? row?.selectVideoId;
   const value = Number(id);
   return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function isSelectedStoryboardImage(row: any): boolean {
+  return Boolean(String(row?.filePath ?? "").trim()) && row?.state === "已完成";
+}
+
+function storyboardImageStatus(attempt: StoryboardImageAttempt, currentSelectedPath: string): string {
+  const path = normalizeMediaPath(attempt.filePath);
+  if (currentSelectedPath && path === currentSelectedPath) return "已选中";
+  if (!currentSelectedPath && attempt.selected) return "已选中";
+  if (attempt.state === "生成失败") return "需复核";
+  if (attempt.state === "生成中") return "生成中";
+  return attempt.state || "未生成";
 }
 
 function normalizeLayoutMap(input: unknown): Record<string, LayoutItem> {
@@ -613,6 +636,39 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
   for (const sb of storyboards as any[]) {
     if (sb.filePath) storyboardThumbMap.set(Number(sb.id), await toThumbUrl(sb.filePath));
   }
+  const storyboardImageAttemptMap = new Map<number, StoryboardImageAttempt[]>();
+  if (storyboardIds.length) {
+    const imageArtifacts = await db("o_generationArtifact")
+      .where({
+        projectId,
+        artifactType: "storyboardImage",
+        targetType: "o_storyboard",
+      })
+      .whereIn("targetId", storyboardIds.map((id: number) => String(id)))
+      .orderBy("createTime", "asc")
+      .limit(500);
+    const seen = new Set<string>();
+    for (const artifact of imageArtifacts as any[]) {
+      const storyboardId = Number(artifact.targetId);
+      const meta = parseJson<Record<string, any>>(artifact.meta, {});
+      const filePath = String(meta.filePath || "").trim();
+      if (!Number.isFinite(storyboardId) || !filePath) continue;
+      const key = `${storyboardId}:${normalizeMediaPath(filePath)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const attempt: StoryboardImageAttempt = {
+        id: `storyboardImage:${storyboardId}:artifact:${artifact.id}`,
+        filePath,
+        thumbnail: await toThumbUrl(filePath),
+        state: String(meta.state || "已完成"),
+        reason: String(meta.reason || ""),
+        selected: Boolean(meta.selected),
+        createTime: artifact.createTime,
+      };
+      if (!storyboardImageAttemptMap.has(storyboardId)) storyboardImageAttemptMap.set(storyboardId, []);
+      storyboardImageAttemptMap.get(storyboardId)!.push(attempt);
+    }
+  }
   // 视频海报/可播放地址
   const videoUrlMap = new Map<number, string>();
   for (const video of videos as any[]) {
@@ -867,6 +923,8 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
 
   storyboards.forEach((storyboard: any, index: number) => {
     const sbThumb = storyboardThumbMap.get(Number(storyboard.id)) || "";
+    const storyboardId = Number(storyboard.id);
+    const currentSelectedPath = isSelectedStoryboardImage(storyboard) ? normalizeMediaPath(storyboard.filePath) : "";
     const linkedAssets = storyboardAssetLinks
       .filter((link: any) => Number(link.storyboardId) === Number(storyboard.id))
       .map((link: any) => assetById.get(Number(link.assetId)))
@@ -887,6 +945,73 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
       status: storyboard.state === "已完成" ? "已完成" : storyboard.state === "生成中" ? "生成中" : storyboard.state === "生成失败" ? "需复核" : undefined,
       ...auditMetaFor(auditIndex, "o_storyboard", storyboard.id),
       data: { storyboard: compactRow(storyboard), prompt, videoDesc: storyboard.videoDesc || "", promptPreview: previewText(prompt, 260), thumbnail: sbThumb, mentions },
+    });
+    const currentPath = normalizeMediaPath(storyboard.filePath);
+    const omitCurrentPath = storyboard.state === "生成中" ? "" : currentPath;
+    const attempts = (storyboardImageAttemptMap.get(storyboardId) || [])
+      .filter((attempt) => !omitCurrentPath || normalizeMediaPath(attempt.filePath) !== omitCurrentPath);
+    if (storyboard.state === "生成中") {
+      attempts.push({
+        id: `storyboardImage:${storyboard.id}`,
+        filePath: "",
+        thumbnail: "",
+        state: "生成中",
+        reason: "",
+        selected: false,
+      });
+    } else if (storyboard.filePath) {
+      attempts.push({
+        id: `storyboardImage:${storyboard.id}`,
+        filePath: storyboard.filePath,
+        thumbnail: sbThumb,
+        state: storyboard.state || "已完成",
+        reason: storyboard.reason || "",
+        selected: isSelectedStoryboardImage(storyboard),
+      });
+    }
+    if (!attempts.length) {
+      attempts.push({
+        id: `storyboardImage:${storyboard.id}`,
+        filePath: "",
+        thumbnail: "",
+        state: storyboard.state || "未生成",
+        reason: storyboard.reason || "",
+        selected: false,
+      });
+    }
+    attempts.forEach((attempt, attemptIndex) => {
+      const status = storyboardImageStatus(attempt, currentSelectedPath);
+      createNode(nodes, staleMap, layout, {
+        id: attempt.id,
+        type: "storyboardImage",
+        label: attempts.length > 1 ? `图片 ${storyboard.index ?? index + 1}-${attemptIndex + 1}` : `图片 ${storyboard.index ?? index + 1}`,
+        fallbackPosition: { x: 2160, y: -220 + index * 380 + attemptIndex * 240 },
+        width: 280,
+        height: 210,
+        status,
+        ...auditMetaFor(auditIndex, "o_storyboard", storyboard.id),
+        data: {
+          storyboardId: storyboard.id,
+          storyboardIndex: storyboard.index ?? index + 1,
+          image: {
+            storyboardId: storyboard.id,
+            state: status,
+            selected: status === "已选中",
+            filePath: attempt.filePath,
+            reason: attempt.reason,
+            createTime: attempt.createTime ?? null,
+          },
+          thumbnail: attempt.thumbnail,
+          promptPreview: previewText(prompt, 180),
+        },
+      });
+      edges.push({
+        id: `storyboard:${storyboard.id}->${attempt.id}`,
+        source: `storyboard:${storyboard.id}`,
+        target: attempt.id,
+        type: "generates",
+        label: "图片",
+      });
     });
     if (storyboard.scriptId) {
       edges.push({
@@ -916,25 +1041,105 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
   });
 
   videoTracks.forEach((track: any, index: number) => {
-    const storyboard = storyboards.find((item: any) => item.trackId === track.id);
-    const linkedAssets = storyboard ? storyboardAssetLinks
-      .filter((link: any) => Number(link.storyboardId) === Number(storyboard.id))
+    const trackStoryboards = storyboards.filter((item: any) => Number(item.trackId) === Number(track.id));
+    const storyboard = trackStoryboards[0];
+    const trackStoryboardIds = new Set(trackStoryboards.map((item: any) => Number(item.id)));
+    const linkedAssets = Array.from(new Map(storyboardAssetLinks
+      .filter((link: any) => trackStoryboardIds.has(Number(link.storyboardId)))
       .map((link: any) => assetById.get(Number(link.assetId)))
-      .filter(Boolean) : [];
+      .filter(Boolean)
+      .map((asset: any) => [Number(asset.id), asset])).values());
+    const selectedStoryboards = trackStoryboards.filter(isSelectedStoryboardImage);
+    const videoPromptId = `videoPrompt:${track.id}`;
     const mentions = [
       ...linkedAssets.map((asset: any, assetIndex: number) => ({
         token: `@图片${assetIndex + 1}`,
         label: `${asset.name || `资产${asset.id}`}${asset.type ? ` ${asset.type}` : ""}`,
         image: assetThumbMap.get(Number(asset.id)) || "",
       })),
-      storyboard ? {
+      ...selectedStoryboards.map((item: any) => ({
+        token: `@镜头${item.index ?? index + 1}`,
+        label: `镜头 ${item.index ?? index + 1} 分镜图`,
+        image: storyboardThumbMap.get(Number(item.id)) || "",
+      })),
+    ];
+
+    linkedAssets.forEach((asset: any, assetIndex: number) => {
+      const thumbnail = assetThumbMap.get(Number(asset.id)) || "";
+      createNode(nodes, staleMap, layout, {
+        id: `videoReference:${track.id}:asset:${asset.id}`,
+        type: "videoReference",
+        label: `@图片${assetIndex + 1} ${asset.name || `资产 ${asset.id}`}`,
+        fallbackPosition: { x: 1880, y: -160 + index * 390 + assetIndex * 120 },
+        width: 220,
+        height: 150,
+        status: thumbnail ? "已完成" : "需复核",
+        sourceLabel: "来源：轨道参考资产",
+        data: {
+          reference: {
+            id: asset.id,
+            source: "asset",
+            type: asset.type || "",
+            name: asset.name || "",
+            token: `@图片${assetIndex + 1}`,
+            filePath: asset.imagePath || "",
+          },
+          thumbnail,
+          promptPreview: asset.prompt || asset.describe || "",
+        },
+      });
+      edges.push({
+        id: `videoReference:${track.id}:asset:${asset.id}->${videoPromptId}`,
+        source: `videoReference:${track.id}:asset:${asset.id}`,
+        target: videoPromptId,
+        type: "references",
+        label: "参考输入",
+      });
+    });
+
+    selectedStoryboards.forEach((item: any, storyboardIndex: number) => {
+      createNode(nodes, staleMap, layout, {
+        id: `videoReference:${track.id}:storyboard:${item.id}`,
+        type: "videoReference",
+        label: `@镜头${item.index ?? storyboardIndex + 1} 分镜图`,
+        fallbackPosition: { x: 1880, y: -160 + index * 390 + (linkedAssets.length + storyboardIndex) * 120 },
+        width: 220,
+        height: 150,
+        status: "已完成",
+        sourceLabel: "来源：已选分镜图",
+        ...auditMetaFor(auditIndex, "o_storyboard", item.id),
+        data: {
+          reference: {
+            id: item.id,
+            source: "storyboard",
+            type: "storyboard",
+            name: `镜头 ${item.index ?? storyboardIndex + 1}`,
+            token: `@镜头${item.index ?? storyboardIndex + 1}`,
+            filePath: item.filePath || "",
+          },
+          thumbnail: storyboardThumbMap.get(Number(item.id)) || "",
+          promptPreview: item.prompt || item.videoDesc || "",
+        },
+      });
+      edges.push({
+        id: `videoReference:${track.id}:storyboard:${item.id}->${videoPromptId}`,
+        source: `videoReference:${track.id}:storyboard:${item.id}`,
+        target: videoPromptId,
+        type: "references",
+        label: "首帧参考",
+      });
+    });
+
+    const promptMentions = mentions.filter(Boolean);
+    if (storyboard && !selectedStoryboards.length) {
+      promptMentions.push({
         token: `@镜头${storyboard.index ?? index + 1}`,
         label: `镜头 ${storyboard.index ?? index + 1}`,
         image: storyboardThumbMap.get(Number(storyboard.id)) || "",
-      } : null,
-    ].filter(Boolean);
+      });
+    }
     createNode(nodes, staleMap, layout, {
-      id: `videoPrompt:${track.id}`,
+      id: videoPromptId,
       type: "videoPrompt",
       label: `视频 Prompt ${track.id}`,
       fallbackPosition: { x: 2240, y: -160 + index * 390 },
@@ -942,7 +1147,7 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
       height: 350,
       sourceLabel: "来源：分镜分析",
       ...auditMetaFor(auditIndex, "o_videoTrack", track.id),
-      data: { videoTrack: compactRow(track), prompt: track.prompt || "", promptPreview: previewText(track.prompt, 260), mentions },
+      data: { videoTrack: compactRow(track), prompt: track.prompt || "", promptPreview: previewText(track.prompt, 260), mentions: promptMentions },
     });
     if (storyboard) {
       edges.push({
