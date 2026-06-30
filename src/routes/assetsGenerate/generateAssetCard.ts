@@ -61,6 +61,18 @@ const AssetCardSchema = z.object({
     .optional(),
 });
 
+// 判断一张资产卡是否已含结构化空间连续性约束（用于决定是否需要补抽）
+function hasSpatialContinuity(card: Record<string, unknown> | null | undefined): boolean {
+  if (!card) return false;
+  const sc = card.spatialContinuity as Record<string, unknown> | undefined;
+  if (!sc) return false;
+  const keys = ["fixedAnchors", "characterBlocking", "objectBlocking", "invariants", "forbiddenDrift", "cameraAxis"];
+  return keys.some((k) => {
+    const v = sc[k];
+    return Array.isArray(v) ? v.length > 0 : Boolean(v && String(v).trim());
+  });
+}
+
 function fallbackAssetCard(asset: any) {
   const type = asset.type as AssetType;
   const summary = String(asset.describe || asset.prompt || asset.name || "").trim() || `${assetTypeLabels[type]}资产`;
@@ -132,8 +144,12 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
     summary: asset.describe || asset.name,
     existingRemark: asset.remark,
   });
-  if (existing && !force) return res.status(200).send(success({ assetId: id, existing: true, card: existing }));
-  if (promptCard && !force) {
+  // 已有卡且空间约束完整 → 直接复用；已有卡但缺 spatialContinuity → 不短路，往下走 LLM 补抽空间约束后 merge 回写
+  if (existing && !force && hasSpatialContinuity(existing)) {
+    return res.status(200).send(success({ assetId: id, existing: true, card: existing }));
+  }
+  // 纯文本提取卡通常无结构化空间约束；场景类需要 spatialContinuity 时不短路，往下走 LLM 补全
+  if (promptCard && !force && !(asset.type === "scene" && !hasSpatialContinuity(promptCard))) {
     await u.db("o_assets").where("id", id).update({ remark: JSON.stringify(promptCard) });
     return res.status(200).send(success({ assetId: id, existing: false, source: "prompt", card: promptCard }));
   }
@@ -164,8 +180,12 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
             "你是影视前期设定师。请把资产描述整理成后续分镜图、视频 Prompt 可复用的结构化资产卡规格。" +
             "不要编造剧本外身份和剧情，只提炼可稳定复用的视觉连续性约束。" +
             "角色重点是脸、体型、发型、服装、表情；场景重点是空间结构、光源、固定陈设、氛围；道具重点是形状、材质、尺寸、使用方式。" +
-            "若资产类型是场景，必须尽量生成 spatialContinuity：用抽象但可执行的空间锚点、人物/物件调度基准、视轴线、不变量、允许变化和禁止漂移来约束跨镜头连续性；不得写入当前资产信息无法支持的具体剧情细节。" +
-            "结果必须通过 resultTool 返回。",
+            "空间连续性约束（spatialContinuity）必须用【抽象、与题材无关】的空间语言表达，不要依赖具体物名枚举——" +
+            "例如用『主体陈设沿同一面墙一字排开』『人物围绕中心台面四向就座』『视轴线由入口指向主体区域』这类描述，" +
+            "这样武侠、科幻、职场等任意题材都适用，而不是只列『桌/电视/窗』等特定物件。" +
+            "若资产类型是场景，spatialContinuity 为必填：fixedAnchors（跨镜头稳定的空间锚点）、characterBlocking（人物默认站位/朝向）、objectBlocking（关键陈设相对位置）至少各给 1 条，并尽量给出 invariants、allowedChanges、forbiddenDrift、cameraAxis。" +
+            "若资产类型是角色或道具，也应在 spatialContinuity 中给出该资产相对场景/其他元素的默认站位或承载关系（如『默认位于画面中景、面向镜头』『置于主桌中央』），只写可从资产/剧本稳定推断的信息，不得编造剧情。" +
+            "不得写入当前资产信息无法支持的具体剧情细节。结果必须通过 resultTool 返回。",
         },
         {
           role: "user",
@@ -187,12 +207,14 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
     console.warn("[generateAssetCard] AI asset card generation failed, using fallback", u.error(e).message);
   }
 
-  const card = generatedCard
+  // 以 existing 为基底（保留已填字段），依次并入 promptCard 与 LLM 生成卡，补抽的 spatialContinuity 深合并进来
+  const fresh = generatedCard
     ? (promptCard ? mergeAssetCards(promptCard, generatedCard) : generatedCard)
     : promptCard || fallbackAssetCard(asset);
+  const card = existing ? mergeAssetCards(existing, fresh) : fresh;
   await u.db("o_assets").where("id", id).update({
     remark: JSON.stringify(card),
   });
 
-  return res.status(200).send(success({ assetId: id, existing: false, card }));
+  return res.status(200).send(success({ assetId: id, existing: Boolean(existing), card }));
 });

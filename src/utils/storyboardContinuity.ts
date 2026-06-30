@@ -61,8 +61,6 @@ type ContinuityContract = {
   qaChecks: string[];
 };
 
-const SPATIAL_HINT_RE = /空间|连续|固定|锚点|布局|方位|位置|不变量|禁止|避免|视轴线|桌|电视|窗|门|沙发|墙|道具|陈设/;
-
 function compact(value: unknown, max = 220): string {
   const text = String(value ?? "").replace(/\s+/g, " ").trim();
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
@@ -73,13 +71,11 @@ function assetName(asset: ContinuityAsset): string {
   return `${id}${asset.name || asset.type || "资产"}`.trim();
 }
 
-function assetHints(asset: ContinuityAsset): string[] {
-  return [asset.assetCard, asset.remark, asset.prompt, asset.describe]
-    .filter(Boolean)
-    .flatMap((value) => String(value).split(/[\n；;|]/))
-    .map((line) => compact(line, 120))
-    .filter((line) => SPATIAL_HINT_RE.test(line))
-    .slice(0, 3);
+// 只读资产卡结构化的空间锁定项（forbiddenDrift / invariants），不再用关键词正则猜测自由文本。
+// 资产卡的 spatialContinuity 由 generateAssetCard 阶段保证结构化（源头强化 + LLM 语义抽取）。
+function assetSpatialLocks(asset: ContinuityAsset): string[] {
+  const spatial = assetSpatial(asset);
+  return unique([...spatial.forbiddenDrift, ...spatial.invariants]).slice(0, 6);
 }
 
 function parseContract(value: unknown): ContinuityContract | null {
@@ -129,10 +125,14 @@ function assetSpatial(asset: ContinuityAsset) {
 
 export function compileEffectiveLayout(input: { assets?: ContinuityAsset[]; layoutState?: LayoutStateInput | null }): EffectiveLayout | null {
   const assets = Array.isArray(input.assets) ? input.assets : [];
-  const sourceAssets = assets
-    .filter((asset) => asset.type === "scene" || assetHints(asset).length > 0)
-    .map(assetName);
-  const spatialBlocks = assets.map(assetSpatial);
+  // 只读资产卡结构化的 spatialContinuity；空间数据由 generateAssetCard 阶段保证完整。
+  const spatialByAsset = assets.map((asset) => ({ asset, spatial: assetSpatial(asset) }));
+  const hasStructuredSpatial = (s: ReturnType<typeof assetSpatial>) =>
+    s.fixedAnchors.length || s.characterBlocking.length || s.objectBlocking.length || s.invariants.length || s.forbiddenDrift.length || Boolean(s.cameraAxis);
+  const sourceAssets = spatialByAsset
+    .filter(({ spatial }) => hasStructuredSpatial(spatial))
+    .map(({ asset }) => assetName(asset));
+  const spatialBlocks = spatialByAsset.map(({ spatial }) => spatial);
   const fixedAnchors = unique(spatialBlocks.flatMap((item) => item.fixedAnchors));
   const characterBlocking = unique(spatialBlocks.flatMap((item) => item.characterBlocking));
   const objectBlocking = unique(spatialBlocks.flatMap((item) => item.objectBlocking));
@@ -140,8 +140,7 @@ export function compileEffectiveLayout(input: { assets?: ContinuityAsset[]; layo
   const allowedStructuralChanges = unique(spatialBlocks.flatMap((item) => item.allowedChanges));
   const forbiddenDrift = unique(spatialBlocks.flatMap((item) => item.forbiddenDrift));
   const cameraAxis = spatialBlocks.map((item) => item.cameraAxis).find(Boolean) || "";
-  const fallbackHints = unique(assets.flatMap(assetHints));
-  const hasContract = sourceAssets.length || fixedAnchors.length || characterBlocking.length || objectBlocking.length || invariants.length || forbiddenDrift.length || fallbackHints.length;
+  const hasContract = sourceAssets.length || fixedAnchors.length || characterBlocking.length || objectBlocking.length || invariants.length || forbiddenDrift.length;
   if (!hasContract) return null;
 
   const layoutStateChanges = valueList(input.layoutState?.structuralChanges);
@@ -159,9 +158,9 @@ export function compileEffectiveLayout(input: { assets?: ContinuityAsset[]; layo
     version: 1,
     source: "SpatialContract+LayoutState",
     sourceAssets,
-    fixedAnchors: unique([...fixedAnchors, ...fallbackHints.filter((item) => /锚点|固定|布局|空间结构/.test(item))]),
+    fixedAnchors,
     characterBlocking,
-    objectBlocking: unique([...objectBlocking, ...fallbackHints.filter((item) => /道具|陈设|桌|电视|窗|门|沙发|墙/.test(item))]),
+    objectBlocking,
     cameraAxis,
     invariants,
     allowedStructuralChanges,
@@ -201,7 +200,7 @@ export function buildStoryboardContinuityContract(input: ContinuityInput): Conti
   const scenes = assets.filter((asset) => asset.type === "scene").map(assetName);
   const roles = assets.filter((asset) => asset.type === "role").map(assetName);
   const props = assets.filter((asset) => asset.type === "tool").map(assetName);
-  const extractedLocks = assets.flatMap(assetHints);
+  const extractedLocks = unique(assets.flatMap(assetSpatialLocks));
 
   return {
     version: 1,
