@@ -22,7 +22,7 @@ AI 短剧/漫剧生产工具：小说 → 剧本 → 资产/分镜图 → 视频
 - **新增 API**：在 `src/routes/<域>/<name>.ts` 建文件即注册为 `/api/<域>/<name>`。`[param]`→`:param`，`index.ts`→目录本身。
 - **数据库变更**：改 `src/lib/initDB.ts` / `src/lib/fixDB.ts` 的幂等迁移（`hasTable`/`hasColumn`/`addColumn`），无传统 migration 文件。
 - **耗时任务必须走生成队列**（`o_genQueue`，见 `src/utils/genQueue.ts`），不要在路由里裸跑 pLimit。新 kind 在 `queueHandlers.ts` / `composeHandlers.ts` 注册。
-- **接入新模型供应商是纯配置**：编辑 `data/vendor/<id>.ts`（vm2 沙盒执行），实现 `textRequest/imageRequest/videoRequest/ttsRequest`，不改主代码。
+- **接入新模型供应商是纯配置**：编辑 `data/vendor/<id>.ts`（`node:vm` 沙盒执行，见 `src/utils/vm.ts`），实现 `textRequest/imageRequest/videoRequest/ttsRequest`，不改主代码。沙盒仅暴露白名单注入对象且冻结；`crypto`/`jsonwebtoken` 已收窄为最小子集。经 `updateCode` 写入 vendor 代码会过静态逃逸护栏（禁 `require`/`process`/`eval` 等）。
 - **AI 调用统一走 `src/utils/ai.ts`** 的 `Ai.Text/Image/Video/Audio(key)`，`key` 用 agent 语义名或 `vendorId:modelName`。
 - **Creative Canvas 前端在 `data/web/creative-canvas.*` 注入实现**；改 JS/CSS 后同步改 `data/web/index.html` cache-buster，并跑 `node --check data/web/creative-canvas.js` + `yarn test:creative-canvas`。视频生成设置的模型/模式/清晰度/时长来自 vendor `durationResolutionMap` 与分镜轨道时长，别硬编码固定秒数。
 - **分镜图空间一致性必须走 `EffectiveLayout`**：场景/道具空间约束由 `compileEffectiveLayout` 编译后注入 Prompt，并由 QA hard gate 裁决；`passed=false` 或任意 `hardFailures` 必须拒绝选中，不能只按 score 放行。

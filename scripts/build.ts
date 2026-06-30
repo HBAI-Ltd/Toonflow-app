@@ -13,7 +13,6 @@ const external = [
   "electron",
   "@huggingface/transformers",
   "onnxruntime-node",
-  "vm2",
   "sqlite3",
   "better-sqlite3",
   "sharp",

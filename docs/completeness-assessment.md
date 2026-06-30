@@ -88,7 +88,7 @@
 | 维度 | 评分 | 状态 | 关键文件 | 核心问题 |
 |---|:---:|---|---|---|
 | 队列系统 | 60 | ⚠️ 凑合 | `src/utils/genQueue.ts`、`queueHandlers.ts`、`composeHandlers.ts` | 有持久化恢复（`recoverQueue`），但断电时"已部分执行"任务**重复执行浪费**；无死信队列、无事务保护 |
-| 供应商沙盒 | 30 | 🔴 危险 | `src/utils/vm.ts`、`data/vendor/*.ts` | **`vm2@3.11.4` 已停维护且有未修复 RCE（CVE-2023-30547）**，而 UI 允许编辑 vendor 代码 → 沙盒逃逸风险 |
+| 供应商沙盒 | 30→65 | 🟡 已加固（P0-1 完成） | `src/utils/vm.ts`、`data/vendor/*.ts` | ~~vm2 RCE~~ 已替换为 `node:vm` + 冻结上下文 + 收窄 `crypto`/`jsonwebtoken` + `updateCode` 静态护栏与审计。半可信模型下风险已大幅收敛；强隔离（进程级）留待开放第三方上传时再做 |
 | 数据库迁移 | 70 | ⚠️ 凑合 | `src/lib/initDB.ts`、`fixDB.ts` | 幂等迁移健全，但无 `schema_migrations` 版本表、无回滚、SQLite alter 依赖删表重建有并发丢数风险 |
 | 测试覆盖 | 20 | 🔴 薄弱 | `scripts/test-*.ts` | **无 vitest/jest**，仅 5 个手工冒烟脚本；队列重试、QA 门禁、DB 迁移等核心逻辑**零覆盖** |
 | 错误处理/可观测 | 70 | ⚠️ 凑合 | `src/logger.ts`、`src/utils/error.ts` | 有文件日志 + 错误规范化，但无结构化日志 / traceId / 告警 |
@@ -105,7 +105,7 @@
 
 | 任务 | 动作 | 涉及 |
 |---|---|---|
-| 替换死亡沙盒 | `vm2` → `isolated-vm` / Node Worker / QuickJS；vendor 代码加签名校验 | `src/utils/vm.ts`、`package.json` |
+| ~~替换死亡沙盒~~ ✅ 已完成 | `vm2` → `node:vm` + 冻结上下文 + 收窄高危注入 + `updateCode` 静态护栏与审计（信任边界前移方案，非强隔离） | `src/utils/vm.ts`、`src/utils/promptCenter.ts`、`src/routes/setting/vendorConfig/updateCode.ts`、`package.json` |
 | 建立测试体系 | 引入 vitest，为队列重试、QA 门禁判定、DB 迁移幂等写测试套件 + 接入 CI | `scripts/`、新增 `*.test.ts` |
 | 修鉴权与 OSS | JWT 加过期/刷新/黑名单；移除硬编码密码；全 `/oss` 路径加认证；加速率限制 + CSRF | `src/app.ts`、`src/routes/login/` |
 

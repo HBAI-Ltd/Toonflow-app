@@ -86,7 +86,6 @@
     "sucrase": "^3.35.1",
     "uuid": "^13.0.0",
     "vercel-minimax-ai-provider": "^0.0.2",
-    "vm2": "^3.11.4",
     "zhipu-ai-provider": "^0.2.2",
     "zod": "^4.3.5"
   },

@@ -4,7 +4,7 @@ import path from "path";
 import fg from "fast-glob";
 import isPathInside from "is-path-inside";
 import { transform } from "sucrase";
-import { VM } from "vm2";
+import runCode from "@/utils/vm";
 import db from "@/utils/db";
 import getPath from "@/utils/getPath";
 
@@ -117,16 +117,9 @@ async function readVendorMeta(vendorId: string): Promise<{ name?: string; models
   const vendorRoot = getPath("vendor");
   const { fullPath } = safePath(vendorRoot, `${vendorId}.ts`);
   const code = await fs.readFile(fullPath, "utf-8");
-  const jsCode = transform(code, { transforms: ["typescript"] }).code.replace(/export\s*\{\s*\};?/g, "");
-  const exports: Record<string, any> = {};
-  const vm = new VM({
-    timeout: 5000,
-    sandbox: { exports, console, fetch },
-    compiler: "javascript",
-    eval: false,
-    wasm: false,
-  });
-  vm.run(jsCode);
+  const jsCode = transform(code, { transforms: ["typescript"] }).code;
+  // 复用统一沙盒 runCode（node:vm），消除独立 vm2 实例；仅读取 vendor 元信息
+  const exports = runCode(jsCode);
   const vendor = exports.vendor ?? {};
   return {
     name: vendor.name,

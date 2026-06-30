@@ -1076,18 +1076,6 @@ accepts@~1.3.4:
     mime-types "~2.1.34"
     negotiator "0.6.3"
 
-acorn-walk@^8.3.4:
-  version "8.3.5"
-  resolved "https://registry.npmmirror.com/acorn-walk/-/acorn-walk-8.3.5.tgz"
-  integrity sha512-HEHNfbars9v4pgpW6SO1KSPkfoS0xVOM/9UzkJltjlsHZmJasxg8aXkuZa7SMf8vKGIBhpUsPluQSqhJFCqebw==
-  dependencies:
-    acorn "^8.11.0"
-
-acorn@^8.11.0, acorn@^8.15.0:
-  version "8.16.0"
-  resolved "https://registry.npmmirror.com/acorn/-/acorn-8.16.0.tgz"
-  integrity sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==
-
 agent-base@6, agent-base@^6.0.2:
   version "6.0.2"
   resolved "https://registry.npmmirror.com/agent-base/-/agent-base-6.0.2.tgz"
@@ -5360,14 +5348,6 @@ verror@^1.10.0:
     assert-plus "^1.0.0"
     core-util-is "1.0.2"
     extsprintf "^1.2.0"
-
-vm2@^3.11.4:
-  version "3.11.5"
-  resolved "https://registry.npmmirror.com/vm2/-/vm2-3.11.5.tgz#6dcebf22c7bf77acf80571f26f1040ee626a97d0"
-  integrity sha512-RSrkBiwrj6FRU+QdqNs6KG0XdlvJCjpQ4GXiqmMbrhmwfu5k/XIMpAer0L8f6iuf0uJ3a4T1xJN126Q8yf0VIA==
-  dependencies:
-    acorn "^8.15.0"
-    acorn-walk "^8.3.4"
 
 watchboy@^0.4.3:
   version "0.4.3"

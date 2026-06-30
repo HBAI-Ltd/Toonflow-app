@@ -101,7 +101,7 @@ o_project（项目：画风/导演手册/图像&视频模型/画幅）
 
 - `key` 可以是 **agent 语义名**（如 `productionAgent:decisionAgent`）或 **`vendorId:modelName`**。
 - **两级模型配置**（`o_setting.agentUseMode`）：简易模式（按主 agent 配模型）/ 高级模式（每个子 agent 单独配），从 `o_agentDeploy` 解析。
-- **Vendor 适配器 = 用户可编辑的 TypeScript 代码**，存于 `data/vendor/<id>.ts`。运行时 `sucrase` 转译后丢进 **vm2 沙盒**（默认 5s 超时，无 eval/wasm）执行，实现 `textRequest` / `imageRequest` / `videoRequest` / `ttsRequest` 四个函数。沙盒注入 sharp 工具、`pollTask` 轮询、各 SDK 的 `createXxx` 工厂。
+- **Vendor 适配器 = 管理员可编辑的 TypeScript 代码**，存于 `data/vendor/<id>.ts`。运行时 `sucrase` 转译后丢进 **`node:vm` 沙盒**（`src/utils/vm.ts`，默认 5s 超时，关闭 eval/wasm，注入对象冻结）执行，实现 `textRequest` / `imageRequest` / `videoRequest` / `ttsRequest` 四个函数。沙盒注入 sharp 工具、`pollTask` 轮询、各 SDK 的 `createXxx` 工厂；`crypto`/`jsonwebtoken` 已收窄为最小子集。经 `updateCode` 路由写入时过静态逃逸护栏并记审计。
 - 视频模型能力以 vendor 的 `durationResolutionMap`、`mode` 和 `audio` 字段为准；前端只做归一化和展示，不在业务代码里硬编码某个供应商的固定秒数。
 - 结果：**「接入新模型供应商」是纯配置/插件，无需改主代码**。
 - `repairToolName`：中转模型用 PascalCase 调工具时，归一化大小写/分隔符匹配回真名。
@@ -122,7 +122,7 @@ o_project（项目：画风/导演手册/图像&视频模型/画幅）
 
 **风险 / 技术债**：
 
-- **vm2 已停止维护**且历史有沙盒逃逸 CVE。执行的是用户自配 vendor 代码，虽限 loopback + JWT，仍是攻击面 —— 加固方向见后续评估。
+- **Vendor 沙盒（已加固，P0-1）**：原 vm2 已停止维护且有沙盒逃逸 CVE，已替换为 `node:vm` + 冻结上下文 + 收窄 `crypto`/`jsonwebtoken` 注入 + `updateCode` 静态逃逸护栏与写入审计。信任模型为「管理员半可信」（loopback + JWT）；若未来开放第三方/社区上传 vendor，需再升级为进程级强隔离。
 - **前端源码不在仓库**：Creative Canvas 等新功能靠注入 `data/web/*.js` 实现，native 入口较脆弱（见集成审计文档自评）。
 - **测试覆盖薄**：仅 4 个 `tsx` 手写验证脚本（`yarn test:*`），无单测框架，`yarn lint` 实际只是 `tsc --noEmit`。
 - 小瑕疵：`database.d.ts` 自动生成时 `o_taskProgress` interface 重复；`src/agents/productionAgent/index.ts` 等存在大量注释掉的旧代码待清理。

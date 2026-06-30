@@ -1,4 +1,4 @@
-import { VM } from "vm2";
+import vm from "node:vm";
 import sharp from "sharp";
 import axios from "axios";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -23,9 +23,21 @@ function getVmTimeout(): number {
   return Number.isFinite(value) && value > 0 ? value : DEFAULT_VM_TIMEOUT_MS;
 }
 
+// 收窄沙盒可见的高危能力，降低 vendor 代码被误植/篡改后的破坏面：
+// - crypto：vendor 仅用到 createHash / createHmac（volcengineSd2 的签名），移除 sign/privateEncrypt 等可滥用面
+// - jsonwebtoken：仅 klingai 用到 sign（用其自有 secretKey 签名），仅暴露 sign，移除 verify/decode 等
+const restrictedCrypto = Object.freeze({
+  createHash: crypto.createHash.bind(crypto),
+  createHmac: crypto.createHmac.bind(crypto),
+  randomUUID: crypto.randomUUID.bind(crypto),
+});
+const restrictedJwt = Object.freeze({
+  sign: jsonwebtoken.sign.bind(jsonwebtoken),
+});
+
 export default function runCode(code: string, vendor?: Record<string, any>) {
   code = code.replace(/export\s*\{\s*\};?/g, ""); // 去掉 export {} 以免沙盒环境报错
-  // 创建一个沙盒
+  // 创建一个沙盒（node:vm 的全新上下文默认不含 process/require/global 等 Node 宿主全局）
   const exports = {};
   const sandbox: Record<string, any> = {
     createOpenAI,
@@ -47,21 +59,20 @@ export default function runCode(code: string, vendor?: Record<string, any>) {
     axios,
     FormData,
     logger,
-    jsonwebtoken,
-    crypto,
+    jsonwebtoken: restrictedJwt,
+    crypto: restrictedCrypto,
   };
   if (vendor !== undefined) {
     sandbox.vendor = vendor;
   }
-  const vm = new VM({
-    timeout: getVmTimeout(),
-    sandbox,
-    compiler: "javascript",
-    eval: false,
-    wasm: false,
-  });
 
-  vm.run(code);
+  const context = vm.createContext(sandbox, {
+    codeGeneration: { strings: false, wasm: false }, // 等价 vm2 的 eval:false / wasm:false
+  });
+  vm.runInContext(code, context, {
+    timeout: getVmTimeout(),
+    // 同步执行；vendor 代码在宿主进程内运行并直接返回真实 Promise（保持现有调用契约）
+  });
 
   return exports as Record<string, any>;
 }

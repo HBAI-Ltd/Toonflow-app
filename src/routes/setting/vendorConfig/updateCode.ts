@@ -7,6 +7,28 @@ import { z } from "zod";
 import { transform } from "sucrase";
 const router = express.Router();
 
+// vendor 代码静态红线护栏：拒绝明显的沙盒逃逸 / 宿主攻击特征。
+// 这不是完整 AST 分析（vendor 为半可信代码，由管理员编辑），只拦截误植或被篡改的高危模式。
+const FORBIDDEN_CODE_PATTERNS: Array<{ pattern: RegExp; reason: string }> = [
+  { pattern: /\brequire\s*\(/, reason: "禁止 require()（沙盒不提供模块加载，且可用于逃逸）" },
+  { pattern: /\bimport\s*\(/, reason: "禁止动态 import()" },
+  { pattern: /\bprocess\s*\./, reason: "禁止访问 process（沙盒无宿主进程对象）" },
+  { pattern: /\bchild_process\b/, reason: "禁止 child_process（命令执行）" },
+  { pattern: /\bglobalThis\b/, reason: "禁止访问 globalThis（防止经全局对象逃逸）" },
+  { pattern: /\b__proto__\b/, reason: "禁止 __proto__（原型链污染）" },
+  { pattern: /\bconstructor\s*\.\s*constructor\b/, reason: "禁止 constructor.constructor（函数构造器逃逸）" },
+  { pattern: /\beval\s*\(/, reason: "禁止 eval()" },
+  { pattern: /\bFunction\s*\(/, reason: "禁止 Function() 构造器（动态代码）" },
+  { pattern: /\bfs\s*\.\s*(read|write|unlink|rm|append)/i, reason: "禁止文件系统操作" },
+];
+
+function checkVendorCodeGuard(tsCode: string): string | null {
+  for (const { pattern, reason } of FORBIDDEN_CODE_PATTERNS) {
+    if (pattern.test(tsCode)) return reason;
+  }
+  return null;
+}
+
 const vendorConfigSchema = z.object({
   id: z.string(),
   author: z.string(),
@@ -68,6 +90,11 @@ export default router.post(
   async (req, res) => {
     try {
       const { tsCode, id } = req.body;
+      // 信任边界前移：写入前先过静态红线护栏，拦截误植/被篡改的逃逸特征
+      const guardReason = checkVendorCodeGuard(tsCode);
+      if (guardReason) {
+        return res.status(400).send(error(`vendor 代码安全校验未通过：${guardReason}`));
+      }
       const jsCode = transform(tsCode, { transforms: ["typescript"] }).code;
       const exports = u.vm(jsCode);
       if (!exports) return res.status(400).send(success("脚本文件必须导出对象"));
@@ -87,7 +114,13 @@ export default router.post(
         .update({
           models: JSON.stringify(vendor.models ?? []),
         });
+      // 写入审计：记录变更前后摘要（console 已被 logger 劫持，落 logs/app.log），便于回溯谁在何时改了 vendor 代码
+      const previousCode = u.vendor.getCode(id) ?? "";
       u.vendor.writeCode(id, tsCode);
+      console.warn(
+        `[vendor-code-audit] id=${id} name=${vendor.name ?? "-"} author=${vendor.author ?? "-"} ` +
+          `before=${previousCode.length}B after=${tsCode.length}B changed=${previousCode !== tsCode}`,
+      );
 
       res.status(200).send(success(result.data));
     } catch (err) {
