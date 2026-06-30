@@ -25,6 +25,7 @@ description: >-
 |------|------|
 | 读取剧本 | `get_flowData("script")` |
 | 读取分镜表 | `get_flowData("storyboardTable")` |
+| 读取资产卡 | `get_flowData("assets")` |
 | 写入分镜面板（逐条） | `add_flowData_storyboard({ ... })` |
 
 **`add_flowData_storyboard` 参数**（**每个写入单位调用一次**，不再输出 `<storyboardItem>` XML）：
@@ -56,7 +57,7 @@ description: >-
 **特征**：仅写入视频描述与资产绑定，不生成提示词、不生成分镜图。**以分镜表已有的「组」为写入单位**——不自行分组，每个组写入一条分镜（一次 `add_flowData_storyboard` 调用）。严格线性，自洽，零条件分支。
 
 **第 1 步 · 读取数据**
-同轮调用 `get_flowData("script")`、`get_flowData("storyboardTable")`。**本模式不加载任何提示词技法**（无需 `storyboard_prompt_techniques` / `director_storyboard`）。分镜表已按「场（`## 场N`）→ 组（`### 第N组`）」预先分组，本模式**直接沿用表内分组，不再自行做 ≤15s 分组**。
+同轮调用 `get_flowData("script")`、`get_flowData("storyboardTable")`、`get_flowData("assets")`。**本模式不加载任何提示词技法**（无需 `storyboard_prompt_techniques` / `director_storyboard`）。分镜表已按「场（`## 场N`）→ 组（`### 第N组`）」预先分组，本模式**直接沿用表内分组，不再自行做 ≤15s 分组**。
 
 **第 2 步 · 逐组写入视频描述（videoDesc）**
 以分镜表的每个「组」为单位，按以下**固定顺序**拼接写入 `videoDesc`：
@@ -90,7 +91,19 @@ add_flowData_storyboard({ videoDesc: "该组视频描述", prompt: null, track: 
 **特征**：完整生成提示词并生成分镜图，激活 `storyboard_prompt_techniques` + 风格专属 `director_storyboard`，**每条分镜独立一组**，提示词按**首帧原则**转换；含人物连贯性预分析、`@图N` 标注、六项忠实性校验全链路。严格线性，自洽，零条件分支。
 
 **第 1 步 · 读取数据并激活技法**
-同轮调用 `get_flowData("script")`、`get_flowData("storyboardTable")`（**本阶段不读取导演规划 `scriptPlan`**——分镜表已是导演规划的完整落地，执行层只依据分镜表写入）；并激活技法 `storyboard_prompt_techniques`（通用提示词技法参考，含解析映射规则、景别词库、输出格式规范、提示词结构框架、画质规范、图像资产标注规则、人物位置连贯性规则）与风格专属技法 `director_storyboard`（提示词生成的全部参考依据），冲突时以风格专属技法为准。
+同轮调用 `get_flowData("script")`、`get_flowData("storyboardTable")`、`get_flowData("assets")`（**本阶段不读取导演规划 `scriptPlan`**——分镜表已是导演规划的完整落地，执行层只依据分镜表与资产卡写入）；并激活技法 `storyboard_prompt_techniques`（通用提示词技法参考，含解析映射规则、景别词库、输出格式规范、提示词结构框架、画质规范、图像资产标注规则、人物位置连贯性规则、场景空间连续性规则）与风格专属技法 `director_storyboard`（提示词生成的全部参考依据），冲突时以风格专属技法为准。
+
+**第 1.5 步 · 建立场景空间连续性基准**
+正式写入前，读取 `assets` 中所有场景资产卡规格；若场景卡包含 `spatialContinuity`、`spatialLayout`、`fixedElements`、`constraints.must/avoid` 等字段，按场景建立空间连续性基准：
+- `fixedAnchors`：固定空间锚点，例如入口、主体区域、窗/门/墙面、主要家具、长期固定的装置。
+- `characterBlocking`：人物默认站位、座位、朝向或与固定锚点的关系；仅采用资产卡或分镜表能支持的信息，不凭空编造。
+- `objectBlocking`：关键道具、家具、陈设的相对位置。
+- `cameraAxis`：视轴线、主要观察方向或可变机位范围。
+- `invariants`：跨镜头不得改变的空间关系。
+- `allowedChanges`：允许随镜头变化的景别、裁切、焦段、机位高度、人物可见比例。
+- `forbiddenDrift`：禁止漂移，如固定物移动、人物无动作依据换位、同一场景被重排成另一个地点。
+
+后续每条 prompt 若引用了场景资产，必须继承对应空间连续性基准；若该场景无空间连续性卡，则只按分镜表字段生成，不强行补造。
 
 **第 2 步 · 人物空间位置与朝向预分析**
 正式写入前通读全部分镜表，建立全局基准表：
@@ -98,7 +111,7 @@ add_flowData_storyboard({ videoDesc: "该组视频描述", prompt: null, track: 
 - **朝向提取**：从分镜表每行「朝向」独立列直接提取各角色朝向信息。若该列为 `—`（如空镜），按已加载技法中的「朝向获取规则」兜底推断
 - **建立基准表**：输出格式如 `角色A → 左前，面朝右 / 角色B → 右后，面朝左`，同一场景内锁定不变
 - **变化标记**：若分镜表某行的「角色动作」包含转身、转头、走位等方向变化（朝向列与空间关系列同步变更），在该行标记朝向/位置变更点，后续分镜从变更后状态继续锁定
-- 后续每条 prompt 中涉及该人物时须按基准表显式标注位置和朝向（依据已加载技法中的「prompt 人物位置与朝向连贯性规则」）
+- 后续每条 prompt 中涉及该人物时须按基准表显式标注位置和朝向（依据已加载技法中的「prompt 人物位置与朝向连贯性规则」），并与第 1.5 步的场景空间连续性基准不冲突。
 
 **第 3 步 · 确定分组（track）**
 **不分组**：每条分镜独立一组，`track` 按顺序递增（第 1 行 track=1，第 2 行 track=2，以此类推）。每条 `duration` 必须严格使用 `storyboardTable` 对应行时长。
@@ -120,6 +133,7 @@ add_flowData_storyboard({ videoDesc: "该组视频描述", prompt: null, track: 
 7. 角色计数一致：prompt 中出现的 role 资产数量必须等于该关键帧内可见角色数量；背影、侧脸、虚焦、边缘半截人物都计入人数
 8. 单角色唯一：同一 `@图N` 角色在同一张关键帧内只能作为一个实体出现；除镜面/水面/玻璃等明确反射场景外，禁止同一角色同时以前景背影和正面人物重复出现
 9. 构图可生成：多人之间必须有清晰间距，不写人物重叠、融合、贴脸堆叠或无法分辨的遮挡关系；若画面描述无法在单帧内稳定表达，优先选择该行第一个清晰定格状态
+10. 空间连续性：若引用场景资产卡含空间连续性基准，prompt 必须显式保留固定锚点、人物/道具相对关系和不变量；只能改变景别、裁切、焦段、机位高度或可见比例，不得让固定物、人物座位/站位、关键道具关系无依据漂移
 
 校验不通过须修正后再进入下一步。
 

@@ -1,4 +1,4 @@
-// @db-hash ffaeb643b52ef37eef50c37246807320
+// @db-hash 134817b2b7d9541936490ebc5ee65dee
 //该文件由脚本自动生成，请勿手动修改
 
 export interface memories {
@@ -301,6 +301,7 @@ export interface o_skillList {
 }
 export interface o_storyboard {
   'cameraMovement'?: string | null;
+  'continuityContract'?: string | null;
   'createTime'?: number | null;
   'dialogue'?: string | null;
   'duration'?: string | null;

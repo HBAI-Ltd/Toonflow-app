@@ -122,18 +122,19 @@ set in the {场景描述（英文）} of @图{场景资产编号} ,
 
 1. **Instruction 必须用英文**
 2. **严格遵循 videoDesc**：提示词内容严格基于 videoDesc 的画面描述、时长、景别、运镜、角色动作、情绪、光影氛围、台词、音效字段，不编造额外信息
-3. **角色动作**从 videoDesc 的「角色动作」字段提取，翻译为简洁英文动作描述
-4. **台词不可缺失**：videoDesc 中有台词的分镜，必须在 Instruction 中体现台词内容（保持原始语言，不翻译）
-5. **台词类型标注**：
+3. **镜头连续性合同**：若 `<storyboardItem>` 含「镜头连续性合同」，用它约束固定空间、人物身份、道具关系和 QA 禁止项；若合同与 videoDesc 的明确剧情动作冲突，以 videoDesc 为准
+4. **角色动作**从 videoDesc 的「角色动作」字段提取，翻译为简洁英文动作描述
+5. **台词不可缺失**：videoDesc 中有台词的分镜，必须在 Instruction 中体现台词内容（保持原始语言，不翻译）
+6. **台词类型标注**：
    - 普通对白 → `(dialogue)`
    - 内心独白 → `(inner monologue, OS)`
    - 画外音 → `(voiceover, VO)`
-6. **镜头风格**使用标准标签：`cinematic` / `wide-angle` / `close-up` / `slow motion` / `surround shooting` / `handheld`
-7. **空间关系**使用标准动词：`wearing` / `holding` / `standing on` / `following behind` / `sitting in`
-8. 单条分镜对应单个 `@图N `，不做多帧跨镜描述
-9. 无需描述角色外观（由参考图负责）
-10. 无时长标注（由模型推断）
-11. **无分镜图时**：当 `shouldGenerateImage="false"` 时，`[References]` 中不列出该分镜图，`[Instruction]` 中不使用 `@图N ` 引用，改为纯文本描述
+7. **镜头风格**使用标准标签：`cinematic` / `wide-angle` / `close-up` / `slow motion` / `surround shooting` / `handheld`
+8. **空间关系**使用标准动词：`wearing` / `holding` / `standing on` / `following behind` / `sitting in`
+9. 单条分镜对应单个 `@图N `，不做多帧跨镜描述
+10. 无需描述角色外观（由参考图负责）
+11. 无时长标注（由模型推断）
+12. **无分镜图时**：当 `shouldGenerateImage="false"` 时，`[References]` 中不列出该分镜图，`[Instruction]` 中不使用 `@图N ` 引用，改为纯文本描述
 
 ---
 

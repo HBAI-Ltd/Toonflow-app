@@ -119,9 +119,11 @@
     sourceReferences: savedSourceReferences(),
     imageModelOptions: [],
     videoModelOptions: [],
+    storyboardImageGenerationSettings: {},
     videoGenerationSettings: {},
     promptMentionPicker: null,
     imagePreview: null,
+    markdownEditor: null,
     agentPlanData: null,
     agentPlanDataId: null,
     syncedAgentMessages: {},
@@ -2394,6 +2396,8 @@
       }
       if (action === "storyboardImage") {
         const storyboard = node.data.storyboard;
+        const settings = storyboardImageGenerationSettingsForNode(node);
+        if (!settings.model) throw new Error("请选择图片模型");
         await api("/production/storyboard/batchGenerateImage", {
           method: "POST",
           body: {
@@ -2402,9 +2406,29 @@
             scriptId: Number(storyboard.scriptId),
             concurrentCount: 1,
             compulsory: true,
+            model: settings.model,
           },
         });
         state.message = "分镜图生成任务已提交";
+      }
+      if (action === "storyboardLastFrameImage") {
+        const storyboard = node.data.storyboard;
+        if (!storyboard?.filePath || storyboard.state !== "已完成") throw new Error("先生成并选中首帧分镜图，再生成尾帧图");
+        const settings = storyboardImageGenerationSettingsForNode(node);
+        if (!settings.model) throw new Error("请选择图片模型");
+        await api("/production/storyboard/batchGenerateImage", {
+          method: "POST",
+          body: {
+            storyboardIds: [Number(storyboard.id)],
+            projectId: Number(storyboard.projectId),
+            scriptId: Number(storyboard.scriptId),
+            concurrentCount: 1,
+            compulsory: true,
+            frameRole: "lastFrame",
+            model: settings.model,
+          },
+        });
+        state.message = "尾帧图生成任务已提交";
       }
       if (action === "videoPrompt") {
         const track = node.data.videoTrack;
@@ -2550,7 +2574,23 @@
     const badges = [];
     if (node.status) badges.push(h("span", { class: statusBadgeClass(node.status), text: node.status }));
     else if (node.stale) badges.push(h("span", { class: "tfcc-badge warn", text: "需复核" }));
-    return h("div", { class: "tfcc-node-title" }, [h("span", { class: "tfcc-node-title-text", text: node.label }), ...badges]);
+    const editButton = canEditMarkdownNode(node)
+      ? h("button", {
+          class: "tfcc-node-edit",
+          title: "编辑",
+          onMouseDown: (event) => event.stopPropagation(),
+          onClick: (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openMarkdownEditor(node).catch((err) => { state.message = err?.message || String(err); render(); });
+          },
+          text: "编辑",
+        })
+      : null;
+    return h("div", { class: "tfcc-node-title" }, [
+      h("span", { class: "tfcc-node-title-text", text: node.label }),
+      h("span", { class: "tfcc-node-title-actions" }, [editButton, ...badges].filter(Boolean)),
+    ]);
   }
 
   function nodeSource(node) {
@@ -2697,7 +2737,7 @@
   function defaultVideoModeForModel(modelValue, fallback = "text") {
     const modes = findVideoModelOption(modelValue)?.model?.mode;
     if (Array.isArray(modes)) {
-      const multiReferenceMode = modes.find((mode) => Array.isArray(mode));
+      const multiReferenceMode = modes.find((mode) => Array.isArray(mode) && mode.some((item) => /^(imageReference|videoReference):/i.test(String(item || ""))));
       if (multiReferenceMode) return normalizeVideoModeValue(multiReferenceMode);
       const preferred = ["startFrameOptional", "singleImage", "startEndRequired", "text"].find((mode) => modes.includes(mode));
       if (preferred) return preferred;
@@ -2761,6 +2801,33 @@
     return allowed.reduce((best, item) => Math.abs(item - current) < Math.abs(best - current) ? item : best, allowed[0]);
   }
 
+  function rawStoryboardDurationForNode(node) {
+    const duration = Math.round(Number(node?.data?.videoTrack?.duration));
+    return Number.isFinite(duration) && duration > 0 ? duration : null;
+  }
+
+  function videoDurationSupportLabel(modelValue) {
+    const values = videoDurationValuesForModel(modelValue);
+    if (!values.length) return "可自定义";
+    if (isContinuousDurationValues(values)) return `${values[0]}-${values[values.length - 1]}s`;
+    return values.map((value) => `${value}s`).join(" / ");
+  }
+
+  function hasVideoDurationOverride(node) {
+    const stored = state.videoGenerationSettings[node?.id] || {};
+    return Object.prototype.hasOwnProperty.call(stored, "duration");
+  }
+
+  function videoDurationSourceLabel(node, settings) {
+    const storyboardDuration = rawStoryboardDurationForNode(node);
+    if (hasVideoDurationOverride(node)) return `手动设置 ${settings.duration}s`;
+    if (storyboardDuration) {
+      if (storyboardDuration === settings.duration) return `已按分镜自动填写 ${settings.duration}s`;
+      return `分镜约 ${storyboardDuration}s，已按模型限制调整为 ${settings.duration}s`;
+    }
+    return `默认 ${settings.duration}s`;
+  }
+
   function videoGenerationSettingsForNode(node, override = {}) {
     const project = state.graph?.project || {};
     const track = node?.data?.videoTrack || {};
@@ -2777,18 +2844,30 @@
   function updateVideoGenerationSetting(node, field, value) {
     const key = node?.id;
     if (!key) return;
+    const stored = state.videoGenerationSettings[key] || {};
+    const hadDurationOverride = Object.prototype.hasOwnProperty.call(stored, "duration");
     const current = videoGenerationSettingsForNode(node);
-    const next = { ...current, ...(state.videoGenerationSettings[key] || {}) };
+    const next = { ...current, ...stored };
     if (field === "model") {
       next.model = value;
       next.mode = defaultVideoModeForModel(value, next.mode);
       next.resolution = defaultVideoResolutionForModel(value, next.resolution);
-      next.duration = normalizeVideoDurationForModel(value, next.duration);
+      if (hadDurationOverride) next.duration = normalizeVideoDurationForModel(value, next.duration);
     } else if (field === "duration") {
       next.duration = normalizeVideoDurationForModel(next.model, value);
     } else {
       next[field] = value;
     }
+    if (field !== "duration" && !hadDurationOverride) delete next.duration;
+    state.videoGenerationSettings[key] = next;
+    renderInspector();
+  }
+
+  function resetVideoDurationToStoryboard(node) {
+    const key = node?.id;
+    if (!key) return;
+    const next = { ...(state.videoGenerationSettings[key] || {}) };
+    delete next.duration;
     state.videoGenerationSettings[key] = next;
     renderInspector();
   }
@@ -3105,15 +3184,191 @@
   async function saveAssetPrompt(node) {
     const asset = node.data?.asset;
     if (!asset?.id) return;
-    await api("/assets/updateAssets", {
+    await api("/creativeCanvas/updateNodeContent", {
       method: "POST",
       body: {
-        id: Number(asset.id),
-        name: asset.name || "",
-        describe: asset.describe || "",
-        remark: asset.remark ?? "",
-        prompt: asset.prompt || "",
+        nodeId: node.id,
+        content: asset.prompt || "",
       },
+    });
+  }
+
+  function markdownEditableMeta(node) {
+    if (!node) return null;
+    const data = node.data || {};
+    if (node.type === "novelChapter") {
+      const full = fullNovelItem(data);
+      return {
+        title: `编辑原文章节：${node.label}`,
+        content: full?.chapterData ?? data.chapterData ?? "",
+      };
+    }
+    if (node.type === "script") {
+      return {
+        title: `编辑剧本：${node.label}`,
+        content: data.content || data.script?.content || data.contentPreview || "",
+      };
+    }
+    if (node.type === "asset" && ["role", "scene", "tool"].includes(data.asset?.type)) {
+      return {
+        title: `编辑资产 Prompt：${data.asset?.name || node.label}`,
+        content: data.asset?.prompt || data.promptPreview || "",
+      };
+    }
+    if (["storySkeleton", "adaptationStrategy", "scriptPlan", "storyboardTable"].includes(node.type)) {
+      return {
+        title: `编辑${node.label}`,
+        content: data.content || data.contentPreview || "",
+        workDataId: Number(data.workDataId || 0) || null,
+        planType: data.planType || (node.type === "storyboardTable" ? "storyboardTable" : null),
+        scriptId: data.scriptId ? Number(data.scriptId) : null,
+      };
+    }
+    return null;
+  }
+
+  function canEditMarkdownNode(node) {
+    return !!markdownEditableMeta(node);
+  }
+
+  async function openMarkdownEditor(node) {
+    if (!node) return;
+    selectNode(node.id);
+    if (node.type === "novelChapter" && !fullNovelItem(node.data)) {
+      await withLoading(loadNovelFull);
+    }
+    const currentNode = graphNodes().find((item) => item.id === node.id) || node;
+    const meta = markdownEditableMeta(currentNode);
+    if (!meta) {
+      state.message = "该节点暂不支持 Markdown 编辑";
+      render();
+      return;
+    }
+    state.markdownEditor = { nodeId: currentNode.id, previewVisible: true, ...meta };
+    render();
+  }
+
+  function closeMarkdownEditor() {
+    state.markdownEditor = null;
+    render();
+  }
+
+  function markdownEditorTextarea() {
+    return document.querySelector(".tfcc-markdown-editor-textarea");
+  }
+
+  function syncMarkdownEditorPreview() {
+    const editor = state.markdownEditor;
+    const preview = document.querySelector(".tfcc-markdown-editor-preview");
+    if (preview) preview.innerHTML = renderMarkdown(editor?.content || "");
+  }
+
+  function updateMarkdownEditorContent(next, selectionStart, selectionEnd) {
+    const editor = state.markdownEditor;
+    const textarea = markdownEditorTextarea();
+    if (!editor) return;
+    editor.content = next;
+    if (textarea) {
+      textarea.value = next;
+      textarea.focus();
+      if (Number.isFinite(selectionStart) && Number.isFinite(selectionEnd)) {
+        textarea.setSelectionRange(selectionStart, selectionEnd);
+      }
+    }
+    syncMarkdownEditorPreview();
+  }
+
+  function markdownSelection() {
+    const editor = state.markdownEditor;
+    const textarea = markdownEditorTextarea();
+    const value = textarea?.value ?? editor?.content ?? "";
+    const start = textarea ? textarea.selectionStart : value.length;
+    const end = textarea ? textarea.selectionEnd : value.length;
+    return { value, start, end, selected: value.slice(start, end) };
+  }
+
+  function replaceMarkdownSelection(replacement, selectionOffset = 0, selectionLength = replacement.length) {
+    const { value, start, end } = markdownSelection();
+    const next = `${value.slice(0, start)}${replacement}${value.slice(end)}`;
+    updateMarkdownEditorContent(next, start + selectionOffset, start + selectionOffset + selectionLength);
+  }
+
+  function wrapMarkdownSelection(before, after = before, placeholder = "文本") {
+    const { selected } = markdownSelection();
+    const body = selected || placeholder;
+    replaceMarkdownSelection(`${before}${body}${after}`, before.length, body.length);
+  }
+
+  function prefixMarkdownLines(prefix) {
+    const { value, start, end } = markdownSelection();
+    const lineStart = value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+    const nextBreak = value.indexOf("\n", end);
+    const lineEnd = nextBreak === -1 ? value.length : nextBreak;
+    const segment = value.slice(lineStart, lineEnd);
+    const lines = segment.split("\n");
+    const replaced = lines.map((line, index) => `${typeof prefix === "function" ? prefix(index) : prefix}${line}`).join("\n");
+    const next = `${value.slice(0, lineStart)}${replaced}${value.slice(lineEnd)}`;
+    updateMarkdownEditorContent(next, lineStart, lineStart + replaced.length);
+  }
+
+  function insertMarkdownBlock(block) {
+    const { value, start, end } = markdownSelection();
+    const before = start > 0 && value[start - 1] !== "\n" ? "\n" : "";
+    const after = end < value.length && value[end] !== "\n" ? "\n" : "";
+    replaceMarkdownSelection(`${before}${block}${after}`, before.length, block.length);
+  }
+
+  function applyMarkdownEditorCommand(command) {
+    const textarea = markdownEditorTextarea();
+    if (command === "preview") {
+      state.markdownEditor.previewVisible = state.markdownEditor.previewVisible === false;
+      render();
+      return;
+    }
+    if (command === "undo" || command === "redo") {
+      textarea?.focus();
+      document.execCommand(command);
+      if (state.markdownEditor && textarea) state.markdownEditor.content = textarea.value;
+      syncMarkdownEditorPreview();
+      return;
+    }
+    if (command === "bold") wrapMarkdownSelection("**", "**", "加粗文本");
+    else if (command === "underline") wrapMarkdownSelection("<u>", "</u>", "下划线文本");
+    else if (command === "italic") wrapMarkdownSelection("*", "*", "斜体文本");
+    else if (command === "strike") wrapMarkdownSelection("~~", "~~", "删除线文本");
+    else if (command === "heading") prefixMarkdownLines("### ");
+    else if (command === "sub") wrapMarkdownSelection("<sub>", "</sub>", "下标");
+    else if (command === "sup") wrapMarkdownSelection("<sup>", "</sup>", "上标");
+    else if (command === "quote") prefixMarkdownLines("> ");
+    else if (command === "ul") prefixMarkdownLines("- ");
+    else if (command === "ol") prefixMarkdownLines((index) => `${index + 1}. `);
+    else if (command === "task") prefixMarkdownLines("- [ ] ");
+    else if (command === "code") {
+      const { selected } = markdownSelection();
+      if (selected.includes("\n")) replaceMarkdownSelection(`\n\`\`\`\n${selected || "code"}\n\`\`\`\n`, 5, selected.length || 4);
+      else wrapMarkdownSelection("`", "`", "code");
+    } else if (command === "image") insertMarkdownBlock("![图片说明](图片地址)");
+    else if (command === "table") insertMarkdownBlock("| 列 1 | 列 2 |\n| --- | --- |\n| 内容 | 内容 |");
+  }
+
+  async function saveMarkdownEditor() {
+    const editor = state.markdownEditor;
+    if (!editor?.nodeId) return;
+    await withLoading(async () => {
+      const result = await api("/creativeCanvas/updateNodeContent", {
+        method: "POST",
+        body: {
+          nodeId: editor.nodeId,
+          content: editor.content || "",
+          workDataId: editor.workDataId || undefined,
+          planType: editor.planType || undefined,
+          scriptId: editor.scriptId || undefined,
+        },
+      });
+      state.markdownEditor = null;
+      state.message = `已保存，影响 ${result?.staleNodeIds?.length || 0} 个下游节点`;
+      await loadGraph();
+      await loadNovelFull({ force: true }).catch(() => {});
     });
   }
 
@@ -3147,6 +3402,7 @@
   function characterSpecRows(spec) {
     if (!spec) return [];
     const constraints = spec.constraints || {};
+    const spatialContinuity = spec.spatialContinuity || {};
     return [
       ["摘要", spec.summary],
       ["面部", spec.faceReference || spec.face],
@@ -3154,6 +3410,13 @@
       ["发型", spec.hair],
       ["服装", spec.costume],
       ["空间结构", spec.spatialLayout || spec.layout],
+      ["空间连续性锚点", spatialContinuity.fixedAnchors || spec.fixedAnchors],
+      ["人物调度基准", spatialContinuity.characterBlocking || spec.characterBlocking],
+      ["道具/陈设位置", spatialContinuity.objectBlocking || spec.objectBlocking],
+      ["视轴线", spatialContinuity.cameraAxis || spec.cameraAxis],
+      ["空间不变量", spatialContinuity.invariants || spec.spatialInvariants],
+      ["允许变化", spatialContinuity.allowedChanges || spec.allowedSpatialChanges],
+      ["禁止漂移", spatialContinuity.forbiddenDrift || spec.forbiddenSpatialDrift],
       ["光源", spec.lighting],
       ["固定陈设", spec.fixedElements || spec.setDressing],
       ["形状", spec.shape],
@@ -3292,9 +3555,23 @@
   }
 
   function sourceCardTitle(node, options = {}) {
+    const editButton = canEditMarkdownNode(node)
+      ? h("button", {
+          class: "tfcc-node-edit",
+          title: "编辑",
+          onMouseDown: (event) => event.stopPropagation(),
+          onClick: (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openMarkdownEditor(node).catch((err) => { state.message = err?.message || String(err); render(); });
+          },
+          text: "编辑",
+        })
+      : null;
     return h("div", { class: "tfcc-source-card-head" }, [
       h("span", { class: "tfcc-source-dot" }),
       h("span", { class: "tfcc-source-title", text: node.label }),
+      editButton,
       options.pill ? h("span", { class: `tfcc-source-pill ${options.pillClass || ""}`.trim(), text: options.pill }) : null,
       node.status ? h("span", { class: statusBadgeClass(node.status), text: node.status }) : null,
     ].filter(Boolean));
@@ -3333,7 +3610,7 @@
       sourceCardTitle({ ...node, status: "", label: title }, { pill: eventBadge.text, pillClass: eventBadge.className }),
       h("div", { class: "tfcc-source-preview", text: short(data.chapterData, 150) }),
       h("div", { class: "tfcc-source-actions" }, [
-        nodeActionButton("编辑章节", () => editNovelNode(node)),
+        nodeActionButton("编辑", () => openMarkdownEditor(node)),
         nodeActionButton("分析事件", () => analyzeNovelEvents(node)),
         nodeActionButton("参考风格画图", () => generateSourceReference(node), "primary"),
       ]),
@@ -3485,7 +3762,7 @@
     }
     if (node.type === "storyboardImage") {
       const image = data.image || {};
-      const status = image.selected ? "已选中" : image.state || "未生成";
+      const status = image.frameRole === "lastFrame" && image.selected ? "已选尾帧" : image.selected ? "已选中" : image.state || "未生成";
       return [
         title,
         previewImageTile(data.thumbnail, node.label, "tfcc-storyboard-image-thumb"),
@@ -3495,7 +3772,7 @@
     }
     if (node.type === "videoReference") {
       const reference = data.reference || {};
-      const sourceText = reference.source === "storyboard" ? "已选分镜图" : `${reference.type || "资产"}参考`;
+      const sourceText = reference.roleLabel || (reference.source === "storyboard" ? "已选分镜图" : `${reference.type || "资产"}参考`);
       return [
         title,
         previewImageTile(data.thumbnail, node.label, "tfcc-video-reference-thumb"),
@@ -4060,12 +4337,26 @@
         for (let item = Math.min(start, end); item <= Math.max(start, end); item++) target.add(item);
       }
     };
+    const addTrackList = (listValue, target = tracks) => {
+      for (const token of String(listValue || "").match(/\d+/g) || []) {
+        const track = Number(token);
+        if (Number.isFinite(track)) target.add(track);
+      }
+    };
     for (const match of value.matchAll(/(?:只处理|处理剩余|剩余|更新|重写).{0,20}(?:track|镜头)\s*(\d+)\s*(?:-|到|至|~)\s*(\d+)/gi)) {
       addRange(match[1], match[2]);
+    }
+    for (const match of value.matchAll(/(?:只处理|处理剩余|剩余|更新|重写).{0,20}(?:track|镜头)\s*([\d\s,，、和及与]+)/gi)) {
+      addTrackList(match[1]);
     }
     if (!tracks.size) {
       const range = value.match(/(?:track|镜头)\s*(\d+)\s*(?:-|到|至|~)\s*(\d+)/i);
       if (range) addRange(range[1], range[2]);
+    }
+    if (!tracks.size) {
+      for (const match of value.matchAll(/(?:track|镜头)\s*([\d\s,，、和及与]+)/gi)) {
+        addTrackList(match[1]);
+      }
     }
     if (!tracks.size) {
       for (const match of value.matchAll(/(?:track|镜头)\s*(\d+)/gi)) {
@@ -4076,6 +4367,9 @@
     const skipped = new Set();
     for (const match of value.matchAll(/(?:跳过|不要|不处理).{0,12}(?:track|镜头)\s*(\d+)\s*(?:-|到|至|~)\s*(\d+)/gi)) {
       addRange(match[1], match[2], skipped);
+    }
+    for (const match of value.matchAll(/(?:跳过|不要|不处理).{0,12}(?:track|镜头)\s*([\d\s,，、和及与]+)/gi)) {
+      addTrackList(match[1], skipped);
     }
     skipped.forEach((track) => tracks.delete(track));
     return [...tracks].sort((a, b) => a - b);
@@ -4159,6 +4453,7 @@
       src,
       videoDesc,
       shouldGenerateImage,
+      continuityContract: raw.continuityContract || raw.contract || raw.shotContinuityContract || null,
       associateAssetsIds: normalizeNumberArray(raw.associateAssetsIds || raw.assetsIds || raw.assetIds),
     };
   }
@@ -5050,13 +5345,15 @@
           "局部任务硬约束：可以调用 get_flowData 读取当前工作区；不要把本请求解释为完整生产流水线；不要重做导演规划 scriptPlan；不要重建或重写分镜表 storyboardTable；不要调用 generate_storyboard；不要生成分镜图片；只按用户指定范围调用 add_flowData_storyboard 更新现有分镜卡。",
           "范围约束：如果用户指定 track 范围，严格只处理这些 track，跳过其他 track；例如 track 5-9 只更新 5、6、7、8、9，必须跳过 track 1-4。若无法识别范围或缺少当前分镜表数据，先回复阻塞原因，不要改写范围外分镜。",
           "prompt 约束：prompt 必须是单张静态关键帧提示词，不得复制 videoDesc，不得包含承接上镜、编号镜头列表、多段动作、台词、音效或运镜；多人画面必须明确角色数量、唯一性和间距。",
+          "连续性合同：每条分镜可带 continuityContract；合同必须剧情优先，写清起始状态、允许变化、锁定项、结束状态和 QA 检查，不要用绝对锁定覆盖 videoDesc 明确剧情动作。",
           "完成要求：完成后只汇报更新数量、更新 track 列表、跳过 track 列表，不要额外提交图片任务。",
           `最近对话上下文：\n${recentAgentDialogueText(8) || "无"}`,
           `用户原始请求：${text}`,
         ].join("\n")
       : [
           `请基于当前剧本「${label}」执行分镜 Agent 的完整生产流水线，并把阶段结果写入画布。`,
-          "流水线要求：1. 先读取工作区数据 get_flowData；2. 若导演规划 scriptPlan 为空或用户要求重做，运行导演规划并调用 save_flowData 保存 scriptPlan；3. 基于剧本和已有角色/场景/道具资产进行可用性检查，缺失资产只提出补齐建议，不要阻塞分镜拆解；4. 若分镜表 storyboardTable 为空或用户要求重做，构建分镜表并调用 save_flowData 保存 storyboardTable；5. 必须调用 add_flowData_storyboard 写入真实分镜卡片，不要只回复文本；每个镜头需要包含 videoDesc、prompt、track、duration、associateAssetsIds、shouldGenerateImage。",
+          "流水线要求：1. 先读取工作区数据 get_flowData；2. 若导演规划 scriptPlan 为空或用户要求重做，运行导演规划并调用 save_flowData 保存 scriptPlan；3. 基于剧本和已有角色/场景/道具资产进行可用性检查，缺失资产只提出补齐建议，不要阻塞分镜拆解；4. 若分镜表 storyboardTable 为空或用户要求重做，构建分镜表并调用 save_flowData 保存 storyboardTable；5. 必须调用 add_flowData_storyboard 写入真实分镜卡片，不要只回复文本；每个镜头需要包含 videoDesc、prompt、track、duration、associateAssetsIds、shouldGenerateImage，可包含 continuityContract。",
+          "连续性合同：continuityContract 用于后续分镜图和视频 Prompt，必须剧情优先，写清起始状态、允许变化、锁定项、结束状态和 QA 检查；锁定项只约束 videoDesc 未明确改变的空间、人物、道具关系。",
           "画布映射要求：导演规划、分镜表、分镜卡都必须有可持久化数据；完成后画布应形成 剧本 -> 导演规划 -> 分镜表 -> 分镜分析 -> 分镜卡 的链路。",
           "默认不要生成分镜图片；只有用户明确要求出图时才调用 generate_storyboard。",
           `最近对话上下文：\n${recentAgentDialogueText(8) || "无"}`,
@@ -5840,7 +6137,8 @@
     const modeOptions = videoModeOptionsForModel(settings.model, settings.mode);
     const resolutionOptions = videoResolutionOptionsForModel(settings.model, settings.resolution);
     const durationValues = videoDurationValuesForModel(settings.model);
-    const durationControl = isContinuousDurationValues(durationValues)
+    const storyboardDuration = rawStoryboardDurationForNode(node);
+    const durationInput = isContinuousDurationValues(durationValues)
       ? h("label", { class: "tfcc-flow-select-field" }, [
           h("span", { text: "时长(s)" }),
           h("input", {
@@ -5855,7 +6153,21 @@
             onChange: (event) => updateVideoGenerationSetting(node, "duration", event.target.value),
           }),
         ])
-      : renderFlowSelect("时长", String(settings.duration), videoDurationOptionsForModel(settings.model, settings.duration), (event) => updateVideoGenerationSetting(node, "duration", event.target.value));
+      : renderFlowSelect("时长(s)", String(settings.duration), videoDurationOptionsForModel(settings.model, settings.duration), (event) => updateVideoGenerationSetting(node, "duration", event.target.value));
+    const durationControl = h("div", { class: "tfcc-video-duration-field" }, [
+      durationInput,
+      h("button", {
+        class: "tfcc-duration-auto-btn",
+        disabled: !storyboardDuration || !hasVideoDurationOverride(node),
+        title: storyboardDuration ? "恢复为分镜自动时长" : "当前分镜没有可用时长",
+        onMouseDown: (event) => event.stopPropagation(),
+        onClick: (event) => {
+          event.stopPropagation();
+          resetVideoDurationToStoryboard(node);
+        },
+        text: "自动",
+      }),
+    ]);
     return h("div", {
       class: "tfcc-source-inspector-block tfcc-video-settings",
       onMouseDown: (event) => event.stopPropagation(),
@@ -5870,7 +6182,44 @@
       ]),
       h("p", {
         class: "tfcc-video-settings-hint",
-        text: modelOption ? `${modelOption.label} · ${videoModeLabel(settings.mode)} · ${settings.resolution} · ${settings.duration}s` : "未配置视频模型",
+        text: modelOption ? `${modelOption.label} · ${videoModeLabel(settings.mode)} · ${settings.resolution} · ${videoDurationSourceLabel(node, settings)}；模型支持：${videoDurationSupportLabel(settings.model)}` : "未配置视频模型",
+      }),
+    ]);
+  }
+
+  function storyboardImageGenerationSettingsForNode(node) {
+    const project = state.graph?.project || {};
+    const stored = state.storyboardImageGenerationSettings[node?.id] || {};
+    return {
+      model: stored.model || project.imageModel || state.imageModelOptions?.[0]?.value || "",
+    };
+  }
+
+  function updateStoryboardImageGenerationSetting(node, field, value) {
+    const key = node?.id;
+    if (!key) return;
+    state.storyboardImageGenerationSettings[key] = {
+      ...storyboardImageGenerationSettingsForNode(node),
+      ...(state.storyboardImageGenerationSettings[key] || {}),
+      [field]: value,
+    };
+    renderInspector();
+  }
+
+  function renderStoryboardImageSettings(node) {
+    const settings = storyboardImageGenerationSettingsForNode(node);
+    return h("div", {
+      class: "tfcc-source-inspector-block tfcc-video-settings",
+      onMouseDown: (event) => event.stopPropagation(),
+      onClick: (event) => event.stopPropagation(),
+    }, [
+      h("div", { class: "tfcc-panel-subtitle", text: "分镜图设置" }),
+      h("div", { class: "tfcc-video-settings-grid" }, [
+        renderFlowSelect("模型", settings.model, imageModelOptions(settings.model), (event) => updateStoryboardImageGenerationSetting(node, "model", event.target.value), "is-video-model is-model"),
+      ]),
+      h("p", {
+        class: "tfcc-video-settings-hint",
+        text: settings.model ? `生成分镜图将使用 ${settings.model}` : "未配置图片模型",
       }),
     ]);
   }
@@ -5946,7 +6295,7 @@
       h("div", { class: "tfcc-inspector-head" }, [
         h("div", { class: "tfcc-inspector-section", text: "章节详情" }),
         h("div", { class: "tfcc-inspector-icons" }, [
-          h("button", { class: "tfcc-icon-btn", title: "编辑章节", onClick: () => editNovelNode(node), text: "✎" }),
+          h("button", { class: "tfcc-icon-btn", title: "编辑章节正文", onClick: () => openMarkdownEditor(node), text: "✎" }),
           h("button", { class: "tfcc-icon-btn", title: "生成参考图", onClick: () => generateSourceReference(node), text: "↗" }),
         ]),
       ]),
@@ -6116,6 +6465,7 @@
     }
     const reviewBlock = node.type === "video" ? renderVideoReviewBlock(node) : null;
     const videoSettingsBlock = node.type === "videoPrompt" ? renderVideoGenerationSettings(node) : null;
+    const storyboardImageSettingsBlock = node.type === "storyboard" ? renderStoryboardImageSettings(node) : null;
     const characterSpecBlock = node.type === "asset" ? renderCharacterSpecBlock(node.data?.asset) : null;
     const actions = [];
     if (node.type === "script") {
@@ -6125,7 +6475,9 @@
       actions.push(h("button", { class: "primary", disabled: !assetAction.meta.actionLabel || assetAction.meta.actionDisabled, onClick: () => runNodeAction("extractAssets"), text }));
     }
     if (node.type === "storyboard") {
+      const lastFrameBusy = state.nodeActionKey === `storyboardLastFrameImage:${node.id}`;
       actions.push(h("button", { onClick: () => runNodeAction("storyboardImage"), text: "生成分镜图" }));
+      actions.push(h("button", { disabled: lastFrameBusy || !node.data?.storyboard?.filePath || node.data?.storyboard?.state !== "已完成", onClick: () => runNodeAction("storyboardLastFrameImage"), text: lastFrameBusy ? "生成中..." : "生成尾帧图" }));
       const sbFlowId = node.data?.storyboard?.flowId;
       actions.push(h("button", { class: "primary", title: sbFlowId ? "" : "尚未建立图片流", onClick: () => openFlowDrawer("storyboard", node.data?.storyboard?.id, sbFlowId, node.label), text: "展开图片流" }));
     }
@@ -6135,8 +6487,10 @@
       actions.push(h("button", { disabled: busy, onClick: () => runNodeAction("assetCard"), text: busy ? (hasAssetCard ? "刷新中..." : "生成中...") : hasAssetCard ? "刷新资产卡规格" : "生成资产卡规格" }));
     }
     if (node.type === "videoPrompt") {
-      actions.push(h("button", { class: "primary", onClick: () => runNodeAction("video"), text: "生成视频" }));
-      actions.push(h("button", { onClick: () => runNodeAction("videoPrompt"), text: "重生视频 Prompt" }));
+      const videoBusy = state.nodeActionKey === `video:${node.id}`;
+      const promptBusy = state.nodeActionKey === `videoPrompt:${node.id}`;
+      actions.push(h("button", { class: "primary", disabled: videoBusy, onClick: () => runNodeAction("video"), text: videoBusy ? "生成中..." : "生成视频" }));
+      actions.push(h("button", { disabled: promptBusy, onClick: () => runNodeAction("videoPrompt"), text: promptBusy ? "重生中..." : "重生视频 Prompt" }));
     }
     // 内容预览（组卡展示成员列表，其余展示来源内容预览）
     let preview = null;
@@ -6206,15 +6560,20 @@
       h("div", { class: "tfcc-inspector-head" }, [
         h("div", { class: "tfcc-inspector-section", text: "节点详情" }),
         h("div", { class: "tfcc-inspector-icons" }, [
-          h("button", { class: "tfcc-icon-btn", title: "编辑", onClick: () => { if (segment) { state.editText = segment.text || ""; renderInspector(); } }, text: "✎" }),
+          canEditMarkdownNode(node)
+            ? h("button", { class: "tfcc-icon-btn", title: "编辑", onClick: () => openMarkdownEditor(node), text: "✎" })
+            : segment
+              ? h("button", { class: "tfcc-icon-btn", title: "编辑", onClick: () => { state.editText = segment.text || ""; renderInspector(); }, text: "✎" })
+              : null,
           h("button", { class: "tfcc-icon-btn", title: "复制节点 ID", onClick: () => navigator.clipboard?.writeText(node.id), text: "🔗" }),
           h("button", { class: "tfcc-icon-btn", title: "复制节点数据", onClick: () => navigator.clipboard?.writeText(JSON.stringify(node.data || {}, null, 2)), text: "⋮" }),
-        ]),
+        ].filter(Boolean)),
       ]),
       h("div", { class: "tfcc-panel-title", text: node.label }),
       h("div", { class: "tfcc-kv" }, rows),
       reviewBlock,
       videoSettingsBlock,
+      storyboardImageSettingsBlock,
       characterSpecBlock,
       preview,
       segment
@@ -6449,7 +6808,87 @@
       state.loading ? h("div", { class: "tfcc-loading", text: "Loading..." }) : null,
       h("div", { class: "tfcc-layout", style: { "--tfcc-agent-width": `${state.agentPanelWidth}px` } }, [renderIconRail(), renderAgentPanel(), renderCanvas(), renderInspectorPanel()]),
       renderPromptMentionPicker(),
+      renderMarkdownEditor(),
       renderImagePreview(),
+    ]);
+  }
+
+  function renderMarkdownEditor() {
+    const editor = state.markdownEditor;
+    if (!editor) return null;
+    const previewVisible = editor.previewVisible !== false;
+    const toolbar = [
+      ["bold", "B", "加粗"],
+      ["underline", "U", "下划线"],
+      ["italic", "I", "斜体"],
+      ["strike", "S", "删除线"],
+      ["heading", "H", "标题"],
+      ["sub", "x₂", "下标"],
+      ["sup", "x²", "上标"],
+      ["quote", "”", "引用"],
+      ["ul", "•", "无序列表"],
+      ["ol", "1.", "有序列表"],
+      ["task", "☑", "任务列表"],
+      ["code", "<>", "代码"],
+      ["image", "IMG", "图片"],
+      ["table", "表", "表格"],
+      ["undo", "↶", "撤销"],
+      ["redo", "↷", "重做"],
+    ];
+    return h("div", {
+      class: "tfcc-markdown-editor",
+      onMouseDown: (event) => {
+        if (event.target === event.currentTarget) closeMarkdownEditor();
+      },
+    }, [
+      h("div", {
+        class: "tfcc-markdown-editor-dialog",
+        onMouseDown: (event) => event.stopPropagation(),
+      }, [
+        h("div", { class: "tfcc-markdown-editor-head" }, [
+          h("strong", { text: editor.title || "编辑内容" }),
+          h("button", { type: "button", class: "tfcc-markdown-editor-close", title: "关闭", onClick: closeMarkdownEditor, text: "×" }),
+        ]),
+        h("div", { class: "tfcc-markdown-editor-toolbar" }, [
+          h("div", { class: "tfcc-markdown-editor-toolset" }, toolbar.map(([command, label, title]) =>
+            h("button", {
+              type: "button",
+              title,
+              onMouseDown: (event) => {
+                event.preventDefault();
+                applyMarkdownEditorCommand(command);
+              },
+              text: label,
+            })
+          )),
+          h("button", {
+            type: "button",
+            class: previewVisible ? "is-active" : "",
+            title: previewVisible ? "隐藏预览" : "显示预览",
+            onMouseDown: (event) => {
+              event.preventDefault();
+              applyMarkdownEditorCommand("preview");
+            },
+            text: "预览",
+          }),
+        ]),
+        h("div", { class: `tfcc-markdown-editor-body ${previewVisible ? "has-preview" : "no-preview"}` }, [
+          h("textarea", {
+            class: "tfcc-markdown-editor-textarea",
+            value: editor.content || "",
+            spellcheck: "false",
+            onInput: (event) => {
+              editor.content = event.target.value;
+              syncMarkdownEditorPreview();
+            },
+          }),
+          previewVisible ? h("div", { class: "tfcc-markdown-editor-preview tfcc-markdown", html: renderMarkdown(editor.content || "") }) : null,
+        ].filter(Boolean)),
+        h("div", { class: "tfcc-markdown-editor-actions" }, [
+          h("button", { type: "button", onClick: closeMarkdownEditor, text: "取消" }),
+          h("button", { type: "button", class: "primary", onClick: () => saveMarkdownEditor().catch((err) => { state.message = err?.message || String(err); render(); }), text: "保存" }),
+        ]),
+      ]),
     ]);
   }
 

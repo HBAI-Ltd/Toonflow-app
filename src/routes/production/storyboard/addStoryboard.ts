@@ -4,6 +4,7 @@ import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { recordGenerationArtifact } from "@/utils/contentAudit";
+import { normalizeStoryboardContinuityContract } from "@/utils/storyboardContinuity";
 const router = express.Router();
 interface Storyboard {
   id: number;
@@ -24,10 +25,17 @@ export default router.post(
     src: z.string().nullable(),
     scriptId: z.number(),
     projectId: z.number(),
+    continuityContract: z.any().optional(),
   }),
   async (req, res) => {
-    const { prompt, duration, state, src, scriptId, projectId, videoDesc, shouldGenerateImage } = req.body;
+    const { prompt, duration, state, src, scriptId, projectId, videoDesc, shouldGenerateImage, continuityContract: rawContinuityContract } = req.body;
     const trackId = Date.now()
+    const continuityContract = normalizeStoryboardContinuityContract(rawContinuityContract, {
+      videoDesc,
+      prompt,
+      track: "主轨道",
+      assets: [],
+    });
     await u.db("o_videoTrack").insert({
       id: trackId,
       scriptId: scriptId,
@@ -41,6 +49,7 @@ export default router.post(
       trackId,
       videoDesc,
       shouldGenerateImage: src ? 1 : 0,
+      continuityContract,
       scriptId: scriptId,
       projectId: projectId,
     });
@@ -52,6 +61,16 @@ export default router.post(
       targetField: "prompt",
       title: `分镜 ${id} 图片提示词`,
       content: prompt,
+      meta: { source: "manual:addStoryboard", scriptId },
+    });
+    await recordGenerationArtifact({
+      projectId,
+      artifactType: "storyboardContinuityContract",
+      targetType: "o_storyboard",
+      targetId: id,
+      targetField: "continuityContract",
+      title: `分镜 ${id} 镜头连续性合同`,
+      content: continuityContract,
       meta: { source: "manual:addStoryboard", scriptId },
     });
     await recordGenerationArtifact({

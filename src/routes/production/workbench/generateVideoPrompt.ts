@@ -6,6 +6,8 @@ import { validateFields } from "@/middleware/middleware";
 import { recordGenerationArtifact } from "@/utils/contentAudit";
 import { recordPromptUsage, resolveVideoModelPrompt } from "@/utils/promptCenter";
 import { assetCardPrompt } from "@/utils/characterSpec";
+import { escapeXmlAttr, formatStoryboardContinuityForVideoPrompt } from "@/utils/storyboardContinuity";
+import { sanitizeGeneratedVideoPrompt } from "@/utils/videoPromptText";
 const router = express.Router();
 
 export default router.post(
@@ -56,7 +58,7 @@ export default router.post(
           const storyboard = await u
             .db("o_storyboard")
             .where("o_storyboard.id", item.id)
-            .select("videoDesc", "prompt", "track", "duration", "shouldGenerateImage")
+            .select("id", "videoDesc", "prompt", "track", "duration", "shouldGenerateImage", "filePath", "state", "continuityContract")
             .first();
           // 查询分镜关联的资产ID
           const assetRows = await u.db("o_assets2Storyboard").where("storyboardId", item.id).orderBy("rowid").select("assetId");
@@ -100,10 +102,14 @@ export default router.post(
         storyboard.push({
           videoDesc: item.videoDesc,
           prompt: item.prompt,
+          id: item.id,
           track: item.track,
           duration: item.duration,
           associateAssetsIds: item.associateAssetsIds,
           shouldGenerateImage: item.shouldGenerateImage,
+          filePath: item.filePath,
+          state: item.state,
+          continuityContract: item.continuityContract,
         });
     }
 
@@ -125,6 +131,25 @@ export default router.post(
           ...new Set(trackAssetRows.map((r: any) => r.assetId).filter((id: any) => typeof id === "number")),
         ];
         const assetById = new Map<number, any>(assets.map((a) => [a.id, a]));
+        const missingAssetIds = orderedTrackAssetIds.filter((id) => !assetById.has(id));
+        if (missingAssetIds.length) {
+          const missingAssets = await u
+            .db("o_assets")
+            .leftJoin("o_image", "o_image.id", "o_assets.imageId")
+            .whereIn("o_assets.id", missingAssetIds)
+            .select("o_assets.id", "o_assets.type", "o_assets.name", "o_assets.remark", "o_assets.prompt", "o_assets.describe", "o_image.filePath");
+          missingAssets.forEach((item: any) => {
+            assetById.set(Number(item.id), {
+              id: item.id,
+              type: item.type,
+              name: item.name,
+              filePath: item.filePath,
+              prompt: item.prompt,
+              describe: item.describe,
+              assetCard: assetCardPrompt(item.remark),
+            });
+          });
+        }
         // 仅保留白名单内、且本次确实查到资产数据的项，按分镜关联顺序排列
         const scopedAssets = orderedTrackAssetIds
           .map((id) => assetById.get(id))
@@ -158,14 +183,18 @@ export default router.post(
         .db("o_storyboard")
         .where({ trackId, projectId })
         .orderBy("index", "asc")
-        .select("videoDesc", "duration", "prompt", "track", "shouldGenerateImage");
+        .select("id", "videoDesc", "duration", "prompt", "track", "shouldGenerateImage", "filePath", "state", "continuityContract");
       if (trackStoryboardRows.length) {
         const rebuilt = trackStoryboardRows.map((sb: any) => ({
+          id: sb.id,
           videoDesc: sb.videoDesc,
           prompt: sb.prompt,
           track: sb.track,
           duration: sb.duration,
           shouldGenerateImage: sb.shouldGenerateImage,
+          filePath: sb.filePath,
+          state: sb.state,
+          continuityContract: sb.continuityContract,
         }));
         // 若 DB 与前端传入的分镜内容不一致(数量或首条 videoDesc)，记录后以 DB 为准
         const frontInvalid =
@@ -208,6 +237,28 @@ export default router.post(
     const artStyle = projectData?.artStyle || "无";
 
     const visualManual = u.getArtPrompt(artStyle, "art_skills", "art_storyboard_video");
+    const assetById = new Map<number, any>(assets.map((asset) => [Number(asset.id), asset]));
+    const storyboardAssets = (item: any) => (item.associateAssetsIds || []).map((assetId: number) => assetById.get(Number(assetId))).filter(Boolean);
+    const storyboardPromptItems = storyboard
+      .map((i) => {
+        const selectedStoryboardImage = Boolean(i.filePath && i.state === "已完成");
+        const continuity = formatStoryboardContinuityForVideoPrompt(i.continuityContract, {
+          videoDesc: i.videoDesc,
+          prompt: i.prompt,
+          track: i.track,
+          assets: storyboardAssets(i),
+          selectedStoryboardImage,
+        });
+        return `<storyboardItem
+  videoDesc='${escapeXmlAttr(i.videoDesc)}'
+  duration='${escapeXmlAttr(i.duration)}'
+  keyframePrompt='${escapeXmlAttr(i.prompt || "")}'
+  selectedStoryboardImage='${selectedStoryboardImage ? "true" : "false"}'
+>
+${continuity}
+</storyboardItem>`;
+      })
+      .join("\n");
     const content = `
           **模型名称**：${modelData},
 
@@ -215,12 +266,7 @@ export default router.post(
             .filter((i) => i.filePath)
             .map((i) => `[${i.id},${i.type},${i.name} ${assetsAudioRecord[i.id] ? `audio:${assetsAudioRecord[i.id]}` : ""} ]${i.assetCard ? `\n资产卡规格：${i.assetCard}` : ""}`)
             .join("，")},
-          **分镜信息**：${storyboard.map(
-            (i) => `<storyboardItem
-  videoDesc='${i.videoDesc}'
-  duration='${i.duration}'
-></storyboardItem>`,
-          )},
+          **分镜信息**：${storyboardPromptItems},
           `;
 
     try {
@@ -237,9 +283,10 @@ export default router.post(
           },
         ],
       });
+      const promptText = sanitizeGeneratedVideoPrompt(text);
       await u.db("o_videoTrack").where({ id: trackId }).update({
         state: "已完成",
-        prompt: text,
+        prompt: promptText,
       });
       await recordGenerationArtifact({
         projectId,
@@ -248,13 +295,13 @@ export default router.post(
         targetId: trackId,
         targetField: "prompt",
         title: `视频轨道 ${trackId} 提示词`,
-        content: text,
+        content: promptText,
         effectivePrompt: videoPromptGeneration,
         promptUsageId,
         modelName: await u.Ai.resolveModelName("universalAi").catch(() => "universalAi"),
         meta: { model, mode, storyboardCount: storyboard.length, assetCount: assets.length },
       });
-      res.status(200).send(success(text));
+      res.status(200).send(success(promptText));
     } catch (e) {
       await u
         .db("o_videoTrack")

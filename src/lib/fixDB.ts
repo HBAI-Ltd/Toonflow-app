@@ -365,6 +365,7 @@ export default async (knex: Knex): Promise<void> => {
   await addColumn("o_storyboard", "soundEffect", "text");
   await addColumn("o_storyboard", "shotType", "text");
   await addColumn("o_storyboard", "cameraMovement", "text");
+  await addColumn("o_storyboard", "continuityContract", "text");
   // 添加新字段
   await addColumn("o_agentDeploy", "type", "string");
   // 添加新字段

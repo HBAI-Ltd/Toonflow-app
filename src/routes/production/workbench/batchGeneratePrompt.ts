@@ -6,6 +6,9 @@ import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { recordGenerationArtifact } from "@/utils/contentAudit";
 import { recordPromptUsage, resolveVideoModelPrompt } from "@/utils/promptCenter";
+import { assetCardPrompt } from "@/utils/characterSpec";
+import { escapeXmlAttr, formatStoryboardContinuityForVideoPrompt } from "@/utils/storyboardContinuity";
+import { sanitizeGeneratedVideoPrompt } from "@/utils/videoPromptText";
 const router = express.Router();
 
 export default router.post(
@@ -57,7 +60,7 @@ export default router.post(
                 const storyboard = await u
                   .db("o_storyboard")
                   .where("o_storyboard.id", item.id)
-                  .select("videoDesc", "prompt", "track", "duration", "shouldGenerateImage")
+                  .select("id", "videoDesc", "prompt", "track", "duration", "shouldGenerateImage", "filePath", "state", "continuityContract")
                   .first();
                 // 查询分镜关联的资产ID
                 const assetRows = await u.db("o_assets2Storyboard").where("storyboardId", item.id).orderBy("rowid").select("assetId");
@@ -74,7 +77,7 @@ export default router.post(
                   .db("o_assets")
                   .leftJoin("o_image", "o_image.id", "o_assets.imageId")
                   .where("o_assets.id", item.id)
-                  .select("o_assets.id", "o_assets.type", "o_assets.name", "o_image.filePath")
+                  .select("o_assets.id", "o_assets.type", "o_assets.name", "o_assets.remark", "o_assets.prompt", "o_assets.describe", "o_image.filePath")
                   .first();
                 return {
                   ...assetsData,
@@ -95,30 +98,55 @@ export default router.post(
                 type: item.type,
                 name: item.name,
                 filePath: item.filePath,
+                prompt: item.prompt,
+                describe: item.describe,
+                assetCard: assetCardPrompt(item.remark),
               });
             if (item._type === "storyboard")
               storyboard.push({
+                id: item.id,
                 videoDesc: item.videoDesc,
                 prompt: item.prompt,
                 track: item.track,
                 duration: item.duration,
                 associateAssetsIds: item.associateAssetsIds,
                 shouldGenerateImage: item.shouldGenerateImage,
+                filePath: item.filePath,
+                state: item.state,
+                continuityContract: item.continuityContract,
               });
           }
+
+          const assetById = new Map<number, any>(assets.map((asset) => [Number(asset.id), asset]));
+          const storyboardAssets = (item: any) => (item.associateAssetsIds || []).map((assetId: number) => assetById.get(Number(assetId))).filter(Boolean);
+          const storyboardPromptItems = storyboard
+            .map((i: any) => {
+              const selectedStoryboardImage = Boolean(i.filePath && i.state === "已完成");
+              const continuity = formatStoryboardContinuityForVideoPrompt(i.continuityContract, {
+                videoDesc: i.videoDesc,
+                prompt: i.prompt,
+                track: i.track,
+                assets: storyboardAssets(i),
+                selectedStoryboardImage,
+              });
+              return `<storyboardItem
+  videoDesc='${escapeXmlAttr(i.videoDesc)}'
+  duration='${escapeXmlAttr(i.duration)}'
+  keyframePrompt='${escapeXmlAttr(i.prompt || "")}'
+  selectedStoryboardImage='${selectedStoryboardImage ? "true" : "false"}'
+>
+${continuity}
+</storyboardItem>`;
+            })
+            .join("\n");
 
           const content = `
           **模型名称**：${modelData},
           **资产信息**（角色、场景、道具、音频):${assets
             .filter((i: any) => i.filePath)
-            .map((i: any) => `[${i.id},${i.type},${i.name}]`)
+            .map((i: any) => `[${i.id},${i.type},${i.name}]${i.assetCard ? `\n资产卡规格：${i.assetCard}` : ""}`)
             .join("，")},
-          **分镜信息**：${storyboard.map(
-            (i: any) => `<storyboardItem
-  videoDesc='${i.videoDesc}'
-  duration='${i.duration}'
-></storyboardItem>`,
-          )},
+          **分镜信息**：${storyboardPromptItems},
           `;
 
           try {
@@ -142,9 +170,10 @@ export default router.post(
                 },
               ],
             });
+            const promptText = sanitizeGeneratedVideoPrompt(text);
 
             await u.db("o_videoTrack").where({ id: track.trackId }).update({
-              prompt: text,
+              prompt: promptText,
               state: "已完成",
             });
             await recordGenerationArtifact({
@@ -154,14 +183,14 @@ export default router.post(
               targetId: track.trackId,
               targetField: "prompt",
               title: `视频轨道 ${track.trackId} 提示词`,
-              content: text,
+              content: promptText,
               effectivePrompt: videoPromptGeneration,
               promptUsageId,
               modelName: promptModelName,
               meta: { model, mode, storyboardCount: storyboard.length, assetCount: assets.length, batch: true },
             });
 
-            return { trackId: track.trackId, text };
+            return { trackId: track.trackId, text: promptText };
           } catch (e: any) {
             await u
               .db("o_videoTrack")

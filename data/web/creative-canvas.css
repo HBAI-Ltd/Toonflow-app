@@ -86,6 +86,7 @@
 .tfcc-header button,
 .tfcc-actions button,
 .tfcc-edit button,
+.tfcc-markdown-editor button,
 .tfcc-zoom button {
   height: 32px;
   border: 1px solid rgba(255, 255, 255, .12);
@@ -105,7 +106,8 @@
 }
 
 .tfcc-header button.primary,
-.tfcc-edit button.primary {
+.tfcc-edit button.primary,
+.tfcc-markdown-editor button.primary {
   background: #e83fb4;
   border-color: #e83fb4;
   color: #fff;
@@ -200,6 +202,180 @@
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, .48);
+}
+
+.tfcc-markdown-editor {
+  position: fixed;
+  inset: var(--tfcc-host-top, 0px) 0 0 0;
+  z-index: 11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: rgba(0, 0, 0, .58);
+}
+
+.tfcc-markdown-editor-dialog {
+  width: min(1540px, 94vw);
+  height: min(860px, 88vh);
+  display: grid;
+  grid-template-rows: 48px 42px minmax(0, 1fr) 56px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, .12);
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, .28);
+}
+
+.tfcc-markdown-editor-head,
+.tfcc-markdown-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(15, 23, 42, .08);
+}
+
+.tfcc-markdown-editor-head strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #111827;
+  font-size: 15px;
+}
+
+.tfcc-markdown-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(15, 23, 42, .08);
+  background: #fff;
+}
+
+.tfcc-markdown-editor-toolset {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.tfcc-markdown-editor button {
+  height: 28px;
+  min-width: 28px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #1f2937;
+  padding: 0 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tfcc-markdown-editor button:hover {
+  background: #f3f4f6;
+}
+
+.tfcc-markdown-editor button.is-active {
+  background: #eef2ff;
+  color: #1d4ed8;
+}
+
+.tfcc-markdown-editor button.primary {
+  min-width: 72px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+.tfcc-markdown-editor button.primary:hover {
+  background: #1d4ed8;
+}
+
+.tfcc-markdown-editor-close {
+  font-size: 18px;
+}
+
+.tfcc-markdown-editor-actions {
+  justify-content: flex-end;
+  border-top: 1px solid rgba(15, 23, 42, .08);
+  border-bottom: 0;
+  background: #fff;
+}
+
+.tfcc-markdown-editor-body {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.tfcc-markdown-editor-body.no-preview {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.tfcc-markdown-editor textarea,
+.tfcc-markdown-editor-preview {
+  min-width: 0;
+  min-height: 0;
+  padding: 18px 22px;
+  overflow: auto;
+}
+
+.tfcc-markdown-editor textarea {
+  resize: none;
+  border: 0;
+  border-right: 1px solid rgba(15, 23, 42, .08);
+  outline: none;
+  background: #fff;
+  color: #111827;
+  font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.tfcc-markdown-editor-body.no-preview textarea {
+  border-right: 0;
+}
+
+.tfcc-markdown-editor-preview {
+  background: #fff;
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.tfcc-markdown-editor-preview.tfcc-markdown h3,
+.tfcc-markdown-editor-preview.tfcc-markdown h4,
+.tfcc-markdown-editor-preview.tfcc-markdown h5,
+.tfcc-markdown-editor-preview.tfcc-markdown h6 {
+  color: #111827;
+}
+
+.tfcc-markdown-editor-preview.tfcc-markdown th,
+.tfcc-markdown-editor-preview.tfcc-markdown td {
+  border-color: #e5e7eb;
+}
+
+.tfcc-markdown-editor-preview.tfcc-markdown th {
+  color: #111827;
+  background: #f3f4f6;
+}
+
+.tfcc-markdown-editor-preview.tfcc-markdown code {
+  border-color: #e5e7eb;
+  background: #f9fafb;
+  color: #111827;
+}
+
+.tfcc-markdown-editor-preview.tfcc-markdown pre {
+  border-color: #e5e7eb;
+  background: #f9fafb;
+}
+
+.tfcc-markdown-editor-preview.tfcc-markdown blockquote {
+  color: #4b5563;
 }
 
 .tfcc-layout {
@@ -766,6 +942,29 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.tfcc-node-title-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.tfcc-node-edit {
+  height: 22px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, .06);
+  color: rgba(243, 245, 251, .74);
+  padding: 0 7px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.tfcc-node-edit:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, .12);
 }
 
 .tfcc-node-sub {
@@ -1550,6 +1749,31 @@
 }
 .tfcc-video-settings-grid .is-video-model {
   grid-column: 1 / -1;
+}
+.tfcc-video-duration-field {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+.tfcc-video-duration-field .tfcc-flow-select-field {
+  min-width: 0;
+}
+.tfcc-duration-auto-btn {
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(94, 234, 212, .22);
+  background: rgba(94, 234, 212, .1);
+  color: rgba(205, 250, 246, .92);
+  font-size: 11px;
+  cursor: pointer;
+}
+.tfcc-duration-auto-btn:disabled {
+  border-color: rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, .04);
+  color: rgba(243, 245, 251, .34);
+  cursor: not-allowed;
 }
 .tfcc-video-settings-hint {
   margin: 8px 0 0;

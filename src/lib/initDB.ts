@@ -707,6 +707,7 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         table.text("soundEffect"); //音效描述
         table.text("shotType"); //景别（远景/全景/中景/近景/特写）
         table.text("cameraMovement"); //运镜（固定/推/拉/摇/跟/移）
+        table.text("continuityContract"); //镜头连续性合同(JSON)
         table.primary(["id"]);
         table.unique(["id"]);
       },

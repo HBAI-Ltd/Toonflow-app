@@ -2,6 +2,7 @@
   "ignore": [
     "node_modules",
     "data/*",
+    "output/*",
     "build/*",
     "dist/*",
     "router.ts",

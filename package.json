@@ -41,6 +41,14 @@
     "docker:local": "docker compose up --build",
     "vendor2json": "node scripts/vendor2json.ts"
   },
+  "electronmon": {
+    "patterns": [
+      "!output/**",
+      "!data/*.sqlite*",
+      "!build/**",
+      "!dist/**"
+    ]
+  },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.35",
     "@ai-sdk/deepseek": "^2.0.17",

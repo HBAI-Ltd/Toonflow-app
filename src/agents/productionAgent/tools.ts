@@ -318,6 +318,7 @@ export default (toolCpnfig: ToolConfig) => {
         duration?: string | number;
         associateAssetsIds?: number[] | string[] | string | null;
         shouldGenerateImage?: string | number | boolean | null;
+        continuityContract?: Record<string, unknown> | string | null;
       }>(
         z
           .object({
@@ -333,6 +334,11 @@ export default (toolCpnfig: ToolConfig) => {
             duration: z.union([z.number(), z.string()]).optional().describe("视频推荐时间"),
             associateAssetsIds: flexibleNumberArraySchema,
             shouldGenerateImage: flexibleBooleanSchema,
+            continuityContract: z
+              .union([z.record(z.string(), z.unknown()), z.string()])
+              .nullable()
+              .optional()
+              .describe("镜头连续性合同。剧情优先，包含起始状态、允许变化、锁定项、结束状态和 QA 检查。"),
           })
           .toJSONSchema(),
       ),
@@ -359,6 +365,7 @@ export default (toolCpnfig: ToolConfig) => {
           duration: Number.isFinite(duration) && duration > 0 ? duration : 3,
           associateAssetsIds,
           shouldGenerateImage,
+          continuityContract: raw.continuityContract ?? null,
         };
         try {
           const res = await socketQueue(

@@ -127,16 +127,17 @@
 1. **提示词输出全部用英文**
 2. **不使用任何 `@图N ` 引用**：全部内容用纯文本描述
 3. **主体用文字描述**：在 [Visual] 中简要描述主体外观特征（如服饰、发型等关键辨识特征）
-4. **每个主体必须标注说话状态**：`speaking` / `silent` / `speaking simultaneously`
-5. **台词不可缺失**：videoDesc 中有台词的分镜，必须在 `[Audio]` 中完整输出台词内容（保持原始语言，不翻译）
-6. **台词类型标注**：
+4. **镜头连续性合同**：若 `<storyboardItem>` 含「镜头连续性合同」，用它约束固定空间、人物身份、道具关系和 QA 禁止项；若合同与 videoDesc 的明确剧情动作冲突，以 videoDesc 为准
+5. **每个主体必须标注说话状态**：`speaking` / `silent` / `speaking simultaneously`
+6. **台词不可缺失**：videoDesc 中有台词的分镜，必须在 `[Audio]` 中完整输出台词内容（保持原始语言，不翻译）
+7. **台词类型标注**：
    - 普通对白 → `dialogue, lip-sync active`
    - 内心独白 → `inner monologue (OS), silent lips`
    - 画外音 → `voiceover (VO), silent lips`
-7. **不说话的主体标注 `silent`**：防止误生口型
-8. **Motion 时间轴**：每段最低 1 秒，不超过总时长
-9. **全程单一连贯镜头**：Camera 段落描述从头到尾一个镜头，绝不切镜
-10. **镜头类型**从以下选取：`Wide establishing shot / Over-the-shoulder / Medium shot / Close-up / Wide shot / POV / Dutch angle / Crane up / Dolly right / Whip pan / Handheld / Slow motion`
+8. **不说话的主体标注 `silent`**：防止误生口型
+9. **Motion 时间轴**：每段最低 1 秒，不超过总时长
+10. **全程单一连贯镜头**：Camera 段落描述从头到尾一个镜头，绝不切镜
+11. **镜头类型**从以下选取：`Wide establishing shot / Over-the-shoulder / Medium shot / Close-up / Wide shot / POV / Dutch angle / Crane up / Dolly right / Whip pan / Handheld / Slow motion`
 
 ---
 

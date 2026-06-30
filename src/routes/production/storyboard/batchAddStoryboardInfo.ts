@@ -4,6 +4,7 @@ import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { recordGenerationArtifact } from "@/utils/contentAudit";
+import { normalizeStoryboardContinuityContract } from "@/utils/storyboardContinuity";
 const router = express.Router();
 
 function normalizeStoredStoryboardPrompt(prompt: string, videoDesc: string): string {
@@ -26,6 +27,7 @@ export default router.post(
         videoDesc: z.string(),
         shouldGenerateImage: z.number(),
         associateAssetsIds: z.array(z.number()),
+        continuityContract: z.any().optional(),
       }),
     ),
     scriptId: z.number(),
@@ -36,6 +38,18 @@ export default router.post(
     if (!data.length) return res.status(400).send({ success: false, message: "数据不能为空" });
     for (const item of data) {
       const prompt = normalizeStoredStoryboardPrompt(item.prompt, item.videoDesc);
+      const associatedAssets = item.associateAssetsIds?.length
+        ? await u
+            .db("o_assets")
+            .whereIn("id", item.associateAssetsIds)
+            .select("id", "type", "name", "remark", "prompt", "describe")
+        : [];
+      const continuityContract = normalizeStoryboardContinuityContract(item.continuityContract, {
+        videoDesc: item.videoDesc,
+        prompt,
+        track: item.track,
+        assets: associatedAssets,
+      });
       const existing = await u.db("o_storyboard").where({ scriptId, projectId, track: item.track }).first();
       const row = {
         prompt,
@@ -46,6 +60,7 @@ export default router.post(
         track: item.track,
         videoDesc: item.videoDesc,
         shouldGenerateImage: item.shouldGenerateImage,
+        continuityContract,
         filePath: null,
         reason: null,
         flowId: null,
@@ -72,6 +87,16 @@ export default router.post(
         targetField: "prompt",
         title: `分镜 ${id} 图片提示词`,
         content: prompt,
+        meta: { source: "manual:batchAddStoryboardInfo", scriptId, track: item.track },
+      });
+      await recordGenerationArtifact({
+        projectId,
+        artifactType: "storyboardContinuityContract",
+        targetType: "o_storyboard",
+        targetId: id,
+        targetField: "continuityContract",
+        title: `分镜 ${id} 镜头连续性合同`,
+        content: continuityContract,
         meta: { source: "manual:batchAddStoryboardInfo", scriptId, track: item.track },
       });
       await recordGenerationArtifact({
@@ -141,7 +166,8 @@ export default router.post(
           state: i.state,
           scriptId: i.scriptId,
           reason: i.reason,
-          videoDesc: i.videoDesc
+          videoDesc: i.videoDesc,
+          continuityContract: i.continuityContract,
         };
       }),
     );

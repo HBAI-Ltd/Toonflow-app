@@ -11,6 +11,14 @@ import oss from "@/utils/oss";
 export interface ImageScore {
   score: number; // 0-100
   reason: string;
+  passed?: boolean;
+  hardFailures: Array<{
+    type?: string;
+    object?: string;
+    message: string;
+    severity?: "hard";
+  }>;
+  softWarnings: string[];
 }
 
 interface ScoreImageOptions {
@@ -23,9 +31,10 @@ const SCORE_PROMPT = `你是 AI 绘画质检员。请根据下方「生成提示
 3. 画面完整性：主体是否被裁切、是否存在乱码文字或水印
 
 输出要求：只输出一个 JSON 对象，不要输出任何其他文字，格式如下：
-{"score": 85, "reason": "简短中文理由，50字以内"}
+{"passed": true, "score": 85, "reason": "简短中文理由，50字以内", "hardFailures": [], "softWarnings": []}
 
 score 为 0-100 的整数，60 分以下表示有明显缺陷不建议采用。
+如果补充评估维度中要求 hard reject，发现任何硬性违规时必须设置 passed=false，并把违规写入 hardFailures。
 `;
 
 export async function scoreImage(filePath: string, prompt: string, extraCriteria = "", options: ScoreImageOptions = {}): Promise<ImageScore | null> {
@@ -42,7 +51,7 @@ export async function scoreImage(filePath: string, prompt: string, extraCriteria
         },
       ],
     });
-    return parseScore(result.text);
+    return parseImageScore(result.text);
   } catch (e) {
     if (options.throwOnError) throw e;
     console.warn("[图片打分] 失败，跳过打分:", e instanceof Error ? e.message : e);
@@ -50,18 +59,64 @@ export async function scoreImage(filePath: string, prompt: string, extraCriteria
   }
 }
 
-function parseScore(text: string): ImageScore | null {
-  const match = text.match(/\{[\s\S]*?\}/);
-  if (!match) return null;
+export function parseImageScore(text: string): ImageScore | null {
+  const json = extractJsonObject(text);
+  if (!json) return null;
   try {
-    const parsed = JSON.parse(match[0]);
+    const parsed = JSON.parse(json);
     const score = Number(parsed.score);
     if (!Number.isFinite(score)) return null;
+    const hardFailures = Array.isArray(parsed.hardFailures)
+      ? parsed.hardFailures
+          .map((item: any) => ({
+            type: typeof item?.type === "string" ? item.type : undefined,
+            object: typeof item?.object === "string" ? item.object : undefined,
+            message: typeof item?.message === "string" ? item.message : typeof item?.rule === "string" ? item.rule : "",
+            severity: item?.severity === "hard" || item?.hard === true ? "hard" as const : undefined,
+          }))
+          .filter((item: { message: string }) => item.message)
+      : [];
+    const softWarnings = Array.isArray(parsed.softWarnings)
+      ? parsed.softWarnings.map((item: unknown) => String(item || "").trim()).filter(Boolean)
+      : [];
     return {
       score: Math.max(0, Math.min(100, Math.round(score))),
       reason: typeof parsed.reason === "string" ? parsed.reason : "",
+      passed: typeof parsed.passed === "boolean" ? parsed.passed : undefined,
+      hardFailures,
+      softWarnings,
     };
   } catch {
     return null;
   }
+}
+
+function extractJsonObject(text: string): string | null {
+  const start = text.indexOf("{");
+  if (start < 0) return null;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < text.length; i++) {
+    const char = text[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+    if (char === "\"") {
+      inString = true;
+    } else if (char === "{") {
+      depth += 1;
+    } else if (char === "}") {
+      depth -= 1;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
 }

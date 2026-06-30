@@ -148,6 +148,24 @@
 - [x] **运行时 API origin 修复**：Electron / GUI 随机端口启动后，`src/app.ts` 回写实际 `PORT`，Creative Canvas 通过 `toonflow://getappurl` 获取当前 API base，避免生成图片或媒体 URL 指到错误端口。
 - [x] **验收结果**：`yarn test:creative-canvas` 与 `npx tsc --noEmit --pretty false` 通过；真实项目中分镜阶段已写入 9 条 `o_storyboard` 和 46 条资产关联，画布显示 9 个分镜节点。分镜图片生成仍是下一阶段，当前写入的分镜行未自动入图像生成队列。
 
+## v2.10 画布一致性与视频生成链路（2026-06-30）
+
+- [x] **Markdown 编辑器统一入口**：原文章节、剧本、角色/场景/道具 Prompt、导演规划、分镜表都可从卡片右上角「编辑」进入同一 Markdown 编辑器，保存走 `/api/creativeCanvas/updateNodeContent` 并标记下游 stale。
+- [x] **资产卡规格与空间连续性**：角色/场景/道具资产可生成结构化资产卡；场景卡支持空间连续性锚点、人物调度基准、道具/陈设位置、视轴线、空间不变量、允许变化和禁止漂移。分镜 Prompt 与图片 QA 会消费这些约束，但剧情明确改变空间关系时以剧情为准。
+- [x] **分镜 Prompt 与分镜图候选拆分**：分镜卡只承载单张静态关键帧 Prompt 和 `continuityContract`；由该 Prompt 生成的分镜图片作为独立 `storyboardImage` 卡一对多挂在右侧。QA 失败的图片保持「需复核」，不能作为「已选中」参考流入视频。
+- [x] **视频视图改为输入参考 → 视频 Prompt → 多视频结果**：每个镜头的视频视图先显示相关角色/场景/道具/已选中分镜图参考卡，再多对一连到视频 Prompt，视频 Prompt 一对多连到生成的视频卡。视频 Prompt 生成会带入资产卡规格、分镜图参考和连续性合同。
+- [x] **视频 Prompt 输出净化**：`generateVideoPrompt` / `batchGeneratePrompt` 保存前调用 `sanitizeGeneratedVideoPrompt`，去掉模型推理、配置冲突说明等非 Prompt 文本。
+- [x] **视频生成设置可解释**：右侧 Inspector 的模型/模式/清晰度/时长来自 vendor 模型配置；时长默认按分镜轨道时长自动填写，并按 `durationResolutionMap` 归一化。用户手动改时长后可点「自动」恢复分镜推导值。
+- Verification: `yarn test:creative-canvas`、`git diff --check -- data/web/creative-canvas.js data/web/creative-canvas.css scripts/test-creative-canvas.ts` 通过。
+
+## v2.11 EffectiveLayout 与分镜图 Hard Gate（2026-07-01）
+
+- [x] `compileEffectiveLayout` 从场景/道具资产卡 `spatialContinuity` 编译固定锚点、物体遮挡、角色站位、镜头轴线、不变量和禁止漂移项。
+- [x] 分镜图 Prompt 生成前注入 `EffectiveLayout｜唯一空间执行输入`，让模型优先服从空间合同，而不是从自然语言里自由重解释场景。
+- [x] 分镜图 QA 升级为结构化 hard gate：`passed=false` 或 `hardFailures.length > 0` 直接拒绝，不能因分数较高而被选中。
+- [x] 分镜图 artifact 保存 `effectiveLayout`、`passed`、`hardFailures`、`softWarnings`，便于追溯为什么某张候选图被拒绝或通过。
+- Verification: `yarn test:creative-canvas`、`yarn lint`、`npx tsc --noEmit --pretty false`、`node --check data/web/creative-canvas.js`、`git diff --check -- src/utils/storyboardContinuity.ts src/routes/production/storyboard/batchGenerateImage.ts src/utils/scoreImage.ts src/utils/queueHandlers.ts scripts/test-creative-canvas.ts` 通过。
+
 ## Test Plan
 
 - 单元：`yarn test:creative-canvas` 覆盖组卡聚合（按 type 分组与计数）、缩略图/海报 URL 字段、status 字段、缺图 fallback、stale 传播不回归。

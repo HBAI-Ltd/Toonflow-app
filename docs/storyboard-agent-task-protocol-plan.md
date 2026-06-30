@@ -4,6 +4,10 @@
 
 The storyboard agent currently receives free-form text that can be wrapped as a full pipeline even when the user asks for a scoped action. A scoped request such as "only rewrite stage 5 for track 5-9, do not generate images" must not be able to rewrite track 1-4 or enqueue image jobs.
 
+## Status
+
+Implemented in `data/web/creative-canvas.js`. The frontend now builds a structured storyboard task envelope (`createStoryboardAgentTask`), sends it with `storyboardPipeline`, and enforces it in the bridge before any real write. Prompt wording remains guidance; scope, forbidden stages, and image-generation bans are enforced by code.
+
 ## Minimal Implementation
 
 1. Add a small `StoryboardAgentTask` object in the Creative Canvas frontend.

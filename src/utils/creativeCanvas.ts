@@ -1,7 +1,9 @@
 import db from "@/utils/db";
 import oss from "@/utils/oss";
-import { getGenerationAuditGraph, patchGenerationSegment } from "@/utils/contentAudit";
+import { assetCardFromPromptText, mergeAssetCards, parseAssetCard } from "@/utils/characterSpec";
+import { getGenerationAuditGraph, hashContent, patchGenerationSegment, recordGenerationArtifact } from "@/utils/contentAudit";
 import { listTaskProgress } from "@/utils/taskProgress";
+import { parseVideoMode } from "@/utils/videoReferences";
 
 /** 资产类型 → 组卡中文标签 */
 const ASSET_GROUP_LABELS: Record<string, string> = {
@@ -10,6 +12,32 @@ const ASSET_GROUP_LABELS: Record<string, string> = {
   tool: "道具资产",
 };
 const ASSET_GROUP_ORDER = ["role", "scene", "tool"] as const;
+
+const VIDEO_REFERENCE_ROLE_LABELS: Record<string, string> = {
+  assetReference: "资产参考",
+  firstFrame: "首帧参考",
+  lastFrame: "尾帧参考",
+  imageReference: "图片参考",
+  videoReference: "视频参考",
+  audioReference: "音频参考",
+};
+
+function videoReferenceRoleLabel(role: string) {
+  return VIDEO_REFERENCE_ROLE_LABELS[role] || "参考输入";
+}
+
+function storyboardVideoReferenceRole(mode: unknown, index: number, count: number) {
+  const parsed = parseVideoMode(mode);
+  if (Array.isArray(parsed)) return "imageReference";
+  if ((parsed === "startEndRequired" || parsed === "endFrameOptional") && count > 1) {
+    if (index === 0) return "firstFrame";
+    if (index === count - 1) return "lastFrame";
+  }
+  if (parsed === "singleImage" || parsed === "startFrameOptional" || parsed === "endFrameOptional" || parsed === "startEndRequired") {
+    return index === 0 ? "firstFrame" : "imageReference";
+  }
+  return "imageReference";
+}
 
 /** 把 o_image / o_video / o_storyboard 的 filePath 安全转成可访问 URL（缩略图优先） */
 async function toThumbUrl(filePath: unknown): Promise<string> {
@@ -118,6 +146,15 @@ export interface PatchCreativeCanvasTextInput {
   createdBy?: string | null;
 }
 
+export interface UpdateCreativeCanvasNodeContentInput {
+  nodeId: string;
+  content: string;
+  workDataId?: number | null;
+  planType?: string | null;
+  scriptId?: number | null;
+  createdBy?: string | null;
+}
+
 interface LayoutItem {
   id: string;
   x?: number;
@@ -139,6 +176,7 @@ interface StoryboardImageAttempt {
   state: string;
   reason: string;
   selected: boolean;
+  frameRole?: "firstFrame" | "lastFrame";
   createTime?: number | null;
 }
 
@@ -182,12 +220,18 @@ function isSelectedStoryboardImage(row: any): boolean {
 }
 
 function storyboardImageStatus(attempt: StoryboardImageAttempt, currentSelectedPath: string): string {
+  if (attempt.frameRole === "lastFrame" && attempt.selected) return "已选尾帧";
+  if (attempt.frameRole === "lastFrame" && attempt.state === "生成失败") return "尾帧需复核";
   const path = normalizeMediaPath(attempt.filePath);
   if (currentSelectedPath && path === currentSelectedPath) return "已选中";
   if (!currentSelectedPath && attempt.selected) return "已选中";
   if (attempt.state === "生成失败") return "需复核";
   if (attempt.state === "生成中") return "生成中";
   return attempt.state || "未生成";
+}
+
+function storyboardFrameRole(value: unknown): "firstFrame" | "lastFrame" {
+  return value === "lastFrame" ? "lastFrame" : "firstFrame";
 }
 
 function normalizeLayoutMap(input: unknown): Record<string, LayoutItem> {
@@ -305,6 +349,16 @@ async function collectDownstreamStale(targetType: string | null | undefined, tar
     videos.forEach((item: any) => add(`video:${item.id}`, "剧本文本已修改，视频结果可能过期"));
   }
 
+  if (targetType === "o_novel") {
+    add(`novelChapter:${id}`, "原文内容已修改");
+    add(`novelSection:${id}`, "原文内容已修改，事件分析需要复核");
+    const novel = await db("o_novel").where("id", id).select("projectId").first();
+    const scripts = novel?.projectId ? await db("o_script").where("projectId", novel.projectId).select("id") : [];
+    for (const script of scripts as any[]) {
+      stale.push(...await collectDownstreamStale("o_script", script.id));
+    }
+  }
+
   if (targetType === "o_assets") {
     const links = await db("o_assets2Storyboard").where("assetId", id).select("storyboardId");
     const storyboardIds = links.map((item: any) => item.storyboardId).filter(Boolean);
@@ -336,6 +390,18 @@ async function collectDownstreamStale(targetType: string | null | undefined, tar
     if (videoId) add(`video:${videoId}`, "视频 prompt 已修改，选中视频可能过期");
     const videos = await db("o_video").where("videoTrackId", id).select("id");
     videos.forEach((item: any) => add(`video:${item.id}`, "视频 prompt 已修改，视频结果可能过期"));
+  }
+
+  if (targetType === "o_agentWorkData") {
+    const work = await db("o_agentWorkData").where("id", id).select("projectId", "episodesId").first();
+    if (work?.episodesId) {
+      stale.push(...await collectDownstreamStale("o_script", work.episodesId));
+    } else if (work?.projectId) {
+      const scripts = await db("o_script").where("projectId", work.projectId).select("id");
+      for (const script of scripts as any[]) {
+        stale.push(...await collectDownstreamStale("o_script", script.id));
+      }
+    }
   }
 
   const direct = targetNodeId(targetType, targetId);
@@ -653,7 +719,8 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
       const meta = parseJson<Record<string, any>>(artifact.meta, {});
       const filePath = String(meta.filePath || "").trim();
       if (!Number.isFinite(storyboardId) || !filePath) continue;
-      const key = `${storyboardId}:${normalizeMediaPath(filePath)}`;
+      const frameRole = storyboardFrameRole(meta.frameRole);
+      const key = `${storyboardId}:${frameRole}:${normalizeMediaPath(filePath)}`;
       if (seen.has(key)) continue;
       seen.add(key);
       const attempt: StoryboardImageAttempt = {
@@ -663,6 +730,7 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         state: String(meta.state || "已完成"),
         reason: String(meta.reason || ""),
         selected: Boolean(meta.selected),
+        frameRole,
         createTime: artifact.createTime,
       };
       if (!storyboardImageAttemptMap.has(storyboardId)) storyboardImageAttemptMap.set(storyboardId, []);
@@ -738,7 +806,7 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
       height: 220,
       sourceLabel: scriptSourceLabel,
       ...auditMetaFor(auditIndex, "o_script", script.id),
-      data: { script: compactRow(script), contentPreview: previewText(script.content, 260) },
+      data: { script: compactRow(script), content: script.content || "", contentPreview: previewText(script.content, 260) },
     });
     edges.push({ id: `${scriptParentId}->script:${script.id}`, source: scriptParentId, target: `script:${script.id}`, type: "contains", label: "剧本" });
     if (scriptPlanParentId) {
@@ -958,6 +1026,7 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         state: "生成中",
         reason: "",
         selected: false,
+        frameRole: "firstFrame",
       });
     } else if (storyboard.filePath) {
       attempts.push({
@@ -967,6 +1036,7 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         state: storyboard.state || "已完成",
         reason: storyboard.reason || "",
         selected: isSelectedStoryboardImage(storyboard),
+        frameRole: "firstFrame",
       });
     }
     if (!attempts.length) {
@@ -977,14 +1047,16 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         state: storyboard.state || "未生成",
         reason: storyboard.reason || "",
         selected: false,
+        frameRole: "firstFrame",
       });
     }
     attempts.forEach((attempt, attemptIndex) => {
       const status = storyboardImageStatus(attempt, currentSelectedPath);
+      const isLastFrame = attempt.frameRole === "lastFrame";
       createNode(nodes, staleMap, layout, {
         id: attempt.id,
         type: "storyboardImage",
-        label: attempts.length > 1 ? `图片 ${storyboard.index ?? index + 1}-${attemptIndex + 1}` : `图片 ${storyboard.index ?? index + 1}`,
+        label: isLastFrame ? `尾帧图 ${storyboard.index ?? index + 1}` : attempts.length > 1 ? `图片 ${storyboard.index ?? index + 1}-${attemptIndex + 1}` : `图片 ${storyboard.index ?? index + 1}`,
         fallbackPosition: { x: 2160, y: -220 + index * 380 + attemptIndex * 240 },
         width: 280,
         height: 210,
@@ -996,7 +1068,8 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
           image: {
             storyboardId: storyboard.id,
             state: status,
-            selected: status === "已选中",
+            selected: status === "已选中" || status === "已选尾帧",
+            frameRole: attempt.frameRole || "firstFrame",
             filePath: attempt.filePath,
             reason: attempt.reason,
             createTime: attempt.createTime ?? null,
@@ -1010,7 +1083,7 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         source: `storyboard:${storyboard.id}`,
         target: attempt.id,
         type: "generates",
-        label: "图片",
+        label: isLastFrame ? "尾帧" : "图片",
       });
     });
     if (storyboard.scriptId) {
@@ -1040,6 +1113,14 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
     });
   });
 
+  const selectedLastFrameMap = new Map<number, StoryboardImageAttempt>();
+  for (const [storyboardId, attempts] of storyboardImageAttemptMap) {
+    const selected = attempts
+      .filter((attempt) => attempt.frameRole === "lastFrame" && attempt.selected && attempt.filePath && attempt.state === "已完成")
+      .sort((a, b) => Number(b.createTime || 0) - Number(a.createTime || 0))[0];
+    if (selected) selectedLastFrameMap.set(storyboardId, selected);
+  }
+
   videoTracks.forEach((track: any, index: number) => {
     const trackStoryboards = storyboards.filter((item: any) => Number(item.trackId) === Number(track.id));
     const storyboard = trackStoryboards[0];
@@ -1050,6 +1131,9 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
       .filter(Boolean)
       .map((asset: any) => [Number(asset.id), asset])).values());
     const selectedStoryboards = trackStoryboards.filter(isSelectedStoryboardImage);
+    const selectedLastFrames = selectedStoryboards
+      .map((item: any) => ({ item, attempt: selectedLastFrameMap.get(Number(item.id)) }))
+      .filter((entry: any) => entry.attempt);
     const videoPromptId = `videoPrompt:${track.id}`;
     const mentions = [
       ...linkedAssets.map((asset: any, assetIndex: number) => ({
@@ -1061,6 +1145,11 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         token: `@镜头${item.index ?? index + 1}`,
         label: `镜头 ${item.index ?? index + 1} 分镜图`,
         image: storyboardThumbMap.get(Number(item.id)) || "",
+      })),
+      ...selectedLastFrames.map(({ item, attempt }: any) => ({
+        token: `@尾帧${item.index ?? index + 1}`,
+        label: `镜头 ${item.index ?? index + 1} 尾帧图`,
+        image: attempt.thumbnail || "",
       })),
     ];
 
@@ -1079,6 +1168,8 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
           reference: {
             id: asset.id,
             source: "asset",
+            role: "assetReference",
+            roleLabel: videoReferenceRoleLabel("assetReference"),
             type: asset.type || "",
             name: asset.name || "",
             token: `@图片${assetIndex + 1}`,
@@ -1093,11 +1184,12 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         source: `videoReference:${track.id}:asset:${asset.id}`,
         target: videoPromptId,
         type: "references",
-        label: "参考输入",
+        label: "资产参考",
       });
     });
 
     selectedStoryboards.forEach((item: any, storyboardIndex: number) => {
+      const role = selectedLastFrames.length ? (storyboardIndex === 0 ? "firstFrame" : "imageReference") : storyboardVideoReferenceRole(project.mode, storyboardIndex, selectedStoryboards.length);
       createNode(nodes, staleMap, layout, {
         id: `videoReference:${track.id}:storyboard:${item.id}`,
         type: "videoReference",
@@ -1112,6 +1204,8 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
           reference: {
             id: item.id,
             source: "storyboard",
+            role,
+            roleLabel: videoReferenceRoleLabel(role),
             type: "storyboard",
             name: `镜头 ${item.index ?? storyboardIndex + 1}`,
             token: `@镜头${item.index ?? storyboardIndex + 1}`,
@@ -1126,7 +1220,42 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         source: `videoReference:${track.id}:storyboard:${item.id}`,
         target: videoPromptId,
         type: "references",
-        label: "首帧参考",
+        label: videoReferenceRoleLabel(role),
+      });
+    });
+
+    selectedLastFrames.forEach(({ item, attempt }: any, lastFrameIndex: number) => {
+      createNode(nodes, staleMap, layout, {
+        id: `videoReference:${track.id}:storyboard:${item.id}:lastFrame`,
+        type: "videoReference",
+        label: `@尾帧${item.index ?? lastFrameIndex + 1} 尾帧图`,
+        fallbackPosition: { x: 1880, y: -160 + index * 390 + (linkedAssets.length + selectedStoryboards.length + lastFrameIndex) * 120 },
+        width: 220,
+        height: 150,
+        status: "已完成",
+        sourceLabel: "来源：已选尾帧图",
+        ...auditMetaFor(auditIndex, "o_storyboard", item.id),
+        data: {
+          reference: {
+            id: item.id,
+            source: "storyboard",
+            role: "lastFrame",
+            roleLabel: videoReferenceRoleLabel("lastFrame"),
+            type: "storyboard",
+            name: `镜头 ${item.index ?? lastFrameIndex + 1} 尾帧`,
+            token: `@尾帧${item.index ?? lastFrameIndex + 1}`,
+            filePath: attempt.filePath || "",
+          },
+          thumbnail: attempt.thumbnail || "",
+          promptPreview: item.prompt || item.videoDesc || "",
+        },
+      });
+      edges.push({
+        id: `videoReference:${track.id}:storyboard:${item.id}:lastFrame->${videoPromptId}`,
+        source: `videoReference:${track.id}:storyboard:${item.id}:lastFrame`,
+        target: videoPromptId,
+        type: "references",
+        label: videoReferenceRoleLabel("lastFrame"),
       });
     });
 
@@ -1469,4 +1598,160 @@ export async function patchCreativeCanvasText(input: PatchCreativeCanvasTextInpu
       targetField: artifact.targetField,
     },
   };
+}
+
+async function recordNodeContentRevision(input: {
+  projectId?: number | null;
+  artifactType: string;
+  targetType: string;
+  targetId: number | string;
+  targetField: string;
+  title: string;
+  beforeText: string;
+  afterText: string;
+  snapshotContent?: string;
+  meta?: Record<string, unknown>;
+  createdBy?: string | null;
+}) {
+  const snapshot = await recordGenerationArtifact({
+    projectId: input.projectId ?? null,
+    artifactType: input.artifactType,
+    targetType: input.targetType,
+    targetId: input.targetId,
+    targetField: input.targetField,
+    title: input.title,
+    content: input.snapshotContent ?? input.afterText,
+    meta: input.meta,
+  });
+  await db("o_generationRevision").insert({
+    artifactId: snapshot.id,
+    segmentId: null,
+    projectId: input.projectId ?? null,
+    targetType: input.targetType,
+    targetId: String(input.targetId),
+    targetField: input.targetField,
+    beforeText: input.beforeText,
+    afterText: input.afterText,
+    beforeHash: hashContent(input.beforeText),
+    afterHash: hashContent(input.afterText),
+    note: "creative canvas node edit",
+    createdBy: input.createdBy ?? "admin",
+    createTime: Date.now(),
+  });
+  const stale = await collectDownstreamStale(input.targetType, input.targetId);
+  return {
+    artifactId: snapshot.id,
+    stale,
+    staleNodeIds: Array.from(new Set(stale.map((item) => item.nodeId))),
+  };
+}
+
+function nodeIdNumber(nodeId: string): number {
+  const value = Number(String(nodeId || "").split(":").pop());
+  if (!Number.isFinite(value) || value <= 0) throw new Error("节点 ID 无效");
+  return value;
+}
+
+export async function updateCreativeCanvasNodeContent(input: UpdateCreativeCanvasNodeContentInput) {
+  const nodeId = String(input.nodeId || "");
+  const content = String(input.content ?? "");
+  const createdBy = input.createdBy ?? "admin";
+
+  if (nodeId.startsWith("novelChapter:")) {
+    const id = nodeIdNumber(nodeId);
+    const row = await db("o_novel").where("id", id).first();
+    if (!row) throw new Error("原文章节不存在");
+    const beforeText = String(row.chapterData || "");
+    await db("o_novel").where("id", id).update({ chapterData: content });
+    return recordNodeContentRevision({
+      projectId: row.projectId,
+      artifactType: "manual",
+      targetType: "o_novel",
+      targetId: id,
+      targetField: "chapterData",
+      title: row.chapter || `原文章节 ${id}`,
+      beforeText,
+      afterText: content,
+      meta: { source: "manual:creativeCanvasMarkdown" },
+      createdBy,
+    });
+  }
+
+  if (nodeId.startsWith("script:")) {
+    const id = nodeIdNumber(nodeId);
+    const row = await db("o_script").where("id", id).first();
+    if (!row) throw new Error("剧本不存在");
+    const beforeText = String(row.content || "");
+    await db("o_script").where("id", id).update({ content });
+    return recordNodeContentRevision({
+      projectId: row.projectId,
+      artifactType: "script",
+      targetType: "o_script",
+      targetId: id,
+      targetField: "content",
+      title: row.name || `剧本 ${id}`,
+      beforeText,
+      afterText: content,
+      meta: { source: "manual:creativeCanvasMarkdown" },
+      createdBy,
+    });
+  }
+
+  if (nodeId.startsWith("expandedAsset:") || nodeId.startsWith("asset:")) {
+    const id = nodeIdNumber(nodeId);
+    const row = await db("o_assets").where("id", id).first();
+    if (!row) throw new Error("资产不存在");
+    const beforeText = String(row.prompt || "");
+    const updates: Record<string, unknown> = { prompt: content, promptState: "已完成" };
+    const promptCard = assetCardFromPromptText(content, row.type, {
+      summary: row.describe || row.name,
+      existingRemark: row.remark,
+    });
+    if (promptCard) {
+      const existingCard = parseAssetCard(row.remark);
+      updates.remark = JSON.stringify(existingCard ? mergeAssetCards(existingCard, promptCard) : promptCard);
+    }
+    await db("o_assets").where("id", id).update(updates);
+    return recordNodeContentRevision({
+      projectId: row.projectId,
+      artifactType: "assetPrompt",
+      targetType: "o_assets",
+      targetId: id,
+      targetField: "prompt",
+      title: row.name || `资产 ${id} Prompt`,
+      beforeText,
+      afterText: content,
+      meta: { source: "manual:creativeCanvasMarkdown", type: row.type },
+      createdBy,
+    });
+  }
+
+  const isPlanNode = nodeId.startsWith("scriptPlan:") || nodeId.startsWith("storyboardTable:");
+  if (isPlanNode) {
+    const workDataId = Number(input.workDataId || 0);
+    const planType = String(input.planType || (nodeId.startsWith("storyboardTable:") ? "storyboardTable" : ""));
+    if (!workDataId || !planType) throw new Error("缺少 Agent 工作数据定位信息");
+    const row = await db("o_agentWorkData").where("id", workDataId).first();
+    if (!row) throw new Error("Agent 工作数据不存在");
+    const data = parseJson<Record<string, unknown>>(row.data, {});
+    const beforeText = String(data[planType] || "");
+    data[planType] = content;
+    const snapshotContent = JSON.stringify(data);
+    await db("o_agentWorkData").where("id", workDataId).update({ data: snapshotContent, updateTime: Date.now() });
+    return recordNodeContentRevision({
+      projectId: row.projectId,
+      artifactType: "manual",
+      targetType: "o_agentWorkData",
+      targetId: workDataId,
+      targetField: "data",
+      title: planType === "storyboardTable" ? "分镜表" : planType === "scriptPlan" ? "导演规划" : planType,
+      beforeText,
+      afterText: content,
+      snapshotContent,
+      meta: { source: "manual:creativeCanvasMarkdown", planType, scriptId: input.scriptId ?? row.episodesId ?? null },
+      createdBy,
+    });
+  }
+
+  throw new Error("该节点暂不支持 Markdown 编辑");
 }

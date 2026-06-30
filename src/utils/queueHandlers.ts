@@ -41,22 +41,30 @@ interface AssetImagePayload {
   enableScore: boolean;
 }
 
-interface StoryboardImagePayload {
+type StoryboardFrameRole = "firstFrame" | "lastFrame";
+
+export interface StoryboardImagePayload {
   storyboardId: number;
   scriptId: number;
   projectId: number;
   prompt: string;
   refImageIds: number[];
+  referencePaths?: string[];
   model: string;
   size: "1K" | "2K" | "4K";
   aspectRatio: `${number}:${number}`;
+  frameRole?: StoryboardFrameRole;
+  effectiveLayout?: unknown;
 }
 
 const STORYBOARD_IMAGE_MIN_SCORE = 60;
 const STORYBOARD_IMAGE_FAILURE_REVIEW_THRESHOLD = 2;
 const STORYBOARD_IMAGE_SCORE_CRITERIA = `4. 多人构图：人物数量是否正确，是否存在人物重叠、融合、遮挡、重复生成或半截人物
 5. 人物计数：背影、侧脸、边缘半截人物都计入可见人物；同一角色不得在同一张关键帧中前后重复出现
-6. 视频可用性：画面是否像单张关键帧，而不是多格漫画、拼贴图或连续动作合成`;
+6. 空间连续性：若提示词包含场景、固定陈设、道具或人物站位关系，检查固定物、道具、人物相对位置是否自洽，是否出现无依据移动固定物、重排空间、人物座位/站位漂移
+7. 空间硬伤：逐条核对提示词或空间连续性约束中的固定锚点、大件陈设、关键道具位置和人物 Blocking；若剧情没有明确移动它们，但图片改变了相对方位、空间层级、承载关系或把固定物放到不相容位置，必须判为明显不合格，score 低于 60
+8. EffectiveLayout 门禁：若提示词包含「EffectiveLayout｜唯一空间执行输入」，必须以其中的固定锚点、承载关系、空间不变量和禁止漂移作为硬性裁决依据；任何违反都写入 hardFailures，passed=false
+9. 视频可用性：画面是否像单张关键帧，而不是多格漫画、拼贴图或连续动作合成`;
 
 interface StoryboardImageArtifactInput {
   storyboardId: number;
@@ -67,13 +75,19 @@ interface StoryboardImageArtifactInput {
   reason?: string | null;
   selected?: boolean;
   score?: number | null;
+  passed?: boolean | null;
+  hardFailures?: unknown;
+  softWarnings?: unknown;
+  effectiveLayout?: unknown;
   source?: string;
   jobId?: number | null;
+  frameRole?: StoryboardFrameRole;
 }
 
 export async function recordStoryboardImageArtifact(input: StoryboardImageArtifactInput): Promise<void> {
   const filePath = String(input.filePath ?? "").trim();
   if (!filePath) return;
+  const frameRole: StoryboardFrameRole = input.frameRole === "lastFrame" ? "lastFrame" : "firstFrame";
   const rows = await db("o_generationArtifact")
     .where({
       projectId: input.projectId,
@@ -81,15 +95,34 @@ export async function recordStoryboardImageArtifact(input: StoryboardImageArtifa
       targetType: "o_storyboard",
       targetId: String(input.storyboardId),
     })
-    .select("meta")
+    .select("id", "meta")
     .limit(100);
-  if (rows.some((row: any) => {
+  for (const row of rows as any[]) {
     try {
-      return JSON.parse(row.meta || "{}")?.filePath === filePath;
+      const meta = JSON.parse(row.meta || "{}");
+      const rowFrameRole = meta.frameRole === "lastFrame" ? "lastFrame" : "firstFrame";
+      if (meta.filePath === filePath && rowFrameRole === frameRole) {
+        if (input.selected) {
+          await db("o_generationArtifact").where("id", row.id).update({
+            meta: JSON.stringify({
+              ...meta,
+              selected: true,
+              state: input.state,
+              reason: input.reason || "",
+              score: input.score ?? meta.score ?? null,
+              passed: input.passed ?? meta.passed ?? null,
+              hardFailures: input.hardFailures ?? meta.hardFailures ?? [],
+              softWarnings: input.softWarnings ?? meta.softWarnings ?? [],
+              effectiveLayout: input.effectiveLayout ?? meta.effectiveLayout ?? null,
+            }),
+          });
+        }
+        return;
+      }
     } catch {
-      return false;
+      // Ignore broken legacy metadata and keep recording the new artifact.
     }
-  })) return;
+  }
 
   await recordGenerationArtifact({
     projectId: input.projectId,
@@ -97,18 +130,45 @@ export async function recordStoryboardImageArtifact(input: StoryboardImageArtifa
     targetType: "o_storyboard",
     targetId: input.storyboardId,
     targetField: "prompt",
-    title: "分镜图",
+    title: frameRole === "lastFrame" ? "尾帧图" : "分镜图",
     content: input.prompt || filePath,
     taskId: input.jobId ?? null,
     meta: {
       filePath,
+      frameRole,
       state: input.state,
       reason: input.reason || "",
       selected: Boolean(input.selected),
       score: input.score ?? null,
+      passed: input.passed ?? null,
+      hardFailures: input.hardFailures ?? [],
+      softWarnings: input.softWarnings ?? [],
+      effectiveLayout: input.effectiveLayout ?? null,
       source: input.source || "generated",
     },
   });
+}
+
+async function unselectStoryboardLastFrameArtifacts(projectId: number, storyboardId: number): Promise<void> {
+  const rows = await db("o_generationArtifact")
+    .where({
+      projectId,
+      artifactType: "storyboardImage",
+      targetType: "o_storyboard",
+      targetId: String(storyboardId),
+    })
+    .select("id", "meta")
+    .limit(100);
+  await Promise.all((rows as any[]).map(async (row) => {
+    try {
+      const meta = JSON.parse(row.meta || "{}");
+      if (meta.frameRole === "lastFrame" && meta.selected) {
+        await db("o_generationArtifact").where("id", row.id).update({ meta: JSON.stringify({ ...meta, selected: false }) });
+      }
+    } catch {
+      // Ignore broken legacy metadata.
+    }
+  }));
 }
 
 function extractStoryboardPromptRoles(prompt: string): string[] {
@@ -141,10 +201,16 @@ function diagnoseStoryboardPromptIssue(prompt: string, qaReason: string): string
   if (/重复|多余|人数|人物数量|超过|出现\d+人|疑似复制/.test(qaReason)) {
     hints.push("QA 问题集中在人像计数或重复角色，优先复核分镜 Prompt 的可见人物数量和空间关系");
   }
+  if (/空间|位置|站位|座位|关系|物品|道具|陈设|固定物|漂移|移动|重排|背景/.test(qaReason)) {
+    hints.push("QA 问题涉及空间连续性，优先复核场景空间连续性卡、固定锚点、人物/道具 Blocking 与分镜 Prompt 是否一致");
+  }
+  if (/scene|场景|固定|电视|桌|窗|门|沙发|屏风|墙|入口/.test(prompt) && !/空间连续性|固定锚点|不变量|禁止漂移|视轴线/.test(prompt)) {
+    hints.push("Prompt 引用了场景或固定陈设，但缺少明确的空间锁定段，建议从场景资产卡补充 spatialContinuity 后重写分镜 Prompt");
+  }
 
   return hints.length
     ? hints.join("；")
-    : "连续图片 QA 失败，建议复核分镜 Prompt 是否人物过多、站位/朝向/动作约束冲突";
+    : "连续图片 QA 失败，建议复核分镜 Prompt 是否人物过多、站位/朝向/动作约束冲突，或缺少场景空间连续性约束";
 }
 
 async function countFailedStoryboardImageArtifacts(projectId: number, storyboardId: number): Promise<number> {
@@ -160,7 +226,8 @@ async function countFailedStoryboardImageArtifacts(projectId: number, storyboard
 
   return rows.filter((row: any) => {
     try {
-      return JSON.parse(row.meta || "{}")?.state === "生成失败";
+      const meta = JSON.parse(row.meta || "{}");
+      return meta?.state === "生成失败" && meta?.frameRole !== "lastFrame";
     } catch {
       return false;
     }
@@ -178,6 +245,18 @@ async function markStoryboardPromptForReviewAfterRepeatedFailures(payload: Story
       state: "生成失败",
       reason: `${reason}\n连续 ${failedCount} 次图片QA未通过，建议反向复核分镜Prompt：${diagnosis}`,
     });
+}
+
+function storyboardQaFailureReason(result: Awaited<ReturnType<typeof scoreImage>>): string | null {
+  if (!result) return null;
+  if (result.passed === false || result.hardFailures.length > 0) {
+    const failures = result.hardFailures.map((item) => item.message).filter(Boolean).join("；");
+    return `图片QA硬门禁未通过：${failures || result.reason || `评分${result.score}`}`;
+  }
+  if (result.score < STORYBOARD_IMAGE_MIN_SCORE) {
+    return `图片QA未通过：${result.reason || `评分${result.score}`}`;
+  }
+  return null;
 }
 
 // ─── 抽卡入队 ────────────────────────────────────────────────
@@ -333,21 +412,31 @@ async function finalizeBatch(batchId: string, assetsId: number): Promise<void> {
 async function handleStoryboardImage(payload: StoryboardImagePayload, job?: QueueJob): Promise<void> {
   const storyboard = await db("o_storyboard").where("id", payload.storyboardId).first();
   if (!storyboard) return; // 分镜已被删除
+  const frameRole: StoryboardFrameRole = payload.frameRole === "lastFrame" ? "lastFrame" : "firstFrame";
+  const isLastFrame = frameRole === "lastFrame";
 
-  await recordStoryboardImageArtifact({
-    storyboardId: payload.storyboardId,
-    projectId: payload.projectId,
-    prompt: payload.prompt,
-    filePath: storyboard.filePath,
-    state: storyboard.state || "已完成",
-    reason: storyboard.reason,
-    selected: storyboard.state === "已完成",
-    source: "regenerateSnapshot",
-  });
-  await db("o_storyboard").where("id", payload.storyboardId).update({ state: "生成中", reason: null });
+  if (isLastFrame && (!storyboard.filePath || storyboard.state !== "已完成")) {
+    throw new Error("生成尾帧图前需要先有已完成的首帧分镜图");
+  }
+
+  if (!isLastFrame) {
+    await recordStoryboardImageArtifact({
+      storyboardId: payload.storyboardId,
+      projectId: payload.projectId,
+      prompt: payload.prompt,
+      filePath: storyboard.filePath,
+      state: storyboard.state || "已完成",
+      reason: storyboard.reason,
+      selected: storyboard.state === "已完成",
+      source: "regenerateSnapshot",
+      frameRole,
+      effectiveLayout: payload.effectiveLayout,
+    });
+    await db("o_storyboard").where("id", payload.storyboardId).update({ state: "生成中", reason: null });
+  }
 
   try {
-    const referenceList = await getReferenceImages(payload.refImageIds);
+    const referenceList = await getReferenceImages(payload.refImageIds, payload.referencePaths ?? []);
     const aiImage = Ai.Image(payload.model as `${string}:${string}`);
     await aiImage.run(
       {
@@ -371,6 +460,22 @@ async function handleStoryboardImage(payload: StoryboardImagePayload, job?: Queu
     } catch (e) {
       const message = errorUtil(e).message;
       const reason = `图片QA未执行：${message}`;
+      if (isLastFrame) {
+        await recordStoryboardImageArtifact({
+          storyboardId: payload.storyboardId,
+          projectId: payload.projectId,
+          prompt: payload.prompt,
+          filePath: savePath,
+          state: "生成失败",
+          reason,
+          selected: false,
+          source: "generated",
+          jobId: job?.id ?? null,
+          frameRole,
+          effectiveLayout: payload.effectiveLayout,
+        });
+        return;
+      }
       await db("o_storyboard")
         .where("id", payload.storyboardId)
         .update({ filePath: savePath, reason, state: "生成失败" });
@@ -384,12 +489,35 @@ async function handleStoryboardImage(payload: StoryboardImagePayload, job?: Queu
         selected: false,
         source: "generated",
         jobId: job?.id ?? null,
+        frameRole,
+        effectiveLayout: payload.effectiveLayout,
       });
       await markStoryboardPromptForReviewAfterRepeatedFailures(payload, reason);
       return;
     }
-    if (result && result.score < STORYBOARD_IMAGE_MIN_SCORE) {
-      const reason = `图片QA未通过：${result.reason || `评分${result.score}`}`;
+    const qaFailureReason = storyboardQaFailureReason(result);
+    if (qaFailureReason && result) {
+      const reason = qaFailureReason;
+      if (isLastFrame) {
+        await recordStoryboardImageArtifact({
+          storyboardId: payload.storyboardId,
+          projectId: payload.projectId,
+          prompt: payload.prompt,
+          filePath: savePath,
+          state: "生成失败",
+          reason,
+          selected: false,
+          score: result.score,
+          passed: result.passed ?? null,
+          hardFailures: result.hardFailures,
+          softWarnings: result.softWarnings,
+          source: "generated",
+          jobId: job?.id ?? null,
+          frameRole,
+          effectiveLayout: payload.effectiveLayout,
+        });
+        return;
+      }
       await db("o_storyboard")
         .where("id", payload.storyboardId)
         .update({ filePath: savePath, reason, state: "生成失败" });
@@ -402,10 +530,36 @@ async function handleStoryboardImage(payload: StoryboardImagePayload, job?: Queu
         reason,
         selected: false,
         score: result.score,
+        passed: result.passed ?? null,
+        hardFailures: result.hardFailures,
+        softWarnings: result.softWarnings,
         source: "generated",
         jobId: job?.id ?? null,
+        frameRole,
+        effectiveLayout: payload.effectiveLayout,
       });
       await markStoryboardPromptForReviewAfterRepeatedFailures(payload, reason);
+      return;
+    }
+    if (isLastFrame) {
+      await unselectStoryboardLastFrameArtifacts(payload.projectId, payload.storyboardId);
+      await recordStoryboardImageArtifact({
+        storyboardId: payload.storyboardId,
+        projectId: payload.projectId,
+        prompt: payload.prompt,
+        filePath: savePath,
+        state: "已完成",
+        reason: result?.reason || "",
+        selected: true,
+        score: result?.score ?? null,
+        passed: result?.passed ?? null,
+        hardFailures: result?.hardFailures ?? [],
+        softWarnings: result?.softWarnings ?? [],
+        source: "generated",
+        jobId: job?.id ?? null,
+        frameRole,
+        effectiveLayout: payload.effectiveLayout,
+      });
       return;
     }
     await db("o_storyboard").where("id", payload.storyboardId).update({ filePath: savePath, state: "已完成", reason: null });
@@ -418,19 +572,23 @@ async function handleStoryboardImage(payload: StoryboardImagePayload, job?: Queu
       reason: result?.reason || "",
       selected: true,
       score: result?.score ?? null,
+      passed: result?.passed ?? null,
+      hardFailures: result?.hardFailures ?? [],
+      softWarnings: result?.softWarnings ?? [],
       source: "generated",
       jobId: job?.id ?? null,
+      frameRole,
+      effectiveLayout: payload.effectiveLayout,
     });
   } catch (e) {
     const message = errorUtil(e).message;
-    await db("o_storyboard").where("id", payload.storyboardId).update({ filePath: "", reason: message, state: "生成失败" });
+    if (!isLastFrame) await db("o_storyboard").where("id", payload.storyboardId).update({ filePath: "", reason: message, state: "生成失败" });
     throw new Error(message);
   }
 }
 
 /** 按 imageIds 顺序加载资产参考图（执行时实时读取，保证数据新鲜且 payload 轻量） */
-async function getReferenceImages(imageIds: number[]): Promise<{ type: "image"; base64: string }[]> {
-  if (!imageIds.length) return [];
+async function getReferenceImages(imageIds: number[], paths: string[] = []): Promise<{ type: "image"; base64: string }[]> {
   const rows = await db("o_image").whereIn("id", imageIds).select("id", "filePath");
   const id2Path = new Map<number, string>();
   for (const row of rows) {
@@ -447,7 +605,14 @@ async function getReferenceImages(imageIds: number[]): Promise<{ type: "image"; 
       }
     }),
   );
-  return (images.filter(Boolean) as string[]).map((base64) => ({ type: "image" as const, base64 }));
+  const pathImages = await Promise.all(paths.map(async (filePath) => {
+    try {
+      return await oss.getImageBase64(filePath);
+    } catch {
+      return null;
+    }
+  }));
+  return ([...images, ...pathImages].filter(Boolean) as string[]).map((base64) => ({ type: "image" as const, base64 }));
 }
 
 /** 把 url 形式的引用转成 base64 data URL（data: 直接透传，/oss/ 走本地 OSS，其余按 HTTP 取） */
@@ -522,5 +687,3 @@ export function registerQueueHandlers(): void {
   registerQueueHandler("storyboardImage", (payload, job) => handleStoryboardImage(payload, job));
   registerComposeHandlers();
 }
-
-export type { StoryboardImagePayload };
