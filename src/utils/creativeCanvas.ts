@@ -178,6 +178,10 @@ interface StoryboardImageAttempt {
   selected: boolean;
   frameRole?: "firstFrame" | "lastFrame";
   createTime?: number | null;
+  score?: number | null;
+  passed?: boolean | null;
+  hardFailures?: string[];
+  softWarnings?: string[];
 }
 
 function parseJson<T>(value: unknown, fallback: T): T {
@@ -732,6 +736,10 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
         selected: Boolean(meta.selected),
         frameRole,
         createTime: artifact.createTime,
+        score: meta.score ?? null,
+        passed: meta.passed ?? null,
+        hardFailures: Array.isArray(meta.hardFailures) ? meta.hardFailures : [],
+        softWarnings: Array.isArray(meta.softWarnings) ? meta.softWarnings : [],
       };
       if (!storyboardImageAttemptMap.has(storyboardId)) storyboardImageAttemptMap.set(storyboardId, []);
       storyboardImageAttemptMap.get(storyboardId)!.push(attempt);
@@ -1073,6 +1081,10 @@ export async function getCreativeCanvasGraph(input: CreativeCanvasGraphInput) {
             filePath: attempt.filePath,
             reason: attempt.reason,
             createTime: attempt.createTime ?? null,
+            score: attempt.score ?? null,
+            passed: attempt.passed ?? null,
+            hardFailures: attempt.hardFailures ?? [],
+            softWarnings: attempt.softWarnings ?? [],
           },
           thumbnail: attempt.thumbnail,
           promptPreview: previewText(prompt, 180),

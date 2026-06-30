@@ -3767,7 +3767,14 @@
         title,
         previewImageTile(data.thumbnail, node.label, "tfcc-storyboard-image-thumb"),
         h("div", { class: "tfcc-node-sub", text: status }),
-        image.reason ? h("p", { text: short(image.reason, 72) }) : null,
+        (() => {
+          const qa = storyboardQaSummary(image);
+          if (qa.failed) {
+            const parts = [`硬失败 ${qa.hard.length}`, qa.soft.length ? `软警告 ${qa.soft.length}` : "", image.score != null ? `${image.score} 分` : ""].filter(Boolean);
+            return h("div", { class: "tfcc-node-qa-fail", text: parts.join(" · ") });
+          }
+          return image.reason ? h("p", { text: short(image.reason, 72) }) : null;
+        })(),
       ].filter(Boolean);
     }
     if (node.type === "videoReference") {
@@ -6253,6 +6260,48 @@
     ].filter(Boolean));
   }
 
+  // 分镜图 QA 诊断块：对齐 renderVideoReviewBlock 的结构，把后端已算出的
+  // score/passed/hardFailures/softWarnings 渲染成可读诊断，替代单句截断摘要。
+  function storyboardQaSummary(image) {
+    const hard = Array.isArray(image?.hardFailures) ? image.hardFailures : [];
+    const soft = Array.isArray(image?.softWarnings) ? image.softWarnings : [];
+    const failed = image?.passed === false || hard.length > 0;
+    return { hard, soft, failed, hasData: image?.score != null || hard.length || soft.length };
+  }
+
+  function renderStoryboardQaBlock(node) {
+    const image = node?.data?.image || {};
+    const { hard, soft } = storyboardQaSummary(image);
+    const hardMsgs = hard.map((item) => (typeof item === "string" ? item : item?.message)).filter(Boolean);
+    const passedText = image.passed === true ? "通过" : image.passed === false ? "未通过" : "-";
+    const parentId = image.storyboardId != null ? `storyboard:${image.storyboardId}` : null;
+    const actions = [
+      parentId ? h("button", { onClick: () => focusCanvasNode(parentId), text: "去重新生成" }) : null,
+    ].filter(Boolean);
+    return h("div", { class: "tfcc-source-inspector-block" }, [
+      h("div", { class: "tfcc-panel-subtitle", text: "分镜图 QA" }),
+      h("div", { class: "tfcc-kv" }, [
+        kv("状态", image.state || "-"),
+        kv("分数", image.score == null ? "-" : `${image.score}`),
+        kv("通过", passedText),
+      ]),
+      hardMsgs.length
+        ? h("div", { class: "tfcc-qa-list" }, [
+            h("div", { class: "tfcc-qa-list-title", text: `硬失败 ${hardMsgs.length} 项` }),
+            ...hardMsgs.map((m) => h("div", { class: "tfcc-qa-tag is-hard", text: m })),
+          ])
+        : null,
+      soft.length
+        ? h("div", { class: "tfcc-qa-list" }, [
+            h("div", { class: "tfcc-qa-list-title", text: `软警告 ${soft.length} 项` }),
+            ...soft.map((m) => h("div", { class: "tfcc-qa-tag is-soft", text: m })),
+          ])
+        : null,
+      !hardMsgs.length && !soft.length && image.reason ? h("p", { class: "tfcc-inspect-text", text: image.reason }) : null,
+      actions.length ? h("div", { class: "tfcc-source-inspector-actions" }, actions) : null,
+    ].filter(Boolean));
+  }
+
   function sourceReferenceFor(data) {
     const key = sourceReferenceKey(data || {});
     return key ? state.sourceReferences[key] || null : null;
@@ -6464,6 +6513,7 @@
       rows.push(kv("artifact", segment.artifactId));
     }
     const reviewBlock = node.type === "video" ? renderVideoReviewBlock(node) : null;
+    const storyboardQaBlock = node.type === "storyboardImage" && storyboardQaSummary(node.data?.image).hasData ? renderStoryboardQaBlock(node) : null;
     const videoSettingsBlock = node.type === "videoPrompt" ? renderVideoGenerationSettings(node) : null;
     const storyboardImageSettingsBlock = node.type === "storyboard" ? renderStoryboardImageSettings(node) : null;
     const characterSpecBlock = node.type === "asset" ? renderCharacterSpecBlock(node.data?.asset) : null;
@@ -6572,6 +6622,7 @@
       h("div", { class: "tfcc-panel-title", text: node.label }),
       h("div", { class: "tfcc-kv" }, rows),
       reviewBlock,
+      storyboardQaBlock,
       videoSettingsBlock,
       storyboardImageSettingsBlock,
       characterSpecBlock,
