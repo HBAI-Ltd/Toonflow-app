@@ -87,9 +87,15 @@ function scopeStoryboardPromptReferences(prompt: string, assets: StoryboardAsset
   const prefix = scopedAssets
     .map((asset, index) => `@图${index + 1} 为${asset.name || `资产${asset.id}`}${assetTypeLabel(asset.type)}`)
     .join(" ");
+  // 角色参考图是「标准四视图」拼图（正/侧/背）。必须告诉模型如何使用，否则易把四视图误当成画面里的多个人，或只参考正面导致大动作/侧背镜头漂移。
+  const hasRole = scopedAssets.some((asset) => asset.type === "role");
+  const roleRefGuide = hasRole
+    ? "角色参考图说明：标注为角色的参考图是该角色的标准四视图（正面/侧面/背面等并排排列），仅用于锁定该角色的脸型、发型、服装、配色和体型等一致性特征；请按本镜头的景别、机位、角度和动作重新作画该角色，不要照搬参考图的多视图并排排版，也不要把同一角色的不同视角当成多个不同的人。"
+    : "";
+  const head = [prefix, roleRefGuide].filter(Boolean).join("\n");
 
   return {
-    prompt: prefix ? `${prefix},\n\n${scopedBody}` : scopedBody,
+    prompt: head ? `${head},\n\n${scopedBody}` : scopedBody,
     assets: scopedAssets,
     refImageIds: scopedRefImageIds,
   };
@@ -98,7 +104,7 @@ function scopeStoryboardPromptReferences(prompt: string, assets: StoryboardAsset
 function appendStoryboardStillRequirements(prompt: string, assets: StoryboardAssetMeta[], effectiveLayout?: EffectiveLayout | null): string {
   const roleNames = assets.filter((asset) => asset.type === "role" && asset.name).map((asset) => asset.name);
   const roleLine = roleNames.length
-    ? `画面人物：${roleNames.join("、")}。画面中可见人物总数必须等于上述人物数量；背影、侧脸、边缘半截人物都计入人数；每个角色只出现一次，不要新增、复制、合并或遗漏人物。`
+    ? `画面人物：${roleNames.join("、")}。画面中可见人物总数必须等于上述人物数量；背影、侧脸、边缘半截人物都计入人数；每个角色只出现一次，不要新增、复制、合并或遗漏人物。注意：角色参考图是四视图（同一角色的多个角度并排），不得因参考图的多视图排版而把同一角色画成多个人。`
     : "";
   const layoutLine =
     roleNames.length >= 2

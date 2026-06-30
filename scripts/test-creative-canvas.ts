@@ -98,6 +98,7 @@ async function postUpdateNovel(body: Record<string, unknown>) {
 }
 
 async function main() {
+  assert.ok(fs.readFileSync("src/routes/production/storyboard/batchGenerateImage.ts", "utf8").includes("标准四视图"), "storyboard image prompt should instruct the model how to use the character four-view reference (avoid drift / multi-person misread)");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("match[0].slice(1)"), "prompt @ mention trigger should read the matched token");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes('kind: "storyboard"'), "storyboard prompt editor should use the shared floating mention picker");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes('kind: "videoPrompt"'), "video prompt editor should use the shared floating mention picker");
