@@ -5,6 +5,8 @@ node_modules
 .vscode
 # output
 out
+output/blender_spatial_continuity/
+output/commercial_sanguo_ep01_min/
 dist
 *.tgz
 
