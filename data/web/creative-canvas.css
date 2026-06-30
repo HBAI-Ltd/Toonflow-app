@@ -2675,6 +2675,52 @@
   cursor: pointer;
 }
 
+/* 合成 QA 拦截面板（挂在对话区与输入框之间） */
+.tfcc-compose-blockers {
+  flex: 0 0 auto;
+  margin: 0 12px 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 196, 79, .07);
+  border: 1px solid rgba(255, 196, 79, .25);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 38vh;
+  overflow-y: auto;
+}
+.tfcc-compose-blockers-head { display: flex; align-items: center; justify-content: space-between; }
+.tfcc-compose-blockers-head strong { font-size: 12px; color: #ffe2a8; }
+.tfcc-compose-blockers-close {
+  border: 0; background: transparent; color: rgba(243, 245, 251, .55);
+  font-size: 16px; line-height: 1; cursor: pointer; padding: 0 2px;
+}
+.tfcc-compose-blockers-close:hover { color: rgba(243, 245, 251, .9); }
+.tfcc-compose-blockers-hint { font-size: 11px; line-height: 1.5; color: rgba(243, 245, 251, .6); margin: 0; }
+.tfcc-compose-blockers-list { display: flex; flex-direction: column; gap: 6px; }
+.tfcc-compose-blocker-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 7px 10px; border-radius: 6px; border-left: 3px solid;
+  background: rgba(255, 255, 255, .03);
+}
+.tfcc-compose-blocker-item.is-warning { border-left-color: #ffc44f; }
+.tfcc-compose-blocker-item.is-failed { border-left-color: #ff4f79; }
+.tfcc-compose-blocker-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tfcc-compose-blocker-main strong { font-size: 12px; color: rgba(243, 245, 251, .9); }
+.tfcc-compose-blocker-reason { font-size: 11px; color: rgba(243, 245, 251, .55); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tfcc-compose-blocker-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.tfcc-compose-blocker-actions button {
+  padding: 4px 10px; border-radius: 5px; font-size: 11px; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .05); color: rgba(243, 245, 251, .82);
+}
+.tfcc-compose-blocker-actions button.primary { border: 0; background: #ed3ebe; color: #fff; font-weight: 650; }
+.tfcc-compose-blocker-tag { font-size: 11px; color: rgba(255, 122, 156, .9); }
+.tfcc-compose-blocker-tag.is-ok { color: rgba(120, 220, 170, .9); }
+.tfcc-compose-blockers-accept-all {
+  align-self: stretch; padding: 8px; border-radius: 6px; border: 0;
+  background: #ed3ebe; color: #fff; font-weight: 650; font-size: 12px; cursor: pointer;
+}
+
 /* 会话历史滚动区 */
 .tfcc-chat-body {
   flex: 1 1 auto;

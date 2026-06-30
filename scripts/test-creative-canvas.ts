@@ -134,7 +134,8 @@ async function main() {
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("visual_reference_low_similarity"), "video inspector should explain visual consistency warnings");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/production/workbench/reviewVideo"), "video inspector should rerun QA through the backend");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("/production/workbench/acceptVideoReview"), "video inspector should allow accepted QA warnings");
-  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("QA 未通过或未接受警告"), "video compose submission should block unresolved QA issues client-side");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("state.composeBlockers = { intent"), "video compose submission should block unresolved QA issues client-side via an actionable blockers panel");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("acceptAllComposeWarnings"), "compose QA blockers panel should support batch-accepting warnings and retrying compose");
   assert.ok(fs.readFileSync("src/utils/queueHandlers.ts", "utf8").includes("markStoryboardPromptForReviewAfterRepeatedFailures"), "repeated failed storyboard images should trigger upstream prompt review");
   assert.ok(fs.readFileSync("src/utils/queueHandlers.ts", "utf8").includes("建议反向复核分镜Prompt"), "storyboard failure reason should explain prompt-level review");
   assert.ok(fs.readFileSync("src/utils/queueHandlers.ts", "utf8").includes("reason: null"), "successful storyboard image generation should clear stale QA review reasons");
@@ -332,7 +333,7 @@ async function main() {
   assert.ok(canvasJs.includes("window.__tfccSocketIoPromise = null"), "failed Socket.IO client loads should be retryable");
   assert.ok(!canvasJs.includes("${location.origin}/socket.io/socket.io.js"), "script agent should not load Socket.IO from the frontend origin");
   assert.ok(!canvasJs.includes("${location.origin}/api/socket/scriptAgent"), "script agent should not connect sockets through the frontend origin");
-  assert.ok(fs.readFileSync("data/web/index.html", "utf8").includes("creative-canvas.js?v=20260701120000"), "creative canvas script URL should bust stale renderer cache");
+  assert.ok(fs.readFileSync("data/web/index.html", "utf8").includes("creative-canvas.js?v=20260701140000"), "creative canvas script URL should bust stale renderer cache");
   assert.ok(fs.readFileSync("src/app.ts", "utf8").includes("process.env.PORT = String(realPort)"), "random-port backend startup should expose the real port to OSS URL generation");
   const updateAgentMessageBlock = canvasJs.slice(canvasJs.indexOf("function updateAgentMessage"), canvasJs.indexOf("function addAgentContent"));
   assert.ok(updateAgentMessageBlock.includes("state.agentRunning = false;"), "script agent terminal message updates should clear the current running state");

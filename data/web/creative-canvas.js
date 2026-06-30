@@ -144,6 +144,8 @@
     agentThink: false,
     editNovelId: null,
     novelFullCache: {},
+    // 合成被 QA 门禁拦截时的可操作面板：{ intent: string, blockers: node[] }
+    composeBlockers: null,
   };
 
   const IMAGE_RATIOS = ["16:9", "9:16", "1:1", "4:3", "3:4"];
@@ -5430,8 +5432,14 @@
       .map((row) => row.linkedVideos.find((video) => Number(video.data?.video?.id) === Number(row.selectedId)))
       .filter((video) => videoReviewBlocksCompose(video?.data?.review));
     if (qaBlocked.length) {
-      throw new Error(`还有 ${qaBlocked.length} 个选中视频 QA 未通过或未接受警告，先在视频卡右侧处理 QA。`);
+      // 不再裸抛错误，而是在 Agent 面板挂出可操作的拦截面板（定位/接受/批量接受并重试）
+      state.composeBlockers = { intent: String(text || ""), blockers: qaBlocked };
+      renderAgentOnly();
+      const warnCount = qaBlocked.filter((v) => v?.data?.review?.status === "warning").length;
+      const failCount = qaBlocked.length - warnCount;
+      return `还有 ${qaBlocked.length} 个选中视频未通过合成前 QA（${warnCount} 个可接受警告、${failCount} 个需重生）。请在下方「合成 QA 拦截」面板处理。`;
     }
+    state.composeBlockers = null;
     if (/整集|拼接|导出/.test(String(text || ""))) {
       await api("/production/workbench/mergeEpisode", {
         method: "POST",
@@ -5447,6 +5455,86 @@
     });
     await loadGraph();
     return `已提交 ${trackIds.length} 个单镜头合成任务。`;
+  }
+
+  // 合成 QA 拦截：批量接受所有 warning（排除 failed），刷新后自动重试原合成意图
+  async function acceptAllComposeWarnings() {
+    const ctx = state.composeBlockers;
+    if (!ctx) return;
+    const acceptable = ctx.blockers.filter((node) => node?.data?.review?.status === "warning" && !videoReviewAccepted(node.data.review));
+    const failed = ctx.blockers.filter((node) => node?.data?.review?.status === "failed");
+    const profile = agentProfile();
+    if (!acceptable.length) {
+      pushLocalAgentMessage("assistant", `没有可接受的警告。${failed.length ? `${failed.length} 个视频 QA 未通过，需重生后再合成。` : ""}`, "warning", profile.title);
+      renderAgentOnly();
+      return;
+    }
+    await withLoading(async () => {
+      for (const node of acceptable) {
+        const videoId = Number(node.data?.video?.id);
+        if (!videoId) continue;
+        await api("/production/workbench/acceptVideoReview", { method: "POST", body: { videoId } });
+      }
+      await loadGraph();
+    });
+    const intent = ctx.intent;
+    state.composeBlockers = null;
+    if (failed.length) {
+      pushLocalAgentMessage("assistant", `已接受 ${acceptable.length} 个警告，但仍有 ${failed.length} 个视频 QA 未通过（需重生）。先重生这些视频再合成。`, "warning", profile.title);
+      renderAgentOnly();
+      return;
+    }
+    // 全部放行 → 自动重试原合成
+    try {
+      const result = await submitVideoCompose(intent);
+      pushLocalAgentMessage("assistant", `已接受 ${acceptable.length} 个警告并重新提交合成。${result}`, "complete", profile.title);
+    } catch (err) {
+      pushLocalAgentMessage("assistant", err?.message || String(err), "error", profile.title);
+    }
+    renderAgentOnly();
+  }
+
+  function dismissComposeBlockers() {
+    state.composeBlockers = null;
+    renderAgentOnly();
+  }
+
+  // 合成被 QA 门禁拦截时的可操作面板（挂在 Agent 面板对话区与输入框之间）
+  function renderComposeBlockers() {
+    const ctx = state.composeBlockers;
+    if (!ctx || !ctx.blockers?.length) return null;
+    const acceptableCount = ctx.blockers.filter((node) => node?.data?.review?.status === "warning" && !videoReviewAccepted(node.data.review)).length;
+    return h("div", { class: "tfcc-compose-blockers" }, [
+      h("div", { class: "tfcc-compose-blockers-head" }, [
+        h("strong", { text: `合成 QA 拦截 · ${ctx.blockers.length} 个` }),
+        h("button", { class: "tfcc-compose-blockers-close", title: "关闭", onClick: dismissComposeBlockers, text: "×" }),
+      ]),
+      h("p", { class: "tfcc-compose-blockers-hint", text: "以下选中视频未通过合成前 QA。warning 可接受后放行，failed 需重生。" }),
+      h("div", { class: "tfcc-compose-blockers-list" }, ctx.blockers.map((node) => {
+        const review = node.data?.review || {};
+        const isFailed = review.status === "failed";
+        const accepted = videoReviewAccepted(review);
+        const issues = Array.isArray(review.issues) ? review.issues : [];
+        const reason = issues.length ? issues.map(videoReviewText).join("、") : videoReviewText(review.status);
+        return h("div", { class: `tfcc-compose-blocker-item ${isFailed ? "is-failed" : "is-warning"}` }, [
+          h("div", { class: "tfcc-compose-blocker-main" }, [
+            h("strong", { text: node.label || `视频 ${node.data?.video?.id ?? ""}` }),
+            h("span", { class: "tfcc-compose-blocker-reason", text: reason }),
+          ]),
+          h("div", { class: "tfcc-compose-blocker-actions" }, [
+            h("button", { onClick: () => focusCanvasNode(node.id), text: "定位" }),
+            isFailed
+              ? h("span", { class: "tfcc-compose-blocker-tag", text: "需重生" })
+              : accepted
+              ? h("span", { class: "tfcc-compose-blocker-tag is-ok", text: "已接受" })
+              : h("button", { class: "primary", onClick: () => withLoading(async () => { await api("/production/workbench/acceptVideoReview", { method: "POST", body: { videoId: Number(node.data?.video?.id) } }); await loadGraph(); }).then(renderAgentOnly).catch((e) => { state.message = e?.message || String(e); render(); }), text: "接受警告" }),
+          ]),
+        ]);
+      })),
+      acceptableCount
+        ? h("button", { class: "tfcc-compose-blockers-accept-all primary", onClick: () => acceptAllComposeWarnings().catch((e) => { state.message = e?.message || String(e); render(); }), text: `全部接受并重试合成（${acceptableCount}）` })
+        : null,
+    ].filter(Boolean));
   }
 
   async function sendAgentMessage() {
@@ -6089,7 +6177,7 @@
       ].filter(Boolean)),
     ]);
 
-    return h("aside", { class: "tfcc-agent tfcc-chat" }, [header, lockBanner, body, composer, h("div", { class: "tfcc-agent-resizer", title: "拖动调整 Agent 区宽度", onPointerdown: startAgentResize })].filter(Boolean));
+    return h("aside", { class: "tfcc-agent tfcc-chat" }, [header, lockBanner, body, renderComposeBlockers(), composer, h("div", { class: "tfcc-agent-resizer", title: "拖动调整 Agent 区宽度", onPointerdown: startAgentResize })].filter(Boolean));
   }
 
   function renderInspectorPanel() {
