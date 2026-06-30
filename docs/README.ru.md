@@ -93,7 +93,9 @@
         </a>
       </td>
       <td width="50%" align="center">
-        GVP - Gitee Самый ценный проект с открытым исходным кодом
+        <a href="./gvp.jpg" target="_blank">
+          <img src="./gvp.jpg" alt="Gitee GVP Certificate" width="100%"/>
+        </a>
       </td>
     </tr>
   </table>
@@ -296,8 +298,8 @@ yarn docker:local
 docker build -t toonflow .
 docker run -d -p <локальный_порт>:10588 -v <локальный_путь_данных>:/app/data toonflow
 
-# После этого страница будет доступна по пути /web/index.html на соответствующем порту
-# Например: http://localhost:10588/web/index.html
+# После этого страница будет доступна по пути /index.html на соответствующем порту
+# Например: http://localhost:10588/index.html
 ```
 
 ### Описание портов сервиса

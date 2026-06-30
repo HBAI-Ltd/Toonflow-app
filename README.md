@@ -93,7 +93,9 @@
         </a>
       </td>
       <td width="50%" align="center">
-        GVP - Gitee最有价值开源项目
+        <a href="./docs/gvp.jpg" target="_blank">
+          <img src="./docs/gvp.jpg" alt="Gitee GVP 认证证书" width="100%"/>
+        </a>
       </td>
     </tr>
   </table>
@@ -214,22 +216,22 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
 ## Demo 信息
 
-| 项目 | 详情 |
-| :--- | :--- |
-| 制作周期 | 约 2 小时 |
-| 视频模型 | Seedance 2.0 |
-| 图片模型 | GPT Image 2 |
-| 语言模型 | Claude Opus 4.6 |
+| 项目       | 详情                                            |
+| :--------- | :---------------------------------------------- |
+| 制作周期   | 约 2 小时                                       |
+| 视频模型   | Seedance 2.0                                    |
+| 图片模型   | GPT Image 2                                     |
+| 语言模型   | Claude Opus 4.6                                 |
 | 成片总时长 | 约 2 分钟（原始素材 3 分钟，剪除废片约 1 分钟） |
 
 ## 成本明细
 
-| 模型类型 | 费用 |
-| :--- | :--- |
-| 语言模型 | 约 ¥10 |
-| 视频模型（全量生成） | 约 ¥120 |
-| 图片模型 | 不足 ¥1 |
-| **合计** | **约 ¥130** |
+| 模型类型             | 费用        |
+| :------------------- | :---------- |
+| 语言模型             | 约 ¥10      |
+| 视频模型（全量生成） | 约 ¥120     |
+| 图片模型             | 不足 ¥1     |
+| **合计**             | **约 ¥130** |
 
 > **声明**：Demo 原始分辨率为 1080×1882，发布版本已压缩至 480p。如涉及版权问题，请联系我们删除处理。
 
@@ -296,8 +298,8 @@ yarn docker:local
 docker build -t toonflow .
 docker run -d -p <本地端口>:10588 -v <本地数据路径>:/app/data toonflow
 
-# 此时在相应端口的 /web/index.html 路径即可访问页面
-# 例如 http://localhost:10588/web/index.html
+# 此时在相应端口的 /index.html 路径即可访问页面
+# 例如 http://localhost:10588/index.html
 ```
 
 ### 服务端口说明
@@ -477,7 +479,6 @@ pm2 monit             # 监控面板
 3. **启动开发环境**
 
    本项目包含 **后端 API 服务** 和 **前端页面** 两部分，请根据需要选择启动方式：
-
    - **方式一：仅启动后端服务**
 
      ```bash
@@ -503,7 +504,6 @@ pm2 monit             # 监控面板
      > 以生产模式直接运行编译后的服务（需先执行 `yarn build`）。
 
 4. **项目打包**
-
    - 编译并生成 TypeScript 文件：
 
      ```bash
@@ -529,7 +529,6 @@ pm2 monit             # 监控面板
      ```
 
 5. **代码质量检查**
-
    - 进行全局语法和规范检查：
 
      ```bash
@@ -664,13 +663,13 @@ Toonflow 基于 Apache-2.0 协议开源发布，并附有补充商业协议。
 
 ## 商业授权定价
 
-| 阶段 | 年销售额 | 年费 |
-|------|---------|------|
-| 🌱 扶持期 | < ¥10 万 | **申请即可免费授权** |
-| 🚀 初创期 | ¥10–50 万 | ¥5,000/年 |
-| 📈 成长期 | ¥50–150 万 | ¥20,000/年 |
-| 🏢 规模期 | ¥150–500 万 | ¥80,000/年 |
-| 🌐 企业级 | > ¥500 万 | 面议 |
+| 阶段      | 年销售额    | 年费                 |
+| --------- | ----------- | -------------------- |
+| 🌱 扶持期 | < ¥10 万    | **申请即可免费授权** |
+| 🚀 初创期 | ¥10–50 万   | ¥5,000/年            |
+| 📈 成长期 | ¥50–150 万  | ¥20,000/年           |
+| 🏢 规模期 | ¥150–500 万 | ¥80,000/年           |
+| 🌐 企业级 | > ¥500 万   | 面议                 |
 
 > **不追溯条款**：v1.0.8 发布前基于 AGPL-3.0 使用的用户，继续按 AGPL-3.0 执行，不受本协议变更约束。
 
@@ -685,7 +684,6 @@ Toonflow 基于 Apache-2.0 协议开源发布，并附有补充商业协议。
 [![Star History Chart](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)
 
 ---
-
 
 # 🙏 致谢
 
@@ -741,7 +739,5 @@ Toonflow 基于 Apache-2.0 协议开源发布，并附有补充商业协议。
 完整的第三方依赖清单请查阅 `NOTICES.txt`
 
 ##### copyright © 北京爱阿科技有限公司
-
-
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer" width="100%"/>

@@ -93,7 +93,9 @@
         </a>
       </td>
       <td width="50%" align="center">
-        GVP - Gitee Most Valuable Open Source Project
+        <a href="./gvp.jpg" target="_blank">
+          <img src="./gvp.jpg" alt="Gitee GVP Certificate" width="100%"/>
+        </a>
       </td>
     </tr>
   </table>
@@ -296,8 +298,8 @@ yarn docker:local
 docker build -t toonflow .
 docker run -d -p <พอร์ตท้องถิ่น>:10588 -v <เส้นทางข้อมูลท้องถิ่น>:/app/data toonflow
 
-# จากนั้นสามารถเข้าถึงหน้าเว็บได้ที่路径 /web/index.html ของพอร์ตนั้น
-# ตัวอย่างเช่น http://localhost:10588/web/index.html
+# จากนั้นสามารถเข้าถึงหน้าเว็บได้ที่路径 /index.html ของพอร์ตนั้น
+# ตัวอย่างเช่น http://localhost:10588/index.html
 ```
 
 ### คำอธิบายพอร์ตบริการ

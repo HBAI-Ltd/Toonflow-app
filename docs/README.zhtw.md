@@ -93,7 +93,9 @@
         </a>
       </td>
       <td width="50%" align="center">
-        GVP - Gitee 最有價值開源項目
+        <a href="./gvp.jpg" target="_blank">
+          <img src="./gvp.jpg" alt="Gitee GVP Certificate" width="100%"/>
+        </a>
       </td>
     </tr>
   </table>
@@ -296,8 +298,8 @@ yarn docker:local
 docker build -t toonflow .
 docker run -d -p <本地埠>:10588 -v <本地資料路徑>:/app/data toonflow
 
-# 此時在相應埠的 /web/index.html 路徑即可訪問頁面
-# 例如 http://localhost:10588/web/index.html
+# 此時在相應埠的 /index.html 路徑即可訪問頁面
+# 例如 http://localhost:10588/index.html
 ```
 
 ### 服務埠說明

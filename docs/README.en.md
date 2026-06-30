@@ -89,11 +89,13 @@
     <tr>
       <td width="50%" align="center">
         <a href="./g-star.png" target="_blank">
-          <img src="./g-star.png" alt="AtomGit G-Star Certificate" width="100%"/>
+          <img src="./g-star.png" alt="Gitee GVP Certificate" width="100%"/>
         </a>
       </td>
       <td width="50%" align="center">
-        GVP - Gitee Most Valuable Open Source Project
+        <a href="./gvp.jpg" target="_blank">
+          <img src="./gvp.jpg" alt="Gitee GVP Certificate" width="100%"/>
+        </a>
       </td>
     </tr>
   </table>
@@ -296,8 +298,8 @@ yarn docker:local
 docker build -t toonflow .
 docker run -d -p <local_port>:10588 -v <local_data_path>:/app/data toonflow
 
-# Access the page at the corresponding port path /web/index.html
-# Example: http://localhost:10588/web/index.html
+# Access the page at the corresponding port path /index.html
+# Example: http://localhost:10588/index.html
 ```
 
 ### Service Port Description
