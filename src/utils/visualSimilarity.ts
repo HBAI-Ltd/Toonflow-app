@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { getImageEmbedding, cosineSimilarity } from "@/utils/agent/imageEmbedding";
 
 export interface VisualFingerprint {
   size: number;
@@ -27,4 +28,14 @@ export async function compareImageFiles(aAbsPath: string, bAbsPath: string, size
     createVisualFingerprint(bAbsPath, size),
   ]);
   return compareVisualFingerprints(a, b);
+}
+
+/**
+ * 基于本地 CLIP 图像 embedding 的语义级相似度（余弦，[0,1]）。
+ * 比 16×16 像素指纹更能区分"微变脸/服装漂移"，且对构图/景别变化鲁棒。
+ * 模型不可用时抛错，由调用方降级到 compareImageFiles（像素指纹）。
+ */
+export async function compareImageFilesByEmbedding(aAbsPath: string, bAbsPath: string): Promise<number> {
+  const [a, b] = await Promise.all([getImageEmbedding(aAbsPath), getImageEmbedding(bAbsPath)]);
+  return Math.max(0, Math.min(1, cosineSimilarity(a, b)));
 }

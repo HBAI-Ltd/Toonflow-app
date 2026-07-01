@@ -5,7 +5,7 @@ import db from "@/utils/db";
 import oss from "@/utils/oss";
 import error from "@/utils/error";
 import { extractVideoFrame, probeDuration, probeVideoInfo } from "@/utils/ffmpegTool";
-import { compareVisualFingerprints, createVisualFingerprint } from "@/utils/visualSimilarity";
+import { compareVisualFingerprints, createVisualFingerprint, compareImageFilesByEmbedding } from "@/utils/visualSimilarity";
 import { assetCardPrompt } from "@/utils/characterSpec";
 
 export type VideoReviewStatus = "passed" | "warning" | "failed";
@@ -31,7 +31,10 @@ interface VisualReference {
   filePath: string;
 }
 
-const VISUAL_LOW_SIMILARITY_THRESHOLD = 0.55;
+// CLIP 余弦与像素指纹量纲不同：CLIP 同主体通常 0.75+、跨主体 0.5 以下；像素指纹沿用旧的 0.55。
+// 阈值为经验初值，可据真实分布校准。
+const VISUAL_LOW_SIMILARITY_THRESHOLD_CLIP = 0.75;
+const VISUAL_LOW_SIMILARITY_THRESHOLD_PIXEL = 0.55;
 
 async function hasReviewTable() {
   return db.schema.hasTable("o_videoReview");
@@ -112,7 +115,8 @@ export async function reviewGeneratedVideo(input: {
   if (videoAbsPath && !issues.includes("video_unplayable")) {
     const visualConsistency = await inspectVisualConsistency(videoAbsPath, consistency.visualReferences);
     report.visualConsistency = visualConsistency;
-    if (visualConsistency.status === "checked" && visualConsistency.bestSimilarity != null && visualConsistency.bestSimilarity < VISUAL_LOW_SIMILARITY_THRESHOLD) {
+    const lowThreshold = (visualConsistency as any).method === "pixel" ? VISUAL_LOW_SIMILARITY_THRESHOLD_PIXEL : VISUAL_LOW_SIMILARITY_THRESHOLD_CLIP;
+    if (visualConsistency.status === "checked" && visualConsistency.bestSimilarity != null && visualConsistency.bestSimilarity < lowThreshold) {
       issues.push("visual_reference_low_similarity");
       score -= 10;
     }
@@ -400,11 +404,21 @@ async function inspectVisualConsistency(videoAbsPath: string, references: Visual
   const framePath = path.join(tmpDir, "frame.jpg");
   try {
     await extractVideoFrame(videoAbsPath, framePath);
-    const frameFingerprint = await createVisualFingerprint(framePath);
+    // 优先用本地 CLIP embedding（语义级、对构图鲁棒）；模型不可用则整批降级到 16×16 像素指纹，保持 method 一致避免量纲混用。
+    let method: "clip" | "pixel" = "clip";
+    const firstRefPath = await oss.getAbsolutePath(refs[0].filePath);
+    try {
+      await compareImageFilesByEmbedding(framePath, firstRefPath);
+    } catch {
+      method = "pixel";
+    }
+    const frameFingerprint = method === "pixel" ? await createVisualFingerprint(framePath) : null;
     const checked = await Promise.all(refs.map(async (ref) => {
       try {
         const refAbsPath = await oss.getAbsolutePath(ref.filePath);
-        const similarity = compareVisualFingerprints(frameFingerprint, await createVisualFingerprint(refAbsPath));
+        const similarity = method === "clip"
+          ? await compareImageFilesByEmbedding(framePath, refAbsPath)
+          : compareVisualFingerprints(frameFingerprint!, await createVisualFingerprint(refAbsPath));
         return { ...ref, similarity: Number(similarity.toFixed(3)) };
       } catch (e) {
         return { ...ref, error: error(e).message };
@@ -415,6 +429,7 @@ async function inspectVisualConsistency(videoAbsPath: string, references: Visual
       .sort((a: any, b: any) => b.similarity - a.similarity);
     return {
       status: "checked" as const,
+      method,
       frameTime: 0.5,
       checkedCount: valid.length,
       bestSimilarity: valid[0]?.similarity ?? null,

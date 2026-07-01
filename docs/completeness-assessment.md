@@ -77,7 +77,7 @@
 
 ### 4.3 一致性方案的精度天花板
 
-- 视觉一致性校验用 **16×16 像素指纹 + 欧氏距离**（`src/utils/visualSimilarity.ts`，阈值 0.55）——只能抓"完全跑偏"，**抓不住脸型微变、服装细节漂移**。
+- 视觉一致性校验原用 **16×16 像素指纹 + 欧氏距离**——只能抓"完全跑偏"。**已提供本地 CLIP embedding 升级**（`src/utils/agent/imageEmbedding.ts` + `compareImageFilesByEmbedding`，语义级相似、对构图鲁棒，阈值 0.75），模型缺失时自动降级像素指纹；放置 CLIP ONNX 模型即启用，见 [visual-consistency-clip.md](visual-consistency-clip.md)。
 - **生成后无角色身份回判**，本质仍依赖视频模型遵守 reference 的能力。
 - `EffectiveLayout` 质量依赖资产卡空间字段的填写质量——**垃圾进垃圾出**。
 
@@ -124,7 +124,7 @@
 
 | 任务 | 动作 | 涉及 |
 |---|---|---|
-| 一致性精度升级 | 16×16 像素指纹 → CLIP / 人脸 embedding；补生成后角色身份回判 | `src/utils/visualSimilarity.ts`、`videoReview.ts` |
+| ~~一致性精度升级~~ ✅ CLIP 已接入 | 16×16 像素指纹 → 本地 CLIP embedding（含降级保护）；剩余：放置模型启用 + 阈值校准 + 可选人脸 embedding/生成后身份回判 | `src/utils/agent/imageEmbedding.ts`、`visualSimilarity.ts`、`videoReview.ts` |
 | 可观测性 | 结构化 JSON 日志 + traceId + 错误告警阈值 | `src/logger.ts` |
 | 队列健壮性 | 资产/分镜生成阶段加 hash 幂等去重；引入死信队列 | `src/utils/genQueue.ts`、`queueHandlers.ts` |
 | 部署完善 | dist `extraResources` 捆绑 ffmpeg/ffprobe，或一键安装脚本 | `electron-builder.yml` |
