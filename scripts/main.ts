@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 import Module from "module";
 
-// 加速 Electron 启动：跳过 GPU 信息收集，减少初始化耗时
+// Reduce Electron startup overhead by skipping GPU cache and occlusion work.
 app.commandLine.appendSwitch("disable-gpu-shader-disk-cache");
 app.commandLine.appendSwitch("disable-features", "CalculateNativeWinOcclusion");
 
@@ -73,16 +73,16 @@ function initializeData(): void {
   }
 }
 
-//获取全部依赖路径，优先从 unpacked 加载原生模块，其他模块从 asar 加载
+// Resolve dependency paths, preferring unpacked native modules in packaged builds.
 function getNodeModulesPaths(): string[] {
   const paths: string[] = [];
   if (app.isPackaged) {
-    // external 依赖（原生模块）在 unpacked 目录
+    // Native modules are copied to the unpacked directory.
     const unpackedNodeModules = path.join(process.resourcesPath, "app.asar.unpacked", "node_modules");
     if (fs.existsSync(unpackedNodeModules)) {
       paths.push(unpackedNodeModules);
     }
-    // 普通依赖在 asar 内
+    // Regular dependencies stay inside the asar archive.
     const asarNodeModules = path.join(process.resourcesPath, "app.asar", "node_modules");
     paths.push(asarNodeModules);
   } else {
@@ -91,15 +91,16 @@ function getNodeModulesPaths(): string[] {
   return paths;
 }
 
-//动态加载
-function requireWithCustomPaths(modulePath: string): any {
+// Keep module resolution pointed at the app node_modules while loading backend code.
+let restoreNodeModulePaths: (() => void) | undefined;
+
+function installPersistentNodeModulePaths(): void {
+  if (restoreNodeModulePaths) return;
   const appNodeModulesPaths = getNodeModulesPaths();
-  // 保存原始方法
   const originalNodeModulePaths = (Module as any)._nodeModulePaths;
-  // 临时修改模块路径解析
+
   (Module as any)._nodeModulePaths = function (from: string): string[] {
     const paths = originalNodeModulePaths.call(this, from);
-    // 将主程序的 node_modules 添加到前面
     for (let i = appNodeModulesPaths.length - 1; i >= 0; i--) {
       const p = appNodeModulesPaths[i];
       if (!paths.includes(p)) {
@@ -108,19 +109,87 @@ function requireWithCustomPaths(modulePath: string): any {
     }
     return paths;
   };
-  try {
-    // 清除缓存确保加载最新
-    delete require.cache[require.resolve(modulePath)];
-    return require(modulePath);
-  } finally {
-    // 恢复原始方法
+
+  restoreNodeModulePaths = () => {
     (Module as any)._nodeModulePaths = originalNodeModulePaths;
-  }
+    restoreNodeModulePaths = undefined;
+  };
+}
+
+function requireWithCustomPaths(modulePath: string): any {
+  delete require.cache[require.resolve(modulePath)];
+  return require(modulePath);
 }
 
 let mainWindow: BrowserWindow | null = null;
 
-function createMainWindow(): Promise<void> {
+function isDevRuntime(): boolean {
+  return process.env.NODE_ENV === "dev" || !app.isPackaged;
+}
+
+function getWebFilePath(fileName: string): string {
+  return isDevRuntime()
+    ? path.join(process.cwd(), "data", "web", fileName)
+    : path.join(app.getPath("userData"), "data", "web", fileName);
+}
+
+function getLocalWebUrl(port: string | number, fileName: string): string {
+  return `http://localhost:${port}/${fileName}`;
+}
+
+function injectStructuralReplicaEntry(win: BrowserWindow, port: string | number): void {
+  win.webContents.on("did-finish-load", () => {
+    const currentUrl = win.webContents.getURL();
+    if (currentUrl.includes("structural-replica.html")) return;
+
+    const targetUrl = getLocalWebUrl(port, "structural-replica.html");
+    const script = `
+      (() => {
+        const entryId = "toonflow-structural-replica-entry";
+        if (document.getElementById(entryId)) return;
+
+        const styleId = "toonflow-structural-replica-entry-style";
+        if (!document.getElementById(styleId)) {
+          const style = document.createElement("style");
+          style.id = styleId;
+          style.textContent = [
+            "#" + entryId + "{position:fixed;right:18px;bottom:18px;z-index:2147483647;display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border:1px solid rgba(0,0,0,.18);border-radius:6px;background:#111318;color:#fff;font:600 14px/1.2 'Microsoft YaHei UI','Microsoft YaHei','Segoe UI',sans-serif;letter-spacing:0;box-shadow:0 10px 24px rgba(16,24,40,.18);cursor:pointer;}",
+            "#" + entryId + ":hover{background:#24262a;}",
+            "#" + entryId + " .tf-sr-mark{width:16px;height:16px;display:grid;grid-template-columns:repeat(2,1fr);gap:2px;}",
+            "#" + entryId + " .tf-sr-mark i{display:block;border:1px solid rgba(255,255,255,.9);border-radius:2px;}"
+          ].join("");
+          document.head.appendChild(style);
+        }
+
+        const button = document.createElement("button");
+        button.id = entryId;
+        button.type = "button";
+        button.title = "\\u7ed3\\u6784\\u590d\\u523b";
+        button.setAttribute("aria-label", "\\u6253\\u5f00\\u7ed3\\u6784\\u590d\\u523b");
+
+        const mark = document.createElement("span");
+        mark.className = "tf-sr-mark";
+        mark.setAttribute("aria-hidden", "true");
+        mark.innerHTML = "<i></i><i></i><i></i><i></i>";
+
+        const label = document.createElement("span");
+        label.textContent = "\\u7ed3\\u6784\\u590d\\u523b";
+
+        button.append(mark, label);
+        button.addEventListener("click", () => {
+          window.location.href = ${JSON.stringify(targetUrl)};
+        });
+        document.body.appendChild(button);
+      })();
+    `;
+
+    win.webContents.executeJavaScript(script).catch((err) => {
+      console.warn("[structural-replica-entry] inject failed:", err);
+    });
+  });
+}
+
+function createMainWindow(port?: string | number): Promise<void> {
   return new Promise((resolve) => {
     const win = new BrowserWindow({
       width: 1000,
@@ -146,13 +215,12 @@ function createMainWindow(): Promise<void> {
       resolve();
     });
 
-    const isDev = process.env.NODE_ENV === "dev" || !app.isPackaged;
+    if (port) injectStructuralReplicaEntry(win, port);
+
     if (process.env.VITE_DEV) {
       void win.loadURL("http://localhost:50188");
     } else {
-      const htmlPath = isDev
-        ? path.join(process.cwd(), "data", "web", "index.html")
-        : path.join(app.getPath("userData"), "data", "web", "index.html");
+      const htmlPath = getWebFilePath("index.html");
       void win.loadFile(htmlPath);
     }
   });
@@ -175,25 +243,26 @@ app.whenReady().then(async () => {
   try {
     let servePath: string;
     if (app.isPackaged) {
-      // 生产环境：让出主线程一次，确保 loading 窗口渲染后再做耗时文件拷贝
+      // Yield once so the loading window can render before packaged data copy work.
       await new Promise((r) => setTimeout(r, 0));
       initializeData();
       servePath = path.join(app.getPath("userData"), "data", "serve", "app.js");
     } else {
-      // 开发环境：直接加载源码（tsx 通过 -r tsx 注册了 require 钩子）
+      // In development, load TypeScript source through the registered tsx hook.
       servePath = path.join(process.cwd(), "src", "app.ts");
     }
-    // 使用自定义路径加载模块
+    // Install custom module paths before loading the backend service.
+    installPersistentNodeModulePaths();
     const mod = requireWithCustomPaths(servePath);
     closeServeFn = mod.closeServe;
     const port = await mod.default(true);
-    process.env.PORT = port;
+    process.env.PORT = String(port);
     await new Promise<void>((resolve, reject) => {
       setTimeout(() => {
         resolve();
       }, 2000);
     });
-    // 注册协议处理器
+    // Register protocol handlers used by the renderer.
     protocol.handle("toonflow", (request) => {
       const url = new URL(request.url);
       const pathname = url.hostname.toLowerCase();
@@ -215,13 +284,25 @@ app.whenReady().then(async () => {
           app.exit(0);
           return { ok: true };
         },
+        openstructuralreplica: () => {
+          mainWindow?.loadURL(getLocalWebUrl(port, "structural-replica.html"));
+          return { ok: true };
+        },
+        openmain: () => {
+          if (process.env.VITE_DEV) {
+            mainWindow?.loadURL("http://localhost:50188");
+          } else {
+            mainWindow?.loadFile(getWebFilePath("index.html"));
+          }
+          return { ok: true };
+        },
         apprestart: () => {
-          // 延迟执行，让响应先返回给前端
+          // Let the response return before relaunching.
           setTimeout(() => {
             app.relaunch();
             app.exit(0);
           }, 500);
-          return { ok: true, message: "应用即将重启" };
+          return { ok: true, message: "搴旂敤鍗冲皢閲嶅惎" };
         },
         windowismaximized: () => ({
           maximized: mainWindow?.isMaximized() ?? false,
@@ -238,13 +319,13 @@ app.whenReady().then(async () => {
             shell.openExternal(targetUrl);
             return { ok: true };
           } else {
-            return { ok: false, error: "缺少url参数" };
+            return { ok: false, error: "缂哄皯url鍙傛暟" };
           }
         },
         getlocallanguage: () => {
-          // 获取应用区域设置
+          // Read the application locale.
 
-          // macOS系统特定方法
+          // macOS exposes the full user locale through system preferences.
           if (process.platform === "darwin") {
             const systemLocale = systemPreferences.getUserDefault("AppleLocale", "string");
             return { ok: true, local: systemLocale };
@@ -256,7 +337,7 @@ app.whenReady().then(async () => {
 
       const handler = handlers[pathname];
 
-      const responseData = handler ? handler() : { error: "未知接口" };
+      const responseData = handler ? handler() : { error: "鏈煡鎺ュ彛" };
       return new Response(JSON.stringify(responseData), {
         headers: {
           "Content-Type": "application/json",
@@ -265,10 +346,10 @@ app.whenReady().then(async () => {
       });
     });
 
-    // 服务启动成功，创建主窗口（主窗口 ready-to-show 时自动关闭loading）
-    await createMainWindow();
+    // Create the main window after the backend service is ready.
+    await createMainWindow(port);
   } catch (err) {
-    console.error("[服务启动失败]:", err);
+    console.error("[鏈嶅姟鍚姩澶辫触]:", err);
     await createMainWindow();
   }
 });
@@ -285,4 +366,5 @@ app.on("activate", () => {
 
 app.on("before-quit", async (event) => {
   if (closeServeFn) await closeServeFn();
+  restoreNodeModulePaths?.();
 });

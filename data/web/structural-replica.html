@@ -1,0 +1,2080 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Toonflow - MP4 结构复刻工作台</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eceff3;
+      --surface: #ffffff;
+      --surface-soft: #f7f8fa;
+      --line: #d9dde5;
+      --line-strong: #c3c9d4;
+      --text: #111318;
+      --muted: #687181;
+      --black: #0f1012;
+      --green: #07875b;
+      --orange: #c86112;
+      --blue: #1d5fd1;
+      --red: #bd2f2f;
+      --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 16px 32px rgba(16, 24, 40, .08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    button, input, select, textarea { font: inherit; letter-spacing: 0; }
+    button {
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+    }
+    button:hover { background: #f7f8fa; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .primary { border-color: var(--black); background: var(--black); color: #fff; }
+    .primary:hover { background: #24262a; }
+
+    input, select, textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+    input, select { height: 34px; padding: 0 10px; }
+    textarea { min-height: 78px; padding: 9px 10px; line-height: 1.55; resize: vertical; }
+    label { display: block; margin: 0 0 6px; color: var(--muted); font-size: 12px; }
+
+    .app { min-height: 100vh; display: grid; grid-template-rows: 34px 1fr; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      border-bottom: 1px solid #dde1e8;
+      background: #f4f5f7;
+      font-weight: 700;
+    }
+    .dots { display: flex; gap: 8px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot.yellow { background: #ffbe2e; }
+    .dot.green { background: #28c840; }
+    .dot.red { background: #ff5f57; }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .topbar-action {
+      min-height: 24px;
+      height: 24px;
+      padding: 0 9px;
+      border-radius: 4px;
+      border-color: #c3c9d4;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .layout {
+      min-height: calc(100vh - 34px);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 68px minmax(0, 1fr);
+      gap: 12px;
+    }
+    .rail {
+      border-radius: 18px;
+      background: #fff;
+      padding: 16px 10px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      justify-items: center;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .06);
+    }
+    .brand {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 2px solid #111;
+      border-radius: 10px;
+      font-weight: 900;
+    }
+    .nav { margin-top: 28px; display: grid; gap: 16px; }
+    .nav button {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border-radius: 12px;
+      border: 0;
+      background: transparent;
+      display: grid;
+      place-items: center;
+    }
+    .nav button.active { background: #111; color: #fff; }
+    .nav svg { width: 23px; height: 23px; stroke-width: 2.2; }
+
+    .stage {
+      min-width: 0;
+      min-height: 0;
+      border-radius: 18px;
+      background: #fff;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      box-shadow: var(--shadow);
+    }
+    .main {
+      min-width: 0;
+      border-right: 1px solid var(--line);
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      min-height: 0;
+    }
+    .header {
+      padding: 22px 28px 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+      gap: 20px;
+      align-items: start;
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.15; }
+    h2 { margin: 0; font-size: 15px; }
+    p { margin: 0; color: var(--muted); line-height: 1.6; }
+
+    .token-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+    }
+    .task-strip {
+      margin: 0 28px 16px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+    .field-row { display: grid; grid-template-columns: 120px 1fr 150px 130px; gap: 10px; }
+    .actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+
+    .canvas { min-height: 0; overflow: auto; padding: 0 28px 28px; }
+    .board { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 18px; align-items: start; }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .panel + .panel { margin-top: 18px; }
+    .panel-head {
+      min-height: 50px;
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .panel-body { padding: 14px; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eef0f4;
+      color: #3f4652;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .tag.green { background: #e8f6ef; color: var(--green); }
+    .tag.orange { background: #fff3e7; color: var(--orange); }
+    .tag.blue { background: #edf4ff; color: var(--blue); }
+    .tag.red { background: #fff0ef; color: var(--red); }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      white-space: nowrap;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #a0a7b2; }
+    .status-dot.ready { background: var(--green); }
+    .status-dot.running { background: var(--orange); }
+    .status-dot.failed { background: var(--red); }
+
+    .dropzone {
+      padding: 14px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      background: #fbfcfd;
+      display: grid;
+      gap: 12px;
+    }
+    .mini-list { display: grid; gap: 10px; }
+    .mini-item {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+    }
+    .mini-item strong { color: var(--text); font-weight: 700; text-align: right; }
+    .core-upload-list { display: grid; gap: 10px; margin-top: 10px; }
+    .core-upload-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      display: grid;
+      gap: 8px;
+    }
+    .core-upload-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .core-upload-head strong { font-size: 13px; }
+    .core-upload-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+    .core-upload-row input[type="file"] { min-width: 0; }
+    .core-upload-card .asset-result { color: var(--muted); font-size: 12px; min-height: 18px; }
+
+    .flow { display: grid; gap: 10px; }
+    .flow-step {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .flow-index {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #e9edf3;
+      font-weight: 800;
+    }
+    .flow-step.done .flow-index { background: #e8f6ef; color: var(--green); }
+    .flow-step.current { border-color: #a8b6cf; }
+    .flow-step.blocked { border-color: #f1b8b8; background: #fff7f7; }
+    .flow-name { min-width: 0; display: grid; gap: 3px; }
+    .flow-name span { color: var(--muted); font-size: 12px; line-height: 1.35; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+    .stat {
+      min-height: 74px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      display: grid;
+      align-content: center;
+      gap: 4px;
+    }
+    .stat strong { font-size: 24px; line-height: 1; }
+    .stat span { color: var(--muted); }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .tabs button.active { background: #111; color: #fff; border-color: #111; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .shot-grid, .dialogue-list, .gap-list, .story-list, .prompt-list, .adaptation-list { display: grid; gap: 12px; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .card-inner { padding: 12px; display: grid; gap: 10px; }
+    .card-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .meta { color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .clip-text { color: var(--text); }
+    .frames { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #e6eaf0; }
+    .frames img, .frame-empty {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      background: #f1f3f6;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .story-card { display: grid; grid-template-columns: 140px minmax(0, 1fr); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .story-thumb { min-height: 110px; display: grid; place-items: center; background: #eef1f5; color: var(--muted); }
+    .story-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .prompt-card textarea {
+      min-height: 136px;
+      background: #fbfcfd;
+      color: #20242b;
+      font-family: "Cascadia Mono", "Consolas", "Microsoft YaHei UI", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+    .prompt-card textarea.final-prompt { min-height: 220px; }
+    .prompt-section { display: grid; gap: 8px; }
+    .prompt-section + .prompt-section { margin-top: 10px; }
+    .prompt-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .prompt-title strong { font-size: 13px; }
+    .prompt-title button { min-height: 28px; padding: 0 9px; font-size: 12px; }
+    .slot-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .slot-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 24px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: #3f4652;
+      font-size: 12px;
+    }
+    .slot-chip.bound { border-color: #b8dccb; background: #e8f6ef; color: var(--green); }
+    .slot-chip.missing { border-color: #f1d2b0; background: #fff3e7; color: var(--orange); }
+    .slot-chip.auto { border-color: #c9d9f6; background: #edf4ff; color: var(--blue); }
+    .prompt-frame-strip { display: flex; gap: 6px; overflow-x: auto; }
+    .prompt-frame-strip img {
+      width: 86px;
+      height: 58px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #eef1f5;
+    }
+    .empty-state {
+      min-height: 150px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .empty-state strong { display: block; color: var(--text); margin-bottom: 6px; }
+    .warning { padding: 8px 10px; border-radius: 6px; background: #fff3e7; color: var(--orange); }
+    .save-row { display: flex; justify-content: flex-end; margin-top: 12px; }
+
+    .right {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 0;
+      background: #fbfcfd;
+    }
+    .right-head { padding: 18px; border-bottom: 1px solid var(--line); background: #fff; }
+    .right-title { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 12px; }
+    .progress-track { height: 7px; border-radius: 999px; background: #e6eaf0; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: #111; transition: width .2s ease; }
+    .progress-meta { display: flex; justify-content: space-between; margin-top: 8px; color: var(--muted); font-size: 12px; }
+    .error-box { display: none; margin-top: 10px; padding: 10px; border-radius: 6px; color: var(--red); background: #fff0ef; line-height: 1.5; }
+    .error-box.show { display: block; }
+    .job-list { display: grid; gap: 10px; }
+    .job-item {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      display: grid;
+      gap: 8px;
+    }
+    .job-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .job-head strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .job-meta { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; color: var(--muted); font-size: 12px; }
+    .job-progress { height: 6px; border-radius: 999px; background: #e6eaf0; overflow: hidden; }
+    .job-progress span { display: block; height: 100%; width: 0%; background: #111; }
+    .job-error { padding: 8px; border-radius: 6px; background: #fff0ef; color: var(--red); font-size: 12px; line-height: 1.45; }
+    .job-actions { display: flex; justify-content: flex-end; }
+    .job-actions button { min-height: 28px; padding: 0 9px; font-size: 12px; }
+    .right-scroll { min-height: 0; overflow: auto; padding: 16px; display: grid; gap: 14px; align-content: start; }
+    .agent-card { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; display: grid; gap: 12px; }
+    .auth-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .auth-actions { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-top: 10px; }
+    .auth-status { color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .log-card { border-top: 1px solid var(--line); background: #111318; color: #fff; }
+    .log-card summary { cursor: pointer; padding: 10px 14px; }
+    .log-card pre { margin: 0; max-height: 220px; overflow: auto; padding: 12px 14px; font-size: 12px; white-space: pre-wrap; }
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      max-width: 420px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #111;
+      color: #fff;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity .18s ease, transform .18s ease;
+      box-shadow: var(--shadow);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: #a82929; }
+
+    @media (max-width: 1100px) {
+      .stage { grid-template-columns: 1fr; }
+      .right { min-height: 480px; border-top: 1px solid var(--line); }
+      .board { grid-template-columns: 1fr; }
+      .task-strip { grid-template-columns: 1fr; }
+      .field-row { grid-template-columns: 1fr 1fr; }
+      .header { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: 1fr; padding: 10px; }
+      .rail { display: none; }
+      .stage { border-radius: 12px; }
+      .header, .canvas { padding-left: 14px; padding-right: 14px; }
+      .task-strip { margin-left: 14px; margin-right: 14px; }
+      .field-row, .stats, .auth-row, .token-box { grid-template-columns: 1fr; }
+      .story-card { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div>Toonflow</div>
+      <div class="topbar-actions">
+        <button id="backToMain" class="topbar-action" type="button">返回 ToonFlow</button>
+        <div class="dots" aria-hidden="true">
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+          <span class="dot red"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="rail" aria-label="Toonflow 导航">
+        <div class="brand">TF</div>
+        <div class="nav">
+          <button title="项目">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7.5h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 7.5V5.5a2 2 0 0 1 2-2h4l2 2h5"/></svg>
+          </button>
+          <button title="剧本">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 3h12a1 1 0 0 1 1 1v16l-3-2-3 2-3-2-3 2-2-1.4V4a1 1 0 0 1 1-1z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+          </button>
+          <button title="资产">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16v12H4z"/><path d="M8 6V4h8v2M8 10h8M8 14h5"/></svg>
+          </button>
+          <button class="active" title="结构复刻">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16v14H4z"/><path d="M8 9h2v2H8zM14 9h2v2h-2zM8 15h2v2H8zM14 15h2v2h-2z"/></svg>
+          </button>
+        </div>
+      </aside>
+
+      <div class="stage">
+        <main class="main">
+          <header class="header">
+            <div>
+              <h1>MP4 结构复刻工作台</h1>
+              <p>上传样片，自动拆解镜头和台词；只强绑定主场景、角色卡和角色音频，其他镜头细节由分镜自动派生。</p>
+            </div>
+            <div class="token-box">
+              <div>
+                <label for="token">接口凭证</label>
+                <input id="token" placeholder="自动读取或登录后写入" autocomplete="off" />
+              </div>
+              <button id="loadStoredToken">读取本地凭证</button>
+            </div>
+          </header>
+
+          <section class="task-strip" aria-label="任务设置">
+            <div>
+              <label for="taskId">任务编号</label>
+              <input id="taskId" type="number" placeholder="读取已有任务" />
+            </div>
+            <div class="field-row">
+              <div>
+                <label for="projectId">项目编号</label>
+                <input id="projectId" type="number" value="900001" />
+              </div>
+              <div>
+                <label for="taskName">任务名称</label>
+                <input id="taskName" value="MP4 结构复刻" />
+              </div>
+              <div>
+                <label for="platform">平台</label>
+                <select id="platform">
+                  <option value="douyin">抖音</option>
+                  <option value="xiaohongshu">小红书</option>
+                  <option value="kuaishou">快手</option>
+                  <option value="bilibili">哔哩哔哩</option>
+                  <option value="wechat">微信视频号</option>
+                  <option value="other" selected>其他</option>
+                </select>
+              </div>
+              <div>
+                <label for="aspectRatio">画幅比例</label>
+                <select id="aspectRatio">
+                  <option>9:16</option>
+                  <option>16:9</option>
+                  <option>1:1</option>
+                  <option>4:3</option>
+                  <option>3:4</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div id="statusPill" class="status-pill"><span class="status-dot"></span><span>未加载</span></div>
+              <div class="actions" style="margin-top:8px">
+                <button id="createTask" class="primary">创建任务</button>
+                <button id="loadTask">读取任务</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="canvas">
+            <div class="board">
+              <div>
+                <section class="panel">
+                  <div class="panel-head">
+                    <h2>MP4 上传</h2>
+                    <span id="uploadMiniStatus" class="tag">等待</span>
+                  </div>
+                  <div class="panel-body">
+                    <div class="dropzone">
+                      <p><strong>源视频样片</strong><br />选择视频文件后分片上传，后端会写入 Toonflow 文件存储，并进入自动拆解流程。</p>
+                      <input id="file" type="file" accept="video/mp4,video/quicktime" />
+                      <button id="upload" class="primary">分片上传源视频</button>
+                    </div>
+                    <div id="uploadStatus" class="mini-item" style="margin-top:12px">
+                      <span>上传状态</span>
+                      <strong>等待上传</strong>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="panel">
+                  <div class="panel-head">
+                    <h2>流程控制</h2>
+                    <span class="tag">按顺序执行</span>
+                  </div>
+                  <div class="panel-body">
+                    <div id="flowStack" class="flow">
+                      <div class="flow-step" data-stage="source_uploaded">
+                        <div class="flow-index">1</div>
+                        <div class="flow-name"><strong>源视频</strong><span>创建任务并上传 MP4</span></div>
+                        <button id="startAnalysis">开始拆解</button>
+                      </div>
+                      <div class="flow-step" data-stage="understanding_frames">
+                        <div class="flow-index">2</div>
+                        <div class="flow-name"><strong>视觉理解</strong><span>抽帧理解镜头、人物、场景</span></div>
+                        <button id="runUnderstanding">运行</button>
+                      </div>
+                      <div class="flow-step" data-stage="ir_built">
+                        <div class="flow-index">3</div>
+                        <div class="flow-name"><strong>结构稿</strong><span>合并台词、镜头和画面结构</span></div>
+                        <button id="buildIr">构建</button>
+                      </div>
+                      <div class="flow-step" data-stage="asset_gap_ready">
+                        <div class="flow-index">4</div>
+                        <div class="flow-name"><strong>核心资产</strong><span>只绑定主场景、角色卡和角色音频</span></div>
+                        <button id="analyzeGaps">分析</button>
+                      </div>
+                      <div class="flow-step" data-stage="storyboard_generated">
+                        <div class="flow-index">5</div>
+                        <div class="flow-name"><strong>新分镜</strong><span>生成可进入生产台的分镜描述</span></div>
+                        <button id="regenerate">生成</button>
+                      </div>
+                      <div class="flow-step" data-stage="checked">
+                        <div class="flow-index">6</div>
+                        <div class="flow-name"><strong>一致性</strong><span>检查资产、台词和镜头约束</span></div>
+                        <button id="check">检查</button>
+                      </div>
+                      <div class="flow-step" data-stage="pushed">
+                        <div class="flow-index">7</div>
+                        <div class="flow-name"><strong>推送 Toonflow</strong><span>写入生产工作台分镜和视频轨</span></div>
+                        <button id="push" class="primary">推送</button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <div>
+                <div class="stats">
+                  <div class="stat"><strong id="statShots">0</strong><span>镜头</span></div>
+                  <div class="stat"><strong id="statFrames">0</strong><span>关键帧</span></div>
+                  <div class="stat"><strong id="statGaps">0</strong><span>核心待绑定</span></div>
+                  <div class="stat"><strong id="statStoryboard">0</strong><span>新分镜</span></div>
+                </div>
+
+                <section class="panel">
+                  <div class="panel-head">
+                    <h2>结构拆解结果</h2>
+                    <span id="artifactSummary" class="tag">等待任务数据</span>
+                  </div>
+                  <div class="panel-body">
+                    <div class="tabs" role="tablist">
+                      <button class="tab active" data-tab="shotsPanel">镜头</button>
+                      <button class="tab" data-tab="dialoguePanel">台词</button>
+                      <button class="tab" data-tab="adaptationPanel">适配</button>
+                      <button class="tab" data-tab="promptPanel">提示词包</button>
+                      <button class="tab" data-tab="storyboardPanel">新分镜</button>
+                    </div>
+                    <div id="shotsPanel" class="tab-panel active">
+                      <div id="shots" class="shot-grid"></div>
+                    </div>
+                    <div id="dialoguePanel" class="tab-panel">
+                      <div id="dialogue" class="dialogue-list"></div>
+                      <div class="save-row"><button id="saveDialogue" class="primary">保存台词</button></div>
+                    </div>
+                    <div id="adaptationPanel" class="tab-panel">
+                      <div class="save-row">
+                        <button id="buildAdaptations" class="primary">生成适配</button>
+                        <button id="routeModels">路由模型</button>
+                        <button id="checkEnvironment">环境检查</button>
+                        <button id="checkVisionProvider">视觉探活</button>
+                      </div>
+                      <div id="adaptations" class="adaptation-list"></div>
+                    </div>
+                    <div id="promptPanel" class="tab-panel">
+                      <div id="promptPackage" class="prompt-list"></div>
+                    </div>
+                    <div id="storyboardPanel" class="tab-panel">
+                      <div id="storyboard" class="story-list"></div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <aside class="right">
+          <div class="right-head">
+            <div class="right-title">
+              <strong>结构复刻 Agent</strong>
+              <span id="progressValue" class="tag">0%</span>
+            </div>
+            <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+            <div class="progress-meta">
+              <span id="progressStage">未加载</span>
+              <span id="progressArtifacts">无任务</span>
+            </div>
+            <div id="errorBox" class="error-box"></div>
+          </div>
+
+          <div class="right-scroll">
+            <section class="agent-card">
+              <h2>任务队列</h2>
+              <div id="jobList" class="job-list"></div>
+            </section>
+
+            <section class="agent-card">
+              <h2>账号登录</h2>
+              <p>使用 Toonflow 本机账号登录，成功后自动写入当前页面的接口凭证。</p>
+              <div class="auth-row">
+                <div>
+                  <label for="loginUsername">账号</label>
+                  <input id="loginUsername" autocomplete="username" value="admin" />
+                </div>
+                <div>
+                  <label for="loginPassword">密码</label>
+                  <input id="loginPassword" type="password" autocomplete="current-password" value="admin123" />
+                </div>
+              </div>
+              <div class="auth-actions">
+                <div id="loginStatus" class="auth-status">未登录，本页可自动读取已保存凭证</div>
+                <button id="loginButton" class="primary">登录并获取凭证</button>
+              </div>
+            </section>
+
+            <section class="agent-card">
+              <h2>具体使用</h2>
+              <p>登录后创建任务，上传 MP4，然后按左侧流程从拆解到推送。推送后会写入同一个项目的生产数据。</p>
+              <div class="mini-list">
+                <div class="mini-item"><span>页面地址</span><strong>/structural-replica.html</strong></div>
+                <div class="mini-item"><span>连接</span><strong>同服务 / 同库</strong></div>
+                <div class="mini-item"><span>主线</span><strong>MP4 自动拆解</strong></div>
+              </div>
+            </section>
+
+            <section class="agent-card">
+              <h2>核心资产与绑定</h2>
+              <p class="meta">必须提供：主场景全景图、人物角色卡、每个角色对应音频。道具、服装、局部环境和镜头细节会进入分镜提示词自动生成。</p>
+              <div class="field-row" style="grid-template-columns: repeat(3, minmax(0, 1fr)) auto;">
+                <input id="bulkRoleAssetId" type="number" placeholder="通用角色资产 ID" />
+                <input id="bulkSceneAssetId" type="number" placeholder="通用场景资产 ID" />
+                <input id="bulkAudioAssetId" type="number" placeholder="通用音频资产 ID" />
+                <button id="fillAssetsByType">按类型填充</button>
+              </div>
+              <div id="coreAssetUploads" class="core-upload-list"></div>
+              <div id="gaps" class="gap-list"></div>
+              <div class="save-row"><button id="bindAssets" class="primary">保存绑定</button></div>
+            </section>
+
+            <section class="agent-card">
+              <h2>一致性报告</h2>
+              <div id="reportBox" class="mini-list"></div>
+            </section>
+
+            <section class="agent-card">
+              <h2>提示词包校验</h2>
+              <div id="promptReportBox" class="mini-list"></div>
+            </section>
+          </div>
+
+          <details class="log-card" open>
+            <summary>接口结果</summary>
+            <pre id="log">{}</pre>
+          </details>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const state = { task: null, progress: null, activeTab: "shotsPanel", pollTimer: null };
+    const $ = (id) => document.getElementById(id);
+    let apiOrigin = "";
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[char]));
+    const escapeSelector = (value) => CSS?.escape ? CSS.escape(String(value ?? "")) : String(value ?? "").replace(/["\\]/g, "\\$&");
+
+    async function initApiOrigin() {
+      if (location.protocol !== "file:") return;
+      try {
+        const data = await (await fetch("toonflow://getAppUrl")).json();
+        if (data?.url) apiOrigin = String(data.url).replace(/\/api\/?$/, "");
+      } catch {
+        apiOrigin = "";
+      }
+    }
+
+    function apiUrl(path) {
+      if (!path || /^https?:\/\//i.test(path)) return path;
+      const normalized = path.startsWith("/") ? path : `/${path}`;
+      return apiOrigin ? `${apiOrigin}${normalized}` : normalized;
+    }
+
+    async function callToonflow(name) {
+      try {
+        return await (await fetch(`toonflow://${name}`)).json();
+      } catch {
+        return null;
+      }
+    }
+
+    const assetTypeLabels = {
+      role: "角色",
+      scene: "场景",
+      prop: "道具",
+      product: "产品",
+      clothing: "服装",
+      voice: "声音",
+      audio: "音频",
+      tool: "道具",
+    };
+
+    const assetStatusLabels = {
+      missing: "待绑定",
+      suggested: "有建议",
+      bound: "已绑定",
+      cleared: "已清空",
+    };
+
+    const jobTypeLabels = {
+      analyzer: "Analyzer",
+      vision: "视觉理解",
+      buildIr: "结构稿",
+      assetGap: "资产缺口",
+      shotAdaptation: "镜头适配",
+      modelRouting: "模型路由",
+      regenerateStoryboard: "生成分镜",
+      checkConsistency: "一致性检查",
+      pushToProduction: "推送生产",
+    };
+
+    const jobStatusLabels = {
+      queued: "排队",
+      running: "运行中",
+      succeeded: "完成",
+      failed: "失败",
+    };
+
+    const warningLabels = {
+      empty_dialogue: "台词为空",
+      source_person_risk: "可能保留了原视频人物信息",
+      source_brand_risk: "可能保留了原品牌信息",
+      source_store_risk: "可能保留了原门店信息",
+      watermark_risk: "可能保留了水印或账号信息",
+    };
+
+    const phraseTranslations = [
+      ["black tripod/light stand", "黑色三脚架或补光灯架"],
+      ["AR sweat-drop sticker", "汗滴表情贴纸"],
+      ["adult male presenter with dark hair, wearing dark jacket over light shirt, small lapel mic; seated/standing indoors and gesturing to cheek", "深色头发男性讲解者，穿深色外套和浅色上衣，佩戴小领夹麦，在室内讲解并指向脸颊"],
+      ["adult male face shown frontally with hair held back, neutral expression, white cheek contour lines overlaid", "正面展示的男性脸部，头发向后固定，表情自然，叠加白色脸颊轮廓线"],
+      ["cream walls, light wood floor, white sofa/counter area, ceiling vent/light strips, casual studio or clinic-like interior", "奶油色墙面、浅木地板、白色沙发或柜台、天花风口和灯带，类似工作室或诊室的室内环境"],
+      ["black/dark background used for close-up facial analysis insert", "用于脸部分析特写的深色背景"],
+      ["small black lapel microphone clipped near collar", "领口附近的小黑色领夹麦"],
+      ["two red fire extinguishers visible in background", "背景里可见的两个红色灭火器"],
+      ["white sofa or cushioned seating", "白色沙发或软垫座椅"],
+      ["counter/cabinet with small containers in background", "背景里的柜台或柜子及小容器"],
+      ["digital overlay cheek guide lines on model face", "脸部叠加的数字轮廓辅助线"],
+      ["speaker_patient", "出镜顾客"],
+      ["treatment_room_setup", "护理室布置"],
+      ["blue_reclining_chair", "蓝色躺椅"],
+      ["hair_band", "发带"],
+      ["clip_on_microphone", "领夹麦"],
+      ["graphic_arrows", "图形箭头"],
+      ["presenter", "讲解者"],
+      ["indoor consultation/demo setting", "室内咨询或演示环境"],
+      ["table", "桌子"],
+      ["camera_or_light_device", "相机或灯光设备"],
+      ["magnifier_graphic", "放大镜图形"],
+      ["text_overlay", "文字贴片"],
+      ["client_patient", "顾客"],
+      ["client", "顾客"],
+      ["consultant", "咨询师"],
+      ["consultation_room", "咨询室"],
+      ["split_screen_layout", "分屏画面"],
+      ["white_table", "白色桌子"],
+      ["tripod_camera", "三脚架相机"],
+      ["face_mask", "口罩"],
+      ["pen_or_pointer", "笔或指示棒"],
+      ["person_1", "人物 1"],
+      ["person_2", "人物 2"],
+      ["interior_room", "室内房间"],
+      ["lavalier_mic", "领夹麦"],
+      ["table_edge", "桌边"],
+      ["generic young adult man, short dark hair, wearing a navy jacket over a white shirt, seated, smiling/laughing, hands clasped on table", "年轻男性，短深色头发，穿海军蓝外套和白色上衣，坐姿微笑或大笑，双手放在桌上"],
+      ["bright minimal room or studio corner with white wall, beige floor-length curtains, daylight from right side, white chair and glossy white tabletop", "明亮简洁的房间或工作室角落，白墙、米色落地窗帘、右侧自然光、白色椅子和亮面白桌"],
+      ["white or light clipboard with metal clip, placed near bottom foreground on table, holding paper with simple sketch", "桌面前景的浅色夹板，带金属夹，夹着简单草图纸"],
+      ["black/gray pen lying diagonally on paper in foreground", "前景纸张上斜放的黑灰色笔"],
+      ["black camera or small rig/tripod visible in background behind subject during later part of shot", "后半段背景里可见的黑色相机或小型支架"],
+      ["cream/white rounded chair partly visible behind seated subject", "坐着的人物背后露出的奶油白圆角椅"],
+      ["practitioner", "操作者"],
+      ["treatment_room", "护理室"],
+      ["white_pen_like_tool", "白色笔状工具"],
+      ["wireless_lav_mic", "无线领夹麦"],
+      ["headband", "头带"],
+      ["subtitles", "字幕"],
+      ["procedure_room_corner", "操作室角落"],
+      ["white_disposable_gloves", "白色一次性手套"],
+      ["blue_chair_cover_or_drape", "蓝色椅套或铺巾"],
+      ["white_client_clothing_or_sheet", "白色顾客服装或盖布"],
+      ["treatment_chair", "护理椅"],
+      ["gloves", "手套"],
+      ["clinic_consultation_room", "诊室咨询间"],
+      ["comparison_graphic_background", "对比图背景"],
+      ["hand_mirror", "手持镜"],
+      ["jawline_annotation_lines", "下颌线标注线"],
+      ["lapel_microphone", "领夹麦"],
+      ["lavalier_microphone_client", "顾客领夹麦"],
+      ["lavalier_microphone_practitioner", "操作者领夹麦"],
+      ["main_subject", "主出镜人物"],
+      ["decorative_backdrop", "装饰背景"],
+      ["clip_mic", "领夹麦"],
+      ["poster_board", "展示板"],
+      ["countertop_items", "台面物品"],
+      ["Young adult with styled dark hair, white top, subtle makeup, lying back and examining face while holding phone; use a new actor and avoid matching original facial identity.", "深色发型的年轻人物，白色上衣、淡妆，半躺并拿手机观察脸部；必须使用新演员，避免复刻原脸"],
+      ["Neutral beige wall/background with bright blue reclining chair or treatment bed, clean indoor lighting.", "中性米色墙面背景，亮蓝色躺椅或护理床，干净室内光线"],
+      ["Copper/orange smartphone partially visible at bottom foreground, used as mirror/camera; avoid recognizable brand design/logos.", "前景底部露出的铜橙色手机，用作镜子或拍摄设备；避免可识别品牌设计和标志"],
+      ["Small black wireless mic clipped to white shirt near chest.", "白色上衣胸前夹着小黑色无线麦"],
+      ["Bright cyan/blue padded chair or treatment bed behind subject.", "人物背后的亮青蓝色软垫椅或护理床"],
+      ["C1", "角色 1"],
+      ["C2", "角色 2"],
+      ["主场景全景图", "主场景全景图"],
+      ["S1", "场景 1"],
+      ["S2", "场景 2"],
+      ["P1", "道具 1"],
+      ["P2", "道具 2"],
+      ["P3", "道具 3"],
+      ["P4", "道具 4"],
+      ["P5", "道具 5"],
+    ];
+
+    function translateFixedText(value) {
+      let text = String(value ?? "");
+      if (!text) return "";
+      for (const [source, target] of phraseTranslations) {
+        text = text.split(source).join(target);
+      }
+      return text
+        .replace(/Reuse timing, shot purpose, camera language, and dialogue pattern/g, "复用原片的时长节奏、镜头目的、运镜方式和台词结构")
+        .replace(/using replaceable slots:/g, "；需要替换的资产：")
+        .replace(/replace all original identity and brand elements/g, "替换所有原人物身份、品牌和标识元素")
+        .replace(/shot size:/g, "景别：")
+        .replace(/angle:/g, "角度：")
+        .replace(/motion:/g, "运镜：")
+        .replace(/composition:/g, "构图：")
+        .replace(/dialogue:/g, "台词：")
+        .replace(/Source shot requires manual structural review/g, "该镜头需要人工复核结构")
+        .replace(/Opening hook with source dialogue/g, "开场钩子，沿用源台词节奏")
+        .replace(/Opening visual hook/g, "开场视觉钩子")
+        .replace(/Closing beat with source dialogue/g, "收尾节奏，沿用源台词")
+        .replace(/Closing visual beat/g, "收尾视觉节奏")
+        .replace(/Narrative beat with source dialogue/g, "叙事段落，沿用源台词节奏")
+        .replace(/Visual transition beat/g, "视觉转场段落")
+        .replace(/original_person_or_face/g, "原人物或原脸")
+        .replace(/original_brand_or_logo/g, "原品牌或标志")
+        .replace(/original_store_sign/g, "原门店招牌")
+        .replace(/watermark/g, "水印")
+        .replace(/source_dialogue_or_environment_audio/g, "源台词或环境声")
+        .replace(/environment_audio/g, "环境声")
+        .replace(/direct_start/g, "直接开场")
+        .replace(/direct_cut/g, "直接切换")
+        .replace(/_/g, " ")
+        .replace(/; ?/g, "；")
+        .replace(/, ?/g, "、");
+    }
+
+    function labelAssetType(type) {
+      return assetTypeLabels[type] || translateFixedText(type) || "资产";
+    }
+
+    function labelAssetStatus(status) {
+      return assetStatusLabels[status] || translateFixedText(status) || status || "未知";
+    }
+
+    function labelJobType(type) {
+      return jobTypeLabels[type] || translateFixedText(type) || type || "任务";
+    }
+
+    function labelJobStatus(status) {
+      return jobStatusLabels[status] || translateFixedText(status) || status || "未知";
+    }
+
+    function labelWarning(warning) {
+      const text = String(warning || "");
+      const longDialogue = text.match(/^dialogue_too_long:max_(\d+)_chars$/);
+      if (longDialogue) return `台词偏长，建议不超过 ${longDialogue[1]} 个字`;
+      return warningLabels[text] || translateFixedText(text);
+    }
+
+    function containsLatin(text) {
+      return /[A-Za-z]{2,}/.test(String(text || ""));
+    }
+
+    function shotLabel(shotId, fallbackIndex) {
+      const match = String(shotId || "").match(/(\d+)/);
+      const number = match ? match[1].padStart(3, "0") : String((fallbackIndex || 0) + 1).padStart(3, "0");
+      return `镜头 ${number}`;
+    }
+
+    function genericSlotName(type, index) {
+      return `${labelAssetType(type)} ${String((index || 0) + 1).padStart(2, "0")}`;
+    }
+
+    function displaySlotName(item, index) {
+      const translated = translateFixedText(item?.slotName || "");
+      return containsLatin(translated) ? genericSlotName(item?.slotType, index) : translated;
+    }
+
+    function displayStructureText(text, shot) {
+      const translated = translateFixedText(text || "");
+      if (!translated || containsLatin(translated)) {
+        const slotCount = (shot?.requiredAssetSlots || []).length;
+        return slotCount
+          ? `复用原片节奏、景别、运镜和台词结构；核心资产强绑定，镜头细节自动派生。`
+          : "复用原片节奏、景别、运镜和台词结构；替换所有原人物、品牌和标识元素。";
+      }
+      return translated;
+    }
+
+    function displayVideoDesc(text) {
+      const translated = translateFixedText(text || "");
+      return containsLatin(translated) ? "已根据源视频结构生成新分镜描述；请使用已绑定资产重新生成画面，避免出现原人物、品牌、门店招牌和水印。" : translated;
+    }
+
+    const statusLabels = {
+      draft: "草稿",
+      source_uploading: "上传中",
+      source_uploaded: "已上传",
+      preprocessing: "预处理",
+      transcribing: "语音转文字",
+      detecting_shots: "镜头检测",
+      sampling_frames: "抽帧",
+      understanding_frames: "视觉理解",
+      ir_built: "结构稿已构建",
+      dialogue_reviewed: "台词已审核",
+      asset_gap_ready: "核心资产缺口完成",
+      assets_bound: "核心资产已绑定",
+      storyboard_generated: "分镜已生成",
+      checked: "已检查",
+      pushed: "已推送",
+      failed: "失败",
+    };
+
+    const stageOrder = [
+      "draft",
+      "source_uploading",
+      "source_uploaded",
+      "preprocessing",
+      "transcribing",
+      "detecting_shots",
+      "sampling_frames",
+      "understanding_frames",
+      "ir_built",
+      "dialogue_reviewed",
+      "asset_gap_ready",
+      "assets_bound",
+      "storyboard_generated",
+      "checked",
+      "pushed",
+    ];
+
+    function findStoredToken() {
+      const directKeys = ["sr_token", "token", "accessToken", "authToken", "Authorization", "authorization"];
+      for (const key of directKeys) {
+        const value = localStorage.getItem(key) || sessionStorage.getItem(key);
+        if (value && /^Bearer\s+/.test(value)) return value;
+      }
+
+      const scanValue = (value, depth = 0) => {
+        if (!value || depth > 4) return "";
+        if (typeof value === "string") {
+          const bearer = value.match(/Bearer\s+eyJ[A-Za-z0-9._-]+/);
+          if (bearer) return bearer[0];
+          if ((value.startsWith("{") || value.startsWith("[")) && value.length < 20000) {
+            try {
+              return scanValue(JSON.parse(value), depth + 1);
+            } catch {
+              return "";
+            }
+          }
+          return "";
+        }
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            const result = scanValue(item, depth + 1);
+            if (result) return result;
+          }
+          return "";
+        }
+        if (typeof value === "object") {
+          for (const item of Object.values(value)) {
+            const result = scanValue(item, depth + 1);
+            if (result) return result;
+          }
+        }
+        return "";
+      };
+
+      for (const storage of [localStorage, sessionStorage]) {
+        for (let index = 0; index < storage.length; index += 1) {
+          const key = storage.key(index);
+          const result = scanValue(storage.getItem(key));
+          if (result) return result;
+        }
+      }
+      return "";
+    }
+
+    function loadStoredToken() {
+      $("token").value = findStoredToken();
+      $("loginStatus").textContent = $("token").value ? "已发现本地凭证，可直接调用接口" : "未发现本地凭证，请先登录";
+    }
+    loadStoredToken();
+
+    $("backToMain").onclick = async () => {
+      const result = await callToonflow("openMain");
+      if (!result?.ok) window.location.href = "./index.html";
+    };
+
+    function token() {
+      const value = $("token").value.trim();
+      if (value) localStorage.setItem("sr_token", value);
+      return value;
+    }
+
+    function maskToken(value) {
+      if (!value) return "";
+      return `${value.slice(0, 12)}...${value.slice(-8)}`;
+    }
+
+    function toast(message, type = "info") {
+      const el = $("toast");
+      el.textContent = message;
+      el.className = `toast show ${type === "error" ? "error" : ""}`;
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => {
+        el.className = "toast";
+      }, 2600);
+    }
+
+    function writeApiSummary(data, fallback = "请求完成") {
+      const payload = data?.data || data || {};
+      const lines = [];
+      lines.push(data?.code && data.code >= 400 ? "请求失败" : fallback);
+      if (payload.taskId) lines.push(`任务编号：${payload.taskId}`);
+      if (payload.status || payload.currentStage) lines.push(`当前阶段：${statusLabels[payload.currentStage || payload.status] || payload.currentStage || payload.status}`);
+      if (typeof payload.progress === "number") lines.push(`进度：${payload.progress}%`);
+      if (payload.artifacts) {
+        lines.push(`镜头：${payload.artifacts.shotCount || 0}`);
+        lines.push(`关键帧：${payload.artifacts.frameSampleCount || 0}`);
+        lines.push(`镜头理解：${payload.artifacts.frameUnderstandingCount || 0}/${payload.artifacts.shotCount || 0}`);
+      }
+      if (typeof payload.missingCount === "number") lines.push(`核心待绑定：${payload.missingCount}`);
+      if (Array.isArray(payload.items)) lines.push(`核心资产项：${payload.items.length}`);
+      if (payload.message || data?.message) lines.push(`说明：${translateFixedText(payload.message || data.message)}`);
+      $("log").textContent = lines.filter(Boolean).join("\n");
+    }
+
+    function setBusy(button, busy) {
+      if (!button) return;
+      if (busy) {
+        button.dataset.busy = "1";
+        button.dataset.label = button.textContent;
+        button.textContent = "处理中";
+        button.disabled = true;
+      } else {
+        delete button.dataset.busy;
+        button.textContent = button.dataset.label || button.textContent;
+        button.disabled = false;
+        setActionButtons();
+      }
+    }
+
+    async function api(path, body, writeLog = true) {
+      const res = await fetch(apiUrl(`/api/structuralReplica/${path}`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: token() },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (writeLog) writeApiSummary(data);
+      if (!res.ok || data.code >= 400) throw new Error(data.message || data.error || "请求失败");
+      return data.data;
+    }
+
+    async function rawApi(url, body) {
+      const res = await fetch(apiUrl(url), {
+        method: "POST",
+        headers: { "Content-Type": "application/octet-stream", Authorization: token() },
+        body,
+      });
+      const data = await res.json();
+      writeApiSummary(data, "上传请求完成");
+      if (!res.ok || data.code >= 400) throw new Error(data.message || data.error || "请求失败");
+      return data.data;
+    }
+
+    async function jsonApi(url, body, fallback = "请求完成") {
+      const res = await fetch(apiUrl(url), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: token() },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      writeApiSummary(data, fallback);
+      if (!res.ok || data.code >= 400) throw new Error(data.message || data.error || "请求失败");
+      return data.data;
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error || new Error("文件读取失败"));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function loginApi(username, password) {
+      const res = await fetch(apiUrl("/api/login/login"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      const logData = JSON.parse(JSON.stringify(data));
+      if (logData?.data?.token) logData.data.token = maskToken(logData.data.token);
+      writeApiSummary(logData, "登录请求完成");
+      if (!res.ok || data.code >= 400) throw new Error(data.message || "登录失败");
+      return data.data;
+    }
+
+    async function runAction(button, fn, successText) {
+      try {
+        setBusy(button, true);
+        const result = await fn();
+        if (successText) toast(successText);
+        return result;
+      } catch (error) {
+        toast(error.message || String(error), "error");
+        throw error;
+      } finally {
+        setBusy(button, false);
+      }
+    }
+
+    function currentTaskId() {
+      const id = Number($("taskId").value);
+      if (!id) throw new Error("需要先创建或填写任务编号");
+      return id;
+    }
+
+    function ossUrl(path) {
+      if (!path) return "";
+      return path.startsWith("/oss/") ? path : `/oss${path.startsWith("/") ? "" : "/"}${path}`;
+    }
+
+    function formatNumber(value, suffix = "") {
+      if (value === null || value === undefined || value === "") return "-";
+      const num = Number(value);
+      if (!Number.isFinite(num)) return String(value);
+      return `${Math.round(num * 100) / 100}${suffix}`;
+    }
+
+    function taskStatus() {
+      return state.progress?.status || state.task?.task?.status || "draft";
+    }
+
+    function statusClass(status) {
+      if (status === "failed") return "failed";
+      if (["preprocessing", "transcribing", "detecting_shots", "sampling_frames", "understanding_frames"].includes(status)) return "running";
+      if (["source_uploaded", "ir_built", "asset_gap_ready", "assets_bound", "storyboard_generated", "checked", "pushed"].includes(status)) return "ready";
+      return "";
+    }
+
+    function canRun(action) {
+      const status = taskStatus();
+      const hasSource = Boolean(state.task?.sourceMedia?.sourcePath);
+      const understandingRunning = isUnderstandingRunning();
+      const allowed = {
+        startAnalysis: (status === "source_uploaded" || status === "failed") && hasSource,
+        runUnderstanding: ["sampling_frames", "ir_built"].includes(status) || (status === "understanding_frames" && !understandingRunning),
+        buildIr: (status === "understanding_frames" && !understandingRunning) || status === "ir_built",
+        analyzeGaps: ["ir_built", "dialogue_reviewed", "asset_gap_ready", "assets_bound"].includes(status),
+        bindAssets: ["asset_gap_ready", "assets_bound"].includes(status),
+        buildAdaptations: ["assets_bound", "storyboard_generated", "checked"].includes(status),
+        routeModels: Boolean(state.task?.shotAdaptations?.length),
+        regenerate: ["assets_bound", "storyboard_generated", "checked"].includes(status),
+        check: ["storyboard_generated", "checked"].includes(status),
+        push: ["checked", "pushed"].includes(status),
+      };
+      return Boolean(allowed[action]);
+    }
+
+    function setActionButtons() {
+      ["startAnalysis", "runUnderstanding", "buildIr", "analyzeGaps", "bindAssets", "buildAdaptations", "routeModels", "regenerate", "check", "push"].forEach((id) => {
+        const button = $(id);
+        if (!button || button.dataset.busy === "1") return;
+        button.disabled = !canRun(id);
+      });
+
+      const status = taskStatus();
+      if ($("startAnalysis")?.dataset.busy !== "1") {
+        $("startAnalysis").textContent = status === "failed" ? "重试拆解" : isAnalysisRunning() ? "运行中" : "开始拆解";
+      }
+      if ($("runUnderstanding")?.dataset.busy !== "1") {
+        $("runUnderstanding").textContent = isUnderstandingRunning() ? "理解中" : stageDone("ir_built", status) ? "重新理解" : "运行";
+      }
+      if ($("buildIr")?.dataset.busy !== "1") {
+        $("buildIr").textContent = stageDone("ir_built", status) ? "重新构建" : "构建";
+      }
+      if ($("analyzeGaps")?.dataset.busy !== "1") {
+        $("analyzeGaps").textContent = stageDone("asset_gap_ready", status) ? "重新分析" : "分析";
+      }
+    }
+
+    function isAnalysisRunning() {
+      return ["preprocessing", "transcribing", "detecting_shots"].includes(taskStatus());
+    }
+
+    function isUnderstandingRunning() {
+      const artifacts = state.progress?.artifacts;
+      return taskStatus() === "understanding_frames" && artifacts && !artifacts.frameUnderstandingComplete;
+    }
+
+    function conciseErrorReason(reason) {
+      if (!reason) return "";
+      const text = String(reason).trim();
+      try {
+        const jsonStart = text.indexOf("{");
+        if (jsonStart >= 0) {
+          const parsed = JSON.parse(text.slice(jsonStart));
+          return parsed?.error?.message || parsed?.message || text;
+        }
+      } catch {}
+      return text.replace(/^Analyzer exited with code \d+:\s*/i, "").trim();
+    }
+
+    async function pollUntilAnalysisDone() {
+      clearInterval(state.pollTimer);
+      state.pollTimer = setInterval(async () => {
+        try {
+          await refresh(false);
+          const status = taskStatus();
+          if (!isAnalysisRunning()) {
+            clearInterval(state.pollTimer);
+            state.pollTimer = null;
+            if (status === "sampling_frames") toast("拆解完成，可以运行视觉理解");
+            if (status === "failed") toast(conciseErrorReason(state.progress?.errorReason || state.task?.task?.errorReason) || "拆解失败", "error");
+          }
+        } catch (error) {
+          clearInterval(state.pollTimer);
+          state.pollTimer = null;
+          toast(error.message || String(error), "error");
+        }
+      }, 1800);
+    }
+
+    async function pollUntilUnderstandingDone() {
+      clearInterval(state.pollTimer);
+      state.pollTimer = setInterval(async () => {
+        try {
+          await refresh(false);
+          if (!isUnderstandingRunning()) {
+            clearInterval(state.pollTimer);
+            state.pollTimer = null;
+            toast("视觉理解完成，下一步构建 IR");
+          }
+        } catch (error) {
+          clearInterval(state.pollTimer);
+          state.pollTimer = null;
+          toast(error.message || String(error), "error");
+        }
+      }, 2200);
+    }
+
+    async function retryJob(jobType) {
+      const taskId = currentTaskId();
+      if (jobType === "analyzer") {
+        await api("startAnalysis", { taskId });
+        await refresh(false);
+        await pollUntilAnalysisDone();
+        return;
+      }
+      if (jobType === "vision") {
+        await api("runFrameUnderstanding", { taskId });
+        await refresh(false);
+        await pollUntilUnderstandingDone();
+        return;
+      }
+      const retryMap = {
+        buildIr: "buildIr",
+        assetGap: "analyzeAssetGaps",
+        shotAdaptation: "buildShotAdaptations",
+        modelRouting: "modelGateway/routeModels",
+        regenerateStoryboard: "regenerateStoryboard",
+        checkConsistency: "checkConsistency",
+        pushToProduction: "pushToProduction",
+      };
+      const endpoint = retryMap[jobType];
+      if (!endpoint) throw new Error(`Unsupported retry job: ${jobType}`);
+      const body = endpoint === "pushToProduction" ? { taskId, createScript: true, scriptName: $("taskName").value } : { taskId };
+      await api(endpoint, body);
+      await refresh();
+    }
+
+    function stageDone(targetStage, status) {
+      if (status === "failed") return false;
+      return stageOrder.indexOf(status) >= stageOrder.indexOf(targetStage);
+    }
+
+    function updateProgressUi() {
+      const progress = state.progress;
+      const status = taskStatus();
+      const progressValue = progress?.progress ?? 0;
+      const label = statusLabels[status] || status || "未加载";
+      const dotClass = statusClass(status);
+
+      $("statusPill").innerHTML = `<span class="status-dot ${dotClass}"></span><span>${escapeHtml(label)}</span>`;
+      $("progressValue").textContent = `${progressValue}%`;
+      $("progressFill").style.width = `${progressValue}%`;
+      $("progressStage").textContent = progress?.activeJob ? `${label} / ${labelJobType(progress.activeJob.jobType)}` : label;
+
+      const artifacts = progress?.artifacts;
+      $("progressArtifacts").textContent = artifacts
+        ? `镜头理解 ${artifacts.frameUnderstandingCount || 0} / ${artifacts.shotCount || 0}，关键帧 ${artifacts.frameSampleCount || 0}`
+        : "无任务";
+
+      const errorReason = conciseErrorReason(progress?.errorReason || state.task?.task?.errorReason);
+      $("errorBox").classList.toggle("show", Boolean(errorReason));
+      $("errorBox").textContent = errorReason ? `失败原因：${errorReason}` : "";
+
+      renderJobs(state.task);
+
+      document.querySelectorAll(".flow-step").forEach((el) => {
+        el.classList.remove("done", "current", "blocked");
+        const stage = el.dataset.stage;
+        if (status === "failed") {
+          el.classList.add("blocked");
+        } else if (stageDone(stage, status)) {
+          el.classList.add("done");
+        } else if (stageOrder.indexOf(stage) >= stageOrder.indexOf(status)) {
+          const prev = [...document.querySelectorAll(".flow-step")].find((step) => !step.classList.contains("done"));
+          if (prev === el) el.classList.add("current");
+        }
+      });
+      setActionButtons();
+    }
+
+    function setStats(data) {
+      const shotRows = data?.storyIr?.data?.shots || data?.shotDetection?.data?.shots || [];
+      const frameRows = data?.frameSamples || [];
+      const gaps = data?.assetGap?.data?.items || [];
+      const storyboardRows = data?.regeneratedStoryboard?.data?.rows || [];
+      $("statShots").textContent = shotRows.length;
+      $("statFrames").textContent = frameRows.length;
+      $("statGaps").textContent = gaps.filter((item) => item.status !== "bound").length || gaps.length;
+      $("statStoryboard").textContent = storyboardRows.length;
+      $("artifactSummary").textContent = `镜头 ${shotRows.length} / 关键帧 ${frameRows.length} / 核心资产 ${gaps.length}`;
+    }
+
+    async function refresh(writeLog = true) {
+      const taskId = currentTaskId();
+      state.task = await api("getTask", { taskId }, writeLog);
+      state.progress = await api("getProgress", { taskId }, writeLog);
+      render();
+      updateProgressUi();
+    }
+
+    function emptyState(title, text) {
+      return `<div class="empty-state"><div><strong>${escapeHtml(title)}</strong><span>${escapeHtml(text)}</span></div></div>`;
+    }
+
+    function promptPackage(data) {
+      return data?.regeneratedStoryboard?.data?.promptPackage || null;
+    }
+
+    function promptIssueLabel(code) {
+      const labels = {
+        prompt_missing_reference_frames: "缺少证据帧",
+        prompt_required_assets_unbound: "资产未绑定",
+        prompt_missing_evidence_or_safety_clause: "缺少证据或禁止项",
+        prompt_package_missing: "缺少提示词包",
+      };
+      return labels[code] || labelWarning(code);
+    }
+
+    function copyText(text) {
+      if (!text) {
+        toast("没有可复制内容", "error");
+        return;
+      }
+      const fallback = () => {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      };
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).then(() => toast("已复制提示词")).catch(() => {
+          fallback();
+          toast("已复制提示词");
+        });
+        return;
+      }
+      fallback();
+      toast("已复制提示词");
+    }
+
+    function renderPromptSlots(slots = []) {
+      if (!slots.length) return `<div class="meta">无资产槽位</div>`;
+      return `<div class="slot-list">${slots.map((slot) => {
+        const bound = slot.bindingStatus === "bound" && slot.boundAssetId;
+        const status = bound ? `资产 ${slot.boundAssetId}` : slot.required ? "待绑定" : "自动生成";
+        return `<span class="slot-chip ${bound ? "bound" : slot.required ? "missing" : "auto"}">${escapeHtml(labelAssetType(slot.slotType))}:${escapeHtml(slot.slotName)} · ${escapeHtml(status)}</span>`;
+      }).join("")}</div>`;
+    }
+
+    function renderPromptFrames(frames = []) {
+      if (!frames.length) return `<div class="meta">证据帧：-</div>`;
+      return `<div class="prompt-frame-strip">${frames.map((frame) => `<img src="${escapeHtml(ossUrl(frame))}" alt="证据帧">`).join("")}</div>`;
+    }
+
+    function renderPromptPackage(data) {
+      const pack = promptPackage(data);
+      if (!pack?.shots?.length) {
+        $("promptPackage").innerHTML = emptyState("还没有提示词包", "绑定核心资产并生成新分镜后，这里会显示每个镜头的核心资产引用和自动派生细节。");
+        renderPromptReport(data);
+        return;
+      }
+
+      const report = pack.validationReport || {};
+      const reportTag = report.status === "pass" ? `<span class="tag green">提示词包通过</span>` : `<span class="tag red">提示词包阻塞</span>`;
+      const finalPrompt = pack.finalVideoPrompt || "";
+      const finalNegative = pack.finalNegativePrompt || "";
+      const summary = `<article class="card card-inner prompt-card">
+        <div class="card-head">
+          <strong>全片最终提示词</strong>
+          ${reportTag}
+        </div>
+        <div class="prompt-section">
+          <div class="prompt-title"><strong>final_video_prompt</strong><button data-copy-prompt="final-video">复制</button></div>
+          <textarea class="final-prompt" readonly>${escapeHtml(finalPrompt)}</textarea>
+        </div>
+        <div class="prompt-section">
+          <div class="prompt-title"><strong>final_negative_prompt</strong><button data-copy-prompt="final-negative">复制</button></div>
+          <textarea readonly>${escapeHtml(finalNegative)}</textarea>
+        </div>
+      </article>`;
+
+      const shotCards = pack.shots.map((shot, index) => {
+        const statusTag = shot.validationStatus === "pass" ? `<span class="tag green">可生成</span>` : `<span class="tag red">需处理</span>`;
+        const range = shot.sourceTimeRange ? `${formatNumber(shot.sourceTimeRange.startSec, "s")} - ${formatNumber(shot.sourceTimeRange.endSec, "s")}` : "-";
+        const warnings = (shot.warnings || []).map((warning) => `<div class="warning">${escapeHtml(promptIssueLabel(warning))}</div>`).join("");
+        return `<article class="card card-inner prompt-card">
+          <div class="card-head">
+            <strong>${escapeHtml(shotLabel(shot.shotId, index))}</strong>
+            ${statusTag}
+          </div>
+          <div class="meta">来源：${escapeHtml(range)} / 时长：${formatNumber(shot.durationSec, "s")}</div>
+          ${renderPromptFrames(shot.referenceFrames || [])}
+          ${renderPromptSlots(shot.assetSlots || [])}
+          ${warnings}
+          <div class="prompt-section">
+            <div class="prompt-title"><strong>槽位提示词</strong><button data-copy-shot="${escapeHtml(shot.shotId)}" data-copy-kind="rawPrompt">复制</button></div>
+            <textarea readonly>${escapeHtml(shot.rawPrompt || "")}</textarea>
+          </div>
+          <div class="prompt-section">
+            <div class="prompt-title"><strong>绑定后提示词</strong><button data-copy-shot="${escapeHtml(shot.shotId)}" data-copy-kind="resolvedPrompt">复制</button></div>
+            <textarea readonly>${escapeHtml(shot.resolvedPrompt || "")}</textarea>
+          </div>
+          <div class="prompt-section">
+            <div class="prompt-title"><strong>负面提示词</strong><button data-copy-shot="${escapeHtml(shot.shotId)}" data-copy-kind="negativePrompt">复制</button></div>
+            <textarea readonly>${escapeHtml(shot.negativePrompt || "")}</textarea>
+          </div>
+        </article>`;
+      }).join("");
+
+      $("promptPackage").innerHTML = summary + shotCards;
+      renderPromptReport(data);
+    }
+
+    function renderPromptReport(data) {
+      const pack = promptPackage(data);
+      if (!pack) {
+        $("promptReportBox").innerHTML = `<div class="mini-item"><span>状态</span><strong>未生成</strong></div>`;
+        return;
+      }
+      const report = pack.validationReport || {};
+      const issues = report.issues || [];
+      const statusClassName = report.status === "pass" ? "green" : "red";
+      const statusText = report.status === "pass" ? "通过" : "有阻塞";
+      $("promptReportBox").innerHTML = `
+        <div class="mini-item"><span>提示词包</span><strong><span class="tag ${statusClassName}">${escapeHtml(statusText)}</span></strong></div>
+        <div class="mini-item"><span>镜头提示词</span><strong>${escapeHtml(String((pack.shots || []).length))}</strong></div>
+        ${issues.slice(0, 5).map((issue, index) => `<div class="mini-item"><span>${escapeHtml(issue.shotId ? shotLabel(issue.shotId, index) : promptIssueLabel(issue.code))}</span><strong>${escapeHtml(issue.level === "blocker" ? "阻塞" : "提醒")}</strong></div>`).join("")}
+        ${issues.length > 5 ? `<div class="mini-item"><span>更多问题</span><strong>${issues.length - 5}</strong></div>` : ""}
+      `;
+    }
+
+    function renderShots(data) {
+      const shotRows = data.storyIr?.data?.shots || data.shotDetection?.data?.shots || [];
+      const frameRows = data.frameSamples || [];
+      if (!shotRows.length) {
+        $("shots").innerHTML = emptyState("还没有镜头数据", "上传 MP4 并点击开始拆解后，这里会显示镜头、关键帧和可复用结构。");
+        return;
+      }
+
+      $("shots").innerHTML = shotRows.map((shot, index) => {
+        const frames = (shot.frameSamples?.length ? shot.frameSamples : frameRows.filter((f) => f.shotId === shot.shotId)).slice(0, 3);
+        const frameTypeLabels = { start: "开头帧", middle: "中间帧", end: "结尾帧", action: "动作帧", text: "文字帧", product: "产品帧" };
+        const frameHtml = frames.length
+          ? frames.map((f) => `<img src="${escapeHtml(ossUrl(f.filePath))}" alt="${escapeHtml(frameTypeLabels[f.frameType] || "关键帧")}">`).join("")
+          : `<div class="frame-empty">无帧</div><div class="frame-empty">无帧</div><div class="frame-empty">无帧</div>`;
+        const review = shot.reviewRequired ? `<span class="tag red">需复核</span>` : `<span class="tag green">可用</span>`;
+        const structureText = displayStructureText(shot.reusableStructure || shot.sourceStructure || shot.shotPurpose, shot);
+        const label = shotLabel(shot.shotId, index);
+        return `<article class="card">
+          <div class="frames">${frameHtml}</div>
+          <div class="card-inner">
+            <div class="card-head">
+              <strong>${escapeHtml(label)}</strong>
+              ${review}
+            </div>
+            <div class="meta">${formatNumber(shot.startSec, "s")} - ${formatNumber(shot.endSec, "s")} / ${formatNumber(shot.durationSec, "s")}</div>
+            <p class="clip-text">${escapeHtml(shot.sourceDialogue || shot.editableDialogue || "无台词")}</p>
+            <div class="meta">${escapeHtml(structureText)}</div>
+          </div>
+        </article>`;
+      }).join("");
+    }
+
+    function renderDialogue(data) {
+      const dialogue = data.dialogueStructure?.data?.lines || [];
+      if (!dialogue.length) {
+      $("dialogue").innerHTML = emptyState("还没有台词结构", "构建结构稿后会自动生成可编辑台词和字幕。");
+      return;
+    }
+      $("dialogue").innerHTML = dialogue.map((line, index) => `<article class="card card-inner" data-shot-id="${escapeHtml(line.shotId)}">
+        <div class="card-head">
+          <strong>${escapeHtml(shotLabel(line.shotId, index))}</strong>
+          ${(line.warnings || []).length ? `<span class="tag orange">有提示</span>` : `<span class="tag green">正常</span>`}
+        </div>
+        <label>最终台词</label>
+        <textarea class="dialogue-final">${escapeHtml(line.finalDialogue || "")}</textarea>
+        <label>字幕</label>
+        <textarea class="dialogue-subtitle">${escapeHtml(line.subtitle || "")}</textarea>
+        ${(line.warnings || []).map((w) => `<div class="warning">${escapeHtml(labelWarning(w))}</div>`).join("")}
+      </article>`).join("");
+    }
+
+    function routeForShot(data, shotId) {
+      return (data.modelRoutes || []).find((route) => route.shotId === shotId);
+    }
+
+    function renderAdaptations(data) {
+      const adaptations = data.shotAdaptations || [];
+      if (!adaptations.length) {
+        $("adaptations").innerHTML = emptyState("还没有镜头适配", "绑定核心资产后点击生成适配，系统会给出 A/B/C/D 等级、改写方案和阻塞原因。");
+        return;
+      }
+      $("adaptations").innerHTML = adaptations.map((item, index) => {
+        const route = routeForShot(data, item.shotId);
+        const levelClass = item.adaptationLevel === "A" ? "green" : item.adaptationLevel === "D" ? "red" : item.adaptationLevel === "C" ? "orange" : "blue";
+        const routeClass = route?.routeStatus === "blocked" ? "red" : route?.routeStatus === "degraded" ? "orange" : route ? "green" : "blue";
+        const reasons = [...(item.blockedReasons || []), ...(item.downgradeReasons || []), ...(route?.downgradeReasons || [])];
+        return `<article class="card card-inner">
+          <div class="card-head">
+            <strong>${escapeHtml(shotLabel(item.shotId, index))}</strong>
+            <span class="tag ${levelClass}">适配 ${escapeHtml(item.adaptationLevel)}</span>
+          </div>
+          <div class="meta">策略：${escapeHtml(item.adaptationStrategy)} / 匹配度：${formatNumber(item.assetMatchScore * 100, "%")}</div>
+          <p class="clip-text">${escapeHtml(item.adaptedVisual || "-")}</p>
+          <div class="meta">模型：${route ? `${escapeHtml(route.selectedProviderId || "-")} / ${escapeHtml(route.selectedModel || "-")}` : "未路由"}</div>
+          <div class="meta">路由状态：<span class="tag ${routeClass}">${escapeHtml(route?.routeStatus || "pending")}</span></div>
+          ${reasons.length ? reasons.map((reason) => `<div class="warning">${escapeHtml(translateFixedText(reason))}</div>`).join("") : `<div class="meta">无降级原因</div>`}
+        </article>`;
+      }).join("");
+    }
+
+    function coreUploadType(slotType) {
+      return slotType === "voice" || slotType === "audio" ? "audio" : slotType === "scene" ? "scene" : "role";
+    }
+
+    function coreUploadAccept(slotType) {
+      return slotType === "voice" || slotType === "audio" ? "audio/*" : "image/*";
+    }
+
+    function coreUploadHelp(slotType) {
+      if (slotType === "scene") return "上传一张场景全景图，后续镜头会自动派生局部背景和不同机位。";
+      if (slotType === "voice" || slotType === "audio") return "上传该角色音频，后续台词会复用这个声音锚点。";
+      return "上传人物角色卡图，保证人物脸、服装基调和身份一致。";
+    }
+
+    function assetInputForSlotType(slotType) {
+      if (slotType === "scene") return $("bulkSceneAssetId");
+      if (slotType === "voice" || slotType === "audio") return $("bulkAudioAssetId");
+      if (slotType === "role") return $("bulkRoleAssetId");
+      return null;
+    }
+
+    function renderCoreAssetUploads(data) {
+      const gaps = data.assetGap?.data?.items || [];
+      const unbound = gaps.filter((item) => item.status !== "bound");
+      if (!unbound.length) {
+        $("coreAssetUploads").innerHTML = `<div class="mini-item"><span>核心资产</span><strong>已绑定或等待分析</strong></div>`;
+        return;
+      }
+      $("coreAssetUploads").innerHTML = unbound.map((item, index) => {
+        const slotName = displaySlotName(item, index);
+        const accept = coreUploadAccept(item.slotType);
+        return `<article class="core-upload-card" data-slot-name="${escapeHtml(item.slotName)}" data-slot-type="${escapeHtml(item.slotType)}">
+          <div class="core-upload-head">
+            <strong>${escapeHtml(slotName)}</strong>
+            <span class="tag blue">${escapeHtml(labelAssetType(item.slotType))}</span>
+          </div>
+          <div class="meta">${escapeHtml(coreUploadHelp(item.slotType))}</div>
+          <div class="core-upload-row">
+            <input class="core-file" type="file" accept="${escapeHtml(accept)}" />
+            <button class="core-upload-btn" data-core-upload>上传并填入</button>
+          </div>
+          <div class="asset-result">可直接填写已有资产编号，或在这里上传生成新资产编号。</div>
+        </article>`;
+      }).join("");
+    }
+
+    function renderGaps(data) {
+      const gaps = data.assetGap?.data?.items || [];
+      if (!gaps.length) {
+        $("gaps").innerHTML = emptyState("暂无核心资产缺口", "点击核心资产分析后，这里只列出主场景全景图、角色卡和角色音频。道具、服装和局部环境会自动派生。");
+        return;
+      }
+      $("gaps").innerHTML = gaps.map((item, index) => {
+        const tagClass = item.status === "bound" ? "green" : item.status === "suggested" ? "blue" : "orange";
+        const binding = (data.bindings || []).find((row) => row.slotName === item.slotName && row.slotType === item.slotType && row.assetId);
+        const slotName = displaySlotName(item, index);
+        const uploadHint = item.uploadHint ? translateFixedText(item.uploadHint) : "输入已有资产编号";
+        return `<article class="card card-inner" data-slot-name="${escapeHtml(item.slotName)}" data-slot-type="${escapeHtml(item.slotType)}">
+          <div class="card-head">
+            <strong>${escapeHtml(slotName)}</strong>
+            <span class="tag ${tagClass}">${escapeHtml(labelAssetType(item.slotType))} / ${escapeHtml(labelAssetStatus(item.status))}</span>
+          </div>
+          <div class="meta">使用镜头：${escapeHtml((item.usedByShots || []).map((id, shotIndex) => shotLabel(id, shotIndex)).join("、") || "-")}</div>
+          <div class="meta">规则：核心资产必须绑定；道具、服装、局部环境默认由分镜提示词自动生成。</div>
+          <div class="meta">建议资产：${escapeHtml((item.suggestedAssetIds || []).join(", ") || "-")}</div>
+          <label style="margin-top:10px">绑定 Toonflow 资产编号</label>
+          <input class="asset-id" type="number" value="${binding?.assetId || ""}" placeholder="${escapeHtml(uploadHint)}" />
+        </article>`;
+      }).join("");
+    }
+
+    function renderStoryboard(data) {
+      const rows = data.regeneratedStoryboard?.data?.rows || [];
+      if (!rows.length) {
+        $("storyboard").innerHTML = emptyState("还没有新分镜", "资产绑定后生成新分镜，这里会展示可推送到生产台的视频描述。");
+        return;
+      }
+      $("storyboard").innerHTML = rows.map((row, index) => `<article class="story-card">
+        <div class="story-thumb">${row.src ? `<img src="${escapeHtml(ossUrl(row.src))}" alt="${escapeHtml(shotLabel(row.shotId, index))}">` : `镜头 ${index + 1}`}</div>
+        <div class="card-inner">
+          <div class="card-head">
+            <strong>${escapeHtml(shotLabel(row.shotId, index))}</strong>
+            <span class="tag blue">${formatNumber(row.duration, "s")}</span>
+          </div>
+          <p class="clip-text">${escapeHtml(displayVideoDesc(row.videoDesc))}</p>
+          <div class="meta">资产：${escapeHtml((row.associateAssetsIds || []).join(", ") || "-")}</div>
+          ${row.resolvedPrompt ? `<div class="meta">提示词包：已生成绑定后提示词</div>` : ""}
+        </div>
+      </article>`).join("");
+    }
+
+    function renderReport(data) {
+      const report = data.report?.data;
+      if (!report) {
+        $("reportBox").innerHTML = `<div class="mini-item"><span>状态</span><strong>未检查</strong></div>`;
+        return;
+      }
+      const issues = report.issues || [];
+      const statusClassName = report.status === "pass" ? "green" : "red";
+      const reportStatus = report.status === "pass" ? "通过" : report.status === "blocked" ? "有阻塞" : translateFixedText(report.status);
+      $("reportBox").innerHTML = `
+        <div class="mini-item"><span>检查结果</span><strong><span class="tag ${statusClassName}">${escapeHtml(reportStatus)}</span></strong></div>
+        ${issues.slice(0, 6).map((issue, index) => `<div class="mini-item"><span>${escapeHtml(issue.shotId ? shotLabel(issue.shotId, index) : labelWarning(issue.code))}</span><strong>${escapeHtml(issue.level === "blocker" ? "阻塞" : "提醒")}</strong></div>`).join("")}
+        ${issues.length > 6 ? `<div class="mini-item"><span>更多问题</span><strong>${issues.length - 6}</strong></div>` : ""}
+      `;
+    }
+
+    function jobStatusTag(job) {
+      const tagClass = job.status === "succeeded" ? "green" : job.status === "failed" ? "red" : job.status === "running" ? "orange" : "blue";
+      return `<span class="tag ${tagClass}">${escapeHtml(labelJobStatus(job.status))}</span>`;
+    }
+
+    function renderJobs(data) {
+      const jobs = data?.jobs || state.progress?.jobs || [];
+      const jobList = $("jobList");
+      if (!jobList) return;
+      if (!jobs.length) {
+        jobList.innerHTML = `<div class="mini-item"><span>任务</span><strong>暂无记录</strong></div>`;
+        return;
+      }
+
+      jobList.innerHTML = jobs.slice(0, 8).map((job) => {
+        const progress = Math.max(0, Math.min(100, Number(job.progress || 0)));
+        const errorReason = conciseErrorReason(job.errorReason);
+        const stageText = translateFixedText(job.stage || "-");
+        return `<article class="job-item">
+          <div class="job-head">
+            <strong>${escapeHtml(labelJobType(job.jobType))}</strong>
+            ${jobStatusTag(job)}
+          </div>
+          <div class="job-progress"><span style="width:${progress}%"></span></div>
+          <div class="job-meta"><span>${escapeHtml(stageText)}</span><span>${progress}% / #${escapeHtml(job.attempt || 1)}</span></div>
+          ${errorReason ? `<div class="job-error">${escapeHtml(errorReason)}</div>` : ""}
+          ${job.status === "failed" ? `<div class="job-actions"><button data-retry-job="${escapeHtml(job.jobType)}">重试</button></div>` : ""}
+        </article>`;
+      }).join("");
+    }
+
+    function render() {
+      const data = state.task;
+      if (!data) return;
+      setStats(data);
+      renderJobs(data);
+      renderShots(data);
+      renderDialogue(data);
+      renderAdaptations(data);
+      renderCoreAssetUploads(data);
+      renderGaps(data);
+      renderPromptPackage(data);
+      renderStoryboard(data);
+      renderReport(data);
+
+      const sourceMedia = data.sourceMedia;
+      if (sourceMedia) {
+        $("uploadMiniStatus").textContent = "已上传";
+        $("uploadMiniStatus").className = "tag green";
+        $("uploadStatus").innerHTML = `<span>${escapeHtml(sourceMedia.sourcePath || "source.mp4")}</span><strong>${formatNumber((sourceMedia.sizeBytes || 0) / 1024 / 1024, "MB")}</strong>`;
+      }
+    }
+
+    document.querySelectorAll(".tab").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.activeTab = button.dataset.tab;
+        document.querySelectorAll(".tab").forEach((el) => el.classList.toggle("active", el === button));
+        document.querySelectorAll(".tab-panel").forEach((el) => el.classList.toggle("active", el.id === state.activeTab));
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const copyPrompt = target.dataset.copyPrompt;
+      if (copyPrompt) {
+        const pack = promptPackage(state.task);
+        if (copyPrompt === "final-video") copyText(pack?.finalVideoPrompt || "");
+        if (copyPrompt === "final-negative") copyText(pack?.finalNegativePrompt || "");
+        return;
+      }
+      const shotId = target.dataset.copyShot;
+      const kind = target.dataset.copyKind;
+      if (shotId && kind) {
+        const shot = (promptPackage(state.task)?.shots || []).find((item) => item.shotId === shotId);
+        copyText(shot?.[kind] || "");
+        return;
+      }
+      const retryJobType = target.dataset.retryJob;
+      if (retryJobType) {
+        runAction(target, async () => {
+          await retryJob(retryJobType);
+        }, "任务已重新提交");
+      }
+    });
+
+    $("loadStoredToken").onclick = loadStoredToken;
+
+    $("createTask").onclick = () => runAction($("createTask"), async () => {
+      const data = await api("createTask", {
+        projectId: Number($("projectId").value),
+        name: $("taskName").value,
+        platform: $("platform").value,
+        aspectRatio: $("aspectRatio").value,
+      });
+      $("taskId").value = data.taskId;
+      await refresh();
+    }, "任务已创建");
+
+    $("loadTask").onclick = () => runAction($("loadTask"), refresh, "任务已读取");
+
+    $("loginButton").onclick = () => runAction($("loginButton"), async () => {
+      const username = $("loginUsername").value.trim();
+      const password = $("loginPassword").value;
+      if (!username || !password) throw new Error("请输入账号和密码");
+      $("loginStatus").textContent = "正在登录 Toonflow";
+      const data = await loginApi(username, password);
+      if (!data?.token) throw new Error("登录成功但没有返回 token");
+      $("token").value = data.token;
+      localStorage.setItem("sr_token", data.token);
+      localStorage.setItem("token", data.token);
+      $("loginPassword").value = "";
+      $("loginStatus").textContent = `已登录：${data.name || username}`;
+    }, "登录成功，凭证已写入");
+
+    $("upload").onclick = () => runAction($("upload"), async () => {
+      const file = $("file").files[0];
+      if (!file) throw new Error("请选择 MP4 或 MOV 文件");
+      const taskId = currentTaskId();
+      const init = await api("sourceUpload/init", { taskId, fileName: file.name, sizeBytes: file.size, mimeType: file.type || "video/mp4" });
+      let uploaded = 0;
+      const totalParts = Math.ceil(file.size / init.chunkSize);
+      $("uploadMiniStatus").textContent = "上传中";
+      $("uploadMiniStatus").className = "tag orange";
+
+      for (let index = 0; index < totalParts; index += 1) {
+        const chunk = file.slice(index * init.chunkSize, Math.min(file.size, (index + 1) * init.chunkSize));
+        await rawApi(`/api/structuralReplica/sourceUpload/chunk?taskId=${taskId}&uploadId=${encodeURIComponent(init.uploadId)}&partIndex=${index}`, chunk);
+        uploaded += chunk.size;
+        const percent = Math.round((uploaded / file.size) * 100);
+        $("uploadStatus").innerHTML = `<span>${escapeHtml(file.name)}</span><strong>${percent}%</strong>`;
+      }
+      await api("sourceUpload/complete", { taskId, uploadId: init.uploadId, totalParts });
+      $("uploadMiniStatus").textContent = "已上传";
+      $("uploadMiniStatus").className = "tag green";
+      $("uploadStatus").innerHTML = `<span>${escapeHtml(file.name)}</span><strong>完成</strong>`;
+      await refresh();
+    }, "视频上传完成");
+
+    $("startAnalysis").onclick = () => runAction($("startAnalysis"), async () => {
+      await api("startAnalysis", { taskId: currentTaskId() });
+      state.progress = await api("getProgress", { taskId: currentTaskId() });
+      updateProgressUi();
+      await pollUntilAnalysisDone();
+    }, "已启动拆解，页面会自动刷新状态");
+
+    $("runUnderstanding").onclick = () => runAction($("runUnderstanding"), async () => {
+      await api("runFrameUnderstanding", { taskId: currentTaskId() });
+      state.progress = await api("getProgress", { taskId: currentTaskId() });
+      updateProgressUi();
+      await pollUntilUnderstandingDone();
+    }, "视觉理解已启动，页面会自动刷新状态");
+
+    $("buildIr").onclick = () => runAction($("buildIr"), async () => {
+      await api("buildIr", { taskId: currentTaskId() });
+      await refresh();
+    }, "结构稿已构建");
+
+    $("analyzeGaps").onclick = () => runAction($("analyzeGaps"), async () => {
+      await api("analyzeAssetGaps", { taskId: currentTaskId() });
+      await refresh();
+    }, "资产缺口已生成");
+
+    $("buildAdaptations").onclick = () => runAction($("buildAdaptations"), async () => {
+      await api("buildShotAdaptations", { taskId: currentTaskId() });
+      await refresh();
+      state.activeTab = "adaptationPanel";
+      document.querySelectorAll(".tab").forEach((el) => el.classList.toggle("active", el.dataset.tab === state.activeTab));
+      document.querySelectorAll(".tab-panel").forEach((el) => el.classList.toggle("active", el.id === state.activeTab));
+    }, "镜头适配已生成");
+
+    $("routeModels").onclick = () => runAction($("routeModels"), async () => {
+      await api("modelGateway/routeModels", { taskId: currentTaskId() });
+      await refresh();
+    }, "模型路由已生成");
+
+    $("checkEnvironment").onclick = () => runAction($("checkEnvironment"), async () => {
+      const result = await api("checkEnvironment", {});
+      $("log").textContent = JSON.stringify(result, null, 2);
+    }, "环境检查完成");
+
+    $("checkVisionProvider").onclick = () => runAction($("checkVisionProvider"), async () => {
+      const result = await api("checkVisionProvider", {});
+      $("log").textContent = JSON.stringify(result, null, 2);
+    }, "视觉探活完成");
+
+    $("regenerate").onclick = () => runAction($("regenerate"), async () => {
+      await api("regenerateStoryboard", { taskId: currentTaskId() });
+      await refresh();
+      state.activeTab = "promptPanel";
+      document.querySelectorAll(".tab").forEach((el) => el.classList.toggle("active", el.dataset.tab === state.activeTab));
+      document.querySelectorAll(".tab-panel").forEach((el) => el.classList.toggle("active", el.id === state.activeTab));
+    }, "新分镜已生成");
+
+    $("check").onclick = () => runAction($("check"), async () => {
+      await api("checkConsistency", { taskId: currentTaskId() });
+      await refresh();
+    }, "一致性检查完成");
+
+    $("push").onclick = () => runAction($("push"), async () => {
+      await api("pushToProduction", { taskId: currentTaskId(), createScript: true, scriptName: $("taskName").value });
+      await refresh();
+    }, "已推送到 Toonflow 生产数据");
+
+    $("saveDialogue").onclick = () => runAction($("saveDialogue"), async () => {
+      const patches = [...document.querySelectorAll("#dialogue article")].map((el) => ({
+        shotId: el.dataset.shotId,
+        finalDialogue: el.querySelector(".dialogue-final").value,
+        subtitle: el.querySelector(".dialogue-subtitle").value,
+      }));
+      await api("updateDialogueStructure", { taskId: currentTaskId(), patches });
+      await refresh();
+    }, "台词已保存");
+
+    $("bindAssets").onclick = () => runAction($("bindAssets"), async () => {
+      const bindings = [...document.querySelectorAll("#gaps article")].flatMap((el) => {
+        const assetId = Number(el.querySelector(".asset-id").value);
+        if (!assetId) return [];
+        const gap = (state.task?.assetGap?.data?.items || []).find((item) => item.slotName === el.dataset.slotName && item.slotType === el.dataset.slotType);
+        return (gap?.usedByShots || []).map((shotId) => ({
+          shotId,
+          slotName: el.dataset.slotName,
+          slotType: el.dataset.slotType,
+          assetId,
+          bindingStatus: "bound",
+        }));
+      });
+      if (!bindings.length) {
+        throw new Error("请先填写可用的 Toonflow 资产编号，再保存绑定");
+      }
+      await api("bindAssets", { taskId: currentTaskId(), bindings });
+      await refresh();
+    }, "资产绑定已保存");
+
+    $("fillAssetsByType").onclick = () => runAction($("fillAssetsByType"), async () => {
+      let filled = 0;
+      [...document.querySelectorAll("#gaps article")].forEach((el) => {
+        const source = assetInputForSlotType(el.dataset.slotType);
+        const assetId = Number(source?.value || 0);
+        if (!assetId) return;
+        const input = el.querySelector(".asset-id");
+        if (!input.value) {
+          input.value = String(assetId);
+          filled += 1;
+        }
+      });
+      if (!filled) throw new Error("请先填写通用角色、场景或音频资产编号");
+    }, "已按资产类型填充缺口");
+
+    $("coreAssetUploads").addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-core-upload]");
+      if (!button) return;
+      const card = button.closest(".core-upload-card");
+      await runAction(button, async () => {
+        const file = card.querySelector(".core-file").files[0];
+        if (!file) throw new Error("请先选择要上传的核心资产文件");
+        const slotName = card.dataset.slotName;
+        const slotType = card.dataset.slotType;
+        const base64 = await fileToDataUrl(file);
+        const asset = await jsonApi("/api/structuralReplica/uploadCoreAsset", {
+          projectId: Number($("projectId").value),
+          name: displaySlotName({ slotName, slotType }, 0),
+          slotName,
+          type: coreUploadType(slotType),
+          base64,
+        }, "核心资产上传完成");
+
+        const gapCard = document.querySelector(`#gaps article[data-slot-name="${escapeSelector(slotName)}"][data-slot-type="${escapeSelector(slotType)}"]`);
+        if (gapCard) gapCard.querySelector(".asset-id").value = asset.assetId;
+        card.querySelector(".asset-result").textContent = `已上传并填入资产编号：${asset.assetId}`;
+      }, "核心资产已上传并填入");
+    });
+
+    (async () => {
+      await initApiOrigin();
+      setStats(null);
+      renderShots({});
+      renderDialogue({});
+      renderAdaptations({});
+      renderCoreAssetUploads({});
+      renderGaps({});
+      renderPromptPackage({});
+      renderStoryboard({});
+      renderReport({});
+      renderJobs({});
+      updateProgressUi();
+    })();
+  </script>
+</body>
+</html>
