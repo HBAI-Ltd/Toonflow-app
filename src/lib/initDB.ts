@@ -389,6 +389,8 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         table.text("errorReason");
         table.integer("lastVerifiedAt");
         table.text("lastSmokeResultJson");
+        table.text("complianceStatus");
+        table.integer("cleanupAfter");
         table.primary(["id"]);
         table.unique(["id"]);
       },
@@ -682,6 +684,107 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
       },
     },
     {
+      name: "o_sr_generation_job",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.text("providerId");
+        table.text("model");
+        table.text("status");
+        table.integer("attempt");
+        table.integer("candidateCount");
+        table.text("inputPackageJson");
+        table.text("resultVideoPath");
+        table.text("errorReason");
+        table.text("costJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.integer("startedAt");
+        table.integer("finishedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_generation_candidate",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.integer("generationJobId");
+        table.integer("candidateIndex");
+        table.text("status");
+        table.text("providerId");
+        table.text("model");
+        table.text("videoPath");
+        table.text("thumbnailPath");
+        table.float("durationSec");
+        table.float("qualityScore");
+        table.integer("selected");
+        table.text("errorReason");
+        table.text("metadataJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_generation_cost",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.integer("generationJobId");
+        table.integer("candidateId");
+        table.text("providerId");
+        table.text("model");
+        table.integer("latencyMs");
+        table.integer("requestSizeBytes");
+        table.float("estimatedCost");
+        table.text("errorCode");
+        table.text("errorReason");
+        table.integer("createdAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_quality_report",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.integer("candidateId");
+        table.text("status");
+        table.float("score");
+        table.text("reportJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_timeline_export",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("status");
+        table.text("outputPath");
+        table.text("reportJson");
+        table.text("subtitleMode");
+        table.text("candidateIdsJson");
+        table.text("errorReason");
+        table.integer("expiresAt");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
       name: "o_prompt",
       builder: (table) => {
         table.integer("id").notNullable();
@@ -806,6 +909,10 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
         table.string("promptState");
         table.integer("audioBindState");
         table.text("promptErrorReason");
+        table.text("licenseType");
+        table.text("licenseNote");
+        table.text("sourceOwner");
+        table.integer("commercialAllowed");
         table.primary(["id"]);
         table.unique(["id"]);
       },

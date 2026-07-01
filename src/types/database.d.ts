@@ -45,10 +45,13 @@ export interface o_artStyle {
 export interface o_assets {
   'assetsId'?: number | null;
   'audioBindState'?: number | null;
+  'commercialAllowed'?: number | null;
   'describe'?: string | null;
   'flowId'?: number | null;
   'id'?: number;
   'imageId'?: number | null;
+  'licenseNote'?: string | null;
+  'licenseType'?: string | null;
   'name'?: string | null;
   'projectId'?: number | null;
   'prompt'?: string | null;
@@ -56,6 +59,7 @@ export interface o_assets {
   'promptState'?: string | null;
   'remark'?: string | null;
   'scriptId'?: number | null;
+  'sourceOwner'?: string | null;
   'startTime'?: number | null;
   'type'?: string | null;
 }
@@ -224,6 +228,58 @@ export interface o_sr_frame_understanding {
   'taskId'?: number | null;
   'updatedAt'?: number | null;
 }
+export interface o_sr_generation_candidate {
+  'candidateIndex'?: number | null;
+  'createdAt'?: number | null;
+  'durationSec'?: number | null;
+  'errorReason'?: string | null;
+  'generationJobId'?: number | null;
+  'id'?: number;
+  'metadataJson'?: string | null;
+  'model'?: string | null;
+  'providerId'?: string | null;
+  'qualityScore'?: number | null;
+  'selected'?: number | null;
+  'shotId'?: string | null;
+  'status'?: string | null;
+  'taskId'?: number | null;
+  'thumbnailPath'?: string | null;
+  'updatedAt'?: number | null;
+  'videoPath'?: string | null;
+}
+export interface o_sr_generation_cost {
+  'candidateId'?: number | null;
+  'createdAt'?: number | null;
+  'errorCode'?: string | null;
+  'errorReason'?: string | null;
+  'estimatedCost'?: number | null;
+  'generationJobId'?: number | null;
+  'id'?: number;
+  'latencyMs'?: number | null;
+  'model'?: string | null;
+  'providerId'?: string | null;
+  'requestSizeBytes'?: number | null;
+  'shotId'?: string | null;
+  'taskId'?: number | null;
+}
+export interface o_sr_generation_job {
+  'attempt'?: number | null;
+  'candidateCount'?: number | null;
+  'costJson'?: string | null;
+  'createdAt'?: number | null;
+  'errorReason'?: string | null;
+  'finishedAt'?: number | null;
+  'id'?: number;
+  'inputPackageJson'?: string | null;
+  'model'?: string | null;
+  'providerId'?: string | null;
+  'resultVideoPath'?: string | null;
+  'shotId'?: string | null;
+  'startedAt'?: number | null;
+  'status'?: string | null;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+}
 export interface o_sr_job {
   'attempt'?: number | null;
   'cancelRequested'?: number | null;
@@ -278,6 +334,17 @@ export interface o_sr_provider_capability {
   'id'?: number;
   'providerId'?: string | null;
   'providerType'?: string | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_quality_report {
+  'candidateId'?: number | null;
+  'createdAt'?: number | null;
+  'id'?: number;
+  'reportJson'?: string | null;
+  'score'?: number | null;
+  'shotId'?: string | null;
+  'status'?: string | null;
+  'taskId'?: number | null;
   'updatedAt'?: number | null;
 }
 export interface o_sr_regenerated_storyboard {
@@ -348,6 +415,8 @@ export interface o_sr_storyboard_mapping {
 }
 export interface o_sr_task {
   'aspectRatio'?: string | null;
+  'cleanupAfter'?: number | null;
+  'complianceStatus'?: string | null;
   'createdAt'?: number | null;
   'errorReason'?: string | null;
   'id'?: number;
@@ -358,6 +427,19 @@ export interface o_sr_task {
   'projectId'?: number | null;
   'scriptId'?: number | null;
   'status'?: string | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_timeline_export {
+  'candidateIdsJson'?: string | null;
+  'createdAt'?: number | null;
+  'errorReason'?: string | null;
+  'expiresAt'?: number | null;
+  'id'?: number;
+  'outputPath'?: string | null;
+  'reportJson'?: string | null;
+  'status'?: string | null;
+  'subtitleMode'?: string | null;
+  'taskId'?: number | null;
   'updatedAt'?: number | null;
 }
 export interface o_sr_transcript {
@@ -467,10 +549,14 @@ export interface DB {
   "o_sr_dialogue_structure": o_sr_dialogue_structure;
   "o_sr_frame_sample": o_sr_frame_sample;
   "o_sr_frame_understanding": o_sr_frame_understanding;
+  "o_sr_generation_candidate": o_sr_generation_candidate;
+  "o_sr_generation_cost": o_sr_generation_cost;
+  "o_sr_generation_job": o_sr_generation_job;
   "o_sr_job": o_sr_job;
   "o_sr_model_probe_result": o_sr_model_probe_result;
   "o_sr_model_route": o_sr_model_route;
   "o_sr_provider_capability": o_sr_provider_capability;
+  "o_sr_quality_report": o_sr_quality_report;
   "o_sr_regenerated_storyboard": o_sr_regenerated_storyboard;
   "o_sr_shot_adaptation": o_sr_shot_adaptation;
   "o_sr_shot_detection": o_sr_shot_detection;
@@ -478,6 +564,7 @@ export interface DB {
   "o_sr_story_ir": o_sr_story_ir;
   "o_sr_storyboard_mapping": o_sr_storyboard_mapping;
   "o_sr_task": o_sr_task;
+  "o_sr_timeline_export": o_sr_timeline_export;
   "o_sr_transcript": o_sr_transcript;
   "o_sr_upload_part": o_sr_upload_part;
   "o_storyboard": o_storyboard;

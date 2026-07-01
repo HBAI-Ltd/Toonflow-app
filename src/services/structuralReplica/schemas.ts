@@ -377,6 +377,119 @@ export const ModelRouteSchema = z.object({
   downgradeReasons: z.array(z.string()).default([]),
 });
 
+export const ShotControlPackageSchema = z.object({
+  taskId: z.number().int().positive(),
+  shotId: z.string().min(1),
+  providerId: z.string().min(1),
+  model: z.string().min(1),
+  prompt: z.string().min(1),
+  negativePrompt: z.string().default(""),
+  referenceList: z
+    .array(
+      z.object({
+        type: z.enum(["image", "video", "audio"]),
+        path: z.string().min(1),
+        source: z.enum(["reference_frame", "asset", "candidate", "other"]).default("other"),
+        assetId: z.number().int().positive().nullable().optional(),
+      }),
+    )
+    .default([]),
+  durationSec: z.number().positive(),
+  aspectRatio: SrAspectRatioSchema,
+  seed: z.number().int().nullable().optional(),
+  fallbackStrategy: z.array(z.string()).default([]),
+  assetSlots: z.array(PromptAssetSlotSchema).default([]),
+  routeStatus: z.enum(["selected", "degraded", "blocked"]),
+  warnings: z.array(z.string()).default([]),
+});
+
+export const GenerationJobStatusSchema = z.enum(["queued", "running", "succeeded", "failed"]);
+export const GenerationCandidateStatusSchema = z.enum(["pending", "succeeded", "failed", "selected", "rejected"]);
+
+export const GenerationCandidateSchema = z.object({
+  taskId: z.number().int().positive(),
+  shotId: z.string().min(1),
+  generationJobId: z.number().int().positive(),
+  candidateIndex: z.number().int().nonnegative(),
+  status: GenerationCandidateStatusSchema,
+  providerId: z.string().min(1),
+  model: z.string().min(1),
+  videoPath: z.string().nullable(),
+  thumbnailPath: z.string().nullable().optional(),
+  durationSec: z.number().nonnegative().nullable().optional(),
+  qualityScore: z.number().min(0).max(100).nullable().optional(),
+  selected: z.boolean().default(false),
+  errorReason: z.string().nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).default({}),
+});
+
+export const GenerationCostSchema = z.object({
+  taskId: z.number().int().positive(),
+  shotId: z.string().min(1),
+  generationJobId: z.number().int().positive(),
+  candidateId: z.number().int().positive().nullable().optional(),
+  providerId: z.string().min(1),
+  model: z.string().min(1),
+  latencyMs: z.number().int().nonnegative(),
+  requestSizeBytes: z.number().int().nonnegative(),
+  estimatedCost: z.number().nonnegative().default(0),
+  errorCode: z.string().nullable().optional(),
+  errorReason: z.string().nullable().optional(),
+});
+
+export const QualityCheckSeveritySchema = z.enum(["info", "warning", "blocker"]);
+export const QualityReportSchema = z.object({
+  taskId: z.number().int().positive(),
+  shotId: z.string().min(1),
+  candidateId: z.number().int().positive(),
+  status: z.enum(["pass", "warning", "blocked"]),
+  score: z.number().min(0).max(100),
+  checks: z
+    .array(
+      z.object({
+        code: z.string().min(1),
+        severity: QualityCheckSeveritySchema,
+        passed: z.boolean(),
+        message: z.string().min(1),
+        details: z.record(z.string(), z.unknown()).default({}),
+      }),
+    )
+    .default([]),
+  retryRecommendation: z
+    .object({
+      recommended: z.boolean(),
+      reason: z.string(),
+      blockerCodes: z.array(z.string()).default([]),
+    })
+    .optional(),
+});
+
+export const TimelineExportSchema = z.object({
+  taskId: z.number().int().positive(),
+  status: z.enum(["queued", "running", "succeeded", "failed", "expired"]),
+  outputPath: z.string().nullable(),
+  reportJson: z.record(z.string(), z.unknown()).default({}),
+  subtitleMode: z.enum(["none", "burn", "track"]).default("none"),
+  candidateIds: z.array(z.number().int().positive()).default([]),
+  errorReason: z.string().nullable().optional(),
+  expiresAt: z.number().int().positive().nullable().optional(),
+});
+
+export const ComplianceReportSchema = z.object({
+  taskId: z.number().int().positive(),
+  status: z.enum(["pass", "warning", "blocked"]),
+  issues: z
+    .array(
+      z.object({
+        code: z.string().min(1),
+        level: z.enum(["warning", "blocker"]),
+        message: z.string().min(1),
+        assetId: z.number().int().positive().optional(),
+      }),
+    )
+    .default([]),
+});
+
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
 export type SourceMedia = z.infer<typeof SourceMediaSchema>;
 export type Transcript = z.infer<typeof TranscriptSchema>;
@@ -399,3 +512,9 @@ export type ConsistencyReport = z.infer<typeof ConsistencyReportSchema>;
 export type ShotAdaptation = z.infer<typeof ShotAdaptationSchema>;
 export type ProviderCapability = z.infer<typeof ProviderCapabilitySchema>;
 export type ModelRoute = z.infer<typeof ModelRouteSchema>;
+export type ShotControlPackage = z.infer<typeof ShotControlPackageSchema>;
+export type GenerationCandidate = z.infer<typeof GenerationCandidateSchema>;
+export type GenerationCost = z.infer<typeof GenerationCostSchema>;
+export type QualityReport = z.infer<typeof QualityReportSchema>;
+export type TimelineExport = z.infer<typeof TimelineExportSchema>;
+export type ComplianceReport = z.infer<typeof ComplianceReportSchema>;
