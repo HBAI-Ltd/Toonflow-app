@@ -104,7 +104,7 @@ export default router.post(
     const [id] = await u.db("o_vendorConfig").insert({
       id: vendor.id,
       inputValues: JSON.stringify(vendor.inputValues ?? {}),
-      models: JSON.stringify([]),
+      models: JSON.stringify(vendor.models ?? []),
       enable: vendor.id == "toonflow" ? 1 : 0,
     });
     u.vendor.writeCode(vendor.id, tsCode);

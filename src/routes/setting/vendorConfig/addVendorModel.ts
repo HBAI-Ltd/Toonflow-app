@@ -48,7 +48,12 @@ export default router.post(
     const models = await u.db("o_vendorConfig").where("id", id).first("models");
     if (models?.models) {
       const existingModels = JSON.parse(models.models);
-      existingModels.push(model);
+      const existingIndex = existingModels.findIndex((m: any) => m.modelName === model.modelName);
+      if (existingIndex === -1) {
+        existingModels.push(model);
+      } else {
+        existingModels[existingIndex] = model;
+      }
       await u
         .db("o_vendorConfig")
         .where("id", id)

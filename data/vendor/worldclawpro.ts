@@ -1,10 +1,8 @@
 /**
- * Toonflow AI供应商模板
+ * Toonflow AI provider template - WorldClawPro OpenAI compatible
  * @version 2.0
  */
-// ============================================================
-// 类型定义
-// ============================================================
+
 type VideoMode =
   | "singleImage"
   | "startEndRequired"
@@ -12,12 +10,14 @@ type VideoMode =
   | "startFrameOptional"
   | "text"
   | (`videoReference:${number}` | `imageReference:${number}` | `audioReference:${number}`)[];
+
 interface TextModel {
   name: string;
   modelName: string;
   type: "text";
   think: boolean;
 }
+
 interface ImageModel {
   name: string;
   modelName: string;
@@ -25,6 +25,7 @@ interface ImageModel {
   mode: ("text" | "singleImage" | "multiReference")[];
   associationSkills?: string;
 }
+
 interface VideoModel {
   name: string;
   modelName: string;
@@ -34,12 +35,14 @@ interface VideoModel {
   audio: "optional" | false | true;
   durationResolutionMap: { duration: number[]; resolution: string[] }[];
 }
+
 interface TTSModel {
   name: string;
   modelName: string;
   type: "tts";
   voices: { title: string; voice: string }[];
 }
+
 interface VendorConfig {
   id: string;
   version: string;
@@ -51,12 +54,14 @@ interface VendorConfig {
   inputValues: Record<string, string>;
   models: (TextModel | ImageModel | VideoModel | TTSModel)[];
 }
+
 interface ImageConfig {
   prompt: string;
   imageBase64: string[];
   size: "1K" | "2K" | "4K";
   aspectRatio: `${number}:${number}`;
 }
+
 interface VideoConfig {
   duration: number;
   resolution: string;
@@ -66,6 +71,7 @@ interface VideoConfig {
   audio?: boolean;
   mode: VideoMode[];
 }
+
 interface TTSConfig {
   text: string;
   voice: string;
@@ -73,14 +79,13 @@ interface TTSConfig {
   pitchRate: number;
   volume: number;
 }
+
 interface PollResult {
   completed: boolean;
   data?: string;
   error?: string;
 }
-// ============================================================
-// 全局声明
-// ============================================================
+
 declare const axios: any;
 declare const logger: (msg: string) => void;
 declare const jsonwebtoken: any;
@@ -107,63 +112,52 @@ declare const exports: {
   checkForUpdates?: () => Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }>;
   updateVendor?: () => Promise<string>;
 };
-// ============================================================
-// 供应商配置
-// ============================================================
+
 const vendor: VendorConfig = {
-  id: "openai",
+  id: "worldclawpro",
   version: "2.0",
-  author: "Toonflow",
-  name: "OpenAI标准接口",
-  description: "OpenAI标准格式接口，可修改请求地址并手动添加模型。",
+  author: "WorldClawPro",
+  name: "WorldClawPro OpenAI Compatible",
+  description: "OpenAI compatible text model endpoint for WorldClawPro. Configure API key and add model ids exposed by the relay.",
   icon: "",
   inputs: [
     { key: "apiKey", label: "API密钥", type: "password", required: true },
-    { key: "baseUrl", label: "请求地址", type: "url", required: true, placeholder: "以v1结束，示例：https://api.openai.com/v1" },
+    { key: "baseUrl", label: "请求地址", type: "url", required: true, placeholder: "https://worldclawpro.ai/v1" },
   ],
   inputValues: {
     apiKey: "",
-    baseUrl: "https://api.openai.com/v1",
+    baseUrl: "https://worldclawpro.ai/v1",
   },
-  models: [
-    { name: "GPT-4o", modelName: "gpt-4o", type: "text", think: false },
-    { name: "GPT-4.1", modelName: "gpt-4.1", type: "text", think: false },
-    { name: "GPT-5.1", modelName: "gpt-5.1", type: "text", think: false },
-    { name: "GPT-5.2", modelName: "gpt-5.2", type: "text", think: false },
-    { name: "GPT-5.4", modelName: "gpt-5.4", type: "text", think: false },
-  ],
+  models: [{ name: "GPT5.5", modelName: "gpt-5.5", type: "text", think: false }],
 };
-// ============================================================
-// 适配器函数
-// ============================================================
-const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
+
+const normalizeBaseUrl = (baseUrl: string) => {
+  const trimmed = (baseUrl || "").replace(/\/+$/, "");
+  return trimmed.endsWith("/v1") ? trimmed : `${trimmed}/v1`;
+};
+
+const textRequest = (model: TextModel, _think: boolean, _thinkLevel: 0 | 1 | 2 | 3) => {
   if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
-  const baseURL = (vendor.inputValues.baseUrl || "https://api.openai.com/v1").replace(/\/+$/, "");
   return createOpenAICompatible({
-    name: "openai",
-    baseURL,
+    name: "worldclawpro",
+    baseURL: normalizeBaseUrl(vendor.inputValues.baseUrl),
     apiKey,
   }).chatModel(model.modelName);
 };
-const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<string> => {
-  throw new Error("OpenAI标准接口当前仅支持文本模型。如需图片或视频，请添加专用供应商适配。");
-};
-const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<string> => {
-  throw new Error("OpenAI标准接口当前仅支持文本模型。如需图片或视频，请添加专用供应商适配。");
-};
-const ttsRequest = async (config: TTSConfig, model: TTSModel): Promise<string> => {
-  return "";
-};
+
+const imageRequest = async (_config: ImageConfig, _model: ImageModel): Promise<string> => "";
+
+const videoRequest = async (_config: VideoConfig, _model: VideoModel): Promise<string> => "";
+
+const ttsRequest = async (_config: TTSConfig, _model: TTSModel): Promise<string> => "";
+
 const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }> => {
-  return { hasUpdate: false, latestVersion: "2.0", notice: "" };
+  return { hasUpdate: false, latestVersion: vendor.version, notice: "" };
 };
-const updateVendor = async (): Promise<string> => {
-  return "";
-};
-// ============================================================
-// 导出
-// ============================================================
+
+const updateVendor = async (): Promise<string> => "";
+
 exports.vendor = vendor;
 exports.textRequest = textRequest;
 exports.imageRequest = imageRequest;
@@ -171,4 +165,5 @@ exports.videoRequest = videoRequest;
 exports.ttsRequest = ttsRequest;
 exports.checkForUpdates = checkForUpdates;
 exports.updateVendor = updateVendor;
+
 export {};
