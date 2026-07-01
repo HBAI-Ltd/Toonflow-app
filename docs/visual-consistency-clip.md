@@ -15,18 +15,30 @@
 
 ## 启用步骤（默认走降级，需下模型才启用 CLIP）
 
-**未放置模型时，系统自动使用像素指纹 fallback，功能正常、不报错。** 要启用 CLIP：
+**未放置模型时，系统自动使用像素指纹 fallback，功能正常、不报错。** 要启用 CLIP（本项目已在 `data/models/clip-vit-base-patch32/` 放好，且该目录已 `.gitignore` 不入库；下述为重新获取步骤）：
 
-1. **下载 CLIP ONNX 模型** 到 `data/models/`，与现有 `all-MiniLM-L6-v2` 同级。推荐 `Xenova/clip-vit-base-patch32`（transformers.js 兼容的 ONNX 版）。目录结构需含 `config.json`、`preprocessor_config.json`、`onnx/model.onnx`（或量化版）等，与 transformers 本地加载约定一致。
-   - 例：`data/models/clip-vit-base-patch32/…`
-2. **配置 `o_setting`**（可选，有默认值）：
-   - `imageModelFolder`：模型文件夹名，默认 `clip-vit-base-patch32`
-   - `imageModelDtype`：量化类型，默认 `fp32`（如用 fp16 量化则设 `fp16`）
-3. 重启服务。首次审核会 lazy 加载模型（~秒级），之后走进程内缓存。
+1. **下载模型文件** 到 `data/models/clip-vit-base-patch32/`（推荐镜像 `hf-mirror.com`，源仓库 `Xenova/clip-vit-base-patch32`）。`image-feature-extraction` pipeline 对 CLIP 加载的是 **vision 塔**，且默认按**基名**查找，所以只需三个文件：
+   - `config.json`
+   - `preprocessor_config.json`（图像预处理必需）
+   - `onnx/vision_model.onnx` ← **必须是这个基名**。仓库里是 `vision_model_fp16.onnx`（~168MB）等带精度后缀的文件；下载后**复制/重命名为 `vision_model.onnx`**（pipeline 不会自动按 dtype 拼后缀）。
+   - 不需要 tokenizer/vocab/merges/text_model（那些是文本塔用的，删掉省体积）。
+   ```bash
+   BASE=https://hf-mirror.com/Xenova/clip-vit-base-patch32/resolve/main
+   mkdir -p data/models/clip-vit-base-patch32/onnx
+   curl -sL $BASE/config.json -o data/models/clip-vit-base-patch32/config.json
+   curl -sL $BASE/preprocessor_config.json -o data/models/clip-vit-base-patch32/preprocessor_config.json
+   curl -sL $BASE/onnx/vision_model_fp16.onnx -o data/models/clip-vit-base-patch32/onnx/vision_model.onnx
+   ```
+2. **配置 `o_setting`**（有默认值，通常无需改）：
+   - `imageModelFolder`：默认 `clip-vit-base-patch32`
+   - `imageModelDtype`：默认 `fp32`（因为我们用的是基名 `vision_model.onnx`，dtype 只影响文件名查找，内容精度由 onnx 自身决定）
+3. 重启服务。首次审核 lazy 加载（~1s），之后进程内缓存。
 
-## 阈值校准
+## 阈值校准（已用真实资产图校准）
 
-`0.75` 是经验初值。用几组真实资产图/分镜图跑出 CLIP 相似度分布后可调整：同一角色不同景别通常 0.75+，不同角色通常 0.5 以下。调整 `videoReview.ts` 的 `VISUAL_LOW_SIMILARITY_THRESHOLD_CLIP`。
+实测 `clip-vit-base-patch32` vision（512D）在"商业三国"同项目角色四视图上：跨角色相似度约 **0.54~0.83**，同一角色不同帧更高。对比 16×16 像素指纹在同批图上因构图差异剧烈波动（0.27~0.93，把构图不同的同类图误判为不相似）——**CLIP 的语义区分更可信**。
+
+据此把 `VISUAL_LOW_SIMILARITY_THRESHOLD_CLIP` 定为 **0.60**（低于此才算真正跑偏/错配角色）。不同项目画风可微调此阈值。
 
 ## 注意事项
 

@@ -61,9 +61,9 @@ export async function getImageEmbedding(absPath: string): Promise<number[]> {
 
   if (!extractor) await initImageEmbedding();
   const image = await RawImage.read(absPath);
-  // 图像特征提取用 pool:true 取 pooled 向量；图像 pipeline 无内置 normalize，故手动 L2 归一化，
-  // 使 cosineSimilarity（归一化后点积）成立。
-  const output = await extractor!(image, { pool: true });
+  // CLIPVisionModelWithProjection（vision_model.onnx）直接输出投影后的 image embedding，
+  // 不带 pooler_output，故不传 pool。图像 pipeline 无内置 normalize，手动 L2 归一化使 cosineSimilarity 成立。
+  const output = await extractor!(image);
   const vector = l2Normalize(Array.from(output.data as Float32Array));
 
   if (embeddingCache.size >= CACHE_MAX) {

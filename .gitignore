@@ -63,3 +63,6 @@ database.d.ts
 data/oss/*
 data/test.sqlite
 version.txt
+
+# CLIP 视觉一致性模型（~168MB，体积大不入库；下载方式见 docs/visual-consistency-clip.md）
+data/models/clip-vit-base-patch32/

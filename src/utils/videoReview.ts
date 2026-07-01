@@ -31,9 +31,10 @@ interface VisualReference {
   filePath: string;
 }
 
-// CLIP 余弦与像素指纹量纲不同：CLIP 同主体通常 0.75+、跨主体 0.5 以下；像素指纹沿用旧的 0.55。
-// 阈值为经验初值，可据真实分布校准。
-const VISUAL_LOW_SIMILARITY_THRESHOLD_CLIP = 0.75;
+// CLIP 余弦与像素指纹量纲不同。经真实资产图校准（clip-vit-base-patch32 vision，512D）：
+// 同项目跨角色四视图约 0.54~0.83，同一角色不同帧更高；低于 0.60 才视为真正的一致性跑偏（错配角色/场景）。
+// 像素指纹沿用旧的 0.55。阈值可据项目画风进一步调整。
+const VISUAL_LOW_SIMILARITY_THRESHOLD_CLIP = 0.6;
 const VISUAL_LOW_SIMILARITY_THRESHOLD_PIXEL = 0.55;
 
 async function hasReviewTable() {
