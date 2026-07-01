@@ -2,14 +2,14 @@
 
 ## 结论
 
-采用增量补齐现有实现方案。目标不是重写 Toonflow 架构，而是把当前 `structuralReplica` 打通为可验收链路，并继续从 1.6.0 开始补每镜头生成队列：
+采用增量补齐现有实现方案。目标不是重写 Toonflow 架构，而是把当前 `structuralReplica` 打通为可验收链路；当前已补齐 1.6.0 生成队列、1.7.0 生成后质检和成片导出、1.8.0 产品化与安全：
 
 ```text
 MP4 上传 -> Analyzer 产物入库 -> Video IR -> 人工复核 -> 资产缺口 -> 资产绑定
--> 镜头级提示词包 -> 一致性检查 -> 推送 Toonflow 工作台
+-> 镜头级提示词包 -> 一致性检查 -> 每镜头生成候选 -> 生成后质检 -> 选择候选 -> Timeline Composer 导出 MP4
 ```
 
-当前基线为 Toonflow `1.2.2`，已完成到 `structuralReplica` 1.5.0 能力边界。后续开发已经拆到根目录：
+当前基线已推进到 Toonflow `1.8.0`，`structuralReplica` 已完成到 1.8.0 能力边界。后续开发路线保留在根目录：
 
 ```text
 docs/19-post-1.2.2-structural-replica-roadmap.md
@@ -86,6 +86,11 @@ failed
 - `o_sr_provider_capability`
 - `o_sr_model_probe_result`
 - `o_sr_model_route`
+- `o_sr_generation_job`
+- `o_sr_generation_candidate`
+- `o_sr_generation_cost`
+- `o_sr_quality_report`
+- `o_sr_timeline_export`
 
 `o_sr_job` 用于记录 analyzer、vision、buildIr、assetGap、regenerateStoryboard、checkConsistency、pushToProduction 等 job 的进度、结果和错误。本轮已补 1.3.0 可恢复字段：
 
@@ -130,6 +135,18 @@ cancelRequested
 - `modelGateway/probeProvider`
 - `modelGateway/listModelRoutes`
 - `modelGateway/routeModels`
+- `generation/enqueueShotGeneration`
+- `generation/enqueueTaskGeneration`
+- `generation/retryShotGeneration`
+- `generation/listShotCandidates`
+- `generation/selectShotCandidate`
+- `quality/inspectCandidate`
+- `quality/inspectSelected`
+- `timeline/export`
+- `compliance/checkTaskCompliance`
+- `compliance/updateAssetLicense`
+- `cleanup/run`
+- `security/setVisionApiKey`
 
 ## 开发优先级
 
@@ -170,28 +187,36 @@ cancelRequested
 - 按镜头能力需求自动选择模型。
 已实现能力不足时的 `fallbackPlan` 和 `downgradeReasons`。
 
-### 1.6.0：生成队列（下一步）
+### 1.6.0：生成队列（已完成）
 
 - 每镜头生成任务。
 - 多候选。
 - 失败重试。
 - 成本和错误记录。
+- Shot Control Package。
+- 单镜头失败隔离，不阻断其他镜头。
+- 候选选择。
 
-### 1.7.0：生成后质检
+### 1.7.0：生成后质检（已完成）
 
 - 抽取生成视频关键帧。
 - 检查角色、场景、产品、字幕、源实体泄漏。
 - 生成 `quality_report`。
 - 支持只重试低分镜头。
 - Timeline Composer 拼接导出 MP4。
+- 支持 SRT sidecar、字幕轨道和烧录路径。
+- 写入导出报告和过期时间。
 
-### 1.8.0：产品化与安全
+### 1.8.0：产品化与安全（已完成代码实现）
 
 - API Key 加密。
 - 资产授权字段。
 - 临时文件清理。
-- 权限边界。
+- 基础项目/资产权限边界。
 - 打包验收。
+- Provider key 不返回前端。
+- 合规检查和源实体风险提示。
+- 任务日志归档和导出过期策略。
 
 ## 一致性检查规则
 
@@ -246,6 +271,7 @@ python -m sr_analyzer.cli run-all --input data/tmp/analyzerSmoke/source.mp4 --wo
 yarn test tests/structuralReplica
 yarn lint
 python -m pytest -q tools/video-analyzer/tests
+node -e "const fs=require('fs'); const html=fs.readFileSync('data/web/structural-replica.html','utf8'); const m=html.match(/<script>([\s\S]*)<\/script>/); new Function(m[1]); console.log('structural-replica.html script syntax ok')"
 ```
 
 端到端 smoke：
@@ -283,4 +309,4 @@ yarn pack
 yarn dist:win
 ```
 
-本阶段交付以 `yarn build` 和 `yarn pack` 通过为最低本地打包标准。
+本阶段交付以 `yarn build` 和 `yarn pack` 通过为最低本地打包标准；Windows 环境可用时继续运行 `yarn dist:win`。安装后真实 smoke 仍依赖 token、projectId、MP4 样片和 bindingsJson。

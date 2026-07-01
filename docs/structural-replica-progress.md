@@ -20,13 +20,17 @@
 - 1.4.0 台词层 + 镜头适配：新增 Dialogue Layer v2、台词估时、压缩台词、拆镜头、延长镜头、Shot Adaptation Layer、A/B/C/D 适配等级。
 - 1.5.0 多模型网关：新增 Provider Capability 表/API、Provider 探活、Model Router、镜头级模型选择和降级原因。
 - 前端 `data/web/structural-replica.html` 增加环境检查、视觉探活、适配、模型路由入口和结果展示。
+- 1.6.0 生成队列：新增 `o_sr_generation_job`、`o_sr_generation_candidate`、`o_sr_generation_cost`，实现 Shot Control Package、单镜头/全任务生成、多候选、失败重试、候选选择、成本和错误记录。
+- 1.7.0 生成后质检 + 成片导出：新增 `o_sr_quality_report`、`o_sr_timeline_export`，实现空文件、黑屏、时长、比例、关键帧可读、人物/场景/产品/字幕安全区、源实体泄漏检查，支持低质量重试建议和 Timeline Composer。
+- 1.8.0 产品化与安全：API key 加密存储、provider key 脱敏、资产授权字段、合规提示、临时文件清理、任务日志归档、导出过期策略、基础项目权限边界和版本号 1.8.0。
+- 前端 `data/web/structural-replica.html` 增加生成导出 tab，支持候选预览/选择、候选质检、已选候选质检和时间线导出。
 
 ## 已验证命令和结果
 ```bash
 yarn test tests/structuralReplica
 ```
-结果：通过。覆盖 structuralReplica 服务逻辑和 `o_sr_job` 生命周期测试。
-最近验证：2026-07-01，执行 3 个测试文件。
+结果：通过。覆盖 structuralReplica 服务逻辑、`o_sr_job` 生命周期、生成队列、质检导出、安全加密、合规清理和权限边界。
+最近验证：2026-07-01，执行 5 个测试文件。
 
 ```bash
 yarn lint
@@ -35,10 +39,25 @@ yarn lint
 最近验证：2026-07-01。
 
 ```bash
+python -m pytest -q tools/video-analyzer/tests
+```
+结果：通过。5 passed。
+最近验证：2026-07-01。
+
+```bash
 node -e "const fs=require('fs'); const html=fs.readFileSync('data/web/structural-replica.html','utf8'); const m=html.match(/<script>([\s\S]*)<\/script>/); new Function(m[1]); console.log('structural-replica.html script syntax ok')"
 ```
 结果：通过。前端静态页脚本语法可解析。
 最近验证：2026-07-01。
+
+```bash
+yarn build
+yarn pack
+yarn run pack
+yarn dist:win
+```
+结果：通过。`yarn build` 生成 `build/app.js` 和 `build/main.js`；`yarn pack` 生成 `toonflow-v1.8.0.tgz`；`yarn run pack` 生成 `dist/win-unpacked`；`yarn dist:win` 生成 `dist/ToonFlow-1.8.0-win-x64-setup.exe`。
+最近验证：2026-07-01。Electron builder 日志包含 `sqlite3@6.0.1` 的 npm collector warning，但命令退出码为 0。
 
 历史真实 smoke：
 ```bash
@@ -52,14 +71,15 @@ yarn tsx scripts/structuralReplicaSmoke.ts --base http://localhost:10588 --token
 真实 smoke 仍依赖本机服务、token、projectId、MP4 样片和 bindingsJson。脚本和命令已保留，但敏感 token 与本地样片不写入仓库。
 ```
 
-## 当前未完成模块
+## 待人工验收和后续模块
 - Analyzer 子步骤进度主要按阶段估算，尚未读取 Python analyzer 内部实时 status。
-- 每镜头生成队列、多候选、失败重试和 provider fallback 仍未完成，进入 1.6.0。
-- 生成后视频质量检查、关键帧抽检、低分镜头重试和 Timeline Composer 属于 1.7.0。
+- 真实 smoke 仍依赖本地服务、token、projectId、MP4 样片和 bindingsJson。
+- 真实视频生成质量、计费和失败码仍依赖目标 provider。
+- 当前权限边界为结构复刻基础项目/资产归属校验，不是完整 RBAC。
 
 ## 1.2.2 后续版本路线
 
-当前 `package.json` 版本为 `1.2.2`。后续开发不再回到旧的 Phase 1/2 重做，按以下版本推进：
+当前 `package.json` 版本为 `1.8.0`。后续开发不再回到旧的 Phase 1/2 重做，按以下版本推进：
 
 | 版本 | 目标 | 重点 |
 | --- | --- | --- |
@@ -67,9 +87,9 @@ yarn tsx scripts/structuralReplicaSmoke.ts --base http://localhost:10588 --token
 | 1.3.0 | 可用链路加固 | 真实 smoke、环境诊断、视觉 provider 探活、可恢复 job worker、下游产物清理 |
 | 1.4.0 | 台词层 + 镜头适配 | Dialogue Layer v2、台词压缩/拆镜头/延长、A/B/C/D 适配等级、镜头降级改写 |
 | 1.5.0 | 多模型网关 | Provider Capability、Model Router、中转站 API 能力探活和降级路由 |
-| 1.6.0 | 生成队列 | 每镜头生成、多候选、失败重试、成本和错误记录 |
-| 1.7.0 | 生成后质检 + 成片导出 | 视频质量检查、低分镜头重试、Timeline Composer、MP4 导出 |
-| 1.8.0 | 产品化与安全 | API key 加密、资产授权、清理归档、权限、打包验收 |
+| 1.6.0 | 生成队列 | 已完成。每镜头生成、多候选、失败重试、成本和错误记录 |
+| 1.7.0 | 生成后质检 + 成片导出 | 已完成。视频质量检查、低分镜头重试、Timeline Composer、MP4 导出 |
+| 1.8.0 | 产品化与安全 | 已完成代码实现。API key 加密、资产授权、清理归档、基础权限边界、打包验收 |
 
 根目录详细文档：
 
@@ -79,11 +99,10 @@ docs/20-post-1.2.2-structural-replica-task-plan.md
 ```
 
 ## 下一阶段开发任务
-- 1.6.0-1：新增每镜头 generation job/candidate/cost 表。
-- 1.6.0-2：从 prompt package + model route 生成 shot control package。
-- 1.6.0-3：新增单镜头生成、重试、候选列表和候选选择 API。
-- 1.6.0-4：记录 provider/model/latency/cost/errorReason，支持失败后 provider fallback。
-- 1.7.0：补生成后质检、低分镜头重试和 Timeline Composer。
+- 在可用本地服务、token、projectId、MP4 样片和 bindingsJson 时跑真实 smoke。
+- 在目标 Windows 机器上安装并手工验收打包产物。
+- 如果进入多人/多租户场景，继续设计完整 RBAC、审计日志和项目共享权限。
+- 接入真实 provider 的计费金额、失败码和质量监控面板。
 
 ## 风险和阻塞点
 - `failed -> preprocessing` 主要服务 analyzer 重试；其他阶段失败后的精细回退仍需继续设计。
@@ -112,18 +131,18 @@ docs/20-post-1.2.2-structural-replica-task-plan.md
 | Dialogue Layer v2 | done | 已补时长估算、fitsDuration、timingActions 和台词动作。 |
 | Shot Adaptation Layer | done | 已补 A/B/C/D 适配等级、降级改写和阻塞原因。 |
 | Model Gateway | done | 已补 Provider Capability、探活、Model Router 和降级原因。 |
-| 生成队列 | todo | 1.6.0 开发。 |
-| P2 生成后质检 | todo | 1.7.0 开发。 |
+| 生成队列 | done | 已补 generation job/candidate/cost、Shot Control Package、多候选、重试和选择。 |
+| P2 生成后质检 | done | 已补质量报告、低质量重试建议、Timeline Composer 和字幕导出。 |
+| 产品化与安全 | done | 已补 key 加密、授权字段、合规、清理归档、导出过期和基础权限边界。 |
 
 ## 下一次继续开发应该使用的 Codex 指令
 ```text
 请继续在 C:\Users\Administrator\Documents\视频2\external\Toonflow-app 项目中增量开发 structuralReplica。
-当前已完成到 1.5.0，进度见 docs/structural-replica-progress.md，完整后续路线见根目录 docs/19 和 docs/20。不要重写现有模块，不要重新做 Phase 1/2。
-下一步进入 1.6.0 生成队列：
-1. 新增每镜头 generation job/candidate/cost 表。
-2. 从 prompt package + model route 生成 shot control package。
-3. 新增单镜头生成、重试、候选列表和候选选择 API。
-4. 记录 provider/model/latency/cost/errorReason，并支持 provider fallback。
-5. 每完成一个小模块更新 docs/structural-replica-progress.md。
-6. 每次改动后运行最小验证。
+当前已完成到 1.8.0，进度见 docs/structural-replica-progress.md，完整后续路线见根目录 docs/19 和 docs/20。不要重写现有模块，不要重新做 Phase 1/2。
+下一步优先做真实环境验收：
+1. 准备本地服务、token、projectId、MP4 样片和 bindingsJson。
+2. 运行 scripts/structuralReplicaSmoke.ts 到生成/质检/导出链路。
+3. 在目标 Windows 机器安装打包产物并运行环境检查。
+4. 如需多人使用，补完整 RBAC、审计日志和项目共享设计。
+5. 每次改动后运行最小验证与打包验收。
 ```
