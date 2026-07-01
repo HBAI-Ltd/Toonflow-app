@@ -645,6 +645,7 @@
                       <button class="tab" data-tab="adaptationPanel">适配</button>
                       <button class="tab" data-tab="promptPanel">提示词包</button>
                       <button class="tab" data-tab="storyboardPanel">新分镜</button>
+                      <button class="tab" data-tab="generationPanel">生成导出</button>
                     </div>
                     <div id="shotsPanel" class="tab-panel active">
                       <div id="shots" class="shot-grid"></div>
@@ -667,6 +668,14 @@
                     </div>
                     <div id="storyboardPanel" class="tab-panel">
                       <div id="storyboard" class="story-list"></div>
+                    </div>
+                    <div id="generationPanel" class="tab-panel">
+                      <div class="save-row">
+                        <button id="generateAllCandidates" class="primary">生成候选</button>
+                        <button id="inspectSelectedCandidates">质检已选</button>
+                        <button id="exportTimeline">导出 MP4</button>
+                      </div>
+                      <div id="generationCandidates" class="story-list"></div>
                     </div>
                   </div>
                 </section>
@@ -1772,6 +1781,46 @@
       </article>`).join("");
     }
 
+    function qualityForCandidate(data, candidateId) {
+      return (data.qualityReports || []).find((report) => Number(report.candidateId) === Number(candidateId));
+    }
+
+    function renderGenerationCandidates(data) {
+      const candidates = data.generationCandidates || [];
+      const exports = data.timelineExports || [];
+      if (!candidates.length) {
+        $("generationCandidates").innerHTML = emptyState("还没有生成候选", "模型路由和提示词包准备好后，可以按镜头生成多个候选并选择最佳结果。");
+        return;
+      }
+      const byShot = new Map();
+      candidates.forEach((candidate) => {
+        if (!byShot.has(candidate.shotId)) byShot.set(candidate.shotId, []);
+        byShot.get(candidate.shotId).push(candidate);
+      });
+      const exportSummary = exports.length ? `<div class="mini-item"><span>最近导出</span><strong>${escapeHtml(exports[0].status)} ${exports[0].outputPath ? exports[0].outputPath : ""}</strong></div>` : "";
+      $("generationCandidates").innerHTML = `${exportSummary}${[...byShot.entries()].map(([shotId, rows], index) => `
+        <article class="card card-inner">
+          <div class="card-head">
+            <strong>${escapeHtml(shotLabel(shotId, index))}</strong>
+            <button data-generate-shot="${escapeHtml(shotId)}">生成本镜头</button>
+          </div>
+          ${rows.map((candidate) => {
+            const report = qualityForCandidate(data, candidate.id);
+            const statusClass = candidate.status === "selected" ? "green" : candidate.status === "failed" ? "red" : "blue";
+            const qualityClass = report?.status === "blocked" ? "red" : report?.status === "warning" ? "orange" : report ? "green" : "blue";
+            return `<div class="mini-item">
+              <span>#${escapeHtml(candidate.candidateIndex + 1)} <span class="tag ${statusClass}">${escapeHtml(candidate.status)}</span></span>
+              <strong>
+                ${candidate.videoPath ? `<a href="${escapeHtml(ossUrl(candidate.videoPath))}" target="_blank">预览</a>` : "-"}
+                <span class="tag ${qualityClass}">${report ? formatNumber(report.score, "分") : "未质检"}</span>
+                <button data-select-candidate="${escapeHtml(candidate.id)}" data-shot-id="${escapeHtml(shotId)}" ${candidate.status === "failed" ? "disabled" : ""}>选择</button>
+                <button data-inspect-candidate="${escapeHtml(candidate.id)}">质检</button>
+              </strong>
+            </div>`;
+          }).join("")}
+        </article>`).join("")}`;
+    }
+
     function renderReport(data) {
       const report = data.report?.data;
       if (!report) {
@@ -1831,6 +1880,7 @@
       renderGaps(data);
       renderPromptPackage(data);
       renderStoryboard(data);
+      renderGenerationCandidates(data);
       renderReport(data);
 
       const sourceMedia = data.sourceMedia;
@@ -1871,6 +1921,37 @@
         runAction(target, async () => {
           await retryJob(retryJobType);
         }, "任务已重新提交");
+        return;
+      }
+      const generateShotId = target.dataset.generateShot;
+      if (generateShotId) {
+        runAction(target, async () => {
+          await api("generation/enqueueShotGeneration", { taskId: currentTaskId(), shotId: generateShotId, candidateCount: 2 });
+          await refresh();
+        }, "镜头候选已生成");
+        return;
+      }
+      const selectCandidateId = target.dataset.selectCandidate;
+      if (selectCandidateId) {
+        runAction(target, async () => {
+          await api("generation/selectShotCandidate", { taskId: currentTaskId(), shotId: target.dataset.shotId, candidateId: Number(selectCandidateId) });
+          await refresh();
+        }, "候选已选择");
+        return;
+      }
+      const inspectCandidateId = target.dataset.inspectCandidate;
+      if (inspectCandidateId) {
+        runAction(target, async () => {
+          const candidate = (state.task?.generationCandidates || []).find((item) => Number(item.id) === Number(inspectCandidateId));
+          const shot = (state.task?.storyIr?.data?.shots || []).find((item) => item.shotId === candidate?.shotId);
+          await api("quality/inspectCandidate", {
+            taskId: currentTaskId(),
+            candidateId: Number(inspectCandidateId),
+            expectedDurationSec: shot?.durationSec || candidate?.durationSec || 1,
+            expectedAspectRatio: state.task?.task?.aspectRatio || "9:16",
+          });
+          await refresh();
+        }, "候选质检完成");
       }
     });
 
@@ -1992,6 +2073,24 @@
       await refresh();
     }, "已推送到 Toonflow 生产数据");
 
+    $("generateAllCandidates").onclick = () => runAction($("generateAllCandidates"), async () => {
+      await api("generation/enqueueTaskGeneration", { taskId: currentTaskId(), candidateCount: 2 });
+      await refresh();
+      state.activeTab = "generationPanel";
+      document.querySelectorAll(".tab").forEach((el) => el.classList.toggle("active", el.dataset.tab === state.activeTab));
+      document.querySelectorAll(".tab-panel").forEach((el) => el.classList.toggle("active", el.id === state.activeTab));
+    }, "全部镜头候选已生成");
+
+    $("inspectSelectedCandidates").onclick = () => runAction($("inspectSelectedCandidates"), async () => {
+      await api("quality/inspectSelected", { taskId: currentTaskId() });
+      await refresh();
+    }, "已选候选质检完成");
+
+    $("exportTimeline").onclick = () => runAction($("exportTimeline"), async () => {
+      await api("timeline/export", { taskId: currentTaskId(), subtitleMode: "track" });
+      await refresh();
+    }, "成片导出完成");
+
     $("saveDialogue").onclick = () => runAction($("saveDialogue"), async () => {
       const patches = [...document.querySelectorAll("#dialogue article")].map((el) => ({
         shotId: el.dataset.shotId,
@@ -2071,6 +2170,7 @@
       renderGaps({});
       renderPromptPackage({});
       renderStoryboard({});
+      renderGenerationCandidates({});
       renderReport({});
       renderJobs({});
       updateProgressUi();

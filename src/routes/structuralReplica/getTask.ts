@@ -5,6 +5,7 @@ import { validateFields } from "@/middleware/middleware";
 import { getTaskBundle } from "@/services/structuralReplica/repository";
 import { parseModelRouteRow, parseShotAdaptationRow } from "@/services/structuralReplica/repository";
 import { listSrJobs, serializeSrJob } from "@/services/structuralReplica/jobService";
+import { parseGenerationCandidateRow } from "@/services/structuralReplica/generationQueueService";
 
 const router = express.Router();
 
@@ -51,6 +52,17 @@ export default router.post(
         report: withReportData(bundle.report),
         mapping: bundle.mapping,
         modelRoutes: bundle.modelRoutes.map(parseModelRouteRow),
+        generationJobs: bundle.generationJobs,
+        generationCandidates: bundle.generationCandidates.map(parseGenerationCandidateRow),
+        qualityReports: bundle.qualityReports.map((row) => ({
+          ...row,
+          data: row.reportJson ? JSON.parse(row.reportJson) : undefined,
+        })),
+        timelineExports: bundle.timelineExports.map((row) => ({
+          ...row,
+          report: row.reportJson ? JSON.parse(row.reportJson) : undefined,
+          candidateIds: row.candidateIdsJson ? JSON.parse(row.candidateIdsJson) : [],
+        })),
         jobs,
       }),
     );
