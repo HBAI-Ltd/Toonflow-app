@@ -51,6 +51,8 @@ AI 短剧/漫剧生产工具：小说 → 剧本 → 资产/分镜图 → 视频
 |---|---|
 | 整体架构 / 数据流 / Agent / 队列 | [docs/architecture.md](docs/architecture.md) |
 | 视频合成 / 宫格分镜 | [docs/video-compose-features.md](docs/video-compose-features.md) |
+| 视觉一致性校验（CLIP embedding + 降级） | [docs/visual-consistency-clip.md](docs/visual-consistency-clip.md) |
+| 项目完成度评估 / 改进路线图 | [docs/completeness-assessment.md](docs/completeness-assessment.md) |
 | huobao-drama 集成审计 | [docs/huobao-drama-integration-audit.md](docs/huobao-drama-integration-audit.md) |
 | Creative Canvas v1 计划 | [docs/creative-canvas-requirements-plan.md](docs/creative-canvas-requirements-plan.md) |
 | Creative Canvas 当前实现 / Agent 驱动工作台 | [docs/creative-canvas-v2-plan.md](docs/creative-canvas-v2-plan.md) |
