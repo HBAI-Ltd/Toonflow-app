@@ -6,6 +6,7 @@ import { fromOssRelPath } from "./artifactPaths";
 import { getTaskBundle, saveFrameUnderstanding } from "./repository";
 import type { SrJobProgressReporter } from "./jobService";
 import { FrameUnderstandingSchema, ShotDetectionSchema, TranscriptSchema, type FrameUnderstanding } from "./schemas";
+import { getDecryptedSetting } from "./securityService";
 
 interface VisionConfig {
   enabled: boolean;
@@ -61,7 +62,7 @@ async function getVisionConfig(): Promise<VisionConfig> {
   const provider = await getSetting("sr.visionProvider", "worldclawpro");
 
   let baseUrl = await getSetting("sr.visionBaseUrl");
-  let apiKey = await getSetting("sr.visionApiKey");
+  let apiKey = await getDecryptedSetting("sr.visionApiKey");
   let model = await getSetting("sr.visionModel");
   const concurrency = Math.min(positiveInt(await getSetting("sr.visionConcurrency"), DEFAULT_VISION_CONCURRENCY), 6);
   const requestTimeoutMs = positiveInt(await getSetting("sr.visionRequestTimeoutMs"), DEFAULT_VISION_REQUEST_TIMEOUT_MS);

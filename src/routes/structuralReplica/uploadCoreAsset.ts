@@ -37,9 +37,13 @@ export default router.post(
     slotName: z.string().min(1).optional(),
     type: z.enum(["role", "scene", "audio"]),
     base64: z.string().min(1),
+    licenseType: z.string().optional(),
+    licenseNote: z.string().optional(),
+    sourceOwner: z.string().optional(),
+    commercialAllowed: z.boolean().optional(),
   }),
   async (req, res) => {
-    const { projectId, name, slotName, type, base64 } = req.body;
+    const { projectId, name, slotName, type, base64, licenseType, licenseNote, sourceOwner, commercialAllowed } = req.body;
     const ext = extFromDataUrl(base64, type === "audio" ? "mp3" : "png");
     const savePath = `/${projectId}/structuralReplica/coreAssets/${uuid()}.${ext}`;
     const assetType = type === "audio" ? "audio" : type;
@@ -52,6 +56,10 @@ export default router.post(
       projectId,
       prompt: slotName ? `structural replica core asset: ${slotName}` : "structural replica core asset",
       startTime: Date.now(),
+      licenseType: licenseType ?? null,
+      licenseNote: licenseNote ?? null,
+      sourceOwner: sourceOwner ?? null,
+      commercialAllowed: commercialAllowed === undefined ? null : commercialAllowed ? 1 : 0,
     });
     const [imageId] = await u.db("o_image").insert({
       filePath: savePath,

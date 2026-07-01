@@ -17,9 +17,9 @@ var __export = (target, all3) => {
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    for (let key2 of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key2) && key2 !== except)
+        __defProp(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc(from, key2)) || desc.enumerable });
   }
   return to;
 };
@@ -34,8 +34,8 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // node_modules/non-error/index.js
-function defineProperty(object4, key, value) {
-  Object.defineProperty(object4, key, {
+function defineProperty(object4, key2, value) {
+  Object.defineProperty(object4, key2, {
     value,
     writable: false,
     enumerable: false,
@@ -290,38 +290,38 @@ var init_serialize_error = __esm({
         useToJSON,
         serialize
       });
-      for (const key of Object.keys(from)) {
-        const value = from[key];
+      for (const key2 of Object.keys(from)) {
+        const value = from[key2];
         if (value && value instanceof Uint8Array && value.constructor.name === "Buffer") {
-          to[key] = serialize ? "[object Buffer]" : value;
+          to[key2] = serialize ? "[object Buffer]" : value;
           continue;
         }
         if (value !== null && typeof value === "object" && typeof value.pipe === "function") {
-          to[key] = serialize ? "[object Stream]" : value;
+          to[key2] = serialize ? "[object Stream]" : value;
           continue;
         }
         if (typeof value === "function") {
           if (!serialize) {
-            to[key] = value;
+            to[key2] = value;
           }
           continue;
         }
         if (serialize && typeof value === "bigint") {
-          to[key] = `${value}n`;
+          to[key2] = `${value}n`;
           continue;
         }
         if (!value || typeof value !== "object") {
           try {
-            to[key] = value;
+            to[key2] = value;
           } catch {
           }
           continue;
         }
         if (!seen.has(value)) {
-          to[key] = continueDestroyCircular(value);
+          to[key2] = continueDestroyCircular(value);
           continue;
         }
-        to[key] = "[Circular]";
+        to[key2] = "[Circular]";
       }
       if (serialize || to instanceof Error) {
         for (const { property: property2, enumerable } of errorProperties) {
@@ -481,8 +481,8 @@ var require_common = __commonJS({
       createDebug.enabled = enabled;
       createDebug.humanize = require_ms();
       createDebug.destroy = destroy;
-      Object.keys(env2).forEach((key) => {
-        createDebug[key] = env2[key];
+      Object.keys(env2).forEach((key2) => {
+        createDebug[key2] = env2[key2];
       });
       createDebug.names = [];
       createDebug.skips = [];
@@ -1028,13 +1028,13 @@ var require_node = __commonJS({
       }
     } catch (error71) {
     }
-    exports2.inspectOpts = Object.keys(process.env).filter((key) => {
-      return /^debug_/i.test(key);
-    }).reduce((obj, key) => {
-      const prop = key.substring(6).toLowerCase().replace(/_([a-z])/g, (_, k) => {
+    exports2.inspectOpts = Object.keys(process.env).filter((key2) => {
+      return /^debug_/i.test(key2);
+    }).reduce((obj, key2) => {
+      const prop = key2.substring(6).toLowerCase().replace(/_([a-z])/g, (_, k) => {
         return k.toUpperCase();
       });
-      let val = process.env[key];
+      let val = process.env[key2];
       if (/^(yes|on|true|enabled)$/i.test(val)) {
         val = true;
       } else if (/^(no|off|false|disabled)$/i.test(val)) {
@@ -1235,11 +1235,11 @@ var require_depd = __commonJS({
           break;
         }
       }
-      var key = caller ? depSite.join(":") + "__" + caller.join(":") : void 0;
-      if (key !== void 0 && key in this._warned) {
+      var key2 = caller ? depSite.join(":") + "__" + caller.join(":") : void 0;
+      if (key2 !== void 0 && key2 in this._warned) {
         return;
       }
-      this._warned[key] = true;
+      this._warned[key2] = true;
       var msg = message;
       if (!msg) {
         msg = callSite === depSite || !callSite.name ? defaultMessage(depSite) : defaultMessage(callSite);
@@ -1695,9 +1695,9 @@ var require_http_errors = __commonJS({
         err.expose = status < 500;
         err.status = err.statusCode = status;
       }
-      for (var key in props) {
-        if (key !== "status" && key !== "statusCode") {
-          err[key] = props[key];
+      for (var key2 in props) {
+        if (key2 !== "status" && key2 !== "statusCode") {
+          err[key2] = props[key2];
         }
       }
       return err;
@@ -1903,17 +1903,17 @@ var require_safer = __commonJS({
     var buffer = require("buffer");
     var Buffer3 = buffer.Buffer;
     var safer = {};
-    var key;
-    for (key in buffer) {
-      if (!buffer.hasOwnProperty(key)) continue;
-      if (key === "SlowBuffer" || key === "Buffer") continue;
-      safer[key] = buffer[key];
+    var key2;
+    for (key2 in buffer) {
+      if (!buffer.hasOwnProperty(key2)) continue;
+      if (key2 === "SlowBuffer" || key2 === "Buffer") continue;
+      safer[key2] = buffer[key2];
     }
     var Safer = safer.Buffer = {};
-    for (key in Buffer3) {
-      if (!Buffer3.hasOwnProperty(key)) continue;
-      if (key === "allocUnsafe" || key === "allocUnsafeSlow") continue;
-      Safer[key] = Buffer3[key];
+    for (key2 in Buffer3) {
+      if (!Buffer3.hasOwnProperty(key2)) continue;
+      if (key2 === "allocUnsafe" || key2 === "allocUnsafeSlow") continue;
+      Safer[key2] = Buffer3[key2];
     }
     safer.Buffer.prototype = Buffer3.prototype;
     if (!Safer.from || Safer.from === Uint8Array.from) {
@@ -2016,9 +2016,9 @@ var require_merge_exports = __commonJS({
     "use strict";
     var hasOwn = typeof Object.hasOwn === "undefined" ? Function.call.bind(Object.prototype.hasOwnProperty) : Object.hasOwn;
     function mergeModules(target, module3) {
-      for (var key in module3) {
-        if (hasOwn(module3, key)) {
-          target[key] = module3[key];
+      for (var key2 in module3) {
+        if (hasOwn(module3, key2)) {
+          target[key2] = module3[key2];
         }
       }
     }
@@ -5606,8 +5606,8 @@ var require_lib = __commonJS({
             enc = codecDef;
             break;
           case "object":
-            for (var key in codecDef) {
-              codecOptions[key] = codecDef[key];
+            for (var key2 in codecDef) {
+              codecOptions[key2] = codecDef[key2];
             }
             if (!codecOptions.encodingName) {
               codecOptions.encodingName = enc;
@@ -6115,7 +6115,7 @@ var require_content_type = __commonJS({
       }
       var obj = new ContentType(type.toLowerCase());
       if (index !== -1) {
-        var key;
+        var key2;
         var match;
         var value;
         PARAM_REGEXP.lastIndex = index;
@@ -6124,7 +6124,7 @@ var require_content_type = __commonJS({
             throw new TypeError("invalid parameter format");
           }
           index += match[0].length;
-          key = match[1].toLowerCase();
+          key2 = match[1].toLowerCase();
           value = match[2];
           if (value.charCodeAt(0) === 34) {
             value = value.slice(1, -1);
@@ -6132,7 +6132,7 @@ var require_content_type = __commonJS({
               value = value.replace(QESC_REGEXP, "$1");
             }
           }
-          obj.parameters[key] = value;
+          obj.parameters[key2] = value;
         }
         if (index !== header.length) {
           throw new TypeError("invalid parameter format");
@@ -15627,11 +15627,11 @@ var require_mime_types = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path38) {
-      if (!path38 || typeof path38 !== "string") {
+    function lookup(path42) {
+      if (!path42 || typeof path42 !== "string") {
         return false;
       }
-      var extension2 = extname("x." + path38).toLowerCase().slice(1);
+      var extension2 = extname("x." + path42).toLowerCase().slice(1);
       if (!extension2) {
         return false;
       }
@@ -16119,9 +16119,9 @@ var require_json = __commonJS({
     function normalizeJsonSyntaxError(error71, obj) {
       var keys2 = Object.getOwnPropertyNames(error71);
       for (var i = 0; i < keys2.length; i++) {
-        var key = keys2[i];
-        if (key !== "stack" && key !== "message") {
-          delete error71[key];
+        var key2 = keys2[i];
+        if (key2 !== "stack" && key2 !== "message") {
+          delete error71[key2];
         }
       }
       error71.stack = obj.stack.replace(error71.message, obj.message);
@@ -16377,8 +16377,8 @@ var require_object_inspect = __commonJS({
       if (isMap(obj)) {
         var mapParts = [];
         if (mapForEach) {
-          mapForEach.call(obj, function(value, key) {
-            mapParts.push(inspect(key, obj, true) + " => " + inspect(value, obj));
+          mapForEach.call(obj, function(value, key2) {
+            mapParts.push(inspect(key2, obj, true) + " => " + inspect(value, obj));
           });
         }
         return collectionOf("Map", mapSize.call(obj), mapParts, indent);
@@ -16496,11 +16496,11 @@ var require_object_inspect = __commonJS({
       }
       return false;
     }
-    var hasOwn = Object.prototype.hasOwnProperty || function(key) {
-      return key in this;
+    var hasOwn = Object.prototype.hasOwnProperty || function(key2) {
+      return key2 in this;
     };
-    function has(obj, key) {
-      return hasOwn.call(obj, key);
+    function has(obj, key2) {
+      return hasOwn.call(obj, key2);
     }
     function toStr(obj) {
       return objectToString2.call(obj);
@@ -16691,19 +16691,19 @@ var require_object_inspect = __commonJS({
           symMap["$" + syms[k]] = syms[k];
         }
       }
-      for (var key in obj) {
-        if (!has(obj, key)) {
+      for (var key2 in obj) {
+        if (!has(obj, key2)) {
           continue;
         }
-        if (isArr && String(Number(key)) === key && key < obj.length) {
+        if (isArr && String(Number(key2)) === key2 && key2 < obj.length) {
           continue;
         }
-        if (hasShammedSymbols && symMap["$" + key] instanceof Symbol) {
+        if (hasShammedSymbols && symMap["$" + key2] instanceof Symbol) {
           continue;
-        } else if ($test.call(/[^\w$]/, key)) {
-          xs.push(inspect(key, obj) + ": " + inspect(obj[key], obj));
+        } else if ($test.call(/[^\w$]/, key2)) {
+          xs.push(inspect(key2, obj) + ": " + inspect(obj[key2], obj));
         } else {
-          xs.push(key + ": " + inspect(obj[key], obj));
+          xs.push(key2 + ": " + inspect(obj[key2], obj));
         }
       }
       if (typeof gOPS === "function") {
@@ -16724,11 +16724,11 @@ var require_side_channel_list = __commonJS({
     "use strict";
     var inspect = require_object_inspect();
     var $TypeError = require_type();
-    var listGetNode = function(list2, key, isDelete) {
+    var listGetNode = function(list2, key2, isDelete) {
       var prev = list2;
       var curr;
       for (; (curr = prev.next) != null; prev = curr) {
-        if (curr.key === key) {
+        if (curr.key === key2) {
           prev.next = curr.next;
           if (!isDelete) {
             curr.next = /** @type {NonNullable<typeof list.next>} */
@@ -16739,61 +16739,61 @@ var require_side_channel_list = __commonJS({
         }
       }
     };
-    var listGet = function(objects, key) {
+    var listGet = function(objects, key2) {
       if (!objects) {
         return void 0;
       }
-      var node = listGetNode(objects, key);
+      var node = listGetNode(objects, key2);
       return node && node.value;
     };
-    var listSet = function(objects, key, value) {
-      var node = listGetNode(objects, key);
+    var listSet = function(objects, key2, value) {
+      var node = listGetNode(objects, key2);
       if (node) {
         node.value = value;
       } else {
         objects.next = /** @type {import('./list.d.ts').ListNode<typeof value, typeof key>} */
         {
           // eslint-disable-line no-param-reassign, no-extra-parens
-          key,
+          key: key2,
           next: objects.next,
           value
         };
       }
     };
-    var listHas = function(objects, key) {
+    var listHas = function(objects, key2) {
       if (!objects) {
         return false;
       }
-      return !!listGetNode(objects, key);
+      return !!listGetNode(objects, key2);
     };
-    var listDelete = function(objects, key) {
+    var listDelete = function(objects, key2) {
       if (objects) {
-        return listGetNode(objects, key, true);
+        return listGetNode(objects, key2, true);
       }
     };
     module2.exports = function getSideChannelList() {
       var $o;
       var channel = {
-        assert: function(key) {
-          if (!channel.has(key)) {
-            throw new $TypeError("Side channel does not contain " + inspect(key));
+        assert: function(key2) {
+          if (!channel.has(key2)) {
+            throw new $TypeError("Side channel does not contain " + inspect(key2));
           }
         },
-        "delete": function(key) {
+        "delete": function(key2) {
           var root2 = $o && $o.next;
-          var deletedNode = listDelete($o, key);
+          var deletedNode = listDelete($o, key2);
           if (deletedNode && root2 && root2 === deletedNode) {
             $o = void 0;
           }
           return !!deletedNode;
         },
-        get: function(key) {
-          return listGet($o, key);
+        get: function(key2) {
+          return listGet($o, key2);
         },
-        has: function(key) {
-          return listHas($o, key);
+        has: function(key2) {
+          return listHas($o, key2);
         },
-        set: function(key, value) {
+        set: function(key2, value) {
           if (!$o) {
             $o = {
               next: void 0
@@ -16802,7 +16802,7 @@ var require_side_channel_list = __commonJS({
           listSet(
             /** @type {NonNullable<typeof $o>} */
             $o,
-            key,
+            key2,
             value
           );
         }
@@ -17648,14 +17648,14 @@ var require_side_channel_map = __commonJS({
     function getSideChannelMap() {
       var $m;
       var channel = {
-        assert: function(key) {
-          if (!channel.has(key)) {
-            throw new $TypeError("Side channel does not contain " + inspect(key));
+        assert: function(key2) {
+          if (!channel.has(key2)) {
+            throw new $TypeError("Side channel does not contain " + inspect(key2));
           }
         },
-        "delete": function(key) {
+        "delete": function(key2) {
           if ($m) {
-            var result = $mapDelete($m, key);
+            var result = $mapDelete($m, key2);
             if ($mapSize($m) === 0) {
               $m = void 0;
             }
@@ -17663,22 +17663,22 @@ var require_side_channel_map = __commonJS({
           }
           return false;
         },
-        get: function(key) {
+        get: function(key2) {
           if ($m) {
-            return $mapGet($m, key);
+            return $mapGet($m, key2);
           }
         },
-        has: function(key) {
+        has: function(key2) {
           if ($m) {
-            return $mapHas($m, key);
+            return $mapHas($m, key2);
           }
           return false;
         },
-        set: function(key, value) {
+        set: function(key2, value) {
           if (!$m) {
             $m = new $Map();
           }
-          $mapSet($m, key, value);
+          $mapSet($m, key2, value);
         }
       };
       return channel;
@@ -17706,50 +17706,50 @@ var require_side_channel_weakmap = __commonJS({
         var $wm;
         var $m;
         var channel = {
-          assert: function(key) {
-            if (!channel.has(key)) {
-              throw new $TypeError("Side channel does not contain " + inspect(key));
+          assert: function(key2) {
+            if (!channel.has(key2)) {
+              throw new $TypeError("Side channel does not contain " + inspect(key2));
             }
           },
-          "delete": function(key) {
-            if ($WeakMap && key && (typeof key === "object" || typeof key === "function")) {
+          "delete": function(key2) {
+            if ($WeakMap && key2 && (typeof key2 === "object" || typeof key2 === "function")) {
               if ($wm) {
-                return $weakMapDelete($wm, key);
+                return $weakMapDelete($wm, key2);
               }
             } else if (getSideChannelMap) {
               if ($m) {
-                return $m["delete"](key);
+                return $m["delete"](key2);
               }
             }
             return false;
           },
-          get: function(key) {
-            if ($WeakMap && key && (typeof key === "object" || typeof key === "function")) {
+          get: function(key2) {
+            if ($WeakMap && key2 && (typeof key2 === "object" || typeof key2 === "function")) {
               if ($wm) {
-                return $weakMapGet($wm, key);
+                return $weakMapGet($wm, key2);
               }
             }
-            return $m && $m.get(key);
+            return $m && $m.get(key2);
           },
-          has: function(key) {
-            if ($WeakMap && key && (typeof key === "object" || typeof key === "function")) {
+          has: function(key2) {
+            if ($WeakMap && key2 && (typeof key2 === "object" || typeof key2 === "function")) {
               if ($wm) {
-                return $weakMapHas($wm, key);
+                return $weakMapHas($wm, key2);
               }
             }
-            return !!$m && $m.has(key);
+            return !!$m && $m.has(key2);
           },
-          set: function(key, value) {
-            if ($WeakMap && key && (typeof key === "object" || typeof key === "function")) {
+          set: function(key2, value) {
+            if ($WeakMap && key2 && (typeof key2 === "object" || typeof key2 === "function")) {
               if (!$wm) {
                 $wm = new $WeakMap();
               }
-              $weakMapSet($wm, key, value);
+              $weakMapSet($wm, key2, value);
             } else if (getSideChannelMap) {
               if (!$m) {
                 $m = getSideChannelMap();
               }
-              $m.set(key, value);
+              $m.set(key2, value);
             }
           }
         };
@@ -17772,25 +17772,25 @@ var require_side_channel = __commonJS({
     module2.exports = function getSideChannel() {
       var $channelData;
       var channel = {
-        assert: function(key) {
-          if (!channel.has(key)) {
-            throw new $TypeError("Side channel does not contain " + inspect(key));
+        assert: function(key2) {
+          if (!channel.has(key2)) {
+            throw new $TypeError("Side channel does not contain " + inspect(key2));
           }
         },
-        "delete": function(key) {
-          return !!$channelData && $channelData["delete"](key);
+        "delete": function(key2) {
+          return !!$channelData && $channelData["delete"](key2);
         },
-        get: function(key) {
-          return $channelData && $channelData.get(key);
+        get: function(key2) {
+          return $channelData && $channelData.get(key2);
         },
-        has: function(key) {
-          return !!$channelData && $channelData.has(key);
+        has: function(key2) {
+          return !!$channelData && $channelData.has(key2);
         },
-        set: function(key, value) {
+        set: function(key2, value) {
           if (!$channelData) {
             $channelData = makeChannel();
           }
-          $channelData.set(key, value);
+          $channelData.set(key2, value);
         }
       };
       return channel;
@@ -17938,19 +17938,19 @@ var require_utils2 = __commonJS({
         });
         return target;
       }
-      return Object.keys(source).reduce(function(acc, key) {
-        var value = source[key];
-        if (has.call(acc, key)) {
-          acc[key] = merge5(acc[key], value, options);
+      return Object.keys(source).reduce(function(acc, key2) {
+        var value = source[key2];
+        if (has.call(acc, key2)) {
+          acc[key2] = merge5(acc[key2], value, options);
         } else {
-          acc[key] = value;
+          acc[key2] = value;
         }
         if (isOverflow(source) && !isOverflow(acc)) {
           markOverflow(acc, getMaxIndex(source));
         }
         if (isOverflow(acc)) {
-          var keyNum = parseInt(key, 10);
-          if (String(keyNum) === key && keyNum >= 0 && keyNum > getMaxIndex(acc)) {
+          var keyNum = parseInt(key2, 10);
+          if (String(keyNum) === key2 && keyNum >= 0 && keyNum > getMaxIndex(acc)) {
             setMaxIndex(acc, keyNum);
           }
         }
@@ -17958,8 +17958,8 @@ var require_utils2 = __commonJS({
       }, mergeTarget);
     };
     var assign = function assignSingleSource(target, source) {
-      return Object.keys(source).reduce(function(acc, key) {
-        acc[key] = source[key];
+      return Object.keys(source).reduce(function(acc, key2) {
+        acc[key2] = source[key2];
         return acc;
       }, target);
     };
@@ -18028,10 +18028,10 @@ var require_utils2 = __commonJS({
         var obj = item.obj[item.prop];
         var keys2 = Object.keys(obj);
         for (var j = 0; j < keys2.length; ++j) {
-          var key = keys2[j];
-          var val = obj[key];
+          var key2 = keys2[j];
+          var val = obj[key2];
           if (typeof val === "object" && val !== null && refs.indexOf(val) === -1) {
-            queue[queue.length] = { obj, prop: key };
+            queue[queue.length] = { obj, prop: key2 };
             refs[refs.length] = val;
           }
         }
@@ -18101,8 +18101,8 @@ var require_stringify = __commonJS({
         return prefix + "[]";
       },
       comma: "comma",
-      indices: function indices(prefix, key) {
-        return prefix + "[" + key + "]";
+      indices: function indices(prefix, key2) {
+        return prefix + "[" + key2 + "]";
       },
       repeat: function repeat(prefix) {
         return prefix;
@@ -18209,12 +18209,12 @@ var require_stringify = __commonJS({
         return adjustedPrefix + "[]";
       }
       for (var j = 0; j < objKeys.length; ++j) {
-        var key = objKeys[j];
-        var value = typeof key === "object" && key && typeof key.value !== "undefined" ? key.value : obj[key];
+        var key2 = objKeys[j];
+        var value = typeof key2 === "object" && key2 && typeof key2.value !== "undefined" ? key2.value : obj[key2];
         if (skipNulls && value === null) {
           continue;
         }
-        var encodedKey = allowDots && encodeDotInKeys ? String(key).replace(/\./g, "%2E") : String(key);
+        var encodedKey = allowDots && encodeDotInKeys ? String(key2).replace(/\./g, "%2E") : String(key2);
         var keyPrefix = isArray3(obj) ? typeof generateArrayPrefix === "function" ? generateArrayPrefix(adjustedPrefix, encodedKey) : adjustedPrefix : adjustedPrefix + (allowDots ? "." + encodedKey : "[" + encodedKey + "]");
         sideChannel.set(object4, step);
         var valueSideChannel = getSideChannel();
@@ -18331,14 +18331,14 @@ var require_stringify = __commonJS({
       }
       var sideChannel = getSideChannel();
       for (var i = 0; i < objKeys.length; ++i) {
-        var key = objKeys[i];
-        var value = obj[key];
+        var key2 = objKeys[i];
+        var value = obj[key2];
         if (options.skipNulls && value === null) {
           continue;
         }
         pushToArray(keys2, stringify2(
           value,
-          key,
+          key2,
           generateArrayPrefix,
           commaRoundTrip,
           options.allowEmptyArrays,
@@ -18453,19 +18453,19 @@ var require_parse = __commonJS({
         var part = parts[i];
         var bracketEqualsPos = part.indexOf("]=");
         var pos = bracketEqualsPos === -1 ? part.indexOf("=") : bracketEqualsPos + 1;
-        var key;
+        var key2;
         var val;
         if (pos === -1) {
-          key = options.decoder(part, defaults2.decoder, charset, "key");
+          key2 = options.decoder(part, defaults2.decoder, charset, "key");
           val = options.strictNullHandling ? null : "";
         } else {
-          key = options.decoder(part.slice(0, pos), defaults2.decoder, charset, "key");
-          if (key !== null) {
+          key2 = options.decoder(part.slice(0, pos), defaults2.decoder, charset, "key");
+          if (key2 !== null) {
             val = utils.maybeMap(
               parseArrayValue(
                 part.slice(pos + 1),
                 options,
-                isArray3(obj[key]) ? obj[key].length : 0
+                isArray3(obj[key2]) ? obj[key2].length : 0
               ),
               function(encodedVal) {
                 return options.decoder(encodedVal, defaults2.decoder, charset, "value");
@@ -18485,17 +18485,17 @@ var require_parse = __commonJS({
           }
           val = utils.combine([], val, options.arrayLimit, options.plainObjects);
         }
-        if (key !== null) {
-          var existing = has.call(obj, key);
+        if (key2 !== null) {
+          var existing = has.call(obj, key2);
           if (existing && (options.duplicates === "combine" || part.indexOf("[]=") > -1)) {
-            obj[key] = utils.combine(
-              obj[key],
+            obj[key2] = utils.combine(
+              obj[key2],
               val,
               options.arrayLimit,
               options.plainObjects
             );
           } else if (!existing || options.duplicates === "last") {
-            obj[key] = val;
+            obj[key2] = val;
           }
         }
       }
@@ -18547,19 +18547,19 @@ var require_parse = __commonJS({
       return leaf;
     };
     var splitKeyIntoSegments = function splitKeyIntoSegments2(givenKey, options) {
-      var key = options.allowDots ? givenKey.replace(/\.([^.[]+)/g, "[$1]") : givenKey;
+      var key2 = options.allowDots ? givenKey.replace(/\.([^.[]+)/g, "[$1]") : givenKey;
       if (options.depth <= 0) {
-        if (!options.plainObjects && has.call(Object.prototype, key)) {
+        if (!options.plainObjects && has.call(Object.prototype, key2)) {
           if (!options.allowPrototypes) {
             return;
           }
         }
-        return [key];
+        return [key2];
       }
       var brackets = /(\[[^[\]]*])/;
       var child = /(\[[^[\]]*])/g;
-      var segment = brackets.exec(key);
-      var parent = segment ? key.slice(0, segment.index) : key;
+      var segment = brackets.exec(key2);
+      var parent = segment ? key2.slice(0, segment.index) : key2;
       var keys2 = [];
       if (parent) {
         if (!options.plainObjects && has.call(Object.prototype, parent)) {
@@ -18570,7 +18570,7 @@ var require_parse = __commonJS({
         keys2[keys2.length] = parent;
       }
       var i = 0;
-      while ((segment = child.exec(key)) !== null && i < options.depth) {
+      while ((segment = child.exec(key2)) !== null && i < options.depth) {
         i += 1;
         var segmentContent = segment[1].slice(1, -1);
         if (!options.plainObjects && has.call(Object.prototype, segmentContent)) {
@@ -18584,7 +18584,7 @@ var require_parse = __commonJS({
         if (options.strictDepth === true) {
           throw new RangeError("Input depth exceeded depth option of " + options.depth + " and strictDepth is true");
         }
-        keys2[keys2.length] = "[" + key.slice(segment.index) + "]";
+        keys2[keys2.length] = "[" + key2.slice(segment.index) + "]";
       }
       return keys2;
     };
@@ -18658,8 +18658,8 @@ var require_parse = __commonJS({
       var obj = options.plainObjects ? { __proto__: null } : {};
       var keys2 = Object.keys(tempObj);
       for (var i = 0; i < keys2.length; ++i) {
-        var key = keys2[i];
-        var newObj = parseKeys(key, tempObj[key], options, typeof str === "string");
+        var key2 = keys2[i];
+        var newObj = parseKeys(key2, tempObj[key2], options, typeof str === "string");
         obj = utils.merge(obj, newObj, options);
       }
       if (options.allowSparse === true) {
@@ -19076,8 +19076,8 @@ var require_finalhandler = __commonJS({
         res.removeHeader("Content-Encoding");
         res.removeHeader("Content-Language");
         res.removeHeader("Content-Range");
-        for (const [key, value] of Object.entries(headers ?? {})) {
-          res.setHeader(key, value);
+        for (const [key2, value] of Object.entries(headers ?? {})) {
+          res.setHeader(key2, value);
         }
         res.setHeader("Content-Security-Policy", "default-src 'none'");
         res.setHeader("X-Content-Type-Options", "nosniff");
@@ -19105,13 +19105,13 @@ var require_view = __commonJS({
   "node_modules/express/lib/view.js"(exports2, module2) {
     "use strict";
     var debug = require_src()("express:view");
-    var path38 = require("node:path");
-    var fs43 = require("node:fs");
-    var dirname2 = path38.dirname;
-    var basename = path38.basename;
-    var extname = path38.extname;
-    var join2 = path38.join;
-    var resolve3 = path38.resolve;
+    var path42 = require("node:path");
+    var fs47 = require("node:fs");
+    var dirname2 = path42.dirname;
+    var basename = path42.basename;
+    var extname = path42.extname;
+    var join2 = path42.join;
+    var resolve3 = path42.resolve;
     module2.exports = View;
     function View(name28, options) {
       var opts = options || {};
@@ -19140,17 +19140,17 @@ var require_view = __commonJS({
       this.path = this.lookup(fileName);
     }
     View.prototype.lookup = function lookup(name28) {
-      var path39;
+      var path43;
       var roots = [].concat(this.root);
       debug('lookup "%s"', name28);
-      for (var i = 0; i < roots.length && !path39; i++) {
+      for (var i = 0; i < roots.length && !path43; i++) {
         var root2 = roots[i];
         var loc = resolve3(root2, name28);
         var dir = dirname2(loc);
         var file3 = basename(loc);
-        path39 = this.resolve(dir, file3);
+        path43 = this.resolve(dir, file3);
       }
-      return path39;
+      return path43;
     };
     View.prototype.render = function render(options, callback) {
       var sync = true;
@@ -19172,21 +19172,21 @@ var require_view = __commonJS({
     };
     View.prototype.resolve = function resolve4(dir, file3) {
       var ext = this.ext;
-      var path39 = join2(dir, file3);
-      var stat = tryStat(path39);
+      var path43 = join2(dir, file3);
+      var stat = tryStat(path43);
       if (stat && stat.isFile()) {
-        return path39;
+        return path43;
       }
-      path39 = join2(dir, basename(file3, ext), "index" + ext);
-      stat = tryStat(path39);
+      path43 = join2(dir, basename(file3, ext), "index" + ext);
+      stat = tryStat(path43);
       if (stat && stat.isFile()) {
-        return path39;
+        return path43;
       }
     };
-    function tryStat(path39) {
-      debug('stat "%s"', path39);
+    function tryStat(path43) {
+      debug('stat "%s"', path43);
       try {
-        return fs43.statSync(path39);
+        return fs47.statSync(path43);
       } catch (e) {
         return void 0;
       }
@@ -19199,14 +19199,14 @@ var require_etag = __commonJS({
   "node_modules/etag/index.js"(exports2, module2) {
     "use strict";
     module2.exports = etag;
-    var crypto8 = require("crypto");
+    var crypto9 = require("crypto");
     var Stats = require("fs").Stats;
     var toString4 = Object.prototype.toString;
     function entitytag(entity) {
       if (entity.length === 0) {
         return '"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
       }
-      var hash3 = crypto8.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
+      var hash3 = crypto9.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
       var len = typeof entity === "string" ? Buffer.byteLength(entity, "utf8") : entity.length;
       return '"' + len.toString(16) + "-" + hash3 + '"';
     }
@@ -20100,12 +20100,12 @@ var require_utils3 = __commonJS({
           index = str.lastIndexOf(";", splitIndex - 1) + 1;
           continue;
         }
-        var key = str.slice(index, splitIndex).trim();
+        var key2 = str.slice(index, splitIndex).trim();
         var value = str.slice(splitIndex + 1, endIndex).trim();
-        if (key === "q") {
+        if (key2 === "q") {
           ret.quality = parseFloat(value);
         } else {
-          ret.params[key] = value;
+          ret.params[key2] = value;
         }
         index = endIndex + 1;
       }
@@ -20376,15 +20376,15 @@ var require_dist = __commonJS({
           if (token.type === endType)
             break;
           if (token.type === "char" || token.type === "escape") {
-            let path38 = token.value;
+            let path42 = token.value;
             let cur = tokens[pos];
             while (cur.type === "char" || cur.type === "escape") {
-              path38 += cur.value;
+              path42 += cur.value;
               cur = tokens[++pos];
             }
             output.push({
               type: "text",
-              value: encodePath(path38)
+              value: encodePath(path42)
             });
             continue;
           }
@@ -20408,16 +20408,16 @@ var require_dist = __commonJS({
       }
       return new TokenData(consumeUntil("end"), str);
     }
-    function compile(path38, options = {}) {
+    function compile(path42, options = {}) {
       const { encode: encode6 = encodeURIComponent, delimiter = DEFAULT_DELIMITER } = options;
-      const data = typeof path38 === "object" ? path38 : parse4(path38, options);
+      const data = typeof path42 === "object" ? path42 : parse4(path42, options);
       const fn = tokensToFunction(data.tokens, delimiter, encode6);
-      return function path39(params = {}) {
-        const [path40, ...missing] = fn(params);
+      return function path43(params = {}) {
+        const [path44, ...missing] = fn(params);
         if (missing.length) {
           throw new TypeError(`Missing parameters: ${missing.join(", ")}`);
         }
-        return path40;
+        return path44;
       };
     }
     function tokensToFunction(tokens, delimiter, encode6) {
@@ -20473,13 +20473,13 @@ var require_dist = __commonJS({
         return [encodeValue(value)];
       };
     }
-    function match(path38, options = {}) {
+    function match(path42, options = {}) {
       const { decode: decode4 = decodeURIComponent, delimiter = DEFAULT_DELIMITER } = options;
-      const { regexp, keys: keys2 } = pathToRegexp(path38, options);
-      const decoders = keys2.map((key) => {
+      const { regexp, keys: keys2 } = pathToRegexp(path42, options);
+      const decoders = keys2.map((key2) => {
         if (decode4 === false)
           return NOOP_VALUE;
-        if (key.type === "param")
+        if (key2.type === "param")
           return decode4;
         return (value) => value.split(delimiter).map(decode4);
       });
@@ -20487,31 +20487,31 @@ var require_dist = __commonJS({
         const m = regexp.exec(input);
         if (!m)
           return false;
-        const path39 = m[0];
+        const path43 = m[0];
         const params = /* @__PURE__ */ Object.create(null);
         for (let i = 1; i < m.length; i++) {
           if (m[i] === void 0)
             continue;
-          const key = keys2[i - 1];
+          const key2 = keys2[i - 1];
           const decoder = decoders[i - 1];
-          params[key.name] = decoder(m[i]);
+          params[key2.name] = decoder(m[i]);
         }
-        return { path: path39, params };
+        return { path: path43, params };
       };
     }
-    function pathToRegexp(path38, options = {}) {
+    function pathToRegexp(path42, options = {}) {
       const { delimiter = DEFAULT_DELIMITER, end = true, sensitive = false, trailing = true } = options;
       const keys2 = [];
       const sources = [];
-      const paths = [path38];
+      const paths = [path42];
       let combinations = 0;
       while (paths.length) {
-        const path39 = paths.shift();
-        if (Array.isArray(path39)) {
-          paths.push(...path39);
+        const path43 = paths.shift();
+        if (Array.isArray(path43)) {
+          paths.push(...path43);
           continue;
         }
-        const data = typeof path39 === "object" ? path39 : parse4(path39, options);
+        const data = typeof path43 === "object" ? path43 : parse4(path43, options);
         flatten(data.tokens, 0, [], (tokens) => {
           if (combinations++ >= 256) {
             throw new PathError("Too many path combinations", data.originalPath);
@@ -20656,18 +20656,18 @@ var require_layer = __commonJS({
     var TRAILING_SLASH_REGEXP = /\/+$/;
     var MATCHING_GROUP_REGEXP = /\((?:\?<(.*?)>)?(?!\?)/g;
     module2.exports = Layer;
-    function Layer(path38, options, fn) {
+    function Layer(path42, options, fn) {
       if (!(this instanceof Layer)) {
-        return new Layer(path38, options, fn);
+        return new Layer(path42, options, fn);
       }
-      debug("new %o", path38);
+      debug("new %o", path42);
       const opts = options || {};
       this.handle = fn;
       this.keys = [];
       this.name = fn.name || "<anonymous>";
       this.params = void 0;
       this.path = void 0;
-      this.slash = path38 === "/" && opts.end === false;
+      this.slash = path42 === "/" && opts.end === false;
       function matcher(_path) {
         if (_path instanceof RegExp) {
           const keys2 = [];
@@ -20686,8 +20686,8 @@ var require_layer = __commonJS({
             }
             const params = {};
             for (let i = 1; i < match.length; i++) {
-              const key = keys2[i - 1];
-              const prop = key.name;
+              const key2 = keys2[i - 1];
+              const prop = key2.name;
               const val = decodeParam(match[i]);
               if (val !== void 0) {
                 params[prop] = val;
@@ -20706,7 +20706,7 @@ var require_layer = __commonJS({
           decode: decodeParam
         });
       }
-      this.matchers = Array.isArray(path38) ? path38.map(matcher) : [matcher(path38)];
+      this.matchers = Array.isArray(path42) ? path42.map(matcher) : [matcher(path42)];
     }
     Layer.prototype.handleError = function handleError(error71, req, res, next) {
       const fn = this.handle;
@@ -20746,9 +20746,9 @@ var require_layer = __commonJS({
         next(err);
       }
     };
-    Layer.prototype.match = function match(path38) {
+    Layer.prototype.match = function match(path42) {
       let match2;
-      if (path38 != null) {
+      if (path42 != null) {
         if (this.slash) {
           this.params = {};
           this.path = "";
@@ -20756,7 +20756,7 @@ var require_layer = __commonJS({
         }
         let i = 0;
         while (!match2 && i < this.matchers.length) {
-          match2 = this.matchers[i](path38);
+          match2 = this.matchers[i](path42);
           i++;
         }
       }
@@ -20784,13 +20784,13 @@ var require_layer = __commonJS({
         throw err;
       }
     }
-    function loosen(path38) {
-      if (path38 instanceof RegExp || path38 === "/") {
-        return path38;
+    function loosen(path42) {
+      if (path42 instanceof RegExp || path42 === "/") {
+        return path42;
       }
-      return Array.isArray(path38) ? path38.map(function(p3) {
+      return Array.isArray(path42) ? path42.map(function(p3) {
         return loosen(p3);
-      }) : String(path38).replace(TRAILING_SLASH_REGEXP, "");
+      }) : String(path42).replace(TRAILING_SLASH_REGEXP, "");
     }
   }
 });
@@ -20806,9 +20806,9 @@ var require_route = __commonJS({
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
     module2.exports = Route;
-    function Route(path38) {
-      debug("new %o", path38);
-      this.path = path38;
+    function Route(path42) {
+      debug("new %o", path42);
+      this.path = path42;
       this.stack = [];
       this.methods = /* @__PURE__ */ Object.create(null);
     }
@@ -20936,16 +20936,16 @@ var require_router = __commonJS({
         return new Router(options);
       }
       const opts = options || {};
-      function router187(req, res, next) {
-        router187.handle(req, res, next);
+      function router210(req, res, next) {
+        router210.handle(req, res, next);
       }
-      Object.setPrototypeOf(router187, this);
-      router187.caseSensitive = opts.caseSensitive;
-      router187.mergeParams = opts.mergeParams;
-      router187.params = {};
-      router187.strict = opts.strict;
-      router187.stack = [];
-      return router187;
+      Object.setPrototypeOf(router210, this);
+      router210.caseSensitive = opts.caseSensitive;
+      router210.mergeParams = opts.mergeParams;
+      router210.params = {};
+      router210.strict = opts.strict;
+      router210.stack = [];
+      return router210;
     }
     Router.prototype = function() {
     };
@@ -21016,8 +21016,8 @@ var require_router = __commonJS({
         if (++sync > 100) {
           return setImmediate(next, err);
         }
-        const path38 = getPathname(req);
-        if (path38 == null) {
+        const path42 = getPathname(req);
+        if (path42 == null) {
           return done(layerError);
         }
         let layer;
@@ -21025,7 +21025,7 @@ var require_router = __commonJS({
         let route;
         while (match !== true && idx < stack.length) {
           layer = stack[idx++];
-          match = matchLayer(layer, path38);
+          match = matchLayer(layer, path42);
           route = layer.route;
           if (typeof match !== "boolean") {
             layerError = layerError || match;
@@ -21063,18 +21063,18 @@ var require_router = __commonJS({
           } else if (route) {
             layer.handleRequest(req, res, next);
           } else {
-            trimPrefix(layer, layerError, layerPath, path38);
+            trimPrefix(layer, layerError, layerPath, path42);
           }
           sync = 0;
         });
       }
-      function trimPrefix(layer, layerError, layerPath, path38) {
+      function trimPrefix(layer, layerError, layerPath, path42) {
         if (layerPath.length !== 0) {
-          if (layerPath !== path38.substring(0, layerPath.length)) {
+          if (layerPath !== path42.substring(0, layerPath.length)) {
             next(layerError);
             return;
           }
-          const c = path38[layerPath.length];
+          const c = path42[layerPath.length];
           if (c && c !== "/") {
             next(layerError);
             return;
@@ -21098,7 +21098,7 @@ var require_router = __commonJS({
     };
     Router.prototype.use = function use(handler) {
       let offset = 0;
-      let path38 = "/";
+      let path42 = "/";
       if (typeof handler !== "function") {
         let arg = handler;
         while (Array.isArray(arg) && arg.length !== 0) {
@@ -21106,7 +21106,7 @@ var require_router = __commonJS({
         }
         if (typeof arg !== "function") {
           offset = 1;
-          path38 = handler;
+          path42 = handler;
         }
       }
       const callbacks = flatten.call(slice.call(arguments, offset), Infinity);
@@ -21118,8 +21118,8 @@ var require_router = __commonJS({
         if (typeof fn !== "function") {
           throw new TypeError("argument handler must be a function");
         }
-        debug("use %o %s", path38, fn.name || "<anonymous>");
-        const layer = new Layer(path38, {
+        debug("use %o %s", path42, fn.name || "<anonymous>");
+        const layer = new Layer(path42, {
           sensitive: this.caseSensitive,
           strict: false,
           end: false
@@ -21129,9 +21129,9 @@ var require_router = __commonJS({
       }
       return this;
     };
-    Router.prototype.route = function route(path38) {
-      const route2 = new Route(path38);
-      const layer = new Layer(path38, {
+    Router.prototype.route = function route(path42) {
+      const route2 = new Route(path42);
+      const layer = new Layer(path42, {
         sensitive: this.caseSensitive,
         strict: this.strict,
         end: true
@@ -21144,8 +21144,8 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      Router.prototype[method] = function(path38) {
-        const route = this.route(path38);
+      Router.prototype[method] = function(path42) {
+        const route = this.route(path42);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
       };
@@ -21174,9 +21174,9 @@ var require_router = __commonJS({
       const fqdnIndex = url4.substring(0, pathLength).indexOf("://");
       return fqdnIndex !== -1 ? url4.substring(0, url4.indexOf("/", 3 + fqdnIndex)) : void 0;
     }
-    function matchLayer(layer, path38) {
+    function matchLayer(layer, path42) {
       try {
-        return layer.match(path38);
+        return layer.match(path42);
       } catch (err) {
         return err;
       }
@@ -21212,7 +21212,7 @@ var require_router = __commonJS({
       }
       let i = 0;
       let paramIndex = 0;
-      let key;
+      let key2;
       let paramVal;
       let paramCallbacks;
       let paramCalled;
@@ -21224,18 +21224,18 @@ var require_router = __commonJS({
           return done();
         }
         paramIndex = 0;
-        key = keys2[i++];
-        paramVal = req.params[key];
-        paramCallbacks = params[key];
-        paramCalled = called[key];
+        key2 = keys2[i++];
+        paramVal = req.params[key2];
+        paramCallbacks = params[key2];
+        paramCalled = called[key2];
         if (paramVal === void 0 || !paramCallbacks) {
           return param();
         }
         if (paramCalled && (paramCalled.match === paramVal || paramCalled.error && paramCalled.error !== "route")) {
-          req.params[key] = paramCalled.value;
+          req.params[key2] = paramCalled.value;
           return param(paramCalled.error);
         }
-        called[key] = paramCalled = {
+        called[key2] = paramCalled = {
           error: null,
           match: paramVal,
           value: paramVal
@@ -21244,7 +21244,7 @@ var require_router = __commonJS({
       }
       function paramCallback(err) {
         const fn = paramCallbacks[paramIndex++];
-        paramCalled.value = req.params[key];
+        paramCalled.value = req.params[key2];
         if (err) {
           paramCalled.error = err;
           param(err);
@@ -21252,7 +21252,7 @@ var require_router = __commonJS({
         }
         if (!fn) return param();
         try {
-          const ret = fn(req, res, paramCallback, paramVal, key);
+          const ret = fn(req, res, paramCallback, paramVal, key2);
           if (isPromise(ret)) {
             if (!(ret instanceof Promise)) {
               deprecate("parameters that are Promise-like are deprecated, use a native Promise instead");
@@ -21333,7 +21333,7 @@ var require_application = __commonJS({
     var app2 = exports2 = module2.exports = {};
     var trustProxyDefaultSymbol = "@@symbol:trust_proxy_default";
     app2.init = function init() {
-      var router187 = null;
+      var router210 = null;
       this.cache = /* @__PURE__ */ Object.create(null);
       this.engines = /* @__PURE__ */ Object.create(null);
       this.settings = /* @__PURE__ */ Object.create(null);
@@ -21342,13 +21342,13 @@ var require_application = __commonJS({
         configurable: true,
         enumerable: true,
         get: function getrouter() {
-          if (router187 === null) {
-            router187 = new Router({
+          if (router210 === null) {
+            router210 = new Router({
               caseSensitive: this.enabled("case sensitive routing"),
               strict: this.enabled("strict routing")
             });
           }
-          return router187;
+          return router210;
         }
       });
     };
@@ -21404,7 +21404,7 @@ var require_application = __commonJS({
     };
     app2.use = function use(fn) {
       var offset = 0;
-      var path38 = "/";
+      var path42 = "/";
       if (typeof fn !== "function") {
         var arg = fn;
         while (Array.isArray(arg) && arg.length !== 0) {
@@ -21412,22 +21412,22 @@ var require_application = __commonJS({
         }
         if (typeof arg !== "function") {
           offset = 1;
-          path38 = fn;
+          path42 = fn;
         }
       }
       var fns = flatten.call(slice.call(arguments, offset), Infinity);
       if (fns.length === 0) {
         throw new TypeError("app.use() requires a middleware function");
       }
-      var router187 = this.router;
+      var router210 = this.router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router187.use(path38, fn2);
+          return router210.use(path42, fn2);
         }
-        debug(".use app under %s", path38);
-        fn2.mountpath = path38;
+        debug(".use app under %s", path42);
+        fn2.mountpath = path42;
         fn2.parent = this;
-        router187.use(path38, function mounted_app(req, res, next) {
+        router210.use(path42, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             Object.setPrototypeOf(req, orig.request);
@@ -21439,8 +21439,8 @@ var require_application = __commonJS({
       }, this);
       return this;
     };
-    app2.route = function route(path38) {
-      return this.router.route(path38);
+    app2.route = function route(path42) {
+      return this.router.route(path42);
     };
     app2.engine = function engine(ext, fn) {
       if (typeof fn !== "function") {
@@ -21483,7 +21483,7 @@ var require_application = __commonJS({
       }
       return this;
     };
-    app2.path = function path38() {
+    app2.path = function path42() {
       return this.parent ? this.parent.path() + this.mountpath : "";
     };
     app2.enabled = function enabled(setting) {
@@ -21499,17 +21499,17 @@ var require_application = __commonJS({
       return this.set(setting, false);
     };
     methods.forEach(function(method) {
-      app2[method] = function(path38) {
+      app2[method] = function(path42) {
         if (method === "get" && arguments.length === 1) {
-          return this.set(path38);
+          return this.set(path42);
         }
-        var route = this.route(path38);
+        var route = this.route(path42);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
       };
     });
-    app2.all = function all3(path38) {
-      var route = this.route(path38);
+    app2.all = function all3(path42) {
+      var route = this.route(path42);
       var args = slice.call(arguments, 1);
       for (var i = 0; i < methods.length; i++) {
         route[methods[i]].apply(route, args);
@@ -21898,14 +21898,14 @@ var require_mediaType = __commonJS({
         var kvps = splitParameters(match[3]).map(splitKeyValuePair);
         for (var j = 0; j < kvps.length; j++) {
           var pair = kvps[j];
-          var key = pair[0].toLowerCase();
+          var key2 = pair[0].toLowerCase();
           var val = pair[1];
           var value = val && val[0] === '"' && val[val.length - 1] === '"' ? val.slice(1, -1) : val;
-          if (key === "q") {
+          if (key2 === "q") {
             q2 = parseFloat(value);
             break;
           }
-          params[key] = value;
+          params[key2] = value;
         }
       }
       return {
@@ -21991,15 +21991,15 @@ var require_mediaType = __commonJS({
     }
     function splitKeyValuePair(str) {
       var index = str.indexOf("=");
-      var key;
+      var key2;
       var val;
       if (index === -1) {
-        key = str;
+        key2 = str;
       } else {
-        key = str.slice(0, index);
+        key2 = str.slice(0, index);
         val = str.slice(index + 1);
       }
-      return [key, val];
+      return [key2, val];
     }
     function splitMediaTypes(accept) {
       var accepts = accept.split(",");
@@ -22419,7 +22419,7 @@ var require_request = __commonJS({
       var subdomains2 = !isIP(hostname4) ? hostname4.split(".").reverse() : [hostname4];
       return subdomains2.slice(offset);
     });
-    defineGetter(req, "path", function path38() {
+    defineGetter(req, "path", function path42() {
       return parse4(this).pathname;
     });
     defineGetter(req, "host", function host() {
@@ -22575,7 +22575,7 @@ var require_content_disposition = __commonJS({
       }
       var index = match[0].length;
       var type = match[1].toLowerCase();
-      var key;
+      var key2;
       var names = [];
       var params = {};
       var value;
@@ -22585,25 +22585,25 @@ var require_content_disposition = __commonJS({
           throw new TypeError("invalid parameter format");
         }
         index += match[0].length;
-        key = match[1].toLowerCase();
+        key2 = match[1].toLowerCase();
         value = match[2];
-        if (names.indexOf(key) !== -1) {
+        if (names.indexOf(key2) !== -1) {
           throw new TypeError("invalid duplicate parameter");
         }
-        names.push(key);
-        if (key.indexOf("*") + 1 === key.length) {
-          key = key.slice(0, -1);
+        names.push(key2);
+        if (key2.indexOf("*") + 1 === key2.length) {
+          key2 = key2.slice(0, -1);
           value = decodefield(value);
-          params[key] = value;
+          params[key2] = value;
           continue;
         }
-        if (typeof params[key] === "string") {
+        if (typeof params[key2] === "string") {
           continue;
         }
         if (value[0] === '"') {
           value = value.slice(1, -1).replace(QESC_REGEXP, "$1");
         }
-        params[key] = value;
+        params[key2] = value;
       }
       if (index !== -1 && index !== string5.length) {
         throw new TypeError("invalid parameter format");
@@ -22636,17 +22636,17 @@ var require_content_disposition = __commonJS({
 var require_cookie_signature = __commonJS({
   "node_modules/cookie-signature/index.js"(exports2) {
     "use strict";
-    var crypto8 = require("crypto");
+    var crypto9 = require("crypto");
     exports2.sign = function(val, secret) {
       if ("string" != typeof val) throw new TypeError("Cookie value must be provided as a string.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
-      return val + "." + crypto8.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
+      return val + "." + crypto9.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
     };
     exports2.unsign = function(input, secret) {
       if ("string" != typeof input) throw new TypeError("Signed cookie string must be provided.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
       var tentativeValue = input.slice(0, input.lastIndexOf(".")), expectedInput = exports2.sign(tentativeValue, secret), expectedBuffer = Buffer.from(expectedInput), inputBuffer = Buffer.from(input);
-      return expectedBuffer.length === inputBuffer.length && crypto8.timingSafeEqual(expectedBuffer, inputBuffer) ? tentativeValue : false;
+      return expectedBuffer.length === inputBuffer.length && crypto9.timingSafeEqual(expectedBuffer, inputBuffer) ? tentativeValue : false;
     };
   }
 });
@@ -22686,8 +22686,8 @@ var require_cookie = __commonJS({
         }
         var keyStartIdx = startIndex(str, index, eqIdx);
         var keyEndIdx = endIndex(str, eqIdx, keyStartIdx);
-        var key = str.slice(keyStartIdx, keyEndIdx);
-        if (!__hasOwnProperty.call(obj, key)) {
+        var key2 = str.slice(keyStartIdx, keyEndIdx);
+        if (!__hasOwnProperty.call(obj, key2)) {
           var valStartIdx = startIndex(str, eqIdx + 1, endIdx);
           var valEndIdx = endIndex(str, endIdx, valStartIdx);
           if (str.charCodeAt(valStartIdx) === 34 && str.charCodeAt(valEndIdx - 1) === 34) {
@@ -22695,7 +22695,7 @@ var require_cookie = __commonJS({
             valEndIdx--;
           }
           var val = str.slice(valStartIdx, valEndIdx);
-          obj[key] = tryDecode(val, dec);
+          obj[key2] = tryDecode(val, dec);
         }
         index = endIdx + 1;
       } while (index < len);
@@ -22827,32 +22827,32 @@ var require_send = __commonJS({
     var escapeHtml = require_escape_html();
     var etag = require_etag();
     var fresh = require_fresh();
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     var mime = require_mime_types();
     var ms = require_ms();
     var onFinished = require_on_finished();
     var parseRange = require_range_parser();
-    var path38 = require("path");
+    var path42 = require("path");
     var statuses = require_statuses();
     var Stream = require("stream");
     var util4 = require("util");
-    var extname = path38.extname;
-    var join2 = path38.join;
-    var normalize = path38.normalize;
-    var resolve3 = path38.resolve;
-    var sep = path38.sep;
+    var extname = path42.extname;
+    var join2 = path42.join;
+    var normalize = path42.normalize;
+    var resolve3 = path42.resolve;
+    var sep = path42.sep;
     var BYTES_RANGE_REGEXP = /^ *bytes=/;
     var MAX_MAXAGE = 60 * 60 * 24 * 365 * 1e3;
     var UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/;
     module2.exports = send;
-    function send(req, path39, options) {
-      return new SendStream(req, path39, options);
+    function send(req, path43, options) {
+      return new SendStream(req, path43, options);
     }
-    function SendStream(req, path39, options) {
+    function SendStream(req, path43, options) {
       Stream.call(this);
       var opts = options || {};
       this.options = opts;
-      this.path = path39;
+      this.path = path43;
       this.req = req;
       this._acceptRanges = opts.acceptRanges !== void 0 ? Boolean(opts.acceptRanges) : true;
       this._cacheControl = opts.cacheControl !== void 0 ? Boolean(opts.cacheControl) : true;
@@ -22966,10 +22966,10 @@ var require_send = __commonJS({
       var lastModified = this.res.getHeader("Last-Modified");
       return parseHttpDate(lastModified) <= parseHttpDate(ifRange);
     };
-    SendStream.prototype.redirect = function redirect(path39) {
+    SendStream.prototype.redirect = function redirect(path43) {
       var res = this.res;
       if (hasListeners(this, "directory")) {
-        this.emit("directory", res, path39);
+        this.emit("directory", res, path43);
         return;
       }
       if (this.hasTrailingSlash()) {
@@ -22989,38 +22989,38 @@ var require_send = __commonJS({
     SendStream.prototype.pipe = function pipe3(res) {
       var root2 = this._root;
       this.res = res;
-      var path39 = decode4(this.path);
-      if (path39 === -1) {
+      var path43 = decode4(this.path);
+      if (path43 === -1) {
         this.error(400);
         return res;
       }
-      if (~path39.indexOf("\0")) {
+      if (~path43.indexOf("\0")) {
         this.error(400);
         return res;
       }
       var parts;
       if (root2 !== null) {
-        if (path39) {
-          path39 = normalize("." + sep + path39);
+        if (path43) {
+          path43 = normalize("." + sep + path43);
         }
-        if (UP_PATH_REGEXP.test(path39)) {
-          debug('malicious path "%s"', path39);
+        if (UP_PATH_REGEXP.test(path43)) {
+          debug('malicious path "%s"', path43);
           this.error(403);
           return res;
         }
-        parts = path39.split(sep);
-        path39 = normalize(join2(root2, path39));
+        parts = path43.split(sep);
+        path43 = normalize(join2(root2, path43));
       } else {
-        if (UP_PATH_REGEXP.test(path39)) {
-          debug('malicious path "%s"', path39);
+        if (UP_PATH_REGEXP.test(path43)) {
+          debug('malicious path "%s"', path43);
           this.error(403);
           return res;
         }
-        parts = normalize(path39).split(sep);
-        path39 = resolve3(path39);
+        parts = normalize(path43).split(sep);
+        path43 = resolve3(path43);
       }
       if (containsDotFile(parts)) {
-        debug('%s dotfile "%s"', this._dotfiles, path39);
+        debug('%s dotfile "%s"', this._dotfiles, path43);
         switch (this._dotfiles) {
           case "allow":
             break;
@@ -23034,13 +23034,13 @@ var require_send = __commonJS({
         }
       }
       if (this._index.length && this.hasTrailingSlash()) {
-        this.sendIndex(path39);
+        this.sendIndex(path43);
         return res;
       }
-      this.sendFile(path39);
+      this.sendFile(path43);
       return res;
     };
-    SendStream.prototype.send = function send2(path39, stat) {
+    SendStream.prototype.send = function send2(path43, stat) {
       var len = stat.size;
       var options = this.options;
       var opts = {};
@@ -23052,9 +23052,9 @@ var require_send = __commonJS({
         this.headersAlreadySent();
         return;
       }
-      debug('pipe "%s"', path39);
-      this.setHeader(path39, stat);
-      this.type(path39);
+      debug('pipe "%s"', path43);
+      this.setHeader(path43, stat);
+      this.type(path43);
       if (this.isConditionalGET()) {
         if (this.isPreconditionFailure()) {
           this.error(412);
@@ -23103,30 +23103,30 @@ var require_send = __commonJS({
         res.end();
         return;
       }
-      this.stream(path39, opts);
+      this.stream(path43, opts);
     };
-    SendStream.prototype.sendFile = function sendFile(path39) {
+    SendStream.prototype.sendFile = function sendFile(path43) {
       var i = 0;
       var self2 = this;
-      debug('stat "%s"', path39);
-      fs43.stat(path39, function onstat(err, stat) {
-        var pathEndsWithSep = path39[path39.length - 1] === sep;
-        if (err && err.code === "ENOENT" && !extname(path39) && !pathEndsWithSep) {
+      debug('stat "%s"', path43);
+      fs47.stat(path43, function onstat(err, stat) {
+        var pathEndsWithSep = path43[path43.length - 1] === sep;
+        if (err && err.code === "ENOENT" && !extname(path43) && !pathEndsWithSep) {
           return next(err);
         }
         if (err) return self2.onStatError(err);
-        if (stat.isDirectory()) return self2.redirect(path39);
+        if (stat.isDirectory()) return self2.redirect(path43);
         if (pathEndsWithSep) return self2.error(404);
-        self2.emit("file", path39, stat);
-        self2.send(path39, stat);
+        self2.emit("file", path43, stat);
+        self2.send(path43, stat);
       });
       function next(err) {
         if (self2._extensions.length <= i) {
           return err ? self2.onStatError(err) : self2.error(404);
         }
-        var p3 = path39 + "." + self2._extensions[i++];
+        var p3 = path43 + "." + self2._extensions[i++];
         debug('stat "%s"', p3);
-        fs43.stat(p3, function(err2, stat) {
+        fs47.stat(p3, function(err2, stat) {
           if (err2) return next(err2);
           if (stat.isDirectory()) return next();
           self2.emit("file", p3, stat);
@@ -23134,7 +23134,7 @@ var require_send = __commonJS({
         });
       }
     };
-    SendStream.prototype.sendIndex = function sendIndex(path39) {
+    SendStream.prototype.sendIndex = function sendIndex(path43) {
       var i = -1;
       var self2 = this;
       function next(err) {
@@ -23142,9 +23142,9 @@ var require_send = __commonJS({
           if (err) return self2.onStatError(err);
           return self2.error(404);
         }
-        var p3 = join2(path39, self2._index[i]);
+        var p3 = join2(path43, self2._index[i]);
         debug('stat "%s"', p3);
-        fs43.stat(p3, function(err2, stat) {
+        fs47.stat(p3, function(err2, stat) {
           if (err2) return next(err2);
           if (stat.isDirectory()) return next();
           self2.emit("file", p3, stat);
@@ -23153,10 +23153,10 @@ var require_send = __commonJS({
       }
       next();
     };
-    SendStream.prototype.stream = function stream4(path39, options) {
+    SendStream.prototype.stream = function stream4(path43, options) {
       var self2 = this;
       var res = this.res;
-      var stream5 = fs43.createReadStream(path39, options);
+      var stream5 = fs47.createReadStream(path43, options);
       this.emit("stream", stream5);
       stream5.pipe(res);
       function cleanup() {
@@ -23171,17 +23171,17 @@ var require_send = __commonJS({
         self2.emit("end");
       });
     };
-    SendStream.prototype.type = function type(path39) {
+    SendStream.prototype.type = function type(path43) {
       var res = this.res;
       if (res.getHeader("Content-Type")) return;
-      var ext = extname(path39);
+      var ext = extname(path43);
       var type2 = mime.contentType(ext) || "application/octet-stream";
       debug("content-type %s", type2);
       res.setHeader("Content-Type", type2);
     };
-    SendStream.prototype.setHeader = function setHeader(path39, stat) {
+    SendStream.prototype.setHeader = function setHeader(path43, stat) {
       var res = this.res;
-      this.emit("headers", res, path39, stat);
+      this.emit("headers", res, path43, stat);
       if (this._acceptRanges && !res.getHeader("Accept-Ranges")) {
         debug("accept ranges");
         res.setHeader("Accept-Ranges", "bytes");
@@ -23239,9 +23239,9 @@ var require_send = __commonJS({
       }
       return err instanceof Error ? createError(status, err, { expose: false }) : createError(status, err);
     }
-    function decode4(path39) {
+    function decode4(path43) {
       try {
-        return decodeURIComponent(path39);
+        return decodeURIComponent(path43);
       } catch (err) {
         return -1;
       }
@@ -23293,8 +23293,8 @@ var require_send = __commonJS({
     function setHeaders(res, headers) {
       var keys2 = Object.keys(headers);
       for (var i = 0; i < keys2.length; i++) {
-        var key = keys2[i];
-        res.setHeader(key, headers[key]);
+        var key2 = keys2[i];
+        res.setHeader(key2, headers[key2]);
       }
     }
   }
@@ -23385,7 +23385,7 @@ var require_response = __commonJS({
     var http4 = require("node:http");
     var onFinished = require_on_finished();
     var mime = require_mime_types();
-    var path38 = require("node:path");
+    var path42 = require("node:path");
     var pathIsAbsolute = require("node:path").isAbsolute;
     var statuses = require_statuses();
     var sign = require_cookie_signature().sign;
@@ -23394,8 +23394,8 @@ var require_response = __commonJS({
     var setCharset = require_utils3().setCharset;
     var cookie = require_cookie();
     var send = require_send();
-    var extname = path38.extname;
-    var resolve3 = path38.resolve;
+    var extname = path42.extname;
+    var resolve3 = path42.resolve;
     var vary = require_vary();
     var { Buffer: Buffer3 } = require("node:buffer");
     var res = Object.create(http4.ServerResponse.prototype);
@@ -23541,26 +23541,26 @@ var require_response = __commonJS({
       this.type("txt");
       return this.send(body);
     };
-    res.sendFile = function sendFile(path39, options, callback) {
+    res.sendFile = function sendFile(path43, options, callback) {
       var done = callback;
       var req = this.req;
       var res2 = this;
       var next = req.next;
       var opts = options || {};
-      if (!path39) {
+      if (!path43) {
         throw new TypeError("path argument is required to res.sendFile");
       }
-      if (typeof path39 !== "string") {
+      if (typeof path43 !== "string") {
         throw new TypeError("path must be a string to res.sendFile");
       }
       if (typeof options === "function") {
         done = options;
         opts = {};
       }
-      if (!opts.root && !pathIsAbsolute(path39)) {
+      if (!opts.root && !pathIsAbsolute(path43)) {
         throw new TypeError("path must be absolute or specify root to res.sendFile");
       }
-      var pathname = encodeURI(path39);
+      var pathname = encodeURI(path43);
       opts.etag = this.app.enabled("etag");
       var file3 = send(req, pathname, opts);
       sendfile(res2, file3, opts, function(err) {
@@ -23571,7 +23571,7 @@ var require_response = __commonJS({
         }
       });
     };
-    res.download = function download2(path39, filename, options, callback) {
+    res.download = function download2(path43, filename, options, callback) {
       var done = callback;
       var name28 = filename;
       var opts = options || null;
@@ -23588,20 +23588,20 @@ var require_response = __commonJS({
         opts = filename;
       }
       var headers = {
-        "Content-Disposition": contentDisposition(name28 || path39)
+        "Content-Disposition": contentDisposition(name28 || path43)
       };
       if (opts && opts.headers) {
         var keys2 = Object.keys(opts.headers);
         for (var i = 0; i < keys2.length; i++) {
-          var key = keys2[i];
-          if (key.toLowerCase() !== "content-disposition") {
-            headers[key] = opts.headers[key];
+          var key2 = keys2[i];
+          if (key2.toLowerCase() !== "content-disposition") {
+            headers[key2] = opts.headers[key2];
           }
         }
       }
       opts = Object.create(opts);
       opts.headers = headers;
-      var fullPath = !opts.root ? resolve3(path39) : path39;
+      var fullPath = !opts.root ? resolve3(path43) : path43;
       return this.sendFile(fullPath, opts, done);
     };
     res.contentType = res.type = function contentType(type) {
@@ -23614,11 +23614,11 @@ var require_response = __commonJS({
       var keys2 = Object.keys(obj).filter(function(v) {
         return v !== "default";
       });
-      var key = keys2.length > 0 ? req.accepts(keys2) : false;
+      var key2 = keys2.length > 0 ? req.accepts(keys2) : false;
       this.vary("Accept");
-      if (key) {
-        this.set("Content-Type", normalizeType(key).value);
-        obj[key](req, this, next);
+      if (key2) {
+        this.set("Content-Type", normalizeType(key2).value);
+        obj[key2](req, this, next);
       } else if (obj.default) {
         obj.default(req, this, next);
       } else {
@@ -23656,8 +23656,8 @@ var require_response = __commonJS({
         }
         this.setHeader(field, value);
       } else {
-        for (var key in field) {
-          this.set(key, field[key]);
+        for (var key2 in field) {
+          this.set(key2, field[key2]);
         }
       }
       return this;
@@ -23884,11 +23884,11 @@ var require_serve_static = __commonJS({
         }
         var forwardError = !fallthrough;
         var originalUrl = parseUrl2.original(req);
-        var path38 = parseUrl2(req).pathname;
-        if (path38 === "/" && originalUrl.pathname.substr(-1) !== "/") {
-          path38 = "";
+        var path42 = parseUrl2(req).pathname;
+        if (path42 === "/" && originalUrl.pathname.substr(-1) !== "/") {
+          path42 = "";
         }
-        var stream4 = send(req, path38, opts);
+        var stream4 = send(req, path42, opts);
         stream4.on("directory", onDirectory);
         if (setHeaders) {
           stream4.on("headers", setHeaders);
@@ -24304,14 +24304,14 @@ var require_mediaType2 = __commonJS({
         var kvps = splitParameters(match[3]).map(splitKeyValuePair);
         for (var j = 0; j < kvps.length; j++) {
           var pair = kvps[j];
-          var key = pair[0].toLowerCase();
+          var key2 = pair[0].toLowerCase();
           var val = pair[1];
           var value = val && val[0] === '"' && val[val.length - 1] === '"' ? val.substr(1, val.length - 2) : val;
-          if (key === "q") {
+          if (key2 === "q") {
             q2 = parseFloat(value);
             break;
           }
-          params[key] = value;
+          params[key2] = value;
         }
       }
       return {
@@ -24397,15 +24397,15 @@ var require_mediaType2 = __commonJS({
     }
     function splitKeyValuePair(str) {
       var index = str.indexOf("=");
-      var key;
+      var key2;
       var val;
       if (index === -1) {
-        key = str;
+        key2 = str;
       } else {
-        key = str.substr(0, index);
+        key2 = str.substr(0, index);
         val = str.substr(index + 1);
       }
-      return [key, val];
+      return [key2, val];
     }
     function splitMediaTypes(accept) {
       var accepts = accept.split(",");
@@ -33080,11 +33080,11 @@ var require_mime_types2 = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path38) {
-      if (!path38 || typeof path38 !== "string") {
+    function lookup(path42) {
+      if (!path42 || typeof path42 !== "string") {
         return false;
       }
-      var extension2 = extname("x." + path38).toLowerCase().substr(1);
+      var extension2 = extname("x." + path42).toLowerCase().substr(1);
       if (!extension2) {
         return false;
       }
@@ -33200,7 +33200,7 @@ var require_accepts2 = __commonJS({
 var require_base64id = __commonJS({
   "node_modules/base64id/lib/base64id.js"(exports2, module2) {
     "use strict";
-    var crypto8 = require("crypto");
+    var crypto9 = require("crypto");
     var Base64Id = function() {
     };
     Base64Id.prototype.getRandomBytes = function(bytes) {
@@ -33208,12 +33208,12 @@ var require_base64id = __commonJS({
       var self2 = this;
       bytes = bytes || 12;
       if (bytes > BUFFER_SIZE) {
-        return crypto8.randomBytes(bytes);
+        return crypto9.randomBytes(bytes);
       }
       var bytesInBuffer = parseInt(BUFFER_SIZE / bytes);
       var threshold = parseInt(bytesInBuffer * 0.85);
       if (!threshold) {
-        return crypto8.randomBytes(bytes);
+        return crypto9.randomBytes(bytes);
       }
       if (this.bytesBufferIndex == null) {
         this.bytesBufferIndex = -1;
@@ -33225,14 +33225,14 @@ var require_base64id = __commonJS({
       if (this.bytesBufferIndex == -1 || this.bytesBufferIndex > threshold) {
         if (!this.isGeneratingBytes) {
           this.isGeneratingBytes = true;
-          crypto8.randomBytes(BUFFER_SIZE, function(err, bytes2) {
+          crypto9.randomBytes(BUFFER_SIZE, function(err, bytes2) {
             self2.bytesBuffer = bytes2;
             self2.bytesBufferIndex = 0;
             self2.isGeneratingBytes = false;
           });
         }
         if (this.bytesBufferIndex == -1) {
-          return crypto8.randomBytes(bytes);
+          return crypto9.randomBytes(bytes);
         }
       }
       var result = this.bytesBuffer.slice(bytes * this.bytesBufferIndex, bytes * (this.bytesBufferIndex + 1));
@@ -33246,7 +33246,7 @@ var require_base64id = __commonJS({
       }
       this.sequenceNumber = this.sequenceNumber + 1 | 0;
       rand.writeInt32BE(this.sequenceNumber, 11);
-      if (crypto8.randomBytes) {
+      if (crypto9.randomBytes) {
         this.getRandomBytes(12).copy(rand);
       } else {
         [0, 4, 8].forEach(function(i) {
@@ -33276,8 +33276,8 @@ var require_commons = __commonJS({
     PACKET_TYPES["noop"] = "6";
     var PACKET_TYPES_REVERSE = /* @__PURE__ */ Object.create(null);
     exports2.PACKET_TYPES_REVERSE = PACKET_TYPES_REVERSE;
-    Object.keys(PACKET_TYPES).forEach((key) => {
-      PACKET_TYPES_REVERSE[PACKET_TYPES[key]] = key;
+    Object.keys(PACKET_TYPES).forEach((key2) => {
+      PACKET_TYPES_REVERSE[PACKET_TYPES[key2]] = key2;
     });
     var ERROR_PACKET = { type: "error", data: "parser error" };
     exports2.ERROR_PACKET = ERROR_PACKET;
@@ -35416,44 +35416,44 @@ var require_permessage_deflate = __commonJS({
        */
       normalizeParams(configurations) {
         configurations.forEach((params) => {
-          Object.keys(params).forEach((key) => {
-            let value = params[key];
+          Object.keys(params).forEach((key2) => {
+            let value = params[key2];
             if (value.length > 1) {
-              throw new Error(`Parameter "${key}" must have only a single value`);
+              throw new Error(`Parameter "${key2}" must have only a single value`);
             }
             value = value[0];
-            if (key === "client_max_window_bits") {
+            if (key2 === "client_max_window_bits") {
               if (value !== true) {
                 const num = +value;
                 if (!Number.isInteger(num) || num < 8 || num > 15) {
                   throw new TypeError(
-                    `Invalid value for parameter "${key}": ${value}`
+                    `Invalid value for parameter "${key2}": ${value}`
                   );
                 }
                 value = num;
               } else if (!this._isServer) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`
+                  `Invalid value for parameter "${key2}": ${value}`
                 );
               }
-            } else if (key === "server_max_window_bits") {
+            } else if (key2 === "server_max_window_bits") {
               const num = +value;
               if (!Number.isInteger(num) || num < 8 || num > 15) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`
+                  `Invalid value for parameter "${key2}": ${value}`
                 );
               }
               value = num;
-            } else if (key === "client_no_context_takeover" || key === "server_no_context_takeover") {
+            } else if (key2 === "client_no_context_takeover" || key2 === "server_no_context_takeover") {
               if (value !== true) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`
+                  `Invalid value for parameter "${key2}": ${value}`
                 );
               }
             } else {
-              throw new Error(`Unknown parameter "${key}"`);
+              throw new Error(`Unknown parameter "${key2}"`);
             }
-            params[key] = value;
+            params[key2] = value;
           });
         });
         return configurations;
@@ -35501,8 +35501,8 @@ var require_permessage_deflate = __commonJS({
       _decompress(data, fin, callback) {
         const endpoint = this._isServer ? "client" : "server";
         if (!this._inflate) {
-          const key = `${endpoint}_max_window_bits`;
-          const windowBits = typeof this.params[key] !== "number" ? zlib2.Z_DEFAULT_WINDOWBITS : this.params[key];
+          const key2 = `${endpoint}_max_window_bits`;
+          const windowBits = typeof this.params[key2] !== "number" ? zlib2.Z_DEFAULT_WINDOWBITS : this.params[key2];
           this._inflate = zlib2.createInflateRaw({
             ...this._options.zlibInflateOptions,
             windowBits
@@ -35552,8 +35552,8 @@ var require_permessage_deflate = __commonJS({
       _compress(data, fin, callback) {
         const endpoint = this._isServer ? "server" : "client";
         if (!this._deflate) {
-          const key = `${endpoint}_max_window_bits`;
-          const windowBits = typeof this.params[key] !== "number" ? zlib2.Z_DEFAULT_WINDOWBITS : this.params[key];
+          const key2 = `${endpoint}_max_window_bits`;
+          const windowBits = typeof this.params[key2] !== "number" ? zlib2.Z_DEFAULT_WINDOWBITS : this.params[key2];
           this._deflate = zlib2.createDeflateRaw({
             ...this._options.zlibDeflateOptions,
             windowBits
@@ -37813,7 +37813,7 @@ var require_websocket2 = __commonJS({
         }
       }
       const defaultPort = isSecure ? 443 : 80;
-      const key = randomBytes(16).toString("base64");
+      const key2 = randomBytes(16).toString("base64");
       const request = isSecure ? https2.request : http4.request;
       const protocolSet = /* @__PURE__ */ new Set();
       let perMessageDeflate;
@@ -37824,7 +37824,7 @@ var require_websocket2 = __commonJS({
       opts.headers = {
         ...opts.headers,
         "Sec-WebSocket-Version": opts.protocolVersion,
-        "Sec-WebSocket-Key": key,
+        "Sec-WebSocket-Key": key2,
         Connection: "Upgrade",
         Upgrade: "websocket"
       };
@@ -37875,8 +37875,8 @@ var require_websocket2 = __commonJS({
           const headers = options && options.headers;
           options = { ...options, headers: {} };
           if (headers) {
-            for (const [key2, value] of Object.entries(headers)) {
-              options.headers[key2.toLowerCase()] = value;
+            for (const [key3, value] of Object.entries(headers)) {
+              options.headers[key3.toLowerCase()] = value;
             }
           }
         } else if (websocket.listenerCount("redirect") === 0) {
@@ -37943,7 +37943,7 @@ var require_websocket2 = __commonJS({
           abortHandshake(websocket, socket, "Invalid Upgrade header");
           return;
         }
-        const digest = createHash("sha1").update(key + GUID).digest("base64");
+        const digest = createHash("sha1").update(key2 + GUID).digest("base64");
         if (res.headers["sec-websocket-accept"] !== digest) {
           abortHandshake(websocket, socket, "Invalid Sec-WebSocket-Accept header");
           return;
@@ -38499,7 +38499,7 @@ var require_websocket_server = __commonJS({
        */
       handleUpgrade(req, socket, head, cb) {
         socket.on("error", socketOnError);
-        const key = req.headers["sec-websocket-key"];
+        const key2 = req.headers["sec-websocket-key"];
         const upgrade = req.headers.upgrade;
         const version3 = +req.headers["sec-websocket-version"];
         if (req.method !== "GET") {
@@ -38512,7 +38512,7 @@ var require_websocket_server = __commonJS({
           abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
           return;
         }
-        if (key === void 0 || !keyRegex.test(key)) {
+        if (key2 === void 0 || !keyRegex.test(key2)) {
           const message = "Missing or invalid Sec-WebSocket-Key header";
           abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
           return;
@@ -38572,7 +38572,7 @@ var require_websocket_server = __commonJS({
               }
               this.completeUpgrade(
                 extensions,
-                key,
+                key2,
                 protocols,
                 req,
                 socket,
@@ -38584,7 +38584,7 @@ var require_websocket_server = __commonJS({
           }
           if (!this.options.verifyClient(info)) return abortHandshake(socket, 401);
         }
-        this.completeUpgrade(extensions, key, protocols, req, socket, head, cb);
+        this.completeUpgrade(extensions, key2, protocols, req, socket, head, cb);
       }
       /**
        * Upgrade the connection to WebSocket.
@@ -38599,7 +38599,7 @@ var require_websocket_server = __commonJS({
        * @throws {Error} If called more than once with the same socket
        * @private
        */
-      completeUpgrade(extensions, key, protocols, req, socket, head, cb) {
+      completeUpgrade(extensions, key2, protocols, req, socket, head, cb) {
         if (!socket.readable || !socket.writable) return socket.destroy();
         if (socket[kWebSocket]) {
           throw new Error(
@@ -38607,7 +38607,7 @@ var require_websocket_server = __commonJS({
           );
         }
         if (this._state > RUNNING) return abortHandshake(socket, 503);
-        const digest = createHash("sha1").update(key + GUID).digest("base64");
+        const digest = createHash("sha1").update(key2 + GUID).digest("base64");
         const headers = [
           "HTTP/1.1 101 Switching Protocols",
           "Upgrade: websocket",
@@ -38758,9 +38758,9 @@ var require_object_assign = __commonJS({
       var symbols;
       for (var s = 1; s < arguments.length; s++) {
         from = Object(arguments[s]);
-        for (var key in from) {
-          if (hasOwnProperty11.call(from, key)) {
-            to[key] = from[key];
+        for (var key2 in from) {
+          if (hasOwnProperty11.call(from, key2)) {
+            to[key2] = from[key2];
           }
         }
         if (getOwnPropertySymbols) {
@@ -39063,11 +39063,11 @@ var require_server = __commonJS({
        * @protected
        */
       _computePath(options) {
-        let path38 = (options.path || "/engine.io").replace(/\/$/, "");
+        let path42 = (options.path || "/engine.io").replace(/\/$/, "");
         if (options.addTrailingSlash !== false) {
-          path38 += "/";
+          path42 += "/";
         }
-        return path38;
+        return path42;
       }
       /**
        * Returns a list of available transports for upgrade given a certain transport.
@@ -39422,8 +39422,8 @@ var require_server = __commonJS({
             }
             this.emit("headers", additionalHeaders, req);
             debug("writing headers: %j", additionalHeaders);
-            Object.keys(additionalHeaders).forEach((key) => {
-              headersArray.push(`${key}: ${additionalHeaders[key]}`);
+            Object.keys(additionalHeaders).forEach((key2) => {
+              headersArray.push(`${key2}: ${additionalHeaders[key2]}`);
             });
           });
         }
@@ -39566,10 +39566,10 @@ var require_server = __commonJS({
        * @param {Object} options
        */
       attach(server2, options = {}) {
-        const path38 = this._computePath(options);
+        const path42 = this._computePath(options);
         const destroyUpgradeTimeout = options.destroyUpgradeTimeout || 1e3;
         function check3(req) {
-          return path38 === req.url.slice(0, path38.length);
+          return path42 === req.url.slice(0, path42.length);
         }
         const listeners = server2.listeners("request").slice(0);
         server2.removeAllListeners("request");
@@ -39577,7 +39577,7 @@ var require_server = __commonJS({
         server2.on("listening", this.init.bind(this));
         server2.on("request", (req, res) => {
           if (check3(req)) {
-            debug('intercepting request for path "%s"', path38);
+            debug('intercepting request for path "%s"', path42);
             this.handleRequest(req, res);
           } else {
             let i = 0;
@@ -40048,8 +40048,8 @@ var require_polling2 = __commonJS({
           "Content-Type": "text/html"
         };
         this.headers(req, headers);
-        for (let key in headers) {
-          res.writeHeader(key, String(headers[key]));
+        for (let key2 in headers) {
+          res.writeHeader(key2, String(headers[key2]));
         }
         const onEnd = (buffer2) => {
           this.onData(buffer2.toString());
@@ -40185,8 +40185,8 @@ var require_polling2 = __commonJS({
         const respond = (data2) => {
           this.headers(this.req, headers);
           this.res.cork(() => {
-            Object.keys(headers).forEach((key) => {
-              this.res.writeHeader(key, String(headers[key]));
+            Object.keys(headers).forEach((key2) => {
+              this.res.writeHeader(key2, String(headers[key2]));
             });
             this.res.end(data2);
           });
@@ -40397,8 +40397,8 @@ var require_userver = __commonJS({
         const params = new URLSearchParams(req.getQuery());
         req._query = Object.fromEntries(params.entries());
         req.headers = {};
-        req.forEach((key, value) => {
-          req.headers[key] = value;
+        req.forEach((key2, value) => {
+          req.headers[key2] = value;
         });
         req.connection = {
           remoteAddress: Buffer.from(res.getRemoteAddressAsText()).toString()
@@ -40416,8 +40416,8 @@ var require_userver = __commonJS({
        * @param options
        */
       attach(app2, options = {}) {
-        const path38 = this._computePath(options);
-        app2.any(path38, this.handleRequest.bind(this)).ws(path38, {
+        const path42 = this._computePath(options);
+        app2.any(path42, this.handleRequest.bind(this)).ws(path42, {
           compression: options.compression,
           idleTimeout: options.idleTimeout,
           maxBackpressure: options.maxBackpressure,
@@ -40524,8 +40524,8 @@ var require_userver = __commonJS({
           }
           this.emit("headers", additionalHeaders, req);
           req.res.writeStatus("101 Switching Protocols");
-          Object.keys(additionalHeaders).forEach((key) => {
-            req.res.writeHeader(key, additionalHeaders[key]);
+          Object.keys(additionalHeaders).forEach((key2) => {
+            req.res.writeHeader(key2, additionalHeaders[key2]);
           });
           res.upgrade({
             transport
@@ -40567,13 +40567,13 @@ var require_userver = __commonJS({
       writeHead(status) {
         this.statusCode = status;
       }
-      setHeader(key, value) {
+      setHeader(key2, value) {
         if (Array.isArray(value)) {
           value.forEach((val) => {
-            this.writeHeader(key, val);
+            this.writeHeader(key2, val);
           });
         } else {
-          this.writeHeader(key, value);
+          this.writeHeader(key2, value);
         }
       }
       removeHeader() {
@@ -40589,21 +40589,21 @@ var require_userver = __commonJS({
         this.writeBufferedHeaders();
         return this;
       }
-      writeHeader(key, value) {
+      writeHeader(key2, value) {
         if (this.isAborted)
           return;
-        if (key === "Content-Length") {
+        if (key2 === "Content-Length") {
           return;
         }
         if (this.statusWritten) {
-          this.res.writeHeader(key, value);
+          this.res.writeHeader(key2, value);
         } else {
-          this.headers.push([key, value]);
+          this.headers.push([key2, value]);
         }
       }
       writeBufferedHeaders() {
-        this.headers.forEach(([key, value]) => {
-          this.res.writeHeader(key, value);
+        this.headers.forEach(([key2, value]) => {
+          this.res.writeHeader(key2, value);
         });
       }
       end(data) {
@@ -40699,8 +40699,8 @@ var require_cjs2 = __commonJS({
       if (obj) return mixin(obj);
     }
     function mixin(obj) {
-      for (var key in Emitter.prototype) {
-        obj[key] = Emitter.prototype[key];
+      for (var key2 in Emitter.prototype) {
+        obj[key2] = Emitter.prototype[key2];
       }
       return obj;
     }
@@ -40803,8 +40803,8 @@ var require_is_binary = __commonJS({
       if (obj.toJSON && typeof obj.toJSON === "function" && arguments.length === 1) {
         return hasBinary(obj.toJSON(), true);
       }
-      for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key) && hasBinary(obj[key])) {
+      for (const key2 in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key2) && hasBinary(obj[key2])) {
           return true;
         }
       }
@@ -40844,9 +40844,9 @@ var require_binary = __commonJS({
         return newData;
       } else if (typeof data === "object" && !(data instanceof Date)) {
         const newData = {};
-        for (const key in data) {
-          if (Object.prototype.hasOwnProperty.call(data, key)) {
-            newData[key] = _deconstructPacket(data[key], buffers);
+        for (const key2 in data) {
+          if (Object.prototype.hasOwnProperty.call(data, key2)) {
+            newData[key2] = _deconstructPacket(data[key2], buffers);
           }
         }
         return newData;
@@ -40873,9 +40873,9 @@ var require_binary = __commonJS({
           data[i] = _reconstructPacket(data[i], buffers);
         }
       } else if (typeof data === "object") {
-        for (const key in data) {
-          if (Object.prototype.hasOwnProperty.call(data, key)) {
-            data[key] = _reconstructPacket(data[key], buffers);
+        for (const key2 in data) {
+          if (Object.prototype.hasOwnProperty.call(data, key2)) {
+            data[key2] = _reconstructPacket(data[key2], buffers);
           }
         }
       }
@@ -42654,16 +42654,16 @@ var require_socket2 = __commonJS({
         if (!this.fns.length)
           return fn();
         const fns = this.fns.slice(0);
-        function run(i) {
+        function run3(i) {
           fns[i](event, (err) => {
             if (err)
               return fn(err);
             if (!fns[i + 1])
               return fn();
-            run(i + 1);
+            run3(i + 1);
           });
         }
-        run(0);
+        run3(0);
       }
       /**
        * Whether the socket is currently disconnected
@@ -42960,16 +42960,16 @@ var require_namespace = __commonJS({
         if (!this._fns.length)
           return fn();
         const fns = this._fns.slice(0);
-        function run(i) {
+        function run3(i) {
           fns[i](socket, (err) => {
             if (err)
               return fn(err);
             if (!fns[i + 1])
               return fn();
-            run(i + 1);
+            run3(i + 1);
           });
         }
-        run(0);
+        run3(0);
       }
       /**
        * Targets a room when emitting.
@@ -44843,7 +44843,7 @@ var require_dist3 = __commonJS({
     var zlib_1 = require("zlib");
     var accepts = require_accepts2();
     var stream_1 = require("stream");
-    var path38 = require("path");
+    var path42 = require("path");
     var engine_io_1 = require_engine_io();
     var client_1 = require_client();
     var events_1 = require("events");
@@ -44920,14 +44920,14 @@ var require_dist3 = __commonJS({
         if (this.parentNsps.size === 0)
           return fn(false);
         const keysIterator = this.parentNsps.keys();
-        const run = () => {
+        const run3 = () => {
           const nextFn = keysIterator.next();
           if (nextFn.done) {
             return fn(false);
           }
           nextFn.value(name28, auth, (err, allow) => {
             if (err || !allow) {
-              return run();
+              return run3();
             }
             if (this._nsps.has(name28)) {
               debug("dynamic namespace %s already exists", name28);
@@ -44938,7 +44938,7 @@ var require_dist3 = __commonJS({
             fn(namespace);
           });
         };
-        run();
+        run3();
       }
       path(v) {
         if (!arguments.length)
@@ -45038,7 +45038,7 @@ var require_dist3 = __commonJS({
             res.writeHeader("cache-control", "public, max-age=0");
             res.writeHeader("content-type", "application/" + (isMap ? "json" : "javascript") + "; charset=utf-8");
             res.writeHeader("etag", expectedEtag);
-            const filepath = path38.join(__dirname, "../client-dist/", filename);
+            const filepath = path42.join(__dirname, "../client-dist/", filename);
             (0, uws_1.serveFile)(res, filepath);
           });
         }
@@ -45120,7 +45120,7 @@ var require_dist3 = __commonJS({
        * @private
        */
       static sendFile(filename, req, res) {
-        const readStream2 = (0, fs_1.createReadStream)(path38.join(__dirname, "../client-dist/", filename));
+        const readStream2 = (0, fs_1.createReadStream)(path42.join(__dirname, "../client-dist/", filename));
         const encoding = accepts(req).encodings(["br", "gzip", "deflate"]);
         const onError = (err) => {
           if (err) {
@@ -45539,8 +45539,8 @@ var require_dist3 = __commonJS({
       }
     };
     exports2.Server = Server2;
-    var emitterMethods = Object.keys(events_1.EventEmitter.prototype).filter(function(key) {
-      return typeof events_1.EventEmitter.prototype[key] === "function";
+    var emitterMethods = Object.keys(events_1.EventEmitter.prototype).filter(function(key2) {
+      return typeof events_1.EventEmitter.prototype[key2] === "function";
     });
     emitterMethods.forEach(function(fn) {
       Server2.prototype[fn] = function() {
@@ -45881,44 +45881,44 @@ var require_permessage_deflate2 = __commonJS({
        */
       normalizeParams(configurations) {
         configurations.forEach((params) => {
-          Object.keys(params).forEach((key) => {
-            let value = params[key];
+          Object.keys(params).forEach((key2) => {
+            let value = params[key2];
             if (value.length > 1) {
-              throw new Error(`Parameter "${key}" must have only a single value`);
+              throw new Error(`Parameter "${key2}" must have only a single value`);
             }
             value = value[0];
-            if (key === "client_max_window_bits") {
+            if (key2 === "client_max_window_bits") {
               if (value !== true) {
                 const num = +value;
                 if (!Number.isInteger(num) || num < 8 || num > 15) {
                   throw new TypeError(
-                    `Invalid value for parameter "${key}": ${value}`
+                    `Invalid value for parameter "${key2}": ${value}`
                   );
                 }
                 value = num;
               } else if (!this._isServer) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`
+                  `Invalid value for parameter "${key2}": ${value}`
                 );
               }
-            } else if (key === "server_max_window_bits") {
+            } else if (key2 === "server_max_window_bits") {
               const num = +value;
               if (!Number.isInteger(num) || num < 8 || num > 15) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`
+                  `Invalid value for parameter "${key2}": ${value}`
                 );
               }
               value = num;
-            } else if (key === "client_no_context_takeover" || key === "server_no_context_takeover") {
+            } else if (key2 === "client_no_context_takeover" || key2 === "server_no_context_takeover") {
               if (value !== true) {
                 throw new TypeError(
-                  `Invalid value for parameter "${key}": ${value}`
+                  `Invalid value for parameter "${key2}": ${value}`
                 );
               }
             } else {
-              throw new Error(`Unknown parameter "${key}"`);
+              throw new Error(`Unknown parameter "${key2}"`);
             }
-            params[key] = value;
+            params[key2] = value;
           });
         });
         return configurations;
@@ -45966,8 +45966,8 @@ var require_permessage_deflate2 = __commonJS({
       _decompress(data, fin, callback) {
         const endpoint = this._isServer ? "client" : "server";
         if (!this._inflate) {
-          const key = `${endpoint}_max_window_bits`;
-          const windowBits = typeof this.params[key] !== "number" ? zlib2.Z_DEFAULT_WINDOWBITS : this.params[key];
+          const key2 = `${endpoint}_max_window_bits`;
+          const windowBits = typeof this.params[key2] !== "number" ? zlib2.Z_DEFAULT_WINDOWBITS : this.params[key2];
           this._inflate = zlib2.createInflateRaw({
             ...this._options.zlibInflateOptions,
             windowBits
@@ -46017,8 +46017,8 @@ var require_permessage_deflate2 = __commonJS({
       _compress(data, fin, callback) {
         const endpoint = this._isServer ? "server" : "client";
         if (!this._deflate) {
-          const key = `${endpoint}_max_window_bits`;
-          const windowBits = typeof this.params[key] !== "number" ? zlib2.Z_DEFAULT_WINDOWBITS : this.params[key];
+          const key2 = `${endpoint}_max_window_bits`;
+          const windowBits = typeof this.params[key2] !== "number" ? zlib2.Z_DEFAULT_WINDOWBITS : this.params[key2];
           this._deflate = zlib2.createDeflateRaw({
             ...this._options.zlibDeflateOptions,
             windowBits
@@ -47896,7 +47896,7 @@ var require_websocket4 = __commonJS({
       }
       const isSecure = parsedUrl.protocol === "wss:" || parsedUrl.protocol === "https:";
       const defaultPort = isSecure ? 443 : 80;
-      const key = randomBytes(16).toString("base64");
+      const key2 = randomBytes(16).toString("base64");
       const get2 = isSecure ? https2.get : http4.get;
       let perMessageDeflate;
       opts.createConnection = isSecure ? tlsConnect : netConnect;
@@ -47905,7 +47905,7 @@ var require_websocket4 = __commonJS({
       opts.host = parsedUrl.hostname.startsWith("[") ? parsedUrl.hostname.slice(1, -1) : parsedUrl.hostname;
       opts.headers = {
         "Sec-WebSocket-Version": opts.protocolVersion,
-        "Sec-WebSocket-Key": key,
+        "Sec-WebSocket-Key": key2,
         Connection: "Upgrade",
         Upgrade: "websocket",
         ...opts.headers
@@ -47948,8 +47948,8 @@ var require_websocket4 = __commonJS({
           const headers = options && options.headers;
           options = { ...options, headers: {} };
           if (headers) {
-            for (const [key2, value] of Object.entries(headers)) {
-              options.headers[key2.toLowerCase()] = value;
+            for (const [key3, value] of Object.entries(headers)) {
+              options.headers[key3.toLowerCase()] = value;
             }
           }
         } else {
@@ -48010,7 +48010,7 @@ var require_websocket4 = __commonJS({
           abortHandshake(websocket, socket, "Invalid Upgrade header");
           return;
         }
-        const digest = createHash("sha1").update(key + GUID).digest("base64");
+        const digest = createHash("sha1").update(key2 + GUID).digest("base64");
         if (res.headers["sec-websocket-accept"] !== digest) {
           abortHandshake(websocket, socket, "Invalid Sec-WebSocket-Accept header");
           return;
@@ -48476,11 +48476,11 @@ var require_websocket_server2 = __commonJS({
        */
       handleUpgrade(req, socket, head, cb) {
         socket.on("error", socketOnError);
-        const key = req.headers["sec-websocket-key"] !== void 0 ? req.headers["sec-websocket-key"].trim() : false;
+        const key2 = req.headers["sec-websocket-key"] !== void 0 ? req.headers["sec-websocket-key"].trim() : false;
         const upgrade = req.headers.upgrade;
         const version3 = +req.headers["sec-websocket-version"];
         const extensions = {};
-        if (req.method !== "GET" || upgrade === void 0 || upgrade.toLowerCase() !== "websocket" || !key || !keyRegex.test(key) || version3 !== 8 && version3 !== 13 || !this.shouldHandle(req)) {
+        if (req.method !== "GET" || upgrade === void 0 || upgrade.toLowerCase() !== "websocket" || !key2 || !keyRegex.test(key2) || version3 !== 8 && version3 !== 13 || !this.shouldHandle(req)) {
           return abortHandshake(socket, 400);
         }
         if (this.options.perMessageDeflate) {
@@ -48510,13 +48510,13 @@ var require_websocket_server2 = __commonJS({
               if (!verified) {
                 return abortHandshake(socket, code || 401, message, headers);
               }
-              this.completeUpgrade(key, extensions, req, socket, head, cb);
+              this.completeUpgrade(key2, extensions, req, socket, head, cb);
             });
             return;
           }
           if (!this.options.verifyClient(info)) return abortHandshake(socket, 401);
         }
-        this.completeUpgrade(key, extensions, req, socket, head, cb);
+        this.completeUpgrade(key2, extensions, req, socket, head, cb);
       }
       /**
        * Upgrade the connection to WebSocket.
@@ -48531,7 +48531,7 @@ var require_websocket_server2 = __commonJS({
        * @throws {Error} If called more than once with the same socket
        * @private
        */
-      completeUpgrade(key, extensions, req, socket, head, cb) {
+      completeUpgrade(key2, extensions, req, socket, head, cb) {
         if (!socket.readable || !socket.writable) return socket.destroy();
         if (socket[kWebSocket]) {
           throw new Error(
@@ -48539,7 +48539,7 @@ var require_websocket_server2 = __commonJS({
           );
         }
         if (this._state > RUNNING) return abortHandshake(socket, 503);
-        const digest = createHash("sha1").update(key + GUID).digest("base64");
+        const digest = createHash("sha1").update(key2 + GUID).digest("base64");
         const headers = [
           "HTTP/1.1 101 Switching Protocols",
           "Upgrade: websocket",
@@ -48834,8 +48834,8 @@ var require_lib4 = __commonJS({
         getWss: function getWss() {
           return wsServer;
         },
-        applyTo: function applyTo(router187) {
-          (0, _addWsMethod2.default)(router187);
+        applyTo: function applyTo(router210) {
+          (0, _addWsMethod2.default)(router210);
         }
       };
     }
@@ -48857,8 +48857,8 @@ var require_safe_buffer = __commonJS({
     var buffer = require("buffer");
     var Buffer3 = buffer.Buffer;
     function copyProps(src, dst) {
-      for (var key in src) {
-        dst[key] = src[key];
+      for (var key2 in src) {
+        dst[key2] = src[key2];
       }
     }
     if (Buffer3.from && Buffer3.alloc && Buffer3.allocUnsafe && Buffer3.allocUnsafeSlow) {
@@ -49267,13 +49267,13 @@ var require_node2 = __commonJS({
     exports2.load = load;
     exports2.useColors = useColors;
     exports2.colors = [6, 2, 3, 4, 5, 1];
-    exports2.inspectOpts = Object.keys(process.env).filter(function(key) {
-      return /^debug_/i.test(key);
-    }).reduce(function(obj, key) {
-      var prop = key.substring(6).toLowerCase().replace(/_([a-z])/g, function(_, k) {
+    exports2.inspectOpts = Object.keys(process.env).filter(function(key2) {
+      return /^debug_/i.test(key2);
+    }).reduce(function(obj, key2) {
+      var prop = key2.substring(6).toLowerCase().replace(/_([a-z])/g, function(_, k) {
         return k.toUpperCase();
       });
-      var val = process.env[key];
+      var val = process.env[key2];
       if (/^(yes|on|true|enabled)$/i.test(val)) val = true;
       else if (/^(no|off|false|disabled)$/i.test(val)) val = false;
       else if (val === "null") val = null;
@@ -49337,8 +49337,8 @@ var require_node2 = __commonJS({
           }
           break;
         case "FILE":
-          var fs43 = require("fs");
-          stream5 = new fs43.SyncWriteStream(fd2, { autoClose: false });
+          var fs47 = require("fs");
+          stream5 = new fs47.SyncWriteStream(fd2, { autoClose: false });
           stream5._type = "fs";
           break;
         case "PIPE":
@@ -49538,11 +49538,11 @@ var require_on_headers = __commonJS({
       return args;
     }
     function set2dArray(res, headers) {
-      var key;
+      var key2;
       for (var i = 0; i < headers.length; i++) {
-        key = headers[i][0];
-        if (key) {
-          res.setHeader(key, headers[i][1]);
+        key2 = headers[i][0];
+        if (key2) {
+          res.setHeader(key2, headers[i][1]);
         }
       }
     }
@@ -49550,20 +49550,20 @@ var require_on_headers = __commonJS({
       for (var i = 0; i < headers.length; i += 2) {
         res.removeHeader(headers[i]);
       }
-      var key;
+      var key2;
       for (var j = 0; j < headers.length; j += 2) {
-        key = headers[j];
-        if (key) {
-          res.appendHeader(key, headers[j + 1]);
+        key2 = headers[j];
+        if (key2) {
+          res.appendHeader(key2, headers[j + 1]);
         }
       }
     }
     function set1dArrayWithSet(res, headers) {
-      var key;
+      var key2;
       for (var i = 0; i < headers.length; i += 2) {
-        key = headers[i];
-        if (key) {
-          res.setHeader(key, headers[i + 1]);
+        key2 = headers[i];
+        if (key2) {
+          res.setHeader(key2, headers[i + 1]);
         }
       }
     }
@@ -49865,7 +49865,7 @@ var require_path = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.convertPosixPathToPattern = exports2.convertWindowsPathToPattern = exports2.convertPathToPattern = exports2.escapePosixPath = exports2.escapeWindowsPath = exports2.escape = exports2.removeLeadingDotSegment = exports2.makeAbsolute = exports2.unixify = void 0;
     var os = require("os");
-    var path38 = require("path");
+    var path42 = require("path");
     var IS_WINDOWS_PLATFORM = os.platform() === "win32";
     var LEADING_DOT_SEGMENT_CHARACTERS_COUNT = 2;
     var POSIX_UNESCAPED_GLOB_SYMBOLS_RE = /(\\?)([()*?[\]{|}]|^!|[!+@](?=\()|\\(?![!()*+?@[\]{|}]))/g;
@@ -49877,7 +49877,7 @@ var require_path = __commonJS({
     }
     exports2.unixify = unixify;
     function makeAbsolute(cwd, filepath) {
-      return path38.resolve(cwd, filepath);
+      return path42.resolve(cwd, filepath);
     }
     exports2.makeAbsolute = makeAbsolute;
     function removeLeadingDotSegment(entry) {
@@ -50384,8 +50384,8 @@ var require_to_regex_range = __commonJS({
     function compare(a, b) {
       return a > b ? 1 : b > a ? -1 : 0;
     }
-    function contains(arr, key, val) {
-      return arr.some((ele) => ele[key] === val);
+    function contains(arr, key2, val) {
+      return arr.some((ele) => ele[key2] === val);
     }
     function countNines(min, len) {
       return Number(String(min).slice(0, -len) + "9".repeat(len));
@@ -51176,7 +51176,7 @@ var require_braces = __commonJS({
 var require_constants4 = __commonJS({
   "node_modules/picomatch/lib/constants.js"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var WIN_SLASH = "\\\\/";
     var WIN_NO_SLASH = `[^${WIN_SLASH}]`;
     var DEFAULT_MAX_EXTGLOB_RECURSION = 0;
@@ -51350,7 +51350,7 @@ var require_constants4 = __commonJS({
       /* | */
       CHAR_ZERO_WIDTH_NOBREAK_SPACE: 65279,
       /* \uFEFF */
-      SEP: path38.sep,
+      SEP: path42.sep,
       /**
        * Create EXTGLOB_CHARS
        */
@@ -51377,7 +51377,7 @@ var require_constants4 = __commonJS({
 var require_utils5 = __commonJS({
   "node_modules/picomatch/lib/utils.js"(exports2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var win32 = process.platform === "win32";
     var {
       REGEX_BACKSLASH,
@@ -51406,7 +51406,7 @@ var require_utils5 = __commonJS({
       if (options && typeof options.windows === "boolean") {
         return options.windows;
       }
-      return win32 === true || path38.sep === "\\";
+      return win32 === true || path42.sep === "\\";
     };
     exports2.escapeLast = (input, char, lastIdx) => {
       const idx = input.lastIndexOf(char, lastIdx);
@@ -52770,7 +52770,7 @@ var require_parse3 = __commonJS({
 var require_picomatch = __commonJS({
   "node_modules/picomatch/lib/picomatch.js"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var scan = require_scan();
     var parse4 = require_parse3();
     var utils = require_utils5();
@@ -52855,7 +52855,7 @@ var require_picomatch = __commonJS({
     };
     picomatch.matchBase = (input, glob, options, posix = utils.isWindows(options)) => {
       const regex = glob instanceof RegExp ? glob : picomatch.makeRe(glob, options);
-      return regex.test(path38.basename(input));
+      return regex.test(path42.basename(input));
     };
     picomatch.isMatch = (str, patterns, options) => picomatch(patterns, options)(str);
     picomatch.parse = (pattern, options) => {
@@ -53012,7 +53012,7 @@ var require_micromatch = __commonJS({
       }
       let keys2 = micromatch(Object.keys(obj), patterns, options);
       let res = {};
-      for (let key of keys2) res[key] = obj[key];
+      for (let key2 of keys2) res[key2] = obj[key2];
       return res;
     };
     micromatch.some = (list2, patterns, options) => {
@@ -53082,7 +53082,7 @@ var require_pattern = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.isAbsolute = exports2.partitionAbsoluteAndRelative = exports2.removeDuplicateSlashes = exports2.matchAny = exports2.convertPatternsToRe = exports2.makeRe = exports2.getPatternParts = exports2.expandBraceExpansion = exports2.expandPatternsWithBraceExpansion = exports2.isAffectDepthOfReadingPattern = exports2.endsWithSlashGlobStar = exports2.hasGlobStar = exports2.getBaseDirectory = exports2.isPatternRelatedToParentDirectory = exports2.getPatternsOutsideCurrentDirectory = exports2.getPatternsInsideCurrentDirectory = exports2.getPositivePatterns = exports2.getNegativePatterns = exports2.isPositivePattern = exports2.isNegativePattern = exports2.convertToNegativePattern = exports2.convertToPositivePattern = exports2.isDynamicPattern = exports2.isStaticPattern = void 0;
-    var path38 = require("path");
+    var path42 = require("path");
     var globParent = require_glob_parent();
     var micromatch = require_micromatch();
     var GLOBSTAR = "**";
@@ -53177,7 +53177,7 @@ var require_pattern = __commonJS({
     }
     exports2.endsWithSlashGlobStar = endsWithSlashGlobStar;
     function isAffectDepthOfReadingPattern(pattern) {
-      const basename = path38.basename(pattern);
+      const basename = path42.basename(pattern);
       return endsWithSlashGlobStar(pattern) || isStaticPattern(basename);
     }
     exports2.isAffectDepthOfReadingPattern = isAffectDepthOfReadingPattern;
@@ -53235,7 +53235,7 @@ var require_pattern = __commonJS({
     }
     exports2.partitionAbsoluteAndRelative = partitionAbsoluteAndRelative;
     function isAbsolute(pattern) {
-      return path38.isAbsolute(pattern);
+      return path42.isAbsolute(pattern);
     }
     exports2.isAbsolute = isAbsolute;
   }
@@ -53410,10 +53410,10 @@ var require_utils6 = __commonJS({
     exports2.array = array4;
     var errno = require_errno();
     exports2.errno = errno;
-    var fs43 = require_fs();
-    exports2.fs = fs43;
-    var path38 = require_path();
-    exports2.path = path38;
+    var fs47 = require_fs();
+    exports2.fs = fs47;
+    var path42 = require_path();
+    exports2.path = path42;
     var pattern = require_pattern();
     exports2.pattern = pattern;
     var stream4 = require_stream3();
@@ -53525,8 +53525,8 @@ var require_async = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.read = void 0;
-    function read(path38, settings, callback) {
-      settings.fs.lstat(path38, (lstatError, lstat) => {
+    function read(path42, settings, callback) {
+      settings.fs.lstat(path42, (lstatError, lstat) => {
         if (lstatError !== null) {
           callFailureCallback(callback, lstatError);
           return;
@@ -53535,7 +53535,7 @@ var require_async = __commonJS({
           callSuccessCallback(callback, lstat);
           return;
         }
-        settings.fs.stat(path38, (statError, stat) => {
+        settings.fs.stat(path42, (statError, stat) => {
           if (statError !== null) {
             if (settings.throwErrorOnBrokenSymbolicLink) {
               callFailureCallback(callback, statError);
@@ -53567,13 +53567,13 @@ var require_sync = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.read = void 0;
-    function read(path38, settings) {
-      const lstat = settings.fs.lstatSync(path38);
+    function read(path42, settings) {
+      const lstat = settings.fs.lstatSync(path42);
       if (!lstat.isSymbolicLink() || !settings.followSymbolicLink) {
         return lstat;
       }
       try {
-        const stat = settings.fs.statSync(path38);
+        const stat = settings.fs.statSync(path42);
         if (settings.markSymbolicLink) {
           stat.isSymbolicLink = () => true;
         }
@@ -53595,12 +53595,12 @@ var require_fs2 = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.createFileSystemAdapter = exports2.FILE_SYSTEM_ADAPTER = void 0;
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     exports2.FILE_SYSTEM_ADAPTER = {
-      lstat: fs43.lstat,
-      stat: fs43.stat,
-      lstatSync: fs43.lstatSync,
-      statSync: fs43.statSync
+      lstat: fs47.lstat,
+      stat: fs47.stat,
+      lstatSync: fs47.lstatSync,
+      statSync: fs47.statSync
     };
     function createFileSystemAdapter(fsMethods) {
       if (fsMethods === void 0) {
@@ -53617,12 +53617,12 @@ var require_settings = __commonJS({
   "node_modules/@nodelib/fs.stat/out/settings.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    var fs43 = require_fs2();
+    var fs47 = require_fs2();
     var Settings = class {
       constructor(_options = {}) {
         this._options = _options;
         this.followSymbolicLink = this._getValue(this._options.followSymbolicLink, true);
-        this.fs = fs43.createFileSystemAdapter(this._options.fs);
+        this.fs = fs47.createFileSystemAdapter(this._options.fs);
         this.markSymbolicLink = this._getValue(this._options.markSymbolicLink, false);
         this.throwErrorOnBrokenSymbolicLink = this._getValue(this._options.throwErrorOnBrokenSymbolicLink, true);
       }
@@ -53644,17 +53644,17 @@ var require_out = __commonJS({
     var sync = require_sync();
     var settings_1 = require_settings();
     exports2.Settings = settings_1.default;
-    function stat(path38, optionsOrSettingsOrCallback, callback) {
+    function stat(path42, optionsOrSettingsOrCallback, callback) {
       if (typeof optionsOrSettingsOrCallback === "function") {
-        async.read(path38, getSettings(), optionsOrSettingsOrCallback);
+        async.read(path42, getSettings(), optionsOrSettingsOrCallback);
         return;
       }
-      async.read(path38, getSettings(optionsOrSettingsOrCallback), callback);
+      async.read(path42, getSettings(optionsOrSettingsOrCallback), callback);
     }
     exports2.stat = stat;
-    function statSync(path38, optionsOrSettings) {
+    function statSync(path42, optionsOrSettings) {
       const settings = getSettings(optionsOrSettings);
-      return sync.read(path38, settings);
+      return sync.read(path42, settings);
     }
     exports2.statSync = statSync;
     function getSettings(settingsOrOptions = {}) {
@@ -53711,9 +53711,9 @@ var require_run_parallel = __commonJS({
       if (!pending) {
         done(null);
       } else if (keys2) {
-        keys2.forEach(function(key) {
-          tasks[key](function(err, result) {
-            each(key, err, result);
+        keys2.forEach(function(key2) {
+          tasks[key2](function(err, result) {
+            each(key2, err, result);
           });
         });
       } else {
@@ -53779,8 +53779,8 @@ var require_utils7 = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.fs = void 0;
-    var fs43 = require_fs3();
-    exports2.fs = fs43;
+    var fs47 = require_fs3();
+    exports2.fs = fs47;
   }
 });
 
@@ -53872,16 +53872,16 @@ var require_async2 = __commonJS({
           return;
         }
         const tasks = names.map((name28) => {
-          const path38 = common.joinPathSegments(directory, name28, settings.pathSegmentSeparator);
+          const path42 = common.joinPathSegments(directory, name28, settings.pathSegmentSeparator);
           return (done) => {
-            fsStat.stat(path38, settings.fsStatSettings, (error71, stats) => {
+            fsStat.stat(path42, settings.fsStatSettings, (error71, stats) => {
               if (error71 !== null) {
                 done(error71);
                 return;
               }
               const entry = {
                 name: name28,
-                path: path38,
+                path: path42,
                 dirent: utils.fs.createDirentFromStats(name28, stats)
               };
               if (settings.stats) {
@@ -53975,14 +53975,14 @@ var require_fs4 = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.createFileSystemAdapter = exports2.FILE_SYSTEM_ADAPTER = void 0;
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     exports2.FILE_SYSTEM_ADAPTER = {
-      lstat: fs43.lstat,
-      stat: fs43.stat,
-      lstatSync: fs43.lstatSync,
-      statSync: fs43.statSync,
-      readdir: fs43.readdir,
-      readdirSync: fs43.readdirSync
+      lstat: fs47.lstat,
+      stat: fs47.stat,
+      lstatSync: fs47.lstatSync,
+      statSync: fs47.statSync,
+      readdir: fs47.readdir,
+      readdirSync: fs47.readdirSync
     };
     function createFileSystemAdapter(fsMethods) {
       if (fsMethods === void 0) {
@@ -53999,15 +53999,15 @@ var require_settings2 = __commonJS({
   "node_modules/@nodelib/fs.scandir/out/settings.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    var path38 = require("path");
+    var path42 = require("path");
     var fsStat = require_out();
-    var fs43 = require_fs4();
+    var fs47 = require_fs4();
     var Settings = class {
       constructor(_options = {}) {
         this._options = _options;
         this.followSymbolicLinks = this._getValue(this._options.followSymbolicLinks, false);
-        this.fs = fs43.createFileSystemAdapter(this._options.fs);
-        this.pathSegmentSeparator = this._getValue(this._options.pathSegmentSeparator, path38.sep);
+        this.fs = fs47.createFileSystemAdapter(this._options.fs);
+        this.pathSegmentSeparator = this._getValue(this._options.pathSegmentSeparator, path42.sep);
         this.stats = this._getValue(this._options.stats, false);
         this.throwErrorOnBrokenSymbolicLink = this._getValue(this._options.throwErrorOnBrokenSymbolicLink, true);
         this.fsStatSettings = new fsStat.Settings({
@@ -54034,17 +54034,17 @@ var require_out2 = __commonJS({
     var sync = require_sync2();
     var settings_1 = require_settings2();
     exports2.Settings = settings_1.default;
-    function scandir(path38, optionsOrSettingsOrCallback, callback) {
+    function scandir(path42, optionsOrSettingsOrCallback, callback) {
       if (typeof optionsOrSettingsOrCallback === "function") {
-        async.read(path38, getSettings(), optionsOrSettingsOrCallback);
+        async.read(path42, getSettings(), optionsOrSettingsOrCallback);
         return;
       }
-      async.read(path38, getSettings(optionsOrSettingsOrCallback), callback);
+      async.read(path42, getSettings(optionsOrSettingsOrCallback), callback);
     }
     exports2.scandir = scandir;
-    function scandirSync(path38, optionsOrSettings) {
+    function scandirSync(path42, optionsOrSettings) {
       const settings = getSettings(optionsOrSettings);
-      return sync.read(path38, settings);
+      return sync.read(path42, settings);
     }
     exports2.scandirSync = scandirSync;
     function getSettings(settingsOrOptions = {}) {
@@ -54691,7 +54691,7 @@ var require_settings3 = __commonJS({
   "node_modules/@nodelib/fs.walk/out/settings.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    var path38 = require("path");
+    var path42 = require("path");
     var fsScandir = require_out2();
     var Settings = class {
       constructor(_options = {}) {
@@ -54701,7 +54701,7 @@ var require_settings3 = __commonJS({
         this.deepFilter = this._getValue(this._options.deepFilter, null);
         this.entryFilter = this._getValue(this._options.entryFilter, null);
         this.errorFilter = this._getValue(this._options.errorFilter, null);
-        this.pathSegmentSeparator = this._getValue(this._options.pathSegmentSeparator, path38.sep);
+        this.pathSegmentSeparator = this._getValue(this._options.pathSegmentSeparator, path42.sep);
         this.fsScandirSettings = new fsScandir.Settings({
           followSymbolicLinks: this._options.followSymbolicLinks,
           fs: this._options.fs,
@@ -54763,7 +54763,7 @@ var require_reader2 = __commonJS({
   "node_modules/fast-glob/out/readers/reader.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    var path38 = require("path");
+    var path42 = require("path");
     var fsStat = require_out();
     var utils = require_utils6();
     var Reader = class {
@@ -54776,7 +54776,7 @@ var require_reader2 = __commonJS({
         });
       }
       _getFullEntryPath(filepath) {
-        return path38.resolve(this._settings.cwd, filepath);
+        return path42.resolve(this._settings.cwd, filepath);
       }
       _makeEntry(stats, pattern) {
         const entry = {
@@ -55192,7 +55192,7 @@ var require_provider = __commonJS({
   "node_modules/fast-glob/out/providers/provider.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    var path38 = require("path");
+    var path42 = require("path");
     var deep_1 = require_deep();
     var entry_1 = require_entry();
     var error_1 = require_error();
@@ -55206,7 +55206,7 @@ var require_provider = __commonJS({
         this.entryTransformer = new entry_2.default(this._settings);
       }
       _getRootDirectory(task) {
-        return path38.resolve(this._settings.cwd, task.base);
+        return path42.resolve(this._settings.cwd, task.base);
       }
       _getReaderOptions(task) {
         const basePath = task.base === "." ? "" : task.base;
@@ -55387,16 +55387,16 @@ var require_settings4 = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.DEFAULT_FILE_SYSTEM_ADAPTER = void 0;
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     var os = require("os");
     var CPU_COUNT = Math.max(os.cpus().length, 1);
     exports2.DEFAULT_FILE_SYSTEM_ADAPTER = {
-      lstat: fs43.lstat,
-      lstatSync: fs43.lstatSync,
-      stat: fs43.stat,
-      statSync: fs43.statSync,
-      readdir: fs43.readdir,
-      readdirSync: fs43.readdirSync
+      lstat: fs47.lstat,
+      lstatSync: fs47.lstatSync,
+      stat: fs47.stat,
+      statSync: fs47.statSync,
+      readdir: fs47.readdir,
+      readdirSync: fs47.readdirSync
     };
     var Settings = class {
       constructor(_options = {}) {
@@ -55838,9 +55838,9 @@ var require_Pool = __commonJS({
           createRetryIntervalMillis: true,
           propagateCreateError: true
         };
-        for (const key of Object.keys(opt)) {
-          if (!allowedKeys[key]) {
-            throw new Error(`Tarn: unsupported option opt.${key}`);
+        for (const key2 of Object.keys(opt)) {
+          if (!allowedKeys[key2]) {
+            throw new Error(`Tarn: unsupported option opt.${key2}`);
           }
         }
         this.creator = opt.create;
@@ -56397,10 +56397,10 @@ var require_assocIndexOf = __commonJS({
   "node_modules/lodash/_assocIndexOf.js"(exports2, module2) {
     "use strict";
     var eq2 = require_eq();
-    function assocIndexOf2(array4, key) {
+    function assocIndexOf2(array4, key2) {
       var length = array4.length;
       while (length--) {
-        if (eq2(array4[length][0], key)) {
+        if (eq2(array4[length][0], key2)) {
           return length;
         }
       }
@@ -56417,8 +56417,8 @@ var require_listCacheDelete = __commonJS({
     var assocIndexOf2 = require_assocIndexOf();
     var arrayProto2 = Array.prototype;
     var splice2 = arrayProto2.splice;
-    function listCacheDelete2(key) {
-      var data = this.__data__, index = assocIndexOf2(data, key);
+    function listCacheDelete2(key2) {
+      var data = this.__data__, index = assocIndexOf2(data, key2);
       if (index < 0) {
         return false;
       }
@@ -56440,8 +56440,8 @@ var require_listCacheGet = __commonJS({
   "node_modules/lodash/_listCacheGet.js"(exports2, module2) {
     "use strict";
     var assocIndexOf2 = require_assocIndexOf();
-    function listCacheGet2(key) {
-      var data = this.__data__, index = assocIndexOf2(data, key);
+    function listCacheGet2(key2) {
+      var data = this.__data__, index = assocIndexOf2(data, key2);
       return index < 0 ? void 0 : data[index][1];
     }
     module2.exports = listCacheGet2;
@@ -56453,8 +56453,8 @@ var require_listCacheHas = __commonJS({
   "node_modules/lodash/_listCacheHas.js"(exports2, module2) {
     "use strict";
     var assocIndexOf2 = require_assocIndexOf();
-    function listCacheHas2(key) {
-      return assocIndexOf2(this.__data__, key) > -1;
+    function listCacheHas2(key2) {
+      return assocIndexOf2(this.__data__, key2) > -1;
     }
     module2.exports = listCacheHas2;
   }
@@ -56465,11 +56465,11 @@ var require_listCacheSet = __commonJS({
   "node_modules/lodash/_listCacheSet.js"(exports2, module2) {
     "use strict";
     var assocIndexOf2 = require_assocIndexOf();
-    function listCacheSet2(key, value) {
-      var data = this.__data__, index = assocIndexOf2(data, key);
+    function listCacheSet2(key2, value) {
+      var data = this.__data__, index = assocIndexOf2(data, key2);
       if (index < 0) {
         ++this.size;
-        data.push([key, value]);
+        data.push([key2, value]);
       } else {
         data[index][1] = value;
       }
@@ -56522,8 +56522,8 @@ var require_stackClear = __commonJS({
 var require_stackDelete = __commonJS({
   "node_modules/lodash/_stackDelete.js"(exports2, module2) {
     "use strict";
-    function stackDelete2(key) {
-      var data = this.__data__, result = data["delete"](key);
+    function stackDelete2(key2) {
+      var data = this.__data__, result = data["delete"](key2);
       this.size = data.size;
       return result;
     }
@@ -56535,8 +56535,8 @@ var require_stackDelete = __commonJS({
 var require_stackGet = __commonJS({
   "node_modules/lodash/_stackGet.js"(exports2, module2) {
     "use strict";
-    function stackGet2(key) {
-      return this.__data__.get(key);
+    function stackGet2(key2) {
+      return this.__data__.get(key2);
     }
     module2.exports = stackGet2;
   }
@@ -56546,8 +56546,8 @@ var require_stackGet = __commonJS({
 var require_stackHas = __commonJS({
   "node_modules/lodash/_stackHas.js"(exports2, module2) {
     "use strict";
-    function stackHas2(key) {
-      return this.__data__.has(key);
+    function stackHas2(key2) {
+      return this.__data__.has(key2);
     }
     module2.exports = stackHas2;
   }
@@ -56760,8 +56760,8 @@ var require_baseIsNative = __commonJS({
 var require_getValue = __commonJS({
   "node_modules/lodash/_getValue.js"(exports2, module2) {
     "use strict";
-    function getValue2(object4, key) {
-      return object4 == null ? void 0 : object4[key];
+    function getValue2(object4, key2) {
+      return object4 == null ? void 0 : object4[key2];
     }
     module2.exports = getValue2;
   }
@@ -56773,8 +56773,8 @@ var require_getNative = __commonJS({
     "use strict";
     var baseIsNative2 = require_baseIsNative();
     var getValue2 = require_getValue();
-    function getNative2(object4, key) {
-      var value = getValue2(object4, key);
+    function getNative2(object4, key2) {
+      var value = getValue2(object4, key2);
       return baseIsNative2(value) ? value : void 0;
     }
     module2.exports = getNative2;
@@ -56819,8 +56819,8 @@ var require_hashClear = __commonJS({
 var require_hashDelete = __commonJS({
   "node_modules/lodash/_hashDelete.js"(exports2, module2) {
     "use strict";
-    function hashDelete2(key) {
-      var result = this.has(key) && delete this.__data__[key];
+    function hashDelete2(key2) {
+      var result = this.has(key2) && delete this.__data__[key2];
       this.size -= result ? 1 : 0;
       return result;
     }
@@ -56836,13 +56836,13 @@ var require_hashGet = __commonJS({
     var HASH_UNDEFINED4 = "__lodash_hash_undefined__";
     var objectProto13 = Object.prototype;
     var hasOwnProperty11 = objectProto13.hasOwnProperty;
-    function hashGet2(key) {
+    function hashGet2(key2) {
       var data = this.__data__;
       if (nativeCreate2) {
-        var result = data[key];
+        var result = data[key2];
         return result === HASH_UNDEFINED4 ? void 0 : result;
       }
-      return hasOwnProperty11.call(data, key) ? data[key] : void 0;
+      return hasOwnProperty11.call(data, key2) ? data[key2] : void 0;
     }
     module2.exports = hashGet2;
   }
@@ -56855,9 +56855,9 @@ var require_hashHas = __commonJS({
     var nativeCreate2 = require_nativeCreate();
     var objectProto13 = Object.prototype;
     var hasOwnProperty11 = objectProto13.hasOwnProperty;
-    function hashHas2(key) {
+    function hashHas2(key2) {
       var data = this.__data__;
-      return nativeCreate2 ? data[key] !== void 0 : hasOwnProperty11.call(data, key);
+      return nativeCreate2 ? data[key2] !== void 0 : hasOwnProperty11.call(data, key2);
     }
     module2.exports = hashHas2;
   }
@@ -56869,10 +56869,10 @@ var require_hashSet = __commonJS({
     "use strict";
     var nativeCreate2 = require_nativeCreate();
     var HASH_UNDEFINED4 = "__lodash_hash_undefined__";
-    function hashSet2(key, value) {
+    function hashSet2(key2, value) {
       var data = this.__data__;
-      this.size += this.has(key) ? 0 : 1;
-      data[key] = nativeCreate2 && value === void 0 ? HASH_UNDEFINED4 : value;
+      this.size += this.has(key2) ? 0 : 1;
+      data[key2] = nativeCreate2 && value === void 0 ? HASH_UNDEFINED4 : value;
       return this;
     }
     module2.exports = hashSet2;
@@ -56941,9 +56941,9 @@ var require_getMapData = __commonJS({
   "node_modules/lodash/_getMapData.js"(exports2, module2) {
     "use strict";
     var isKeyable2 = require_isKeyable();
-    function getMapData2(map3, key) {
+    function getMapData2(map3, key2) {
       var data = map3.__data__;
-      return isKeyable2(key) ? data[typeof key == "string" ? "string" : "hash"] : data.map;
+      return isKeyable2(key2) ? data[typeof key2 == "string" ? "string" : "hash"] : data.map;
     }
     module2.exports = getMapData2;
   }
@@ -56954,8 +56954,8 @@ var require_mapCacheDelete = __commonJS({
   "node_modules/lodash/_mapCacheDelete.js"(exports2, module2) {
     "use strict";
     var getMapData2 = require_getMapData();
-    function mapCacheDelete2(key) {
-      var result = getMapData2(this, key)["delete"](key);
+    function mapCacheDelete2(key2) {
+      var result = getMapData2(this, key2)["delete"](key2);
       this.size -= result ? 1 : 0;
       return result;
     }
@@ -56968,8 +56968,8 @@ var require_mapCacheGet = __commonJS({
   "node_modules/lodash/_mapCacheGet.js"(exports2, module2) {
     "use strict";
     var getMapData2 = require_getMapData();
-    function mapCacheGet2(key) {
-      return getMapData2(this, key).get(key);
+    function mapCacheGet2(key2) {
+      return getMapData2(this, key2).get(key2);
     }
     module2.exports = mapCacheGet2;
   }
@@ -56980,8 +56980,8 @@ var require_mapCacheHas = __commonJS({
   "node_modules/lodash/_mapCacheHas.js"(exports2, module2) {
     "use strict";
     var getMapData2 = require_getMapData();
-    function mapCacheHas2(key) {
-      return getMapData2(this, key).has(key);
+    function mapCacheHas2(key2) {
+      return getMapData2(this, key2).has(key2);
     }
     module2.exports = mapCacheHas2;
   }
@@ -56992,9 +56992,9 @@ var require_mapCacheSet = __commonJS({
   "node_modules/lodash/_mapCacheSet.js"(exports2, module2) {
     "use strict";
     var getMapData2 = require_getMapData();
-    function mapCacheSet2(key, value) {
-      var data = getMapData2(this, key), size = data.size;
-      data.set(key, value);
+    function mapCacheSet2(key2, value) {
+      var data = getMapData2(this, key2), size = data.size;
+      data.set(key2, value);
       this.size += data.size == size ? 0 : 1;
       return this;
     }
@@ -57036,18 +57036,18 @@ var require_stackSet = __commonJS({
     var Map3 = require_Map();
     var MapCache2 = require_MapCache();
     var LARGE_ARRAY_SIZE3 = 200;
-    function stackSet2(key, value) {
+    function stackSet2(key2, value) {
       var data = this.__data__;
       if (data instanceof ListCache2) {
         var pairs = data.__data__;
         if (!Map3 || pairs.length < LARGE_ARRAY_SIZE3 - 1) {
-          pairs.push([key, value]);
+          pairs.push([key2, value]);
           this.size = ++data.size;
           return this;
         }
         data = this.__data__ = new MapCache2(pairs);
       }
-      data.set(key, value);
+      data.set(key2, value);
       this.size = data.size;
       return this;
     }
@@ -57117,16 +57117,16 @@ var require_baseAssignValue = __commonJS({
   "node_modules/lodash/_baseAssignValue.js"(exports2, module2) {
     "use strict";
     var defineProperty2 = require_defineProperty();
-    function baseAssignValue(object4, key, value) {
-      if (key == "__proto__" && defineProperty2) {
-        defineProperty2(object4, key, {
+    function baseAssignValue(object4, key2, value) {
+      if (key2 == "__proto__" && defineProperty2) {
+        defineProperty2(object4, key2, {
           "configurable": true,
           "enumerable": true,
           "value": value,
           "writable": true
         });
       } else {
-        object4[key] = value;
+        object4[key2] = value;
       }
     }
     module2.exports = baseAssignValue;
@@ -57141,10 +57141,10 @@ var require_assignValue = __commonJS({
     var eq2 = require_eq();
     var objectProto13 = Object.prototype;
     var hasOwnProperty11 = objectProto13.hasOwnProperty;
-    function assignValue(object4, key, value) {
-      var objValue = object4[key];
-      if (!(hasOwnProperty11.call(object4, key) && eq2(objValue, value)) || value === void 0 && !(key in object4)) {
-        baseAssignValue(object4, key, value);
+    function assignValue(object4, key2, value) {
+      var objValue = object4[key2];
+      if (!(hasOwnProperty11.call(object4, key2) && eq2(objValue, value)) || value === void 0 && !(key2 in object4)) {
+        baseAssignValue(object4, key2, value);
       }
     }
     module2.exports = assignValue;
@@ -57162,15 +57162,15 @@ var require_copyObject = __commonJS({
       object4 || (object4 = {});
       var index = -1, length = props.length;
       while (++index < length) {
-        var key = props[index];
-        var newValue = customizer ? customizer(object4[key], source[key], key, object4, source) : void 0;
+        var key2 = props[index];
+        var newValue = customizer ? customizer(object4[key2], source[key2], key2, object4, source) : void 0;
         if (newValue === void 0) {
-          newValue = source[key];
+          newValue = source[key2];
         }
         if (isNew) {
-          baseAssignValue(object4, key, newValue);
+          baseAssignValue(object4, key2, newValue);
         } else {
-          assignValue(object4, key, newValue);
+          assignValue(object4, key2, newValue);
         }
       }
       return object4;
@@ -57404,13 +57404,13 @@ var require_arrayLikeKeys = __commonJS({
     var hasOwnProperty11 = objectProto13.hasOwnProperty;
     function arrayLikeKeys2(value, inherited) {
       var isArr = isArray3(value), isArg = !isArr && isArguments2(value), isBuff = !isArr && !isArg && isBuffer3(value), isType = !isArr && !isArg && !isBuff && isTypedArray3(value), skipIndexes = isArr || isArg || isBuff || isType, result = skipIndexes ? baseTimes2(value.length, String) : [], length = result.length;
-      for (var key in value) {
-        if ((inherited || hasOwnProperty11.call(value, key)) && !(skipIndexes && // Safari 9 has enumerable `arguments.length` in strict mode.
-        (key == "length" || // Node.js 0.10 has enumerable non-index properties on buffers.
-        isBuff && (key == "offset" || key == "parent") || // PhantomJS 2 has enumerable non-index properties on typed arrays.
-        isType && (key == "buffer" || key == "byteLength" || key == "byteOffset") || // Skip index properties.
-        isIndex2(key, length)))) {
-          result.push(key);
+      for (var key2 in value) {
+        if ((inherited || hasOwnProperty11.call(value, key2)) && !(skipIndexes && // Safari 9 has enumerable `arguments.length` in strict mode.
+        (key2 == "length" || // Node.js 0.10 has enumerable non-index properties on buffers.
+        isBuff && (key2 == "offset" || key2 == "parent") || // PhantomJS 2 has enumerable non-index properties on typed arrays.
+        isType && (key2 == "buffer" || key2 == "byteLength" || key2 == "byteOffset") || // Skip index properties.
+        isIndex2(key2, length)))) {
+          result.push(key2);
         }
       }
       return result;
@@ -57468,9 +57468,9 @@ var require_baseKeys = __commonJS({
         return nativeKeys2(object4);
       }
       var result = [];
-      for (var key in Object(object4)) {
-        if (hasOwnProperty11.call(object4, key) && key != "constructor") {
-          result.push(key);
+      for (var key2 in Object(object4)) {
+        if (hasOwnProperty11.call(object4, key2) && key2 != "constructor") {
+          result.push(key2);
         }
       }
       return result;
@@ -57526,8 +57526,8 @@ var require_nativeKeysIn = __commonJS({
     function nativeKeysIn(object4) {
       var result = [];
       if (object4 != null) {
-        for (var key in Object(object4)) {
-          result.push(key);
+        for (var key2 in Object(object4)) {
+          result.push(key2);
         }
       }
       return result;
@@ -57550,9 +57550,9 @@ var require_baseKeysIn = __commonJS({
         return nativeKeysIn(object4);
       }
       var isProto = isPrototype2(object4), result = [];
-      for (var key in object4) {
-        if (!(key == "constructor" && (isProto || !hasOwnProperty11.call(object4, key)))) {
-          result.push(key);
+      for (var key2 in object4) {
+        if (!(key2 == "constructor" && (isProto || !hasOwnProperty11.call(object4, key2)))) {
+          result.push(key2);
         }
       }
       return result;
@@ -58195,10 +58195,10 @@ var require_baseClone = __commonJS({
     var cloneableTags = {};
     cloneableTags[argsTag4] = cloneableTags[arrayTag3] = cloneableTags[arrayBufferTag3] = cloneableTags[dataViewTag4] = cloneableTags[boolTag3] = cloneableTags[dateTag3] = cloneableTags[float32Tag2] = cloneableTags[float64Tag2] = cloneableTags[int8Tag2] = cloneableTags[int16Tag2] = cloneableTags[int32Tag2] = cloneableTags[mapTag4] = cloneableTags[numberTag3] = cloneableTags[objectTag4] = cloneableTags[regexpTag3] = cloneableTags[setTag4] = cloneableTags[stringTag3] = cloneableTags[symbolTag3] = cloneableTags[uint8Tag2] = cloneableTags[uint8ClampedTag2] = cloneableTags[uint16Tag2] = cloneableTags[uint32Tag2] = true;
     cloneableTags[errorTag3] = cloneableTags[funcTag3] = cloneableTags[weakMapTag3] = false;
-    function baseClone(value, bitmask, customizer, key, object4, stack) {
+    function baseClone(value, bitmask, customizer, key2, object4, stack) {
       var result, isDeep = bitmask & CLONE_DEEP_FLAG, isFlat = bitmask & CLONE_FLAT_FLAG, isFull = bitmask & CLONE_SYMBOLS_FLAG;
       if (customizer) {
-        result = object4 ? customizer(value, key, object4, stack) : customizer(value);
+        result = object4 ? customizer(value, key2, object4, stack) : customizer(value);
       }
       if (result !== void 0) {
         return result;
@@ -58240,18 +58240,18 @@ var require_baseClone = __commonJS({
           result.add(baseClone(subValue, bitmask, customizer, subValue, value, stack));
         });
       } else if (isMap(value)) {
-        value.forEach(function(subValue, key2) {
-          result.set(key2, baseClone(subValue, bitmask, customizer, key2, value, stack));
+        value.forEach(function(subValue, key3) {
+          result.set(key3, baseClone(subValue, bitmask, customizer, key3, value, stack));
         });
       }
       var keysFunc = isFull ? isFlat ? getAllKeysIn : getAllKeys2 : isFlat ? keysIn : keys2;
       var props = isArr ? void 0 : keysFunc(value);
-      arrayEach(props || value, function(subValue, key2) {
+      arrayEach(props || value, function(subValue, key3) {
         if (props) {
-          key2 = subValue;
-          subValue = value[key2];
+          key3 = subValue;
+          subValue = value[key3];
         }
-        assignValue(result, key2, baseClone(subValue, bitmask, customizer, key2, value, stack));
+        assignValue(result, key3, baseClone(subValue, bitmask, customizer, key3, value, stack));
       });
       return result;
     }
@@ -58460,10 +58460,10 @@ var require_defaults = __commonJS({
         var propsIndex = -1;
         var propsLength = props.length;
         while (++propsIndex < propsLength) {
-          var key = props[propsIndex];
-          var value = object4[key];
-          if (value === void 0 || eq2(value, objectProto13[key]) && !hasOwnProperty11.call(object4, key)) {
-            object4[key] = source[key];
+          var key2 = props[propsIndex];
+          var value = object4[key2];
+          if (value === void 0 || eq2(value, objectProto13[key2]) && !hasOwnProperty11.call(object4, key2)) {
+            object4[key2] = source[key2];
           }
         }
       }
@@ -59000,8 +59000,8 @@ var require_common4 = __commonJS({
       createDebug.enabled = enabled;
       createDebug.humanize = require_ms3();
       createDebug.destroy = destroy;
-      Object.keys(env2).forEach((key) => {
-        createDebug[key] = env2[key];
+      Object.keys(env2).forEach((key2) => {
+        createDebug[key2] = env2[key2];
       });
       createDebug.names = [];
       createDebug.skips = [];
@@ -59423,13 +59423,13 @@ var require_node3 = __commonJS({
       }
     } catch (error71) {
     }
-    exports2.inspectOpts = Object.keys(process.env).filter((key) => {
-      return /^debug_/i.test(key);
-    }).reduce((obj, key) => {
-      const prop = key.substring(6).toLowerCase().replace(/_([a-z])/g, (_, k) => {
+    exports2.inspectOpts = Object.keys(process.env).filter((key2) => {
+      return /^debug_/i.test(key2);
+    }).reduce((obj, key2) => {
+      const prop = key2.substring(6).toLowerCase().replace(/_([a-z])/g, (_, k) => {
         return k.toUpperCase();
       });
-      let val = process.env[key];
+      let val = process.env[key2];
       if (/^(yes|on|true|enabled)$/i.test(val)) {
         val = true;
       } else if (/^(no|off|false|disabled)$/i.test(val)) {
@@ -59645,8 +59645,8 @@ var require_arrayIncludesWith = __commonJS({
 var require_cacheHas = __commonJS({
   "node_modules/lodash/_cacheHas.js"(exports2, module2) {
     "use strict";
-    function cacheHas2(cache, key) {
-      return cache.has(key);
+    function cacheHas2(cache, key2) {
+      return cache.has(key2);
     }
     module2.exports = cacheHas2;
   }
@@ -59822,12 +59822,12 @@ var require_memoize = __commonJS({
         throw new TypeError(FUNC_ERROR_TEXT2);
       }
       var memoized = function() {
-        var args = arguments, key = resolver ? resolver.apply(this, args) : args[0], cache = memoized.cache;
-        if (cache.has(key)) {
-          return cache.get(key);
+        var args = arguments, key2 = resolver ? resolver.apply(this, args) : args[0], cache = memoized.cache;
+        if (cache.has(key2)) {
+          return cache.get(key2);
         }
         var result = func.apply(this, args);
-        memoized.cache = cache.set(key, result) || cache;
+        memoized.cache = cache.set(key2, result) || cache;
         return result;
       };
       memoized.cache = new (memoize2.Cache || MapCache2)();
@@ -59845,11 +59845,11 @@ var require_memoizeCapped = __commonJS({
     var memoize2 = require_memoize();
     var MAX_MEMOIZE_SIZE2 = 500;
     function memoizeCapped2(func) {
-      var result = memoize2(func, function(key) {
+      var result = memoize2(func, function(key2) {
         if (cache.size === MAX_MEMOIZE_SIZE2) {
           cache.clear();
         }
-        return key;
+        return key2;
       });
       var cache = result.cache;
       return result;
@@ -59920,11 +59920,11 @@ var require_baseGet = __commonJS({
     "use strict";
     var castPath2 = require_castPath();
     var toKey2 = require_toKey();
-    function baseGet2(object4, path38) {
-      path38 = castPath2(path38, object4);
-      var index = 0, length = path38.length;
+    function baseGet2(object4, path42) {
+      path42 = castPath2(path42, object4);
+      var index = 0, length = path42.length;
       while (object4 != null && index < length) {
-        object4 = object4[toKey2(path38[index++])];
+        object4 = object4[toKey2(path42[index++])];
       }
       return index && index == length ? object4 : void 0;
     }
@@ -59937,8 +59937,8 @@ var require_get2 = __commonJS({
   "node_modules/lodash/get.js"(exports2, module2) {
     "use strict";
     var baseGet2 = require_baseGet();
-    function get2(object4, path38, defaultValue) {
-      var result = object4 == null ? void 0 : baseGet2(object4, path38);
+    function get2(object4, path42, defaultValue) {
+      var result = object4 == null ? void 0 : baseGet2(object4, path42);
       return result === void 0 ? defaultValue : result;
     }
     module2.exports = get2;
@@ -59975,8 +59975,8 @@ var require_isEmpty = __commonJS({
       if (isPrototype2(value)) {
         return !baseKeys2(value).length;
       }
-      for (var key in value) {
-        if (hasOwnProperty11.call(value, key)) {
+      for (var key2 in value) {
+        if (hasOwnProperty11.call(value, key2)) {
           return false;
         }
       }
@@ -60256,8 +60256,8 @@ var require_baseValues = __commonJS({
     "use strict";
     var arrayMap2 = require_arrayMap();
     function baseValues(object4, props) {
-      return arrayMap2(props, function(key) {
-        return object4[key];
+      return arrayMap2(props, function(key2) {
+        return object4[key2];
       });
     }
     module2.exports = baseValues;
@@ -60271,8 +60271,8 @@ var require_customDefaultsAssignIn = __commonJS({
     var eq2 = require_eq();
     var objectProto13 = Object.prototype;
     var hasOwnProperty11 = objectProto13.hasOwnProperty;
-    function customDefaultsAssignIn(objValue, srcValue, key, object4) {
-      if (objValue === void 0 || eq2(objValue, objectProto13[key]) && !hasOwnProperty11.call(object4, key)) {
+    function customDefaultsAssignIn(objValue, srcValue, key2, object4) {
+      if (objValue === void 0 || eq2(objValue, objectProto13[key2]) && !hasOwnProperty11.call(object4, key2)) {
         return srcValue;
       }
       return objValue;
@@ -60314,8 +60314,8 @@ var require_basePropertyOf = __commonJS({
   "node_modules/lodash/_basePropertyOf.js"(exports2, module2) {
     "use strict";
     function basePropertyOf(object4) {
-      return function(key) {
-        return object4 == null ? void 0 : object4[key];
+      return function(key2) {
+        return object4 == null ? void 0 : object4[key2];
       };
     }
     module2.exports = basePropertyOf;
@@ -60525,26 +60525,26 @@ var require_flatten = __commonJS({
 var require_fs5 = __commonJS({
   "node_modules/knex/lib/migrations/util/fs.js"(exports2, module2) {
     "use strict";
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     var flatten = require_flatten();
     var os = require("os");
-    var path38 = require("path");
+    var path42 = require("path");
     var { promisify } = require("util");
-    var stat = promisify(fs43.stat);
-    var readFile3 = promisify(fs43.readFile);
-    var writeFile3 = promisify(fs43.writeFile);
-    var readdir = promisify(fs43.readdir);
-    var mkdir = promisify(fs43.mkdir);
-    function existsSync4(path39) {
+    var stat = promisify(fs47.stat);
+    var readFile3 = promisify(fs47.readFile);
+    var writeFile3 = promisify(fs47.writeFile);
+    var readdir = promisify(fs47.readdir);
+    var mkdir = promisify(fs47.mkdir);
+    function existsSync4(path43) {
       try {
-        fs43.accessSync(path39);
+        fs47.accessSync(path43);
         return true;
       } catch (e) {
         return false;
       }
     }
     function createTemp() {
-      return promisify(fs43.mkdtemp)(`${os.tmpdir()}${path38.sep}`);
+      return promisify(fs47.mkdtemp)(`${os.tmpdir()}${path42.sep}`);
     }
     function ensureDirectoryExists(dir) {
       return stat(dir).catch(() => mkdir(dir, { recursive: true }));
@@ -60554,7 +60554,7 @@ var require_fs5 = __commonJS({
       return flatten(
         await Promise.all(
           pathsList.sort().map(async (currentPath) => {
-            const currentFile = path38.resolve(dir, currentPath);
+            const currentFile = path42.resolve(dir, currentPath);
             const statFile = await stat(currentFile);
             if (statFile && statFile.isDirectory()) {
               if (recursive) {
@@ -60685,8 +60685,8 @@ var require_mapToArray = __commonJS({
     "use strict";
     function mapToArray2(map3) {
       var index = -1, result = Array(map3.size);
-      map3.forEach(function(value, key) {
-        result[++index] = [key, value];
+      map3.forEach(function(value, key2) {
+        result[++index] = [key2, value];
       });
       return result;
     }
@@ -60799,8 +60799,8 @@ var require_equalObjects = __commonJS({
       }
       var index = objLength;
       while (index--) {
-        var key = objProps[index];
-        if (!(isPartial ? key in other : hasOwnProperty11.call(other, key))) {
+        var key2 = objProps[index];
+        if (!(isPartial ? key2 in other : hasOwnProperty11.call(other, key2))) {
           return false;
         }
       }
@@ -60814,16 +60814,16 @@ var require_equalObjects = __commonJS({
       stack.set(other, object4);
       var skipCtor = isPartial;
       while (++index < objLength) {
-        key = objProps[index];
-        var objValue = object4[key], othValue = other[key];
+        key2 = objProps[index];
+        var objValue = object4[key2], othValue = other[key2];
         if (customizer) {
-          var compared = isPartial ? customizer(othValue, objValue, key, other, object4, stack) : customizer(objValue, othValue, key, object4, other, stack);
+          var compared = isPartial ? customizer(othValue, objValue, key2, other, object4, stack) : customizer(objValue, othValue, key2, object4, other, stack);
         }
         if (!(compared === void 0 ? objValue === othValue || equalFunc(objValue, othValue, bitmask, customizer, stack) : compared)) {
           result = false;
           break;
         }
-        skipCtor || (skipCtor = key == "constructor");
+        skipCtor || (skipCtor = key2 == "constructor");
       }
       if (result && !skipCtor) {
         var objCtor = object4.constructor, othCtor = other.constructor;
@@ -60932,15 +60932,15 @@ var require_baseIsMatch = __commonJS({
       }
       while (++index < length) {
         data = matchData[index];
-        var key = data[0], objValue = object4[key], srcValue = data[1];
+        var key2 = data[0], objValue = object4[key2], srcValue = data[1];
         if (noCustomizer && data[2]) {
-          if (objValue === void 0 && !(key in object4)) {
+          if (objValue === void 0 && !(key2 in object4)) {
             return false;
           }
         } else {
           var stack = new Stack2();
           if (customizer) {
-            var result = customizer(objValue, srcValue, key, object4, source, stack);
+            var result = customizer(objValue, srcValue, key2, object4, source, stack);
           }
           if (!(result === void 0 ? baseIsEqual2(srcValue, objValue, COMPARE_PARTIAL_FLAG7 | COMPARE_UNORDERED_FLAG5, customizer, stack) : result)) {
             return false;
@@ -60974,8 +60974,8 @@ var require_getMatchData = __commonJS({
     function getMatchData2(object4) {
       var result = keys2(object4), length = result.length;
       while (length--) {
-        var key = result[length], value = object4[key];
-        result[length] = [key, value, isStrictComparable2(value)];
+        var key2 = result[length], value = object4[key2];
+        result[length] = [key2, value, isStrictComparable2(value)];
       }
       return result;
     }
@@ -60987,12 +60987,12 @@ var require_getMatchData = __commonJS({
 var require_matchesStrictComparable = __commonJS({
   "node_modules/lodash/_matchesStrictComparable.js"(exports2, module2) {
     "use strict";
-    function matchesStrictComparable2(key, srcValue) {
+    function matchesStrictComparable2(key2, srcValue) {
       return function(object4) {
         if (object4 == null) {
           return false;
         }
-        return object4[key] === srcValue && (srcValue !== void 0 || key in Object(object4));
+        return object4[key2] === srcValue && (srcValue !== void 0 || key2 in Object(object4));
       };
     }
     module2.exports = matchesStrictComparable2;
@@ -61023,8 +61023,8 @@ var require_baseMatches = __commonJS({
 var require_baseHasIn = __commonJS({
   "node_modules/lodash/_baseHasIn.js"(exports2, module2) {
     "use strict";
-    function baseHasIn2(object4, key) {
-      return object4 != null && key in Object(object4);
+    function baseHasIn2(object4, key2) {
+      return object4 != null && key2 in Object(object4);
     }
     module2.exports = baseHasIn2;
   }
@@ -61040,21 +61040,21 @@ var require_hasPath = __commonJS({
     var isIndex2 = require_isIndex();
     var isLength2 = require_isLength();
     var toKey2 = require_toKey();
-    function hasPath2(object4, path38, hasFunc) {
-      path38 = castPath2(path38, object4);
-      var index = -1, length = path38.length, result = false;
+    function hasPath2(object4, path42, hasFunc) {
+      path42 = castPath2(path42, object4);
+      var index = -1, length = path42.length, result = false;
       while (++index < length) {
-        var key = toKey2(path38[index]);
-        if (!(result = object4 != null && hasFunc(object4, key))) {
+        var key2 = toKey2(path42[index]);
+        if (!(result = object4 != null && hasFunc(object4, key2))) {
           break;
         }
-        object4 = object4[key];
+        object4 = object4[key2];
       }
       if (result || ++index != length) {
         return result;
       }
       length = object4 == null ? 0 : object4.length;
-      return !!length && isLength2(length) && isIndex2(key, length) && (isArray3(object4) || isArguments2(object4));
+      return !!length && isLength2(length) && isIndex2(key2, length) && (isArray3(object4) || isArguments2(object4));
     }
     module2.exports = hasPath2;
   }
@@ -61066,8 +61066,8 @@ var require_hasIn = __commonJS({
     "use strict";
     var baseHasIn2 = require_baseHasIn();
     var hasPath2 = require_hasPath();
-    function hasIn2(object4, path38) {
-      return object4 != null && hasPath2(object4, path38, baseHasIn2);
+    function hasIn2(object4, path42) {
+      return object4 != null && hasPath2(object4, path42, baseHasIn2);
     }
     module2.exports = hasIn2;
   }
@@ -61086,13 +61086,13 @@ var require_baseMatchesProperty = __commonJS({
     var toKey2 = require_toKey();
     var COMPARE_PARTIAL_FLAG7 = 1;
     var COMPARE_UNORDERED_FLAG5 = 2;
-    function baseMatchesProperty2(path38, srcValue) {
-      if (isKey2(path38) && isStrictComparable2(srcValue)) {
-        return matchesStrictComparable2(toKey2(path38), srcValue);
+    function baseMatchesProperty2(path42, srcValue) {
+      if (isKey2(path42) && isStrictComparable2(srcValue)) {
+        return matchesStrictComparable2(toKey2(path42), srcValue);
       }
       return function(object4) {
-        var objValue = get2(object4, path38);
-        return objValue === void 0 && objValue === srcValue ? hasIn2(object4, path38) : baseIsEqual2(srcValue, objValue, COMPARE_PARTIAL_FLAG7 | COMPARE_UNORDERED_FLAG5);
+        var objValue = get2(object4, path42);
+        return objValue === void 0 && objValue === srcValue ? hasIn2(object4, path42) : baseIsEqual2(srcValue, objValue, COMPARE_PARTIAL_FLAG7 | COMPARE_UNORDERED_FLAG5);
       };
     }
     module2.exports = baseMatchesProperty2;
@@ -61103,9 +61103,9 @@ var require_baseMatchesProperty = __commonJS({
 var require_baseProperty = __commonJS({
   "node_modules/lodash/_baseProperty.js"(exports2, module2) {
     "use strict";
-    function baseProperty2(key) {
+    function baseProperty2(key2) {
       return function(object4) {
-        return object4 == null ? void 0 : object4[key];
+        return object4 == null ? void 0 : object4[key2];
       };
     }
     module2.exports = baseProperty2;
@@ -61117,9 +61117,9 @@ var require_basePropertyDeep = __commonJS({
   "node_modules/lodash/_basePropertyDeep.js"(exports2, module2) {
     "use strict";
     var baseGet2 = require_baseGet();
-    function basePropertyDeep2(path38) {
+    function basePropertyDeep2(path42) {
       return function(object4) {
-        return baseGet2(object4, path38);
+        return baseGet2(object4, path42);
       };
     }
     module2.exports = basePropertyDeep2;
@@ -61134,8 +61134,8 @@ var require_property = __commonJS({
     var basePropertyDeep2 = require_basePropertyDeep();
     var isKey2 = require_isKey();
     var toKey2 = require_toKey();
-    function property2(path38) {
-      return isKey2(path38) ? baseProperty2(toKey2(path38)) : basePropertyDeep2(path38);
+    function property2(path42) {
+      return isKey2(path42) ? baseProperty2(toKey2(path42)) : basePropertyDeep2(path42);
     }
     module2.exports = property2;
   }
@@ -61174,8 +61174,8 @@ var require_createBaseFor = __commonJS({
       return function(object4, iteratee, keysFunc) {
         var index = -1, iterable = Object(object4), props = keysFunc(object4), length = props.length;
         while (length--) {
-          var key = props[fromRight ? length : ++index];
-          if (iteratee(iterable[key], key, iterable) === false) {
+          var key2 = props[fromRight ? length : ++index];
+          if (iteratee(iterable[key2], key2, iterable) === false) {
             break;
           }
         }
@@ -61254,8 +61254,8 @@ var require_baseMap = __commonJS({
     var isArrayLike2 = require_isArrayLike();
     function baseMap(collection, iteratee) {
       var index = -1, result = isArrayLike2(collection) ? Array(collection.length) : [];
-      baseEach(collection, function(value, key, collection2) {
-        result[++index] = iteratee(value, key, collection2);
+      baseEach(collection, function(value, key2, collection2) {
+        result[++index] = iteratee(value, key2, collection2);
       });
       return result;
     }
@@ -61352,7 +61352,7 @@ var require_baseOrderBy = __commonJS({
       }
       var index = -1;
       iteratees = arrayMap2(iteratees, baseUnary2(baseIteratee2));
-      var result = baseMap(collection, function(value, key, collection2) {
+      var result = baseMap(collection, function(value, key2, collection2) {
         var criteria = arrayMap2(iteratees, function(iteratee) {
           return iteratee(value);
         });
@@ -61394,10 +61394,10 @@ var require_sortBy = __commonJS({
 var require_is_node_modules = __commonJS({
   "node_modules/get-package-type/is-node-modules.cjs"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     function isNodeModules(directory) {
-      let basename = path38.basename(directory);
-      if (path38.sep === "\\") {
+      let basename = path42.basename(directory);
+      if (path42.sep === "\\") {
         basename = basename.toLowerCase();
       }
       return basename === "node_modules";
@@ -61418,7 +61418,7 @@ var require_cache = __commonJS({
 var require_async7 = __commonJS({
   "node_modules/get-package-type/async.cjs"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var { promisify } = require("util");
     var readFile3 = promisify(require("fs").readFile);
     var isNodeModules = require_is_node_modules();
@@ -61429,10 +61429,10 @@ var require_async7 = __commonJS({
         return "commonjs";
       }
       try {
-        return JSON.parse(await readFile3(path38.resolve(directory, "package.json"))).type || "commonjs";
+        return JSON.parse(await readFile3(path42.resolve(directory, "package.json"))).type || "commonjs";
       } catch (_) {
       }
-      const parent = path38.dirname(directory);
+      const parent = path42.dirname(directory);
       if (parent === directory) {
         return "commonjs";
       }
@@ -61453,7 +61453,7 @@ var require_async7 = __commonJS({
       return result;
     }
     function getPackageType(filename) {
-      return getDirectoryType(path38.resolve(path38.dirname(filename)));
+      return getDirectoryType(path42.resolve(path42.dirname(filename)));
     }
     module2.exports = getPackageType;
   }
@@ -61463,7 +61463,7 @@ var require_async7 = __commonJS({
 var require_sync7 = __commonJS({
   "node_modules/get-package-type/sync.cjs"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var { readFileSync: readFileSync2 } = require("fs");
     var isNodeModules = require_is_node_modules();
     var resultsCache = require_cache();
@@ -61472,10 +61472,10 @@ var require_sync7 = __commonJS({
         return "commonjs";
       }
       try {
-        return JSON.parse(readFileSync2(path38.resolve(directory, "package.json"))).type || "commonjs";
+        return JSON.parse(readFileSync2(path42.resolve(directory, "package.json"))).type || "commonjs";
       } catch (_) {
       }
-      const parent = path38.dirname(directory);
+      const parent = path42.dirname(directory);
       if (parent === directory) {
         return "commonjs";
       }
@@ -61490,7 +61490,7 @@ var require_sync7 = __commonJS({
       return result;
     }
     function getPackageTypeSync(filename) {
-      return getDirectoryType(path38.resolve(path38.dirname(filename)));
+      return getDirectoryType(path42.resolve(path42.dirname(filename)));
     }
     module2.exports = getPackageTypeSync;
   }
@@ -61533,7 +61533,7 @@ var require_import_file = __commonJS({
 var require_MigrationsLoader = __commonJS({
   "node_modules/knex/lib/migrations/common/MigrationsLoader.js"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var DEFAULT_LOAD_EXTENSIONS = Object.freeze([
       ".co",
       ".coffee",
@@ -61555,8 +61555,8 @@ var require_MigrationsLoader = __commonJS({
         this.loadExtensions = loadExtensions || DEFAULT_LOAD_EXTENSIONS;
       }
       getFile(migrationsInfo) {
-        const absoluteDir = path38.resolve(process.cwd(), migrationsInfo.directory);
-        const _path = path38.join(absoluteDir, migrationsInfo.file);
+        const absoluteDir = path42.resolve(process.cwd(), migrationsInfo.directory);
+        const _path = path42.join(absoluteDir, migrationsInfo.file);
         const importFile = require_import_file();
         return importFile(_path);
       }
@@ -61572,7 +61572,7 @@ var require_MigrationsLoader = __commonJS({
 var require_fs_migrations = __commonJS({
   "node_modules/knex/lib/migrations/migrate/sources/fs-migrations.js"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var sortBy = require_sortBy();
     var { readdir } = require_fs5();
     var { AbstractMigrationsLoader } = require_MigrationsLoader();
@@ -61583,7 +61583,7 @@ var require_fs_migrations = __commonJS({
        */
       getMigrations(loadExtensions) {
         const readMigrationsPromises = this.migrationsPaths.map((configDir) => {
-          const absoluteDir = path38.resolve(process.cwd(), configDir);
+          const absoluteDir = path42.resolve(process.cwd(), configDir);
           return readdir(absoluteDir).then((files) => ({
             files,
             configDir,
@@ -61624,7 +61624,7 @@ var require_fs_migrations = __commonJS({
     function filterMigrations(migrationSource, migrations, loadExtensions) {
       return migrations.filter((migration) => {
         const migrationName = migrationSource.getMigrationName(migration);
-        const extension = path38.extname(migrationName);
+        const extension = path42.extname(migrationName);
         return loadExtensions.includes(extension);
       });
     }
@@ -61726,7 +61726,7 @@ var require_colorette = __commonJS({
       bgWhiteBright: init(107, 49)
     };
     var createColors = ({ useColor = isColorSupported } = {}) => useColor ? colors : Object.keys(colors).reduce(
-      (colors2, key) => ({ ...colors2, [key]: String }),
+      (colors2, key2) => ({ ...colors2, [key2]: String }),
       {}
     );
     var {
@@ -61986,7 +61986,7 @@ var require_timestamp = __commonJS({
 var require_MigrationGenerator = __commonJS({
   "node_modules/knex/lib/migrations/migrate/MigrationGenerator.js"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var { writeJsFileUsingTemplate } = require_template2();
     var { getMergedConfig } = require_migrator_configuration_merger();
     var { ensureDirectoryExists } = require_fs5();
@@ -62015,7 +62015,7 @@ var require_MigrationGenerator = __commonJS({
         return Promise.all(promises6);
       }
       _getStubPath() {
-        return this.config.stub || path38.join(__dirname, "stub", this.config.extension + ".stub");
+        return this.config.stub || path42.join(__dirname, "stub", this.config.extension + ".stub");
       }
       _getNewMigrationName(name28) {
         if (name28[0] === "-") name28 = name28.slice(1);
@@ -62025,7 +62025,7 @@ var require_MigrationGenerator = __commonJS({
         const fileName = this._getNewMigrationName(name28);
         const dirs = this._absoluteConfigDirs();
         const dir = dirs.slice(-1)[0];
-        return path38.join(dir, fileName);
+        return path42.join(dir, fileName);
       }
       // Write a new migration to disk, using the config and generated filename,
       // passing any `variables` given in the config to the template.
@@ -62047,7 +62047,7 @@ var require_MigrationGenerator = __commonJS({
               "Failed to resolve config file, knex cannot determine where to generate migrations"
             );
           }
-          return path38.resolve(process.cwd(), directory);
+          return path42.resolve(process.cwd(), directory);
         });
       }
     };
@@ -62689,13 +62689,13 @@ var require_includes = __commonJS({
 var require_fs_seeds = __commonJS({
   "node_modules/knex/lib/migrations/seed/sources/fs-seeds.js"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var flatten = require_flatten();
     var includes = require_includes();
     var { AbstractMigrationsLoader } = require_MigrationsLoader();
     var { getFilepathsInFolder } = require_fs5();
     var filterByLoadExtensions = (extensions) => (value) => {
-      const extension = path38.extname(value);
+      const extension = path42.extname(value);
       return includes(extensions, extension);
     };
     var FsSeeds = class extends AbstractMigrationsLoader {
@@ -62707,7 +62707,7 @@ var require_fs_seeds = __commonJS({
               "Empty value passed as a directory for Seeder, this is not supported."
             );
           }
-          return path38.resolve(process.cwd(), directory);
+          return path42.resolve(process.cwd(), directory);
         });
       }
       async getSeeds(config3) {
@@ -62724,7 +62724,7 @@ var require_fs_seeds = __commonJS({
           files.sort();
         }
         if (specific) {
-          files = files.filter((file3) => path38.basename(file3) === specific);
+          files = files.filter((file3) => path42.basename(file3) === specific);
           if (files.length === 0) {
             throw new Error(
               `Invalid argument provided: the specific seed "${specific}" does not exist.`
@@ -62801,7 +62801,7 @@ var require_seeder_configuration_merger = __commonJS({
 var require_Seeder = __commonJS({
   "node_modules/knex/lib/migrations/seed/Seeder.js"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var { ensureDirectoryExists } = require_fs5();
     var { writeJsFileUsingTemplate } = require_template2();
     var { yyyymmddhhmmss } = require_timestamp();
@@ -62852,7 +62852,7 @@ var require_Seeder = __commonJS({
         return filepath;
       }
       _getStubPath() {
-        return this.config.stub || path38.join(__dirname, "stub", this.config.extension + ".stub");
+        return this.config.stub || path42.join(__dirname, "stub", this.config.extension + ".stub");
       }
       _getNewStubFileName(name28) {
         if (name28[0] === "-") name28 = name28.slice(1);
@@ -62867,7 +62867,7 @@ var require_Seeder = __commonJS({
           this.config.logger
         );
         const dir = dirs.slice(-1)[0];
-        return path38.join(dir, fileName);
+        return path42.join(dir, fileName);
       }
       // Write a new seed to disk, using the config and generated filename,
       // passing any `variables` given in the config to the template.
@@ -63128,9 +63128,9 @@ var require_assignMergeValue = __commonJS({
     "use strict";
     var baseAssignValue = require_baseAssignValue();
     var eq2 = require_eq();
-    function assignMergeValue(object4, key, value) {
-      if (value !== void 0 && !eq2(object4[key], value) || value === void 0 && !(key in object4)) {
-        baseAssignValue(object4, key, value);
+    function assignMergeValue(object4, key2, value) {
+      if (value !== void 0 && !eq2(object4[key2], value) || value === void 0 && !(key2 in object4)) {
+        baseAssignValue(object4, key2, value);
       }
     }
     module2.exports = assignMergeValue;
@@ -63141,14 +63141,14 @@ var require_assignMergeValue = __commonJS({
 var require_safeGet = __commonJS({
   "node_modules/lodash/_safeGet.js"(exports2, module2) {
     "use strict";
-    function safeGet(object4, key) {
-      if (key === "constructor" && typeof object4[key] === "function") {
+    function safeGet(object4, key2) {
+      if (key2 === "constructor" && typeof object4[key2] === "function") {
         return;
       }
-      if (key == "__proto__") {
+      if (key2 == "__proto__") {
         return;
       }
-      return object4[key];
+      return object4[key2];
     }
     module2.exports = safeGet;
   }
@@ -63186,13 +63186,13 @@ var require_baseMergeDeep = __commonJS({
     var isTypedArray3 = require_isTypedArray();
     var safeGet = require_safeGet();
     var toPlainObject = require_toPlainObject();
-    function baseMergeDeep(object4, source, key, srcIndex, mergeFunc, customizer, stack) {
-      var objValue = safeGet(object4, key), srcValue = safeGet(source, key), stacked = stack.get(srcValue);
+    function baseMergeDeep(object4, source, key2, srcIndex, mergeFunc, customizer, stack) {
+      var objValue = safeGet(object4, key2), srcValue = safeGet(source, key2), stacked = stack.get(srcValue);
       if (stacked) {
-        assignMergeValue(object4, key, stacked);
+        assignMergeValue(object4, key2, stacked);
         return;
       }
-      var newValue = customizer ? customizer(objValue, srcValue, key + "", object4, source, stack) : void 0;
+      var newValue = customizer ? customizer(objValue, srcValue, key2 + "", object4, source, stack) : void 0;
       var isCommon = newValue === void 0;
       if (isCommon) {
         var isArr = isArray3(srcValue), isBuff = !isArr && isBuffer3(srcValue), isTyped = !isArr && !isBuff && isTypedArray3(srcValue);
@@ -63227,7 +63227,7 @@ var require_baseMergeDeep = __commonJS({
         mergeFunc(newValue, srcValue, srcIndex, customizer, stack);
         stack["delete"](srcValue);
       }
-      assignMergeValue(object4, key, newValue);
+      assignMergeValue(object4, key2, newValue);
     }
     module2.exports = baseMergeDeep;
   }
@@ -63248,16 +63248,16 @@ var require_baseMerge = __commonJS({
       if (object4 === source) {
         return;
       }
-      baseFor(source, function(srcValue, key) {
+      baseFor(source, function(srcValue, key2) {
         stack || (stack = new Stack2());
         if (isObject5(srcValue)) {
-          baseMergeDeep(object4, source, key, srcIndex, baseMerge, customizer, stack);
+          baseMergeDeep(object4, source, key2, srcIndex, baseMerge, customizer, stack);
         } else {
-          var newValue = customizer ? customizer(safeGet(object4, key), srcValue, key + "", object4, source, stack) : void 0;
+          var newValue = customizer ? customizer(safeGet(object4, key2), srcValue, key2 + "", object4, source, stack) : void 0;
           if (newValue === void 0) {
             newValue = srcValue;
           }
-          assignMergeValue(object4, key, newValue);
+          assignMergeValue(object4, key2, newValue);
         }
       }, keysIn);
     }
@@ -63406,7 +63406,7 @@ var require_security = __commonJS({
     }
     var hasOwn = /* @__PURE__ */ (() => {
       const hasOwnProperty11 = Object.prototype.hasOwnProperty;
-      return (obj, key) => hasOwnProperty11.call(obj, key);
+      return (obj, key2) => hasOwnProperty11.call(obj, key2);
     })();
     module2.exports = {
       setHiddenProperty,
@@ -63624,8 +63624,8 @@ var require_make_knex = __commonJS({
       knex3.client = client;
       knex3.userParams = {};
       const ee = new EventEmitter3();
-      for (const key in ee) {
-        knex3[key] = ee[key];
+      for (const key2 in ee) {
+        knex3[key2] = ee[key2];
       }
       if (knex3._internalListeners) {
         knex3._internalListeners.forEach(({ eventName, listener }) => {
@@ -64105,9 +64105,9 @@ var require_assign = __commonJS({
         copyObject(source, keys2(source), object4);
         return;
       }
-      for (var key in source) {
-        if (hasOwnProperty11.call(source, key)) {
-          assignValue(object4, key, source[key]);
+      for (var key2 in source) {
+        if (hasOwnProperty11.call(source, key2)) {
+          assignValue(object4, key2, source[key2]);
         }
       }
     });
@@ -64447,9 +64447,9 @@ var require_helpers = __commonJS({
           argContainsUndefined = containsUndefined(mixed[i]);
         }
       } else if (isPlainObject4(mixed)) {
-        Object.keys(mixed).forEach((key) => {
+        Object.keys(mixed).forEach((key2) => {
           if (!argContainsUndefined) {
-            argContainsUndefined = containsUndefined(mixed[key]);
+            argContainsUndefined = containsUndefined(mixed[key2]);
           }
         });
       } else {
@@ -64466,9 +64466,9 @@ var require_helpers = __commonJS({
           }
         });
       } else if (isPlainObject4(mixed)) {
-        Object.keys(mixed).forEach((key) => {
-          if (containsUndefined(mixed[key])) {
-            indices.push(key);
+        Object.keys(mixed).forEach((key2) => {
+          if (containsUndefined(mixed[key2])) {
+            indices.push(key2);
           }
         });
       } else {
@@ -65305,8 +65305,8 @@ var require_querybuilder = __commonJS({
         const obj = column;
         if (isObject5(obj) && !obj.isRawInstance) {
           return this.whereWrapped(function() {
-            for (const key in obj) {
-              this.andWhere(key, obj[key]);
+            for (const key2 in obj) {
+              this.andWhere(key2, obj[key2]);
             }
           });
         }
@@ -65317,8 +65317,8 @@ var require_querybuilder = __commonJS({
         const obj = column;
         if (isObject5(obj) && !obj.isRawInstance) {
           return this.whereWrapped(function() {
-            for (const key in obj) {
-              this.andWhereColumn(key, "=", obj[key]);
+            for (const key2 in obj) {
+              this.andWhereColumn(key2, "=", obj[key2]);
             }
           });
         }
@@ -65349,8 +65349,8 @@ var require_querybuilder = __commonJS({
       _objectWhere(obj) {
         const boolVal = this._bool();
         const notVal = this._not() ? "Not" : "";
-        for (const key in obj) {
-          this[boolVal + "Where" + notVal](key, obj[key]);
+        for (const key2 in obj) {
+          this[boolVal + "Where" + notVal](key2, obj[key2]);
         }
         return this;
       }
@@ -65644,8 +65644,8 @@ var require_querybuilder = __commonJS({
         const obj = column;
         if (isObject5(obj) && !obj.isRawInstance) {
           return this.havingWrapped(function() {
-            for (const key in obj) {
-              this.andHaving(key, obj[key]);
+            for (const key2 in obj) {
+              this.andHaving(key2, obj[key2]);
             }
           });
         }
@@ -65849,8 +65849,8 @@ var require_querybuilder = __commonJS({
       // Increments a column's value by the specified amount.
       increment(column, amount = 1) {
         if (isObject5(column)) {
-          for (const key in column) {
-            this._counter(key, column[key]);
+          for (const key2 in column) {
+            this._counter(key2, column[key2]);
           }
           return this;
         }
@@ -65859,8 +65859,8 @@ var require_querybuilder = __commonJS({
       // Decrements a column's value by the specified amount.
       decrement(column, amount = 1) {
         if (isObject5(column)) {
-          for (const key in column) {
-            this._counter(key, -column[key]);
+          for (const key2 in column) {
+            this._counter(key2, -column[key2]);
           }
           return this;
         }
@@ -66074,14 +66074,14 @@ var require_querybuilder = __commonJS({
       }
       // Takes a JS object of methods to call and calls them
       fromJS(obj) {
-        each(obj, (val, key) => {
-          if (typeof this[key] !== "function") {
-            this.client.logger.warn(`Knex Error: unknown key ${key}`);
+        each(obj, (val, key2) => {
+          if (typeof this[key2] !== "function") {
+            this.client.logger.warn(`Knex Error: unknown key ${key2}`);
           }
           if (Array.isArray(val)) {
-            this[key].apply(this, val);
+            this[key2].apply(this, val);
           } else {
-            this[key](val);
+            this[key2](val);
           }
         });
         return this;
@@ -66113,11 +66113,11 @@ var require_querybuilder = __commonJS({
       }
       jsonExtract() {
         const column = arguments[0];
-        let path38;
+        let path42;
         let alias;
         let singleValue = true;
         if (arguments.length >= 2) {
-          path38 = arguments[1];
+          path42 = arguments[1];
         }
         if (arguments.length >= 3) {
           alias = arguments[2];
@@ -66130,32 +66130,32 @@ var require_querybuilder = __commonJS({
         }
         return this._json("jsonExtract", {
           column,
-          path: path38,
+          path: path42,
           alias,
           singleValue
           // boolean used only in MSSQL to use function for extract value instead of object/array.
         });
       }
-      jsonSet(column, path38, value, alias) {
+      jsonSet(column, path42, value, alias) {
         return this._json("jsonSet", {
           column,
-          path: path38,
+          path: path42,
           value,
           alias
         });
       }
-      jsonInsert(column, path38, value, alias) {
+      jsonInsert(column, path42, value, alias) {
         return this._json("jsonInsert", {
           column,
-          path: path38,
+          path: path42,
           value,
           alias
         });
       }
-      jsonRemove(column, path38, alias) {
+      jsonRemove(column, path42, alias) {
         return this._json("jsonRemove", {
           column,
-          path: path38,
+          path: path42,
           alias
         });
       }
@@ -66194,12 +66194,12 @@ var require_querybuilder = __commonJS({
       orWhereNotJsonObject(column, value) {
         return this._bool("or").whereNotJsonObject(column, value);
       }
-      whereJsonPath(column, path38, operator, value) {
-        this._whereJsonWrappedValue("whereJsonPath", column, value, operator, path38);
+      whereJsonPath(column, path42, operator, value) {
+        this._whereJsonWrappedValue("whereJsonPath", column, value, operator, path42);
         return this;
       }
-      orWhereJsonPath(column, path38, operator, value) {
-        return this._bool("or").whereJsonPath(column, path38, operator, value);
+      orWhereJsonPath(column, path42, operator, value) {
+        return this._bool("or").whereJsonPath(column, path42, operator, value);
       }
       // Json superset wheres
       whereJsonSupersetOf(column, value) {
@@ -66607,11 +66607,11 @@ var require_wrappingFormatter = __commonJS({
         ["?|", "\\?|"],
         ["?&", "\\?&"]
       ],
-      (result, key) => {
-        if (Array.isArray(key)) {
-          result[key[0]] = key[1];
+      (result, key2) => {
+        if (Array.isArray(key2)) {
+          result[key2[0]] = key2[1];
         } else {
-          result[key] = key;
+          result[key2] = key2;
         }
       },
       {}
@@ -66817,8 +66817,8 @@ var require_rawFormatter = __commonJS({
           return p1;
         }
         const part = p22 || p3 || p4;
-        const key = match.trim();
-        const isIdentifier = key[key.length - 1] === ":";
+        const key2 = match.trim();
+        const isIdentifier = key2[key2.length - 1] === ":";
         const value = values[part];
         if (value === void 0) {
           if (Object.prototype.hasOwnProperty.call(values, part)) {
@@ -67029,7 +67029,7 @@ var require_baseAggregator = __commonJS({
     "use strict";
     var baseEach = require_baseEach();
     function baseAggregator(collection, setter, iteratee, accumulator) {
-      baseEach(collection, function(value, key, collection2) {
+      baseEach(collection, function(value, key2, collection2) {
         setter(accumulator, value, iteratee(value), collection2);
       });
       return accumulator;
@@ -67064,11 +67064,11 @@ var require_groupBy = __commonJS({
     var createAggregator = require_createAggregator();
     var objectProto13 = Object.prototype;
     var hasOwnProperty11 = objectProto13.hasOwnProperty;
-    var groupBy = createAggregator(function(result, value, key) {
-      if (hasOwnProperty11.call(result, key)) {
-        result[key].push(value);
+    var groupBy = createAggregator(function(result, value, key2) {
+      if (hasOwnProperty11.call(result, key2)) {
+        result[key2].push(value);
       } else {
-        baseAssignValue(result, key, [value]);
+        baseAssignValue(result, key2, [value]);
       }
     });
     module2.exports = groupBy;
@@ -67081,8 +67081,8 @@ var require_baseHas = __commonJS({
     "use strict";
     var objectProto13 = Object.prototype;
     var hasOwnProperty11 = objectProto13.hasOwnProperty;
-    function baseHas(object4, key) {
-      return object4 != null && hasOwnProperty11.call(object4, key);
+    function baseHas(object4, key2) {
+      return object4 != null && hasOwnProperty11.call(object4, key2);
     }
     module2.exports = baseHas;
   }
@@ -67094,8 +67094,8 @@ var require_has = __commonJS({
     "use strict";
     var baseHas = require_baseHas();
     var hasPath2 = require_hasPath();
-    function has(object4, path38) {
-      return object4 != null && hasPath2(object4, path38, baseHas);
+    function has(object4, path42) {
+      return object4 != null && hasPath2(object4, path42, baseHas);
     }
     module2.exports = has;
   }
@@ -67126,26 +67126,26 @@ var require_baseSet = __commonJS({
     var isIndex2 = require_isIndex();
     var isObject5 = require_isObject();
     var toKey2 = require_toKey();
-    function baseSet(object4, path38, value, customizer) {
+    function baseSet(object4, path42, value, customizer) {
       if (!isObject5(object4)) {
         return object4;
       }
-      path38 = castPath2(path38, object4);
-      var index = -1, length = path38.length, lastIndex = length - 1, nested = object4;
+      path42 = castPath2(path42, object4);
+      var index = -1, length = path42.length, lastIndex = length - 1, nested = object4;
       while (nested != null && ++index < length) {
-        var key = toKey2(path38[index]), newValue = value;
-        if (key === "__proto__" || key === "constructor" || key === "prototype") {
+        var key2 = toKey2(path42[index]), newValue = value;
+        if (key2 === "__proto__" || key2 === "constructor" || key2 === "prototype") {
           return object4;
         }
         if (index != lastIndex) {
-          var objValue = nested[key];
-          newValue = customizer ? customizer(objValue, key, nested) : void 0;
+          var objValue = nested[key2];
+          newValue = customizer ? customizer(objValue, key2, nested) : void 0;
           if (newValue === void 0) {
-            newValue = isObject5(objValue) ? objValue : isIndex2(path38[index + 1]) ? [] : {};
+            newValue = isObject5(objValue) ? objValue : isIndex2(path42[index + 1]) ? [] : {};
           }
         }
-        assignValue(nested, key, newValue);
-        nested = nested[key];
+        assignValue(nested, key2, newValue);
+        nested = nested[key2];
       }
       return object4;
     }
@@ -67163,9 +67163,9 @@ var require_basePickBy = __commonJS({
     function basePickBy(object4, paths, predicate) {
       var index = -1, length = paths.length, result = {};
       while (++index < length) {
-        var path38 = paths[index], value = baseGet2(object4, path38);
-        if (predicate(value, path38)) {
-          baseSet(result, castPath2(path38, object4), value);
+        var path42 = paths[index], value = baseGet2(object4, path42);
+        if (predicate(value, path42)) {
+          baseSet(result, castPath2(path42, object4), value);
         }
       }
       return result;
@@ -67190,8 +67190,8 @@ var require_pickBy = __commonJS({
         return [prop];
       });
       predicate = baseIteratee2(predicate);
-      return basePickBy(object4, props, function(value, path38) {
-        return predicate(value, path38[0]);
+      return basePickBy(object4, props, function(value, path42) {
+        return predicate(value, path42[0]);
       });
     }
     module2.exports = pickBy;
@@ -68235,18 +68235,18 @@ var require_querycompiler = __commonJS({
           const keys2 = Object.keys(data[i]);
           let j = -1;
           while (++j < keys2.length) {
-            const key = keys2[j];
-            let idx = columns.indexOf(key);
+            const key2 = keys2[j];
+            let idx = columns.indexOf(key2);
             if (idx === -1) {
-              columns = columns.concat(key).sort();
-              idx = columns.indexOf(key);
+              columns = columns.concat(key2).sort();
+              idx = columns.indexOf(key2);
               let k = -1;
               while (++k < values.length) {
                 values[k].splice(idx, 0, void 0);
               }
               row.splice(idx, 0, void 0);
             }
-            row[idx] = data[i][key];
+            row[idx] = data[i][key2];
           }
           values.push(row);
         }
@@ -69528,9 +69528,9 @@ var require_columnbuilder = __commonJS({
       defaultsTo: "defaultTo"
     };
     modifiers.forEach(function(method) {
-      const key = aliasMethod[method] || method;
+      const key2 = aliasMethod[method] || method;
       ColumnBuilder.prototype[method] = function() {
-        this._modifiers[key] = toArray2(arguments);
+        this._modifiers[key2] = toArray2(arguments);
         return this;
       };
     });
@@ -70643,15 +70643,15 @@ var require_pg_connection_string = __commonJS({
       if (config3.sslcert || config3.sslkey || config3.sslrootcert || config3.sslmode) {
         config3.ssl = {};
       }
-      const fs43 = config3.sslcert || config3.sslkey || config3.sslrootcert ? require("fs") : null;
+      const fs47 = config3.sslcert || config3.sslkey || config3.sslrootcert ? require("fs") : null;
       if (config3.sslcert) {
-        config3.ssl.cert = fs43.readFileSync(config3.sslcert).toString();
+        config3.ssl.cert = fs47.readFileSync(config3.sslcert).toString();
       }
       if (config3.sslkey) {
-        config3.ssl.key = fs43.readFileSync(config3.sslkey).toString();
+        config3.ssl.key = fs47.readFileSync(config3.sslkey).toString();
       }
       if (config3.sslrootcert) {
-        config3.ssl.ca = fs43.readFileSync(config3.sslrootcert).toString();
+        config3.ssl.ca = fs47.readFileSync(config3.sslrootcert).toString();
       }
       switch (config3.sslmode) {
         case "disable": {
@@ -70735,18 +70735,18 @@ var require_parse_connection = __commonJS({
         connection.password = decodeURIComponent(parsed.password);
       }
       if (parsed.searchParams) {
-        for (const [key, value] of parsed.searchParams.entries()) {
+        for (const [key2, value] of parsed.searchParams.entries()) {
           const isNestedConfigSupported = ["mysql:", "mariadb:", "mssql:"].includes(
             parsed.protocol
           );
           if (isNestedConfigSupported) {
             try {
-              connection[key] = JSON.parse(value);
+              connection[key2] = JSON.parse(value);
             } catch (err) {
-              connection[key] = value;
+              connection[key2] = value;
             }
           } else {
-            connection[key] = value;
+            connection[key2] = value;
           }
         }
       }
@@ -74306,26 +74306,26 @@ var require_postgres = __commonJS({
         });
       }
       setSchemaSearchPath(connection, searchPath) {
-        let path38 = searchPath || this.searchPath;
-        if (!path38) return Promise.resolve(true);
-        if (!Array.isArray(path38) && !isString2(path38)) {
+        let path42 = searchPath || this.searchPath;
+        if (!path42) return Promise.resolve(true);
+        if (!Array.isArray(path42) && !isString2(path42)) {
           throw new TypeError(
-            `knex: Expected searchPath to be Array/String, got: ${typeof path38}`
+            `knex: Expected searchPath to be Array/String, got: ${typeof path42}`
           );
         }
-        if (isString2(path38)) {
-          if (path38.includes(",")) {
-            const parts = path38.split(",");
+        if (isString2(path42)) {
+          if (path42.includes(",")) {
+            const parts = path42.split(",");
             const arraySyntax = `[${parts.map((searchPath2) => `'${searchPath2}'`).join(", ")}]`;
             this.logger.warn(
-              `Detected comma in searchPath "${path38}".If you are trying to specify multiple schemas, use Array syntax: ${arraySyntax}`
+              `Detected comma in searchPath "${path42}".If you are trying to specify multiple schemas, use Array syntax: ${arraySyntax}`
             );
           }
-          path38 = [path38];
+          path42 = [path42];
         }
-        path38 = path38.map((schemaName) => `"${schemaName}"`).join(",");
+        path42 = path42.map((schemaName) => `"${schemaName}"`).join(",");
         return new Promise(function(resolver, rejecter) {
-          connection.query(`set search_path to ${path38}`, function(err) {
+          connection.query(`set search_path to ${path42}`, function(err) {
             if (err) return rejecter(err);
             resolver(true);
           });
@@ -74957,7 +74957,7 @@ var require_transaction2 = __commonJS({
       SNAPSHOT: 5
     };
     var humanReadableKeys = Object.keys(isolationEnum).map(
-      (key) => key.toLowerCase().replace("_", " ")
+      (key2) => key2.toLowerCase().replace("_", " ")
     );
   }
 });
@@ -77608,7 +77608,7 @@ var require_utils10 = __commonJS({
         }
       }
       generateCombinedName(logger3, postfix, name28, subNames) {
-        const crypto8 = require("crypto");
+        const crypto9 = require("crypto");
         if (!Array.isArray(subNames)) subNames = subNames ? [subNames] : [];
         const table = name28.replace(/\.|-/g, "_");
         const subNamesPart = subNames.join("_");
@@ -77617,7 +77617,7 @@ var require_utils10 = __commonJS({
           logger3.warn(
             `Automatically generated name "${result}" exceeds ${this.limit} character limit for Oracle Database ${this.oracleVersion}. Using base64 encoded sha1 of that name instead.`
           );
-          result = crypto8.createHash("sha1").update(result).digest("base64").replace("=", "");
+          result = crypto9.createHash("sha1").update(result).digest("base64").replace("=", "");
         }
         return result;
       }
@@ -78947,18 +78947,18 @@ var require_oracledb_querycompiler = __commonJS({
           } else {
             outBinding[index] = clone3(returning);
           }
-          each(values, function(value, key) {
+          each(values, function(value, key2) {
             if (value instanceof Buffer) {
-              values[key] = new BlobHelper(key, value);
-              const blobIndex = outBinding[index].indexOf(key);
+              values[key2] = new BlobHelper(key2, value);
+              const blobIndex = outBinding[index].indexOf(key2);
               if (blobIndex >= 0) {
                 outBinding[index].splice(blobIndex, 1);
-                values[key].returning = true;
+                values[key2].returning = true;
               }
-              outBinding[index].push(values[key]);
+              outBinding[index].push(values[key2]);
             }
             if (value === void 0) {
-              delete params[index][key];
+              delete params[index][key2];
             }
           });
         });
@@ -80361,8 +80361,8 @@ async function initEmbedding() {
   if (extractor) return;
   const modelConfigData = await db_default("o_setting").whereIn("key", ["modelOnnxFile", "modelDtype"]);
   const modelObj = {};
-  Object.entries(modelConfigData).forEach(([key, value]) => {
-    modelObj[key] = value;
+  Object.entries(modelConfigData).forEach(([key2, value]) => {
+    modelObj[key2] = value;
   });
   let modelOnnxFile = modelObj?.modelOnnxFile ? JSON.parse(modelObj.modelOnnxFile) : ["all-MiniLM-L6-v2", "onnx", "model_fp16.onnx"];
   let modelDtype = modelObj?.modelDtype ?? "fp16";
@@ -80785,6 +80785,37 @@ var init_initDB = __esm({
             table.integer("createdAt");
             table.integer("updatedAt");
             table.text("errorReason");
+            table.integer("lastVerifiedAt");
+            table.text("lastSmokeResultJson");
+            table.text("complianceStatus");
+            table.integer("cleanupAfter");
+            table.primary(["id"]);
+            table.unique(["id"]);
+          }
+        },
+        {
+          name: "o_sr_job",
+          builder: (table) => {
+            table.integer("id").notNullable();
+            table.integer("taskId");
+            table.text("jobType");
+            table.text("status");
+            table.integer("progress");
+            table.text("stage");
+            table.text("inputJson");
+            table.text("resultJson");
+            table.text("errorReason");
+            table.integer("attempt");
+            table.integer("parentJobId");
+            table.integer("createdAt");
+            table.integer("updatedAt");
+            table.integer("startedAt");
+            table.integer("finishedAt");
+            table.text("lockedBy");
+            table.integer("lockedAt");
+            table.integer("nextRunAt");
+            table.integer("recoverable");
+            table.integer("cancelRequested");
             table.primary(["id"]);
             table.unique(["id"]);
           }
@@ -80977,6 +81008,176 @@ var init_initDB = __esm({
             table.integer("storyboardId");
             table.integer("trackId");
             table.integer("createdAt");
+            table.primary(["id"]);
+            table.unique(["id"]);
+          }
+        },
+        {
+          name: "o_sr_shot_adaptation",
+          builder: (table) => {
+            table.integer("id").notNullable();
+            table.integer("taskId");
+            table.text("shotId");
+            table.text("level");
+            table.text("strategy");
+            table.float("assetMatchScore");
+            table.text("requiredSlotsJson");
+            table.text("matchedAssetsJson");
+            table.text("adaptedVisual");
+            table.text("blockedReasonsJson");
+            table.text("downgradeReasonsJson");
+            table.integer("createdAt");
+            table.integer("updatedAt");
+            table.primary(["id"]);
+            table.unique(["id"]);
+          }
+        },
+        {
+          name: "o_sr_provider_capability",
+          builder: (table) => {
+            table.integer("id").notNullable();
+            table.text("providerId");
+            table.text("providerType");
+            table.text("displayName");
+            table.text("baseUrl");
+            table.text("capabilityJson");
+            table.integer("enabled");
+            table.integer("createdAt");
+            table.integer("updatedAt");
+            table.primary(["id"]);
+            table.unique(["id"]);
+          }
+        },
+        {
+          name: "o_sr_model_probe_result",
+          builder: (table) => {
+            table.integer("id").notNullable();
+            table.text("providerId");
+            table.text("model");
+            table.text("status");
+            table.integer("latencyMs");
+            table.text("errorReason");
+            table.text("resultJson");
+            table.integer("createdAt");
+            table.primary(["id"]);
+            table.unique(["id"]);
+          }
+        },
+        {
+          name: "o_sr_model_route",
+          builder: (table) => {
+            table.integer("id").notNullable();
+            table.integer("taskId");
+            table.text("shotId");
+            table.text("selectedProviderId");
+            table.text("selectedModel");
+            table.text("routeStatus");
+            table.text("requiredCapabilitiesJson");
+            table.text("fallbackPlanJson");
+            table.text("downgradeReasonsJson");
+            table.integer("createdAt");
+            table.integer("updatedAt");
+            table.primary(["id"]);
+            table.unique(["id"]);
+          }
+        },
+        {
+          name: "o_sr_generation_job",
+          builder: (table) => {
+            table.integer("id").notNullable();
+            table.integer("taskId");
+            table.text("shotId");
+            table.text("providerId");
+            table.text("model");
+            table.text("status");
+            table.integer("attempt");
+            table.integer("candidateCount");
+            table.text("inputPackageJson");
+            table.text("resultVideoPath");
+            table.text("errorReason");
+            table.text("costJson");
+            table.integer("createdAt");
+            table.integer("updatedAt");
+            table.integer("startedAt");
+            table.integer("finishedAt");
+            table.primary(["id"]);
+            table.unique(["id"]);
+          }
+        },
+        {
+          name: "o_sr_generation_candidate",
+          builder: (table) => {
+            table.integer("id").notNullable();
+            table.integer("taskId");
+            table.text("shotId");
+            table.integer("generationJobId");
+            table.integer("candidateIndex");
+            table.text("status");
+            table.text("providerId");
+            table.text("model");
+            table.text("videoPath");
+            table.text("thumbnailPath");
+            table.float("durationSec");
+            table.float("qualityScore");
+            table.integer("selected");
+            table.text("errorReason");
+            table.text("metadataJson");
+            table.integer("createdAt");
+            table.integer("updatedAt");
+            table.primary(["id"]);
+            table.unique(["id"]);
+          }
+        },
+        {
+          name: "o_sr_generation_cost",
+          builder: (table) => {
+            table.integer("id").notNullable();
+            table.integer("taskId");
+            table.text("shotId");
+            table.integer("generationJobId");
+            table.integer("candidateId");
+            table.text("providerId");
+            table.text("model");
+            table.integer("latencyMs");
+            table.integer("requestSizeBytes");
+            table.float("estimatedCost");
+            table.text("errorCode");
+            table.text("errorReason");
+            table.integer("createdAt");
+            table.primary(["id"]);
+            table.unique(["id"]);
+          }
+        },
+        {
+          name: "o_sr_quality_report",
+          builder: (table) => {
+            table.integer("id").notNullable();
+            table.integer("taskId");
+            table.text("shotId");
+            table.integer("candidateId");
+            table.text("status");
+            table.float("score");
+            table.text("reportJson");
+            table.integer("createdAt");
+            table.integer("updatedAt");
+            table.primary(["id"]);
+            table.unique(["id"]);
+          }
+        },
+        {
+          name: "o_sr_timeline_export",
+          builder: (table) => {
+            table.integer("id").notNullable();
+            table.integer("taskId");
+            table.text("status");
+            table.text("outputPath");
+            table.text("reportJson");
+            table.text("subtitleMode");
+            table.text("candidateIdsJson");
+            table.text("errorReason");
+            table.integer("expiresAt");
+            table.integer("createdAt");
+            table.integer("updatedAt");
             table.primary(["id"]);
             table.unique(["id"]);
           }
@@ -81809,6 +82010,10 @@ A medium tracking shot follows the woman from behind as she ascends and approach
             table.string("promptState");
             table.integer("audioBindState");
             table.text("promptErrorReason");
+            table.text("licenseType");
+            table.text("licenseNote");
+            table.text("sourceOwner");
+            table.integer("commercialAllowed");
             table.primary(["id"]);
             table.unique(["id"]);
           },
@@ -94135,8 +94340,8 @@ var require_JSXTransformer = __commonJS({
         }
         if (this.isAutomaticRuntime) {
           if (this.importProcessor) {
-            for (const [path38, resolvedName] of Object.entries(this.cjsAutomaticModuleNameResolutions)) {
-              prefix += `var ${resolvedName} = require("${path38}");`;
+            for (const [path42, resolvedName] of Object.entries(this.cjsAutomaticModuleNameResolutions)) {
+              prefix += `var ${resolvedName} = require("${path42}");`;
             }
           } else {
             const { createElement: createElementResolution, ...otherResolutions } = this.esmAutomaticImportNameResolutions;
@@ -94329,11 +94534,11 @@ var require_JSXTransformer = __commonJS({
       }
       claimAutoImportedName(funcName, importPathSuffix) {
         if (this.importProcessor) {
-          const path38 = this.jsxImportSource + importPathSuffix;
-          if (!this.cjsAutomaticModuleNameResolutions[path38]) {
-            this.cjsAutomaticModuleNameResolutions[path38] = this.importProcessor.getFreeIdentifierForPath(path38);
+          const path42 = this.jsxImportSource + importPathSuffix;
+          if (!this.cjsAutomaticModuleNameResolutions[path42]) {
+            this.cjsAutomaticModuleNameResolutions[path42] = this.importProcessor.getFreeIdentifierForPath(path42);
           }
-          return `${this.cjsAutomaticModuleNameResolutions[path38]}.${funcName}`;
+          return `${this.cjsAutomaticModuleNameResolutions[path42]}.${funcName}`;
         } else {
           if (!this.esmAutomaticImportNameResolutions[funcName]) {
             this.esmAutomaticImportNameResolutions[funcName] = this.nameManager.claimFreeName(
@@ -94769,7 +94974,7 @@ var require_CJSImportProcessor = __commonJS({
        */
       pruneTypeOnlyImports() {
         this.nonTypeIdentifiers = _getNonTypeIdentifiers.getNonTypeIdentifiers.call(void 0, this.tokens, this.options);
-        for (const [path38, importInfo] of this.importInfoByPath.entries()) {
+        for (const [path42, importInfo] of this.importInfoByPath.entries()) {
           if (importInfo.hasBareImport || importInfo.hasStarExport || importInfo.exportStarNames.length > 0 || importInfo.namedExports.length > 0) {
             continue;
           }
@@ -94779,7 +94984,7 @@ var require_CJSImportProcessor = __commonJS({
             ...importInfo.namedImports.map(({ localName }) => localName)
           ];
           if (names.every((name28) => this.shouldAutomaticallyElideImportedName(name28))) {
-            this.importsToReplace.set(path38, "");
+            this.importsToReplace.set(path42, "");
           }
         }
       }
@@ -94787,7 +94992,7 @@ var require_CJSImportProcessor = __commonJS({
         return this.isTypeScriptTransformEnabled && !this.keepUnusedImports && !this.nonTypeIdentifiers.has(name28);
       }
       generateImportReplacements() {
-        for (const [path38, importInfo] of this.importInfoByPath.entries()) {
+        for (const [path42, importInfo] of this.importInfoByPath.entries()) {
           const {
             defaultNames,
             wildcardNames,
@@ -94797,17 +95002,17 @@ var require_CJSImportProcessor = __commonJS({
             hasStarExport
           } = importInfo;
           if (defaultNames.length === 0 && wildcardNames.length === 0 && namedImports.length === 0 && namedExports.length === 0 && exportStarNames.length === 0 && !hasStarExport) {
-            this.importsToReplace.set(path38, `require('${path38}');`);
+            this.importsToReplace.set(path42, `require('${path42}');`);
             continue;
           }
-          const primaryImportName = this.getFreeIdentifierForPath(path38);
+          const primaryImportName = this.getFreeIdentifierForPath(path42);
           let secondaryImportName;
           if (this.enableLegacyTypeScriptModuleInterop) {
             secondaryImportName = primaryImportName;
           } else {
-            secondaryImportName = wildcardNames.length > 0 ? wildcardNames[0] : this.getFreeIdentifierForPath(path38);
+            secondaryImportName = wildcardNames.length > 0 ? wildcardNames[0] : this.getFreeIdentifierForPath(path42);
           }
-          let requireCode = `var ${primaryImportName} = require('${path38}');`;
+          let requireCode = `var ${primaryImportName} = require('${path42}');`;
           if (wildcardNames.length > 0) {
             for (const wildcardName of wildcardNames) {
               const moduleExpr = this.enableLegacyTypeScriptModuleInterop ? primaryImportName : `${this.helperManager.getHelperName("interopRequireWildcard")}(${primaryImportName})`;
@@ -94835,7 +95040,7 @@ var require_CJSImportProcessor = __commonJS({
               "createStarExport"
             )}(${primaryImportName});`;
           }
-          this.importsToReplace.set(path38, requireCode);
+          this.importsToReplace.set(path42, requireCode);
           for (const defaultName of defaultNames) {
             this.identifierReplacements.set(defaultName, `${secondaryImportName}.default`);
           }
@@ -94844,8 +95049,8 @@ var require_CJSImportProcessor = __commonJS({
           }
         }
       }
-      getFreeIdentifierForPath(path38) {
-        const components = path38.split("/");
+      getFreeIdentifierForPath(path42) {
+        const components = path42.split("/");
         const lastComponent = components[components.length - 1];
         const baseName = lastComponent.replace(/\W/g, "");
         return this.nameManager.claimFreeName(`_${baseName}`);
@@ -94890,8 +95095,8 @@ var require_CJSImportProcessor = __commonJS({
         if (!this.tokens.matches1AtIndex(index, _types.TokenType.string)) {
           throw new Error("Expected string token at the end of import statement.");
         }
-        const path38 = this.tokens.stringValueAtIndex(index);
-        const importInfo = this.getImportInfo(path38);
+        const path42 = this.tokens.stringValueAtIndex(index);
+        const importInfo = this.getImportInfo(path42);
         importInfo.defaultNames.push(...defaultNames);
         importInfo.wildcardNames.push(...wildcardNames);
         importInfo.namedImports.push(...namedImports);
@@ -94958,8 +95163,8 @@ var require_CJSImportProcessor = __commonJS({
         if (!this.tokens.matches1AtIndex(index, _types.TokenType.string)) {
           throw new Error("Expected string token at the end of import statement.");
         }
-        const path38 = this.tokens.stringValueAtIndex(index);
-        const importInfo = this.getImportInfo(path38);
+        const path42 = this.tokens.stringValueAtIndex(index);
+        const importInfo = this.getImportInfo(path42);
         importInfo.namedExports.push(...namedImports);
       }
       preprocessExportStarAtIndex(index) {
@@ -94974,8 +95179,8 @@ var require_CJSImportProcessor = __commonJS({
         if (!this.tokens.matches1AtIndex(index, _types.TokenType.string)) {
           throw new Error("Expected string token at the end of star export statement.");
         }
-        const path38 = this.tokens.stringValueAtIndex(index);
-        const importInfo = this.getImportInfo(path38);
+        const path42 = this.tokens.stringValueAtIndex(index);
+        const importInfo = this.getImportInfo(path42);
         if (exportedName !== null) {
           importInfo.exportStarNames.push(exportedName);
         } else {
@@ -95015,8 +95220,8 @@ var require_CJSImportProcessor = __commonJS({
        * Get a mutable import info object for this path, creating one if it doesn't
        * exist yet.
        */
-      getImportInfo(path38) {
-        const existingInfo = this.importInfoByPath.get(path38);
+      getImportInfo(path42) {
+        const existingInfo = this.importInfoByPath.get(path42);
         if (existingInfo) {
           return existingInfo;
         }
@@ -95029,7 +95234,7 @@ var require_CJSImportProcessor = __commonJS({
           exportStarNames: [],
           hasStarExport: false
         };
-        this.importInfoByPath.set(path38, newInfo);
+        this.importInfoByPath.set(path42, newInfo);
         return newInfo;
       }
       addExportBinding(localName, exportedName) {
@@ -95109,9 +95314,9 @@ var require_sourcemap_codec_umd = __commonJS({
       };
       var __copyProps2 = (to, from, except, desc) => {
         if (from && typeof from === "object" || typeof from === "function") {
-          for (let key of __getOwnPropNames2(from))
-            if (!__hasOwnProp2.call(to, key) && key !== except)
-              __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+          for (let key2 of __getOwnPropNames2(from))
+            if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+              __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
         }
         return to;
       };
@@ -95569,16 +95774,16 @@ var require_resolve_uri_umd = __commonJS({
       }
       function parseFileUrl(input) {
         const match = fileRegex.exec(input);
-        const path38 = match[2];
-        return makeUrl("file:", "", match[1] || "", "", isAbsolutePath(path38) ? path38 : "/" + path38, match[3] || "", match[4] || "");
+        const path42 = match[2];
+        return makeUrl("file:", "", match[1] || "", "", isAbsolutePath(path42) ? path42 : "/" + path42, match[3] || "", match[4] || "");
       }
-      function makeUrl(scheme, user, host, port, path38, query, hash3) {
+      function makeUrl(scheme, user, host, port, path42, query, hash3) {
         return {
           scheme,
           user,
           host,
           port,
-          path: path38,
+          path: path42,
           query,
           hash: hash3,
           type: 7
@@ -95608,11 +95813,11 @@ var require_resolve_uri_umd = __commonJS({
         url4.type = input ? input.startsWith("?") ? 3 : input.startsWith("#") ? 2 : 4 : 1;
         return url4;
       }
-      function stripPathFilename(path38) {
-        if (path38.endsWith("/.."))
-          return path38;
-        const index = path38.lastIndexOf("/");
-        return path38.slice(0, index + 1);
+      function stripPathFilename(path42) {
+        if (path42.endsWith("/.."))
+          return path42;
+        const index = path42.lastIndexOf("/");
+        return path42.slice(0, index + 1);
       }
       function mergePaths(url4, base) {
         normalizePath(base, base.type);
@@ -95650,14 +95855,14 @@ var require_resolve_uri_umd = __commonJS({
           pieces[pointer++] = piece;
           positive++;
         }
-        let path38 = "";
+        let path42 = "";
         for (let i = 1; i < pointer; i++) {
-          path38 += "/" + pieces[i];
+          path42 += "/" + pieces[i];
         }
-        if (!path38 || addTrailingSlash && !path38.endsWith("/..")) {
-          path38 += "/";
+        if (!path42 || addTrailingSlash && !path42.endsWith("/..")) {
+          path42 += "/";
         }
-        url4.path = path38;
+        url4.path = path42;
       }
       function resolve3(input, base) {
         if (!input && !base)
@@ -95698,13 +95903,13 @@ var require_resolve_uri_umd = __commonJS({
           case 3:
             return queryHash;
           case 4: {
-            const path38 = url4.path.slice(1);
-            if (!path38)
+            const path42 = url4.path.slice(1);
+            if (!path42)
               return queryHash || ".";
-            if (isRelative(base || input) && !isRelative(path38)) {
-              return "./" + path38 + queryHash;
+            if (isRelative(base || input) && !isRelative(path42)) {
+              return "./" + path42 + queryHash;
             }
-            return path38 + queryHash;
+            return path42 + queryHash;
           }
           case 5:
             return url4.path + queryHash;
@@ -95756,9 +95961,9 @@ var require_trace_mapping_umd = __commonJS({
       };
       var __copyProps2 = (to, from, except, desc) => {
         if (from && typeof from === "object" || typeof from === "function") {
-          for (let key of __getOwnPropNames2(from))
-            if (!__hasOwnProp2.call(to, key) && key !== except)
-              __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+          for (let key2 of __getOwnPropNames2(from))
+            if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+              __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
         }
         return to;
       };
@@ -95804,10 +96009,10 @@ var require_trace_mapping_umd = __commonJS({
       module3.exports = __toCommonJS2(trace_mapping_exports);
       var import_sourcemap_codec = __toESM2(require_sourcemap_codec());
       var import_resolve_uri = __toESM2(require_resolve_uri());
-      function stripFilename(path38) {
-        if (!path38) return "";
-        const index = path38.lastIndexOf("/");
-        return path38.slice(0, index + 1);
+      function stripFilename(path42) {
+        if (!path42) return "";
+        const index = path42.lastIndexOf("/");
+        return path42.slice(0, index + 1);
       }
       function resolver(mapUrl, sourceRoot) {
         const from = stripFilename(mapUrl);
@@ -95912,11 +96117,11 @@ var require_trace_mapping_umd = __commonJS({
           lastIndex: -1
         };
       }
-      function memoizedBinarySearch(haystack, needle, state, key) {
+      function memoizedBinarySearch(haystack, needle, state, key2) {
         const { lastKey, lastNeedle, lastIndex } = state;
         let low = 0;
         let high = haystack.length - 1;
-        if (key === lastKey) {
+        if (key2 === lastKey) {
           if (needle === lastNeedle) {
             found = lastIndex !== -1 && haystack[lastIndex][COLUMN] === needle;
             return lastIndex;
@@ -95927,7 +96132,7 @@ var require_trace_mapping_umd = __commonJS({
             high = lastIndex;
           }
         }
-        state.lastKey = key;
+        state.lastKey = key2;
         state.lastNeedle = needle;
         return state.lastIndex = binarySearch(haystack, needle, low, high);
       }
@@ -96297,9 +96502,9 @@ var require_gen_mapping_umd = __commonJS({
       };
       var __copyProps2 = (to, from, except, desc) => {
         if (from && typeof from === "object" || typeof from === "function") {
-          for (let key of __getOwnPropNames2(from))
-            if (!__hasOwnProp2.call(to, key) && key !== except)
-              __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+          for (let key2 of __getOwnPropNames2(from))
+            if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+              __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
         }
         return to;
       };
@@ -96346,18 +96551,18 @@ var require_gen_mapping_umd = __commonJS({
       function cast(set3) {
         return set3;
       }
-      function get2(setarr, key) {
-        return cast(setarr)._indexes[key];
+      function get2(setarr, key2) {
+        return cast(setarr)._indexes[key2];
       }
-      function put(setarr, key) {
-        const index = get2(setarr, key);
+      function put(setarr, key2) {
+        const index = get2(setarr, key2);
         if (index !== void 0) return index;
         const { array: array4, _indexes: indexes } = cast(setarr);
-        const length = array4.push(key);
-        return indexes[key] = length - 1;
+        const length = array4.push(key2);
+        return indexes[key2] = length - 1;
       }
-      function remove(setarr, key) {
-        const index = get2(setarr, key);
+      function remove(setarr, key2) {
+        const index = get2(setarr, key2);
         if (index === void 0) return;
         const { array: array4, _indexes: indexes } = cast(setarr);
         for (let i = index + 1; i < array4.length; i++) {
@@ -96365,7 +96570,7 @@ var require_gen_mapping_umd = __commonJS({
           array4[i - 1] = k;
           indexes[k]--;
         }
-        indexes[key] = void 0;
+        indexes[key2] = void 0;
         array4.pop();
       }
       var import_sourcemap_codec = __toESM2(require_sourcemap_codec());
@@ -97016,9 +97221,9 @@ var require_util2 = __commonJS({
       /** @class */
       (function(_super) {
         __extends(VError2, _super);
-        function VError2(path38, message) {
+        function VError2(path42, message) {
           var _this = _super.call(this, message) || this;
-          _this.path = path38;
+          _this.path = path42;
           Object.setPrototypeOf(_this, VError2.prototype);
           return _this;
         }
@@ -97078,26 +97283,26 @@ var require_util2 = __commonJS({
             (_b27 = this._messages).push.apply(_b27, best._messages);
           }
         };
-        DetailContext2.prototype.getError = function(path38) {
+        DetailContext2.prototype.getError = function(path42) {
           var msgParts = [];
           for (var i = this._propNames.length - 1; i >= 0; i--) {
             var p3 = this._propNames[i];
-            path38 += typeof p3 === "number" ? "[" + p3 + "]" : p3 ? "." + p3 : "";
+            path42 += typeof p3 === "number" ? "[" + p3 + "]" : p3 ? "." + p3 : "";
             var m = this._messages[i];
             if (m) {
-              msgParts.push(path38 + " " + m);
+              msgParts.push(path42 + " " + m);
             }
           }
-          return new VError(path38, msgParts.join("; "));
+          return new VError(path42, msgParts.join("; "));
         };
-        DetailContext2.prototype.getErrorDetail = function(path38) {
+        DetailContext2.prototype.getErrorDetail = function(path42) {
           var details = [];
           for (var i = this._propNames.length - 1; i >= 0; i--) {
             var p3 = this._propNames[i];
-            path38 += typeof p3 === "number" ? "[" + p3 + "]" : p3 ? "." + p3 : "";
+            path42 += typeof p3 === "number" ? "[" + p3 + "]" : p3 ? "." + p3 : "";
             var message = this._messages[i];
             if (message) {
-              details.push({ path: path38, message });
+              details.push({ path: path42, message });
             }
           }
           var detail = null;
@@ -97910,8 +98115,8 @@ var require_dist4 = __commonJS({
           this.checkerPlain = this.ttype.getChecker(suite, false);
           this.checkerStrict = this.ttype.getChecker(suite, true);
         }
-        Checker2.prototype.setReportedPath = function(path38) {
-          this._path = path38;
+        Checker2.prototype.setReportedPath = function(path42) {
+          this._path = path42;
         };
         Checker2.prototype.check = function(value) {
           return this._doCheck(this.checkerPlain, value);
@@ -98006,9 +98211,9 @@ var require_Options_gen_types = __commonJS({
       } else {
         var newObj = {};
         if (obj != null) {
-          for (var key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) {
-              newObj[key] = obj[key];
+          for (var key2 in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key2)) {
+              newObj[key2] = obj[key2];
             }
           }
         }
@@ -103344,9 +103549,9 @@ var require_CJSImportTransformer = __commonJS({
         if (shouldElideImport) {
           this.tokens.removeToken();
         } else {
-          const path38 = this.tokens.stringValue();
-          this.tokens.replaceTokenTrimmingLeftWhitespace(this.importProcessor.claimImportCode(path38));
-          this.tokens.appendCode(this.importProcessor.claimImportCode(path38));
+          const path42 = this.tokens.stringValue();
+          this.tokens.replaceTokenTrimmingLeftWhitespace(this.importProcessor.claimImportCode(path42));
+          this.tokens.appendCode(this.importProcessor.claimImportCode(path42));
         }
         _removeMaybeImportAttributes.removeMaybeImportAttributes.call(void 0, this.tokens);
         if (this.tokens.matches1(_types.TokenType.semi)) {
@@ -103926,8 +104131,8 @@ var require_CJSImportTransformer = __commonJS({
         }
         if (this.tokens.matchesContextual(_keywords.ContextualKeyword._from)) {
           this.tokens.removeToken();
-          const path38 = this.tokens.stringValue();
-          this.tokens.replaceTokenTrimmingLeftWhitespace(this.importProcessor.claimImportCode(path38));
+          const path42 = this.tokens.stringValue();
+          this.tokens.replaceTokenTrimmingLeftWhitespace(this.importProcessor.claimImportCode(path42));
           _removeMaybeImportAttributes.removeMaybeImportAttributes.call(void 0, this.tokens);
         } else {
           this.tokens.appendCode(exportStatements.join(" "));
@@ -103941,8 +104146,8 @@ var require_CJSImportTransformer = __commonJS({
         while (!this.tokens.matches1(_types.TokenType.string)) {
           this.tokens.removeToken();
         }
-        const path38 = this.tokens.stringValue();
-        this.tokens.replaceTokenTrimmingLeftWhitespace(this.importProcessor.claimImportCode(path38));
+        const path42 = this.tokens.stringValue();
+        this.tokens.replaceTokenTrimmingLeftWhitespace(this.importProcessor.claimImportCode(path42));
         _removeMaybeImportAttributes.removeMaybeImportAttributes.call(void 0, this.tokens);
         if (this.tokens.matches1(_types.TokenType.semi)) {
           this.tokens.removeToken();
@@ -105773,14 +105978,14 @@ var require_formatTokens = __commonJS({
           _types.formatTokenType.call(void 0, token.type),
           truncate(String(raw), 14),
           // @ts-ignore: Intentional dynamic access by key.
-          ...tokenKeys.map((key) => formatValue(token[key], key)),
+          ...tokenKeys.map((key2) => formatValue(token[key2], key2)),
           // @ts-ignore: Intentional dynamic access by key.
-          ...typeKeys.map((key) => formatValue(token.type[key], key))
+          ...typeKeys.map((key2) => formatValue(token.type[key2], key2))
         ];
       }
-      function formatValue(value, key) {
+      function formatValue(value, key2) {
         if (value === true) {
-          return key;
+          return key2;
         } else if (value === false || value === null) {
           return "";
         } else {
@@ -106110,6 +106315,34 @@ var init_fixDB = __esm({
         table.primary(["id"]);
         table.unique(["id"]);
       });
+      await addColumn("o_sr_task", "lastVerifiedAt", "integer");
+      await addColumn("o_sr_task", "lastSmokeResultJson", "text");
+      await addColumn("o_sr_task", "complianceStatus", "text");
+      await addColumn("o_sr_task", "cleanupAfter", "integer");
+      await createTableIfMissing("o_sr_job", (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("jobType");
+        table.text("status");
+        table.integer("progress");
+        table.text("stage");
+        table.text("inputJson");
+        table.text("resultJson");
+        table.text("errorReason");
+        table.integer("attempt");
+        table.integer("parentJobId");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.integer("startedAt");
+        table.integer("finishedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      });
+      await addColumn("o_sr_job", "lockedBy", "text");
+      await addColumn("o_sr_job", "lockedAt", "integer");
+      await addColumn("o_sr_job", "nextRunAt", "integer");
+      await addColumn("o_sr_job", "recoverable", "integer");
+      await addColumn("o_sr_job", "cancelRequested", "integer");
       await createTableIfMissing("o_sr_source_media", (table) => {
         table.integer("id").notNullable();
         table.integer("taskId");
@@ -106263,6 +106496,153 @@ var init_fixDB = __esm({
         table.primary(["id"]);
         table.unique(["id"]);
       });
+      await createTableIfMissing("o_sr_shot_adaptation", (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.text("level");
+        table.text("strategy");
+        table.float("assetMatchScore");
+        table.text("requiredSlotsJson");
+        table.text("matchedAssetsJson");
+        table.text("adaptedVisual");
+        table.text("blockedReasonsJson");
+        table.text("downgradeReasonsJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      });
+      await createTableIfMissing("o_sr_provider_capability", (table) => {
+        table.integer("id").notNullable();
+        table.text("providerId");
+        table.text("providerType");
+        table.text("displayName");
+        table.text("baseUrl");
+        table.text("capabilityJson");
+        table.integer("enabled");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      });
+      await createTableIfMissing("o_sr_model_probe_result", (table) => {
+        table.integer("id").notNullable();
+        table.text("providerId");
+        table.text("model");
+        table.text("status");
+        table.integer("latencyMs");
+        table.text("errorReason");
+        table.text("resultJson");
+        table.integer("createdAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      });
+      await createTableIfMissing("o_sr_model_route", (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.text("selectedProviderId");
+        table.text("selectedModel");
+        table.text("routeStatus");
+        table.text("requiredCapabilitiesJson");
+        table.text("fallbackPlanJson");
+        table.text("downgradeReasonsJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      });
+      await createTableIfMissing("o_sr_generation_job", (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.text("providerId");
+        table.text("model");
+        table.text("status");
+        table.integer("attempt");
+        table.integer("candidateCount");
+        table.text("inputPackageJson");
+        table.text("resultVideoPath");
+        table.text("errorReason");
+        table.text("costJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.integer("startedAt");
+        table.integer("finishedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      });
+      await createTableIfMissing("o_sr_generation_candidate", (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.integer("generationJobId");
+        table.integer("candidateIndex");
+        table.text("status");
+        table.text("providerId");
+        table.text("model");
+        table.text("videoPath");
+        table.text("thumbnailPath");
+        table.float("durationSec");
+        table.float("qualityScore");
+        table.integer("selected");
+        table.text("errorReason");
+        table.text("metadataJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      });
+      await createTableIfMissing("o_sr_generation_cost", (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.integer("generationJobId");
+        table.integer("candidateId");
+        table.text("providerId");
+        table.text("model");
+        table.integer("latencyMs");
+        table.integer("requestSizeBytes");
+        table.float("estimatedCost");
+        table.text("errorCode");
+        table.text("errorReason");
+        table.integer("createdAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      });
+      await createTableIfMissing("o_sr_quality_report", (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.integer("candidateId");
+        table.text("status");
+        table.float("score");
+        table.text("reportJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      });
+      await createTableIfMissing("o_sr_timeline_export", (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("status");
+        table.text("outputPath");
+        table.text("reportJson");
+        table.text("subtitleMode");
+        table.text("candidateIdsJson");
+        table.text("errorReason");
+        table.integer("expiresAt");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      });
+      await addColumn("o_assets", "licenseType", "text");
+      await addColumn("o_assets", "licenseNote", "text");
+      await addColumn("o_assets", "sourceOwner", "text");
+      await addColumn("o_assets", "commercialAllowed", "integer");
       const defaultVendorIds = ["deepseek", "atlascloud"];
       const vendorDataSelect = await utils_default.db("o_vendorConfig").whereIn("id", defaultVendorIds).select("*");
       const existingVendorIds = new Set(vendorDataSelect.map((i) => i.id));
@@ -107264,8 +107644,8 @@ var init_SharedTasks = __esm({
 // node_modules/@rmp135/sql-ts/dist/Adapters/SharedAdapterTasks.js
 async function getTableEnums(db2, config3) {
   const tableEnums = config3.tableEnums;
-  const allEnums = await Promise.all(Object.entries(tableEnums).map(async ([key, enums]) => {
-    const [schemaName, tableName] = key.split(".");
+  const allEnums = await Promise.all(Object.entries(tableEnums).map(async ([key2, enums]) => {
+    const [schemaName, tableName] = key2.split(".");
     const rawRows = await db2(tableName).select(`${enums.key} as Key`, `${enums.value} as Value`);
     const rows = rawRows.reduce((acc, row) => {
       acc[row.Key] = row.Value;
@@ -107730,8 +108110,8 @@ var init_baseIsNative = __esm({
 });
 
 // node_modules/lodash-es/_getValue.js
-function getValue(object4, key) {
-  return object4 == null ? void 0 : object4[key];
+function getValue(object4, key2) {
+  return object4 == null ? void 0 : object4[key2];
 }
 var getValue_default;
 var init_getValue = __esm({
@@ -107742,8 +108122,8 @@ var init_getValue = __esm({
 });
 
 // node_modules/lodash-es/_getNative.js
-function getNative(object4, key) {
-  var value = getValue_default(object4, key);
+function getNative(object4, key2) {
+  var value = getValue_default(object4, key2);
   return baseIsNative_default(value) ? value : void 0;
 }
 var getNative_default;
@@ -108101,13 +108481,13 @@ var init_isTypedArray = __esm({
 // node_modules/lodash-es/_arrayLikeKeys.js
 function arrayLikeKeys(value, inherited) {
   var isArr = isArray_default(value), isArg = !isArr && isArguments_default(value), isBuff = !isArr && !isArg && isBuffer_default(value), isType = !isArr && !isArg && !isBuff && isTypedArray_default(value), skipIndexes = isArr || isArg || isBuff || isType, result = skipIndexes ? baseTimes_default(value.length, String) : [], length = result.length;
-  for (var key in value) {
-    if ((inherited || hasOwnProperty4.call(value, key)) && !(skipIndexes && // Safari 9 has enumerable `arguments.length` in strict mode.
-    (key == "length" || // Node.js 0.10 has enumerable non-index properties on buffers.
-    isBuff && (key == "offset" || key == "parent") || // PhantomJS 2 has enumerable non-index properties on typed arrays.
-    isType && (key == "buffer" || key == "byteLength" || key == "byteOffset") || // Skip index properties.
-    isIndex_default(key, length)))) {
-      result.push(key);
+  for (var key2 in value) {
+    if ((inherited || hasOwnProperty4.call(value, key2)) && !(skipIndexes && // Safari 9 has enumerable `arguments.length` in strict mode.
+    (key2 == "length" || // Node.js 0.10 has enumerable non-index properties on buffers.
+    isBuff && (key2 == "offset" || key2 == "parent") || // PhantomJS 2 has enumerable non-index properties on typed arrays.
+    isType && (key2 == "buffer" || key2 == "byteLength" || key2 == "byteOffset") || // Skip index properties.
+    isIndex_default(key2, length)))) {
+      result.push(key2);
     }
   }
   return result;
@@ -108159,9 +108539,9 @@ function baseKeys(object4) {
     return nativeKeys_default(object4);
   }
   var result = [];
-  for (var key in Object(object4)) {
-    if (hasOwnProperty5.call(object4, key) && key != "constructor") {
-      result.push(key);
+  for (var key2 in Object(object4)) {
+    if (hasOwnProperty5.call(object4, key2) && key2 != "constructor") {
+      result.push(key2);
     }
   }
   return result;
@@ -108242,8 +108622,8 @@ var init_hashClear = __esm({
 });
 
 // node_modules/lodash-es/_hashDelete.js
-function hashDelete(key) {
-  var result = this.has(key) && delete this.__data__[key];
+function hashDelete(key2) {
+  var result = this.has(key2) && delete this.__data__[key2];
   this.size -= result ? 1 : 0;
   return result;
 }
@@ -108256,13 +108636,13 @@ var init_hashDelete = __esm({
 });
 
 // node_modules/lodash-es/_hashGet.js
-function hashGet(key) {
+function hashGet(key2) {
   var data = this.__data__;
   if (nativeCreate_default) {
-    var result = data[key];
+    var result = data[key2];
     return result === HASH_UNDEFINED ? void 0 : result;
   }
-  return hasOwnProperty6.call(data, key) ? data[key] : void 0;
+  return hasOwnProperty6.call(data, key2) ? data[key2] : void 0;
 }
 var HASH_UNDEFINED, objectProto8, hasOwnProperty6, hashGet_default;
 var init_hashGet = __esm({
@@ -108277,9 +108657,9 @@ var init_hashGet = __esm({
 });
 
 // node_modules/lodash-es/_hashHas.js
-function hashHas(key) {
+function hashHas(key2) {
   var data = this.__data__;
-  return nativeCreate_default ? data[key] !== void 0 : hasOwnProperty7.call(data, key);
+  return nativeCreate_default ? data[key2] !== void 0 : hasOwnProperty7.call(data, key2);
 }
 var objectProto9, hasOwnProperty7, hashHas_default;
 var init_hashHas = __esm({
@@ -108293,10 +108673,10 @@ var init_hashHas = __esm({
 });
 
 // node_modules/lodash-es/_hashSet.js
-function hashSet(key, value) {
+function hashSet(key2, value) {
   var data = this.__data__;
-  this.size += this.has(key) ? 0 : 1;
-  data[key] = nativeCreate_default && value === void 0 ? HASH_UNDEFINED2 : value;
+  this.size += this.has(key2) ? 0 : 1;
+  data[key2] = nativeCreate_default && value === void 0 ? HASH_UNDEFINED2 : value;
   return this;
 }
 var HASH_UNDEFINED2, hashSet_default;
@@ -108350,10 +108730,10 @@ var init_listCacheClear = __esm({
 });
 
 // node_modules/lodash-es/_assocIndexOf.js
-function assocIndexOf(array4, key) {
+function assocIndexOf(array4, key2) {
   var length = array4.length;
   while (length--) {
-    if (eq_default(array4[length][0], key)) {
+    if (eq_default(array4[length][0], key2)) {
       return length;
     }
   }
@@ -108369,8 +108749,8 @@ var init_assocIndexOf = __esm({
 });
 
 // node_modules/lodash-es/_listCacheDelete.js
-function listCacheDelete(key) {
-  var data = this.__data__, index = assocIndexOf_default(data, key);
+function listCacheDelete(key2) {
+  var data = this.__data__, index = assocIndexOf_default(data, key2);
   if (index < 0) {
     return false;
   }
@@ -108395,8 +108775,8 @@ var init_listCacheDelete = __esm({
 });
 
 // node_modules/lodash-es/_listCacheGet.js
-function listCacheGet(key) {
-  var data = this.__data__, index = assocIndexOf_default(data, key);
+function listCacheGet(key2) {
+  var data = this.__data__, index = assocIndexOf_default(data, key2);
   return index < 0 ? void 0 : data[index][1];
 }
 var listCacheGet_default;
@@ -108409,8 +108789,8 @@ var init_listCacheGet = __esm({
 });
 
 // node_modules/lodash-es/_listCacheHas.js
-function listCacheHas(key) {
-  return assocIndexOf_default(this.__data__, key) > -1;
+function listCacheHas(key2) {
+  return assocIndexOf_default(this.__data__, key2) > -1;
 }
 var listCacheHas_default;
 var init_listCacheHas = __esm({
@@ -108422,11 +108802,11 @@ var init_listCacheHas = __esm({
 });
 
 // node_modules/lodash-es/_listCacheSet.js
-function listCacheSet(key, value) {
-  var data = this.__data__, index = assocIndexOf_default(data, key);
+function listCacheSet(key2, value) {
+  var data = this.__data__, index = assocIndexOf_default(data, key2);
   if (index < 0) {
     ++this.size;
-    data.push([key, value]);
+    data.push([key2, value]);
   } else {
     data[index][1] = value;
   }
@@ -108514,9 +108894,9 @@ var init_isKeyable = __esm({
 });
 
 // node_modules/lodash-es/_getMapData.js
-function getMapData(map3, key) {
+function getMapData(map3, key2) {
   var data = map3.__data__;
-  return isKeyable_default(key) ? data[typeof key == "string" ? "string" : "hash"] : data.map;
+  return isKeyable_default(key2) ? data[typeof key2 == "string" ? "string" : "hash"] : data.map;
 }
 var getMapData_default;
 var init_getMapData = __esm({
@@ -108528,8 +108908,8 @@ var init_getMapData = __esm({
 });
 
 // node_modules/lodash-es/_mapCacheDelete.js
-function mapCacheDelete(key) {
-  var result = getMapData_default(this, key)["delete"](key);
+function mapCacheDelete(key2) {
+  var result = getMapData_default(this, key2)["delete"](key2);
   this.size -= result ? 1 : 0;
   return result;
 }
@@ -108543,8 +108923,8 @@ var init_mapCacheDelete = __esm({
 });
 
 // node_modules/lodash-es/_mapCacheGet.js
-function mapCacheGet(key) {
-  return getMapData_default(this, key).get(key);
+function mapCacheGet(key2) {
+  return getMapData_default(this, key2).get(key2);
 }
 var mapCacheGet_default;
 var init_mapCacheGet = __esm({
@@ -108556,8 +108936,8 @@ var init_mapCacheGet = __esm({
 });
 
 // node_modules/lodash-es/_mapCacheHas.js
-function mapCacheHas(key) {
-  return getMapData_default(this, key).has(key);
+function mapCacheHas(key2) {
+  return getMapData_default(this, key2).has(key2);
 }
 var mapCacheHas_default;
 var init_mapCacheHas = __esm({
@@ -108569,9 +108949,9 @@ var init_mapCacheHas = __esm({
 });
 
 // node_modules/lodash-es/_mapCacheSet.js
-function mapCacheSet(key, value) {
-  var data = getMapData_default(this, key), size = data.size;
-  data.set(key, value);
+function mapCacheSet(key2, value) {
+  var data = getMapData_default(this, key2), size = data.size;
+  data.set(key2, value);
   this.size += data.size == size ? 0 : 1;
   return this;
 }
@@ -108617,12 +108997,12 @@ function memoize(func, resolver) {
     throw new TypeError(FUNC_ERROR_TEXT);
   }
   var memoized = function() {
-    var args = arguments, key = resolver ? resolver.apply(this, args) : args[0], cache = memoized.cache;
-    if (cache.has(key)) {
-      return cache.get(key);
+    var args = arguments, key2 = resolver ? resolver.apply(this, args) : args[0], cache = memoized.cache;
+    if (cache.has(key2)) {
+      return cache.get(key2);
     }
     var result = func.apply(this, args);
-    memoized.cache = cache.set(key, result) || cache;
+    memoized.cache = cache.set(key2, result) || cache;
     return result;
   };
   memoized.cache = new (memoize.Cache || MapCache_default)();
@@ -108641,11 +109021,11 @@ var init_memoize = __esm({
 
 // node_modules/lodash-es/_memoizeCapped.js
 function memoizeCapped(func) {
-  var result = memoize_default(func, function(key) {
+  var result = memoize_default(func, function(key2) {
     if (cache.size === MAX_MEMOIZE_SIZE) {
       cache.clear();
     }
-    return key;
+    return key2;
   });
   var cache = result.cache;
   return result;
@@ -108733,11 +109113,11 @@ var init_toKey = __esm({
 });
 
 // node_modules/lodash-es/_baseGet.js
-function baseGet(object4, path38) {
-  path38 = castPath_default(path38, object4);
-  var index = 0, length = path38.length;
+function baseGet(object4, path42) {
+  path42 = castPath_default(path42, object4);
+  var index = 0, length = path42.length;
   while (object4 != null && index < length) {
-    object4 = object4[toKey_default(path38[index++])];
+    object4 = object4[toKey_default(path42[index++])];
   }
   return index && index == length ? object4 : void 0;
 }
@@ -108752,8 +109132,8 @@ var init_baseGet = __esm({
 });
 
 // node_modules/lodash-es/get.js
-function get(object4, path38, defaultValue) {
-  var result = object4 == null ? void 0 : baseGet_default(object4, path38);
+function get(object4, path42, defaultValue) {
+  var result = object4 == null ? void 0 : baseGet_default(object4, path42);
   return result === void 0 ? defaultValue : result;
 }
 var get_default;
@@ -108796,8 +109176,8 @@ var init_stackClear = __esm({
 });
 
 // node_modules/lodash-es/_stackDelete.js
-function stackDelete(key) {
-  var data = this.__data__, result = data["delete"](key);
+function stackDelete(key2) {
+  var data = this.__data__, result = data["delete"](key2);
   this.size = data.size;
   return result;
 }
@@ -108810,8 +109190,8 @@ var init_stackDelete = __esm({
 });
 
 // node_modules/lodash-es/_stackGet.js
-function stackGet(key) {
-  return this.__data__.get(key);
+function stackGet(key2) {
+  return this.__data__.get(key2);
 }
 var stackGet_default;
 var init_stackGet = __esm({
@@ -108822,8 +109202,8 @@ var init_stackGet = __esm({
 });
 
 // node_modules/lodash-es/_stackHas.js
-function stackHas(key) {
-  return this.__data__.has(key);
+function stackHas(key2) {
+  return this.__data__.has(key2);
 }
 var stackHas_default;
 var init_stackHas = __esm({
@@ -108834,18 +109214,18 @@ var init_stackHas = __esm({
 });
 
 // node_modules/lodash-es/_stackSet.js
-function stackSet(key, value) {
+function stackSet(key2, value) {
   var data = this.__data__;
   if (data instanceof ListCache_default) {
     var pairs = data.__data__;
     if (!Map_default || pairs.length < LARGE_ARRAY_SIZE - 1) {
-      pairs.push([key, value]);
+      pairs.push([key2, value]);
       this.size = ++data.size;
       return this;
     }
     data = this.__data__ = new MapCache_default(pairs);
   }
-  data.set(key, value);
+  data.set(key2, value);
   this.size = data.size;
   return this;
 }
@@ -109130,8 +109510,8 @@ var init_arraySome = __esm({
 });
 
 // node_modules/lodash-es/_cacheHas.js
-function cacheHas(cache, key) {
-  return cache.has(key);
+function cacheHas(cache, key2) {
+  return cache.has(key2);
 }
 var cacheHas_default;
 var init_cacheHas = __esm({
@@ -109201,8 +109581,8 @@ var init_equalArrays = __esm({
 // node_modules/lodash-es/_mapToArray.js
 function mapToArray(map3) {
   var index = -1, result = Array(map3.size);
-  map3.forEach(function(value, key) {
-    result[++index] = [key, value];
+  map3.forEach(function(value, key2) {
+    result[++index] = [key2, value];
   });
   return result;
 }
@@ -109314,8 +109694,8 @@ function equalObjects(object4, other, bitmask, customizer, equalFunc, stack) {
   }
   var index = objLength;
   while (index--) {
-    var key = objProps[index];
-    if (!(isPartial ? key in other : hasOwnProperty8.call(other, key))) {
+    var key2 = objProps[index];
+    if (!(isPartial ? key2 in other : hasOwnProperty8.call(other, key2))) {
       return false;
     }
   }
@@ -109329,16 +109709,16 @@ function equalObjects(object4, other, bitmask, customizer, equalFunc, stack) {
   stack.set(other, object4);
   var skipCtor = isPartial;
   while (++index < objLength) {
-    key = objProps[index];
-    var objValue = object4[key], othValue = other[key];
+    key2 = objProps[index];
+    var objValue = object4[key2], othValue = other[key2];
     if (customizer) {
-      var compared = isPartial ? customizer(othValue, objValue, key, other, object4, stack) : customizer(objValue, othValue, key, object4, other, stack);
+      var compared = isPartial ? customizer(othValue, objValue, key2, other, object4, stack) : customizer(objValue, othValue, key2, object4, other, stack);
     }
     if (!(compared === void 0 ? objValue === othValue || equalFunc(objValue, othValue, bitmask, customizer, stack) : compared)) {
       result = false;
       break;
     }
-    skipCtor || (skipCtor = key == "constructor");
+    skipCtor || (skipCtor = key2 == "constructor");
   }
   if (result && !skipCtor) {
     var objCtor = object4.constructor, othCtor = other.constructor;
@@ -109450,15 +109830,15 @@ function baseIsMatch(object4, source, matchData, customizer) {
   }
   while (++index < length) {
     data = matchData[index];
-    var key = data[0], objValue = object4[key], srcValue = data[1];
+    var key2 = data[0], objValue = object4[key2], srcValue = data[1];
     if (noCustomizer && data[2]) {
-      if (objValue === void 0 && !(key in object4)) {
+      if (objValue === void 0 && !(key2 in object4)) {
         return false;
       }
     } else {
       var stack = new Stack_default();
       if (customizer) {
-        var result = customizer(objValue, srcValue, key, object4, source, stack);
+        var result = customizer(objValue, srcValue, key2, object4, source, stack);
       }
       if (!(result === void 0 ? baseIsEqual_default(srcValue, objValue, COMPARE_PARTIAL_FLAG5 | COMPARE_UNORDERED_FLAG3, customizer, stack) : result)) {
         return false;
@@ -109496,8 +109876,8 @@ var init_isStrictComparable = __esm({
 function getMatchData(object4) {
   var result = keys_default(object4), length = result.length;
   while (length--) {
-    var key = result[length], value = object4[key];
-    result[length] = [key, value, isStrictComparable_default(value)];
+    var key2 = result[length], value = object4[key2];
+    result[length] = [key2, value, isStrictComparable_default(value)];
   }
   return result;
 }
@@ -109512,12 +109892,12 @@ var init_getMatchData = __esm({
 });
 
 // node_modules/lodash-es/_matchesStrictComparable.js
-function matchesStrictComparable(key, srcValue) {
+function matchesStrictComparable(key2, srcValue) {
   return function(object4) {
     if (object4 == null) {
       return false;
     }
-    return object4[key] === srcValue && (srcValue !== void 0 || key in Object(object4));
+    return object4[key2] === srcValue && (srcValue !== void 0 || key2 in Object(object4));
   };
 }
 var matchesStrictComparable_default;
@@ -109550,8 +109930,8 @@ var init_baseMatches = __esm({
 });
 
 // node_modules/lodash-es/_baseHasIn.js
-function baseHasIn(object4, key) {
-  return object4 != null && key in Object(object4);
+function baseHasIn(object4, key2) {
+  return object4 != null && key2 in Object(object4);
 }
 var baseHasIn_default;
 var init_baseHasIn = __esm({
@@ -109562,21 +109942,21 @@ var init_baseHasIn = __esm({
 });
 
 // node_modules/lodash-es/_hasPath.js
-function hasPath(object4, path38, hasFunc) {
-  path38 = castPath_default(path38, object4);
-  var index = -1, length = path38.length, result = false;
+function hasPath(object4, path42, hasFunc) {
+  path42 = castPath_default(path42, object4);
+  var index = -1, length = path42.length, result = false;
   while (++index < length) {
-    var key = toKey_default(path38[index]);
-    if (!(result = object4 != null && hasFunc(object4, key))) {
+    var key2 = toKey_default(path42[index]);
+    if (!(result = object4 != null && hasFunc(object4, key2))) {
       break;
     }
-    object4 = object4[key];
+    object4 = object4[key2];
   }
   if (result || ++index != length) {
     return result;
   }
   length = object4 == null ? 0 : object4.length;
-  return !!length && isLength_default(length) && isIndex_default(key, length) && (isArray_default(object4) || isArguments_default(object4));
+  return !!length && isLength_default(length) && isIndex_default(key2, length) && (isArray_default(object4) || isArguments_default(object4));
 }
 var hasPath_default;
 var init_hasPath = __esm({
@@ -109593,8 +109973,8 @@ var init_hasPath = __esm({
 });
 
 // node_modules/lodash-es/hasIn.js
-function hasIn(object4, path38) {
-  return object4 != null && hasPath_default(object4, path38, baseHasIn_default);
+function hasIn(object4, path42) {
+  return object4 != null && hasPath_default(object4, path42, baseHasIn_default);
 }
 var hasIn_default;
 var init_hasIn = __esm({
@@ -109607,13 +109987,13 @@ var init_hasIn = __esm({
 });
 
 // node_modules/lodash-es/_baseMatchesProperty.js
-function baseMatchesProperty(path38, srcValue) {
-  if (isKey_default(path38) && isStrictComparable_default(srcValue)) {
-    return matchesStrictComparable_default(toKey_default(path38), srcValue);
+function baseMatchesProperty(path42, srcValue) {
+  if (isKey_default(path42) && isStrictComparable_default(srcValue)) {
+    return matchesStrictComparable_default(toKey_default(path42), srcValue);
   }
   return function(object4) {
-    var objValue = get_default(object4, path38);
-    return objValue === void 0 && objValue === srcValue ? hasIn_default(object4, path38) : baseIsEqual_default(srcValue, objValue, COMPARE_PARTIAL_FLAG6 | COMPARE_UNORDERED_FLAG4);
+    var objValue = get_default(object4, path42);
+    return objValue === void 0 && objValue === srcValue ? hasIn_default(object4, path42) : baseIsEqual_default(srcValue, objValue, COMPARE_PARTIAL_FLAG6 | COMPARE_UNORDERED_FLAG4);
   };
 }
 var COMPARE_PARTIAL_FLAG6, COMPARE_UNORDERED_FLAG4, baseMatchesProperty_default;
@@ -109634,9 +110014,9 @@ var init_baseMatchesProperty = __esm({
 });
 
 // node_modules/lodash-es/_baseProperty.js
-function baseProperty(key) {
+function baseProperty(key2) {
   return function(object4) {
-    return object4 == null ? void 0 : object4[key];
+    return object4 == null ? void 0 : object4[key2];
   };
 }
 var baseProperty_default;
@@ -109648,9 +110028,9 @@ var init_baseProperty = __esm({
 });
 
 // node_modules/lodash-es/_basePropertyDeep.js
-function basePropertyDeep(path38) {
+function basePropertyDeep(path42) {
   return function(object4) {
-    return baseGet_default(object4, path38);
+    return baseGet_default(object4, path42);
   };
 }
 var basePropertyDeep_default;
@@ -109663,8 +110043,8 @@ var init_basePropertyDeep = __esm({
 });
 
 // node_modules/lodash-es/property.js
-function property(path38) {
-  return isKey_default(path38) ? baseProperty_default(toKey_default(path38)) : basePropertyDeep_default(path38);
+function property(path42) {
+  return isKey_default(path42) ? baseProperty_default(toKey_default(path42)) : basePropertyDeep_default(path42);
 }
 var property_default;
 var init_property = __esm({
@@ -110556,9 +110936,9 @@ var require_utils12 = __commonJS({
     }
     function extend4(obj) {
       for (var i = 1; i < arguments.length; i++) {
-        for (var key in arguments[i]) {
-          if (Object.prototype.hasOwnProperty.call(arguments[i], key)) {
-            obj[key] = arguments[i][key];
+        for (var key2 in arguments[i]) {
+          if (Object.prototype.hasOwnProperty.call(arguments[i], key2)) {
+            obj[key2] = arguments[i][key2];
           }
         }
       }
@@ -110773,11 +111153,11 @@ var require_each2 = __commonJS({
           } else {
             (function() {
               var priorKey = void 0;
-              Object.keys(context2).forEach(function(key) {
+              Object.keys(context2).forEach(function(key2) {
                 if (priorKey !== void 0) {
                   execIteration(priorKey, i - 1);
                 }
-                priorKey = key;
+                priorKey = key2;
                 i++;
               });
               if (priorKey !== void 0) {
@@ -111294,8 +111674,8 @@ var require_runtime = __commonJS({
       } else {
         var newObj = {};
         if (obj != null) {
-          for (var key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
+          for (var key2 in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key2)) newObj[key2] = obj[key2];
           }
         }
         newObj["default"] = obj;
@@ -111629,8 +112009,8 @@ var require_handlebars_runtime = __commonJS({
       } else {
         var newObj = {};
         if (obj != null) {
-          for (var key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
+          for (var key2 in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key2)) newObj[key2] = obj[key2];
           }
         }
         newObj["default"] = obj;
@@ -111685,13 +112065,13 @@ var require_ast = __commonJS({
         helperExpression: function helperExpression(node) {
           return node.type === "SubExpression" || (node.type === "MustacheStatement" || node.type === "BlockStatement") && !!(node.params && node.params.length || node.hash);
         },
-        scopedId: function scopedId(path38) {
-          return /^\.|this\b/.test(path38.original);
+        scopedId: function scopedId(path42) {
+          return /^\.|this\b/.test(path42.original);
         },
         // an ID is simple if it only has one part, and that part is not
         // `..` or `this`.
-        simpleId: function simpleId(path38) {
-          return path38.parts.length === 1 && !AST.helpers.scopedId(path38) && !path38.depth;
+        simpleId: function simpleId(path42) {
+          return path42.parts.length === 1 && !AST.helpers.scopedId(path42) && !path42.depth;
         }
       }
     };
@@ -112761,12 +113141,12 @@ var require_helpers4 = __commonJS({
         loc
       };
     }
-    function prepareMustache(path38, params, hash3, open, strip, locInfo) {
+    function prepareMustache(path42, params, hash3, open, strip, locInfo) {
       var escapeFlag = open.charAt(3) || open.charAt(2), escaped = escapeFlag !== "{" && escapeFlag !== "&";
       var decorator = /\*/.test(open);
       return {
         type: decorator ? "Decorator" : "MustacheStatement",
-        path: path38,
+        path: path42,
         params,
         hash: hash3,
         escaped,
@@ -112883,8 +113263,8 @@ var require_base3 = __commonJS({
       } else {
         var newObj = {};
         if (obj != null) {
-          for (var key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
+          for (var key2 in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key2)) newObj[key2] = obj[key2];
           }
         }
         newObj["default"] = obj;
@@ -113084,9 +113464,9 @@ var require_compiler3 = __commonJS({
       },
       DecoratorBlock: function DecoratorBlock(decorator) {
         var program = decorator.program && this.compileProgram(decorator.program);
-        var params = this.setupFullMustacheParams(decorator, program, void 0), path38 = decorator.path;
+        var params = this.setupFullMustacheParams(decorator, program, void 0), path42 = decorator.path;
         this.useDecorators = true;
-        this.opcode("registerDecorator", params.length, path38.original);
+        this.opcode("registerDecorator", params.length, path42.original);
       },
       PartialStatement: function PartialStatement(partial3) {
         this.usePartial = true;
@@ -113150,46 +113530,46 @@ var require_compiler3 = __commonJS({
         }
       },
       ambiguousSexpr: function ambiguousSexpr(sexpr, program, inverse) {
-        var path38 = sexpr.path, name28 = path38.parts[0], isBlock = program != null || inverse != null;
-        this.opcode("getContext", path38.depth);
+        var path42 = sexpr.path, name28 = path42.parts[0], isBlock = program != null || inverse != null;
+        this.opcode("getContext", path42.depth);
         this.opcode("pushProgram", program);
         this.opcode("pushProgram", inverse);
-        path38.strict = true;
-        this.accept(path38);
+        path42.strict = true;
+        this.accept(path42);
         this.opcode("invokeAmbiguous", name28, isBlock);
       },
       simpleSexpr: function simpleSexpr(sexpr) {
-        var path38 = sexpr.path;
-        path38.strict = true;
-        this.accept(path38);
+        var path42 = sexpr.path;
+        path42.strict = true;
+        this.accept(path42);
         this.opcode("resolvePossibleLambda");
       },
       helperSexpr: function helperSexpr(sexpr, program, inverse) {
-        var params = this.setupFullMustacheParams(sexpr, program, inverse), path38 = sexpr.path, name28 = path38.parts[0];
+        var params = this.setupFullMustacheParams(sexpr, program, inverse), path42 = sexpr.path, name28 = path42.parts[0];
         if (this.options.knownHelpers[name28]) {
           this.opcode("invokeKnownHelper", params.length, name28);
         } else if (this.options.knownHelpersOnly) {
           throw new _exception2["default"]("You specified knownHelpersOnly, but used the unknown helper " + name28, sexpr);
         } else {
-          path38.strict = true;
-          path38.falsy = true;
-          this.accept(path38);
-          this.opcode("invokeHelper", params.length, path38.original, _ast2["default"].helpers.simpleId(path38));
+          path42.strict = true;
+          path42.falsy = true;
+          this.accept(path42);
+          this.opcode("invokeHelper", params.length, path42.original, _ast2["default"].helpers.simpleId(path42));
         }
       },
-      PathExpression: function PathExpression(path38) {
-        this.addDepth(path38.depth);
-        this.opcode("getContext", path38.depth);
-        var name28 = path38.parts[0], scoped = _ast2["default"].helpers.scopedId(path38), blockParamId = !path38.depth && !scoped && this.blockParamIndex(name28);
+      PathExpression: function PathExpression(path42) {
+        this.addDepth(path42.depth);
+        this.opcode("getContext", path42.depth);
+        var name28 = path42.parts[0], scoped = _ast2["default"].helpers.scopedId(path42), blockParamId = !path42.depth && !scoped && this.blockParamIndex(name28);
         if (blockParamId) {
-          this.opcode("lookupBlockParam", blockParamId, path38.parts);
+          this.opcode("lookupBlockParam", blockParamId, path42.parts);
         } else if (!name28) {
           this.opcode("pushContext");
-        } else if (path38.data) {
+        } else if (path42.data) {
           this.options.data = true;
-          this.opcode("lookupData", path38.depth, path38.parts, path38.strict);
+          this.opcode("lookupData", path42.depth, path42.parts, path42.strict);
         } else {
-          this.opcode("lookupOnContext", path38.parts, path38.falsy, path38.strict, scoped);
+          this.opcode("lookupOnContext", path42.parts, path42.falsy, path42.strict, scoped);
         }
       },
       StringLiteral: function StringLiteral(string5) {
@@ -113542,16 +113922,16 @@ var require_util3 = __commonJS({
     }
     exports2.urlGenerate = urlGenerate;
     function normalize(aPath) {
-      var path38 = aPath;
+      var path42 = aPath;
       var url4 = urlParse(aPath);
       if (url4) {
         if (!url4.path) {
           return aPath;
         }
-        path38 = url4.path;
+        path42 = url4.path;
       }
-      var isAbsolute = exports2.isAbsolute(path38);
-      var parts = path38.split(/\/+/);
+      var isAbsolute = exports2.isAbsolute(path42);
+      var parts = path42.split(/\/+/);
       for (var part, up = 0, i = parts.length - 1; i >= 0; i--) {
         part = parts[i];
         if (part === ".") {
@@ -113568,15 +113948,15 @@ var require_util3 = __commonJS({
           }
         }
       }
-      path38 = parts.join("/");
-      if (path38 === "") {
-        path38 = isAbsolute ? "/" : ".";
+      path42 = parts.join("/");
+      if (path42 === "") {
+        path42 = isAbsolute ? "/" : ".";
       }
       if (url4) {
-        url4.path = path38;
+        url4.path = path42;
         return urlGenerate(url4);
       }
-      return path38;
+      return path42;
     }
     exports2.normalize = normalize;
     function join2(aRoot, aPath) {
@@ -114151,8 +114531,8 @@ var require_source_map_generator = __commonJS({
         if (aSourceRoot != null) {
           source = util4.relative(aSourceRoot, source);
         }
-        var key = util4.toSetString(source);
-        return Object.prototype.hasOwnProperty.call(this._sourcesContents, key) ? this._sourcesContents[key] : null;
+        var key2 = util4.toSetString(source);
+        return Object.prototype.hasOwnProperty.call(this._sourcesContents, key2) ? this._sourcesContents[key2] : null;
       }, this);
     };
     SourceMapGenerator.prototype.toJSON = function SourceMapGenerator_toJSON() {
@@ -115254,10 +115634,10 @@ var require_code_gen = __commonJS({
       objectLiteral: function objectLiteral(obj) {
         var _this = this;
         var pairs = [];
-        Object.keys(obj).forEach(function(key) {
-          var value = castChunk(obj[key], _this);
+        Object.keys(obj).forEach(function(key2) {
+          var value = castChunk(obj[key2], _this);
           if (value !== "undefined") {
-            pairs.push([_this.quotedString(key), ":", value]);
+            pairs.push([_this.quotedString(key2), ":", value]);
           }
         });
         var ret = this.generateList(pairs);
@@ -115901,7 +116281,7 @@ var require_javascript_compiler = __commonJS({
       // On stack, after: ..., hash, ...
       //
       // Pops a value off the stack and assigns it to the current hash
-      assignToHash: function assignToHash(key) {
+      assignToHash: function assignToHash(key2) {
         var value = this.popStack(), context2 = void 0, type = void 0, id = void 0;
         if (this.trackIds) {
           id = this.popStack();
@@ -115912,15 +116292,15 @@ var require_javascript_compiler = __commonJS({
         }
         var hash3 = this.hash;
         if (context2) {
-          hash3.contexts[key] = context2;
+          hash3.contexts[key2] = context2;
         }
         if (type) {
-          hash3.types[key] = type;
+          hash3.types[key2] = type;
         }
         if (id) {
-          hash3.ids[key] = id;
+          hash3.ids[key2] = id;
         }
-        hash3.values[key] = value;
+        hash3.values[key2] = value;
       },
       pushId: function pushId(type, name28, child) {
         if (type === "BlockParam") {
@@ -116367,8 +116747,8 @@ var require_printer = __commonJS({
       return this.accept(sexpr.path) + " " + params + hash3;
     };
     PrintVisitor.prototype.PathExpression = function(id) {
-      var path38 = id.parts.join("/");
-      return (id.data ? "@" : "") + "PATH:" + path38;
+      var path42 = id.parts.join("/");
+      return (id.data ? "@" : "") + "PATH:" + path42;
     };
     PrintVisitor.prototype.StringLiteral = function(string5) {
       return '"' + string5.value + '"';
@@ -116408,8 +116788,8 @@ var require_lib6 = __commonJS({
     handlebars.print = printer.print;
     module2.exports = handlebars;
     function extension(module3, filename) {
-      var fs43 = require("fs");
-      var templateString = fs43.readFileSync(filename, "utf8");
+      var fs47 = require("fs");
+      var templateString = fs47.readFileSync(filename, "utf8");
       module3.exports = handlebars.compile(templateString);
     }
     if (typeof require !== "undefined" && require.extensions) {
@@ -116926,24 +117306,24 @@ function forEach(obj, fn, { allOwnKeys = false } = {}) {
     }
     const keys2 = allOwnKeys ? Object.getOwnPropertyNames(obj) : Object.keys(obj);
     const len = keys2.length;
-    let key;
+    let key2;
     for (i = 0; i < len; i++) {
-      key = keys2[i];
-      fn.call(null, obj[key], key, obj);
+      key2 = keys2[i];
+      fn.call(null, obj[key2], key2, obj);
     }
   }
 }
-function findKey(obj, key) {
+function findKey(obj, key2) {
   if (isBuffer2(obj)) {
     return null;
   }
-  key = key.toLowerCase();
+  key2 = key2.toLowerCase();
   const keys2 = Object.keys(obj);
   let i = keys2.length;
   let _key;
   while (i-- > 0) {
     _key = keys2[i];
-    if (key === _key.toLowerCase()) {
+    if (key2 === _key.toLowerCase()) {
       return _key;
     }
   }
@@ -116952,11 +117332,11 @@ function findKey(obj, key) {
 function merge() {
   const { caseless, skipUndefined } = isContextDefined(this) && this || {};
   const result = {};
-  const assignValue = (val, key) => {
-    if (key === "__proto__" || key === "constructor" || key === "prototype") {
+  const assignValue = (val, key2) => {
+    if (key2 === "__proto__" || key2 === "constructor" || key2 === "prototype") {
       return;
     }
-    const targetKey = caseless && findKey(result, key) || key;
+    const targetKey = caseless && findKey(result, key2) || key2;
     if (isPlainObject(result[targetKey]) && isPlainObject(val)) {
       result[targetKey] = merge(result[targetKey], val);
     } else if (isPlainObject(val)) {
@@ -117051,16 +117431,16 @@ var init_utils = __esm({
     extend = (a, b, thisArg, { allOwnKeys } = {}) => {
       forEach(
         b,
-        (val, key) => {
+        (val, key2) => {
           if (thisArg && isFunction2(val)) {
-            Object.defineProperty(a, key, {
+            Object.defineProperty(a, key2, {
               value: bind(val, thisArg),
               writable: true,
               enumerable: true,
               configurable: true
             });
           } else {
-            Object.defineProperty(a, key, {
+            Object.defineProperty(a, key2, {
               value: val,
               writable: true,
               enumerable: true,
@@ -117220,9 +117600,9 @@ var init_utils = __esm({
           if (!("toJSON" in source)) {
             stack[i] = source;
             const target = isArray2(source) ? [] : {};
-            forEach(source, (value, key) => {
+            forEach(source, (value, key2) => {
               const reducedValue = visit4(value, i + 1);
-              !isUndefined(reducedValue) && (target[key] = reducedValue);
+              !isUndefined(reducedValue) && (target[key2] = reducedValue);
             });
             stack[i] = void 0;
             return target;
@@ -126253,11 +126633,11 @@ var require_mime_types3 = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path38) {
-      if (!path38 || typeof path38 !== "string") {
+    function lookup(path42) {
+      if (!path42 || typeof path42 !== "string") {
         return false;
       }
-      var extension2 = extname("x." + path38).toLowerCase().substr(1);
+      var extension2 = extname("x." + path42).toLowerCase().substr(1);
       if (!extension2) {
         return false;
       }
@@ -126337,9 +126717,9 @@ var require_abort = __commonJS({
       Object.keys(state.jobs).forEach(clean.bind(state));
       state.jobs = {};
     }
-    function clean(key) {
-      if (typeof this.jobs[key] == "function") {
-        this.jobs[key]();
+    function clean(key2) {
+      if (typeof this.jobs[key2] == "function") {
+        this.jobs[key2]();
       }
     }
   }
@@ -126353,26 +126733,26 @@ var require_iterate = __commonJS({
     var abort = require_abort();
     module2.exports = iterate;
     function iterate(list2, iterator2, state, callback) {
-      var key = state["keyedList"] ? state["keyedList"][state.index] : state.index;
-      state.jobs[key] = runJob(iterator2, key, list2[key], function(error71, output) {
-        if (!(key in state.jobs)) {
+      var key2 = state["keyedList"] ? state["keyedList"][state.index] : state.index;
+      state.jobs[key2] = runJob(iterator2, key2, list2[key2], function(error71, output) {
+        if (!(key2 in state.jobs)) {
           return;
         }
-        delete state.jobs[key];
+        delete state.jobs[key2];
         if (error71) {
           abort(state);
         } else {
-          state.results[key] = output;
+          state.results[key2] = output;
         }
         callback(error71, state.results);
       });
     }
-    function runJob(iterator2, key, item, callback) {
+    function runJob(iterator2, key2, item, callback) {
       var aborter;
       if (iterator2.length == 2) {
         aborter = iterator2(item, async(callback));
       } else {
-        aborter = iterator2(item, key, async(callback));
+        aborter = iterator2(item, key2, async(callback));
       }
       return aborter;
     }
@@ -126569,13 +126949,13 @@ var require_form_data = __commonJS({
     "use strict";
     var CombinedStream = require_combined_stream();
     var util4 = require("util");
-    var path38 = require("path");
+    var path42 = require("path");
     var http4 = require("http");
     var https2 = require("https");
     var parseUrl2 = require("url").parse;
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     var Stream = require("stream").Stream;
-    var crypto8 = require("crypto");
+    var crypto9 = require("crypto");
     var mime = require_mime_types3();
     var asynckit = require_asynckit();
     var setToStringTag = require_es_set_tostringtag();
@@ -126640,7 +127020,7 @@ var require_form_data = __commonJS({
         if (value.end != void 0 && value.end != Infinity && value.start != void 0) {
           callback(null, value.end + 1 - (value.start ? value.start : 0));
         } else {
-          fs43.stat(value.path, function(err, stat) {
+          fs47.stat(value.path, function(err, stat) {
             if (err) {
               callback(err);
               return;
@@ -126697,11 +127077,11 @@ var require_form_data = __commonJS({
     FormData4.prototype._getContentDisposition = function(value, options) {
       var filename;
       if (typeof options.filepath === "string") {
-        filename = path38.normalize(options.filepath).replace(/\\/g, "/");
+        filename = path42.normalize(options.filepath).replace(/\\/g, "/");
       } else if (options.filename || value && (value.name || value.path)) {
-        filename = path38.basename(options.filename || value && (value.name || value.path));
+        filename = path42.basename(options.filename || value && (value.name || value.path));
       } else if (value && value.readable && hasOwn(value, "httpVersion")) {
-        filename = path38.basename(value.client._httpMessage.path || "");
+        filename = path42.basename(value.client._httpMessage.path || "");
       }
       if (filename) {
         return 'filename="' + filename + '"';
@@ -126781,7 +127161,7 @@ var require_form_data = __commonJS({
       return Buffer.concat([dataBuffer, Buffer.from(this._lastBoundary())]);
     };
     FormData4.prototype._generateBoundary = function() {
-      this._boundary = "--------------------------" + crypto8.randomBytes(12).toString("hex");
+      this._boundary = "--------------------------" + crypto9.randomBytes(12).toString("hex");
     };
     FormData4.prototype.getLengthSync = function() {
       var knownLength = this._overheadLength + this._valueLength;
@@ -126896,12 +127276,12 @@ var init_FormData = __esm({
 function isVisitable(thing) {
   return utils_default2.isPlainObject(thing) || utils_default2.isArray(thing);
 }
-function removeBrackets(key) {
-  return utils_default2.endsWith(key, "[]") ? key.slice(0, -2) : key;
+function removeBrackets(key2) {
+  return utils_default2.endsWith(key2, "[]") ? key2.slice(0, -2) : key2;
 }
-function renderKey(path38, key, dots) {
-  if (!path38) return key;
-  return path38.concat(key).map(function each(token, i) {
+function renderKey(path42, key2, dots) {
+  if (!path42) return key2;
+  return path42.concat(key2).map(function each(token, i) {
     token = removeBrackets(token);
     return !dots && i ? "[" + token + "]" : token;
   }).join(dots ? "." : "");
@@ -126951,22 +127331,22 @@ function toFormData(obj, formData, options) {
     }
     return value;
   }
-  function defaultVisitor(value, key, path38) {
+  function defaultVisitor(value, key2, path42) {
     let arr = value;
     if (utils_default2.isReactNative(formData) && utils_default2.isReactNativeBlob(value)) {
-      formData.append(renderKey(path38, key, dots), convertValue(value));
+      formData.append(renderKey(path42, key2, dots), convertValue(value));
       return false;
     }
-    if (value && !path38 && typeof value === "object") {
-      if (utils_default2.endsWith(key, "{}")) {
-        key = metaTokens ? key : key.slice(0, -2);
+    if (value && !path42 && typeof value === "object") {
+      if (utils_default2.endsWith(key2, "{}")) {
+        key2 = metaTokens ? key2 : key2.slice(0, -2);
         value = JSON.stringify(value);
-      } else if (utils_default2.isArray(value) && isFlatArray(value) || (utils_default2.isFileList(value) || utils_default2.endsWith(key, "[]")) && (arr = utils_default2.toArray(value))) {
-        key = removeBrackets(key);
+      } else if (utils_default2.isArray(value) && isFlatArray(value) || (utils_default2.isFileList(value) || utils_default2.endsWith(key2, "[]")) && (arr = utils_default2.toArray(value))) {
+        key2 = removeBrackets(key2);
         arr.forEach(function each(el, index) {
           !(utils_default2.isUndefined(el) || el === null) && formData.append(
             // eslint-disable-next-line no-nested-ternary
-            indexes === true ? renderKey([key], index, dots) : indexes === null ? key : key + "[]",
+            indexes === true ? renderKey([key2], index, dots) : indexes === null ? key2 : key2 + "[]",
             convertValue(el)
           );
         });
@@ -126976,7 +127356,7 @@ function toFormData(obj, formData, options) {
     if (isVisitable(value)) {
       return true;
     }
-    formData.append(renderKey(path38, key, dots), convertValue(value));
+    formData.append(renderKey(path42, key2, dots), convertValue(value));
     return false;
   }
   const stack = [];
@@ -126985,16 +127365,16 @@ function toFormData(obj, formData, options) {
     convertValue,
     isVisitable
   });
-  function build(value, path38) {
+  function build(value, path42) {
     if (utils_default2.isUndefined(value)) return;
     if (stack.indexOf(value) !== -1) {
-      throw Error("Circular reference detected in " + path38.join("."));
+      throw Error("Circular reference detected in " + path42.join("."));
     }
     stack.push(value);
-    utils_default2.forEach(value, function each(el, key) {
-      const result = !(utils_default2.isUndefined(el) || el === null) && visitor.call(formData, el, utils_default2.isString(key) ? key.trim() : key, path38, exposedHelpers);
+    utils_default2.forEach(value, function each(el, key2) {
+      const result = !(utils_default2.isUndefined(el) || el === null) && visitor.call(formData, el, utils_default2.isString(key2) ? key2.trim() : key2, path42, exposedHelpers);
       if (result === true) {
-        build(el, path38 ? path38.concat(key) : [key]);
+        build(el, path42 ? path42.concat(key2) : [key2]);
       }
     });
     stack.pop();
@@ -127271,9 +127651,9 @@ var init_platform = __esm({
 // node_modules/axios/lib/helpers/toURLEncodedForm.js
 function toURLEncodedForm(data, options) {
   return toFormData_default(data, new platform_default.classes.URLSearchParams(), {
-    visitor: function(value, key, path38, helpers) {
+    visitor: function(value, key2, path42, helpers) {
       if (platform_default.isNode && utils_default2.isBuffer(value)) {
-        this.append(key, value.toString("base64"));
+        this.append(key2, value.toString("base64"));
         return false;
       }
       return helpers.defaultVisitor.apply(this, arguments);
@@ -127301,19 +127681,19 @@ function arrayToObject(arr) {
   const keys2 = Object.keys(arr);
   let i;
   const len = keys2.length;
-  let key;
+  let key2;
   for (i = 0; i < len; i++) {
-    key = keys2[i];
-    obj[key] = arr[key];
+    key2 = keys2[i];
+    obj[key2] = arr[key2];
   }
   return obj;
 }
 function formDataToJSON(formData) {
-  function buildPath(path38, value, target, index) {
-    let name28 = path38[index++];
+  function buildPath(path42, value, target, index) {
+    let name28 = path42[index++];
     if (name28 === "__proto__") return true;
     const isNumericKey = Number.isFinite(+name28);
-    const isLast = index >= path38.length;
+    const isLast = index >= path42.length;
     name28 = !name28 && utils_default2.isArray(target) ? target.length : name28;
     if (isLast) {
       if (utils_default2.hasOwnProp(target, name28)) {
@@ -127326,7 +127706,7 @@ function formDataToJSON(formData) {
     if (!target[name28] || !utils_default2.isObject(target[name28])) {
       target[name28] = [];
     }
-    const result = buildPath(path38, value, target[name28], index);
+    const result = buildPath(path42, value, target[name28], index);
     if (result && utils_default2.isArray(target[name28])) {
       target[name28] = arrayToObject(target[name28]);
     }
@@ -127503,24 +127883,24 @@ var init_parseHeaders = __esm({
     ]);
     parseHeaders_default = (rawHeaders) => {
       const parsed = {};
-      let key;
+      let key2;
       let val;
       let i;
       rawHeaders && rawHeaders.split("\n").forEach(function parser(line2) {
         i = line2.indexOf(":");
-        key = line2.substring(0, i).trim().toLowerCase();
+        key2 = line2.substring(0, i).trim().toLowerCase();
         val = line2.substring(i + 1).trim();
-        if (!key || parsed[key] && ignoreDuplicateOf[key]) {
+        if (!key2 || parsed[key2] && ignoreDuplicateOf[key2]) {
           return;
         }
-        if (key === "set-cookie") {
-          if (parsed[key]) {
-            parsed[key].push(val);
+        if (key2 === "set-cookie") {
+          if (parsed[key2]) {
+            parsed[key2].push(val);
           } else {
-            parsed[key] = [val];
+            parsed[key2] = [val];
           }
         } else {
-          parsed[key] = parsed[key] ? parsed[key] + ", " + val : val;
+          parsed[key2] = parsed[key2] ? parsed[key2] + ", " + val : val;
         }
       });
       return parsed;
@@ -127597,9 +127977,9 @@ var init_AxiosHeaders = __esm({
           if (!lHeader) {
             throw new Error("header name must be a non-empty string");
           }
-          const key = utils_default2.findKey(self2, lHeader);
-          if (!key || self2[key] === void 0 || _rewrite === true || _rewrite === void 0 && self2[key] !== false) {
-            self2[key || _header] = normalizeValue(_value);
+          const key2 = utils_default2.findKey(self2, lHeader);
+          if (!key2 || self2[key2] === void 0 || _rewrite === true || _rewrite === void 0 && self2[key2] !== false) {
+            self2[key2 || _header] = normalizeValue(_value);
           }
         }
         const setHeaders = (headers, _rewrite) => utils_default2.forEach(headers, (_value, _header) => setHeader(_value, _header, _rewrite));
@@ -127608,12 +127988,12 @@ var init_AxiosHeaders = __esm({
         } else if (utils_default2.isString(header) && (header = header.trim()) && !isValidHeaderName(header)) {
           setHeaders(parseHeaders_default(header), valueOrRewrite);
         } else if (utils_default2.isObject(header) && utils_default2.isIterable(header)) {
-          let obj = {}, dest, key;
+          let obj = {}, dest, key2;
           for (const entry of header) {
             if (!utils_default2.isArray(entry)) {
               throw TypeError("Object iterator must return a key-value pair");
             }
-            obj[key = entry[0]] = (dest = obj[key]) ? utils_default2.isArray(dest) ? [...dest, entry[1]] : [dest, entry[1]] : entry[1];
+            obj[key2 = entry[0]] = (dest = obj[key2]) ? utils_default2.isArray(dest) ? [...dest, entry[1]] : [dest, entry[1]] : entry[1];
           }
           setHeaders(obj, valueOrRewrite);
         } else {
@@ -127624,9 +128004,9 @@ var init_AxiosHeaders = __esm({
       get(header, parser) {
         header = normalizeHeader(header);
         if (header) {
-          const key = utils_default2.findKey(this, header);
-          if (key) {
-            const value = this[key];
+          const key2 = utils_default2.findKey(this, header);
+          if (key2) {
+            const value = this[key2];
             if (!parser) {
               return value;
             }
@@ -127634,7 +128014,7 @@ var init_AxiosHeaders = __esm({
               return parseTokens(value);
             }
             if (utils_default2.isFunction(parser)) {
-              return parser.call(this, value, key);
+              return parser.call(this, value, key2);
             }
             if (utils_default2.isRegExp(parser)) {
               return parser.exec(value);
@@ -127646,8 +128026,8 @@ var init_AxiosHeaders = __esm({
       has(header, matcher) {
         header = normalizeHeader(header);
         if (header) {
-          const key = utils_default2.findKey(this, header);
-          return !!(key && this[key] !== void 0 && (!matcher || matchHeaderValue(this, this[key], key, matcher)));
+          const key2 = utils_default2.findKey(this, header);
+          return !!(key2 && this[key2] !== void 0 && (!matcher || matchHeaderValue(this, this[key2], key2, matcher)));
         }
         return false;
       }
@@ -127657,9 +128037,9 @@ var init_AxiosHeaders = __esm({
         function deleteHeader(_header) {
           _header = normalizeHeader(_header);
           if (_header) {
-            const key = utils_default2.findKey(self2, _header);
-            if (key && (!matcher || matchHeaderValue(self2, self2[key], key, matcher))) {
-              delete self2[key];
+            const key2 = utils_default2.findKey(self2, _header);
+            if (key2 && (!matcher || matchHeaderValue(self2, self2[key2], key2, matcher))) {
+              delete self2[key2];
               deleted = true;
             }
           }
@@ -127676,9 +128056,9 @@ var init_AxiosHeaders = __esm({
         let i = keys2.length;
         let deleted = false;
         while (i--) {
-          const key = keys2[i];
-          if (!matcher || matchHeaderValue(this, this[key], key, matcher, true)) {
-            delete this[key];
+          const key2 = keys2[i];
+          if (!matcher || matchHeaderValue(this, this[key2], key2, matcher, true)) {
+            delete this[key2];
             deleted = true;
           }
         }
@@ -127688,9 +128068,9 @@ var init_AxiosHeaders = __esm({
         const self2 = this;
         const headers = {};
         utils_default2.forEach(this, (value, header) => {
-          const key = utils_default2.findKey(headers, header);
-          if (key) {
-            self2[key] = normalizeValue(value);
+          const key2 = utils_default2.findKey(headers, header);
+          if (key2) {
+            self2[key2] = normalizeValue(value);
             delete self2[header];
             return;
           }
@@ -127758,8 +128138,8 @@ var init_AxiosHeaders = __esm({
       "User-Agent",
       "Authorization"
     ]);
-    utils_default2.reduceDescriptors(AxiosHeaders.prototype, ({ value }, key) => {
-      let mapped = key[0].toUpperCase() + key.slice(1);
+    utils_default2.reduceDescriptors(AxiosHeaders.prototype, ({ value }, key2) => {
+      let mapped = key2[0].toUpperCase() + key2.slice(1);
       return {
         get: () => value,
         set(headerValue) {
@@ -127947,8 +128327,8 @@ function shouldProxy(hostname4, port) {
     return !hostname4.endsWith(parsedProxyHostname);
   });
 }
-function getEnv(key) {
-  return process.env[key.toLowerCase()] || process.env[key.toUpperCase()] || "";
+function getEnv(key2) {
+  return process.env[key2.toLowerCase()] || process.env[key2.toUpperCase()] || "";
 }
 var DEFAULT_PORTS;
 var init_proxy_from_env = __esm({
@@ -128410,8 +128790,8 @@ var require_follow_redirects = __commonJS({
     }
     function spreadUrlObject(urlObject, target) {
       var spread3 = target || {};
-      for (var key of preservedUrlFields) {
-        spread3[key] = urlObject[key];
+      for (var key2 of preservedUrlFields) {
+        spread3[key2] = urlObject[key2];
       }
       if (spread3.hostname.startsWith("[")) {
         spread3.hostname = spread3.hostname.slice(1, -1);
@@ -129474,9 +129854,9 @@ var init_http = __esm({
           auth = urlUsername + ":" + urlPassword;
         }
         auth && headers.delete("authorization");
-        let path38;
+        let path42;
         try {
-          path38 = buildURL(
+          path42 = buildURL(
             parsed.pathname + parsed.search,
             config3.params,
             config3.paramsSerializer
@@ -129494,7 +129874,7 @@ var init_http = __esm({
           false
         );
         const options = {
-          path: path38,
+          path: path42,
           method,
           headers: headers.toJSON(),
           agents: { http: config3.httpAgent, https: config3.httpsAgent },
@@ -129758,14 +130138,14 @@ var init_cookies = __esm({
     cookies_default = platform_default.hasStandardBrowserEnv ? (
       // Standard browser envs support document.cookie
       {
-        write(name28, value, expires, path38, domain3, secure, sameSite) {
+        write(name28, value, expires, path42, domain3, secure, sameSite) {
           if (typeof document === "undefined") return;
           const cookie = [`${name28}=${encodeURIComponent(value)}`];
           if (utils_default2.isNumber(expires)) {
             cookie.push(`expires=${new Date(expires).toUTCString()}`);
           }
-          if (utils_default2.isString(path38)) {
-            cookie.push(`path=${path38}`);
+          if (utils_default2.isString(path42)) {
+            cookie.push(`path=${path42}`);
           }
           if (utils_default2.isString(domain3)) {
             cookie.push(`domain=${domain3}`);
@@ -129927,9 +130307,9 @@ var init_resolveConfig = __esm({
         } else if (utils_default2.isFunction(data.getHeaders)) {
           const formHeaders = data.getHeaders();
           const allowedHeaders = ["content-type", "content-length"];
-          Object.entries(formHeaders).forEach(([key, val]) => {
-            if (allowedHeaders.includes(key.toLowerCase())) {
-              headers.set(key, val);
+          Object.entries(formHeaders).forEach(([key2, val]) => {
+            if (allowedHeaders.includes(key2.toLowerCase())) {
+              headers.set(key2, val);
             }
           });
         }
@@ -130056,8 +130436,8 @@ var init_xhr = __esm({
         };
         requestData === void 0 && requestHeaders.setContentType(null);
         if ("setRequestHeader" in request) {
-          utils_default2.forEach(requestHeaders.toJSON(), function setRequestHeader(val, key) {
-            request.setRequestHeader(key, val);
+          utils_default2.forEach(requestHeaders.toJSON(), function setRequestHeader(val, key2) {
+            request.setRequestHeader(key2, val);
           });
         }
         if (!utils_default2.isUndefined(_config.withCredentials)) {
@@ -131089,8 +131469,8 @@ var init_HttpStatusCode = __esm({
       SslHandshakeFailed: 525,
       InvalidSslCertificate: 526
     };
-    Object.entries(HttpStatusCode).forEach(([key, value]) => {
-      HttpStatusCode[value] = key;
+    Object.entries(HttpStatusCode).forEach(([key2, value]) => {
+      HttpStatusCode[value] = key2;
     });
     HttpStatusCode_default = HttpStatusCode;
   }
@@ -131215,9 +131595,9 @@ function normalizeError(error71) {
 function extractMeta(obj) {
   const standardKeys = ["name", "message", "stack", "cause"];
   const meta4 = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (!standardKeys.includes(key) && value !== void 0) {
-      meta4[key] = value;
+  for (const [key2, value] of Object.entries(obj)) {
+    if (!standardKeys.includes(key2) && value !== void 0) {
+      meta4[key2] = value;
     }
   }
   return Object.keys(meta4).length > 0 ? meta4 : void 0;
@@ -131842,9 +132222,9 @@ function floatSafeRemainder(val, step) {
   const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
   return valInt % stepInt / 10 ** decCount;
 }
-function defineLazy(object4, key, getter) {
+function defineLazy(object4, key2, getter) {
   let value = void 0;
-  Object.defineProperty(object4, key, {
+  Object.defineProperty(object4, key2, {
     get() {
       if (value === EVALUATING) {
         return void 0;
@@ -131856,7 +132236,7 @@ function defineLazy(object4, key, getter) {
       return value;
     },
     set(v) {
-      Object.defineProperty(object4, key, {
+      Object.defineProperty(object4, key2, {
         value: v
         // configurable: true,
       });
@@ -131886,14 +132266,14 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path38) {
-  if (!path38)
+function getElementAtPath(obj, path42) {
+  if (!path42)
     return obj;
-  return path38.reduce((acc, key) => acc?.[key], obj);
+  return path42.reduce((acc, key2) => acc?.[key2], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys2 = Object.keys(promisesObj);
-  const promises6 = keys2.map((key) => promisesObj[key]);
+  const promises6 = keys2.map((key2) => promisesObj[key2]);
   return Promise.all(promises6).then((results) => {
     const resolvedObj = {};
     for (let i = 0; i < keys2.length; i++) {
@@ -131944,8 +132324,8 @@ function shallowClone(o) {
 }
 function numKeys(data) {
   let keyCount = 0;
-  for (const key in data) {
-    if (Object.prototype.hasOwnProperty.call(data, key)) {
+  for (const key2 in data) {
+    if (Object.prototype.hasOwnProperty.call(data, key2)) {
       keyCount++;
     }
   }
@@ -132031,13 +132411,13 @@ function pick(schema, mask) {
   const def = mergeDefs(schema._zod.def, {
     get shape() {
       const newShape = {};
-      for (const key in mask) {
-        if (!(key in currDef.shape)) {
-          throw new Error(`Unrecognized key: "${key}"`);
+      for (const key2 in mask) {
+        if (!(key2 in currDef.shape)) {
+          throw new Error(`Unrecognized key: "${key2}"`);
         }
-        if (!mask[key])
+        if (!mask[key2])
           continue;
-        newShape[key] = currDef.shape[key];
+        newShape[key2] = currDef.shape[key2];
       }
       assignProp(this, "shape", newShape);
       return newShape;
@@ -132056,13 +132436,13 @@ function omit(schema, mask) {
   const def = mergeDefs(schema._zod.def, {
     get shape() {
       const newShape = { ...schema._zod.def.shape };
-      for (const key in mask) {
-        if (!(key in currDef.shape)) {
-          throw new Error(`Unrecognized key: "${key}"`);
+      for (const key2 in mask) {
+        if (!(key2 in currDef.shape)) {
+          throw new Error(`Unrecognized key: "${key2}"`);
         }
-        if (!mask[key])
+        if (!mask[key2])
           continue;
-        delete newShape[key];
+        delete newShape[key2];
       }
       assignProp(this, "shape", newShape);
       return newShape;
@@ -132079,8 +132459,8 @@ function extend2(schema, shape) {
   const hasChecks = checks && checks.length > 0;
   if (hasChecks) {
     const existingShape = schema._zod.def.shape;
-    for (const key in shape) {
-      if (Object.getOwnPropertyDescriptor(existingShape, key) !== void 0) {
+    for (const key2 in shape) {
+      if (Object.getOwnPropertyDescriptor(existingShape, key2) !== void 0) {
         throw new Error("Cannot overwrite keys on object schemas containing refinements. Use `.safeExtend()` instead.");
       }
     }
@@ -132134,23 +132514,23 @@ function partial(Class3, schema, mask) {
       const oldShape = schema._zod.def.shape;
       const shape = { ...oldShape };
       if (mask) {
-        for (const key in mask) {
-          if (!(key in oldShape)) {
-            throw new Error(`Unrecognized key: "${key}"`);
+        for (const key2 in mask) {
+          if (!(key2 in oldShape)) {
+            throw new Error(`Unrecognized key: "${key2}"`);
           }
-          if (!mask[key])
+          if (!mask[key2])
             continue;
-          shape[key] = Class3 ? new Class3({
+          shape[key2] = Class3 ? new Class3({
             type: "optional",
-            innerType: oldShape[key]
-          }) : oldShape[key];
+            innerType: oldShape[key2]
+          }) : oldShape[key2];
         }
       } else {
-        for (const key in oldShape) {
-          shape[key] = Class3 ? new Class3({
+        for (const key2 in oldShape) {
+          shape[key2] = Class3 ? new Class3({
             type: "optional",
-            innerType: oldShape[key]
-          }) : oldShape[key];
+            innerType: oldShape[key2]
+          }) : oldShape[key2];
         }
       }
       assignProp(this, "shape", shape);
@@ -132166,22 +132546,22 @@ function required(Class3, schema, mask) {
       const oldShape = schema._zod.def.shape;
       const shape = { ...oldShape };
       if (mask) {
-        for (const key in mask) {
-          if (!(key in shape)) {
-            throw new Error(`Unrecognized key: "${key}"`);
+        for (const key2 in mask) {
+          if (!(key2 in shape)) {
+            throw new Error(`Unrecognized key: "${key2}"`);
           }
-          if (!mask[key])
+          if (!mask[key2])
             continue;
-          shape[key] = new Class3({
+          shape[key2] = new Class3({
             type: "nonoptional",
-            innerType: oldShape[key]
+            innerType: oldShape[key2]
           });
         }
       } else {
-        for (const key in oldShape) {
-          shape[key] = new Class3({
+        for (const key2 in oldShape) {
+          shape[key2] = new Class3({
             type: "nonoptional",
-            innerType: oldShape[key]
+            innerType: oldShape[key2]
           });
         }
       }
@@ -132201,11 +132581,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path38, issues) {
+function prefixIssues(path42, issues) {
   return issues.map((iss) => {
     var _a31;
     (_a31 = iss).path ?? (_a31.path = []);
-    iss.path.unshift(path38);
+    iss.path.unshift(path42);
     return iss;
   });
 }
@@ -132448,7 +132828,7 @@ function formatError(error71, mapper = (issue3) => issue3.message) {
 }
 function treeifyError(error71, mapper = (issue3) => issue3.message) {
   const result = { errors: [] };
-  const processError = (error73, path38 = []) => {
+  const processError = (error73, path42 = []) => {
     var _a31, _b27;
     for (const issue3 of error73.issues) {
       if (issue3.code === "invalid_union" && issue3.errors.length) {
@@ -132458,7 +132838,7 @@ function treeifyError(error71, mapper = (issue3) => issue3.message) {
       } else if (issue3.code === "invalid_element") {
         processError({ issues: issue3.issues }, issue3.path);
       } else {
-        const fullpath = [...path38, ...issue3.path];
+        const fullpath = [...path42, ...issue3.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue3));
           continue;
@@ -132490,8 +132870,8 @@ function treeifyError(error71, mapper = (issue3) => issue3.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path38 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path38) {
+  const path42 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path42) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -133462,19 +133842,19 @@ function handleArrayResult(result, final, index) {
   }
   final.value[index] = result.value;
 }
-function handlePropertyResult(result, final, key, input, isOptionalOut) {
+function handlePropertyResult(result, final, key2, input, isOptionalOut) {
   if (result.issues.length) {
-    if (isOptionalOut && !(key in input)) {
+    if (isOptionalOut && !(key2 in input)) {
       return;
     }
-    final.issues.push(...prefixIssues(key, result.issues));
+    final.issues.push(...prefixIssues(key2, result.issues));
   }
   if (result.value === void 0) {
-    if (key in input) {
-      final.value[key] = void 0;
+    if (key2 in input) {
+      final.value[key2] = void 0;
     }
   } else {
-    final.value[key] = result.value;
+    final.value[key2] = result.value;
   }
 }
 function normalizeDef(def) {
@@ -133499,18 +133879,18 @@ function handleCatchall(proms, input, payload, ctx, def, inst) {
   const _catchall = def.catchall._zod;
   const t = _catchall.def.type;
   const isOptionalOut = _catchall.optout === "optional";
-  for (const key in input) {
-    if (keySet.has(key))
+  for (const key2 in input) {
+    if (keySet.has(key2))
       continue;
     if (t === "never") {
-      unrecognized.push(key);
+      unrecognized.push(key2);
       continue;
     }
-    const r = _catchall.run({ value: input[key], issues: [] }, ctx);
+    const r = _catchall.run({ value: input[key2], issues: [] }, ctx);
     if (r instanceof Promise) {
-      proms.push(r.then((r2) => handlePropertyResult(r2, payload, key, input, isOptionalOut)));
+      proms.push(r.then((r2) => handlePropertyResult(r2, payload, key2, input, isOptionalOut)));
     } else {
-      handlePropertyResult(r, payload, key, input, isOptionalOut);
+      handlePropertyResult(r, payload, key2, input, isOptionalOut);
     }
   }
   if (unrecognized.length) {
@@ -133580,17 +133960,17 @@ function mergeValues(a, b) {
   }
   if (isPlainObject2(a) && isPlainObject2(b)) {
     const bKeys = Object.keys(b);
-    const sharedKeys = Object.keys(a).filter((key) => bKeys.indexOf(key) !== -1);
+    const sharedKeys = Object.keys(a).filter((key2) => bKeys.indexOf(key2) !== -1);
     const newObj = { ...a, ...b };
-    for (const key of sharedKeys) {
-      const sharedValue = mergeValues(a[key], b[key]);
+    for (const key2 of sharedKeys) {
+      const sharedValue = mergeValues(a[key2], b[key2]);
       if (!sharedValue.valid) {
         return {
           valid: false,
-          mergeErrorPath: [key, ...sharedValue.mergeErrorPath]
+          mergeErrorPath: [key2, ...sharedValue.mergeErrorPath]
         };
       }
-      newObj[key] = sharedValue.data;
+      newObj[key2] = sharedValue.data;
     }
     return { valid: true, data: newObj };
   }
@@ -133660,10 +134040,10 @@ function handleTupleResult(result, final, index) {
   }
   final.value[index] = result.value;
 }
-function handleMapResult(keyResult, valueResult, final, key, input, inst, ctx) {
+function handleMapResult(keyResult, valueResult, final, key2, input, inst, ctx) {
   if (keyResult.issues.length) {
-    if (propertyKeyTypes.has(typeof key)) {
-      final.issues.push(...prefixIssues(key, keyResult.issues));
+    if (propertyKeyTypes.has(typeof key2)) {
+      final.issues.push(...prefixIssues(key2, keyResult.issues));
     } else {
       final.issues.push({
         code: "invalid_key",
@@ -133675,15 +134055,15 @@ function handleMapResult(keyResult, valueResult, final, key, input, inst, ctx) {
     }
   }
   if (valueResult.issues.length) {
-    if (propertyKeyTypes.has(typeof key)) {
-      final.issues.push(...prefixIssues(key, valueResult.issues));
+    if (propertyKeyTypes.has(typeof key2)) {
+      final.issues.push(...prefixIssues(key2, valueResult.issues));
     } else {
       final.issues.push({
         origin: "map",
         code: "invalid_element",
         input,
         inst,
-        key,
+        key: key2,
         issues: valueResult.issues.map((iss) => finalizeIssue(iss, ctx, config()))
       });
     }
@@ -134401,12 +134781,12 @@ var init_schemas = __esm({
       defineLazy(inst._zod, "propValues", () => {
         const shape = def.shape;
         const propValues = {};
-        for (const key in shape) {
-          const field = shape[key]._zod;
+        for (const key2 in shape) {
+          const field = shape[key2]._zod;
           if (field.values) {
-            propValues[key] ?? (propValues[key] = /* @__PURE__ */ new Set());
+            propValues[key2] ?? (propValues[key2] = /* @__PURE__ */ new Set());
             for (const v of field.values)
-              propValues[key].add(v);
+              propValues[key2].add(v);
           }
         }
         return propValues;
@@ -134429,14 +134809,14 @@ var init_schemas = __esm({
         payload.value = {};
         const proms = [];
         const shape = value.shape;
-        for (const key of value.keys) {
-          const el = shape[key];
+        for (const key2 of value.keys) {
+          const el = shape[key2];
           const isOptionalOut = el._zod.optout === "optional";
-          const r = el._zod.run({ value: input[key], issues: [] }, ctx);
+          const r = el._zod.run({ value: input[key2], issues: [] }, ctx);
           if (r instanceof Promise) {
-            proms.push(r.then((r2) => handlePropertyResult(r2, payload, key, input, isOptionalOut)));
+            proms.push(r.then((r2) => handlePropertyResult(r2, payload, key2, input, isOptionalOut)));
           } else {
-            handlePropertyResult(r, payload, key, input, isOptionalOut);
+            handlePropertyResult(r, payload, key2, input, isOptionalOut);
           }
         }
         if (!catchall) {
@@ -134452,23 +134832,23 @@ var init_schemas = __esm({
       const generateFastpass = (shape) => {
         const doc = new Doc(["shape", "payload", "ctx"]);
         const normalized = _normalized.value;
-        const parseStr = (key) => {
-          const k = esc(key);
+        const parseStr = (key2) => {
+          const k = esc(key2);
           return `shape[${k}]._zod.run({ value: input[${k}], issues: [] }, ctx)`;
         };
         doc.write(`const input = payload.value;`);
         const ids = /* @__PURE__ */ Object.create(null);
         let counter = 0;
-        for (const key of normalized.keys) {
-          ids[key] = `key_${counter++}`;
+        for (const key2 of normalized.keys) {
+          ids[key2] = `key_${counter++}`;
         }
         doc.write(`const newResult = {};`);
-        for (const key of normalized.keys) {
-          const id = ids[key];
-          const k = esc(key);
-          const schema = shape[key];
+        for (const key2 of normalized.keys) {
+          const id = ids[key2];
+          const k = esc(key2);
+          const schema = shape[key2];
           const isOptionalOut = schema?._zod?.optout === "optional";
-          doc.write(`const ${id} = ${parseStr(key)};`);
+          doc.write(`const ${id} = ${parseStr(key2)};`);
           if (isOptionalOut) {
             doc.write(`
         if (${id}.issues.length) {
@@ -134787,30 +135167,30 @@ var init_schemas = __esm({
         if (values) {
           payload.value = {};
           const recordKeys = /* @__PURE__ */ new Set();
-          for (const key of values) {
-            if (typeof key === "string" || typeof key === "number" || typeof key === "symbol") {
-              recordKeys.add(typeof key === "number" ? key.toString() : key);
-              const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+          for (const key2 of values) {
+            if (typeof key2 === "string" || typeof key2 === "number" || typeof key2 === "symbol") {
+              recordKeys.add(typeof key2 === "number" ? key2.toString() : key2);
+              const result = def.valueType._zod.run({ value: input[key2], issues: [] }, ctx);
               if (result instanceof Promise) {
                 proms.push(result.then((result2) => {
                   if (result2.issues.length) {
-                    payload.issues.push(...prefixIssues(key, result2.issues));
+                    payload.issues.push(...prefixIssues(key2, result2.issues));
                   }
-                  payload.value[key] = result2.value;
+                  payload.value[key2] = result2.value;
                 }));
               } else {
                 if (result.issues.length) {
-                  payload.issues.push(...prefixIssues(key, result.issues));
+                  payload.issues.push(...prefixIssues(key2, result.issues));
                 }
-                payload.value[key] = result.value;
+                payload.value[key2] = result.value;
               }
             }
           }
           let unrecognized;
-          for (const key in input) {
-            if (!recordKeys.has(key)) {
+          for (const key2 in input) {
+            if (!recordKeys.has(key2)) {
               unrecognized = unrecognized ?? [];
-              unrecognized.push(key);
+              unrecognized.push(key2);
             }
           }
           if (unrecognized && unrecognized.length > 0) {
@@ -134823,16 +135203,16 @@ var init_schemas = __esm({
           }
         } else {
           payload.value = {};
-          for (const key of Reflect.ownKeys(input)) {
-            if (key === "__proto__")
+          for (const key2 of Reflect.ownKeys(input)) {
+            if (key2 === "__proto__")
               continue;
-            let keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+            let keyResult = def.keyType._zod.run({ value: key2, issues: [] }, ctx);
             if (keyResult instanceof Promise) {
               throw new Error("Async schemas not supported in object keys currently");
             }
-            const checkNumericKey = typeof key === "string" && number.test(key) && keyResult.issues.length;
+            const checkNumericKey = typeof key2 === "string" && number.test(key2) && keyResult.issues.length;
             if (checkNumericKey) {
-              const retryResult = def.keyType._zod.run({ value: Number(key), issues: [] }, ctx);
+              const retryResult = def.keyType._zod.run({ value: Number(key2), issues: [] }, ctx);
               if (retryResult instanceof Promise) {
                 throw new Error("Async schemas not supported in object keys currently");
               }
@@ -134842,30 +135222,30 @@ var init_schemas = __esm({
             }
             if (keyResult.issues.length) {
               if (def.mode === "loose") {
-                payload.value[key] = input[key];
+                payload.value[key2] = input[key2];
               } else {
                 payload.issues.push({
                   code: "invalid_key",
                   origin: "record",
                   issues: keyResult.issues.map((iss) => finalizeIssue(iss, ctx, config())),
-                  input: key,
-                  path: [key],
+                  input: key2,
+                  path: [key2],
                   inst
                 });
               }
               continue;
             }
-            const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+            const result = def.valueType._zod.run({ value: input[key2], issues: [] }, ctx);
             if (result instanceof Promise) {
               proms.push(result.then((result2) => {
                 if (result2.issues.length) {
-                  payload.issues.push(...prefixIssues(key, result2.issues));
+                  payload.issues.push(...prefixIssues(key2, result2.issues));
                 }
                 payload.value[keyResult.value] = result2.value;
               }));
             } else {
               if (result.issues.length) {
-                payload.issues.push(...prefixIssues(key, result.issues));
+                payload.issues.push(...prefixIssues(key2, result.issues));
               }
               payload.value[keyResult.value] = result.value;
             }
@@ -134892,15 +135272,15 @@ var init_schemas = __esm({
         }
         const proms = [];
         payload.value = /* @__PURE__ */ new Map();
-        for (const [key, value] of input) {
-          const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+        for (const [key2, value] of input) {
+          const keyResult = def.keyType._zod.run({ value: key2, issues: [] }, ctx);
           const valueResult = def.valueType._zod.run({ value, issues: [] }, ctx);
           if (keyResult instanceof Promise || valueResult instanceof Promise) {
             proms.push(Promise.all([keyResult, valueResult]).then(([keyResult2, valueResult2]) => {
-              handleMapResult(keyResult2, valueResult2, payload, key, input, inst, ctx);
+              handleMapResult(keyResult2, valueResult2, payload, key2, input, inst, ctx);
             }));
           } else {
-            handleMapResult(keyResult, valueResult, payload, key, input, inst, ctx);
+            handleMapResult(keyResult, valueResult, payload, key2, input, inst, ctx);
           }
         }
         if (proms.length)
@@ -142598,8 +142978,8 @@ function extractDefs(ctx, schema) {
     if (defId)
       seen.defId = defId;
     const schema2 = seen.schema;
-    for (const key in schema2) {
-      delete schema2[key];
+    for (const key2 in schema2) {
+      delete schema2[key2];
     }
     schema2.$ref = ref;
   };
@@ -142668,20 +143048,20 @@ function finalize(ctx, schema) {
       Object.assign(schema2, _cached);
       const isParentRef = zodSchema4._zod.parent === ref;
       if (isParentRef) {
-        for (const key in schema2) {
-          if (key === "$ref" || key === "allOf")
+        for (const key2 in schema2) {
+          if (key2 === "$ref" || key2 === "allOf")
             continue;
-          if (!(key in _cached)) {
-            delete schema2[key];
+          if (!(key2 in _cached)) {
+            delete schema2[key2];
           }
         }
       }
       if (refSchema.$ref && refSeen.def) {
-        for (const key in schema2) {
-          if (key === "$ref" || key === "allOf")
+        for (const key2 in schema2) {
+          if (key2 === "$ref" || key2 === "allOf")
             continue;
-          if (key in refSeen.def && JSON.stringify(schema2[key]) === JSON.stringify(refSeen.def[key])) {
-            delete schema2[key];
+          if (key2 in refSeen.def && JSON.stringify(schema2[key2]) === JSON.stringify(refSeen.def[key2])) {
+            delete schema2[key2];
           }
         }
       }
@@ -142693,11 +143073,11 @@ function finalize(ctx, schema) {
       if (parentSeen?.schema.$ref) {
         schema2.$ref = parentSeen.schema.$ref;
         if (parentSeen.def) {
-          for (const key in schema2) {
-            if (key === "$ref" || key === "allOf")
+          for (const key2 in schema2) {
+            if (key2 === "$ref" || key2 === "allOf")
               continue;
-            if (key in parentSeen.def && JSON.stringify(schema2[key]) === JSON.stringify(parentSeen.def[key])) {
-              delete schema2[key];
+            if (key2 in parentSeen.def && JSON.stringify(schema2[key2]) === JSON.stringify(parentSeen.def[key2])) {
+              delete schema2[key2];
             }
           }
         }
@@ -142791,8 +143171,8 @@ function isTransforming(_schema, _ctx) {
     return isTransforming(def.in, ctx) || isTransforming(def.out, ctx);
   }
   if (def.type === "object") {
-    for (const key in def.shape) {
-      if (isTransforming(def.shape[key], ctx))
+    for (const key2 in def.shape) {
+      if (isTransforming(def.shape[key2], ctx))
         return true;
     }
     return false;
@@ -142854,9 +143234,9 @@ function toJSONSchema(input, params) {
     };
     ctx2.external = external;
     for (const entry of registry3._idmap.entries()) {
-      const [key, schema] = entry;
+      const [key2, schema] = entry;
       extractDefs(ctx2, schema);
-      schemas[key] = finalize(ctx2, schema);
+      schemas[key2] = finalize(ctx2, schema);
     }
     if (Object.keys(defs).length > 0) {
       const defsSegment = ctx2.target === "draft-2020-12" ? "$defs" : "definitions";
@@ -143136,15 +143516,15 @@ var init_json_schema_processors = __esm({
       json4.type = "object";
       json4.properties = {};
       const shape = def.shape;
-      for (const key in shape) {
-        json4.properties[key] = process2(shape[key], ctx, {
+      for (const key2 in shape) {
+        json4.properties[key2] = process2(shape[key2], ctx, {
           ...params,
-          path: [...params.path, "properties", key]
+          path: [...params.path, "properties", key2]
         });
       }
       const allKeys = new Set(Object.keys(shape));
-      const requiredKeys = new Set([...allKeys].filter((key) => {
-        const v = def.shape[key]._zod;
+      const requiredKeys = new Set([...allKeys].filter((key2) => {
+        const v = def.shape[key2]._zod;
         if (ctx.io === "input") {
           return v.optin === void 0;
         } else {
@@ -145255,17 +145635,17 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path38 = ref.slice(1).split("/").filter(Boolean);
-  if (path38.length === 0) {
+  const path42 = ref.slice(1).split("/").filter(Boolean);
+  if (path42.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path38[0] === defsKey) {
-    const key = path38[1];
-    if (!key || !ctx.defs[key]) {
+  if (path42[0] === defsKey) {
+    const key2 = path42[1];
+    if (!key2 || !ctx.defs[key2]) {
       throw new Error(`Reference not found: ${ref}`);
     }
-    return ctx.defs[key];
+    return ctx.defs[key2];
   }
   throw new Error(`Reference not found: ${ref}`);
 }
@@ -145451,9 +145831,9 @@ function convertBaseSchema(schema, ctx) {
       const shape = {};
       const properties = schema.properties || {};
       const requiredSet = new Set(schema.required || []);
-      for (const [key, propSchema] of Object.entries(properties)) {
+      for (const [key2, propSchema] of Object.entries(properties)) {
         const propZodSchema = convertSchema(propSchema, ctx);
-        shape[key] = requiredSet.has(key) ? propZodSchema : propZodSchema.optional();
+        shape[key2] = requiredSet.has(key2) ? propZodSchema : propZodSchema.optional();
       }
       if (schema.propertyNames) {
         const keySchema3 = convertSchema(schema.propertyNames, ctx);
@@ -145597,20 +145977,20 @@ function convertSchema(schema, ctx) {
   }
   const extraMeta = {};
   const coreMetadataKeys = ["$id", "id", "$comment", "$anchor", "$vocabulary", "$dynamicRef", "$dynamicAnchor"];
-  for (const key of coreMetadataKeys) {
-    if (key in schema) {
-      extraMeta[key] = schema[key];
+  for (const key2 of coreMetadataKeys) {
+    if (key2 in schema) {
+      extraMeta[key2] = schema[key2];
     }
   }
   const contentMetadataKeys = ["contentEncoding", "contentMediaType", "contentSchema"];
-  for (const key of contentMetadataKeys) {
-    if (key in schema) {
-      extraMeta[key] = schema[key];
+  for (const key2 of contentMetadataKeys) {
+    if (key2 in schema) {
+      extraMeta[key2] = schema[key2];
     }
   }
-  for (const key of Object.keys(schema)) {
-    if (!RECOGNIZED_KEYS.has(key)) {
-      extraMeta[key] = schema[key];
+  for (const key2 of Object.keys(schema)) {
+    if (!RECOGNIZED_KEYS.has(key2)) {
+      extraMeta[key2] = schema[key2];
     }
   }
   if (Object.keys(extraMeta).length > 0) {
@@ -146070,9 +146450,9 @@ var init_util2 = __esm({
       };
       util4.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object4) => {
         const keys2 = [];
-        for (const key in object4) {
-          if (Object.prototype.hasOwnProperty.call(object4, key)) {
-            keys2.push(key);
+        for (const key2 in object4) {
+          if (Object.prototype.hasOwnProperty.call(object4, key2)) {
+            keys2.push(key2);
           }
         }
         return keys2;
@@ -146443,8 +146823,8 @@ var init_parseUtil = __esm({
     init_errors3();
     init_en2();
     makeIssue = (params) => {
-      const { data, path: path38, errorMaps, issueData } = params;
-      const fullPath = [...path38, ...issueData.path || []];
+      const { data, path: path42, errorMaps, issueData } = params;
+      const fullPath = [...path42, ...issueData.path || []];
       const fullIssue = {
         ...issueData,
         path: fullPath
@@ -146493,10 +146873,10 @@ var init_parseUtil = __esm({
       static async mergeObjectAsync(status, pairs) {
         const syncPairs = [];
         for (const pair of pairs) {
-          const key = await pair.key;
+          const key2 = await pair.key;
           const value = await pair.value;
           syncPairs.push({
-            key,
+            key: key2,
             value
           });
         }
@@ -146505,17 +146885,17 @@ var init_parseUtil = __esm({
       static mergeObjectSync(status, pairs) {
         const finalObject = {};
         for (const pair of pairs) {
-          const { key, value } = pair;
-          if (key.status === "aborted")
+          const { key: key2, value } = pair;
+          if (key2.status === "aborted")
             return INVALID;
           if (value.status === "aborted")
             return INVALID;
-          if (key.status === "dirty")
+          if (key2.status === "dirty")
             status.dirty();
           if (value.status === "dirty")
             status.dirty();
-          if (key.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
-            finalObject[key.value] = value.value;
+          if (key2.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
+            finalObject[key2.value] = value.value;
           }
         }
         return { status: status.value, value: finalObject };
@@ -146649,9 +147029,9 @@ function floatSafeRemainder2(val, step) {
 function deepPartialify(schema) {
   if (schema instanceof ZodObject2) {
     const newShape = {};
-    for (const key in schema.shape) {
-      const fieldSchema = schema.shape[key];
-      newShape[key] = ZodOptional2.create(deepPartialify(fieldSchema));
+    for (const key2 in schema.shape) {
+      const fieldSchema = schema.shape[key2];
+      newShape[key2] = ZodOptional2.create(deepPartialify(fieldSchema));
     }
     return new ZodObject2({
       ...schema._def,
@@ -146679,14 +147059,14 @@ function mergeValues2(a, b) {
     return { valid: true, data: a };
   } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {
     const bKeys = util3.objectKeys(b);
-    const sharedKeys = util3.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);
+    const sharedKeys = util3.objectKeys(a).filter((key2) => bKeys.indexOf(key2) !== -1);
     const newObj = { ...a, ...b };
-    for (const key of sharedKeys) {
-      const sharedValue = mergeValues2(a[key], b[key]);
+    for (const key2 of sharedKeys) {
+      const sharedValue = mergeValues2(a[key2], b[key2]);
       if (!sharedValue.valid) {
         return { valid: false };
       }
-      newObj[key] = sharedValue.data;
+      newObj[key2] = sharedValue.data;
     }
     return { valid: true, data: newObj };
   } else if (aType === ZodParsedType.array && bType === ZodParsedType.array) {
@@ -146727,12 +147107,12 @@ var init_types = __esm({
     init_parseUtil();
     init_util2();
     ParseInputLazyPath = class {
-      constructor(parent, value, path38, key) {
+      constructor(parent, value, path42, key2) {
         this._cachedPath = [];
         this.parent = parent;
         this.data = value;
-        this._path = path38;
-        this._key = key;
+        this._path = path42;
+        this._key = key2;
       }
       get path() {
         if (!this._cachedPath.length) {
@@ -148410,29 +148790,29 @@ var init_types = __esm({
         const { shape, keys: shapeKeys } = this._getCached();
         const extraKeys = [];
         if (!(this._def.catchall instanceof ZodNever2 && this._def.unknownKeys === "strip")) {
-          for (const key in ctx.data) {
-            if (!shapeKeys.includes(key)) {
-              extraKeys.push(key);
+          for (const key2 in ctx.data) {
+            if (!shapeKeys.includes(key2)) {
+              extraKeys.push(key2);
             }
           }
         }
         const pairs = [];
-        for (const key of shapeKeys) {
-          const keyValidator = shape[key];
-          const value = ctx.data[key];
+        for (const key2 of shapeKeys) {
+          const keyValidator = shape[key2];
+          const value = ctx.data[key2];
           pairs.push({
-            key: { status: "valid", value: key },
-            value: keyValidator._parse(new ParseInputLazyPath(ctx, value, ctx.path, key)),
-            alwaysSet: key in ctx.data
+            key: { status: "valid", value: key2 },
+            value: keyValidator._parse(new ParseInputLazyPath(ctx, value, ctx.path, key2)),
+            alwaysSet: key2 in ctx.data
           });
         }
         if (this._def.catchall instanceof ZodNever2) {
           const unknownKeys = this._def.unknownKeys;
           if (unknownKeys === "passthrough") {
-            for (const key of extraKeys) {
+            for (const key2 of extraKeys) {
               pairs.push({
-                key: { status: "valid", value: key },
-                value: { status: "valid", value: ctx.data[key] }
+                key: { status: "valid", value: key2 },
+                value: { status: "valid", value: ctx.data[key2] }
               });
             }
           } else if (unknownKeys === "strict") {
@@ -148449,15 +148829,15 @@ var init_types = __esm({
           }
         } else {
           const catchall = this._def.catchall;
-          for (const key of extraKeys) {
-            const value = ctx.data[key];
+          for (const key2 of extraKeys) {
+            const value = ctx.data[key2];
             pairs.push({
-              key: { status: "valid", value: key },
+              key: { status: "valid", value: key2 },
               value: catchall._parse(
-                new ParseInputLazyPath(ctx, value, ctx.path, key)
+                new ParseInputLazyPath(ctx, value, ctx.path, key2)
                 //, ctx.child(key), value, getParsedType(value)
               ),
-              alwaysSet: key in ctx.data
+              alwaysSet: key2 in ctx.data
             });
           }
         }
@@ -148465,10 +148845,10 @@ var init_types = __esm({
           return Promise.resolve().then(async () => {
             const syncPairs = [];
             for (const pair of pairs) {
-              const key = await pair.key;
+              const key2 = await pair.key;
               const value = await pair.value;
               syncPairs.push({
-                key,
+                key: key2,
                 value,
                 alwaysSet: pair.alwaysSet
               });
@@ -148593,8 +148973,8 @@ var init_types = __esm({
       //   }) as any;
       //   return merged;
       // }
-      setKey(key, schema) {
-        return this.augment({ [key]: schema });
+      setKey(key2, schema) {
+        return this.augment({ [key2]: schema });
       }
       // merge<Incoming extends AnyZodObject>(
       //   merging: Incoming
@@ -148625,9 +149005,9 @@ var init_types = __esm({
       }
       pick(mask) {
         const shape = {};
-        for (const key of util3.objectKeys(mask)) {
-          if (mask[key] && this.shape[key]) {
-            shape[key] = this.shape[key];
+        for (const key2 of util3.objectKeys(mask)) {
+          if (mask[key2] && this.shape[key2]) {
+            shape[key2] = this.shape[key2];
           }
         }
         return new _ZodObject({
@@ -148637,9 +149017,9 @@ var init_types = __esm({
       }
       omit(mask) {
         const shape = {};
-        for (const key of util3.objectKeys(this.shape)) {
-          if (!mask[key]) {
-            shape[key] = this.shape[key];
+        for (const key2 of util3.objectKeys(this.shape)) {
+          if (!mask[key2]) {
+            shape[key2] = this.shape[key2];
           }
         }
         return new _ZodObject({
@@ -148655,12 +149035,12 @@ var init_types = __esm({
       }
       partial(mask) {
         const newShape = {};
-        for (const key of util3.objectKeys(this.shape)) {
-          const fieldSchema = this.shape[key];
-          if (mask && !mask[key]) {
-            newShape[key] = fieldSchema;
+        for (const key2 of util3.objectKeys(this.shape)) {
+          const fieldSchema = this.shape[key2];
+          if (mask && !mask[key2]) {
+            newShape[key2] = fieldSchema;
           } else {
-            newShape[key] = fieldSchema.optional();
+            newShape[key2] = fieldSchema.optional();
           }
         }
         return new _ZodObject({
@@ -148670,16 +149050,16 @@ var init_types = __esm({
       }
       required(mask) {
         const newShape = {};
-        for (const key of util3.objectKeys(this.shape)) {
-          if (mask && !mask[key]) {
-            newShape[key] = this.shape[key];
+        for (const key2 of util3.objectKeys(this.shape)) {
+          if (mask && !mask[key2]) {
+            newShape[key2] = this.shape[key2];
           } else {
-            const fieldSchema = this.shape[key];
+            const fieldSchema = this.shape[key2];
             let newField = fieldSchema;
             while (newField instanceof ZodOptional2) {
               newField = newField._def.innerType;
             }
-            newShape[key] = newField;
+            newShape[key2] = newField;
           }
         }
         return new _ZodObject({
@@ -149056,11 +149436,11 @@ var init_types = __esm({
         const pairs = [];
         const keyType = this._def.keyType;
         const valueType = this._def.valueType;
-        for (const key in ctx.data) {
+        for (const key2 in ctx.data) {
           pairs.push({
-            key: keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, key)),
-            value: valueType._parse(new ParseInputLazyPath(ctx, ctx.data[key], ctx.path, key)),
-            alwaysSet: key in ctx.data
+            key: keyType._parse(new ParseInputLazyPath(ctx, key2, ctx.path, key2)),
+            value: valueType._parse(new ParseInputLazyPath(ctx, ctx.data[key2], ctx.path, key2)),
+            alwaysSet: key2 in ctx.data
           });
         }
         if (ctx.common.async) {
@@ -149108,9 +149488,9 @@ var init_types = __esm({
         }
         const keyType = this._def.keyType;
         const valueType = this._def.valueType;
-        const pairs = [...ctx.data.entries()].map(([key, value], index) => {
+        const pairs = [...ctx.data.entries()].map(([key2, value], index) => {
           return {
-            key: keyType._parse(new ParseInputLazyPath(ctx, key, ctx.path, [index, "key"])),
+            key: keyType._parse(new ParseInputLazyPath(ctx, key2, ctx.path, [index, "key"])),
             value: valueType._parse(new ParseInputLazyPath(ctx, value, ctx.path, [index, "value"]))
           };
         });
@@ -149118,30 +149498,30 @@ var init_types = __esm({
           const finalMap = /* @__PURE__ */ new Map();
           return Promise.resolve().then(async () => {
             for (const pair of pairs) {
-              const key = await pair.key;
+              const key2 = await pair.key;
               const value = await pair.value;
-              if (key.status === "aborted" || value.status === "aborted") {
+              if (key2.status === "aborted" || value.status === "aborted") {
                 return INVALID;
               }
-              if (key.status === "dirty" || value.status === "dirty") {
+              if (key2.status === "dirty" || value.status === "dirty") {
                 status.dirty();
               }
-              finalMap.set(key.value, value.value);
+              finalMap.set(key2.value, value.value);
             }
             return { status: status.value, value: finalMap };
           });
         } else {
           const finalMap = /* @__PURE__ */ new Map();
           for (const pair of pairs) {
-            const key = pair.key;
+            const key2 = pair.key;
             const value = pair.value;
-            if (key.status === "aborted" || value.status === "aborted") {
+            if (key2.status === "aborted" || value.status === "aborted") {
               return INVALID;
             }
-            if (key.status === "dirty" || value.status === "dirty") {
+            if (key2.status === "dirty" || value.status === "dirty") {
               status.dirty();
             }
-            finalMap.set(key.value, value.value);
+            finalMap.set(key2.value, value.value);
           }
           return { status: status.value, value: finalMap };
         }
@@ -150218,22 +150598,22 @@ function convertImageModelFileToDataUri(file3) {
 function convertToFormData(input, options = {}) {
   const { useArrayBrackets = true } = options;
   const formData = new FormData();
-  for (const [key, value] of Object.entries(input)) {
+  for (const [key2, value] of Object.entries(input)) {
     if (value == null) {
       continue;
     }
     if (Array.isArray(value)) {
       if (value.length === 1) {
-        formData.append(key, value[0]);
+        formData.append(key2, value[0]);
         continue;
       }
-      const arrayKey = useArrayBrackets ? `${key}[]` : key;
+      const arrayKey = useArrayBrackets ? `${key2}[]` : key2;
       for (const item of value) {
         formData.append(arrayKey, item);
       }
       continue;
     }
-    formData.append(key, value);
+    formData.append(key2, value);
   }
   return formData;
 }
@@ -150494,16 +150874,16 @@ function normalizeHeaders(headers) {
   }
   const normalized = {};
   if (headers instanceof Headers) {
-    headers.forEach((value, key) => {
-      normalized[key.toLowerCase()] = value;
+    headers.forEach((value, key2) => {
+      normalized[key2.toLowerCase()] = value;
     });
   } else {
     if (!Array.isArray(headers)) {
       headers = Object.entries(headers);
     }
-    for (const [key, value] of headers) {
+    for (const [key2, value] of headers) {
       if (value != null) {
-        normalized[key.toLowerCase()] = value;
+        normalized[key2.toLowerCase()] = value;
       }
     }
   }
@@ -150528,8 +150908,8 @@ function isUrlSupported({
 }) {
   url4 = url4.toLowerCase();
   mediaType = mediaType.toLowerCase();
-  return Object.entries(supportedUrls).map(([key, value]) => {
-    const mediaType2 = key.toLowerCase();
+  return Object.entries(supportedUrls).map(([key2, value]) => {
+    const mediaType2 = key2.toLowerCase();
     return mediaType2 === "*" || mediaType2 === "*/*" ? { mediaTypePrefix: "", regexes: value } : { mediaTypePrefix: mediaType2.replace(/\*/, ""), regexes: value };
   }).filter(({ mediaTypePrefix }) => mediaType.startsWith(mediaTypePrefix)).flatMap(({ regexes }) => regexes).some((pattern) => pattern.test(url4));
 }
@@ -150566,20 +150946,20 @@ function loadApiKey({
   return apiKey;
 }
 function loadOptionalSetting({
-  settingValue,
+  settingValue: settingValue2,
   environmentVariableName
 }) {
-  if (typeof settingValue === "string") {
-    return settingValue;
+  if (typeof settingValue2 === "string") {
+    return settingValue2;
   }
-  if (settingValue != null || typeof process === "undefined") {
+  if (settingValue2 != null || typeof process === "undefined") {
     return void 0;
   }
-  settingValue = process.env[environmentVariableName];
-  if (settingValue == null || typeof settingValue !== "string") {
+  settingValue2 = process.env[environmentVariableName];
+  if (settingValue2 == null || typeof settingValue2 !== "string") {
     return void 0;
   }
-  return settingValue;
+  return settingValue2;
 }
 function mediaTypeToExtension(mediaType) {
   var _a211;
@@ -150614,8 +150994,8 @@ function filter2(obj) {
       if (Object.prototype.hasOwnProperty.call(node, "constructor") && node.constructor !== null && typeof node.constructor === "object" && Object.prototype.hasOwnProperty.call(node.constructor, "prototype")) {
         throw new SyntaxError("Object contains forbidden prototype property");
       }
-      for (const key in node) {
-        const value = node[key];
+      for (const key2 in node) {
+        const value = node[key2];
         if (value && typeof value === "object") {
           next.push(value);
         }
@@ -150642,8 +151022,8 @@ function addAdditionalPropertiesToJsonSchema(jsonSchema22) {
     jsonSchema22.additionalProperties = false;
     const { properties } = jsonSchema22;
     if (properties != null) {
-      for (const key of Object.keys(properties)) {
-        properties[key] = visit(properties[key]);
+      for (const key2 of Object.keys(properties)) {
+        properties[key2] = visit(properties[key2]);
       }
     }
   }
@@ -150661,8 +151041,8 @@ function addAdditionalPropertiesToJsonSchema(jsonSchema22) {
   }
   const { definitions } = jsonSchema22;
   if (definitions != null) {
-    for (const key of Object.keys(definitions)) {
-      definitions[key] = visit(definitions[key]);
+    for (const key2 of Object.keys(definitions)) {
+      definitions[key2] = visit(definitions[key2]);
     }
   }
   return jsonSchema22;
@@ -151147,10 +151527,10 @@ function parseMapDef(def, refs) {
 }
 function parseNativeEnumDef(def) {
   const object4 = def.values;
-  const actualKeys = Object.keys(def.values).filter((key) => {
-    return typeof object4[object4[key]] !== "number";
+  const actualKeys = Object.keys(def.values).filter((key2) => {
+    return typeof object4[object4[key2]] !== "number";
   });
-  const actualValues = actualKeys.map((key) => object4[key]);
+  const actualValues = actualKeys.map((key2) => object4[key2]);
   const parsedTypes = Array.from(
     new Set(actualValues.map((values) => typeof values))
   );
@@ -154034,37 +154414,37 @@ function createOpenAI(options = {}) {
   );
   const createChatModel = (modelId) => new OpenAIChatLanguageModel(modelId, {
     provider: `${providerName}.chat`,
-    url: ({ path: path38 }) => `${baseURL}${path38}`,
+    url: ({ path: path42 }) => `${baseURL}${path42}`,
     headers: getHeaders,
     fetch: options.fetch
   });
   const createCompletionModel = (modelId) => new OpenAICompletionLanguageModel(modelId, {
     provider: `${providerName}.completion`,
-    url: ({ path: path38 }) => `${baseURL}${path38}`,
+    url: ({ path: path42 }) => `${baseURL}${path42}`,
     headers: getHeaders,
     fetch: options.fetch
   });
   const createEmbeddingModel = (modelId) => new OpenAIEmbeddingModel(modelId, {
     provider: `${providerName}.embedding`,
-    url: ({ path: path38 }) => `${baseURL}${path38}`,
+    url: ({ path: path42 }) => `${baseURL}${path42}`,
     headers: getHeaders,
     fetch: options.fetch
   });
   const createImageModel = (modelId) => new OpenAIImageModel(modelId, {
     provider: `${providerName}.image`,
-    url: ({ path: path38 }) => `${baseURL}${path38}`,
+    url: ({ path: path42 }) => `${baseURL}${path42}`,
     headers: getHeaders,
     fetch: options.fetch
   });
   const createTranscriptionModel = (modelId) => new OpenAITranscriptionModel(modelId, {
     provider: `${providerName}.transcription`,
-    url: ({ path: path38 }) => `${baseURL}${path38}`,
+    url: ({ path: path42 }) => `${baseURL}${path42}`,
     headers: getHeaders,
     fetch: options.fetch
   });
   const createSpeechModel = (modelId) => new OpenAISpeechModel(modelId, {
     provider: `${providerName}.speech`,
-    url: ({ path: path38 }) => `${baseURL}${path38}`,
+    url: ({ path: path42 }) => `${baseURL}${path42}`,
     headers: getHeaders,
     fetch: options.fetch
   });
@@ -154079,7 +154459,7 @@ function createOpenAI(options = {}) {
   const createResponsesModel = (modelId) => {
     return new OpenAIResponsesLanguageModel(modelId, {
       provider: `${providerName}.responses`,
-      url: ({ path: path38 }) => `${baseURL}${path38}`,
+      url: ({ path: path42 }) => `${baseURL}${path42}`,
       headers: getHeaders,
       fetch: options.fetch,
       fileIdPrefixes: ["file-"]
@@ -155399,7 +155779,7 @@ var init_dist6 = __esm({
         mask,
         n,
         size,
-        aspectRatio,
+        aspectRatio: aspectRatio2,
         seed,
         providerOptions,
         headers,
@@ -155407,7 +155787,7 @@ var init_dist6 = __esm({
       }) {
         var _a31, _b27, _c, _d, _e, _f, _g, _h, _i, _j, _k;
         const warnings = [];
-        if (aspectRatio != null) {
+        if (aspectRatio2 != null) {
           warnings.push({
             type: "unsupported",
             feature: "aspectRatio",
@@ -157310,11 +157690,11 @@ var init_dist6 = __esm({
         warnings.push(...inputWarnings);
         const strictJsonSchema = (_d = openaiOptions == null ? void 0 : openaiOptions.strictJsonSchema) != null ? _d : true;
         let include = openaiOptions == null ? void 0 : openaiOptions.include;
-        function addInclude(key) {
+        function addInclude(key2) {
           if (include == null) {
-            include = [key];
-          } else if (!include.includes(key)) {
-            include = [...include, key];
+            include = [key2];
+          } else if (!include.includes(key2)) {
+            include = [...include, key2];
           }
         }
         function hasOpenAITool(id) {
@@ -158855,10 +159235,10 @@ var init_dist6 = __esm({
         }
         if (openAIOptions) {
           const speechModelOptions = {};
-          for (const key in speechModelOptions) {
-            const value = speechModelOptions[key];
+          for (const key2 in speechModelOptions) {
+            const value = speechModelOptions[key2];
             if (value !== void 0) {
-              requestBody[key] = value;
+              requestBody[key2] = value;
             }
           }
         }
@@ -159069,14 +159449,14 @@ var init_dist6 = __esm({
             temperature: openAIOptions.temperature,
             timestamp_granularities: openAIOptions.timestampGranularities
           };
-          for (const [key, value] of Object.entries(transcriptionModelOptions)) {
+          for (const [key2, value] of Object.entries(transcriptionModelOptions)) {
             if (value != null) {
               if (Array.isArray(value)) {
                 for (const item of value) {
-                  formData.append(`${key}[]`, String(item));
+                  formData.append(`${key2}[]`, String(item));
                 }
               } else {
-                formData.append(key, String(value));
+                formData.append(key2, String(value));
               }
             }
           }
@@ -159422,7 +159802,7 @@ function createDeepSeek(options = {}) {
   const createLanguageModel = (modelId) => {
     return new DeepSeekChatLanguageModel(modelId, {
       provider: `deepseek.chat`,
-      url: ({ path: path38 }) => `${baseURL}${path38}`,
+      url: ({ path: path42 }) => `${baseURL}${path42}`,
       headers: getHeaders,
       fetch: options.fetch
     });
@@ -160284,16 +160664,16 @@ function normalizeHeaders2(headers) {
   }
   const normalized = {};
   if (headers instanceof Headers) {
-    headers.forEach((value, key) => {
-      normalized[key.toLowerCase()] = value;
+    headers.forEach((value, key2) => {
+      normalized[key2.toLowerCase()] = value;
     });
   } else {
     if (!Array.isArray(headers)) {
       headers = Object.entries(headers);
     }
-    for (const [key, value] of headers) {
+    for (const [key2, value] of headers) {
       if (value != null) {
-        normalized[key.toLowerCase()] = value;
+        normalized[key2.toLowerCase()] = value;
       }
     }
   }
@@ -160362,8 +160742,8 @@ function filter3(obj) {
       if (Object.prototype.hasOwnProperty.call(node, "constructor") && node.constructor !== null && typeof node.constructor === "object" && Object.prototype.hasOwnProperty.call(node.constructor, "prototype")) {
         throw new SyntaxError("Object contains forbidden prototype property");
       }
-      for (const key in node) {
-        const value = node[key];
+      for (const key2 in node) {
+        const value = node[key2];
         if (value && typeof value === "object") {
           next.push(value);
         }
@@ -160896,9 +161276,9 @@ function floatSafeRemainder3(val, step) {
   const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
   return valInt % stepInt / 10 ** decCount;
 }
-function defineLazy2(object22, key, getter) {
+function defineLazy2(object22, key2, getter) {
   let value = void 0;
-  Object.defineProperty(object22, key, {
+  Object.defineProperty(object22, key2, {
     get() {
       if (value === EVALUATING2) {
         return void 0;
@@ -160910,7 +161290,7 @@ function defineLazy2(object22, key, getter) {
       return value;
     },
     set(v) {
-      Object.defineProperty(object22, key, {
+      Object.defineProperty(object22, key2, {
         value: v
         // configurable: true,
       });
@@ -160940,14 +161320,14 @@ function mergeDefs2(...defs) {
 function cloneDef2(schema) {
   return mergeDefs2(schema._zod.def);
 }
-function getElementAtPath2(obj, path38) {
-  if (!path38)
+function getElementAtPath2(obj, path42) {
+  if (!path42)
     return obj;
-  return path38.reduce((acc, key) => acc == null ? void 0 : acc[key], obj);
+  return path42.reduce((acc, key2) => acc == null ? void 0 : acc[key2], obj);
 }
 function promiseAllObject2(promisesObj) {
   const keys2 = Object.keys(promisesObj);
-  const promises6 = keys2.map((key) => promisesObj[key]);
+  const promises6 = keys2.map((key2) => promisesObj[key2]);
   return Promise.all(promises6).then((results) => {
     const resolvedObj = {};
     for (let i = 0; i < keys2.length; i++) {
@@ -160998,8 +161378,8 @@ function shallowClone2(o) {
 }
 function numKeys2(data) {
   let keyCount = 0;
-  for (const key in data) {
-    if (Object.prototype.hasOwnProperty.call(data, key)) {
+  for (const key2 in data) {
+    if (Object.prototype.hasOwnProperty.call(data, key2)) {
       keyCount++;
     }
   }
@@ -161085,13 +161465,13 @@ function pick2(schema, mask) {
   const def = mergeDefs2(schema._zod.def, {
     get shape() {
       const newShape = {};
-      for (const key in mask) {
-        if (!(key in currDef.shape)) {
-          throw new Error(`Unrecognized key: "${key}"`);
+      for (const key2 in mask) {
+        if (!(key2 in currDef.shape)) {
+          throw new Error(`Unrecognized key: "${key2}"`);
         }
-        if (!mask[key])
+        if (!mask[key2])
           continue;
-        newShape[key] = currDef.shape[key];
+        newShape[key2] = currDef.shape[key2];
       }
       assignProp2(this, "shape", newShape);
       return newShape;
@@ -161110,13 +161490,13 @@ function omit2(schema, mask) {
   const def = mergeDefs2(schema._zod.def, {
     get shape() {
       const newShape = { ...schema._zod.def.shape };
-      for (const key in mask) {
-        if (!(key in currDef.shape)) {
-          throw new Error(`Unrecognized key: "${key}"`);
+      for (const key2 in mask) {
+        if (!(key2 in currDef.shape)) {
+          throw new Error(`Unrecognized key: "${key2}"`);
         }
-        if (!mask[key])
+        if (!mask[key2])
           continue;
-        delete newShape[key];
+        delete newShape[key2];
       }
       assignProp2(this, "shape", newShape);
       return newShape;
@@ -161133,8 +161513,8 @@ function extend3(schema, shape) {
   const hasChecks = checks && checks.length > 0;
   if (hasChecks) {
     const existingShape = schema._zod.def.shape;
-    for (const key in shape) {
-      if (Object.getOwnPropertyDescriptor(existingShape, key) !== void 0) {
+    for (const key2 in shape) {
+      if (Object.getOwnPropertyDescriptor(existingShape, key2) !== void 0) {
         throw new Error("Cannot overwrite keys on object schemas containing refinements. Use `.safeExtend()` instead.");
       }
     }
@@ -161188,23 +161568,23 @@ function partial2(Class22, schema, mask) {
       const oldShape = schema._zod.def.shape;
       const shape = { ...oldShape };
       if (mask) {
-        for (const key in mask) {
-          if (!(key in oldShape)) {
-            throw new Error(`Unrecognized key: "${key}"`);
+        for (const key2 in mask) {
+          if (!(key2 in oldShape)) {
+            throw new Error(`Unrecognized key: "${key2}"`);
           }
-          if (!mask[key])
+          if (!mask[key2])
             continue;
-          shape[key] = Class22 ? new Class22({
+          shape[key2] = Class22 ? new Class22({
             type: "optional",
-            innerType: oldShape[key]
-          }) : oldShape[key];
+            innerType: oldShape[key2]
+          }) : oldShape[key2];
         }
       } else {
-        for (const key in oldShape) {
-          shape[key] = Class22 ? new Class22({
+        for (const key2 in oldShape) {
+          shape[key2] = Class22 ? new Class22({
             type: "optional",
-            innerType: oldShape[key]
-          }) : oldShape[key];
+            innerType: oldShape[key2]
+          }) : oldShape[key2];
         }
       }
       assignProp2(this, "shape", shape);
@@ -161220,22 +161600,22 @@ function required2(Class22, schema, mask) {
       const oldShape = schema._zod.def.shape;
       const shape = { ...oldShape };
       if (mask) {
-        for (const key in mask) {
-          if (!(key in shape)) {
-            throw new Error(`Unrecognized key: "${key}"`);
+        for (const key2 in mask) {
+          if (!(key2 in shape)) {
+            throw new Error(`Unrecognized key: "${key2}"`);
           }
-          if (!mask[key])
+          if (!mask[key2])
             continue;
-          shape[key] = new Class22({
+          shape[key2] = new Class22({
             type: "nonoptional",
-            innerType: oldShape[key]
+            innerType: oldShape[key2]
           });
         }
       } else {
-        for (const key in oldShape) {
-          shape[key] = new Class22({
+        for (const key2 in oldShape) {
+          shape[key2] = new Class22({
             type: "nonoptional",
-            innerType: oldShape[key]
+            innerType: oldShape[key2]
           });
         }
       }
@@ -161256,12 +161636,12 @@ function aborted2(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues2(path38, issues) {
+function prefixIssues2(path42, issues) {
   return issues.map((iss) => {
     var _a47;
     var _a37;
     (_a47 = (_a37 = iss).path) != null ? _a47 : _a37.path = [];
-    iss.path.unshift(path38);
+    iss.path.unshift(path42);
     return iss;
   });
 }
@@ -161421,7 +161801,7 @@ function formatError2(error482, mapper = (issue22) => issue22.message) {
 }
 function treeifyError2(error482, mapper = (issue22) => issue22.message) {
   const result = { errors: [] };
-  const processError = (error492, path38 = []) => {
+  const processError = (error492, path42 = []) => {
     var _a47, _b27, _c, _d;
     var _a37, _b28;
     for (const issue22 of error492.issues) {
@@ -161432,7 +161812,7 @@ function treeifyError2(error482, mapper = (issue22) => issue22.message) {
       } else if (issue22.code === "invalid_element") {
         processError({ issues: issue22.issues }, issue22.path);
       } else {
-        const fullpath = [...path38, ...issue22.path];
+        const fullpath = [...path42, ...issue22.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue22));
           continue;
@@ -161464,8 +161844,8 @@ function treeifyError2(error482, mapper = (issue22) => issue22.message) {
 }
 function toDotPath2(_path) {
   const segs = [];
-  const path38 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path38) {
+  const path42 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path42) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -161571,19 +161951,19 @@ function handleArrayResult2(result, final, index) {
   }
   final.value[index] = result.value;
 }
-function handlePropertyResult2(result, final, key, input, isOptionalOut) {
+function handlePropertyResult2(result, final, key2, input, isOptionalOut) {
   if (result.issues.length) {
-    if (isOptionalOut && !(key in input)) {
+    if (isOptionalOut && !(key2 in input)) {
       return;
     }
-    final.issues.push(...prefixIssues2(key, result.issues));
+    final.issues.push(...prefixIssues2(key2, result.issues));
   }
   if (result.value === void 0) {
-    if (key in input) {
-      final.value[key] = void 0;
+    if (key2 in input) {
+      final.value[key2] = void 0;
     }
   } else {
-    final.value[key] = result.value;
+    final.value[key2] = result.value;
   }
 }
 function normalizeDef2(def) {
@@ -161609,18 +161989,18 @@ function handleCatchall2(proms, input, payload, ctx, def, inst) {
   const _catchall = def.catchall._zod;
   const t = _catchall.def.type;
   const isOptionalOut = _catchall.optout === "optional";
-  for (const key in input) {
-    if (keySet.has(key))
+  for (const key2 in input) {
+    if (keySet.has(key2))
       continue;
     if (t === "never") {
-      unrecognized.push(key);
+      unrecognized.push(key2);
       continue;
     }
-    const r = _catchall.run({ value: input[key], issues: [] }, ctx);
+    const r = _catchall.run({ value: input[key2], issues: [] }, ctx);
     if (r instanceof Promise) {
-      proms.push(r.then((r2) => handlePropertyResult2(r2, payload, key, input, isOptionalOut)));
+      proms.push(r.then((r2) => handlePropertyResult2(r2, payload, key2, input, isOptionalOut)));
     } else {
-      handlePropertyResult2(r, payload, key, input, isOptionalOut);
+      handlePropertyResult2(r, payload, key2, input, isOptionalOut);
     }
   }
   if (unrecognized.length) {
@@ -161690,17 +162070,17 @@ function mergeValues3(a, b) {
   }
   if (isPlainObject3(a) && isPlainObject3(b)) {
     const bKeys = Object.keys(b);
-    const sharedKeys = Object.keys(a).filter((key) => bKeys.indexOf(key) !== -1);
+    const sharedKeys = Object.keys(a).filter((key2) => bKeys.indexOf(key2) !== -1);
     const newObj = { ...a, ...b };
-    for (const key of sharedKeys) {
-      const sharedValue = mergeValues3(a[key], b[key]);
+    for (const key2 of sharedKeys) {
+      const sharedValue = mergeValues3(a[key2], b[key2]);
       if (!sharedValue.valid) {
         return {
           valid: false,
-          mergeErrorPath: [key, ...sharedValue.mergeErrorPath]
+          mergeErrorPath: [key2, ...sharedValue.mergeErrorPath]
         };
       }
-      newObj[key] = sharedValue.data;
+      newObj[key2] = sharedValue.data;
     }
     return { valid: true, data: newObj };
   }
@@ -161770,10 +162150,10 @@ function handleTupleResult2(result, final, index) {
   }
   final.value[index] = result.value;
 }
-function handleMapResult2(keyResult, valueResult, final, key, input, inst, ctx) {
+function handleMapResult2(keyResult, valueResult, final, key2, input, inst, ctx) {
   if (keyResult.issues.length) {
-    if (propertyKeyTypes2.has(typeof key)) {
-      final.issues.push(...prefixIssues2(key, keyResult.issues));
+    if (propertyKeyTypes2.has(typeof key2)) {
+      final.issues.push(...prefixIssues2(key2, keyResult.issues));
     } else {
       final.issues.push({
         code: "invalid_key",
@@ -161785,15 +162165,15 @@ function handleMapResult2(keyResult, valueResult, final, key, input, inst, ctx) 
     }
   }
   if (valueResult.issues.length) {
-    if (propertyKeyTypes2.has(typeof key)) {
-      final.issues.push(...prefixIssues2(key, valueResult.issues));
+    if (propertyKeyTypes2.has(typeof key2)) {
+      final.issues.push(...prefixIssues2(key2, valueResult.issues));
     } else {
       final.issues.push({
         origin: "map",
         code: "invalid_element",
         input,
         inst,
-        key,
+        key: key2,
         issues: valueResult.issues.map((iss) => finalizeIssue2(iss, ctx, config2()))
       });
     }
@@ -163338,8 +163718,8 @@ function extractDefs2(ctx, schema) {
     if (defId)
       seen.defId = defId;
     const schema2 = seen.schema;
-    for (const key in schema2) {
-      delete schema2[key];
+    for (const key2 in schema2) {
+      delete schema2[key2];
     }
     schema2.$ref = ref;
   };
@@ -163410,20 +163790,20 @@ function finalize2(ctx, schema) {
       Object.assign(schema2, _cached);
       const isParentRef = zodSchema4._zod.parent === ref;
       if (isParentRef) {
-        for (const key in schema2) {
-          if (key === "$ref" || key === "allOf")
+        for (const key2 in schema2) {
+          if (key2 === "$ref" || key2 === "allOf")
             continue;
-          if (!(key in _cached)) {
-            delete schema2[key];
+          if (!(key2 in _cached)) {
+            delete schema2[key2];
           }
         }
       }
       if (refSchema.$ref) {
-        for (const key in schema2) {
-          if (key === "$ref" || key === "allOf")
+        for (const key2 in schema2) {
+          if (key2 === "$ref" || key2 === "allOf")
             continue;
-          if (key in refSeen.def && JSON.stringify(schema2[key]) === JSON.stringify(refSeen.def[key])) {
-            delete schema2[key];
+          if (key2 in refSeen.def && JSON.stringify(schema2[key2]) === JSON.stringify(refSeen.def[key2])) {
+            delete schema2[key2];
           }
         }
       }
@@ -163435,11 +163815,11 @@ function finalize2(ctx, schema) {
       if (parentSeen == null ? void 0 : parentSeen.schema.$ref) {
         schema2.$ref = parentSeen.schema.$ref;
         if (parentSeen.def) {
-          for (const key in schema2) {
-            if (key === "$ref" || key === "allOf")
+          for (const key2 in schema2) {
+            if (key2 === "$ref" || key2 === "allOf")
               continue;
-            if (key in parentSeen.def && JSON.stringify(schema2[key]) === JSON.stringify(parentSeen.def[key])) {
-              delete schema2[key];
+            if (key2 in parentSeen.def && JSON.stringify(schema2[key2]) === JSON.stringify(parentSeen.def[key2])) {
+              delete schema2[key2];
             }
           }
         }
@@ -163533,8 +163913,8 @@ function isTransforming2(_schema, _ctx) {
     return isTransforming2(def.in, ctx) || isTransforming2(def.out, ctx);
   }
   if (def.type === "object") {
-    for (const key in def.shape) {
-      if (isTransforming2(def.shape[key], ctx))
+    for (const key2 in def.shape) {
+      if (isTransforming2(def.shape[key2], ctx))
         return true;
     }
     return false;
@@ -163574,9 +163954,9 @@ function toJSONSchema2(input, params) {
     };
     ctx2.external = external;
     for (const entry of registry22._idmap.entries()) {
-      const [key, schema] = entry;
+      const [key2, schema] = entry;
       extractDefs2(ctx2, schema);
-      schemas[key] = finalize2(ctx2, schema);
+      schemas[key2] = finalize2(ctx2, schema);
     }
     if (Object.keys(defs).length > 0) {
       const defsSegment = ctx2.target === "draft-2020-12" ? "$defs" : "definitions";
@@ -164085,17 +164465,17 @@ function resolveRef2(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path38 = ref.slice(1).split("/").filter(Boolean);
-  if (path38.length === 0) {
+  const path42 = ref.slice(1).split("/").filter(Boolean);
+  if (path42.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path38[0] === defsKey) {
-    const key = path38[1];
-    if (!key || !ctx.defs[key]) {
+  if (path42[0] === defsKey) {
+    const key2 = path42[1];
+    if (!key2 || !ctx.defs[key2]) {
       throw new Error(`Reference not found: ${ref}`);
     }
-    return ctx.defs[key];
+    return ctx.defs[key2];
   }
   throw new Error(`Reference not found: ${ref}`);
 }
@@ -164281,9 +164661,9 @@ function convertBaseSchema2(schema, ctx) {
       const shape = {};
       const properties = schema.properties || {};
       const requiredSet = new Set(schema.required || []);
-      for (const [key, propSchema] of Object.entries(properties)) {
+      for (const [key2, propSchema] of Object.entries(properties)) {
         const propZodSchema = convertSchema2(propSchema, ctx);
-        shape[key] = requiredSet.has(key) ? propZodSchema : propZodSchema.optional();
+        shape[key2] = requiredSet.has(key2) ? propZodSchema : propZodSchema.optional();
       }
       if (schema.propertyNames) {
         const keySchema3 = convertSchema2(schema.propertyNames, ctx);
@@ -164427,20 +164807,20 @@ function convertSchema2(schema, ctx) {
   }
   const extraMeta = {};
   const coreMetadataKeys = ["$id", "id", "$comment", "$anchor", "$vocabulary", "$dynamicRef", "$dynamicAnchor"];
-  for (const key of coreMetadataKeys) {
-    if (key in schema) {
-      extraMeta[key] = schema[key];
+  for (const key2 of coreMetadataKeys) {
+    if (key2 in schema) {
+      extraMeta[key2] = schema[key2];
     }
   }
   const contentMetadataKeys = ["contentEncoding", "contentMediaType", "contentSchema"];
-  for (const key of contentMetadataKeys) {
-    if (key in schema) {
-      extraMeta[key] = schema[key];
+  for (const key2 of contentMetadataKeys) {
+    if (key2 in schema) {
+      extraMeta[key2] = schema[key2];
     }
   }
-  for (const key of Object.keys(schema)) {
-    if (!RECOGNIZED_KEYS2.has(key)) {
-      extraMeta[key] = schema[key];
+  for (const key2 of Object.keys(schema)) {
+    if (!RECOGNIZED_KEYS2.has(key2)) {
+      extraMeta[key2] = schema[key2];
     }
   }
   if (Object.keys(extraMeta).length > 0) {
@@ -164656,7 +165036,7 @@ function createZhipu(options = {}) {
   });
   const createImageModel = (modelId) => new ZhipuImageModel(modelId, {
     provider: "zhipu.image",
-    url: ({ path: path38 }) => `${baseURL}${path38}`,
+    url: ({ path: path42 }) => `${baseURL}${path42}`,
     headers: getHeaders,
     fetch: options.fetch,
     _internal: {
@@ -166854,12 +167234,12 @@ var init_dist11 = __esm({
         var _a37;
         const shape = def.shape;
         const propValues = {};
-        for (const key in shape) {
-          const field = shape[key]._zod;
+        for (const key2 in shape) {
+          const field = shape[key2]._zod;
           if (field.values) {
-            (_a37 = propValues[key]) != null ? _a37 : propValues[key] = /* @__PURE__ */ new Set();
+            (_a37 = propValues[key2]) != null ? _a37 : propValues[key2] = /* @__PURE__ */ new Set();
             for (const v of field.values)
-              propValues[key].add(v);
+              propValues[key2].add(v);
           }
         }
         return propValues;
@@ -166882,14 +167262,14 @@ var init_dist11 = __esm({
         payload.value = {};
         const proms = [];
         const shape = value.shape;
-        for (const key of value.keys) {
-          const el = shape[key];
+        for (const key2 of value.keys) {
+          const el = shape[key2];
           const isOptionalOut = el._zod.optout === "optional";
-          const r = el._zod.run({ value: input[key], issues: [] }, ctx);
+          const r = el._zod.run({ value: input[key2], issues: [] }, ctx);
           if (r instanceof Promise) {
-            proms.push(r.then((r2) => handlePropertyResult2(r2, payload, key, input, isOptionalOut)));
+            proms.push(r.then((r2) => handlePropertyResult2(r2, payload, key2, input, isOptionalOut)));
           } else {
-            handlePropertyResult2(r, payload, key, input, isOptionalOut);
+            handlePropertyResult2(r, payload, key2, input, isOptionalOut);
           }
         }
         if (!catchall) {
@@ -166906,23 +167286,23 @@ var init_dist11 = __esm({
         var _a37;
         const doc = new Doc2(["shape", "payload", "ctx"]);
         const normalized = _normalized.value;
-        const parseStr = (key) => {
-          const k = esc2(key);
+        const parseStr = (key2) => {
+          const k = esc2(key2);
           return `shape[${k}]._zod.run({ value: input[${k}], issues: [] }, ctx)`;
         };
         doc.write(`const input = payload.value;`);
         const ids = /* @__PURE__ */ Object.create(null);
         let counter = 0;
-        for (const key of normalized.keys) {
-          ids[key] = `key_${counter++}`;
+        for (const key2 of normalized.keys) {
+          ids[key2] = `key_${counter++}`;
         }
         doc.write(`const newResult = {};`);
-        for (const key of normalized.keys) {
-          const id = ids[key];
-          const k = esc2(key);
-          const schema = shape[key];
+        for (const key2 of normalized.keys) {
+          const id = ids[key2];
+          const k = esc2(key2);
+          const schema = shape[key2];
           const isOptionalOut = ((_a37 = schema == null ? void 0 : schema._zod) == null ? void 0 : _a37.optout) === "optional";
-          doc.write(`const ${id} = ${parseStr(key)};`);
+          doc.write(`const ${id} = ${parseStr(key2)};`);
           if (isOptionalOut) {
             doc.write(`
         if (${id}.issues.length) {
@@ -167242,30 +167622,30 @@ var init_dist11 = __esm({
         if (values) {
           payload.value = {};
           const recordKeys = /* @__PURE__ */ new Set();
-          for (const key of values) {
-            if (typeof key === "string" || typeof key === "number" || typeof key === "symbol") {
-              recordKeys.add(typeof key === "number" ? key.toString() : key);
-              const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+          for (const key2 of values) {
+            if (typeof key2 === "string" || typeof key2 === "number" || typeof key2 === "symbol") {
+              recordKeys.add(typeof key2 === "number" ? key2.toString() : key2);
+              const result = def.valueType._zod.run({ value: input[key2], issues: [] }, ctx);
               if (result instanceof Promise) {
                 proms.push(result.then((result2) => {
                   if (result2.issues.length) {
-                    payload.issues.push(...prefixIssues2(key, result2.issues));
+                    payload.issues.push(...prefixIssues2(key2, result2.issues));
                   }
-                  payload.value[key] = result2.value;
+                  payload.value[key2] = result2.value;
                 }));
               } else {
                 if (result.issues.length) {
-                  payload.issues.push(...prefixIssues2(key, result.issues));
+                  payload.issues.push(...prefixIssues2(key2, result.issues));
                 }
-                payload.value[key] = result.value;
+                payload.value[key2] = result.value;
               }
             }
           }
           let unrecognized;
-          for (const key in input) {
-            if (!recordKeys.has(key)) {
+          for (const key2 in input) {
+            if (!recordKeys.has(key2)) {
               unrecognized = unrecognized != null ? unrecognized : [];
-              unrecognized.push(key);
+              unrecognized.push(key2);
             }
           }
           if (unrecognized && unrecognized.length > 0) {
@@ -167278,16 +167658,16 @@ var init_dist11 = __esm({
           }
         } else {
           payload.value = {};
-          for (const key of Reflect.ownKeys(input)) {
-            if (key === "__proto__")
+          for (const key2 of Reflect.ownKeys(input)) {
+            if (key2 === "__proto__")
               continue;
-            let keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+            let keyResult = def.keyType._zod.run({ value: key2, issues: [] }, ctx);
             if (keyResult instanceof Promise) {
               throw new Error("Async schemas not supported in object keys currently");
             }
-            const checkNumericKey = typeof key === "string" && number4.test(key) && keyResult.issues.length && keyResult.issues.some((iss) => iss.code === "invalid_type" && iss.expected === "number");
+            const checkNumericKey = typeof key2 === "string" && number4.test(key2) && keyResult.issues.length && keyResult.issues.some((iss) => iss.code === "invalid_type" && iss.expected === "number");
             if (checkNumericKey) {
-              const retryResult = def.keyType._zod.run({ value: Number(key), issues: [] }, ctx);
+              const retryResult = def.keyType._zod.run({ value: Number(key2), issues: [] }, ctx);
               if (retryResult instanceof Promise) {
                 throw new Error("Async schemas not supported in object keys currently");
               }
@@ -167297,30 +167677,30 @@ var init_dist11 = __esm({
             }
             if (keyResult.issues.length) {
               if (def.mode === "loose") {
-                payload.value[key] = input[key];
+                payload.value[key2] = input[key2];
               } else {
                 payload.issues.push({
                   code: "invalid_key",
                   origin: "record",
                   issues: keyResult.issues.map((iss) => finalizeIssue2(iss, ctx, config2())),
-                  input: key,
-                  path: [key],
+                  input: key2,
+                  path: [key2],
                   inst
                 });
               }
               continue;
             }
-            const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+            const result = def.valueType._zod.run({ value: input[key2], issues: [] }, ctx);
             if (result instanceof Promise) {
               proms.push(result.then((result2) => {
                 if (result2.issues.length) {
-                  payload.issues.push(...prefixIssues2(key, result2.issues));
+                  payload.issues.push(...prefixIssues2(key2, result2.issues));
                 }
                 payload.value[keyResult.value] = result2.value;
               }));
             } else {
               if (result.issues.length) {
-                payload.issues.push(...prefixIssues2(key, result.issues));
+                payload.issues.push(...prefixIssues2(key2, result.issues));
               }
               payload.value[keyResult.value] = result.value;
             }
@@ -167347,15 +167727,15 @@ var init_dist11 = __esm({
         }
         const proms = [];
         payload.value = /* @__PURE__ */ new Map();
-        for (const [key, value] of input) {
-          const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+        for (const [key2, value] of input) {
+          const keyResult = def.keyType._zod.run({ value: key2, issues: [] }, ctx);
           const valueResult = def.valueType._zod.run({ value, issues: [] }, ctx);
           if (keyResult instanceof Promise || valueResult instanceof Promise) {
             proms.push(Promise.all([keyResult, valueResult]).then(([keyResult2, valueResult2]) => {
-              handleMapResult2(keyResult2, valueResult2, payload, key, input, inst, ctx);
+              handleMapResult2(keyResult2, valueResult2, payload, key2, input, inst, ctx);
             }));
           } else {
-            handleMapResult2(keyResult, valueResult, payload, key, input, inst, ctx);
+            handleMapResult2(keyResult, valueResult, payload, key2, input, inst, ctx);
           }
         }
         if (proms.length)
@@ -173479,15 +173859,15 @@ var init_dist11 = __esm({
       json22.type = "object";
       json22.properties = {};
       const shape = def.shape;
-      for (const key in shape) {
-        json22.properties[key] = process3(shape[key], ctx, {
+      for (const key2 in shape) {
+        json22.properties[key2] = process3(shape[key2], ctx, {
           ...params,
-          path: [...params.path, "properties", key]
+          path: [...params.path, "properties", key2]
         });
       }
       const allKeys = new Set(Object.keys(shape));
-      const requiredKeys = new Set([...allKeys].filter((key) => {
-        const v = def.shape[key]._zod;
+      const requiredKeys = new Set([...allKeys].filter((key2) => {
+        const v = def.shape[key2]._zod;
         if (ctx.io === "input") {
           return v.optin === void 0;
         } else {
@@ -175436,7 +175816,7 @@ var init_dist11 = __esm({
         prompt,
         n,
         size,
-        aspectRatio,
+        aspectRatio: aspectRatio2,
         seed,
         providerOptions,
         headers,
@@ -175452,7 +175832,7 @@ var init_dist11 = __esm({
             details: "This model does not support multiple images per call."
           });
         }
-        if (aspectRatio != null) {
+        if (aspectRatio2 != null) {
           warnings.push({
             type: "unsupported-setting",
             setting: "aspectRatio",
@@ -175543,9 +175923,9 @@ var require_dist6 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -175925,7 +176305,7 @@ Error message: ${getErrorMessage6(cause)}`,
       }
       if (typeof value === "object") {
         return Object.entries(value).every(
-          ([key, val]) => typeof key === "string" && (val === void 0 || isJSONValue(val))
+          ([key2, val]) => typeof key2 === "string" && (val === void 0 || isJSONValue(val))
         );
       }
       return false;
@@ -175935,7 +176315,7 @@ Error message: ${getErrorMessage6(cause)}`,
     }
     function isJSONObject(value) {
       return value != null && typeof value === "object" && Object.entries(value).every(
-        ([key, val]) => typeof key === "string" && (val === void 0 || isJSONValue(val))
+        ([key2, val]) => typeof key2 === "string" && (val === void 0 || isJSONValue(val))
       );
     }
   }
@@ -176149,9 +176529,9 @@ var require_util4 = __commonJS({
       return valInt % stepInt / 10 ** decCount;
     }
     var EVALUATING3 = /* @__PURE__ */ Symbol("evaluating");
-    function defineLazy3(object4, key, getter) {
+    function defineLazy3(object4, key2, getter) {
       let value = void 0;
-      Object.defineProperty(object4, key, {
+      Object.defineProperty(object4, key2, {
         get() {
           if (value === EVALUATING3) {
             return void 0;
@@ -176163,7 +176543,7 @@ var require_util4 = __commonJS({
           return value;
         },
         set(v) {
-          Object.defineProperty(object4, key, {
+          Object.defineProperty(object4, key2, {
             value: v
             // configurable: true,
           });
@@ -176193,14 +176573,14 @@ var require_util4 = __commonJS({
     function cloneDef3(schema) {
       return mergeDefs3(schema._zod.def);
     }
-    function getElementAtPath3(obj, path38) {
-      if (!path38)
+    function getElementAtPath3(obj, path42) {
+      if (!path42)
         return obj;
-      return path38.reduce((acc, key) => acc?.[key], obj);
+      return path42.reduce((acc, key2) => acc?.[key2], obj);
     }
     function promiseAllObject3(promisesObj) {
       const keys2 = Object.keys(promisesObj);
-      const promises6 = keys2.map((key) => promisesObj[key]);
+      const promises6 = keys2.map((key2) => promisesObj[key2]);
       return Promise.all(promises6).then((results) => {
         const resolvedObj = {};
         for (let i = 0; i < keys2.length; i++) {
@@ -176265,8 +176645,8 @@ var require_util4 = __commonJS({
     }
     function numKeys3(data) {
       let keyCount = 0;
-      for (const key in data) {
-        if (Object.prototype.hasOwnProperty.call(data, key)) {
+      for (const key2 in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key2)) {
           keyCount++;
         }
       }
@@ -176410,13 +176790,13 @@ var require_util4 = __commonJS({
       const def = mergeDefs3(schema._zod.def, {
         get shape() {
           const newShape = {};
-          for (const key in mask) {
-            if (!(key in currDef.shape)) {
-              throw new Error(`Unrecognized key: "${key}"`);
+          for (const key2 in mask) {
+            if (!(key2 in currDef.shape)) {
+              throw new Error(`Unrecognized key: "${key2}"`);
             }
-            if (!mask[key])
+            if (!mask[key2])
               continue;
-            newShape[key] = currDef.shape[key];
+            newShape[key2] = currDef.shape[key2];
           }
           assignProp3(this, "shape", newShape);
           return newShape;
@@ -176435,13 +176815,13 @@ var require_util4 = __commonJS({
       const def = mergeDefs3(schema._zod.def, {
         get shape() {
           const newShape = { ...schema._zod.def.shape };
-          for (const key in mask) {
-            if (!(key in currDef.shape)) {
-              throw new Error(`Unrecognized key: "${key}"`);
+          for (const key2 in mask) {
+            if (!(key2 in currDef.shape)) {
+              throw new Error(`Unrecognized key: "${key2}"`);
             }
-            if (!mask[key])
+            if (!mask[key2])
               continue;
-            delete newShape[key];
+            delete newShape[key2];
           }
           assignProp3(this, "shape", newShape);
           return newShape;
@@ -176458,8 +176838,8 @@ var require_util4 = __commonJS({
       const hasChecks = checks && checks.length > 0;
       if (hasChecks) {
         const existingShape = schema._zod.def.shape;
-        for (const key in shape) {
-          if (Object.getOwnPropertyDescriptor(existingShape, key) !== void 0) {
+        for (const key2 in shape) {
+          if (Object.getOwnPropertyDescriptor(existingShape, key2) !== void 0) {
             throw new Error("Cannot overwrite keys on object schemas containing refinements. Use `.safeExtend()` instead.");
           }
         }
@@ -176513,23 +176893,23 @@ var require_util4 = __commonJS({
           const oldShape = schema._zod.def.shape;
           const shape = { ...oldShape };
           if (mask) {
-            for (const key in mask) {
-              if (!(key in oldShape)) {
-                throw new Error(`Unrecognized key: "${key}"`);
+            for (const key2 in mask) {
+              if (!(key2 in oldShape)) {
+                throw new Error(`Unrecognized key: "${key2}"`);
               }
-              if (!mask[key])
+              if (!mask[key2])
                 continue;
-              shape[key] = Class4 ? new Class4({
+              shape[key2] = Class4 ? new Class4({
                 type: "optional",
-                innerType: oldShape[key]
-              }) : oldShape[key];
+                innerType: oldShape[key2]
+              }) : oldShape[key2];
             }
           } else {
-            for (const key in oldShape) {
-              shape[key] = Class4 ? new Class4({
+            for (const key2 in oldShape) {
+              shape[key2] = Class4 ? new Class4({
                 type: "optional",
-                innerType: oldShape[key]
-              }) : oldShape[key];
+                innerType: oldShape[key2]
+              }) : oldShape[key2];
             }
           }
           assignProp3(this, "shape", shape);
@@ -176545,22 +176925,22 @@ var require_util4 = __commonJS({
           const oldShape = schema._zod.def.shape;
           const shape = { ...oldShape };
           if (mask) {
-            for (const key in mask) {
-              if (!(key in shape)) {
-                throw new Error(`Unrecognized key: "${key}"`);
+            for (const key2 in mask) {
+              if (!(key2 in shape)) {
+                throw new Error(`Unrecognized key: "${key2}"`);
               }
-              if (!mask[key])
+              if (!mask[key2])
                 continue;
-              shape[key] = new Class4({
+              shape[key2] = new Class4({
                 type: "nonoptional",
-                innerType: oldShape[key]
+                innerType: oldShape[key2]
               });
             }
           } else {
-            for (const key in oldShape) {
-              shape[key] = new Class4({
+            for (const key2 in oldShape) {
+              shape[key2] = new Class4({
                 type: "nonoptional",
-                innerType: oldShape[key]
+                innerType: oldShape[key2]
               });
             }
           }
@@ -176580,11 +176960,11 @@ var require_util4 = __commonJS({
       }
       return false;
     }
-    function prefixIssues3(path38, issues) {
+    function prefixIssues3(path42, issues) {
       return issues.map((iss) => {
         var _a31;
         (_a31 = iss).path ?? (_a31.path = []);
-        iss.path.unshift(path38);
+        iss.path.unshift(path42);
         return iss;
       });
     }
@@ -176809,7 +177189,7 @@ var require_errors = __commonJS({
     }
     function treeifyError3(error71, mapper = (issue3) => issue3.message) {
       const result = { errors: [] };
-      const processError = (error73, path38 = []) => {
+      const processError = (error73, path42 = []) => {
         var _a31, _b27;
         for (const issue3 of error73.issues) {
           if (issue3.code === "invalid_union" && issue3.errors.length) {
@@ -176819,7 +177199,7 @@ var require_errors = __commonJS({
           } else if (issue3.code === "invalid_element") {
             processError({ issues: issue3.issues }, issue3.path);
           } else {
-            const fullpath = [...path38, ...issue3.path];
+            const fullpath = [...path42, ...issue3.path];
             if (fullpath.length === 0) {
               result.errors.push(mapper(issue3));
               continue;
@@ -176851,8 +177231,8 @@ var require_errors = __commonJS({
     }
     function toDotPath3(_path) {
       const segs = [];
-      const path38 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-      for (const seg of path38) {
+      const path42 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+      for (const seg of path42) {
         if (typeof seg === "number")
           segs.push(`[${seg}]`);
         else if (typeof seg === "symbol")
@@ -178489,19 +178869,19 @@ var require_schemas = __commonJS({
         return payload;
       };
     });
-    function handlePropertyResult3(result, final, key, input, isOptionalOut) {
+    function handlePropertyResult3(result, final, key2, input, isOptionalOut) {
       if (result.issues.length) {
-        if (isOptionalOut && !(key in input)) {
+        if (isOptionalOut && !(key2 in input)) {
           return;
         }
-        final.issues.push(...util4.prefixIssues(key, result.issues));
+        final.issues.push(...util4.prefixIssues(key2, result.issues));
       }
       if (result.value === void 0) {
-        if (key in input) {
-          final.value[key] = void 0;
+        if (key2 in input) {
+          final.value[key2] = void 0;
         }
       } else {
-        final.value[key] = result.value;
+        final.value[key2] = result.value;
       }
     }
     function normalizeDef3(def) {
@@ -178526,18 +178906,18 @@ var require_schemas = __commonJS({
       const _catchall = def.catchall._zod;
       const t = _catchall.def.type;
       const isOptionalOut = _catchall.optout === "optional";
-      for (const key in input) {
-        if (keySet.has(key))
+      for (const key2 in input) {
+        if (keySet.has(key2))
           continue;
         if (t === "never") {
-          unrecognized.push(key);
+          unrecognized.push(key2);
           continue;
         }
-        const r = _catchall.run({ value: input[key], issues: [] }, ctx);
+        const r = _catchall.run({ value: input[key2], issues: [] }, ctx);
         if (r instanceof Promise) {
-          proms.push(r.then((r2) => handlePropertyResult3(r2, payload, key, input, isOptionalOut)));
+          proms.push(r.then((r2) => handlePropertyResult3(r2, payload, key2, input, isOptionalOut)));
         } else {
-          handlePropertyResult3(r, payload, key, input, isOptionalOut);
+          handlePropertyResult3(r, payload, key2, input, isOptionalOut);
         }
       }
       if (unrecognized.length) {
@@ -178573,12 +178953,12 @@ var require_schemas = __commonJS({
       util4.defineLazy(inst._zod, "propValues", () => {
         const shape = def.shape;
         const propValues = {};
-        for (const key in shape) {
-          const field = shape[key]._zod;
+        for (const key2 in shape) {
+          const field = shape[key2]._zod;
           if (field.values) {
-            propValues[key] ?? (propValues[key] = /* @__PURE__ */ new Set());
+            propValues[key2] ?? (propValues[key2] = /* @__PURE__ */ new Set());
             for (const v of field.values)
-              propValues[key].add(v);
+              propValues[key2].add(v);
           }
         }
         return propValues;
@@ -178601,14 +178981,14 @@ var require_schemas = __commonJS({
         payload.value = {};
         const proms = [];
         const shape = value.shape;
-        for (const key of value.keys) {
-          const el = shape[key];
+        for (const key2 of value.keys) {
+          const el = shape[key2];
           const isOptionalOut = el._zod.optout === "optional";
-          const r = el._zod.run({ value: input[key], issues: [] }, ctx);
+          const r = el._zod.run({ value: input[key2], issues: [] }, ctx);
           if (r instanceof Promise) {
-            proms.push(r.then((r2) => handlePropertyResult3(r2, payload, key, input, isOptionalOut)));
+            proms.push(r.then((r2) => handlePropertyResult3(r2, payload, key2, input, isOptionalOut)));
           } else {
-            handlePropertyResult3(r, payload, key, input, isOptionalOut);
+            handlePropertyResult3(r, payload, key2, input, isOptionalOut);
           }
         }
         if (!catchall) {
@@ -178624,23 +179004,23 @@ var require_schemas = __commonJS({
       const generateFastpass = (shape) => {
         const doc = new doc_js_1.Doc(["shape", "payload", "ctx"]);
         const normalized = _normalized.value;
-        const parseStr = (key) => {
-          const k = util4.esc(key);
+        const parseStr = (key2) => {
+          const k = util4.esc(key2);
           return `shape[${k}]._zod.run({ value: input[${k}], issues: [] }, ctx)`;
         };
         doc.write(`const input = payload.value;`);
         const ids = /* @__PURE__ */ Object.create(null);
         let counter = 0;
-        for (const key of normalized.keys) {
-          ids[key] = `key_${counter++}`;
+        for (const key2 of normalized.keys) {
+          ids[key2] = `key_${counter++}`;
         }
         doc.write(`const newResult = {};`);
-        for (const key of normalized.keys) {
-          const id = ids[key];
-          const k = util4.esc(key);
-          const schema = shape[key];
+        for (const key2 of normalized.keys) {
+          const id = ids[key2];
+          const k = util4.esc(key2);
+          const schema = shape[key2];
           const isOptionalOut = schema?._zod?.optout === "optional";
-          doc.write(`const ${id} = ${parseStr(key)};`);
+          doc.write(`const ${id} = ${parseStr(key2)};`);
           if (isOptionalOut) {
             doc.write(`
         if (${id}.issues.length) {
@@ -178926,17 +179306,17 @@ var require_schemas = __commonJS({
       }
       if (util4.isPlainObject(a) && util4.isPlainObject(b)) {
         const bKeys = Object.keys(b);
-        const sharedKeys = Object.keys(a).filter((key) => bKeys.indexOf(key) !== -1);
+        const sharedKeys = Object.keys(a).filter((key2) => bKeys.indexOf(key2) !== -1);
         const newObj = { ...a, ...b };
-        for (const key of sharedKeys) {
-          const sharedValue = mergeValues4(a[key], b[key]);
+        for (const key2 of sharedKeys) {
+          const sharedValue = mergeValues4(a[key2], b[key2]);
           if (!sharedValue.valid) {
             return {
               valid: false,
-              mergeErrorPath: [key, ...sharedValue.mergeErrorPath]
+              mergeErrorPath: [key2, ...sharedValue.mergeErrorPath]
             };
           }
-          newObj[key] = sharedValue.data;
+          newObj[key2] = sharedValue.data;
         }
         return { valid: true, data: newObj };
       }
@@ -179092,30 +179472,30 @@ var require_schemas = __commonJS({
         if (values) {
           payload.value = {};
           const recordKeys = /* @__PURE__ */ new Set();
-          for (const key of values) {
-            if (typeof key === "string" || typeof key === "number" || typeof key === "symbol") {
-              recordKeys.add(typeof key === "number" ? key.toString() : key);
-              const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+          for (const key2 of values) {
+            if (typeof key2 === "string" || typeof key2 === "number" || typeof key2 === "symbol") {
+              recordKeys.add(typeof key2 === "number" ? key2.toString() : key2);
+              const result = def.valueType._zod.run({ value: input[key2], issues: [] }, ctx);
               if (result instanceof Promise) {
                 proms.push(result.then((result2) => {
                   if (result2.issues.length) {
-                    payload.issues.push(...util4.prefixIssues(key, result2.issues));
+                    payload.issues.push(...util4.prefixIssues(key2, result2.issues));
                   }
-                  payload.value[key] = result2.value;
+                  payload.value[key2] = result2.value;
                 }));
               } else {
                 if (result.issues.length) {
-                  payload.issues.push(...util4.prefixIssues(key, result.issues));
+                  payload.issues.push(...util4.prefixIssues(key2, result.issues));
                 }
-                payload.value[key] = result.value;
+                payload.value[key2] = result.value;
               }
             }
           }
           let unrecognized;
-          for (const key in input) {
-            if (!recordKeys.has(key)) {
+          for (const key2 in input) {
+            if (!recordKeys.has(key2)) {
               unrecognized = unrecognized ?? [];
-              unrecognized.push(key);
+              unrecognized.push(key2);
             }
           }
           if (unrecognized && unrecognized.length > 0) {
@@ -179128,16 +179508,16 @@ var require_schemas = __commonJS({
           }
         } else {
           payload.value = {};
-          for (const key of Reflect.ownKeys(input)) {
-            if (key === "__proto__")
+          for (const key2 of Reflect.ownKeys(input)) {
+            if (key2 === "__proto__")
               continue;
-            let keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+            let keyResult = def.keyType._zod.run({ value: key2, issues: [] }, ctx);
             if (keyResult instanceof Promise) {
               throw new Error("Async schemas not supported in object keys currently");
             }
-            const checkNumericKey = typeof key === "string" && regexes.number.test(key) && keyResult.issues.length;
+            const checkNumericKey = typeof key2 === "string" && regexes.number.test(key2) && keyResult.issues.length;
             if (checkNumericKey) {
-              const retryResult = def.keyType._zod.run({ value: Number(key), issues: [] }, ctx);
+              const retryResult = def.keyType._zod.run({ value: Number(key2), issues: [] }, ctx);
               if (retryResult instanceof Promise) {
                 throw new Error("Async schemas not supported in object keys currently");
               }
@@ -179147,30 +179527,30 @@ var require_schemas = __commonJS({
             }
             if (keyResult.issues.length) {
               if (def.mode === "loose") {
-                payload.value[key] = input[key];
+                payload.value[key2] = input[key2];
               } else {
                 payload.issues.push({
                   code: "invalid_key",
                   origin: "record",
                   issues: keyResult.issues.map((iss) => util4.finalizeIssue(iss, ctx, core.config())),
-                  input: key,
-                  path: [key],
+                  input: key2,
+                  path: [key2],
                   inst
                 });
               }
               continue;
             }
-            const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+            const result = def.valueType._zod.run({ value: input[key2], issues: [] }, ctx);
             if (result instanceof Promise) {
               proms.push(result.then((result2) => {
                 if (result2.issues.length) {
-                  payload.issues.push(...util4.prefixIssues(key, result2.issues));
+                  payload.issues.push(...util4.prefixIssues(key2, result2.issues));
                 }
                 payload.value[keyResult.value] = result2.value;
               }));
             } else {
               if (result.issues.length) {
-                payload.issues.push(...util4.prefixIssues(key, result.issues));
+                payload.issues.push(...util4.prefixIssues(key2, result.issues));
               }
               payload.value[keyResult.value] = result.value;
             }
@@ -179197,15 +179577,15 @@ var require_schemas = __commonJS({
         }
         const proms = [];
         payload.value = /* @__PURE__ */ new Map();
-        for (const [key, value] of input) {
-          const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+        for (const [key2, value] of input) {
+          const keyResult = def.keyType._zod.run({ value: key2, issues: [] }, ctx);
           const valueResult = def.valueType._zod.run({ value, issues: [] }, ctx);
           if (keyResult instanceof Promise || valueResult instanceof Promise) {
             proms.push(Promise.all([keyResult, valueResult]).then(([keyResult2, valueResult2]) => {
-              handleMapResult3(keyResult2, valueResult2, payload, key, input, inst, ctx);
+              handleMapResult3(keyResult2, valueResult2, payload, key2, input, inst, ctx);
             }));
           } else {
-            handleMapResult3(keyResult, valueResult, payload, key, input, inst, ctx);
+            handleMapResult3(keyResult, valueResult, payload, key2, input, inst, ctx);
           }
         }
         if (proms.length)
@@ -179213,10 +179593,10 @@ var require_schemas = __commonJS({
         return payload;
       };
     });
-    function handleMapResult3(keyResult, valueResult, final, key, input, inst, ctx) {
+    function handleMapResult3(keyResult, valueResult, final, key2, input, inst, ctx) {
       if (keyResult.issues.length) {
-        if (util4.propertyKeyTypes.has(typeof key)) {
-          final.issues.push(...util4.prefixIssues(key, keyResult.issues));
+        if (util4.propertyKeyTypes.has(typeof key2)) {
+          final.issues.push(...util4.prefixIssues(key2, keyResult.issues));
         } else {
           final.issues.push({
             code: "invalid_key",
@@ -179228,15 +179608,15 @@ var require_schemas = __commonJS({
         }
       }
       if (valueResult.issues.length) {
-        if (util4.propertyKeyTypes.has(typeof key)) {
-          final.issues.push(...util4.prefixIssues(key, valueResult.issues));
+        if (util4.propertyKeyTypes.has(typeof key2)) {
+          final.issues.push(...util4.prefixIssues(key2, valueResult.issues));
         } else {
           final.issues.push({
             origin: "map",
             code: "invalid_element",
             input,
             inst,
-            key,
+            key: key2,
             issues: valueResult.issues.map((iss) => util4.finalizeIssue(iss, ctx, core.config()))
           });
         }
@@ -188654,8 +189034,8 @@ var require_to_json_schema = __commonJS({
         if (defId)
           seen.defId = defId;
         const schema2 = seen.schema;
-        for (const key in schema2) {
-          delete schema2[key];
+        for (const key2 in schema2) {
+          delete schema2[key2];
         }
         schema2.$ref = ref;
       };
@@ -188724,20 +189104,20 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           Object.assign(schema2, _cached);
           const isParentRef = zodSchema4._zod.parent === ref;
           if (isParentRef) {
-            for (const key in schema2) {
-              if (key === "$ref" || key === "allOf")
+            for (const key2 in schema2) {
+              if (key2 === "$ref" || key2 === "allOf")
                 continue;
-              if (!(key in _cached)) {
-                delete schema2[key];
+              if (!(key2 in _cached)) {
+                delete schema2[key2];
               }
             }
           }
           if (refSchema.$ref && refSeen.def) {
-            for (const key in schema2) {
-              if (key === "$ref" || key === "allOf")
+            for (const key2 in schema2) {
+              if (key2 === "$ref" || key2 === "allOf")
                 continue;
-              if (key in refSeen.def && JSON.stringify(schema2[key]) === JSON.stringify(refSeen.def[key])) {
-                delete schema2[key];
+              if (key2 in refSeen.def && JSON.stringify(schema2[key2]) === JSON.stringify(refSeen.def[key2])) {
+                delete schema2[key2];
               }
             }
           }
@@ -188749,11 +189129,11 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           if (parentSeen?.schema.$ref) {
             schema2.$ref = parentSeen.schema.$ref;
             if (parentSeen.def) {
-              for (const key in schema2) {
-                if (key === "$ref" || key === "allOf")
+              for (const key2 in schema2) {
+                if (key2 === "$ref" || key2 === "allOf")
                   continue;
-                if (key in parentSeen.def && JSON.stringify(schema2[key]) === JSON.stringify(parentSeen.def[key])) {
-                  delete schema2[key];
+                if (key2 in parentSeen.def && JSON.stringify(schema2[key2]) === JSON.stringify(parentSeen.def[key2])) {
+                  delete schema2[key2];
                 }
               }
             }
@@ -188847,8 +189227,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         return isTransforming3(def.in, ctx) || isTransforming3(def.out, ctx);
       }
       if (def.type === "object") {
-        for (const key in def.shape) {
-          if (isTransforming3(def.shape[key], ctx))
+        for (const key2 in def.shape) {
+          if (isTransforming3(def.shape[key2], ctx))
             return true;
         }
         return false;
@@ -189181,15 +189561,15 @@ var require_json_schema_processors = __commonJS({
       json4.type = "object";
       json4.properties = {};
       const shape = def.shape;
-      for (const key in shape) {
-        json4.properties[key] = (0, to_json_schema_js_1.process)(shape[key], ctx, {
+      for (const key2 in shape) {
+        json4.properties[key2] = (0, to_json_schema_js_1.process)(shape[key2], ctx, {
           ...params,
-          path: [...params.path, "properties", key]
+          path: [...params.path, "properties", key2]
         });
       }
       const allKeys = new Set(Object.keys(shape));
-      const requiredKeys = new Set([...allKeys].filter((key) => {
-        const v = def.shape[key]._zod;
+      const requiredKeys = new Set([...allKeys].filter((key2) => {
+        const v = def.shape[key2]._zod;
         if (ctx.io === "input") {
           return v.optin === void 0;
         } else {
@@ -189469,9 +189849,9 @@ var require_json_schema_processors = __commonJS({
         };
         ctx2.external = external;
         for (const entry of registry3._idmap.entries()) {
-          const [key, schema] = entry;
+          const [key2, schema] = entry;
           (0, to_json_schema_js_1.extractDefs)(ctx2, schema);
-          schemas[key] = (0, to_json_schema_js_1.finalize)(ctx2, schema);
+          schemas[key2] = (0, to_json_schema_js_1.finalize)(ctx2, schema);
         }
         if (Object.keys(defs).length > 0) {
           const defsSegment = ctx2.target === "draft-2020-12" ? "$defs" : "definitions";
@@ -191353,17 +191733,17 @@ var require_from_json_schema = __commonJS({
       if (!ref.startsWith("#")) {
         throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
       }
-      const path38 = ref.slice(1).split("/").filter(Boolean);
-      if (path38.length === 0) {
+      const path42 = ref.slice(1).split("/").filter(Boolean);
+      if (path42.length === 0) {
         return ctx.rootSchema;
       }
       const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-      if (path38[0] === defsKey) {
-        const key = path38[1];
-        if (!key || !ctx.defs[key]) {
+      if (path42[0] === defsKey) {
+        const key2 = path42[1];
+        if (!key2 || !ctx.defs[key2]) {
           throw new Error(`Reference not found: ${ref}`);
         }
-        return ctx.defs[key];
+        return ctx.defs[key2];
       }
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -191549,9 +191929,9 @@ var require_from_json_schema = __commonJS({
           const shape = {};
           const properties = schema.properties || {};
           const requiredSet = new Set(schema.required || []);
-          for (const [key, propSchema] of Object.entries(properties)) {
+          for (const [key2, propSchema] of Object.entries(properties)) {
             const propZodSchema = convertSchema3(propSchema, ctx);
-            shape[key] = requiredSet.has(key) ? propZodSchema : propZodSchema.optional();
+            shape[key2] = requiredSet.has(key2) ? propZodSchema : propZodSchema.optional();
           }
           if (schema.propertyNames) {
             const keySchema3 = convertSchema3(schema.propertyNames, ctx);
@@ -191695,20 +192075,20 @@ var require_from_json_schema = __commonJS({
       }
       const extraMeta = {};
       const coreMetadataKeys = ["$id", "id", "$comment", "$anchor", "$vocabulary", "$dynamicRef", "$dynamicAnchor"];
-      for (const key of coreMetadataKeys) {
-        if (key in schema) {
-          extraMeta[key] = schema[key];
+      for (const key2 of coreMetadataKeys) {
+        if (key2 in schema) {
+          extraMeta[key2] = schema[key2];
         }
       }
       const contentMetadataKeys = ["contentEncoding", "contentMediaType", "contentSchema"];
-      for (const key of contentMetadataKeys) {
-        if (key in schema) {
-          extraMeta[key] = schema[key];
+      for (const key2 of contentMetadataKeys) {
+        if (key2 in schema) {
+          extraMeta[key2] = schema[key2];
         }
       }
-      for (const key of Object.keys(schema)) {
-        if (!RECOGNIZED_KEYS3.has(key)) {
-          extraMeta[key] = schema[key];
+      for (const key2 of Object.keys(schema)) {
+        if (!RECOGNIZED_KEYS3.has(key2)) {
+          extraMeta[key2] = schema[key2];
         }
       }
       if (Object.keys(extraMeta).length > 0) {
@@ -192025,9 +192405,9 @@ var require_util5 = __commonJS({
       };
       util5.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object4) => {
         const keys2 = [];
-        for (const key in object4) {
-          if (Object.prototype.hasOwnProperty.call(object4, key)) {
-            keys2.push(key);
+        for (const key2 in object4) {
+          if (Object.prototype.hasOwnProperty.call(object4, key2)) {
+            keys2.push(key2);
           }
         }
         return keys2;
@@ -192404,8 +192784,8 @@ var require_parseUtil = __commonJS({
     var errors_js_1 = require_errors3();
     var en_js_1 = __importDefault(require_en2());
     var makeIssue2 = (params) => {
-      const { data, path: path38, errorMaps, issueData } = params;
-      const fullPath = [...path38, ...issueData.path || []];
+      const { data, path: path42, errorMaps, issueData } = params;
+      const fullPath = [...path42, ...issueData.path || []];
       const fullIssue = {
         ...issueData,
         path: fullPath
@@ -192475,10 +192855,10 @@ var require_parseUtil = __commonJS({
       static async mergeObjectAsync(status, pairs) {
         const syncPairs = [];
         for (const pair of pairs) {
-          const key = await pair.key;
+          const key2 = await pair.key;
           const value = await pair.value;
           syncPairs.push({
-            key,
+            key: key2,
             value
           });
         }
@@ -192487,17 +192867,17 @@ var require_parseUtil = __commonJS({
       static mergeObjectSync(status, pairs) {
         const finalObject = {};
         for (const pair of pairs) {
-          const { key, value } = pair;
-          if (key.status === "aborted")
+          const { key: key2, value } = pair;
+          if (key2.status === "aborted")
             return exports2.INVALID;
           if (value.status === "aborted")
             return exports2.INVALID;
-          if (key.status === "dirty")
+          if (key2.status === "dirty")
             status.dirty();
           if (value.status === "dirty")
             status.dirty();
-          if (key.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
-            finalObject[key.value] = value.value;
+          if (key2.value !== "__proto__" && (typeof value.value !== "undefined" || pair.alwaysSet)) {
+            finalObject[key2.value] = value.value;
           }
         }
         return { status: status.value, value: finalObject };
@@ -192559,12 +192939,12 @@ var require_types4 = __commonJS({
     var parseUtil_js_1 = require_parseUtil();
     var util_js_1 = require_util5();
     var ParseInputLazyPath2 = class {
-      constructor(parent, value, path38, key) {
+      constructor(parent, value, path42, key2) {
         this._cachedPath = [];
         this.parent = parent;
         this.data = value;
-        this._path = path38;
-        this._key = key;
+        this._path = path42;
+        this._key = key2;
       }
       get path() {
         if (!this._cachedPath.length) {
@@ -194325,9 +194705,9 @@ var require_types4 = __commonJS({
     function deepPartialify2(schema) {
       if (schema instanceof ZodObject4) {
         const newShape = {};
-        for (const key in schema.shape) {
-          const fieldSchema = schema.shape[key];
-          newShape[key] = ZodOptional4.create(deepPartialify2(fieldSchema));
+        for (const key2 in schema.shape) {
+          const fieldSchema = schema.shape[key2];
+          newShape[key2] = ZodOptional4.create(deepPartialify2(fieldSchema));
         }
         return new ZodObject4({
           ...schema._def,
@@ -194378,29 +194758,29 @@ var require_types4 = __commonJS({
         const { shape, keys: shapeKeys } = this._getCached();
         const extraKeys = [];
         if (!(this._def.catchall instanceof ZodNever4 && this._def.unknownKeys === "strip")) {
-          for (const key in ctx.data) {
-            if (!shapeKeys.includes(key)) {
-              extraKeys.push(key);
+          for (const key2 in ctx.data) {
+            if (!shapeKeys.includes(key2)) {
+              extraKeys.push(key2);
             }
           }
         }
         const pairs = [];
-        for (const key of shapeKeys) {
-          const keyValidator = shape[key];
-          const value = ctx.data[key];
+        for (const key2 of shapeKeys) {
+          const keyValidator = shape[key2];
+          const value = ctx.data[key2];
           pairs.push({
-            key: { status: "valid", value: key },
-            value: keyValidator._parse(new ParseInputLazyPath2(ctx, value, ctx.path, key)),
-            alwaysSet: key in ctx.data
+            key: { status: "valid", value: key2 },
+            value: keyValidator._parse(new ParseInputLazyPath2(ctx, value, ctx.path, key2)),
+            alwaysSet: key2 in ctx.data
           });
         }
         if (this._def.catchall instanceof ZodNever4) {
           const unknownKeys = this._def.unknownKeys;
           if (unknownKeys === "passthrough") {
-            for (const key of extraKeys) {
+            for (const key2 of extraKeys) {
               pairs.push({
-                key: { status: "valid", value: key },
-                value: { status: "valid", value: ctx.data[key] }
+                key: { status: "valid", value: key2 },
+                value: { status: "valid", value: ctx.data[key2] }
               });
             }
           } else if (unknownKeys === "strict") {
@@ -194417,15 +194797,15 @@ var require_types4 = __commonJS({
           }
         } else {
           const catchall = this._def.catchall;
-          for (const key of extraKeys) {
-            const value = ctx.data[key];
+          for (const key2 of extraKeys) {
+            const value = ctx.data[key2];
             pairs.push({
-              key: { status: "valid", value: key },
+              key: { status: "valid", value: key2 },
               value: catchall._parse(
-                new ParseInputLazyPath2(ctx, value, ctx.path, key)
+                new ParseInputLazyPath2(ctx, value, ctx.path, key2)
                 //, ctx.child(key), value, getParsedType(value)
               ),
-              alwaysSet: key in ctx.data
+              alwaysSet: key2 in ctx.data
             });
           }
         }
@@ -194433,10 +194813,10 @@ var require_types4 = __commonJS({
           return Promise.resolve().then(async () => {
             const syncPairs = [];
             for (const pair of pairs) {
-              const key = await pair.key;
+              const key2 = await pair.key;
               const value = await pair.value;
               syncPairs.push({
-                key,
+                key: key2,
                 value,
                 alwaysSet: pair.alwaysSet
               });
@@ -194561,8 +194941,8 @@ var require_types4 = __commonJS({
       //   }) as any;
       //   return merged;
       // }
-      setKey(key, schema) {
-        return this.augment({ [key]: schema });
+      setKey(key2, schema) {
+        return this.augment({ [key2]: schema });
       }
       // merge<Incoming extends AnyZodObject>(
       //   merging: Incoming
@@ -194593,9 +194973,9 @@ var require_types4 = __commonJS({
       }
       pick(mask) {
         const shape = {};
-        for (const key of util_js_1.util.objectKeys(mask)) {
-          if (mask[key] && this.shape[key]) {
-            shape[key] = this.shape[key];
+        for (const key2 of util_js_1.util.objectKeys(mask)) {
+          if (mask[key2] && this.shape[key2]) {
+            shape[key2] = this.shape[key2];
           }
         }
         return new _ZodObject({
@@ -194605,9 +194985,9 @@ var require_types4 = __commonJS({
       }
       omit(mask) {
         const shape = {};
-        for (const key of util_js_1.util.objectKeys(this.shape)) {
-          if (!mask[key]) {
-            shape[key] = this.shape[key];
+        for (const key2 of util_js_1.util.objectKeys(this.shape)) {
+          if (!mask[key2]) {
+            shape[key2] = this.shape[key2];
           }
         }
         return new _ZodObject({
@@ -194623,12 +195003,12 @@ var require_types4 = __commonJS({
       }
       partial(mask) {
         const newShape = {};
-        for (const key of util_js_1.util.objectKeys(this.shape)) {
-          const fieldSchema = this.shape[key];
-          if (mask && !mask[key]) {
-            newShape[key] = fieldSchema;
+        for (const key2 of util_js_1.util.objectKeys(this.shape)) {
+          const fieldSchema = this.shape[key2];
+          if (mask && !mask[key2]) {
+            newShape[key2] = fieldSchema;
           } else {
-            newShape[key] = fieldSchema.optional();
+            newShape[key2] = fieldSchema.optional();
           }
         }
         return new _ZodObject({
@@ -194638,16 +195018,16 @@ var require_types4 = __commonJS({
       }
       required(mask) {
         const newShape = {};
-        for (const key of util_js_1.util.objectKeys(this.shape)) {
-          if (mask && !mask[key]) {
-            newShape[key] = this.shape[key];
+        for (const key2 of util_js_1.util.objectKeys(this.shape)) {
+          if (mask && !mask[key2]) {
+            newShape[key2] = this.shape[key2];
           } else {
-            const fieldSchema = this.shape[key];
+            const fieldSchema = this.shape[key2];
             let newField = fieldSchema;
             while (newField instanceof ZodOptional4) {
               newField = newField._def.innerType;
             }
-            newShape[key] = newField;
+            newShape[key2] = newField;
           }
         }
         return new _ZodObject({
@@ -194894,14 +195274,14 @@ var require_types4 = __commonJS({
         return { valid: true, data: a };
       } else if (aType === util_js_1.ZodParsedType.object && bType === util_js_1.ZodParsedType.object) {
         const bKeys = util_js_1.util.objectKeys(b);
-        const sharedKeys = util_js_1.util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);
+        const sharedKeys = util_js_1.util.objectKeys(a).filter((key2) => bKeys.indexOf(key2) !== -1);
         const newObj = { ...a, ...b };
-        for (const key of sharedKeys) {
-          const sharedValue = mergeValues4(a[key], b[key]);
+        for (const key2 of sharedKeys) {
+          const sharedValue = mergeValues4(a[key2], b[key2]);
           if (!sharedValue.valid) {
             return { valid: false };
           }
-          newObj[key] = sharedValue.data;
+          newObj[key2] = sharedValue.data;
         }
         return { valid: true, data: newObj };
       } else if (aType === util_js_1.ZodParsedType.array && bType === util_js_1.ZodParsedType.array) {
@@ -195067,11 +195447,11 @@ var require_types4 = __commonJS({
         const pairs = [];
         const keyType = this._def.keyType;
         const valueType = this._def.valueType;
-        for (const key in ctx.data) {
+        for (const key2 in ctx.data) {
           pairs.push({
-            key: keyType._parse(new ParseInputLazyPath2(ctx, key, ctx.path, key)),
-            value: valueType._parse(new ParseInputLazyPath2(ctx, ctx.data[key], ctx.path, key)),
-            alwaysSet: key in ctx.data
+            key: keyType._parse(new ParseInputLazyPath2(ctx, key2, ctx.path, key2)),
+            value: valueType._parse(new ParseInputLazyPath2(ctx, ctx.data[key2], ctx.path, key2)),
+            alwaysSet: key2 in ctx.data
           });
         }
         if (ctx.common.async) {
@@ -195120,9 +195500,9 @@ var require_types4 = __commonJS({
         }
         const keyType = this._def.keyType;
         const valueType = this._def.valueType;
-        const pairs = [...ctx.data.entries()].map(([key, value], index) => {
+        const pairs = [...ctx.data.entries()].map(([key2, value], index) => {
           return {
-            key: keyType._parse(new ParseInputLazyPath2(ctx, key, ctx.path, [index, "key"])),
+            key: keyType._parse(new ParseInputLazyPath2(ctx, key2, ctx.path, [index, "key"])),
             value: valueType._parse(new ParseInputLazyPath2(ctx, value, ctx.path, [index, "value"]))
           };
         });
@@ -195130,30 +195510,30 @@ var require_types4 = __commonJS({
           const finalMap = /* @__PURE__ */ new Map();
           return Promise.resolve().then(async () => {
             for (const pair of pairs) {
-              const key = await pair.key;
+              const key2 = await pair.key;
               const value = await pair.value;
-              if (key.status === "aborted" || value.status === "aborted") {
+              if (key2.status === "aborted" || value.status === "aborted") {
                 return parseUtil_js_1.INVALID;
               }
-              if (key.status === "dirty" || value.status === "dirty") {
+              if (key2.status === "dirty" || value.status === "dirty") {
                 status.dirty();
               }
-              finalMap.set(key.value, value.value);
+              finalMap.set(key2.value, value.value);
             }
             return { status: status.value, value: finalMap };
           });
         } else {
           const finalMap = /* @__PURE__ */ new Map();
           for (const pair of pairs) {
-            const key = pair.key;
+            const key2 = pair.key;
             const value = pair.value;
-            if (key.status === "aborted" || value.status === "aborted") {
+            if (key2.status === "aborted" || value.status === "aborted") {
               return parseUtil_js_1.INVALID;
             }
-            if (key.status === "dirty" || value.status === "dirty") {
+            if (key2.status === "dirty" || value.status === "dirty") {
               status.dirty();
             }
-            finalMap.set(key.value, value.value);
+            finalMap.set(key2.value, value.value);
           }
           return { status: status.value, value: finalMap };
         }
@@ -196319,9 +196699,9 @@ var require_dist8 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -196572,22 +196952,22 @@ var require_dist8 = __commonJS({
     function convertToFormData2(input, options = {}) {
       const { useArrayBrackets = true } = options;
       const formData = new FormData();
-      for (const [key, value] of Object.entries(input)) {
+      for (const [key2, value] of Object.entries(input)) {
         if (value == null) {
           continue;
         }
         if (Array.isArray(value)) {
           if (value.length === 1) {
-            formData.append(key, value[0]);
+            formData.append(key2, value[0]);
             continue;
           }
-          const arrayKey = useArrayBrackets ? `${key}[]` : key;
+          const arrayKey = useArrayBrackets ? `${key2}[]` : key2;
           for (const item of value) {
             formData.append(arrayKey, item);
           }
           continue;
         }
-        formData.append(key, value);
+        formData.append(key2, value);
       }
       return formData;
     }
@@ -196912,16 +197292,16 @@ var require_dist8 = __commonJS({
       }
       const normalized = {};
       if (headers instanceof Headers) {
-        headers.forEach((value, key) => {
-          normalized[key.toLowerCase()] = value;
+        headers.forEach((value, key2) => {
+          normalized[key2.toLowerCase()] = value;
         });
       } else {
         if (!Array.isArray(headers)) {
           headers = Object.entries(headers);
         }
-        for (const [key, value] of headers) {
+        for (const [key2, value] of headers) {
           if (value != null) {
-            normalized[key.toLowerCase()] = value;
+            normalized[key2.toLowerCase()] = value;
           }
         }
       }
@@ -197052,8 +197432,8 @@ var require_dist8 = __commonJS({
     }) {
       url4 = url4.toLowerCase();
       mediaType = mediaType.toLowerCase();
-      return Object.entries(supportedUrls).map(([key, value]) => {
-        const mediaType2 = key.toLowerCase();
+      return Object.entries(supportedUrls).map(([key2, value]) => {
+        const mediaType2 = key2.toLowerCase();
         return mediaType2 === "*" || mediaType2 === "*/*" ? { mediaTypePrefix: "", regexes: value } : { mediaTypePrefix: mediaType2.replace(/\*/, ""), regexes: value };
       }).filter(({ mediaTypePrefix }) => mediaType.startsWith(mediaTypePrefix)).flatMap(({ regexes }) => regexes).some((pattern) => pattern.test(url4));
     }
@@ -197091,32 +197471,32 @@ var require_dist8 = __commonJS({
       return apiKey;
     }
     function loadOptionalSetting2({
-      settingValue,
+      settingValue: settingValue2,
       environmentVariableName
     }) {
-      if (typeof settingValue === "string") {
-        return settingValue;
+      if (typeof settingValue2 === "string") {
+        return settingValue2;
       }
-      if (settingValue != null || typeof process === "undefined") {
+      if (settingValue2 != null || typeof process === "undefined") {
         return void 0;
       }
-      settingValue = process.env[environmentVariableName];
-      if (settingValue == null || typeof settingValue !== "string") {
+      settingValue2 = process.env[environmentVariableName];
+      if (settingValue2 == null || typeof settingValue2 !== "string") {
         return void 0;
       }
-      return settingValue;
+      return settingValue2;
     }
     var import_provider610 = require_dist6();
     function loadSetting({
-      settingValue,
+      settingValue: settingValue2,
       environmentVariableName,
       settingName,
       description
     }) {
-      if (typeof settingValue === "string") {
-        return settingValue;
+      if (typeof settingValue2 === "string") {
+        return settingValue2;
       }
-      if (settingValue != null) {
+      if (settingValue2 != null) {
         throw new import_provider610.LoadSettingError({
           message: `${description} setting must be a string.`
         });
@@ -197126,18 +197506,18 @@ var require_dist8 = __commonJS({
           message: `${description} setting is missing. Pass it using the '${settingName}' parameter. Environment variables is not supported in this environment.`
         });
       }
-      settingValue = process.env[environmentVariableName];
-      if (settingValue == null) {
+      settingValue2 = process.env[environmentVariableName];
+      if (settingValue2 == null) {
         throw new import_provider610.LoadSettingError({
           message: `${description} setting is missing. Pass it using the '${settingName}' parameter or the ${environmentVariableName} environment variable.`
         });
       }
-      if (typeof settingValue !== "string") {
+      if (typeof settingValue2 !== "string") {
         throw new import_provider610.LoadSettingError({
           message: `${description} setting must be a string. The value of the ${environmentVariableName} environment variable is not a string.`
         });
       }
-      return settingValue;
+      return settingValue2;
     }
     function mediaTypeToExtension2(mediaType) {
       var _a211;
@@ -197175,8 +197555,8 @@ var require_dist8 = __commonJS({
           if (Object.prototype.hasOwnProperty.call(node, "constructor") && node.constructor !== null && typeof node.constructor === "object" && Object.prototype.hasOwnProperty.call(node.constructor, "prototype")) {
             throw new SyntaxError("Object contains forbidden prototype property");
           }
-          for (const key in node) {
-            const value = node[key];
+          for (const key2 in node) {
+            const value = node[key2];
             if (value && typeof value === "object") {
               next.push(value);
             }
@@ -197206,8 +197586,8 @@ var require_dist8 = __commonJS({
         jsonSchema22.additionalProperties = false;
         const { properties } = jsonSchema22;
         if (properties != null) {
-          for (const key of Object.keys(properties)) {
-            properties[key] = visit4(properties[key]);
+          for (const key2 of Object.keys(properties)) {
+            properties[key2] = visit4(properties[key2]);
           }
         }
       }
@@ -197225,8 +197605,8 @@ var require_dist8 = __commonJS({
       }
       const { definitions } = jsonSchema22;
       if (definitions != null) {
-        for (const key of Object.keys(definitions)) {
-          definitions[key] = visit4(definitions[key]);
+        for (const key2 of Object.keys(definitions)) {
+          definitions[key2] = visit4(definitions[key2]);
         }
       }
       return jsonSchema22;
@@ -197823,10 +198203,10 @@ var require_dist8 = __commonJS({
     }
     function parseNativeEnumDef4(def) {
       const object4 = def.values;
-      const actualKeys = Object.keys(def.values).filter((key) => {
-        return typeof object4[object4[key]] !== "number";
+      const actualKeys = Object.keys(def.values).filter((key2) => {
+        return typeof object4[object4[key2]] !== "number";
       });
-      const actualValues = actualKeys.map((key) => object4[key]);
+      const actualValues = actualKeys.map((key2) => object4[key2]);
       const parsedTypes = Array.from(
         new Set(actualValues.map((values) => typeof values))
       );
@@ -198967,9 +199347,9 @@ var require_dist9 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -199183,13 +199563,13 @@ var require_dist9 = __commonJS({
       };
     }
     var import_provider_utils210 = require_dist8();
-    var import_zod169 = require_zod();
-    var qwenErrorDataSchema = import_zod169.z.object({
-      object: import_zod169.z.literal("error"),
-      message: import_zod169.z.string(),
-      type: import_zod169.z.string(),
-      param: import_zod169.z.string().nullable(),
-      code: import_zod169.z.string().nullable()
+    var import_zod189 = require_zod();
+    var qwenErrorDataSchema = import_zod189.z.object({
+      object: import_zod189.z.literal("error"),
+      message: import_zod189.z.string(),
+      type: import_zod189.z.string(),
+      param: import_zod189.z.string().nullable(),
+      code: import_zod189.z.string().nullable()
     });
     var qwenFailedResponseHandler = (0, import_provider_utils210.createJsonErrorResponseHandler)({
       errorSchema: qwenErrorDataSchema,
@@ -200558,8 +200938,8 @@ ${user}:`]
       });
       const getCommonModelConfig = (modelType) => ({
         provider: `qwen.${modelType}`,
-        url: ({ path: path38 }) => {
-          const url4 = new URL(`${baseURL}${path38}`);
+        url: ({ path: path42 }) => {
+          const url4 = new URL(`${baseURL}${path42}`);
           if (options.queryParams) {
             url4.search = new URLSearchParams(options.queryParams).toString();
           }
@@ -200697,8 +201077,8 @@ function convertJSONSchemaToOpenAPISchema(jsonSchema4, isRoot = true) {
   }
   if (properties != null) {
     result.properties = Object.entries(properties).reduce(
-      (acc, [key, value]) => {
-        acc[key] = convertJSONSchemaToOpenAPISchema(value, false);
+      (acc, [key2, value]) => {
+        acc[key2] = convertJSONSchemaToOpenAPISchema(value, false);
         return acc;
       },
       {}
@@ -202639,7 +203019,7 @@ var init_dist12 = __esm({
           prompt,
           n = 1,
           size,
-          aspectRatio = "1:1",
+          aspectRatio: aspectRatio2 = "1:1",
           seed,
           providerOptions,
           headers,
@@ -202681,8 +203061,8 @@ var init_dist12 = __esm({
         const parameters = {
           sampleCount: n
         };
-        if (aspectRatio != null) {
-          parameters.aspectRatio = aspectRatio;
+        if (aspectRatio2 != null) {
+          parameters.aspectRatio = aspectRatio2;
         }
         if (googleOptions) {
           Object.assign(parameters, googleOptions);
@@ -202727,7 +203107,7 @@ var init_dist12 = __esm({
           prompt,
           n,
           size,
-          aspectRatio,
+          aspectRatio: aspectRatio2,
           seed,
           providerOptions,
           headers,
@@ -202790,8 +203170,8 @@ var init_dist12 = __esm({
           providerOptions: {
             google: {
               responseModalities: ["IMAGE"],
-              imageConfig: aspectRatio ? {
-                aspectRatio
+              imageConfig: aspectRatio2 ? {
+                aspectRatio: aspectRatio2
               } : void 0,
               ...(_c = providerOptions == null ? void 0 : providerOptions.google) != null ? _c : {}
             }
@@ -202930,15 +203310,15 @@ var init_dist12 = __esm({
           if (opts.negativePrompt !== void 0 && opts.negativePrompt !== null) {
             parameters.negativePrompt = opts.negativePrompt;
           }
-          for (const [key, value] of Object.entries(opts)) {
+          for (const [key2, value] of Object.entries(opts)) {
             if (![
               "pollIntervalMs",
               "pollTimeoutMs",
               "personGeneration",
               "negativePrompt",
               "referenceImages"
-            ].includes(key)) {
-              parameters[key] = value;
+            ].includes(key2)) {
+              parameters[key2] = value;
             }
           }
         }
@@ -208625,8 +209005,8 @@ function createOpenAICompatible(options) {
   const getHeaders = () => withUserAgentSuffix(headers, `ai-sdk/openai-compatible/${VERSION9}`);
   const getCommonModelConfig = (modelType) => ({
     provider: `${providerName}.${modelType}`,
-    url: ({ path: path38 }) => {
-      const url4 = new URL(`${baseURL}${path38}`);
+    url: ({ path: path42 }) => {
+      const url4 = new URL(`${baseURL}${path42}`);
       if (options.queryParams) {
         url4.search = new URLSearchParams(options.queryParams).toString();
       }
@@ -208837,9 +209217,9 @@ var init_dist14 = __esm({
               Object.entries(
                 (_e = providerOptions == null ? void 0 : providerOptions[this.providerOptionsName]) != null ? _e : {}
               ).filter(
-                ([key]) => !Object.keys(
+                ([key2]) => !Object.keys(
                   openaiCompatibleLanguageModelChatOptions.shape
-                ).includes(key)
+                ).includes(key2)
               )
             ),
             reasoning_effort: compatibleOptions.reasoningEffort,
@@ -209708,7 +210088,7 @@ var init_dist14 = __esm({
         prompt,
         n,
         size,
-        aspectRatio,
+        aspectRatio: aspectRatio2,
         seed,
         providerOptions,
         headers,
@@ -209718,7 +210098,7 @@ var init_dist14 = __esm({
       }) {
         var _a31, _b27, _c, _d, _e;
         const warnings = [];
-        if (aspectRatio != null) {
+        if (aspectRatio2 != null) {
           warnings.push({
             type: "unsupported",
             feature: "aspectRatio",
@@ -211092,7 +211472,7 @@ var init_dist15 = __esm({
         prompt,
         n,
         size,
-        aspectRatio,
+        aspectRatio: aspectRatio2,
         seed,
         providerOptions,
         headers,
@@ -211135,8 +211515,8 @@ var init_dist15 = __esm({
           n,
           response_format: "b64_json"
         };
-        if (aspectRatio != null) {
-          body.aspect_ratio = aspectRatio;
+        if (aspectRatio2 != null) {
+          body.aspect_ratio = aspectRatio2;
         }
         if ((xaiOptions == null ? void 0 : xaiOptions.output_format) != null) {
           body.output_format = xaiOptions.output_format;
@@ -211144,7 +211524,7 @@ var init_dist15 = __esm({
         if ((xaiOptions == null ? void 0 : xaiOptions.sync_mode) != null) {
           body.sync_mode = xaiOptions.sync_mode;
         }
-        if ((xaiOptions == null ? void 0 : xaiOptions.aspect_ratio) != null && aspectRatio == null) {
+        if ((xaiOptions == null ? void 0 : xaiOptions.aspect_ratio) != null && aspectRatio2 == null) {
           body.aspect_ratio = xaiOptions.aspect_ratio;
         }
         if ((xaiOptions == null ? void 0 : xaiOptions.resolution) != null) {
@@ -212623,14 +213003,14 @@ var init_dist15 = __esm({
           }
         }
         if (xaiOptions != null) {
-          for (const [key, value] of Object.entries(xaiOptions)) {
+          for (const [key2, value] of Object.entries(xaiOptions)) {
             if (![
               "pollIntervalMs",
               "pollTimeoutMs",
               "resolution",
               "videoUrl"
-            ].includes(key)) {
-              body[key] = value;
+            ].includes(key2)) {
+              body[key2] = value;
             }
           }
         }
@@ -213134,16 +213514,16 @@ function normalizeHeaders3(headers) {
   }
   const normalized = {};
   if (headers instanceof Headers) {
-    headers.forEach((value, key) => {
-      normalized[key.toLowerCase()] = value;
+    headers.forEach((value, key2) => {
+      normalized[key2.toLowerCase()] = value;
     });
   } else {
     if (!Array.isArray(headers)) {
       headers = Object.entries(headers);
     }
-    for (const [key, value] of headers) {
+    for (const [key2, value] of headers) {
       if (value != null) {
-        normalized[key.toLowerCase()] = value;
+        normalized[key2.toLowerCase()] = value;
       }
     }
   }
@@ -213183,8 +213563,8 @@ function filter4(obj) {
       if (Object.prototype.hasOwnProperty.call(node, "constructor") && Object.prototype.hasOwnProperty.call(node.constructor, "prototype")) {
         throw new SyntaxError("Object contains forbidden prototype property");
       }
-      for (const key in node) {
-        const value = node[key];
+      for (const key2 in node) {
+        const value = node[key2];
         if (value && typeof value === "object") {
           next.push(value);
         }
@@ -213211,8 +213591,8 @@ function addAdditionalPropertiesToJsonSchema2(jsonSchema22) {
     jsonSchema22.additionalProperties = false;
     const { properties } = jsonSchema22;
     if (properties != null) {
-      for (const key of Object.keys(properties)) {
-        properties[key] = visit2(properties[key]);
+      for (const key2 of Object.keys(properties)) {
+        properties[key2] = visit2(properties[key2]);
       }
     }
   }
@@ -213230,8 +213610,8 @@ function addAdditionalPropertiesToJsonSchema2(jsonSchema22) {
   }
   const { definitions } = jsonSchema22;
   if (definitions != null) {
-    for (const key of Object.keys(definitions)) {
-      definitions[key] = visit2(definitions[key]);
+    for (const key2 of Object.keys(definitions)) {
+      definitions[key2] = visit2(definitions[key2]);
     }
   }
   return jsonSchema22;
@@ -213716,10 +214096,10 @@ function parseMapDef2(def, refs) {
 }
 function parseNativeEnumDef2(def) {
   const object4 = def.values;
-  const actualKeys = Object.keys(def.values).filter((key) => {
-    return typeof object4[object4[key]] !== "number";
+  const actualKeys = Object.keys(def.values).filter((key2) => {
+    return typeof object4[object4[key2]] !== "number";
   });
-  const actualValues = actualKeys.map((key) => object4[key]);
+  const actualValues = actualKeys.map((key2) => object4[key2]);
   const parsedTypes = Array.from(
     new Set(actualValues.map((values) => typeof values))
   );
@@ -219199,16 +219579,16 @@ function normalizeHeaders4(headers) {
   }
   const normalized = {};
   if (headers instanceof Headers) {
-    headers.forEach((value, key) => {
-      normalized[key.toLowerCase()] = value;
+    headers.forEach((value, key2) => {
+      normalized[key2.toLowerCase()] = value;
     });
   } else {
     if (!Array.isArray(headers)) {
       headers = Object.entries(headers);
     }
-    for (const [key, value] of headers) {
+    for (const [key2, value] of headers) {
       if (value != null) {
-        normalized[key.toLowerCase()] = value;
+        normalized[key2.toLowerCase()] = value;
       }
     }
   }
@@ -219277,8 +219657,8 @@ function filter5(obj) {
       if (Object.prototype.hasOwnProperty.call(node, "constructor") && Object.prototype.hasOwnProperty.call(node.constructor, "prototype")) {
         throw new SyntaxError("Object contains forbidden prototype property");
       }
-      for (const key in node) {
-        const value = node[key];
+      for (const key2 in node) {
+        const value = node[key2];
         if (value && typeof value === "object") {
           next.push(value);
         }
@@ -219305,8 +219685,8 @@ function addAdditionalPropertiesToJsonSchema3(jsonSchema22) {
     jsonSchema22.additionalProperties = false;
     const { properties } = jsonSchema22;
     if (properties != null) {
-      for (const key of Object.keys(properties)) {
-        properties[key] = visit3(properties[key]);
+      for (const key2 of Object.keys(properties)) {
+        properties[key2] = visit3(properties[key2]);
       }
     }
   }
@@ -219324,8 +219704,8 @@ function addAdditionalPropertiesToJsonSchema3(jsonSchema22) {
   }
   const { definitions } = jsonSchema22;
   if (definitions != null) {
-    for (const key of Object.keys(definitions)) {
-      definitions[key] = visit3(definitions[key]);
+    for (const key2 of Object.keys(definitions)) {
+      definitions[key2] = visit3(definitions[key2]);
     }
   }
   return jsonSchema22;
@@ -219810,10 +220190,10 @@ function parseMapDef3(def, refs) {
 }
 function parseNativeEnumDef3(def) {
   const object4 = def.values;
-  const actualKeys = Object.keys(def.values).filter((key) => {
-    return typeof object4[object4[key]] !== "number";
+  const actualKeys = Object.keys(def.values).filter((key2) => {
+    return typeof object4[object4[key2]] !== "number";
   });
-  const actualValues = actualKeys.map((key) => object4[key]);
+  const actualValues = actualKeys.map((key2) => object4[key2]);
   const parsedTypes = Array.from(
     new Set(actualValues.map((values) => typeof values))
   );
@@ -221210,7 +221590,7 @@ function createMinimax(options = {}) {
   const createLanguageModel = (modelId) => {
     return new MinimaxChatLanguageModel(modelId, {
       provider: `minimax.chat`,
-      url: ({ path: path38 }) => `${baseURL}${path38}`,
+      url: ({ path: path42 }) => `${baseURL}${path42}`,
       headers: getHeaders,
       fetch: options.fetch
     });
@@ -221365,7 +221745,7 @@ var init_dist20 = __esm({
               Object.entries(
                 providerOptions?.[this.providerOptionsName] ?? {}
               ).filter(
-                ([key]) => !Object.keys(minimaxChatProviderOptions.shape).includes(key)
+                ([key2]) => !Object.keys(minimaxChatProviderOptions.shape).includes(key2)
               )
             ),
             reasoning_effort: compatibleOptions.reasoningEffort,
@@ -221808,8 +222188,8 @@ var require_safe_buffer2 = __commonJS({
     var buffer = require("buffer");
     var Buffer3 = buffer.Buffer;
     function copyProps(src, dst) {
-      for (var key in src) {
-        dst[key] = src[key];
+      for (var key2 in src) {
+        dst[key2] = src[key2];
       }
     }
     if (Buffer3.from && Buffer3.alloc && Buffer3.allocUnsafe && Buffer3.allocUnsafeSlow) {
@@ -222112,70 +222492,70 @@ var require_jwa = __commonJS({
   "node_modules/jwa/index.js"(exports2, module2) {
     "use strict";
     var Buffer3 = require_safe_buffer2().Buffer;
-    var crypto8 = require("crypto");
+    var crypto9 = require("crypto");
     var formatEcdsa = require_ecdsa_sig_formatter();
     var util4 = require("util");
     var MSG_INVALID_ALGORITHM = '"%s" is not a valid algorithm.\n  Supported algorithms are:\n  "HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512" and "none".';
     var MSG_INVALID_SECRET = "secret must be a string or buffer";
     var MSG_INVALID_VERIFIER_KEY = "key must be a string or a buffer";
     var MSG_INVALID_SIGNER_KEY = "key must be a string, a buffer or an object";
-    var supportsKeyObjects = typeof crypto8.createPublicKey === "function";
+    var supportsKeyObjects = typeof crypto9.createPublicKey === "function";
     if (supportsKeyObjects) {
       MSG_INVALID_VERIFIER_KEY += " or a KeyObject";
       MSG_INVALID_SECRET += "or a KeyObject";
     }
-    function checkIsPublicKey(key) {
-      if (Buffer3.isBuffer(key)) {
+    function checkIsPublicKey(key2) {
+      if (Buffer3.isBuffer(key2)) {
         return;
       }
-      if (typeof key === "string") {
+      if (typeof key2 === "string") {
         return;
       }
       if (!supportsKeyObjects) {
         throw typeError(MSG_INVALID_VERIFIER_KEY);
       }
-      if (typeof key !== "object") {
+      if (typeof key2 !== "object") {
         throw typeError(MSG_INVALID_VERIFIER_KEY);
       }
-      if (typeof key.type !== "string") {
+      if (typeof key2.type !== "string") {
         throw typeError(MSG_INVALID_VERIFIER_KEY);
       }
-      if (typeof key.asymmetricKeyType !== "string") {
+      if (typeof key2.asymmetricKeyType !== "string") {
         throw typeError(MSG_INVALID_VERIFIER_KEY);
       }
-      if (typeof key.export !== "function") {
+      if (typeof key2.export !== "function") {
         throw typeError(MSG_INVALID_VERIFIER_KEY);
       }
     }
-    function checkIsPrivateKey(key) {
-      if (Buffer3.isBuffer(key)) {
+    function checkIsPrivateKey(key2) {
+      if (Buffer3.isBuffer(key2)) {
         return;
       }
-      if (typeof key === "string") {
+      if (typeof key2 === "string") {
         return;
       }
-      if (typeof key === "object") {
+      if (typeof key2 === "object") {
         return;
       }
       throw typeError(MSG_INVALID_SIGNER_KEY);
     }
-    function checkIsSecretKey(key) {
-      if (Buffer3.isBuffer(key)) {
+    function checkIsSecretKey(key2) {
+      if (Buffer3.isBuffer(key2)) {
         return;
       }
-      if (typeof key === "string") {
-        return key;
+      if (typeof key2 === "string") {
+        return key2;
       }
       if (!supportsKeyObjects) {
         throw typeError(MSG_INVALID_SECRET);
       }
-      if (typeof key !== "object") {
+      if (typeof key2 !== "object") {
         throw typeError(MSG_INVALID_SECRET);
       }
-      if (key.type !== "secret") {
+      if (key2.type !== "secret") {
         throw typeError(MSG_INVALID_SECRET);
       }
-      if (typeof key.export !== "function") {
+      if (typeof key2.export !== "function") {
         throw typeError(MSG_INVALID_SECRET);
       }
     }
@@ -222209,17 +222589,17 @@ var require_jwa = __commonJS({
       return function sign(thing, secret) {
         checkIsSecretKey(secret);
         thing = normalizeInput(thing);
-        var hmac = crypto8.createHmac("sha" + bits, secret);
+        var hmac = crypto9.createHmac("sha" + bits, secret);
         var sig = (hmac.update(thing), hmac.digest("base64"));
         return fromBase64(sig);
       };
     }
     var bufferEqual;
-    var timingSafeEqual = "timingSafeEqual" in crypto8 ? function timingSafeEqual2(a, b) {
+    var timingSafeEqual = "timingSafeEqual" in crypto9 ? function timingSafeEqual2(a, b) {
       if (a.byteLength !== b.byteLength) {
         return false;
       }
-      return crypto8.timingSafeEqual(a, b);
+      return crypto9.timingSafeEqual(a, b);
     } : function timingSafeEqual2(a, b) {
       if (!bufferEqual) {
         bufferEqual = require_buffer_equal_constant_time();
@@ -222236,7 +222616,7 @@ var require_jwa = __commonJS({
       return function sign(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto8.createSign("RSA-SHA" + bits);
+        var signer = crypto9.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign(privateKey, "base64"));
         return fromBase64(sig);
       };
@@ -222246,7 +222626,7 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto8.createVerify("RSA-SHA" + bits);
+        var verifier = crypto9.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify(publicKey, signature, "base64");
       };
@@ -222255,11 +222635,11 @@ var require_jwa = __commonJS({
       return function sign(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto8.createSign("RSA-SHA" + bits);
+        var signer = crypto9.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign({
           key: privateKey,
-          padding: crypto8.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto8.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto9.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto9.constants.RSA_PSS_SALTLEN_DIGEST
         }, "base64"));
         return fromBase64(sig);
       };
@@ -222269,12 +222649,12 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto8.createVerify("RSA-SHA" + bits);
+        var verifier = crypto9.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify({
           key: publicKey,
-          padding: crypto8.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto8.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto9.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto9.constants.RSA_PSS_SALTLEN_DIGEST
         }, signature, "base64");
       };
     }
@@ -223520,27 +223900,27 @@ var require_lrucache = __commonJS({
         this.max = 1e3;
         this.map = /* @__PURE__ */ new Map();
       }
-      get(key) {
-        const value = this.map.get(key);
+      get(key2) {
+        const value = this.map.get(key2);
         if (value === void 0) {
           return void 0;
         } else {
-          this.map.delete(key);
-          this.map.set(key, value);
+          this.map.delete(key2);
+          this.map.set(key2, value);
           return value;
         }
       }
-      delete(key) {
-        return this.map.delete(key);
+      delete(key2) {
+        return this.map.delete(key2);
       }
-      set(key, value) {
-        const deleted = this.delete(key);
+      set(key2, value) {
+        const deleted = this.delete(key2);
         if (!deleted && value !== void 0) {
           if (this.map.size >= this.max) {
             const firstKey = this.map.keys().next().value;
             this.delete(firstKey);
           }
-          this.map.set(key, value);
+          this.map.set(key2, value);
         }
         return this;
       }
@@ -224643,9 +225023,9 @@ var require_validateAsymmetricKey = __commonJS({
       ES384: "secp384r1",
       ES512: "secp521r1"
     };
-    module2.exports = function(algorithm, key) {
-      if (!algorithm || !key) return;
-      const keyType = key.asymmetricKeyType;
+    module2.exports = function(algorithm, key2) {
+      if (!algorithm || !key2) return;
+      const keyType = key2.asymmetricKeyType;
       if (!keyType) return;
       const allowedAlgorithms = allowedAlgorithmsForKeys[keyType];
       if (!allowedAlgorithms) {
@@ -224657,7 +225037,7 @@ var require_validateAsymmetricKey = __commonJS({
       if (ASYMMETRIC_KEY_DETAILS_SUPPORTED) {
         switch (keyType) {
           case "ec":
-            const keyCurve = key.asymmetricKeyDetails.namedCurve;
+            const keyCurve = key2.asymmetricKeyDetails.namedCurve;
             const allowedCurve = allowedCurves[algorithm];
             if (keyCurve !== allowedCurve) {
               throw new Error(`"alg" parameter "${algorithm}" requires curve "${allowedCurve}".`);
@@ -224666,7 +225046,7 @@ var require_validateAsymmetricKey = __commonJS({
           case "rsa-pss":
             if (RSA_PSS_KEY_DETAILS_SUPPORTED) {
               const length = parseInt(algorithm.slice(-3), 10);
-              const { hashAlgorithm, mgf1HashAlgorithm, saltLength } = key.asymmetricKeyDetails;
+              const { hashAlgorithm, mgf1HashAlgorithm, saltLength } = key2.asymmetricKeyDetails;
               if (hashAlgorithm !== `sha${length}` || mgf1HashAlgorithm !== hashAlgorithm) {
                 throw new Error(`Invalid key for this operation, its RSA-PSS parameters do not meet the requirements of "alg" ${algorithm}.`);
               }
@@ -224759,18 +225139,18 @@ var require_verify = __commonJS({
         return done(new JsonWebTokenError("invalid token"));
       }
       const header = decodedToken.header;
-      let getSecret;
+      let getSecret2;
       if (typeof secretOrPublicKey === "function") {
         if (!callback) {
           return done(new JsonWebTokenError("verify must be called asynchronous if secret or public key is provided as a callback"));
         }
-        getSecret = secretOrPublicKey;
+        getSecret2 = secretOrPublicKey;
       } else {
-        getSecret = function(header2, secretCallback) {
+        getSecret2 = function(header2, secretCallback) {
           return secretCallback(null, secretOrPublicKey);
         };
       }
-      return getSecret(header, function(err, secretOrPublicKey2) {
+      return getSecret2(header, function(err, secretOrPublicKey2) {
         if (err) {
           return done(new JsonWebTokenError("error in secret or public key callback: " + err.message));
         }
@@ -224964,8 +225344,8 @@ var require_lodash = __commonJS({
       return result;
     }
     function baseValues(object4, props) {
-      return arrayMap2(props, function(key) {
-        return object4[key];
+      return arrayMap2(props, function(key2) {
+        return object4[key2];
       });
     }
     function overArg2(func, transform8) {
@@ -224982,9 +225362,9 @@ var require_lodash = __commonJS({
     function arrayLikeKeys2(value, inherited) {
       var result = isArray3(value) || isArguments2(value) ? baseTimes2(value.length, String) : [];
       var length = result.length, skipIndexes = !!length;
-      for (var key in value) {
-        if ((inherited || hasOwnProperty11.call(value, key)) && !(skipIndexes && (key == "length" || isIndex2(key, length)))) {
-          result.push(key);
+      for (var key2 in value) {
+        if ((inherited || hasOwnProperty11.call(value, key2)) && !(skipIndexes && (key2 == "length" || isIndex2(key2, length)))) {
+          result.push(key2);
         }
       }
       return result;
@@ -224994,9 +225374,9 @@ var require_lodash = __commonJS({
         return nativeKeys2(object4);
       }
       var result = [];
-      for (var key in Object(object4)) {
-        if (hasOwnProperty11.call(object4, key) && key != "constructor") {
-          result.push(key);
+      for (var key2 in Object(object4)) {
+        if (hasOwnProperty11.call(object4, key2) && key2 != "constructor") {
+          result.push(key2);
         }
       }
       return result;
@@ -225386,15 +225766,15 @@ var require_sign2 = __commonJS({
       if (!isPlainObject4(object4)) {
         throw new Error('Expected "' + parameterName + '" to be a plain object.');
       }
-      Object.keys(object4).forEach(function(key) {
-        const validator2 = schema[key];
+      Object.keys(object4).forEach(function(key2) {
+        const validator2 = schema[key2];
         if (!validator2) {
           if (!allowUnknown) {
-            throw new Error('"' + key + '" is not allowed in "' + parameterName + '"');
+            throw new Error('"' + key2 + '" is not allowed in "' + parameterName + '"');
           }
           return;
         }
-        if (!validator2.isValid(object4[key])) {
+        if (!validator2.isValid(object4[key2])) {
           throw new Error(validator2.message);
         }
       });
@@ -225527,13 +225907,13 @@ var require_sign2 = __commonJS({
           return failure(new Error('"expiresIn" should be a number of seconds or string representing a timespan eg: "1d", "20h", 60'));
         }
       }
-      Object.keys(options_to_payload).forEach(function(key) {
-        const claim = options_to_payload[key];
-        if (typeof options[key] !== "undefined") {
+      Object.keys(options_to_payload).forEach(function(key2) {
+        const claim = options_to_payload[key2];
+        if (typeof options[key2] !== "undefined") {
           if (typeof payload[claim] !== "undefined") {
-            return failure(new Error('Bad "options.' + key + '" option. The payload already has an "' + claim + '" property.'));
+            return failure(new Error('Bad "options.' + key2 + '" option. The payload already has an "' + claim + '" property.'));
           }
-          payload[claim] = options[key];
+          payload[claim] = options[key2];
         }
       });
       const encoding = options.encoding || "utf8";
@@ -225663,8 +226043,8 @@ async function mergeImages(imageBase64List, maxSize = "10mb") {
   const imageMetadatas = await Promise.all(imageBuffers.map((buffer) => (0, import_sharp.default)(buffer).metadata()));
   const maxHeight = Math.max(...imageMetadatas.map((m) => m.height || 0));
   const imageWidths = imageMetadatas.map((metadata) => {
-    const aspectRatio = (metadata.width || 1) / (metadata.height || 1);
-    return Math.round(maxHeight * aspectRatio);
+    const aspectRatio2 = (metadata.width || 1) / (metadata.height || 1);
+    return Math.round(maxHeight * aspectRatio2);
   });
   const totalWidth = imageWidths.reduce((sum, w) => sum + w, 0);
   const resizedImages = await Promise.all(
@@ -225820,9 +226200,9 @@ var require_get_context = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -225855,9 +226235,9 @@ var require_token_error = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -225899,9 +226279,9 @@ var require_token_io = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -225978,9 +226358,9 @@ var require_auth_config = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -226000,8 +226380,8 @@ var require_auth_config = __commonJS({
       writeAuthConfig: () => writeAuthConfig
     });
     module2.exports = __toCommonJS2(auth_config_exports);
-    var fs43 = __toESM2(require("fs"));
-    var path38 = __toESM2(require("path"));
+    var fs47 = __toESM2(require("fs"));
+    var path42 = __toESM2(require("path"));
     var import_token_util = require_token_util();
     function getAuthConfigPath() {
       const dataDir = (0, import_token_util.getVercelDataDir)();
@@ -226010,15 +226390,15 @@ var require_auth_config = __commonJS({
           `Unable to find Vercel CLI data directory. Your platform: ${process.platform}. Supported: darwin, linux, win32.`
         );
       }
-      return path38.join(dataDir, "auth.json");
+      return path42.join(dataDir, "auth.json");
     }
     function readAuthConfig() {
       try {
         const authPath = getAuthConfigPath();
-        if (!fs43.existsSync(authPath)) {
+        if (!fs47.existsSync(authPath)) {
           return null;
         }
-        const content = fs43.readFileSync(authPath, "utf8");
+        const content = fs47.readFileSync(authPath, "utf8");
         if (!content) {
           return null;
         }
@@ -226029,11 +226409,11 @@ var require_auth_config = __commonJS({
     }
     function writeAuthConfig(config3) {
       const authPath = getAuthConfigPath();
-      const authDir = path38.dirname(authPath);
-      if (!fs43.existsSync(authDir)) {
-        fs43.mkdirSync(authDir, { mode: 504, recursive: true });
+      const authDir = path42.dirname(authPath);
+      if (!fs47.existsSync(authDir)) {
+        fs47.mkdirSync(authDir, { mode: 504, recursive: true });
       }
-      fs43.writeFileSync(authPath, JSON.stringify(config3, null, 2), { mode: 384 });
+      fs47.writeFileSync(authPath, JSON.stringify(config3, null, 2), { mode: 384 });
     }
     function isValidAccessToken(authConfig) {
       if (!authConfig.token)
@@ -226060,9 +226440,9 @@ var require_oauth = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -226151,9 +226531,9 @@ var require_token_util = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -226179,8 +226559,8 @@ var require_token_util = __commonJS({
       saveToken: () => saveToken
     });
     module2.exports = __toCommonJS2(token_util_exports);
-    var path38 = __toESM2(require("path"));
-    var fs43 = __toESM2(require("fs"));
+    var path42 = __toESM2(require("path"));
+    var fs47 = __toESM2(require("fs"));
     var import_token_error = require_token_error();
     var import_token_io = require_token_io();
     var import_auth_config = require_auth_config();
@@ -226191,7 +226571,7 @@ var require_token_util = __commonJS({
       if (!dataDir) {
         return null;
       }
-      return path38.join(dataDir, vercelFolder);
+      return path42.join(dataDir, vercelFolder);
     }
     async function getVercelCliToken() {
       const authConfig = (0, import_auth_config.readAuthConfig)();
@@ -226264,13 +226644,13 @@ var require_token_util = __commonJS({
           "Unable to find project root directory. Have you linked your project with `vc link?`"
         );
       }
-      const prjPath = path38.join(dir, ".vercel", "project.json");
-      if (!fs43.existsSync(prjPath)) {
+      const prjPath = path42.join(dir, ".vercel", "project.json");
+      if (!fs47.existsSync(prjPath)) {
         throw new import_token_error.VercelOidcTokenError(
           "project.json not found, have you linked your project with `vc link?`"
         );
       }
-      const prj = JSON.parse(fs43.readFileSync(prjPath, "utf8"));
+      const prj = JSON.parse(fs47.readFileSync(prjPath, "utf8"));
       if (typeof prj.projectId !== "string" && typeof prj.orgId !== "string") {
         throw new TypeError(
           "Expected a string-valued projectId property. Try running `vc link` to re-link your project."
@@ -226285,11 +226665,11 @@ var require_token_util = __commonJS({
           "Unable to find user data directory. Please reach out to Vercel support."
         );
       }
-      const tokenPath = path38.join(dir, "com.vercel.token", `${projectId}.json`);
+      const tokenPath = path42.join(dir, "com.vercel.token", `${projectId}.json`);
       const tokenJson = JSON.stringify(token);
-      fs43.mkdirSync(path38.dirname(tokenPath), { mode: 504, recursive: true });
-      fs43.writeFileSync(tokenPath, tokenJson);
-      fs43.chmodSync(tokenPath, 432);
+      fs47.mkdirSync(path42.dirname(tokenPath), { mode: 504, recursive: true });
+      fs47.writeFileSync(tokenPath, tokenJson);
+      fs47.chmodSync(tokenPath, 432);
       return;
     }
     function loadToken(projectId) {
@@ -226299,11 +226679,11 @@ var require_token_util = __commonJS({
           "Unable to find user data directory. Please reach out to Vercel support."
         );
       }
-      const tokenPath = path38.join(dir, "com.vercel.token", `${projectId}.json`);
-      if (!fs43.existsSync(tokenPath)) {
+      const tokenPath = path42.join(dir, "com.vercel.token", `${projectId}.json`);
+      if (!fs47.existsSync(tokenPath)) {
         return null;
       }
-      const token = JSON.parse(fs43.readFileSync(tokenPath, "utf8"));
+      const token = JSON.parse(fs47.readFileSync(tokenPath, "utf8"));
       assertVercelOidcTokenResponse(token);
       return token;
     }
@@ -226341,9 +226721,9 @@ var require_token = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -226396,9 +226776,9 @@ var require_get_vercel_oidc_token = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -226467,9 +226847,9 @@ var require_dist10 = __commonJS({
     };
     var __copyProps2 = (to, from, except, desc) => {
       if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames2(from))
-          if (!__hasOwnProp2.call(to, key) && key !== except)
-            __defProp4(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        for (let key2 of __getOwnPropNames2(from))
+          if (!__hasOwnProp2.call(to, key2) && key2 !== except)
+            __defProp4(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc2(from, key2)) || desc.enumerable });
       }
       return to;
     };
@@ -227633,7 +228013,7 @@ Run 'npx vercel link' to link your project, then 'vc env pull' to fetch the toke
         prompt,
         n,
         size,
-        aspectRatio,
+        aspectRatio: aspectRatio2,
         seed,
         files,
         mask,
@@ -227660,7 +228040,7 @@ Run 'npx vercel link' to link your project, then 'vc env pull' to fetch the toke
               prompt,
               n,
               ...size && { size },
-              ...aspectRatio && { aspectRatio },
+              ...aspectRatio2 && { aspectRatio: aspectRatio2 },
               ...seed && { seed },
               ...providerOptions && { providerOptions },
               ...files && {
@@ -227754,7 +228134,7 @@ Run 'npx vercel link' to link your project, then 'vc env pull' to fetch the toke
       async doGenerate({
         prompt,
         n,
-        aspectRatio,
+        aspectRatio: aspectRatio2,
         resolution,
         duration: duration4,
         fps,
@@ -227779,7 +228159,7 @@ Run 'npx vercel link' to link your project, then 'vc env pull' to fetch the toke
             body: {
               prompt,
               n,
-              ...aspectRatio && { aspectRatio },
+              ...aspectRatio2 && { aspectRatio: aspectRatio2 },
               ...resolution && { resolution },
               ...duration4 && { duration: duration4 },
               ...fps && { fps },
@@ -228511,17 +228891,17 @@ var init_context = __esm({
       function BaseContext2(parentContext) {
         var self2 = this;
         self2._currentContext = parentContext ? new Map(parentContext) : /* @__PURE__ */ new Map();
-        self2.getValue = function(key) {
-          return self2._currentContext.get(key);
+        self2.getValue = function(key2) {
+          return self2._currentContext.get(key2);
         };
-        self2.setValue = function(key, value) {
+        self2.setValue = function(key2, value) {
           var context2 = new BaseContext2(self2._currentContext);
-          context2._currentContext.set(key, value);
+          context2._currentContext.set(key2, value);
           return context2;
         };
-        self2.deleteValue = function(key) {
+        self2.deleteValue = function(key2) {
           var context2 = new BaseContext2(self2._currentContext);
-          context2._currentContext.delete(key);
+          context2._currentContext.delete(key2);
           return context2;
         };
       }
@@ -229912,31 +230292,31 @@ function getBaseTelemetryAttributes({
     "ai.model.provider": model.provider,
     "ai.model.id": model.modelId,
     // settings:
-    ...Object.entries(settings).reduce((attributes, [key, value]) => {
-      if (key === "timeout") {
+    ...Object.entries(settings).reduce((attributes, [key2, value]) => {
+      if (key2 === "timeout") {
         const totalTimeoutMs = getTotalTimeoutMs(
           value
         );
         if (totalTimeoutMs != null) {
-          attributes[`ai.settings.${key}`] = totalTimeoutMs;
+          attributes[`ai.settings.${key2}`] = totalTimeoutMs;
         }
       } else {
-        attributes[`ai.settings.${key}`] = value;
+        attributes[`ai.settings.${key2}`] = value;
       }
       return attributes;
     }, {}),
     // add metadata as attributes:
     ...Object.entries((_a212 = telemetry == null ? void 0 : telemetry.metadata) != null ? _a212 : {}).reduce(
-      (attributes, [key, value]) => {
-        attributes[`ai.telemetry.metadata.${key}`] = value;
+      (attributes, [key2, value]) => {
+        attributes[`ai.telemetry.metadata.${key2}`] = value;
         return attributes;
       },
       {}
     ),
     // request headers
-    ...Object.entries(headers != null ? headers : {}).reduce((attributes, [key, value]) => {
+    ...Object.entries(headers != null ? headers : {}).reduce((attributes, [key2, value]) => {
       if (value !== void 0) {
-        attributes[`ai.request.headers.${key}`] = value;
+        attributes[`ai.request.headers.${key2}`] = value;
       }
       return attributes;
     }, {})
@@ -230006,7 +230386,7 @@ async function selectTelemetryAttributes({
     return {};
   }
   const resultAttributes = {};
-  for (const [key, value] of Object.entries(attributes)) {
+  for (const [key2, value] of Object.entries(attributes)) {
     if (value == null) {
       continue;
     }
@@ -230016,7 +230396,7 @@ async function selectTelemetryAttributes({
       }
       const result = await value.input();
       if (result != null) {
-        resultAttributes[key] = result;
+        resultAttributes[key2] = result;
       }
       continue;
     }
@@ -230026,11 +230406,11 @@ async function selectTelemetryAttributes({
       }
       const result = await value.output();
       if (result != null) {
-        resultAttributes[key] = result;
+        resultAttributes[key2] = result;
       }
       continue;
     }
-    resultAttributes[key] = value;
+    resultAttributes[key2] = value;
   }
   return resultAttributes;
 }
@@ -230178,21 +230558,21 @@ function mergeObjects(base, overrides) {
     return base;
   }
   const result = { ...base };
-  for (const key in overrides) {
-    if (Object.prototype.hasOwnProperty.call(overrides, key)) {
-      const overridesValue = overrides[key];
+  for (const key2 in overrides) {
+    if (Object.prototype.hasOwnProperty.call(overrides, key2)) {
+      const overridesValue = overrides[key2];
       if (overridesValue === void 0)
         continue;
-      const baseValue = key in base ? base[key] : void 0;
+      const baseValue = key2 in base ? base[key2] : void 0;
       const isSourceObject = overridesValue !== null && typeof overridesValue === "object" && !Array.isArray(overridesValue) && !(overridesValue instanceof Date) && !(overridesValue instanceof RegExp);
       const isTargetObject = baseValue !== null && baseValue !== void 0 && typeof baseValue === "object" && !Array.isArray(baseValue) && !(baseValue instanceof Date) && !(baseValue instanceof RegExp);
       if (isSourceObject && isTargetObject) {
-        result[key] = mergeObjects(
+        result[key2] = mergeObjects(
           baseValue,
           overridesValue
         );
       } else {
-        result[key] = overridesValue;
+        result[key2] = overridesValue;
       }
     }
   }
@@ -231989,9 +232369,9 @@ function asContent({
 }
 function prepareHeaders(headers, defaultHeaders) {
   const responseHeaders = new Headers(headers != null ? headers : {});
-  for (const [key, value] of Object.entries(defaultHeaders)) {
-    if (!responseHeaders.has(key)) {
-      responseHeaders.set(key, value);
+  for (const [key2, value] of Object.entries(defaultHeaders)) {
+    if (!responseHeaders.has(key2)) {
+      responseHeaders.set(key2, value);
     }
   }
   return responseHeaders;
@@ -236970,11 +237350,11 @@ var init_dist23 = __esm({
       if (existing) {
         return existing;
       }
-      const run = { id, started_at };
-      db2.runs.push(run);
+      const run3 = { id, started_at };
+      db2.runs.push(run3);
       saveDb(db2);
       notifyServer("run");
-      return run;
+      return run3;
     };
     createStep = async (step) => {
       const db2 = getDb();
@@ -237461,8 +237841,8 @@ var init_ai = __esm({
     AiImage = class {
       key;
       result = "";
-      constructor(key) {
-        this.key = key;
+      constructor(key2) {
+        this.key = key2;
       }
       async run(input, taskRecord2) {
         const modelName = await resolveModelName(this.key);
@@ -237480,16 +237860,16 @@ var init_ai = __esm({
         await exec2(modelName);
         return this;
       }
-      async save(path38) {
-        await utils_default.oss.writeFile(path38, this.result);
+      async save(path42) {
+        await utils_default.oss.writeFile(path42, this.result);
         return this;
       }
     };
     AiVideo = class {
       key;
       result = "";
-      constructor(key) {
-        this.key = key;
+      constructor(key2) {
+        this.key = key2;
       }
       async run(input, taskRecord2) {
         const modelName = await resolveModelName(this.key);
@@ -237510,16 +237890,16 @@ var init_ai = __esm({
           throw e;
         }
       }
-      async save(path38) {
-        await utils_default.oss.writeFile(path38, this.result);
+      async save(path42) {
+        await utils_default.oss.writeFile(path42, this.result);
         return this;
       }
     };
     AiAudio = class {
       key;
       result = "";
-      constructor(key) {
-        this.key = key;
+      constructor(key2) {
+        this.key = key2;
       }
       async run(input, taskRecord2) {
         const modelName = await resolveModelName(this.key);
@@ -237538,16 +237918,16 @@ var init_ai = __esm({
         }
         return await exec2(modelName);
       }
-      async save(path38) {
-        await utils_default.oss.writeFile(path38, this.result);
+      async save(path42) {
+        await utils_default.oss.writeFile(path42, this.result);
         return this;
       }
     };
     ai_default = {
       Text: (AiType, think, thinkLevel) => new AiText(AiType, think, thinkLevel),
-      Image: (key) => new AiImage(key),
-      Video: (key) => new AiVideo(key),
-      Audio: (key) => new AiAudio(key)
+      Image: (key2) => new AiImage(key2),
+      Video: (key2) => new AiVideo(key2),
+      Audio: (key2) => new AiAudio(key2)
     };
   }
 });
@@ -237695,7 +238075,7 @@ var init_writeVersion = __esm({
     init_getPath();
     APP_VERSION = (() => {
       if (true) {
-        return "1.2.2";
+        return "1.8.0";
       }
       const pkgPath = import_path7.default.resolve(process.cwd(), "package.json");
       const pkg = JSON.parse(import_fs5.default.readFileSync(pkgPath, "utf8"));
@@ -237812,6 +238192,228 @@ var init_utils3 = __esm({
       writeVersion: writeVersion_default,
       vendor: vendor_exports
     };
+  }
+});
+
+// src/services/structuralReplica/jobService.ts
+function stringifyJson(data) {
+  if (data === void 0) return null;
+  return typeof data === "string" ? data : JSON.stringify(data);
+}
+function parseJsonValue(data) {
+  if (!data) return void 0;
+  try {
+    return JSON.parse(data);
+  } catch {
+    return data;
+  }
+}
+function clampProgress(value) {
+  if (value === void 0 || !Number.isFinite(value)) return void 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+async function ensureSrJobRecoveryColumns() {
+  if (recoveryColumnsReady) return;
+  const tableInfo = await db.raw("PRAGMA table_info(o_sr_job)");
+  if (!tableInfo.length) return;
+  const existingColumns = new Set(tableInfo.map((column) => column.name));
+  for (const [column, type] of recoveryColumns) {
+    if (existingColumns.has(column)) continue;
+    try {
+      await db.raw(`ALTER TABLE o_sr_job ADD COLUMN ${column} ${type}`);
+    } catch (error71) {
+      if (!String(error71).includes("duplicate column")) throw error71;
+    }
+  }
+  recoveryColumnsReady = true;
+}
+async function nextAttempt(taskId, jobType) {
+  const latest = await utils_default.db("o_sr_job").where({ taskId, jobType }).orderBy("attempt", "desc").first();
+  return (Number(latest?.attempt) || 0) + 1;
+}
+function serializeSrJob(job) {
+  if (!job) return void 0;
+  return {
+    ...job,
+    input: parseJsonValue(job.inputJson),
+    result: parseJsonValue(job.resultJson)
+  };
+}
+async function createSrJob(input) {
+  await ensureSrJobRecoveryColumns();
+  const now2 = Date.now();
+  const [id] = await utils_default.db("o_sr_job").insert({
+    taskId: input.taskId,
+    jobType: input.jobType,
+    status: "queued",
+    progress: 0,
+    stage: input.stage || "queued",
+    inputJson: stringifyJson(input.input),
+    resultJson: null,
+    errorReason: null,
+    attempt: await nextAttempt(input.taskId, input.jobType),
+    parentJobId: input.parentJobId ?? null,
+    createdAt: now2,
+    updatedAt: now2,
+    startedAt: null,
+    finishedAt: null,
+    lockedBy: null,
+    lockedAt: null,
+    nextRunAt: input.nextRunAt ?? now2,
+    recoverable: input.recoverable === false ? 0 : 1,
+    cancelRequested: 0
+  });
+  return await utils_default.db("o_sr_job").where("id", Number(id)).first();
+}
+async function getActiveSrJob(taskId, jobType) {
+  const query = utils_default.db("o_sr_job").where("taskId", taskId).whereIn("status", ["queued", "running"]);
+  if (jobType) query.andWhere("jobType", jobType);
+  return await query.orderBy("id", "desc").first();
+}
+async function listSrJobs(taskId, limit = 20) {
+  return await utils_default.db("o_sr_job").where("taskId", taskId).orderBy("id", "desc").limit(limit);
+}
+async function getSrJob(jobId) {
+  return await utils_default.db("o_sr_job").where("id", jobId).first();
+}
+async function startSrJob(jobId, stage = "running") {
+  await ensureSrJobRecoveryColumns();
+  const now2 = Date.now();
+  await utils_default.db("o_sr_job").where("id", jobId).update({
+    status: "running",
+    progress: 1,
+    stage,
+    errorReason: null,
+    startedAt: now2,
+    updatedAt: now2,
+    lockedBy: process.pid ? `pid:${process.pid}` : "local",
+    lockedAt: now2
+  });
+  return await utils_default.db("o_sr_job").where("id", jobId).first();
+}
+async function updateSrJob(jobId, update) {
+  const patch = {
+    updatedAt: Date.now()
+  };
+  const progress = clampProgress(update.progress);
+  if (progress !== void 0) patch.progress = progress;
+  if (update.stage !== void 0) patch.stage = update.stage;
+  if (update.result !== void 0) patch.resultJson = stringifyJson(update.result);
+  await utils_default.db("o_sr_job").where("id", jobId).update(patch);
+  return await utils_default.db("o_sr_job").where("id", jobId).first();
+}
+async function finishSrJob(jobId, result) {
+  await ensureSrJobRecoveryColumns();
+  const now2 = Date.now();
+  await utils_default.db("o_sr_job").where("id", jobId).update({
+    status: "succeeded",
+    progress: 100,
+    stage: "succeeded",
+    resultJson: stringifyJson(result),
+    errorReason: null,
+    finishedAt: now2,
+    updatedAt: now2,
+    lockedBy: null,
+    lockedAt: null
+  });
+  return await utils_default.db("o_sr_job").where("id", jobId).first();
+}
+async function failSrJob(jobId, errorReason) {
+  await ensureSrJobRecoveryColumns();
+  const now2 = Date.now();
+  await utils_default.db("o_sr_job").where("id", jobId).update({
+    status: "failed",
+    stage: "failed",
+    errorReason,
+    finishedAt: now2,
+    updatedAt: now2,
+    lockedBy: null,
+    lockedAt: null
+  });
+  return await utils_default.db("o_sr_job").where("id", jobId).first();
+}
+async function requestCancelSrJob(jobId) {
+  await ensureSrJobRecoveryColumns();
+  await utils_default.db("o_sr_job").where("id", jobId).update({ cancelRequested: 1, updatedAt: Date.now() });
+  return await utils_default.db("o_sr_job").where("id", jobId).first();
+}
+async function recoverStaleSrJobs(options = {}) {
+  await ensureSrJobRecoveryColumns();
+  const now2 = options.now ?? Date.now();
+  const staleBefore = now2 - (options.staleAfterMs ?? 10 * 60 * 1e3);
+  const staleJobs = await utils_default.db("o_sr_job").whereIn("status", ["queued", "running"]).andWhere((builder) => {
+    builder.whereNull("lockedAt").orWhere("lockedAt", "<", staleBefore).orWhere("updatedAt", "<", staleBefore);
+  }).orderBy("id", "asc");
+  let recovered = 0;
+  let failed = 0;
+  for (const job of staleJobs) {
+    const recoverable = job.recoverable !== 0;
+    if (recoverable) {
+      await utils_default.db("o_sr_job").where("id", job.id).update({
+        status: "queued",
+        stage: "recovered_after_restart",
+        progress: 0,
+        lockedBy: null,
+        lockedAt: null,
+        nextRunAt: now2,
+        errorReason: null,
+        updatedAt: now2
+      });
+      recovered += 1;
+    } else {
+      await utils_default.db("o_sr_job").where("id", job.id).update({
+        status: "failed",
+        stage: "failed",
+        errorReason: "Job was interrupted and is not recoverable",
+        lockedBy: null,
+        lockedAt: null,
+        finishedAt: now2,
+        updatedAt: now2
+      });
+      failed += 1;
+    }
+  }
+  return { scanned: staleJobs.length, recovered, failed };
+}
+async function runSrJob(jobId, runner, stage = "running") {
+  await startSrJob(jobId, stage);
+  const report = async (update) => {
+    await updateSrJob(jobId, update);
+  };
+  try {
+    const result = await runner(report);
+    await finishSrJob(jobId, result);
+    return result;
+  } catch (error71) {
+    await failSrJob(jobId, error71 instanceof Error ? error71.message : String(error71));
+    throw error71;
+  }
+}
+function runSrJobInBackground(job, runner, stage = "running", onSettled) {
+  const jobId = Number(job.id);
+  setImmediate(() => {
+    runSrJob(jobId, runner, stage).then(async () => {
+      await onSettled?.(null);
+    }).catch(async (error71) => {
+      console.error(`[structuralReplica:job:${job.jobType}]`, error71);
+      await onSettled?.(error71);
+    });
+  });
+}
+var recoveryColumns, recoveryColumnsReady;
+var init_jobService = __esm({
+  "src/services/structuralReplica/jobService.ts"() {
+    "use strict";
+    init_utils3();
+    init_db();
+    recoveryColumns = [
+      ["lockedBy", "text"],
+      ["lockedAt", "integer"],
+      ["nextRunAt", "integer"],
+      ["recoverable", "integer"],
+      ["cancelRequested", "integer"]
+    ];
+    recoveryColumnsReady = false;
   }
 });
 
@@ -238903,7 +239505,7 @@ function pLimit(concurrency) {
     activeCount--;
     resumeNext();
   };
-  const run = async (function_, resolve3, arguments_) => {
+  const run3 = async (function_, resolve3, arguments_) => {
     const result = (async () => function_(...arguments_))();
     resolve3(result);
     try {
@@ -238917,7 +239519,7 @@ function pLimit(concurrency) {
     new Promise((internalResolve) => {
       queueItem.run = internalResolve;
       queue.enqueue(queueItem);
-    }).then(run.bind(void 0, function_, resolve3, arguments_));
+    }).then(run3.bind(void 0, function_, resolve3, arguments_));
     if (activeCount < concurrency) {
       resumeNext();
     }
@@ -239349,9 +239951,9 @@ var init_generateAssets = __esm({
           model: model.split(/:(.+)/)[1],
           resolution
         });
-        const path38 = await utils_default.oss.getSmallImageUrl(imagePath);
+        const path42 = await utils_default.oss.getSmallImageUrl(imagePath);
         await utils_default.db("o_assets").where("id", id).update({ imageId });
-        return res.status(200).send(success3({ path: path38, assetsId: id }));
+        return res.status(200).send(success3({ path: path42, assetsId: id }));
       } catch (e) {
         await utils_default.db("o_image").where("id", imageId).update({ state: "\u751F\u6210\u5931\u8D25", errorReason: utils_default.error(e).message });
         return res.status(400).send(error50(utils_default.error(e).message || "\u56FE\u7247\u751F\u6210\u5931\u8D25"));
@@ -242739,8 +243341,8 @@ var init_getGenerateData = __esm({
               const audioCountMap = {};
               const filteredAssets = uniqueAssets.filter((a) => {
                 if (a.fileType !== "audio" || audioReferenceCount === 0) return true;
-                const key = String(a.id);
-                audioCountMap[key] = (audioCountMap[key] ?? 0) + 1;
+                const key2 = String(a.id);
+                audioCountMap[key2] = (audioCountMap[key2] ?? 0) + 1;
                 const totalAudio = Object.values(audioCountMap).reduce((s, n) => s + n, 0);
                 return totalAudio <= audioReferenceCount;
               });
@@ -243536,8 +244138,8 @@ var init_getModelDetails = __esm({
         key: external_exports.enum(["scriptAgent", "productionAgent"])
       }),
       async (req, res) => {
-        const { key } = req.body;
-        const data = await utils_default.db("o_agentDeploy").select("o_agentDeploy.*").where("o_agentDeploy.key", key).first();
+        const { key: key2 } = req.body;
+        const data = await utils_default.db("o_agentDeploy").select("o_agentDeploy.*").where("o_agentDeploy.key", key2).first();
         const [id, modelName] = data ? data.modelName.split(/:(.+)/) : [];
         const models = await utils_default.vendor.getModelList(id);
         const model = models.find((m) => m.modelName === modelName);
@@ -243909,13 +244511,13 @@ var init_delScript = __esm({
 var require_utils13 = __commonJS({
   "node_modules/compressing/lib/utils.js"(exports2) {
     "use strict";
-    var fs43 = require("fs");
-    var path38 = require("path");
+    var fs47 = require("fs");
+    var path42 = require("path");
     var { pipeline: pump } = require("stream");
     function isPathWithinParent(childPath, parentPath) {
-      const normalizedChild = path38.resolve(childPath);
-      const normalizedParent = path38.resolve(parentPath);
-      const parentWithSep = normalizedParent.endsWith(path38.sep) ? normalizedParent : normalizedParent + path38.sep;
+      const normalizedChild = path42.resolve(childPath);
+      const normalizedParent = path42.resolve(parentPath);
+      const parentWithSep = normalizedParent.endsWith(path42.sep) ? normalizedParent : normalizedParent + path42.sep;
       return normalizedChild === normalizedParent || normalizedChild.startsWith(parentWithSep);
     }
     exports2.sourceType = (source) => {
@@ -243959,14 +244561,14 @@ var require_utils13 = __commonJS({
       return (source, dest, opts) => {
         opts = opts || {};
         opts.source = source;
-        const destStream = destType(dest) === "path" ? fs43.createWriteStream(dest) : dest;
+        const destStream = destType(dest) === "path" ? fs47.createWriteStream(dest) : dest;
         const compressStream = new StreamClass(opts);
         return safePipe([compressStream, destStream]);
       };
     };
     exports2.makeCompressDirFn = (StreamClass) => {
       return (dir, dest, opts) => {
-        const destStream = destType(dest) === "path" ? fs43.createWriteStream(dest) : dest;
+        const destStream = destType(dest) === "path" ? fs47.createWriteStream(dest) : dest;
         const compressStream = new StreamClass();
         compressStream.addEntry(dir, opts);
         return safePipe([compressStream, destStream]);
@@ -243989,9 +244591,9 @@ var require_utils13 = __commonJS({
         const strip = opts.strip ? Number(opts.strip) : 0;
         delete opts.strip;
         return new Promise((resolve3, reject) => {
-          fs43.mkdir(destDir, { recursive: true }, (err) => {
+          fs47.mkdir(destDir, { recursive: true }, (err) => {
             if (err) return reject(err);
-            const resolvedDestDir = path38.resolve(destDir);
+            const resolvedDestDir = path42.resolve(destDir);
             let entryCount = 0;
             let successCount = 0;
             let isFinish = false;
@@ -244003,44 +244605,44 @@ var require_utils13 = __commonJS({
               done();
             }).on("error", reject).on("entry", (header, stream4, next) => {
               stream4.on("end", next);
-              const destFilePath = path38.join(resolvedDestDir, stripFileName(strip, header.name, header.type));
-              const resolvedDestPath = path38.resolve(destFilePath);
+              const destFilePath = path42.join(resolvedDestDir, stripFileName(strip, header.name, header.type));
+              const resolvedDestPath = path42.resolve(destFilePath);
               if (!isPathWithinParent(resolvedDestPath, resolvedDestDir)) {
                 console.warn(`[compressing] Skipping entry with path traversal: "${header.name}" -> "${resolvedDestPath}"`);
                 stream4.resume();
                 return;
               }
               if (header.type === "file") {
-                const dir = path38.dirname(destFilePath);
-                fs43.mkdir(dir, { recursive: true }, (err2) => {
+                const dir = path42.dirname(destFilePath);
+                fs47.mkdir(dir, { recursive: true }, (err2) => {
                   if (err2) return reject(err2);
                   entryCount++;
-                  pump(stream4, fs43.createWriteStream(destFilePath, { mode: opts.mode || header.mode }), (err3) => {
+                  pump(stream4, fs47.createWriteStream(destFilePath, { mode: opts.mode || header.mode }), (err3) => {
                     if (err3) return reject(err3);
                     successCount++;
                     done();
                   });
                 });
               } else if (header.type === "symlink") {
-                const dir = path38.dirname(destFilePath);
-                const target = path38.resolve(dir, header.linkname);
+                const dir = path42.dirname(destFilePath);
+                const target = path42.resolve(dir, header.linkname);
                 if (!isPathWithinParent(target, resolvedDestDir)) {
                   console.warn(`[compressing] Skipping symlink "${header.name}": target "${target}" escapes extraction directory`);
                   stream4.resume();
                   return;
                 }
                 entryCount++;
-                fs43.mkdir(dir, { recursive: true }, (err2) => {
+                fs47.mkdir(dir, { recursive: true }, (err2) => {
                   if (err2) return reject(err2);
-                  const relativeTarget = path38.relative(dir, target);
-                  fs43.symlink(relativeTarget, destFilePath, (err3) => {
+                  const relativeTarget = path42.relative(dir, target);
+                  fs47.symlink(relativeTarget, destFilePath, (err3) => {
                     if (err3) return reject(err3);
                     successCount++;
                     stream4.resume();
                   });
                 });
               } else {
-                fs43.mkdir(destFilePath, { recursive: true }, (err2) => {
+                fs47.mkdir(destFilePath, { recursive: true }, (err2) => {
                   if (err2) return reject(err2);
                   stream4.resume();
                 });
@@ -244069,7 +244671,7 @@ var require_utils13 = __commonJS({
     }
     exports2.safePipe = safePipe;
     function normalizePath(fileName) {
-      fileName = path38.normalize(fileName);
+      fileName = path42.normalize(fileName);
       if (process.platform === "win32") fileName = fileName.replace(/\\+/g, "/");
       return fileName;
     }
@@ -244407,7 +245009,7 @@ var require_buffer_crc32 = __commonJS({
 var require_yazl = __commonJS({
   "node_modules/yazl/index.js"(exports2) {
     "use strict";
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     var Transform = require("stream").Transform;
     var PassThrough = require("stream").PassThrough;
     var zlib2 = require("zlib");
@@ -244431,14 +245033,14 @@ var require_yazl = __commonJS({
       if (options == null) options = {};
       var entry = new Entry(metadataPath, false, options);
       self2.entries.push(entry);
-      fs43.stat(realPath, function(err, stats) {
+      fs47.stat(realPath, function(err, stats) {
         if (err) return self2.emit("error", err);
         if (!stats.isFile()) return self2.emit("error", new Error("not a file: " + realPath));
         entry.uncompressedSize = stats.size;
         if (options.mtime == null) entry.setLastModDate(stats.mtime);
         if (options.mode == null) entry.setFileAttributesMode(stats.mode);
         entry.setFileDataPumpFunction(function() {
-          var readStream2 = fs43.createReadStream(realPath);
+          var readStream2 = fs47.createReadStream(realPath);
           entry.state = Entry.FILE_DATA_IN_PROGRESS;
           readStream2.on("error", function(err2) {
             self2.emit("error", err2);
@@ -245059,8 +245661,8 @@ var require_safe_buffer3 = __commonJS({
     var buffer = require("buffer");
     var Buffer3 = buffer.Buffer;
     function copyProps(src, dst) {
-      for (var key in src) {
-        dst[key] = src[key];
+      for (var key2 in src) {
+        dst[key2] = src[key2];
       }
     }
     if (Buffer3.from && Buffer3.alloc && Buffer3.allocUnsafe && Buffer3.allocUnsafeSlow) {
@@ -245783,8 +246385,8 @@ var require_stream_duplex = __commonJS({
     var pna = require_process_nextick_args();
     var objectKeys = Object.keys || function(obj) {
       var keys3 = [];
-      for (var key in obj) {
-        keys3.push(key);
+      for (var key2 in obj) {
+        keys3.push(key2);
       }
       return keys3;
     };
@@ -245860,8 +246462,8 @@ var require_safe_buffer4 = __commonJS({
     var buffer = require("buffer");
     var Buffer3 = buffer.Buffer;
     function copyProps(src, dst) {
-      for (var key in src) {
-        dst[key] = src[key];
+      for (var key2 in src) {
+        dst[key2] = src[key2];
       }
     }
     if (Buffer3.from && Buffer3.alloc && Buffer3.allocUnsafe && Buffer3.allocUnsafeSlow) {
@@ -247207,9 +247809,9 @@ var require_immutable = __commonJS({
       var target = {};
       for (var i = 0; i < arguments.length; i++) {
         var source = arguments[i];
-        for (var key in source) {
-          if (hasOwnProperty11.call(source, key)) {
-            target[key] = source[key];
+        for (var key2 in source) {
+          if (hasOwnProperty11.call(source, key2)) {
+            target[key2] = source[key2];
           }
         }
       }
@@ -248108,8 +248710,8 @@ var require_headers = __commonJS({
       if (opts.linkname) result += addLength(" linkpath=" + opts.linkname + "\n");
       var pax = opts.pax;
       if (pax) {
-        for (var key in pax) {
-          result += addLength(" " + key + "=" + pax[key] + "\n");
+        for (var key2 in pax) {
+          result += addLength(" " + key2 + "=" + pax[key2] + "\n");
         }
       }
       return toBuffer(result);
@@ -248761,8 +249363,8 @@ var require_base_stream = __commonJS({
 var require_stream9 = __commonJS({
   "node_modules/compressing/lib/tar/stream.js"(exports2, module2) {
     "use strict";
-    var fs43 = require("fs");
-    var path38 = require("path");
+    var fs47 = require("fs");
+    var path42 = require("path");
     var stream4 = require("stream");
     var tar = require_tar_stream();
     var utils = require_utils13();
@@ -248797,7 +249399,7 @@ var require_stream9 = __commonJS({
         }
       }
       _addFileOrDirEntry(entry, opts) {
-        fs43.stat(entry, (err, stat) => {
+        fs47.stat(entry, (err, stat) => {
           if (err) return this.emit("error", err);
           if (stat.isDirectory()) return this._addDirEntry(entry, opts);
           if (stat.isFile()) return this._addFileEntry(entry, opts);
@@ -248807,27 +249409,27 @@ var require_stream9 = __commonJS({
         });
       }
       _addFileEntry(entry, opts) {
-        fs43.stat(entry, (err, stat) => {
+        fs47.stat(entry, (err, stat) => {
           if (err) return this.emit("error", err);
-          const entryStream = this._pack.entry({ name: opts.relativePath || path38.basename(entry), size: stat.size, mode: stat.mode & 511 }, this._onEntryFinish.bind(this));
-          const stream5 = fs43.createReadStream(entry, opts.fs);
+          const entryStream = this._pack.entry({ name: opts.relativePath || path42.basename(entry), size: stat.size, mode: stat.mode & 511 }, this._onEntryFinish.bind(this));
+          const stream5 = fs47.createReadStream(entry, opts.fs);
           stream5.on("error", (err2) => this.emit("error", err2));
           stream5.pipe(entryStream);
         });
       }
       _addDirEntry(entry, opts) {
-        fs43.readdir(entry, (err, files) => {
+        fs47.readdir(entry, (err, files) => {
           if (err) return this.emit("error", err);
           const relativePath = opts.relativePath || "";
           files.forEach((fileOrDir) => {
             const newOpts = utils.clone(opts);
             if (opts.ignoreBase) {
-              newOpts.relativePath = path38.posix.join(relativePath, fileOrDir);
+              newOpts.relativePath = path42.posix.join(relativePath, fileOrDir);
             } else {
-              newOpts.relativePath = path38.posix.join(relativePath, path38.basename(entry), fileOrDir);
+              newOpts.relativePath = path42.posix.join(relativePath, path42.basename(entry), fileOrDir);
             }
             newOpts.ignoreBase = true;
-            this.addEntry(path38.posix.join(entry, fileOrDir), newOpts);
+            this.addEntry(path42.posix.join(entry, fileOrDir), newOpts);
           });
           this._onEntryFinish();
         });
@@ -248884,7 +249486,7 @@ var require_stream9 = __commonJS({
 var require_stream10 = __commonJS({
   "node_modules/compressing/lib/zip/stream.js"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var yazl = require_yazl();
     var TarStream = require_stream9();
     var ZipStream = class extends TarStream {
@@ -248896,7 +249498,7 @@ var require_stream10 = __commonJS({
         stream4.on("error", (err) => this.emit("error", err));
       }
       _addFileEntry(entry, opts) {
-        this._zipfile.addFile(entry, opts.relativePath || path38.basename(entry), opts);
+        this._zipfile.addFile(entry, opts.relativePath || path42.basename(entry), opts);
         this._onEntryFinish();
       }
       _addBufferEntry(entry, opts) {
@@ -248955,7 +249557,7 @@ var require_get_ready = __commonJS({
 var require_file_stream = __commonJS({
   "node_modules/compressing/lib/zip/file_stream.js"(exports2, module2) {
     "use strict";
-    var path38 = require("path");
+    var path42 = require("path");
     var yazl = require_yazl();
     var assert3 = require("assert");
     var stream4 = require("stream");
@@ -248977,7 +249579,7 @@ var require_file_stream = __commonJS({
           this.end();
         }
         if (sourceType === "file") {
-          zipfile.addFile(opts.source, opts.relativePath || path38.basename(opts.source), opts.yazl);
+          zipfile.addFile(opts.source, opts.relativePath || path42.basename(opts.source), opts.yazl);
         } else if (sourceType === "buffer") {
           zipfile.addBuffer(opts.source, opts.relativePath, opts.yazl);
         } else if (sourceType === "stream") {
@@ -249063,7 +249665,7 @@ var require_pend = __commonJS({
 var require_fd_slicer2 = __commonJS({
   "node_modules/fd-slicer2/index.js"(exports2) {
     "use strict";
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     var { Readable: Readable2, Writable, PassThrough } = require("stream");
     var Pend = require_pend();
     var { EventEmitter: EventEmitter3 } = require("events");
@@ -249078,7 +249680,7 @@ var require_fd_slicer2 = __commonJS({
       }
       read(buffer, offset, length, position, callback) {
         this.pend.go((cb) => {
-          fs43.read(this.fd, buffer, offset, length, position, (err, bytesRead, buffer2) => {
+          fs47.read(this.fd, buffer, offset, length, position, (err, bytesRead, buffer2) => {
             cb();
             callback(err, bytesRead, buffer2);
           });
@@ -249086,7 +249688,7 @@ var require_fd_slicer2 = __commonJS({
       }
       write(buffer, offset, length, position, callback) {
         this.pend.go((cb) => {
-          fs43.write(this.fd, buffer, offset, length, position, (err, written, buffer2) => {
+          fs47.write(this.fd, buffer, offset, length, position, (err, written, buffer2) => {
             cb();
             callback(err, written, buffer2);
           });
@@ -249106,7 +249708,7 @@ var require_fd_slicer2 = __commonJS({
         if (this.refCount > 0) return;
         if (this.refCount < 0) throw new Error("invalid unref");
         if (this.autoClose) {
-          fs43.close(this.fd, (err) => {
+          fs47.close(this.fd, (err) => {
             if (err) {
               this.emit("error", err);
             } else {
@@ -249141,7 +249743,7 @@ var require_fd_slicer2 = __commonJS({
         this.context.pend.go((cb) => {
           if (this.destroyed) return cb();
           const buffer = Buffer.alloc(toRead);
-          fs43.read(this.context.fd, buffer, 0, toRead, this.pos, (err, bytesRead) => {
+          fs47.read(this.context.fd, buffer, 0, toRead, this.pos, (err, bytesRead) => {
             if (err) {
               this.destroy(err);
             } else if (bytesRead === 0) {
@@ -249187,7 +249789,7 @@ var require_fd_slicer2 = __commonJS({
         }
         this.context.pend.go((cb) => {
           if (this.destroyed) return cb();
-          fs43.write(this.context.fd, buffer, 0, buffer.length, this.pos, (err, bytes) => {
+          fs47.write(this.context.fd, buffer, 0, buffer.length, this.pos, (err, bytes) => {
             if (err) {
               this.destroy();
               cb();
@@ -249314,7 +249916,7 @@ var require_fd_slicer2 = __commonJS({
 var require_yauzl = __commonJS({
   "node_modules/@eggjs/yauzl/index.js"(exports2) {
     "use strict";
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     var zlib2 = require("zlib");
     var fd_slicer = require_fd_slicer2();
     var crc32 = require_buffer_crc32();
@@ -249332,7 +249934,7 @@ var require_yauzl = __commonJS({
     exports2.ZipFile = ZipFile;
     exports2.Entry = Entry;
     exports2.RandomAccessReader = RandomAccessReader;
-    function open(path38, options, callback) {
+    function open(path42, options, callback) {
       if (typeof options === "function") {
         callback = options;
         options = null;
@@ -249344,10 +249946,10 @@ var require_yauzl = __commonJS({
       if (options.validateEntrySizes == null) options.validateEntrySizes = true;
       if (options.strictFileNames == null) options.strictFileNames = false;
       if (callback == null) callback = defaultCallback;
-      fs43.open(path38, "r", function(err, fd) {
+      fs47.open(path42, "r", function(err, fd) {
         if (err) return callback(err);
         fromFd(fd, options, function(err2, zipfile) {
-          if (err2) fs43.close(fd, defaultCallback);
+          if (err2) fs47.close(fd, defaultCallback);
           callback(err2, zipfile);
         });
       });
@@ -249364,7 +249966,7 @@ var require_yauzl = __commonJS({
       if (options.validateEntrySizes == null) options.validateEntrySizes = true;
       if (options.strictFileNames == null) options.strictFileNames = false;
       if (callback == null) callback = defaultCallback;
-      fs43.fstat(fd, function(err, stats) {
+      fs47.fstat(fd, function(err, stats) {
         if (err) return callback(err);
         var reader = fd_slicer.createFromFd(fd, { autoClose: true });
         fromRandomAccessReader(reader, stats.size, options, callback);
@@ -253465,8 +254067,8 @@ var require_lib7 = __commonJS({
             enc = codecDef;
             break;
           case "object":
-            for (var key in codecDef)
-              codecOptions[key] = codecDef[key];
+            for (var key2 in codecDef)
+              codecOptions[key2] = codecDef[key2];
             if (!codecOptions.encodingName)
               codecOptions.encodingName = enc;
             enc = codecDef.type;
@@ -253684,7 +254286,7 @@ var require_lib8 = __commonJS({
 var require_file_stream2 = __commonJS({
   "node_modules/compressing/lib/gzip/file_stream.js"(exports2, module2) {
     "use strict";
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     var zlib2 = require("zlib");
     var utils = require_utils13();
     var streamifier = require_lib8();
@@ -253694,7 +254296,7 @@ var require_file_stream2 = __commonJS({
         super(opts.zlib);
         const sourceType = utils.sourceType(opts.source);
         if (sourceType === "file") {
-          const stream4 = fs43.createReadStream(opts.source, opts.fs);
+          const stream4 = fs47.createReadStream(opts.source, opts.fs);
           stream4.on("error", (err) => this.emit("error", err));
           stream4.pipe(this);
           return;
@@ -253719,7 +254321,7 @@ var require_file_stream2 = __commonJS({
 var require_uncompress_stream2 = __commonJS({
   "node_modules/compressing/lib/gzip/uncompress_stream.js"(exports2, module2) {
     "use strict";
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     var zlib2 = require("zlib");
     var utils = require_utils13();
     var streamifier = require_lib8();
@@ -253729,7 +254331,7 @@ var require_uncompress_stream2 = __commonJS({
         super(opts.zlib);
         const sourceType = utils.sourceType(opts.source);
         if (sourceType === "file") {
-          const stream4 = fs43.createReadStream(opts.source, opts.fs);
+          const stream4 = fs47.createReadStream(opts.source, opts.fs);
           stream4.on("error", (err) => this.emit("error", err));
           stream4.pipe(this);
           return;
@@ -253769,8 +254371,8 @@ var require_gzip = __commonJS({
 var require_file_stream3 = __commonJS({
   "node_modules/compressing/lib/tar/file_stream.js"(exports2, module2) {
     "use strict";
-    var fs43 = require("fs");
-    var path38 = require("path");
+    var fs47 = require("fs");
+    var path42 = require("path");
     var stream4 = require("stream");
     var tar = require_tar_stream();
     var utils = require_utils13();
@@ -253783,13 +254385,13 @@ var require_file_stream3 = __commonJS({
         pack.on("end", () => this.ready(true));
         const sourceType = utils.sourceType(opts.source);
         if (sourceType === "file") {
-          fs43.stat(opts.source, (err, stat) => {
+          fs47.stat(opts.source, (err, stat) => {
             if (err) return this.emit("error", err);
-            this.entry = pack.entry({ name: opts.relativePath || path38.basename(opts.source), size: stat.size, mode: stat.mode & 511 }, (err2) => {
+            this.entry = pack.entry({ name: opts.relativePath || path42.basename(opts.source), size: stat.size, mode: stat.mode & 511 }, (err2) => {
               if (err2) return this.emit("error", err2);
               pack.finalize();
             });
-            const stream5 = fs43.createReadStream(opts.source, opts.fs);
+            const stream5 = fs47.createReadStream(opts.source, opts.fs);
             stream5.on("error", (err2) => this.emit("error", err2));
             stream5.pipe(this);
           });
@@ -253848,7 +254450,7 @@ var require_file_stream3 = __commonJS({
 var require_uncompress_stream3 = __commonJS({
   "node_modules/compressing/lib/tar/uncompress_stream.js"(exports2, module2) {
     "use strict";
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     var tar = require_tar_stream();
     var utils = require_utils13();
     var streamifier = require_lib8();
@@ -253858,7 +254460,7 @@ var require_uncompress_stream3 = __commonJS({
         super(opts);
         const sourceType = utils.sourceType(opts.source);
         if (sourceType === "file") {
-          const stream4 = fs43.createReadStream(opts.source, opts.fs);
+          const stream4 = fs47.createReadStream(opts.source, opts.fs);
           stream4.on("error", (err) => this.emit("error", err));
           stream4.pipe(this);
           return;
@@ -254000,7 +254602,7 @@ var require_FlushWritable = __commonJS({
 var require_uncompress_stream4 = __commonJS({
   "node_modules/compressing/lib/tgz/uncompress_stream.js"(exports2, module2) {
     "use strict";
-    var fs43 = require("fs");
+    var fs47 = require("fs");
     var utils = require_utils13();
     var ready = require_get_ready();
     var streamifier = require_lib8();
@@ -254018,7 +254620,7 @@ var require_uncompress_stream4 = __commonJS({
         this._gzipStream.pipe(tarStream);
         const sourceType = utils.sourceType(opts.source);
         if (sourceType === "file") {
-          const stream4 = fs43.createReadStream(opts.source, opts.fs);
+          const stream4 = fs47.createReadStream(opts.source, opts.fs);
           stream4.on("error", (err) => this.emit("error", err));
           stream4.pipe(this);
           return;
@@ -254615,7 +255217,7 @@ var init_checkUpdate = __esm({
     router118 = import_express118.default.Router();
     APP_VERSION2 = (() => {
       if (true) {
-        return "1.2.2";
+        return "1.8.0";
       }
       const pkgPath = import_path21.default.resolve(process.cwd(), "package.json");
       const pkg = JSON.parse(import_fs15.default.readFileSync(pkgPath, "utf8"));
@@ -254720,12 +255322,12 @@ var init_agentSetKey = __esm({
         key: external_exports.string().optional()
       }),
       async (req, res) => {
-        const { key } = req.body;
+        const { key: key2 } = req.body;
         const vendorConfigData = await utils_default.db("o_vendorConfig").where("id", "toonflow").first();
         if (!vendorConfigData) return res.status(500).send(error50("\u672A\u627E\u5230\u8BE5\u4F9B\u5E94\u5546\u914D\u7F6E"));
         if (!vendorConfigData.inputValues) return res.status(500).send(error50("\u672A\u627E\u5230\u6A21\u578B\u914D\u7F6E\u6570\u636E"));
         const inputValue = JSON.parse(vendorConfigData.inputValues);
-        inputValue.apiKey = key;
+        inputValue.apiKey = key2;
         await utils_default.db("o_vendorConfig").where("id", "toonflow").update({
           inputValues: JSON.stringify(inputValue)
         });
@@ -255287,12 +255889,12 @@ var init_sureMemory = __esm({
       }),
       async (req, res) => {
         const { messagesPerSummary, shortTermLimit, summaryMaxLength, summaryLimit, ragLimit, deepRetrieveSummaryLimit, modelOnnxFile, modelDtype } = req.body;
-        const upsert = async (key, value) => {
-          const exists = await utils_default.db("o_setting").where("key", key).first();
+        const upsert = async (key2, value) => {
+          const exists = await utils_default.db("o_setting").where("key", key2).first();
           if (exists) {
-            await utils_default.db("o_setting").where("key", key).update({ value });
+            await utils_default.db("o_setting").where("key", key2).update({ value });
           } else {
-            await utils_default.db("o_setting").insert({ key, value });
+            await utils_default.db("o_setting").insert({ key: key2, value });
           }
         };
         await upsert("messagesPerSummary", messagesPerSummary);
@@ -255329,13 +255931,13 @@ var init_bindingPrompt = __esm({
         fileName: external_exports.string()
       }),
       async (req, res) => {
-        const { vendorId, model, path: path38, fileName } = req.body;
+        const { vendorId, model, path: path42, fileName } = req.body;
         const data = await utils_default.db("o_modelPrompt").where("model", model).andWhere("vendorId", vendorId).select("*").first();
         if (data) {
-          await utils_default.db("o_modelPrompt").where("model", model).andWhere("vendorId", vendorId).update({ fileName, path: path38 });
+          await utils_default.db("o_modelPrompt").where("model", model).andWhere("vendorId", vendorId).update({ fileName, path: path42 });
           res.status(200).send(success3("\u7ED1\u5B9A\u6210\u529F"));
         } else {
-          await utils_default.db("o_modelPrompt").insert({ vendorId, model, path: path38, fileName });
+          await utils_default.db("o_modelPrompt").insert({ vendorId, model, path: path42, fileName });
           res.status(200).send(success3("\u7ED1\u5B9A\u6210\u529F"));
         }
       }
@@ -255596,9 +256198,9 @@ var init_getSkillContent = __esm({
         path: external_exports.string()
       }),
       async (req, res) => {
-        const { path: path38 } = req.body;
+        const { path: path42 } = req.body;
         const skillsRoot = utils_default.getPath(["skills"]);
-        const filePath = import_path26.default.join(skillsRoot, path38);
+        const filePath = import_path26.default.join(skillsRoot, path42);
         if (!isPathInside(filePath, skillsRoot)) {
           return res.status(400).send(error50("\u65E0\u6548\u7684\u8DEF\u5F84"));
         }
@@ -255651,9 +256253,9 @@ var init_saveSkillContent = __esm({
         content: external_exports.string()
       }),
       async (req, res) => {
-        const { path: path38, content } = req.body;
+        const { path: path42, content } = req.body;
         const skillsRoot = utils_default.getPath(["skills"]);
-        const filePath = import_path27.default.join(skillsRoot, path38);
+        const filePath = import_path27.default.join(skillsRoot, path42);
         if (!isPathInside(filePath, skillsRoot)) {
           return res.status(400).send(error50("\u65E0\u6548\u7684\u8DEF\u5F84"));
         }
@@ -255748,7 +256350,7 @@ var init_addVendor = __esm({
         const result = vendorConfigSchema.safeParse(vendor);
         if (!result.success) {
           const issueLines = result.error.issues.map((issue3, index) => {
-            const path38 = issue3.path.length ? issue3.path.join(".") : "root";
+            const path42 = issue3.path.length ? issue3.path.join(".") : "root";
             let detail = issue3.message;
             if (issue3.code === "invalid_union") {
               const unionDetails = [
@@ -255760,7 +256362,7 @@ var init_addVendor = __esm({
                 detail = `${issue3.message}\uFF08${unionDetails.join("\uFF1B")}\uFF09`;
               }
             }
-            return `${index + 1}. ${path38}: ${detail}`;
+            return `${index + 1}. ${path42}: ${detail}`;
           });
           return res.status(400).send(error50(`vendor\u914D\u7F6E\u6821\u9A8C\u5931\u8D25\uFF0C\u5171 ${issueLines.length} \u5904:
 ${issueLines.join("\n")}`));
@@ -256736,7 +257338,7 @@ function coerceListItem(value) {
   }
   return null;
 }
-var SrAspectRatioSchema, SrPlatformSchema, SrAssetSlotTypeSchema, CreateTaskSchema, SourceMediaSchema, TranscriptSegmentSchema, TranscriptSchema, ShotSchema, ShotDetectionSchema, FrameSampleSchema, StringListSchema, BooleanDefaultFalseSchema, FrameUnderstandingSchema, AssetSlotSchema, StructuralIrShotSchema, StructuralIrSchema, DialogueLineSchema, DialogueStructureSchema, AssetGapItemSchema, AssetGapSchema, AssetBindingSchema, PromptAssetSlotSchema, PromptSourceTimeRangeSchema, PromptPackageIssueSchema, PromptPackageValidationReportSchema, PromptShotSchema, StoryboardPromptMapSchema, PromptPackageSchema, StoryboardPromptMetaSchema, RegeneratedStoryboardRowSchema, RegeneratedStoryboardSchema, ConsistencyIssueSchema, ConsistencyReportSchema;
+var SrAspectRatioSchema, SrPlatformSchema, SrAssetSlotTypeSchema, CreateTaskSchema, SourceMediaSchema, TranscriptSegmentSchema, TranscriptSchema, ShotSchema, ShotDetectionSchema, FrameSampleSchema, StringListSchema, BooleanDefaultFalseSchema, FrameUnderstandingSchema, AssetSlotSchema, StructuralIrShotSchema, StructuralIrSchema, DialogueLineSchema, DialogueStructureSchema, AssetGapItemSchema, AssetGapSchema, AssetBindingSchema, PromptAssetSlotSchema, PromptSourceTimeRangeSchema, PromptPackageIssueSchema, PromptPackageValidationReportSchema, PromptShotSchema, StoryboardPromptMapSchema, PromptPackageSchema, StoryboardPromptMetaSchema, RegeneratedStoryboardRowSchema, RegeneratedStoryboardSchema, ConsistencyIssueSchema, ConsistencyReportSchema, ShotAdaptationLevelSchema, ShotAdaptationSchema, ProviderCapabilitySchema, ModelRouteSchema, ShotControlPackageSchema, GenerationJobStatusSchema, GenerationCandidateStatusSchema, GenerationCandidateSchema, GenerationCostSchema, QualityCheckSeveritySchema, QualityReportSchema, TimelineExportSchema, ComplianceReportSchema;
 var init_schemas3 = __esm({
   "src/services/structuralReplica/schemas.ts"() {
     "use strict";
@@ -256873,11 +257475,21 @@ var init_schemas3 = __esm({
     });
     DialogueLineSchema = external_exports.object({
       shotId: external_exports.string().min(1),
+      dialogueMode: external_exports.enum(["source", "user_edited", "compressed", "split", "extended", "no_dialogue"]).default("source"),
+      sourceDialogue: external_exports.string().default(""),
+      dialoguePattern: external_exports.string().default(""),
+      editableDialogue: external_exports.string().default(""),
       editableTemplate: external_exports.string(),
       variables: external_exports.record(external_exports.string(), external_exports.string()).default({}),
       finalDialogue: external_exports.string(),
       subtitle: external_exports.string().optional(),
       cta: external_exports.string().optional(),
+      charCount: external_exports.number().int().nonnegative().default(0),
+      estimatedSpeechSec: external_exports.number().nonnegative().default(0),
+      targetDurationSec: external_exports.number().nonnegative().default(0),
+      fitsDuration: external_exports.boolean().default(true),
+      timingStrategy: external_exports.enum(["fit", "compress_dialogue", "split_shot", "extend_shot", "no_dialogue"]).default("fit"),
+      timingActions: external_exports.array(external_exports.enum(["compress_dialogue", "split_shot", "extend_shot", "mark_no_dialogue", "sync_subtitle_from_dialogue"])).default([]),
       warnings: external_exports.array(external_exports.string()).default([])
     });
     DialogueStructureSchema = external_exports.object({
@@ -257001,6 +257613,162 @@ var init_schemas3 = __esm({
       issues: external_exports.array(ConsistencyIssueSchema),
       markdown: external_exports.string().optional()
     });
+    ShotAdaptationLevelSchema = external_exports.enum(["A", "B", "C", "D"]);
+    ShotAdaptationSchema = external_exports.object({
+      taskId: external_exports.number().int().positive(),
+      shotId: external_exports.string().min(1),
+      adaptationLevel: ShotAdaptationLevelSchema,
+      adaptationStrategy: external_exports.enum(["use_reference_and_assets", "use_user_assets_first", "rewrite_to_available_scene", "blocked_missing_assets"]),
+      assetMatchScore: external_exports.number().min(0).max(1),
+      requiredSlots: external_exports.array(external_exports.string()).default([]),
+      matchedAssets: external_exports.record(
+        external_exports.string(),
+        external_exports.object({
+          assetId: external_exports.number().int().positive().nullable(),
+          score: external_exports.number().min(0).max(1),
+          reason: external_exports.string().optional()
+        })
+      ),
+      adaptedVisual: external_exports.string().default(""),
+      blockedReasons: external_exports.array(external_exports.string()).default([]),
+      downgradeReasons: external_exports.array(external_exports.string()).default([])
+    });
+    ProviderCapabilitySchema = external_exports.object({
+      providerId: external_exports.string().min(1),
+      providerType: external_exports.enum(["openai_compatible", "toonflow_vendor", "custom"]).default("openai_compatible"),
+      displayName: external_exports.string().optional(),
+      baseUrl: external_exports.string().optional().default(""),
+      apiKey: external_exports.string().optional().default(""),
+      enabled: external_exports.boolean().default(true),
+      models: external_exports.array(
+        external_exports.object({
+          model: external_exports.string().min(1),
+          displayName: external_exports.string().optional(),
+          type: external_exports.enum(["text", "image", "video"]).default("video"),
+          priority: external_exports.number().int().default(0),
+          capabilities: external_exports.object({
+            textToVideo: external_exports.boolean().default(false),
+            imageToVideo: external_exports.boolean().default(false),
+            videoReference: external_exports.boolean().default(false),
+            multiReference: external_exports.boolean().default(false),
+            characterLock: external_exports.boolean().default(false),
+            lipSync: external_exports.boolean().default(false),
+            maxDurationSec: external_exports.number().positive().default(5),
+            supportedRatios: external_exports.array(SrAspectRatioSchema).default(["9:16"]),
+            supportsSeed: external_exports.boolean().default(false),
+            supportsNegativePrompt: external_exports.boolean().default(false)
+          })
+        })
+      ).default([])
+    });
+    ModelRouteSchema = external_exports.object({
+      taskId: external_exports.number().int().positive(),
+      shotId: external_exports.string().min(1),
+      selectedProviderId: external_exports.string().nullable(),
+      selectedModel: external_exports.string().nullable(),
+      routeStatus: external_exports.enum(["selected", "degraded", "blocked"]),
+      requiredCapabilities: external_exports.array(external_exports.string()).default([]),
+      fallbackPlan: external_exports.array(external_exports.string()).default([]),
+      downgradeReasons: external_exports.array(external_exports.string()).default([])
+    });
+    ShotControlPackageSchema = external_exports.object({
+      taskId: external_exports.number().int().positive(),
+      shotId: external_exports.string().min(1),
+      providerId: external_exports.string().min(1),
+      model: external_exports.string().min(1),
+      prompt: external_exports.string().min(1),
+      negativePrompt: external_exports.string().default(""),
+      referenceList: external_exports.array(
+        external_exports.object({
+          type: external_exports.enum(["image", "video", "audio"]),
+          path: external_exports.string().min(1),
+          source: external_exports.enum(["reference_frame", "asset", "candidate", "other"]).default("other"),
+          assetId: external_exports.number().int().positive().nullable().optional()
+        })
+      ).default([]),
+      durationSec: external_exports.number().positive(),
+      aspectRatio: SrAspectRatioSchema,
+      seed: external_exports.number().int().nullable().optional(),
+      fallbackStrategy: external_exports.array(external_exports.string()).default([]),
+      assetSlots: external_exports.array(PromptAssetSlotSchema).default([]),
+      routeStatus: external_exports.enum(["selected", "degraded", "blocked"]),
+      warnings: external_exports.array(external_exports.string()).default([])
+    });
+    GenerationJobStatusSchema = external_exports.enum(["queued", "running", "succeeded", "failed"]);
+    GenerationCandidateStatusSchema = external_exports.enum(["pending", "succeeded", "failed", "selected", "rejected"]);
+    GenerationCandidateSchema = external_exports.object({
+      taskId: external_exports.number().int().positive(),
+      shotId: external_exports.string().min(1),
+      generationJobId: external_exports.number().int().positive(),
+      candidateIndex: external_exports.number().int().nonnegative(),
+      status: GenerationCandidateStatusSchema,
+      providerId: external_exports.string().min(1),
+      model: external_exports.string().min(1),
+      videoPath: external_exports.string().nullable(),
+      thumbnailPath: external_exports.string().nullable().optional(),
+      durationSec: external_exports.number().nonnegative().nullable().optional(),
+      qualityScore: external_exports.number().min(0).max(100).nullable().optional(),
+      selected: external_exports.boolean().default(false),
+      errorReason: external_exports.string().nullable().optional(),
+      metadata: external_exports.record(external_exports.string(), external_exports.unknown()).default({})
+    });
+    GenerationCostSchema = external_exports.object({
+      taskId: external_exports.number().int().positive(),
+      shotId: external_exports.string().min(1),
+      generationJobId: external_exports.number().int().positive(),
+      candidateId: external_exports.number().int().positive().nullable().optional(),
+      providerId: external_exports.string().min(1),
+      model: external_exports.string().min(1),
+      latencyMs: external_exports.number().int().nonnegative(),
+      requestSizeBytes: external_exports.number().int().nonnegative(),
+      estimatedCost: external_exports.number().nonnegative().default(0),
+      errorCode: external_exports.string().nullable().optional(),
+      errorReason: external_exports.string().nullable().optional()
+    });
+    QualityCheckSeveritySchema = external_exports.enum(["info", "warning", "blocker"]);
+    QualityReportSchema = external_exports.object({
+      taskId: external_exports.number().int().positive(),
+      shotId: external_exports.string().min(1),
+      candidateId: external_exports.number().int().positive(),
+      status: external_exports.enum(["pass", "warning", "blocked"]),
+      score: external_exports.number().min(0).max(100),
+      checks: external_exports.array(
+        external_exports.object({
+          code: external_exports.string().min(1),
+          severity: QualityCheckSeveritySchema,
+          passed: external_exports.boolean(),
+          message: external_exports.string().min(1),
+          details: external_exports.record(external_exports.string(), external_exports.unknown()).default({})
+        })
+      ).default([]),
+      retryRecommendation: external_exports.object({
+        recommended: external_exports.boolean(),
+        reason: external_exports.string(),
+        blockerCodes: external_exports.array(external_exports.string()).default([])
+      }).optional()
+    });
+    TimelineExportSchema = external_exports.object({
+      taskId: external_exports.number().int().positive(),
+      status: external_exports.enum(["queued", "running", "succeeded", "failed", "expired"]),
+      outputPath: external_exports.string().nullable(),
+      reportJson: external_exports.record(external_exports.string(), external_exports.unknown()).default({}),
+      subtitleMode: external_exports.enum(["none", "burn", "track"]).default("none"),
+      candidateIds: external_exports.array(external_exports.number().int().positive()).default([]),
+      errorReason: external_exports.string().nullable().optional(),
+      expiresAt: external_exports.number().int().positive().nullable().optional()
+    });
+    ComplianceReportSchema = external_exports.object({
+      taskId: external_exports.number().int().positive(),
+      status: external_exports.enum(["pass", "warning", "blocked"]),
+      issues: external_exports.array(
+        external_exports.object({
+          code: external_exports.string().min(1),
+          level: external_exports.enum(["warning", "blocker"]),
+          message: external_exports.string().min(1),
+          assetId: external_exports.number().int().positive().optional()
+        })
+      ).default([])
+    });
   }
 });
 
@@ -257056,14 +257824,79 @@ var init_taskState = __esm({
       storyboard_generated: ["checked", "failed"],
       checked: ["pushed", "failed"],
       pushed: [],
-      failed: ["preprocessing"]
+      failed: ["preprocessing", "understanding_frames"]
     };
+  }
+});
+
+// src/services/structuralReplica/securityService.ts
+async function getSecret() {
+  let row = await utils_default.db("o_setting").where("key", "sr.encryptionSecret").first();
+  if (!row?.value) {
+    const value = import_node_crypto5.default.randomBytes(32).toString("hex");
+    await utils_default.db("o_setting").insert({ key: "sr.encryptionSecret", value });
+    row = { key: "sr.encryptionSecret", value };
+  }
+  return import_node_crypto5.default.createHash("sha256").update(String(row.value)).digest();
+}
+function isEncryptedSecret(value) {
+  return typeof value === "string" && value.startsWith(PREFIX);
+}
+async function encryptSecret(value) {
+  if (!value) return "";
+  if (isEncryptedSecret(value)) return value;
+  const key2 = await getSecret();
+  const iv = import_node_crypto5.default.randomBytes(12);
+  const cipher = import_node_crypto5.default.createCipheriv("aes-256-gcm", key2, iv);
+  const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `${PREFIX}${Buffer.concat([iv, tag, encrypted]).toString("base64")}`;
+}
+async function decryptSecret(value) {
+  if (!value) return "";
+  if (!isEncryptedSecret(value)) return value;
+  const data = Buffer.from(value.slice(PREFIX.length), "base64");
+  const iv = data.subarray(0, 12);
+  const tag = data.subarray(12, 28);
+  const encrypted = data.subarray(28);
+  const decipher = import_node_crypto5.default.createDecipheriv("aes-256-gcm", await getSecret(), iv);
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
+}
+function redactProviderCapability(capability) {
+  return { ...capability, apiKey: "" };
+}
+async function upsertEncryptedSetting(key2, value) {
+  const encrypted = await encryptSecret(value);
+  const existing = await utils_default.db("o_setting").where("key", key2).first();
+  if (existing) await utils_default.db("o_setting").where("key", key2).update({ value: encrypted });
+  else await utils_default.db("o_setting").insert({ key: key2, value: encrypted });
+}
+async function getDecryptedSetting(key2, fallback = "") {
+  const row = await utils_default.db("o_setting").where("key", key2).first();
+  return row?.value ? await decryptSecret(String(row.value)) : fallback;
+}
+var import_node_crypto5, PREFIX;
+var init_securityService = __esm({
+  "src/services/structuralReplica/securityService.ts"() {
+    "use strict";
+    import_node_crypto5 = __toESM(require("node:crypto"));
+    init_utils3();
+    PREFIX = "srenc:v1:";
   }
 });
 
 // src/services/structuralReplica/repository.ts
 function jsonStringify(data) {
   return typeof data === "string" ? data : JSON.stringify(data);
+}
+function parseJson(data, fallback) {
+  if (!data) return fallback;
+  try {
+    return JSON.parse(data);
+  } catch {
+    return fallback;
+  }
 }
 async function getLatestByTask(table, taskId) {
   return await utils_default.db(table).where("taskId", taskId).orderBy("id", "desc").first();
@@ -257200,25 +258033,60 @@ async function clearDerivedArtifactsFromFrameUnderstanding(taskId) {
     utils_default.db("o_sr_dialogue_structure").where("taskId", taskId).delete(),
     utils_default.db("o_sr_asset_gap").where("taskId", taskId).delete(),
     utils_default.db("o_sr_asset_binding").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_shot_adaptation").where("taskId", taskId).delete(),
     utils_default.db("o_sr_regenerated_storyboard").where("taskId", taskId).delete(),
     utils_default.db("o_sr_consistency_report").where("taskId", taskId).delete(),
-    utils_default.db("o_sr_storyboard_mapping").where("taskId", taskId).delete()
+    utils_default.db("o_sr_storyboard_mapping").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_model_route").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_job").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_candidate").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_cost").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_quality_report").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_timeline_export").where("taskId", taskId).delete()
   ]);
 }
 async function clearDerivedArtifactsFromStoryIr(taskId) {
   await Promise.all([
+    utils_default.db("o_sr_dialogue_structure").where("taskId", taskId).delete(),
     utils_default.db("o_sr_asset_gap").where("taskId", taskId).delete(),
     utils_default.db("o_sr_asset_binding").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_shot_adaptation").where("taskId", taskId).delete(),
     utils_default.db("o_sr_regenerated_storyboard").where("taskId", taskId).delete(),
     utils_default.db("o_sr_consistency_report").where("taskId", taskId).delete(),
-    utils_default.db("o_sr_storyboard_mapping").where("taskId", taskId).delete()
+    utils_default.db("o_sr_storyboard_mapping").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_model_route").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_job").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_candidate").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_cost").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_quality_report").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_timeline_export").where("taskId", taskId).delete()
+  ]);
+}
+async function clearDerivedArtifactsFromDialogue(taskId) {
+  await Promise.all([
+    utils_default.db("o_sr_regenerated_storyboard").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_consistency_report").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_storyboard_mapping").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_model_route").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_job").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_candidate").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_cost").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_quality_report").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_timeline_export").where("taskId", taskId).delete()
   ]);
 }
 async function clearDerivedArtifactsFromAssetBindings(taskId) {
   await Promise.all([
+    utils_default.db("o_sr_shot_adaptation").where("taskId", taskId).delete(),
     utils_default.db("o_sr_regenerated_storyboard").where("taskId", taskId).delete(),
     utils_default.db("o_sr_consistency_report").where("taskId", taskId).delete(),
-    utils_default.db("o_sr_storyboard_mapping").where("taskId", taskId).delete()
+    utils_default.db("o_sr_storyboard_mapping").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_model_route").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_job").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_candidate").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_generation_cost").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_quality_report").where("taskId", taskId).delete(),
+    utils_default.db("o_sr_timeline_export").where("taskId", taskId).delete()
   ]);
 }
 async function saveStoryIr(taskId, storyIr) {
@@ -257273,6 +258141,42 @@ async function saveAssetBindings(taskId, bindings) {
   );
   return await utils_default.db("o_sr_asset_binding").where("taskId", taskId).orderBy("id", "asc");
 }
+async function saveShotAdaptations(taskId, adaptations) {
+  await utils_default.db("o_sr_shot_adaptation").where("taskId", taskId).delete();
+  if (!adaptations.length) return [];
+  const now2 = Date.now();
+  await utils_default.db("o_sr_shot_adaptation").insert(
+    adaptations.map((adaptation) => ({
+      taskId,
+      shotId: adaptation.shotId,
+      level: adaptation.adaptationLevel,
+      strategy: adaptation.adaptationStrategy,
+      assetMatchScore: adaptation.assetMatchScore,
+      requiredSlotsJson: jsonStringify(adaptation.requiredSlots),
+      matchedAssetsJson: jsonStringify(adaptation.matchedAssets),
+      adaptedVisual: adaptation.adaptedVisual,
+      blockedReasonsJson: jsonStringify(adaptation.blockedReasons),
+      downgradeReasonsJson: jsonStringify(adaptation.downgradeReasons),
+      createdAt: now2,
+      updatedAt: now2
+    }))
+  );
+  return await utils_default.db("o_sr_shot_adaptation").where("taskId", taskId).orderBy("id", "asc");
+}
+function parseShotAdaptationRow(row) {
+  return {
+    taskId: Number(row.taskId),
+    shotId: String(row.shotId || ""),
+    adaptationLevel: row.level,
+    adaptationStrategy: row.strategy,
+    assetMatchScore: Number(row.assetMatchScore || 0),
+    requiredSlots: parseJson(row.requiredSlotsJson, []),
+    matchedAssets: parseJson(row.matchedAssetsJson, {}),
+    adaptedVisual: row.adaptedVisual || "",
+    blockedReasons: parseJson(row.blockedReasonsJson, []),
+    downgradeReasons: parseJson(row.downgradeReasonsJson, [])
+  };
+}
 async function saveRegeneratedStoryboard(taskId, storyboard) {
   const now2 = Date.now();
   const [id] = await utils_default.db("o_sr_regenerated_storyboard").insert({
@@ -257294,6 +258198,103 @@ async function saveConsistencyReport(taskId, report) {
   });
   return await utils_default.db("o_sr_consistency_report").where("id", Number(id)).first();
 }
+async function listProviderCapabilities() {
+  const rows = await utils_default.db("o_sr_provider_capability").orderBy("id", "asc");
+  return rows.map(
+    (row) => redactProviderCapability({
+      ...parseJson(row.capabilityJson, {
+        providerId: row.providerId || "",
+        providerType: row.providerType || "openai_compatible",
+        displayName: row.displayName || void 0,
+        baseUrl: row.baseUrl || "",
+        apiKey: "",
+        enabled: row.enabled !== 0,
+        models: []
+      }),
+      providerId: row.providerId || "",
+      providerType: row.providerType || "openai_compatible",
+      displayName: row.displayName || void 0,
+      baseUrl: row.baseUrl || "",
+      apiKey: "",
+      enabled: row.enabled !== 0
+    })
+  );
+}
+async function upsertProviderCapability(capability) {
+  const now2 = Date.now();
+  const existing = await utils_default.db("o_sr_provider_capability").where("providerId", capability.providerId).first();
+  const existingPayload = parseJson(existing?.capabilityJson, null);
+  const savedApiKey = capability.apiKey ? await encryptSecret(capability.apiKey) : existingPayload?.apiKey ? await encryptSecret(existingPayload.apiKey) : "";
+  const storedCapability = {
+    ...capability,
+    apiKey: savedApiKey
+  };
+  const row = {
+    providerId: capability.providerId,
+    providerType: capability.providerType,
+    displayName: capability.displayName ?? null,
+    baseUrl: capability.baseUrl ?? null,
+    capabilityJson: jsonStringify(storedCapability),
+    enabled: capability.enabled ? 1 : 0,
+    updatedAt: now2
+  };
+  if (existing?.id) {
+    await utils_default.db("o_sr_provider_capability").where("id", existing.id).update(row);
+  } else {
+    await utils_default.db("o_sr_provider_capability").insert({ ...row, createdAt: now2 });
+  }
+  const saved = (await listProviderCapabilities()).find((item) => item.providerId === capability.providerId);
+  if (!saved) throw new Error(`provider capability was not saved: ${capability.providerId}`);
+  return saved;
+}
+async function recordProviderProbe(input) {
+  const [id] = await utils_default.db("o_sr_model_probe_result").insert({
+    providerId: input.providerId,
+    model: input.model ?? null,
+    status: input.status,
+    latencyMs: input.latencyMs ?? null,
+    errorReason: input.errorReason ?? null,
+    resultJson: stringifyOptional(input.result),
+    createdAt: Date.now()
+  });
+  return await utils_default.db("o_sr_model_probe_result").where("id", Number(id)).first();
+}
+function stringifyOptional(data) {
+  if (data === void 0) return null;
+  return jsonStringify(data);
+}
+async function saveModelRoutes(taskId, routes) {
+  await utils_default.db("o_sr_model_route").where("taskId", taskId).delete();
+  if (!routes.length) return [];
+  const now2 = Date.now();
+  await utils_default.db("o_sr_model_route").insert(
+    routes.map((route) => ({
+      taskId,
+      shotId: route.shotId,
+      selectedProviderId: route.selectedProviderId,
+      selectedModel: route.selectedModel,
+      routeStatus: route.routeStatus,
+      requiredCapabilitiesJson: jsonStringify(route.requiredCapabilities),
+      fallbackPlanJson: jsonStringify(route.fallbackPlan),
+      downgradeReasonsJson: jsonStringify(route.downgradeReasons),
+      createdAt: now2,
+      updatedAt: now2
+    }))
+  );
+  return await utils_default.db("o_sr_model_route").where("taskId", taskId).orderBy("id", "asc");
+}
+function parseModelRouteRow(row) {
+  return {
+    taskId: Number(row.taskId),
+    shotId: row.shotId || "",
+    selectedProviderId: row.selectedProviderId ?? null,
+    selectedModel: row.selectedModel ?? null,
+    routeStatus: row.routeStatus || "blocked",
+    requiredCapabilities: parseJson(row.requiredCapabilitiesJson, []),
+    fallbackPlan: parseJson(row.fallbackPlanJson, []),
+    downgradeReasons: parseJson(row.downgradeReasonsJson, [])
+  };
+}
 async function getTaskBundle(taskId) {
   const task = await getTaskOrThrow(taskId);
   const [
@@ -257306,9 +258307,15 @@ async function getTaskBundle(taskId) {
     dialogueStructure,
     assetGap,
     bindings,
+    shotAdaptations,
     regeneratedStoryboard,
     report,
-    mapping
+    mapping,
+    modelRoutes,
+    generationJobs,
+    generationCandidates,
+    qualityReports,
+    timelineExports
   ] = await Promise.all([
     utils_default.db("o_sr_source_media").where("taskId", taskId).first(),
     getLatestByTask("o_sr_transcript", taskId),
@@ -257319,9 +258326,15 @@ async function getTaskBundle(taskId) {
     getLatestByTask("o_sr_dialogue_structure", taskId),
     getLatestByTask("o_sr_asset_gap", taskId),
     utils_default.db("o_sr_asset_binding").where("taskId", taskId).orderBy("id", "asc"),
+    utils_default.db("o_sr_shot_adaptation").where("taskId", taskId).orderBy("id", "asc"),
     getLatestByTask("o_sr_regenerated_storyboard", taskId),
     getLatestByTask("o_sr_consistency_report", taskId),
-    utils_default.db("o_sr_storyboard_mapping").where("taskId", taskId).orderBy("id", "asc")
+    utils_default.db("o_sr_storyboard_mapping").where("taskId", taskId).orderBy("id", "asc"),
+    utils_default.db("o_sr_model_route").where("taskId", taskId).orderBy("id", "asc"),
+    utils_default.db("o_sr_generation_job").where("taskId", taskId).orderBy("id", "desc"),
+    utils_default.db("o_sr_generation_candidate").where("taskId", taskId).orderBy("shotId", "asc").orderBy("candidateIndex", "asc").orderBy("id", "asc"),
+    utils_default.db("o_sr_quality_report").where("taskId", taskId).orderBy("id", "desc"),
+    utils_default.db("o_sr_timeline_export").where("taskId", taskId).orderBy("id", "desc")
   ]);
   return {
     task,
@@ -257334,9 +258347,15 @@ async function getTaskBundle(taskId) {
     dialogueStructure,
     assetGap,
     bindings,
+    shotAdaptations,
     regeneratedStoryboard,
     report,
-    mapping
+    mapping,
+    modelRoutes,
+    generationJobs,
+    generationCandidates,
+    qualityReports,
+    timelineExports
   };
 }
 function averageSpeechRate(values) {
@@ -257349,6 +258368,7 @@ var init_repository = __esm({
     "use strict";
     init_utils3();
     init_taskState();
+    init_securityService();
   }
 });
 
@@ -257527,8 +258547,8 @@ async function analyzeAssetGaps(taskId) {
       const normalizedSlot = normalizeAssetSlot(slot);
       if (!normalizedSlot) continue;
       if (!normalizedSlot.required || !isUserRequiredAssetSlot(normalizedSlot)) continue;
-      const key = assetSlotKey(normalizedSlot.type, normalizedSlot.slot);
-      const item = grouped.get(key) || {
+      const key2 = assetSlotKey(normalizedSlot.type, normalizedSlot.slot);
+      const item = grouped.get(key2) || {
         slotName: normalizedSlot.slot,
         slotType: normalizedSlot.type,
         required: normalizedSlot.required,
@@ -257536,7 +258556,7 @@ async function analyzeAssetGaps(taskId) {
       };
       item.required = item.required || normalizedSlot.required;
       item.usedByShots.add(shot.shotId);
-      grouped.set(key, item);
+      grouped.set(key2, item);
     }
   }
   const boundKeys = new Set(
@@ -257555,8 +258575,8 @@ async function analyzeAssetGaps(taskId) {
       const assetName = (asset.name || "").toLowerCase();
       return searchTerms.some((term) => assetName.includes(term) || term.includes(assetName));
     }).map((asset) => asset.id).filter((id) => typeof id === "number").slice(0, 5);
-    const key = assetSlotKey(item.slotType, item.slotName);
-    const status = boundKeys.has(key) ? "bound" : suggestedAssetIds.length ? "suggested" : "missing";
+    const key2 = assetSlotKey(item.slotType, item.slotName);
+    const status = boundKeys.has(key2) ? "bound" : suggestedAssetIds.length ? "suggested" : "missing";
     items.push({
       slotName: item.slotName,
       slotType: item.slotType,
@@ -257595,6 +258615,7 @@ var init_analyzeAssetGaps = __esm({
     init_middleware();
     init_assetGapAnalyzer();
     init_repository();
+    init_jobService();
     router165 = import_express165.default.Router();
     analyzeAssetGaps_default = router165.post(
       "/",
@@ -257609,17 +258630,32 @@ var init_analyzeAssetGaps = __esm({
           if (!allowedStatuses.includes(task.status || "")) {
             return res.status(400).send(error50(`task status must be ir_built or later asset stage, got ${task.status}`));
           }
-          await clearDerivedArtifactsFromAssetBindings(taskId);
-          const assetGap = await analyzeAssetGaps(taskId);
-          const row = await saveAssetGap(taskId, assetGap);
-          const updatedTask = task.status === "ir_built" || task.status === "dialogue_reviewed" ? await updateTaskStatus(taskId, "asset_gap_ready") : task;
+          const job = await createSrJob({ taskId, jobType: "assetGap", input: { taskId }, stage: "queued" });
+          const result = await runSrJob(
+            Number(job.id),
+            async (report) => {
+              await report({ progress: 15, stage: "clearing_asset_bindings" });
+              await clearDerivedArtifactsFromAssetBindings(taskId);
+              await report({ progress: 45, stage: "analyzing_asset_gaps" });
+              const assetGap = await analyzeAssetGaps(taskId);
+              await report({ progress: 80, stage: "saving_asset_gaps" });
+              const row = await saveAssetGap(taskId, assetGap);
+              const updatedTask = task.status === "ir_built" || task.status === "dialogue_reviewed" ? await updateTaskStatus(taskId, "asset_gap_ready") : task;
+              return {
+                taskId,
+                status: updatedTask.status,
+                assetGapId: row.id,
+                missingCount: assetGap.missingCount,
+                items: assetGap.items
+              };
+            },
+            "analyzing_asset_gaps"
+          );
+          const finishedJob = await getSrJob(Number(job.id));
           res.status(200).send(
             success3({
-              taskId,
-              status: updatedTask.status,
-              assetGapId: row.id,
-              missingCount: assetGap.missingCount,
-              items: assetGap.items
+              ...result,
+              job: serializeSrJob(finishedJob)
             })
           );
         } catch (e) {
@@ -257815,7 +258851,7 @@ var init_bindAssets = __esm({
 });
 
 // src/services/structuralReplica/structuralIrBuilder.ts
-function parseJson(raw, fallback) {
+function parseJson2(raw, fallback) {
   if (!raw) return fallback;
   return JSON.parse(raw);
 }
@@ -257945,7 +258981,7 @@ function mustReplaceFromUnderstanding(understanding) {
   ]);
 }
 function buildMedia(bundle) {
-  const mediaJson = parseJson(bundle.sourceMedia?.mediaJson, {});
+  const mediaJson = parseJson2(bundle.sourceMedia?.mediaJson, {});
   return {
     ...mediaJson,
     taskId: bundle.task.id,
@@ -258018,23 +259054,84 @@ var init_structuralIrBuilder = __esm({
   }
 });
 
+// src/services/structuralReplica/dialogueTimingService.ts
+function countDialogueChars(text2) {
+  return [...text2.replace(/\s+/g, "")].length;
+}
+function estimateSpeechSec(text2) {
+  const charCount2 = countDialogueChars(text2);
+  if (!charCount2) return 0;
+  const asciiWordCount = (text2.match(/[A-Za-z0-9]+/g) || []).length;
+  const cjkCount = (text2.match(/[\u3400-\u9fff]/g) || []).length;
+  const mixedUnits = cjkCount + asciiWordCount * 1.6 + Math.max(0, charCount2 - cjkCount) * 0.4;
+  return Number((mixedUnits / 5.2).toFixed(2));
+}
+function evaluateDialogueTiming(text2, targetDurationSec) {
+  const finalText = text2.trim();
+  const charCount2 = countDialogueChars(finalText);
+  const estimatedSpeechSec = estimateSpeechSec(finalText);
+  const safeTarget = Math.max(0, Number(targetDurationSec) || 0);
+  if (!finalText) {
+    return {
+      charCount: charCount2,
+      estimatedSpeechSec,
+      targetDurationSec: safeTarget,
+      fitsDuration: true,
+      timingStrategy: "no_dialogue",
+      timingActions: ["mark_no_dialogue"],
+      warnings: ["empty_dialogue"]
+    };
+  }
+  const fitsDuration = !safeTarget || estimatedSpeechSec <= safeTarget * 1.08;
+  const timingActions = ["sync_subtitle_from_dialogue"];
+  let timingStrategy = "fit";
+  const warnings = [];
+  if (!fitsDuration) {
+    warnings.push(`dialogue_too_long:${estimatedSpeechSec}s>${safeTarget}s`);
+    if (estimatedSpeechSec > safeTarget * 1.8) {
+      timingStrategy = "split_shot";
+      timingActions.unshift("split_shot");
+    } else if (estimatedSpeechSec > safeTarget * 1.25) {
+      timingStrategy = "compress_dialogue";
+      timingActions.unshift("compress_dialogue");
+    } else {
+      timingStrategy = "extend_shot";
+      timingActions.unshift("extend_shot");
+    }
+  }
+  return { charCount: charCount2, estimatedSpeechSec, targetDurationSec: safeTarget, fitsDuration, timingStrategy, timingActions, warnings };
+}
+function compressDialogueText(text2, targetDurationSec) {
+  const trimmed = text2.trim().replace(/\s+/g, " ");
+  const maxChars = Math.max(4, Math.floor(targetDurationSec * 5.2));
+  if (countDialogueChars(trimmed) <= maxChars) return trimmed;
+  const chars = [...trimmed];
+  if (chars.length <= maxChars) return trimmed;
+  return chars.slice(0, Math.max(1, maxChars - 1)).join("").replace(/[，。,.!！?？、;；：:]$/, "") + "\u2026";
+}
+var init_dialogueTimingService = __esm({
+  "src/services/structuralReplica/dialogueTimingService.ts"() {
+    "use strict";
+  }
+});
+
 // src/services/structuralReplica/dialogueStructureService.ts
 function extractVariables(template) {
   const variables = {};
   for (const match of template.matchAll(/\{([^{}]+)\}/g)) {
-    const key = match[1].trim();
-    if (key) variables[key] = "";
+    const key2 = match[1].trim();
+    if (key2) variables[key2] = "";
   }
   return variables;
 }
 function fillTemplate(template, variables) {
-  return template.replace(/\{([^{}]+)\}/g, (_, key) => variables[key.trim()] ?? `{${key}}`);
+  return template.replace(/\{([^{}]+)\}/g, (_, key2) => variables[key2.trim()] ?? `{${key2}}`);
 }
 function countChars(text2) {
   return [...text2.replace(/\s+/g, "")].length;
 }
 function warningsForLine(text2, durationSec) {
-  const warnings = [];
+  const warnings = [...evaluateDialogueTiming(text2, durationSec || 0).warnings];
   if (!text2.trim()) warnings.push("empty_dialogue");
   if (durationSec && durationSec > 0) {
     const maxChars = Math.max(4, Math.floor(durationSec * 6));
@@ -258052,12 +259149,23 @@ function buildInitialDialogueStructure(ir) {
     status: "draft",
     lines: ir.shots.map((shot) => {
       const text2 = shot.editableDialogue || shot.sourceDialogue || "";
+      const timing = evaluateDialogueTiming(text2, shot.durationSec);
       return {
         shotId: shot.shotId,
+        dialogueMode: text2 ? "source" : "no_dialogue",
+        sourceDialogue: shot.sourceDialogue || "",
+        dialoguePattern: shot.dialoguePattern || text2,
+        editableDialogue: text2,
         editableTemplate: text2,
         variables: extractVariables(text2),
         finalDialogue: text2,
         subtitle: shot.subtitlePattern || text2,
+        charCount: timing.charCount,
+        estimatedSpeechSec: timing.estimatedSpeechSec,
+        targetDurationSec: timing.targetDurationSec,
+        fitsDuration: timing.fitsDuration,
+        timingStrategy: timing.timingStrategy,
+        timingActions: timing.timingActions,
         warnings: warningsForLine(text2, shot.durationSec)
       };
     })
@@ -258082,13 +259190,22 @@ async function updateDialogueStructure(taskId, patches) {
     };
     const finalDialogue = patch.finalDialogue ?? fillTemplate(editableTemplate, variables);
     const subtitle = patch.subtitle ?? existing.subtitle ?? finalDialogue;
+    const timing = evaluateDialogueTiming(finalDialogue, durationByShot.get(patch.shotId) || existing.targetDurationSec || 0);
     lineByShot.set(patch.shotId, {
       ...existing,
+      dialogueMode: "user_edited",
+      editableDialogue: finalDialogue,
       editableTemplate,
       variables,
       finalDialogue,
       subtitle,
       cta: patch.cta ?? existing.cta,
+      charCount: timing.charCount,
+      estimatedSpeechSec: timing.estimatedSpeechSec,
+      targetDurationSec: timing.targetDurationSec,
+      fitsDuration: timing.fitsDuration,
+      timingStrategy: timing.timingStrategy,
+      timingActions: timing.timingActions,
       warnings: warningsForLine(`${finalDialogue} ${subtitle || ""}`, durationByShot.get(patch.shotId))
     });
   }
@@ -258098,6 +259215,7 @@ async function updateDialogueStructure(taskId, patches) {
     status: "reviewed",
     lines: current.lines.map((line2) => lineByShot.get(line2.shotId) || line2)
   });
+  await clearDerivedArtifactsFromDialogue(taskId);
   await saveDialogueStructure(taskId, next);
   return next;
 }
@@ -258107,6 +259225,7 @@ var init_dialogueStructureService = __esm({
     "use strict";
     init_repository();
     init_schemas3();
+    init_dialogueTimingService();
     RISK_PATTERNS = [
       { code: "source_person_risk", pattern: /原(人物|人脸)|本人|店员|老板娘|主播本人/ },
       { code: "source_brand_risk", pattern: /原(品牌|logo|LOGO)|品牌名|商标/ },
@@ -258128,6 +259247,7 @@ var init_buildIr = __esm({
     init_structuralIrBuilder();
     init_dialogueStructureService();
     init_repository();
+    init_jobService();
     init_schemas3();
     router167 = import_express167.default.Router();
     buildIr_default = router167.post(
@@ -258149,22 +259269,218 @@ var init_buildIr = __esm({
           if (shotCount > 0 && bundle.frameUnderstanding.length < shotCount) {
             return res.status(400).send(error50(`frame understanding is incomplete: ${bundle.frameUnderstanding.length}/${shotCount}. Wait for vision understanding to finish.`));
           }
-          await clearDerivedArtifactsFromStoryIr(taskId);
-          const ir = await buildStructuralIr(taskId);
-          const dialogueStructure = buildInitialDialogueStructure(ir);
-          const storyIrRow = await saveStoryIr(taskId, ir);
-          const dialogueRow = await saveDialogueStructure(taskId, dialogueStructure);
-          const updatedTask = task.status === "ir_built" ? task : await updateTaskStatus(taskId, "ir_built");
+          const job = await createSrJob({ taskId, jobType: "buildIr", input: { taskId }, stage: "queued" });
+          const result = await runSrJob(
+            Number(job.id),
+            async (report) => {
+              await report({ progress: 10, stage: "clearing_derived_artifacts" });
+              await clearDerivedArtifactsFromStoryIr(taskId);
+              await report({ progress: 35, stage: "building_ir" });
+              const ir = await buildStructuralIr(taskId);
+              const dialogueStructure = buildInitialDialogueStructure(ir);
+              await report({ progress: 75, stage: "saving_ir" });
+              const storyIrRow = await saveStoryIr(taskId, ir);
+              const dialogueRow = await saveDialogueStructure(taskId, dialogueStructure);
+              const updatedTask = task.status === "ir_built" ? task : await updateTaskStatus(taskId, "ir_built");
+              return {
+                taskId,
+                status: updatedTask.status,
+                shotCount: ir.shots.length,
+                storyIrId: storyIrRow.id,
+                dialogueStructureId: dialogueRow.id,
+                dialogueVersion: dialogueStructure.version
+              };
+            },
+            "building_ir"
+          );
+          const finishedJob = await getSrJob(Number(job.id));
           res.status(200).send(
             success3({
-              taskId,
-              status: updatedTask.status,
-              shotCount: ir.shots.length,
-              storyIrId: storyIrRow.id,
-              dialogueStructureId: dialogueRow.id,
-              dialogueVersion: dialogueStructure.version
+              ...result,
+              job: serializeSrJob(finishedJob)
             })
           );
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/services/structuralReplica/adaptationLevelPolicy.ts
+function key(slotType, slotName) {
+  return `${slotType}:${slotName}`.toLowerCase();
+}
+function isCoreSlot(slot) {
+  const normalized = normalizeAssetSlot(slot);
+  if (!normalized) return false;
+  if (normalized.type === "role" || normalized.type === "product") return true;
+  return normalized.type === "scene" && /主场景|primary|storefront|门店|门头|外景/i.test(normalized.slot);
+}
+function downgradeForSlot(slot) {
+  const label = `${slot.type}:${slot.slot}`;
+  if (slot.type === "role") return `missing_required_role:${label}`;
+  if (slot.type === "product") return `missing_core_product:${label}`;
+  if (slot.type === "scene") return `missing_scene_rewrite_to_indoor:${label}`;
+  return `missing_optional_visual_rewrite:${label}`;
+}
+function evaluateAdaptationLevel(input) {
+  const normalizedSlots = input.shot.requiredAssetSlots.map((slot) => normalizeAssetSlot(slot)).filter((slot) => Boolean(slot));
+  const requiredSlots = normalizedSlots.filter(
+    (slot) => slot.required && (isUserRequiredAssetSlot(slot) || slot.type === "scene" || slot.type === "product")
+  );
+  const bindingByKey = /* @__PURE__ */ new Map();
+  for (const binding of input.bindings) {
+    if (binding.shotId !== input.shot.shotId || binding.bindingStatus !== "bound" || !binding.assetId) continue;
+    const normalized = normalizeBindingSlot({ slotName: binding.slotName, slotType: binding.slotType });
+    if (normalized) bindingByKey.set(key(normalized.type, normalized.slot), binding);
+  }
+  const matchedAssets = {};
+  const missingRequired = [];
+  for (const slot of requiredSlots) {
+    const binding = bindingByKey.get(key(slot.type, slot.slot));
+    const slotKey = `${slot.type}:${slot.slot}`;
+    if (binding?.assetId) {
+      matchedAssets[slotKey] = { assetId: binding.assetId, score: 1 };
+    } else {
+      matchedAssets[slotKey] = { assetId: null, score: 0, reason: "missing_binding" };
+      missingRequired.push(slot);
+    }
+  }
+  const coreMissing = missingRequired.filter(isCoreSlot);
+  const assetMatchScore = requiredSlots.length ? Number(((requiredSlots.length - missingRequired.length) / requiredSlots.length).toFixed(2)) : 1;
+  const downgradeReasons = missingRequired.map(downgradeForSlot);
+  const blockedReasons = coreMissing.filter((slot) => slot.type === "role" || slot.type === "product").map(downgradeForSlot);
+  if (blockedReasons.length) {
+    return {
+      adaptationLevel: "D",
+      adaptationStrategy: "blocked_missing_assets",
+      assetMatchScore,
+      requiredSlots: requiredSlots.map((slot) => `${slot.type}:${slot.slot}`),
+      matchedAssets,
+      blockedReasons,
+      downgradeReasons
+    };
+  }
+  if (missingRequired.length) {
+    return {
+      adaptationLevel: "C",
+      adaptationStrategy: "rewrite_to_available_scene",
+      assetMatchScore,
+      requiredSlots: requiredSlots.map((slot) => `${slot.type}:${slot.slot}`),
+      matchedAssets,
+      blockedReasons: [],
+      downgradeReasons
+    };
+  }
+  const optionalMissingCount = normalizedSlots.filter((slot) => !slot.required && !bindingByKey.has(key(slot.type, slot.slot))).length;
+  if (optionalMissingCount > 0 || /环绕|复杂|快速|whip|orbit/i.test(input.shot.cameraMotion || "")) {
+    return {
+      adaptationLevel: "B",
+      adaptationStrategy: "use_user_assets_first",
+      assetMatchScore,
+      requiredSlots: requiredSlots.map((slot) => `${slot.type}:${slot.slot}`),
+      matchedAssets,
+      blockedReasons: [],
+      downgradeReasons: optionalMissingCount ? [`optional_slots_missing:${optionalMissingCount}`] : ["complex_camera_motion_simplified"]
+    };
+  }
+  return {
+    adaptationLevel: "A",
+    adaptationStrategy: "use_reference_and_assets",
+    assetMatchScore,
+    requiredSlots: requiredSlots.map((slot) => `${slot.type}:${slot.slot}`),
+    matchedAssets,
+    blockedReasons: [],
+    downgradeReasons: []
+  };
+}
+var init_adaptationLevelPolicy = __esm({
+  "src/services/structuralReplica/adaptationLevelPolicy.ts"() {
+    "use strict";
+    init_assetSlotNormalizer();
+    init_assetRequirementPolicy();
+  }
+});
+
+// src/services/structuralReplica/shotAdaptationService.ts
+function buildAdaptedVisual(shot, level, reasons) {
+  const base = [shot.reusableStructure, shot.shotPurpose, shot.shotSize, shot.cameraAngle].filter(Boolean).join("\uFF1B") || "\u4FDD\u7559\u955C\u5934\u76EE\u7684\u548C\u8282\u594F";
+  if (level === "D") return `${base}\u3002\u8BE5\u955C\u5934\u7F3A\u5C11\u6838\u5FC3\u8D44\u4EA7\uFF0C\u6682\u4E0D\u751F\u6210\uFF0C\u8BF7\u5148\u8865\u9F50\uFF1A${reasons.join("\uFF1B")}`;
+  if (level === "C") return `${base}\u3002\u4E0D\u4F7F\u7528\u53C2\u8003\u89C6\u9891\u753B\u9762\uFF0C\u6539\u5199\u4E3A\u53EF\u7528\u8D44\u4EA7\u9A71\u52A8\u7684\u5BA4\u5185\u67DC\u53F0/\u4EA7\u54C1\u5C55\u793A/\u9759\u6001\u53E3\u64AD\u65B9\u6848\u3002`;
+  if (level === "B") return `${base}\u3002\u4F18\u5148\u4F7F\u7528\u7528\u6237\u8D44\u4EA7\uFF0C\u5F31\u5316\u53C2\u8003\u753B\u9762\uFF0C\u590D\u6742\u8FD0\u955C\u964D\u7EA7\u4E3A\u56FA\u5B9A\u955C\u5934\u6216\u8F7B\u5FAE\u63A8\u62C9\u3002`;
+  return `${base}\u3002\u4F7F\u7528\u53C2\u8003\u955C\u5934\u7ED3\u6784\u3001\u7528\u6237\u7ED1\u5B9A\u8D44\u4EA7\u548C\u539F\u8282\u594F\u751F\u6210\u3002`;
+}
+async function buildShotAdaptations(taskId) {
+  const bundle = await getTaskBundle(taskId);
+  if (!bundle.storyIr?.dataJson) throw new Error("story IR not found");
+  const ir = StructuralIrSchema.parse(JSON.parse(bundle.storyIr.dataJson));
+  const bindings = bundle.bindings.map(
+    (binding) => AssetBindingSchema.parse({
+      taskId,
+      shotId: binding.shotId,
+      slotName: binding.slotName,
+      slotType: binding.slotType,
+      assetId: binding.assetId ?? null,
+      bindingStatus: binding.bindingStatus || "missing",
+      note: binding.note ?? null
+    })
+  );
+  const adaptations = ir.shots.filter((shot) => shot.enabled).map((shot) => {
+    const policy = evaluateAdaptationLevel({ shot, bindings });
+    return ShotAdaptationSchema.parse({
+      taskId,
+      shotId: shot.shotId,
+      ...policy,
+      adaptedVisual: buildAdaptedVisual(shot, policy.adaptationLevel, [...policy.blockedReasons, ...policy.downgradeReasons])
+    });
+  });
+  await saveShotAdaptations(taskId, adaptations);
+  return adaptations;
+}
+var init_shotAdaptationService = __esm({
+  "src/services/structuralReplica/shotAdaptationService.ts"() {
+    "use strict";
+    init_repository();
+    init_schemas3();
+    init_adaptationLevelPolicy();
+  }
+});
+
+// src/routes/structuralReplica/buildShotAdaptations.ts
+var import_express168, router168, buildShotAdaptations_default;
+var init_buildShotAdaptations = __esm({
+  "src/routes/structuralReplica/buildShotAdaptations.ts"() {
+    "use strict";
+    import_express168 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_shotAdaptationService();
+    init_jobService();
+    router168 = import_express168.default.Router();
+    buildShotAdaptations_default = router168.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive()
+      }),
+      async (req, res) => {
+        const { taskId } = req.body;
+        try {
+          const job = await createSrJob({ taskId, jobType: "shotAdaptation", input: { taskId } });
+          const adaptations = await runSrJob(
+            Number(job.id),
+            async (report) => {
+              await report({ progress: 20, stage: "evaluating_asset_match" });
+              const result = await buildShotAdaptations(taskId);
+              await report({ progress: 90, stage: "saving_adaptations" });
+              return { taskId, count: result.length, blocked: result.filter((item) => item.adaptationLevel === "D").length };
+            },
+            "building_shot_adaptations"
+          );
+          const finishedJob = await getSrJob(Number(job.id));
+          res.status(200).send(success3({ ...adaptations, job: serializeSrJob(finishedJob) }));
         } catch (e) {
           res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
         }
@@ -258196,7 +259512,7 @@ function markdown(issues) {
   if (!issues.length) return "# Structural Replica Consistency Report\n\nNo issues.";
   return ["# Structural Replica Consistency Report", "", ...issues.map((issue3) => `- [${issue3.level}] ${issue3.code}${issue3.shotId ? ` (${issue3.shotId})` : ""}: ${issue3.message}`)].join("\n");
 }
-function parseJson2(raw) {
+function parseJson3(raw) {
   if (!raw) return void 0;
   return JSON.parse(raw);
 }
@@ -258287,8 +259603,8 @@ async function checkConsistency(taskId) {
   const dialogue = DialogueStructureSchema.parse(JSON.parse(bundle.dialogueStructure.dataJson));
   const storyboard = RegeneratedStoryboardSchema.parse(JSON.parse(bundle.regeneratedStoryboard.dataJson));
   const promptPackage = storyboard.promptPackage ? PromptPackageSchema.parse(storyboard.promptPackage) : null;
-  const transcript = bundle.transcript?.dataJson ? TranscriptSchema.parse(parseJson2(bundle.transcript.dataJson)) : null;
-  const shotDetection = bundle.shotDetection?.dataJson ? ShotDetectionSchema.parse(parseJson2(bundle.shotDetection.dataJson)) : null;
+  const transcript = bundle.transcript?.dataJson ? TranscriptSchema.parse(parseJson3(bundle.transcript.dataJson)) : null;
+  const shotDetection = bundle.shotDetection?.dataJson ? ShotDetectionSchema.parse(parseJson3(bundle.shotDetection.dataJson)) : null;
   const frameUnderstandings = parseFrameUnderstandingRows(bundle.frameUnderstanding);
   const dialogueByShot = new Map(dialogue.lines.map((line2) => [line2.shotId, line2]));
   const rowByShot = new Map(storyboard.rows.map((row) => [row.shotId, row]));
@@ -258407,23 +259723,24 @@ var init_consistencyGuard = __esm({
     init_videoDescRenderer();
     init_assetRequirementPolicy();
     RISK_PATTERN = /原(视频|人物|人脸|脸|品牌|门店|店招|账号)|水印|logo|LOGO|商标|账号名|抖音号|小红书号/;
-    SAFETY_INSTRUCTION_PATTERN = /禁止|不要出现|不得出现|避免出现|不能出现|不包含|必须替换|替换所有|替换原(视频|人物|人脸|脸|品牌|门店|店招|账号)|移除|去除|must not include|do not include|do not copy|replace all|remove/iu;
+    SAFETY_INSTRUCTION_PATTERN = /禁止|不要出现|不得出现|避免出现|避免使用|不能出现|不包含|必须替换|替换所有|替换原(视频|人物|人脸|脸|品牌|门店|店招|账号)|移除|去除|需更换|更换为|替代演员|替换演员|不复刻|不保留|无品牌标识|无商标|must not include|do not include|do not copy|replace all|remove/iu;
   }
 });
 
 // src/routes/structuralReplica/checkConsistency.ts
-var import_express168, router168, checkConsistency_default;
+var import_express169, router169, checkConsistency_default;
 var init_checkConsistency = __esm({
   "src/routes/structuralReplica/checkConsistency.ts"() {
     "use strict";
-    import_express168 = __toESM(require_express2());
+    import_express169 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_middleware();
     init_consistencyGuard();
     init_repository();
-    router168 = import_express168.default.Router();
-    checkConsistency_default = router168.post(
+    init_jobService();
+    router169 = import_express169.default.Router();
+    checkConsistency_default = router169.post(
       "/",
       validateFields({
         taskId: external_exports.number().int().positive()
@@ -258435,16 +259752,30 @@ var init_checkConsistency = __esm({
           if (task.status !== "storyboard_generated" && task.status !== "checked") {
             return res.status(400).send(error50(`task status must be storyboard_generated or checked, got ${task.status}`));
           }
-          const report = await checkConsistency(taskId);
-          const updatedTask = task.status === "storyboard_generated" ? await updateTaskStatus(taskId, "checked") : task;
+          const job = await createSrJob({ taskId, jobType: "checkConsistency", input: { taskId }, stage: "queued" });
+          const result = await runSrJob(
+            Number(job.id),
+            async (jobReport) => {
+              await jobReport({ progress: 30, stage: "checking_consistency" });
+              const report = await checkConsistency(taskId);
+              await jobReport({ progress: 80, stage: "updating_task_status" });
+              const updatedTask = task.status === "storyboard_generated" ? await updateTaskStatus(taskId, "checked") : task;
+              return {
+                taskId,
+                status: updatedTask.status,
+                reportStatus: report.status,
+                blockerCount: report.issues.filter((issue3) => issue3.level === "blocker").length,
+                warningCount: report.issues.filter((issue3) => issue3.level === "warning").length,
+                issues: report.issues
+              };
+            },
+            "checking_consistency"
+          );
+          const finishedJob = await getSrJob(Number(job.id));
           res.status(200).send(
             success3({
-              taskId,
-              status: updatedTask.status,
-              reportStatus: report.status,
-              blockerCount: report.issues.filter((issue3) => issue3.level === "blocker").length,
-              warningCount: report.issues.filter((issue3) => issue3.level === "warning").length,
-              issues: report.issues
+              ...result,
+              job: serializeSrJob(finishedJob)
             })
           );
         } catch (e) {
@@ -258455,20 +259786,477 @@ var init_checkConsistency = __esm({
   }
 });
 
+// src/services/structuralReplica/environmentCheckService.ts
+function settingValue(settings, key2, fallback) {
+  return settings[key2]?.trim() || fallback;
+}
+async function loadSrSettings() {
+  const rows = await utils_default.db("o_setting").whereLike("key", "sr.%").select("key", "value");
+  return Object.fromEntries(rows.map((row) => [String(row.key), String(row.value ?? "")]));
+}
+function runCommand(command, args, options = {}) {
+  const label = [command, ...args].join(" ");
+  return new Promise((resolve3) => {
+    const child = (0, import_node_child_process.spawn)(command, args, {
+      cwd: options.cwd,
+      env: options.env,
+      shell: process.platform === "win32",
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    let output = "";
+    const timer = setTimeout(() => {
+      child.kill();
+      resolve3({ name: command, status: "error", detail: `${label} timed out`, required: true });
+    }, options.timeoutMs ?? 1e4);
+    child.stdout.on("data", (data) => {
+      output += String(data);
+    });
+    child.stderr.on("data", (data) => {
+      output += String(data);
+    });
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      resolve3({ name: command, status: "error", detail: err.message, required: true });
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      const firstLine = output.trim().split(/\r?\n/).find(Boolean) || `${label} exited with ${code}`;
+      resolve3({ name: command, status: code === 0 ? "ok" : "error", detail: firstLine, required: true });
+    });
+  });
+}
+async function checkWritable(name28, target) {
+  try {
+    await import_promises13.default.mkdir(target, { recursive: true });
+    const testFile = import_node_path6.default.join(target, `.sr-write-${Date.now()}.tmp`);
+    await import_promises13.default.writeFile(testFile, "ok");
+    await import_promises13.default.unlink(testFile);
+    return { name: name28, status: "ok", detail: target, required: true };
+  } catch (err) {
+    return { name: name28, status: "error", detail: err instanceof Error ? err.message : String(err), required: true };
+  }
+}
+async function checkStructuralReplicaEnvironment() {
+  const settings = await loadSrSettings();
+  const pythonPath = settingValue(settings, "sr.pythonPath", "python");
+  const ffmpegPath = settingValue(settings, "sr.ffmpegPath", "ffmpeg");
+  const ffprobePath = settingValue(settings, "sr.ffprobePath", "ffprobe");
+  const analyzerPath = import_node_path6.default.resolve(process.cwd(), "tools", "video-analyzer");
+  const analyzerEnv = {
+    ...process.env,
+    PYTHONPATH: [analyzerPath, process.env.PYTHONPATH].filter(Boolean).join(import_node_path6.default.delimiter)
+  };
+  const [ffmpeg, ffprobe, python, analyzer, whisper, ossWritable, tmpWritable] = await Promise.all([
+    runCommand(ffmpegPath, ["-version"]),
+    runCommand(ffprobePath, ["-version"]),
+    runCommand(pythonPath, ["--version"]),
+    runCommand(pythonPath, ["-c", "import sr_analyzer; print('sr_analyzer ok')"], { cwd: analyzerPath, env: analyzerEnv }),
+    runCommand(pythonPath, ["-c", "import whisper; print('whisper ok')"], { cwd: analyzerPath, env: analyzerEnv }).then((item) => ({
+      ...item,
+      required: false,
+      status: item.status === "ok" ? "ok" : "warning"
+    })),
+    checkWritable("data/oss writable", utils_default.getPath("oss")),
+    checkWritable("data/tmp writable", utils_default.getPath("tmp"))
+  ]);
+  const checks = [
+    { ...ffmpeg, name: "ffmpeg" },
+    { ...ffprobe, name: "ffprobe" },
+    { ...python, name: "python" },
+    { ...analyzer, name: "sr_analyzer import" },
+    { ...whisper, name: "whisper availability" },
+    ossWritable,
+    tmpWritable
+  ];
+  const ok = checks.every((item) => item.status !== "error" || !item.required);
+  return { ok, checks, settings: { pythonPath, ffmpegPath, ffprobePath, whisperModel: settings["sr.whisperModel"] || "turbo" } };
+}
+var import_promises13, import_node_path6, import_node_child_process;
+var init_environmentCheckService = __esm({
+  "src/services/structuralReplica/environmentCheckService.ts"() {
+    "use strict";
+    import_promises13 = __toESM(require("node:fs/promises"));
+    import_node_path6 = __toESM(require("node:path"));
+    import_node_child_process = require("node:child_process");
+    init_utils3();
+  }
+});
+
+// src/routes/structuralReplica/checkEnvironment.ts
+var import_express170, router170, checkEnvironment_default;
+var init_checkEnvironment = __esm({
+  "src/routes/structuralReplica/checkEnvironment.ts"() {
+    "use strict";
+    import_express170 = __toESM(require_express2());
+    init_responseFormat();
+    init_environmentCheckService();
+    router170 = import_express170.default.Router();
+    checkEnvironment_default = router170.post("/", async (_, res) => {
+      try {
+        res.status(200).send(success3(await checkStructuralReplicaEnvironment()));
+      } catch (e) {
+        res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+      }
+    });
+  }
+});
+
+// src/services/structuralReplica/visionProbeService.ts
+async function loadSettings() {
+  const rows = await utils_default.db("o_setting").whereLike("key", "sr.%").select("key", "value");
+  return Object.fromEntries(rows.map((row) => [String(row.key), String(row.value ?? "")]));
+}
+function normalizeBaseUrl(baseUrl) {
+  return baseUrl.trim().replace(/\/+$/, "");
+}
+function maskKey(apiKey) {
+  if (!apiKey) return "";
+  if (apiKey.length <= 8) return "***";
+  return `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}`;
+}
+async function probeOpenAICompatible(input) {
+  const startedAt = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), input.timeoutMs);
+  try {
+    const response = await fetch(`${normalizeBaseUrl(input.baseUrl)}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${input.apiKey.replace(/^Bearer\s+/i, "")}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: input.model,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: 'Return JSON: {"ok":true}' },
+              {
+                type: "image_url",
+                image_url: {
+                  url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 16
+      }),
+      signal: controller.signal
+    });
+    const text2 = await response.text();
+    const latencyMs = Date.now() - startedAt;
+    let parsed = text2;
+    try {
+      parsed = JSON.parse(text2);
+    } catch {
+    }
+    if (!response.ok) {
+      return { ok: false, status: "unavailable", latencyMs, reason: `HTTP ${response.status}: ${text2.slice(0, 300)}`, response: parsed };
+    }
+    return { ok: true, status: "available", latencyMs, reason: "vision provider accepted image input", response: parsed };
+  } catch (err) {
+    return { ok: false, status: "unavailable", latencyMs: Date.now() - startedAt, reason: err instanceof Error ? err.message : String(err) };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+async function checkVisionProvider(input = {}) {
+  const settings = await loadSettings();
+  const providerId = input.providerId || settings["sr.visionProvider"] || "worldclawpro";
+  const baseUrl = input.baseUrl || settings["sr.visionBaseUrl"] || "";
+  const model = input.model || settings["sr.visionModel"] || "";
+  const timeoutMs = input.timeoutMs || Number(settings["sr.visionRequestTimeoutMs"] || 3e4);
+  let apiKey = input.apiKey || "";
+  apiKey ||= await getDecryptedSetting("sr.visionApiKey");
+  if (!apiKey) {
+    const vendor = await utils_default.db("o_vendorConfig").where("id", providerId).first();
+    const values = vendor?.inputValues ? JSON.parse(vendor.inputValues) : {};
+    apiKey = values.apiKey || "";
+  }
+  const config3 = {
+    providerId,
+    baseUrl,
+    model,
+    hasApiKey: Boolean(apiKey),
+    apiKeyPreview: maskKey(apiKey),
+    timeoutMs
+  };
+  if (!baseUrl) return { ok: false, status: "unavailable", reason: "vision baseUrl is missing", config: config3 };
+  if (!model) return { ok: false, status: "unavailable", reason: "vision model is missing", config: config3 };
+  if (!apiKey) return { ok: false, status: "unavailable", reason: "vision apiKey is missing", config: config3 };
+  const result = await probeOpenAICompatible({ baseUrl, apiKey, model, timeoutMs });
+  return { ...result, config: config3 };
+}
+var init_visionProbeService = __esm({
+  "src/services/structuralReplica/visionProbeService.ts"() {
+    "use strict";
+    init_utils3();
+    init_securityService();
+  }
+});
+
+// src/routes/structuralReplica/checkVisionProvider.ts
+var import_express171, router171, checkVisionProvider_default;
+var init_checkVisionProvider = __esm({
+  "src/routes/structuralReplica/checkVisionProvider.ts"() {
+    "use strict";
+    import_express171 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_visionProbeService();
+    router171 = import_express171.default.Router();
+    checkVisionProvider_default = router171.post(
+      "/",
+      validateFields({
+        providerId: external_exports.string().optional(),
+        baseUrl: external_exports.string().optional(),
+        apiKey: external_exports.string().optional(),
+        model: external_exports.string().optional(),
+        timeoutMs: external_exports.number().int().positive().optional()
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3(await checkVisionProvider(req.body)));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/services/structuralReplica/cleanupService.ts
+async function safeRm(filePath, allowedRoot, dryRun, removedFiles) {
+  const absolute = import_node_path7.default.resolve(filePath);
+  if (!isPathInside(absolute, allowedRoot) && absolute !== allowedRoot) throw new Error(`cleanup path outside data root: ${filePath}`);
+  try {
+    const stat = await import_promises14.default.stat(absolute);
+    if (!stat.isFile()) return;
+    removedFiles.push(absolute);
+    if (!dryRun) await import_promises14.default.rm(absolute, { force: true });
+  } catch {
+    return;
+  }
+}
+function parseJson4(data, fallback) {
+  if (!data) return fallback;
+  try {
+    return JSON.parse(data);
+  } catch {
+    return fallback;
+  }
+}
+async function safeRmOssRelPath(relPath, dataRoot, dryRun, removedFiles) {
+  if (!relPath) return;
+  const normalized = String(relPath).replace(/^[/\\]+/, "");
+  await safeRm(utils_default.getPath(["oss", ...normalized.split(/[\\/]+/)]), dataRoot, dryRun, removedFiles);
+}
+async function cleanupStructuralReplicaArtifacts(options = {}) {
+  const dryRun = options.dryRun !== false;
+  const now2 = options.now ?? Date.now();
+  const olderThanMs = options.olderThanMs ?? 14 * 24 * 60 * 60 * 1e3;
+  const dataRoot = utils_default.getPath();
+  const removedFiles = [];
+  const expiredExports = await utils_default.db("o_sr_timeline_export").where("expiresAt", "<", now2).whereNot("status", "expired").select("*");
+  for (const exp of expiredExports) {
+    await safeRmOssRelPath(exp.outputPath, dataRoot, dryRun, removedFiles);
+    const report = parseJson4(exp.reportJson, {});
+    await safeRmOssRelPath(report.subtitlePath, dataRoot, dryRun, removedFiles);
+  }
+  if (!dryRun && expiredExports.length) {
+    await utils_default.db("o_sr_timeline_export").whereIn(
+      "id",
+      expiredExports.map((item) => item.id)
+    ).update({ status: "expired", updatedAt: now2 });
+  }
+  const staleFailedCandidates = await utils_default.db("o_sr_generation_candidate").where("status", "failed").andWhere("updatedAt", "<", now2 - olderThanMs).select("*");
+  for (const candidate of staleFailedCandidates) {
+    await safeRmOssRelPath(candidate.videoPath, dataRoot, dryRun, removedFiles);
+  }
+  const oldJobs = await utils_default.db("o_sr_generation_job").whereIn("status", ["succeeded", "failed"]).andWhere("finishedAt", "<", now2 - olderThanMs).select("id");
+  if (!dryRun && oldJobs.length) {
+    await import_promises14.default.mkdir(utils_default.getPath(["tmp", "structuralReplica", "archive"]), { recursive: true });
+    await import_promises14.default.writeFile(
+      utils_default.getPath(["tmp", "structuralReplica", "archive", `generation-jobs-${now2}.json`]),
+      JSON.stringify(oldJobs, null, 2),
+      "utf8"
+    );
+  }
+  return { dryRun, removedFiles, archivedJobs: oldJobs.length, expiredExports: expiredExports.length };
+}
+var import_promises14, import_node_path7;
+var init_cleanupService = __esm({
+  "src/services/structuralReplica/cleanupService.ts"() {
+    "use strict";
+    import_promises14 = __toESM(require("node:fs/promises"));
+    import_node_path7 = __toESM(require("node:path"));
+    init_is_path_inside();
+    init_utils3();
+  }
+});
+
+// src/routes/structuralReplica/cleanup/run.ts
+var import_express172, router172, run_default;
+var init_run = __esm({
+  "src/routes/structuralReplica/cleanup/run.ts"() {
+    "use strict";
+    import_express172 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_cleanupService();
+    router172 = import_express172.default.Router();
+    run_default = router172.post(
+      "/",
+      validateFields({
+        dryRun: external_exports.boolean().optional(),
+        olderThanMs: external_exports.number().int().positive().optional()
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3({ cleanup: await cleanupStructuralReplicaArtifacts(req.body) }));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/services/structuralReplica/complianceService.ts
+async function checkTaskCompliance(taskId) {
+  const bundle = await getTaskBundle(taskId);
+  const issues = [];
+  const assetIds = new Set(bundle.bindings.map((binding) => binding.assetId).filter((id) => typeof id === "number"));
+  if (assetIds.size) {
+    const assets = await utils_default.db("o_assets").whereIn("id", [...assetIds]).select("*");
+    for (const asset of assets) {
+      if (!asset.licenseType || !asset.sourceOwner) {
+        issues.push({
+          code: "asset_license_missing",
+          level: "warning",
+          message: "\u6838\u5FC3\u8D44\u4EA7\u7F3A\u5C11\u6388\u6743\u7C7B\u578B\u6216\u6765\u6E90\u6240\u6709\u8005\u3002",
+          assetId: Number(asset.id)
+        });
+      }
+      if (asset.commercialAllowed === 0) {
+        issues.push({
+          code: "asset_not_commercial_allowed",
+          level: "blocker",
+          message: "\u6838\u5FC3\u8D44\u4EA7\u672A\u6388\u6743\u5546\u4E1A\u4F7F\u7528\u3002",
+          assetId: Number(asset.id)
+        });
+      }
+    }
+  }
+  if (bundle.storyIr?.dataJson && hasSourceEntityRisk(bundle.storyIr.dataJson)) {
+    issues.push({
+      code: "source_entity_leakage_risk",
+      level: "blocker",
+      message: "\u6E90\u89C6\u9891\u4EBA\u7269\u3001\u54C1\u724C\u3001\u95E8\u5E97\u6216\u6C34\u5370\u5B58\u5728\u6CC4\u6F0F\u98CE\u9669\u3002"
+    });
+  }
+  const status = issues.some((issue3) => issue3.level === "blocker") ? "blocked" : issues.length ? "warning" : "pass";
+  await utils_default.db("o_sr_task").where("id", taskId).update({
+    complianceStatus: status,
+    updatedAt: Date.now()
+  });
+  return ComplianceReportSchema.parse({ taskId, status, issues });
+}
+async function updateAssetLicense(input) {
+  await utils_default.db("o_assets").where("id", input.assetId).update({
+    licenseType: input.licenseType ?? null,
+    licenseNote: input.licenseNote ?? null,
+    sourceOwner: input.sourceOwner ?? null,
+    commercialAllowed: input.commercialAllowed === void 0 || input.commercialAllowed === null ? null : input.commercialAllowed ? 1 : 0
+  });
+  return await utils_default.db("o_assets").where("id", input.assetId).first();
+}
+var init_complianceService = __esm({
+  "src/services/structuralReplica/complianceService.ts"() {
+    "use strict";
+    init_utils3();
+    init_schemas3();
+    init_consistencyGuard();
+    init_repository();
+  }
+});
+
+// src/routes/structuralReplica/compliance/checkTaskCompliance.ts
+var import_express173, router173, checkTaskCompliance_default;
+var init_checkTaskCompliance = __esm({
+  "src/routes/structuralReplica/compliance/checkTaskCompliance.ts"() {
+    "use strict";
+    import_express173 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_complianceService();
+    router173 = import_express173.default.Router();
+    checkTaskCompliance_default = router173.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive()
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3({ compliance: await checkTaskCompliance(req.body.taskId) }));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/routes/structuralReplica/compliance/updateAssetLicense.ts
+var import_express174, router174, updateAssetLicense_default;
+var init_updateAssetLicense = __esm({
+  "src/routes/structuralReplica/compliance/updateAssetLicense.ts"() {
+    "use strict";
+    import_express174 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_complianceService();
+    router174 = import_express174.default.Router();
+    updateAssetLicense_default = router174.post(
+      "/",
+      validateFields({
+        assetId: external_exports.number().int().positive(),
+        licenseType: external_exports.string().optional().nullable(),
+        licenseNote: external_exports.string().optional().nullable(),
+        sourceOwner: external_exports.string().optional().nullable(),
+        commercialAllowed: external_exports.boolean().optional().nullable()
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3({ asset: await updateAssetLicense(req.body) }));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
 // src/routes/structuralReplica/createTask.ts
-var import_express169, router169, createTask_default;
+var import_express175, router175, createTask_default;
 var init_createTask = __esm({
   "src/routes/structuralReplica/createTask.ts"() {
     "use strict";
-    import_express169 = __toESM(require_express2());
+    import_express175 = __toESM(require_express2());
     init_utils3();
     init_zod();
     init_responseFormat();
     init_middleware();
     init_repository();
     init_schemas3();
-    router169 = import_express169.default.Router();
-    createTask_default = router169.post(
+    router175 = import_express175.default.Router();
+    createTask_default = router175.post(
       "/",
       validateFields({
         projectId: external_exports.number().int().positive(),
@@ -258477,14 +260265,14 @@ var init_createTask = __esm({
         aspectRatio: SrAspectRatioSchema.default("9:16")
       }),
       async (req, res) => {
-        const { projectId, name: name28, platform = "other", aspectRatio = "9:16" } = req.body;
+        const { projectId, name: name28, platform = "other", aspectRatio: aspectRatio2 = "9:16" } = req.body;
         const project = await utils_default.db("o_project").where("id", projectId).first();
         if (!project) return res.status(400).send(error50("\u9879\u76EE\u4E0D\u5B58\u5728"));
         const task = await createTask({
           projectId,
           name: name28,
           platform,
-          aspectRatio
+          aspectRatio: aspectRatio2
         });
         res.status(200).send(success3({ taskId: task.id, status: task.status }));
       }
@@ -258492,18 +260280,687 @@ var init_createTask = __esm({
   }
 });
 
+// src/services/structuralReplica/dialogueActionService.ts
+function splitText(text2) {
+  const chars = [...text2.trim()];
+  if (chars.length <= 1) return [text2.trim(), ""];
+  const midpoint = Math.ceil(chars.length / 2);
+  const punctuationIndex = chars.findIndex((char, index) => index >= midpoint - 4 && index <= midpoint + 6 && /[，。,.!！?？、;；]/.test(char));
+  const splitAt = punctuationIndex > 0 ? punctuationIndex + 1 : midpoint;
+  return [chars.slice(0, splitAt).join("").trim(), chars.slice(splitAt).join("").trim()];
+}
+function nextSplitShotId(ir, shotId) {
+  let index = 2;
+  let candidate = `${shotId}_b`;
+  const existing = new Set(ir.shots.map((shot) => shot.shotId));
+  while (existing.has(candidate)) {
+    candidate = `${shotId}_b${index}`;
+    index += 1;
+  }
+  return candidate;
+}
+function applyTiming(line2, targetDurationSec) {
+  const timing = evaluateDialogueTiming(line2.finalDialogue, targetDurationSec);
+  return {
+    ...line2,
+    charCount: timing.charCount,
+    estimatedSpeechSec: timing.estimatedSpeechSec,
+    targetDurationSec: timing.targetDurationSec,
+    fitsDuration: timing.fitsDuration,
+    timingStrategy: timing.timingStrategy,
+    timingActions: timing.timingActions,
+    warnings: [.../* @__PURE__ */ new Set([...(line2.warnings || []).filter((warning) => !warning.startsWith("dialogue_too_long")), ...timing.warnings])]
+  };
+}
+function replaceAt(items, index, item) {
+  return items.map((current, currentIndex) => currentIndex === index ? item : current);
+}
+async function applyDialogueAction(input) {
+  const bundle = await getTaskBundle(input.taskId);
+  if (!bundle.dialogueStructure?.dataJson) throw new Error("dialogue structure not found");
+  if (!bundle.storyIr?.dataJson) throw new Error("story IR not found");
+  const ir = StructuralIrSchema.parse(JSON.parse(bundle.storyIr.dataJson));
+  const dialogue = DialogueStructureSchema.parse(JSON.parse(bundle.dialogueStructure.dataJson));
+  const shotIndex = ir.shots.findIndex((shot2) => shot2.shotId === input.shotId);
+  const lineIndex = dialogue.lines.findIndex((line3) => line3.shotId === input.shotId);
+  if (shotIndex < 0) throw new Error(`shot not found: ${input.shotId}`);
+  if (lineIndex < 0) throw new Error(`dialogue line not found: ${input.shotId}`);
+  const shot = ir.shots[shotIndex];
+  const line2 = dialogue.lines[lineIndex];
+  let nextIr = ir;
+  let nextDialogue = dialogue;
+  let result = {};
+  if (input.action === "compress_dialogue") {
+    const finalDialogue = compressDialogueText(line2.finalDialogue, shot.durationSec);
+    const nextLine = applyTiming(
+      {
+        ...line2,
+        dialogueMode: "compressed",
+        editableDialogue: finalDialogue,
+        editableTemplate: finalDialogue,
+        finalDialogue,
+        subtitle: finalDialogue
+      },
+      shot.durationSec
+    );
+    nextDialogue = { ...dialogue, version: dialogue.version + 1, status: "reviewed", lines: replaceAt(dialogue.lines, lineIndex, nextLine) };
+    result = { finalDialogue };
+  } else if (input.action === "extend_shot") {
+    const targetDurationSec = Math.max(shot.durationSec, Number(input.value) || line2.estimatedSpeechSec || shot.durationSec + 1);
+    const nextShot = { ...shot, endSec: shot.startSec + targetDurationSec, durationSec: targetDurationSec };
+    const nextLine = applyTiming({ ...line2, dialogueMode: "extended" }, targetDurationSec);
+    nextIr = { ...ir, shots: replaceAt(ir.shots, shotIndex, nextShot) };
+    nextDialogue = { ...dialogue, version: dialogue.version + 1, status: "reviewed", lines: replaceAt(dialogue.lines, lineIndex, nextLine) };
+    result = { targetDurationSec };
+  } else if (input.action === "mark_no_dialogue") {
+    const nextLine = applyTiming(
+      {
+        ...line2,
+        dialogueMode: "no_dialogue",
+        editableDialogue: "",
+        editableTemplate: "",
+        finalDialogue: "",
+        subtitle: ""
+      },
+      shot.durationSec
+    );
+    nextDialogue = { ...dialogue, version: dialogue.version + 1, status: "reviewed", lines: replaceAt(dialogue.lines, lineIndex, nextLine) };
+    result = { finalDialogue: "" };
+  } else if (input.action === "sync_subtitle_from_dialogue") {
+    const nextLine = applyTiming({ ...line2, subtitle: line2.finalDialogue }, shot.durationSec);
+    nextDialogue = { ...dialogue, version: dialogue.version + 1, status: "reviewed", lines: replaceAt(dialogue.lines, lineIndex, nextLine) };
+    result = { subtitle: line2.finalDialogue };
+  } else if (input.action === "split_shot") {
+    const [firstText, secondText] = splitText(line2.finalDialogue);
+    const secondShotId = nextSplitShotId(ir, input.shotId);
+    const halfDuration = Math.max(0.5, Number((shot.durationSec / 2).toFixed(2)));
+    const firstShot = {
+      ...shot,
+      endSec: Number((shot.startSec + halfDuration).toFixed(2)),
+      durationSec: halfDuration,
+      editableDialogue: firstText,
+      subtitlePattern: firstText
+    };
+    const secondShot = {
+      ...shot,
+      shotId: secondShotId,
+      startSec: firstShot.endSec,
+      durationSec: Math.max(0.5, Number((shot.durationSec - halfDuration).toFixed(2))),
+      endSec: shot.endSec,
+      sourceDialogue: secondText,
+      dialoguePattern: secondText,
+      editableDialogue: secondText,
+      subtitlePattern: secondText,
+      shotPurpose: `${shot.shotPurpose || "split shot"} (continued)`
+    };
+    const firstLine = applyTiming(
+      {
+        ...line2,
+        dialogueMode: "split",
+        editableDialogue: firstText,
+        editableTemplate: firstText,
+        finalDialogue: firstText,
+        subtitle: firstText
+      },
+      firstShot.durationSec
+    );
+    const secondLine = applyTiming(
+      {
+        ...line2,
+        shotId: secondShotId,
+        dialogueMode: "split",
+        sourceDialogue: secondText,
+        dialoguePattern: secondText,
+        editableDialogue: secondText,
+        editableTemplate: secondText,
+        variables: {},
+        finalDialogue: secondText,
+        subtitle: secondText
+      },
+      secondShot.durationSec
+    );
+    nextIr = { ...ir, shots: [...ir.shots.slice(0, shotIndex), firstShot, secondShot, ...ir.shots.slice(shotIndex + 1)] };
+    nextDialogue = {
+      ...dialogue,
+      version: dialogue.version + 1,
+      status: "reviewed",
+      lines: [...dialogue.lines.slice(0, lineIndex), firstLine, secondLine, ...dialogue.lines.slice(lineIndex + 1)]
+    };
+    result = { splitShotId: secondShotId, firstDialogue: firstText, secondDialogue: secondText };
+  }
+  await clearDerivedArtifactsFromDialogue(input.taskId);
+  if (nextIr !== ir) await saveStoryIr(input.taskId, StructuralIrSchema.parse(nextIr));
+  await saveDialogueStructure(input.taskId, DialogueStructureSchema.parse(nextDialogue));
+  return { taskId: input.taskId, shotId: input.shotId, action: input.action, ...result, dialogueStructure: nextDialogue, storyIr: nextIr };
+}
+var init_dialogueActionService = __esm({
+  "src/services/structuralReplica/dialogueActionService.ts"() {
+    "use strict";
+    init_repository();
+    init_schemas3();
+    init_dialogueTimingService();
+  }
+});
+
+// src/routes/structuralReplica/dialogueAction.ts
+var import_express176, router176, dialogueAction_default;
+var init_dialogueAction = __esm({
+  "src/routes/structuralReplica/dialogueAction.ts"() {
+    "use strict";
+    import_express176 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_dialogueActionService();
+    router176 = import_express176.default.Router();
+    dialogueAction_default = router176.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive(),
+        shotId: external_exports.string().min(1),
+        action: external_exports.enum(["compress_dialogue", "split_shot", "extend_shot", "mark_no_dialogue", "sync_subtitle_from_dialogue"]),
+        value: external_exports.union([external_exports.string(), external_exports.number()]).nullable().optional()
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3(await applyDialogueAction(req.body)));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/services/structuralReplica/shotControlPackageService.ts
+function parseJson5(data, fallback) {
+  if (!data) return fallback;
+  try {
+    return JSON.parse(data);
+  } catch {
+    return fallback;
+  }
+}
+async function buildShotControlPackage(taskId, shotId) {
+  const bundle = await getTaskBundle(taskId);
+  if (!bundle.regeneratedStoryboard?.dataJson) throw new Error("regenerated storyboard not found");
+  const storyboard = parseJson5(bundle.regeneratedStoryboard.dataJson, null);
+  const promptPackage = PromptPackageSchema.parse(storyboard?.promptPackage);
+  const promptShot = promptPackage.shots.find((shot) => shot.shotId === shotId);
+  if (!promptShot) throw new Error(`prompt package shot not found: ${shotId}`);
+  const route = bundle.modelRoutes.map(parseModelRouteRow).find((item) => item.shotId === shotId);
+  if (!route) throw new Error(`model route not found: ${shotId}`);
+  if (!route.selectedProviderId || !route.selectedModel || route.routeStatus === "blocked") {
+    throw new Error(`model route is blocked for shot: ${shotId}`);
+  }
+  return ShotControlPackageSchema.parse({
+    taskId,
+    shotId,
+    providerId: route.selectedProviderId,
+    model: route.selectedModel,
+    prompt: promptShot.resolvedPrompt,
+    negativePrompt: promptShot.negativePrompt,
+    referenceList: promptShot.referenceFrames.map((path42) => ({
+      type: "image",
+      path: path42,
+      source: "reference_frame"
+    })),
+    durationSec: promptShot.durationSec,
+    aspectRatio: bundle.task.aspectRatio || "9:16",
+    fallbackStrategy: route.fallbackPlan,
+    assetSlots: promptShot.assetSlots,
+    routeStatus: route.routeStatus,
+    warnings: [...promptShot.warnings, ...route.downgradeReasons]
+  });
+}
+var init_shotControlPackageService = __esm({
+  "src/services/structuralReplica/shotControlPackageService.ts"() {
+    "use strict";
+    init_repository();
+    init_schemas3();
+  }
+});
+
+// src/services/structuralReplica/generationQueueService.ts
+function stringifyJson2(data) {
+  if (data === void 0) return null;
+  return typeof data === "string" ? data : JSON.stringify(data);
+}
+function parseJson6(data, fallback) {
+  if (!data) return fallback;
+  try {
+    return JSON.parse(data);
+  } catch {
+    return fallback;
+  }
+}
+function requestSizeBytes(data) {
+  return Buffer.byteLength(JSON.stringify(data), "utf8");
+}
+async function referenceListForPackage(pkg) {
+  const refs = [];
+  for (const item of pkg.referenceList) {
+    if (item.type === "image") refs.push({ type: "image", base64: await utils_default.oss.getImageBase64(item.path) });
+    if (item.type === "audio") refs.push({ type: "audio", base64: await utils_default.oss.getImageBase64(item.path) });
+    if (item.type === "video") refs.push({ type: "video", base64: await utils_default.oss.getImageBase64(item.path) });
+  }
+  return refs;
+}
+async function defaultGenerationRunner(input) {
+  const pkg = input.package;
+  const modelKey = `${pkg.providerId}:${pkg.model}`;
+  const aiVideo = utils_default.Ai.Video(modelKey);
+  await aiVideo.run(
+    {
+      prompt: pkg.prompt,
+      referenceList: await referenceListForPackage(pkg),
+      mode: pkg.referenceList.length ? ["singleImage"] : ["text"],
+      duration: Math.max(1, Math.round(pkg.durationSec)),
+      aspectRatio: pkg.aspectRatio === "16:9" ? "16:9" : "9:16",
+      resolution: pkg.aspectRatio === "16:9" ? "1280x720" : "720x1280",
+      audio: false
+    },
+    {
+      projectId: Number((await utils_default.db("o_sr_task").where("id", pkg.taskId).first())?.projectId || 0),
+      taskClass: "\u7ED3\u6784\u590D\u523B\u955C\u5934\u751F\u6210",
+      describe: `\u751F\u6210 ${pkg.shotId} \u5019\u9009 ${input.candidateIndex + 1}`,
+      relatedObjects: JSON.stringify({ taskId: pkg.taskId, shotId: pkg.shotId })
+    }
+  );
+  await aiVideo.save(input.outputPath);
+  return {
+    videoPath: input.outputPath,
+    durationSec: pkg.durationSec,
+    metadata: { runner: "toonflow_ai_video" }
+  };
+}
+async function nextGenerationAttempt(taskId, shotId) {
+  const latest = await utils_default.db("o_sr_generation_job").where({ taskId, shotId }).orderBy("attempt", "desc").first();
+  return (Number(latest?.attempt) || 0) + 1;
+}
+async function enqueueShotGeneration(input) {
+  const candidateCount = Math.max(1, Math.min(4, Math.floor(input.candidateCount || 1)));
+  const controlPackage = await buildShotControlPackage(input.taskId, input.shotId);
+  const now2 = Date.now();
+  const [jobId] = await utils_default.db("o_sr_generation_job").insert({
+    taskId: input.taskId,
+    shotId: input.shotId,
+    providerId: controlPackage.providerId,
+    model: controlPackage.model,
+    status: "queued",
+    attempt: await nextGenerationAttempt(input.taskId, input.shotId),
+    candidateCount,
+    inputPackageJson: stringifyJson2(controlPackage),
+    resultVideoPath: null,
+    errorReason: null,
+    costJson: null,
+    createdAt: now2,
+    updatedAt: now2,
+    startedAt: null,
+    finishedAt: null
+  });
+  const job = await utils_default.db("o_sr_generation_job").where("id", Number(jobId)).first();
+  return await runGenerationJob(Number(job.id), input.runner);
+}
+async function retryShotGeneration(input) {
+  return await enqueueShotGeneration(input);
+}
+async function runGenerationJob(jobId, runner = defaultGenerationRunner) {
+  const job = await utils_default.db("o_sr_generation_job").where("id", jobId).first();
+  if (!job) throw new Error(`generation job not found: ${jobId}`);
+  const controlPackage = parseJson6(job.inputPackageJson, null);
+  if (!controlPackage) throw new Error(`generation job input package is invalid: ${jobId}`);
+  const now2 = Date.now();
+  await utils_default.db("o_sr_generation_job").where("id", jobId).update({
+    status: "running",
+    startedAt: now2,
+    updatedAt: now2,
+    errorReason: null
+  });
+  const costs = [];
+  const candidates = [];
+  const errors = [];
+  const count = Math.max(1, Number(job.candidateCount || 1));
+  for (let candidateIndex = 0; candidateIndex < count; candidateIndex += 1) {
+    const startedAt = Date.now();
+    let candidateId = null;
+    const outputPath = `/${controlPackage.taskId}/structuralReplica/generated/${controlPackage.shotId}-${jobId}-${candidateIndex + 1}.mp4`;
+    try {
+      const result = await runner({ package: controlPackage, candidateIndex, outputPath });
+      const [id] = await utils_default.db("o_sr_generation_candidate").insert({
+        taskId: controlPackage.taskId,
+        shotId: controlPackage.shotId,
+        generationJobId: jobId,
+        candidateIndex,
+        status: "succeeded",
+        providerId: controlPackage.providerId,
+        model: controlPackage.model,
+        videoPath: result.videoPath,
+        thumbnailPath: result.thumbnailPath ?? null,
+        durationSec: result.durationSec ?? controlPackage.durationSec,
+        qualityScore: result.qualityScore ?? null,
+        selected: 0,
+        errorReason: null,
+        metadataJson: stringifyJson2(result.metadata ?? {}),
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      });
+      candidateId = Number(id);
+      candidates.push(await utils_default.db("o_sr_generation_candidate").where("id", candidateId).first());
+      const cost = await recordGenerationCost({
+        taskId: controlPackage.taskId,
+        shotId: controlPackage.shotId,
+        generationJobId: jobId,
+        candidateId,
+        providerId: controlPackage.providerId,
+        model: controlPackage.model,
+        latencyMs: Date.now() - startedAt,
+        requestSizeBytes: requestSizeBytes(controlPackage),
+        estimatedCost: result.estimatedCost ?? 0
+      });
+      costs.push(cost);
+    } catch (error71) {
+      const reason = error71 instanceof Error ? error71.message : String(error71);
+      errors.push(reason);
+      const [id] = await utils_default.db("o_sr_generation_candidate").insert({
+        taskId: controlPackage.taskId,
+        shotId: controlPackage.shotId,
+        generationJobId: jobId,
+        candidateIndex,
+        status: "failed",
+        providerId: controlPackage.providerId,
+        model: controlPackage.model,
+        videoPath: null,
+        thumbnailPath: null,
+        durationSec: null,
+        qualityScore: null,
+        selected: 0,
+        errorReason: reason,
+        metadataJson: stringifyJson2({}),
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      });
+      candidateId = Number(id);
+      candidates.push(await utils_default.db("o_sr_generation_candidate").where("id", candidateId).first());
+      costs.push(
+        await recordGenerationCost({
+          taskId: controlPackage.taskId,
+          shotId: controlPackage.shotId,
+          generationJobId: jobId,
+          candidateId,
+          providerId: controlPackage.providerId,
+          model: controlPackage.model,
+          latencyMs: Date.now() - startedAt,
+          requestSizeBytes: requestSizeBytes(controlPackage),
+          estimatedCost: 0,
+          errorCode: "generation_failed",
+          errorReason: reason
+        })
+      );
+    }
+  }
+  const succeeded = candidates.filter((item) => item.status === "succeeded");
+  const finishedAt = Date.now();
+  await utils_default.db("o_sr_generation_job").where("id", jobId).update({
+    status: succeeded.length ? "succeeded" : "failed",
+    resultVideoPath: succeeded[0]?.videoPath ?? null,
+    errorReason: succeeded.length ? null : errors.join("; "),
+    costJson: stringifyJson2(costs.map((item) => ({ id: item.id, estimatedCost: item.estimatedCost, errorReason: item.errorReason }))),
+    finishedAt,
+    updatedAt: finishedAt
+  });
+  return {
+    job: await utils_default.db("o_sr_generation_job").where("id", jobId).first(),
+    candidates,
+    costs
+  };
+}
+async function enqueueTaskGeneration(input) {
+  const bundle = await getTaskBundle(input.taskId);
+  if (!bundle.storyIr?.dataJson) throw new Error("story IR not found");
+  const ir = StructuralIrSchema.parse(JSON.parse(bundle.storyIr.dataJson));
+  const results = [];
+  for (const shot of ir.shots.filter((item) => item.enabled)) {
+    try {
+      const result = await enqueueShotGeneration({
+        taskId: input.taskId,
+        shotId: shot.shotId,
+        candidateCount: input.candidateCount,
+        runner: input.runner
+      });
+      results.push({ shotId: shot.shotId, ok: result.job.status === "succeeded", job: result.job, errorReason: result.job.errorReason ?? void 0 });
+    } catch (error71) {
+      results.push({ shotId: shot.shotId, ok: false, errorReason: error71 instanceof Error ? error71.message : String(error71) });
+    }
+  }
+  return results;
+}
+async function recordGenerationCost(input) {
+  const [id] = await utils_default.db("o_sr_generation_cost").insert({
+    taskId: input.taskId,
+    shotId: input.shotId,
+    generationJobId: input.generationJobId,
+    candidateId: input.candidateId ?? null,
+    providerId: input.providerId,
+    model: input.model,
+    latencyMs: input.latencyMs,
+    requestSizeBytes: input.requestSizeBytes,
+    estimatedCost: input.estimatedCost,
+    errorCode: input.errorCode ?? null,
+    errorReason: input.errorReason ?? null,
+    createdAt: Date.now()
+  });
+  return await utils_default.db("o_sr_generation_cost").where("id", Number(id)).first();
+}
+async function listShotCandidates(taskId, shotId) {
+  const query = utils_default.db("o_sr_generation_candidate").where("taskId", taskId);
+  if (shotId) query.andWhere("shotId", shotId);
+  const rows = await query.orderBy("shotId", "asc").orderBy("candidateIndex", "asc").orderBy("id", "asc");
+  return rows.map(parseGenerationCandidateRow);
+}
+function parseGenerationCandidateRow(row) {
+  return GenerationCandidateSchema.parse({
+    taskId: Number(row.taskId),
+    shotId: row.shotId || "",
+    generationJobId: Number(row.generationJobId),
+    candidateIndex: Number(row.candidateIndex || 0),
+    status: row.status || "pending",
+    providerId: row.providerId || "",
+    model: row.model || "",
+    videoPath: row.videoPath ?? null,
+    thumbnailPath: row.thumbnailPath ?? null,
+    durationSec: row.durationSec ?? null,
+    qualityScore: row.qualityScore ?? null,
+    selected: row.selected === 1,
+    errorReason: row.errorReason ?? null,
+    metadata: parseJson6(row.metadataJson, {})
+  });
+}
+async function selectShotCandidate(input) {
+  const candidate = await utils_default.db("o_sr_generation_candidate").where({ id: input.candidateId, taskId: input.taskId, shotId: input.shotId }).first();
+  if (!candidate) throw new Error(`generation candidate not found: ${input.candidateId}`);
+  if (candidate.status !== "succeeded" && candidate.status !== "selected") {
+    throw new Error(`candidate is not selectable: ${candidate.status}`);
+  }
+  await utils_default.db("o_sr_generation_candidate").where({ taskId: input.taskId, shotId: input.shotId, status: "selected" }).update({
+    status: "succeeded",
+    updatedAt: Date.now()
+  });
+  await utils_default.db("o_sr_generation_candidate").where({ taskId: input.taskId, shotId: input.shotId }).update({
+    selected: 0,
+    updatedAt: Date.now()
+  });
+  await utils_default.db("o_sr_generation_candidate").where("id", input.candidateId).update({
+    selected: 1,
+    status: "selected",
+    updatedAt: Date.now()
+  });
+  return parseGenerationCandidateRow(await utils_default.db("o_sr_generation_candidate").where("id", input.candidateId).first());
+}
+var init_generationQueueService = __esm({
+  "src/services/structuralReplica/generationQueueService.ts"() {
+    "use strict";
+    init_utils3();
+    init_shotControlPackageService();
+    init_schemas3();
+    init_repository();
+    init_schemas3();
+  }
+});
+
+// src/routes/structuralReplica/generation/enqueueShotGeneration.ts
+var import_express177, router177, enqueueShotGeneration_default;
+var init_enqueueShotGeneration = __esm({
+  "src/routes/structuralReplica/generation/enqueueShotGeneration.ts"() {
+    "use strict";
+    import_express177 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_generationQueueService();
+    router177 = import_express177.default.Router();
+    enqueueShotGeneration_default = router177.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive(),
+        shotId: external_exports.string().min(1),
+        candidateCount: external_exports.number().int().positive().max(4).optional()
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3(await enqueueShotGeneration(req.body)));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/routes/structuralReplica/generation/enqueueTaskGeneration.ts
+var import_express178, router178, enqueueTaskGeneration_default;
+var init_enqueueTaskGeneration = __esm({
+  "src/routes/structuralReplica/generation/enqueueTaskGeneration.ts"() {
+    "use strict";
+    import_express178 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_generationQueueService();
+    router178 = import_express178.default.Router();
+    enqueueTaskGeneration_default = router178.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive(),
+        candidateCount: external_exports.number().int().positive().max(4).optional()
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3({ results: await enqueueTaskGeneration(req.body) }));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/routes/structuralReplica/generation/listShotCandidates.ts
+var import_express179, router179, listShotCandidates_default;
+var init_listShotCandidates = __esm({
+  "src/routes/structuralReplica/generation/listShotCandidates.ts"() {
+    "use strict";
+    import_express179 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_generationQueueService();
+    router179 = import_express179.default.Router();
+    listShotCandidates_default = router179.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive(),
+        shotId: external_exports.string().min(1).optional()
+      }),
+      async (req, res) => {
+        res.status(200).send(success3({ candidates: await listShotCandidates(req.body.taskId, req.body.shotId) }));
+      }
+    );
+  }
+});
+
+// src/routes/structuralReplica/generation/retryShotGeneration.ts
+var import_express180, router180, retryShotGeneration_default;
+var init_retryShotGeneration = __esm({
+  "src/routes/structuralReplica/generation/retryShotGeneration.ts"() {
+    "use strict";
+    import_express180 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_generationQueueService();
+    router180 = import_express180.default.Router();
+    retryShotGeneration_default = router180.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive(),
+        shotId: external_exports.string().min(1),
+        candidateCount: external_exports.number().int().positive().max(4).optional()
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3(await retryShotGeneration(req.body)));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/routes/structuralReplica/generation/selectShotCandidate.ts
+var import_express181, router181, selectShotCandidate_default;
+var init_selectShotCandidate = __esm({
+  "src/routes/structuralReplica/generation/selectShotCandidate.ts"() {
+    "use strict";
+    import_express181 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_generationQueueService();
+    router181 = import_express181.default.Router();
+    selectShotCandidate_default = router181.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive(),
+        shotId: external_exports.string().min(1),
+        candidateId: external_exports.number().int().positive()
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3({ candidate: await selectShotCandidate(req.body) }));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
 // src/routes/structuralReplica/getProgress.ts
-var import_express170, router170, progressByStatus, getProgress_default;
+var import_express182, router182, progressByStatus, getProgress_default;
 var init_getProgress = __esm({
   "src/routes/structuralReplica/getProgress.ts"() {
     "use strict";
-    import_express170 = __toESM(require_express2());
+    import_express182 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_middleware();
     init_repository();
+    init_jobService();
     init_schemas3();
-    router170 = import_express170.default.Router();
+    init_repository();
+    router182 = import_express182.default.Router();
     progressByStatus = {
       draft: 0,
       source_uploading: 10,
@@ -258522,7 +260979,7 @@ var init_getProgress = __esm({
       pushed: 100,
       failed: 100
     };
-    getProgress_default = router170.post(
+    getProgress_default = router182.post(
       "/",
       validateFields({
         taskId: external_exports.number().int().positive()
@@ -258537,12 +260994,21 @@ var init_getProgress = __esm({
         const visualSummaryCount = frameUnderstandings.filter((item) => item.visualSummary?.trim()).length;
         const reviewRequiredCount = frameUnderstandings.filter((item) => item.reviewRequired).length;
         const frameUnderstandingComplete = shotCount > 0 && frameUnderstandings.length >= shotCount;
+        const jobs = (await listSrJobs(taskId, 12)).map((job) => serializeSrJob(job));
+        const activeJob = jobs.find((job) => job.status === "queued" || job.status === "running") || null;
+        const latestJob = jobs[0] || null;
+        const jobProgress = activeJob && typeof activeJob.progress === "number" ? activeJob.progress : null;
+        const shotAdaptations = bundle.shotAdaptations.map(parseShotAdaptationRow);
+        const modelRoutes = bundle.modelRoutes.map(parseModelRouteRow);
+        const adaptationBlockers = shotAdaptations.filter((item) => item.adaptationLevel === "D").flatMap((item) => item.blockedReasons.map((reason) => ({ shotId: item.shotId, reason })));
+        const modelRouteBlockers = modelRoutes.filter((item) => item.routeStatus === "blocked").flatMap((item) => item.downgradeReasons.map((reason) => ({ shotId: item.shotId, reason })));
+        const nextAction = status === "assets_bound" && !shotAdaptations.length ? "buildShotAdaptations" : shotAdaptations.length && !modelRoutes.length ? "routeModels" : adaptationBlockers.length || modelRouteBlockers.length ? "resolveBlockers" : activeJob ? "waitForJob" : null;
         res.status(200).send(
           success3({
             taskId,
             status,
             currentStage: status,
-            progress: progressByStatus[status] ?? 0,
+            progress: jobProgress ?? progressByStatus[status] ?? 0,
             artifacts: {
               hasSourceMedia: Boolean(bundle.sourceMedia),
               hasTranscript: Boolean(bundle.transcript),
@@ -258552,9 +261018,23 @@ var init_getProgress = __esm({
               frameUnderstandingCount: bundle.frameUnderstanding.length,
               visualSummaryCount,
               reviewRequiredCount,
-              frameUnderstandingComplete
+              frameUnderstandingComplete,
+              shotAdaptationCount: shotAdaptations.length,
+              shotAdaptationBlockedCount: adaptationBlockers.length,
+              modelRouteCount: modelRoutes.length,
+              modelRouteBlockedCount: modelRouteBlockers.length,
+              generationJobCount: bundle.generationJobs.length,
+              generationCandidateCount: bundle.generationCandidates.length,
+              selectedCandidateCount: bundle.generationCandidates.filter((item) => item.selected === 1).length,
+              qualityReportCount: bundle.qualityReports.length,
+              timelineExportCount: bundle.timelineExports.length
             },
-            errorReason: status === "failed" ? bundle.task.errorReason : null
+            blockers: [...adaptationBlockers, ...modelRouteBlockers],
+            nextAction,
+            jobs,
+            activeJob,
+            latestJob,
+            errorReason: activeJob?.errorReason || latestJob?.errorReason || (status === "failed" ? bundle.task.errorReason : null)
           })
         );
       }
@@ -258577,17 +261057,20 @@ function withReportData(row) {
     data: row.reportJson ? JSON.parse(row.reportJson) : void 0
   };
 }
-var import_express171, router171, getTask_default;
+var import_express183, router183, getTask_default;
 var init_getTask = __esm({
   "src/routes/structuralReplica/getTask.ts"() {
     "use strict";
-    import_express171 = __toESM(require_express2());
+    import_express183 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_middleware();
     init_repository();
-    router171 = import_express171.default.Router();
-    getTask_default = router171.post(
+    init_repository();
+    init_jobService();
+    init_generationQueueService();
+    router183 = import_express183.default.Router();
+    getTask_default = router183.post(
       "/",
       validateFields({
         taskId: external_exports.number().int().positive()
@@ -258595,6 +261078,7 @@ var init_getTask = __esm({
       async (req, res) => {
         const { taskId } = req.body;
         const bundle = await getTaskBundle(taskId);
+        const jobs = (await listSrJobs(taskId, 20)).map((job) => serializeSrJob(job));
         res.status(200).send(
           success3({
             task: bundle.task,
@@ -258607,13 +261091,479 @@ var init_getTask = __esm({
             dialogueStructure: withData(bundle.dialogueStructure),
             assetGap: withData(bundle.assetGap),
             bindings: bundle.bindings,
+            shotAdaptations: bundle.shotAdaptations.map(parseShotAdaptationRow),
             regeneratedStoryboard: withData(bundle.regeneratedStoryboard),
             report: withReportData(bundle.report),
-            mapping: bundle.mapping
+            mapping: bundle.mapping,
+            modelRoutes: bundle.modelRoutes.map(parseModelRouteRow),
+            generationJobs: bundle.generationJobs,
+            generationCandidates: bundle.generationCandidates.map(parseGenerationCandidateRow),
+            qualityReports: bundle.qualityReports.map((row) => ({
+              ...row,
+              data: row.reportJson ? JSON.parse(row.reportJson) : void 0
+            })),
+            timelineExports: bundle.timelineExports.map((row) => ({
+              ...row,
+              report: row.reportJson ? JSON.parse(row.reportJson) : void 0,
+              candidateIds: row.candidateIdsJson ? JSON.parse(row.candidateIdsJson) : []
+            })),
+            jobs
           })
         );
       }
     );
+  }
+});
+
+// src/routes/structuralReplica/jobs/cancel.ts
+var import_express184, router184, cancel_default;
+var init_cancel = __esm({
+  "src/routes/structuralReplica/jobs/cancel.ts"() {
+    "use strict";
+    import_express184 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_jobService();
+    router184 = import_express184.default.Router();
+    cancel_default = router184.post(
+      "/",
+      validateFields({
+        jobId: external_exports.number().int().positive()
+      }),
+      async (req, res) => {
+        try {
+          const job = await requestCancelSrJob(req.body.jobId);
+          res.status(200).send(success3({ job: serializeSrJob(job) }));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/routes/structuralReplica/jobs/recover.ts
+var import_express185, router185, recover_default;
+var init_recover = __esm({
+  "src/routes/structuralReplica/jobs/recover.ts"() {
+    "use strict";
+    import_express185 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_jobService();
+    router185 = import_express185.default.Router();
+    recover_default = router185.post(
+      "/",
+      validateFields({
+        staleAfterMs: external_exports.number().int().positive().optional()
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3(await recoverStaleSrJobs({ staleAfterMs: req.body.staleAfterMs })));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/routes/structuralReplica/modelGateway/listModelRoutes.ts
+var import_express186, router186, listModelRoutes_default;
+var init_listModelRoutes = __esm({
+  "src/routes/structuralReplica/modelGateway/listModelRoutes.ts"() {
+    "use strict";
+    import_express186 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_repository();
+    router186 = import_express186.default.Router();
+    listModelRoutes_default = router186.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive()
+      }),
+      async (req, res) => {
+        try {
+          const bundle = await getTaskBundle(req.body.taskId);
+          res.status(200).send(success3({ routes: bundle.modelRoutes.map(parseModelRouteRow) }));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/services/structuralReplica/modelGateway/providerCapabilityService.ts
+function parseJson7(value, fallback) {
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+function inferModelCapability(model) {
+  const name28 = model.modelName || "";
+  const modes = model.mode || [];
+  const imageToVideo = /image-to-video|i2v|image/i.test(name28) || modes.includes("singleImage");
+  const videoReference = /reference-to-video|video_reference|omni|kling-video-o1|wan/i.test(name28);
+  const multiReference = /reference-to-video|multi|omni|wan|seedance/i.test(name28) || modes.includes("multiReference");
+  const textToVideo = model.type === "video" && !imageToVideo && !videoReference ? true : /text-to-video|t2v|video/i.test(name28);
+  return {
+    textToVideo,
+    imageToVideo,
+    videoReference,
+    multiReference,
+    characterLock: /omni|reference|character|wan|seedance/i.test(name28),
+    lipSync: /lip|sync|omni/i.test(name28),
+    maxDurationSec: Number(model.maxDurationSec || model.maxDuration || 5),
+    supportedRatios: ["9:16", "16:9"],
+    supportsSeed: /seed|wan|kling|seedance/i.test(name28),
+    supportsNegativePrompt: !/kling/i.test(name28)
+  };
+}
+async function syncProviderCapabilitiesFromVendors() {
+  const vendors = await utils_default.db("o_vendorConfig").select("*");
+  const saved = [];
+  for (const vendor of vendors) {
+    const models = parseJson7(vendor.models, []).filter((model) => model.type === "video");
+    if (!models.length) continue;
+    const inputValues = parseJson7(vendor.inputValues, {});
+    const capability = ProviderCapabilitySchema.parse({
+      providerId: vendor.id,
+      providerType: "toonflow_vendor",
+      displayName: vendor.id,
+      baseUrl: inputValues.baseUrl || inputValues.mediaBaseUrl || "",
+      apiKey: inputValues.apiKey || "",
+      enabled: vendor.enable !== 0,
+      models: models.map((model, index) => ({
+        model: model.modelName,
+        displayName: model.name || model.modelName,
+        type: "video",
+        priority: Math.max(0, models.length - index),
+        capabilities: inferModelCapability(model)
+      }))
+    });
+    saved.push(await upsertProviderCapability(capability));
+  }
+  return saved;
+}
+async function listEffectiveProviderCapabilities(options = {}) {
+  if (options.syncVendors) await syncProviderCapabilitiesFromVendors();
+  return await listProviderCapabilities();
+}
+async function saveProviderCapability(input) {
+  return await upsertProviderCapability(ProviderCapabilitySchema.parse(input));
+}
+var init_providerCapabilityService = __esm({
+  "src/services/structuralReplica/modelGateway/providerCapabilityService.ts"() {
+    "use strict";
+    init_utils3();
+    init_schemas3();
+    init_repository();
+  }
+});
+
+// src/routes/structuralReplica/modelGateway/listProviders.ts
+var import_express187, router187, listProviders_default;
+var init_listProviders = __esm({
+  "src/routes/structuralReplica/modelGateway/listProviders.ts"() {
+    "use strict";
+    import_express187 = __toESM(require_express2());
+    init_responseFormat();
+    init_providerCapabilityService();
+    router187 = import_express187.default.Router();
+    listProviders_default = router187.post("/", async (_, res) => {
+      try {
+        res.status(200).send(success3({ providers: await listEffectiveProviderCapabilities({ syncVendors: true }) }));
+      } catch (e) {
+        res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+      }
+    });
+  }
+});
+
+// src/services/structuralReplica/modelGateway/providerProbeService.ts
+async function probeProviderCapability(provider, modelName) {
+  const startedAt = Date.now();
+  const model = modelName ? provider.models.find((item) => item.model === modelName) : provider.models[0];
+  if (!provider.enabled) {
+    const result2 = { ok: false, status: "unavailable", reason: "provider is disabled", providerId: provider.providerId, model: model?.model ?? null };
+    await recordProviderProbe({ providerId: provider.providerId, model: model?.model ?? null, status: "unavailable", errorReason: result2.reason, result: result2 });
+    return result2;
+  }
+  if (!model) {
+    const result2 = { ok: false, status: "unavailable", reason: "provider has no video model", providerId: provider.providerId, model: null };
+    await recordProviderProbe({ providerId: provider.providerId, model: null, status: "unavailable", errorReason: result2.reason, result: result2 });
+    return result2;
+  }
+  if (!provider.baseUrl && provider.providerType === "openai_compatible") {
+    const result2 = { ok: false, status: "unavailable", reason: "provider baseUrl is missing", providerId: provider.providerId, model: model.model };
+    await recordProviderProbe({ providerId: provider.providerId, model: model.model, status: "unavailable", errorReason: result2.reason, result: result2 });
+    return result2;
+  }
+  const result = {
+    ok: true,
+    status: "available",
+    reason: "provider capability metadata is usable",
+    providerId: provider.providerId,
+    model: model.model,
+    latencyMs: Date.now() - startedAt,
+    capabilities: model.capabilities
+  };
+  await recordProviderProbe({
+    providerId: provider.providerId,
+    model: model.model,
+    status: "available",
+    latencyMs: result.latencyMs,
+    result
+  });
+  return result;
+}
+var init_providerProbeService = __esm({
+  "src/services/structuralReplica/modelGateway/providerProbeService.ts"() {
+    "use strict";
+    init_repository();
+  }
+});
+
+// src/routes/structuralReplica/modelGateway/probeProvider.ts
+var import_express188, router188, probeProvider_default;
+var init_probeProvider = __esm({
+  "src/routes/structuralReplica/modelGateway/probeProvider.ts"() {
+    "use strict";
+    import_express188 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_providerCapabilityService();
+    init_providerProbeService();
+    router188 = import_express188.default.Router();
+    probeProvider_default = router188.post(
+      "/",
+      validateFields({
+        providerId: external_exports.string().min(1),
+        model: external_exports.string().optional()
+      }),
+      async (req, res) => {
+        try {
+          const providers = await listEffectiveProviderCapabilities({ syncVendors: true });
+          const provider = providers.find((item) => item.providerId === req.body.providerId);
+          if (!provider) return res.status(400).send(error50(`provider not found: ${req.body.providerId}`));
+          res.status(200).send(success3(await probeProviderCapability(provider, req.body.model)));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/services/structuralReplica/modelGateway/capabilityPolicy.ts
+function requiredCapabilitiesForShot(input) {
+  const required3 = /* @__PURE__ */ new Set(["textToVideo"]);
+  if (input.adaptation.adaptationLevel === "A" || input.adaptation.adaptationLevel === "B") required3.add("videoReference");
+  if (input.adaptation.adaptationLevel === "C") required3.add("imageToVideo");
+  if (Object.keys(input.adaptation.matchedAssets).filter((key2) => input.adaptation.matchedAssets[key2]?.assetId).length > 1) required3.add("multiReference");
+  if (Object.keys(input.adaptation.matchedAssets).some((key2) => key2.startsWith("role:"))) required3.add("characterLock");
+  if (input.durationSec > 0) required3.add(`maxDurationSec:${input.durationSec}`);
+  if (input.aspectRatio) required3.add(`ratio:${input.aspectRatio}`);
+  return [...required3];
+}
+function supports(model, capability) {
+  if (capability === "textToVideo") return model.capabilities.textToVideo;
+  if (capability === "imageToVideo") return model.capabilities.imageToVideo;
+  if (capability === "videoReference") return model.capabilities.videoReference;
+  if (capability === "multiReference") return model.capabilities.multiReference;
+  if (capability === "characterLock") return model.capabilities.characterLock;
+  if (capability === "lipSync") return model.capabilities.lipSync;
+  if (capability.startsWith("maxDurationSec:")) return model.capabilities.maxDurationSec >= Number(capability.slice("maxDurationSec:".length));
+  if (capability.startsWith("ratio:")) return model.capabilities.supportedRatios.includes(capability.slice("ratio:".length));
+  return true;
+}
+function evaluateModelCandidate(provider, model, required3) {
+  const missing = required3.filter((capability) => !supports(model, capability));
+  const downgradeReasons = [];
+  const fallbackPlan = [];
+  for (const capability of missing) {
+    if (capability === "videoReference" && model.capabilities.imageToVideo) {
+      downgradeReasons.push("video_reference_not_supported_use_keyframe_image_to_video");
+      fallbackPlan.push("use_keyframe_image_to_video");
+      continue;
+    }
+    if (capability === "multiReference") {
+      downgradeReasons.push("multi_reference_not_supported_use_primary_role_and_scene");
+      fallbackPlan.push("use_primary_role_and_scene_only");
+      continue;
+    }
+    if (capability === "characterLock") {
+      downgradeReasons.push("character_lock_not_supported_warn_identity_drift");
+      fallbackPlan.push("warn_character_identity_drift");
+      continue;
+    }
+    if (capability.startsWith("maxDurationSec:")) {
+      downgradeReasons.push("model_max_duration_insufficient_split_or_compress_dialogue");
+      fallbackPlan.push("split_shot_or_compress_dialogue");
+      continue;
+    }
+    downgradeReasons.push(`missing_capability:${capability}`);
+  }
+  const degradable = ["videoReference", "multiReference", "characterLock"];
+  const hardMissing = missing.filter((capability) => !degradable.includes(capability) && !capability.startsWith("maxDurationSec:"));
+  const routeStatus = hardMissing.length ? "blocked" : downgradeReasons.length ? "degraded" : "selected";
+  const score = (provider.enabled ? 100 : -100) + model.priority * 10 - hardMissing.length * 50 - downgradeReasons.length * 10;
+  return { routeStatus, score, missing, downgradeReasons, fallbackPlan };
+}
+var init_capabilityPolicy = __esm({
+  "src/services/structuralReplica/modelGateway/capabilityPolicy.ts"() {
+    "use strict";
+  }
+});
+
+// src/services/structuralReplica/modelGateway/modelRouter.ts
+function routeBlocked(taskId, adaptation, reasons, requiredCapabilities) {
+  return ModelRouteSchema.parse({
+    taskId,
+    shotId: adaptation.shotId,
+    selectedProviderId: null,
+    selectedModel: null,
+    routeStatus: "blocked",
+    requiredCapabilities,
+    fallbackPlan: [],
+    downgradeReasons: reasons
+  });
+}
+function chooseModel(providers, requiredCapabilities) {
+  let best = null;
+  for (const provider of providers.filter((item) => item.enabled)) {
+    for (const model of provider.models.filter((item) => item.type === "video")) {
+      const evaluated = evaluateModelCandidate(provider, model, requiredCapabilities);
+      if (!best || evaluated.score > best.score) best = { provider, model, ...evaluated };
+    }
+  }
+  return best;
+}
+async function routeModelsForTask(taskId) {
+  const bundle = await getTaskBundle(taskId);
+  if (!bundle.storyIr?.dataJson) throw new Error("story IR not found");
+  const ir = StructuralIrSchema.parse(JSON.parse(bundle.storyIr.dataJson));
+  const adaptationRows = bundle.shotAdaptations;
+  if (!adaptationRows.length) throw new Error("shot adaptations not found");
+  const adaptations = adaptationRows.map(parseShotAdaptationRow);
+  const providers = await listEffectiveProviderCapabilities({ syncVendors: true });
+  const routeByShot = /* @__PURE__ */ new Map();
+  for (const adaptation of adaptations) {
+    const shot = ir.shots.find((item) => item.shotId === adaptation.shotId);
+    if (!shot) continue;
+    const requiredCapabilities = requiredCapabilitiesForShot({
+      adaptation,
+      durationSec: shot.durationSec,
+      aspectRatio: String(bundle.task.aspectRatio || "9:16")
+    });
+    if (adaptation.adaptationLevel === "D") {
+      routeByShot.set(adaptation.shotId, routeBlocked(taskId, adaptation, adaptation.blockedReasons, requiredCapabilities));
+      continue;
+    }
+    const candidate = chooseModel(providers, requiredCapabilities);
+    if (!candidate) {
+      routeByShot.set(adaptation.shotId, routeBlocked(taskId, adaptation, ["no_provider_with_video_model"], requiredCapabilities));
+      continue;
+    }
+    routeByShot.set(
+      adaptation.shotId,
+      ModelRouteSchema.parse({
+        taskId,
+        shotId: adaptation.shotId,
+        selectedProviderId: candidate.provider.providerId,
+        selectedModel: candidate.model.model,
+        routeStatus: candidate.routeStatus,
+        requiredCapabilities,
+        fallbackPlan: candidate.fallbackPlan,
+        downgradeReasons: candidate.downgradeReasons
+      })
+    );
+  }
+  const rows = await saveModelRoutes(taskId, [...routeByShot.values()]);
+  return rows.map(parseModelRouteRow);
+}
+var init_modelRouter = __esm({
+  "src/services/structuralReplica/modelGateway/modelRouter.ts"() {
+    "use strict";
+    init_repository();
+    init_schemas3();
+    init_providerCapabilityService();
+    init_capabilityPolicy();
+  }
+});
+
+// src/routes/structuralReplica/modelGateway/routeModels.ts
+var import_express189, router189, routeModels_default;
+var init_routeModels = __esm({
+  "src/routes/structuralReplica/modelGateway/routeModels.ts"() {
+    "use strict";
+    import_express189 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_modelRouter();
+    init_jobService();
+    router189 = import_express189.default.Router();
+    routeModels_default = router189.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive()
+      }),
+      async (req, res) => {
+        const { taskId } = req.body;
+        try {
+          const job = await createSrJob({ taskId, jobType: "modelRouting", input: { taskId } });
+          const result = await runSrJob(
+            Number(job.id),
+            async (report) => {
+              await report({ progress: 20, stage: "syncing_provider_capabilities" });
+              const routes = await routeModelsForTask(taskId);
+              await report({ progress: 90, stage: "saving_model_routes" });
+              return {
+                taskId,
+                count: routes.length,
+                blocked: routes.filter((route) => route.routeStatus === "blocked").length,
+                degraded: routes.filter((route) => route.routeStatus === "degraded").length,
+                routes
+              };
+            },
+            "routing_models"
+          );
+          const finishedJob = await getSrJob(Number(job.id));
+          res.status(200).send(success3({ ...result, job: serializeSrJob(finishedJob) }));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/routes/structuralReplica/modelGateway/upsertProviderCapability.ts
+var import_express190, router190, upsertProviderCapability_default;
+var init_upsertProviderCapability = __esm({
+  "src/routes/structuralReplica/modelGateway/upsertProviderCapability.ts"() {
+    "use strict";
+    import_express190 = __toESM(require_express2());
+    init_responseFormat();
+    init_providerCapabilityService();
+    router190 = import_express190.default.Router();
+    upsertProviderCapability_default = router190.post("/", async (req, res) => {
+      try {
+        res.status(200).send(success3({ provider: await saveProviderCapability(req.body) }));
+      } catch (e) {
+        res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+      }
+    });
   }
 });
 
@@ -258716,18 +261666,19 @@ var init_toonflowPusher = __esm({
 });
 
 // src/routes/structuralReplica/pushToProduction.ts
-var import_express172, router172, pushToProduction_default;
+var import_express191, router191, pushToProduction_default;
 var init_pushToProduction = __esm({
   "src/routes/structuralReplica/pushToProduction.ts"() {
     "use strict";
-    import_express172 = __toESM(require_express2());
+    import_express191 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_middleware();
     init_toonflowPusher();
     init_repository();
-    router172 = import_express172.default.Router();
-    pushToProduction_default = router172.post(
+    init_jobService();
+    router191 = import_express191.default.Router();
+    pushToProduction_default = router191.post(
       "/",
       validateFields({
         taskId: external_exports.number().int().positive(),
@@ -258741,9 +261692,326 @@ var init_pushToProduction = __esm({
           if (task.status !== "checked" && task.status !== "pushed") {
             return res.status(400).send(error50(`task status must be checked or pushed, got ${task.status}`));
           }
-          const result = await pushToProduction({ taskId, createScript, scriptName });
-          const updatedTask = task.status === "checked" ? await updateTaskStatus(taskId, "pushed") : task;
-          res.status(200).send(success3({ taskId, status: updatedTask.status, ...result }));
+          const job = await createSrJob({ taskId, jobType: "pushToProduction", input: { taskId, createScript, scriptName }, stage: "queued" });
+          const result = await runSrJob(
+            Number(job.id),
+            async (report) => {
+              await report({ progress: 25, stage: "pushing_to_production" });
+              const pushed = await pushToProduction({ taskId, createScript, scriptName });
+              await report({ progress: 85, stage: "updating_task_status" });
+              const updatedTask = task.status === "checked" ? await updateTaskStatus(taskId, "pushed") : task;
+              return { taskId, status: updatedTask.status, ...pushed };
+            },
+            "pushing_to_production"
+          );
+          const finishedJob = await getSrJob(Number(job.id));
+          res.status(200).send(success3({ ...result, job: serializeSrJob(finishedJob) }));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/services/structuralReplica/qualityRetryPolicy.ts
+function recommendRetry(report) {
+  const blockers = report.checks.filter((check3) => check3.severity === "blocker" && !check3.passed);
+  if (blockers.length) {
+    return {
+      recommended: true,
+      reason: "blocker_quality_check_failed",
+      blockerCodes: blockers.map((check3) => check3.code)
+    };
+  }
+  if (report.score < 70) {
+    return {
+      recommended: true,
+      reason: "low_quality_score",
+      blockerCodes: []
+    };
+  }
+  const warnings = report.checks.filter((check3) => check3.severity === "warning" && !check3.passed);
+  return {
+    recommended: false,
+    reason: warnings.length ? "user_can_accept_with_warnings" : "quality_passed",
+    blockerCodes: []
+  };
+}
+var init_qualityRetryPolicy = __esm({
+  "src/services/structuralReplica/qualityRetryPolicy.ts"() {
+    "use strict";
+  }
+});
+
+// src/services/structuralReplica/qualityGuardService.ts
+function parseJson8(data, fallback) {
+  if (!data) return fallback;
+  try {
+    return JSON.parse(data);
+  } catch {
+    return fallback;
+  }
+}
+function ossAbsPath(relPath) {
+  const normalized = relPath.replace(/^[/\\]+/, "");
+  return utils_default.getPath(["oss", ...normalized.split(/[\\/]+/)]);
+}
+function run(command, args, timeoutMs = 2e4) {
+  return new Promise((resolve3, reject) => {
+    const child = (0, import_node_child_process2.spawn)(command, args, { shell: process.platform === "win32", stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error(`${command} timed out`));
+    }, timeoutMs);
+    child.stdout.on("data", (data) => {
+      stdout += String(data);
+    });
+    child.stderr.on("data", (data) => {
+      stderr += String(data);
+    });
+    child.on("error", (error71) => {
+      clearTimeout(timer);
+      reject(error71);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      resolve3({ code, stdout, stderr });
+    });
+  });
+}
+function parseBlackFrameRatio(stderr, durationSec) {
+  if (!durationSec || durationSec <= 0) return null;
+  const durations = [...stderr.matchAll(/black_duration:([0-9.]+)/g)].map((match) => Number(match[1])).filter(Number.isFinite);
+  if (!durations.length) return 0;
+  const totalBlackSec = durations.reduce((sum, value) => sum + value, 0);
+  return Math.max(0, Math.min(1, totalBlackSec / durationSec));
+}
+async function getSetting(key2, fallback) {
+  const row = await utils_default.db("o_setting").where("key", key2).first();
+  return String(row?.value || fallback);
+}
+async function defaultVideoProbe(videoPath) {
+  const absPath = import_node_path8.default.isAbsolute(videoPath) ? videoPath : ossAbsPath(videoPath);
+  try {
+    const stat = await import_promises15.default.stat(absPath);
+    if (!stat.isFile()) return { exists: false, sizeBytes: 0 };
+    const ffprobe = await getSetting("sr.ffprobePath", "ffprobe");
+    const ffmpeg = await getSetting("sr.ffmpegPath", "ffmpeg");
+    let durationSec = null;
+    let width = null;
+    let height = null;
+    let keyframeReadable = false;
+    try {
+      const probed = await run(ffprobe, ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,duration", "-of", "json", absPath]);
+      const parsed = JSON.parse(probed.stdout || "{}");
+      const stream4 = parsed.streams?.[0];
+      durationSec = stream4?.duration ? Number(stream4.duration) : null;
+      width = stream4?.width ?? null;
+      height = stream4?.height ?? null;
+    } catch {
+    }
+    try {
+      const keyframe = await run(ffmpeg, ["-v", "error", "-i", absPath, "-frames:v", "1", "-f", "null", "-"], 2e4);
+      keyframeReadable = keyframe.code === 0;
+    } catch {
+      keyframeReadable = false;
+    }
+    let blackFrameRatio = null;
+    try {
+      const blackDetect = await run(ffmpeg, ["-v", "info", "-i", absPath, "-vf", "blackdetect=d=0.1:pix_th=0.10", "-an", "-f", "null", "-"], 3e4);
+      blackFrameRatio = parseBlackFrameRatio(blackDetect.stderr, durationSec);
+    } catch {
+      blackFrameRatio = null;
+    }
+    return { exists: true, sizeBytes: stat.size, durationSec, width, height, blackFrameRatio, keyframeReadable };
+  } catch {
+    return { exists: false, sizeBytes: 0 };
+  }
+}
+function aspectRatio(width, height) {
+  if (!width || !height) return null;
+  const ratio = width / height;
+  if (Math.abs(ratio - 16 / 9) < 0.08) return "16:9";
+  if (Math.abs(ratio - 9 / 16) < 0.08) return "9:16";
+  if (Math.abs(ratio - 1) < 0.08) return "1:1";
+  return `${width}:${height}`;
+}
+function scoreFromChecks(checks) {
+  return Math.max(
+    0,
+    100 - checks.reduce((sum, check3) => {
+      if (check3.passed) return sum;
+      return sum + (check3.severity === "blocker" ? 30 : check3.severity === "warning" ? 12 : 4);
+    }, 0)
+  );
+}
+async function inspectGenerationCandidate(input) {
+  const candidate = await utils_default.db("o_sr_generation_candidate").where({ id: input.candidateId, taskId: input.taskId }).first();
+  if (!candidate) throw new Error(`generation candidate not found: ${input.candidateId}`);
+  const metadata = parseJson8(candidate.metadataJson, {});
+  const probe = await (input.probe || defaultVideoProbe)(candidate.videoPath || "");
+  const checks = [];
+  const fileExists = Boolean(candidate.videoPath && probe.exists);
+  checks.push({ code: "file_exists", severity: "blocker", passed: fileExists, message: fileExists ? "\u6587\u4EF6\u5B58\u5728" : "\u751F\u6210\u89C6\u9891\u6587\u4EF6\u4E0D\u5B58\u5728", details: { videoPath: candidate.videoPath } });
+  checks.push({ code: "non_empty_file", severity: "blocker", passed: probe.sizeBytes > 0, message: probe.sizeBytes > 0 ? "\u6587\u4EF6\u975E\u7A7A" : "\u751F\u6210\u89C6\u9891\u4E3A\u7A7A\u6587\u4EF6", details: { sizeBytes: probe.sizeBytes } });
+  const durationDelta = probe.durationSec == null ? null : Math.abs(probe.durationSec - input.expectedDurationSec);
+  checks.push({
+    code: "duration_match",
+    severity: "warning",
+    passed: durationDelta == null ? false : durationDelta <= Math.max(0.75, input.expectedDurationSec * 0.25),
+    message: "\u65F6\u957F\u504F\u5DEE\u68C0\u67E5",
+    details: { expectedDurationSec: input.expectedDurationSec, actualDurationSec: probe.durationSec, durationDelta }
+  });
+  checks.push({
+    code: "aspect_ratio_match",
+    severity: "blocker",
+    passed: aspectRatio(probe.width, probe.height) === input.expectedAspectRatio,
+    message: "\u753B\u9762\u6BD4\u4F8B\u68C0\u67E5",
+    details: { expectedAspectRatio: input.expectedAspectRatio, width: probe.width, height: probe.height, actualAspectRatio: aspectRatio(probe.width, probe.height) }
+  });
+  checks.push({
+    code: "black_frame",
+    severity: "blocker",
+    passed: probe.blackFrameRatio == null ? true : probe.blackFrameRatio < 0.9,
+    message: "\u9ED1\u5C4F\u68C0\u67E5",
+    details: { blackFrameRatio: probe.blackFrameRatio }
+  });
+  checks.push({
+    code: "keyframe_extract",
+    severity: "blocker",
+    passed: probe.keyframeReadable !== false,
+    message: "\u5173\u952E\u5E27\u53EF\u8BFB\u68C0\u67E5",
+    details: { keyframeReadable: probe.keyframeReadable }
+  });
+  for (const code of ["character_presence", "scene_presence", "product_presence", "subtitle_safe_area", "source_entity_leakage"]) {
+    const value = metadata[code];
+    const passed = code === "source_entity_leakage" ? value !== true : value !== false;
+    checks.push({
+      code,
+      severity: code === "source_entity_leakage" ? "blocker" : "warning",
+      passed,
+      message: `${code} check`,
+      details: { value }
+    });
+  }
+  const score = scoreFromChecks(checks);
+  const status = checks.some((check3) => check3.severity === "blocker" && !check3.passed) ? "blocked" : checks.some((check3) => !check3.passed) ? "warning" : "pass";
+  return QualityReportSchema.parse({
+    taskId: input.taskId,
+    shotId: candidate.shotId,
+    candidateId: input.candidateId,
+    status,
+    score,
+    checks,
+    retryRecommendation: recommendRetry({ score, checks })
+  });
+}
+async function saveQualityReport(report) {
+  const now2 = Date.now();
+  const [id] = await utils_default.db("o_sr_quality_report").insert({
+    taskId: report.taskId,
+    shotId: report.shotId,
+    candidateId: report.candidateId,
+    status: report.status,
+    score: report.score,
+    reportJson: JSON.stringify(report),
+    createdAt: now2,
+    updatedAt: now2
+  });
+  await utils_default.db("o_sr_generation_candidate").where("id", report.candidateId).update({
+    qualityScore: report.score,
+    updatedAt: now2
+  });
+  return await utils_default.db("o_sr_quality_report").where("id", Number(id)).first();
+}
+async function inspectAndSaveCandidate(input) {
+  const report = await inspectGenerationCandidate(input);
+  await saveQualityReport(report);
+  return report;
+}
+var import_promises15, import_node_path8, import_node_child_process2;
+var init_qualityGuardService = __esm({
+  "src/services/structuralReplica/qualityGuardService.ts"() {
+    "use strict";
+    import_promises15 = __toESM(require("node:fs/promises"));
+    import_node_path8 = __toESM(require("node:path"));
+    import_node_child_process2 = require("node:child_process");
+    init_utils3();
+    init_schemas3();
+    init_qualityRetryPolicy();
+  }
+});
+
+// src/routes/structuralReplica/quality/inspectCandidate.ts
+var import_express192, router192, inspectCandidate_default;
+var init_inspectCandidate = __esm({
+  "src/routes/structuralReplica/quality/inspectCandidate.ts"() {
+    "use strict";
+    import_express192 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_qualityGuardService();
+    router192 = import_express192.default.Router();
+    inspectCandidate_default = router192.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive(),
+        candidateId: external_exports.number().int().positive(),
+        expectedDurationSec: external_exports.number().positive(),
+        expectedAspectRatio: external_exports.string().min(1)
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3({ report: await inspectAndSaveCandidate(req.body) }));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
+      }
+    );
+  }
+});
+
+// src/routes/structuralReplica/quality/inspectSelected.ts
+var import_express193, router193, inspectSelected_default;
+var init_inspectSelected = __esm({
+  "src/routes/structuralReplica/quality/inspectSelected.ts"() {
+    "use strict";
+    import_express193 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_qualityGuardService();
+    init_repository();
+    init_schemas3();
+    router193 = import_express193.default.Router();
+    inspectSelected_default = router193.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive()
+      }),
+      async (req, res) => {
+        try {
+          const bundle = await getTaskBundle(req.body.taskId);
+          if (!bundle.storyIr?.dataJson) throw new Error("story IR not found");
+          const ir = StructuralIrSchema.parse(JSON.parse(bundle.storyIr.dataJson));
+          const reports = [];
+          for (const candidate of bundle.generationCandidates.filter((item) => item.selected === 1)) {
+            const shot = ir.shots.find((item) => item.shotId === candidate.shotId);
+            if (!shot) continue;
+            reports.push(
+              await inspectAndSaveCandidate({
+                taskId: req.body.taskId,
+                candidateId: Number(candidate.id),
+                expectedDurationSec: shot.durationSec,
+                expectedAspectRatio: bundle.task.aspectRatio || "9:16"
+              })
+            );
+          }
+          res.status(200).send(success3({ reports }));
         } catch (e) {
           res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
         }
@@ -258785,8 +262053,8 @@ function promptAssetSlots(shot, bindings) {
   const bindingsByKey = new Map(normalizedBindingsForShot(bindings, shot.shotId).map((binding) => [binding.normalizedKey, binding]));
   const slots = shot.requiredAssetSlots.map((slot) => normalizeAssetSlot(slot)).filter((slot) => Boolean(slot));
   return slots.map((slot) => {
-    const key = assetSlotKey(slot.type, slot.slot);
-    const binding = bindingsByKey.get(key);
+    const key2 = assetSlotKey(slot.type, slot.slot);
+    const binding = bindingsByKey.get(key2);
     const isBound = binding?.bindingStatus === "bound" && typeof binding.assetId === "number";
     return {
       slotName: slot.slot,
@@ -259017,18 +262285,19 @@ var init_storyboardRegenerator = __esm({
 });
 
 // src/routes/structuralReplica/regenerateStoryboard.ts
-var import_express173, router173, regenerateStoryboard_default;
+var import_express194, router194, regenerateStoryboard_default;
 var init_regenerateStoryboard = __esm({
   "src/routes/structuralReplica/regenerateStoryboard.ts"() {
     "use strict";
-    import_express173 = __toESM(require_express2());
+    import_express194 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_middleware();
     init_storyboardRegenerator();
     init_repository();
-    router173 = import_express173.default.Router();
-    regenerateStoryboard_default = router173.post(
+    init_jobService();
+    router194 = import_express194.default.Router();
+    regenerateStoryboard_default = router194.post(
       "/",
       validateFields({
         taskId: external_exports.number().int().positive()
@@ -259040,9 +262309,20 @@ var init_regenerateStoryboard = __esm({
           if (task.status !== "assets_bound" && task.status !== "storyboard_generated" && task.status !== "checked") {
             return res.status(400).send(error50(`task status must be assets_bound or later storyboard stage, got ${task.status}`));
           }
-          const storyboard = await regenerateStoryboard(taskId);
-          const updatedTask = task.status === "assets_bound" ? await updateTaskStatus(taskId, "storyboard_generated") : task;
-          res.status(200).send(success3({ taskId, status: updatedTask.status, version: storyboard.version, shots: storyboard.rows.length, rows: storyboard.rows }));
+          const job = await createSrJob({ taskId, jobType: "regenerateStoryboard", input: { taskId }, stage: "queued" });
+          const result = await runSrJob(
+            Number(job.id),
+            async (report) => {
+              await report({ progress: 30, stage: "regenerating_storyboard" });
+              const storyboard = await regenerateStoryboard(taskId);
+              await report({ progress: 85, stage: "updating_task_status" });
+              const updatedTask = task.status === "assets_bound" ? await updateTaskStatus(taskId, "storyboard_generated") : task;
+              return { taskId, status: updatedTask.status, version: storyboard.version, shots: storyboard.rows.length, rows: storyboard.rows };
+            },
+            "regenerating_storyboard"
+          );
+          const finishedJob = await getSrJob(Number(job.id));
+          res.status(200).send(success3({ ...result, job: serializeSrJob(finishedJob) }));
         } catch (e) {
           res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
         }
@@ -259055,29 +262335,29 @@ var init_regenerateStoryboard = __esm({
 function toOssRelPath(filePath) {
   if (!filePath) return null;
   const ossRoot = utils_default.getPath("oss");
-  const absolute = import_node_path6.default.resolve(filePath);
-  const relative = import_node_path6.default.relative(ossRoot, absolute);
-  if (relative.startsWith("..") || import_node_path6.default.isAbsolute(relative)) return filePath.split(import_node_path6.default.sep).join("/");
-  return `/${relative.split(import_node_path6.default.sep).join("/")}`;
+  const absolute = import_node_path9.default.resolve(filePath);
+  const relative = import_node_path9.default.relative(ossRoot, absolute);
+  if (relative.startsWith("..") || import_node_path9.default.isAbsolute(relative)) return filePath.split(import_node_path9.default.sep).join("/");
+  return `/${relative.split(import_node_path9.default.sep).join("/")}`;
 }
 function fromOssRelPath(filePath) {
-  return utils_default.getPath(import_node_path6.default.join("oss", filePath.replace(/^[/\\]+/, "")));
+  return utils_default.getPath(import_node_path9.default.join("oss", filePath.replace(/^[/\\]+/, "")));
 }
-var import_node_path6;
+var import_node_path9;
 var init_artifactPaths = __esm({
   "src/services/structuralReplica/artifactPaths.ts"() {
     "use strict";
-    import_node_path6 = __toESM(require("node:path"));
+    import_node_path9 = __toESM(require("node:path"));
     init_utils3();
   }
 });
 
 // src/services/structuralReplica/frameUnderstandingService.ts
-async function getSetting(key, fallback = "") {
-  const row = await utils_default.db("o_setting").where("key", key).first();
+async function getSetting2(key2, fallback = "") {
+  const row = await utils_default.db("o_setting").where("key", key2).first();
   return row?.value || fallback;
 }
-function normalizeBaseUrl(baseUrl) {
+function normalizeBaseUrl2(baseUrl) {
   const trimmed = baseUrl.replace(/\/+$/, "");
   return trimmed.endsWith("/v1") ? trimmed : `${trimmed}/v1`;
 }
@@ -259094,14 +262374,14 @@ function parseJsonObject(raw) {
   return JSON.parse(raw);
 }
 async function getVisionConfig() {
-  const enabledValue = (await getSetting("sr.visionEnabled", "0")).toLowerCase();
+  const enabledValue = (await getSetting2("sr.visionEnabled", "0")).toLowerCase();
   const enabled = ["1", "true", "yes", "on"].includes(enabledValue);
-  const provider = await getSetting("sr.visionProvider", "worldclawpro");
-  let baseUrl = await getSetting("sr.visionBaseUrl");
-  let apiKey = await getSetting("sr.visionApiKey");
-  let model = await getSetting("sr.visionModel");
-  const concurrency = Math.min(positiveInt(await getSetting("sr.visionConcurrency"), DEFAULT_VISION_CONCURRENCY), 6);
-  const requestTimeoutMs = positiveInt(await getSetting("sr.visionRequestTimeoutMs"), DEFAULT_VISION_REQUEST_TIMEOUT_MS);
+  const provider = await getSetting2("sr.visionProvider", "worldclawpro");
+  let baseUrl = await getSetting2("sr.visionBaseUrl");
+  let apiKey = await getDecryptedSetting("sr.visionApiKey");
+  let model = await getSetting2("sr.visionModel");
+  const concurrency = Math.min(positiveInt(await getSetting2("sr.visionConcurrency"), DEFAULT_VISION_CONCURRENCY), 6);
+  const requestTimeoutMs = positiveInt(await getSetting2("sr.visionRequestTimeoutMs"), DEFAULT_VISION_REQUEST_TIMEOUT_MS);
   if ((!baseUrl || !apiKey || !model) && provider) {
     const vendor = await utils_default.db("o_vendorConfig").where("id", provider).first();
     const inputValues = JSON.parse(vendor?.inputValues || "{}");
@@ -259119,7 +262399,7 @@ async function getVisionConfig() {
   return {
     enabled,
     provider,
-    baseUrl: baseUrl ? normalizeBaseUrl(baseUrl) : void 0,
+    baseUrl: baseUrl ? normalizeBaseUrl2(baseUrl) : void 0,
     apiKey: apiKey ? apiKey.replace(/^Bearer\s+/i, "") : void 0,
     model: model ? normalizeModelName(model) : void 0,
     concurrency,
@@ -259131,7 +262411,7 @@ function resolveFramePath(filePath) {
   return fromOssRelPath(filePath);
 }
 function getMimeType(filePath) {
-  const ext = import_node_path7.default.extname(filePath).toLowerCase();
+  const ext = import_node_path10.default.extname(filePath).toLowerCase();
   if (ext === ".png") return "image/png";
   if (ext === ".webp") return "image/webp";
   return "image/jpeg";
@@ -259140,7 +262420,7 @@ async function readFrameDataUrl(sample) {
   if (!sample.filePath) return null;
   const absolutePath = resolveFramePath(sample.filePath);
   try {
-    const data = await import_promises13.default.readFile(absolutePath);
+    const data = await import_promises16.default.readFile(absolutePath);
     return `data:${getMimeType(absolutePath)};base64,${data.toString("base64")}`;
   } catch {
     return null;
@@ -259297,12 +262577,14 @@ async function requestVisionUnderstanding(args) {
     provider: config3.provider
   });
 }
-async function runFrameUnderstanding(taskId) {
+async function runFrameUnderstanding(taskId, report) {
   const bundle = await getTaskBundle(taskId);
   if (!bundle.shotDetection?.dataJson) throw new Error("shot detection result not found");
   const shotDetection = ShotDetectionSchema.parse(parseJsonObject(bundle.shotDetection.dataJson));
   const transcriptRaw = parseJsonObject(bundle.transcript?.dataJson);
   const config3 = await getVisionConfig();
+  let completed = 0;
+  await report?.({ progress: 5, stage: "vision_preparing" });
   const results = await mapWithConcurrency(shotDetection.shots, config3.concurrency, async (shot) => {
     const shotSamples = samplesForShot(bundle.frameSamples, shot.shotId);
     let understanding;
@@ -259325,6 +262607,12 @@ async function runFrameUnderstanding(taskId) {
       }
     }
     const saved = await saveFrameUnderstanding(taskId, understanding);
+    completed += 1;
+    await report?.({
+      progress: 5 + Math.round(completed / Math.max(shotDetection.shots.length, 1) * 90),
+      stage: `vision_${completed}_${shotDetection.shots.length}`,
+      result: { completed, total: shotDetection.shots.length }
+    });
     return FrameUnderstandingSchema.parse(parseJsonObject(saved.dataJson));
   });
   return {
@@ -259333,16 +262621,17 @@ async function runFrameUnderstanding(taskId) {
     results
   };
 }
-var import_promises13, import_node_path7, FRAME_TYPES, RETRYABLE_VISION_STATUS, DEFAULT_VISION_CONCURRENCY, DEFAULT_VISION_REQUEST_TIMEOUT_MS;
+var import_promises16, import_node_path10, FRAME_TYPES, RETRYABLE_VISION_STATUS, DEFAULT_VISION_CONCURRENCY, DEFAULT_VISION_REQUEST_TIMEOUT_MS;
 var init_frameUnderstandingService = __esm({
   "src/services/structuralReplica/frameUnderstandingService.ts"() {
     "use strict";
-    import_promises13 = __toESM(require("node:fs/promises"));
-    import_node_path7 = __toESM(require("node:path"));
+    import_promises16 = __toESM(require("node:fs/promises"));
+    import_node_path10 = __toESM(require("node:path"));
     init_utils3();
     init_artifactPaths();
     init_repository();
     init_schemas3();
+    init_securityService();
     FRAME_TYPES = ["start", "middle", "end"];
     RETRYABLE_VISION_STATUS = /* @__PURE__ */ new Set([408, 409, 425, 429, 500, 502, 503, 504]);
     DEFAULT_VISION_CONCURRENCY = 3;
@@ -259351,19 +262640,20 @@ var init_frameUnderstandingService = __esm({
 });
 
 // src/routes/structuralReplica/runFrameUnderstanding.ts
-var import_express174, router174, runningTasks, runFrameUnderstanding_default;
+var import_express195, router195, runningTasks, runFrameUnderstanding_default;
 var init_runFrameUnderstanding = __esm({
   "src/routes/structuralReplica/runFrameUnderstanding.ts"() {
     "use strict";
-    import_express174 = __toESM(require_express2());
+    import_express195 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_middleware();
     init_repository();
     init_frameUnderstandingService();
-    router174 = import_express174.default.Router();
+    init_jobService();
+    router195 = import_express195.default.Router();
     runningTasks = /* @__PURE__ */ new Set();
-    runFrameUnderstanding_default = router174.post(
+    runFrameUnderstanding_default = router195.post(
       "/",
       validateFields({
         taskId: external_exports.number().int().positive()
@@ -259372,37 +262662,71 @@ var init_runFrameUnderstanding = __esm({
         const { taskId } = req.body;
         try {
           const task = await getTaskOrThrow(taskId);
-          const allowedStatuses = ["sampling_frames", "understanding_frames", "ir_built", "dialogue_reviewed", "asset_gap_ready", "assets_bound"];
+          const allowedStatuses = ["sampling_frames", "understanding_frames", "ir_built", "dialogue_reviewed", "asset_gap_ready", "assets_bound", "failed"];
           if (!allowedStatuses.includes(task.status || "")) {
             return res.status(400).send(error50(`task status must be sampling_frames or later editable stage, got ${task.status}`));
           }
-          if (runningTasks.has(taskId)) {
-            return res.status(200).send(success3({ taskId, status: task.status, started: true, running: true }));
+          const activeJob = await getActiveSrJob(taskId, "vision");
+          if (runningTasks.has(taskId) || activeJob) {
+            return res.status(200).send(success3({ taskId, status: task.status, started: true, running: true, job: serializeSrJob(activeJob) }));
           }
           const updatedTask = task.status === "understanding_frames" ? task : await updateTaskStatus(taskId, "understanding_frames");
           await clearDerivedArtifactsFromFrameUnderstanding(taskId);
+          const job = await createSrJob({ taskId, jobType: "vision", input: { taskId }, stage: "queued" });
           runningTasks.add(taskId);
-          setImmediate(() => {
-            runFrameUnderstanding(taskId).catch(async (e) => {
-              console.error("[structuralReplica:runFrameUnderstanding]", e);
+          runSrJobInBackground(
+            job,
+            async (report) => {
+              const result = await runFrameUnderstanding(taskId, report);
+              return { total: result.total, reviewRequiredCount: result.reviewRequiredCount };
+            },
+            "vision_preparing",
+            async (e) => {
+              runningTasks.delete(taskId);
+              if (!e) return;
               try {
                 await updateTaskStatus(taskId, "failed", e instanceof Error ? e.message : String(e));
               } catch (statusError) {
                 console.error("[structuralReplica:runFrameUnderstanding:status]", statusError);
               }
-            }).finally(() => runningTasks.delete(taskId));
-          });
+            }
+          );
           res.status(200).send(
             success3({
               taskId,
               status: updatedTask.status,
               started: true,
-              running: true
+              running: true,
+              job: serializeSrJob(job)
             })
           );
         } catch (e) {
           res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
         }
+      }
+    );
+  }
+});
+
+// src/routes/structuralReplica/security/setVisionApiKey.ts
+var import_express196, router196, setVisionApiKey_default;
+var init_setVisionApiKey = __esm({
+  "src/routes/structuralReplica/security/setVisionApiKey.ts"() {
+    "use strict";
+    import_express196 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_securityService();
+    router196 = import_express196.default.Router();
+    setVisionApiKey_default = router196.post(
+      "/",
+      validateFields({
+        apiKey: external_exports.string().min(1)
+      }),
+      async (req, res) => {
+        await upsertEncryptedSetting("sr.visionApiKey", req.body.apiKey);
+        res.status(200).send(success3({ saved: true, apiKey: "" }));
       }
     );
   }
@@ -259425,24 +262749,24 @@ function ensureSupportedSource(input) {
   }
 }
 function getUploadPartRelPath(taskId, uploadId, partIndex) {
-  return import_node_path8.default.join("tmp", "structuralReplica", String(taskId), uploadId, `${partIndex}.part`);
+  return import_node_path11.default.join("tmp", "structuralReplica", String(taskId), uploadId, `${partIndex}.part`);
 }
 function getFinalSourceRelPath(projectId, taskId) {
-  return import_node_path8.default.join(String(projectId), "structuralReplica", String(taskId), "source", "source.mp4");
+  return import_node_path11.default.join(String(projectId), "structuralReplica", String(taskId), "source", "source.mp4");
 }
 function normalizeOssPath(relPath) {
-  return `/${relPath.split(import_node_path8.default.sep).join("/")}`;
+  return `/${relPath.split(import_node_path11.default.sep).join("/")}`;
 }
 function sha256Buffer(buffer) {
-  return import_node_crypto5.default.createHash("sha256").update(buffer).digest("hex");
+  return import_node_crypto6.default.createHash("sha256").update(buffer).digest("hex");
 }
 async function sha256File(filePath) {
-  const hash3 = import_node_crypto5.default.createHash("sha256");
-  await (0, import_promises15.pipeline)(import_node_fs2.default.createReadStream(filePath), hash3);
+  const hash3 = import_node_crypto6.default.createHash("sha256");
+  await (0, import_promises18.pipeline)(import_node_fs2.default.createReadStream(filePath), hash3);
   return hash3.digest("hex");
 }
 async function getFileSize(filePath) {
-  const stat = await import_promises14.default.stat(filePath);
+  const stat = await import_promises17.default.stat(filePath);
   return stat.size;
 }
 async function assertUploadTask(taskId) {
@@ -259453,7 +262777,7 @@ async function assertUploadTask(taskId) {
 async function initUpload(input) {
   ensureSupportedSource(input);
   await assertUploadTask(input.taskId);
-  const uploadId = `sr_upload_${Date.now()}_${import_node_crypto5.default.randomUUID()}`;
+  const uploadId = `sr_upload_${Date.now()}_${import_node_crypto6.default.randomUUID()}`;
   await updateTaskStatus(input.taskId, "source_uploading");
   return {
     uploadId,
@@ -259468,8 +262792,8 @@ async function saveChunk(input) {
   await assertUploadTask(input.taskId);
   const relPath = getUploadPartRelPath(input.taskId, input.uploadId, input.partIndex);
   const absPath = utils_default.getPath(relPath);
-  await import_promises14.default.mkdir(import_node_path8.default.dirname(absPath), { recursive: true });
-  await import_promises14.default.writeFile(absPath, input.buffer);
+  await import_promises17.default.mkdir(import_node_path11.default.dirname(absPath), { recursive: true });
+  await import_promises17.default.writeFile(absPath, input.buffer);
   const partSha256 = sha256Buffer(input.buffer);
   await saveUploadPart({
     taskId: input.taskId,
@@ -259477,7 +262801,7 @@ async function saveChunk(input) {
     partIndex: input.partIndex,
     partSize: input.buffer.length,
     partSha256,
-    path: relPath.split(import_node_path8.default.sep).join("/")
+    path: relPath.split(import_node_path11.default.sep).join("/")
   });
   return {
     partIndex: input.partIndex,
@@ -259507,8 +262831,8 @@ async function completeUpload(input) {
   assertContiguousParts(parts, input.totalParts);
   const sourceRelPath = getFinalSourceRelPath(task.projectId, input.taskId);
   const sourcePath = normalizeOssPath(sourceRelPath);
-  const outputAbsPath = utils_default.getPath(import_node_path8.default.join("oss", sourceRelPath));
-  await import_promises14.default.mkdir(import_node_path8.default.dirname(outputAbsPath), { recursive: true });
+  const outputAbsPath = utils_default.getPath(import_node_path11.default.join("oss", sourceRelPath));
+  await import_promises17.default.mkdir(import_node_path11.default.dirname(outputAbsPath), { recursive: true });
   const output = import_node_fs2.default.createWriteStream(outputAbsPath);
   const outputFinished = new Promise((resolve3, reject) => {
     output.on("finish", resolve3);
@@ -259516,7 +262840,7 @@ async function completeUpload(input) {
   });
   try {
     for (const part of parts) {
-      await (0, import_promises15.pipeline)(import_node_fs2.default.createReadStream(utils_default.getPath(part.path)), output, { end: false });
+      await (0, import_promises18.pipeline)(import_node_fs2.default.createReadStream(utils_default.getPath(part.path)), output, { end: false });
     }
   } finally {
     output.end();
@@ -259539,15 +262863,15 @@ async function completeUpload(input) {
     status: updatedTask.status
   };
 }
-var import_node_crypto5, import_node_fs2, import_promises14, import_node_path8, import_promises15, ALLOWED_MIME_TYPES, DEFAULT_MAX_UPLOAD_BYTES, SOURCE_UPLOAD_CHUNK_SIZE;
+var import_node_crypto6, import_node_fs2, import_promises17, import_node_path11, import_promises18, ALLOWED_MIME_TYPES, DEFAULT_MAX_UPLOAD_BYTES, SOURCE_UPLOAD_CHUNK_SIZE;
 var init_sourceUploadService = __esm({
   "src/services/structuralReplica/sourceUploadService.ts"() {
     "use strict";
-    import_node_crypto5 = __toESM(require("node:crypto"));
+    import_node_crypto6 = __toESM(require("node:crypto"));
     import_node_fs2 = __toESM(require("node:fs"));
-    import_promises14 = __toESM(require("node:fs/promises"));
-    import_node_path8 = __toESM(require("node:path"));
-    import_promises15 = require("node:stream/promises");
+    import_promises17 = __toESM(require("node:fs/promises"));
+    import_node_path11 = __toESM(require("node:path"));
+    import_promises18 = require("node:stream/promises");
     init_utils3();
     init_repository();
     ALLOWED_MIME_TYPES = /* @__PURE__ */ new Set(["video/mp4", "video/quicktime"]);
@@ -259557,21 +262881,21 @@ var init_sourceUploadService = __esm({
 });
 
 // src/routes/structuralReplica/sourceUpload/chunk.ts
-var import_express175, router175, QuerySchema, chunk_default;
+var import_express197, router197, QuerySchema, chunk_default;
 var init_chunk = __esm({
   "src/routes/structuralReplica/sourceUpload/chunk.ts"() {
     "use strict";
-    import_express175 = __toESM(require_express2());
+    import_express197 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_sourceUploadService();
-    router175 = import_express175.default.Router();
+    router197 = import_express197.default.Router();
     QuerySchema = external_exports.object({
       taskId: external_exports.coerce.number().int().positive(),
       uploadId: external_exports.string().min(1),
       partIndex: external_exports.coerce.number().int().nonnegative()
     });
-    chunk_default = router175.post("/", import_express175.default.raw({ type: "application/octet-stream", limit: "16mb" }), async (req, res) => {
+    chunk_default = router197.post("/", import_express197.default.raw({ type: "application/octet-stream", limit: "16mb" }), async (req, res) => {
       const parsed = QuerySchema.safeParse(req.query);
       if (!parsed.success) return res.status(400).send(error50("\u53C2\u6570\u9519\u8BEF", parsed.error.issues));
       if (!Buffer.isBuffer(req.body)) return res.status(400).send(error50("\u8BF7\u6C42\u4F53\u5FC5\u987B\u662F application/octet-stream"));
@@ -259589,17 +262913,17 @@ var init_chunk = __esm({
 });
 
 // src/routes/structuralReplica/sourceUpload/complete.ts
-var import_express176, router176, complete_default;
+var import_express198, router198, complete_default;
 var init_complete = __esm({
   "src/routes/structuralReplica/sourceUpload/complete.ts"() {
     "use strict";
-    import_express176 = __toESM(require_express2());
+    import_express198 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_middleware();
     init_sourceUploadService();
-    router176 = import_express176.default.Router();
-    complete_default = router176.post(
+    router198 = import_express198.default.Router();
+    complete_default = router198.post(
       "/",
       validateFields({
         taskId: external_exports.number().int().positive(),
@@ -259619,17 +262943,17 @@ var init_complete = __esm({
 });
 
 // src/routes/structuralReplica/sourceUpload/init.ts
-var import_express177, router177, init_default;
+var import_express199, router199, init_default;
 var init_init = __esm({
   "src/routes/structuralReplica/sourceUpload/init.ts"() {
     "use strict";
-    import_express177 = __toESM(require_express2());
+    import_express199 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_middleware();
     init_sourceUploadService();
-    router177 = import_express177.default.Router();
-    init_default = router177.post(
+    router199 = import_express199.default.Router();
+    init_default = router199.post(
       "/",
       validateFields({
         taskId: external_exports.number().int().positive(),
@@ -259652,7 +262976,7 @@ var init_init = __esm({
 
 // src/services/structuralReplica/frameSampleIngestService.ts
 async function ingestFrameSamples(taskId, analysisDir) {
-  const raw = JSON.parse(await import_promises16.default.readFile(`${analysisDir}/frames.json`, "utf8"));
+  const raw = JSON.parse(await import_promises19.default.readFile(`${analysisDir}/frames.json`, "utf8"));
   const samples = (raw.samples || []).map((sample) => {
     const parsed = FrameSampleSchema.parse(sample);
     return {
@@ -259662,11 +262986,11 @@ async function ingestFrameSamples(taskId, analysisDir) {
   });
   return await saveFrameSamples(taskId, samples);
 }
-var import_promises16;
+var import_promises19;
 var init_frameSampleIngestService = __esm({
   "src/services/structuralReplica/frameSampleIngestService.ts"() {
     "use strict";
-    import_promises16 = __toESM(require("node:fs/promises"));
+    import_promises19 = __toESM(require("node:fs/promises"));
     init_schemas3();
     init_repository();
     init_artifactPaths();
@@ -259678,7 +263002,7 @@ async function ingestMediaProbe(taskId, analysisDir) {
   const bundle = await getTaskBundle(taskId);
   if (!bundle.sourceMedia?.sourcePath) throw new Error("source media not found");
   const mediaPath = `${analysisDir}/media.json`;
-  const media = JSON.parse(await import_promises17.default.readFile(mediaPath, "utf8"));
+  const media = JSON.parse(await import_promises20.default.readFile(mediaPath, "utf8"));
   return await saveSourceMedia({
     taskId,
     sourcePath: bundle.sourceMedia.sourcePath,
@@ -259695,11 +263019,11 @@ async function ingestMediaProbe(taskId, analysisDir) {
     hasAudio: media.hasAudio ? 1 : 0
   });
 }
-var import_promises17;
+var import_promises20;
 var init_mediaProbeService = __esm({
   "src/services/structuralReplica/mediaProbeService.ts"() {
     "use strict";
-    import_promises17 = __toESM(require("node:fs/promises"));
+    import_promises20 = __toESM(require("node:fs/promises"));
     init_repository();
     init_artifactPaths();
   }
@@ -259707,15 +263031,15 @@ var init_mediaProbeService = __esm({
 
 // src/services/structuralReplica/shotDetectionIngestService.ts
 async function ingestShotDetection(taskId, analysisDir) {
-  const raw = JSON.parse(await import_promises18.default.readFile(`${analysisDir}/shots.json`, "utf8"));
+  const raw = JSON.parse(await import_promises21.default.readFile(`${analysisDir}/shots.json`, "utf8"));
   const shotDetection = ShotDetectionSchema.parse(raw);
   return await saveShotDetection(taskId, shotDetection);
 }
-var import_promises18;
+var import_promises21;
 var init_shotDetectionIngestService = __esm({
   "src/services/structuralReplica/shotDetectionIngestService.ts"() {
     "use strict";
-    import_promises18 = __toESM(require("node:fs/promises"));
+    import_promises21 = __toESM(require("node:fs/promises"));
     init_schemas3();
     init_repository();
   }
@@ -259723,36 +263047,36 @@ var init_shotDetectionIngestService = __esm({
 
 // src/services/structuralReplica/transcriptIngestService.ts
 async function ingestTranscript(taskId, analysisDir) {
-  const raw = JSON.parse(await import_promises19.default.readFile(`${analysisDir}/transcript.json`, "utf8"));
+  const raw = JSON.parse(await import_promises22.default.readFile(`${analysisDir}/transcript.json`, "utf8"));
   const transcript = TranscriptSchema.parse(raw);
   return await saveTranscript(taskId, transcript);
 }
-var import_promises19;
+var import_promises22;
 var init_transcriptIngestService = __esm({
   "src/services/structuralReplica/transcriptIngestService.ts"() {
     "use strict";
-    import_promises19 = __toESM(require("node:fs/promises"));
+    import_promises22 = __toESM(require("node:fs/promises"));
     init_schemas3();
     init_repository();
   }
 });
 
 // src/services/structuralReplica/analyzerRunner.ts
-async function getSetting2(key, fallback) {
-  const row = await utils_default.db("o_setting").where("key", key).first();
+async function getSetting3(key2, fallback) {
+  const row = await utils_default.db("o_setting").where("key", key2).first();
   return row?.value || fallback;
 }
 async function runPythonAnalyzer(taskId, inputPath, analysisDir) {
-  const pythonPath = await getSetting2("sr.pythonPath", "python");
-  const whisperModel = await getSetting2("sr.whisperModel", "turbo");
-  const analyzerPath = import_node_path9.default.resolve("tools", "video-analyzer");
+  const pythonPath = await getSetting3("sr.pythonPath", "python");
+  const whisperModel = await getSetting3("sr.whisperModel", "turbo");
+  const analyzerPath = import_node_path12.default.resolve("tools", "video-analyzer");
   const env2 = {
     ...process.env,
-    PYTHONPATH: process.env.PYTHONPATH ? `${analyzerPath}${import_node_path9.default.delimiter}${process.env.PYTHONPATH}` : analyzerPath
+    PYTHONPATH: process.env.PYTHONPATH ? `${analyzerPath}${import_node_path12.default.delimiter}${process.env.PYTHONPATH}` : analyzerPath
   };
   const args = ["-m", "sr_analyzer.cli", "run-all", "--input", inputPath, "--workdir", analysisDir, "--model", whisperModel];
   return await new Promise((resolve3, reject) => {
-    const child = (0, import_node_child_process.spawn)(pythonPath, args, { cwd: process.cwd(), env: env2, windowsHide: true });
+    const child = (0, import_node_child_process3.spawn)(pythonPath, args, { cwd: process.cwd(), env: env2, windowsHide: true });
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (chunk) => {
@@ -259768,32 +263092,38 @@ async function runPythonAnalyzer(taskId, inputPath, analysisDir) {
     });
   });
 }
-async function ingestAnalysisArtifacts(taskId, analysisDir) {
+async function ingestAnalysisArtifacts(taskId, analysisDir, report) {
+  await report?.({ progress: 45, stage: "transcribing" });
   await updateTaskStatus(taskId, "transcribing");
   await ingestMediaProbe(taskId, analysisDir);
   await ingestTranscript(taskId, analysisDir);
+  await report?.({ progress: 65, stage: "detecting_shots" });
   await updateTaskStatus(taskId, "detecting_shots");
   await ingestShotDetection(taskId, analysisDir);
+  await report?.({ progress: 80, stage: "sampling_frames" });
   await updateTaskStatus(taskId, "sampling_frames");
   await ingestFrameSamples(taskId, analysisDir);
 }
-async function runAnalyzer(taskId) {
+async function runAnalyzer(taskId, report) {
   const bundle = await getTaskBundle(taskId);
   if (bundle.task.status !== "source_uploaded" && bundle.task.status !== "failed") {
     throw new Error(`task status must be source_uploaded or failed, got ${bundle.task.status}`);
   }
   if (!bundle.sourceMedia?.sourcePath) throw new Error("source media not found");
   if (!bundle.task.projectId) throw new Error("task projectId not found");
-  const analysisDir = utils_default.getPath(import_node_path9.default.join("oss", String(bundle.task.projectId), "structuralReplica", String(taskId), "analysis"));
-  await import_promises20.default.mkdir(analysisDir, { recursive: true });
+  const analysisDir = utils_default.getPath(import_node_path12.default.join("oss", String(bundle.task.projectId), "structuralReplica", String(taskId), "analysis"));
+  await import_promises23.default.mkdir(analysisDir, { recursive: true });
   try {
+    await report?.({ progress: 5, stage: "preprocessing" });
     await updateTaskStatus(taskId, "preprocessing", null);
+    await report?.({ progress: 20, stage: "running_analyzer" });
     const { stdout, stderr } = await runPythonAnalyzer(taskId, fromOssRelPath(bundle.sourceMedia.sourcePath), analysisDir);
-    await ingestAnalysisArtifacts(taskId, analysisDir);
+    await ingestAnalysisArtifacts(taskId, analysisDir, report);
+    await report?.({ progress: 95, stage: "artifacts_ingested" });
     return {
       taskId,
       analysisDir,
-      artifactsPath: import_node_path9.default.join(analysisDir, "artifacts.json"),
+      artifactsPath: import_node_path12.default.join(analysisDir, "artifacts.json"),
       stdout,
       stderr
     };
@@ -259803,13 +263133,13 @@ async function runAnalyzer(taskId) {
     throw e;
   }
 }
-var import_node_child_process, import_promises20, import_node_path9;
+var import_node_child_process3, import_promises23, import_node_path12;
 var init_analyzerRunner = __esm({
   "src/services/structuralReplica/analyzerRunner.ts"() {
     "use strict";
-    import_node_child_process = require("node:child_process");
-    import_promises20 = __toESM(require("node:fs/promises"));
-    import_node_path9 = __toESM(require("node:path"));
+    import_node_child_process3 = require("node:child_process");
+    import_promises23 = __toESM(require("node:fs/promises"));
+    import_node_path12 = __toESM(require("node:path"));
     init_utils3();
     init_artifactPaths();
     init_repository();
@@ -259821,18 +263151,19 @@ var init_analyzerRunner = __esm({
 });
 
 // src/routes/structuralReplica/startAnalysis.ts
-var import_express178, router178, startAnalysis_default;
+var import_express200, router200, startAnalysis_default;
 var init_startAnalysis = __esm({
   "src/routes/structuralReplica/startAnalysis.ts"() {
     "use strict";
-    import_express178 = __toESM(require_express2());
+    import_express200 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_middleware();
     init_repository();
     init_analyzerRunner();
-    router178 = import_express178.default.Router();
-    startAnalysis_default = router178.post(
+    init_jobService();
+    router200 = import_express200.default.Router();
+    startAnalysis_default = router200.post(
       "/",
       validateFields({
         taskId: external_exports.number().int().positive()
@@ -259847,27 +263178,244 @@ var init_startAnalysis = __esm({
         if (!bundle.sourceMedia?.sourcePath) {
           return res.status(400).send(error50("\u4EFB\u52A1\u6CA1\u6709\u6E90\u89C6\u9891\uFF0C\u8BF7\u5148\u4E0A\u4F20 MP4"));
         }
-        setImmediate(() => {
-          runAnalyzer(taskId).catch((e) => console.error("[structuralReplica:startAnalysis]", e));
-        });
-        res.status(200).send(success3({ started: true }));
+        const activeJob = await getActiveSrJob(taskId, "analyzer");
+        if (activeJob) return res.status(200).send(success3({ started: true, running: true, job: serializeSrJob(activeJob) }));
+        const job = await createSrJob({ taskId, jobType: "analyzer", input: { taskId }, stage: "queued" });
+        runSrJobInBackground(job, async (report) => {
+          const result = await runAnalyzer(taskId, report);
+          return { taskId: result.taskId, analysisDir: result.analysisDir, artifactsPath: result.artifactsPath };
+        }, "preprocessing");
+        res.status(200).send(success3({ started: true, running: true, job: serializeSrJob(job) }));
+      }
+    );
+  }
+});
+
+// src/services/structuralReplica/timelineComposer.ts
+function ossAbsPath2(relPath) {
+  const normalized = relPath.replace(/^[/\\]+/, "");
+  return utils_default.getPath(["oss", ...normalized.split(/[\\/]+/)]);
+}
+async function getSetting4(key2, fallback) {
+  const row = await utils_default.db("o_setting").where("key", key2).first();
+  return String(row?.value || fallback);
+}
+function run2(command, args, timeoutMs = 12e4) {
+  return new Promise((resolve3, reject) => {
+    const child = (0, import_node_child_process4.spawn)(command, args, { shell: process.platform === "win32", stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error(`${command} timed out`));
+    }, timeoutMs);
+    child.stdout.on("data", (data) => {
+      stdout += String(data);
+    });
+    child.stderr.on("data", (data) => {
+      stderr += String(data);
+    });
+    child.on("error", (error71) => {
+      clearTimeout(timer);
+      reject(error71);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      resolve3({ code, stdout, stderr });
+    });
+  });
+}
+function parseCandidateIds(data) {
+  if (!data) return [];
+  try {
+    const value = JSON.parse(data);
+    return Array.isArray(value) ? value.map(Number).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+function srtTime(seconds) {
+  const safeSeconds = Math.max(0, seconds);
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor(safeSeconds % 3600 / 60);
+  const secs = Math.floor(safeSeconds % 60);
+  const millis = Math.round((safeSeconds - Math.floor(safeSeconds)) * 1e3);
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")},${String(millis).padStart(3, "0")}`;
+}
+function escapeSubtitleFilterPath(filePath) {
+  return filePath.replace(/\\/g, "/").replace(/:/g, "\\:").replace(/'/g, "\\'");
+}
+async function selectedTimelineInputs(taskId) {
+  const bundle = await getTaskBundle(taskId);
+  if (!bundle.storyIr?.dataJson) throw new Error("story IR not found");
+  const ir = StructuralIrSchema.parse(JSON.parse(bundle.storyIr.dataJson));
+  const dialogue = bundle.dialogueStructure?.dataJson ? DialogueStructureSchema.parse(JSON.parse(bundle.dialogueStructure.dataJson)) : null;
+  const dialogueByShot = new Map((dialogue?.lines || []).map((line2) => [line2.shotId, line2]));
+  const selectedRows = await utils_default.db("o_sr_generation_candidate").where({ taskId, selected: 1 }).orderBy("id", "asc");
+  const selectedByShot = new Map(selectedRows.map((row) => [row.shotId, row]));
+  const ordered = [];
+  const subtitles = [];
+  for (const shot of ir.shots.filter((item) => item.enabled)) {
+    const row = selectedByShot.get(shot.shotId);
+    if (!row) throw new Error(`selected candidate missing for shot: ${shot.shotId}`);
+    if (!row.videoPath) throw new Error(`selected candidate has no video path: ${shot.shotId}`);
+    ordered.push(row);
+    const line2 = dialogueByShot.get(shot.shotId);
+    subtitles.push({
+      shotId: shot.shotId,
+      text: line2?.subtitle || line2?.finalDialogue || "",
+      durationSec: Number(row.durationSec || shot.durationSec || 0)
+    });
+  }
+  return { candidates: ordered, subtitles };
+}
+async function writeSrtFile(taskId, generatedAt, subtitles) {
+  const subtitlePath = `/${taskId}/structuralReplica/exports/timeline-${generatedAt}.srt`;
+  const absPath = ossAbsPath2(subtitlePath);
+  await import_promises24.default.mkdir(import_node_path13.default.dirname(absPath), { recursive: true });
+  let cursor = 0;
+  const blocks = subtitles.map((subtitle, index) => {
+    const text2 = subtitle.text.trim();
+    const start = cursor;
+    const end = cursor + Math.max(0.25, subtitle.durationSec || 0);
+    cursor = end;
+    return text2 ? `${index + 1}
+${srtTime(start)} --> ${srtTime(end)}
+${text2}
+` : "";
+  }).filter(Boolean);
+  await import_promises24.default.writeFile(absPath, blocks.join("\n"), "utf8");
+  return subtitlePath;
+}
+async function composeTimeline(input) {
+  const { candidates, subtitles } = await selectedTimelineInputs(input.taskId);
+  const now2 = Date.now();
+  const expiresAt = now2 + (input.expiresInDays ?? 14) * 24 * 60 * 60 * 1e3;
+  const outputPath = `/${input.taskId}/structuralReplica/exports/timeline-${now2}.mp4`;
+  const subtitleMode = input.subtitleMode || "none";
+  const subtitlePath = subtitleMode === "none" ? null : await writeSrtFile(input.taskId, now2, subtitles);
+  const report = {
+    taskId: input.taskId,
+    shotCount: candidates.length,
+    candidateIds: candidates.map((item) => Number(item.id)),
+    subtitleMode,
+    subtitlePath,
+    outputPath,
+    generatedAt: now2
+  };
+  const [exportId] = await utils_default.db("o_sr_timeline_export").insert({
+    taskId: input.taskId,
+    status: "running",
+    outputPath,
+    reportJson: JSON.stringify(report),
+    subtitleMode,
+    candidateIdsJson: JSON.stringify(report.candidateIds),
+    errorReason: null,
+    expiresAt,
+    createdAt: now2,
+    updatedAt: now2
+  });
+  try {
+    if (!input.dryRun) {
+      const ffmpeg = await getSetting4("sr.ffmpegPath", "ffmpeg");
+      const concatListPath = utils_default.getPath(["tmp", "structuralReplica", `concat-${input.taskId}-${now2}.txt`]);
+      await import_promises24.default.mkdir(import_node_path13.default.dirname(concatListPath), { recursive: true });
+      const concatContent = candidates.map((candidate) => `file '${ossAbsPath2(candidate.videoPath || "").replace(/'/g, "'\\''")}'`).join("\n");
+      await import_promises24.default.writeFile(concatListPath, concatContent, "utf8");
+      const absOutput = ossAbsPath2(outputPath);
+      await import_promises24.default.mkdir(import_node_path13.default.dirname(absOutput), { recursive: true });
+      if (subtitleMode === "none") {
+        const result = await run2(ffmpeg, ["-y", "-f", "concat", "-safe", "0", "-i", concatListPath, "-c", "copy", absOutput], 12e4);
+        if (result.code !== 0) throw new Error(result.stderr || `ffmpeg exited with ${result.code}`);
+      } else {
+        const tempConcatPath = utils_default.getPath(["tmp", "structuralReplica", `timeline-${input.taskId}-${now2}-concat.mp4`]);
+        const concatResult = await run2(ffmpeg, ["-y", "-f", "concat", "-safe", "0", "-i", concatListPath, "-c", "copy", tempConcatPath], 12e4);
+        if (concatResult.code !== 0) throw new Error(concatResult.stderr || `ffmpeg exited with ${concatResult.code}`);
+        const absSubtitlePath = ossAbsPath2(subtitlePath || "");
+        const args = subtitleMode === "burn" ? ["-y", "-i", tempConcatPath, "-vf", `subtitles='${escapeSubtitleFilterPath(absSubtitlePath)}'`, "-c:a", "copy", absOutput] : ["-y", "-i", tempConcatPath, "-i", absSubtitlePath, "-map", "0", "-map", "1", "-c:v", "copy", "-c:a", "copy", "-c:s", "mov_text", absOutput];
+        const result = await run2(ffmpeg, args, 12e4);
+        if (result.code !== 0) throw new Error(result.stderr || `ffmpeg exited with ${result.code}`);
+      }
+    }
+    await utils_default.db("o_sr_timeline_export").where("id", Number(exportId)).update({
+      status: "succeeded",
+      reportJson: JSON.stringify({ ...report, dryRun: Boolean(input.dryRun) }),
+      updatedAt: Date.now()
+    });
+  } catch (error71) {
+    await utils_default.db("o_sr_timeline_export").where("id", Number(exportId)).update({
+      status: "failed",
+      errorReason: error71 instanceof Error ? error71.message : String(error71),
+      updatedAt: Date.now()
+    });
+  }
+  const row = await utils_default.db("o_sr_timeline_export").where("id", Number(exportId)).first();
+  return TimelineExportSchema.parse({
+    taskId: row.taskId,
+    status: row.status,
+    outputPath: row.outputPath,
+    reportJson: row.reportJson ? JSON.parse(row.reportJson) : {},
+    subtitleMode: row.subtitleMode || "none",
+    candidateIds: parseCandidateIds(row.candidateIdsJson),
+    errorReason: row.errorReason ?? null,
+    expiresAt: row.expiresAt ?? null
+  });
+}
+var import_promises24, import_node_path13, import_node_child_process4;
+var init_timelineComposer = __esm({
+  "src/services/structuralReplica/timelineComposer.ts"() {
+    "use strict";
+    import_promises24 = __toESM(require("node:fs/promises"));
+    import_node_path13 = __toESM(require("node:path"));
+    import_node_child_process4 = require("node:child_process");
+    init_utils3();
+    init_schemas3();
+    init_repository();
+  }
+});
+
+// src/routes/structuralReplica/timeline/export.ts
+var import_express201, router201, export_default;
+var init_export = __esm({
+  "src/routes/structuralReplica/timeline/export.ts"() {
+    "use strict";
+    import_express201 = __toESM(require_express2());
+    init_zod();
+    init_responseFormat();
+    init_middleware();
+    init_timelineComposer();
+    router201 = import_express201.default.Router();
+    export_default = router201.post(
+      "/",
+      validateFields({
+        taskId: external_exports.number().int().positive(),
+        subtitleMode: external_exports.enum(["none", "burn", "track"]).optional(),
+        dryRun: external_exports.boolean().optional(),
+        expiresInDays: external_exports.number().int().positive().optional()
+      }),
+      async (req, res) => {
+        try {
+          res.status(200).send(success3({ export: await composeTimeline(req.body) }));
+        } catch (e) {
+          res.status(400).send(error50(e instanceof Error ? e.message : String(e)));
+        }
       }
     );
   }
 });
 
 // src/routes/structuralReplica/updateDialogueStructure.ts
-var import_express179, router179, DialoguePatchSchema, updateDialogueStructure_default;
+var import_express202, router202, DialoguePatchSchema, updateDialogueStructure_default;
 var init_updateDialogueStructure = __esm({
   "src/routes/structuralReplica/updateDialogueStructure.ts"() {
     "use strict";
-    import_express179 = __toESM(require_express2());
+    import_express202 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_middleware();
     init_repository();
     init_dialogueStructureService();
-    router179 = import_express179.default.Router();
+    router202 = import_express202.default.Router();
     DialoguePatchSchema = external_exports.object({
       shotId: external_exports.string().min(1),
       editableTemplate: external_exports.string().optional(),
@@ -259876,7 +263424,7 @@ var init_updateDialogueStructure = __esm({
       subtitle: external_exports.string().optional(),
       cta: external_exports.string().optional()
     });
-    updateDialogueStructure_default = router179.post(
+    updateDialogueStructure_default = router202.post(
       "/",
       validateFields({
         taskId: external_exports.number().int().positive(),
@@ -259910,17 +263458,17 @@ var init_updateDialogueStructure = __esm({
 });
 
 // src/routes/structuralReplica/updateIrShot.ts
-var import_express180, router180, PatchSchema, updateIrShot_default;
+var import_express203, router203, PatchSchema, updateIrShot_default;
 var init_updateIrShot = __esm({
   "src/routes/structuralReplica/updateIrShot.ts"() {
     "use strict";
-    import_express180 = __toESM(require_express2());
+    import_express203 = __toESM(require_express2());
     init_zod();
     init_responseFormat();
     init_middleware();
     init_repository();
     init_schemas3();
-    router180 = import_express180.default.Router();
+    router203 = import_express203.default.Router();
     PatchSchema = external_exports.object({
       shotPurpose: external_exports.string().optional(),
       sourceStructure: external_exports.string().optional(),
@@ -259934,7 +263482,7 @@ var init_updateIrShot = __esm({
       reviewRequired: external_exports.boolean().optional(),
       reviewReason: external_exports.string().nullable().optional()
     });
-    updateIrShot_default = router180.post(
+    updateIrShot_default = router203.post(
       "/",
       validateFields({
         taskId: external_exports.number().int().positive(),
@@ -260002,28 +263550,32 @@ function extFromDataUrl(base644, fallback) {
 function stripBase64Header(base644) {
   return Buffer.from(base644.replace(/^data:[^;]+;base64,/, ""), "base64");
 }
-var import_express181, router181, uploadCoreAsset_default;
+var import_express204, router204, uploadCoreAsset_default;
 var init_uploadCoreAsset = __esm({
   "src/routes/structuralReplica/uploadCoreAsset.ts"() {
     "use strict";
-    import_express181 = __toESM(require_express2());
+    import_express204 = __toESM(require_express2());
     init_zod();
     init_dist_node();
     init_responseFormat();
     init_middleware();
     init_utils3();
-    router181 = import_express181.default.Router();
-    uploadCoreAsset_default = router181.post(
+    router204 = import_express204.default.Router();
+    uploadCoreAsset_default = router204.post(
       "/",
       validateFields({
         projectId: external_exports.number().int().positive(),
         name: external_exports.string().min(1),
         slotName: external_exports.string().min(1).optional(),
         type: external_exports.enum(["role", "scene", "audio"]),
-        base64: external_exports.string().min(1)
+        base64: external_exports.string().min(1),
+        licenseType: external_exports.string().optional(),
+        licenseNote: external_exports.string().optional(),
+        sourceOwner: external_exports.string().optional(),
+        commercialAllowed: external_exports.boolean().optional()
       }),
       async (req, res) => {
-        const { projectId, name: name28, slotName, type, base64: base644 } = req.body;
+        const { projectId, name: name28, slotName, type, base64: base644, licenseType, licenseNote, sourceOwner, commercialAllowed } = req.body;
         const ext = extFromDataUrl(base644, type === "audio" ? "mp3" : "png");
         const savePath = `/${projectId}/structuralReplica/coreAssets/${v4_default()}.${ext}`;
         const assetType = type === "audio" ? "audio" : type;
@@ -260034,7 +263586,11 @@ var init_uploadCoreAsset = __esm({
           type: assetType,
           projectId,
           prompt: slotName ? `structural replica core asset: ${slotName}` : "structural replica core asset",
-          startTime: Date.now()
+          startTime: Date.now(),
+          licenseType: licenseType ?? null,
+          licenseNote: licenseNote ?? null,
+          sourceOwner: sourceOwner ?? null,
+          commercialAllowed: commercialAllowed === void 0 ? null : commercialAllowed ? 1 : 0
         });
         const [imageId] = await utils_default.db("o_image").insert({
           filePath: savePath,
@@ -260050,15 +263606,15 @@ var init_uploadCoreAsset = __esm({
 });
 
 // src/routes/task/getProject.ts
-var import_express182, router182, getProject_default2;
+var import_express205, router205, getProject_default2;
 var init_getProject2 = __esm({
   "src/routes/task/getProject.ts"() {
     "use strict";
-    import_express182 = __toESM(require_express2());
+    import_express205 = __toESM(require_express2());
     init_utils3();
     init_responseFormat();
-    router182 = import_express182.default.Router();
-    getProject_default2 = router182.post("/", async (req, res) => {
+    router205 = import_express205.default.Router();
+    getProject_default2 = router205.post("/", async (req, res) => {
       const list2 = await utils_default.db("o_project").select("id", "name").groupBy("name");
       const data = list2.filter((item) => item.name);
       res.status(200).send(success3(data));
@@ -260067,17 +263623,17 @@ var init_getProject2 = __esm({
 });
 
 // src/routes/task/getTaskApi.ts
-var import_express183, router183, getTaskApi_default;
+var import_express206, router206, getTaskApi_default;
 var init_getTaskApi = __esm({
   "src/routes/task/getTaskApi.ts"() {
     "use strict";
-    import_express183 = __toESM(require_express2());
+    import_express206 = __toESM(require_express2());
     init_utils3();
     init_responseFormat();
     init_middleware();
     init_zod();
-    router183 = import_express183.default.Router();
-    getTaskApi_default = router183.post(
+    router206 = import_express206.default.Router();
+    getTaskApi_default = router206.post(
       "/",
       validateFields({
         state: external_exports.string().optional().nullable(),
@@ -260118,15 +263674,15 @@ var init_getTaskApi = __esm({
 });
 
 // src/routes/task/getTaskCategories.ts
-var import_express184, router184, getTaskCategories_default;
+var import_express207, router207, getTaskCategories_default;
 var init_getTaskCategories = __esm({
   "src/routes/task/getTaskCategories.ts"() {
     "use strict";
-    import_express184 = __toESM(require_express2());
+    import_express207 = __toESM(require_express2());
     init_utils3();
     init_responseFormat();
-    router184 = import_express184.default.Router();
-    getTaskCategories_default = router184.post("/", async (req, res) => {
+    router207 = import_express207.default.Router();
+    getTaskCategories_default = router207.post("/", async (req, res) => {
       const list2 = await utils_default.db("o_tasks").select("taskClass").groupBy("taskClass");
       const data = list2.filter((item) => item.taskClass);
       res.status(200).send(success3(data));
@@ -260135,17 +263691,17 @@ var init_getTaskCategories = __esm({
 });
 
 // src/routes/task/taskDetails.ts
-var import_express185, router185, taskDetails_default;
+var import_express208, router208, taskDetails_default;
 var init_taskDetails = __esm({
   "src/routes/task/taskDetails.ts"() {
     "use strict";
-    import_express185 = __toESM(require_express2());
+    import_express208 = __toESM(require_express2());
     init_utils3();
     init_responseFormat();
     init_middleware();
     init_zod();
-    router185 = import_express185.default.Router();
-    taskDetails_default = router185.post(
+    router208 = import_express208.default.Router();
+    taskDetails_default = router208.post(
       "/",
       validateFields({
         taskId: external_exports.number()
@@ -260160,15 +263716,15 @@ var init_taskDetails = __esm({
 });
 
 // src/routes/test/test.ts
-var import_express186, import_fs18, router186, test_default;
+var import_express209, import_fs18, router209, test_default;
 var init_test = __esm({
   "src/routes/test/test.ts"() {
     "use strict";
-    import_express186 = __toESM(require_express2());
+    import_express209 = __toESM(require_express2());
     init_utils3();
     import_fs18 = __toESM(require("fs"));
-    router186 = import_express186.default.Router();
-    test_default = router186.get("/", async (req, res) => {
+    router209 = import_express209.default.Router();
+    test_default = router209.get("/", async (req, res) => {
       return res.send("ok");
       const test2 = await utils_default.db("o_vendorConfig").select("*");
       import_fs18.default.writeFileSync("test.json", JSON.stringify(test2, null, 2));
@@ -260353,17 +263909,40 @@ var init_router = __esm({
     init_analyzeAssetGaps();
     init_bindAssets();
     init_buildIr();
+    init_buildShotAdaptations();
     init_checkConsistency();
+    init_checkEnvironment();
+    init_checkVisionProvider();
+    init_run();
+    init_checkTaskCompliance();
+    init_updateAssetLicense();
     init_createTask();
+    init_dialogueAction();
+    init_enqueueShotGeneration();
+    init_enqueueTaskGeneration();
+    init_listShotCandidates();
+    init_retryShotGeneration();
+    init_selectShotCandidate();
     init_getProgress();
     init_getTask();
+    init_cancel();
+    init_recover();
+    init_listModelRoutes();
+    init_listProviders();
+    init_probeProvider();
+    init_routeModels();
+    init_upsertProviderCapability();
     init_pushToProduction();
+    init_inspectCandidate();
+    init_inspectSelected();
     init_regenerateStoryboard();
     init_runFrameUnderstanding();
+    init_setVisionApiKey();
     init_chunk();
     init_complete();
     init_init();
     init_startAnalysis();
+    init_export();
     init_updateDialogueStructure();
     init_updateIrShot();
     init_uploadCoreAsset();
@@ -260540,17 +264119,40 @@ var init_router = __esm({
       app2.use("/api/structuralReplica/analyzeAssetGaps", analyzeAssetGaps_default);
       app2.use("/api/structuralReplica/bindAssets", bindAssets_default);
       app2.use("/api/structuralReplica/buildIr", buildIr_default);
+      app2.use("/api/structuralReplica/buildShotAdaptations", buildShotAdaptations_default);
       app2.use("/api/structuralReplica/checkConsistency", checkConsistency_default);
+      app2.use("/api/structuralReplica/checkEnvironment", checkEnvironment_default);
+      app2.use("/api/structuralReplica/checkVisionProvider", checkVisionProvider_default);
+      app2.use("/api/structuralReplica/cleanup/run", run_default);
+      app2.use("/api/structuralReplica/compliance/checkTaskCompliance", checkTaskCompliance_default);
+      app2.use("/api/structuralReplica/compliance/updateAssetLicense", updateAssetLicense_default);
       app2.use("/api/structuralReplica/createTask", createTask_default);
+      app2.use("/api/structuralReplica/dialogueAction", dialogueAction_default);
+      app2.use("/api/structuralReplica/generation/enqueueShotGeneration", enqueueShotGeneration_default);
+      app2.use("/api/structuralReplica/generation/enqueueTaskGeneration", enqueueTaskGeneration_default);
+      app2.use("/api/structuralReplica/generation/listShotCandidates", listShotCandidates_default);
+      app2.use("/api/structuralReplica/generation/retryShotGeneration", retryShotGeneration_default);
+      app2.use("/api/structuralReplica/generation/selectShotCandidate", selectShotCandidate_default);
       app2.use("/api/structuralReplica/getProgress", getProgress_default);
       app2.use("/api/structuralReplica/getTask", getTask_default);
+      app2.use("/api/structuralReplica/jobs/cancel", cancel_default);
+      app2.use("/api/structuralReplica/jobs/recover", recover_default);
+      app2.use("/api/structuralReplica/modelGateway/listModelRoutes", listModelRoutes_default);
+      app2.use("/api/structuralReplica/modelGateway/listProviders", listProviders_default);
+      app2.use("/api/structuralReplica/modelGateway/probeProvider", probeProvider_default);
+      app2.use("/api/structuralReplica/modelGateway/routeModels", routeModels_default);
+      app2.use("/api/structuralReplica/modelGateway/upsertProviderCapability", upsertProviderCapability_default);
       app2.use("/api/structuralReplica/pushToProduction", pushToProduction_default);
+      app2.use("/api/structuralReplica/quality/inspectCandidate", inspectCandidate_default);
+      app2.use("/api/structuralReplica/quality/inspectSelected", inspectSelected_default);
       app2.use("/api/structuralReplica/regenerateStoryboard", regenerateStoryboard_default);
       app2.use("/api/structuralReplica/runFrameUnderstanding", runFrameUnderstanding_default);
+      app2.use("/api/structuralReplica/security/setVisionApiKey", setVisionApiKey_default);
       app2.use("/api/structuralReplica/sourceUpload/chunk", chunk_default);
       app2.use("/api/structuralReplica/sourceUpload/complete", complete_default);
       app2.use("/api/structuralReplica/sourceUpload/init", init_default);
       app2.use("/api/structuralReplica/startAnalysis", startAnalysis_default);
+      app2.use("/api/structuralReplica/timeline/export", export_default);
       app2.use("/api/structuralReplica/updateDialogueStructure", updateDialogueStructure_default);
       app2.use("/api/structuralReplica/updateIrShot", updateIrShot_default);
       app2.use("/api/structuralReplica/uploadCoreAsset", uploadCoreAsset_default);
@@ -260614,7 +264216,7 @@ if (!env) {
 }
 
 // src/app.ts
-var import_express187 = __toESM(require_express2());
+var import_express210 = __toESM(require_express2());
 
 // node_modules/socket.io/wrapper.mjs
 var import_dist = __toESM(require_dist3(), 1);
@@ -260766,11 +264368,11 @@ ${list2}` }]
       if (row.key != null) dbMap[row.key] = row.value ?? null;
     }
     const result = { ...defaults2 };
-    for (const key of keys2) {
-      const raw = dbMap[key];
+    for (const key2 of keys2) {
+      const raw = dbMap[key2];
       if (raw == null) continue;
       const num = Number(raw);
-      result[key] = Number.isNaN(num) ? raw : num;
+      result[key2] = Number.isNaN(num) ? raw : num;
     }
     return result;
   }
@@ -260909,10 +264511,10 @@ function parseFrontmatter(content) {
       i++;
       continue;
     }
-    const key = keyMatch[1].trim();
+    const key2 = keyMatch[1].trim();
     const rawValue = (keyMatch[2] ?? "").trim();
     i++;
-    if (!key) continue;
+    if (!key2) continue;
     if (/^[>|][+-]?[0-9]*$/.test(rawValue)) {
       const isFolded = rawValue.startsWith(">");
       const blockLines = [];
@@ -260933,11 +264535,11 @@ function parseFrontmatter(content) {
         blockLines.push(current.slice(blockIndent));
         i++;
       }
-      result[key] = isFolded ? blockLines.join("\n").replace(/\n{2,}/g, "\n\n").replace(/([^\n])\n([^\n])/g, "$1 $2").trim() : blockLines.join("\n").trim();
+      result[key2] = isFolded ? blockLines.join("\n").replace(/\n{2,}/g, "\n\n").replace(/([^\n])\n([^\n])/g, "$1 $2").trim() : blockLines.join("\n").trim();
       continue;
     }
     const unquoted = rawValue.replace(/^(['"])([\s\S]*)\1$/, "$2");
-    result[key] = unquoted;
+    result[key2] = unquoted;
   }
   if (!result.name || !result.description) {
     throw new Error(`\u6280\u80FD\u6587\u4EF6\u7F3A\u5C11\u5FC5\u8981\u5B57\u6BB5: name \u6216 description\uFF0C\u786E\u4FDD frontmatter \u5305\u542B\u8FD9\u4E24\u4E2A\u5B57\u6BB5\u3002${content}`);
@@ -260981,8 +264583,8 @@ function createSkillTools(skills, skillPaths, rootDir = getPath_default("skills"
         content += "\u4F7F\u7528 read_skill_file \u5DE5\u5177\u8BFB\u53D6\u8D44\u6E90\u6587\u4EF6\u3002\n";
         if (skillPaths.secondarySkills.length > 0) {
           content += "\n<skill_resources>\n";
-          for (const path38 of skillPaths.secondarySkills) {
-            content += `  <file>${path38}</file>
+          for (const path42 of skillPaths.secondarySkills) {
+            content += `  <file>${path42}</file>
 `;
           }
           content += "</skill_resources>\n";
@@ -261025,8 +264627,8 @@ function createSkillTools(skills, skillPaths, rootDir = getPath_default("skills"
         content += "\u53EF\u4EE5\u4F7F\u7528 read_skill_file \u5DE5\u5177\u8BFB\u53D6\u8D44\u6E90\u6587\u4EF6\u3002\n";
         if (skillPaths.tertiarySkills.length > 0) {
           content += "\n<skill_resources>\n";
-          for (const path38 of skillPaths.tertiarySkills) {
-            content += `  <file>${path38}</file>
+          for (const path42 of skillPaths.tertiarySkills) {
+            content += `  <file>${path42}</file>
 `;
           }
           content += "</skill_resources>\n";
@@ -261097,7 +264699,7 @@ var flowDataSchema = external_exports.object({
 });
 var keySchema = external_exports.enum(Object.keys(flowDataSchema.shape));
 var flowDataKeyLabels = Object.fromEntries(
-  Object.entries(flowDataSchema.shape).map(([key, schema]) => [key, schema.description ?? key])
+  Object.entries(flowDataSchema.shape).map(([key2, schema]) => [key2, schema.description ?? key2])
 );
 function createSocketQueue(delayMs = 800) {
   let lastPromise = Promise.resolve();
@@ -261123,19 +264725,19 @@ var tools_default = (toolCpnfig) => {
           key: keySchema.describe("\u6570\u636Ekey")
         }).toJSONSchema()
       ),
-      execute: async ({ key }) => {
-        const thinking = msg.thinking(`\u6B63\u5728\u83B7\u53D6${flowDataKeyLabels[key]}\u5DE5\u4F5C\u533A\u6570\u636E...`);
-        const flowData = await new Promise((resolve3) => socket.emit("getFlowData", { key }, (res) => resolve3(res)));
-        thinking.appendText(`\u83B7\u53D6\u5230${flowDataKeyLabels[key]}:
-` + JSON.stringify(flowData[key], null, 2));
-        thinking.updateTitle(`\u83B7\u53D6${flowDataKeyLabels[key]}\u5B8C\u6210`);
+      execute: async ({ key: key2 }) => {
+        const thinking = msg.thinking(`\u6B63\u5728\u83B7\u53D6${flowDataKeyLabels[key2]}\u5DE5\u4F5C\u533A\u6570\u636E...`);
+        const flowData = await new Promise((resolve3) => socket.emit("getFlowData", { key: key2 }, (res) => resolve3(res)));
+        thinking.appendText(`\u83B7\u53D6\u5230${flowDataKeyLabels[key2]}:
+` + JSON.stringify(flowData[key2], null, 2));
+        thinking.updateTitle(`\u83B7\u53D6${flowDataKeyLabels[key2]}\u5B8C\u6210`);
         thinking.complete();
-        if (workMap[key] && JSON.stringify(workMap[key]) === JSON.stringify(flowData[key])) {
-          console.info(`[tools] get_flowData: ${flowDataKeyLabels[key]}\u6570\u636E\u672A\u53D8\u5316\uFF0C\u65E0\u9700\u66F4\u65B0`);
-          return `${flowDataKeyLabels[key]}\u6570\u636E\u672A\u53D8\u5316\uFF0C\u65E0\u9700\u66F4\u65B0`;
+        if (workMap[key2] && JSON.stringify(workMap[key2]) === JSON.stringify(flowData[key2])) {
+          console.info(`[tools] get_flowData: ${flowDataKeyLabels[key2]}\u6570\u636E\u672A\u53D8\u5316\uFF0C\u65E0\u9700\u66F4\u65B0`);
+          return `${flowDataKeyLabels[key2]}\u6570\u636E\u672A\u53D8\u5316\uFF0C\u65E0\u9700\u66F4\u65B0`;
         }
-        workMap[key] = flowData[key];
-        return flowData[key];
+        workMap[key2] = flowData[key2];
+        return flowData[key2];
       }
     }),
     add_deriveAsset: tool({
@@ -261374,7 +264976,7 @@ async function createSubAgent(parentCtx) {
   const { resTool, abortSignal } = parentCtx;
   const memory = new memory_default("productionAgent", parentCtx.isolationKey);
   async function runAgent({
-    key,
+    key: key2,
     prompt,
     system,
     name: name28,
@@ -261384,7 +264986,7 @@ async function createSubAgent(parentCtx) {
   }) {
     parentCtx.msg.complete();
     const subMsg = resTool.newMessage("assistant", name28);
-    const { fullStream } = await utils_default.Ai.Text(key, parentCtx.thinkConfig.think, parentCtx.thinkConfig.thinlLevel).stream({
+    const { fullStream } = await utils_default.Ai.Text(key2, parentCtx.thinkConfig.think, parentCtx.thinkConfig.thinlLevel).stream({
       system,
       messages: messages ?? [{ role: "user", content: prompt }],
       abortSignal,
@@ -262379,7 +265981,7 @@ var planData = external_exports.object({
 });
 var keySchema2 = external_exports.enum(Object.keys(planData.shape));
 var planDataKeyLabels = Object.fromEntries(
-  Object.entries(planData.shape).map(([key, schema]) => [key, schema.description ?? key])
+  Object.entries(planData.shape).map(([key2, schema]) => [key2, schema.description ?? key2])
 );
 var tools_default2 = (toolCpnfig) => {
   const { resTool, toolsNames, msg } = toolCpnfig;
@@ -262411,15 +266013,15 @@ var tools_default2 = (toolCpnfig) => {
           key: keySchema2.describe("\u6570\u636Ekey")
         }).toJSONSchema()
       ),
-      execute: async ({ key }) => {
-        console.log("[tools] get_planData", key);
-        const thinking = msg.thinking(`\u6B63\u5728\u83B7\u53D6${planDataKeyLabels[key]}\u5DE5\u4F5C\u533A\u6570\u636E...`);
-        const planData2 = await new Promise((resolve3) => socket.emit("getPlanData", { key }, (res) => resolve3(res)));
-        thinking.appendText(`\u83B7\u53D6\u5230${planDataKeyLabels[key]}:
-` + planData2[key]);
-        thinking.updateTitle(`\u83B7\u53D6${planDataKeyLabels[key]}\u5B8C\u6210`);
+      execute: async ({ key: key2 }) => {
+        console.log("[tools] get_planData", key2);
+        const thinking = msg.thinking(`\u6B63\u5728\u83B7\u53D6${planDataKeyLabels[key2]}\u5DE5\u4F5C\u533A\u6570\u636E...`);
+        const planData2 = await new Promise((resolve3) => socket.emit("getPlanData", { key: key2 }, (res) => resolve3(res)));
+        thinking.appendText(`\u83B7\u53D6\u5230${planDataKeyLabels[key2]}:
+` + planData2[key2]);
+        thinking.updateTitle(`\u83B7\u53D6${planDataKeyLabels[key2]}\u5B8C\u6210`);
         thinking.complete();
-        return planData2[key] ?? "\u65E0\u6570\u636E";
+        return planData2[key2] ?? "\u65E0\u6570\u636E";
       }
     }),
     get_novel_text: tool({
@@ -262533,7 +266135,7 @@ function createSubAgent2(parentCtx) {
   const { resTool, abortSignal } = parentCtx;
   const memory = new memory_default("scriptAgent", parentCtx.isolationKey);
   async function runAgent({
-    key,
+    key: key2,
     prompt,
     system,
     name: name28,
@@ -262543,7 +266145,7 @@ function createSubAgent2(parentCtx) {
   }) {
     parentCtx.msg.complete();
     const subMsg = resTool.newMessage("assistant", name28);
-    const { fullStream } = await utils_default.Ai.Text(key, parentCtx.thinkConfig.think, parentCtx.thinkConfig.thinlLevel).stream({
+    const { fullStream } = await utils_default.Ai.Text(key2, parentCtx.thinkConfig.think, parentCtx.thinkConfig.thinlLevel).stream({
       system,
       messages: messages ?? [{ role: "user", content: prompt }],
       abortSignal,
@@ -262844,7 +266446,75 @@ async function ensureThumbnail(originalPath, thumbnailPath, size) {
 }
 
 // src/app.ts
-var app = (0, import_express187.default)();
+init_jobService();
+
+// src/services/structuralReplica/accessBoundaryService.ts
+init_utils3();
+function userId(user) {
+  const id = Number(user?.id);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+function ownsProject(project, user) {
+  if (!project?.id) return false;
+  const requestUserId = userId(user);
+  if (!requestUserId) return true;
+  return !project.userId || Number(project.userId) === requestUserId;
+}
+async function assertProjectAccess(projectId, user) {
+  const project = await utils_default.db("o_project").where("id", projectId).first();
+  if (!project) throw new Error("project not found");
+  if (!ownsProject(project, user)) throw new Error("project access denied");
+  return project;
+}
+async function assertTaskAccess(taskId, user) {
+  const task = await utils_default.db("o_sr_task").where("id", taskId).first();
+  if (!task) throw new Error("structural replica task not found");
+  await assertProjectAccess(Number(task.projectId), user);
+  return task;
+}
+async function assertAssetAccess(assetId, user) {
+  const asset = await utils_default.db("o_assets").where("id", assetId).first();
+  if (!asset) throw new Error("asset not found");
+  if (asset.projectId) await assertProjectAccess(Number(asset.projectId), user);
+  return asset;
+}
+
+// src/middleware/structuralReplicaAccess.ts
+function firstPositiveInt(values) {
+  for (const value of values) {
+    const num = Number(value);
+    if (Number.isFinite(num) && num > 0) return num;
+  }
+  return null;
+}
+async function checkStructuralReplicaAccess(req) {
+  if (!req.path.startsWith("/api/structuralReplica")) return;
+  const user = req.user;
+  const source = { ...req.query || {}, ...req.params || {}, ...req.body || {} };
+  const taskId = firstPositiveInt([source.taskId]);
+  if (taskId) {
+    await assertTaskAccess(taskId, user);
+    return;
+  }
+  const assetId = firstPositiveInt([source.assetId]);
+  if (assetId) {
+    await assertAssetAccess(assetId, user);
+    return;
+  }
+  const projectId = firstPositiveInt([source.projectId]);
+  if (projectId) await assertProjectAccess(projectId, user);
+}
+async function structuralReplicaAccessBoundary(req, res, next) {
+  try {
+    await checkStructuralReplicaAccess(req);
+    next();
+  } catch (error71) {
+    res.status(403).send({ message: error71 instanceof Error ? error71.message : String(error71) });
+  }
+}
+
+// src/app.ts
+var app = (0, import_express210.default)();
 var server = import_node_http.default.createServer(app);
 async function checkPermissions() {
   if (!isEletron()) return true;
@@ -262875,14 +266545,20 @@ ${userDataPath}
 async function startServe(randomPort = false) {
   await checkPermissions();
   await utils_default.writeVersion();
+  try {
+    const recovered = await recoverStaleSrJobs();
+    if (recovered.scanned) console.log("[structuralReplica] recovered stale jobs:", recovered);
+  } catch (err) {
+    console.error("[structuralReplica] stale job recovery failed", err);
+  }
   const io2 = new Server(server, { cors: { origin: "*" } });
   socket_default(io2);
   if (process.env.NODE_ENV == "dev") await generateRouter();
   (0, import_express_ws.default)(app);
   app.use((0, import_morgan.default)("dev"));
   app.use((0, import_cors.default)({ origin: "*" }));
-  app.use(import_express187.default.json({ limit: "100mb" }));
-  app.use(import_express187.default.urlencoded({ extended: true, limit: "100mb" }));
+  app.use(import_express210.default.json({ limit: "100mb" }));
+  app.use(import_express210.default.urlencoded({ extended: true, limit: "100mb" }));
   const ossDir = utils_default.getPath("oss");
   if (!import_fs19.default.existsSync(ossDir)) {
     import_fs19.default.mkdirSync(ossDir, { recursive: true });
@@ -262909,7 +266585,7 @@ async function startServe(randomPort = false) {
           sizeSubDir = `${percentMatch[1]}p`;
           sizeOpts = { type: "percentage", value: pct };
         } else {
-          import_express187.default.static(ossDir, { acceptRanges: false })(req, res, next);
+          import_express210.default.static(ossDir, { acceptRanges: false })(req, res, next);
           return;
         }
         const ext = import_path29.default.extname(req.path);
@@ -262920,14 +266596,14 @@ async function startServe(randomPort = false) {
           if (thumbnailPath) {
             res.sendFile(thumbnailPath);
           } else {
-            import_express187.default.static(ossDir, { acceptRanges: false })(req, res, next);
+            import_express210.default.static(ossDir, { acceptRanges: false })(req, res, next);
           }
         });
         return;
       }
       next();
     },
-    import_express187.default.static(ossDir, { acceptRanges: false })
+    import_express210.default.static(ossDir, { acceptRanges: false })
   );
   const skillsDir = utils_default.getPath("skills");
   if (!import_fs19.default.existsSync(skillsDir)) {
@@ -262939,18 +266615,18 @@ async function startServe(randomPort = false) {
     (req, res, next) => {
       /\.(jpe?g|png|gif|webp|svg|ico|bmp)$/i.test(req.path) ? next() : res.status(403).end();
     },
-    import_express187.default.static(skillsDir, { acceptRanges: false })
+    import_express210.default.static(skillsDir, { acceptRanges: false })
   );
   const assetsDir = utils_default.getPath("assets");
   if (!import_fs19.default.existsSync(assetsDir)) {
     import_fs19.default.mkdirSync(assetsDir, { recursive: true });
   }
   console.log("\u6587\u4EF6\u76EE\u5F55:", assetsDir);
-  app.use("/assets", import_express187.default.static(assetsDir, { acceptRanges: false }));
+  app.use("/assets", import_express210.default.static(assetsDir, { acceptRanges: false }));
   const webDir = utils_default.getPath("web");
   if (import_fs19.default.existsSync(webDir)) {
     console.log("\u9759\u6001\u7F51\u7AD9\u76EE\u5F55:", webDir);
-    app.use(import_express187.default.static(webDir, { acceptRanges: false }));
+    app.use(import_express210.default.static(webDir, { acceptRanges: false }));
   } else {
     console.warn("\u9759\u6001\u7F51\u7AD9\u76EE\u5F55\u4E0D\u5B58\u5728:", webDir);
   }
@@ -262970,8 +266646,9 @@ async function startServe(randomPort = false) {
       return res.status(401).send({ message: "\u65E0\u6548\u7684token" });
     }
   });
-  const router187 = await Promise.resolve().then(() => (init_router(), router_exports));
-  await router187.default(app);
+  app.use(structuralReplicaAccessBoundary);
+  const router210 = await Promise.resolve().then(() => (init_router(), router_exports));
+  await router210.default(app);
   app.use((_, res, next) => {
     return res.status(404).send({ message: "API 404 Not Found" });
   });

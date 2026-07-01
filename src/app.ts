@@ -16,6 +16,7 @@ import socketInit from "@/socket/index";
 import { isEletron } from "@/utils/getPath";
 import { ensureThumbnail, ThumbnailSize } from "@/utils/image";
 import { recoverStaleSrJobs } from "@/services/structuralReplica/jobService";
+import { structuralReplicaAccessBoundary } from "@/middleware/structuralReplicaAccess";
 
 const app = express();
 const server = http.createServer(app);
@@ -175,6 +176,7 @@ export default async function startServe(randomPort: Boolean = false) {
       return res.status(401).send({ message: "无效的token" });
     }
   });
+  app.use(structuralReplicaAccessBoundary);
 
   const router = await import("@/router");
   await router.default(app);

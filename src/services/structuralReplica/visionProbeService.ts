@@ -1,4 +1,5 @@
 import u from "@/utils";
+import { getDecryptedSetting } from "./securityService";
 
 export interface VisionProviderProbeInput {
   providerId?: string;
@@ -80,6 +81,7 @@ export async function checkVisionProvider(input: VisionProviderProbeInput = {}) 
   const model = input.model || settings["sr.visionModel"] || "";
   const timeoutMs = input.timeoutMs || Number(settings["sr.visionRequestTimeoutMs"] || 30000);
   let apiKey = input.apiKey || "";
+  apiKey ||= await getDecryptedSetting("sr.visionApiKey");
   if (!apiKey) {
     const vendor = await u.db("o_vendorConfig").where("id", providerId).first();
     const values = vendor?.inputValues ? (JSON.parse(vendor.inputValues) as Record<string, string>) : {};

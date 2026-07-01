@@ -6,8 +6,11 @@ import type {
   o_sr_dialogue_structure,
   o_sr_frame_sample,
   o_sr_frame_understanding,
+  o_sr_generation_candidate,
+  o_sr_generation_job,
   o_sr_model_route,
   o_sr_provider_capability,
+  o_sr_quality_report,
   o_sr_regenerated_storyboard,
   o_sr_shot_detection,
   o_sr_shot_adaptation,
@@ -15,6 +18,7 @@ import type {
   o_sr_story_ir,
   o_sr_storyboard_mapping,
   o_sr_task,
+  o_sr_timeline_export,
   o_sr_transcript,
   o_sr_upload_part,
 } from "@/types/database";
@@ -36,6 +40,7 @@ import type {
   ModelRoute,
 } from "./schemas";
 import { assertTransition, SrTaskStatus } from "./taskState";
+import { decryptSecret, encryptSecret, redactProviderCapability } from "./securityService";
 
 type JsonValue = Record<string, unknown> | unknown[] | string | number | boolean | null;
 type LatestTaskTables = {
@@ -64,6 +69,10 @@ export interface TaskBundle {
   report?: o_sr_consistency_report;
   mapping: o_sr_storyboard_mapping[];
   modelRoutes: o_sr_model_route[];
+  generationJobs: o_sr_generation_job[];
+  generationCandidates: o_sr_generation_candidate[];
+  qualityReports: o_sr_quality_report[];
+  timelineExports: o_sr_timeline_export[];
 }
 
 function jsonStringify(data: JsonValue): string {
@@ -248,6 +257,11 @@ export async function clearDerivedArtifactsFromFrameUnderstanding(taskId: number
     u.db("o_sr_consistency_report").where("taskId", taskId).delete(),
     u.db("o_sr_storyboard_mapping").where("taskId", taskId).delete(),
     u.db("o_sr_model_route").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_job").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_candidate").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_cost").where("taskId", taskId).delete(),
+    u.db("o_sr_quality_report").where("taskId", taskId).delete(),
+    u.db("o_sr_timeline_export").where("taskId", taskId).delete(),
   ]);
 }
 
@@ -261,6 +275,11 @@ export async function clearDerivedArtifactsFromStoryIr(taskId: number): Promise<
     u.db("o_sr_consistency_report").where("taskId", taskId).delete(),
     u.db("o_sr_storyboard_mapping").where("taskId", taskId).delete(),
     u.db("o_sr_model_route").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_job").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_candidate").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_cost").where("taskId", taskId).delete(),
+    u.db("o_sr_quality_report").where("taskId", taskId).delete(),
+    u.db("o_sr_timeline_export").where("taskId", taskId).delete(),
   ]);
 }
 
@@ -270,6 +289,11 @@ export async function clearDerivedArtifactsFromDialogue(taskId: number): Promise
     u.db("o_sr_consistency_report").where("taskId", taskId).delete(),
     u.db("o_sr_storyboard_mapping").where("taskId", taskId).delete(),
     u.db("o_sr_model_route").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_job").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_candidate").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_cost").where("taskId", taskId).delete(),
+    u.db("o_sr_quality_report").where("taskId", taskId).delete(),
+    u.db("o_sr_timeline_export").where("taskId", taskId).delete(),
   ]);
 }
 
@@ -280,6 +304,11 @@ export async function clearDerivedArtifactsFromAssetBindings(taskId: number): Pr
     u.db("o_sr_consistency_report").where("taskId", taskId).delete(),
     u.db("o_sr_storyboard_mapping").where("taskId", taskId).delete(),
     u.db("o_sr_model_route").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_job").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_candidate").where("taskId", taskId).delete(),
+    u.db("o_sr_generation_cost").where("taskId", taskId).delete(),
+    u.db("o_sr_quality_report").where("taskId", taskId).delete(),
+    u.db("o_sr_timeline_export").where("taskId", taskId).delete(),
   ]);
 }
 
@@ -423,34 +452,46 @@ export async function saveStoryboardMappings(
 
 export async function listProviderCapabilities(): Promise<ProviderCapability[]> {
   const rows = (await u.db("o_sr_provider_capability").orderBy("id", "asc")) as o_sr_provider_capability[];
-  return rows.map((row) => ({
-    ...parseJson<ProviderCapability>(row.capabilityJson, {
+  return rows.map((row) =>
+    redactProviderCapability({
+      ...parseJson<ProviderCapability>(row.capabilityJson, {
+        providerId: row.providerId || "",
+        providerType: (row.providerType as ProviderCapability["providerType"]) || "openai_compatible",
+        displayName: row.displayName || undefined,
+        baseUrl: row.baseUrl || "",
+        apiKey: "",
+        enabled: row.enabled !== 0,
+        models: [],
+      }),
       providerId: row.providerId || "",
       providerType: (row.providerType as ProviderCapability["providerType"]) || "openai_compatible",
       displayName: row.displayName || undefined,
       baseUrl: row.baseUrl || "",
       apiKey: "",
       enabled: row.enabled !== 0,
-      models: [],
     }),
-    providerId: row.providerId || "",
-    providerType: (row.providerType as ProviderCapability["providerType"]) || "openai_compatible",
-    displayName: row.displayName || undefined,
-    baseUrl: row.baseUrl || "",
-    apiKey: "",
-    enabled: row.enabled !== 0,
-  }));
+  );
 }
 
 export async function upsertProviderCapability(capability: ProviderCapability): Promise<ProviderCapability> {
   const now = Date.now();
   const existing = await u.db("o_sr_provider_capability").where("providerId", capability.providerId).first();
+  const existingPayload = parseJson<ProviderCapability | null>(existing?.capabilityJson, null);
+  const savedApiKey = capability.apiKey
+    ? await encryptSecret(capability.apiKey)
+    : existingPayload?.apiKey
+      ? await encryptSecret(existingPayload.apiKey)
+      : "";
+  const storedCapability: ProviderCapability = {
+    ...capability,
+    apiKey: savedApiKey,
+  };
   const row = {
     providerId: capability.providerId,
     providerType: capability.providerType,
     displayName: capability.displayName ?? null,
     baseUrl: capability.baseUrl ?? null,
-    capabilityJson: jsonStringify(capability),
+    capabilityJson: jsonStringify(storedCapability),
     enabled: capability.enabled ? 1 : 0,
     updatedAt: now,
   };
@@ -462,6 +503,24 @@ export async function upsertProviderCapability(capability: ProviderCapability): 
   const saved = (await listProviderCapabilities()).find((item) => item.providerId === capability.providerId);
   if (!saved) throw new Error(`provider capability was not saved: ${capability.providerId}`);
   return saved;
+}
+
+export async function getProviderCapabilityWithSecret(providerId: string): Promise<ProviderCapability | undefined> {
+  const row = await u.db("o_sr_provider_capability").where("providerId", providerId).first();
+  if (!row) return undefined;
+  const capability = parseJson<ProviderCapability>(row.capabilityJson, {
+    providerId: row.providerId || "",
+    providerType: (row.providerType as ProviderCapability["providerType"]) || "openai_compatible",
+    displayName: row.displayName || undefined,
+    baseUrl: row.baseUrl || "",
+    apiKey: "",
+    enabled: row.enabled !== 0,
+    models: [],
+  });
+  return {
+    ...capability,
+    apiKey: await decryptSecret(capability.apiKey),
+  };
 }
 
 export async function recordProviderProbe(input: {
@@ -540,6 +599,10 @@ export async function getTaskBundle(taskId: number): Promise<TaskBundle> {
     report,
     mapping,
     modelRoutes,
+    generationJobs,
+    generationCandidates,
+    qualityReports,
+    timelineExports,
   ] = await Promise.all([
     u.db("o_sr_source_media").where("taskId", taskId).first(),
     getLatestByTask("o_sr_transcript", taskId),
@@ -555,6 +618,10 @@ export async function getTaskBundle(taskId: number): Promise<TaskBundle> {
     getLatestByTask("o_sr_consistency_report", taskId),
     u.db("o_sr_storyboard_mapping").where("taskId", taskId).orderBy("id", "asc"),
     u.db("o_sr_model_route").where("taskId", taskId).orderBy("id", "asc"),
+    u.db("o_sr_generation_job").where("taskId", taskId).orderBy("id", "desc"),
+    u.db("o_sr_generation_candidate").where("taskId", taskId).orderBy("shotId", "asc").orderBy("candidateIndex", "asc").orderBy("id", "asc"),
+    u.db("o_sr_quality_report").where("taskId", taskId).orderBy("id", "desc"),
+    u.db("o_sr_timeline_export").where("taskId", taskId).orderBy("id", "desc"),
   ]);
 
   return {
@@ -573,6 +640,10 @@ export async function getTaskBundle(taskId: number): Promise<TaskBundle> {
     report,
     mapping,
     modelRoutes,
+    generationJobs,
+    generationCandidates,
+    qualityReports,
+    timelineExports,
   };
 }
 
