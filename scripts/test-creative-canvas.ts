@@ -99,6 +99,7 @@ async function postUpdateNovel(body: Record<string, unknown>) {
 
 async function main() {
   assert.ok(fs.readFileSync("src/routes/production/storyboard/batchGenerateImage.ts", "utf8").includes("标准四视图"), "storyboard image prompt should instruct the model how to use the character four-view reference (avoid drift / multi-person misread)");
+  assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("renderVisualConsistencyDetail"), "video QA block should render per-reference visual match evidence (CLIP similarity detail)");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes("match[0].slice(1)"), "prompt @ mention trigger should read the matched token");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes('kind: "storyboard"'), "storyboard prompt editor should use the shared floating mention picker");
   assert.ok(fs.readFileSync("data/web/creative-canvas.js", "utf8").includes('kind: "videoPrompt"'), "video prompt editor should use the shared floating mention picker");
@@ -334,7 +335,7 @@ async function main() {
   assert.ok(canvasJs.includes("window.__tfccSocketIoPromise = null"), "failed Socket.IO client loads should be retryable");
   assert.ok(!canvasJs.includes("${location.origin}/socket.io/socket.io.js"), "script agent should not load Socket.IO from the frontend origin");
   assert.ok(!canvasJs.includes("${location.origin}/api/socket/scriptAgent"), "script agent should not connect sockets through the frontend origin");
-  assert.ok(fs.readFileSync("data/web/index.html", "utf8").includes("creative-canvas.js?v=20260701140000"), "creative canvas script URL should bust stale renderer cache");
+  assert.ok(fs.readFileSync("data/web/index.html", "utf8").includes("creative-canvas.js?v=20260701160000"), "creative canvas script URL should bust stale renderer cache");
   assert.ok(fs.readFileSync("src/app.ts", "utf8").includes("process.env.PORT = String(realPort)"), "random-port backend startup should expose the real port to OSS URL generation");
   const updateAgentMessageBlock = canvasJs.slice(canvasJs.indexOf("function updateAgentMessage"), canvasJs.indexOf("function addAgentContent"));
   assert.ok(updateAgentMessageBlock.includes("state.agentRunning = false;"), "script agent terminal message updates should clear the current running state");

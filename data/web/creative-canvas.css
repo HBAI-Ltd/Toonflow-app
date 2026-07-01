@@ -2155,6 +2155,33 @@
   padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, .08);
 }
+
+/* 视觉匹配证据明细（视频首帧 vs 各参考图相似度） */
+.tfcc-visual-detail { margin-top: 10px; }
+.tfcc-visual-detail-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: rgba(243, 245, 251, .6); margin-bottom: 6px;
+}
+.tfcc-visual-method {
+  font-size: 10px; padding: 1px 7px; border-radius: 10px;
+  background: rgba(120, 170, 255, .14); color: #a9c8ff;
+}
+.tfcc-visual-list { display: flex; flex-direction: column; gap: 4px; }
+.tfcc-visual-row { display: flex; align-items: center; gap: 8px; }
+.tfcc-visual-name {
+  flex: 0 0 34%; font-size: 11px; color: rgba(243, 245, 251, .8);
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.tfcc-visual-bar {
+  flex: 1 1 auto; height: 6px; border-radius: 3px;
+  background: rgba(255, 255, 255, .07); overflow: hidden;
+}
+.tfcc-visual-bar-fill { display: block; height: 100%; border-radius: 3px; }
+.tfcc-visual-bar-fill.is-ok { background: #4fd1a5; }
+.tfcc-visual-bar-fill.is-low { background: #ffb04f; }
+.tfcc-visual-pct { flex: 0 0 auto; font-size: 11px; width: 34px; text-align: right; }
+.tfcc-visual-pct.is-ok { color: #7fe0bf; }
+.tfcc-visual-pct.is-low { color: #ffc880; }
 .tfcc-source-status-row {
   display: flex;
   align-items: center;

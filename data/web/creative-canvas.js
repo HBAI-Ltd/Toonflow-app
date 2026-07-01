@@ -6343,9 +6343,40 @@
         visual ? kv("视觉匹配", visual.bestSimilarity == null ? videoReviewText(visual.status) : `${Math.round(Number(visual.bestSimilarity) * 100)}%`) : null,
         bestRef ? kv("最佳参考", bestRef.name || `${bestRef.source}:${bestRef.id}`) : null,
       ].filter(Boolean)) : h("p", { class: "tfcc-inspect-text", text: "尚未运行视频 QA。" }),
+      renderVisualConsistencyDetail(visual),
       issues.length ? h("p", { class: "tfcc-inspect-text", text: `问题：${issues.map(videoReviewText).join("；")}` }) : null,
       h("div", { class: "tfcc-source-inspector-actions" }, actions),
     ].filter(Boolean));
+  }
+
+  // 视觉匹配证据明细：把 report.visualConsistency.references（视频首帧 vs 每张参考图的相似度）
+  // 渲染成可读列表，让用户看到"哪个角色/场景/分镜匹配得好、哪个偏"，而非只有一个 bestSimilarity。
+  const VISUAL_SIM_THRESHOLD = 0.6; // 与后端 CLIP 阈值一致
+  function renderVisualConsistencyDetail(visual) {
+    if (!visual || visual.status !== "checked") return null;
+    const refs = (Array.isArray(visual.references) ? visual.references : [])
+      .filter((r) => typeof r.similarity === "number")
+      .sort((a, b) => b.similarity - a.similarity);
+    if (!refs.length) return null;
+    const methodLabel = visual.method === "pixel" ? "像素指纹（降级）" : "CLIP 语义";
+    return h("div", { class: "tfcc-visual-detail" }, [
+      h("div", { class: "tfcc-visual-detail-head" }, [
+        h("span", { text: `视觉匹配明细（${refs.length}）` }),
+        h("span", { class: "tfcc-visual-method", text: methodLabel }),
+      ]),
+      h("div", { class: "tfcc-visual-list" }, refs.slice(0, 12).map((r) => {
+        const pct = Math.round(Number(r.similarity) * 100);
+        const low = r.similarity < VISUAL_SIM_THRESHOLD;
+        const typeLabel = r.source === "storyboard" ? "分镜" : "资产";
+        return h("div", { class: "tfcc-visual-row" }, [
+          h("span", { class: "tfcc-visual-name", title: `${typeLabel}·${r.name || r.id}`, text: `${typeLabel}·${r.name || r.id}` }),
+          h("span", { class: "tfcc-visual-bar" }, [
+            h("span", { class: `tfcc-visual-bar-fill ${low ? "is-low" : "is-ok"}`, style: { width: `${Math.max(4, pct)}%` } }),
+          ]),
+          h("span", { class: `tfcc-visual-pct ${low ? "is-low" : "is-ok"}`, text: `${pct}%` }),
+        ]);
+      })),
+    ]);
   }
 
   // 分镜图 QA 诊断块：对齐 renderVideoReviewBlock 的结构，把后端已算出的
