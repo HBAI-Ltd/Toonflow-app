@@ -14,6 +14,8 @@ coverage
 # logs
 logs
 _.log
+*.log
+*.err.log
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # dotenv environment variable files
@@ -46,6 +48,13 @@ db.sqlite-wal
 web/*
 
 *.sqlite
+data/tmp/
+data/vendor/vendor.json
+data/web/*.bak-*
+**/__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
 
 router.ts
 

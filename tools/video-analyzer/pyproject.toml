@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sr-analyzer"
+version = "0.1.0"
+description = "MP4 structural replica analyzer for Toonflow"
+requires-python = ">=3.10"
+dependencies = [
+  "scenedetect[opencv]",
+  "openai-whisper",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sr_analyzer*"]

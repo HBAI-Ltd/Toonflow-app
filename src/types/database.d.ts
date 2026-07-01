@@ -1,4 +1,4 @@
-// @db-hash f5d050145d03a52b5b502043bc559ec0
+// @db-hash cfda16e8b7eca975fa0e7178d24cdfab
 //该文件由脚本自动生成，请勿手动修改
 
 export interface memories {
@@ -97,7 +97,6 @@ export interface o_modelPrompt {
   'id'?: number;
   'model'?: string | null;
   'path'?: string | null;
-  'prompt'?: string | null;
   'vendorId'?: string | null;
 }
 export interface o_novel {
@@ -167,6 +166,218 @@ export interface o_skillList {
   'state': number;
   'type': string;
   'updateTime': number;
+}
+export interface o_sr_asset_binding {
+  'assetId'?: number | null;
+  'bindingStatus'?: string | null;
+  'createdAt'?: number | null;
+  'id'?: number;
+  'note'?: string | null;
+  'shotId'?: string | null;
+  'slotName'?: string | null;
+  'slotType'?: string | null;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_asset_gap {
+  'createdAt'?: number | null;
+  'dataJson'?: string | null;
+  'id'?: number;
+  'missingCount'?: number | null;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_consistency_report {
+  'createdAt'?: number | null;
+  'id'?: number;
+  'reportJson'?: string | null;
+  'reportMarkdown'?: string | null;
+  'status'?: string | null;
+  'taskId'?: number | null;
+}
+export interface o_sr_dialogue_structure {
+  'createdAt'?: number | null;
+  'dataJson'?: string | null;
+  'id'?: number;
+  'status'?: string | null;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+  'version'?: number | null;
+}
+export interface o_sr_frame_sample {
+  'createdAt'?: number | null;
+  'filePath'?: string | null;
+  'frameType'?: string | null;
+  'id'?: number;
+  'qualityScore'?: number | null;
+  'shotId'?: string | null;
+  'taskId'?: number | null;
+  'timeSec'?: number | null;
+}
+export interface o_sr_frame_understanding {
+  'createdAt'?: number | null;
+  'dataJson'?: string | null;
+  'id'?: number;
+  'provider'?: string | null;
+  'reviewRequired'?: number | null;
+  'shotId'?: string | null;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_job {
+  'attempt'?: number | null;
+  'cancelRequested'?: number | null;
+  'createdAt'?: number | null;
+  'errorReason'?: string | null;
+  'finishedAt'?: number | null;
+  'id'?: number;
+  'inputJson'?: string | null;
+  'jobType'?: string | null;
+  'lockedAt'?: number | null;
+  'lockedBy'?: string | null;
+  'nextRunAt'?: number | null;
+  'parentJobId'?: number | null;
+  'progress'?: number | null;
+  'recoverable'?: number | null;
+  'resultJson'?: string | null;
+  'stage'?: string | null;
+  'startedAt'?: number | null;
+  'status'?: string | null;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_model_probe_result {
+  'createdAt'?: number | null;
+  'errorReason'?: string | null;
+  'id'?: number;
+  'latencyMs'?: number | null;
+  'model'?: string | null;
+  'providerId'?: string | null;
+  'resultJson'?: string | null;
+  'status'?: string | null;
+}
+export interface o_sr_model_route {
+  'createdAt'?: number | null;
+  'downgradeReasonsJson'?: string | null;
+  'fallbackPlanJson'?: string | null;
+  'id'?: number;
+  'requiredCapabilitiesJson'?: string | null;
+  'routeStatus'?: string | null;
+  'selectedModel'?: string | null;
+  'selectedProviderId'?: string | null;
+  'shotId'?: string | null;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_provider_capability {
+  'baseUrl'?: string | null;
+  'capabilityJson'?: string | null;
+  'createdAt'?: number | null;
+  'displayName'?: string | null;
+  'enabled'?: number | null;
+  'id'?: number;
+  'providerId'?: string | null;
+  'providerType'?: string | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_regenerated_storyboard {
+  'createdAt'?: number | null;
+  'dataJson'?: string | null;
+  'id'?: number;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+  'version'?: number | null;
+}
+export interface o_sr_shot_detection {
+  'createdAt'?: number | null;
+  'dataJson'?: string | null;
+  'engine'?: string | null;
+  'id'?: number;
+  'shotCount'?: number | null;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_shot_adaptation {
+  'adaptedVisual'?: string | null;
+  'assetMatchScore'?: number | null;
+  'blockedReasonsJson'?: string | null;
+  'createdAt'?: number | null;
+  'downgradeReasonsJson'?: string | null;
+  'id'?: number;
+  'level'?: string | null;
+  'matchedAssetsJson'?: string | null;
+  'requiredSlotsJson'?: string | null;
+  'shotId'?: string | null;
+  'strategy'?: string | null;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_source_media {
+  'audioPath'?: string | null;
+  'coverPath'?: string | null;
+  'createdAt'?: number | null;
+  'durationSec'?: number | null;
+  'fps'?: number | null;
+  'hasAudio'?: number | null;
+  'height'?: number | null;
+  'id'?: number;
+  'mediaJson'?: string | null;
+  'normalizedPath'?: string | null;
+  'sha256'?: string | null;
+  'sizeBytes'?: number | null;
+  'sourcePath'?: string | null;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+  'width'?: number | null;
+}
+export interface o_sr_story_ir {
+  'createdAt'?: number | null;
+  'dataJson'?: string | null;
+  'id'?: number;
+  'shotCount'?: number | null;
+  'taskId'?: number | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_storyboard_mapping {
+  'createdAt'?: number | null;
+  'id'?: number;
+  'shotId'?: string | null;
+  'storyboardId'?: number | null;
+  'taskId'?: number | null;
+  'trackId'?: number | null;
+}
+export interface o_sr_task {
+  'aspectRatio'?: string | null;
+  'createdAt'?: number | null;
+  'errorReason'?: string | null;
+  'id'?: number;
+  'lastSmokeResultJson'?: string | null;
+  'lastVerifiedAt'?: number | null;
+  'name'?: string | null;
+  'platform'?: string | null;
+  'projectId'?: number | null;
+  'scriptId'?: number | null;
+  'status'?: string | null;
+  'updatedAt'?: number | null;
+}
+export interface o_sr_transcript {
+  'avgSpeechRateCps'?: number | null;
+  'createdAt'?: number | null;
+  'dataJson'?: string | null;
+  'engine'?: string | null;
+  'id'?: number;
+  'model'?: string | null;
+  'taskId'?: number | null;
+}
+export interface o_sr_upload_part {
+  'createdAt'?: number | null;
+  'id'?: number;
+  'partIndex'?: number | null;
+  'partSha256'?: string | null;
+  'partSize'?: number | null;
+  'path'?: string | null;
+  'taskId'?: number | null;
+  'uploadId'?: string | null;
 }
 export interface o_storyboard {
   'createTime'?: number | null;
@@ -250,6 +461,25 @@ export interface DB {
   "o_setting": o_setting;
   "o_skillAttribution": o_skillAttribution;
   "o_skillList": o_skillList;
+  "o_sr_asset_binding": o_sr_asset_binding;
+  "o_sr_asset_gap": o_sr_asset_gap;
+  "o_sr_consistency_report": o_sr_consistency_report;
+  "o_sr_dialogue_structure": o_sr_dialogue_structure;
+  "o_sr_frame_sample": o_sr_frame_sample;
+  "o_sr_frame_understanding": o_sr_frame_understanding;
+  "o_sr_job": o_sr_job;
+  "o_sr_model_probe_result": o_sr_model_probe_result;
+  "o_sr_model_route": o_sr_model_route;
+  "o_sr_provider_capability": o_sr_provider_capability;
+  "o_sr_regenerated_storyboard": o_sr_regenerated_storyboard;
+  "o_sr_shot_adaptation": o_sr_shot_adaptation;
+  "o_sr_shot_detection": o_sr_shot_detection;
+  "o_sr_source_media": o_sr_source_media;
+  "o_sr_story_ir": o_sr_story_ir;
+  "o_sr_storyboard_mapping": o_sr_storyboard_mapping;
+  "o_sr_task": o_sr_task;
+  "o_sr_transcript": o_sr_transcript;
+  "o_sr_upload_part": o_sr_upload_part;
   "o_storyboard": o_storyboard;
   "o_tasks": o_tasks;
   "o_user": o_user;

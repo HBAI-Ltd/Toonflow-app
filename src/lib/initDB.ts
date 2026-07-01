@@ -312,6 +312,46 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
             key: "switchAiDevTool",
             value: "0",
           },
+          {
+            key: "sr.pythonPath",
+            value: "python",
+          },
+          {
+            key: "sr.ffmpegPath",
+            value: "ffmpeg",
+          },
+          {
+            key: "sr.ffprobePath",
+            value: "ffprobe",
+          },
+          {
+            key: "sr.whisperModel",
+            value: "turbo",
+          },
+          {
+            key: "sr.visionEnabled",
+            value: "0",
+          },
+          {
+            key: "sr.visionProvider",
+            value: "worldclawpro",
+          },
+          {
+            key: "sr.visionBaseUrl",
+            value: "https://worldclawpro.ai/v1",
+          },
+          {
+            key: "sr.visionModel",
+            value: "gpt-5.5",
+          },
+          {
+            key: "sr.visionConcurrency",
+            value: "3",
+          },
+          {
+            key: "sr.visionRequestTimeoutMs",
+            value: "120000",
+          },
         ]);
       },
     },
@@ -334,6 +374,313 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
       initData: async (knex) => {},
     },
     //提示词表
+    {
+      name: "o_sr_task",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("projectId");
+        table.integer("scriptId");
+        table.text("name");
+        table.text("status");
+        table.text("platform");
+        table.text("aspectRatio");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.text("errorReason");
+        table.integer("lastVerifiedAt");
+        table.text("lastSmokeResultJson");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_job",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("jobType");
+        table.text("status");
+        table.integer("progress");
+        table.text("stage");
+        table.text("inputJson");
+        table.text("resultJson");
+        table.text("errorReason");
+        table.integer("attempt");
+        table.integer("parentJobId");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.integer("startedAt");
+        table.integer("finishedAt");
+        table.text("lockedBy");
+        table.integer("lockedAt");
+        table.integer("nextRunAt");
+        table.integer("recoverable");
+        table.integer("cancelRequested");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_source_media",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("sourcePath");
+        table.text("normalizedPath");
+        table.text("audioPath");
+        table.text("coverPath");
+        table.text("mediaJson");
+        table.text("sha256");
+        table.integer("sizeBytes");
+        table.float("durationSec");
+        table.integer("width");
+        table.integer("height");
+        table.float("fps");
+        table.integer("hasAudio");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_upload_part",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("uploadId");
+        table.integer("partIndex");
+        table.integer("partSize");
+        table.text("partSha256");
+        table.text("path");
+        table.integer("createdAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_transcript",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("engine");
+        table.text("model");
+        table.text("dataJson");
+        table.float("avgSpeechRateCps");
+        table.integer("createdAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_shot_detection",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("engine");
+        table.text("dataJson");
+        table.integer("shotCount");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_frame_sample",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.text("frameType");
+        table.float("timeSec");
+        table.text("filePath");
+        table.float("qualityScore");
+        table.integer("createdAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_frame_understanding",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.text("provider");
+        table.text("dataJson");
+        table.integer("reviewRequired");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_story_ir",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("dataJson");
+        table.integer("shotCount");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_dialogue_structure",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.integer("version");
+        table.text("status");
+        table.text("dataJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_asset_gap",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("dataJson");
+        table.integer("missingCount");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_asset_binding",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.text("slotName");
+        table.text("slotType");
+        table.integer("assetId");
+        table.text("bindingStatus");
+        table.text("note");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_regenerated_storyboard",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.integer("version");
+        table.text("dataJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_consistency_report",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("status");
+        table.text("reportJson");
+        table.text("reportMarkdown");
+        table.integer("createdAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_storyboard_mapping",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.integer("storyboardId");
+        table.integer("trackId");
+        table.integer("createdAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_shot_adaptation",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.text("level");
+        table.text("strategy");
+        table.float("assetMatchScore");
+        table.text("requiredSlotsJson");
+        table.text("matchedAssetsJson");
+        table.text("adaptedVisual");
+        table.text("blockedReasonsJson");
+        table.text("downgradeReasonsJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_provider_capability",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.text("providerId");
+        table.text("providerType");
+        table.text("displayName");
+        table.text("baseUrl");
+        table.text("capabilityJson");
+        table.integer("enabled");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_model_probe_result",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.text("providerId");
+        table.text("model");
+        table.text("status");
+        table.integer("latencyMs");
+        table.text("errorReason");
+        table.text("resultJson");
+        table.integer("createdAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
+    {
+      name: "o_sr_model_route",
+      builder: (table) => {
+        table.integer("id").notNullable();
+        table.integer("taskId");
+        table.text("shotId");
+        table.text("selectedProviderId");
+        table.text("selectedModel");
+        table.text("routeStatus");
+        table.text("requiredCapabilitiesJson");
+        table.text("fallbackPlanJson");
+        table.text("downgradeReasonsJson");
+        table.integer("createdAt");
+        table.integer("updatedAt");
+        table.primary(["id"]);
+        table.unique(["id"]);
+      },
+    },
     {
       name: "o_prompt",
       builder: (table) => {
@@ -597,6 +944,12 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
           {
             id: "openai",
             inputValues: "{}",
+            models: "[]",
+            enable: 0,
+          },
+          {
+            id: "worldclawpro",
+            inputValues: JSON.stringify({ apiKey: "", baseUrl: "https://worldclawpro.ai/v1" }),
             models: "[]",
             enable: 0,
           },

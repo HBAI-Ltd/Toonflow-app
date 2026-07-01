@@ -15,6 +15,7 @@ import jwt from "jsonwebtoken";
 import socketInit from "@/socket/index";
 import { isEletron } from "@/utils/getPath";
 import { ensureThumbnail, ThumbnailSize } from "@/utils/image";
+import { recoverStaleSrJobs } from "@/services/structuralReplica/jobService";
 
 const app = express();
 const server = http.createServer(app);
@@ -47,6 +48,12 @@ export default async function startServe(randomPort: Boolean = false) {
   await checkPermissions();
 
   await u.writeVersion();
+  try {
+    const recovered = await recoverStaleSrJobs();
+    if (recovered.scanned) console.log("[structuralReplica] recovered stale jobs:", recovered);
+  } catch (err) {
+    console.error("[structuralReplica] stale job recovery failed", err);
+  }
   const io = new Server(server, { cors: { origin: "*" } });
   socketInit(io);
 

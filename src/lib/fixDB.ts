@@ -31,6 +31,12 @@ export default async (knex: Knex): Promise<void> => {
       });
     }
   };
+
+  const createTableIfMissing = async (name: string, builder: (table: Knex.CreateTableBuilder) => void) => {
+    if (!(await knex.schema.hasTable(name))) {
+      await knex.schema.createTable(name, builder);
+    }
+  };
   //矫正因软件异常退出导致的状态不一致问题
   await db("o_novel").where("eventState", 0).update({
     eventState: -1,
@@ -68,22 +74,269 @@ export default async (knex: Knex): Promise<void> => {
   await addColumn("o_assets", "audioBindState", "integer");
   await addColumn("o_modelPrompt", "fileName", "string");
   await addColumn("o_modelPrompt", "path", "string");
-  const vendorDataSelect = await u.db("o_vendorConfig").whereIn("id", ["deepseek", "atlascloud"]).select("*");
-  if (!vendorDataSelect.find((i) => i.id == "deepseek")) {
-    await u.db("o_vendorConfig").insert({
-      id: "deepseek",
-      inputValues: "{}",
-      models: "[]",
-      enable: 0,
-    });
-  }
-  if (!vendorDataSelect.find((i) => i.id == "atlascloud")) {
-    await u.db("o_vendorConfig").insert({
-      id: "atlascloud",
-      inputValues: "{}",
-      models: "[]",
-      enable: 0,
-    });
+  await createTableIfMissing("o_sr_task", (table) => {
+    table.integer("id").notNullable();
+    table.integer("projectId");
+    table.integer("scriptId");
+    table.text("name");
+    table.text("status");
+    table.text("platform");
+    table.text("aspectRatio");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.text("errorReason");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await addColumn("o_sr_task", "lastVerifiedAt", "integer");
+  await addColumn("o_sr_task", "lastSmokeResultJson", "text");
+  await createTableIfMissing("o_sr_job", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("jobType");
+    table.text("status");
+    table.integer("progress");
+    table.text("stage");
+    table.text("inputJson");
+    table.text("resultJson");
+    table.text("errorReason");
+    table.integer("attempt");
+    table.integer("parentJobId");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.integer("startedAt");
+    table.integer("finishedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await addColumn("o_sr_job", "lockedBy", "text");
+  await addColumn("o_sr_job", "lockedAt", "integer");
+  await addColumn("o_sr_job", "nextRunAt", "integer");
+  await addColumn("o_sr_job", "recoverable", "integer");
+  await addColumn("o_sr_job", "cancelRequested", "integer");
+  await createTableIfMissing("o_sr_source_media", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("sourcePath");
+    table.text("normalizedPath");
+    table.text("audioPath");
+    table.text("coverPath");
+    table.text("mediaJson");
+    table.text("sha256");
+    table.integer("sizeBytes");
+    table.float("durationSec");
+    table.integer("width");
+    table.integer("height");
+    table.float("fps");
+    table.integer("hasAudio");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_upload_part", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("uploadId");
+    table.integer("partIndex");
+    table.integer("partSize");
+    table.text("partSha256");
+    table.text("path");
+    table.integer("createdAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_transcript", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("engine");
+    table.text("model");
+    table.text("dataJson");
+    table.float("avgSpeechRateCps");
+    table.integer("createdAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_shot_detection", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("engine");
+    table.text("dataJson");
+    table.integer("shotCount");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_frame_sample", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("shotId");
+    table.text("frameType");
+    table.float("timeSec");
+    table.text("filePath");
+    table.float("qualityScore");
+    table.integer("createdAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_frame_understanding", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("shotId");
+    table.text("provider");
+    table.text("dataJson");
+    table.integer("reviewRequired");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_story_ir", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("dataJson");
+    table.integer("shotCount");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_dialogue_structure", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.integer("version");
+    table.text("status");
+    table.text("dataJson");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_asset_gap", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("dataJson");
+    table.integer("missingCount");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_asset_binding", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("shotId");
+    table.text("slotName");
+    table.text("slotType");
+    table.integer("assetId");
+    table.text("bindingStatus");
+    table.text("note");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_regenerated_storyboard", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.integer("version");
+    table.text("dataJson");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_consistency_report", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("status");
+    table.text("reportJson");
+    table.text("reportMarkdown");
+    table.integer("createdAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_storyboard_mapping", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("shotId");
+    table.integer("storyboardId");
+    table.integer("trackId");
+    table.integer("createdAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_shot_adaptation", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("shotId");
+    table.text("level");
+    table.text("strategy");
+    table.float("assetMatchScore");
+    table.text("requiredSlotsJson");
+    table.text("matchedAssetsJson");
+    table.text("adaptedVisual");
+    table.text("blockedReasonsJson");
+    table.text("downgradeReasonsJson");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_provider_capability", (table) => {
+    table.integer("id").notNullable();
+    table.text("providerId");
+    table.text("providerType");
+    table.text("displayName");
+    table.text("baseUrl");
+    table.text("capabilityJson");
+    table.integer("enabled");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_model_probe_result", (table) => {
+    table.integer("id").notNullable();
+    table.text("providerId");
+    table.text("model");
+    table.text("status");
+    table.integer("latencyMs");
+    table.text("errorReason");
+    table.text("resultJson");
+    table.integer("createdAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+  await createTableIfMissing("o_sr_model_route", (table) => {
+    table.integer("id").notNullable();
+    table.integer("taskId");
+    table.text("shotId");
+    table.text("selectedProviderId");
+    table.text("selectedModel");
+    table.text("routeStatus");
+    table.text("requiredCapabilitiesJson");
+    table.text("fallbackPlanJson");
+    table.text("downgradeReasonsJson");
+    table.integer("createdAt");
+    table.integer("updatedAt");
+    table.primary(["id"]);
+    table.unique(["id"]);
+  });
+
+  const defaultVendorIds = ["deepseek", "atlascloud"];
+  const vendorDataSelect = await u.db("o_vendorConfig").whereIn("id", defaultVendorIds).select("*");
+  const existingVendorIds = new Set(vendorDataSelect.map((i) => i.id));
+  for (const id of defaultVendorIds) {
+    if (!existingVendorIds.has(id)) {
+      await u.db("o_vendorConfig").insert({
+        id,
+        inputValues: "{}",
+        models: "[]",
+        enable: 0,
+      });
+    }
   }
   //检测是否包含新增音色绑定提示词
   const existAudioPrompt = await db("o_prompt").where("type", "audioBindPrompt").first();
@@ -109,6 +362,29 @@ export default async (knex: Knex): Promise<void> => {
     });
   }
   //添加数据高级配置
+  const structuralReplicaSettings = [
+    { key: "sr.pythonPath", value: "python" },
+    { key: "sr.ffmpegPath", value: "ffmpeg" },
+    { key: "sr.ffprobePath", value: "ffprobe" },
+    { key: "sr.whisperModel", value: "turbo" },
+    { key: "sr.visionEnabled", value: "0" },
+    { key: "sr.visionProvider", value: "worldclawpro" },
+    { key: "sr.visionBaseUrl", value: "https://worldclawpro.ai/v1" },
+    { key: "sr.visionModel", value: "gpt-5.5" },
+    { key: "sr.visionConcurrency", value: "3" },
+    { key: "sr.visionRequestTimeoutMs", value: "120000" },
+  ];
+  const existingSrSettings = await u
+    .db("o_setting")
+    .whereIn(
+      "key",
+      structuralReplicaSettings.map((item) => item.key),
+    )
+    .select("key");
+  const existingSrSettingKeys = new Set(existingSrSettings.map((item) => item.key));
+  const missingSrSettings = structuralReplicaSettings.filter((item) => !existingSrSettingKeys.has(item.key));
+  if (missingSrSettings.length) await u.db("o_setting").insert(missingSrSettings);
+
   const advancedAgentList = [
     { key: "scriptAgent:decisionAgent", name: "剧本Agent:决策层", desc: "决策层" },
     { key: "scriptAgent:supervisionAgent", name: "剧本Agent:监督层", desc: "监督层" },
@@ -190,6 +466,14 @@ export default async (knex: Knex): Promise<void> => {
   if (Number(toonflowVer) < 3.2) {
     u.vendor.writeCode("toonflow", vendorData["toonflow.ts"]);
   }
+  const openaiCode = u.vendor.getCode("openai");
+  if (openaiCode && !openaiCode.includes("createOpenAICompatible")) {
+    u.vendor.writeCode("openai", vendorData["openai.ts"]);
+  }
+  const worldclawpro = u.vendor.getVendor("worldclawpro");
+  if (worldclawpro?.version && Number(worldclawpro.version) < 2.0) {
+    u.vendor.writeCode("worldclawpro", vendorData["worldclawpro.ts"]);
+  }
 };
 
 async function tempOnsert(tsCode: string) {
@@ -201,7 +485,7 @@ async function tempOnsert(tsCode: string) {
   await u.db("o_vendorConfig").insert({
     id: vendor.id,
     inputValues: JSON.stringify(vendor.inputValues ?? {}),
-    models: JSON.stringify([]),
+    models: JSON.stringify(vendor.models ?? []),
     enable: vendor.id == "toonflow" ? 1 : 0,
   });
   u.vendor.writeCode(vendor.id, tsCode);
