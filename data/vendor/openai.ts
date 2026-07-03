@@ -51,9 +51,13 @@ interface VendorConfig {
   inputValues: Record<string, string>;
   models: (TextModel | ImageModel | VideoModel | TTSModel)[];
 }
+type ReferenceList =
+  | { type: "image"; sourceType: "base64"; base64: string }
+  | { type: "audio"; sourceType: "base64"; base64: string }
+  | { type: "video"; sourceType: "base64"; base64: string };
 interface ImageConfig {
   prompt: string;
-  imageBase64: string[];
+  referenceList?: Extract<ReferenceList, { type: "image" }>[];
   size: "1K" | "2K" | "4K";
   aspectRatio: `${number}:${number}`;
 }
@@ -142,7 +146,53 @@ const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3
   return createOpenAI({ baseURL: vendor.inputValues.baseUrl, apiKey }).chat(model.modelName);
 };
 const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<string> => {
-  return "";
+  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
+  const baseUrl = vendor.inputValues.baseUrl;
+  const imageBase64List = (config.referenceList ?? []).map((r) => r.base64).filter(Boolean);
+
+  // 分辨率映射
+  const sizeMap: Record<string, Record<string, string>> = {
+    "16:9": { "1K": "1024x576", "2K": "2048x1152", "4K": "4096x2304" },
+    "9:16": { "1K": "576x1024", "2K": "1152x2048", "4K": "2304x4096" },
+    "1:1": { "1K": "1024x1024", "2K": "2048x2048", "4K": "4096x4096" },
+    "4:3": { "1K": "1024x768", "2K": "2048x1536", "4K": "4096x3072" },
+    "3:4": { "1K": "768x1024", "2K": "1536x2048", "4K": "3072x4096" },
+  };
+  const size = sizeMap[config.aspectRatio]?.[config.size] ?? "1024x1024";
+
+  const body: Record<string, any> = {
+    model: model.modelName,
+    prompt: config.prompt,
+    n: 1,
+    size: size,
+    response_format: "b64_json",
+  };
+
+  logger(`[imageRequest] openai adapter, model: ${model.modelName}, size: ${size}`);
+  const response = await fetch(`${baseUrl}/images/generations`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`图片生成请求失败，状态码: ${response.status}, 错误信息: ${errorText}`);
+  }
+
+  const data = await response.json();
+
+  if (data.data && data.data[0]) {
+    if (data.data[0].b64_json) {
+      return data.data[0].b64_json;
+    }
+    if (data.data[0].url) {
+      return await urlToBase64(data.data[0].url);
+    }
+  }
+
+  throw new Error("图片生成失败：未返回图片数据");
 };
 const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<string> => {
   return "";
