@@ -69,10 +69,11 @@ const requestSchema = {
   name: z.string(),
   prompt: z.string(),
   base64: z.string().optional().nullable(),
+  imageIds: z.array(z.number()).optional().nullable(),
 };
 
 export default router.post("/", validateFields(requestSchema), async (req, res) => {
-  const { projectId, model, resolution, id, type, name, prompt, base64 } = req.body;
+  const { projectId, model, resolution, id, type, name, prompt, base64, imageIds } = req.body;
 
   // 1. 查询项目 & 获取类型配置
   const project = await u.db("o_project").where("id", projectId).select("artStyle", "type", "intro").first();
@@ -97,12 +98,31 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
   const describe = `生成${cfg.label}图，名称：${name}，提示词：${prompt}`;
   const relatedObjects = { id, projectId, type: cfg.label };
 
+  // 收集参考图:base64(单张)优先,然后从 imageIds 查询多张历史/上传图
+  const referenceList: { type: "image"; base64: string }[] = [];
+  if (base64) {
+    referenceList.push({ type: "image", base64 });
+  }
+  if (imageIds && imageIds.length > 0) {
+    const idRows = await u.db("o_image").whereIn("id", imageIds).select("filePath");
+    for (const row of idRows) {
+      if (!row.filePath) continue;
+      try {
+        const b64 = await u.oss.getImageBase64(row.filePath);
+        referenceList.push({ type: "image", base64: b64 });
+      } catch (e) {
+        // 跳过无法读取的图片,继续生成
+        console.error(`[generateAssets] 读取参考图失败 id=${row.id} path=${row.filePath}:`, e);
+      }
+    }
+  }
+
   try {
     const aiImage = u.Ai.Image(model);
     await aiImage.run(
       {
         prompt: userPrompt,
-        referenceList: base64 ? [{ type: "image", base64 }] : [],
+        referenceList,
         size: resolution,
         aspectRatio: "16:9",
       },

@@ -46,6 +46,25 @@ export default router.post(
       if (!repleAssets[item.assetsRoleId]) repleAssets[item.assetsRoleId] = [item];
       else repleAssets[item.assetsRoleId].push(item);
     });
+    const assets2ImageData = await u
+      .db("o_assetsRole2Image")
+      .leftJoin("o_image", "o_image.id", "o_assetsRole2Image.assetsImageId")
+      .whereIn(
+        "o_assetsRole2Image.assetsRoleId",
+        data.map((i: any) => i.id!),
+      )
+      .select(
+        "o_image.id",
+        "o_image.filePath",
+        "o_assetsRole2Image.assetsRoleId",
+      );
+    const repleImages: Record<number, { id: number; filePath: string }[]> = {};
+    for (const item of assets2ImageData) {
+      if (!item.id) continue;
+      const url = item.filePath ? await u.oss.getSmallImageUrl(item.filePath) : "";
+      if (!repleImages[item.assetsRoleId]) repleImages[item.assetsRoleId] = [{ id: item.id, filePath: url }];
+      else repleImages[item.assetsRoleId].push({ id: item.id, filePath: url });
+    }
     const result = await Promise.all(
       data.map(async (parent: any) => {
         const historyImages = await u.db("o_image").where("assetsId", parent.id).andWhere("state", "已完成").select("id", "filePath");
@@ -60,6 +79,7 @@ export default router.post(
           filePath: parent.filePath && (await u.oss.getSmallImageUrl(parent.filePath!)),
           historyImages: historyImagesWithUrl,
           relepedAudio: repleAssets[parent.id] ?? [],
+          relepedImage: repleImages[parent.id] ?? [],
         };
       }),
     );
