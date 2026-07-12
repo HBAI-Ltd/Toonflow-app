@@ -15,12 +15,12 @@
 </p>
 
 <p align="center">
-  <strong>简体中文</strong> | 
-  <a href="./docs/README.zhtw.md">繁體中文</a> | 
-  <a href="./docs/README.en.md">English</a> | 
-  <a href="./docs/README.th.md">ไทย</a> | 
-  <a href="./docs/README.vi.md">Tiếng Việt</a> | 
-  <a href="./docs/README.ja.md">日本語</a> | 
+  <strong>简体中文</strong> |
+  <a href="./docs/README.zhtw.md">繁體中文</a> |
+  <a href="./docs/README.en.md">English</a> |
+  <a href="./docs/README.th.md">ไทย</a> |
+  <a href="./docs/README.vi.md">Tiếng Việt</a> |
+  <a href="./docs/README.ja.md">日本語</a> |
   <a href="./docs/README.ru.md">Русский</a>
 </p>
 
@@ -69,7 +69,7 @@
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Docker/docker2.svg" alt="Docker" />&nbsp;
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Electron/electron2.svg" alt="Electron" />
   </p>
-  
+
   > 🚀 **一站式短剧工程**：从文本到角色，从分镜到视频，0门槛全流程AI化，创作效率提升10倍+！
 </div>
 
@@ -114,17 +114,17 @@ Toonflow 支持以下语言界面：
 
 Toonflow 是面向短剧生产的 AI 工作台，围绕“策划 → 编剧 → 分镜 → 出片”构建完整闭环，并支持本地化、可编程、可持续迭代的生产流程。
 
-- ✅ **无限画布生产工作台**  
+- ✅ **无限画布生产工作台**
   以类无限画布形式组织剧本、角色、分镜、素材与视频节点，支持自由编排、回溯与并行生产，不受线性步骤限制。
-- ✅ **三层 Agent 协作体系**  
+- ✅ **三层 Agent 协作体系**
   决策层、执行层、监督层协同工作，覆盖任务拆解、内容生成、质量审阅与修订反馈，提升稳定性与成片一致性。
-- ✅ **持久化 Agent 记忆**  
+- ✅ **持久化 Agent 记忆**
   基于本地 ONNX 向量检索的跨会话记忆系统，支持短期消息、长期摘要和语义召回，确保多轮创作连续性。
-- ✅ **可编程供应商系统**  
+- ✅ **可编程供应商系统**
   支持在设置中心直接编写供应商 TypeScript 逻辑并即时生效，无需改源码或重启，便于私有化和多模型接入。
-- ✅ **章节事件图谱驱动改编**  
+- ✅ **章节事件图谱驱动改编**
   自动提取原著章节事件并结构化存储，剧本改编按事件图谱精准调用上下文，减少长文本信息丢失。
-- ✅ **Skill 文件化配置**  
+- ✅ **Skill 文件化配置**
   ScriptAgent 与 ProductionAgent 的核心提示词外化为 Markdown Skill 文件，支持在线编辑与快速调优。
 
 ---
@@ -257,8 +257,8 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
 安装完成后，启动程序即可开始使用本服务。
 
-> ⚠️ **首次登录**  
-> 账号：`admin`  
+> ⚠️ **首次登录**
+> 账号：`admin`
 > 密码：`admin123`
 
 ## Docker 部署
@@ -397,8 +397,8 @@ pm2 restart all       # 重启服务
 pm2 monit             # 监控面板
 ```
 
-> ⚠️ **首次登录**  
-> 账号：`admin`  
+> ⚠️ **首次登录**
+> 账号：`admin`
 > 密码：`admin123`
 
 ##### 6. 部署前端网站
