@@ -1,10 +1,10 @@
 /**
- * Toonflow AI供应商模板 - MiniMax(海螺AI)
- * @version 2.0
+ * Toonflow AI vendor template - MiniMax
+ * @version 2.2
  */
 
 // ============================================================
-// 类型定义
+// Type definitions
 // ============================================================
 
 type VideoMode =
@@ -98,7 +98,7 @@ interface PollResult {
 }
 
 // ============================================================
-// 全局声明
+// Global declarations
 // ============================================================
 
 declare const axios: any;
@@ -130,7 +130,7 @@ declare const exports: {
 };
 
 // ============================================================
-// 供应商配置
+// Vendor configuration
 // ============================================================
 
 const vendor: VendorConfig = {
@@ -141,28 +141,28 @@ const vendor: VendorConfig = {
   description:
     "Official text and media integration with selectable regional endpoints and OpenAI-compatible or Anthropic-compatible text protocols. [Global documentation](https://platform.minimax.io/docs) [China documentation](https://platform.minimaxi.com/docs)",
   inputs: [
-    { key: "apiKey", label: "API密钥", type: "password", required: true },
+    { key: "apiKey", label: "API key", type: "password", required: true },
     { key: "baseUrl", label: "Custom API base URL", type: "url", required: false, placeholder: "Optional custom API root" },
     { key: "region", label: "Region", type: "text", required: true, placeholder: "global_en or cn_zh" },
     { key: "protocol", label: "Text protocol", type: "text", required: true, placeholder: "openai or anthropic" },
   ],
   inputValues: { apiKey: "", baseUrl: "", region: "global_en", protocol: "openai" },
   models: [
-    // 文本模型
+    // Text models
     { name: "MiniMax M3", modelName: "MiniMax-M3", type: "text", think: true, thinking: ["adaptive", "disabled"] },
     { name: "MiniMax M2.7", modelName: "MiniMax-M2.7", type: "text", think: true, thinking: ["always_on"] },
-    { name: "MiniMax-M2.7 极速版 (推理版)", modelName: "MiniMax-M2.7-highspeed", type: "text", think: true },
-    { name: "MiniMax-M2.5 (推理版)", modelName: "MiniMax-M2.5", type: "text", think: true },
-    { name: "MiniMax-M2.5 极速版 (推理版)", modelName: "MiniMax-M2.5-highspeed", type: "text", think: true },
-    { name: "MiniMax-M2.1 (编程版)", modelName: "MiniMax-M2.1", type: "text", think: true },
-    { name: "MiniMax-M2.1 极速版 (编程版)", modelName: "MiniMax-M2.1-highspeed", type: "text", think: true },
-    { name: "MiniMax-M2 (Agent版)", modelName: "MiniMax-M2", type: "text", think: false },
-    // 图片模型
-    { name: "海螺图像V1", modelName: "image-01", type: "image", mode: ["text", "singleImage"] },
-    { name: "海螺图像V1 Live版", modelName: "image-01-live", type: "image", mode: ["text", "singleImage"], associationSkills: "支持自定义画风" },
-    // 视频模型
+    { name: "MiniMax M2.7 High-Speed (Reasoning)", modelName: "MiniMax-M2.7-highspeed", type: "text", think: true },
+    { name: "MiniMax M2.5 (Reasoning)", modelName: "MiniMax-M2.5", type: "text", think: true },
+    { name: "MiniMax M2.5 High-Speed (Reasoning)", modelName: "MiniMax-M2.5-highspeed", type: "text", think: true },
+    { name: "MiniMax M2.1 (Coding)", modelName: "MiniMax-M2.1", type: "text", think: true },
+    { name: "MiniMax M2.1 High-Speed (Coding)", modelName: "MiniMax-M2.1-highspeed", type: "text", think: true },
+    { name: "MiniMax M2 (Agent)", modelName: "MiniMax-M2", type: "text", think: false },
+    // Image models
+    { name: "Hailuo Image V1", modelName: "image-01", type: "image", mode: ["text", "singleImage"] },
+    { name: "Hailuo Image V1 Live", modelName: "image-01-live", type: "image", mode: ["text", "singleImage"], associationSkills: "Supports custom styles" },
+    // Video models
     {
-      name: "海螺2.3",
+      name: "Hailuo 2.3",
       modelName: "MiniMax-Hailuo-2.3",
       type: "video",
       mode: ["text", "singleImage"],
@@ -173,7 +173,7 @@ const vendor: VendorConfig = {
       ],
     },
     {
-      name: "海螺2.3极速版",
+      name: "Hailuo 2.3 Fast",
       modelName: "MiniMax-Hailuo-2.3-Fast",
       type: "video",
       mode: ["text", "singleImage"],
@@ -184,7 +184,7 @@ const vendor: VendorConfig = {
       ],
     },
     {
-      name: "海螺02",
+      name: "Hailuo 02",
       modelName: "MiniMax-Hailuo-02",
       type: "video",
       mode: ["text", "singleImage", "startEndRequired"],
@@ -198,11 +198,11 @@ const vendor: VendorConfig = {
 };
 
 // ============================================================
-// 辅助工具
+// Helper utilities
 // ============================================================
 
 /**
- * 获取请求头
+ * Get request headers.
  */
 const getHeaders = (): Record<string, string> => {
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
@@ -213,7 +213,7 @@ const getHeaders = (): Record<string, string> => {
 };
 
 /**
- * 获取基础请求地址
+ * Get the base request URL.
  */
 type Region = "global_en" | "cn_zh";
 type TextProtocol = "openai" | "anthropic";
@@ -275,18 +275,18 @@ const getAnthropicBaseUrl = (): string => {
 };
 
 /**
- * 从 ReferenceList 条目中提取有头 base64 字符串
+ * Extract a data URL from a ReferenceList item.
  */
 const extractBase64WithHead = (ref: ReferenceList): string => {
   return ref.base64.startsWith("data:") ? ref.base64 : `data:image/png;base64,${ref.base64}`;
 };
 
 // ============================================================
-// 适配器函数
+// Adapter functions
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
   const thinkingModes = model.thinking || [];
   const shouldThink = model.think && (think || thinkingModes.includes("always_on"));
@@ -318,17 +318,17 @@ const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3
 };
 
 const uploadReference = async (base64: string, fileType: "image" | "audio" | "video"): Promise<ReferenceList> => {
-  // MiniMax的图片接口直接接受 base64，压缩后原样返回
+  // The image endpoint accepts base64 directly and returns the compressed data unchanged.
   if (fileType === "image") {
     const compressed = await zipImage(base64, 10 * 1024);
     return { type: "image", sourceType: "base64", base64: compressed };
   }
-  // 视频接口的图片参数也是 base64，压缩到20MB
+  // The video endpoint also accepts base64 image parameters; compress them to 20 MB.
   return { type: fileType, sourceType: "base64", base64 } as ReferenceList;
 };
 
 const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<string> => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API key");
   const baseUrl = getBaseUrl();
   const headers = getHeaders();
 
@@ -342,20 +342,20 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
     aigc_watermark: false,
   };
 
-  // 处理图生图参考
+  // Handle image-to-image references.
   const imageRefs = config.referenceList || [];
   if (imageRefs.length > 0) {
     const refBase64 = extractBase64WithHead(imageRefs[0]);
     reqBody.subject_reference = [{ type: "character", image_file: refBase64 }];
   }
 
-  logger("开始提交MiniMax图像生成任务");
+  logger("Submitting image generation task");
   const resp = await axios.post(`${baseUrl}/v1/image_generation`, reqBody, { headers });
   if (resp.data.base_resp.status_code !== 0) {
-    throw new Error(`图像生成失败：${resp.data.base_resp.status_msg}`);
+    throw new Error(`Image generation failed: ${resp.data.base_resp.status_msg}`);
   }
   if (resp.data.metadata.success_count === 0) {
-    throw new Error("图像生成被安全策略拦截，请调整prompt或参考图");
+    throw new Error("Image generation was blocked by the safety policy; adjust the prompt or reference image");
   }
 
   const imgBase64 = resp.data.data.image_base64[0];
@@ -363,7 +363,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
 };
 
 const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<string> => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API key");
   const baseUrl = getBaseUrl();
   const headers = getHeaders();
 
@@ -376,11 +376,11 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     prompt_optimizer: true,
   };
 
-  // 提取图片类型的引用
+  // Extract image references.
   const imageRefs = (config.referenceList || []).filter((r) => r.type === "image");
 
   if (imageRefs.length > 0) {
-    // 压缩图片到20MB以内
+    // Compress images to 20 MB or less.
     const compressedImages: string[] = [];
     for (const ref of imageRefs) {
       const base64 = extractBase64WithHead(ref);
@@ -389,7 +389,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     }
 
     if (config.mode.includes("startEndRequired")) {
-      if (compressedImages.length < 2) throw new Error("首尾帧模式需要上传两张图片");
+      if (compressedImages.length < 2) throw new Error("Start/end frame mode requires two images");
       reqBody.first_frame_image = compressedImages[0];
       reqBody.last_frame_image = compressedImages[1];
     } else if (config.mode.includes("singleImage")) {
@@ -397,15 +397,15 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     }
   }
 
-  logger("开始提交MiniMax视频生成任务");
+  logger("Submitting video generation task");
   const submitResp = await axios.post(`${baseUrl}/v1/video_generation`, reqBody, { headers });
   if (submitResp.data.base_resp.status_code !== 0) {
-    throw new Error(`任务提交失败：${submitResp.data.base_resp.status_msg}`);
+    throw new Error(`Task submission failed: ${submitResp.data.base_resp.status_msg}`);
   }
   const taskId = submitResp.data.task_id;
-  logger(`视频任务提交成功，任务ID: ${taskId}`);
+  logger(`Video task submitted successfully, task ID: ${taskId}`);
 
-  // 轮询任务状态
+  // Poll task status.
   const pollResult = await pollTask(
     async () => {
       const queryResp = await axios.get(`${baseUrl}/v1/query/video_generation`, {
@@ -420,9 +420,9 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
         return { completed: true, data: queryResp.data.file_id };
       }
       if (status === "Fail") {
-        return { completed: true, error: "视频生成失败" };
+        return { completed: true, error: "Video generation failed" };
       }
-      logger(`视频任务生成中，当前状态：${status}`);
+      logger(`Video task in progress, current status: ${status}`);
       return { completed: false };
     },
     5000,
@@ -431,18 +431,18 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
 
   if (pollResult.error) throw new Error(pollResult.error);
   const fileId = pollResult.data!;
-  logger(`视频任务生成成功，文件ID: ${fileId}`);
+  logger(`Video task completed, file ID: ${fileId}`);
 
-  // 获取下载地址
+  // Get the download URL.
   const fileResp = await axios.get(`${baseUrl}/v1/files/retrieve`, {
     headers: getHeaders(),
     params: { file_id: fileId },
   });
   if (fileResp.data.base_resp.status_code !== 0) {
-    throw new Error(`获取文件地址失败：${fileResp.data.base_resp.status_msg}`);
+    throw new Error(`Failed to get the file URL: ${fileResp.data.base_resp.status_msg}`);
   }
   const downloadUrl = fileResp.data.file.download_url;
-  logger(`视频下载地址获取成功，开始转Base64`);
+  logger(`Video download URL retrieved successfully; converting to base64`);
 
   return await urlToBase64(downloadUrl);
 };
@@ -456,7 +456,7 @@ const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: s
     hasUpdate: false,
     latestVersion: "2.2",
     notice:
-      "## 新版本更新公告\n1. 适配新版模板架构，支持 ReferenceList 统一引用类型\n2. 新增 uploadReference 前置处理器\n3. 优化图片压缩和引用提取逻辑",
+      "## Update notice\n1. Updated the provider template architecture and unified ReferenceList handling\n2. Added the uploadReference preprocessing hook\n3. Improved image compression and reference extraction",
   };
 };
 
@@ -465,7 +465,7 @@ const updateVendor = async (): Promise<string> => {
 };
 
 // ============================================================
-// 导出
+// Exports
 // ============================================================
 
 exports.vendor = vendor;
@@ -477,5 +477,5 @@ exports.ttsRequest = ttsRequest;
 exports.checkForUpdates = checkForUpdates;
 exports.updateVendor = updateVendor;
 
-// 这行代码用于确保当前文件被识别为模块，避免全局变量冲突
+// Keep this file as a module to avoid global variable collisions.
 export {};
