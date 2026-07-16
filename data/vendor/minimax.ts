@@ -20,6 +20,7 @@ interface TextModel {
   modelName: string;
   type: "text";
   think: boolean;
+  thinking?: ("adaptive" | "disabled" | "always_on")[];
 }
 
 interface ImageModel {
@@ -134,18 +135,22 @@ declare const exports: {
 
 const vendor: VendorConfig = {
   id: "minimax",
-  version: "2.1",
+  version: "2.2",
   author: "Toonflow",
-  name: "MiniMax(海螺AI)",
-  description: "MiniMax官方接口适配，支持M系列推理文本模型、文生图/图生图、视频生成（文生视频、图生视频、首尾帧生成）能力 \n [前往平台](https://minimaxi.com/)",
+  name: "MiniMax",
+  description:
+    "Official text and media integration with selectable regional endpoints and OpenAI-compatible or Anthropic-compatible text protocols. [Global documentation](https://platform.minimax.io/docs) [China documentation](https://platform.minimaxi.com/docs)",
   inputs: [
     { key: "apiKey", label: "API密钥", type: "password", required: true },
-    { key: "baseUrl", label: "请求地址", type: "url", required: true, placeholder: "示例：https://api.minimaxi.com" },
+    { key: "baseUrl", label: "Custom API base URL", type: "url", required: false, placeholder: "Optional custom API root" },
+    { key: "region", label: "Region", type: "text", required: true, placeholder: "global_en or cn_zh" },
+    { key: "protocol", label: "Text protocol", type: "text", required: true, placeholder: "openai or anthropic" },
   ],
-  inputValues: { apiKey: "", baseUrl: "https://api.minimaxi.com" },
+  inputValues: { apiKey: "", baseUrl: "", region: "global_en", protocol: "openai" },
   models: [
     // 文本模型
-    { name: "MiniMax-M2.7 (推理版)", modelName: "MiniMax-M2.7", type: "text", think: true },
+    { name: "MiniMax M3", modelName: "MiniMax-M3", type: "text", think: true, thinking: ["adaptive", "disabled"] },
+    { name: "MiniMax M2.7", modelName: "MiniMax-M2.7", type: "text", think: true, thinking: ["always_on"] },
     { name: "MiniMax-M2.7 极速版 (推理版)", modelName: "MiniMax-M2.7-highspeed", type: "text", think: true },
     { name: "MiniMax-M2.5 (推理版)", modelName: "MiniMax-M2.5", type: "text", think: true },
     { name: "MiniMax-M2.5 极速版 (推理版)", modelName: "MiniMax-M2.5-highspeed", type: "text", think: true },
@@ -210,8 +215,63 @@ const getHeaders = (): Record<string, string> => {
 /**
  * 获取基础请求地址
  */
+type Region = "global_en" | "cn_zh";
+type TextProtocol = "openai" | "anthropic";
+
+const endpointByRegion: Record<
+  Region,
+  { apiBaseUrl: string; openaiBaseUrl: string; anthropicBaseUrl: string }
+> = {
+  global_en: {
+    apiBaseUrl: "https://api.minimax.io",
+    openaiBaseUrl: "https://api.minimax.io/v1",
+    anthropicBaseUrl: "https://api.minimax.io/anthropic",
+  },
+  cn_zh: {
+    apiBaseUrl: "https://api.minimaxi.com",
+    openaiBaseUrl: "https://api.minimaxi.com/v1",
+    anthropicBaseUrl: "https://api.minimaxi.com/anthropic",
+  },
+};
+
+const normalizeUrl = (value: string | undefined): string => (value || "").replace(/\/+$/, "");
+
+const getRegion = (): Region => {
+  const configuredBaseUrl = normalizeUrl(vendor.inputValues.baseUrl);
+  return configuredBaseUrl === endpointByRegion.cn_zh.apiBaseUrl ||
+    configuredBaseUrl === endpointByRegion.cn_zh.openaiBaseUrl ||
+    configuredBaseUrl === endpointByRegion.cn_zh.anthropicBaseUrl
+    ? "cn_zh"
+    : vendor.inputValues.region?.trim() === "cn_zh"
+      ? "cn_zh"
+      : "global_en";
+};
+
+const getTextProtocol = (): TextProtocol =>
+  vendor.inputValues.protocol?.trim().toLowerCase() === "anthropic" ? "anthropic" : "openai";
+
+const isOfficialEndpoint = (value: string): boolean =>
+  Object.values(endpointByRegion).some((endpoint) =>
+    [endpoint.apiBaseUrl, endpoint.openaiBaseUrl, endpoint.anthropicBaseUrl].includes(value),
+  );
+
 const getBaseUrl = (): string => {
-  return vendor.inputValues.baseUrl.replace(/\/$/, "");
+  const configuredBaseUrl = normalizeUrl(vendor.inputValues.baseUrl);
+  return !configuredBaseUrl || isOfficialEndpoint(configuredBaseUrl)
+    ? endpointByRegion[getRegion()].apiBaseUrl
+    : configuredBaseUrl;
+};
+
+const getOpenAIBaseUrl = (): string => {
+  const configuredBaseUrl = normalizeUrl(vendor.inputValues.baseUrl);
+  if (!configuredBaseUrl || isOfficialEndpoint(configuredBaseUrl)) return endpointByRegion[getRegion()].openaiBaseUrl;
+  return configuredBaseUrl.endsWith("/v1") ? configuredBaseUrl : `${configuredBaseUrl}/v1`;
+};
+
+const getAnthropicBaseUrl = (): string => {
+  const configuredBaseUrl = normalizeUrl(vendor.inputValues.baseUrl);
+  if (!configuredBaseUrl || isOfficialEndpoint(configuredBaseUrl)) return endpointByRegion[getRegion()].anthropicBaseUrl;
+  return configuredBaseUrl.endsWith("/anthropic") ? configuredBaseUrl : `${configuredBaseUrl}/anthropic`;
 };
 
 /**
@@ -228,11 +288,33 @@ const extractBase64WithHead = (ref: ReferenceList): string => {
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
   if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
-  const baseUrl = getBaseUrl();
+  const thinkingModes = model.thinking || [];
+  const shouldThink = model.think && (think || thinkingModes.includes("always_on"));
 
-  const openaiBaseUrl = `${baseUrl}/v1`;
-  const extraBody = model.think ? { reasoning_split: true } : {};
-  return createOpenAI({ baseURL: openaiBaseUrl, apiKey, extraBody }).chat(model.modelName);
+  if (getTextProtocol() === "anthropic") {
+    const anthropicThinking = thinkingModes.includes("adaptive")
+      ? { type: shouldThink ? "adaptive" : "disabled" }
+      : undefined;
+    const anthropicOptions: any = {
+      baseURL: `${getAnthropicBaseUrl()}/v1`,
+      authToken: apiKey,
+    };
+
+    if (anthropicThinking) {
+      anthropicOptions.fetch = async (url: string, options?: any) => {
+        const rawBody = JSON.parse(options?.body || "{}");
+        return fetch(url, {
+          ...options,
+          body: JSON.stringify({ ...rawBody, thinking: anthropicThinking }),
+        });
+      };
+    }
+
+    return createAnthropic(anthropicOptions).chat(model.modelName);
+  }
+
+  const extraBody = shouldThink ? { reasoning_split: true } : {};
+  return createOpenAI({ baseURL: getOpenAIBaseUrl(), apiKey, extraBody }).chat(model.modelName);
 };
 
 const uploadReference = async (base64: string, fileType: "image" | "audio" | "video"): Promise<ReferenceList> => {
@@ -372,7 +454,7 @@ const ttsRequest = async (config: TTSConfig, model: TTSModel): Promise<string> =
 const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }> => {
   return {
     hasUpdate: false,
-    latestVersion: "2.0",
+    latestVersion: "2.2",
     notice:
       "## 新版本更新公告\n1. 适配新版模板架构，支持 ReferenceList 统一引用类型\n2. 新增 uploadReference 前置处理器\n3. 优化图片压缩和引用提取逻辑",
   };
