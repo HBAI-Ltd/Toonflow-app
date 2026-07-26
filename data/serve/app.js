@@ -240928,12 +240928,14 @@ var init_batchGenerateImage = __esm({
           )
         );
         const generateTask = async (item) => {
+          const imagePrompt = item.prompt?.trim() || item.videoDesc?.trim() || "";
           const repeloadObj = {
-            prompt: item.prompt,
+            prompt: imagePrompt,
             size: projectSettingData?.imageQuality,
             aspectRatio: projectSettingData?.videoRatio
           };
           try {
+            if (!imagePrompt) throw new Error("\u5206\u955C\u7F3A\u5C11\u56FE\u7247\u63D0\u793A\u8BCD\u548C\u89C6\u9891\u63CF\u8FF0");
             const imageCls = await utils_default.Ai.Image(projectSettingData?.imageModel).run(
               {
                 referenceList: await getAssetsImageBase64(assetRecord[item.id] || []),

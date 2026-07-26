@@ -92,12 +92,14 @@ export default router.post(
     );
 
     const generateTask = async (item: (typeof storyboardData)[number]) => {
+      const imagePrompt = item.prompt?.trim() || item.videoDesc?.trim() || "";
       const repeloadObj = {
-        prompt: item.prompt!,
+        prompt: imagePrompt,
         size: projectSettingData?.imageQuality as "1K" | "2K" | "4K",
         aspectRatio: projectSettingData?.videoRatio as `${number}:${number}`,
       };
       try {
+        if (!imagePrompt) throw new Error("分镜缺少图片提示词和视频描述");
         const imageCls = await u.Ai.Image(projectSettingData?.imageModel as `${string}:${string}`).run(
           {
             referenceList: await getAssetsImageBase64(assetRecord[item.id!] || []),
