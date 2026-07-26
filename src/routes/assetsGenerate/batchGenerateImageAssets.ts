@@ -127,7 +127,7 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
             relatedObjects: JSON.stringify(relatedObjects),
           },
         );
-        aiImage.save(imagePath);
+        await aiImage.save(imagePath);
 
         const imageData = await u.db("o_image").where("id", imageId).select("*").first();
         if (!imageData) return res.status(500).send("资产已被删除");
