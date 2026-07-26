@@ -307,8 +307,11 @@ class AiVideo {
         await referenceList2imageBase642(mn.split(/:(.+)/)[0], input);
 
         this.result = await fn(input);
-
+        if (typeof this.result !== "string" || this.result.trim().length === 0) {
+          throw new Error("视频供应商未返回视频数据");
+        }
         if (this.result.startsWith("http")) this.result = await urlToBase64(this.result);
+        if (this.result.trim().length === 0) throw new Error("视频供应商未返回视频数据");
       };
       if (taskRecord) {
         await withTaskRecord(this.key, taskRecord.taskClass, taskRecord.describe, taskRecord.relatedObjects, taskRecord.projectId, exec);

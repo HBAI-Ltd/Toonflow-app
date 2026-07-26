@@ -58,14 +58,15 @@ interface ImageConfig {
   size: "1K" | "2K" | "4K";
   aspectRatio: `${number}:${number}`;
 }
+type ReferenceList = { type: "image"; base64: string } | { type: "audio"; base64: string } | { type: "video"; base64: string };
 interface VideoConfig {
   duration: number;
   resolution: string;
   aspectRatio: "16:9" | "9:16";
   prompt: string;
-  imageBase64?: string[];
+  referenceList?: ReferenceList[];
   audio?: boolean;
-  mode: VideoMode[];
+  mode: VideoMode;
 }
 interface TTSConfig {
   text: string;
@@ -192,7 +193,119 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
   }
 };
 const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<string> => {
-  return "";
+  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.baseUrl) throw new Error("缺少请求地址");
+
+  const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
+  const baseUrl = vendor.inputValues.baseUrl.replace(/\/+$/, "");
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+  const references = config.referenceList ?? [];
+  const imageReferences = references.filter((reference) => reference.type === "image");
+  const videoReferences = references.filter((reference) => reference.type === "video");
+  const audioReferences = references.filter((reference) => reference.type === "audio");
+
+  if (audioReferences.length > 0) {
+    throw new Error("OpenAI视频接口不支持音频参考");
+  }
+  if (videoReferences.length > 1) {
+    throw new Error("OpenAI视频编辑仅支持一个视频参考");
+  }
+  if (videoReferences.length > 0 && imageReferences.length > 0) {
+    throw new Error("OpenAI视频接口不能同时使用图片和视频参考");
+  }
+
+  const body: Record<string, any> = {
+    model: model.modelName,
+    prompt: config.prompt,
+  };
+  let endpoint = `${baseUrl}/videos/generations`;
+
+  if (videoReferences.length === 1) {
+    endpoint = `${baseUrl}/videos/edits`;
+    body.video = { url: videoReferences[0].base64 };
+  } else {
+    const resolution = config.resolution.endsWith("p") ? config.resolution : `${config.resolution}p`;
+    body.duration = config.duration;
+    body.aspect_ratio = config.aspectRatio;
+    body.resolution = resolution;
+
+    if (Array.isArray(config.mode)) {
+      if (imageReferences.length === 0) throw new Error("OpenAI参考生视频需要至少一张参考图");
+      if (imageReferences.length > 7) throw new Error("OpenAI参考生视频最多支持七张参考图");
+      body.reference_images = imageReferences.map((reference) => ({ url: reference.base64 }));
+    } else if (config.mode === "startEndRequired") {
+      throw new Error("OpenAI视频接口不支持首尾帧模式");
+    } else if (["singleImage", "startFrameOptional", "endFrameOptional"].includes(config.mode)) {
+      if (imageReferences.length > 1) throw new Error("OpenAI图生视频仅支持一张起始图");
+      if (config.mode === "singleImage" && imageReferences.length === 0) throw new Error("OpenAI图生视频需要一张起始图");
+      if (imageReferences.length === 1) body.image = { url: imageReferences[0].base64 };
+    } else if (imageReferences.length > 0) {
+      throw new Error("OpenAI文生视频模式不支持参考图");
+    }
+  }
+
+  const extractErrorMessage = (value: any): string =>
+    value?.response?.data?.error?.message ??
+    value?.response?.data?.message ??
+    value?.error?.message ??
+    value?.message ??
+    String(value);
+
+  let createResponse: any;
+  try {
+    createResponse = await axios.post(endpoint, body, { headers });
+  } catch (e: any) {
+    throw new Error(`OpenAI视频生成任务创建失败：${extractErrorMessage(e)}`);
+  }
+
+  const requestId = createResponse.data?.request_id;
+  if (typeof requestId !== "string" || requestId.length === 0) {
+    throw new Error("OpenAI视频生成任务创建失败：未返回 request_id");
+  }
+  logger(`OpenAI视频任务已创建，ID：${requestId}`);
+
+  const pollResult = await pollTask(
+    async (): Promise<PollResult> => {
+      let queryResponse: any;
+      try {
+        queryResponse = await axios.get(`${baseUrl}/videos/${requestId}`, { headers });
+      } catch (e: any) {
+        return { completed: true, error: `查询OpenAI视频任务失败：${extractErrorMessage(e)}` };
+      }
+
+      if (queryResponse.status === 202) return { completed: false };
+      const data = queryResponse.data;
+      const status = data?.status;
+      const videoUrl = data?.video?.url;
+      logger(`OpenAI视频任务状态：${status ?? "pending"}`);
+
+      if (status === "done" || (!status && typeof videoUrl === "string" && videoUrl.length > 0)) {
+        if (data?.video?.respect_moderation === false) {
+          return { completed: true, error: "OpenAI视频生成因内容安全策略被拦截" };
+        }
+        if (typeof videoUrl !== "string" || videoUrl.length === 0) {
+          return { completed: true, error: "OpenAI视频任务已完成但未返回视频URL" };
+        }
+        return { completed: true, data: videoUrl };
+      }
+      if (status === "failed" || status === "expired") {
+        const message = data?.error?.message ?? data?.error?.code ?? `视频任务状态为 ${status}`;
+        return { completed: true, error: message };
+      }
+      return { completed: false };
+    },
+    5000,
+    600000,
+  );
+
+  if (pollResult.error) throw new Error(`OpenAI视频生成失败：${pollResult.error}`);
+  if (typeof pollResult.data !== "string" || pollResult.data.length === 0) {
+    throw new Error("OpenAI视频生成失败：轮询未返回视频URL");
+  }
+  return pollResult.data;
 };
 const ttsRequest = async (config: TTSConfig, model: TTSModel): Promise<string> => {
   return "";
