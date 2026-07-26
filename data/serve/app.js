@@ -257276,6 +257276,10 @@ ${mem.shortTerm.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
 \u4EE5\u4E0B\u662F\u4F60\u5BF9\u7528\u6237\u7684\u8BB0\u5FC6\uFF0C\u53EF\u4F5C\u4E3A\u53C2\u8003\u4F46\u4E0D\u8981\u4E3B\u52A8\u63D0\u53CA\uFF1A
 ${memoryContext}`;
 }
+async function getLatestMemoryContent(isolationKey, role) {
+  const row = await utils_default.db("memories").where({ isolationKey, type: "message", role }).whereNot("content", "").orderBy("createTime", "desc").first();
+  return row?.content?.trim() ?? "";
+}
 async function runDecisionAI(ctx) {
   const { isolationKey, text: text2, abortSignal } = ctx;
   const memory = new memory_default("productionAgent", isolationKey);
@@ -257345,8 +257349,9 @@ async function createSubAgent(parentCtx) {
       tools: { ...extraTools, ...tools_default({ resTool, msg: subMsg }) }
     });
     const fullResponse = await consumeFullStream(fullStream, subMsg);
-    if (fullResponse.trim()) {
-      await memory.add(memoryKey, removeAllXmlTags(fullResponse), {
+    const memoryContent = removeAllXmlTags(fullResponse);
+    if (memoryContent) {
+      await memory.add(memoryKey, memoryContent, {
         name: name28,
         createTime: new Date(subMsg.datetime).getTime()
       });
@@ -257489,7 +257494,13 @@ ${modelInfo}` },
     execute: async ({ prompt }) => {
       const skill = import_path10.default.join(utils_default.getPath("skills"), "production_execution_storyboard_table.md");
       const systemPrompt = await fs11.promises.readFile(skill, "utf-8");
+      const latestReview = await getLatestMemoryContent(parentCtx.isolationKey, "assistant:supervision");
       const addPrompt = "\n\u4F60\u5FC5\u987B\u4F7F\u7528\u5982\u4E0BXML\u683C\u5F0F\u5199\u5165\u5DE5\u4F5C\u533A\uFF1A\n```\n<storyboardTable>\u5185\u5BB9</storyboardTable>\n```";
+      const reviewContext = latestReview ? `
+
+## \u4E0A\u4E00\u8F6E\u5B8C\u6574\u5BA1\u6838\u62A5\u544A
+\u4EE5\u4E0B\u62A5\u544A\u662F\u672C\u8F6E\u4FEE\u590D\u7684\u56FA\u5B9A\u9A8C\u6536\u6E05\u5355\u3002\u82E5\u5F53\u524D\u4EFB\u52A1\u662F\u9996\u6B21\u6784\u5EFA\u5219\u5FFD\u7565\uFF1B\u82E5\u662F\u4FEE\u590D\uFF0C\u5FC5\u987B\u9010\u9879\u6838\u9500\u5E76\u4FDD\u6301\u672A\u6D89\u53CA\u5185\u5BB9\u4E0D\u53D8\u3002
+${latestReview}` : "";
       return runAgent({
         key: "productionAgent:storyboardTableAgent",
         prompt,
@@ -257499,7 +257510,7 @@ ${modelInfo}` },
         messages: [
           { role: "assistant", content: productionSkills.prompt + `
 ${modelInfo}` },
-          { role: "user", content: prompt + addPrompt }
+          { role: "user", content: prompt + reviewContext + addPrompt }
         ],
         tools: { activate_skill: productionSkills.tools.activate_skill }
       });
@@ -257511,12 +257522,23 @@ ${modelInfo}` },
     execute: async ({ prompt }) => {
       const skill = import_path10.default.join(utils_default.getPath("skills"), "production_agent_supervision.md");
       const systemPrompt = await fs11.promises.readFile(skill, "utf-8");
+      const previousReview = await getLatestMemoryContent(parentCtx.isolationKey, "assistant:supervision");
+      const messages = previousReview ? [
+        {
+          role: "assistant",
+          content: `\u4E0A\u4E00\u8F6E\u5BA1\u6838\u62A5\u544A\u5982\u4E0B\u3002\u8BF7\u628A\u5B83\u4F5C\u4E3A\u590D\u5BA1\u9A8C\u6536\u6E05\u5355\uFF0C\u5148\u6838\u9500\u65E7\u95EE\u9898\uFF0C\u518D\u6309\u7CFB\u7EDF\u89C4\u5219\u68C0\u67E5\u672C\u8F6E\u662F\u5426\u5F15\u5165\u65B0\u7684\u786C\u7EA2\u7EBF\u3002
+
+${previousReview}`
+        },
+        { role: "user", content: prompt }
+      ] : void 0;
       return runAgent({
         key: "productionAgent:supervisionAgent",
         prompt,
         system: systemPrompt,
         name: "\u76D1\u5236",
-        memoryKey: "assistant:supervision"
+        memoryKey: "assistant:supervision",
+        messages
       });
     }
   });

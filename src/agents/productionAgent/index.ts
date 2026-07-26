@@ -40,6 +40,16 @@ function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>): string {
   return `## Memory\n以下是你对用户的记忆，可作为参考但不要主动提及：\n${memoryContext}`;
 }
 
+async function getLatestMemoryContent(isolationKey: string, role: string): Promise<string> {
+  const row = await u
+    .db("memories")
+    .where({ isolationKey, type: "message", role })
+    .whereNot("content", "")
+    .orderBy("createTime", "desc")
+    .first();
+  return row?.content?.trim() ?? "";
+}
+
 export async function runDecisionAI(ctx: AgentContext) {
   const { isolationKey, text, abortSignal } = ctx;
   const memory = new Memory("productionAgent", isolationKey);
@@ -126,8 +136,9 @@ async function createSubAgent(parentCtx: AgentContext) {
 
     const fullResponse = await consumeFullStream(fullStream, subMsg);
 
-    if (fullResponse.trim()) {
-      await memory.add(memoryKey, removeAllXmlTags(fullResponse), {
+    const memoryContent = removeAllXmlTags(fullResponse);
+    if (memoryContent) {
+      await memory.add(memoryKey, memoryContent, {
         name,
         createTime: new Date(subMsg.datetime).getTime(),
       });
@@ -329,8 +340,12 @@ async function createSubAgent(parentCtx: AgentContext) {
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_storyboard_table.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const latestReview = await getLatestMemoryContent(parentCtx.isolationKey, "assistant:supervision");
 
       const addPrompt = "\n你必须使用如下XML格式写入工作区：\n```\n<storyboardTable>内容</storyboardTable>\n```";
+      const reviewContext = latestReview
+        ? `\n\n## 上一轮完整审核报告\n以下报告是本轮修复的固定验收清单。若当前任务是首次构建则忽略；若是修复，必须逐项核销并保持未涉及内容不变。\n${latestReview}`
+        : "";
 
       return runAgent({
         key: "productionAgent:storyboardTableAgent",
@@ -340,7 +355,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: productionSkills.prompt + `\n${modelInfo}` },
-          { role: "user", content: prompt + addPrompt },
+          { role: "user", content: prompt + reviewContext + addPrompt },
         ],
         tools: { activate_skill: productionSkills.tools.activate_skill },
       });
@@ -353,12 +368,23 @@ async function createSubAgent(parentCtx: AgentContext) {
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_agent_supervision.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const previousReview = await getLatestMemoryContent(parentCtx.isolationKey, "assistant:supervision");
+      const messages = previousReview
+        ? [
+            {
+              role: "assistant" as const,
+              content: `上一轮审核报告如下。请把它作为复审验收清单，先核销旧问题，再按系统规则检查本轮是否引入新的硬红线。\n\n${previousReview}`,
+            },
+            { role: "user" as const, content: prompt },
+          ]
+        : undefined;
       return runAgent({
         key: "productionAgent:supervisionAgent",
         prompt,
         system: systemPrompt,
         name: "监制",
         memoryKey: "assistant:supervision",
+        messages,
       });
     },
   });
