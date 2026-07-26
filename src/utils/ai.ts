@@ -255,7 +255,11 @@ class AiImage {
       const fn = await getVendorTemplateFn("imageRequest", mn);
       await referenceList2imageBase642(mn.split(/:(.+)/)[0], input);
       this.result = await fn(input);
+      if (typeof this.result !== "string" || this.result.trim().length === 0) {
+        throw new Error("图片供应商未返回图片数据");
+      }
       if (this.result.startsWith("http")) this.result = await urlToBase64(this.result);
+      if (this.result.trim().length === 0) throw new Error("图片供应商未返回图片数据");
       return this;
     };
     if (taskRecord) {

@@ -53,7 +53,8 @@ interface VendorConfig {
 }
 interface ImageConfig {
   prompt: string;
-  imageBase64: string[];
+  referenceList?: { type: "image"; base64: string }[];
+  imageBase64?: string[];
   size: "1K" | "2K" | "4K";
   aspectRatio: `${number}:${number}`;
 }
@@ -142,7 +143,53 @@ const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3
   return createOpenAI({ baseURL: vendor.inputValues.baseUrl, apiKey }).chat(model.modelName);
 };
 const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<string> => {
-  return "";
+  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.baseUrl) throw new Error("缺少请求地址");
+
+  const referenceImages = config.referenceList ?? [];
+  if (referenceImages.length > 0 || (config.imageBase64?.length ?? 0) > 0) {
+    throw new Error("OpenAI图片生成暂不支持参考图，请使用纯文本提示词");
+  }
+
+  const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
+  const baseUrl = vendor.inputValues.baseUrl.replace(/\/+$/, "");
+  const [ratioWidth, ratioHeight] = config.aspectRatio.split(":").map(Number);
+  const orientation = ratioWidth === ratioHeight ? "square" : ratioWidth > ratioHeight ? "landscape" : "portrait";
+  const imageSize = model.modelName === "dall-e-3"
+    ? { square: "1024x1024", landscape: "1792x1024", portrait: "1024x1792" }[orientation]
+    : model.modelName.startsWith("gpt-image")
+      ? { square: "1024x1024", landscape: "1536x1024", portrait: "1024x1536" }[orientation]
+      : "1024x1024";
+
+  try {
+    const response = await axios.post(
+      `${baseUrl}/images/generations`,
+      {
+        model: model.modelName,
+        prompt: config.prompt,
+        n: 1,
+        size: imageSize,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const firstImage = response.data?.data?.[0];
+    if (typeof firstImage?.b64_json === "string" && firstImage.b64_json.length > 0) {
+      return firstImage.b64_json;
+    }
+    if (typeof firstImage?.url === "string" && firstImage.url.length > 0) {
+      return await urlToBase64(firstImage.url);
+    }
+    throw new Error("接口未返回 b64_json 或图片URL");
+  } catch (e: any) {
+    const message = e?.response?.data?.error?.message ?? e?.response?.data?.message ?? e?.message ?? String(e);
+    throw new Error(`OpenAI图片生成失败：${message}`);
+  }
 };
 const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<string> => {
   return "";
