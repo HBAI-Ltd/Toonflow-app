@@ -79,6 +79,7 @@ export default (nsp: Namespace) => {
       } catch (err: any) {
         if (err.name !== "AbortError" && !currentController.signal.aborted) {
           console.error("[productionAgent] chat error:", u.error(err).message);
+          msg.error(u.error(err).message);
         }
       } finally {
         if (abortController === currentController) {
