@@ -105772,7 +105772,7 @@ async function tempOnsert(tsCode) {
   });
   utils_default.vendor.writeCode(vendor.id, tsCode);
 }
-var import_path4, import_fs2, import_sucrase, vendorData, fixDB_default;
+var import_path4, import_fs2, import_sucrase, vendorData, externalBuiltInVendorFiles, fixDB_default;
 var init_fixDB = __esm({
   "src/lib/fixDB.ts"() {
     "use strict";
@@ -105783,7 +105783,14 @@ var init_fixDB = __esm({
     import_sucrase = __toESM(require_dist5());
     init_vendor();
     vendorData = vendor_default;
+    externalBuiltInVendorFiles = ["chatgptWebSol.ts"];
     fixDB_default = async (knex3) => {
+      for (const filename of externalBuiltInVendorFiles) {
+        const vendorPath = utils_default.getPath(["vendor", filename]);
+        if (import_fs2.default.existsSync(vendorPath)) {
+          vendorData[filename] = import_fs2.default.readFileSync(vendorPath, "utf-8");
+        }
+      }
       const addColumn = async (table, column, type) => {
         if (!await knex3.schema.hasTable(table)) return;
         if (!await knex3.schema.hasColumn(table, column)) {

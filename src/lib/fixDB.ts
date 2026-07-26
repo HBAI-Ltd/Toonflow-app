@@ -7,8 +7,16 @@ import { transform } from "sucrase";
 import rawVendorData from "./vendor.json";
 
 const vendorData = rawVendorData as Record<string, string>;
+const externalBuiltInVendorFiles = ["chatgptWebSol.ts"];
 
 export default async (knex: Knex): Promise<void> => {
+  for (const filename of externalBuiltInVendorFiles) {
+    const vendorPath = u.getPath(["vendor", filename]);
+    if (fs.existsSync(vendorPath)) {
+      vendorData[filename] = fs.readFileSync(vendorPath, "utf-8");
+    }
+  }
+
   const addColumn = async (table: string, column: string, type: string) => {
     if (!(await knex.schema.hasTable(table))) return;
     if (!(await knex.schema.hasColumn(table, column))) {
