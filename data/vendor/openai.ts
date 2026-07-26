@@ -84,6 +84,8 @@ interface PollResult {
 // 全局声明
 // ============================================================
 declare const axios: any;
+declare const Buffer: any;
+declare const FormData: any;
 declare const logger: (msg: string) => void;
 declare const jsonwebtoken: any;
 declare const zipImage: (base64: string, size: number) => Promise<string>;
@@ -147,11 +149,6 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
   if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
   if (!vendor.inputValues.baseUrl) throw new Error("缺少请求地址");
 
-  const referenceImages = config.referenceList ?? [];
-  if (referenceImages.length > 0 || (config.imageBase64?.length ?? 0) > 0) {
-    throw new Error("OpenAI图片生成暂不支持参考图，请使用纯文本提示词");
-  }
-
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
   const baseUrl = vendor.inputValues.baseUrl.replace(/\/+$/, "");
   const [ratioWidth, ratioHeight] = config.aspectRatio.split(":").map(Number);
@@ -163,6 +160,41 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
       : "1024x1024";
 
   try {
+    const referenceImages = [
+      ...(config.referenceList ?? []).map((reference) => reference.base64),
+      ...(config.imageBase64 ?? []),
+    ];
+    if (referenceImages.length > 0) {
+      const form = new FormData();
+      form.append("model", model.modelName);
+      form.append("prompt", config.prompt);
+      form.append("size", imageSize);
+      referenceImages.forEach((image, index) => {
+        const dataUrlMatch = image.match(/^data:([^;,]+);base64,([\s\S]+)$/i);
+        const mimeType = dataUrlMatch?.[1] || "image/png";
+        const base64 = (dataUrlMatch?.[2] || image).replace(/\s+/g, "");
+        const imageBuffer = Buffer.from(base64, "base64");
+        if (imageBuffer.length === 0) throw new Error(`第 ${index + 1} 张参考图为空或格式无效`);
+        const extension = mimeType === "image/jpeg" ? "jpg" : mimeType.split("/")[1] || "png";
+        form.append("image[]", imageBuffer, {
+          filename: `reference-${index + 1}.${extension}`,
+          contentType: mimeType,
+        });
+      });
+
+      const response = await axios.post(`${baseUrl}/images/edits`, form, {
+        headers: form.getHeaders({ Authorization: `Bearer ${apiKey}` }),
+      });
+      const firstImage = response.data?.data?.[0];
+      if (typeof firstImage?.b64_json === "string" && firstImage.b64_json.length > 0) {
+        return firstImage.b64_json;
+      }
+      if (typeof firstImage?.url === "string" && firstImage.url.length > 0) {
+        return await urlToBase64(firstImage.url);
+      }
+      throw new Error("接口未返回 b64_json 或图片URL");
+    }
+
     const response = await axios.post(
       `${baseUrl}/images/generations`,
       {

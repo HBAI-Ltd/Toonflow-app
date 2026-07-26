@@ -117,7 +117,7 @@ export default router.post(
           state: "已完成",
         });
       } catch (e) {
-        u.db("o_storyboard")
+        await u.db("o_storyboard")
           .where("id", item.id)
           .update({
             filePath: "",

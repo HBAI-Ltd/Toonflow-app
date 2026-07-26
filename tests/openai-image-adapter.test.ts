@@ -4,7 +4,32 @@ import test from "node:test";
 import { transform } from "sucrase";
 import { VM } from "vm2";
 
-type PostCall = { url: string; body: Record<string, unknown>; options: { headers: Record<string, string> } };
+type PostCall = { url: string; body: any; options: { headers: Record<string, string> } };
+
+class MockFormData {
+  private readonly boundary = "test-boundary";
+  private readonly parts: Buffer[] = [];
+
+  append(name: string, value: string | Buffer, options?: { filename: string; contentType: string }) {
+    const disposition = options ? `; filename="${options.filename}"` : "";
+    const contentType = options ? `\r\nContent-Type: ${options.contentType}` : "";
+    this.parts.push(
+      Buffer.concat([
+        Buffer.from(`--${this.boundary}\r\nContent-Disposition: form-data; name="${name}"${disposition}${contentType}\r\n\r\n`),
+        Buffer.isBuffer(value) ? value : Buffer.from(value),
+        Buffer.from("\r\n"),
+      ]),
+    );
+  }
+
+  getHeaders(headers: Record<string, string>) {
+    return { ...headers, "content-type": `multipart/form-data; boundary=${this.boundary}` };
+  }
+
+  getBuffer() {
+    return Buffer.concat([...this.parts, Buffer.from(`--${this.boundary}--\r\n`)]);
+  }
+}
 
 function loadAdapter(responseData: unknown) {
   const calls: PostCall[] = [];
@@ -20,8 +45,10 @@ function loadAdapter(responseData: unknown) {
   const vm = new VM({
     sandbox: {
       axios,
+      Buffer,
       createOpenAI: () => ({ chat: () => ({}) }),
       exports,
+      FormData: MockFormData,
       urlToBase64: async (url: string) => `downloaded:${url}`,
     },
   });
@@ -58,11 +85,41 @@ test("rejects empty image responses", async () => {
   await assert.rejects(() => adapter.imageRequest(config, model), /未返回 b64_json 或图片URL/);
 });
 
-test("rejects reference images instead of silently ignoring them", async () => {
-  const { adapter } = loadAdapter({ data: [{ b64_json: "unused" }] });
+test("uses image edits multipart requests for multiple referenceList images", async () => {
+  const { adapter, calls } = loadAdapter({ data: [{ b64_json: "ZWRpdGVk" }] });
 
-  await assert.rejects(
-    () => adapter.imageRequest({ ...config, referenceList: [{ type: "image", base64: "data:image/png;base64,eA==" }] }, model),
-    /暂不支持参考图/,
+  const result = await adapter.imageRequest(
+    {
+      ...config,
+      referenceList: [
+        { type: "image", base64: "data:image/png;base64,Zmlyc3Q=" },
+        { type: "image", base64: "data:image/jpeg;base64,c2Vjb25k" },
+      ],
+    },
+    model,
   );
+
+  assert.equal(result, "ZWRpdGVk");
+  assert.equal(calls[0].url, "https://example.test/v1/images/edits");
+  assert.equal(calls[0].options.headers.Authorization, "Bearer test-key");
+  assert.match(calls[0].options.headers["content-type"], /^multipart\/form-data; boundary=/);
+  const multipart = calls[0].body.getBuffer().toString("utf8");
+  assert.equal((multipart.match(/name="image\[\]"/g) ?? []).length, 2);
+  assert.match(multipart, /name="model"\r\n\r\ngpt-image-2/);
+  assert.match(multipart, /name="prompt"\r\n\r\na cat/);
+  assert.match(multipart, /name="size"\r\n\r\n1536x1024/);
+  assert.match(multipart, /filename="reference-1.png"/);
+  assert.match(multipart, /filename="reference-2.jpg"/);
+});
+
+test("supports legacy imageBase64 values in image edits", async () => {
+  const { adapter, calls } = loadAdapter({ data: [{ url: "https://images.test/edited.png" }] });
+
+  const result = await adapter.imageRequest({ ...config, imageBase64: ["bGVnYWN5"] }, model);
+
+  assert.equal(result, "downloaded:https://images.test/edited.png");
+  assert.equal(calls[0].url, "https://example.test/v1/images/edits");
+  const multipart = calls[0].body.getBuffer().toString("utf8");
+  assert.equal((multipart.match(/name="image\[\]"/g) ?? []).length, 1);
+  assert.match(multipart, /filename="reference-1.png"/);
 });
