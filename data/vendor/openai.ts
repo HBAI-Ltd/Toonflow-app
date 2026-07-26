@@ -249,9 +249,24 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     throw new Error("OpenAI视频接口不能同时使用图片和视频参考");
   }
 
+  const truncateUtf8 = (value: string, maxBytes: number): string => {
+    if (Buffer.byteLength(value, "utf8") <= maxBytes) return value;
+    let low = 0;
+    let high = value.length;
+    while (low < high) {
+      const middle = Math.ceil((low + high) / 2);
+      if (Buffer.byteLength(value.slice(0, middle), "utf8") <= maxBytes) low = middle;
+      else high = middle - 1;
+    }
+    return value.slice(0, low);
+  };
+  const prompt = truncateUtf8(config.prompt, 4096);
+  if (prompt.length < config.prompt.length) {
+    logger(`OpenAI视频提示词已截断到 4096 UTF-8 字节（原长度：${Buffer.byteLength(config.prompt, "utf8")} 字节）`);
+  }
   const body: Record<string, any> = {
     model: model.modelName,
-    prompt: config.prompt,
+    prompt,
   };
   let endpoint = `${baseUrl}/videos/generations`;
 
@@ -260,7 +275,8 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     body.video = { url: videoReferences[0].base64 };
   } else {
     const resolution = config.resolution.endsWith("p") ? config.resolution : `${config.resolution}p`;
-    body.duration = config.duration;
+    const isReferenceVideo = imageReferences.length > 0;
+    body.duration = isReferenceVideo ? Math.min(config.duration, 10) : config.duration;
     body.aspect_ratio = config.aspectRatio;
     body.resolution = resolution;
 
@@ -279,12 +295,16 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     }
   }
 
-  const extractErrorMessage = (value: any): string =>
-    value?.response?.data?.error?.message ??
-    value?.response?.data?.message ??
-    value?.error?.message ??
-    value?.message ??
-    String(value);
+  const extractErrorMessage = (value: any): string => {
+    const responseData = value?.response?.data;
+    const responseCode = responseData?.code ?? responseData?.error?.code;
+    const responseMessage =
+      responseData?.error?.message ??
+      (typeof responseData?.error === "string" ? responseData.error : undefined) ??
+      responseData?.message;
+    if (responseCode && responseMessage) return `${responseCode}: ${responseMessage}`;
+    return responseMessage ?? responseCode ?? value?.error?.message ?? value?.message ?? String(value);
+  };
 
   let createResponse: any;
   try {

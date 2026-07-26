@@ -6,19 +6,23 @@ import { VM } from "vm2";
 
 type PostCall = { url: string; body: Record<string, unknown>; options: { headers: Record<string, string> } };
 type GetCall = { url: string; options: { headers: Record<string, string> } };
+type ResponseStep = { status?: number; data: unknown } | { error: unknown };
 
-function loadAdapter(options?: { createResponse?: unknown; statusResponses?: { status?: number; data: unknown }[] }) {
+function loadAdapter(options?: { createResponse?: unknown; createError?: unknown; statusResponses?: ResponseStep[] }) {
   const postCalls: PostCall[] = [];
   const getCalls: GetCall[] = [];
   const statusResponses = [...(options?.statusResponses ?? [{ data: { status: "done", video: { url: "https://videos.test/result.mp4" } } }])];
   const axios = {
     post: async (url: string, body: Record<string, unknown>, requestOptions: PostCall["options"]) => {
       postCalls.push({ url, body, options: requestOptions });
+      if (options?.createError) throw options.createError;
       return { data: options?.createResponse ?? { request_id: "request-123" } };
     },
     get: async (url: string, requestOptions: GetCall["options"]) => {
       getCalls.push({ url, options: requestOptions });
-      return statusResponses.shift() ?? { data: { status: "pending" } };
+      const response = statusResponses.shift() ?? { data: { status: "pending" } };
+      if ("error" in response) throw response.error;
+      return response;
     },
   };
   const exports: Record<string, any> = {};
@@ -83,6 +87,14 @@ test("creates and polls an xAI-compatible text-to-video request", async () => {
   assert.equal(getCalls[0].url, "https://example.test/v1/videos/request-123");
 });
 
+test("limits video prompts to the compatible endpoint maximum", async () => {
+  const { adapter, postCalls } = loadAdapter();
+  await adapter.videoRequest({ ...config, prompt: `${"x".repeat(4090)}中文对白` }, model);
+  const submittedPrompt = String(postCalls[0].body.prompt);
+  assert.ok(Buffer.byteLength(submittedPrompt, "utf8") <= 4096);
+  assert.ok(submittedPrompt.length < 4094);
+});
+
 test("maps single-image and reference-image modes to the documented fields", async () => {
   const startImage = "data:image/png;base64,c3RhcnQ=";
   const { adapter: imageAdapter, postCalls: imageCalls } = loadAdapter();
@@ -105,6 +117,19 @@ test("maps single-image and reference-image modes to the documented fields", asy
     { url: "data:image/png;base64,b25l" },
     { url: "data:image/png;base64,dHdv" },
   ]);
+  assert.equal(referenceCalls[0].body.duration, 5);
+
+  const { adapter: longReferenceAdapter, postCalls: longReferenceCalls } = loadAdapter();
+  await longReferenceAdapter.videoRequest(
+    {
+      ...config,
+      duration: 15,
+      mode: ["imageReference:5"],
+      referenceList: [{ type: "image", base64: "data:image/png;base64,b25l" }],
+    },
+    model,
+  );
+  assert.equal(longReferenceCalls[0].body.duration, 10);
 });
 
 test("uses the video edit endpoint for a video reference", async () => {
@@ -134,6 +159,42 @@ test("surfaces task failures and missing request IDs", async () => {
 
   const { adapter: emptyAdapter } = loadAdapter({ createResponse: {} });
   await assert.rejects(() => emptyAdapter.videoRequest(config, model), /未返回 request_id/);
+});
+
+test("surfaces structured create and moderation errors from compatible endpoints", async () => {
+  const { adapter: createErrorAdapter } = loadAdapter({
+    createError: {
+      response: {
+        data: {
+          code: "invalid-argument",
+          error: "Duration 15s exceeds the maximum allowed for reference-to-video, which is 10s.",
+        },
+      },
+    },
+  });
+  await assert.rejects(
+    () => createErrorAdapter.videoRequest(config, model),
+    /invalid-argument: Duration 15s exceeds the maximum allowed/,
+  );
+
+  const { adapter: moderationAdapter } = loadAdapter({
+    statusResponses: [
+      {
+        error: {
+          response: {
+            data: {
+              code: "imagine:content-moderated",
+              error: "Generated video rejected by content moderation.",
+            },
+          },
+        },
+      },
+    ],
+  });
+  await assert.rejects(
+    () => moderationAdapter.videoRequest(config, model),
+    /imagine:content-moderated: Generated video rejected by content moderation/,
+  );
 });
 
 test("rejects unsupported mixed references instead of silently ignoring them", async () => {
