@@ -535,6 +535,25 @@ pm2 monit             # 监控面板
 
      > 以生产模式直接运行编译后的服务（需先执行 `yarn build`）。
 
+   所有启动方式都会先检查并按需并行启动同级目录中的
+   `chatgpt2api` 与 `doubao2api`。Toonflow 仅在两个服务的
+   `/v1/models` 均可访问，并分别包含 `gpt-5.6-sol-wm` 和
+   `doubao-video` 时继续启动。默认复用 Conda 环境
+   `chatgpt2api-py313` 与 `base`；已经运行的服务不会重复启动，
+   也不会在 Toonflow 退出时被关闭。
+
+   可按本机目录和环境覆盖以下变量：
+
+   | 环境变量 | 说明 |
+   | --- | --- |
+   | `TOONFLOW_SERVICES_ROOT` | `chatgpt2api`、`doubao2api` 的共同父目录 |
+   | `TOONFLOW_CHATGPT2API_DIR` | `chatgpt2api` 项目目录 |
+   | `TOONFLOW_DOUBAO2API_DIR` | `doubao2api` 项目目录 |
+   | `TOONFLOW_CONDA_EXE` | Conda 可执行文件路径 |
+   | `TOONFLOW_CHATGPT2API_CONDA_ENV` | ChatGPT 服务的 Conda 环境名 |
+   | `TOONFLOW_DOUBAO2API_CONDA_ENV` | 豆包服务的 Conda 环境名 |
+   | `TOONFLOW_COMPANION_STARTUP_TIMEOUT_MS` | 服务启动与模型检查超时毫秒数 |
+
 4. **项目打包**
    - 编译并生成 TypeScript 文件：
 

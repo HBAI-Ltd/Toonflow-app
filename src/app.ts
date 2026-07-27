@@ -15,9 +15,171 @@ import jwt from "jsonwebtoken";
 import socketInit from "@/socket/index";
 import { isEletron } from "@/utils/getPath";
 import { ensureThumbnail, ThumbnailSize } from "@/utils/image";
+import {
+  CompanionApiManager,
+  type CompanionApiDefinition,
+} from "@/lib/companionApis";
 
 const app = express();
 const server = http.createServer(app);
+let companionApiManager: CompanionApiManager | undefined;
+let shutdownHooksRegistered = false;
+
+interface VendorConnection {
+  baseUrl: string;
+  apiKey: string;
+}
+
+function cleanCompanionApiKey(value: string): string {
+  return value.trim().replace(/^Bearer\s+/i, "");
+}
+
+function positiveNumber(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function getCompanionProjectDir(
+  serviceName: "chatgpt2api" | "doubao2api",
+): string {
+  const explicit =
+    serviceName === "chatgpt2api"
+      ? process.env.TOONFLOW_CHATGPT2API_DIR
+      : process.env.TOONFLOW_DOUBAO2API_DIR;
+  if (explicit?.trim()) return path.resolve(explicit.trim());
+
+  const servicesRoot = process.env.TOONFLOW_SERVICES_ROOT?.trim();
+  return servicesRoot
+    ? path.resolve(servicesRoot, serviceName)
+    : path.resolve(process.cwd(), "..", serviceName);
+}
+
+async function getVendorConnection(
+  vendorId: "chatgptWebSol" | "doubaoWeb",
+  fallbackBaseUrl: string,
+): Promise<VendorConnection> {
+  const timeoutMs = positiveNumber(
+    process.env.TOONFLOW_COMPANION_CONFIG_TIMEOUT_MS,
+    10_000,
+  );
+  const deadline = Date.now() + timeoutMs;
+  let lastError: unknown;
+
+  while (Date.now() <= deadline) {
+    try {
+      const row = await u
+        .db("o_vendorConfig")
+        .where("id", vendorId)
+        .select("inputValues")
+        .first();
+      if (row) {
+        const inputValues =
+          typeof row.inputValues === "string"
+            ? JSON.parse(row.inputValues)
+            : row.inputValues;
+        return {
+          baseUrl:
+            typeof inputValues?.baseUrl === "string" &&
+            inputValues.baseUrl.trim()
+              ? inputValues.baseUrl.trim()
+              : fallbackBaseUrl,
+          apiKey:
+            typeof inputValues?.apiKey === "string"
+              ? inputValues.apiKey
+              : "",
+        };
+      }
+    } catch (error) {
+      lastError = error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  const detail =
+    lastError instanceof Error ? `：${lastError.message}` : "";
+  throw new Error(`无法读取供应商 ${vendorId} 的连接配置${detail}`);
+}
+
+async function ensureCompanionApis(): Promise<void> {
+  if (companionApiManager) return;
+
+  const [chatgpt, doubao] = await Promise.all([
+    getVendorConnection(
+      "chatgptWebSol",
+      "http://127.0.0.1:8000/v1",
+    ),
+    getVendorConnection("doubaoWeb", "http://127.0.0.1:9090"),
+  ]);
+  const definitions: CompanionApiDefinition[] = [
+    {
+      id: "chatgpt2api",
+      displayName: "chatgpt2api",
+      baseUrl: chatgpt.baseUrl,
+      apiKey: chatgpt.apiKey,
+      expectedModelIds: ["gpt-5.6-sol-wm"],
+      projectDir: getCompanionProjectDir("chatgpt2api"),
+      condaEnv:
+        process.env.TOONFLOW_CHATGPT2API_CONDA_ENV?.trim() ||
+        "chatgpt2api-py313",
+      pythonArgs: ["main.py"],
+      processEnv: cleanCompanionApiKey(chatgpt.apiKey)
+        ? {
+            CHATGPT2API_AUTH_KEY: cleanCompanionApiKey(
+              chatgpt.apiKey,
+            ),
+          }
+        : undefined,
+    },
+    {
+      id: "doubao2api",
+      displayName: "doubao2api",
+      baseUrl: doubao.baseUrl,
+      apiKey: doubao.apiKey,
+      expectedModelIds: ["doubao-video"],
+      projectDir: getCompanionProjectDir("doubao2api"),
+      condaEnv:
+        process.env.TOONFLOW_DOUBAO2API_CONDA_ENV?.trim() || "base",
+      pythonArgs: ["-m", "doubao2api"],
+      processEnv: cleanCompanionApiKey(doubao.apiKey)
+        ? {
+            DOUBAO_API_KEY: cleanCompanionApiKey(doubao.apiKey),
+          }
+        : undefined,
+    },
+  ];
+
+  const manager = new CompanionApiManager(definitions, {
+    startupTimeoutMs: positiveNumber(
+      process.env.TOONFLOW_COMPANION_STARTUP_TIMEOUT_MS,
+      60_000,
+    ),
+  });
+  companionApiManager = manager;
+  try {
+    await manager.ensureAll();
+  } catch (error) {
+    companionApiManager = undefined;
+    throw error;
+  }
+
+  if (!shutdownHooksRegistered) {
+    shutdownHooksRegistered = true;
+    process.once("exit", () => companionApiManager?.stopOwnedSync());
+    if (!isElectron) {
+      for (const signal of ["SIGINT", "SIGTERM", "SIGUSR2"] as const) {
+        process.once(signal, () => {
+          void closeServe().finally(() => {
+            if (signal === "SIGUSR2") {
+              process.kill(process.pid, signal);
+            } else {
+              process.exit(signal === "SIGINT" ? 130 : 143);
+            }
+          });
+        });
+      }
+    }
+  }
+}
 
 async function checkPermissions() {
   if (!isEletron()) return true;
@@ -47,6 +209,7 @@ export default async function startServe(randomPort: Boolean = false) {
   await checkPermissions();
 
   await u.writeVersion();
+  await ensureCompanionApis();
   const io = new Server(server, { cors: { origin: "*" } });
   socketInit(io);
 
@@ -199,17 +362,42 @@ export default async function startServe(randomPort: Boolean = false) {
 // 支持await关闭
 export function closeServe(): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (server) {
-      server.close((err?: Error) => {
-        if (err) return reject(err);
-        console.log("[服务已关闭]");
-        resolve();
-      });
-    } else {
+    const closeCompanions = async (serverError?: Error) => {
+      try {
+        await companionApiManager?.stopOwned();
+        companionApiManager = undefined;
+      } catch (error) {
+        if (!serverError) {
+          reject(error);
+          return;
+        }
+      }
+      if (serverError) {
+        reject(serverError);
+        return;
+      }
       resolve();
+    };
+
+    if (!server.listening) {
+      void closeCompanions();
+      return;
     }
+    server.close((err?: Error) => {
+      if (!err) console.log("[服务已关闭]");
+      void closeCompanions(err);
+    });
   });
 }
 
 const isElectron = typeof process.versions?.electron !== "undefined";
-if (!isElectron) startServe();
+if (!isElectron) {
+  void startServe().catch(async (error) => {
+    console.error("[服务启动失败]:", error);
+    try {
+      await closeServe();
+    } finally {
+      process.exit(1);
+    }
+  });
+}

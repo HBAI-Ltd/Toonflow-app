@@ -1,6 +1,6 @@
 /**
- * ChatGPT 网页 GPT-5.6 SOL 供应商
- * @version 1.0
+ * ChatGPT 网页 GPT-5.6 SOL + Image2 供应商
+ * @version 1.1
  */
 
 interface TextModel {
@@ -25,12 +25,18 @@ interface VendorConfig {
     placeholder?: string;
   }[];
   inputValues: Record<string, string>;
-  models: TextModel[];
+  models: (TextModel | ImageModel)[];
 }
+
+type ReferenceList = {
+  type: "image";
+  sourceType?: "base64";
+  base64: string;
+};
 
 interface ImageConfig {
   prompt: string;
-  imageBase64: string[];
+  referenceList?: ReferenceList[];
   size: "1K" | "2K" | "4K";
   aspectRatio: `${number}:${number}`;
 }
@@ -39,6 +45,7 @@ interface ImageModel {
   name: string;
   modelName: string;
   type: "image";
+  mode: ("text" | "singleImage" | "multiReference")[];
 }
 
 interface VideoConfig {
@@ -81,14 +88,16 @@ declare const exports: {
 };
 
 const MODEL_NAME = "gpt-5.6-sol-wm";
+const IMAGE_MODEL_NAME = "gpt-image-2";
 const EXTREME_REASONING_EFFORT = "xhigh";
 
 const vendor: VendorConfig = {
   id: "chatgptWebSol",
-  version: "1.0",
+  version: "1.1",
   author: "Toonflow",
-  name: "ChatGPT 网页 GPT-5.6 SOL",
-  description: "通过本机 chatgpt2api 调用 ChatGPT 网页 GPT-5.6 SOL，固定使用极高推理强度。",
+  name: "ChatGPT 网页 GPT-5.6 SOL + Image2",
+  description:
+    "通过本机 chatgpt2api 调用 ChatGPT 网页 GPT-5.6 SOL（固定极高推理强度）与 GPT Image 2 图片生成能力。",
   icon: "",
   inputs: [
     {
@@ -103,12 +112,12 @@ const vendor: VendorConfig = {
       label: "请求地址",
       type: "url",
       required: true,
-      placeholder: "示例：http://127.0.0.1:5173/v1",
+      placeholder: "示例：http://127.0.0.1:8000/v1",
     },
   ],
   inputValues: {
     apiKey: "",
-    baseUrl: "http://127.0.0.1:5173/v1",
+    baseUrl: "http://127.0.0.1:8000/v1",
   },
   models: [
     {
@@ -116,6 +125,12 @@ const vendor: VendorConfig = {
       modelName: MODEL_NAME,
       type: "text",
       think: true,
+    },
+    {
+      name: "GPT Image 2",
+      modelName: IMAGE_MODEL_NAME,
+      type: "image",
+      mode: ["text", "singleImage", "multiReference"],
     },
   ],
 };
@@ -162,7 +177,99 @@ const textRequest = (model: TextModel, _think: boolean, _thinkLevel: 0 | 1 | 2 |
   }).chat(model.modelName);
 };
 
-const imageRequest = async (_config: ImageConfig, _model: ImageModel): Promise<string> => "";
+function imageSizeForRatio(aspectRatio: string): string {
+  const [widthValue, heightValue] = aspectRatio.split(":").map(Number);
+  if (!Number.isFinite(widthValue) || !Number.isFinite(heightValue) || heightValue <= 0) {
+    return "1024x1024";
+  }
+  const ratio = widthValue / heightValue;
+  if (ratio > 1.1) return "1536x1024";
+  if (ratio < 0.9) return "1024x1536";
+  return "1024x1024";
+}
+
+function toImageInput(reference: ReferenceList, index: number) {
+  const value = (reference.base64 || "").trim();
+  const dataUrlMatch = value.match(/^data:([^;]+);base64,([\s\S]+)$/i);
+  const mimeType = dataUrlMatch?.[1] || "image/png";
+  const base64 = dataUrlMatch?.[2] || value;
+  const subtype = mimeType.split("/")[1]?.toLowerCase() || "png";
+  const extension = subtype === "jpeg" ? "jpg" : subtype.replace(/[^a-z0-9]/g, "") || "png";
+  return {
+    b64_json: base64,
+    filename: `reference-${index + 1}.${extension}`,
+    mime_type: mimeType,
+  };
+}
+
+function imageErrorMessage(data: any, fallback: string): string {
+  const candidates = [
+    data?.error?.message,
+    data?.error,
+    data?.detail?.error?.message,
+    data?.detail?.error,
+    data?.detail?.message,
+    data?.detail,
+    data?.message,
+  ];
+  const message = candidates.find((value) => typeof value === "string" && value.trim());
+  return message || fallback;
+}
+
+const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<string> => {
+  const apiKey = (vendor.inputValues.apiKey || "").trim().replace(/^Bearer\s+/i, "");
+  if (!apiKey) throw new Error("缺少代理 API Key");
+
+  const prompt = (config.prompt || "").trim();
+  if (!prompt) throw new Error("图片提示词不能为空");
+
+  const references = (config.referenceList || []).filter(
+    (reference) => reference?.type === "image" && reference.base64?.trim(),
+  );
+  const endpoint = references.length > 0 ? "images/edits" : "images/generations";
+  const body: Record<string, any> = {
+    model: model.modelName,
+    prompt,
+    n: 1,
+    size: imageSizeForRatio(config.aspectRatio),
+    quality: "auto",
+    response_format: "b64_json",
+  };
+  if (references.length > 0) {
+    body.images = references.map(toImageInput);
+  }
+
+  const response = await fetch(`${normalizeBaseUrl(vendor.inputValues.baseUrl)}/${endpoint}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+  let data: any;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(`图片生成请求失败：服务返回了无效 JSON（HTTP ${response.status}）`);
+  }
+  if (!response.ok) {
+    throw new Error(
+      `图片生成请求失败（HTTP ${response.status}）：${imageErrorMessage(data, response.statusText)}`,
+    );
+  }
+
+  const firstImage = data?.data?.[0];
+  if (typeof firstImage?.b64_json === "string" && firstImage.b64_json) {
+    return firstImage.b64_json.startsWith("data:")
+      ? firstImage.b64_json
+      : `data:image/png;base64,${firstImage.b64_json}`;
+  }
+  if (typeof firstImage?.url === "string" && firstImage.url) {
+    return firstImage.url;
+  }
+  throw new Error("图片生成成功但未返回图片数据");
+};
 
 const videoRequest = async (_config: VideoConfig, _model: VideoModel): Promise<string> => "";
 

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol, systemPreferences } from "electron";
+import { app, BrowserWindow, dialog, protocol, systemPreferences } from "electron";
 import path from "path";
 import fs from "fs";
 import Module from "module";
@@ -269,7 +269,9 @@ app.whenReady().then(async () => {
     await createMainWindow();
   } catch (err) {
     console.error("[服务启动失败]:", err);
-    await createMainWindow();
+    const message = err instanceof Error ? err.message : String(err);
+    dialog.showErrorBox("Toonflow 启动失败", message);
+    app.quit();
   }
 });
 

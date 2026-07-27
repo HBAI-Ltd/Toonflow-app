@@ -7,7 +7,7 @@ import { transform } from "sucrase";
 import rawVendorData from "./vendor.json";
 
 const vendorData = rawVendorData as Record<string, string>;
-const externalBuiltInVendorFiles = ["chatgptWebSol.ts"];
+const externalBuiltInVendorFiles = ["doubaoWeb.ts", "chatgptWebSol.ts"];
 
 export default async (knex: Knex): Promise<void> => {
   for (const filename of externalBuiltInVendorFiles) {
