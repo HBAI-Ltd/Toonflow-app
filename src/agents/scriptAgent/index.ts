@@ -39,13 +39,23 @@ function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>): string {
 }
 
 async function getLatestMemoryContent(isolationKey: string, role: string): Promise<string> {
-  const row = await u
+  const row = await getLatestMemoryMessage(isolationKey, role);
+  return row?.content?.trim() ?? "";
+}
+
+async function getLatestMemoryMessage(isolationKey: string, role: string): Promise<{ content?: string; createTime?: number } | undefined> {
+  return u
     .db("memories")
     .where({ isolationKey, type: "message", role })
     .whereNot("content", "")
     .orderBy("createTime", "desc")
     .first();
-  return row?.content?.trim() ?? "";
+}
+
+function isCrossWorkspaceRepair(text: string): boolean {
+  const mentionsBothWorkspaces = text.includes("故事骨架") && text.includes("改编策略");
+  const requestsRepair = /(修复|修改|同步|更新|全部|都修|依次)/.test(text);
+  return mentionsBothWorkspaces && requestsRepair;
 }
 
 export async function runDecisionAI(ctx: AgentContext) {
@@ -172,27 +182,31 @@ function createSubAgent(parentCtx: AgentContext) {
     },
   });
 
+  async function runAdaptationStrategy(prompt: string) {
+    const skill = path.join(u.getPath("skills"), "script_execution_adaptation.md");
+    const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+    const latestReview = await getLatestMemoryContent(parentCtx.isolationKey, "assistant:supervision");
+
+    const formatPrompt = "\n你必须使用如下XML格式写入工作区：\n<adaptationStrategy>改编策略内容</adaptationStrategy>";
+    const reviewContext = latestReview
+      ? `\n\n## 上一轮完整审核报告\n以下报告是本轮修复的固定验收清单。若当前任务是首次构建则忽略；若是修复，必须逐项核销并保持未涉及内容不变。\n${latestReview}`
+      : "";
+
+    return runAgent({
+      key: "scriptAgent:adaptationStrategyAgent",
+      prompt,
+      system: systemPrompt + formatPrompt,
+      name: "编剧",
+      memoryKey: "assistant:execution:adaptationStrategy",
+      messages: [{ role: "user", content: prompt + reviewContext + formatPrompt }],
+    });
+  }
+
   const run_sub_agent_adaptationStrategy = tool({
     description: "运行执行subAgent来完成改编策略相关任务",
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
-      const skill = path.join(u.getPath("skills"), "script_execution_adaptation.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
-      const latestReview = await getLatestMemoryContent(parentCtx.isolationKey, "assistant:supervision");
-
-      const formatPrompt = "\n你必须使用如下XML格式写入工作区：\n<adaptationStrategy>改编策略内容</adaptationStrategy>";
-      const reviewContext = latestReview
-        ? `\n\n## 上一轮完整审核报告\n以下报告是本轮修复的固定验收清单。若当前任务是首次构建则忽略；若是修复，必须逐项核销并保持未涉及内容不变。\n${latestReview}`
-        : "";
-
-      return runAgent({
-        key: "scriptAgent:adaptationStrategyAgent",
-        prompt,
-        system: systemPrompt + formatPrompt,
-        name: "编剧",
-        memoryKey: "assistant:execution:adaptationStrategy",
-        messages: [{ role: "user", content: prompt + reviewContext + formatPrompt }],
-      });
+      return runAdaptationStrategy(prompt);
     },
   });
 
@@ -232,6 +246,21 @@ function createSubAgent(parentCtx: AgentContext) {
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_agent_supervision.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      let reviewPrompt = prompt;
+
+      if (isCrossWorkspaceRepair(parentCtx.text)) {
+        const [latestUser, latestAdaptation] = await Promise.all([
+          getLatestMemoryMessage(parentCtx.isolationKey, "user"),
+          getLatestMemoryMessage(parentCtx.isolationKey, "assistant:execution:adaptationStrategy"),
+        ]);
+        const userCreateTime = Number(latestUser?.createTime ?? 0);
+        const adaptationCreateTime = Number(latestAdaptation?.createTime ?? 0);
+        if (adaptationCreateTime < userCreateTime) {
+          await runAdaptationStrategy(parentCtx.text);
+        }
+        reviewPrompt = `请审核【改编策略】的同步修复结果，并校验其跟随最新故事骨架。\n${prompt}`;
+      }
+
       const previousReview = await getLatestMemoryContent(parentCtx.isolationKey, "assistant:supervision");
       const messages = previousReview
         ? [
@@ -239,13 +268,13 @@ function createSubAgent(parentCtx: AgentContext) {
               role: "assistant" as const,
               content: `上一轮审核报告如下。请把它作为复审验收清单，先核销旧问题，再按系统规则检查本轮是否引入新的硬红线。\n\n${previousReview}`,
             },
-            { role: "user" as const, content: prompt },
+            { role: "user" as const, content: reviewPrompt },
           ]
         : undefined;
 
       return runAgent({
         key: "scriptAgent:supervisionAgent",
-        prompt,
+        prompt: reviewPrompt,
         system: systemPrompt,
         name: "编辑",
         memoryKey: "assistant:supervision",

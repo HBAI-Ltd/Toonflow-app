@@ -258476,8 +258476,16 @@ ${mem.shortTerm.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
 ${memoryContext}`;
 }
 async function getLatestMemoryContent2(isolationKey, role) {
-  const row = await utils_default.db("memories").where({ isolationKey, type: "message", role }).whereNot("content", "").orderBy("createTime", "desc").first();
+  const row = await getLatestMemoryMessage(isolationKey, role);
   return row?.content?.trim() ?? "";
+}
+async function getLatestMemoryMessage(isolationKey, role) {
+  return utils_default.db("memories").where({ isolationKey, type: "message", role }).whereNot("content", "").orderBy("createTime", "desc").first();
+}
+function isCrossWorkspaceRepair(text2) {
+  const mentionsBothWorkspaces = text2.includes("\u6545\u4E8B\u9AA8\u67B6") && text2.includes("\u6539\u7F16\u7B56\u7565");
+  const requestsRepair = /(修复|修改|同步|更新|全部|都修|依次)/.test(text2);
+  return mentionsBothWorkspaces && requestsRepair;
 }
 async function runDecisionAI2(ctx) {
   const { isolationKey, text: text2, userMessageTime, abortSignal, resTool } = ctx;
@@ -258577,27 +258585,30 @@ ${latestReview}` : "";
       });
     }
   });
-  const run_sub_agent_adaptationStrategy = tool({
-    description: "\u8FD0\u884C\u6267\u884CsubAgent\u6765\u5B8C\u6210\u6539\u7F16\u7B56\u7565\u76F8\u5173\u4EFB\u52A1",
-    inputSchema: jsonSchema(promptInput),
-    execute: async ({ prompt }) => {
-      const skill = import_path11.default.join(utils_default.getPath("skills"), "script_execution_adaptation.md");
-      const systemPrompt = await fs12.promises.readFile(skill, "utf-8");
-      const latestReview = await getLatestMemoryContent2(parentCtx.isolationKey, "assistant:supervision");
-      const formatPrompt = "\n\u4F60\u5FC5\u987B\u4F7F\u7528\u5982\u4E0BXML\u683C\u5F0F\u5199\u5165\u5DE5\u4F5C\u533A\uFF1A\n<adaptationStrategy>\u6539\u7F16\u7B56\u7565\u5185\u5BB9</adaptationStrategy>";
-      const reviewContext = latestReview ? `
+  async function runAdaptationStrategy(prompt) {
+    const skill = import_path11.default.join(utils_default.getPath("skills"), "script_execution_adaptation.md");
+    const systemPrompt = await fs12.promises.readFile(skill, "utf-8");
+    const latestReview = await getLatestMemoryContent2(parentCtx.isolationKey, "assistant:supervision");
+    const formatPrompt = "\n\u4F60\u5FC5\u987B\u4F7F\u7528\u5982\u4E0BXML\u683C\u5F0F\u5199\u5165\u5DE5\u4F5C\u533A\uFF1A\n<adaptationStrategy>\u6539\u7F16\u7B56\u7565\u5185\u5BB9</adaptationStrategy>";
+    const reviewContext = latestReview ? `
 
 ## \u4E0A\u4E00\u8F6E\u5B8C\u6574\u5BA1\u6838\u62A5\u544A
 \u4EE5\u4E0B\u62A5\u544A\u662F\u672C\u8F6E\u4FEE\u590D\u7684\u56FA\u5B9A\u9A8C\u6536\u6E05\u5355\u3002\u82E5\u5F53\u524D\u4EFB\u52A1\u662F\u9996\u6B21\u6784\u5EFA\u5219\u5FFD\u7565\uFF1B\u82E5\u662F\u4FEE\u590D\uFF0C\u5FC5\u987B\u9010\u9879\u6838\u9500\u5E76\u4FDD\u6301\u672A\u6D89\u53CA\u5185\u5BB9\u4E0D\u53D8\u3002
 ${latestReview}` : "";
-      return runAgent({
-        key: "scriptAgent:adaptationStrategyAgent",
-        prompt,
-        system: systemPrompt + formatPrompt,
-        name: "\u7F16\u5267",
-        memoryKey: "assistant:execution:adaptationStrategy",
-        messages: [{ role: "user", content: prompt + reviewContext + formatPrompt }]
-      });
+    return runAgent({
+      key: "scriptAgent:adaptationStrategyAgent",
+      prompt,
+      system: systemPrompt + formatPrompt,
+      name: "\u7F16\u5267",
+      memoryKey: "assistant:execution:adaptationStrategy",
+      messages: [{ role: "user", content: prompt + reviewContext + formatPrompt }]
+    });
+  }
+  const run_sub_agent_adaptationStrategy = tool({
+    description: "\u8FD0\u884C\u6267\u884CsubAgent\u6765\u5B8C\u6210\u6539\u7F16\u7B56\u7565\u76F8\u5173\u4EFB\u52A1",
+    inputSchema: jsonSchema(promptInput),
+    execute: async ({ prompt }) => {
+      return runAdaptationStrategy(prompt);
     }
   });
   const run_sub_agent_script = tool({
@@ -258633,6 +258644,20 @@ XML\u4E0D\u5F97\u6DFB\u52A0\u4EFB\u4F55\u989D\u5916\u6807\u7B7E<scriptItem name=
     execute: async ({ prompt }) => {
       const skill = import_path11.default.join(utils_default.getPath("skills"), "script_agent_supervision.md");
       const systemPrompt = await fs12.promises.readFile(skill, "utf-8");
+      let reviewPrompt = prompt;
+      if (isCrossWorkspaceRepair(parentCtx.text)) {
+        const [latestUser, latestAdaptation] = await Promise.all([
+          getLatestMemoryMessage(parentCtx.isolationKey, "user"),
+          getLatestMemoryMessage(parentCtx.isolationKey, "assistant:execution:adaptationStrategy")
+        ]);
+        const userCreateTime = Number(latestUser?.createTime ?? 0);
+        const adaptationCreateTime = Number(latestAdaptation?.createTime ?? 0);
+        if (adaptationCreateTime < userCreateTime) {
+          await runAdaptationStrategy(parentCtx.text);
+        }
+        reviewPrompt = `\u8BF7\u5BA1\u6838\u3010\u6539\u7F16\u7B56\u7565\u3011\u7684\u540C\u6B65\u4FEE\u590D\u7ED3\u679C\uFF0C\u5E76\u6821\u9A8C\u5176\u8DDF\u968F\u6700\u65B0\u6545\u4E8B\u9AA8\u67B6\u3002
+${prompt}`;
+      }
       const previousReview = await getLatestMemoryContent2(parentCtx.isolationKey, "assistant:supervision");
       const messages = previousReview ? [
         {
@@ -258641,11 +258666,11 @@ XML\u4E0D\u5F97\u6DFB\u52A0\u4EFB\u4F55\u989D\u5916\u6807\u7B7E<scriptItem name=
 
 ${previousReview}`
         },
-        { role: "user", content: prompt }
+        { role: "user", content: reviewPrompt }
       ] : void 0;
       return runAgent({
         key: "scriptAgent:supervisionAgent",
-        prompt,
+        prompt: reviewPrompt,
         system: systemPrompt,
         name: "\u7F16\u8F91",
         memoryKey: "assistant:supervision",
