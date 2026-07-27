@@ -20,9 +20,18 @@ test("supervision deterministically completes a missing downstream repair first"
 
   assert.match(source, /function isCrossWorkspaceRepair/);
   assert.match(source, /assistant:execution:adaptationStrategy/);
-  assert.match(source, /if \(adaptationCreateTime < userCreateTime\)/);
+  assert.match(source, /adaptationCompletedForCurrentTurn = true/);
+  assert.match(source, /if \(!adaptationCompletedForCurrentTurn && adaptationCreateTime < userCreateTime\)/);
   assert.match(source, /await runAdaptationStrategy\(parentCtx\.text\)/);
   assert.match(source, /请审核【改编策略】的同步修复结果，并校验其跟随最新故事骨架/);
+});
+
+test("XML-only execution responses do not create empty memories", () => {
+  const source = read("src/agents/scriptAgent/index.ts");
+
+  assert.match(source, /const memoryContent = removeAllXmlTags\(fullResponse\)/);
+  assert.match(source, /if \(memoryContent\) \{/);
+  assert.doesNotMatch(source, /if \(fullResponse\.trim\(\)\) \{\s*await memory\.add\(memoryKey, removeAllXmlTags/s);
 });
 
 test("decision agent treats cross-workspace repairs as one ordered transaction", () => {

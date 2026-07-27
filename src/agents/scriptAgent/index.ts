@@ -141,8 +141,9 @@ function createSubAgent(parentCtx: AgentContext) {
 
     const fullResponse = await consumeFullStream(fullStream, subMsg);
 
-    if (fullResponse.trim()) {
-      await memory.add(memoryKey, removeAllXmlTags(fullResponse), {
+    const memoryContent = removeAllXmlTags(fullResponse);
+    if (memoryContent) {
+      await memory.add(memoryKey, memoryContent, {
         name,
         createTime: new Date(subMsg.datetime).getTime(),
       });
@@ -157,6 +158,7 @@ function createSubAgent(parentCtx: AgentContext) {
       prompt: z.string().describe("交给子Agent的任务简约描述，100字以内"),
     })
     .toJSONSchema();
+  let adaptationCompletedForCurrentTurn = false;
 
   const run_sub_agent_storySkeleton = tool({
     description: "运行执行subAgent来完成故事骨架相关任务",
@@ -192,7 +194,7 @@ function createSubAgent(parentCtx: AgentContext) {
       ? `\n\n## 上一轮完整审核报告\n以下报告是本轮修复的固定验收清单。若当前任务是首次构建则忽略；若是修复，必须逐项核销并保持未涉及内容不变。\n${latestReview}`
       : "";
 
-    return runAgent({
+    const response = await runAgent({
       key: "scriptAgent:adaptationStrategyAgent",
       prompt,
       system: systemPrompt + formatPrompt,
@@ -200,6 +202,8 @@ function createSubAgent(parentCtx: AgentContext) {
       memoryKey: "assistant:execution:adaptationStrategy",
       messages: [{ role: "user", content: prompt + reviewContext + formatPrompt }],
     });
+    adaptationCompletedForCurrentTurn = true;
+    return response;
   }
 
   const run_sub_agent_adaptationStrategy = tool({
@@ -255,7 +259,7 @@ function createSubAgent(parentCtx: AgentContext) {
         ]);
         const userCreateTime = Number(latestUser?.createTime ?? 0);
         const adaptationCreateTime = Number(latestAdaptation?.createTime ?? 0);
-        if (adaptationCreateTime < userCreateTime) {
+        if (!adaptationCompletedForCurrentTurn && adaptationCreateTime < userCreateTime) {
           await runAdaptationStrategy(parentCtx.text);
         }
         reviewPrompt = `请审核【改编策略】的同步修复结果，并校验其跟随最新故事骨架。\n${prompt}`;

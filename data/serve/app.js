@@ -258550,8 +258550,9 @@ function createSubAgent2(parentCtx) {
       tools: { ...extraTools, ...tools_default2({ resTool, msg: subMsg }) }
     });
     const fullResponse = await consumeFullStream2(fullStream, subMsg);
-    if (fullResponse.trim()) {
-      await memory.add(memoryKey, removeAllXmlTags2(fullResponse), {
+    const memoryContent = removeAllXmlTags2(fullResponse);
+    if (memoryContent) {
+      await memory.add(memoryKey, memoryContent, {
         name: name28,
         createTime: new Date(subMsg.datetime).getTime()
       });
@@ -258562,6 +258563,7 @@ function createSubAgent2(parentCtx) {
   const promptInput = external_exports.object({
     prompt: external_exports.string().describe("\u4EA4\u7ED9\u5B50Agent\u7684\u4EFB\u52A1\u7B80\u7EA6\u63CF\u8FF0\uFF0C100\u5B57\u4EE5\u5185")
   }).toJSONSchema();
+  let adaptationCompletedForCurrentTurn = false;
   const run_sub_agent_storySkeleton = tool({
     description: "\u8FD0\u884C\u6267\u884CsubAgent\u6765\u5B8C\u6210\u6545\u4E8B\u9AA8\u67B6\u76F8\u5173\u4EFB\u52A1",
     inputSchema: jsonSchema(promptInput),
@@ -258595,7 +258597,7 @@ ${latestReview}` : "";
 ## \u4E0A\u4E00\u8F6E\u5B8C\u6574\u5BA1\u6838\u62A5\u544A
 \u4EE5\u4E0B\u62A5\u544A\u662F\u672C\u8F6E\u4FEE\u590D\u7684\u56FA\u5B9A\u9A8C\u6536\u6E05\u5355\u3002\u82E5\u5F53\u524D\u4EFB\u52A1\u662F\u9996\u6B21\u6784\u5EFA\u5219\u5FFD\u7565\uFF1B\u82E5\u662F\u4FEE\u590D\uFF0C\u5FC5\u987B\u9010\u9879\u6838\u9500\u5E76\u4FDD\u6301\u672A\u6D89\u53CA\u5185\u5BB9\u4E0D\u53D8\u3002
 ${latestReview}` : "";
-    return runAgent({
+    const response = await runAgent({
       key: "scriptAgent:adaptationStrategyAgent",
       prompt,
       system: systemPrompt + formatPrompt,
@@ -258603,6 +258605,8 @@ ${latestReview}` : "";
       memoryKey: "assistant:execution:adaptationStrategy",
       messages: [{ role: "user", content: prompt + reviewContext + formatPrompt }]
     });
+    adaptationCompletedForCurrentTurn = true;
+    return response;
   }
   const run_sub_agent_adaptationStrategy = tool({
     description: "\u8FD0\u884C\u6267\u884CsubAgent\u6765\u5B8C\u6210\u6539\u7F16\u7B56\u7565\u76F8\u5173\u4EFB\u52A1",
@@ -258652,7 +258656,7 @@ XML\u4E0D\u5F97\u6DFB\u52A0\u4EFB\u4F55\u989D\u5916\u6807\u7B7E<scriptItem name=
         ]);
         const userCreateTime = Number(latestUser?.createTime ?? 0);
         const adaptationCreateTime = Number(latestAdaptation?.createTime ?? 0);
-        if (adaptationCreateTime < userCreateTime) {
+        if (!adaptationCompletedForCurrentTurn && adaptationCreateTime < userCreateTime) {
           await runAdaptationStrategy(parentCtx.text);
         }
         reviewPrompt = `\u8BF7\u5BA1\u6838\u3010\u6539\u7F16\u7B56\u7565\u3011\u7684\u540C\u6B65\u4FEE\u590D\u7ED3\u679C\uFF0C\u5E76\u6821\u9A8C\u5176\u8DDF\u968F\u6700\u65B0\u6545\u4E8B\u9AA8\u67B6\u3002
