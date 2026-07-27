@@ -258550,7 +258550,7 @@ function createSubAgent2(parentCtx) {
       tools: { ...extraTools, ...tools_default2({ resTool, msg: subMsg }) }
     });
     const fullResponse = await consumeFullStream2(fullStream, subMsg);
-    const memoryContent = removeAllXmlTags2(fullResponse);
+    const memoryContent = removeAllXmlTags2(fullResponse).trim();
     if (memoryContent) {
       await memory.add(memoryKey, memoryContent, {
         name: name28,
@@ -258648,7 +258648,10 @@ XML\u4E0D\u5F97\u6DFB\u52A0\u4EFB\u4F55\u989D\u5916\u6807\u7B7E<scriptItem name=
     execute: async ({ prompt }) => {
       const skill = import_path11.default.join(utils_default.getPath("skills"), "script_agent_supervision.md");
       const systemPrompt = await fs12.promises.readFile(skill, "utf-8");
-      let reviewPrompt = prompt;
+      let reviewPrompt = `## \u7528\u6237\u672C\u8F6E\u5DF2\u786E\u8BA4\u6307\u4EE4
+${parentCtx.text}
+
+${prompt}`;
       if (isCrossWorkspaceRepair(parentCtx.text)) {
         const [latestUser, latestAdaptation] = await Promise.all([
           getLatestMemoryMessage(parentCtx.isolationKey, "user"),
@@ -258659,7 +258662,10 @@ XML\u4E0D\u5F97\u6DFB\u52A0\u4EFB\u4F55\u989D\u5916\u6807\u7B7E<scriptItem name=
         if (!adaptationCompletedForCurrentTurn && adaptationCreateTime < userCreateTime) {
           await runAdaptationStrategy(parentCtx.text);
         }
-        reviewPrompt = `\u8BF7\u5BA1\u6838\u3010\u6539\u7F16\u7B56\u7565\u3011\u7684\u540C\u6B65\u4FEE\u590D\u7ED3\u679C\uFF0C\u5E76\u6821\u9A8C\u5176\u8DDF\u968F\u6700\u65B0\u6545\u4E8B\u9AA8\u67B6\u3002
+        reviewPrompt = `## \u7528\u6237\u672C\u8F6E\u5DF2\u786E\u8BA4\u6307\u4EE4
+${parentCtx.text}
+
+\u8BF7\u5BA1\u6838\u3010\u6539\u7F16\u7B56\u7565\u3011\u7684\u540C\u6B65\u4FEE\u590D\u7ED3\u679C\uFF0C\u5E76\u6821\u9A8C\u5176\u8DDF\u968F\u6700\u65B0\u6545\u4E8B\u9AA8\u67B6\u3002
 ${prompt}`;
       }
       const previousReview = await getLatestMemoryContent2(parentCtx.isolationKey, "assistant:supervision");

@@ -23,13 +23,14 @@ test("supervision deterministically completes a missing downstream repair first"
   assert.match(source, /adaptationCompletedForCurrentTurn = true/);
   assert.match(source, /if \(!adaptationCompletedForCurrentTurn && adaptationCreateTime < userCreateTime\)/);
   assert.match(source, /await runAdaptationStrategy\(parentCtx\.text\)/);
+  assert.match(source, /## 用户本轮已确认指令\\n\$\{parentCtx\.text\}/);
   assert.match(source, /请审核【改编策略】的同步修复结果，并校验其跟随最新故事骨架/);
 });
 
 test("XML-only execution responses do not create empty memories", () => {
   const source = read("src/agents/scriptAgent/index.ts");
 
-  assert.match(source, /const memoryContent = removeAllXmlTags\(fullResponse\)/);
+  assert.match(source, /const memoryContent = removeAllXmlTags\(fullResponse\)\.trim\(\)/);
   assert.match(source, /if \(memoryContent\) \{/);
   assert.doesNotMatch(source, /if \(fullResponse\.trim\(\)\) \{\s*await memory\.add\(memoryKey, removeAllXmlTags/s);
 });
@@ -71,4 +72,6 @@ test("supervision reviews converge and exempt one-minute single-episode projects
   assert.match(skill, /只调用 `get_planData\(key="storySkeleton"\)`/);
   assert.match(skill, /禁止读取或引用 `adaptationStrategy` 作为骨架不通过的依据/);
   assert.match(skill, /跨工作区事务复审/);
+  assert.match(skill, /用户确认冻结/);
+  assert.match(skill, /已处理风险不得重开/);
 });

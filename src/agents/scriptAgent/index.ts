@@ -141,7 +141,7 @@ function createSubAgent(parentCtx: AgentContext) {
 
     const fullResponse = await consumeFullStream(fullStream, subMsg);
 
-    const memoryContent = removeAllXmlTags(fullResponse);
+    const memoryContent = removeAllXmlTags(fullResponse).trim();
     if (memoryContent) {
       await memory.add(memoryKey, memoryContent, {
         name,
@@ -250,7 +250,7 @@ function createSubAgent(parentCtx: AgentContext) {
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_agent_supervision.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
-      let reviewPrompt = prompt;
+      let reviewPrompt = `## 用户本轮已确认指令\n${parentCtx.text}\n\n${prompt}`;
 
       if (isCrossWorkspaceRepair(parentCtx.text)) {
         const [latestUser, latestAdaptation] = await Promise.all([
@@ -262,7 +262,7 @@ function createSubAgent(parentCtx: AgentContext) {
         if (!adaptationCompletedForCurrentTurn && adaptationCreateTime < userCreateTime) {
           await runAdaptationStrategy(parentCtx.text);
         }
-        reviewPrompt = `请审核【改编策略】的同步修复结果，并校验其跟随最新故事骨架。\n${prompt}`;
+        reviewPrompt = `## 用户本轮已确认指令\n${parentCtx.text}\n\n请审核【改编策略】的同步修复结果，并校验其跟随最新故事骨架。\n${prompt}`;
       }
 
       const previousReview = await getLatestMemoryContent(parentCtx.isolationKey, "assistant:supervision");
