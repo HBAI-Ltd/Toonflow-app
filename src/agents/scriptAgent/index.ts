@@ -38,6 +38,16 @@ function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>): string {
   return `## Memory\n以下是你对用户的记忆，可作为参考但不要主动提及：\n${memoryContext}`;
 }
 
+async function getLatestMemoryContent(isolationKey: string, role: string): Promise<string> {
+  const row = await u
+    .db("memories")
+    .where({ isolationKey, type: "message", role })
+    .whereNot("content", "")
+    .orderBy("createTime", "desc")
+    .first();
+  return row?.content?.trim() ?? "";
+}
+
 export async function runDecisionAI(ctx: AgentContext) {
   const { isolationKey, text, userMessageTime, abortSignal, resTool } = ctx;
   const memory = new Memory("scriptAgent", isolationKey);
@@ -144,8 +154,12 @@ function createSubAgent(parentCtx: AgentContext) {
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_execution_skeleton.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const latestReview = await getLatestMemoryContent(parentCtx.isolationKey, "assistant:supervision");
 
       const formatPrompt = "\n你必须使用如下XML格式写入工作区：\n<storySkeleton>故事骨架内容</storySkeleton>";
+      const reviewContext = latestReview
+        ? `\n\n## 上一轮完整审核报告\n以下报告是本轮修复的固定验收清单。若当前任务是首次构建则忽略；若是修复，必须逐项核销并保持未涉及内容不变。\n${latestReview}`
+        : "";
 
       return runAgent({
         key: "scriptAgent:storySkeletonAgent",
@@ -153,7 +167,7 @@ function createSubAgent(parentCtx: AgentContext) {
         system: systemPrompt + formatPrompt,
         name: "编剧",
         memoryKey: "assistant:execution:storySkeleton",
-        messages: [{ role: "user", content: prompt + formatPrompt }],
+        messages: [{ role: "user", content: prompt + reviewContext + formatPrompt }],
       });
     },
   });
@@ -164,8 +178,12 @@ function createSubAgent(parentCtx: AgentContext) {
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_execution_adaptation.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const latestReview = await getLatestMemoryContent(parentCtx.isolationKey, "assistant:supervision");
 
       const formatPrompt = "\n你必须使用如下XML格式写入工作区：\n<adaptationStrategy>改编策略内容</adaptationStrategy>";
+      const reviewContext = latestReview
+        ? `\n\n## 上一轮完整审核报告\n以下报告是本轮修复的固定验收清单。若当前任务是首次构建则忽略；若是修复，必须逐项核销并保持未涉及内容不变。\n${latestReview}`
+        : "";
 
       return runAgent({
         key: "scriptAgent:adaptationStrategyAgent",
@@ -173,7 +191,7 @@ function createSubAgent(parentCtx: AgentContext) {
         system: systemPrompt + formatPrompt,
         name: "编剧",
         memoryKey: "assistant:execution:adaptationStrategy",
-        messages: [{ role: "user", content: prompt + formatPrompt }],
+        messages: [{ role: "user", content: prompt + reviewContext + formatPrompt }],
       });
     },
   });
@@ -214,6 +232,16 @@ function createSubAgent(parentCtx: AgentContext) {
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_agent_supervision.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const previousReview = await getLatestMemoryContent(parentCtx.isolationKey, "assistant:supervision");
+      const messages = previousReview
+        ? [
+            {
+              role: "assistant" as const,
+              content: `上一轮审核报告如下。请把它作为复审验收清单，先核销旧问题，再按系统规则检查本轮是否引入新的硬红线。\n\n${previousReview}`,
+            },
+            { role: "user" as const, content: prompt },
+          ]
+        : undefined;
 
       return runAgent({
         key: "scriptAgent:supervisionAgent",
@@ -221,6 +249,7 @@ function createSubAgent(parentCtx: AgentContext) {
         system: systemPrompt,
         name: "编辑",
         memoryKey: "assistant:supervision",
+        messages,
       });
     },
   });

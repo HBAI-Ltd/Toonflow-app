@@ -33,6 +33,7 @@
     "debug:ai": "npx @ai-sdk/devtools",
     "test:openai-image": "tsx --test tests/openai-image-adapter.test.ts",
     "test:openai-video": "tsx --test tests/openai-video-adapter.test.ts",
+    "test:script-agent-review": "tsx --test tests/script-agent-review-convergence.test.ts",
     "license": "node scripts/license.ts",
     "vendor2json": "node scripts/vendor2json.ts"
   },
