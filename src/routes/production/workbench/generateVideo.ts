@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { ReferenceList } from "@/utils/ai";
+import { resolveVideoReferenceMediaType } from "@/lib/videoPromptReferences";
 const router = express.Router();
 
 type Type = "imageReference" | "startImage" | "endImage" | "videoReference" | "audioReference";
@@ -27,6 +28,7 @@ export default router.post(
       z.object({
         id: z.number(),
         sources: z.string(),
+        fileType: z.enum(["image", "video", "audio"]).optional(),
       }),
     ),
     prompt: z.string(),
@@ -63,15 +65,19 @@ export default router.post(
             .leftJoin("o_image", "o_assets.imageId", "o_image.id")
             .select("o_image.filePath", "o_image.type")
             .first();
-          return { path: filePath?.filePath, sources: filePath.type };
+          return {
+            path: filePath?.filePath,
+            fileType: resolveVideoReferenceMediaType(item.fileType, filePath?.type, filePath?.filePath),
+          };
         }
       }),
     );
     //把images里面的图片转成base64格式
     const base64 = await Promise.all(
       images.map(async (item) => {
-        if (!item) return null;
-        return { base64: await u.oss.getImageBase64(item.path), type: item.sources == "audio" ? "audio" : "image" };
+        if (!item?.path) return null;
+        const type = resolveVideoReferenceMediaType(item.fileType, undefined, item.path);
+        return { base64: await u.oss.getImageBase64(item.path), type };
       }),
     );
     //新增

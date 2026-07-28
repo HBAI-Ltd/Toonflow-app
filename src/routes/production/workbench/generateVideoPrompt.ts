@@ -5,6 +5,12 @@ import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import fs from "fs/promises";
 import path from "path";
+import {
+  buildSeedance2AssetReferenceContext,
+  formatLegacyVideoPromptAssetList,
+  isSeedance2Model,
+  type VideoPromptAssetReference,
+} from "@/lib/videoPromptReferences";
 const router = express.Router();
 
 export default router.post(
@@ -16,6 +22,7 @@ export default router.post(
       z.object({
         id: z.number(),
         sources: z.string(),
+        fileType: z.enum(["image", "video", "audio"]).optional(),
       }),
     ),
     model: z.string(),
@@ -28,7 +35,7 @@ export default router.post(
     });
     //查询参数
     const images = await Promise.all(
-      info.map(async (item: { id: number; sources: string }) => {
+      info.map(async (item: { id: number; sources: string; fileType?: "image" | "video" | "audio" }) => {
         if (item.sources === "storyboard") {
           // 查询分镜主信息
           const storyboard = await u
@@ -51,10 +58,11 @@ export default router.post(
             .db("o_assets")
             .leftJoin("o_image", "o_image.id", "o_assets.imageId")
             .where("o_assets.id", item.id)
-            .select("o_assets.id", "o_assets.type", "o_assets.name", "o_image.filePath")
+            .select("o_assets.id", "o_assets.type", "o_assets.name", "o_image.filePath", "o_image.type as storedFileType")
             .first();
           return {
             ...assetsData,
+            mediaType: item.fileType ?? assetsData?.storedFileType,
             _type: "assets", // 标记类型
           };
         }
@@ -62,7 +70,7 @@ export default router.post(
     );
 
     // 拆分 assets 和 storyboard
-    const assets: any[] = [];
+    const assets: VideoPromptAssetReference[] = [];
     const storyboard: any[] = [];
     for (const item of images) {
       if (!item) continue; // 忽略空
@@ -72,6 +80,7 @@ export default router.post(
           type: item.type,
           name: item.name,
           filePath: item.filePath,
+          mediaType: item.mediaType,
         });
       if (item._type === "storyboard")
         storyboard.push({
@@ -123,7 +132,7 @@ export default router.post(
       if (modelLower.includes("wan") && modelLower.includes("2.6")) {
         // wan2.6 系列 => 单图首尾帧模式
         fileName = "wan2.6Single-imageFirstFrameMode.md";
-      } else if (/seedance.*2[.\-]0/i.test(modelData)) {
+      } else if (isSeedance2Model(modelData)) {
         // seedance 2.0 / 2-0 系列
         fileName = "seedance2Multi-parameterMode.md";
       } else if (mode === "startEndRequired" || mode === "endFrameOptional" || mode === "startFrameOptional") {
@@ -155,13 +164,13 @@ export default router.post(
     const artStyle = projectData?.artStyle || "无";
 
     const visualManual = u.getArtPrompt(artStyle, "art_skills", "art_storyboard_video");
+    const assetContext = isSeedance2Model(modelData)
+      ? buildSeedance2AssetReferenceContext(assets, assetsAudioRecord)
+      : `**资产信息**（角色、场景、道具、音频）:${formatLegacyVideoPromptAssetList(assets, assetsAudioRecord)}`;
     const content = `
           **模型名称**：${modelData},
 
-          **资产信息**（角色、场景、道具、音频):${assets
-            .filter((i) => i.filePath)
-            .map((i) => `[${i.id},${i.type},${i.name} ${assetsAudioRecord[i.id] ? `audio:${assetsAudioRecord[i.id]}` : ""} ] `)
-            .join("，")},
+          ${assetContext},
           **分镜信息**：${storyboard.map(
             (i) => `<storyboardItem
   videoDesc='${i.videoDesc}'
