@@ -183,7 +183,7 @@ export default async (knex: Knex): Promise<void> => {
     u.vendor.writeCode("volcengine", vendorData["volcengine.ts"]);
   }
   const minimaxVer = await u.vendor.getVendor("minimax").version;
-  if (Number(minimaxVer) < 2.1) {
+  if (Number(minimaxVer) < 2.2) {
     u.vendor.writeCode("minimax", vendorData["minimax.ts"]);
   }
   const toonflowVer = await u.vendor.getVendor("toonflow").version;
