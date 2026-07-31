@@ -293,7 +293,7 @@ export default (toolCpnfig: ToolConfig) => {
           associateAssetsIds: raw.associateAssetsIds ?? [],
           shouldGenerateImage: raw.shouldGenerateImage,
         };
-        const res = await socketQueue(
+        socketQueue(
           () =>
             new Promise((resolve, reject) =>
               socket.emit("addStoryboard", { ...data }, (res: any) => {
@@ -301,11 +301,18 @@ export default (toolCpnfig: ToolConfig) => {
                 resolve(res);
               }),
             ),
-        );
-        thinking.appendText("新增的分镜数据:\n" + JSON.stringify(data, null, 2));
-        thinking.updateTitle("新增分镜成功");
-        thinking.complete();
-        return res ?? true;
+        )
+          .then((res) => {
+            thinking.appendText("新增的分镜数据:\n" + JSON.stringify(data, null, 2));
+            thinking.updateTitle("新增分镜成功");
+            thinking.complete();
+          })
+          .catch((e) => {
+            thinking.appendText("新增的分镜数据:\n" + JSON.stringify(data, null, 2));
+            thinking.updateTitle("新增分镜失败");
+            thinking.complete();
+          });
+        return true;
       },
     }),
   };
