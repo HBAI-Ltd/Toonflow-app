@@ -25,6 +25,8 @@ description: >-
 |------|------|
 | 读取剧本 | `get_flowData("script")` |
 | 读取分镜表 | `get_flowData("storyboardTable")` |
+| 读取分镜面板 | `get_flowData("storyboard")` |
+| 删除旧分镜 | `del_flowData_storyboard({ ids })` |
 | 写入分镜面板（逐条） | `add_flowData_storyboard({ ... })` |
 
 **`add_flowData_storyboard` 参数**（**每个写入单位调用一次**，不再输出 `<storyboardItem>` XML）：
@@ -37,6 +39,20 @@ description: >-
 | `duration` | `number` | 视频推荐时长（秒） |
 | `associateAssetsIds` | `number[] \| null` | 该分镜/组所需的资产ID列表 |
 | `shouldGenerateImage` | `"true" \| "false"` | 是否生成分镜图（字符串枚举） |
+
+### 整板重做前置流程
+
+仅当决策层派发指令明确包含“整板重做”时执行。本前置流程不替代写入流程，只在流程 A 或流程 C 写入前执行一次。
+
+1. 调用 `get_flowData("storyboard")` 读取当前分镜面板；读取失败则立即终止任务，禁止删除和写入。
+2. 提取本轮读取结果中的全部旧分镜 ID；禁止自主识别、推断或删除重复分镜，禁止根据 videoDesc、prompt、track、duration、资产关联或内容相似度筛选部分 ID。
+3. 若读取结果为空，跳过删除，直接进入决策层指定的流程 A 或流程 C。
+4. 若存在旧分镜，必须一次性调用 `del_flowData_storyboard({ ids })` 删除全部旧分镜；`ids` 必须来自本轮读取结果且包含全部旧分镜 ID。
+5. 删除失败则立即终止任务，禁止调用 `add_flowData_storyboard`，并向用户说明失败原因。
+6. 删除成功后，继续进入决策层指定的流程 A 或流程 C。
+7. 写入完成后必须再次调用 `get_flowData("storyboard")` 验证结果：旧分镜 ID 不得出现在最终结果中，最终分镜数量必须等于本次成功写入的单位数量；验证不通过时不得返回成功文案，应说明结果不完整。
+
+普通新增、补充、继续制作、重新生成分镜图片等任务不得执行本前置流程。
 
 ### 路由（第一步必做）
 

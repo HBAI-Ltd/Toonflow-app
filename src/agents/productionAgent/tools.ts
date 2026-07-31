@@ -3,6 +3,7 @@ import { z } from "zod";
 import _ from "lodash";
 import ResTool from "@/socket/resTool";
 import u from "@/utils";
+import { deleteStoryboards } from "@/lib/storyboard";
 
 const deriveAssetSchema = z.object({
   id: z.number().describe("衍生资产ID,如果新增则为空"),
@@ -240,6 +241,27 @@ export default (toolCpnfig: ToolConfig) => {
         return "开始生成分镜";
       },
     }),
+    del_flowData_storyboard: tool({
+      description:
+        "仅用于用户明确要求整板重做分镜面板时，删除本轮 get_flowData({ key: 'storyboard' }) 读取到的全部旧分镜。禁止识别重复或筛选部分 ID。",
+      inputSchema: jsonSchema<{ ids: number[] }>(
+        z
+          .object({
+            ids: z.array(z.number()).min(1).describe("本轮读取到的全部旧分镜真实 ID"),
+          })
+          .toJSONSchema(),
+      ),
+      execute: async ({ ids }) => {
+        const thinking = msg.thinking("正在删除旧分镜...");
+        const { projectId, scriptId } = resTool.data;
+        const result = await deleteStoryboards({ ids, projectId, scriptId, requireAll: true }, u.db);
+        await new Promise((resolve) => socket.emit("delStoryboard", { ids: result.deletedIds }, (res: any) => resolve(res)));
+        thinking.appendText(`已删除当前剧本的 ${result.deletedCount} 条旧分镜`);
+        thinking.updateTitle("旧分镜删除完成");
+        thinking.complete();
+        return `已删除当前剧本的 ${result.deletedCount} 条旧分镜`;
+      },
+    }),
     add_flowData_storyboard: tool({
       description: "新增分镜面板到工作区",
       inputSchema: jsonSchema<{
@@ -271,7 +293,7 @@ export default (toolCpnfig: ToolConfig) => {
           associateAssetsIds: raw.associateAssetsIds ?? [],
           shouldGenerateImage: raw.shouldGenerateImage,
         };
-        socketQueue(
+        const res = await socketQueue(
           () =>
             new Promise((resolve, reject) =>
               socket.emit("addStoryboard", { ...data }, (res: any) => {
@@ -279,18 +301,11 @@ export default (toolCpnfig: ToolConfig) => {
                 resolve(res);
               }),
             ),
-        )
-          .then((res) => {
-            thinking.appendText("新增的分镜数据:\n" + JSON.stringify(data, null, 2));
-            thinking.updateTitle("新增分镜成功");
-            thinking.complete();
-          })
-          .catch((e) => {
-            thinking.appendText("新增的分镜数据:\n" + JSON.stringify(data, null, 2));
-            thinking.updateTitle("新增分镜失败");
-            thinking.complete();
-          });
-        return true;
+        );
+        thinking.appendText("新增的分镜数据:\n" + JSON.stringify(data, null, 2));
+        thinking.updateTitle("新增分镜成功");
+        thinking.complete();
+        return res ?? true;
       },
     }),
   };
