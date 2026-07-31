@@ -1,4 +1,80 @@
-# 开发报告：手动图片/视频生成模式
+# 开发报告：移除项目级媒体模型选择（当前任务）
+
+## 变更摘要
+
+- 新建/编辑项目弹窗不再显示图片模型、图片质量、视频模型和视频模式。
+- 项目提交不再校验上述媒体配置；兼容字段继续以空字符串或旧值随请求发送。
+- 项目可在没有媒体模型时直接进入，不再查询媒体供应商状态。
+- 生产 Agent 改用手动媒体上下文，不再解析项目媒体模型或访问媒体供应商。
+- 视频工作台和新增轨道不再要求项目预先配置视频模型。
+- 未修改数据库结构、登录权限、手册选择、画幅比例或工作台内部的可选模型/模式能力。
+
+## 修改文件
+
+后端：
+
+- `src/lib/manualMediaMode.ts`
+- `src/agents/productionAgent/index.ts`
+- `src/routes/production/workbench/getGenerateData.ts`
+- `src/routes/production/workbench/addTrack.ts`
+- `tests/manualMediaMode.test.mjs`
+- `data/serve/app.js`
+- `data/web/index.html`
+- `PLAN.md`
+- `DEV_REPORT.md`
+- `CODEX_REVIEW.md`
+
+前端：
+
+- `src/views/project/components/projectDialog.vue`
+- `src/views/project/index.vue`
+- `tests/manualProjectModelSelection.test.mjs`
+
+## 测试命令
+
+```bash
+node --test tests/*.mjs
+./node_modules/.bin/tsc --noEmit
+./node_modules/.bin/vue-tsc --build --force
+./node_modules/.bin/vite build --outDir <后端>/data/web --emptyOutDir
+./node_modules/.bin/cross-env NODE_ENV=prod ./node_modules/.bin/tsx scripts/build.ts
+curl http://127.0.0.1:10588/
+```
+
+## 测试结果
+
+- 新增测试先红后绿。
+- 前端手动媒体相关测试：6/6 通过。
+- 后端完整测试：28/28 通过；1 个真实外部豆包测试按设计跳过。
+- 后端 TypeScript lint：通过。
+- 前端完整 `vue-tsc`：被既有备份文件 `generate copy.vue:1063` 语法错误阻断；进一步隔离检查仍显示仓库已有的 `window.$message`、主题 `auto` 等全局类型问题，本次没有修改这些文件或降低检查标准。
+- 前端 Vite 生产构建：通过，转换 11097 个模块。
+- 后端生产构建：通过。
+- 本地运行副本：重新构建并启动成功，PID `81530` 监听 `10588`，首页 HTTP 200、响应 26870756 字节。
+- 本地前端 `index.html` 与已测试构建产物 SHA-256 一致：`3d883f585f494fb947e553600cddffada96f5fe454e5408138635382c6311425`。
+
+## 风险说明
+
+1. 视频工作台内部仍保留具体模型/模式选择，用于用户需要按目标外部工具组织参考素材时使用；本任务只删除截图中的项目级必选区域。
+2. 旧项目已有媒体模型字段不会自动清空，但生产 Agent 不再依赖或调用它们。
+3. 前端仓库存在与本任务无关的历史类型错误；生产构建和新增行为测试均已通过。
+4. 后端手动媒体 PR 分支的基线包含伴随 API 启动功能，缺少其供应商配置时独立启动会失败；本地运行副本使用自身无该功能的源码重新构建，未为本任务改动伴随 API。
+
+## 回滚方案
+
+- 恢复上述前后端源码和测试文件。
+- 恢复 `data/web/` 与 `data/serve/app.js`，重启 Toonflow。
+- 无数据库迁移，不需要恢复用户数据或手册数据。
+
+## 是否需要人工确认
+
+- 本地修改与部署已按用户确认完成，不需要额外确认。
+- 草稿 PR 仅供审阅，不自动合并；合并必须人工执行。
+- 未执行登录后的项目创建，避免未经单独确认写入用户项目数据。
+
+---
+
+# 开发报告：手动图片/视频生成模式（原任务记录）
 
 ## 变更摘要
 

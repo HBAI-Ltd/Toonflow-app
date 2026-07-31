@@ -8,6 +8,7 @@ import useTools from "@/agents/productionAgent/tools";
 import ResTool from "@/socket/resTool";
 import * as fs from "fs";
 import path from "path";
+import { MANUAL_MEDIA_PROJECT_CONTEXT } from "@/lib/manualMediaMode";
 
 export interface AgentContext {
   socket: Socket;
@@ -50,28 +51,14 @@ export async function runDecisionAI(ctx: AgentContext) {
 
   const projectInfo = await u.db("o_project").where("id", ctx.resTool.data.projectId).first();
   if (!projectInfo) throw new Error(`项目不存在，ID: ${ctx.resTool.data.projectId}`);
-  const [_, imageModelName] = projectInfo.imageModel!.split(/:(.+)/);
-  const [id, videoModelName] = projectInfo.videoModel!.split(/:(.+)/);
-  const models = await u.vendor.getModelList(id);
-  if (!models.length) throw new Error(`项目使用的模型不存在，ID: ${projectInfo.videoModel}`);
-  let videoMode = "";
-  try {
-    videoMode = JSON.parse(projectInfo.mode ?? "");
-  } catch (e) {
-    videoMode = projectInfo.mode ?? "";
-  }
-  const isRef = Array.isArray(videoMode) ? true : false;
-  // const findData = models.find((i: any) => i.modelName == videoModelName);
-  // const isRef = findData.mode.every((i: any) => Array.isArray(i));
-
-  const modelInfo = `项目使用的模型如下：\n图像模型：${imageModelName}\n视频模型：${videoModelName}\n多参：${isRef ? "是" : "否"}`;
+  const mediaModeInfo = MANUAL_MEDIA_PROJECT_CONTEXT;
 
   const mem = buildMemPrompt(await memory.get(text));
 
   const { fullStream } = await u.Ai.Text("productionAgent:decisionAgent", ctx.thinkConfig.think, ctx.thinkConfig.thinlLevel).stream({
     messages: [
       { role: "system", content: prompt },
-      { role: "assistant", content: mem + "\n" + modelInfo },
+      { role: "assistant", content: mem + "\n" + mediaModeInfo },
       { role: "user", content: text },
     ],
     abortSignal,
@@ -146,22 +133,7 @@ async function createSubAgent(parentCtx: AgentContext) {
   const projectInfo = await u.db("o_project").where("id", resTool.data.projectId).first();
   if (!projectInfo) throw new Error(`项目不存在，ID: ${resTool.data.projectId}`);
   const artSkills = await createArtSkills(projectInfo?.artStyle!, projectInfo?.directorManual!);
-
-  const [_, imageModelName] = projectInfo.imageModel!.split(/:(.+)/);
-  const [id, videoModelName] = projectInfo.videoModel!.split(/:(.+)/);
-  const models = await u.vendor.getModelList(id);
-  if (!models.length) throw new Error(`项目使用的模型不存在，ID: ${projectInfo.videoModel}`);
-  // const findData = models.find((i: any) => i.modelName == videoModelName);
-  //
-  let videoMode = "";
-  try {
-    videoMode = JSON.parse(projectInfo.mode ?? "");
-  } catch (e) {
-    videoMode = projectInfo.mode ?? "";
-  }
-  const isRef = Array.isArray(videoMode) ? true : false;
-
-  const modelInfo = `项目使用的模型如下：\n图像模型：${imageModelName}\n视频模型：${videoModelName}\n多参：${isRef ? "是" : "否"}`;
+  const mediaModeInfo = MANUAL_MEDIA_PROJECT_CONTEXT;
 
   // const run_sub_agent_execution = tool({
   //   description: "执行层子Agent，负责衍生资产、",
@@ -185,7 +157,7 @@ async function createSubAgent(parentCtx: AgentContext) {
   //       name: "执行导演",
   //       memoryKey: "assistant:execution",
   //       messages: [
-  //         { role: "assistant", content: artSkills.prompt + `\n${modelInfo}` },
+  //         { role: "assistant", content: artSkills.prompt + `\n${mediaModeInfo}` },
   //         { role: "user", content: prompt + addPrompt },
   //       ],
   //       tools: { ...artSkills.tools },
@@ -207,7 +179,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         name: "执行导演",
         memoryKey: "assistant:execution",
         messages: [
-          { role: "assistant", content: artSkills.prompt + `\n${modelInfo}` },
+          { role: "assistant", content: artSkills.prompt + `\n${mediaModeInfo}` },
           { role: "user", content: prompt },
         ],
         tools: { activate_skill: artSkills.tools.activate_skill },
@@ -229,7 +201,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         name: "执行导演",
         memoryKey: "assistant:execution",
         messages: [
-          { role: "assistant", content: artSkills.prompt + `\n${modelInfo}` },
+          { role: "assistant", content: artSkills.prompt + `\n${mediaModeInfo}` },
           { role: "user", content: prompt },
         ],
         tools: { activate_skill: artSkills.tools.activate_skill },
@@ -254,7 +226,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         name: "执行导演",
         memoryKey: "assistant:execution",
         messages: [
-          { role: "assistant", content: artSkills.prompt + `\n${modelInfo}` },
+          { role: "assistant", content: artSkills.prompt + `\n${mediaModeInfo}` },
           { role: "user", content: prompt + addPrompt },
         ],
         tools: { activate_skill: artSkills.tools.activate_skill },
@@ -276,7 +248,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         name: "执行导演",
         memoryKey: "assistant:execution",
         messages: [
-          { role: "assistant", content: artSkills.prompt + `\n${modelInfo}` },
+          { role: "assistant", content: artSkills.prompt + `\n${mediaModeInfo}` },
           { role: "user", content: prompt },
         ],
         tools: { activate_skill: artSkills.tools.activate_skill },
@@ -314,7 +286,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         name: "执行导演",
         memoryKey: "assistant:execution",
         messages: [
-          { role: "assistant", content: productionSkills.prompt + `\n${modelInfo}` },
+          { role: "assistant", content: productionSkills.prompt + `\n${mediaModeInfo}` },
           { role: "user", content: prompt + addPrompt },
         ],
         tools: { activate_skill: productionSkills.tools.activate_skill },
@@ -339,7 +311,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         name: "执行导演",
         memoryKey: "assistant:execution",
         messages: [
-          { role: "assistant", content: productionSkills.prompt + `\n${modelInfo}` },
+          { role: "assistant", content: productionSkills.prompt + `\n${mediaModeInfo}` },
           { role: "user", content: prompt + addPrompt },
         ],
         tools: { activate_skill: productionSkills.tools.activate_skill },

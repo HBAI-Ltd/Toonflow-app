@@ -51,3 +51,23 @@ test("manual video upload persists a completed video and selects it on the origi
   assert.match(uploadSource, /update\(\{\s*videoId/);
   assert.doesNotMatch(uploadSource, /Ai\.Video|videoRequest/);
 });
+
+test("production agent uses manual media context without resolving media providers", () => {
+  const productionAgentSource = read("src/agents/productionAgent/index.ts");
+  const manualModeSource = read("src/lib/manualMediaMode.ts");
+
+  assert.match(manualModeSource, /MANUAL_MEDIA_PROJECT_CONTEXT/);
+  assert.match(productionAgentSource, /MANUAL_MEDIA_PROJECT_CONTEXT/);
+  assert.doesNotMatch(productionAgentSource, /vendor\.getModelList/);
+  assert.doesNotMatch(productionAgentSource, /projectInfo\.(?:imageModel|videoModel)/);
+});
+
+test("video workbench data and track creation do not require a project video model", () => {
+  const getGenerateDataSource = read("src/routes/production/workbench/getGenerateData.ts");
+  const addTrackSource = read("src/routes/production/workbench/addTrack.ts");
+
+  assert.doesNotMatch(getGenerateDataSource, /项目未配置视频模型/);
+  assert.doesNotMatch(getGenerateDataSource, /if\s*\(\s*!projectData\?\.videoModel/);
+  assert.doesNotMatch(addTrackSource, /videoModel|vendor\.getModelList/);
+  assert.match(addTrackSource, /o_videoTrack/);
+});

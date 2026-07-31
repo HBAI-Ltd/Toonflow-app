@@ -236839,11 +236839,12 @@ var init_dist23 = __esm({
 function assertManualMediaMode() {
   throw new Error(MEDIA_GENERATION_DISABLED_MESSAGE);
 }
-var MEDIA_GENERATION_DISABLED_MESSAGE, MEDIA_GENERATION_PATHS;
+var MEDIA_GENERATION_DISABLED_MESSAGE, MANUAL_MEDIA_PROJECT_CONTEXT, MEDIA_GENERATION_PATHS;
 var init_manualMediaMode = __esm({
   "src/lib/manualMediaMode.ts"() {
     "use strict";
     MEDIA_GENERATION_DISABLED_MESSAGE = "\u5F53\u524D\u4E3A\u624B\u52A8\u5A92\u4F53\u6A21\u5F0F\uFF1A\u8BF7\u590D\u5236\u5B8C\u6574\u63D0\u793A\u8BCD\uFF0C\u5728\u5916\u90E8\u5DE5\u5177\u751F\u6210\u540E\u56DE\u5230\u539F\u4F4D\u7F6E\u4E0A\u4F20\u6587\u4EF6";
+    MANUAL_MEDIA_PROJECT_CONTEXT = "\u5F53\u524D\u9879\u76EE\u4F7F\u7528\u624B\u52A8\u5A92\u4F53\u6A21\u5F0F\uFF1A\u53EA\u8F93\u51FA\u53EF\u590D\u5236\u7684\u5B8C\u6574\u56FE\u7247/\u89C6\u9891\u63D0\u793A\u8BCD\uFF0C\u4E0D\u4F9D\u8D56\u6216\u8C03\u7528\u56FE\u7247/\u89C6\u9891\u6A21\u578B\uFF1B\u7528\u6237\u4F1A\u5728\u5916\u90E8\u5DE5\u5177\u751F\u6210\u5A92\u4F53\u540E\u56DE\u5230\u539F\u4F4D\u7F6E\u4E0A\u4F20\u7ED3\u679C\u3002";
     MEDIA_GENERATION_PATHS = [
       "/api/assets/generateAssets",
       "/api/assetsGenerate/generateAssets",
@@ -241396,9 +241397,6 @@ var init_addTrack = __esm({
       }),
       async (req, res) => {
         const { projectId, scriptId, duration: duration4 } = req.body;
-        const data = await utils_default.db("o_project").where("id", projectId).first();
-        const video = data?.videoModel?.split(":");
-        const vemdor = await utils_default.vendor.getModelList(video?.[0]);
         const trackId = Date.now();
         await utils_default.db("o_videoTrack").insert({
           id: trackId,
@@ -242197,10 +242195,7 @@ var init_getGenerateData = __esm({
       }),
       async (req, res) => {
         const { projectId, scriptId } = req.body;
-        const projectData = await utils_default.db("o_project").where("id", projectId).select("id", "videoModel", "mode").first();
-        if (!projectData?.videoModel) {
-          return res.status(400).json(success3("\u9879\u76EE\u672A\u914D\u7F6E\u89C6\u9891\u6A21\u578B"));
-        }
+        const projectData = await utils_default.db("o_project").where("id", projectId).select("id", "mode").first();
         let videoMode = "";
         try {
           videoMode = JSON.parse(projectData?.mode ?? "");
@@ -257353,6 +257348,7 @@ var tools_default = (toolCpnfig) => {
 // src/agents/productionAgent/index.ts
 var fs11 = __toESM(require("fs"));
 var import_path10 = __toESM(require("path"));
+init_manualMediaMode();
 function buildMemPrompt(mem) {
   let memoryContext = "";
   if (mem.rag.length) {
@@ -257381,26 +257377,12 @@ async function runDecisionAI(ctx) {
   const prompt = await fs11.promises.readFile(skill, "utf-8");
   const projectInfo = await utils_default.db("o_project").where("id", ctx.resTool.data.projectId).first();
   if (!projectInfo) throw new Error(`\u9879\u76EE\u4E0D\u5B58\u5728\uFF0CID: ${ctx.resTool.data.projectId}`);
-  const [_, imageModelName] = projectInfo.imageModel.split(/:(.+)/);
-  const [id, videoModelName] = projectInfo.videoModel.split(/:(.+)/);
-  const models = await utils_default.vendor.getModelList(id);
-  if (!models.length) throw new Error(`\u9879\u76EE\u4F7F\u7528\u7684\u6A21\u578B\u4E0D\u5B58\u5728\uFF0CID: ${projectInfo.videoModel}`);
-  let videoMode = "";
-  try {
-    videoMode = JSON.parse(projectInfo.mode ?? "");
-  } catch (e) {
-    videoMode = projectInfo.mode ?? "";
-  }
-  const isRef = Array.isArray(videoMode) ? true : false;
-  const modelInfo = `\u9879\u76EE\u4F7F\u7528\u7684\u6A21\u578B\u5982\u4E0B\uFF1A
-\u56FE\u50CF\u6A21\u578B\uFF1A${imageModelName}
-\u89C6\u9891\u6A21\u578B\uFF1A${videoModelName}
-\u591A\u53C2\uFF1A${isRef ? "\u662F" : "\u5426"}`;
+  const mediaModeInfo = MANUAL_MEDIA_PROJECT_CONTEXT;
   const mem = buildMemPrompt(await memory.get(text2));
   const { fullStream } = await utils_default.Ai.Text("productionAgent:decisionAgent", ctx.thinkConfig.think, ctx.thinkConfig.thinlLevel).stream({
     messages: [
       { role: "system", content: prompt },
-      { role: "assistant", content: mem + "\n" + modelInfo },
+      { role: "assistant", content: mem + "\n" + mediaModeInfo },
       { role: "user", content: text2 }
     ],
     abortSignal,
@@ -257457,21 +257439,7 @@ async function createSubAgent(parentCtx) {
   const projectInfo = await utils_default.db("o_project").where("id", resTool.data.projectId).first();
   if (!projectInfo) throw new Error(`\u9879\u76EE\u4E0D\u5B58\u5728\uFF0CID: ${resTool.data.projectId}`);
   const artSkills = await createArtSkills(projectInfo?.artStyle, projectInfo?.directorManual);
-  const [_, imageModelName] = projectInfo.imageModel.split(/:(.+)/);
-  const [id, videoModelName] = projectInfo.videoModel.split(/:(.+)/);
-  const models = await utils_default.vendor.getModelList(id);
-  if (!models.length) throw new Error(`\u9879\u76EE\u4F7F\u7528\u7684\u6A21\u578B\u4E0D\u5B58\u5728\uFF0CID: ${projectInfo.videoModel}`);
-  let videoMode = "";
-  try {
-    videoMode = JSON.parse(projectInfo.mode ?? "");
-  } catch (e) {
-    videoMode = projectInfo.mode ?? "";
-  }
-  const isRef = Array.isArray(videoMode) ? true : false;
-  const modelInfo = `\u9879\u76EE\u4F7F\u7528\u7684\u6A21\u578B\u5982\u4E0B\uFF1A
-\u56FE\u50CF\u6A21\u578B\uFF1A${imageModelName}
-\u89C6\u9891\u6A21\u578B\uFF1A${videoModelName}
-\u591A\u53C2\uFF1A${isRef ? "\u662F" : "\u5426"}`;
+  const mediaModeInfo = MANUAL_MEDIA_PROJECT_CONTEXT;
   const run_sub_agent_derive_assets = tool({
     description: "\u8FD0\u884C\u6267\u884CsubAgent\u6765\u5B8C\u6210\u884D\u751F\u8D44\u4EA7\u5206\u6790\u4E0E\u4FE1\u606F\u5199\u5165\u76F8\u5173\u4EFB\u52A1",
     inputSchema: jsonSchema(promptInput),
@@ -257486,7 +257454,7 @@ async function createSubAgent(parentCtx) {
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: artSkills.prompt + `
-${modelInfo}` },
+${mediaModeInfo}` },
           { role: "user", content: prompt }
         ],
         tools: { activate_skill: artSkills.tools.activate_skill }
@@ -257507,7 +257475,7 @@ ${modelInfo}` },
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: artSkills.prompt + `
-${modelInfo}` },
+${mediaModeInfo}` },
           { role: "user", content: prompt }
         ],
         tools: { activate_skill: artSkills.tools.activate_skill }
@@ -257529,7 +257497,7 @@ ${modelInfo}` },
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: artSkills.prompt + `
-${modelInfo}` },
+${mediaModeInfo}` },
           { role: "user", content: prompt + addPrompt }
         ],
         tools: { activate_skill: artSkills.tools.activate_skill }
@@ -257550,7 +257518,7 @@ ${modelInfo}` },
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: artSkills.prompt + `
-${modelInfo}` },
+${mediaModeInfo}` },
           { role: "user", content: prompt }
         ],
         tools: { activate_skill: artSkills.tools.activate_skill }
@@ -257573,7 +257541,7 @@ ${modelInfo}` },
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: productionSkills.prompt + `
-${modelInfo}` },
+${mediaModeInfo}` },
           { role: "user", content: prompt + addPrompt }
         ],
         tools: { activate_skill: productionSkills.tools.activate_skill }
@@ -257595,7 +257563,7 @@ ${modelInfo}` },
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: productionSkills.prompt + `
-${modelInfo}` },
+${mediaModeInfo}` },
           { role: "user", content: prompt + addPrompt }
         ],
         tools: { activate_skill: productionSkills.tools.activate_skill }

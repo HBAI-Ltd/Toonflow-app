@@ -37,11 +37,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { projectId, scriptId } = req.body;
-    const projectData = await u.db("o_project").where("id", projectId).select("id", "videoModel", "mode").first();
-
-    if (!projectData?.videoModel) {
-      return res.status(400).json(success("项目未配置视频模型"));
-    }
+    const projectData = await u.db("o_project").where("id", projectId).select("id", "mode").first();
     let videoMode = "";
     try {
       videoMode = JSON.parse(projectData?.mode ?? "");
