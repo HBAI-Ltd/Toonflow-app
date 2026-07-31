@@ -1,3 +1,50 @@
+# 开发报告：手动图片/视频生成模式
+
+## 变更摘要
+
+- 图片、视频生成入口改为完整提示词复制与原位置上传。
+- 文本提示词生成/润色保留，主流程不再创建媒体生成任务。
+- 新增统一 409 拦截、AI 图片/视频底层保护和视频轨道上传接口。
+- 未新增依赖，未修改数据库结构。
+
+## 修改文件
+
+- `PLAN.md`
+- `src/app.ts`
+- `src/lib/manualMediaMode.ts`
+- `src/utils/ai.ts`
+- `src/router.ts`
+- `src/routes/production/workbench/uploadVideo.ts`
+- `docs/manual-media-api.md`
+- `tests/manualMediaMode.test.mjs`
+- `data/serve/app.js`
+- `data/web/index.html`
+- `DEV_REPORT.md`
+- `CODEX_REVIEW.md`
+
+## 测试结果
+
+- `node --test tests/manualMediaMode.test.mjs`：3/3 通过。
+- `./node_modules/.bin/tsc --noEmit`：通过。
+- 后端生产构建：通过。
+- 前端手动媒体测试：3/3 通过。
+- 前端 Vite 生产构建：通过。
+- 前端完整类型检查受既有 `generate copy.vue` 语法错误和其他既有类型错误阻断；本次修改文件未出现新增类型错误。
+- 实际交付目录启动、页面 200、生成接口 409 和上传接口无效 MIME 400 冒烟通过。
+
+## 风险与回滚
+
+- Base64 视频受现有 100 MB 请求体限制。
+- 外部生成一致性依赖目标工具对提示词的执行效果。
+- 回滚源码、`data/serve/app.js` 和 `data/web/` 即可；无数据库迁移。
+
+## 人工确认
+
+- PR 仅创建供审阅，不自动合并。
+- 登录后的真实图片/视频上传会写入项目数据，需用户指定测试项目后再执行。
+
+---
+
 # 开发报告：豆包网页视频 API 接入
 
 ## 变更摘要

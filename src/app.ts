@@ -15,6 +15,8 @@ import jwt from "jsonwebtoken";
 import socketInit from "@/socket/index";
 import { isEletron } from "@/utils/getPath";
 import { ensureThumbnail, ThumbnailSize } from "@/utils/image";
+import { error } from "@/lib/responseFormat";
+import { MEDIA_GENERATION_DISABLED_MESSAGE, MEDIA_GENERATION_PATHS } from "@/lib/manualMediaMode";
 import {
   CompanionApiManager,
   type CompanionApiDefinition,
@@ -330,6 +332,10 @@ export default async function startServe(randomPort: Boolean = false) {
     } catch (err) {
       return res.status(401).send({ message: "无效的token" });
     }
+  });
+
+  app.all([...MEDIA_GENERATION_PATHS], (_req, res) => {
+    return res.status(409).send(error(MEDIA_GENERATION_DISABLED_MESSAGE));
   });
 
   const router = await import("@/router");

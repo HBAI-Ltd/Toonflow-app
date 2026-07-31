@@ -3,6 +3,7 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 import axios from "axios";
 import { transform } from "sucrase";
 import u from "@/utils";
+import { assertManualMediaMode } from "@/lib/manualMediaMode";
 
 type AiType =
   | "scriptAgent"
@@ -250,6 +251,7 @@ class AiImage {
     this.key = key;
   }
   async run(input: ImageConfig, taskRecord?: TaskRecord) {
+    assertManualMediaMode();
     const modelName = await resolveModelName(this.key);
     const exec = async (mn: `${string}:${string}`) => {
       const fn = await getVendorTemplateFn("imageRequest", mn);
@@ -296,6 +298,7 @@ class AiVideo {
     this.key = key;
   }
   async run(input: VideoConfig, taskRecord?: TaskRecord) {
+    assertManualMediaMode();
     const modelName = await resolveModelName(this.key);
     try {
       const exec = async (mn: `${string}:${string}`) => {
