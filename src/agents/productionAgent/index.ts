@@ -77,7 +77,7 @@ export async function runDecisionAI(ctx: AgentContext) {
     abortSignal,
     tools: {
       ...memory.getTools(),
-      ...useTools({ resTool: ctx.resTool, msg: ctx.msg }),
+      // ...useTools({ resTool: ctx.resTool, msg: ctx.msg }),// 不注入工具，防止决策层还是直接读工作区
       ...(await createSubAgent(ctx)),
     },
     onFinish: async (completion) => {
