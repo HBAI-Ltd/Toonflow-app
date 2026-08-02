@@ -96,6 +96,19 @@ interface PollResult {
   error?: string;
 }
 
+const minimaxSpeechVoices: TTSModel["voices"] = [
+  { title: "Expressive Narrator", voice: "English_expressive_narrator" },
+  { title: "Radiant Girl", voice: "English_radiant_girl" },
+  { title: "Magnetic-voiced Male", voice: "English_magnetic_voiced_man" },
+  { title: "Compelling Lady", voice: "English_compelling_lady1" },
+  { title: "News Anchor", voice: "Chinese (Mandarin)_News_Anchor" },
+  { title: "Warm Bestie", voice: "Chinese (Mandarin)_Warm_Bestie" },
+  { title: "Gentle Youth", voice: "Chinese (Mandarin)_Gentle_Youth" },
+  { title: "Warm Girl", voice: "Chinese (Mandarin)_Warm_Girl" },
+  { title: "Sincere Adult", voice: "Chinese (Mandarin)_Sincere_Adult" },
+  { title: "Lyrical Voice", voice: "Chinese (Mandarin)_Lyrical_Voice" },
+];
+
 // ============================================================
 // 全局声明
 // ============================================================
@@ -189,6 +202,14 @@ const vendor: VendorConfig = {
         { duration: [10], resolution: ["512P", "768P"] },
       ],
     },
+    { name: "MiniMax Speech 2.8 HD", modelName: "speech-2.8-hd", type: "tts", voices: minimaxSpeechVoices },
+    { name: "MiniMax Speech 2.8 Turbo", modelName: "speech-2.8-turbo", type: "tts", voices: minimaxSpeechVoices },
+    { name: "MiniMax Speech 2.6 HD", modelName: "speech-2.6-hd", type: "tts", voices: minimaxSpeechVoices },
+    { name: "MiniMax Speech 2.6 Turbo", modelName: "speech-2.6-turbo", type: "tts", voices: minimaxSpeechVoices },
+    { name: "MiniMax Speech 02 HD", modelName: "speech-02-hd", type: "tts", voices: minimaxSpeechVoices },
+    { name: "MiniMax Speech 02 Turbo", modelName: "speech-02-turbo", type: "tts", voices: minimaxSpeechVoices },
+    { name: "MiniMax Speech 01 HD", modelName: "speech-01-hd", type: "tts", voices: minimaxSpeechVoices },
+    { name: "MiniMax Speech 01 Turbo", modelName: "speech-01-turbo", type: "tts", voices: minimaxSpeechVoices },
   ],
 };
 
@@ -366,7 +387,58 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
 };
 
 const ttsRequest = async (config: TTSConfig, model: TTSModel): Promise<string> => {
-  return "";
+  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  const baseUrl = getBaseUrl();
+  const headers = getHeaders();
+  const voiceId = config.voice || model.voices[0]?.voice;
+  if (!voiceId) throw new Error("缺少语音配置");
+
+  const response = await fetch(`${baseUrl}/v1/t2a_v2`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      model: model.modelName,
+      text: config.text,
+      stream: false,
+      language_boost: "auto",
+      output_format: "hex",
+      voice_setting: {
+        voice_id: voiceId,
+        speed: config.speechRate,
+        vol: config.volume,
+        pitch: config.pitchRate,
+      },
+      audio_setting: {
+        sample_rate: 32000,
+        bitrate: 128000,
+        format: "mp3",
+        channel: 1,
+      },
+      subtitle_enable: false,
+      voice_modify: {
+        pitch: 0,
+        intensity: 0,
+        timbre: 0,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Text-to-speech request failed: ${errorText}`);
+  }
+
+  const data = await response.json();
+  if (data?.base_resp?.status_code !== 0) {
+    throw new Error(`Text-to-speech failed: ${data?.base_resp?.status_msg || "unknown error"}`);
+  }
+
+  const audioHex = data?.data?.audio;
+  if (!audioHex) {
+    throw new Error("Text-to-speech response did not include audio data");
+  }
+
+  return `data:audio/mp3;base64,${Buffer.from(audioHex, "hex").toString("base64")}`;
 };
 
 const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }> => {
