@@ -96,6 +96,8 @@ interface PollResult {
   error?: string;
 }
 
+const ttsVoices = [{ title: "English expressive narrator", voice: "English_expressive_narrator" }];
+
 // ============================================================
 // 全局声明
 // ============================================================
@@ -189,6 +191,14 @@ const vendor: VendorConfig = {
         { duration: [10], resolution: ["512P", "768P"] },
       ],
     },
+    { name: "Speech 2.8 HD", modelName: "speech-2.8-hd", type: "tts", voices: ttsVoices },
+    { name: "Speech 2.8 Turbo", modelName: "speech-2.8-turbo", type: "tts", voices: ttsVoices },
+    { name: "Speech 2.6 HD", modelName: "speech-2.6-hd", type: "tts", voices: ttsVoices },
+    { name: "Speech 2.6 Turbo", modelName: "speech-2.6-turbo", type: "tts", voices: ttsVoices },
+    { name: "Speech 02 HD", modelName: "speech-02-hd", type: "tts", voices: ttsVoices },
+    { name: "Speech 02 Turbo", modelName: "speech-02-turbo", type: "tts", voices: ttsVoices },
+    { name: "Speech 01 HD", modelName: "speech-01-hd", type: "tts", voices: ttsVoices },
+    { name: "Speech 01 Turbo", modelName: "speech-01-turbo", type: "tts", voices: ttsVoices },
   ],
 };
 
@@ -212,6 +222,11 @@ const getHeaders = (): Record<string, string> => {
  */
 const getBaseUrl = (): string => {
   return vendor.inputValues.baseUrl.replace(/\/$/, "");
+};
+
+const getSpeechBaseUrl = (): string => {
+  const baseUrl = getBaseUrl();
+  return baseUrl.endsWith("/v1") ? baseUrl : baseUrl + "/v1";
 };
 
 /**
@@ -366,7 +381,142 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
 };
 
 const ttsRequest = async (config: TTSConfig, model: TTSModel): Promise<string> => {
-  return "";
+  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!config.text) throw new Error("缺少文本内容");
+
+  const baseUrl = getSpeechBaseUrl();
+  const headers = getHeaders();
+  const voiceId = config.voice || model.voices[0]?.voice;
+  if (!voiceId) throw new Error("缺少语音配置");
+
+  const toDataUrl = (audio: string): string => {
+    if (!audio) throw new Error("语音合成未返回音频");
+    if (/^data:/i.test(audio) || /^https?:\/\//i.test(audio)) return audio;
+    return "data:audio/mp3;base64," + Buffer.from(audio, "hex").toString("base64");
+  };
+
+  const syncResponse = await fetch(baseUrl + "/t2a_v2", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      model: model.modelName,
+      text: config.text,
+      stream: false,
+      language_boost: "auto",
+      output_format: "hex",
+      voice_setting: {
+        voice_id: voiceId,
+        speed: config.speechRate,
+        vol: config.volume,
+        pitch: config.pitchRate,
+      },
+      audio_setting: {
+        sample_rate: 32000,
+        bitrate: 128000,
+        format: "mp3",
+        channel: 1,
+      },
+    }),
+  });
+
+  let syncData: any = null;
+  try {
+    syncData = await syncResponse.json();
+  } catch {
+    syncData = null;
+  }
+  if (syncResponse.ok && syncData?.base_resp?.status_code === 0 && syncData?.data?.audio) {
+    return toDataUrl(syncData.data.audio);
+  }
+
+  const asyncResponse = await fetch(baseUrl + "/t2a_async_v2", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      model: model.modelName,
+      text: config.text,
+      language_boost: "auto",
+      voice_setting: {
+        voice_id: voiceId,
+        speed: config.speechRate,
+        vol: config.volume,
+        pitch: config.pitchRate,
+      },
+      audio_setting: {
+        audio_sample_rate: 32000,
+        bitrate: 128000,
+        format: "mp3",
+        channel: 2,
+      },
+    }),
+  });
+  if (!asyncResponse.ok) {
+    const errorText = await asyncResponse.text();
+    throw new Error("语音合成任务创建失败: " + errorText);
+  }
+
+  const asyncData = await asyncResponse.json();
+  if (asyncData?.base_resp?.status_code !== 0) {
+    throw new Error(asyncData?.base_resp?.status_msg || "语音合成任务创建失败");
+  }
+
+  const taskId = asyncData?.task_id;
+  const fileId = asyncData?.file_id;
+  if (!taskId || !fileId) {
+    throw new Error("语音合成任务未返回任务信息");
+  }
+
+  const pollResult = await pollTask(
+    async (): Promise<PollResult> => {
+      const queryResponse = await fetch(
+        baseUrl + "/query/t2a_async_query_v2?task_id=" + encodeURIComponent(taskId),
+        {
+          method: "GET",
+          headers,
+        },
+      );
+      if (!queryResponse.ok) {
+        const errorText = await queryResponse.text();
+        throw new Error("语音合成任务查询失败: " + errorText);
+      }
+      const queryData = await queryResponse.json();
+      const status = String(queryData?.status || "").toLowerCase();
+      if (status === "success") {
+        return { completed: true, data: String(queryData?.file_id || fileId) };
+      }
+      if (status === "failed") {
+        return { completed: true, error: queryData?.base_resp?.status_msg || "语音合成失败" };
+      }
+      if (status === "expired") {
+        return { completed: true, error: "语音合成任务已过期" };
+      }
+      return { completed: false };
+    },
+    1000,
+    600000,
+  );
+
+  if (pollResult.error) {
+    throw new Error(pollResult.error);
+  }
+
+  const fileResp = await fetch(
+    baseUrl + "/files/retrieve?file_id=" + encodeURIComponent(pollResult.data || fileId),
+    {
+      method: "GET",
+      headers,
+    },
+  );
+  if (!fileResp.ok) {
+    const errorText = await fileResp.text();
+    throw new Error("语音文件获取失败: " + errorText);
+  }
+  const fileData = await fileResp.json();
+  const downloadUrl = fileData?.file?.download_url;
+  if (!downloadUrl) {
+    throw new Error("语音文件未返回下载地址");
+  }
+  return await urlToBase64(downloadUrl);
 };
 
 const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }> => {
