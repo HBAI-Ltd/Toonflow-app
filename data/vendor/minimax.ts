@@ -20,6 +20,15 @@ interface TextModel {
   modelName: string;
   type: "text";
   think: boolean;
+  contextWindow?: number;
+  pricingUsdPerMillionTokens?: {
+    input: number;
+    output: number;
+    cache_read: number;
+    cache_write: number | null;
+  };
+  inputModalities?: string[];
+  thinking?: ("adaptive" | "disabled" | "always_on")[];
 }
 
 interface ImageModel {
@@ -57,6 +66,12 @@ interface VendorConfig {
   inputs: { key: string; label: string; type: "text" | "password" | "url"; required: boolean; placeholder?: string }[];
   inputValues: Record<string, string>;
   models: (TextModel | ImageModel | VideoModel | TTSModel)[];
+  regionalEndpoints?: {
+    region: string;
+    openaiBaseUrl: string;
+    anthropicBaseUrl: string;
+    docsRoot: string;
+  }[];
 }
 
 type ReferenceList =
@@ -134,7 +149,7 @@ declare const exports: {
 
 const vendor: VendorConfig = {
   id: "minimax",
-  version: "2.1",
+  version: "2.2",
   author: "Toonflow",
   name: "MiniMax(海螺AI)",
   description: "MiniMax官方接口适配，支持M系列推理文本模型、文生图/图生图、视频生成（文生视频、图生视频、首尾帧生成）能力 \n [前往平台](https://minimaxi.com/)",
@@ -143,9 +158,52 @@ const vendor: VendorConfig = {
     { key: "baseUrl", label: "请求地址", type: "url", required: true, placeholder: "示例：https://api.minimaxi.com" },
   ],
   inputValues: { apiKey: "", baseUrl: "https://api.minimaxi.com" },
+  regionalEndpoints: [
+    {
+      region: "global_en",
+      openaiBaseUrl: "https://api.minimax.io/v1",
+      anthropicBaseUrl: "https://api.minimax.io/anthropic",
+      docsRoot: "https://platform.minimax.io/docs",
+    },
+    {
+      region: "cn_zh",
+      openaiBaseUrl: "https://api.minimaxi.com/v1",
+      anthropicBaseUrl: "https://api.minimaxi.com/anthropic",
+      docsRoot: "https://platform.minimaxi.com/docs",
+    },
+  ],
   models: [
     // 文本模型
-    { name: "MiniMax-M2.7 (推理版)", modelName: "MiniMax-M2.7", type: "text", think: true },
+    {
+      name: "MiniMax-M3",
+      modelName: "MiniMax-M3",
+      type: "text",
+      think: true,
+      contextWindow: 1000000,
+      pricingUsdPerMillionTokens: {
+        input: 0.6,
+        output: 2.4,
+        cache_read: 0.12,
+        cache_write: null,
+      },
+      inputModalities: ["text", "image", "video"],
+      thinking: ["adaptive", "disabled"],
+    },
+    {
+      name: "MiniMax-M2.7 (推理版)",
+      modelName: "MiniMax-M2.7",
+      type: "text",
+      think: true,
+      contextWindow: 204800,
+      pricingUsdPerMillionTokens: {
+        input: 0.3,
+        output: 1.2,
+        cache_read: 0.06,
+        cache_write: 0.375,
+      },
+      inputModalities: ["text"],
+      thinking: ["always_on"],
+    },
     { name: "MiniMax-M2.7 极速版 (推理版)", modelName: "MiniMax-M2.7-highspeed", type: "text", think: true },
     { name: "MiniMax-M2.5 (推理版)", modelName: "MiniMax-M2.5", type: "text", think: true },
     { name: "MiniMax-M2.5 极速版 (推理版)", modelName: "MiniMax-M2.5-highspeed", type: "text", think: true },
