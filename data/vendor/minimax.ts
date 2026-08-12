@@ -47,6 +47,14 @@ interface TTSModel {
   voices: { title: string; voice: string }[];
 }
 
+interface VoiceCloneCapability {
+  name: string;
+  type: "voiceClone";
+  models: string[];
+  audioFormats: ("mp3" | "m4a" | "wav")[];
+  operations: { operationId: string; method: "POST"; path: string }[];
+}
+
 interface VendorConfig {
   id: string;
   version: string;
@@ -57,6 +65,7 @@ interface VendorConfig {
   inputs: { key: string; label: string; type: "text" | "password" | "url"; required: boolean; placeholder?: string }[];
   inputValues: Record<string, string>;
   models: (TextModel | ImageModel | VideoModel | TTSModel)[];
+  capabilities?: VoiceCloneCapability[];
 }
 
 type ReferenceList =
@@ -90,6 +99,12 @@ interface TTSConfig {
   referenceList?: Extract<ReferenceList, { type: "audio" }>[];
 }
 
+interface VoiceCloneConfig {
+  cloneAudio: string;
+  voiceId: string;
+  model: "speech-2.8-hd" | "speech-2.6-hd" | "speech-02-hd" | "speech-01-hd";
+}
+
 interface PollResult {
   completed: boolean;
   data?: string;
@@ -101,6 +116,8 @@ interface PollResult {
 // ============================================================
 
 declare const axios: any;
+declare const Buffer: any;
+declare const FormData: any;
 declare const logger: (msg: string) => void;
 declare const jsonwebtoken: any;
 declare const zipImage: (base64: string, size: number) => Promise<string>;
@@ -124,6 +141,9 @@ declare const exports: {
   imageRequest: (c: ImageConfig, m: ImageModel) => Promise<string>;
   videoRequest: (c: VideoConfig, m: VideoModel) => Promise<string>;
   ttsRequest: (c: TTSConfig, m: TTSModel) => Promise<string>;
+  uploadCloneAudio: (source: string) => Promise<string>;
+  uploadPromptAudio: (source: string) => Promise<string>;
+  voiceClone: (c: VoiceCloneConfig) => Promise<string>;
   checkForUpdates?: () => Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }>;
   updateVendor?: () => Promise<string>;
 };
@@ -134,7 +154,7 @@ declare const exports: {
 
 const vendor: VendorConfig = {
   id: "minimax",
-  version: "2.1",
+  version: "2.2",
   author: "Toonflow",
   name: "MiniMax(海螺AI)",
   description: "MiniMax官方接口适配，支持M系列推理文本模型、文生图/图生图、视频生成（文生视频、图生视频、首尾帧生成）能力 \n [前往平台](https://minimaxi.com/)",
@@ -190,6 +210,19 @@ const vendor: VendorConfig = {
       ],
     },
   ],
+  capabilities: [
+    {
+      name: "MiniMax Voice Clone",
+      type: "voiceClone",
+      models: ["speech-2.8-hd", "speech-2.6-hd", "speech-02-hd", "speech-01-hd"],
+      audioFormats: ["mp3", "m4a", "wav"],
+      operations: [
+        { operationId: "uploadCloneAudio", method: "POST", path: "/v1/files/upload" },
+        { operationId: "uploadPromptAudio", method: "POST", path: "/v1/files/upload" },
+        { operationId: "voiceClone", method: "POST", path: "/v1/voice_clone" },
+      ],
+    },
+  ],
 };
 
 // ============================================================
@@ -220,6 +253,45 @@ const getBaseUrl = (): string => {
 const extractBase64WithHead = (ref: ReferenceList): string => {
   return ref.base64.startsWith("data:") ? ref.base64 : `data:image/png;base64,${ref.base64}`;
 };
+
+const parseAudio = (source: string): { data: any; filename: string; contentType: string } => {
+  const match = source.match(/^data:audio\/(mpeg|mp3|mp4|x-m4a|wav|wave|x-wav);base64,(.+)$/);
+  if (!match) throw new Error("Voice clone audio must be an MP3, M4A, or WAV data URL");
+  const formats: Record<string, { extension: string; contentType: string }> = {
+    mpeg: { extension: "mp3", contentType: "audio/mpeg" },
+    mp3: { extension: "mp3", contentType: "audio/mpeg" },
+    mp4: { extension: "m4a", contentType: "audio/mp4" },
+    "x-m4a": { extension: "m4a", contentType: "audio/mp4" },
+    wav: { extension: "wav", contentType: "audio/wav" },
+    wave: { extension: "wav", contentType: "audio/wav" },
+    "x-wav": { extension: "wav", contentType: "audio/wav" },
+  };
+  const format = formats[match[1]];
+  const data = Buffer.from(match[2], "base64");
+  if (!data.length) throw new Error("Voice clone audio must not be empty");
+  return { data, filename: `voice.${format.extension}`, contentType: format.contentType };
+};
+
+const uploadVoiceAudio = async (source: string, purpose: "voice_clone" | "prompt_audio"): Promise<string> => {
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API key");
+  const audio = parseAudio(source);
+  const form = new FormData();
+  form.append("purpose", purpose);
+  form.append("file", audio.data, { filename: audio.filename, contentType: audio.contentType });
+  const response = await axios.post(`${getBaseUrl()}/v1/files/upload`, form, {
+    headers: { Authorization: getHeaders().Authorization, ...form.getHeaders() },
+  });
+  if (response.data?.base_resp?.status_code !== 0) {
+    throw new Error(`Voice audio upload failed: ${response.data?.base_resp?.status_msg || "unknown error"}`);
+  }
+  const fileId = response.data?.file?.file_id ?? response.data?.file_id;
+  if (!fileId) throw new Error("Voice audio upload response did not include a file ID");
+  return String(fileId);
+};
+
+const uploadCloneAudio = (source: string): Promise<string> => uploadVoiceAudio(source, "voice_clone");
+
+const uploadPromptAudio = (source: string): Promise<string> => uploadVoiceAudio(source, "prompt_audio");
 
 // ============================================================
 // 适配器函数
@@ -369,6 +441,22 @@ const ttsRequest = async (config: TTSConfig, model: TTSModel): Promise<string> =
   return "";
 };
 
+const voiceClone = async (config: VoiceCloneConfig): Promise<string> => {
+  if (!config.voiceId) throw new Error("Voice ID is required");
+  const fileId = await uploadCloneAudio(config.cloneAudio);
+  const response = await axios.post(
+    `${getBaseUrl()}/v1/voice_clone`,
+    { file_id: fileId, voice_id: config.voiceId, model: config.model },
+    { headers: getHeaders() },
+  );
+  if (response.data?.base_resp?.status_code !== 0) {
+    throw new Error(`Voice cloning failed: ${response.data?.base_resp?.status_msg || "unknown error"}`);
+  }
+  const voiceId = response.data?.voice_id;
+  if (!voiceId) throw new Error("Voice cloning response did not include a voice ID");
+  return String(voiceId);
+};
+
 const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }> => {
   return {
     hasUpdate: false,
@@ -392,6 +480,9 @@ exports.uploadReference = uploadReference;
 exports.imageRequest = imageRequest;
 exports.videoRequest = videoRequest;
 exports.ttsRequest = ttsRequest;
+exports.uploadCloneAudio = uploadCloneAudio;
+exports.uploadPromptAudio = uploadPromptAudio;
+exports.voiceClone = voiceClone;
 exports.checkForUpdates = checkForUpdates;
 exports.updateVendor = updateVendor;
 

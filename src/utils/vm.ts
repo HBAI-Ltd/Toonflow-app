@@ -36,6 +36,7 @@ export default function runCode(code: string, vendor?: Record<string, any>) {
     fetch: fetch,
     exports,
     axios,
+    Buffer,
     FormData,
     logger,
     jsonwebtoken,
