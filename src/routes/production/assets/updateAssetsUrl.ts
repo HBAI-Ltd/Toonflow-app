@@ -3,7 +3,6 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import { id } from "zod/locales";
 import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
