@@ -3,7 +3,6 @@
   "common.failed": "失败",
   "common.itemCount": "{count} 项",
   "setting.language.invalid": "语言无效。允许的值：en、vi、zh。",
-  "test.onlyInZh": "仅中文",
   "setting.about.checkUpdate.versionInfoFailed": "无法获取版本信息",
   "setting.about.checkUpdate.sourceDownloadInfoFailed": "无法获取该源的下载信息",
   "setting.about.checkUpdate.noInstallerForPlatform": "该源暂无适用于当前系统的安装包",

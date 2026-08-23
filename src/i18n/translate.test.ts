@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { t, isLocale } from "./translate";
+import { t, isLocale, createTranslator } from "./translate";
 import { DEFAULT_LOCALE, FALLBACK_LOCALE, LOCALES } from "./types";
 
 describe("hằng số locale", () => {
@@ -27,11 +27,21 @@ describe("t", () => {
     expect(t("common.itemCount", { count: 3 }, "en")).toBe("3 items");
   });
 
-  it("lùi về zh khi locale thiếu khoá", () => {
-    expect(t("test.onlyInZh", {}, "en")).toBe("仅中文");
-  });
-
   it("trả về chính key khi không locale nào có", () => {
     expect(t("khong.ton.tai", {}, "en")).toBe("khong.ton.tai");
+  });
+});
+
+// Uses a synthetic fixture catalog via createTranslator() instead of a test-only key checked
+// into the shipped src/i18n/locales/zh.json — that file ships in the app bundle, so it should
+// only ever hold real translations.
+describe("createTranslator — fallback về locale mặc định (FALLBACK_LOCALE)", () => {
+  it("lùi về zh khi locale được yêu cầu thiếu khoá", () => {
+    const translate = createTranslator({
+      en: {},
+      vi: {},
+      zh: { "test.onlyInZh": "仅中文" },
+    });
+    expect(translate("test.onlyInZh", {}, "en")).toBe("仅中文");
   });
 });
