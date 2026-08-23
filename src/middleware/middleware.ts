@@ -10,6 +10,25 @@ const ZOD_LOCALES: Record<Locale, () => ReturnType<typeof en>> = {
   zh: zhCN,
 };
 
+/**
+ * z.config() is global, mutable state shared by the whole process. There must
+ * be NO `await` between setting it and calling schema.safeParse(): Node runs
+ * one synchronous block at a time, so keeping the two calls adjacent (this
+ * function does both inside a single synchronous call) guarantees no other
+ * request's handler can interleave and observe — or overwrite — the wrong
+ * locale between them. Callers must resolve `locale` first (that part can
+ * safely be async/awaited) and only invoke this helper once they are ready
+ * to parse immediately.
+ */
+export function safeParseWithLocale<T extends ZodTypeAny>(
+  schema: T,
+  data: unknown,
+  locale: Locale,
+): ReturnType<T["safeParse"]> {
+  z.config(ZOD_LOCALES[locale]());
+  return schema.safeParse(data) as ReturnType<T["safeParse"]>;
+}
+
 export function validateFields(
   shape: Record<string, ZodTypeAny>,
   source: "body" | "query" | "params" = "body", // 默认校验 body
@@ -27,12 +46,7 @@ export function validateFields(
       console.error("getLocale failed, falling back to default locale:", err);
       locale = DEFAULT_LOCALE;
     }
-    // z.config() is global, mutable state. There must be NO `await` between this
-    // call and schema.safeParse(data) below: Node processes one synchronous block
-    // at a time, so keeping them adjacent guarantees no other request's handler
-    // can interleave and observe (or overwrite) the wrong locale.
-    z.config(ZOD_LOCALES[locale]());
-    const parseResult = schema.safeParse(data);
+    const parseResult = safeParseWithLocale(schema, data, locale);
     if (!parseResult.success) {
       const errors = parseResult.error.issues.map((issue) =>
         t("middleware.validation.fieldError", { field: issue.path.join("."), message: issue.message }, locale),

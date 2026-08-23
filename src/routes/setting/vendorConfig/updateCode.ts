@@ -1,7 +1,7 @@
 import express from "express";
 import { serializeError } from "serialize-error";
 import { success, error } from "@/lib/responseFormat";
-import { validateFields } from "@/middleware/middleware";
+import { validateFields, safeParseWithLocale } from "@/middleware/middleware";
 import u from "@/utils";
 import { z } from "zod";
 import { transform } from "sucrase";
@@ -81,7 +81,10 @@ export default router.post(
         return res.status(400).send(success(null, t("setting.vendorConfig.updateCode.mustExportVideoRequest", {}, locale)));
       if (!exports.vendor) return res.status(400).send(success(null, t("setting.vendorConfig.updateCode.mustExportVendorObject", {}, locale)));
       const vendor = exports.vendor;
-      const result = vendorConfigSchema.safeParse(vendor);
+      // z.config() is global; resolve it right next to the parse call with no
+      // await in between (see safeParseWithLocale in middleware.ts) so an
+      // interleaved request cannot flip the locale used for these messages.
+      const result = safeParseWithLocale(vendorConfigSchema, vendor, locale);
       if (!result.success) {
         const errorMsg = result.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; ");
         return res.status(400).send(error(t("setting.vendorConfig.updateCode.validationFailed", { errorMsg }, locale)));
