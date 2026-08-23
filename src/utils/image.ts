@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import fss from "fs";
 import path from "node:path";
 import sharp from "sharp";
+import { t, getLocale } from "@/i18n";
 
 /**
  * 图片缩放选项
@@ -58,6 +59,7 @@ export async function ensureThumbnail(
   thumbnailPath: string,
   size?: ThumbnailSize,
 ): Promise<string | null> {
+  const locale = await getLocale();
   // 小图已存在，直接返回
   if (fss.existsSync(thumbnailPath)) {
     return thumbnailPath;
@@ -71,7 +73,7 @@ export async function ensureThumbnail(
       // 百分比缩放：先获取原图尺寸，再等比计算目标尺寸
       const meta = await sharp(originalPath).metadata();
       if (!meta.width || !meta.height) {
-        console.warn("[image] 无法获取原图尺寸:", originalPath);
+        console.warn(t("utils.image.cannotGetOriginalSize", {}, locale), originalPath);
         return null;
       }
       const pct = size.value / 100;
@@ -88,10 +90,10 @@ export async function ensureThumbnail(
       // 默认 256x256 inside
       await resizeImage(originalPath, thumbnailPath);
     }
-    console.info(`[${thumbnailPath}] 小图生成成功`);
+    console.info(t("utils.image.thumbnailGenerated", { path: thumbnailPath }, locale));
     return thumbnailPath;
   } catch (e) {
-    console.warn("[image] 生成缩略图失败:", e);
+    console.warn(t("utils.image.thumbnailGenerationFailed", {}, locale), e);
     return null;
   }
 }

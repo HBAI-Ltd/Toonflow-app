@@ -14,6 +14,7 @@ import FormData from "form-data";
 import jsonwebtoken from "jsonwebtoken";
 import u from "@/utils";
 import crypto from "node:crypto";
+import { t, getLocale, type Locale } from "@/i18n";
 export default function runCode(code: string, vendor?: Record<string, any>) {
   code = code.replace(/export\s*\{\s*\};?/g, ""); // 去掉 export {} 以免沙盒环境报错
   // 创建一个沙盒
@@ -113,11 +114,12 @@ export async function pollTask(
  * @returns 拼接后的图片base64字符串
  */
 export async function mergeImages(imageBase64List: string[], maxSize = "10mb"): Promise<string> {
+  const locale = await getLocale();
   if (imageBase64List.length === 0) {
-    throw new Error("图片列表不能为空");
+    throw new Error(t("utils.vm.emptyImageList", {}, locale));
   }
 
-  const maxBytes = parseSize(maxSize);
+  const maxBytes = await parseSize(maxSize, locale);
   const imageBuffers = imageBase64List.map(base64ToBuffer);
   const imageMetadatas = await Promise.all(imageBuffers.map((buffer) => sharp(buffer).metadata()));
   const maxHeight = Math.max(...imageMetadatas.map((m) => m.height || 0));
@@ -163,10 +165,10 @@ export async function mergeImages(imageBase64List: string[], maxSize = "10mb"): 
 /**
  * 解析大小字符串为字节数
  */
-function parseSize(size: string): number {
+async function parseSize(size: string, locale?: Locale): Promise<number> {
   const match = size.toLowerCase().match(/^(\d+(?:\.\d+)?)\s*(kb|mb|gb|b)?$/);
   if (!match) {
-    throw new Error(`无效的大小格式: ${size}`);
+    throw new Error(t("utils.vm.invalidSizeFormat", { size }, locale ?? (await getLocale())));
   }
   const value = parseFloat(match[1]);
   const unit = match[2] || "b";

@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 import { o_novel } from "@/types/database";
 import u from "@/utils";
 import { stripThink } from "@/utils/stripThink";
+import { t, getLocale } from "@/i18n";
 export interface EventType {
   id: number;
   event: string;
@@ -26,6 +27,7 @@ class CleanNovel {
 
   private async processChapter(novel: o_novel): Promise<EventType | null> {
     try {
+      const locale = await getLocale();
       const prompt = await u.getPrompts("event");
       const promptData = await u.db("o_prompt").where("type", "eventExtraction").first();
       let eventExtraction = "" as string | undefined;
@@ -39,15 +41,16 @@ class CleanNovel {
         messages: [
           {
             role: "user",
-            content:
-              "请根据以下小说章节数：" +
-              novel.chapterIndex +
-              "小说章节券：" +
-              novel.reel +
-              "小说章节名称：" +
-              novel.chapter +
-              "、小说章节内容生成事件摘要：\n" +
-              novel.chapterData!,
+            content: t(
+              "agent.eventExtraction.userPrompt",
+              {
+                chapterIndex: novel.chapterIndex as unknown as string,
+                reel: novel.reel as unknown as string,
+                chapter: novel.chapter as unknown as string,
+                chapterData: novel.chapterData!,
+              },
+              locale,
+            ),
           },
         ],
       });

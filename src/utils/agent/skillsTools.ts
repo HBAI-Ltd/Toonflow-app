@@ -5,6 +5,7 @@ import isPathInside from "is-path-inside";
 import getPath from "@/utils/getPath";
 import * as fs from "fs";
 import fg from "fast-glob";
+import { t, getLocale, FALLBACK_LOCALE, type Locale } from "@/i18n";
 
 type SkillAttribution =
   //剧本Agent
@@ -41,10 +42,10 @@ function ensureNonEmptyBody(body: string, fallback: string): string {
 
 // ==================== 解析 SKILL.md ====================
 
-export function parseFrontmatter(content: string): { name: string; description: string } {
+export function parseFrontmatter(content: string, locale: Locale = FALLBACK_LOCALE): { name: string; description: string } {
   const match = content.match(/^\uFEFF?---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/);
   if (!match?.[1]) {
-    throw new Error(`技能文件缺少有效的 frontmatter，确保以 --- 包裹并包含 name 和 description 字段。${content}`);
+    throw new Error(t("utils.skillsTools.parseFrontmatter.missingFrontmatter", { content }, locale));
   }
 
   const result: Record<string, string> = {};
@@ -107,18 +108,19 @@ export function parseFrontmatter(content: string): { name: string; description: 
       continue;
     }
 
-    const unquoted = rawValue.replace(/^(['"])([\s\S]*)\1$/, "$2");
+    const unquoted = rawValue.replace(/^([\x27\x22])([\s\S]*)\1$/, "$2"); // \x27 = ', \x22 = " — escaped so the i18n scanner's naive quote tokenizer doesn't desync
     result[key] = unquoted;
   }
 
   if (!result.name || !result.description) {
-    throw new Error(`技能文件缺少必要字段: name 或 description，确保 frontmatter 包含这两个字段。${content}`);
+    throw new Error(t("utils.skillsTools.parseFrontmatter.missingRequiredFields", { content }, locale));
   }
 
   return { name: result.name, description: result.description };
 }
 
 export async function useSkill(input: SkillInput) {
+  const locale = await getLocale();
   const { mainSkill, workspace = [], attachedSkills = [] } = input;
   const rootDir = getPath("skills");
   const normalizedRootDir = path.resolve(rootDir);
@@ -126,10 +128,10 @@ export async function useSkill(input: SkillInput) {
   const mainSkills: { path: string; name: string; description: string }[] = [];
   for (const skill of mainSkill) {
     const skillPath = path.join(rootDir, skill + ".md");
-    if (!fs.existsSync(skillPath)) throw new Error(`主技能文件不存在: ${skillPath}`);
-    if (!isPathInside(skillPath, normalizedRootDir)) throw new Error(`技能名称无效：检测到路径穿越。${skillPath}`);
+    if (!fs.existsSync(skillPath)) throw new Error(t("utils.skillsTools.useSkill.mainSkillNotFound", { path: skillPath }, locale));
+    if (!isPathInside(skillPath, normalizedRootDir)) throw new Error(t("utils.skillsTools.useSkill.invalidSkillName", { path: skillPath }, locale));
     const content = await fs.promises.readFile(skillPath, "utf-8");
-    const parsed = parseFrontmatter(content);
+    const parsed = parseFrontmatter(content, locale);
     mainSkills.push({ path: skillPath, ...parsed });
   }
 
@@ -160,59 +162,60 @@ export async function useSkill(input: SkillInput) {
     tertiarySkills: collectMdFiles(attachedSkills, true),
   };
 
-  return { prompt: buildSkillPrompt(mainSkills), tools: createSkillTools(mainSkills, skillPaths), skillPaths };
+  return { prompt: buildSkillPrompt(mainSkills, locale), tools: createSkillTools(mainSkills, skillPaths, undefined, locale), skillPaths };
 }
 
-export function buildSkillPrompt(skills: { name: string; description: string }[]): string {
+export function buildSkillPrompt(skills: { name: string; description: string }[], locale: Locale = FALLBACK_LOCALE): string {
   const skillEntries = skills
     .map((s) => `  <skill>\n    <name>${s.name}</name>\n    <description>${s.description}</description>\n  </skill>`)
     .join("\n");
-  return `## Skills
-以下技能提供了专业任务的专用指令。
-当任务与某个技能的描述匹配时，调用 activate_skill 工具并传入技能名称来加载完整指令。
-加载后遵循技能指令执行任务，需要时调用 read_skill_file 读取资源文件内容。
-
-<available_skills>
-${skillEntries}
-</available_skills>`;
+  return t("utils.skillsTools.skillsHeader", { skillEntries }, locale);
 }
 
-export function createSkillTools(skills: { name: string; description: string }[], skillPaths: SkillPaths, rootDir: string = getPath("skills")) {
+export function createSkillTools(
+  skills: { name: string; description: string }[],
+  skillPaths: SkillPaths,
+  rootDir: string = getPath("skills"),
+  locale: Locale = FALLBACK_LOCALE,
+) {
   const activated = new Set<string>(); // 已激活技能集合，防止重复加载
   const skillsRootDir = path.resolve(rootDir);
   const skillNames = skills.map((s) => s.name);
   const skillMap = new Map(skillPaths.mainSkill.map((s) => [s.name, s]));
   return {
     activate_skill: tool({
-      description: `激活一个技能，加载其完整指令和捆绑资源列表到上下文。可用技能：${skillNames.join(", ")}`,
+      description: t("utils.skillsTools.tools.activateSkill.describe", { skillNames: skillNames.join(", ") }, locale),
       inputSchema: jsonSchema<{ name: string }>(
         z
           .object({
-            name: z.enum(skillNames as [string, ...string[]]).describe("要激活的技能名称"),
+            name: z.enum(skillNames as [string, ...string[]]).describe(t("utils.skillsTools.tools.activateSkill.nameDescribe", {}, locale)),
           })
           .toJSONSchema(),
       ),
       execute: async ({ name }) => {
         if (activated.has(name)) {
-          console.log(`⚡[主技能] ℹ️ 技能 "${name}" 已激活，跳过重复注入`);
-          return { alreadyActive: true, message: `技能 "${name}" 已激活，无需重复加载` };
+          console.log(t("utils.skillsTools.tools.activateSkill.alreadyActiveLog", { name }, locale));
+          return { alreadyActive: true, message: t("utils.skillsTools.tools.activateSkill.alreadyActiveMessage", { name }, locale) };
         }
         const matched = skillMap.get(name);
-        if (!matched) return { error: `未找到技能 "${name}"` };
+        if (!matched) return { error: t("utils.skillsTools.tools.activateSkill.notFound", { name }, locale) };
         let raw = "";
         try {
           raw = await fs.promises.readFile(matched.path, "utf-8");
-          console.log(`⚡[主技能] ✓ 已读取主技能文件： ${matched.path}（${raw.length} 字符）`);
+          console.log(t("utils.skillsTools.tools.activateSkill.readLog", { path: matched.path, length: raw.length }, locale));
         } catch (error) {
-          console.log(`⚡[主技能] ✗ 读取失败：未找到文件 "${matched.path}"`);
+          console.log(t("utils.skillsTools.tools.activateSkill.readFailedLog", { path: matched.path }, locale));
         }
         activated.add(name);
-        console.log(`⚡[主技能] ✓ 技能 "${name}" 已激活`);
-        const body = ensureNonEmptyBody(raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, ""), "该技能文件无正文内容。");
+        console.log(t("utils.skillsTools.tools.activateSkill.activatedLog", { name }, locale));
+        const body = ensureNonEmptyBody(
+          raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, ""),
+          t("utils.skillsTools.tools.activateSkill.emptyBodyFallback", {}, locale),
+        );
         let content = "";
         content = `<skill_content name="${name}">\n`;
         content += body + "\n\n";
-        content += "使用 read_skill_file 工具读取资源文件。\n";
+        content += t("utils.skillsTools.tools.activateSkill.useReadSkillFileHint", {}, locale);
         if (skillPaths.secondarySkills.length > 0) {
           content += "\n<skill_resources>\n";
           for (const path of skillPaths.secondarySkills) {
@@ -225,39 +228,39 @@ export function createSkillTools(skills: { name: string; description: string }[]
       },
     }),
     read_skill_file: tool({
-      description: "读取已激活技能目录下的资源文件。传入 activate_skill 返回的 skill_resources 中的文件路径。",
+      description: t("utils.skillsTools.tools.readSkillFile.describe", {}, locale),
       inputSchema: jsonSchema<{ filePath: string }>(
         z
           .object({
-            filePath: z.string().describe("资源文件的相对路径，来自 activate_skill 返回的 skill_resources"),
+            filePath: z.string().describe(t("utils.skillsTools.tools.readSkillFile.filePathDescribe", {}, locale)),
           })
           .toJSONSchema(),
       ),
       execute: async ({ filePath }) => {
         const normalizedInputPath = toUnixPath(filePath).trim();
         if (!normalizedInputPath) {
-          console.log(`📖[技法文件] ✗ filePath 不能为空`);
-          return { error: "filePath 不能为空" };
+          console.log(t("utils.skillsTools.tools.readSkillFile.emptyPathLog", {}, locale));
+          return { error: t("utils.skillsTools.tools.readSkillFile.emptyPathError", {}, locale) };
         }
 
         const fullPath = path.resolve(path.join(skillsRootDir, normalizedInputPath));
         if (!(fullPath === skillsRootDir || isPathInside(fullPath, skillsRootDir))) {
-          console.log(`📖[技法文件] ✗ 路径越界已拦截："${filePath}" 超出技能目录范围`);
+          console.log(t("utils.skillsTools.tools.readSkillFile.pathOutOfBoundsLog", { filePath }, locale));
           return { error: "Access denied: path is outside skill directory" };
         }
         let body = "";
         try {
           body = await fs.promises.readFile(fullPath, "utf-8");
-          console.log(`📖[技法文件] ✓ 已读取文件： ${filePath}（${body.length} 字符）`);
+          console.log(t("utils.skillsTools.tools.readSkillFile.readLog", { filePath, length: body.length }, locale));
         } catch {
-          console.log(`📖[技法文件] ✗ 读取失败：未找到文件 "${filePath}"`);
+          console.log(t("utils.skillsTools.tools.readSkillFile.readFailedLog", { filePath }, locale));
           return { error: `File not found: ${filePath}` };
         }
-        const safeBody = ensureNonEmptyBody(body, "该资源文件为空。");
+        const safeBody = ensureNonEmptyBody(body, t("utils.skillsTools.tools.readSkillFile.emptyBodyFallback", {}, locale));
         let content = "";
         content = `<skill_content>\n`;
         content += safeBody + "\n\n";
-        content += "可以使用 read_skill_file 工具读取资源文件。\n";
+        content += t("utils.skillsTools.tools.readSkillFile.useReadSkillFileHint", {}, locale);
         if (skillPaths.tertiarySkills.length > 0) {
           content += "\n<skill_resources>\n";
           for (const path of skillPaths.tertiarySkills) {

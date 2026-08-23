@@ -8,6 +8,7 @@ import initDB from "@/lib/initDB";
 import type { DB } from "@/types/database";
 import crypto from "crypto";
 import fixDB from "@/lib/fixDB";
+import { t, getLocale } from "@/i18n";
 
 type TableName = keyof DB & string;
 type RowType<TName extends TableName> = DB[TName];
@@ -58,7 +59,8 @@ async function initKnexType(knexDb: any) {
   }).fetchDatabase(knexDb);
   const declarations = await dbClient.toTypescript();
   const dbObject = await dbClient.toObject();
-  const customHeader = `//该文件由脚本自动生成，请勿手动修改`;
+  const locale = await getLocale();
+  const customHeader = `//${t("utils.db.generatedFileHeader", {}, locale)}`;
   // 清除上次的注释头
   let declBody = declarations.replace(/^\/\*[\s\S]*?\*\/\s*/, "");
   declBody = declBody.replace(/(\n\s*)\/\*([^*][\s\S]*?)\*\//g, "$1/**$2*/");

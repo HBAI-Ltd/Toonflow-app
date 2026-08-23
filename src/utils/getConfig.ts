@@ -1,4 +1,5 @@
 import u from "@/utils";
+import { t, getLocale, type Locale } from "@/i18n";
 
 type AIType = "text" | "image" | "video";
 
@@ -29,15 +30,24 @@ type ResDataMap = {
   video: VideoResData;
 };
 
-const errorMessages: Record<AIType, string> = {
-  text: "文本模型配置不存在",
-  image: "图像模型配置不存在",
-  video: "视频模型配置不存在",
+const errorMessageKeys: Record<AIType, string> = {
+  text: "utils.getConfig.textConfigNotFound",
+  image: "utils.getConfig.imageConfigNotFound",
+  video: "utils.getConfig.videoConfigNotFound",
 };
+
+function getErrorMessages(locale: Locale): Record<AIType, string> {
+  return {
+    text: t(errorMessageKeys.text, {}, locale),
+    image: t(errorMessageKeys.image, {}, locale),
+    video: t(errorMessageKeys.video, {}, locale),
+  };
+}
 
 const needBaseURL: AIType[] = ["text", "video", "image"];
 
 export default async function getConfig<T extends AIType>(aiType: T, manufacturer?: string): Promise<ResDataMap[T]> {
+  const locale = await getLocale();
   const config = await u
     .db("t_config")
     .where("type", aiType)
@@ -48,7 +58,7 @@ export default async function getConfig<T extends AIType>(aiType: T, manufacture
     })
     .first();
 
-  if (!config) throw new Error(errorMessages[aiType]);
+  if (!config) throw new Error(getErrorMessages(locale)[aiType]);
 
   const result: BaseConfig = {
     model: config?.model ?? "",

@@ -4,6 +4,7 @@ import { getEmbedding, cosineSimilarity } from "./embedding";
 import type { memories as MemoryRow } from "@/types/database";
 import { tool, jsonSchema } from "ai";
 import { z } from "zod";
+import { t, getLocale, FALLBACK_LOCALE, type Locale } from "@/i18n";
 
 // ── 可调配置默认值 ──
 const DEFAULTS: {
@@ -43,20 +44,21 @@ class Memory {
   }
 
   private async generateSummary(contents: string[]): Promise<string> {
+    const locale = await getLocale();
     const { summaryMaxLength } = await this.getConfigData({ summaryMaxLength: DEFAULTS.summaryMaxLength });
     const { text } = await u.Ai.Text(this.agentType as any).invoke({
-      system: `你是一个记忆压缩助手。请将以下多条记忆内容压缩为一段简洁的摘要，不超过${summaryMaxLength}个字符。只输出摘要内容，不要加任何前缀或解释。`,
+      system: t("utils.memory.generateSummary.system", { summaryMaxLength: Number(summaryMaxLength) }, locale),
       messages: [{ role: "user", content: contents.map((c, i) => `${i + 1}. ${c}`).join("\n") }],
     });
     return text.slice(0, Number(summaryMaxLength));
   }
 
   private async judgeSummaryRelevance(keyword: string, summaries: { id: string; content: string }[]): Promise<string[]> {
+    const locale = await getLocale();
     const list = summaries.map((s) => `[${s.id}] ${s.content}`).join("\n");
     const { text } = await u.Ai.Text(this.agentType as any).invoke({
-      system:
-        '你是一个信息检索助手。用户会给你一个关键词和一组摘要，请判断哪些摘要可能包含与关键词相关的详细信息。只返回相关摘要的id列表，用JSON数组格式，例如 ["id1","id2"]。不要解释。',
-      messages: [{ role: "user", content: `关键词: ${keyword}\n\n摘要列表:\n${list}` }],
+      system: t("utils.memory.judgeSummaryRelevance.system", {}, locale),
+      messages: [{ role: "user", content: t("utils.memory.judgeSummaryRelevance.userPrompt", { keyword, list }, locale) }],
     });
     try {
       const ids = JSON.parse(text);
@@ -197,20 +199,20 @@ class Memory {
     return messages.map((m) => ({ id: m.id, content: m.content, createTime: m.createTime }));
   }
 
-  getTools() {
+  getTools(locale: Locale = FALLBACK_LOCALE) {
     return {
       deepRetrieve: tool({
-        description: "深度检索记忆：当你需要回忆与某个关键词相关的详细历史信息时使用此工具",
+        description: t("utils.memory.tools.deepRetrieve.describe", {}, locale),
         inputSchema: jsonSchema<{ keyword: string }>(
           z
             .object({
-              keyword: z.string().describe("要检索的关键词"),
+              keyword: z.string().describe(t("utils.memory.tools.deepRetrieve.keywordDescribe", {}, locale)),
             })
             .toJSONSchema(),
         ),
         execute: async ({ keyword }) => {
           const results = await this.deepRetrieve(keyword);
-          if (results.length === 0) return { found: false, message: "未找到相关记忆" };
+          if (results.length === 0) return { found: false, message: t("utils.memory.tools.deepRetrieve.notFound", {}, locale) };
           return { found: true, memories: results.map((r) => r.content) };
         },
       }),
