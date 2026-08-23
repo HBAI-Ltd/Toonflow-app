@@ -77,6 +77,28 @@ export function stripComments(source: string): string {
         const rc = source[j];
         if (rc === "\n") break; // regex literal không xuống dòng — không phải regex thật, bỏ cuộc
         if (rc === "\\") { j += 2; continue; }
+        // Nếu dấu nháy này có một dấu nháy cùng loại "khớp cặp" trên cùng dòng, bỏ qua
+        // nguyên chuỗi đó như một khối (vd. một URL như "http://x/y" nằm giữa hai dấu
+        // `/` của một phép chia bị hiểu nhầm là regex) — nếu không, dấu `/` bên trong
+        // chuỗi đó có thể bị coi nhầm là dấu đóng regex, trong khi dấu `/` đóng THẬT lại
+        // nằm ngay sau chuỗi, trên cùng dòng. Nếu KHÔNG tìm được dấu nháy khớp cặp (vd.
+        // regex /'/g chỉ chứa một dấu nháy đơn không cặp), coi nó là ký tự thường của
+        // regex như hành vi gốc — bắt cặp một cách mù quáng ở đây từng khiến /'/g (có
+        // thật trong data/vendor/volcengineSd2.ts) bị từ chối làm regex một cách sai.
+        // Bỏ qua bước này khi đang trong character class `[...]` vì trong ngữ cảnh đó,
+        // dấu nháy chỉ là ký tự thường của regex (vd. /['"]/), không mở một chuỗi mới.
+        if (!inClass && (rc === '"' || rc === "'" || rc === "`")) {
+          const q = rc;
+          let k = j + 1;
+          let matched = false;
+          while (k < source.length && source[k] !== "\n") {
+            if (source[k] === "\\") { k += 2; continue; }
+            if (source[k] === q) { matched = true; k++; break; }
+            k++;
+          }
+          if (matched) { j = k; continue; }
+          j++; continue; // không có dấu nháy khớp cặp trên dòng này: coi q là ký tự thường
+        }
         if (rc === "[") { inClass = true; j++; continue; }
         if (rc === "]") { inClass = false; j++; continue; }
         if (rc === "/" && !inClass) { j++; closed = true; break; }

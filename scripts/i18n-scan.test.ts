@@ -32,6 +32,37 @@ describe("stripComments", () => {
     const src = 'const x = a / b / "更新成功";';
     expect(stripComments(src)).toContain("更新成功");
   });
+
+  it("không lệch pha khi phép chia sau `}` có dấu `/` thứ hai cùng dòng bên trong chuỗi (regression: canStartRegex() coi `}` là điểm mở regex)", () => {
+    // {a:1} / "http://x.com/y" / total — đây là phép chia (object literal rồi chia),
+    // không phải regex, dù ký tự `/` thứ hai xuất hiện cùng dòng (bên trong chuỗi URL).
+    // Comment CJK ở dòng SAU phải vẫn được strip đúng.
+    const src = 'const rate = {a:1} / "http://x.com/y" / total;\nconst z = 1; // 后续注释2';
+    expect(stripComments(src)).not.toContain("后续注释2");
+  });
+
+  it("vẫn báo hit CJK trong chuỗi thật ở dòng sau khi gặp phép chia sau `}` cùng mẫu", () => {
+    const src = 'const rate = {a:1} / "http://x.com/y" / total;\nres.send(success("更新成功"));';
+    const hits = scanText(src, { stripComments: true });
+    expect(hits).toHaveLength(1);
+    expect(hits[0].text).toBe("更新成功");
+  });
+
+  it("regex thật trên một dòng chứa cả hai loại dấu nháy vẫn được lexer là regex, và chuỗi CJK ở dòng sau vẫn được báo", () => {
+    const src = 'const r = /[\'"]/g;\nres.send(success("更新成功"));';
+    const hits = scanText(src, { stripComments: true });
+    expect(hits).toHaveLength(1);
+    expect(hits[0].text).toBe("更新成功");
+  });
+
+  it("regex thật chỉ chứa một dấu nháy đơn không cặp (vd. /'/g, có thật trong data/vendor/volcengineSd2.ts) vẫn được lexer đúng, không bị coi là mở một chuỗi mới lệch pha", () => {
+    // Regression: bắt cặp dấu nháy một cách mù quáng bên trong ứng viên regex (fix ban
+    // đầu cho lỗi phép-chia-sau-`}`) từng khiến /'/g bị từ chối làm regex vì không có
+    // dấu nháy thứ hai để khớp cặp — khiến dấu `'` sau đó bị coi là mở chuỗi thật, nuốt
+    // mất comment CJK ở dòng sau.
+    const src = 'str.replace(/\'/g, "%27");\n// 后续注释3';
+    expect(stripComments(src)).not.toContain("后续注释3");
+  });
 });
 
 describe("scanText", () => {
