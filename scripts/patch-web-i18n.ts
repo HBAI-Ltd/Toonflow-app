@@ -24,7 +24,7 @@ function detectLocale(block: string): "en" | "vi" | "other" {
   const about = match[1];
 
   // CJK (Hán), Kana (Nhật), Thái, Kirin (Nga) → không phải en/vi, bỏ qua.
-  if (/[㐀-鿿぀-ヿ฀-๿Ѐ-ӿ]/.test(about)) return "other";
+  if (/[㐀-鿿぀-ヿ฀-๿Ѐ-ӿ]/.test(about)) return "other"; // i18n-ignore — cận trên dải mã CJK dùng để nhận diện hệ chữ viết, không phải chuỗi dịch
 
   // Ký tự có dấu đặc trưng tiếng Việt (đ/ơ/ư/â/ê/ô/ă + toàn bộ khối
   // Latin Extended Additional dùng cho nguyên âm có thanh điệu).
