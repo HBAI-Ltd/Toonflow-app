@@ -733,7 +733,7 @@ See the full agreement in the [LICENSE](./LICENSE) file.
 
 [![Star History Rank](https://api.star-history.com/badge?repo=HBAI-Ltd/Toonflow-app)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app)
 
-[![Star History Chart](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)
+[![Star History Chart](https://star-history.dera.page/svg?repos=HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)](https://star-history.dera.page/#HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)
 
 ---
 
@@ -766,18 +766,18 @@ We also thank the following organizations/units/individuals for their support:
   </thead>
   <tbody>
     <tr>
+      <td align="center"><img src="./sponsored/metaso.jpg" alt="Metaso Logo" width="48"></td>
+      <td align="center"><b>Metaso</b></td>
+      <td align="center">💻 Computing Sponsorship</td>
+      <td>Metaso Technology offers a cost-effective MiniMax H3 video generation service: <b>768P at just ¥0.09/sec, 2K at just ¥0.15/sec</b>. Supports native 2K, audio-video sync, and an API compatible with the <b>OpenAI protocol</b>, plus <b>ComfyUI</b> and <b>infinite canvas</b> support — no need to deploy your own GPU.<br/><br/>🎁 Sign up via the <a href="https://metaso.cn/minimax-h3/?s=toon">exclusive referral link</a> to claim bonus credits and exclusive discounts. For business inquiries, add WeChat: wxid_9rt077jmud6j22</td>
+      <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">Website</a></td>
+    </tr>
+    <tr>
       <td align="center"><img src="./sponsored/sophnet.png" alt="Sophnet Logo" width="48"></td>
       <td align="center"><b>Sophnet</b></td>
       <td align="center">💻 Computing Sponsorship</td>
       <td>Committed to building a faster, more stable, and more cost-effective one-stop model inference API service platform</td>
       <td align="center"><a href="https://www.sophnet.com/">Website</a></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="./sponsored/atlascloud.png" alt="Atlas Cloud Logo" width="48"></td>
-      <td align="center"><b>Atlas Cloud</b></td>
-      <td align="center">💻 Computing Sponsorship</td>
-      <td>The world's first full-modality reasoning platform. Dialogue, image, video, audio — all unified API. 300+ models, OpenAI compatible.</td>
-      <td align="center"><a href="https://www.atlascloud.ai/">Website</a></td>
     </tr>
     <tr>
       <td align="center"><img src="./sponsored/hunyuan.webp" alt="Tencent Hunyuan 3D Logo" width="48"></td>
