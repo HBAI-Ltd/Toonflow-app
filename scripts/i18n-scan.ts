@@ -9,6 +9,15 @@ export interface CjkHit {
 
 export interface ScanOptions {
   stripComments: boolean;
+  /**
+   * Set of JSON keys whose value line is deliberately exempt from the scan — for locale
+   * catalog entries that legitimately embed CJK characters (e.g. a regex example inside a
+   * translated string). Plain JSON has no comment syntax, so the usual i18n-ignore pragma
+   * can't be placed inline without leaking literal text into the translated value; this is
+   * the "otherwise exempt" mechanism for that case. Matched against `"key":` at the start of
+   * a line (this repo's locale JSON files are one key per line).
+   */
+  jsonKeyExemptions?: Set<string>;
 }
 
 // Ranges: U+4E00-9FFF CJK Unified Ideographs, U+3000-303F CJK Symbols and Punctuation
@@ -156,7 +165,9 @@ function scanLines(source: string, opts: ScanOptions): ScanResult {
   lines.forEach((line, idx) => {
     const lineHasPragma = rawLines[idx].includes(IGNORE_PRAGMA);
     const prevLineHasPragma = idx > 0 && rawLines[idx - 1].includes(IGNORE_PRAGMA);
-    const ignored = lineHasPragma || prevLineHasPragma;
+    const keyMatch = opts.jsonKeyExemptions && rawLines[idx].match(/^\s*"([^"]+)":/);
+    const keyExempt = !!(keyMatch && opts.jsonKeyExemptions!.has(keyMatch[1]));
+    const ignored = lineHasPragma || prevLineHasPragma || keyExempt;
 
     for (const m of line.matchAll(CJK)) {
       if (ignored) {
@@ -174,13 +185,21 @@ export function scanText(source: string, opts: ScanOptions): CjkHit[] {
   return scanLines(source, opts).hits;
 }
 
-const TARGETS: { glob: string; stripComments: boolean }[] = [
+// Locale catalog entries that legitimately embed CJK characters (e.g. a Chinese chapter-marker
+// regex example) inside an otherwise-translated en/vi string. See ScanOptions.jsonKeyExemptions.
+const JSON_KEY_EXEMPTIONS = new Set(["agent.script.getAiRegex.systemPrompt"]);
+
+const TARGETS: { glob: string; stripComments: boolean; jsonKeyExemptions?: Set<string> }[] = [
   { glob: "src/**/*.ts", stripComments: true },
   { glob: "data/vendor/*.ts", stripComments: true },
   { glob: "scripts/*.ts", stripComments: true },
   { glob: "README.md", stripComments: false },
   { glob: "docs/README.en.md", stripComments: false },
   { glob: "docs/README.vi.md", stripComments: false },
+  { glob: "src/i18n/locales/en.json", stripComments: false, jsonKeyExemptions: JSON_KEY_EXEMPTIONS },
+  { glob: "src/i18n/locales/vi.json", stripComments: false, jsonKeyExemptions: JSON_KEY_EXEMPTIONS },
+  { glob: "data/skills/**/README.en.md", stripComments: false },
+  { glob: "data/skills/**/README.vi.md", stripComments: false },
 ];
 
 const IGNORE = ["src/i18n/locales/zh.json", "src/lib/vendor.json", "src/router.ts", "**/*.test.ts"];
@@ -191,7 +210,10 @@ async function main() {
   for (const target of TARGETS) {
     const files = await fg(target.glob, { ignore: IGNORE, dot: false });
     for (const file of files) {
-      const { hits, suppressed } = scanLines(fs.readFileSync(file, "utf-8"), { stripComments: target.stripComments });
+      const { hits, suppressed } = scanLines(fs.readFileSync(file, "utf-8"), {
+        stripComments: target.stripComments,
+        jsonKeyExemptions: target.jsonKeyExemptions,
+      });
       totalSuppressed += suppressed;
       for (const hit of hits) {
         console.log(`${file}:${hit.line}  ${hit.text}`);

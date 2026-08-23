@@ -140,3 +140,12 @@ describe("scanText - dải Unicode mở rộng (fullwidth/CJK punctuation)", () 
     expect(hits.map((h) => h.text)).toEqual(["你好"]);
   });
 });
+
+describe("scanLines - jsonKeyExemptions", () => {
+  it("bỏ qua dòng có key nằm trong jsonKeyExemptions", () => {
+    const source = '{\n  "a.b": "包含中文",\n  "c.d": "另一个中文"\n}';
+    const hits = scanText(source, { stripComments: false, jsonKeyExemptions: new Set(["a.b"]) });
+    expect(hits).toHaveLength(1);
+    expect(hits[0].text).toBe("另一个中文");
+  });
+});
