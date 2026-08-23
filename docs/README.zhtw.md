@@ -724,7 +724,7 @@ Toonflow 基於 Apache-2.0 協議開源發布，並附有補充商業協議。
 
 [![Star History Rank](https://api.star-history.com/badge?repo=HBAI-Ltd/Toonflow-app)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app)
 
-[![Star History Chart](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)
+[![Star History Chart](https://star-history.dera.page/svg?repos=HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)](https://star-history.dera.page/#HBAI-Ltd/Toonflow-app&type=timeline&legend=top-left)
 
 ---
 
