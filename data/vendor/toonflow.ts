@@ -216,7 +216,7 @@ const vendor: VendorConfig = {
     {
       name: "All-in-One Image G-2.0",
       type: "image",
-      modelName: "全能图片G-2.0", // API model identifier sent verbatim to the Toonflow relay platform; not translated
+      modelName: "全能图片G-2.0", // i18n-ignore — literal API model parameter sent to the Toonflow relay platform, not display text; the user-facing `name` above was translated
       mode: ["text", "singleImage", "multiReference"],
     },
     // { name: "DeepSeek v4 pro", modelName: "deepseek-v4-pro", type: "text", think: false },
@@ -376,6 +376,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
     });
     return res.data!;
   }
+  // i18n-ignore — matches the literal (untranslated) modelName identifier above, not display text
   if (lowerName.includes("gpt") || lowerName.includes("全能图片")) {
     const normalizedSize = config.size === "1K" ? "1k" : config.size === "2K" ? "2k" : config.size === "4K" ? "4k" : config.size;
     const body: Record<string, any> = {
