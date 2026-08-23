@@ -1,5 +1,4 @@
 import fs from "fs";
-import path from "path";
 import fg from "fast-glob";
 
 export interface CjkHit {
@@ -56,16 +55,22 @@ interface ScanResult {
   suppressed: number;
 }
 
-/** Quét CJK, tách riêng các hit bị pragma i18n-ignore chặn. */
+/**
+ * Quét CJK, tách riêng các hit bị pragma i18n-ignore chặn.
+ * Pragma luôn được kiểm tra trên dòng RAW (chưa strip comment), vì stripComments
+ * xoá chính chữ "i18n-ignore" nếu nó nằm trong comment — kiểm tra trên text đã
+ * strip sẽ khiến pragma không bao giờ có tác dụng với comment thật.
+ */
 function scanLines(source: string, opts: ScanOptions): ScanResult {
   const text = opts.stripComments ? stripComments(source) : source;
+  const rawLines = source.split("\n");
   const lines = text.split("\n");
   const hits: CjkHit[] = [];
   let suppressed = 0;
 
   lines.forEach((line, idx) => {
-    const lineHasPragma = line.includes(IGNORE_PRAGMA);
-    const prevLineHasPragma = idx > 0 && lines[idx - 1].includes(IGNORE_PRAGMA);
+    const lineHasPragma = rawLines[idx].includes(IGNORE_PRAGMA);
+    const prevLineHasPragma = idx > 0 && rawLines[idx - 1].includes(IGNORE_PRAGMA);
     const ignored = lineHasPragma || prevLineHasPragma;
 
     for (const m of line.matchAll(CJK)) {

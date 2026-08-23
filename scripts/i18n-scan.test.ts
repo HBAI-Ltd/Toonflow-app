@@ -32,7 +32,28 @@ describe("scanText", () => {
   });
 });
 
-describe("scanText - pragma i18n-ignore", () => {
+describe("scanText - pragma i18n-ignore (stripComments: true, cấu hình thật của yarn i18n:scan)", () => {
+  it("bỏ qua chuỗi CJK khi pragma nằm trong comment cùng dòng (regression: pragma bị strip mất trước khi kiểm tra)", () => {
+    const hits = scanText('const a = "跳过这个"; // i18n-ignore', { stripComments: true });
+    expect(hits).toHaveLength(0);
+  });
+
+  it("bỏ qua chuỗi CJK khi dòng ngay phía trên có pragma i18n-ignore trong comment", () => {
+    const hits = scanText('// i18n-ignore\nconst a = "跳过这个";', { stripComments: true });
+    expect(hits).toHaveLength(0);
+  });
+
+  it("không trả về hit bị bỏ qua trong kết quả CjkHit[], vẫn báo dòng không có pragma", () => {
+    const hits = scanText(
+      '// i18n-ignore\nconst a = "跳过这个";\nconst b = "不跳过";',
+      { stripComments: true }
+    );
+    expect(hits).toHaveLength(1);
+    expect(hits[0].text).toBe("不跳过");
+  });
+});
+
+describe("scanText - pragma i18n-ignore (stripComments: false)", () => {
   it("bỏ qua chuỗi CJK trên dòng có pragma i18n-ignore", () => {
     const hits = scanText('const a = "跳过这个"; // i18n-ignore', { stripComments: false });
     expect(hits).toHaveLength(0);
