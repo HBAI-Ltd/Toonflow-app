@@ -24,6 +24,17 @@ export function canonicalSkillPath(filePath: string): string {
 }
 
 /**
+ * Locale mà client CHỦ Ý gửi lên qua hậu tố path (`foo.vi.md` -> `"vi"`), hay `null` nếu
+ * path không mang hậu tố locale nào (bản gốc, hoặc trùng tình cờ với `.zh.md` — zh không
+ * có sidecar nên không tính). Dùng để đối chiếu path client gửi với locale của request
+ * hiện tại, tránh trường hợp path cũ (sidecar vi/en) bị ghi/đọc dưới một locale khác.
+ */
+export function skillPathLocale(filePath: string): Locale | null {
+  const match = filePath.match(SIDECAR_SUFFIX_RE);
+  return match ? (match[1] as Locale) : null;
+}
+
+/**
  * Đường dẫn thật sự nên đọc/hiển thị cho locale này, xuất phát từ bản gốc:
  * sidecar nếu đã tồn tại trên đĩa, ngược lại là chính bản gốc.
  * Khác `readLocalizedSkill` ở chỗ hàm này trả về đường dẫn, không phải nội dung,

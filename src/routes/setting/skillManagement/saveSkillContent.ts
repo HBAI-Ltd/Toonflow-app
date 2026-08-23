@@ -6,7 +6,7 @@ import isPathInside from "is-path-inside";
 import u from "@/utils";
 import p from "path";
 import * as fs from "fs";
-import { t, getLocale, canonicalSkillPath, localizedSkillPath } from "@/i18n";
+import { t, getLocale, canonicalSkillPath, localizedSkillPath, skillPathLocale } from "@/i18n";
 
 const router = express.Router();
 
@@ -23,6 +23,15 @@ export default router.post(
     const filePath = p.join(skillsRoot, path);
     if (!isPathInside(filePath, skillsRoot)) {
       return res.status(400).send(error(t("setting.skillManagement.saveSkillContent.invalidPath", {}, locale)));
+    }
+
+    // Path client gửi lên có thể mang hậu tố locale tường minh (foo.vi.md). Nếu request
+    // hiện tại đã chuyển sang locale khác (ví dụ người dùng đổi ngôn ngữ toàn cục sau khi
+    // mở form sửa) thì path đó đã "cũ" — không được phép resolve/redirect sang locale
+    // khác, kẻo ghi đè nhầm lên bản gốc hoặc sidecar của một locale không liên quan.
+    const pathLocale = skillPathLocale(filePath);
+    if (pathLocale !== null && pathLocale !== locale) {
+      return res.status(400).send(error(t("setting.skillManagement.pathLocaleMismatch", {}, locale)));
     }
 
     // Client có thể gửi lên path base hoặc path sidecar (đường dẫn getSkillList vừa trả

@@ -2,7 +2,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { describe, it, expect, afterEach, beforeEach } from "vitest";
-import { localizedSkillPath, readLocalizedSkill, canonicalSkillPath, resolveSkillReadPath } from "./skillPath";
+import { localizedSkillPath, readLocalizedSkill, canonicalSkillPath, resolveSkillReadPath, skillPathLocale } from "./skillPath";
 
 describe("localizedSkillPath", () => {
   it("chèn hậu tố locale trước phần mở rộng", () => {
@@ -86,6 +86,21 @@ describe("canonicalSkillPath", () => {
   it("không nhận nhầm tên file trùng ngẫu nhiên với hậu tố locale, ví dụ zh không phải sidecar suffix", () => {
     // zh là FALLBACK_LOCALE, không có sidecar .zh.md nào cả -> không bị coi là sidecar
     expect(canonicalSkillPath("/a/b/foo.zh.md")).toBe("/a/b/foo.zh.md");
+  });
+});
+
+describe("skillPathLocale", () => {
+  it("sidecar en/vi -> trả về đúng locale của hậu tố", () => {
+    expect(skillPathLocale("/a/b/foo.en.md")).toBe("en");
+    expect(skillPathLocale("/a/b/foo.vi.md")).toBe("vi");
+  });
+
+  it("bản gốc (không có hậu tố locale) -> trả về null", () => {
+    expect(skillPathLocale("/a/b/foo.md")).toBeNull();
+  });
+
+  it("zh không phải hậu tố sidecar hợp lệ -> trả về null", () => {
+    expect(skillPathLocale("/a/b/foo.zh.md")).toBeNull();
   });
 });
 

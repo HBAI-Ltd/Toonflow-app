@@ -41,6 +41,14 @@ describe("skillManagement routes (list/content/save)", () => {
     fs.writeFileSync(path.join(skillsRoot, "has_vi", "foo.md"), "中文原文 foo", "utf-8");
     fs.writeFileSync(path.join(skillsRoot, "has_vi", "foo.vi.md"), "noi dung tieng viet foo", "utf-8");
 
+    // skill "locale_guard": bản gốc + sidecar vi + sidecar en, dùng riêng cho các test
+    // path/locale guard bên dưới để không phụ thuộc thứ tự chạy với các test khác đang
+    // mutate "has_vi"/"no_sidecar".
+    fs.mkdirSync(path.join(skillsRoot, "locale_guard"), { recursive: true });
+    fs.writeFileSync(path.join(skillsRoot, "locale_guard", "foo.md"), "原始中文 guard", "utf-8");
+    fs.writeFileSync(path.join(skillsRoot, "locale_guard", "foo.vi.md"), "ban dich vi goc guard", "utf-8");
+    fs.writeFileSync(path.join(skillsRoot, "locale_guard", "foo.en.md"), "original english guard", "utf-8");
+
     const { default: getSkillListRouter } = await import("./getSkillList");
     const { default: getSkillContentRouter } = await import("./getSkillContent");
     const { default: saveSkillContentRouter } = await import("./saveSkillContent");
@@ -131,6 +139,34 @@ describe("skillManagement routes (list/content/save)", () => {
       expect(status).toBe(400);
       expect(json.data).toBeNull();
     });
+
+    describe("path/locale guard", () => {
+      it("path .vi.md dưới locale vi -> khớp, trả nội dung sidecar vi", async () => {
+        const { status, json } = await post("/getSkillContent", { path: "locale_guard/foo.vi.md" }, "vi");
+        expect(status).toBe(200);
+        expect(json.data).toBe("ban dich vi goc guard");
+      });
+
+      it("path .vi.md dưới locale zh -> lệch, từ chối 400", async () => {
+        const { status, json } = await post("/getSkillContent", { path: "locale_guard/foo.vi.md" }, "zh");
+        expect(status).toBe(400);
+        expect(json.data).toBeNull();
+      });
+
+      it("path .en.md dưới locale vi -> lệch, từ chối 400", async () => {
+        const { status, json } = await post("/getSkillContent", { path: "locale_guard/foo.en.md" }, "vi");
+        expect(status).toBe(400);
+        expect(json.data).toBeNull();
+      });
+
+      it.each(["zh", "vi", "en"] as const)(
+        "path không có hậu tố locale -> luôn được chấp nhận dưới locale %s",
+        async (loc) => {
+          const { status } = await post("/getSkillContent", { path: "locale_guard/foo.md" }, loc);
+          expect(status).toBe(200);
+        },
+      );
+    });
   });
 
   describe("saveSkillContent", () => {
@@ -194,6 +230,63 @@ describe("skillManagement routes (list/content/save)", () => {
       const { status } = await post("/saveSkillContent", { path: "../../evil.md", content: "pwned" }, "vi");
       expect(status).toBe(400);
       expect(fs.existsSync(path.join(tmpRoot, "evil.md"))).toBe(false);
+    });
+
+    describe("path/locale guard", () => {
+      it("path .vi.md dưới locale vi -> khớp, ghi đúng sidecar vi", async () => {
+        const { status } = await post(
+          "/saveSkillContent",
+          { path: "locale_guard/foo.vi.md", content: "ban dich vi cap nhat guard" },
+          "vi",
+        );
+        expect(status).toBe(200);
+        expect(fs.readFileSync(path.join(skillsRoot, "locale_guard", "foo.vi.md"), "utf-8")).toBe(
+          "ban dich vi cap nhat guard",
+        );
+      });
+
+      it("path .vi.md dưới locale zh -> lệch, từ chối 400, bản gốc VÀ sidecar vi byte-identical sau đó", async () => {
+        const originalBefore = fs.readFileSync(path.join(skillsRoot, "locale_guard", "foo.md"));
+        const sidecarBefore = fs.readFileSync(path.join(skillsRoot, "locale_guard", "foo.vi.md"));
+
+        const { status } = await post(
+          "/saveSkillContent",
+          { path: "locale_guard/foo.vi.md", content: "noi dung chinese lech" },
+          "zh",
+        );
+        expect(status).toBe(400);
+
+        const originalAfter = fs.readFileSync(path.join(skillsRoot, "locale_guard", "foo.md"));
+        const sidecarAfter = fs.readFileSync(path.join(skillsRoot, "locale_guard", "foo.vi.md"));
+        expect(originalAfter.equals(originalBefore)).toBe(true);
+        expect(sidecarAfter.equals(sidecarBefore)).toBe(true);
+      });
+
+      it("path .en.md dưới locale vi -> lệch, từ chối 400, sidecar en byte-identical sau đó", async () => {
+        const enBefore = fs.readFileSync(path.join(skillsRoot, "locale_guard", "foo.en.md"));
+
+        const { status } = await post(
+          "/saveSkillContent",
+          { path: "locale_guard/foo.en.md", content: "noi dung vi lech" },
+          "vi",
+        );
+        expect(status).toBe(400);
+
+        const enAfter = fs.readFileSync(path.join(skillsRoot, "locale_guard", "foo.en.md"));
+        expect(enAfter.equals(enBefore)).toBe(true);
+      });
+
+      it.each(["zh", "vi", "en"] as const)(
+        "path không có hậu tố locale -> luôn được chấp nhận khi lưu dưới locale %s",
+        async (loc) => {
+          const dir = `no_suffix_guard_${loc}`;
+          fs.mkdirSync(path.join(skillsRoot, dir), { recursive: true });
+          fs.writeFileSync(path.join(skillsRoot, dir, "foo.md"), "原始中文", "utf-8");
+
+          const { status } = await post("/saveSkillContent", { path: `${dir}/foo.md`, content: "updated" }, loc);
+          expect(status).toBe(200);
+        },
+      );
     });
   });
 });

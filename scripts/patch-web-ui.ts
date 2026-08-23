@@ -147,6 +147,13 @@ function escapeRegExp(s: string): string {
 }
 
 function patchCjkStrings(source: string): { output: string; applied: string[] } {
+  // Neo kém bền vững nhất trong ba cái ở file này: `ft` là tên rút gọn do build
+  // tool đặt cho helper tạo static-text vnode của Vue 3, không phải một API ổn
+  // định như `--td-font-family` hay shape của axios interceptor — nó có thể đổi
+  // (thành `_ft`, `Wt`, …) ở bất kỳ lần rebuild upstream nào. Nếu neo này thôi
+  // khớp: tìm trong render function đã compile một lệnh gọi hàm có đúng MỘT đối
+  // số là chuỗi tĩnh (literal), thường đứng cạnh `_createTextVNode`/`toDisplayString`
+  // trong cùng khối minified — đó chính là `ft` đã đổi tên.
   const anchorRe = /\bft\("((?:[^"\\]|\\.)*)"/g;
   let anchorSeen = false;
   const foundCjk = new Set<string>();
