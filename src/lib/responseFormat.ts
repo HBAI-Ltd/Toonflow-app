@@ -1,3 +1,5 @@
+import { t } from "@/i18n/translate";
+
 export interface ApiResponse {
   code: number;
   data: any;
@@ -5,11 +7,11 @@ export interface ApiResponse {
 }
 
 // 成功回调
-export function success<T>(data: T | null = null, message: string = "成功"): ApiResponse {
+export function success<T>(data: T | null = null, message?: string): ApiResponse {
   return {
     code: 200,
     data,
-    message,
+    message: message ?? t("common.success"),
   };
 }
 

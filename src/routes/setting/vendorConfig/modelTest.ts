@@ -4,6 +4,7 @@ import { validateFields } from "@/middleware/middleware";
 import u from "@/utils";
 import { z } from "zod";
 import { tool, jsonSchema } from "ai";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 检查语言模型
@@ -15,6 +16,7 @@ export default router.post(
     id: z.string(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { modelName, type, id } = req.body;
 
     try {
@@ -23,7 +25,8 @@ export default router.post(
         image: {
           fnName: "imageRequest",
           modelData: {
-            prompt:
+            // i18n-ignore — literal AI test prompt, not a user-facing string
+            prompt: // i18n-ignore
               "一张16:9比例的图片，完美等分为2x2四宫格布局，各区域无缝衔接：\n左上宫格：一只可爱的猫，毛发蓬松，眼睛明亮，姿态俏皮\n右上宫格：一只友善的狗，金毛犬，表情愉悦，摇着尾巴\n左下宫格：一头健壮的牛，田园背景，目光温和，皮毛光泽\n右下宫格：一匹骏马，姿态优雅，鬃毛飘逸，肌肉健美\n风格要求：四个宫格风格统一，色彩鲜艳饱和，高清画质，细节清晰锐利，专业插画风格，线条干净，统一的左上方光源，柔和阴影，和谐配色，卡通/半写实风格，宫格间用白色或浅灰细线分隔", //图片提示词
             referenceList: [], //输入的图片提示词
             size: "1K", // 图片尺寸
@@ -34,8 +37,8 @@ export default router.post(
       } as const;
       const vendorConfigData = await u.db("o_vendorConfig").where("id", id).first();
 
-      if (!vendorConfigData) return res.status(500).send(error("未找到该供应商配置"));
-      if (!vendorConfigData.models) return res.status(500).send(error("未找到模型列表"));
+      if (!vendorConfigData) return res.status(500).send(error(t("setting.vendorConfig.modelTest.vendorConfigNotFound", {}, locale)));
+      if (!vendorConfigData.models) return res.status(500).send(error(t("setting.vendorConfig.modelTest.modelListNotFound", {}, locale)));
 
       const modelList = await u.vendor.getModelList(vendorConfigData.id!);
 
@@ -74,14 +77,14 @@ export default router.post(
 
       if (type == "text") {
         const { textStream } = await u.Ai.Text(`${id}:${modelName}`).stream({
-          prompt: "请调用工具获取火星的天气，并回答我多少气温",
+          prompt: "请调用工具获取火星的天气，并回答我多少气温", // i18n-ignore — literal AI test prompt, not a user-facing string
           tools: { getWeatherTool },
         });
         let fullResponse = "";
         for await (const chunk of textStream) {
           fullResponse += chunk;
         }
-        if (!fullResponse) return res.status(500).send(error("模型未返回结果"));
+        if (!fullResponse) return res.status(500).send(error(t("setting.vendorConfig.modelTest.noModelResult", {}, locale)));
         res.status(200).send(success(fullResponse));
       } else {
         const aiTypeFn = {

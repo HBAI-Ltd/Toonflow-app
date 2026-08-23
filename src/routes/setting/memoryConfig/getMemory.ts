@@ -1,9 +1,11 @@
 import express from "express";
 import { error, success } from "@/lib/responseFormat";
 import u from "@/utils";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 export default router.get("/", async (req, res) => {
+  const locale = await getLocale(req as any);
   const settingData = await u
     .db("o_setting")
     .whereIn("key", [
@@ -17,7 +19,7 @@ export default router.get("/", async (req, res) => {
       "modelDtype",
     ]);
 
-  if (!settingData) return res.status(400).send(error(`获取记忆配置失败`));
+  if (!settingData) return res.status(400).send(error(t("setting.memoryConfig.getMemory.failed", {}, locale)));
   const memoryObj: Record<string, number | string | string[]> = {};
 
   settingData.forEach((i) => {

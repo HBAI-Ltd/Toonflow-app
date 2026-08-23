@@ -3,6 +3,7 @@ import { success } from "@/lib/responseFormat";
 import u from "@/utils";
 import { z } from "zod";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -22,11 +23,12 @@ export default router.post(
     ),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { items } = req.body;
     for (const item of items) {
       const { id, name, model, modelName, vendorId, desc, temperature, maxOutputTokens } = item;
       await u.db("o_agentDeploy").where({ id }).update({ id, name, model, modelName, vendorId, desc, temperature, maxOutputTokens });
     }
-    res.status(200).send(success("批量配置成功"));
+    res.status(200).send(success(null, t("setting.agentDeploy.deployAgentModel.batchConfigured", {}, locale)));
   },
 );
