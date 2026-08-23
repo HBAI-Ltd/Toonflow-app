@@ -185,6 +185,7 @@
   "agent.production.workbench.videoPrompt.storyboardLabel": "**Storyboard info**: ",
   "production.workbench.batchGeneratePrompt.started": "Prompt generation started.",
   "production.workbench.common.videoTaskDescribe": "Generate video from prompt",
+  "production.workbench.common.relatedObjectType.video": "video",
   "production.workbench.deleteTrack.deleted": "Video track deleted successfully.",
   "production.workbench.selectVideo.selected": "Video selected successfully.",
   "production.workbench.updateVideoDuration.updated": "Updated successfully.",

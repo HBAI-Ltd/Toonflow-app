@@ -104,7 +104,15 @@ export default router.post(
           return { base64: await u.oss.getImageBase64(item.path), type: item.sources == "audio" ? "audio" : "image" };
         }),
       );
-      const relatedObjects = { projectId, videoId, scriptId, type: "视频" }; // i18n-ignore — embedded in relatedObjects/AI prompt, not directly rendered to users
+      // relatedObjects is returned verbatim to the client by task-list/task-detail
+      // endpoints with no custom cell handler, so it renders raw in the task
+      // table — it must follow the request locale like the sibling describe field.
+      const relatedObjects = {
+        projectId,
+        videoId,
+        scriptId,
+        type: t("production.workbench.common.relatedObjectType.video", {}, locale),
+      };
       const aiVideo = u.Ai.Video(model);
       aiVideo
         .run(

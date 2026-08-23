@@ -186,6 +186,7 @@
   "agent.production.workbench.videoPrompt.storyboardLabel": "**分镜信息**：",
   "production.workbench.batchGeneratePrompt.started": "开始生成提示词",
   "production.workbench.common.videoTaskDescribe": "根据提示词生成视频",
+  "production.workbench.common.relatedObjectType.video": "视频",
   "production.workbench.deleteTrack.deleted": "视频段删除成功",
   "production.workbench.selectVideo.selected": "视频选择成功",
   "production.workbench.updateVideoDuration.updated": "更新成功",

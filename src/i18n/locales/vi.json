@@ -185,6 +185,7 @@
   "agent.production.workbench.videoPrompt.storyboardLabel": "**Thông tin phân cảnh**: ",
   "production.workbench.batchGeneratePrompt.started": "Đã bắt đầu tạo prompt.",
   "production.workbench.common.videoTaskDescribe": "Tạo video theo prompt",
+  "production.workbench.common.relatedObjectType.video": "video",
   "production.workbench.deleteTrack.deleted": "Xóa track video thành công.",
   "production.workbench.selectVideo.selected": "Chọn video thành công.",
   "production.workbench.updateVideoDuration.updated": "Cập nhật thành công.",
