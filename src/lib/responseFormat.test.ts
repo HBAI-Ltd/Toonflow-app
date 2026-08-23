@@ -2,7 +2,12 @@ import { describe, it, expect } from "vitest";
 import { success, error } from "./responseFormat";
 
 describe("success", () => {
-  it("mặc định trả thông báo tiếng Anh", () => {
+  // Known limitation, not a specification: success() is sync with no locale
+  // parameter, so it always falls back to DEFAULT_LOCALE (en) regardless of
+  // the request's actual locale. vi/zh callers currently get an English
+  // message unless they pass one explicitly. See the i18n-ignore comment on
+  // success() in responseFormat.ts.
+  it("khi không truyền locale, luôn rơi về tiếng Anh mặc định (hạn chế đã biết, chưa phải hành vi đúng)", () => {
     expect(success(null).message).toBe("Success");
   });
 
