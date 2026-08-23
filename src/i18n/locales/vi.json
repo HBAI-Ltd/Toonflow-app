@@ -1,0 +1,6 @@
+{
+  "common.success": "Thành công",
+  "common.failed": "Thất bại",
+  "common.itemCount": "{count} mục",
+  "setting.language.invalid": "Ngôn ngữ không hợp lệ. Giá trị cho phép: en, vi, zh."
+}

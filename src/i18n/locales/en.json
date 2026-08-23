@@ -1,0 +1,6 @@
+{
+  "common.success": "Success",
+  "common.failed": "Failed",
+  "common.itemCount": "{count} items",
+  "setting.language.invalid": "Invalid language. Allowed values: en, vi, zh."
+}

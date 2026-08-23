@@ -1,0 +1,7 @@
+{
+  "common.success": "成功",
+  "common.failed": "失败",
+  "common.itemCount": "{count} 项",
+  "setting.language.invalid": "语言无效。允许的值：en、vi、zh。",
+  "test.onlyInZh": "仅中文"
+}
