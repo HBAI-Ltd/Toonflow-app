@@ -35,7 +35,8 @@
     "debug:ai": "npx @ai-sdk/devtools",
     "license": "node scripts/license.ts",
     "vendor2json": "node scripts/vendor2json.ts",
-    "i18n:scan": "tsx scripts/i18n-scan.ts"
+    "i18n:scan": "tsx scripts/i18n-scan.ts",
+    "i18n:patch-web": "tsx scripts/patch-web-i18n.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.35",
