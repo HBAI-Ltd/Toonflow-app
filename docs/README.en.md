@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="../README.md">简体中文</a> | 
+  <a href="./README.zh.md">简体中文</a> | 
   <a href="./README.zhtw.md">繁體中文</a> | 
   <strong>English</strong> | 
   <a href="./README.th.md">ไทย</a> | 
@@ -244,6 +244,12 @@ Before installing and using this software, please prepare the following:
 - ✅ Sora or Doubao video service API endpoint
 - ✅ Nano Banana Pro image generation model service API
 
+## Language Support
+
+Toonflow's backend supports three interface/content locales: `en` (English), `vi` (Vietnamese), and `zh` (Chinese, the original language and fallback). The active locale is read from the `X-Toonflow-Lang` request header, falling back to the saved `o_setting.content_language` value, and finally to `en`. You can query and change it via `GET /api/setting/language/getLanguage` and `POST /api/setting/language/setLanguage`.
+
+See [`docs/i18n/README.md`](./i18n/README.md) for the full guide: how locales work, how to add a new translated string, when a string must stay in Chinese instead of being translated, and the upstream-sync procedure for this fork.
+
 ## Local Installation
 
 ### 1. Download & Install
@@ -285,7 +291,7 @@ Build directly from existing local source code, suitable for developers or users
 
 ```shell
 # Clone the project first (skip if already cloned)
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+git clone https://github.com/kienmatu/Toonflow-app.git
 cd Toonflow-app
 
 # Build and start locally using docker-compose
@@ -344,7 +350,7 @@ npm install -g yarn pm2
 
 ```bash
 cd /opt
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+git clone https://github.com/kienmatu/Toonflow-app.git
 cd Toonflow-app
 yarn install
 yarn build
@@ -497,7 +503,7 @@ If you need to deploy or customize the frontend separately, please refer to the 
    **Clone from GitHub:**
 
    ```bash
-   git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+   git clone https://github.com/kienmatu/Toonflow-app.git
    cd Toonflow-app
    ```
 

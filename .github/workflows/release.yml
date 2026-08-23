@@ -15,7 +15,7 @@ env:
   NODE_VERSION: "24"
 
 jobs:
-  # ==================== Windows 构建 ====================
+  # ==================== Windows build ====================
   build-Windows:
     strategy:
       fail-fast: false
@@ -27,33 +27,33 @@ jobs:
             name: ARM64
 
     runs-on: windows-latest
-    name: 构建 Windows (${{ matrix.name }})
+    name: Build Windows (${{ matrix.name }})
 
     steps:
-      - name: 检出代码
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 配置 Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 安装依赖
+      - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: 打包 Windows 安装程序
+      - name: Package Windows installer
         run: yarn dist:win --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 上传构建产物
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-${{ matrix.arch }}
           path: dist/*.exe
           retention-days: 7
 
-  # ==================== macOS 构建 ====================
+  # ==================== macOS build ====================
   build-macOS:
     strategy:
       fail-fast: false
@@ -67,40 +67,40 @@ jobs:
             name: Intel
 
     runs-on: ${{ matrix.os }}
-    name: 构建 macOS (${{ matrix.name }})
+    name: Build macOS (${{ matrix.name }})
 
     steps:
-      - name: 检出代码
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 配置 Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 安装依赖
+      - name: Install dependencies
         run: yarn install --frozen-lockfile
         env:
           npm_config_arch: ${{ matrix.arch }}
 
-      - name: 安装目标平台 sharp
+      - name: Install platform-specific sharp
         if: matrix.arch == 'x64'
         run: |
           npm install --no-save --ignore-scripts --force @img/sharp-darwin-x64 @img/sharp-libvips-darwin-x64
 
-      - name: 打包 macOS 安装程序
+      - name: Package macOS installer
         run: yarn dist:mac --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 上传构建产物
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-${{ matrix.arch }}
           path: dist/*.dmg
           retention-days: 7
 
-  # ==================== Linux 构建 ====================
+  # ==================== Linux build ====================
   build-Linux:
     strategy:
       fail-fast: false
@@ -112,66 +112,66 @@ jobs:
             name: ARM64
 
     runs-on: ubuntu-latest
-    name: 构建 Linux (${{ matrix.name }})
+    name: Build Linux (${{ matrix.name }})
 
     steps:
-      - name: 检出代码
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 配置 Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 安装依赖
+      - name: Install dependencies
         run: yarn install --frozen-lockfile
         env:
           npm_config_arch: ${{ matrix.arch }}
 
-      - name: 安装目标平台 sharp
+      - name: Install platform-specific sharp
         if: matrix.arch == 'arm64'
         run: |
           npm install --no-save --ignore-scripts --force @img/sharp-linux-arm64 @img/sharp-libvips-linux-arm64
 
-      - name: 打包 Linux 安装程序
+      - name: Package Linux installer
         run: yarn dist:linux --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 上传构建产物
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-${{ matrix.arch }}
           path: dist/*.AppImage
           retention-days: 7
 
-  # ==================== 发布 ====================
+  # ==================== Release ====================
   release:
     needs: [build-Windows, build-macOS, build-Linux]
     runs-on: ubuntu-latest
-    name: 发布到 GitHub
+    name: Publish to GitHub
     if: startsWith(github.ref, 'refs/tags/')
 
     permissions:
       contents: write
 
     steps:
-      - name: 下载所有构建产物
+      - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: 整理文件
+      - name: Organize files
         run: |
           mkdir -p dist
           find artifacts -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" \) -exec mv {} dist/ \;
 
-      - name: 显示待发布文件
+      - name: List files to be released
         run: |
-          echo "===== 待发布文件列表 ====="
+          echo "===== Files pending release ====="
           ls -la dist/
 
-      - name: 创建 GitHub Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: ToonFlow ${{ github.ref_name }}
@@ -179,24 +179,24 @@ jobs:
           prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
           generate_release_notes: true
           body: |
-            ## 📦 下载指南
+            ## 📦 Download Guide
 
-            | 操作系统 | 架构 | 文件 | 说明 |
+            | OS | Arch | File | Notes |
             |---------|------|------|------|
-            | 🪟 Windows | x64 | `ToonFlow-*-win-x64-setup.exe` | **推荐**，适用于大多数 Windows 电脑 |
-            | 🪟 Windows | ARM64 | `ToonFlow-*-win-arm64-setup.exe` | 适用于 ARM 架构 Windows 设备 |
-            | 🍎 macOS | Apple Silicon | `ToonFlow-*-mac-arm64.dmg` | 适用于 M1/M2/M3/M4 芯片的 Mac |
-            | 🍎 macOS | Intel | `ToonFlow-*-mac-x64.dmg` | 适用于 Intel 芯片的 Mac |
-            | 🐧 Linux | x64 | `ToonFlow-*-linux-x86_64.AppImage` | 适用于大多数 Linux 发行版 |
-            | 🐧 Linux | ARM64 | `ToonFlow-*-linux-arm64.AppImage` | 适用于 ARM 架构的 Linux 设备 |
+            | 🪟 Windows | x64 | `ToonFlow-*-win-x64-setup.exe` | **Recommended**, suitable for most Windows PCs |
+            | 🪟 Windows | ARM64 | `ToonFlow-*-win-arm64-setup.exe` | For ARM-based Windows devices |
+            | 🍎 macOS | Apple Silicon | `ToonFlow-*-mac-arm64.dmg` | For Macs with M1/M2/M3/M4 chips |
+            | 🍎 macOS | Intel | `ToonFlow-*-mac-x64.dmg` | For Macs with Intel chips |
+            | 🐧 Linux | x64 | `ToonFlow-*-linux-x86_64.AppImage` | For most Linux distributions |
+            | 🐧 Linux | ARM64 | `ToonFlow-*-linux-arm64.AppImage` | For ARM-based Linux devices |
 
-            > 💡 **不确定选哪个？** Windows 用户通常选 **win-x64-setup.exe**；Mac 用户查看「关于本机」：M 系列芯片选 **arm64.dmg**，Intel 选 **x64.dmg**。
+            > 💡 **Not sure which one to pick?** Windows users should generally choose **win-x64-setup.exe**; Mac users can check "About This Mac": M-series chips should choose **arm64.dmg**, Intel should choose **x64.dmg**.
 
-            ## 🚀 安装说明
+            ## 🚀 Installation Instructions
 
-            - **Windows**：下载 `.exe` 文件，双击运行安装向导即可。如遇 DLL 缺失，请安装 [VC++ 运行库](https://aka.ms/vs/17/release/vc_redist.x64.exe)。
-            - **macOS**：下载 `.dmg` 文件，打开后将应用拖入「应用程序」。首次打开如遇安全提示，前往「系统设置 → 隐私与安全性」允许运行。
-            - **Linux**：下载 `.AppImage`，执行 `chmod +x ToonFlow-*.AppImage` 后运行。
+            - **Windows**: Download the `.exe` file and double-click to run the setup wizard. If a DLL is reported missing, install the [VC++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+            - **macOS**: Download the `.dmg` file, open it, and drag the app into "Applications". If you get a security prompt on first launch, go to "System Settings → Privacy & Security" to allow it to run.
+            - **Linux**: Download the `.AppImage`, run `chmod +x ToonFlow-*.AppImage`, then execute it.
 
             ---
 
@@ -204,7 +204,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 发布完成
+      - name: Release complete
         run: |
-          echo "✅ 发布完成！"
+          echo "✅ Release complete!"
           echo "🔗 Release: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
