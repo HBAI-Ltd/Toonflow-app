@@ -757,6 +757,13 @@ Toonflow เผยแพร่ภายใต้สัญญาอนุญา�
   </thead>
   <tbody>
     <tr>
+      <td align="center"><img src="./sponsored/metaso.jpg" alt="โลโก้ Metaso" width="48"></td>
+      <td align="center"><b>Metaso</b></td>
+      <td align="center">💻 สนับสนุนพลังประมวลผล</td>
+      <td>Metaso Technology มอบบริการสร้างวิดีโอ MiniMax H3 ที่คุ้มค่า: <b>768P เพียง 0.09 หยวน/วินาที, 2K เพียง 0.15 หยวน/วินาที</b> รองรับ 2K แบบเนทีฟ ซิงค์เสียงและภาพ API เข้ากันได้กับ <b>โปรโตคอล OpenAI</b> พร้อมรองรับ <b>ComfyUI</b> และ <b>ผืนผ้าใบไม่จำกัด</b> ไม่ต้องติดตั้ง GPU เอง<br/><br/>🎁 สมัครผ่าน<a href="https://metaso.cn/minimax-h3/?s=toon">ลิงก์เฉพาะ</a>เพื่อรับเครดิตฟรีและส่วนลดพิเศษ ติดต่อธุรกิจเพิ่มเติมได้ที่ WeChat: wxid_9rt077jmud6j22</td>
+      <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">เว็บไซต์</a></td>
+    </tr>
+    <tr>
       <td align="center"><img src="./sponsored/sophnet.png" alt="โลโก้ Sophnet Cloud" width="48"></td>
       <td align="center"><b>Sophnet Cloud</b></td>
       <td align="center">💻 สนับสนุนพลังประมวลผล</td>
