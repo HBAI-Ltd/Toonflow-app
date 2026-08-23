@@ -17,10 +17,20 @@ export default router.post(
     const scripts = await u.db("o_script").where("projectId", projectId).select("id");
     const scriptIds = scripts.map((item: any) => item.id);
 
-    const roleCount: any = await u.db("o_assets").where("projectId", projectId).where("type", "角色").count("* as total").first();
+    const roleCount: any = await u
+      .db("o_assets")
+      .where("projectId", projectId)
+      .where("type", "角色") // i18n-ignore — internal DB "type" enum literal, not user-facing text
+      .count("* as total")
+      .first();
     const scriptCount: any = await u.db("o_script").where("projectId", projectId).count("* as total").first();
     const videoCount: any = await u.db("o_video").whereIn("scriptId", scriptIds).count("* as total").first();
-    const storyboardCount: any = await u.db("o_assets").whereIn("scriptId", scriptIds).where("type", "分镜").count("* as total").first();
+    const storyboardCount: any = await u
+      .db("o_assets")
+      .whereIn("scriptId", scriptIds)
+      .where("type", "分镜") // i18n-ignore — internal DB "type" enum literal, not user-facing text
+      .count("* as total")
+      .first();
 
     const data = {
       roleCount: roleCount?.total || 0,

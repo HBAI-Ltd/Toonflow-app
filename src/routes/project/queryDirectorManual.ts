@@ -3,14 +3,21 @@ import u from "@/utils";
 import { success } from "@/lib/responseFormat";
 import fs from "fs";
 import path from "path";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 字段映射表
-const DATA_MAP: { label: string; value: string; subDir?: string }[] = [
-  { label: "README", value: "README" },
-  { label: "导演规划", value: "director_planning_narrative", subDir: "driector_skills" },
-  { label: "分镜表", value: "director_storyboard_table_narrative", subDir: "driector_skills" },
+const DATA_MAP: { value: string; subDir?: string }[] = [
+  { value: "README" },
+  { value: "director_planning_narrative", subDir: "driector_skills" },
+  { value: "director_storyboard_table_narrative", subDir: "driector_skills" },
 ];
+
+// value -> label 的翻译键，README 保留原样
+function labelForValue(value: string, locale: import("@/i18n").Locale): string {
+  if (value === "README") return "README";
+  return t(`project.directorManual.label.${value}`, {}, locale);
+}
 
 // 读取 md 文件内容，文件不存在时返回空字符串
 function readMd(filePath: string): string {
@@ -40,6 +47,7 @@ async function readAllImages(imagesDir: string) {
 // 获取导演手册
 export default router.post("/", async (req, res) => {
   try {
+    const locale = await getLocale(req as any);
     const artPromptsDir = u.getPath(["skills", "story_skills"]);
 
     // 读取所有风格文件夹
@@ -55,7 +63,7 @@ export default router.post("/", async (req, res) => {
         const readmePath = path.join(styleDir, "README.md");
         const readmeContent = fs.readFileSync(readmePath, "utf-8");
         const firstLine = readmeContent.split("\n")[0].replace(/--/g, "");
-        const data = DATA_MAP.map(({ label, value, subDir }) => {
+        const data = DATA_MAP.map(({ value, subDir }) => {
           let mdPath: string;
           if (subDir) {
             mdPath = path.join(styleDir, subDir, `${value}.md`);
@@ -63,7 +71,7 @@ export default router.post("/", async (req, res) => {
             mdPath = path.join(styleDir, `${value}.md`);
           }
           return {
-            label,
+            label: labelForValue(value, locale),
             value,
             data: readMd(mdPath),
           };

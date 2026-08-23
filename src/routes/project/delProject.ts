@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 删除项目
@@ -12,6 +13,7 @@ export default router.post(
     id: z.number(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { id } = req.body;
     //删除项目
     await u.db("o_project").where("id", id).delete();
@@ -53,11 +55,11 @@ export default router.post(
 
     try {
       await u.oss.deleteDirectory(`${id}/`);
-      console.log(`项目 ${id} 的OSS文件夹删除成功`);
+      console.log(t("project.delProject.ossFolderDeletedLog", { id }, locale));
     } catch (error: any) {
-      console.log(`项目 ${id} 没有对应的OSS文件夹，跳过删除`);
+      console.log(t("project.delProject.ossFolderMissingLog", { id }, locale));
     }
 
-    res.status(200).send(success({ message: "删除项目成功" }));
+    res.status(200).send(success({ message: t("project.delProject.deleted", {}, locale) }));
   },
 );

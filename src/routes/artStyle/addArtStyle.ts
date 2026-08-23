@@ -4,6 +4,7 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -14,6 +15,7 @@ export default router.post(
     prompt: z.string(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { name, fileUrl, prompt } = req.body;
     const imagePath = `/artStyle/${uuidv4()}.jpg`;
     const matches = fileUrl.match(/^data:image\/\w+;base64,(.+)$/);
@@ -25,6 +27,6 @@ export default router.post(
       label: name,
       prompt,
     });
-    res.status(200).send(success("艺术风格添加成功"));
+    res.status(200).send(success(t("artStyle.addArtStyle.added", {}, locale)));
   },
 );

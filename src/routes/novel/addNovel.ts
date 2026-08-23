@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 新增原文数据
@@ -20,6 +21,7 @@ export default router.post(
     ),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { projectId, data } = req.body;
     const totalNovelId = [];
     const getLastChapterIndex = await u.db("o_novel").where("projectId", projectId).select("chapterIndex").orderBy("chapterIndex", "desc").first();
@@ -49,6 +51,6 @@ export default router.post(
     });
     novelClass.start(chapterAllList, projectId);
 
-    res.status(200).send(success({ message: "新增原文成功" }));
+    res.status(200).send(success({ message: t("novel.addNovel.added", {}, locale) }));
   },
 );
