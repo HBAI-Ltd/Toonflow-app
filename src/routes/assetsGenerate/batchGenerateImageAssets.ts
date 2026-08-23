@@ -21,21 +21,21 @@ interface AssetTypeConfig {
 
 const assetTypeConfig: Record<AssetType, AssetTypeConfig> = {
   role: {
-    label: "角色", // i18n-ignore — embedded in relatedObjects/AI prompt, not directly rendered to users
+    label: "角色", // i18n-ignore — literal AI image-generation prompt fragment (cfg.label is interpolated into buildPrompt)
     taskClass: "角色图生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
     dir: "role",
     promptTitle: "角色标准四视图", // i18n-ignore — literal AI image-generation prompt fragment
     promptEnd: "人物角色四视图", // i18n-ignore — literal AI image-generation prompt fragment
   },
   scene: {
-    label: "场景", // i18n-ignore — embedded in relatedObjects/AI prompt, not directly rendered to users
+    label: "场景", // i18n-ignore — literal AI image-generation prompt fragment (cfg.label is interpolated into buildPrompt)
     taskClass: "场景图生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
     dir: "scene",
     promptTitle: "标准场景图", // i18n-ignore — literal AI image-generation prompt fragment
     promptEnd: "标准场景图", // i18n-ignore — literal AI image-generation prompt fragment
   },
   tool: {
-    label: "道具", // i18n-ignore — embedded in relatedObjects/AI prompt, not directly rendered to users
+    label: "道具", // i18n-ignore — literal AI image-generation prompt fragment (cfg.label is interpolated into buildPrompt)
     taskClass: "道具图生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
     dir: "props",
     promptTitle: "标准道具图", // i18n-ignore — literal AI image-generation prompt fragment
@@ -43,7 +43,7 @@ const assetTypeConfig: Record<AssetType, AssetTypeConfig> = {
   },
 };
 
-// 翻译过的资产类型标签，仅用于人类可读的任务描述（描述本身，不进入 AI 提示词）
+// 翻译过的资产类型标签，用于人类可读的任务描述与任务元数据（describe、relatedObjects.type），不进入 AI 提示词
 const assetTypeLabelKey: Record<AssetType, string> = {
   role: "assetsGenerate.assetType.role.label",
   scene: "assetsGenerate.assetType.scene.label",
@@ -108,12 +108,13 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
 
       const imagePath = `/${projectId}/${cfg.dir}/${uuidv4()}.jpg`;
       const userPrompt = buildPrompt(cfg, project.artStyle ?? "", item.name, item.prompt);
+      const translatedLabel = t(assetTypeLabelKey[item.type as AssetType], {}, locale);
       const describe = t(
         "assetsGenerate.batchGenerateImageAssets.describe",
-        { label: t(assetTypeLabelKey[item.type as AssetType], {}, locale), name: item.name, prompt: item.prompt },
+        { label: translatedLabel, name: item.name, prompt: item.prompt },
         locale,
       );
-      const relatedObjects = { id: item.id, projectId, type: cfg.label };
+      const relatedObjects = { id: item.id, projectId, type: translatedLabel };
       try {
         const aiImage = u.Ai.Image(model);
         await aiImage.run(
