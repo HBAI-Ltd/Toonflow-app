@@ -16,7 +16,7 @@ export default router.post(
       .db("o_assets")
       .leftJoin("o_image", "o_assets.imageId", "o_image.id")
       .whereIn("o_assets.id", ids)
-      .whereNot("o_image.state", "生成中")
+      .whereNot("o_image.state", "生成中") // i18n-ignore — stored o_image.state enum value, not user-facing text
       .select("o_image.state", "o_assets.id", "o_image.filePath");
     const result = await Promise.all(
       data.map(async (item: any) => ({

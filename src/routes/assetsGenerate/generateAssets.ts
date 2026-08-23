@@ -4,6 +4,7 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 
 const router = express.Router();
 
@@ -19,43 +20,40 @@ interface AssetTypeConfig {
 
 const assetTypeConfig: Record<AssetType, AssetTypeConfig> = {
   role: {
-    label: "角色",
-    taskClass: "角色图生成",
+    label: "角色", // i18n-ignore — embedded in relatedObjects/AI prompt, not directly rendered to users
+    taskClass: "角色图生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
     dir: "role",
-    promptTitle: "角色标准四视图",
-    promptEnd: "人物角色四视图",
+    promptTitle: "角色标准四视图", // i18n-ignore — literal AI image-generation prompt fragment
+    promptEnd: "人物角色四视图", // i18n-ignore — literal AI image-generation prompt fragment
   },
   scene: {
-    label: "场景",
-    taskClass: "场景图生成",
+    label: "场景", // i18n-ignore — embedded in relatedObjects/AI prompt, not directly rendered to users
+    taskClass: "场景图生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
     dir: "scene",
-    promptTitle: "标准场景图",
-    promptEnd: "标准场景图",
+    promptTitle: "标准场景图", // i18n-ignore — literal AI image-generation prompt fragment
+    promptEnd: "标准场景图", // i18n-ignore — literal AI image-generation prompt fragment
   },
   tool: {
-    label: "道具",
-    taskClass: "道具图生成",
+    label: "道具", // i18n-ignore — embedded in relatedObjects/AI prompt, not directly rendered to users
+    taskClass: "道具图生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
     dir: "props",
-    promptTitle: "标准道具图",
-    promptEnd: "标准道具图",
+    promptTitle: "标准道具图", // i18n-ignore — literal AI image-generation prompt fragment
+    promptEnd: "标准道具图", // i18n-ignore — literal AI image-generation prompt fragment
   },
+};
+
+// 翻译过的资产类型标签，仅用于人类可读的任务描述（描述本身，不进入 AI 提示词）
+const assetTypeLabelKey: Record<AssetType, string> = {
+  role: "assetsGenerate.assetType.role.label",
+  scene: "assetsGenerate.assetType.scene.label",
+  tool: "assetsGenerate.assetType.tool.label",
 };
 
 // ─── 构建生成提示词 ──────────────────────────────────────────
 
 function buildPrompt(cfg: AssetTypeConfig, artStyle: string, name: string, prompt: string): string {
-  return `
-    请根据以下参数生成${cfg.promptTitle}：
-
-    **基础参数：**
-    - 画风风格: ${artStyle || "未指定"}
-
-    **${cfg.label}设定：**
-    - 名称:${name},
-    - 提示词:${prompt},
-
-    请严格按照系统规范生成${cfg.promptEnd}。
-  `;
+  // i18n-ignore — literal AI image-generation prompt template, not user-facing text
+  return `\n    请根据以下参数生成${cfg.promptTitle}：\n\n    **基础参数：**\n    - 画风风格: ${artStyle || "未指定"}\n\n    **${cfg.label}设定：**\n    - 名称:${name},\n    - 提示词:${prompt},\n\n    请严格按照系统规范生成${cfg.promptEnd}。\n  `;
 }
 
 // ─── 生成资产图片 ────────────────────────────────────────────
@@ -72,19 +70,20 @@ const requestSchema = {
 };
 
 export default router.post("/", validateFields(requestSchema), async (req, res) => {
+  const locale = await getLocale(req as any);
   const { projectId, model, resolution, id, type, name, prompt, base64 } = req.body;
 
   // 1. 查询项目 & 获取类型配置
   const project = await u.db("o_project").where("id", projectId).select("artStyle", "type", "intro").first();
-  if (!project) return res.status(500).send(success({ message: "项目为空" }));
+  if (!project) return res.status(500).send(success({ message: t("assetsGenerate.common.projectEmpty", {}, locale) }));
 
   const cfg = assetTypeConfig[type as AssetType];
-  if (!cfg) return res.status(400).send(error("不支持的类型"));
+  if (!cfg) return res.status(400).send(error(t("assetsGenerate.common.unsupportedType", {}, locale)));
 
   // 2. 创建图片占位记录
   const [imageId] = await u.db("o_image").insert({
     type,
-    state: "生成中",
+    state: "生成中", // i18n-ignore — stored o_image.state enum value, not user-facing text
     assetsId: id,
     model: model.split(/:(.+)/)[1],
     resolution,
@@ -94,7 +93,11 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
   // 3. 准备生成参数
   const imagePath = `/${projectId}/${cfg.dir}/${uuidv4()}.jpg`;
   const userPrompt = buildPrompt(cfg, project.artStyle!, name, prompt);
-  const describe = `生成${cfg.label}图，名称：${name}，提示词：${prompt}`;
+  const describe = t(
+    "assetsGenerate.batchGenerateImageAssets.describe",
+    { label: t(assetTypeLabelKey[type as AssetType], {}, locale), name, prompt },
+    locale,
+  );
   const relatedObjects = { id, projectId, type: cfg.label };
 
   try {
@@ -116,13 +119,13 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
     aiImage.save(imagePath);
     // 5. 更新记录 & 返回结果
     const imageData = await u.db("o_image").where("id", imageId).select("*").first();
-    if (!imageData) return res.status(500).send("资产已被删除");
-    if (imageData.state === "生成失败") return;
+    if (!imageData) return res.status(500).send(t("assetsGenerate.common.assetDeleted", {}, locale));
+    if (imageData.state === "生成失败") return; // i18n-ignore — stored o_image.state enum value, not user-facing text
     await u
       .db("o_image")
       .where("id", imageId)
       .update({
-        state: "已完成",
+        state: "已完成", // i18n-ignore — stored o_image.state enum value, not user-facing text
         filePath: imagePath,
         type,
         model: model.split(/:(.+)/)[1],
@@ -137,7 +140,7 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
     await u
       .db("o_image")
       .where("id", imageId)
-      .update({ state: "生成失败", errorReason: u.error(e).message });
-    return res.status(400).send(error(u.error(e).message || "图片生成失败"));
+      .update({ state: "生成失败", errorReason: u.error(e).message }); // i18n-ignore — stored o_image.state enum value, not user-facing text
+    return res.status(400).send(error(u.error(e).message || t("assetsGenerate.common.imageGenerateFailed", {}, locale)));
   }
 });

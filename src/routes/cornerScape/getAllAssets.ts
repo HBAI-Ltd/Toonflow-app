@@ -48,7 +48,11 @@ export default router.post(
     });
     const result = await Promise.all(
       data.map(async (parent: any) => {
-        const historyImages = await u.db("o_image").where("assetsId", parent.id).andWhere("state", "已完成").select("id", "filePath");
+        const historyImages = await u
+          .db("o_image")
+          .where("assetsId", parent.id)
+          .andWhere("state", "已完成") // i18n-ignore — stored o_image.state enum value, not user-facing text
+          .select("id", "filePath");
         const historyImagesWithUrl = await Promise.all(
           historyImages.map(async (img: any) => ({
             id: img.id,

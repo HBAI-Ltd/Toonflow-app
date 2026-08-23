@@ -12,7 +12,11 @@ export default router.post(
   }),
   async (req, res) => {
     const { ids } = req.body;
-    const data = await u.db("o_assets").whereIn("id", ids).whereNot("audioBindState", "生成中").select("*");
+    const data = await u
+      .db("o_assets")
+      .whereIn("id", ids)
+      .whereNot("audioBindState", "生成中") // i18n-ignore — stored o_assets.audioBindState enum value, not user-facing text
+      .select("*");
     res.status(200).send(success(data));
   },
 );

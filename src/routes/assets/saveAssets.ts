@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { stat } from "original-fs";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 保存资产图片
@@ -19,6 +20,7 @@ export default router.post(
     imageId: z.number().optional().nullable(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { id, base64, type, prompt, projectId, imageId } = req.body;
     if (base64) {
       //自定义上传选择的图片
@@ -33,7 +35,7 @@ export default router.post(
         assetsId: id,
         filePath: savePath,
         type: type,
-        state: "已完成",
+        state: "已完成", // i18n-ignore — stored o_image.state enum value, not user-facing text
       });
       // 更新资产表图片为新图片
       await u
@@ -52,6 +54,6 @@ export default router.post(
           imageId: imageId,
         });
     }
-    res.status(200).send(success({ message: "保存资产图片成功" }));
+    res.status(200).send(success({ message: t("assets.saveAssets.saved", {}, locale) }));
   },
 );
