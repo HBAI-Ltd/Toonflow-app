@@ -34,7 +34,8 @@
     "dist:linux": "yarn build && electron-builder --linux",
     "debug:ai": "npx @ai-sdk/devtools",
     "license": "node scripts/license.ts",
-    "vendor2json": "node scripts/vendor2json.ts"
+    "vendor2json": "node scripts/vendor2json.ts",
+    "i18n:scan": "tsx scripts/i18n-scan.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.35",
