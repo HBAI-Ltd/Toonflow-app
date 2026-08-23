@@ -15,11 +15,14 @@
 </p>
 
 <p align="center">
+<!-- i18n-ignore — language endonym, must not be translated -->
   <a href="./README.zh.md">简体中文</a> | 
+<!-- i18n-ignore — language endonym, must not be translated -->
   <a href="./README.zhtw.md">繁體中文</a> | 
   <strong>English</strong> | 
   <a href="./README.th.md">ไทย</a> | 
   <a href="./README.vi.md">Tiếng Việt</a> | 
+<!-- i18n-ignore — language endonym, must not be translated -->
   <a href="./README.ja.md">日本語</a> | 
   <a href="./README.ru.md">Русский</a>
 </p>
@@ -106,12 +109,12 @@ Toonflow supports the following interface languages:
 
 | Language             | Language              |
 | -------------------- | --------------------- |
-| Chinese (Simplified) | 简体中文              |
-| Chinese (Traditional)| 繁體中文              |
+| Chinese (Simplified) | 简体中文              | <!-- i18n-ignore — language endonym, must not be translated -->
+| Chinese (Traditional)| 繁體中文              | <!-- i18n-ignore — language endonym, must not be translated -->
 | English              | English               |
 | Thai                 | ไทย                  |
 | Vietnamese           | Tiếng Việt            |
-| Japanese             | 日本語                |
+| Japanese             | 日本語                | <!-- i18n-ignore — language endonym, must not be translated -->
 | Russian              | Русский               |
 
 > 💡 More languages are being adapted — contributions for translations are welcome!

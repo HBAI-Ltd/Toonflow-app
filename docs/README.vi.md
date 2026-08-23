@@ -15,11 +15,14 @@
 </p>
 
 <p align="center">
+<!-- i18n-ignore — language endonym, must not be translated -->
   <a href="./README.zh.md">简体中文</a> | 
+<!-- i18n-ignore — language endonym, must not be translated -->
   <a href="./README.zhtw.md">繁體中文</a> | 
   <a href="./README.en.md">English</a> | 
   <a href="./README.th.md">ไทย</a> | 
   <strong>Tiếng Việt</strong> | 
+<!-- i18n-ignore — language endonym, must not be translated -->
   <a href="./README.ja.md">日本語</a> | 
   <a href="./README.ru.md">Русский</a>
 </p>
@@ -106,12 +109,12 @@ Toonflow hỗ trợ giao diện các ngôn ngữ sau:
 
 | Ngôn ngữ       | Ngôn ngữ              |
 | ---------- | --------------------- |
-| 简体中文   | Tiếng Trung (Giản thể) |
-| 繁體中文   | Tiếng Trung (Phồn thể) |
+| 简体中文   | Tiếng Trung (Giản thể) | <!-- i18n-ignore — language endonym, must not be translated -->
+| 繁體中文   | Tiếng Trung (Phồn thể) | <!-- i18n-ignore — language endonym, must not be translated -->
 | English    | Tiếng Anh               |
 | ไทย        | Tiếng Thái              |
 | Tiếng Việt | Tiếng Việt            |
-| 日本語     | Tiếng Nhật              |
+| 日本語     | Tiếng Nhật              | <!-- i18n-ignore — language endonym, must not be translated -->
 | Русский    | Tiếng Nga              |
 
 > 💡 Đang thích ứng thêm nhiều ngôn ngữ, hoan nghênh đóng góp bản dịch!
