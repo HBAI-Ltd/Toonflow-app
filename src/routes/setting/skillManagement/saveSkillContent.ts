@@ -6,7 +6,7 @@ import isPathInside from "is-path-inside";
 import u from "@/utils";
 import p from "path";
 import * as fs from "fs";
-import { t, getLocale } from "@/i18n";
+import { t, getLocale, canonicalSkillPath, localizedSkillPath } from "@/i18n";
 
 const router = express.Router();
 
@@ -25,11 +25,29 @@ export default router.post(
       return res.status(400).send(error(t("setting.skillManagement.saveSkillContent.invalidPath", {}, locale)));
     }
 
-    if (!fs.existsSync(filePath)) {
+    // Client có thể gửi lên path base hoặc path sidecar (đường dẫn getSkillList vừa trả
+    // về) -> quy về bản gốc để xác định skill này có thật hay không, tránh việc tự suy ra
+    // sidecar-của-sidecar (foo.vi.vi.md) nếu lỡ nhận nhầm một sidecar làm bản gốc.
+    const canonicalPath = canonicalSkillPath(filePath);
+
+    // Sự tồn tại được kiểm tra trên bản gốc, không phải trên path client gửi lên: dưới
+    // locale en/vi, sidecar hợp lệ có thể (và thường là) CHƯA tồn tại — đó chính là lần
+    // đầu tạo bản dịch, không phải lỗi. Bản gốc mới là thứ định danh "skill này có tồn tại
+    // không"; nó luôn phải có sẵn (đây là nguyên bản zh do upstream cung cấp).
+    if (!fs.existsSync(canonicalPath)) {
       return res.status(400).send(error(t("setting.skillManagement.saveSkillContent.fileNotFound", {}, locale)));
     }
 
-    const raw = await fs.promises.writeFile(filePath, content, "utf-8");
+    // Quy tắc ghi (giống editVisualManual/editDirectorlManual): nếu bản gốc tồn tại thì đó
+    // là nguyên bản upstream cần bảo vệ -> ghi vào sidecar riêng cho locale, không bao giờ
+    // đụng vào bản gốc khi locale khác zh. localizedSkillPath trả về chính bản gốc khi
+    // locale là zh, nên hành vi zh giữ nguyên như trước.
+    const targetPath = fs.existsSync(canonicalPath) ? localizedSkillPath(canonicalPath, locale) : canonicalPath;
+    if (!isPathInside(targetPath, skillsRoot)) {
+      return res.status(400).send(error(t("setting.skillManagement.saveSkillContent.invalidPath", {}, locale)));
+    }
+
+    const raw = await fs.promises.writeFile(targetPath, content, "utf-8");
 
     res.status(200).send(success(raw));
   },

@@ -1,8 +1,8 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { describe, it, expect, afterEach } from "vitest";
-import { localizedSkillPath, readLocalizedSkill } from "./skillPath";
+import { describe, it, expect, afterEach, beforeEach } from "vitest";
+import { localizedSkillPath, readLocalizedSkill, canonicalSkillPath, resolveSkillReadPath } from "./skillPath";
 
 describe("localizedSkillPath", () => {
   it("chèn hậu tố locale trước phần mở rộng", () => {
@@ -70,5 +70,51 @@ describe("readLocalizedSkill", () => {
       expect(readLocalizedSkill(missingPath, "en")).toBe("");
       expect(readLocalizedSkill(missingPath, "zh")).toBe("");
     });
+  });
+});
+
+describe("canonicalSkillPath", () => {
+  it("sidecar en/vi -> quy về bản gốc .md", () => {
+    expect(canonicalSkillPath("/a/b/foo.en.md")).toBe("/a/b/foo.md");
+    expect(canonicalSkillPath("/a/b/foo.vi.md")).toBe("/a/b/foo.md");
+  });
+
+  it("bản gốc (không có hậu tố locale) -> trả nguyên trạng", () => {
+    expect(canonicalSkillPath("/a/b/foo.md")).toBe("/a/b/foo.md");
+  });
+
+  it("không nhận nhầm tên file trùng ngẫu nhiên với hậu tố locale, ví dụ zh không phải sidecar suffix", () => {
+    // zh là FALLBACK_LOCALE, không có sidecar .zh.md nào cả -> không bị coi là sidecar
+    expect(canonicalSkillPath("/a/b/foo.zh.md")).toBe("/a/b/foo.zh.md");
+  });
+});
+
+describe("resolveSkillReadPath", () => {
+  let tmpDir: string;
+  let baseFile: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "resolve-read-path-test-"));
+    baseFile = path.join(tmpDir, "foo.md");
+    fs.writeFileSync(baseFile, "noi dung goc (zh)", "utf-8");
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("zh luôn trả về chính bản gốc, kể cả khi sidecar tồn tại", () => {
+    fs.writeFileSync(localizedSkillPath(baseFile, "vi"), "sidecar vi", "utf-8");
+    expect(resolveSkillReadPath(baseFile, "zh")).toBe(baseFile);
+  });
+
+  it("có sidecar cho locale -> trả về đường dẫn sidecar", () => {
+    const viSidecar = localizedSkillPath(baseFile, "vi");
+    fs.writeFileSync(viSidecar, "sidecar vi", "utf-8");
+    expect(resolveSkillReadPath(baseFile, "vi")).toBe(viSidecar);
+  });
+
+  it("không có sidecar cho locale -> lùi về bản gốc", () => {
+    expect(resolveSkillReadPath(baseFile, "en")).toBe(baseFile);
   });
 });
