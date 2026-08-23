@@ -45,7 +45,7 @@ export default router.post(
           aspectRatio: ratio,
         },
         {
-          taskClass: "工作流图片生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
+          taskClass: t("taskClass.workflowImage", {}, locale),
           describe: t("production.editImage.generateFlowImage.taskDescribe", {}, locale),
           relatedObjects: JSON.stringify(req.body),
           projectId: projectId,

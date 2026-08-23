@@ -13,7 +13,6 @@ type AssetType = "role" | "scene" | "tool";
 
 interface AssetTypeConfig {
   label: string;
-  taskClass: string;
   dir: string;
   promptTitle: string;
   promptEnd: string;
@@ -22,21 +21,18 @@ interface AssetTypeConfig {
 const assetTypeConfig: Record<AssetType, AssetTypeConfig> = {
   role: {
     label: "角色", // i18n-ignore — literal AI image-generation prompt fragment (cfg.label is interpolated into buildPrompt)
-    taskClass: "角色图生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
     dir: "role",
     promptTitle: "角色标准四视图", // i18n-ignore — literal AI image-generation prompt fragment
     promptEnd: "人物角色四视图", // i18n-ignore — literal AI image-generation prompt fragment
   },
   scene: {
     label: "场景", // i18n-ignore — literal AI image-generation prompt fragment (cfg.label is interpolated into buildPrompt)
-    taskClass: "场景图生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
     dir: "scene",
     promptTitle: "标准场景图", // i18n-ignore — literal AI image-generation prompt fragment
     promptEnd: "标准场景图", // i18n-ignore — literal AI image-generation prompt fragment
   },
   tool: {
     label: "道具", // i18n-ignore — literal AI image-generation prompt fragment (cfg.label is interpolated into buildPrompt)
-    taskClass: "道具图生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
     dir: "props",
     promptTitle: "标准道具图", // i18n-ignore — literal AI image-generation prompt fragment
     promptEnd: "标准道具图", // i18n-ignore — literal AI image-generation prompt fragment
@@ -48,6 +44,13 @@ const assetTypeLabelKey: Record<AssetType, string> = {
   role: "assetsGenerate.assetType.role.label",
   scene: "assetsGenerate.assetType.scene.label",
   tool: "assetsGenerate.assetType.tool.label",
+};
+
+// 翻译过的 o_tasks.taskClass 值：前端用它同时作为过滤下拉的显示文本与过滤值，因此必须是本地化文本
+const taskClassKey: Record<AssetType, string> = {
+  role: "taskClass.characterImage",
+  scene: "taskClass.sceneImage",
+  tool: "taskClass.propImage",
 };
 
 function buildPrompt(cfg: AssetTypeConfig, artStyle: string, name: string, prompt: string): string {
@@ -125,7 +128,7 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
             aspectRatio: "16:9",
           },
           {
-            taskClass: cfg.taskClass,
+            taskClass: t(taskClassKey[item.type as AssetType], {}, locale),
             describe,
             projectId,
             relatedObjects: JSON.stringify(relatedObjects),

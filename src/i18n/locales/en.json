@@ -325,5 +325,12 @@
   "agent.script.tools.getScriptContent.idsDescribe": "Script IDs",
   "agent.script.tools.getScriptContent.fetching": "Fetching script content...",
   "agent.script.tools.getScriptContent.fetched": "Fetched script content:\n{data}",
-  "agent.script.tools.getScriptContent.done": "Finished fetching script content"
+  "agent.script.tools.getScriptContent.done": "Finished fetching script content",
+  "taskClass.characterImage": "Character Image Generation",
+  "taskClass.sceneImage": "Scene Image Generation",
+  "taskClass.propImage": "Prop Image Generation",
+  "taskClass.imageGeneration": "Image Generation",
+  "taskClass.storyboardImage": "Storyboard Image Generation",
+  "taskClass.videoGeneration": "Video Generation",
+  "taskClass.workflowImage": "Workflow Image Generation"
 }

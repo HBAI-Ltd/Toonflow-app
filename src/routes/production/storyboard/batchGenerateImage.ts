@@ -107,7 +107,7 @@ export default router.post(
             ...repeloadObj,
           },
           {
-            taskClass: "生成分镜图片", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
+            taskClass: t("taskClass.storyboardImage", {}, locale),
             describe: t("production.storyboard.batchGenerateImage.taskDescribe", {}, locale),
             relatedObjects: JSON.stringify(repeloadObj),
             projectId: projectId,

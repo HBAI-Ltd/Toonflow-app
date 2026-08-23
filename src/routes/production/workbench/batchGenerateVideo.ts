@@ -119,7 +119,7 @@ export default router.post(
           },
           {
             projectId,
-            taskClass: "视频生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
+            taskClass: t("taskClass.videoGeneration", {}, locale),
             describe: t("production.workbench.common.videoTaskDescribe", {}, locale),
             relatedObjects: JSON.stringify(relatedObjects),
           },

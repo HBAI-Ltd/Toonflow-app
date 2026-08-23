@@ -326,5 +326,12 @@
   "agent.script.tools.getScriptContent.idsDescribe": "脚本id",
   "agent.script.tools.getScriptContent.fetching": "正在获取脚本内容...",
   "agent.script.tools.getScriptContent.fetched": "获取到脚本内容:\n{data}",
-  "agent.script.tools.getScriptContent.done": "获取脚本内容完成"
+  "agent.script.tools.getScriptContent.done": "获取脚本内容完成",
+  "taskClass.characterImage": "角色图生成",
+  "taskClass.sceneImage": "场景图生成",
+  "taskClass.propImage": "道具图生成",
+  "taskClass.imageGeneration": "生成图片",
+  "taskClass.storyboardImage": "生成分镜图片",
+  "taskClass.videoGeneration": "视频生成",
+  "taskClass.workflowImage": "工作流图片生成"
 }

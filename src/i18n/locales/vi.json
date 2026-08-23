@@ -325,5 +325,12 @@
   "agent.script.tools.getScriptContent.idsDescribe": "ID kịch bản",
   "agent.script.tools.getScriptContent.fetching": "Đang lấy nội dung kịch bản...",
   "agent.script.tools.getScriptContent.fetched": "Đã lấy nội dung kịch bản:\n{data}",
-  "agent.script.tools.getScriptContent.done": "Đã lấy xong nội dung kịch bản"
+  "agent.script.tools.getScriptContent.done": "Đã lấy xong nội dung kịch bản",
+  "taskClass.characterImage": "Tạo ảnh nhân vật",
+  "taskClass.sceneImage": "Tạo ảnh bối cảnh",
+  "taskClass.propImage": "Tạo ảnh đạo cụ",
+  "taskClass.imageGeneration": "Tạo ảnh",
+  "taskClass.storyboardImage": "Tạo ảnh phân cảnh",
+  "taskClass.videoGeneration": "Tạo video",
+  "taskClass.workflowImage": "Tạo ảnh quy trình"
 }
