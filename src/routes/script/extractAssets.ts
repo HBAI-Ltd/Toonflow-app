@@ -178,7 +178,7 @@ export default router.post(
         });
         // 查询当前项目已有的资产列表，提供给 AI 参考
         const existingAssets = await u.db("o_assets").where("projectId", projectId).select("name", "type");
-        const existingAssetsList = existingAssets.map((a) => `${a.name}(${a.type})`).join("、");
+        const existingAssetsList = existingAssets.map((a) => `${a.name}(${a.type})`).join("、"); // i18n-ignore — AI-prompt list separator, only interpolated into an agent prompt, never rendered to a user
 
         // 拼接多集剧本内容，每集用分隔标记
         const scriptsContent = validScripts

@@ -94,7 +94,11 @@ export default router.post(
             ),
           ];
           if (unionDetails.length > 0) {
-            detail = `${issue.message}（${unionDetails.join("；")}）`;
+            // Use plain ASCII punctuation, not fullwidth CJK punctuation — issue.message is
+            // already locale-aware (via z.config()/safeParseWithLocale above), so wrapping it
+            // in fullwidth （；） gave en/vi users a mixed-script response like
+            // "Invalid input（expected string；expected number）".
+            detail = `${issue.message} (${unionDetails.join("; ")})`;
           }
         }
         return `${index + 1}. ${path}: ${detail}`;

@@ -58,7 +58,7 @@ export default function runCode(code: string, vendor?: Record<string, any>) {
   return exports as Record<string, any>;
 }
 export function logger(logstring: any) {
-  console.log("【VM】" + JSON.stringify(logstring));
+  console.log("【VM】" + JSON.stringify(logstring)); // i18n-ignore — server-only console log prefix, never shown to a user
 }
 /**
  * 压缩图片，目标字节数不高于 size

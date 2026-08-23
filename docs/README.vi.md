@@ -475,7 +475,7 @@ Nếu cần triển khai riêng lẻ hoặc tùy chỉnh giao diện frontend, v
 > [!CAUTION]
 > 🚧 **Quy tắc gửi PR** 🚧
 >
-> ⛔ Nhánh `master` không chấp nhận bất kỳ PR nào ｜ ✅ Vui lòng gửi PR đến nhánh `develop`
+> ⛔ Không gửi PR vào nhánh `master`. ✅ Vui lòng gửi PR đến nhánh `develop`.
 >
 > Chào mừng các nhà phát triển cùng tham gia xây dựng Toonflow. Nếu có hứng thú tham gia, vui lòng liên hệ quản lý ACT trong nhóm trao đổi.
 

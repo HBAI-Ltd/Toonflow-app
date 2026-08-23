@@ -168,6 +168,7 @@ export default router.post(
           ${assetsLabel}${assets
             .filter((i: any) => i.filePath)
             .map((i: any) => `[${i.id},${i.type},${i.name}]`)
+            // i18n-ignore — AI-prompt list separator, only interpolated into an agent prompt, never rendered to a user
             .join("，")},
           ${storyboardLabel}${storyboard.map(
             (i: any) => `<storyboardItem

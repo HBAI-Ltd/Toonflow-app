@@ -166,6 +166,7 @@ export default router.post(
           ${assetsLabel}${assets
             .filter((i) => i.filePath)
             .map((i) => `[${i.id},${i.type},${i.name} ${assetsAudioRecord[i.id] ? `audio:${assetsAudioRecord[i.id]}` : ""} ] `)
+            // i18n-ignore — AI-prompt list separator, only interpolated into an agent prompt, never rendered to a user
             .join("，")},
           ${storyboardLabel}${storyboard.map(
             (i) => `<storyboardItem

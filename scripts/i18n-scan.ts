@@ -11,7 +11,11 @@ export interface ScanOptions {
   stripComments: boolean;
 }
 
-const CJK = /[一-鿿]+/g; // i18n-ignore — Unicode range boundaries for the scanner's own regex, not translatable text
+// Ranges: U+4E00-9FFF CJK Unified Ideographs, U+3000-303F CJK Symbols and Punctuation
+// (fullwidth spaces/brackets/dots), U+FF00-FF60 Halfwidth and Fullwidth Forms (fullwidth
+// ASCII punctuation, e.g. fullwidth parens/semicolon/comma).
+// i18n-ignore — Unicode range boundaries for the scanner's own regex, not translatable text
+const CJK = /[一-鿿　-〿＀-｠]+/g;
 const IGNORE_PRAGMA = "i18n-ignore";
 
 /**

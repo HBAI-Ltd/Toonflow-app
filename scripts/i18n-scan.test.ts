@@ -123,3 +123,20 @@ describe("scanText - pragma i18n-ignore (stripComments: false)", () => {
     expect(hits[0].text).toBe("不跳过");
   });
 });
+
+describe("scanText - dải Unicode mở rộng (fullwidth/CJK punctuation)", () => {
+  it("bắt được dấu chấm câu fullwidth CJK (U+3000-303F)", () => {
+    const hits = scanText('const a = "a【b】c";', { stripComments: true });
+    expect(hits.map((h) => h.text)).toEqual(["【", "】"]);
+  });
+
+  it("bắt được dấu chấm câu fullwidth ASCII (U+FF00-FF60)", () => {
+    const hits = scanText('const a = "x（y；z）";', { stripComments: true });
+    expect(hits.map((h) => h.text).join("")).toBe("（；）");
+  });
+
+  it("vẫn bắt được ký tự Hán như trước (U+4E00-9FFF)", () => {
+    const hits = scanText('const a = "你好";', { stripComments: true });
+    expect(hits.map((h) => h.text)).toEqual(["你好"]);
+  });
+});
