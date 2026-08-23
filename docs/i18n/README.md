@@ -154,8 +154,36 @@ The 23 skill manuals under `data/skills/**` (`README.md` in each skill directory
   back to the original if the sidecar is missing or unreadable.
 - `data/skills/.i18n-manifest.json` — records, per original file, the SHA-256 of the Chinese
   source at translation time (`sourceHash`) and which locales have a sidecar (`translated: ["en",
-  "vi"]`). After an upstream merge, recompute the hash of each original and compare — a mismatch
-  means the upstream content moved on and the sidecar is stale.
+  "vi"]`). Run `yarn i18n:check-manifest` (`scripts/i18n-check-manifest.ts`) to recompute the
+  hash of every original and compare it against `sourceHash` — it reports which sidecars are
+  stale and which originals have no manifest entry at all, and exits non-zero if anything is
+  stale or missing. Run it after every upstream merge that touches `data/skills/**`.
+
+**Scope: most markdown files under `data/skills/**` are not covered by this system at all.**
+Only the 23 `README.md` files (one per skill directory) have sidecars and a manifest entry. The
+remaining ~160 markdown files nested under skill directories — `art_prompt/*.md`, `prefix.md`,
+`driector_skills/*.md`, and similar — have no `.en.md`/`.vi.md` sidecar and are not in the
+manifest. There is no localized-path fallback logic for them beyond what `readLocalizedSkill()`
+already does (fall back to the original when no sidecar exists), so `en`/`vi` users opening one
+of these files in the manual editors are shown the original Chinese content as-is. This is the
+current scope, not a bug to chase down file-by-file — extending sidecar coverage to these files
+is future work.
+
+**Known limitations that are visible to users today, not caused by a missing translation:**
+
+- `o_tasks.state` renders raw Chinese (`进行中` / `已完成` / `生成失败`) in the task table's
+  State column for **every** locale, including `en` and `vi`. This is deliberate: the frontend
+  hardcodes those exact Chinese strings as its filter values, so translating what the backend
+  stores would silently break status filtering in the UI. Fixing this for real requires a
+  frontend change — the filter values need to become locale-independent (e.g. stable enum keys
+  the frontend translates for display) before the backend can safely localize `state`.
+- Locale-frozen `taskClass` values accumulate in the category dropdown over time.
+  `getTaskCategories` groups tasks by the literal stored `taskClass` string. The seed migration
+  (`migrateTaskClass` in `src/lib/migrations/i18nSeed.ts`) only rewrites the original Chinese
+  seed values, and only runs once per row (matched by exact string). After a user switches
+  language, tasks created before the switch keep their old-locale `taskClass` label and tasks
+  created after get the new one — both appear permanently as separate entries in the category
+  dropdown. There is no cleanup pass that merges them.
 
 **Never edit an original `README.md` under `data/skills/**` directly to "fix" a translation.**
 Two reasons:
@@ -203,9 +231,12 @@ Adapted from section 6 of
 
 1. `git fetch upstream && git merge upstream/master`.
 2. **Areas that never conflict:** the original files under `data/skills/**` (only sidecars were
-   added, originals untouched), and Chinese comments left in place throughout `src/**` (only
-   string literals were touched, not comments — except where a comment itself needed
-   `i18n-ignore`).
+   added, originals untouched).
+   Most Chinese comments in `src/**` were left in place, but this is not a blanket guarantee —
+   this branch also added `i18n-ignore` pragma comments, rewrote several comments to English
+   (see e.g. `src/lib/migrations/i18nSeed.ts`), and translated comment-only files such as
+   `docs/i18n/README.md` itself. A merge touching one of those specific comment lines can still
+   conflict; only comment lines this branch never touched are conflict-free.
 3. **Areas that reliably conflict when upstream touches them:**
    - `data/vendor/*.ts` — translated in place (see section 3.5 of the design doc); any upstream
      edit to a vendor file collides with the English text here.
@@ -220,8 +251,11 @@ Adapted from section 6 of
      who wants to diff it against upstream's `README.md` directly.
    These conflicts are all single-line content conflicts, resolved by hand — a different kind of
    problem than the 183-file conflict storm avoided by not touching skill-manual originals.
-4. Run `yarn i18n:scan` to see which translations are now stale and which new strings are
-   untranslated.
+4. Run `yarn i18n:scan` to find new untranslated CJK strings introduced by the merge in
+   `src/**`/`scripts/*.ts`/`data/vendor/*.ts`/the READMEs it covers. Run `yarn i18n:check-manifest`
+   separately to find which `data/skills/**` translations are now stale (their original changed
+   since it was last translated) — `i18n:scan` does not look at skill-manual originals or
+   sidecars, `i18n:check-manifest` is the tool for that.
 5. Re-run `yarn i18n:patch-web` if `data/web/` changed.
 6. Re-run `yarn vendor2json` after resolving conflicts in `data/vendor/`, so `src/lib/vendor.json`
    matches the source again.

@@ -36,7 +36,8 @@
     "license": "node scripts/license.ts",
     "vendor2json": "node scripts/vendor2json.ts",
     "i18n:scan": "tsx scripts/i18n-scan.ts",
-    "i18n:patch-web": "tsx scripts/patch-web-i18n.ts"
+    "i18n:patch-web": "tsx scripts/patch-web-i18n.ts",
+    "i18n:check-manifest": "tsx scripts/i18n-check-manifest.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.35",
