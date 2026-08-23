@@ -8,6 +8,7 @@ import useTools from "@/agents/productionAgent/tools";
 import ResTool from "@/socket/resTool";
 import * as fs from "fs";
 import path from "path";
+import { t, getLocale, type Locale } from "@/i18n";
 
 export interface AgentContext {
   socket: Socket;
@@ -24,24 +25,25 @@ export interface AgentContext {
   };
 }
 
-function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>): string {
+async function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>, locale: Locale): Promise<string> {
   let memoryContext = "";
   if (mem.rag.length) {
-    memoryContext += `[相关记忆]\n${mem.rag.map((r) => r.content).join("\n")}`;
+    memoryContext += `${t("agent.production.orchestrator.memoryRelated", {}, locale)}\n${mem.rag.map((r) => r.content).join("\n")}`;
   }
   if (mem.summaries.length) {
     if (memoryContext) memoryContext += "\n\n";
-    memoryContext += `[历史摘要]\n${mem.summaries.map((s, i) => `${i + 1}. ${s.content}`).join("\n")}`;
+    memoryContext += `${t("agent.production.orchestrator.memorySummary", {}, locale)}\n${mem.summaries.map((s, i) => `${i + 1}. ${s.content}`).join("\n")}`;
   }
   if (mem.shortTerm.length) {
     if (memoryContext) memoryContext += "\n\n";
-    memoryContext += `[近期对话]\n${mem.shortTerm.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
+    memoryContext += `${t("agent.production.orchestrator.memoryRecent", {}, locale)}\n${mem.shortTerm.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
   }
-  return `## Memory\n以下是你对用户的记忆，可作为参考但不要主动提及：\n${memoryContext}`;
+  return t("agent.production.orchestrator.memoryHeader", { context: memoryContext }, locale);
 }
 
 export async function runDecisionAI(ctx: AgentContext) {
   const { isolationKey, text, abortSignal } = ctx;
+  const locale = await getLocale();
   const memory = new Memory("productionAgent", isolationKey);
   await memory.add("user", text);
 
@@ -49,11 +51,11 @@ export async function runDecisionAI(ctx: AgentContext) {
   const prompt = await fs.promises.readFile(skill, "utf-8");
 
   const projectInfo = await u.db("o_project").where("id", ctx.resTool.data.projectId).first();
-  if (!projectInfo) throw new Error(`项目不存在，ID: ${ctx.resTool.data.projectId}`);
+  if (!projectInfo) throw new Error(t("agent.production.orchestrator.projectNotFound", { id: ctx.resTool.data.projectId }, locale));
   const [_, imageModelName] = projectInfo.imageModel!.split(/:(.+)/);
   const [id, videoModelName] = projectInfo.videoModel!.split(/:(.+)/);
   const models = await u.vendor.getModelList(id);
-  if (!models.length) throw new Error(`项目使用的模型不存在，ID: ${projectInfo.videoModel}`);
+  if (!models.length) throw new Error(t("agent.production.orchestrator.modelNotFound", { id: String(projectInfo.videoModel) }, locale));
   let videoMode = "";
   try {
     videoMode = JSON.parse(projectInfo.mode ?? "");
@@ -64,9 +66,17 @@ export async function runDecisionAI(ctx: AgentContext) {
   // const findData = models.find((i: any) => i.modelName == videoModelName);
   // const isRef = findData.mode.every((i: any) => Array.isArray(i));
 
-  const modelInfo = `项目使用的模型如下：\n图像模型：${imageModelName}\n视频模型：${videoModelName}\n多参：${isRef ? "是" : "否"}`;
+  const modelInfo = t(
+    "agent.production.orchestrator.modelInfo",
+    {
+      imageModel: imageModelName,
+      videoModel: videoModelName,
+      multiParam: isRef ? t("agent.production.orchestrator.yes", {}, locale) : t("agent.production.orchestrator.no", {}, locale),
+    },
+    locale,
+  );
 
-  const mem = buildMemPrompt(await memory.get(text));
+  const mem = await buildMemPrompt(await memory.get(text), locale);
 
   const { fullStream } = await u.Ai.Text("productionAgent:decisionAgent", ctx.thinkConfig.think, ctx.thinkConfig.thinlLevel).stream({
     messages: [
@@ -77,7 +87,7 @@ export async function runDecisionAI(ctx: AgentContext) {
     abortSignal,
     tools: {
       ...memory.getTools(),
-      ...useTools({ resTool: ctx.resTool, msg: ctx.msg }),
+      ...useTools({ resTool: ctx.resTool, msg: ctx.msg, locale }),
       ...(await createSubAgent(ctx)),
     },
     onFinish: async (completion) => {
@@ -96,6 +106,7 @@ export async function runDecisionAI(ctx: AgentContext) {
 
 async function createSubAgent(parentCtx: AgentContext) {
   const { resTool, abortSignal } = parentCtx;
+  const locale = await getLocale();
   const memory = new Memory("productionAgent", parentCtx.isolationKey);
   async function runAgent({
     key,
@@ -121,7 +132,7 @@ async function createSubAgent(parentCtx: AgentContext) {
       system,
       messages: messages ?? [{ role: "user", content: prompt }],
       abortSignal,
-      tools: { ...extraTools, ...useTools({ resTool, msg: subMsg }) },
+      tools: { ...extraTools, ...useTools({ resTool, msg: subMsg, locale }) },
     });
 
     const fullResponse = await consumeFullStream(fullStream, subMsg);
@@ -133,24 +144,24 @@ async function createSubAgent(parentCtx: AgentContext) {
       });
     }
 
-    parentCtx.msg = resTool.newMessage("assistant", "视频策划");
+    parentCtx.msg = resTool.newMessage("assistant", t("agent.production.orchestrator.roleVideoPlanning", {}, locale));
     return fullResponse;
   }
 
   const promptInput = z
     .object({
-      prompt: z.string().describe("交给子Agent的任务简约描述，100字以内"),
+      prompt: z.string().describe(t("agent.production.subAgent.promptDescribe", {}, locale)),
     })
     .toJSONSchema();
 
   const projectInfo = await u.db("o_project").where("id", resTool.data.projectId).first();
-  if (!projectInfo) throw new Error(`项目不存在，ID: ${resTool.data.projectId}`);
-  const artSkills = await createArtSkills(projectInfo?.artStyle!, projectInfo?.directorManual!);
+  if (!projectInfo) throw new Error(t("agent.production.orchestrator.projectNotFound", { id: resTool.data.projectId }, locale));
+  const artSkills = await createArtSkills(projectInfo?.artStyle!, projectInfo?.directorManual!, locale);
 
   const [_, imageModelName] = projectInfo.imageModel!.split(/:(.+)/);
   const [id, videoModelName] = projectInfo.videoModel!.split(/:(.+)/);
   const models = await u.vendor.getModelList(id);
-  if (!models.length) throw new Error(`项目使用的模型不存在，ID: ${projectInfo.videoModel}`);
+  if (!models.length) throw new Error(t("agent.production.orchestrator.modelNotFound", { id: String(projectInfo.videoModel) }, locale));
   // const findData = models.find((i: any) => i.modelName == videoModelName);
   //
   let videoMode = "";
@@ -161,7 +172,15 @@ async function createSubAgent(parentCtx: AgentContext) {
   }
   const isRef = Array.isArray(videoMode) ? true : false;
 
-  const modelInfo = `项目使用的模型如下：\n图像模型：${imageModelName}\n视频模型：${videoModelName}\n多参：${isRef ? "是" : "否"}`;
+  const modelInfo = t(
+    "agent.production.orchestrator.modelInfo",
+    {
+      imageModel: imageModelName,
+      videoModel: videoModelName,
+      multiParam: isRef ? t("agent.production.orchestrator.yes", {}, locale) : t("agent.production.orchestrator.no", {}, locale),
+    },
+    locale,
+  );
 
   // const run_sub_agent_execution = tool({
   //   description: "执行层子Agent，负责衍生资产、",
@@ -195,7 +214,7 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   //衍生资产分析与信息写入
   const run_sub_agent_derive_assets = tool({
-    description: "运行执行subAgent来完成衍生资产分析与信息写入相关任务",
+    description: t("agent.production.subAgent.deriveAssetsDescribe", {}, locale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_derive_assets.md");
@@ -204,7 +223,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         key: "productionAgent:deriveAssetsAgent",
         prompt,
         system: systemPrompt,
-        name: "执行导演",
+        name: t("agent.production.orchestrator.roleExecutionDirector", {}, locale),
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: artSkills.prompt + `\n${modelInfo}` },
@@ -217,7 +236,7 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   //衍生资产图片生成
   const run_sub_agent_generate_assets = tool({
-    description: "运行执行subAgent来完成衍生资产图片生成相关任务",
+    description: t("agent.production.subAgent.generateAssetsDescribe", {}, locale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_generate_assets.md");
@@ -226,7 +245,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         key: "productionAgent:generateAssetsAgent",
         prompt,
         system: systemPrompt,
-        name: "执行导演",
+        name: t("agent.production.orchestrator.roleExecutionDirector", {}, locale),
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: artSkills.prompt + `\n${modelInfo}` },
@@ -239,19 +258,19 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   //拍摄计划
   const run_sub_agent_director_plan = tool({
-    description: "运行执行subAgent来完成导演规划相关任务",
+    description: t("agent.production.subAgent.directorPlanDescribe", {}, locale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_director_plan.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const addPrompt = "\n你必须使用如下XML格式写入工作区：\n```\n<scriptPlan>内容</scriptPlan>\n```";
+      const addPrompt = t("agent.production.subAgent.formatDirectorPlan", {}, locale);
 
       return runAgent({
         key: "productionAgent:directorPlanAgent",
         prompt,
         system: systemPrompt + addPrompt,
-        name: "执行导演",
+        name: t("agent.production.orchestrator.roleExecutionDirector", {}, locale),
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: artSkills.prompt + `\n${modelInfo}` },
@@ -264,7 +283,7 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   //分镜图生成
   const run_sub_agent_storyboard_gen = tool({
-    description: "运行执行subAgent来完成分镜图生成相关任务",
+    description: t("agent.production.subAgent.storyboardGenDescribe", {}, locale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_storyboard_gen.md");
@@ -273,7 +292,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         key: "productionAgent:storyboardGenAgent",
         prompt,
         system: systemPrompt,
-        name: "执行导演",
+        name: t("agent.production.orchestrator.roleExecutionDirector", {}, locale),
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: artSkills.prompt + `\n${modelInfo}` },
@@ -294,24 +313,23 @@ async function createSubAgent(parentCtx: AgentContext) {
   //   mainSkills.push({ path: skillPath, ...parsed });
   // }
 
-  const productionSkills = await useProductionSkills(projectInfo?.artStyle!, projectInfo?.directorManual!);
+  const productionSkills = await useProductionSkills(projectInfo?.artStyle!, projectInfo?.directorManual!, locale);
 
   //分镜面板写入
   const run_sub_agent_storyboard_panel = tool({
-    description: "运行执行subAgent来完成分镜面板写入相关任务",
+    description: t("agent.production.subAgent.storyboardPanelDescribe", {}, locale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_storyboard_panel.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const addPrompt =
-        "\n你必须使用如下XML格式写入工作区：\n```\n<storyboardItem videoDesc='视频描述' prompt=提示词内容 track='分组' shouldGenerateImage='true/false' duration='视频推荐时间' associateAssetsIds='[该分镜所需的资产ID列表]'></storyboardItem>\n```";
+      const addPrompt = t("agent.production.subAgent.formatStoryboardPanel", {}, locale);
 
       return runAgent({
         key: "productionAgent:storyboardPanelAgent",
         prompt,
         system: systemPrompt + addPrompt,
-        name: "执行导演",
+        name: t("agent.production.orchestrator.roleExecutionDirector", {}, locale),
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: productionSkills.prompt + `\n${modelInfo}` },
@@ -324,19 +342,19 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   //分镜表写入
   const run_sub_agent_storyboard_table = tool({
-    description: "运行执行subAgent来完成分镜表构建相关任务",
+    description: t("agent.production.subAgent.storyboardTableDescribe", {}, locale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_storyboard_table.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const addPrompt = "\n你必须使用如下XML格式写入工作区：\n```\n<storyboardTable>内容</storyboardTable>\n```";
+      const addPrompt = t("agent.production.subAgent.formatStoryboardTable", {}, locale);
 
       return runAgent({
         key: "productionAgent:storyboardTableAgent",
         prompt,
         system: systemPrompt + addPrompt,
-        name: "执行导演",
+        name: t("agent.production.orchestrator.roleExecutionDirector", {}, locale),
         memoryKey: "assistant:execution",
         messages: [
           { role: "assistant", content: productionSkills.prompt + `\n${modelInfo}` },
@@ -348,7 +366,7 @@ async function createSubAgent(parentCtx: AgentContext) {
   });
 
   const run_sub_agent_supervision = tool({
-    description: "运行监督层subAgent执行独立任务，完成后返回结果",
+    description: t("agent.production.subAgent.supervisionDescribe", {}, locale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_agent_supervision.md");
@@ -357,7 +375,7 @@ async function createSubAgent(parentCtx: AgentContext) {
         key: "productionAgent:supervisionAgent",
         prompt,
         system: systemPrompt,
-        name: "监制",
+        name: t("agent.production.orchestrator.roleSupervisor", {}, locale),
         memoryKey: "assistant:supervision",
       });
     },
@@ -374,22 +392,19 @@ async function createSubAgent(parentCtx: AgentContext) {
   };
 }
 
-async function createArtSkills(artName: string, storyName: string) {
+async function createArtSkills(artName: string, storyName: string, locale: Locale) {
   const artWorkerPath = u.getPath(["skills", "art_skills", artName, "driector_skills"]);
   const storyWorkerPath = u.getPath(["skills", "story_skills", storyName, "driector_skills"]);
   const skillList = [...(await scanSkills(artWorkerPath + "/*.md")), ...(await scanSkills(storyWorkerPath + "/*.md"))];
   const mainSkills: { path: string; name: string; description: string }[] = [];
   for (const skillPath of skillList) {
-    if (!fs.existsSync(skillPath)) throw new Error(`主技能文件不存在: ${skillPath}`);
+    if (!fs.existsSync(skillPath)) throw new Error(t("agent.production.orchestrator.mainSkillMissing", { path: skillPath }, locale));
     const content = await fs.promises.readFile(skillPath, "utf-8");
     const parsed = parseFrontmatter(content);
     mainSkills.push({ path: skillPath, ...parsed });
   }
   const res = {
-    prompt: `## Skills
-以下技能提供了专业任务的专用指令。
-当任务与某个技能的描述匹配时，调用 activate_skill 工具并传入技能名称来加载完整指令。
-${buildSkillPrompt(mainSkills)}`,
+    prompt: t("agent.production.skills.header", { skillList: buildSkillPrompt(mainSkills) }, locale),
     tools: createSkillTools(mainSkills, { mainSkill: mainSkills, secondarySkills: [], tertiarySkills: [] }),
   };
   return res;
@@ -399,6 +414,7 @@ async function consumeFullStream(
   initialMsg: ReturnType<ResTool["newMessage"]>,
   syncMsg?: () => ReturnType<ResTool["newMessage"]>,
 ): Promise<string> {
+  const locale = await getLocale();
   let msg = initialMsg;
   let text = msg.text();
   let thinking: ReturnType<typeof msg.thinking> | null = null;
@@ -416,12 +432,12 @@ async function consumeFullStream(
       }
       if (chunk.type === "reasoning-start") {
         thinkTime = Date.now();
-        thinking = msg.thinking("思考中...");
+        thinking = msg.thinking(t("agent.production.orchestrator.thinking", {}, locale));
       } else if (chunk.type === "reasoning-delta") {
         thinking?.append(chunk.text);
       } else if (chunk.type === "reasoning-end") {
         thinkTime = Date.now() - thinkTime;
-        thinking?.updateTitle(`思考完毕（${(thinkTime / 1000).toFixed(1)} 秒）`);
+        thinking?.updateTitle(t("agent.production.orchestrator.thinkingDone", { seconds: (thinkTime / 1000).toFixed(1) }, locale));
         thinking?.complete();
         thinking = null;
       } else if (chunk.type === "text-delta") {
@@ -463,7 +479,7 @@ ${skillEntries}
 </available_skills>`;
 }
 
-async function useProductionSkills(artName: string, storyName: string) {
+async function useProductionSkills(artName: string, storyName: string, locale: Locale) {
   const artWorkerPath = u.getPath(["skills", "art_skills", artName, "driector_skills"]);
   const storyWorkerPath = u.getPath(["skills", "story_skills", storyName, "driector_skills"]);
   const productionPath = u.getPath(["skills", "production_skills"]);
@@ -474,16 +490,13 @@ async function useProductionSkills(artName: string, storyName: string) {
   ];
   const mainSkills: { path: string; name: string; description: string }[] = [];
   for (const skillPath of skillList) {
-    if (!fs.existsSync(skillPath)) throw new Error(`主技能文件不存在: ${skillPath}`);
+    if (!fs.existsSync(skillPath)) throw new Error(t("agent.production.orchestrator.mainSkillMissing", { path: skillPath }, locale));
     const content = await fs.promises.readFile(skillPath, "utf-8");
     const parsed = parseFrontmatter(content);
     mainSkills.push({ path: skillPath, ...parsed });
   }
   const res = {
-    prompt: `## Skills
-以下技能提供了专业任务的专用指令。
-当任务与某个技能的描述匹配时，调用 activate_skill 工具并传入技能名称来加载完整指令。
-${buildSkillPrompt(mainSkills)}`,
+    prompt: t("agent.production.skills.header", { skillList: buildSkillPrompt(mainSkills) }, locale),
     tools: createSkillTools(mainSkills, { mainSkill: mainSkills, secondarySkills: [], tertiarySkills: [] }),
   };
   return res;

@@ -7,6 +7,7 @@ import useTools from "@/agents/scriptAgent/tools";
 import ResTool from "@/socket/resTool";
 import * as fs from "fs";
 import path from "path";
+import { t, getLocale, type Locale } from "@/i18n";
 
 export interface AgentContext {
   socket: Socket;
@@ -22,44 +23,45 @@ export interface AgentContext {
   };
 }
 
-function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>): string {
+async function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>, locale: Locale): Promise<string> {
   let memoryContext = "";
   if (mem.rag.length) {
-    memoryContext += `[相关记忆]\n${mem.rag.map((r) => r.content).join("\n")}`;
+    memoryContext += `${t("agent.script.orchestrator.memoryRelated", {}, locale)}\n${mem.rag.map((r) => r.content).join("\n")}`;
   }
   if (mem.summaries.length) {
     if (memoryContext) memoryContext += "\n\n";
-    memoryContext += `[历史摘要]\n${mem.summaries.map((s, i) => `${i + 1}. ${s.content}`).join("\n")}`;
+    memoryContext += `${t("agent.script.orchestrator.memorySummary", {}, locale)}\n${mem.summaries.map((s, i) => `${i + 1}. ${s.content}`).join("\n")}`;
   }
   if (mem.shortTerm.length) {
     if (memoryContext) memoryContext += "\n\n";
-    memoryContext += `[近期对话]\n${mem.shortTerm.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
+    memoryContext += `${t("agent.script.orchestrator.memoryRecent", {}, locale)}\n${mem.shortTerm.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
   }
-  return `## Memory\n以下是你对用户的记忆，可作为参考但不要主动提及：\n${memoryContext}`;
+  return t("agent.script.orchestrator.memoryHeader", { context: memoryContext }, locale);
 }
 
 export async function runDecisionAI(ctx: AgentContext) {
   const { isolationKey, text, userMessageTime, abortSignal, resTool } = ctx;
+  const locale = await getLocale();
   const memory = new Memory("scriptAgent", isolationKey);
   await memory.add("user", text, { createTime: userMessageTime });
 
   const skill = path.join(u.getPath("skills"), "script_agent_decision.md");
   const prompt = await fs.promises.readFile(skill, "utf-8");
 
-  const mem = buildMemPrompt(await memory.get(text));
+  const mem = await buildMemPrompt(await memory.get(text), locale);
 
   const projectData = await u.db("o_project").where("id", resTool.data.projectId).first();
 
   const novelData = await u.db("o_novel").where("projectId", resTool.data.projectId).select("chapterIndex");
 
   const projectInfo = [
-    "## 项目信息",
-    `小说名称：${projectData?.name ?? "未知"}`,
-    `小说类型：${projectData?.type ?? "未知"}`,
-    `小说简介：${projectData?.intro ?? "无"}`,
-    `目标改编影视视觉手册|画风：${projectData?.artStyle ?? "无"}`,
-    `目标改编视频画幅：${projectData?.videoRatio ?? "16:9"}`,
-    `章节数量：${novelData.length}章`,
+    t("agent.script.orchestrator.projectInfoHeader", {}, locale),
+    t("agent.script.orchestrator.novelName", { name: projectData?.name ?? t("agent.script.orchestrator.unknown", {}, locale) }, locale),
+    t("agent.script.orchestrator.novelType", { type: projectData?.type ?? t("agent.script.orchestrator.unknown", {}, locale) }, locale),
+    t("agent.script.orchestrator.novelIntro", { intro: projectData?.intro ?? t("agent.script.orchestrator.none", {}, locale) }, locale),
+    t("agent.script.orchestrator.artStyle", { style: projectData?.artStyle ?? t("agent.script.orchestrator.none", {}, locale) }, locale),
+    t("agent.script.orchestrator.videoRatio", { ratio: projectData?.videoRatio ?? "16:9" }, locale),
+    t("agent.script.orchestrator.chapterCount", { count: novelData.length }, locale),
   ].join("\n");
 
   const { fullStream } = await u.Ai.Text("scriptAgent:decisionAgent", ctx.thinkConfig.think, ctx.thinkConfig.thinlLevel).stream({
@@ -71,8 +73,8 @@ export async function runDecisionAI(ctx: AgentContext) {
     abortSignal,
     tools: {
       ...memory.getTools(),
-      ...useTools({ resTool: ctx.resTool, msg: ctx.msg }),
-      ...createSubAgent(ctx),
+      ...useTools({ resTool: ctx.resTool, msg: ctx.msg, locale }),
+      ...(await createSubAgent(ctx)),
     },
     onFinish: async (completion) => {
       await memory.add("assistant:decision", removeAllXmlTags(completion.text));
@@ -88,8 +90,9 @@ export async function runDecisionAI(ctx: AgentContext) {
   });
 }
 
-function createSubAgent(parentCtx: AgentContext) {
+async function createSubAgent(parentCtx: AgentContext) {
   const { resTool, abortSignal } = parentCtx;
+  const locale = await getLocale();
   const memory = new Memory("scriptAgent", parentCtx.isolationKey);
 
   async function runAgent({
@@ -116,7 +119,7 @@ function createSubAgent(parentCtx: AgentContext) {
       system,
       messages: messages ?? [{ role: "user", content: prompt }],
       abortSignal,
-      tools: { ...extraTools, ...useTools({ resTool, msg: subMsg }) },
+      tools: { ...extraTools, ...useTools({ resTool, msg: subMsg, locale }) },
     });
 
     const fullResponse = await consumeFullStream(fullStream, subMsg);
@@ -128,30 +131,30 @@ function createSubAgent(parentCtx: AgentContext) {
       });
     }
 
-    parentCtx.msg = resTool.newMessage("assistant", "视频策划");
+    parentCtx.msg = resTool.newMessage("assistant", t("agent.script.orchestrator.roleVideoPlanning", {}, locale));
     return fullResponse;
   }
 
   const promptInput = z
     .object({
-      prompt: z.string().describe("交给子Agent的任务简约描述，100字以内"),
+      prompt: z.string().describe(t("agent.script.subAgent.promptDescribe", {}, locale)),
     })
     .toJSONSchema();
 
   const run_sub_agent_storySkeleton = tool({
-    description: "运行执行subAgent来完成故事骨架相关任务",
+    description: t("agent.script.subAgent.storySkeletonDescribe", {}, locale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_execution_skeleton.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const formatPrompt = "\n你必须使用如下XML格式写入工作区：\n<storySkeleton>故事骨架内容</storySkeleton>";
+      const formatPrompt = t("agent.script.subAgent.storySkeletonFormat", {}, locale);
 
       return runAgent({
         key: "scriptAgent:storySkeletonAgent",
         prompt,
         system: systemPrompt + formatPrompt,
-        name: "编剧",
+        name: t("agent.script.orchestrator.roleWriter", {}, locale),
         memoryKey: "assistant:execution:storySkeleton",
         messages: [{ role: "user", content: prompt + formatPrompt }],
       });
@@ -159,19 +162,19 @@ function createSubAgent(parentCtx: AgentContext) {
   });
 
   const run_sub_agent_adaptationStrategy = tool({
-    description: "运行执行subAgent来完成改编策略相关任务",
+    description: t("agent.script.subAgent.adaptationDescribe", {}, locale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_execution_adaptation.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const formatPrompt = "\n你必须使用如下XML格式写入工作区：\n<adaptationStrategy>改编策略内容</adaptationStrategy>";
+      const formatPrompt = t("agent.script.subAgent.adaptationFormat", {}, locale);
 
       return runAgent({
         key: "scriptAgent:adaptationStrategyAgent",
         prompt,
         system: systemPrompt + formatPrompt,
-        name: "编剧",
+        name: t("agent.script.orchestrator.roleWriter", {}, locale),
         memoryKey: "assistant:execution:adaptationStrategy",
         messages: [{ role: "user", content: prompt + formatPrompt }],
       });
@@ -179,37 +182,39 @@ function createSubAgent(parentCtx: AgentContext) {
   });
 
   const run_sub_agent_script = tool({
-    description: "运行执行subAgent来完成剧本相关任务",
+    description: t("agent.script.subAgent.scriptDescribe", {}, locale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_execution_script.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
       const scriptList = await u.db("o_script").where("projectId", resTool.data.projectId).select("id", "name");
-      const scriptPrompt = ["## 可用剧本(ID:名称)", scriptList.map((s: any) => `${s.id}:${(s.name || "").replace(/[,:]/g, "")}`).join(","), ""].join(
-        "\n",
-      );
+      const scriptPrompt = [
+        t("agent.script.subAgent.scriptListHeader", {}, locale),
+        scriptList.map((s: any) => `${s.id}:${(s.name || "").replace(/[,:]/g, "")}`).join(","),
+        "",
+      ].join("\n");
 
       const novelData = await u.db("o_novel").where("projectId", resTool.data.projectId).select("chapterIndex");
 
-      const formatPrompt = `\n你必须使用如下XML格式写入工作区：\nXML不得添加任何额外标签<scriptItem name="剧本名称">剧本内容</scriptItem><scriptItem name="剧本名称">剧本内容</scriptItem><scriptItem name="剧本名称">剧本内容</scriptItem>`;
+      const formatPrompt = t("agent.script.subAgent.scriptFormat", {}, locale);
 
       return runAgent({
         key: "scriptAgent:scriptAgent",
         prompt,
         system: systemPrompt + formatPrompt,
         messages: [
-          { role: "assistant", content: scriptPrompt + `章节数量：${novelData.length}章` },
+          { role: "assistant", content: scriptPrompt + t("agent.script.orchestrator.chapterCount", { count: novelData.length }, locale) },
           { role: "user", content: prompt + formatPrompt },
         ],
-        name: "编剧",
+        name: t("agent.script.orchestrator.roleWriter", {}, locale),
         memoryKey: "assistant:execution:script",
       });
     },
   });
 
   const run_supervision_agent = tool({
-    description: "运行监督层subAgent执行独立任务，完成后返回结果",
+    description: t("agent.script.subAgent.supervisionDescribe", {}, locale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_agent_supervision.md");
@@ -219,7 +224,7 @@ function createSubAgent(parentCtx: AgentContext) {
         key: "scriptAgent:supervisionAgent",
         prompt,
         system: systemPrompt,
-        name: "编辑",
+        name: t("agent.script.orchestrator.roleEditor", {}, locale),
         memoryKey: "assistant:supervision",
       });
     },
@@ -238,6 +243,7 @@ async function consumeFullStream(
   initialMsg: ReturnType<ResTool["newMessage"]>,
   syncMsg?: () => ReturnType<ResTool["newMessage"]>,
 ): Promise<string> {
+  const locale = await getLocale();
   let msg = initialMsg;
   let text = msg.text();
   let thinking: ReturnType<typeof msg.thinking> | null = null;
@@ -255,12 +261,12 @@ async function consumeFullStream(
       }
       if (chunk.type === "reasoning-start") {
         thinkTime = Date.now();
-        thinking = msg.thinking("思考中...");
+        thinking = msg.thinking(t("agent.script.orchestrator.thinking", {}, locale));
       } else if (chunk.type === "reasoning-delta") {
         thinking?.append(chunk.text);
       } else if (chunk.type === "reasoning-end") {
         thinkTime = Date.now() - thinkTime;
-        thinking?.updateTitle(`思考完毕（${(thinkTime / 1000).toFixed(1)} 秒）`);
+        thinking?.updateTitle(t("agent.script.orchestrator.thinkingDone", { seconds: (thinkTime / 1000).toFixed(1) }, locale));
         thinking?.complete();
         thinking = null;
       } else if (chunk.type === "text-delta") {
