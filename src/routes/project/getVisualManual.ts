@@ -3,7 +3,7 @@ import u from "@/utils";
 import { error, success } from "@/lib/responseFormat";
 import fs from "fs";
 import path from "path";
-import { t, getLocale } from "@/i18n";
+import { t, getLocale, readLocalizedSkill } from "@/i18n";
 const router = express.Router();
 
 // 字段映射表
@@ -26,15 +26,6 @@ const DATA_MAP: { value: string; subDir?: string }[] = [
 function labelForValue(value: string, locale: import("@/i18n").Locale): string {
   if (value === "README") return "README";
   return t(`project.visualManual.label.${value}`, {}, locale);
-}
-
-// 读取 md 文件内容，文件不存在时返回空字符串
-function readMd(filePath: string): string {
-  try {
-    return fs.readFileSync(filePath, "utf-8");
-  } catch {
-    return "";
-  }
 }
 
 // 获取 images 文件夹下所有图片文件路径列表
@@ -70,7 +61,7 @@ export default router.post("/", async (req, res) => {
         const styleDir = path.join(artPromptsDir, styleName);
         const images = await readAllImages(styleName);
         const readmePath = path.join(styleDir, "README.md");
-        const readmeContent = fs.readFileSync(readmePath, "utf-8");
+        const readmeContent = readLocalizedSkill(readmePath, locale);
         const firstLine = readmeContent.split("\n")[0].replace(/--/g, "");
         const data = DATA_MAP.map(({ value, subDir }) => {
           let mdPath: string;
@@ -82,7 +73,7 @@ export default router.post("/", async (req, res) => {
           return {
             label: labelForValue(value, locale),
             value,
-            data: readMd(mdPath),
+            data: readLocalizedSkill(mdPath, locale),
           };
         });
 
