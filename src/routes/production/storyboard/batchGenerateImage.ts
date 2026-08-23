@@ -6,6 +6,7 @@ import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { Output, tool } from "ai";
 import { assetItemSchema } from "@/agents/productionAgent/tools";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 export type AssetData = z.infer<typeof assetItemSchema>;
 
@@ -32,18 +33,20 @@ export default router.post(
       concurrentCount: number;
       compulsory: boolean;
     } = req.body;
-    if (!storyboardIds || storyboardIds.length === 0) return res.status(400).send(error("storyboardIds不能为空"));
+    const locale = await getLocale(req as any);
+    if (!storyboardIds || storyboardIds.length === 0)
+      return res.status(400).send(error(t("production.storyboard.batchGenerateImage.idsEmpty", {}, locale)));
     // 当没有 storyboardIds 时，通过 AI 生成新的分镜面板数据
     let finalStoryboardIds: number[] = storyboardIds || [];
     // shouldGenerateImage === 0 的分镜标记为「未生成」，其余标记为「生成中」
     const storyboardData = await u.db("o_storyboard").where("scriptId", scriptId).where("projectId", projectId).whereIn("id", finalStoryboardIds);
-    if (!storyboardData.length) return res.status(500).send(error("未查到分镜数据"));
+    if (!storyboardData.length) return res.status(500).send(error(t("production.storyboard.common.notFound", {}, locale)));
     const storyIds = storyboardData.map((i) => i.id);
     if (compulsory) {
-      await u.db("o_storyboard").whereIn("id", storyIds).where("scriptId", scriptId).update({ state: "生成中", shouldGenerateImage: 1 });
+      await u.db("o_storyboard").whereIn("id", storyIds).where("scriptId", scriptId).update({ state: "生成中", shouldGenerateImage: 1 }); // i18n-ignore — stored o_storyboard.state enum value, not user-facing text
     } else {
-      await u.db("o_storyboard").whereIn("id", storyIds).where("scriptId", scriptId).where("shouldGenerateImage", 0).update({ state: "未生成" });
-      await u.db("o_storyboard").whereIn("id", storyIds).where("scriptId", scriptId).where("shouldGenerateImage", 1).update({ state: "生成中" });
+      await u.db("o_storyboard").whereIn("id", storyIds).where("scriptId", scriptId).where("shouldGenerateImage", 0).update({ state: "未生成" }); // i18n-ignore — stored o_storyboard.state enum value, not user-facing text
+      await u.db("o_storyboard").whereIn("id", storyIds).where("scriptId", scriptId).where("shouldGenerateImage", 1).update({ state: "生成中" }); // i18n-ignore — stored o_storyboard.state enum value, not user-facing text
     }
 
     const projectSettingData = await u.db("o_project").where("id", projectId).select("imageModel", "imageQuality", "artStyle", "videoRatio").first();
@@ -104,8 +107,8 @@ export default router.post(
             ...repeloadObj,
           },
           {
-            taskClass: "生成分镜图片",
-            describe: "分镜图片生成",
+            taskClass: "生成分镜图片", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
+            describe: t("production.storyboard.batchGenerateImage.taskDescribe", {}, locale),
             relatedObjects: JSON.stringify(repeloadObj),
             projectId: projectId,
           },
@@ -114,7 +117,7 @@ export default router.post(
         await imageCls.save(savePath);
         await u.db("o_storyboard").where("id", item.id).update({
           filePath: savePath,
-          state: "已完成",
+          state: "已完成", // i18n-ignore — stored o_storyboard.state enum value, not user-facing text
         });
       } catch (e) {
         u.db("o_storyboard")
@@ -122,7 +125,7 @@ export default router.post(
           .update({
             filePath: "",
             reason: u.error(e).message,
-            state: "生成失败",
+            state: "生成失败", // i18n-ignore — stored o_storyboard.state enum value, not user-facing text
           });
       }
     };

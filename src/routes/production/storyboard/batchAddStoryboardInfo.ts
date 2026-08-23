@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 export default router.post(
   "/",
@@ -24,7 +25,8 @@ export default router.post(
   }),
   async (req, res) => {
     const { data, scriptId, projectId } = req.body;
-    if (!data.length) return res.status(400).send({ success: false, message: "数据不能为空" });
+    const locale = await getLocale(req as any);
+    if (!data.length) return res.status(400).send({ success: false, message: t("production.storyboard.batchAddStoryboardInfo.dataEmpty", {}, locale) });
     for (const item of data) {
       const [id] = await u.db("o_storyboard").insert({
         prompt: item.prompt,
@@ -48,7 +50,7 @@ export default router.post(
       item.id = id;
     }
     const lastStoryboard = await u.db("o_storyboard").where("scriptId", scriptId);
-    if (!lastStoryboard || !lastStoryboard.length) return res.status(400).send(error("未查到分镜数据"));
+    if (!lastStoryboard || !lastStoryboard.length) return res.status(400).send(error(t("production.storyboard.common.notFound", {}, locale)));
     //根据track分组
     const storyboardGroupByTrack: Record<string, number[]> = {};
     lastStoryboard.forEach((item: any) => {

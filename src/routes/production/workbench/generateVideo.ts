@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { ReferenceList } from "@/utils/ai";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 type Type = "imageReference" | "startImage" | "endImage" | "videoReference" | "audioReference";
@@ -39,6 +40,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { scriptId, projectId, prompt, uploadData, model, duration, resolution, audio, mode, trackId } = req.body;
+    const locale = await getLocale(req as any);
     let modeData = [];
     if (Array.isArray(mode)) {
     } else if (typeof mode === "string" && mode.startsWith('["') && mode.endsWith('"]')) {
@@ -78,7 +80,7 @@ export default router.post(
     const [videoId] = await u.db("o_video").insert({
       filePath: videoPath,
       time: Date.now(),
-      state: "生成中",
+      state: "生成中", // i18n-ignore — stored o_video.state enum value, not user-facing text
       scriptId,
       projectId,
       videoTrackId: trackId,
@@ -88,7 +90,7 @@ export default router.post(
       projectId,
       videoId,
       scriptId,
-      type: "视频",
+      type: "视频", // i18n-ignore — embedded in relatedObjects/AI prompt, not directly rendered to users
     };
     const aiVideo = u.Ai.Video(model);
     aiVideo
@@ -104,19 +106,19 @@ export default router.post(
         },
         {
           projectId,
-          taskClass: "视频生成",
-          describe: "根据提示词生成视频",
+          taskClass: "视频生成", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
+          describe: t("production.workbench.common.videoTaskDescribe", {}, locale),
           relatedObjects: JSON.stringify(relatedObjects),
         },
       )
       .then(async () => await aiVideo.save(videoPath))
-      .then(async () => await u.db("o_video").where("id", videoId).update({ state: "生成成功" }))
+      .then(async () => await u.db("o_video").where("id", videoId).update({ state: "生成成功" })) // i18n-ignore — stored o_video.state enum value, not user-facing text
       .catch(async (error: any) => {
         await u
           .db("o_video")
           .where("id", videoId)
           .update({
-            state: "生成失败",
+            state: "生成失败", // i18n-ignore — stored o_video.state enum value, not user-facing text
             errorReason: u.error(error).message,
           });
       });

@@ -6,31 +6,34 @@ import { validateFields } from "@/middleware/middleware";
 import { useSkill } from "@/utils/agent/skillsTools";
 import { tool, jsonSchema } from "ai";
 import { o_script } from "@/types/database";
+import { t, getLocale } from "@/i18n";
 
 const router = express.Router();
 
 /** 新资产：AI 首次识别到的资产，需要完整信息 */
-const NewAssetSchema = z.object({
-  name: z.string().describe("资产名称,仅为名称不做其他任何表述"),
-  desc: z.string().describe("资产描述"),
-  type: z.enum(["role", "tool", "scene"]).describe("资产类型"),
-  scriptIds: z.array(z.number()).describe("使用该资产的剧本id数组"),
-});
+const NewAssetSchema = (locale: Awaited<ReturnType<typeof getLocale>>) =>
+  z.object({
+    name: z.string().describe(t("agent.script.extractAssets.assetName", {}, locale)),
+    desc: z.string().describe(t("agent.script.extractAssets.assetDesc", {}, locale)),
+    type: z.enum(["role", "tool", "scene"]).describe(t("agent.script.extractAssets.assetType", {}, locale)),
+    scriptIds: z.array(z.number()).describe(t("agent.script.extractAssets.scriptIds", {}, locale)),
+  });
 
 /** 已有资产：数据库中已存在的资产，只需给出名称和关联的剧本 */
-const ExistingAssetRefSchema = z.object({
-  name: z.string().describe("已有资产的名称,必须与已有资产列表中的名称完全一致"),
-  scriptIds: z.array(z.number()).describe("使用该资产的剧本id数组"),
-});
+const ExistingAssetRefSchema = (locale: Awaited<ReturnType<typeof getLocale>>) =>
+  z.object({
+    name: z.string().describe(t("agent.script.extractAssets.existingAssetName", {}, locale)),
+    scriptIds: z.array(z.number()).describe(t("agent.script.extractAssets.scriptIds", {}, locale)),
+  });
 
 export const AssetSchema = z.object({
-  name: z.string().describe("资产名称,仅为名称不做其他任何表述"),
-  desc: z.string().describe("资产描述"),
-  type: z.enum(["role", "tool", "scene"]).describe("资产类型"),
+  name: z.string().describe("资产名称,仅为名称不做其他任何表述"), // i18n-ignore — unused exported schema (no importers in codebase), description never reaches AI or user
+  desc: z.string().describe("资产描述"), // i18n-ignore — unused exported schema, see above
+  type: z.enum(["role", "tool", "scene"]).describe("资产类型"), // i18n-ignore — unused exported schema, see above
 });
 
-type NewAsset = z.infer<typeof NewAssetSchema>;
-type ExistingAssetRef = z.infer<typeof ExistingAssetRefSchema>;
+type NewAsset = z.infer<ReturnType<typeof NewAssetSchema>>;
+type ExistingAssetRef = z.infer<ReturnType<typeof ExistingAssetRefSchema>>;
 type Asset = z.infer<typeof AssetSchema>;
 
 /** 每批 AI 调用的结果 */
@@ -62,8 +65,9 @@ export default router.post(
   }),
   async (req, res) => {
     const { scriptIds, projectId, groupSize = 5 } = req.body;
+    const locale = await getLocale(req as any);
 
-    if (!scriptIds.length) return res.status(400).send(error("请先选择剧本"));
+    if (!scriptIds.length) return res.status(400).send(error(t("script.extractAssets.selectScriptFirst", {}, locale)));
     const scripts = await u.db("o_script").whereIn("id", scriptIds);
 
     // 构建 scriptId -> script 内容的映射
@@ -145,7 +149,7 @@ export default router.post(
         errorReason: null,
       });
     }
-    res.send(success("开始提取资产"));
+    res.send(success(t("script.extractAssets.started", {}, locale)));
 
     function processGroup(group: number[][][]) {
       group.map(async (itemIds) => {
@@ -154,8 +158,9 @@ export default router.post(
           for (const scriptId of scriptIds) {
             const script = scriptMap.get(scriptId);
             if (!script) {
-              errors.push({ scriptId, error: "未找到对应剧本" });
-              await u.db("o_script").where("id", scriptId).where("projectId", projectId).update({ extractState: -1, errorReason: "未找到对应剧本" });
+              const notFoundMsg = t("script.extractAssets.scriptNotFound", {}, locale);
+              errors.push({ scriptId, error: notFoundMsg });
+              await u.db("o_script").where("id", scriptId).where("projectId", projectId).update({ extractState: -1, errorReason: notFoundMsg });
             } else {
               // 查看状态是否为等待提取，仅对等待提取进行生成
               const item = await u.db("o_script").where("projectId", projectId).where("id", scriptId).select("extractState").first();
@@ -177,30 +182,31 @@ export default router.post(
 
         // 拼接多集剧本内容，每集用分隔标记
         const scriptsContent = validScripts
-          .map(({ id, script }) => `===== 【剧本ID: ${id}】${script.name || ""} =====\n${script.content}`)
+          .map(
+            ({ id, script }) =>
+              `${t("agent.script.extractAssets.scriptMarker", { id, name: script.name || "" }, locale)}\n${script.content}`,
+          )
           .join("\n\n");
 
         let collectedNew: NewAsset[] = [];
         let collectedExisting: ExistingAssetRef[] = [];
         try {
           const resultTool = tool({
-            description: "返回结果时必须调用这个工具",
+            description: t("agent.script.extractAssets.resultToolDescribe", {}, locale),
             inputSchema: jsonSchema<{ newAssets: NewAsset[]; existingAssetRefs: ExistingAssetRef[] }>(
               z
                 .object({
-                  newAssets: z
-                    .array(NewAssetSchema)
-                    .describe("新发现的资产列表（不在已有资产列表中的），需要完整的 prompt、name、desc、type 和使用该资产的 scriptIds"),
+                  newAssets: z.array(NewAssetSchema(locale)).describe(t("agent.script.extractAssets.newAssetsDescribe", {}, locale)),
                   existingAssetRefs: z
-                    .array(ExistingAssetRefSchema)
-                    .describe("已有资产的引用列表（在已有资产列表中已存在的），只需给出资产名称和使用该资产的 scriptIds"),
+                    .array(ExistingAssetRefSchema(locale))
+                    .describe(t("agent.script.extractAssets.existingAssetRefsDescribe", {}, locale)),
                 })
                 .toJSONSchema(),
             ),
             execute: async ({ newAssets, existingAssetRefs }) => {
               if (newAssets?.length) collectedNew = newAssets;
               if (existingAssetRefs?.length) collectedExisting = existingAssetRefs;
-              return "无需回复用户任何内容";
+              return t("agent.script.extractAssets.toolResultReply", {}, locale);
             },
           });
           const promptData = await u.db("o_prompt").where("type", "scriptAssetExtraction").first();
@@ -211,20 +217,21 @@ export default router.post(
             scriptAssetExtraction = promptData?.data ?? undefined;
           }
           const existingHint = existingAssetsList
-            ? `\n\n【已有资产列表】：${existingAssetsList}\n对于已有资产，如果在剧本中出现，只需在 existingAssetRefs 中给出资产名称和对应的 scriptIds 数组即可，无需重复生成 desc/type。对于新发现的资产（不在已有列表中），请在 newAssets 中给出完整信息。`
+            ? t("agent.script.extractAssets.existingHint", { existingAssetsList }, locale)
             : "";
           const output = await u.Ai.Text("universalAi").invoke({
             messages: [
               {
                 role: "system",
-                content:
-                  scriptAssetExtraction +
-                  "\n\n提取剧本中涉及的资产（角色、场景、道具），参考技能 script_assets_extract 规范，结果必须通过 resultTool 工具返回。" +
-                  "\n\n注意：本次会同时提供多集剧本，每集剧本以 ===== 【剧本ID: xxx】 ===== 分隔。你需要分析每集剧本使用了哪些资产，并在输出中用 scriptIds 数组标明每个资产在哪些剧本中出现。",
+                content: scriptAssetExtraction + t("agent.script.extractAssets.systemPromptSuffix", {}, locale),
               },
               {
                 role: "user",
-                content: `当前已有资产列表：${existingHint}\n\n请根据以下${validScripts.length}集剧本提取对应的剧本资产（角色、场景、道具）:\n\n${scriptsContent}`,
+                content: t(
+                  "agent.script.extractAssets.userPrompt",
+                  { existingHint, count: validScripts.length, scriptsContent },
+                  locale,
+                ),
               },
             ],
             tools: { resultTool },
@@ -235,7 +242,7 @@ export default router.post(
             existingRefs: collectedExisting,
           });
         } catch (e) {
-          console.error(`[extractAssets] group=[${validScriptIds.join(",")}] 提取失败:`, e);
+          console.error(`[extractAssets] group=[${validScriptIds.join(",")}] 提取失败:`, e); // i18n-ignore — server-side log message, not user-facing text
           for (const { id, script } of validScripts) {
             errors.push({ scriptId: id, error: (script.name || "") + ":" + u.error(e).message });
             await u
@@ -247,9 +254,10 @@ export default router.post(
           return;
         }
         if (!collectedNew.length && !collectedExisting.length) {
+          const noAssetsMsg = t("script.extractAssets.noAssetsReturned", {}, locale);
           for (const { id } of validScripts) {
-            errors.push({ scriptId: id, error: "AI 未返回任何资产" });
-            await u.db("o_script").where("id", id).where("projectId", projectId).update({ extractState: -1, errorReason: "AI 未返回任何资产" });
+            errors.push({ scriptId: id, error: noAssetsMsg });
+            await u.db("o_script").where("id", id).where("projectId", projectId).update({ extractState: -1, errorReason: noAssetsMsg });
           }
           return;
         }

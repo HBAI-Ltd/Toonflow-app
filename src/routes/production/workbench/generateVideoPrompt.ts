@@ -5,6 +5,7 @@ import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import fs from "fs/promises";
 import path from "path";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -23,8 +24,9 @@ export default router.post(
   }),
   async (req, res) => {
     const { trackId, projectId, info, model, mode } = req.body;
+    const locale = await getLocale(req as any);
     await u.db("o_videoTrack").where({ id: trackId }).update({
-      state: "生成中",
+      state: "生成中", // i18n-ignore — stored o_videoTrack.state enum value, not user-facing text
     });
     //查询参数
     const images = await Promise.all(
@@ -152,17 +154,20 @@ export default router.post(
       }
     }
 
-    const artStyle = projectData?.artStyle || "无";
+    const artStyle = projectData?.artStyle || "无"; // i18n-ignore — internal fallback key for art-style prompt lookup, not user-facing text
 
     const visualManual = u.getArtPrompt(artStyle, "art_skills", "art_storyboard_video");
+    const modelLabel = t("agent.production.workbench.videoPrompt.modelLabel", {}, locale);
+    const assetsLabel = t("agent.production.workbench.videoPrompt.assetsLabel", {}, locale);
+    const storyboardLabel = t("agent.production.workbench.videoPrompt.storyboardLabel", {}, locale);
     const content = `
-          **模型名称**：${modelData},
+          ${modelLabel}${modelData},
 
-          **资产信息**（角色、场景、道具、音频):${assets
+          ${assetsLabel}${assets
             .filter((i) => i.filePath)
             .map((i) => `[${i.id},${i.type},${i.name} ${assetsAudioRecord[i.id] ? `audio:${assetsAudioRecord[i.id]}` : ""} ] `)
             .join("，")},
-          **分镜信息**：${storyboard.map(
+          ${storyboardLabel}${storyboard.map(
             (i) => `<storyboardItem
   videoDesc='${i.videoDesc}'
   duration='${i.duration}'
@@ -185,7 +190,7 @@ export default router.post(
         ],
       });
       await u.db("o_videoTrack").where({ id: trackId }).update({
-        state: "已完成",
+        state: "已完成", // i18n-ignore — stored o_videoTrack.state enum value, not user-facing text
         prompt: text,
       });
       res.status(200).send(success(text));
@@ -194,7 +199,7 @@ export default router.post(
         .db("o_videoTrack")
         .where({ id: trackId })
         .update({
-          state: "生成失败",
+          state: "生成失败", // i18n-ignore — stored o_videoTrack.state enum value, not user-facing text
           reason: u.error(e).message,
         });
       res.status(400).send(error(u.error(e).message));

@@ -38,7 +38,7 @@ export default router.post(
               }),
           );
         } catch (error) {
-          console.error("更新分镜排序失败", error);
+          console.error("更新分镜排序失败", error); // i18n-ignore — server-side log message, not user-facing text
         }
       }
     }

@@ -5,6 +5,7 @@ import sharp from "sharp";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { Output } from "ai";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -17,6 +18,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { assetIds, projectId, scriptId, concurrentCount = 5 } = req.body;
+    const locale = await getLocale(req as any);
 
     const projectSettingData = await u.db("o_project").where("id", projectId).select("imageModel", "imageQuality", "artStyle").first();
 
@@ -57,7 +59,7 @@ export default router.post(
       const [imageId] = await u.db("o_image").insert({
         assetsId: item.id,
         type: item.type,
-        state: "生成中",
+        state: "生成中", // i18n-ignore — stored o_image.state enum value, not user-facing text
         resolution: projectSettingData?.imageQuality,
         model: projectSettingData?.imageModel,
       });
@@ -66,19 +68,22 @@ export default router.post(
     }
 
     const imageData: { id: number; state: string; src: string }[] = [];
-    res.status(200).send(success("开始生成资产图片"));
+    res.status(200).send(success(t("production.assets.batchGenerateAssetsImage.started", {}, locale)));
     const generateSingleAsset = async (item: any) => {
       const imageId = imageIdMap[item.id!];
       const typeConfig = promptRecord[item.type!] || promptRecord["role"];
 
+      const noDetail = t("agent.production.batchGenerateAssetsImage.noDetail", {}, locale);
       const { text } = await u.Ai.Text("universalAi").invoke({
         system: `${typeConfig.prompt}`,
         messages: [
           {
             role: "user",
-            content: `
-            父级资产描述: ${item.parentDescribe || "无详细描述"}
-            当前资产描述: ${item.describe || "无详细描述"}`,
+            content: t(
+              "agent.production.batchGenerateAssetsImage.describePrompt",
+              { parentDescribe: item.parentDescribe || noDetail, describe: item.describe || noDetail },
+              locale,
+            ),
           },
         ],
       });
@@ -97,28 +102,28 @@ export default router.post(
             ...repeloadObj,
           },
           {
-            taskClass: "生成图片",
-            describe: "资产图片生成",
+            taskClass: "生成图片", // i18n-ignore — stored o_tasks.taskClass enum value, not user-facing text
+            describe: t("production.assets.batchGenerateAssetsImage.taskDescribe", {}, locale),
             relatedObjects: JSON.stringify(repeloadObj),
             projectId: projectId,
           },
         );
         const savePath = `/${projectId}/assets/${scriptId}/${item.type}/${u.uuid()}.jpg`;
         await imageCls.save(savePath);
-        await u.db("o_image").where({ id: imageId }).update({ state: "已完成", filePath: savePath });
+        await u.db("o_image").where({ id: imageId }).update({ state: "已完成", filePath: savePath }); // i18n-ignore — stored o_image.state enum value, not user-facing text
         return {
           id: item.id!,
-          state: "已完成",
+          state: "已完成", // i18n-ignore — stored o_image.state enum value, not user-facing text
           src: await u.oss.getSmallImageUrl(savePath),
         };
       } catch (e) {
         await u
           .db("o_image")
           .where({ id: imageId })
-          .update({ state: "生成失败", errorReason: u.error(e).message });
+          .update({ state: "生成失败", errorReason: u.error(e).message }); // i18n-ignore — stored o_image.state enum value, not user-facing text
         return {
           id: item.id!,
-          state: "生成失败",
+          state: "生成失败", // i18n-ignore — stored o_image.state enum value, not user-facing text
           src: "",
         };
       }

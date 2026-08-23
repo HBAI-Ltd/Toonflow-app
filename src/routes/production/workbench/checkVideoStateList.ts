@@ -17,7 +17,7 @@ export default router.post(
     const videoList = await u
       .db("o_video")
       .whereIn("id", videoIds)
-      .whereIn("state", ["生成成功", "生成失败"])
+      .whereIn("state", ["生成成功", "生成失败"]) // i18n-ignore — stored o_video.state enum values, not user-facing text
       .select("id", "state", "errorReason", "filePath");
     res.status(200).send(
       success(

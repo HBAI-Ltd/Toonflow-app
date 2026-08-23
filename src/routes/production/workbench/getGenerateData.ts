@@ -3,11 +3,13 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 interface VideoItem {
   id: number;
   src: string;
+  // i18n-ignore — stored o_video.state enum values, not user-facing text
   state: "未生成" | "生成中" | "已完成" | "生成失败";
 }
 
@@ -21,6 +23,7 @@ interface TrackMedia {
 interface TrackItem {
   id?: number;
   prompt: string;
+  // i18n-ignore — stored o_videoTrack.state enum values, not user-facing text
   state: "未生成" | "生成中" | "已完成" | "生成失败";
   reason?: string;
   duration?: number;
@@ -37,10 +40,11 @@ export default router.post(
   }),
   async (req, res) => {
     const { projectId, scriptId } = req.body;
+    const locale = await getLocale(req as any);
     const projectData = await u.db("o_project").where("id", projectId).select("id", "videoModel", "mode").first();
 
     if (!projectData?.videoModel) {
-      return res.status(400).json(success("项目未配置视频模型"));
+      return res.status(400).json(success(t("production.workbench.getGenerateData.videoModelNotConfigured", {}, locale)));
     }
     let videoMode = "";
     try {
@@ -165,6 +169,7 @@ export default router.post(
         id: trackId,
         duration: item?.duration ?? 0,
         prompt: item?.prompt || "",
+        // i18n-ignore — stored o_videoTrack.state enum values, not user-facing text
         state: (item?.state as "未生成" | "生成中" | "已完成" | "生成失败") ?? "未生成",
         reason: item?.reason ?? "",
         selectVideoId: Number(item?.videoId)!,
@@ -201,6 +206,7 @@ export default router.post(
             .map(async (v) => ({
               id: v.id!,
               src: v.filePath ? await u.oss.getFileUrl(v.filePath) : "",
+              // i18n-ignore — stored o_video.state enum values, not user-facing text
               state: v.state === "已完成" ? "已完成" : v.state === "生成中" ? "生成中" : v.state === "生成失败" ? "生成失败" : "未生成",
               errorReason: v?.errorReason ?? "",
             })),

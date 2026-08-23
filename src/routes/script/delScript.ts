@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 删除剧本
@@ -13,6 +14,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { ids } = req.body;
+    const locale = await getLocale(req as any);
     const scriptData = await u.db("o_script").whereIn("id", ids);
     if (scriptData && scriptData.length) {
       const scriptProjectId = new Set(scriptData.map((item) => item.projectId));
@@ -34,6 +36,6 @@ export default router.post(
     await u.db("o_script").whereIn("id", ids).delete();
     await u.db("o_storyboard").whereIn("scriptId", ids).delete();
     await u.db("o_video").whereIn("scriptId", ids).delete();
-    res.status(200).send(success({ message: "删除剧本成功" }));
+    res.status(200).send(success({ message: t("script.delScript.deleted", {}, locale) }));
   },
 );
