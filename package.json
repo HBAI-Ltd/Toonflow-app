@@ -24,6 +24,8 @@
     "dev:gui-vite": "cross-env VITE_DEV=1 electronmon -r tsx scripts/main.ts",
     "start": "cross-env NODE_ENV=prod node data/serve/app.js",
     "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "build": "cross-env NODE_ENV=prod tsx scripts/build.ts",
     "pack": "electron-builder --dir",
     "dist": "yarn build && electron-builder",
@@ -92,7 +94,9 @@
     "license-checker": "^25.0.1",
     "nodemon": "^3.1.11",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite-tsconfig-paths": "^5",
+    "vitest": "^3"
   },
   "overrides": {
     "@rmp135/sql-ts": {
