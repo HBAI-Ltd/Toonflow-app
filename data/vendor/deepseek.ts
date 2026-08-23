@@ -1,10 +1,10 @@
 /**
- * Toonflow AI供应商模板 - DeepSeek
+ * Toonflow AI provider template - DeepSeek
  * @version 2.1
  */
 
 // ============================================================
-// 类型定义
+// Type definitions
 // ============================================================
 
 type VideoMode =
@@ -91,7 +91,7 @@ interface PollResult {
 }
 
 // ============================================================
-// 全局声明
+// Global declarations
 // ============================================================
 
 declare const axios: any;
@@ -122,7 +122,7 @@ declare const exports: {
 };
 
 // ============================================================
-// 供应商配置
+// Provider configuration
 // ============================================================
 
 const vendor: VendorConfig = {
@@ -148,14 +148,14 @@ const vendor: VendorConfig = {
 };
 
 // ============================================================
-// 适配器函数
+// Adapter functions
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
   if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
 
-  // DeepSeek 思考强度仅支持 high / max（low、medium 会被映射为 high，xhigh 会被映射为 max）
+  // DeepSeek thinking effort only supports high / max (low/medium map to high, xhigh maps to max)
   // thinkLevel: 0/1/2 → high, 3 → max
   const effortMap: Record<0 | 1 | 2 | 3, "high" | "max"> = {
     0: "high",
@@ -210,7 +210,7 @@ const updateVendor = async (): Promise<string> => {
 };
 
 // ============================================================
-// 导出
+// Exports
 // ============================================================
 
 exports.vendor = vendor;

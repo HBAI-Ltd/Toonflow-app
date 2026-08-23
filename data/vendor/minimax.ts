@@ -1,10 +1,10 @@
 /**
- * Toonflow AI供应商模板 - MiniMax(海螺AI)
+ * Toonflow AI provider template - MiniMax (Hailuo AI)
  * @version 2.0
  */
 
 // ============================================================
-// 类型定义
+// Type definitions
 // ============================================================
 
 type VideoMode =
@@ -97,7 +97,7 @@ interface PollResult {
 }
 
 // ============================================================
-// 全局声明
+// Global declarations
 // ============================================================
 
 declare const axios: any;
@@ -129,7 +129,7 @@ declare const exports: {
 };
 
 // ============================================================
-// 供应商配置
+// Provider configuration
 // ============================================================
 
 const vendor: VendorConfig = {
@@ -193,11 +193,11 @@ const vendor: VendorConfig = {
 };
 
 // ============================================================
-// 辅助工具
+// Helper utilities
 // ============================================================
 
 /**
- * 获取请求头
+ * Get request headers
  */
 const getHeaders = (): Record<string, string> => {
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
@@ -208,21 +208,21 @@ const getHeaders = (): Record<string, string> => {
 };
 
 /**
- * 获取基础请求地址
+ * Get the base request URL
  */
 const getBaseUrl = (): string => {
   return vendor.inputValues.baseUrl.replace(/\/$/, "");
 };
 
 /**
- * 从 ReferenceList 条目中提取有头 base64 字符串
+ * Extract a headed base64 string from a ReferenceList entry
  */
 const extractBase64WithHead = (ref: ReferenceList): string => {
   return ref.base64.startsWith("data:") ? ref.base64 : `data:image/png;base64,${ref.base64}`;
 };
 
 // ============================================================
-// 适配器函数
+// Adapter functions
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
@@ -236,12 +236,12 @@ const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3
 };
 
 const uploadReference = async (base64: string, fileType: "image" | "audio" | "video"): Promise<ReferenceList> => {
-  // MiniMax的图片接口直接接受 base64，压缩后原样返回
+  // MiniMax's image API accepts base64 directly, return as-is after compression
   if (fileType === "image") {
     const compressed = await zipImage(base64, 10 * 1024);
     return { type: "image", sourceType: "base64", base64: compressed };
   }
-  // 视频接口的图片参数也是 base64，压缩到20MB
+  // The video API's image parameter is also base64, compress to 20MB
   return { type: fileType, sourceType: "base64", base64 } as ReferenceList;
 };
 
@@ -260,7 +260,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
     aigc_watermark: false,
   };
 
-  // 处理图生图参考
+  // Handle image-to-image reference
   const imageRefs = config.referenceList || [];
   if (imageRefs.length > 0) {
     const refBase64 = extractBase64WithHead(imageRefs[0]);
@@ -294,11 +294,11 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     prompt_optimizer: true,
   };
 
-  // 提取图片类型的引用
+  // Extract image-type references
   const imageRefs = (config.referenceList || []).filter((r) => r.type === "image");
 
   if (imageRefs.length > 0) {
-    // 压缩图片到20MB以内
+    // Compress images to under 20MB
     const compressedImages: string[] = [];
     for (const ref of imageRefs) {
       const base64 = extractBase64WithHead(ref);
@@ -323,7 +323,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   const taskId = submitResp.data.task_id;
   logger(`Video task submitted successfully, task ID: ${taskId}`);
 
-  // 轮询任务状态
+  // Poll task status
   const pollResult = await pollTask(
     async () => {
       const queryResp = await axios.get(`${baseUrl}/v1/query/video_generation`, {
@@ -351,7 +351,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   const fileId = pollResult.data!;
   logger(`Video task generated successfully, file ID: ${fileId}`);
 
-  // 获取下载地址
+  // Get download URL
   const fileResp = await axios.get(`${baseUrl}/v1/files/retrieve`, {
     headers: getHeaders(),
     params: { file_id: fileId },
@@ -383,7 +383,7 @@ const updateVendor = async (): Promise<string> => {
 };
 
 // ============================================================
-// 导出
+// Exports
 // ============================================================
 
 exports.vendor = vendor;
@@ -395,5 +395,5 @@ exports.ttsRequest = ttsRequest;
 exports.checkForUpdates = checkForUpdates;
 exports.updateVendor = updateVendor;
 
-// 这行代码用于确保当前文件被识别为模块，避免全局变量冲突
+// This line ensures the current file is recognized as a module, avoiding global variable conflicts
 export {};

@@ -1,10 +1,10 @@
 /**
- * Toonflow AI供应商模板 - 火山引擎(豆包)
+ * Toonflow AI provider template - Volcengine (Doubao)
  * @version 2.0
  */
 
 // ============================================================
-// 类型定义
+// Type definitions
 // ============================================================
 
 type VideoMode =
@@ -97,7 +97,7 @@ interface PollResult {
 }
 
 // ============================================================
-// 全局声明
+// Global declarations
 // ============================================================
 
 declare const axios: any;
@@ -128,7 +128,7 @@ declare const exports: {
 };
 
 // ============================================================
-// 供应商配置
+// Provider configuration
 // ============================================================
 
 const vendor: VendorConfig = {
@@ -147,13 +147,13 @@ const vendor: VendorConfig = {
     baseUrl: "https://ark.cn-beijing.volces.com/api/v3",
   },
   models: [
-    // ===================== 文本模型 - 推荐 =====================
+    // ===================== Text models - Recommended =====================
     { name: "Doubao-Seed-2.0-Pro", modelName: "doubao-seed-2-0-pro-260215", type: "text", think: true },
     { name: "Doubao-Seed-2.0-Lite", modelName: "doubao-seed-2-0-lite-260215", type: "text", think: true },
     { name: "Doubao-Seed-2.0-Mini", modelName: "doubao-seed-2-0-mini-260215", type: "text", think: true },
     { name: "Doubao-Seed-2.0-Code-Preview", modelName: "doubao-seed-2-0-code-preview-260215", type: "text", think: true },
     { name: "Doubao-Seed-Character", modelName: "doubao-seed-character-251128", type: "text", think: false },
-    // ===================== 文本模型 - 往期 =====================
+    // ===================== Text models - Previous =====================
     { name: "Doubao-Seed-1.8", modelName: "doubao-seed-1-8-251228", type: "text", think: true },
     { name: "Doubao-Seed-Code-Preview", modelName: "doubao-seed-code-preview-251028", type: "text", think: true },
     { name: "Doubao-Seed-1.6-Lite", modelName: "doubao-seed-1-6-lite-251015", type: "text", think: true },
@@ -168,7 +168,7 @@ const vendor: VendorConfig = {
     { name: "Doubao-1.5-Pro-32K-Character(0228)", modelName: "doubao-1-5-pro-32k-character-250228", type: "text", think: false },
     { name: "Doubao-1.5-Lite-32K", modelName: "doubao-1-5-lite-32k-250115", type: "text", think: false },
     { name: "Doubao-1.5-Vision-Pro-32K", modelName: "doubao-1-5-vision-pro-32k-250115", type: "text", think: false },
-    // ===================== 文本模型 - 第三方(火山引擎托管) =====================
+    // ===================== Text models - Third-party (hosted on Volcengine) =====================
     { name: "GLM-4-7", modelName: "glm-4-7-251222", type: "text", think: true },
     { name: "DeepSeek-V3-2", modelName: "deepseek-v3-2-251201", type: "text", think: true },
     { name: "DeepSeek-V3-1-Terminus", modelName: "deepseek-v3-1-terminus", type: "text", think: true },
@@ -180,7 +180,7 @@ const vendor: VendorConfig = {
     { name: "Qwen3-0.6B", modelName: "qwen3-0-6b-20250429", type: "text", think: false },
     { name: "Qwen2.5-72B", modelName: "qwen2-5-72b-20240919", type: "text", think: false },
     { name: "GLM-4.5-Air", modelName: "glm-4-5-air", type: "text", think: false },
-    // ===================== 图片生成模型 =====================
+    // ===================== Image generation models =====================
     {
       name: "Seedream-5.0",
       modelName: "doubao-seedream-5-0-260128",
@@ -211,7 +211,7 @@ const vendor: VendorConfig = {
       type: "image",
       mode: ["text"],
     },
-    // ===================== 视频生成模型 =====================
+    // ===================== Video generation models =====================
     {
       name: "Seedance-2.0 (Synced Audio&Video)",
       modelName: "doubao-seedance-2-0-260128",
@@ -272,7 +272,7 @@ const vendor: VendorConfig = {
 };
 
 // ============================================================
-// 辅助工具
+// Helper utilities
 // ============================================================
 
 const getHeaders = () => {
@@ -286,7 +286,7 @@ const getHeaders = () => {
 const getBaseUrl = () => vendor.inputValues.baseUrl.replace(/\/+$/, "");
 
 // ============================================================
-// 适配器函数
+// Adapter functions
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
@@ -335,18 +335,18 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
   const isOldModel = model.modelName.includes("seedream-3-0");
   const is5Lite = model.modelName.includes("seedream-5-0-lite");
 
-  // sequential_image_generation 仅 seedream 5.0-lite/4.5/4.0 支持
+  // sequential_image_generation is only supported by seedream 5.0-lite/4.5/4.0
   if (!isOldModel) {
     body.sequential_image_generation = "disabled";
   }
 
-  // 参考图片：单图为 string，多图为 array（seedream-3.0-t2i 不支持 image 参数）
+  // Reference image: a single image is a string, multiple images are an array (seedream-3.0-t2i does not support the image parameter)
   if (!isOldModel && config.referenceList && config.referenceList.length > 0) {
     const images = config.referenceList.map((ref) => ref.base64);
     body.image = images.length === 1 ? images[0] : images;
   }
 
-  // 尺寸处理：优先使用推荐像素值，未匹配则直接传分辨率字符串让模型自行决定
+  // Size handling: prefer the recommended pixel value; if unmatched, pass the resolution string directly and let the model decide
   const [w, h] = config.aspectRatio.split(":").map(Number);
   const sizeTable: Record<string, Record<string, string>> = {
     "1K": {
@@ -386,30 +386,30 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
   const table = sizeTable[sizeKey];
 
   if (table && table[ratioKey]) {
-    // 推荐像素值匹配到了，但需要检查是否满足模型最低像素要求
+    // Recommended pixel value matched, but need to check whether it meets the model's minimum pixel requirement
     const [pw, ph] = table[ratioKey].split("x").map(Number);
     const totalPixels = pw * ph;
     if (isOldModel) {
-      // seedream-3.0-t2i: 像素范围 [512x512, 2048x2048]
+      // seedream-3.0-t2i: pixel range [512x512, 2048x2048]
       body.size = table[ratioKey];
     } else if (totalPixels < 3686400) {
-      // 1K 像素值不满足新模型最低要求，直接传 "2K" 让模型自行决定
+      // The 1K pixel value doesn't meet the new model's minimum requirement, pass "2K" directly and let the model decide
       body.size = "2K";
     } else if (is5Lite && totalPixels > 10404496) {
-      // seedream-5.0-lite 最高 10404496，4K 超限，回退传 "2K"
+      // seedream-5.0-lite maxes out at 10404496, 4K exceeds the limit, fall back to passing "2K"
       body.size = "2K";
     } else {
       body.size = table[ratioKey];
     }
   } else if (isOldModel) {
-    // seedream-3.0-t2i: 像素范围 [512x512, 2048x2048]，直接按比例计算
+    // seedream-3.0-t2i: pixel range [512x512, 2048x2048], compute directly by ratio
     const base = sizeKey === "1K" ? 1024 : 2048;
     const calcW = Math.min(2048, Math.round(base * Math.sqrt(w / h)));
     const calcH = Math.min(2048, Math.round(base * Math.sqrt(h / w)));
     body.size = `${Math.max(512, calcW)}x${Math.max(512, calcH)}`;
   } else {
-    // 新模型未匹配推荐值时，直接传分辨率字符串（方式1），由模型根据 prompt 自行决定尺寸
-    // seedream 5.0-lite 支持 "2K"/"3K"，seedream 4.5 支持 "2K"/"4K"，seedream 4.0 支持 "1K"/"2K"/"4K"
+    // When the new model doesn't match a recommended value, pass the resolution string directly (method 1) and let the model decide the size based on the prompt
+    // seedream 5.0-lite supports "2K"/"3K", seedream 4.5 supports "2K"/"4K", seedream 4.0 supports "1K"/"2K"/"4K"
     if (is5Lite) {
       body.size = sizeKey === "4K" ? "3K" : sizeKey === "1K" ? "2K" : sizeKey;
     } else {
@@ -434,7 +434,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
     throw new Error(`Image generation failed: ${response.error.message || response.error.code}`);
   }
 
-  // 从 data 数组中提取第一张成功的图片
+  // Extract the first successful image from the data array
   if (response?.data && response.data.length > 0) {
     for (const item of response.data) {
       if (item.url) {
@@ -532,7 +532,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
         break;
     }
   } else if (Array.isArray(config.mode)) {
-    // 多模态参考模式：按类型分别提取并添加
+    // Multimodal reference mode: extract and add separately by type
     const imageRefs = config.referenceList?.filter((r) => r.type === "image") ?? [];
     const videoRefs = config.referenceList?.filter((r) => r.type === "video") ?? [];
     const audioRefs = config.referenceList?.filter((r) => r.type === "audio") ?? [];
@@ -663,7 +663,7 @@ const updateVendor = async (): Promise<string> => {
 };
 
 // ============================================================
-// 导出
+// Exports
 // ============================================================
 
 exports.vendor = vendor;

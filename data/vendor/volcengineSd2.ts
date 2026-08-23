@@ -1,10 +1,10 @@
 /**
- * Toonflow AI供应商模板 - 火山引擎(豆包)
+ * Toonflow AI provider template - Volcengine (Doubao)
  * @version 2.0
  */
 
 // ============================================================
-// 类型定义
+// Type definitions
 // ============================================================
 
 type VideoMode =
@@ -97,7 +97,7 @@ interface PollResult {
 }
 
 // ============================================================
-// 全局声明
+// Global declarations
 // ============================================================
 
 declare const axios: any;
@@ -128,7 +128,7 @@ declare const exports: {
   updateVendor?: () => Promise<string>;
 };
 
-// 常量配置
+// Constant configuration
 const SERVICE = "ark";
 const VERSION = "2024-01-01";
 const REGION = "cn-beijing";
@@ -139,7 +139,7 @@ const PATH = "/";
 const TIMEOUT = 120_000;
 
 // ============================================================
-// 供应商配置
+// Provider configuration
 // ============================================================
 
 const vendor: VendorConfig = {
@@ -194,7 +194,7 @@ const vendor: VendorConfig = {
     },
   ],
 };
-/** 签名密钥派生 */
+/** Signing key derivation */
 function deriveSigningKey(shortDate: string) {
   const kDate = crypto.createHmac("sha256", vendor.inputValues.sk).update(shortDate).digest();
   const kRegion = crypto.createHmac("sha256", kDate).update(REGION).digest();
@@ -214,11 +214,11 @@ function buildQueryString(params: Record<string, string>): string {
     .join("&");
 }
 /**
- * 火山引擎 HMAC-SHA256 签名请求
- * @param action  API Action 名称
- * @param body    请求体对象（自动序列化为 JSON）
- * @param method  HTTP 方法，默认 POST
- * @param header  额外的自定义请求头
+ * Volcengine HMAC-SHA256 signed request
+ * @param action  API Action name
+ * @param body    Request body object (automatically serialized to JSON)
+ * @param method  HTTP method, defaults to POST
+ * @param header  Extra custom request headers
  */
 async function request(
   action: string,
@@ -228,15 +228,15 @@ async function request(
 ): Promise<any> {
   const bodyStr = JSON.stringify(body);
 
-  // 查询参数（按 key 排序）
+  // Query parameters (sorted by key)
   const sortedQuery = Object.fromEntries(Object.entries({ Action: action, Version: VERSION }).sort(([a], [b]) => a.localeCompare(b)));
 
-  // 时间戳 & 内容哈希
+  // Timestamp & content hash
   const date = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+/, "Z");
   const shortDate = date.slice(0, 8);
   const xContentSha256 = crypto.createHash("sha256").update(bodyStr).digest("hex");
 
-  // 规范化请求字符串
+  // Canonical request string
   const queryString = buildQueryString(sortedQuery as Record<string, string>);
   const canonicalRequest = [
     method,
@@ -255,11 +255,11 @@ async function request(
   const credentialScope = `${shortDate}/${REGION}/${SERVICE}/request`;
   const stringToSign = `HMAC-SHA256\n${date}\n${credentialScope}\n${hashedCanonicalRequest}`;
 
-  // 计算签名
+  // Compute the signature
   const signingKey = deriveSigningKey(shortDate);
   const signature = crypto.createHmac("sha256", signingKey).update(stringToSign).digest("hex");
 
-  // 组装请求头
+  // Assemble the request headers
   const authorization = `HMAC-SHA256 Credential=${vendor.inputValues.ak}/${credentialScope}, SignedHeaders=${SIGNED_HEADERS}, Signature=${signature}`;
   const headers: Record<string, string> = {
     Host: HOST,
@@ -277,7 +277,7 @@ async function request(
 }
 
 // ============================================================
-// 火山引擎 TOS V4 签名工具函数
+// Volcengine TOS V4 signing utility functions
 // ============================================================
 const TOS_SIGNING_ALGORITHM = "TOS4-HMAC-SHA256";
 function getTosRegion(): string {
@@ -496,7 +496,7 @@ function tosGetSignedUrl(objectKey: string, expiresIn: number = 7200): string {
 
   return `https://${host}/${tosUriEncode(objectKey)}?${finalQuery}`;
 }
-/** 从 base64 Data URL 中解析 MIME 类型和文件扩展名 */
+/** Parse the MIME type and file extension from a base64 Data URL */
 function parseBase64(base64: string): { mimeType: string; ext: string; data: string } {
   const match = base64.match(/^data:([^;]+);base64,(.+)$/);
   if (!match) {
@@ -598,7 +598,7 @@ async function uploadAssets(source: string, type: "Image" | "Video" | "Audio"): 
 }
 
 // ============================================================
-// 辅助工具
+// Helper utilities
 // ============================================================
 
 const getHeaders = () => {
@@ -612,7 +612,7 @@ const getHeaders = () => {
 const getBaseUrl = () => vendor.inputValues.baseUrl.replace(/\/+$/, "");
 
 // ============================================================
-// 适配器函数
+// Adapter functions
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {};
@@ -699,7 +699,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
         break;
     }
   } else if (Array.isArray(config.mode)) {
-    // 多模态参考模式：按类型分别提取并添加
+    // Multimodal reference mode: extract and add separately by type
     const imageRefs = config.referenceList?.filter((r) => r.type === "image") ?? [];
     const videoRefs = config.referenceList?.filter((r) => r.type === "video") ?? [];
     const audioRefs = config.referenceList?.filter((r) => r.type === "audio") ?? [];
@@ -829,7 +829,7 @@ const updateVendor = async (): Promise<string> => {
 };
 
 // ============================================================
-// 导出
+// Exports
 // ============================================================
 
 exports.vendor = vendor;

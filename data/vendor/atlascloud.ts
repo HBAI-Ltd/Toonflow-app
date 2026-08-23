@@ -1,15 +1,15 @@
 /**
- * Toonflow AI供应商模板 - AtlasCloud MASS
+ * Toonflow AI provider template - AtlasCloud MASS
  * @version 0.8
  *
- * 说明：
- * 1) 文本接口使用 OpenAI 兼容基地址：https://api.atlascloud.ai/v1
- * 2) 图片/视频使用 Atlas Cloud 媒体接口：https://api.atlascloud.ai/api/v1
- * 3) 图片/视频为异步任务：提交后轮询 /api/v1/model/prediction/{id}
+ * Notes:
+ * 1) Text API uses the OpenAI-compatible base URL: https://api.atlascloud.ai/v1
+ * 2) Image/video use the Atlas Cloud media API: https://api.atlascloud.ai/api/v1
+ * 3) Image/video are asynchronous tasks: poll /api/v1/model/prediction/{id} after submission
  */
 
 // ============================================================
-// 类型定义
+// Type definitions
 // ============================================================
 
 type VideoMode =
@@ -109,7 +109,7 @@ type AtlasVideoModelKind =
   | "generic";
 
 // ============================================================
-// 全局声明
+// Global declarations
 // ============================================================
 
 declare const axios: any;
@@ -128,7 +128,7 @@ declare const exports: {
 };
 
 // ============================================================
-// 供应商配置
+// Provider configuration
 // ============================================================
 
 const vendor: VendorConfig = {
@@ -210,7 +210,7 @@ const vendor: VendorConfig = {
 };
 
 // ============================================================
-// 辅助工具
+// Helper utilities
 // ============================================================
 
 const getChatBaseUrl = () => vendor.inputValues.chatBaseUrl.replace(/\/+$/, "");
@@ -418,7 +418,7 @@ const buildAtlasVideoPayload = (config: VideoConfig, model: VideoModel) => {
 };
 
 // ============================================================
-// 适配器函数
+// Adapter functions
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
@@ -575,7 +575,7 @@ const updateVendor = async (): Promise<string> => {
 };
 
 // ============================================================
-// 导出
+// Exports
 // ============================================================
 
 exports.vendor = vendor;

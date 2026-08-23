@@ -1,9 +1,9 @@
 /**
- * Toonflow AI供应商模板
+ * Toonflow AI provider template
  * @version 2.0
  */
 // ============================================================
-// 类型定义
+// Type definitions
 // ============================================================
 type VideoMode =
   | "singleImage"
@@ -79,7 +79,7 @@ interface PollResult {
   error?: string;
 }
 // ============================================================
-// 全局声明
+// Global declarations
 // ============================================================
 declare const axios: any;
 declare const logger: (msg: string) => void;
@@ -108,7 +108,7 @@ declare const exports: {
   updateVendor?: () => Promise<string>;
 };
 // ============================================================
-// 供应商配置
+// Provider configuration
 // ============================================================
 const vendor: VendorConfig = {
   id: "openai",
@@ -134,7 +134,7 @@ const vendor: VendorConfig = {
   ],
 };
 // ============================================================
-// 适配器函数
+// Adapter functions
 // ============================================================
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
   if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
@@ -157,7 +157,7 @@ const updateVendor = async (): Promise<string> => {
   return "";
 };
 // ============================================================
-// 导出
+// Exports
 // ============================================================
 exports.vendor = vendor;
 exports.textRequest = textRequest;

@@ -1,10 +1,10 @@
 /**
- * Toonflow官方中转平台 供应商适配
+ * Toonflow Official Relay Platform provider adapter
  * @version 3.0
  */
 
 // ============================================================
-// 类型定义
+// Type definitions
 // ============================================================
 
 type VideoMode =
@@ -97,7 +97,7 @@ interface PollResult {
 }
 
 // ============================================================
-// 全局声明
+// Global declarations
 // ============================================================
 
 declare const axios: any;
@@ -128,7 +128,7 @@ declare const exports: {
 };
 
 // ============================================================
-// 供应商配置
+// Provider configuration
 // ============================================================
 
 const vendor: VendorConfig = {
@@ -224,10 +224,10 @@ const vendor: VendorConfig = {
 };
 
 // ============================================================
-// 辅助工具
+// Helper utilities
 // ============================================================
 
-// 从 markdown 内容中提取第一张图片
+// Extract the first image from markdown content
 function extractFirstImageFromMd(content: string) {
   const regex = /!\[([^\]]*)\]\((data:image\/[^;]+;base64,[A-Za-z0-9+/=]+|https?:\/\/[^\s)]+|\/\/[^\s)]+|[^\s)]+)\)/;
   const match = content.match(regex);
@@ -238,7 +238,7 @@ function extractFirstImageFromMd(content: string) {
 }
 
 // ============================================================
-// 适配器函数
+// Adapter functions
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
@@ -247,7 +247,7 @@ const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3
   const lowerName = model.modelName.toLowerCase();
   if (lowerName.includes("deepseek")) {
     logger("Using deepseek");
-    // DeepSeek 思考强度仅支持 high / max（low、medium 会被映射为 high，xhigh 会被映射为 max）
+    // DeepSeek thinking effort only supports high / max (low/medium map to high, xhigh maps to max)
     // thinkLevel: 0/1/2 → high, 3 → max
     const effortMap: Record<0 | 1 | 2 | 3, "high" | "max"> = {
       0: "high",
@@ -280,7 +280,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
   const lowerName = model.modelName.toLowerCase();
   const imageBase64List = (config.referenceList ?? []).map((r) => r.base64).filter(Boolean);
 
-  // Gemini / nano 系模型：走 chat/completions 接口，从返回的 markdown 中提取图片
+  // Gemini / nano family models: use the chat/completions API, extract the image from the returned markdown
   if (lowerName.includes("gemini") || lowerName.includes("nano")) {
     const imageConfigGoogle: Record<string, string> = {
       aspect_ratio: config.aspectRatio,
@@ -316,7 +316,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
     return await urlToBase64(imageResult.url);
   }
 
-  // 豆包 / seedream 系模型：走 images/generations 接口
+  // Doubao / seedream family models: use the images/generations API
   if (lowerName.includes("doubao") || lowerName.includes("seedream")) {
     const effectiveSize = config.size === "1K" ? "2K" : config.size;
     const sizeMap: Record<string, Record<string, string>> = {
@@ -438,7 +438,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   const baseUrl = vendor.inputValues.baseUrl;
   const lowerName = model.modelName.toLowerCase();
 
-  // 当前激活的单一 VideoMode（取第一个非数组模式，或数组模式）
+  // Currently active single VideoMode (take the first non-array mode, or the array mode)
   const activeMode = config.mode as string | string[];
   const imageRefs = (config.referenceList ?? []).filter((r) => r.type === "image").map((r) => r.base64);
   const videoRefs = (config.referenceList ?? []).filter((r) => r.type === "video").map((r) => r.base64);
@@ -448,11 +448,11 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       await zipImage(item, 3 * 1024 * 104);
     }
   }
-  // 构建模型专属 metadata
+  // Build model-specific metadata
   let metadata: Record<string, any> = {};
 
   if (lowerName.includes("wan")) {
-    // 万象系列
+    // Wanxiang family
     if ((activeMode === "startEndRequired" || activeMode === "endFrameOptional" || activeMode === "startFrameOptional") && imageRefs.length >= 2) {
       if (imageRefs[0]) metadata.first_frame_url = imageRefs[0];
       if (imageRefs[1]) metadata.last_frame_url = imageRefs[1];
@@ -515,7 +515,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   }
 
   if (lowerName.includes("doubao") || lowerName.includes("seedance")) {
-    // 豆包/Seedance 系列
+    // Doubao/Seedance family
     metadata = {
       ...(typeof config.audio === "boolean" && { generate_audio: config.audio }),
       ratio: config.aspectRatio,
@@ -523,7 +523,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       resolution: config.resolution,
     };
     if (Array.isArray(activeMode)) {
-      // 多参考模式
+      // Multi-reference mode
       imageRefs.forEach((item) => {
         metadata.references.push({
           role: "reference_image",
@@ -573,7 +573,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       });
     }
   } else if (lowerName.includes("vidu")) {
-    // Vidu 系列
+    // Vidu family
     metadata = {
       aspect_ratio: config.aspectRatio,
       audio: config.audio ?? false,
@@ -589,14 +589,14 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       image_list: [],
     };
 
-    // 图片有效性检查函数
+    // Image validity check function
     const isValidImage = (imageUrl: any) => {
       return imageUrl && typeof imageUrl === "string" && imageUrl.trim().length > 0;
     };
 
     if (activeMode === "singleImage") {
       if (lowerName.includes("omni") || lowerName.includes("o1")) {
-        // 只在图片有效时才添加
+        // Only add when the image is valid
         if (isValidImage(imageRefs[0])) {
           metadata.image_list = [{ image_url: imageRefs[0] }];
         }
@@ -637,7 +637,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     };
   }
 
-  // 公共请求体（非万象通用路径）
+  // Common request body (non-Wanxiang generic path)
   const publicBody: Record<string, any> = {
     model: model.modelName,
     ...(imageRefs.length && lowerName.includes("vidu") ? { images: imageRefs } : {}),
@@ -738,7 +738,7 @@ const updateVendor = async (): Promise<string> => {
 };
 
 // ============================================================
-// 导出
+// Exports
 // ============================================================
 
 exports.vendor = vendor;

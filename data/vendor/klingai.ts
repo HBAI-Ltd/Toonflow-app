@@ -1,10 +1,10 @@
 /**
- * Toonflow AI供应商模板 - 可灵AI
+ * Toonflow AI provider template - Kling AI
  * @version 2.0
  */
 
 // ============================================================
-// 类型定义
+// Type definitions
 // ============================================================
 
 type VideoMode =
@@ -97,7 +97,7 @@ interface PollResult {
 }
 
 // ============================================================
-// 全局声明
+// Global declarations
 // ============================================================
 
 declare const axios: any;
@@ -128,7 +128,7 @@ declare const exports: {
 };
 
 // ============================================================
-// 供应商配置
+// Provider configuration
 // ============================================================
 
 const vendor: VendorConfig = {
@@ -320,11 +320,11 @@ const vendor: VendorConfig = {
 };
 
 // ============================================================
-// 辅助工具
+// Helper utilities
 // ============================================================
 
 /**
- * 生成可灵AI的JWT鉴权Token
+ * Generate a Kling AI JWT auth token
  */
 const generateAuthToken = (): string => {
   const now = Math.floor(Date.now() / 1000);
@@ -340,30 +340,30 @@ const generateAuthToken = (): string => {
 };
 
 /**
- * 获取基础请求地址
+ * Get the base request URL
  */
 const getBaseUrl = (): string => {
   return vendor.inputValues.baseUrl || "https://api-beijing.klingai.com";
 };
 
 /**
- * 从 ReferenceList 条目中提取可用的数据字符串
- * 对于 url 类型返回 url，对于 base64 类型返回纯 base64（去掉 data: 前缀）
+ * Extract a usable data string from a ReferenceList entry
+ * Returns the url for url-type entries, or plain base64 (without the data: prefix) for base64-type entries
  */
 const extractRawBase64 = (ref: ReferenceList): string => {
   return ref.base64.replace(/^data:[^;]+;base64,/, "");
 };
 
 /**
- * 从 ReferenceList 条目中提取带头的 base64 或 url
- * 用于 omni-video 接口，该接口的 image_url 支持带前缀的 base64 和 url
+ * Extract a headed base64 string or url from a ReferenceList entry
+ * Used for the omni-video API, whose image_url supports both prefixed base64 and url
  */
 const extractImageUrl = (ref: ReferenceList): string => {
   return ref.base64.startsWith("data:") ? ref.base64 : `data:image/jpeg;base64,${ref.base64}`;
 };
 
 /**
- * 提交任务并轮询获取结果的通用函数
+ * Generic function to submit a task and poll for the result
  */
 const submitAndPoll = async (submitUrl: string, queryUrlBase: string, requestBody: any): Promise<string> => {
   const token = generateAuthToken();
@@ -433,7 +433,7 @@ const submitAndPoll = async (submitUrl: string, queryUrlBase: string, requestBod
 };
 
 // ============================================================
-// 适配器函数
+// Adapter functions
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
@@ -450,15 +450,15 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
 
   const baseUrl = getBaseUrl();
 
-  // 解析 modelName，格式：kling-video-o1:pro => modelName=kling-video-o1, mode=pro
+  // Parse modelName, format: kling-video-o1:pro => modelName=kling-video-o1, mode=pro
   const colonIdx = model.modelName.indexOf(":");
   const modelName = colonIdx > -1 ? model.modelName.substring(0, colonIdx) : model.modelName;
   const mode = colonIdx > -1 ? model.modelName.substring(colonIdx + 1) : "pro";
 
-  // 判断是否为 Omni 模型
+  // Determine whether this is an Omni model
   const isOmniModel = modelName === "kling-video-o1" || modelName === "kling-v3-omni";
 
-  // 判断当前选中的视频生成模式
+  // Determine the currently selected video generation mode
   const currentMode = config.mode;
   const isText = currentMode.includes("text");
   const isSingleImage = currentMode.includes("singleImage");
@@ -467,12 +467,12 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   const isStartFrameOptional = currentMode.includes("startFrameOptional");
   const hasMultiRef = Array.isArray(currentMode) && currentMode.some((m) => Array.isArray(m));
 
-  // 提取不同类型的引用
+  // Extract references of different types
   const imageRefs = (config.referenceList || []).filter((r) => r.type === "image");
   const videoRefs = (config.referenceList || []).filter((r) => r.type === "video");
 
   // =====================================================
-  // Omni 模型 —— 使用 /v1/videos/omni-video 接口
+  // Omni model — uses the /v1/videos/omni-video API
   // =====================================================
   if (isOmniModel) {
     const requestBody: any = {
@@ -531,7 +531,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       }
     }
 
-    // 文生视频或无图片输入时需要设置宽高比
+    // Aspect ratio must be set for text-to-video or when there is no image input
     const hasImageInput = requestBody.image_list && requestBody.image_list.length > 0;
     if (!hasImageInput) {
       requestBody.aspect_ratio = config.aspectRatio || "16:9";
@@ -543,10 +543,10 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   }
 
   // =====================================================
-  // 非 Omni 模型 —— 根据模式选择不同接口
+  // Non-Omni model — choose a different API based on mode
   // =====================================================
 
-  // 多图参考模式 —— 使用 /v1/videos/multi-image2video 接口（仅 kling-v1-6 支持）
+  // Multi-image reference mode — uses the /v1/videos/multi-image2video API (kling-v1-6 only)
   if (hasMultiRef && imageRefs.length > 0) {
     const imageList = [];
     for (let i = 0; i < imageRefs.length; i++) {
@@ -567,7 +567,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     return await submitAndPoll(`${baseUrl}${apiPath}`, `${baseUrl}${apiPath}`, requestBody);
   }
 
-  // 文生视频模式 —— 使用 /v1/videos/text2video 接口
+  // Text-to-video mode — uses the /v1/videos/text2video API
   if (isText) {
     if (!config.prompt) throw new Error("Text-to-video mode requires a prompt");
 
@@ -584,7 +584,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     return await submitAndPoll(`${baseUrl}${apiPath}`, `${baseUrl}${apiPath}`, requestBody);
   }
 
-  // 图生视频模式（单图 / 首尾帧 / 尾帧可选等）—— 使用 /v1/videos/image2video 接口
+  // Image-to-video mode (single image / first-last frame / optional last frame, etc.) — uses the /v1/videos/image2video API
   if ((isSingleImage || isStartEndRequired || isEndFrameOptional || isStartFrameOptional) && imageRefs.length > 0) {
     const requestBody: any = {
       model_name: modelName,
@@ -625,7 +625,7 @@ const ttsRequest = async (config: TTSConfig, model: TTSModel): Promise<string> =
 };
 
 // ============================================================
-// 导出
+// Exports
 // ============================================================
 
 exports.vendor = vendor;
@@ -634,5 +634,5 @@ exports.imageRequest = imageRequest;
 exports.videoRequest = videoRequest;
 exports.ttsRequest = ttsRequest;
 
-// 这行代码用于确保当前文件被识别为模块，避免全局变量冲突
+// This line ensures the current file is recognized as a module, avoiding global variable conflicts
 export {};
