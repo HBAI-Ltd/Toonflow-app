@@ -39,14 +39,16 @@ const assetTypeConfig: Record<AssetType, AssetTypeConfig> = {
   },
 };
 
-// 翻译过的资产类型标签，用于人类可读的任务描述与任务元数据（describe、relatedObjects.type），不进入 AI 提示词
+// Translated asset-type labels, used for human-readable task descriptions and task metadata
+// (describe, relatedObjects.type) — never fed into the AI prompt
 const assetTypeLabelKey: Record<AssetType, string> = {
   role: "assetsGenerate.assetType.role.label",
   scene: "assetsGenerate.assetType.scene.label",
   tool: "assetsGenerate.assetType.tool.label",
 };
 
-// 翻译过的 o_tasks.taskClass 值：前端用它同时作为过滤下拉的显示文本与过滤值，因此必须是本地化文本
+// Translated o_tasks.taskClass values: the frontend uses this as both the display text and
+// the filter value in its filter dropdown, so it must be localized text
 const taskClassKey: Record<AssetType, string> = {
   role: "taskClass.characterImage",
   scene: "taskClass.sceneImage",
