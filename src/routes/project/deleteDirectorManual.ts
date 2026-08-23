@@ -33,7 +33,7 @@ export default router.post(
         }
         await fs.rm(artPromptsDir, { recursive: true, force: true });
       } catch (e) {
-        console.error(t("project.manual.deleteFailedLog", {}, locale), artPromptsDir, e);
+        console.error("[Delete director manual] Delete failed:", artPromptsDir, e);
       }
       res.status(200).send(success({ message: t("project.manual.deleted", {}, locale) }));
     } catch (err) {

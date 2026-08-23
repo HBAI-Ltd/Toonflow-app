@@ -70,16 +70,16 @@ const mainBuildConfig: esbuild.BuildOptions = {
 
 (async () => {
   try {
-    console.log("🔨 开始构建...\n");
+    console.log("🔨 Build starting...\n");
 
     // 并行构建
     await Promise.all([esbuild.build(appBuildConfig), esbuild.build(mainBuildConfig)]);
 
-    console.log("✅ 后端服务构建完成: build/app.js");
-    console.log("✅ Electron主进程构建完成: build/main.js");
-    console.log("\n🎉 所有构建任务完成!\n");
+    console.log("✅ Backend service build complete: build/app.js");
+    console.log("✅ Electron main process build complete: build/main.js");
+    console.log("\n🎉 All build tasks complete!\n");
   } catch (err) {
-    console.error("❌ 构建失败:", err);
+    console.error("❌ Build failed:", err);
     process.exit(1);
   }
 })();

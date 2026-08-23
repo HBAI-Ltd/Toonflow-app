@@ -55,9 +55,9 @@ export default router.post(
 
     try {
       await u.oss.deleteDirectory(`${id}/`);
-      console.log(t("project.delProject.ossFolderDeletedLog", { id }, locale));
+      console.log(`Deleted OSS folder for project ${id}`);
     } catch (error: any) {
-      console.log(t("project.delProject.ossFolderMissingLog", { id }, locale));
+      console.log(`No OSS folder found for project ${id}, skipping deletion`);
     }
 
     res.status(200).send(success({ message: t("project.delProject.deleted", {}, locale) }));

@@ -11,7 +11,7 @@ export interface ScanOptions {
   stripComments: boolean;
 }
 
-const CJK = /[一-鿿]+/g;
+const CJK = /[一-鿿]+/g; // i18n-ignore — Unicode range boundaries for the scanner's own regex, not translatable text
 const IGNORE_PRAGMA = "i18n-ignore";
 
 /**

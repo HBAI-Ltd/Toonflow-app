@@ -1,5 +1,6 @@
 import u from "@/utils";
 import { Socket } from "socket.io";
+import { t, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import type {
   ChatMessageStatus,
   AIMessageContent,
@@ -19,10 +20,12 @@ type ContentType = AIMessageContent["type"];
 class ResTool {
   public socket: Socket;
   public data: Record<string, any>;
+  public locale: Locale;
 
-  constructor(socket: Socket, data: Record<string, any> = {}) {
+  constructor(socket: Socket, data: Record<string, any> = {}, locale: Locale = DEFAULT_LOCALE) {
     this.socket = socket;
     this.data = data;
+    this.locale = locale;
   }
 
   // 创建新消息
@@ -39,7 +42,7 @@ class ResTool {
       content: [],
     });
 
-    return new MessageBuilder(this.socket, messageId, role, name, datetime);
+    return new MessageBuilder(this.socket, messageId, role, name, datetime, this.locale);
   }
 
   // 发送错误消息
@@ -67,13 +70,22 @@ class MessageBuilder {
   private messageRole: "assistant" | "user" | "system";
   private messageName?: string;
   private messageDatetime: string;
+  public readonly locale: Locale;
 
-  constructor(socket: Socket, messageId: string, role: "assistant" | "user" | "system", name?: string, datetime?: string) {
+  constructor(
+    socket: Socket,
+    messageId: string,
+    role: "assistant" | "user" | "system",
+    name?: string,
+    datetime?: string,
+    locale: Locale = DEFAULT_LOCALE,
+  ) {
     this.socket = socket;
     this.messageId = messageId;
     this.messageRole = role;
     this.messageName = name;
     this.messageDatetime = datetime ?? new Date().toISOString();
+    this.locale = locale;
   }
 
   get id() {
@@ -142,12 +154,13 @@ class MessageBuilder {
   }
 
   // 添加思考内容
-  thinking(title = "思考中...") {
+  thinking(title?: string) {
+    const resolvedTitle = title ?? t("socket.resTool.thinkingDefault", {}, this.locale);
     const contentId = u.uuid();
     const content: ThinkingContent = {
       type: "thinking",
       id: contentId,
-      data: { title, text: "" },
+      data: { title: resolvedTitle, text: "" },
       status: "pending",
     };
 
@@ -160,12 +173,13 @@ class MessageBuilder {
   }
 
   // 添加搜索内容
-  search(title = "搜索中...") {
+  search(title?: string) {
+    const resolvedTitle = title ?? t("socket.resTool.searchingDefault", {}, this.locale);
     const contentId = u.uuid();
     const content: SearchContent = {
       type: "search",
       id: contentId,
-      data: { title, references: [] },
+      data: { title: resolvedTitle, references: [] },
       status: "pending",
     };
 
@@ -500,7 +514,7 @@ class AutoThinkingTextStream extends ContentStream<string> {
 
   private ensureThinkingStream() {
     if (!this.thinkingStream) {
-      this.thinkingStream = this.messageBuilder.thinking("思考中...");
+      this.thinkingStream = this.messageBuilder.thinking(t("socket.resTool.thinkingDefault", {}, this.messageBuilder.locale));
     }
     return this.thinkingStream;
   }

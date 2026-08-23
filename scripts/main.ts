@@ -221,7 +221,7 @@ app.whenReady().then(async () => {
             app.relaunch();
             app.exit(0);
           }, 500);
-          return { ok: true, message: "应用即将重启" };
+          return { ok: true, message: "Application is restarting" };
         },
         windowismaximized: () => ({
           maximized: mainWindow?.isMaximized() ?? false,
@@ -238,7 +238,7 @@ app.whenReady().then(async () => {
             shell.openExternal(targetUrl);
             return { ok: true };
           } else {
-            return { ok: false, error: "缺少url参数" };
+            return { ok: false, error: "Missing url parameter" };
           }
         },
         getlocallanguage: () => {
@@ -256,7 +256,7 @@ app.whenReady().then(async () => {
 
       const handler = handlers[pathname];
 
-      const responseData = handler ? handler() : { error: "未知接口" };
+      const responseData = handler ? handler() : { error: "Unknown endpoint" };
       return new Response(JSON.stringify(responseData), {
         headers: {
           "Content-Type": "application/json",
@@ -268,7 +268,7 @@ app.whenReady().then(async () => {
     // 服务启动成功，创建主窗口（主窗口 ready-to-show 时自动关闭loading）
     await createMainWindow();
   } catch (err) {
-    console.error("[服务启动失败]:", err);
+    console.error("[Server startup failed]:", err);
     await createMainWindow();
   }
 });
