@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { resolveVideoReferenceMediaType } from "@/lib/videoPromptReferences";
 const router = express.Router();
 
 interface VideoItem {
@@ -98,7 +99,7 @@ export default router.post(
         .leftJoin("o_assets", "o_assets2Storyboard.assetId", "o_assets.id")
         .leftJoin("o_image", "o_image.id", "o_assets.imageId")
         .whereIn("o_assets2Storyboard.storyboardId", storyIds as number[])
-        .select("o_assets.*", "o_image.filePath", "o_assets2Storyboard.storyboardId");
+        .select("o_assets.*", "o_image.filePath", "o_image.type as storedFileType", "o_assets2Storyboard.storyboardId");
 
       const queryAudioIds = [...assetDatas.map((i) => i.id!), ...assetDatas.map((i) => i.assetsId!)].filter(Boolean);
       const assets2AudioData = await u
@@ -139,7 +140,7 @@ export default router.post(
             name: i.name,
             describe: i.describe,
             type: i.type,
-            fileType: "image" as const,
+            fileType: resolveVideoReferenceMediaType(i.storedFileType, i.type, i.filePath),
             sources: "assets",
             src: i.filePath ? await u.oss.getSmallImageUrl(i.filePath) : "",
           };

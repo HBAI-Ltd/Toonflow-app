@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { ReferenceList } from "@/utils/ai";
+import { resolveVideoReferenceMediaType } from "@/lib/videoPromptReferences";
 const router = express.Router();
 
 type Type = "imageReference" | "startImage" | "endImage" | "videoReference" | "audioReference";
@@ -29,6 +30,7 @@ export default router.post(
           z.object({
             id: z.number(),
             sources: z.string(),
+            fileType: z.enum(["image", "video", "audio"]).optional(),
           }),
         ),
         trackId: z.number(),
@@ -57,7 +59,7 @@ export default router.post(
 
     // 为每个 track 预处理数据并插入数据库，返回任务列表
     const tasks = await Promise.all(
-      (trackData as { uploadData: { id: number; sources: string }[]; trackId: number; prompt: string; duration: number }[]).map(async (track) => {
+      (trackData as { uploadData: { id: number; sources: string; fileType?: "image" | "video" | "audio" }[]; trackId: number; prompt: string; duration: number }[]).map(async (track) => {
         const { uploadData, trackId, prompt, duration } = track;
 
         // 查询出图片数据
@@ -74,7 +76,10 @@ export default router.post(
                 .leftJoin("o_image", "o_assets.imageId", "o_image.id")
                 .select("o_image.filePath", "o_image.type")
                 .first();
-              return { path: filePath?.filePath, sources: filePath.type };
+              return {
+                path: filePath?.filePath,
+                fileType: resolveVideoReferenceMediaType(item.fileType, filePath?.type, filePath?.filePath),
+              };
             }
           }),
         );
@@ -98,8 +103,9 @@ export default router.post(
       // 所有任务全部并发后台执行，完全不阻塞任何进程
       const base64 = await Promise.all(
         images.map(async (item) => {
-          if (!item) return null;
-          return { base64: await u.oss.getImageBase64(item.path), type: item.sources == "audio" ? "audio" : "image" };
+          if (!item?.path) return null;
+          const type = resolveVideoReferenceMediaType(item.fileType, undefined, item.path);
+          return { base64: await u.oss.getImageBase64(item.path), type };
         }),
       );
       const relatedObjects = { projectId, videoId, scriptId, type: "视频" };
