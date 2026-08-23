@@ -10,23 +10,23 @@
   </a>
   &nbsp;|&nbsp;
   <a href="https://gitcode.com/HBAI-Ltd/Toonflow-app">
-    <img src="./docs/atomgitLogo.svg" alt="Atomgit" style="height:20px"/>
+    <img src="./atomgitLogo.svg" alt="Atomgit" style="height:20px"/>
   </a>
 </p>
 
 <p align="center">
   <strong>简体中文</strong> | 
-  <a href="./docs/README.zhtw.md">繁體中文</a> | 
-  <a href="./docs/README.en.md">English</a> | 
-  <a href="./docs/README.th.md">ไทย</a> | 
-  <a href="./docs/README.vi.md">Tiếng Việt</a> | 
-  <a href="./docs/README.ja.md">日本語</a> | 
-  <a href="./docs/README.ru.md">Русский</a>
+  <a href="./README.zhtw.md">繁體中文</a> | 
+  <a href="./README.en.md">English</a> | 
+  <a href="./README.th.md">ไทย</a> | 
+  <a href="./README.vi.md">Tiếng Việt</a> | 
+  <a href="./README.ja.md">日本語</a> | 
+  <a href="./README.ru.md">Русский</a>
 </p>
 
 <div align="center">
 
-<img src="./docs/logo.png" alt="Toonflow Logo" height="120"/>
+<img src="./logo.png" alt="Toonflow Logo" height="120"/>
 
 [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=000000&center=true&vCenter=true&width=600&lines=Toonflow;AI%E7%9F%AD%E5%89%A7%E5%B7%A5%E5%8E%82;%E5%8A%A8%E5%8A%A8%E6%89%8B%E6%8C%87%EF%BC%8C%E5%B0%8F%E8%AF%B4%E7%A7%92%E5%8F%98%E5%89%A7%E9%9B%86%EF%BC%81)](https://git.io/typing-svg)
 
@@ -77,13 +77,13 @@
   <table>
     <tr>
       <td width="50%" align="center">
-        <a href="./docs/g-star.png" target="_blank">
-          <img src="./docs/g-star.png" alt="AtomGit G-Star 认证证书" width="100%"/>
+        <a href="./g-star.png" target="_blank">
+          <img src="./g-star.png" alt="AtomGit G-Star 认证证书" width="100%"/>
         </a>
       </td>
       <td width="50%" align="center">
-        <a href="./docs/gvp.jpg" target="_blank">
-          <img src="./docs/gvp.jpg" alt="Gitee GVP 认证证书" width="100%"/>
+        <a href="./gvp.jpg" target="_blank">
+          <img src="./gvp.jpg" alt="Gitee GVP 认证证书" width="100%"/>
         </a>
       </td>
     </tr>
@@ -153,14 +153,14 @@ Toonflow 是面向短剧生产的 AI 工作台，围绕“策划 → 编剧 → 
 ## 📺 视频教程
 
 https://www.bilibili.com/video/BV1oXD7BqEqJ
-[![Toonflow 12 分钟快速上手 AI 视频](./docs/videoCover.jpg)](https://www.bilibili.com/video/BV1oXD7BqEqJ)
+[![Toonflow 12 分钟快速上手 AI 视频](./videoCover.jpg)](https://www.bilibili.com/video/BV1oXD7BqEqJ)
 
 **Toonflow 12 分钟快速上手 AI 视频**
 👉 [点击观看](https://www.bilibili.com/video/BV1oXD7BqEqJ)
 
 📱 手机微信扫码观看
 
-<img src="./docs/videoQR.png" alt="微信扫码观看" width="150"/>
+<img src="./videoQR.png" alt="微信扫码观看" width="150"/>
 
 ---
 
@@ -171,24 +171,24 @@ https://www.bilibili.com/video/BV1oXD7BqEqJ
 <div align="center">
 <table>
   <tr>
-    <td width="50%"><a href="./docs/screenshot/1.png" target="_blank"><img src="./docs/screenshot/1.png" width="100%"/></a></td>
-    <td width="50%"><a href="./docs/screenshot/2.png" target="_blank"><img src="./docs/screenshot/2.png" width="100%"/></a></td>
+    <td width="50%"><a href="./screenshot/1.png" target="_blank"><img src="./screenshot/1.png" width="100%"/></a></td>
+    <td width="50%"><a href="./screenshot/2.png" target="_blank"><img src="./screenshot/2.png" width="100%"/></a></td>
   </tr>
   <tr>
-    <td width="50%"><a href="./docs/screenshot/3.png" target="_blank"><img src="./docs/screenshot/3.png" width="100%"/></a></td>
-    <td width="50%"><a href="./docs/screenshot/4.png" target="_blank"><img src="./docs/screenshot/4.png" width="100%"/></a></td>
+    <td width="50%"><a href="./screenshot/3.png" target="_blank"><img src="./screenshot/3.png" width="100%"/></a></td>
+    <td width="50%"><a href="./screenshot/4.png" target="_blank"><img src="./screenshot/4.png" width="100%"/></a></td>
   </tr>
   <tr>
-    <td width="50%"><a href="./docs/screenshot/5.png" target="_blank"><img src="./docs/screenshot/5.png" width="100%"/></a></td>
-    <td width="50%"><a href="./docs/screenshot/6.png" target="_blank"><img src="./docs/screenshot/6.png" width="100%"/></a></td>
+    <td width="50%"><a href="./screenshot/5.png" target="_blank"><img src="./screenshot/5.png" width="100%"/></a></td>
+    <td width="50%"><a href="./screenshot/6.png" target="_blank"><img src="./screenshot/6.png" width="100%"/></a></td>
   </tr>
   <tr>
-    <td width="50%"><a href="./docs/screenshot/7.png" target="_blank"><img src="./docs/screenshot/7.png" width="100%"/></a></td>
-    <td width="50%"><a href="./docs/screenshot/8.png" target="_blank"><img src="./docs/screenshot/8.png" width="100%"/></a></td>
+    <td width="50%"><a href="./screenshot/7.png" target="_blank"><img src="./screenshot/7.png" width="100%"/></a></td>
+    <td width="50%"><a href="./screenshot/8.png" target="_blank"><img src="./screenshot/8.png" width="100%"/></a></td>
   </tr>
   <tr>
-    <td width="50%"><a href="./docs/screenshot/9.png" target="_blank"><img src="./docs/screenshot/9.png" width="100%"/></a></td>
-    <td width="50%"><a href="./docs/screenshot/10.png" target="_blank"><img src="./docs/screenshot/10.png" width="100%"/></a></td>
+    <td width="50%"><a href="./screenshot/9.png" target="_blank"><img src="./screenshot/9.png" width="100%"/></a></td>
+    <td width="50%"><a href="./screenshot/10.png" target="_blank"><img src="./screenshot/10.png" width="100%"/></a></td>
   </tr>
 </table>
 </div>
@@ -199,7 +199,7 @@ https://www.bilibili.com/video/BV1oXD7BqEqJ
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-如无法播放，请[点击下载视频](./docs/screenshot/demo.mp4)
+如无法播放，请[点击下载视频](./screenshot/demo.mp4)
 
 </div>
 
@@ -658,7 +658,7 @@ pm2 monit             # 监控面板
 
 拉群小助手:
 
-<img src="./docs/QR.png" alt="Toonflow QR" height="400"/>
+<img src="./QR.png" alt="Toonflow QR" height="400"/>
 
 也可以点击图标加入 Discord：
 
@@ -745,28 +745,28 @@ Toonflow 基于 Apache-2.0 协议开源发布，并附有补充商业协议。
   </thead>
   <tbody>
     <tr>
-      <td align="center"><img src="./docs/sponsored/sophnet.png" alt="算能云 Logo" width="48"></td>
+      <td align="center"><img src="./sponsored/sophnet.png" alt="算能云 Logo" width="48"></td>
       <td align="center"><b>算能云</b></td>
       <td align="center">💻 算力赞助</td>
       <td>致力于打造更快、更稳、更省的一站式模型推理API服务平台</td>
       <td align="center"><a href="https://www.sophnet.com/">官网</a></td>
     </tr>
     <tr>
-      <td align="center"><img src="./docs/sponsored/atlascloud.png" alt="Atlas Cloud Logo" width="48"></td>
+      <td align="center"><img src="./sponsored/atlascloud.png" alt="Atlas Cloud Logo" width="48"></td>
       <td align="center"><b>Atlas Cloud</b></td>
       <td align="center">💻 算力赞助</td>
       <td>全球首个全模态推理平台。对话、图像、视频、音频——全部统一 API。300+ 模型，OpenAI 兼容。</td>
       <td align="center"><a href="https://www.atlascloud.ai/">官网</a></td>
     </tr>
     <tr>
-      <td align="center"><img src="./docs/sponsored/hunyuan.webp" alt="腾讯混元3D Logo" width="48"></td>
+      <td align="center"><img src="./sponsored/hunyuan.webp" alt="腾讯混元3D Logo" width="48"></td>
       <td align="center"><b>腾讯混元3D</b></td>
       <td align="center">🌐 世界模型技术支持</td>
       <td>腾讯混元3D AI创作引擎基于腾讯混元3D生成大模型2.5版本，业界首个一站式3D内容AI创作平台。具备文生、图生3D、3D动画生成、纹理生成等功能，支持草图生3D、3D人物生成，有低多边形模型生成优势。</td>
       <td align="center"><a href="https://3d.hunyuan.tencent.com/">官网</a></td>
     </tr>
     <tr>
-      <td align="center"><img src="./docs/sponsored/ai-galaxy.png" alt="智星云 Logo" width="48"></td>
+      <td align="center"><img src="./sponsored/ai-galaxy.png" alt="智星云 Logo" width="48"></td>
       <td align="center"><b>智星云</b></td>
       <td align="center">💻 算力支持 <br/> 🖼️ 镜像支持</td>
       <td>国内知名专业算力服务品牌，提供便宜稳定的算力，服务国内清北、复旦、浙大等上千所985/211高校实验室、中科院及5000余家AI企业。</td>
