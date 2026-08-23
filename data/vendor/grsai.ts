@@ -145,15 +145,15 @@ const vendor: VendorConfig = {
   version: "2.2",
   author: "Toonflow",
   name: "Grsai",
-  description: "Grsai AI平台适配，支持文生图、图生图、文生视频、Gemini兼容文本模型 \n [前往中转平台](https://tf.grsai.ai/zh)",
+  description: "Grsai AI platform adapter, supports text-to-image, image-to-image, text-to-video, and Gemini-compatible text models \n [Go to relay platform](https://tf.grsai.ai/zh)",
   inputs: [
-    { key: "apiKey", label: "API密钥", type: "password", required: true },
+    { key: "apiKey", label: "API Key", type: "password", required: true },
     {
       key: "baseUrl",
-      label: "请求地址",
+      label: "Request URL",
       type: "url",
       required: true,
-      placeholder: "示例：https://grsai.dakka.com.cn",
+      placeholder: "Example: https://grsai.dakka.com.cn",
     },
   ],
   inputValues: { apiKey: "", baseUrl: "https://grsai.dakka.com.cn" },
@@ -202,7 +202,7 @@ const getHeaders = () => {
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
   return createGoogleGenerativeAI({
     baseURL: `${vendor.inputValues.baseUrl}/v1beta`,
@@ -211,7 +211,7 @@ const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3
 };
 
 const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<string> => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const baseUrl = vendor.inputValues.baseUrl;
   const headers = getHeaders();
 
@@ -240,7 +240,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
   // 选择接口路径
   const apiPath = model.modelName.startsWith("nano-banana") ? "/v1/draw/nano-banana" : "/v1/draw/completions";
 
-  logger(`开始提交图片生成任务，模型：${model.modelName}`);
+  logger(`Starting image generation task submission, model: ${model.modelName}`);
   logger(`${baseUrl}${apiPath}`)
   const submitResp = await fetch(`${baseUrl}${apiPath}`, {
     method: "POST",
@@ -249,13 +249,13 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
   });
   if (!submitResp.ok) {
     const errorReason = await submitResp.text();
-    throw new Error(`任务提交失败：${errorReason}`);
+    throw new Error(`Task submission failed: ${errorReason}`);
   }
   const submitData = await submitResp.json();
-  if (submitData.code !== 0) throw new Error(`任务提交失败：${submitData.msg}`);
+  if (submitData.code !== 0) throw new Error(`Task submission failed: ${submitData.msg}`);
 
   const taskId = submitData.data.id;
-  logger(`图片任务提交成功，任务ID：${taskId}`);
+  logger(`Image task submitted successfully, task ID: ${taskId}`);
 
   // 轮询结果
   const pollResult = await pollTask(
@@ -267,7 +267,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
       });
       if (!resp.ok) {
         const errorReason = await resp.text();
-        throw new Error(`查询任务失败：${errorReason}`);
+        throw new Error(`Task query failed: ${errorReason}`);
       }
       const respData = await resp.json();
       if (respData.code !== 0) return { completed: true, error: respData.msg };
@@ -282,7 +282,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
         const imgUrl = taskData.results?.[0]?.url || taskData.url;
         return { completed: true, data: imgUrl };
       }
-      logger(`图片任务生成中，进度：${taskData.progress}%`);
+      logger(`Image task generating, progress: ${taskData.progress}%`);
       return { completed: false };
     },
     3000,
@@ -290,12 +290,12 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
   );
 
   if (pollResult.error) throw new Error(pollResult.error);
-  logger(`图片生成完成，开始转换Base64`);
+  logger(`Image generation complete, converting to Base64`);
   return await urlToBase64(pollResult.data!);
 };
 
 const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<string> => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const baseUrl = vendor.inputValues.baseUrl;
   const headers = getHeaders();
 
@@ -319,7 +319,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     }
   }
 
-  logger(`开始提交视频生成任务，模型：${model.modelName}`);
+  logger(`Starting video generation task submission, model: ${model.modelName}`);
   const submitResp = await fetch(`${baseUrl}/v1/video/veo`, {
     method: "POST",
     headers,
@@ -327,13 +327,13 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   });
   if (!submitResp.ok) {
     const errorReason = await submitResp.text();
-    throw new Error(`任务提交失败： ${errorReason}`);
+    throw new Error(`Task submission failed: ${errorReason}`);
   }
   const submitData = await submitResp.json();
-  if (submitData.code !== 0) throw new Error(`任务提交失败：${submitData.msg}`);
+  if (submitData.code !== 0) throw new Error(`Task submission failed: ${submitData.msg}`);
 
   const taskId = submitData.data.id;
-  logger(`视频任务提交成功，任务ID：${taskId}`);
+  logger(`Video task submitted successfully, task ID: ${taskId}`);
 
   // 轮询结果
   const pollResult = await pollTask(
@@ -345,7 +345,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       });
       if (!resp.ok) {
         const errorReason = await resp.text();
-        throw new Error(`查询视频任务失败 ${errorReason}`);
+        throw new Error(`Video task query failed ${errorReason}`);
       }
       const respData = await resp.json();
       logger(respData);
@@ -360,7 +360,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       if (taskData.status === "succeeded") {
         return { completed: true, data: taskData.url };
       }
-      logger(`视频任务生成中，进度：${taskData.progress}%`);
+      logger(`Video task generating, progress: ${taskData.progress}%`);
       return { completed: false };
     },
     5000,
@@ -368,7 +368,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   );
 
   if (pollResult.error) throw new Error(pollResult.error);
-  logger(`视频生成完成，开始转换Base64`);
+  logger(`Video generation complete, converting to Base64`);
   return await urlToBase64(pollResult.data!);
 };
 
@@ -384,7 +384,7 @@ const checkForUpdates = async (): Promise<{
   return {
     hasUpdate: false,
     latestVersion: "1.0",
-    notice: "## 新版本更新公告",
+    notice: "## New version release notes",
   };
 };
 

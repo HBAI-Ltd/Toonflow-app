@@ -135,19 +135,19 @@ const vendor: VendorConfig = {
   id: "klingai",
   version: "2.0",
   author: "Toonflow",
-  name: "可灵AI",
+  name: "Kling AI",
   description:
-    "可灵AI视频生成\n\n支持可灵全系列视频模型，包括 kling-video-o1、kling-v3-omni、kling-v3、kling-v2-6、kling-v2-5-turbo、kling-v2-1、kling-v2-master、kling-v1-6、kling-v1-5、kling-v1 等。\n\n需要在[可灵AI开放平台](https://klingai.com)\n\n获取 Access Key 和 Secret Key。",
+    "Kling AI video generation\n\nSupports the full Kling video model lineup, including kling-video-o1, kling-v3-omni, kling-v3, kling-v2-6, kling-v2-5-turbo, kling-v2-1, kling-v2-master, kling-v1-6, kling-v1-5, kling-v1, and more.\n\nGet your Access Key and Secret Key from the [Kling AI Open Platform](https://klingai.com).",
   inputs: [
-    { key: "accessKey", label: "Access Key", type: "password", required: true, placeholder: "请输入可灵AI的Access Key" },
-    { key: "secretKey", label: "Secret Key", type: "password", required: true, placeholder: "请输入可灵AI的Secret Key" },
-    { key: "baseUrl", label: "请求地址", type: "url", required: true, placeholder: "默认：https://api-beijing.klingai.com" },
+    { key: "accessKey", label: "Access Key", type: "password", required: true, placeholder: "Enter your Kling AI Access Key" },
+    { key: "secretKey", label: "Secret Key", type: "password", required: true, placeholder: "Enter your Kling AI Secret Key" },
+    { key: "baseUrl", label: "Request URL", type: "url", required: true, placeholder: "Default: https://api-beijing.klingai.com" },
   ],
   inputValues: { accessKey: "", secretKey: "", baseUrl: "https://api-beijing.klingai.com" },
   models: [
     // kling-video-o1 (Omni)
     {
-      name: "kling-video-o1 标准",
+      name: "kling-video-o1 Standard",
       modelName: "kling-video-o1:std",
       type: "video",
       mode: ["text", "singleImage", "startEndRequired", ["imageReference:7", "videoReference:1"]],
@@ -155,7 +155,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [5, 10], resolution: ["720p"] }],
     },
     {
-      name: "kling-video-o1 专家",
+      name: "kling-video-o1 Expert",
       modelName: "kling-video-o1:pro",
       type: "video",
       mode: ["text", "singleImage", "startEndRequired", ["imageReference:7", "videoReference:1"]],
@@ -164,7 +164,7 @@ const vendor: VendorConfig = {
     },
     // kling-v3-omni (Omni)
     {
-      name: "kling-v3-omni 标准",
+      name: "kling-v3-omni Standard",
       modelName: "kling-v3-omni:std",
       type: "video",
       mode: ["text", "singleImage", "startEndRequired", ["imageReference:7", "videoReference:1"]],
@@ -172,7 +172,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
     },
     {
-      name: "kling-v3-omni 专家",
+      name: "kling-v3-omni Expert",
       modelName: "kling-v3-omni:pro",
       type: "video",
       mode: ["text", "singleImage", "startEndRequired", ["imageReference:7", "videoReference:1"]],
@@ -181,7 +181,7 @@ const vendor: VendorConfig = {
     },
     // kling-v3
     {
-      name: "kling-v3 标准",
+      name: "kling-v3 Standard",
       modelName: "kling-v3:std",
       type: "video",
       mode: ["text", "singleImage", "startEndRequired"],
@@ -189,7 +189,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p"] }],
     },
     {
-      name: "kling-v3 专家",
+      name: "kling-v3 Expert",
       modelName: "kling-v3:pro",
       type: "video",
       mode: ["text", "singleImage", "startEndRequired"],
@@ -198,7 +198,7 @@ const vendor: VendorConfig = {
     },
     // kling-v2-6
     {
-      name: "kling-v2-6 标准",
+      name: "kling-v2-6 Standard",
       modelName: "kling-v2-6:std",
       type: "video",
       mode: ["text", "singleImage"],
@@ -206,7 +206,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [5, 10], resolution: ["720p"] }],
     },
     {
-      name: "kling-v2-6 专家",
+      name: "kling-v2-6 Expert",
       modelName: "kling-v2-6:pro",
       type: "video",
       mode: ["text", "singleImage", "startEndRequired"],
@@ -215,7 +215,7 @@ const vendor: VendorConfig = {
     },
     // kling-v2-5-turbo
     {
-      name: "kling-v2-5-turbo 标准",
+      name: "kling-v2-5-turbo Standard",
       modelName: "kling-v2-5-turbo:std",
       type: "video",
       mode: ["text", "singleImage"],
@@ -223,7 +223,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [5, 10], resolution: ["1080p"] }],
     },
     {
-      name: "kling-v2-5-turbo 专家",
+      name: "kling-v2-5-turbo Expert",
       modelName: "kling-v2-5-turbo:pro",
       type: "video",
       mode: ["text", "singleImage", "startEndRequired"],
@@ -232,7 +232,7 @@ const vendor: VendorConfig = {
     },
     // kling-v2-1
     {
-      name: "kling-v2-1 标准",
+      name: "kling-v2-1 Standard",
       modelName: "kling-v2-1:std",
       type: "video",
       mode: ["singleImage"],
@@ -240,7 +240,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [5, 10], resolution: ["720p"] }],
     },
     {
-      name: "kling-v2-1 专家",
+      name: "kling-v2-1 Expert",
       modelName: "kling-v2-1:pro",
       type: "video",
       mode: ["singleImage", "startEndRequired"],
@@ -267,7 +267,7 @@ const vendor: VendorConfig = {
     },
     // kling-v1-6
     {
-      name: "kling-v1-6 标准",
+      name: "kling-v1-6 Standard",
       modelName: "kling-v1-6:std",
       type: "video",
       mode: ["text", "singleImage", ["imageReference:4"]],
@@ -275,7 +275,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [5, 10], resolution: ["720p"] }],
     },
     {
-      name: "kling-v1-6 专家",
+      name: "kling-v1-6 Expert",
       modelName: "kling-v1-6:pro",
       type: "video",
       mode: ["text", "singleImage", "endFrameOptional", ["imageReference:4"]],
@@ -284,7 +284,7 @@ const vendor: VendorConfig = {
     },
     // kling-v1-5
     {
-      name: "kling-v1-5 标准",
+      name: "kling-v1-5 Standard",
       modelName: "kling-v1-5:std",
       type: "video",
       mode: ["singleImage"],
@@ -292,7 +292,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [5, 10], resolution: ["720p"] }],
     },
     {
-      name: "kling-v1-5 专家",
+      name: "kling-v1-5 Expert",
       modelName: "kling-v1-5:pro",
       type: "video",
       mode: ["singleImage", "endFrameOptional"],
@@ -301,7 +301,7 @@ const vendor: VendorConfig = {
     },
     // kling-v1
     {
-      name: "kling-v1 标准",
+      name: "kling-v1 Standard",
       modelName: "kling-v1:std",
       type: "video",
       mode: ["text", "singleImage", "startEndRequired"],
@@ -309,7 +309,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [5, 10], resolution: ["720p"] }],
     },
     {
-      name: "kling-v1 专家",
+      name: "kling-v1 Expert",
       modelName: "kling-v1:pro",
       type: "video",
       mode: ["text", "singleImage", "startEndRequired"],
@@ -368,9 +368,9 @@ const extractImageUrl = (ref: ReferenceList): string => {
 const submitAndPoll = async (submitUrl: string, queryUrlBase: string, requestBody: any): Promise<string> => {
   const token = generateAuthToken();
 
-  logger(`开始提交可灵AI视频生成任务: ${submitUrl}`);
+  logger(`Starting Kling AI video generation task submission: ${submitUrl}`);
   logger(
-    `请求参数: ${JSON.stringify({
+    `Request parameters: ${JSON.stringify({
       ...requestBody,
       image: requestBody.image ? "[BASE64]" : undefined,
       image_tail: requestBody.image_tail ? "[BASE64]" : undefined,
@@ -386,11 +386,11 @@ const submitAndPoll = async (submitUrl: string, queryUrlBase: string, requestBod
   });
 
   if (submitResp.data.code !== 0) {
-    throw new Error(`提交任务失败: ${submitResp.data.message || JSON.stringify(submitResp.data)}`);
+    throw new Error(`Task submission failed: ${submitResp.data.message || JSON.stringify(submitResp.data)}`);
   }
 
   const taskId = submitResp.data.data.task_id;
-  logger(`任务已提交，任务ID: ${taskId}`);
+  logger(`Task submitted, task ID: ${taskId}`);
 
   const result = await pollTask(
     async () => {
@@ -402,23 +402,23 @@ const submitAndPoll = async (submitUrl: string, queryUrlBase: string, requestBod
       });
 
       if (queryResp.data.code !== 0) {
-        return { completed: true, error: `查询任务失败: ${queryResp.data.message}` };
+        return { completed: true, error: `Task query failed: ${queryResp.data.message}` };
       }
 
       const taskData = queryResp.data.data;
       const status = taskData.task_status;
-      logger(`轮询中... 任务状态: ${status}`);
+      logger(`Polling... task status: ${status}`);
 
       if (status === "succeed") {
         const videoUrl = taskData.task_result?.videos?.[0]?.url;
         if (!videoUrl) {
-          return { completed: true, error: "任务完成但未获取到视频URL" };
+          return { completed: true, error: "Task completed but no video URL was obtained" };
         }
         return { completed: true, data: videoUrl };
       }
 
       if (status === "failed") {
-        return { completed: true, error: `视频生成失败: ${taskData.task_status_msg || "未知错误"}` };
+        return { completed: true, error: `Video generation failed: ${taskData.task_status_msg || "Unknown error"}` };
       }
 
       return { completed: false };
@@ -428,7 +428,7 @@ const submitAndPoll = async (submitUrl: string, queryUrlBase: string, requestBod
   );
 
   if (result.error) throw new Error(result.error);
-  logger(`视频生成完成，正在转换为Base64...`);
+  logger(`Video generation complete, converting to Base64...`);
   return await urlToBase64(result.data!);
 };
 
@@ -437,16 +437,16 @@ const submitAndPoll = async (submitUrl: string, queryUrlBase: string, requestBod
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
-  throw new Error("可灵AI不支持文本模型");
+  throw new Error("Kling AI does not support text models");
 };
 
 const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<string> => {
-  throw new Error("可灵AI不支持图片模型");
+  throw new Error("Kling AI does not support image models");
 };
 
 const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<string> => {
-  if (!vendor.inputValues.accessKey) throw new Error("缺少Access Key");
-  if (!vendor.inputValues.secretKey) throw new Error("缺少Secret Key");
+  if (!vendor.inputValues.accessKey) throw new Error("Missing Access Key");
+  if (!vendor.inputValues.secretKey) throw new Error("Missing Secret Key");
 
   const baseUrl = getBaseUrl();
 
@@ -489,7 +489,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     if (isSingleImage && imageRefs.length > 0) {
       const imageUrl = extractImageUrl(imageRefs[0]);
       requestBody.image_list = [{ image_url: imageUrl, type: "first_frame" }];
-      if (!requestBody.prompt) requestBody.prompt = "根据图片生成视频";
+      if (!requestBody.prompt) requestBody.prompt = "Generate video from image";
     } else if (isStartEndRequired && imageRefs.length >= 2) {
       const firstUrl = extractImageUrl(imageRefs[0]);
       const endUrl = extractImageUrl(imageRefs[1]);
@@ -497,7 +497,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
         { image_url: firstUrl, type: "first_frame" },
         { image_url: endUrl, type: "end_frame" },
       ];
-      if (!requestBody.prompt) requestBody.prompt = "根据首尾帧图片生成过渡视频";
+      if (!requestBody.prompt) requestBody.prompt = "Generate a transition video from the first and last frame images";
     } else if (isEndFrameOptional && imageRefs.length >= 1) {
       const firstUrl = extractImageUrl(imageRefs[0]);
       requestBody.image_list = [{ image_url: firstUrl, type: "first_frame" }];
@@ -505,7 +505,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
         const endUrl = extractImageUrl(imageRefs[1]);
         requestBody.image_list.push({ image_url: endUrl, type: "end_frame" });
       }
-      if (!requestBody.prompt) requestBody.prompt = "根据图片生成视频";
+      if (!requestBody.prompt) requestBody.prompt = "Generate video from image";
     } else if (isStartFrameOptional && imageRefs.length >= 1) {
       if (imageRefs.length >= 2) {
         const firstUrl = extractImageUrl(imageRefs[0]);
@@ -518,7 +518,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
         const endUrl = extractImageUrl(imageRefs[0]);
         requestBody.image_list = [{ image_url: endUrl, type: "end_frame" }];
       }
-      if (!requestBody.prompt) requestBody.prompt = "根据图片生成视频";
+      if (!requestBody.prompt) requestBody.prompt = "Generate video from image";
     } else if (hasMultiRef && (imageRefs.length > 0 || videoRefs.length > 0)) {
       requestBody.image_list = [];
       for (let i = 0; i < imageRefs.length; i++) {
@@ -526,8 +526,8 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
         requestBody.image_list.push({ image_url: imageUrl });
       }
       if (!requestBody.prompt) {
-        const refs = imageRefs.map((_, idx) => `<<<image_${idx + 1}>>>`).join("、");
-        requestBody.prompt = `参考${refs}生成视频`;
+        const refs = imageRefs.map((_, idx) => `<<<image_${idx + 1}>>>`).join(", ");
+        requestBody.prompt = `Generate video referencing ${refs}`;
       }
     }
 
@@ -535,7 +535,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     const hasImageInput = requestBody.image_list && requestBody.image_list.length > 0;
     if (!hasImageInput) {
       requestBody.aspect_ratio = config.aspectRatio || "16:9";
-      if (!requestBody.prompt) throw new Error("文生视频模式需要提供提示词");
+      if (!requestBody.prompt) throw new Error("Text-to-video mode requires a prompt");
     }
 
     const apiPath = "/v1/videos/omni-video";
@@ -557,7 +557,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     const requestBody: any = {
       model_name: modelName,
       image_list: imageList,
-      prompt: config.prompt || "根据参考图片生成视频",
+      prompt: config.prompt || "Generate video from the reference image",
       mode: mode,
       duration: String(config.duration),
       aspect_ratio: config.aspectRatio || "16:9",
@@ -569,7 +569,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
 
   // 文生视频模式 —— 使用 /v1/videos/text2video 接口
   if (isText) {
-    if (!config.prompt) throw new Error("文生视频模式需要提供提示词");
+    if (!config.prompt) throw new Error("Text-to-video mode requires a prompt");
 
     const requestBody: any = {
       model_name: modelName,
@@ -588,7 +588,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   if ((isSingleImage || isStartEndRequired || isEndFrameOptional || isStartFrameOptional) && imageRefs.length > 0) {
     const requestBody: any = {
       model_name: modelName,
-      prompt: config.prompt || "根据图片生成视频",
+      prompt: config.prompt || "Generate video from image",
       mode: mode,
       duration: String(config.duration),
       sound: config.audio === true ? "on" : "off",
@@ -617,7 +617,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     return await submitAndPoll(`${baseUrl}${apiPath}`, `${baseUrl}${apiPath}`, requestBody);
   }
 
-  throw new Error("不支持的视频生成模式或缺少必要的输入参数");
+  throw new Error("Unsupported video generation mode or missing required input parameters");
 };
 
 const ttsRequest = async (config: TTSConfig, model: TTSModel): Promise<string> => {

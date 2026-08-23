@@ -91,13 +91,13 @@ declare const jsonwebtoken: any;
 // ==================== 供应商数据 ====================
 const vendor: VendorConfig = {
   id: "vidu",
-  author: "搬砖的Coder",
+  author: "Brick-Moving Coder",
   description:
-    "Vidu 官方视频生成平台。 [前往平台](https://platform.vidu.cn/login/)",
-  name: "Vidu 开放平台",
+    "Vidu official video generation platform. [Go to platform](https://platform.vidu.cn/login/)",
+  name: "Vidu Open Platform",
   inputs: [
-    { key: "apiKey", label: "API密钥", type: "password", required: true, placeholder: "请到Vidu官方申请" },
-    { key: "baseUrl", label: "接口路径", type: "url", required: true, placeholder: "https://api.vidu.cn/ent/v2" },
+    { key: "apiKey", label: "API Key", type: "password", required: true, placeholder: "Apply for this on the official Vidu site" },
+    { key: "baseUrl", label: "API Path", type: "url", required: true, placeholder: "https://api.vidu.cn/ent/v2" },
   ],
   inputValues: {
     apiKey: "",
@@ -196,7 +196,7 @@ exports.vendor = vendor;
 
 // 文本请求函数
 const textRequest: (textModel: TextModel) => { url: string; model: string } = (textModel) => {
-  throw new Error("当前供应商仅支持视频大模型，谢谢！");
+  throw new Error("This provider only supports video models, thank you!");
 };
 exports.textRequest = textRequest;
 
@@ -208,7 +208,7 @@ interface ImageConfig {
   aspectRatio: `${number}:${number}`; // 长宽比
 }
 const imageRequest = async (imageConfig: ImageConfig, imageModel: ImageModel) => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace("Token ", "");
 
   const size = imageConfig.size === "1K" ? "2K" : imageConfig.size;
@@ -241,14 +241,14 @@ const imageRequest = async (imageConfig: ImageConfig, imageModel: ImageModel) =>
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    const errorText = await response.text(); // 获取错误信息
-    console.error("请求失败，状态码:", response.status, ", 错误信息:", errorText);
-    throw new Error(`请求失败，状态码: ${response.status}, 错误信息: ${errorText}`);
+    const errorText = await response.text(); // Get the error message
+    console.error("Request failed, status code:", response.status, ", error message:", errorText);
+    throw new Error(`Request failed, status code: ${response.status}, error message: ${errorText}`);
   }
   const data = await response.json();
   const res = await checkTaskResult(data.task_id);
   if (!res.data) {
-    throw new Error("图片未能生成");
+    throw new Error("Image generation failed");
   }
   const list = JSON.parse(JSON.stringify(res.data));
   return list[0].url;
@@ -298,9 +298,9 @@ const checkTaskResult = async (taskId: string) => {
       headers: { Authorization: `Token ${apiKey}`, "Content-Type": "application/json" },
     });
     if (!queryResponse.ok) {
-      const errorText = await queryResponse.text(); // 获取错误信息
-      console.error("请求失败，状态码:", queryResponse.status, ", 错误信息:", errorText);
-      throw new Error(`请求失败，状态码: ${queryResponse.status}, 错误信息: ${errorText}`);
+      const errorText = await queryResponse.text(); // Get the error message
+      console.error("Request failed, status code:", queryResponse.status, ", error message:", errorText);
+      throw new Error(`Request failed, status code: ${queryResponse.status}, error message: ${errorText}`);
     }
     const queryData = await queryResponse.json();
     const status = queryData?.state ?? queryData?.data?.state;
@@ -312,7 +312,7 @@ const checkTaskResult = async (taskId: string) => {
         return { completed: true, data: queryData.creations };
       case "FAILURE":
       case "failed":
-        return { completed: false, error: fail_reason || "生成失败" };
+        return { completed: false, error: fail_reason || "Generation failed" };
       default:
         return { completed: false };
     }
@@ -322,13 +322,13 @@ const checkTaskResult = async (taskId: string) => {
 };
 
 const videoRequest = async (videoConfig: VideoConfig, videoModel: VideoModel) => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace("Token ", "");
 
-  // 构建每个模型对应的附加参数
+  // Build the additional parameters for each model
   const metadata = buildModelMetadata(videoModel.modelName, videoConfig);
 
-  //公共请求参数
+  // Common request parameters
   const publicBody = {
     model: videoModel.modelName,
     ...(videoConfig.imageBase64 && videoConfig.imageBase64.length ? { images: videoConfig.imageBase64 } : {}),
@@ -345,9 +345,9 @@ const videoRequest = async (videoConfig: VideoConfig, videoModel: VideoModel) =>
     body: JSON.stringify(publicBody),
   });
   if (!response.ok) {
-    const errorText = await response.text(); // 获取错误信息
-    console.error("请求失败，状态码:", response.status, ", 错误信息:", errorText);
-    throw new Error(`请求失败，状态码: ${response.status}, 错误信息: ${errorText}`);
+    const errorText = await response.text(); // Get the error message
+    console.error("Request failed, status code:", response.status, ", error message:", errorText);
+    throw new Error(`Request failed, status code: ${response.status}, error message: ${errorText}`);
   }
   const data = await response.json();
   const taskId = data.id;
@@ -364,5 +364,5 @@ interface TTSConfig {
   volume: number;
 }
 const ttsRequest = async (ttsConfig: TTSConfig, ttsModel: TTSModel) => {
-  throw new Error("Vidu 暂不支持语音合成（TTS）");
+  throw new Error("Vidu does not support text-to-speech (TTS) yet");
 };

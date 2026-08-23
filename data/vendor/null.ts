@@ -135,11 +135,11 @@ const vendor: VendorConfig = {
   id: "null",
   version: "2.0",
   author: "Toonflow",
-  name: "空模板",
-  description: "## 开发模板，您可以使用此模板进行Vibe Coding",
+  name: "Blank Template",
+  description: "## Development template, you can use this template for Vibe Coding",
   inputs: [
-    { key: "apiKey", label: "API密钥", type: "password", required: true },
-    { key: "baseUrl", label: "请求地址", type: "url", required: true, placeholder: "示例：https://api.openai.com/v1" },
+    { key: "apiKey", label: "API Key", type: "password", required: true },
+    { key: "baseUrl", label: "Request URL", type: "url", required: true, placeholder: "Example: https://api.openai.com/v1" },
   ],
   inputValues: { apiKey: "", baseUrl: "https://api.openai.com/v1" },
   models: [{ name: "GPT-4o", modelName: "gpt-4o", type: "text", think: false }],
@@ -150,7 +150,7 @@ const vendor: VendorConfig = {
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
   return createOpenAI({ baseURL: vendor.inputValues.baseUrl, apiKey }).chat(model.modelName);
 };
@@ -168,7 +168,7 @@ const ttsRequest = async (config: TTSConfig, model: TTSModel): Promise<string> =
 };
 
 const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }> => {
-  return { hasUpdate: false, latestVersion: "2.0", notice: "## 新版本更新公告" };
+  return { hasUpdate: false, latestVersion: "2.0", notice: "## New version release notes" };
 };
 
 const updateVendor = async (): Promise<string> => {

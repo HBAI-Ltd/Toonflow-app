@@ -135,12 +135,12 @@ const vendor: VendorConfig = {
   id: "volcengine",
   version: "2.4",
   author: "leeqi",
-  name: "火山引擎(豆包)",
-  description: "火山引擎豆包大模型，支持文本、图片生成、视频生成等能力。\n\n需要在[火山引擎控制台](https://console.volcengine.com/ark)获取API密钥。",
+  name: "Volcengine (Doubao)",
+  description: "Volcengine Doubao large model, supports text, image generation, video generation, and more.\n\nGet your API Key from the [Volcengine Console](https://console.volcengine.com/ark).",
   icon: "",
   inputs: [
-    { key: "apiKey", label: "API密钥", type: "password", required: true, placeholder: "火山引擎API Key" },
-    { key: "baseUrl", label: "请求地址", type: "url", required: true, placeholder: "以v3结束，示例：https://ark.cn-beijing.volces.com/api/v3" },
+    { key: "apiKey", label: "API Key", type: "password", required: true, placeholder: "Volcengine API Key" },
+    { key: "baseUrl", label: "Request URL", type: "url", required: true, placeholder: "Ends with v3, example: https://ark.cn-beijing.volces.com/api/v3" },
   ],
   inputValues: {
     apiKey: "",
@@ -213,7 +213,7 @@ const vendor: VendorConfig = {
     },
     // ===================== 视频生成模型 =====================
     {
-      name: "Seedance-2.0(音画同生)",
+      name: "Seedance-2.0 (Synced Audio&Video)",
       modelName: "doubao-seedance-2-0-260128",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
@@ -221,7 +221,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["480p", "720p"] }],
     },
     {
-      name: "Seedance-2.0-Fast(音画同生)",
+      name: "Seedance-2.0-Fast (Synced Audio&Video)",
       modelName: "doubao-seedance-2-0-fast-260128",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
@@ -229,7 +229,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["480p", "720p"] }],
     },
     {
-      name: "Seedance-1.5-Pro(音画同生)",
+      name: "Seedance-1.5-Pro (Synced Audio&Video)",
       modelName: "doubao-seedance-1-5-pro-251215",
       type: "video",
       mode: ["text", "startFrameOptional"],
@@ -276,7 +276,7 @@ const vendor: VendorConfig = {
 // ============================================================
 
 const getHeaders = () => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "")}`,
@@ -290,7 +290,7 @@ const getBaseUrl = () => vendor.inputValues.baseUrl.replace(/\/+$/, "");
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
 
   const effortMap: Record<number, string> = {
@@ -417,7 +417,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
     }
   }
 
-  logger(`[图片生成] 请求模型: ${model.modelName}, 尺寸: ${body.size}`);
+  logger(`[Image generation] Requesting model: ${model.modelName}, size: ${body.size}`);
   const res = await fetch(`${baseUrl}/images/generations`, {
     method: "POST",
     headers,
@@ -425,13 +425,13 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
   });
   if (!res.ok) {
     const errorText = await res.text();
-    throw new Error(`图片生成请求失败: ${errorText}`);
+    throw new Error(`Image generation request failed: ${errorText}`);
   }
   const response = await res.json();
   logger(response);
 
   if (response?.error) {
-    throw new Error(`图片生成失败：${response.error.message || response.error.code}`);
+    throw new Error(`Image generation failed: ${response.error.message || response.error.code}`);
   }
 
   // 从 data 数组中提取第一张成功的图片
@@ -444,12 +444,12 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
         return item.b64_json;
       }
       if (item.error) {
-        throw new Error(`图片生成失败：${item.error.message || item.error.code}`);
+        throw new Error(`Image generation failed: ${item.error.message || item.error.code}`);
       }
     }
   }
 
-  throw new Error("图片生成失败：未返回有效结果");
+  throw new Error("Image generation failed: no valid result returned");
 };
 
 const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<string> => {
@@ -588,7 +588,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     body.generate_audio = false;
   }
 
-  logger(`[视频生成] 提交任务, 模型: ${model.modelName}, 时长: ${config.duration}s, 分辨率: ${config.resolution}`);
+  logger(`[Video generation] Submitting task, model: ${model.modelName}, duration: ${config.duration}s, resolution: ${config.resolution}`);
   const res = await fetch(`${baseUrl}/contents/generations/tasks`, {
     method: "POST",
     headers,
@@ -597,17 +597,17 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
 
   if (!res.ok) {
     const errorText = await res.text();
-    throw new Error(`视频生成任务创建失败: ${errorText}`);
+    throw new Error(`Failed to create video generation task: ${errorText}`);
   }
   const createResponse = await res.json();
   logger(createResponse);
   const taskId = createResponse?.id;
 
   if (!taskId) {
-    throw new Error("视频生成任务创建失败：未返回任务ID");
+    throw new Error("Failed to create video generation task: no task ID returned");
   }
 
-  logger(`[视频生成] 任务已创建, ID: ${taskId}`);
+  logger(`[Video generation] Task created, ID: ${taskId}`);
 
   const result = await pollTask(
     async (): Promise<PollResult> => {
@@ -617,24 +617,24 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       });
       if (!queryRes.ok) {
         const errorText = await queryRes.text();
-        throw new Error(`查询视频生成任务状态失败: ${errorText}`);
+        throw new Error(`Failed to query video generation task status: ${errorText}`);
       }
       const task = await queryRes.json();
 
-      logger(`[视频生成] 任务状态: ${JSON.stringify(task)}`);
+      logger(`[Video generation] Task status: ${JSON.stringify(task)}`);
 
       switch (task.status) {
         case "succeeded":
           if (task.content?.video_url) {
             return { completed: true, data: task.content.video_url };
           }
-          return { completed: true, error: "任务成功但未返回视频URL" };
+          return { completed: true, error: "Task succeeded but no video URL was returned" };
         case "failed":
-          return { completed: true, error: task.error?.message || "视频生成失败" };
+          return { completed: true, error: task.error?.message || "Video generation failed" };
         case "expired":
-          return { completed: true, error: "视频生成任务超时" };
+          return { completed: true, error: "Video generation task timed out" };
         case "cancelled":
-          return { completed: true, error: "视频生成任务已取消" };
+          return { completed: true, error: "Video generation task was cancelled" };
         default:
           return { completed: false };
       }

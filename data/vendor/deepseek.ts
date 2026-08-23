@@ -131,11 +131,11 @@ const vendor: VendorConfig = {
   author: "Toonflow",
   name: "DeepSeek",
   description:
-    "DeepSeek 官方接口适配，支持 V4 系列模型与思考模式（思维链输出）。\n\n[前往平台](https://platform.deepseek.com/)",
+    "DeepSeek official API adapter, supports the V4 series models and thinking mode (chain-of-thought output).\n\n[Go to platform](https://platform.deepseek.com/)",
   icon: "",
   inputs: [
-    { key: "apiKey", label: "API密钥", type: "password", required: true },
-    { key: "baseUrl", label: "请求地址", type: "url", required: true, placeholder: "示例：https://api.deepseek.com" },
+    { key: "apiKey", label: "API Key", type: "password", required: true },
+    { key: "baseUrl", label: "Request URL", type: "url", required: true, placeholder: "Example: https://api.deepseek.com" },
   ],
   inputValues: {
     apiKey: "",
@@ -152,7 +152,7 @@ const vendor: VendorConfig = {
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
 
   // DeepSeek 思考强度仅支持 high / max（low、medium 会被映射为 high，xhigh 会被映射为 max）

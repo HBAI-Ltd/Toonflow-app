@@ -146,17 +146,17 @@ const vendor: VendorConfig = {
   id: "volcengineSd2",
   version: "2.0",
   author: "toonflow",
-  name: "火山引擎sd2.0真人",
-  description: "火山引擎豆包大模型，支持文本、图片生成、视频生成等能力。\n\n需要在[火山引擎控制台](https://console.volcengine.com/ark)获取API密钥。",
+  name: "Volcengine SD2.0 Live-Action",
+  description: "Volcengine Doubao large model, supports text, image generation, video generation, and more.\n\nGet your API Key from the [Volcengine Console](https://console.volcengine.com/ark).",
   icon: "",
   inputs: [
-    { key: "apiKey", label: "API密钥", type: "password", required: true, placeholder: "火山引擎API Key" },
-    { key: "baseUrl", label: "请求地址", type: "url", required: true, placeholder: "以v3结束，示例：https://ark.cn-beijing.volces.com/api/v3" },
-    { key: "ak", label: "火山 Access Key ID", type: "text", required: true, placeholder: "火山引擎/OSS API访问密钥" },
-    { key: "sk", label: "火山 Secret Access Key", type: "password", required: true, placeholder: "火山引擎/OSS Secret Access Key" },
-    { key: "groupId", label: "资产组ID", type: "text", required: true, placeholder: "火山引擎资产组ID" },
-    { key: "tosEndpoint", label: "火山TOS Endpoint", type: "url", required: true, placeholder: "如 tos-cn-beijing.volces.com" },
-    { key: "tosBucket", label: "火山TOS Bucket", type: "text", required: true, placeholder: "Bucket 名称" },
+    { key: "apiKey", label: "API Key", type: "password", required: true, placeholder: "Volcengine API Key" },
+    { key: "baseUrl", label: "Request URL", type: "url", required: true, placeholder: "Ends with v3, example: https://ark.cn-beijing.volces.com/api/v3" },
+    { key: "ak", label: "Volcengine Access Key ID", type: "text", required: true, placeholder: "Volcengine/OSS API access key" },
+    { key: "sk", label: "Volcengine Secret Access Key", type: "password", required: true, placeholder: "Volcengine/OSS Secret Access Key" },
+    { key: "groupId", label: "Asset Group ID", type: "text", required: true, placeholder: "Volcengine asset group ID" },
+    { key: "tosEndpoint", label: "Volcengine TOS Endpoint", type: "url", required: true, placeholder: "e.g. tos-cn-beijing.volces.com" },
+    { key: "tosBucket", label: "Volcengine TOS Bucket", type: "text", required: true, placeholder: "Bucket name" },
   ],
   inputValues: {
     apiKey: "",
@@ -169,7 +169,7 @@ const vendor: VendorConfig = {
   },
   models: [
     {
-      name: "Seedance-2.0(音画同生)",
+      name: "Seedance-2.0 (Synced Audio&Video)",
       modelName: "doubao-seedance-2-0-260128",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
@@ -177,7 +177,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["480p", "720p"] }],
     },
     {
-      name: "Seedance-2.0-Fast(音画同生)",
+      name: "Seedance-2.0-Fast (Synced Audio&Video)",
       modelName: "doubao-seedance-2-0-fast-260128",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
@@ -185,7 +185,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["480p", "720p"] }],
     },
     {
-      name: "Seedance-1.5-Pro(音画同生)",
+      name: "Seedance-1.5-Pro (Synced Audio&Video)",
       modelName: "doubao-seedance-1-5-pro-251215",
       type: "video",
       mode: ["text", "startFrameOptional"],
@@ -317,7 +317,7 @@ function tosSecurityToken(): string {
 }
 function getStorageProvider(): "tos" | "oss" {
   if (hasCompleteTosConfig()) return "tos";
-  throw new Error("未检测到可用对象存储配置，请填写完整的 TOS 或 OSS 配置");
+  throw new Error("No usable object storage configuration detected, please fill in the complete TOS or OSS configuration");
 }
 function tosUriEncode(str: string, encodeSlash: boolean = false): string {
   const encoded = encodeURIComponent(str).replace(/!/g, "%21").replace(/'/g, "%27").replace(/\(/g, "%28").replace(/\)/g, "%29").replace(/\*/g, "%2A");
@@ -414,7 +414,7 @@ async function tosUpload(objectKey: string, data: Buffer, contentType: string): 
   const bucket = tosBucket();
   const endpoint = tosEndpoint();
   if (!bucket || !endpoint || !tosAk() || !tosSk()) {
-    throw new Error("TOS 配置不完整");
+    throw new Error("TOS configuration incomplete");
   }
 
   const host = `${bucket}.${endpoint}`;
@@ -453,7 +453,7 @@ async function tosUpload(objectKey: string, data: Buffer, contentType: string): 
 
   if (!res.ok) {
     const errText = await res.text().catch(() => `${res.status} ${res.statusText}`);
-    throw new Error(`TOS 上传失败: ${errText}`);
+    throw new Error(`TOS upload failed: ${errText}`);
   }
 }
 function tosGetSignedUrl(objectKey: string, expiresIn: number = 7200): string {
@@ -535,14 +535,14 @@ async function uploadAssets(source: string, type: "Image" | "Video" | "Audio"): 
     let assetUrl: string;
     const exists = await tosFileExists(objectKey);
     if (!exists) {
-      logger(`[TOS] 上传文件: ${objectKey} (${mimeType})`);
+      logger(`[TOS] Uploading file: ${objectKey} (${mimeType})`);
       await tosUpload(objectKey, buffer, mimeType);
     } else {
-      logger(`[TOS] 文件已存在，跳过上传: ${objectKey}`);
+      logger(`[TOS] File already exists, skipping upload: ${objectKey}`);
     }
     assetUrl = tosGetSignedUrl(objectKey, 7200);
 
-    logger(`生成预签名URL: ${assetUrl}`);
+    logger(`Generated pre-signed URL: ${assetUrl}`);
 
     const res = await request("CreateAsset", {
       GroupId: vendor.inputValues.groupId,
@@ -553,30 +553,30 @@ async function uploadAssets(source: string, type: "Image" | "Video" | "Audio"): 
 
     if (!res.ok) {
       const errorText = await res.text();
-      throw new Error(`创建资产失败: ${errorText}`);
+      throw new Error(`Failed to create asset: ${errorText}`);
     }
 
     const resData = await res.json();
     const assetId: string = resData.Result.Id;
-    logger(`资产已创建: ${assetId}`);
+    logger(`Asset created: ${assetId}`);
 
     const result = await pollTask(
       async (): Promise<PollResult> => {
         const queryRes = await request("GetAsset", { Id: assetId, AssetType: type });
         if (!queryRes.ok) {
           const errorText = await queryRes.text();
-          throw new Error(`查询资产状态失败: ${errorText}`);
+          throw new Error(`Failed to query asset status: ${errorText}`);
         }
         const task = await queryRes.json();
         const status: string = task.Result.Status;
 
-        logger(`[资产轮询] 状态: ${JSON.stringify(task, null, 2)}`);
+        logger(`[Asset polling] Status: ${JSON.stringify(task, null, 2)}`);
 
         switch (status) {
           case "Active":
             return { completed: true, data: assetId };
           case "Failed":
-            return { completed: true, error: task.Result.Error?.Message || "资产创建失败" };
+            return { completed: true, error: task.Result.Error?.Message || "Asset creation failed" };
           default:
             return { completed: false };
         }
@@ -592,7 +592,7 @@ async function uploadAssets(source: string, type: "Image" | "Video" | "Audio"): 
     return `asset://${result.data}`;
   } catch (err: any) {
     const msg = typeof err?.message === "string" ? err.message : String(err);
-    logger(`[uploadAssets] 上传失败: ${msg}`);
+    logger(`[uploadAssets] Upload failed: ${msg}`);
     return source;
   }
 }
@@ -602,7 +602,7 @@ async function uploadAssets(source: string, type: "Image" | "Video" | "Audio"): 
 // ============================================================
 
 const getHeaders = () => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "")}`,
@@ -754,7 +754,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   } else {
     body.generate_audio = false;
   }
-  logger(`[视频生成] 提交任务, 模型: ${model.modelName}, 时长: ${config.duration}s, 分辨率: ${config.resolution}`);
+  logger(`[Video generation] Submitting task, model: ${model.modelName}, duration: ${config.duration}s, resolution: ${config.resolution}`);
   const res = await fetch(`${baseUrl}/contents/generations/tasks`, {
     method: "POST",
     headers,
@@ -763,17 +763,17 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
 
   if (!res.ok) {
     const errorText = await res.text();
-    throw new Error(`视频生成任务创建失败: ${errorText}`);
+    throw new Error(`Failed to create video generation task: ${errorText}`);
   }
   const createResponse = await res.json();
   logger(createResponse);
   const taskId = createResponse?.id;
 
   if (!taskId) {
-    throw new Error("视频生成任务创建失败：未返回任务ID");
+    throw new Error("Failed to create video generation task: no task ID returned");
   }
 
-  logger(`[视频生成] 任务已创建, ID: ${taskId}`);
+  logger(`[Video generation] Task created, ID: ${taskId}`);
 
   const result = await pollTask(
     async (): Promise<PollResult> => {
@@ -783,24 +783,24 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       });
       if (!queryRes.ok) {
         const errorText = await queryRes.text();
-        throw new Error(`查询视频生成任务状态失败: ${errorText}`);
+        throw new Error(`Failed to query video generation task status: ${errorText}`);
       }
       const task = await queryRes.json();
 
-      logger(`[视频生成] 任务状态: ${JSON.stringify(task)}`);
+      logger(`[Video generation] Task status: ${JSON.stringify(task)}`);
 
       switch (task.status) {
         case "succeeded":
           if (task.content?.video_url) {
             return { completed: true, data: task.content.video_url };
           }
-          return { completed: true, error: "任务成功但未返回视频URL" };
+          return { completed: true, error: "Task succeeded but no video URL was returned" };
         case "failed":
-          return { completed: true, error: task.error?.message || "视频生成失败" };
+          return { completed: true, error: task.error?.message || "Video generation failed" };
         case "expired":
-          return { completed: true, error: "视频生成任务超时" };
+          return { completed: true, error: "Video generation task timed out" };
         case "cancelled":
-          return { completed: true, error: "视频生成任务已取消" };
+          return { completed: true, error: "Video generation task was cancelled" };
         default:
           return { completed: false };
       }

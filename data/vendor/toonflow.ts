@@ -135,18 +135,18 @@ const vendor: VendorConfig = {
   id: "toonflow",
   version: "3.2",
   author: "Toonflow",
-  name: "Toonflow官方中转平台",
+  name: "Toonflow Official Relay Platform",
   description:
-    "## Toonflow官方中转平台\n\nToonflow官方中转平台，提供**文本、图像、视频、音频**等多模态生成能力的中转服务，支持接入多个大模型供应商，方便用户统一管理和调用不同供应商的生成能力。\n\n🔗 [前往中转平台](https://api.toonflow.net/)\n\n如果这个项目对你有帮助，可以考虑支持一下我们的开发工作 ☕",
+    "## Toonflow Official Relay Platform\n\nThe Toonflow Official Relay Platform provides relay services for multimodal generation capabilities including **text, image, video, and audio**, and supports connecting to multiple large model providers, making it easy for users to manage and call the generation capabilities of different providers in one place.\n\n🔗 [Go to relay platform](https://api.toonflow.net/)\n\nIf this project has helped you, consider supporting our development work ☕",
   icon: "",
-  inputs: [{ key: "apiKey", label: "API密钥", type: "password", required: true }],
+  inputs: [{ key: "apiKey", label: "API Key", type: "password", required: true }],
   inputValues: {
     apiKey: "",
     baseUrl: "https://api.toonflow.net/v1",
   },
   models: [
     {
-      name: "Seedance-2.0 (支持真人)",
+      name: "Seedance-2.0 (Live-Action Supported)",
       modelName: "Seedance 2.0",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
@@ -154,7 +154,7 @@ const vendor: VendorConfig = {
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["480p", "720p"] }],
     },
     {
-      name: "Seedance 2.0 fast (支持真人)",
+      name: "Seedance 2.0 fast (Live-Action Supported)",
       modelName: "Seedance 2.0 fast",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
@@ -214,9 +214,9 @@ const vendor: VendorConfig = {
       mode: ["text", "singleImage", "multiReference"],
     },
     {
-      name: "全能图片G-2.0",
+      name: "All-in-One Image G-2.0",
       type: "image",
-      modelName: "全能图片G-2.0",
+      modelName: "全能图片G-2.0", // API model identifier sent verbatim to the Toonflow relay platform; not translated
       mode: ["text", "singleImage", "multiReference"],
     },
     // { name: "DeepSeek v4 pro", modelName: "deepseek-v4-pro", type: "text", think: false },
@@ -242,11 +242,11 @@ function extractFirstImageFromMd(content: string) {
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
   const lowerName = model.modelName.toLowerCase();
   if (lowerName.includes("deepseek")) {
-    logger("使用deepseek");
+    logger("Using deepseek");
     // DeepSeek 思考强度仅支持 high / max（low、medium 会被映射为 high，xhigh 会被映射为 max）
     // thinkLevel: 0/1/2 → high, 3 → max
     const effortMap: Record<0 | 1 | 2 | 3, "high" | "max"> = {
@@ -274,7 +274,7 @@ const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3
 };
 
 const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<string> => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
   const baseUrl = vendor.inputValues.baseUrl;
   const lowerName = model.modelName.toLowerCase();
@@ -293,13 +293,13 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
         content: imageBase64List.map((b) => ({ type: "image_url", image_url: { url: b } })),
       });
     }
-    messages.push({ role: "user", content: config.prompt + "请直接输出图片" });
+    messages.push({ role: "user", content: config.prompt + "Please output the image directly" });
     const body = {
       model: model.modelName,
       messages,
       extra_body: { google: { image_config: imageConfigGoogle } },
     };
-    logger(`[imageRequest] 使用 gemini 适配器，模型: ${model.modelName}`);
+    logger(`[imageRequest] Using gemini adapter, model: ${model.modelName}`);
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -307,11 +307,11 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
     });
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`请求失败，状态码: ${response.status}, 错误信息: ${errorText}`);
+      throw new Error(`Request failed, status code: ${response.status}, error message: ${errorText}`);
     }
     const data = await response.json();
     const imageResult = extractFirstImageFromMd(data.choices[0].message.content);
-    if (!imageResult) throw new Error("未能从响应中提取图片");
+    if (!imageResult) throw new Error("Failed to extract image from response");
     if (imageResult.type === "base64") return imageResult.url;
     return await urlToBase64(imageResult.url);
   }
@@ -336,7 +336,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
       },
       ...(imageBase64List.length && { images: imageBase64List }),
     };
-    logger(`[imageRequest] 使用 doubao 适配器，模型: ${model.modelName}`);
+    logger(`[imageRequest] Using doubao adapter, model: ${model.modelName}`);
     const response = await fetch(`${baseUrl}/image/generateImage`, {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -344,11 +344,11 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
     });
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`请求失败，状态码: ${response.status}, 错误信息: ${errorText}`);
+      throw new Error(`Request failed, status code: ${response.status}, error message: ${errorText}`);
     }
     const data = await response.json();
     const taskId = data.data;
-    logger(`[imageRequest] 任务ID: ${taskId}`);
+    logger(`[imageRequest] Task ID: ${taskId}`);
     const res = await pollTask(async () => {
       const queryResponse = await fetch(`${baseUrl}/image/getImageStatus`, {
         method: "POST",
@@ -359,7 +359,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
       });
       if (!queryResponse.ok) {
         const errorText = await queryResponse.text();
-        throw new Error(`轮询失败，状态码: ${queryResponse.status}, 错误信息: ${errorText}`);
+        throw new Error(`Polling failed, status code: ${queryResponse.status}, error message: ${errorText}`);
       }
       const queryData = await queryResponse.json();
       logger(queryData);
@@ -369,7 +369,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
         case "success":
           return { completed: true, data: queryData.data.data };
         case "failed":
-          return { completed: true, error: queryData?.data?.failReason ?? "视频生成失败" };
+          return { completed: true, error: queryData?.data?.failReason ?? "Video generation failed" };
         default:
           return { completed: false };
       }
@@ -387,7 +387,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
         aspectRatio: config.aspectRatio,
       },
     };
-    logger(`[imageRequest] 使用 doubao 适配器，模型: ${model.modelName}`);
+    logger(`[imageRequest] Using doubao adapter, model: ${model.modelName}`);
     const response = await fetch(`${baseUrl}/image/generateImage`, {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -395,11 +395,11 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
     });
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`请求失败，状态码: ${response.status}, 错误信息: ${errorText}`);
+      throw new Error(`Request failed, status code: ${response.status}, error message: ${errorText}`);
     }
     const data = await response.json();
     const taskId = data.data;
-    logger(`[imageRequest] 任务ID: ${taskId}`);
+    logger(`[imageRequest] Task ID: ${taskId}`);
     const res = await pollTask(async () => {
       const queryResponse = await fetch(`${baseUrl}/image/getImageStatus`, {
         method: "POST",
@@ -410,7 +410,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
       });
       if (!queryResponse.ok) {
         const errorText = await queryResponse.text();
-        throw new Error(`轮询失败，状态码: ${queryResponse.status}, 错误信息: ${errorText}`);
+        throw new Error(`Polling failed, status code: ${queryResponse.status}, error message: ${errorText}`);
       }
       const queryData = await queryResponse.json();
       logger(queryData);
@@ -420,7 +420,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
         case "success":
           return { completed: true, data: queryData.data.data };
         case "failed":
-          return { completed: true, error: queryData?.data?.failReason ?? "视频生成失败" };
+          return { completed: true, error: queryData?.data?.failReason ?? "Video generation failed" };
         default:
           return { completed: false };
       }
@@ -428,11 +428,11 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
     return res.data!;
   }
 
-  throw new Error(`不支持的图像模型: ${model.modelName}`);
+  throw new Error(`Unsupported image model: ${model.modelName}`);
 };
 
 const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<string> => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
   const baseUrl = vendor.inputValues.baseUrl;
   const lowerName = model.modelName.toLowerCase();
@@ -468,7 +468,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       images: imageRefs,
       metadata,
     };
-    logger(`[videoRequest] 提交万象视频任务，模型: ${model.modelName}`);
+    logger(`[videoRequest] Submitting Wanxiang video task, model: ${model.modelName}`);
     const response = await fetch(`${baseUrl}/video/generateVideo`, {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -476,11 +476,11 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     });
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`请求失败，状态码: ${response.status}, 错误信息: ${errorText}`);
+      throw new Error(`Request failed, status code: ${response.status}, error message: ${errorText}`);
     }
     const data = await response.json();
     const taskId = data.data;
-    logger(`[videoRequest] 万象任务ID: ${taskId}`);
+    logger(`[videoRequest] Wanxiang task ID: ${taskId}`);
     const res = await pollTask(async () => {
       const queryResponse = await fetch(`${baseUrl}/video/getVideoStatus`, {
         method: "POST",
@@ -491,7 +491,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       });
       if (!queryResponse.ok) {
         const errorText = await queryResponse.text();
-        throw new Error(`轮询失败，状态码: ${queryResponse.status}, 错误信息: ${errorText}`);
+        throw new Error(`Polling failed, status code: ${queryResponse.status}, error message: ${errorText}`);
       }
       const queryData = await queryResponse.json();
       logger(queryData);
@@ -504,7 +504,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
           return { completed: true, data: queryData.data.data };
         case "FAILURE":
         case "failed":
-          return { completed: true, error: queryData?.data?.failReason ?? "视频生成失败" };
+          return { completed: true, error: queryData?.data?.failReason ?? "Video generation failed" };
         default:
           return { completed: false };
       }
@@ -646,7 +646,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     metadata,
   };
 
-  logger(`[videoRequest] 提交视频任务，模型: ${model.modelName}`);
+  logger(`[videoRequest] Submitting video task, model: ${model.modelName}`);
   const response = await fetch(`${baseUrl}/video/generateVideo`, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -654,11 +654,11 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   });
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`请求失败，状态码: ${response.status}, 错误信息: ${errorText}`);
+    throw new Error(`Request failed, status code: ${response.status}, error message: ${errorText}`);
   }
   const data = await response.json();
   const taskId = data.data;
-  logger(`[videoRequest] 任务ID: ${taskId}`);
+  logger(`[videoRequest] Task ID: ${taskId}`);
 
   const res = await pollTask(async () => {
     const queryResponse = await fetch(`${baseUrl}/video/getVideoStatus`, {
@@ -670,7 +670,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
     });
     if (!queryResponse.ok) {
       const errorText = await queryResponse.text();
-      throw new Error(`轮询失败，状态码: ${queryResponse.status}, 错误信息: ${errorText}`);
+      throw new Error(`Polling failed, status code: ${queryResponse.status}, error message: ${errorText}`);
     }
     const queryData = await queryResponse.json();
     logger(queryData);
@@ -682,7 +682,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
         return { completed: true, data: queryData.data.data };
       case "FAILURE":
       case "failed":
-        return { completed: true, error: queryData?.data?.failReason ?? "视频生成失败" };
+        return { completed: true, error: queryData?.data?.failReason ?? "Video generation failed" };
       default:
         return { completed: false };
     }
@@ -708,14 +708,14 @@ const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: s
   });
   if (!res.ok) {
     const errorReason = await res.text();
-    throw new Error(`检查更新失败，${errorReason}`);
+    throw new Error(`Update check failed, ${errorReason}`);
   }
   const { data } = await res.json();
   if (data?.hasUpdate && data?.latestVersion) {
     return {
       hasUpdate: data?.hasUpdate ?? false,
       latestVersion: data?.latestVersion ?? null,
-      notice: data?.notice ? data?.notice : "作者有点懒，没有填写更新内容",
+      notice: data?.notice ? data?.notice : "The author was a bit lazy and did not fill in the update notes",
     };
   }
   return { hasUpdate: false, latestVersion: "", notice: "" };
@@ -729,7 +729,7 @@ const updateVendor = async (): Promise<string> => {
   });
   if (!response.ok) {
     const errorReason = await response.text();
-    throw new Error(`请求失败: ${response.status} ${errorReason}`);
+    throw new Error(`Request failed: ${response.status} ${errorReason}`);
   }
   const { data } = await response.json();
   logger(data);
