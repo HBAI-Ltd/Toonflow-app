@@ -108,6 +108,32 @@ describe("migrateI18nSeed — o_prompt", () => {
   });
 });
 
+describe("migrateI18nSeed — locale zh không được ghi đè dữ liệu tiếng Trung của người dùng", () => {
+  it("agentDeploy: locale zh -> 0 bản ghi được cập nhật, giá trị tiếng Trung giữ nguyên", async () => {
+    await db("o_agentDeploy").insert({
+      id: 1,
+      key: "scriptAgent",
+      name: "剧本Agent",
+      desc: "用于读取原文生成故事骨架、改编策略，建议使用具备强大文本理解和生成能力的模型",
+    });
+    const result = await migrateI18nSeed(db, { vendorDir, locale: "zh" });
+    expect(result.agentDeploy.updated).toBe(0);
+    expect(result.agentDeploy.skipped).toBe(0);
+    const row = await db("o_agentDeploy").where("id", 1).first();
+    expect(row.name).toBe("剧本Agent");
+    expect(row.desc).toBe("用于读取原文生成故事骨架、改编策略，建议使用具备强大文本理解和生成能力的模型");
+  });
+
+  it("prompt: locale zh -> 0 bản ghi được cập nhật, giá trị tiếng Trung giữ nguyên", async () => {
+    await db("o_prompt").insert({ id: 1, type: "eventExtraction", name: "事件提取" });
+    const result = await migrateI18nSeed(db, { vendorDir, locale: "zh" });
+    expect(result.prompt.updated).toBe(0);
+    expect(result.prompt.skipped).toBe(0);
+    const row = await db("o_prompt").where("id", 1).first();
+    expect(row.name).toBe("事件提取");
+  });
+});
+
 describe("migrateI18nSeed — o_tasks.taskClass", () => {
   it("chuyển taskClass tiếng Trung cũ sang bản dịch theo locale", async () => {
     await db("o_tasks").insert({ id: 1, taskClass: "角色图生成" });

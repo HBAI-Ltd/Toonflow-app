@@ -179,8 +179,21 @@ async function migrateVendorFiles(vendorDir: string): Promise<CategoryResult> {
   return result;
 }
 
-async function migrateAgentDeploy(knex: Knex): Promise<CategoryResult> {
+// migrateAgentDeploy/migratePrompt keep the deliberate one-way-English design: this seed
+// data is user-editable, so there is no runtime switch that would not clobber a user's own
+// edits. But the two functions must do nothing when the resolved locale is "zh" — unlike
+// migrateTaskClass (which honours the resolved locale on every run), rewriting these to
+// English is a *destructive*, one-time act on user-owned rows. If content_language is
+// absent (upgrade from a pre-i18n DB), getLocale() falls back to the "en" DEFAULT_LOCALE
+// even for a Chinese user who never chose a locale at all; running this migration in that
+// state would rewrite their Chinese agent names/prompt names to English, and switching the
+// setting back to "zh" afterwards would not restore the original values (they're gone).
+// Skipping entirely when locale === "zh" preserves the original Chinese data for exactly
+// the users who would be harmed, while leaving the migration free to run English-izing
+// seed cleanup for en/vi users as designed.
+async function migrateAgentDeploy(knex: Knex, locale: Locale): Promise<CategoryResult> {
   const result: CategoryResult = { updated: 0, skipped: 0 };
+  if (locale === "zh") return result;
   if (!(await knex.schema.hasTable("o_agentDeploy"))) return result;
   for (const [key, seed] of Object.entries(AGENT_DEPLOY_SEED_MAP)) {
     const rows = await knex("o_agentDeploy").where("key", key).select("id", "name", "desc");
@@ -201,8 +214,10 @@ async function migrateAgentDeploy(knex: Knex): Promise<CategoryResult> {
   return result;
 }
 
-async function migratePrompt(knex: Knex): Promise<CategoryResult> {
+// See the comment on migrateAgentDeploy above — same rationale applies here.
+async function migratePrompt(knex: Knex, locale: Locale): Promise<CategoryResult> {
   const result: CategoryResult = { updated: 0, skipped: 0 };
+  if (locale === "zh") return result;
   if (!(await knex.schema.hasTable("o_prompt"))) return result;
   for (const [type, seed] of Object.entries(PROMPT_NAME_SEED_MAP)) {
     const rows = await knex("o_prompt").where("type", type).select("id", "name");
@@ -241,8 +256,8 @@ export async function migrateI18nSeed(
 ): Promise<I18nSeedMigrationResult> {
   const [vendorFiles, agentDeploy, prompt, taskClass] = await Promise.all([
     migrateVendorFiles(options.vendorDir),
-    migrateAgentDeploy(knex),
-    migratePrompt(knex),
+    migrateAgentDeploy(knex, options.locale),
+    migratePrompt(knex, options.locale),
     migrateTaskClass(knex, options.locale),
   ]);
 
