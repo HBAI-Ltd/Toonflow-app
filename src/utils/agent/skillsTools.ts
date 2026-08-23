@@ -108,7 +108,7 @@ export function parseFrontmatter(content: string, locale: Locale = FALLBACK_LOCA
       continue;
     }
 
-    const unquoted = rawValue.replace(/^([\x27\x22])([\s\S]*)\1$/, "$2"); // \x27 = ', \x22 = " — escaped so the i18n scanner's naive quote tokenizer doesn't desync
+    const unquoted = rawValue.replace(/^(['"])([\s\S]*)\1$/, "$2");
     result[key] = unquoted;
   }
 

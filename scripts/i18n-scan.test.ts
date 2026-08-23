@@ -13,6 +13,25 @@ describe("stripComments", () => {
   it("giữ lại chuỗi trông giống comment", () => {
     expect(stripComments('const a = "http://x/y // 更新成功";')).toContain("更新成功");
   });
+
+  it("không lệch pha khi regex literal chứa cả hai loại dấu nháy (regression: /['\"]/ từng làm tokenizer coi nhầm phần còn lại của file là bên trong chuỗi)", () => {
+    const src = 'const r = /^([\'"])([\\s\\S]*)\\1$/;\nconst b = 1; // 未激活';
+    expect(stripComments(src)).not.toContain("未激活");
+  });
+
+  it("vẫn phát hiện CJK ở dòng sau một regex literal chứa dấu nháy", () => {
+    const src = 'const r = /^([\'"])([\\s\\S]*)\\1$/;\nres.send(success("更新成功"));';
+    const hits = scanText(src, { stripComments: true });
+    expect(hits).toHaveLength(1);
+    expect(hits[0].text).toBe("更新成功");
+  });
+
+  it("không coi phép chia là mở đầu regex (division vs regex heuristic)", () => {
+    // a / b — đây là phép chia, không phải regex; ký tự `/` thứ hai bên dưới phải
+    // được coi là chia tiếp, không phải mở một regex literal mới nuốt phần còn lại.
+    const src = 'const x = a / b / "更新成功";';
+    expect(stripComments(src)).toContain("更新成功");
+  });
 });
 
 describe("scanText", () => {

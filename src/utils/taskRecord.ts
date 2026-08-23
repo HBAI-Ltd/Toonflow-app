@@ -1,13 +1,11 @@
 import db from "@/utils/db";
-import { t, getLocale, type Locale } from "@/i18n";
+import { t, getLocale } from "@/i18n";
 
-function getTaskStateMap(locale: Locale) {
-  return {
-    "0": t("taskState.inProgress", {}, locale),
-    "1": t("taskState.completed", {}, locale),
-    "-1": t("taskState.failed", {}, locale),
-  };
-}
+const taskStateMap = {
+  "0": "进行中", // i18n-ignore — frontend hardcodes this exact Chinese string as its task-state filter value (data/web/index.html), must stay Chinese
+  "1": "已完成", // i18n-ignore — frontend hardcodes this exact Chinese string as its task-state filter value (data/web/index.html), must stay Chinese
+  "-1": "生成失败", // i18n-ignore — frontend hardcodes this exact Chinese string as its task-state filter value (data/web/index.html), must stay Chinese
+};
 /**
  * 记录任务并返回结束函数
  * @param projectId  项目 ID
@@ -25,7 +23,6 @@ export default async function taskRecord(
   } = {},
 ) {
   const locale = await getLocale();
-  const taskStateMap = getTaskStateMap(locale);
   const { content, describe = "" } = opts;
 
   let opteorContent: string | undefined;
