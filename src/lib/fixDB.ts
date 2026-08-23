@@ -206,6 +206,21 @@ export default async (knex: Knex): Promise<void> => {
   if (Number(toonflowVer) < 3.2) {
     u.vendor.writeCode("toonflow", vendorData["toonflow.ts"]);
   }
+
+  // Carries translated seed strings (Tasks 5–8) to machines that already had the app installed.
+  // On a fresh install, initDB seeds English directly and this is a no-op; on an existing install,
+  // it replaces only values that still match the old Chinese seed exactly, so user edits are never
+  // touched. Never allowed to throw — see safeMigrateI18nSeed's doc comment.
+  const { safeMigrateI18nSeed } = await import("./migrations/i18nSeed");
+  const i18nSeedResult = await safeMigrateI18nSeed(knex, { vendorDir: u.getPath("vendor"), locale });
+  if (i18nSeedResult.updated > 0) {
+    console.log(
+      `[i18n] migrated ${i18nSeedResult.updated} old-install seed value(s) to the current locale ` +
+        `(vendor files: ${i18nSeedResult.vendorFiles.updated}, agentDeploy: ${i18nSeedResult.agentDeploy.updated}, ` +
+        `prompt: ${i18nSeedResult.prompt.updated}, taskClass: ${i18nSeedResult.taskClass.updated}; ` +
+        `skipped ${i18nSeedResult.skipped} value(s) already edited by the user)`,
+    );
+  }
 };
 
 async function tempOnsert(tsCode: string) {
