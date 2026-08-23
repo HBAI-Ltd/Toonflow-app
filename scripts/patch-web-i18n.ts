@@ -39,10 +39,14 @@ function detectLocale(block: string): "en" | "vi" | "other" {
 export function patchBundle(source: string): { output: string; applied: string[] } {
   const applied: string[] = [];
   let found = 0;
+  let sawEn = false;
+  let sawVi = false;
 
   const output = source.replace(/menu:\{([^{}]*)\}/g, (whole, body: string) => {
     found++;
     const locale = detectLocale(whole);
+    if (locale === "en") sawEn = true;
+    if (locale === "vi") sawVi = true;
     if (locale === "other") return whole;
 
     let next = body;
@@ -65,6 +69,13 @@ export function patchBundle(source: string): { output: string; applied: string[]
   });
 
   if (found === 0) throw new Error("không tìm thấy neo `menu:{…}` trong bundle — cấu trúc đã đổi, dừng lại");
+
+  if (!sawEn || !sawVi) {
+    const missing = [!sawEn ? "en" : null, !sawVi ? "vi" : null].filter(Boolean).join(", ");
+    throw new Error(
+      `tìm thấy neo \`menu:{…}\` nhưng không nhận diện được catalog: ${missing} — detectLocale có thể đã hỏng, dừng lại`,
+    );
+  }
 
   return { output, applied };
 }
