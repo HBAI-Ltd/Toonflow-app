@@ -771,13 +771,6 @@ Cảm ơn các tổ chức/đơn vị/cá nhân sau đã cung cấp hỗ trợ c
       <td align="center"><a href="https://www.sophnet.com/">Trang web</a></td>
     </tr>
     <tr>
-      <td align="center"><img src="./sponsored/atlascloud.png" alt="Atlas Cloud Logo" width="48"></td>
-      <td align="center"><b>Atlas Cloud</b></td>
-      <td align="center">💻 Tài trợ sức mạnh tính toán</td>
-      <td>Nền tảng suy luận đa phương thức toàn diện đầu tiên trên thế giới. Hội thoại, hình ảnh, video, âm thanh - tất cả API thống nhất. Hơn 300 mô hình, tương thích OpenAI.</td>
-      <td align="center"><a href="https://www.atlascloud.ai/">Trang web</a></td>
-    </tr>
-    <tr>
       <td align="center"><img src="./sponsored/hunyuan.webp" alt="Tencent Hunyuan 3D Logo" width="48"></td>
       <td align="center"><b>Tencent Hunyuan 3D</b></td>
       <td align="center">🌐 Hỗ trợ kỹ thuật mô hình thế giới</td>

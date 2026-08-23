@@ -771,13 +771,6 @@ Toonflow เผยแพร่ภายใต้สัญญาอนุญา�
       <td align="center"><a href="https://www.sophnet.com/">เว็บไซต์</a></td>
     </tr>
     <tr>
-      <td align="center"><img src="./sponsored/atlascloud.png" alt="โลโก้ Atlas Cloud" width="48"></td>
-      <td align="center"><b>Atlas Cloud</b></td>
-      <td align="center">💻 สนับสนุนพลังประมวลผล</td>
-      <td>แพลตฟอร์มการอนุมานแบบครบวงจรระดับโลกแห่งแรก การสนทนา รูปภาพ วิดีโอ เสียง — API ที่เป็นหนึ่งเดียวทั้งหมด มีโมเดลมากกว่า 300 โมเดล รองรับ OpenAI</td>
-      <td align="center"><a href="https://www.atlascloud.ai/">เว็บไซต์</a></td>
-    </tr>
-    <tr>
       <td align="center"><img src="./sponsored/hunyuan.webp" alt="โลโก้ Tencent Hunyuan 3D" width="48"></td>
       <td align="center"><b>Tencent Hunyuan 3D</b></td>
       <td align="center">🌐 สนับสนุนเทคโนโลยี World Model</td>

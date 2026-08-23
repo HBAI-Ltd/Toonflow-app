@@ -771,13 +771,6 @@ Toonflow распространяется с открытым исходным �
       <td align="center"><a href="https://www.sophnet.com/">Веб-сайт</a></td>
     </tr>
     <tr>
-      <td align="center"><img src="./sponsored/atlascloud.png" alt="Atlas Cloud Logo" width="48"></td>
-      <td align="center"><b>Atlas Cloud</b></td>
-      <td align="center">💻 Спонсорство вычислительных мощностей</td>
-      <td>Первая в мире универсальная мультимодальная платформа инференса. Диалог, изображения, видео, аудио — всё через единый API. Более 300 моделей, совместимость с OpenAI.</td>
-      <td align="center"><a href="https://www.atlascloud.ai/">Веб-сайт</a></td>
-    </tr>
-    <tr>
       <td align="center"><img src="./sponsored/hunyuan.webp" alt="Tencent Hunyuan 3D Logo" width="48"></td>
       <td align="center"><b>Tencent Hunyuan 3D</b></td>
       <td align="center">🌐 Техническая поддержка мировых моделей</td>

@@ -771,13 +771,6 @@ Toonflow は Apache-2.0 ライセンスのもとでオープンソース公開�
       <td align="center"><a href="https://www.sophnet.com/">公式サイト</a></td>
     </tr>
     <tr>
-      <td align="center"><img src="./sponsored/atlascloud.png" alt="Atlas Cloud ロゴ" width="48"></td>
-      <td align="center"><b>Atlas Cloud</b></td>
-      <td align="center">💻 計算リソーススポンサー</td>
-      <td>世界初の全モーダル推論プラットフォーム。対話、画像、動画、音声—すべて統一API。300以上のモデル、OpenAI互換。</td>
-      <td align="center"><a href="https://www.atlascloud.ai/">公式サイト</a></td>
-    </tr>
-    <tr>
       <td align="center"><img src="./sponsored/hunyuan.webp" alt="Tencent Hunyuan 3D ロゴ" width="48"></td>
       <td align="center"><b>Tencent Hunyuan 3D</b></td>
       <td align="center">🌐 ワールドモデル技術サポート</td>
