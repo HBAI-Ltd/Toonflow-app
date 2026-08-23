@@ -1,15 +1,15 @@
 /**
- * Toonflow AI供应商模板 - AtlasCloud MASS
+ * Toonflow AI provider template - AtlasCloud MASS
  * @version 0.8
  *
- * 说明：
- * 1) 文本接口使用 OpenAI 兼容基地址：https://api.atlascloud.ai/v1
- * 2) 图片/视频使用 Atlas Cloud 媒体接口：https://api.atlascloud.ai/api/v1
- * 3) 图片/视频为异步任务：提交后轮询 /api/v1/model/prediction/{id}
+ * Notes:
+ * 1) Text API uses the OpenAI-compatible base URL: https://api.atlascloud.ai/v1
+ * 2) Image/video use the Atlas Cloud media API: https://api.atlascloud.ai/api/v1
+ * 3) Image/video are asynchronous tasks: poll /api/v1/model/prediction/{id} after submission
  */
 
 // ============================================================
-// 类型定义
+// Type definitions
 // ============================================================
 
 type VideoMode =
@@ -109,7 +109,7 @@ type AtlasVideoModelKind =
   | "generic";
 
 // ============================================================
-// 全局声明
+// Global declarations
 // ============================================================
 
 declare const axios: any;
@@ -128,7 +128,7 @@ declare const exports: {
 };
 
 // ============================================================
-// 供应商配置
+// Provider configuration
 // ============================================================
 
 const vendor: VendorConfig = {
@@ -136,11 +136,11 @@ const vendor: VendorConfig = {
   version: "1.0",
   author: "AtlasCloud",
   name: "AtlasCloud MASS",
-  description: "AtlasCloud 全模态平台接入 Toonflow。默认按官方文档填写文本、图片、视频与任务轮询路径。",
+  description: "AtlasCloud all-modality platform integration for Toonflow. Text, image, video, and task-polling paths are pre-filled per the official documentation.",
   inputs: [
-    { key: "apiKey", label: "API密钥", type: "password", required: true, placeholder: "AtlasCloud API Key" },
-    { key: "chatBaseUrl", label: "文本基地址", type: "url", required: true, placeholder: "https://api.atlascloud.ai/v1", disabled: true },
-    { key: "mediaBaseUrl", label: "媒体基地址", type: "url", required: true, placeholder: "https://api.atlascloud.ai/api/v1", disabled: true },
+    { key: "apiKey", label: "API Key", type: "password", required: true, placeholder: "AtlasCloud API Key" },
+    { key: "chatBaseUrl", label: "Text Base URL", type: "url", required: true, placeholder: "https://api.atlascloud.ai/v1", disabled: true },
+    { key: "mediaBaseUrl", label: "Media Base URL", type: "url", required: true, placeholder: "https://api.atlascloud.ai/api/v1", disabled: true },
   ],
   inputValues: {
     apiKey: "",
@@ -210,7 +210,7 @@ const vendor: VendorConfig = {
 };
 
 // ============================================================
-// 辅助工具
+// Helper utilities
 // ============================================================
 
 const getChatBaseUrl = () => vendor.inputValues.chatBaseUrl.replace(/\/+$/, "");
@@ -220,7 +220,7 @@ const getMediaBaseUrl = () => vendor.inputValues.mediaBaseUrl.replace(/\/+$/, ""
 const joinUrl = (base: string, path: string) => `${base}${path.startsWith("/") ? "" : "/"}${path}`;
 
 const getHeaders = () => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少 API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "")}`,
@@ -372,7 +372,7 @@ const buildAtlasVideoPayload = (config: VideoConfig, model: VideoModel) => {
 
   if (kind === "wanReferenceToVideo") {
     if (imageRefs.length < 1) {
-      throw new Error(`${model.name} 需要至少 1 张参考图`);
+      throw new Error(`${model.name} requires at least 1 reference image`);
     }
     body.images = [imageRefs[0]];
     body.ratio = ratio;
@@ -382,7 +382,7 @@ const buildAtlasVideoPayload = (config: VideoConfig, model: VideoModel) => {
     body.seed = -1;
   } else if (kind === "seedanceReferenceToVideo") {
     if (imageRefs.length < 1) {
-      throw new Error(`${model.name} 需要至少 1 张参考图`);
+      throw new Error(`${model.name} requires at least 1 reference image`);
     }
     if (shouldGenerateAudio) body.generate_audio = true;
     body.images = [imageRefs[0]];
@@ -392,7 +392,7 @@ const buildAtlasVideoPayload = (config: VideoConfig, model: VideoModel) => {
     body.watermark = false;
   } else if (kind === "seedanceImageToVideo") {
     if (imageRefs.length < 1) {
-      throw new Error(`${model.name} 需要至少 1 张参考图`);
+      throw new Error(`${model.name} requires at least 1 reference image`);
     }
     if (shouldGenerateAudio) body.generate_audio = true;
     body.images = imageRefs;
@@ -418,11 +418,11 @@ const buildAtlasVideoPayload = (config: VideoConfig, model: VideoModel) => {
 };
 
 // ============================================================
-// 适配器函数
+// Adapter functions
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少 API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
   const effortMap: Record<number, string> = { 0: "minimal", 1: "low", 2: "medium", 3: "high" };
 
@@ -469,20 +469,20 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
     body.resolution = sizeToResolution[config.size || "1K"] || "1k";
   }
 
-  logger(`[AtlasCloud 图片] 提交任务: ${model.modelName} -> ${resolvedModelName}, refs=${imageRefs.length}`);
+  logger(`[AtlasCloud Image] Submitting task: ${model.modelName} -> ${resolvedModelName}, refs=${imageRefs.length}`);
   const submitResp = await axios.post(url, body, { headers });
   const submitData = submitResp.data;
 
-  // 同步返回（直接拿图）
+  // Synchronous response (image returned directly)
   const syncB64 = extractB64(submitData);
   if (syncB64) return syncB64;
   const syncUrl = extractUrl(submitData);
   if (syncUrl) return await urlToBase64(syncUrl);
 
-  // 异步返回（拿 taskId 再轮询）
+  // Asynchronous response (get taskId then poll)
   const taskId = extractTaskId(submitData);
   if (!taskId) {
-    throw new Error(`图片任务提交失败：未获取到任务ID。原始响应：${JSON.stringify(submitData).slice(0, 500)}`);
+    throw new Error(`Image task submission failed: no task ID obtained. Raw response: ${JSON.stringify(submitData).slice(0, 500)}`);
   }
 
   const pollResult = await pollTask(
@@ -497,10 +497,10 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
         if (b64) return { completed: true, data: b64 };
         const mediaUrl = extractUrl(data);
         if (mediaUrl) return { completed: true, data: mediaUrl };
-        return { completed: true, error: "任务成功但未返回结果地址" };
+        return { completed: true, error: "Task succeeded but no result address was returned" };
       }
       if (["failed", "error", "cancelled", "canceled", "expired"].includes(status)) {
-        return { completed: true, error: extractError(data) || "图片生成失败" };
+        return { completed: true, error: extractError(data) || "Image generation failed" };
       }
       return { completed: false };
     },
@@ -509,7 +509,7 @@ const imageRequest = async (config: ImageConfig, model: ImageModel): Promise<str
   );
 
   if (pollResult.error) throw new Error(pollResult.error);
-  if (!pollResult.data) throw new Error("图片生成失败：轮询未返回数据");
+  if (!pollResult.data) throw new Error("Image generation failed: polling returned no data");
   if (pollResult.data.startsWith("data:")) return pollResult.data;
   if (pollResult.data.startsWith("http")) return await urlToBase64(pollResult.data);
   return pollResult.data;
@@ -520,7 +520,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   const url = joinUrl(getMediaBaseUrl(), "/model/generateVideo");
   const { body, summary } = buildAtlasVideoPayload(config, model);
 
-  logger(`[AtlasCloud 视频] 提交任务: ${model.modelName}, ${summary}`);
+  logger(`[AtlasCloud Video] Submitting task: ${model.modelName}, ${summary}`);
   const submitResp: any = await withNetworkRetry<any>(() => axios.post(url, body, { headers }), 3, 1500);
   const submitData = submitResp.data;
 
@@ -528,7 +528,7 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   if (!taskId) {
     const syncUrl = extractUrl(submitData);
     if (syncUrl) return await urlToBase64(syncUrl);
-    throw new Error(`视频任务提交失败：未获取到任务ID。原始响应：${JSON.stringify(submitData).slice(0, 500)}`);
+    throw new Error(`Video task submission failed: no task ID obtained. Raw response: ${JSON.stringify(submitData).slice(0, 500)}`);
   }
 
   const pollResult = await pollTask(
@@ -541,10 +541,10 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
       if (["succeeded", "success", "done", "completed"].includes(status)) {
         const mediaUrl = extractUrl(data);
         if (mediaUrl) return { completed: true, data: mediaUrl };
-        return { completed: true, error: "任务成功但未返回视频地址" };
+        return { completed: true, error: "Task succeeded but no video address was returned" };
       }
       if (["failed", "error", "cancelled", "canceled", "expired"].includes(status)) {
-        return { completed: true, error: extractError(data) || "视频生成失败" };
+        return { completed: true, error: extractError(data) || "Video generation failed" };
       }
       return { completed: false };
     },
@@ -553,12 +553,12 @@ const videoRequest = async (config: VideoConfig, model: VideoModel): Promise<str
   );
 
   if (pollResult.error) throw new Error(pollResult.error);
-  if (!pollResult.data) throw new Error("视频生成失败：轮询未返回数据");
+  if (!pollResult.data) throw new Error("Video generation failed: polling returned no data");
   return await urlToBase64(pollResult.data);
 };
 
 const ttsRequest = async (_config: TTSConfig, _model: TTSModel): Promise<string> => {
-  // AtlasCloud 当前版本先不接 TTS。
+  // AtlasCloud does not support TTS in the current version.
   return "";
 };
 
@@ -566,7 +566,7 @@ const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: s
   return {
     hasUpdate: false,
     latestVersion: vendor.version,
-    notice: "AtlasCloud MASS 初稿。",
+    notice: "AtlasCloud MASS initial draft.",
   };
 };
 
@@ -575,7 +575,7 @@ const updateVendor = async (): Promise<string> => {
 };
 
 // ============================================================
-// 导出
+// Exports
 // ============================================================
 
 exports.vendor = vendor;

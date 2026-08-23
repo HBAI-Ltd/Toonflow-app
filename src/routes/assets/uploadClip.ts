@@ -4,6 +4,7 @@ import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
 import { v4 as uuid } from "uuid";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 根据 base64 头部获取文件扩展名
@@ -35,6 +36,7 @@ export default router.post(
     name: z.string(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { base64Data, projectId, type = "clip", name } = req.body;
     const ext = getExtFromBase64(base64Data);
     const savePath = `/${projectId}/assets/${uuid()}.${ext}`;
@@ -50,11 +52,11 @@ export default router.post(
       filePath: savePath,
       type,
       assetsId: id,
-      state: "已完成",
+      state: "已完成", // i18n-ignore — stored o_image.state enum value, not user-facing text
     });
     await u.db("o_assets").where("id", id).update({
       imageId: imageId,
     });
-    res.status(200).send(success("上传成功"));
+    res.status(200).send(success(null, t("assets.uploadClip.uploaded", {}, locale)));
   },
 );

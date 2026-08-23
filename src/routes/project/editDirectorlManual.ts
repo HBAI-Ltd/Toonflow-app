@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
+import { t, getLocale, localizedSkillPath } from "@/i18n";
 const router = express.Router();
 
 // 编辑导演手册
@@ -23,6 +24,7 @@ export default router.post(
     ),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     try {
       const { name, directorManual, images, data } = req.body as {
         name: string;
@@ -33,13 +35,13 @@ export default router.post(
 
       // 安全校验：不允许包含路径分隔符、纯数字，防止越级删除或误删项目目录
       if (name.includes("/") || name.includes("\\") || name === "." || name === ".." || /^\d+$/.test(name)) {
-        res.status(400).send(error("名称不能包含路径分隔符或为纯数字"));
+        res.status(400).send(error(t("project.manual.invalidName", {}, locale)));
         return;
       }
 
       const mainPath = u.getPath(["skills", "story_skills", directorManual]);
       if (!fs.existsSync(mainPath)) {
-        return res.status(400).send(error("导演手册不存在"));
+        return res.status(400).send(error(t("project.manual.notExistDirector", {}, locale)));
       }
       // 字段映射表（与 getVisualManual 保持一致）
       const DATA_MAP: { value: string; subDir?: string }[] = [
@@ -59,14 +61,18 @@ export default router.post(
         const subDir = SUB_DIR_MAP.get(item.value)!;
         const dirArr = subDir ? [mainPath, subDir] : [mainPath];
         const filePath = u.getPath([...dirArr, `${item.value}.md`]);
+        // 若原始文件（upstream 原件）尚不存在，说明此字段没有需要保护的原始内容，
+        // 直接写入原始路径，使其成为其他 locale 的兜底；否则写入 locale 专属 sidecar，
+        // 避免覆盖 zh 原件（zh 本身 localizedSkillPath 会返回原路径，行为不变）。
+        const targetPath = fs.existsSync(filePath) ? localizedSkillPath(filePath, locale) : filePath;
 
-        const fileDir = path.dirname(filePath);
+        const fileDir = path.dirname(targetPath);
         // 目录不存在时递归创建
         if (!fs.existsSync(fileDir)) {
           fs.mkdirSync(fileDir, { recursive: true });
         }
         const content = item.value === "README" ? `${name}\n${item.data}` : item.data;
-        fs.writeFileSync(filePath, content, "utf-8");
+        fs.writeFileSync(targetPath, content, "utf-8");
       }
       const imagesDir = path.join(mainPath, "images");
 

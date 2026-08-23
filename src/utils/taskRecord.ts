@@ -1,9 +1,10 @@
 import db from "@/utils/db";
+import { t, getLocale } from "@/i18n";
 
 const taskStateMap = {
-  "0": "进行中",
-  "1": "已完成",
-  "-1": "生成失败",
+  "0": "进行中", // i18n-ignore — frontend hardcodes this exact Chinese string as its task-state filter value (data/web/index.html), must stay Chinese
+  "1": "已完成", // i18n-ignore — frontend hardcodes this exact Chinese string as its task-state filter value (data/web/index.html), must stay Chinese
+  "-1": "生成失败", // i18n-ignore — frontend hardcodes this exact Chinese string as its task-state filter value (data/web/index.html), must stay Chinese
 };
 /**
  * 记录任务并返回结束函数
@@ -21,6 +22,7 @@ export default async function taskRecord(
     content?: any;
   } = {},
 ) {
+  const locale = await getLocale();
   const { content, describe = "" } = opts;
 
   let opteorContent: string | undefined;
@@ -29,7 +31,7 @@ export default async function taskRecord(
   } else if (typeof content === "string") {
     opteorContent = content;
   } else if (typeof content === "function") {
-    throw new Error("不支持的类型");
+    throw new Error(t("utils.taskRecord.unsupportedType", {}, locale));
   } else {
     try {
       opteorContent = JSON.stringify(content);
@@ -44,7 +46,7 @@ export default async function taskRecord(
     relatedObjects: opteorContent,
     model: modelName,
     describe,
-    state: taskStateMap[0],
+    state: taskStateMap["0"],
     startTime: Date.now(),
   });
 
@@ -53,7 +55,7 @@ export default async function taskRecord(
     await db("o_tasks")
       .where("id", id)
       .update({
-        state: taskStateMap[state],
+        state: taskStateMap[String(state) as "1" | "-1"],
         reason: state === -1 ? (reason ?? "") : null,
       });
   };

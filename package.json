@@ -1,16 +1,16 @@
 {
   "name": "toonflow",
   "version": "1.1.8",
-  "description": "Toonflow 是一款 AI 短剧漫剧工具，能够利用 AI 技术将小说自动转化为剧本，并结合 AI 生成的图片和视频，实现高效的短剧创作。",
+  "description": "Toonflow is an AI short-drama and comic-drama tool that turns novels into scripts automatically and pairs them with AI-generated images and video.",
   "author": "HBAI-Ltd <ltlctools@outlook.com>",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/HBAI-Ltd/Toonflow-app#readme",
+  "homepage": "https://github.com/kienmatu/Toonflow-app#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/HBAI-Ltd/Toonflow-app.git"
+    "url": "git+https://github.com/kienmatu/Toonflow-app.git"
   },
   "bugs": {
-    "url": "https://github.com/HBAI-Ltd/Toonflow-app/issues",
+    "url": "https://github.com/kienmatu/Toonflow-app/issues",
     "email": "ltlctools@outlook.com"
   },
   "main": "build/main.js",
@@ -24,6 +24,8 @@
     "dev:gui-vite": "cross-env VITE_DEV=1 electronmon -r tsx scripts/main.ts",
     "start": "cross-env NODE_ENV=prod node data/serve/app.js",
     "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "build": "cross-env NODE_ENV=prod tsx scripts/build.ts",
     "pack": "electron-builder --dir",
     "dist": "yarn build && electron-builder",
@@ -32,7 +34,10 @@
     "dist:linux": "yarn build && electron-builder --linux",
     "debug:ai": "npx @ai-sdk/devtools",
     "license": "node scripts/license.ts",
-    "vendor2json": "node scripts/vendor2json.ts"
+    "vendor2json": "node scripts/vendor2json.ts",
+    "i18n:scan": "tsx scripts/i18n-scan.ts",
+    "i18n:patch-web": "tsx scripts/patch-web-i18n.ts",
+    "i18n:check-manifest": "tsx scripts/i18n-check-manifest.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.35",
@@ -92,7 +97,9 @@
     "license-checker": "^25.0.1",
     "nodemon": "^3.1.11",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite-tsconfig-paths": "^5",
+    "vitest": "^3"
   },
   "overrides": {
     "@rmp135/sql-ts": {

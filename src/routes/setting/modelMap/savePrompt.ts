@@ -5,6 +5,7 @@ import { z } from "zod";
 import { validateFields } from "@/middleware/middleware";
 import fs from "fs/promises";
 import path from "path";
+import { t, getLocale } from "@/i18n";
 
 const router = express.Router();
 
@@ -16,6 +17,7 @@ export default router.post(
     type: z.enum(["image", "video"]),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { name, data, type } = req.body;
 
     const modelPromptRoot = u.getPath(["modelPrompt"]);
@@ -26,6 +28,6 @@ export default router.post(
     const filePath = path.join(dir, `${name}.md`);
     await fs.writeFile(filePath, data, "utf-8");
 
-    res.status(200).send(success("保存成功"));
+    res.status(200).send(success(null, t("setting.modelMap.savePrompt.saved", {}, locale)));
   },
 );

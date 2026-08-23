@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ export default router.post(
     concurrentCount: z.number().min(1).optional(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { projectId, novelIds, concurrentCount = 5 } = req.body;
 
     const [allChapters, novel] = await Promise.all([
@@ -22,7 +24,7 @@ export default router.post(
       Promise.resolve(new u.cleanNovel(concurrentCount)),
     ]);
     if (allChapters.length === 0) {
-      return res.status(400).send(success("没有对应章节"));
+      return res.status(400).send(success(t("novel.event.generateEvents.noChapters", {}, locale)));
     }
     await u.db("o_novel").where("projectId", projectId).whereIn("id", novelIds).update({ eventState: 0, event: null });
     novel.emitter.on("item", async (item) => {
@@ -33,6 +35,6 @@ export default router.post(
     });
     novel.start(allChapters, projectId);
 
-    return res.status(200).send(success("生成事件成功"));
+    return res.status(200).send(success(t("novel.event.generateEvents.generated", {}, locale)));
   },
 );

@@ -3,7 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import { id } from "zod/locales";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -15,12 +15,13 @@ export default router.post(
   }),
   async (req, res) => {
     const { id, url, flowId } = req.body;
+    const locale = await getLocale(req as any);
     const [imageId] = await u.db("o_image").insert({
       filePath: u.replaceUrl(url),
-      state: "已完成",
+      state: "已完成", // i18n-ignore — stored o_image.state enum value, not user-facing text
       assetsId: id,
     });
     await u.db("o_assets").where({ id }).update({ flowId, imageId });
-    res.status(200).send(success({ message: "更新提示词成功" }));
+    res.status(200).send(success({ message: t("production.common.promptUpdated", {}, locale) }));
   },
 );

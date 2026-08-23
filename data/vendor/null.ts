@@ -1,19 +1,19 @@
 /**
- * Toonflow AI供应商模板
+ * Toonflow AI provider template
  * @version 2.0
  */
 
 // ============================================================
-// 类型定义
+// Type definitions
 // ============================================================
 
 type VideoMode =
-  | "singleImage" //单图参考
-  | "startEndRequired" //首尾帧（两张都得有）
-  | "endFrameOptional" //首尾帧（尾帧可选）
-  | "startFrameOptional" //首尾帧（首帧可选）
-  | "text" //文本
-  | (`videoReference:${number}` | `imageReference:${number}` | `audioReference:${number}`)[]; //多参考（数字代表限制数量）
+  | "singleImage" // single image reference
+  | "startEndRequired" // first/last frame (both required)
+  | "endFrameOptional" // first/last frame (last frame optional)
+  | "startFrameOptional" // first/last frame (first frame optional)
+  | "text" // text
+  | (`videoReference:${number}` | `imageReference:${number}` | `audioReference:${number}`)[]; // multi-reference (the number indicates the limit)
 
 interface TextModel {
   name: string;
@@ -48,12 +48,12 @@ interface TTSModel {
 }
 
 interface VendorConfig {
-  id: string; //唯一ID，作为文件名存储用户磁盘上，禁止符号
-  version: string; //版本号，格式为x.y，需遵守语义化版本控制
-  name: string; //供应商名称
-  author: string; //作者
-  description?: string; //描述，支持Markdown格式
-  icon?: string; //图标，仅支持Base64格式，建议尺寸为128x128像素
+  id: string; // unique ID, used as the filename stored on the user's disk, symbols forbidden
+  version: string; // version number, format x.y, must follow semantic versioning
+  name: string; // provider name
+  author: string; // author
+  description?: string; // description, supports Markdown format
+  icon?: string; // icon, Base64 format only, recommended size 128x128 pixels
   inputs: { key: string; label: string; type: "text" | "password" | "url"; required: boolean; placeholder?: string }[];
   inputValues: Record<string, string>;
   models: (TextModel | ImageModel | VideoModel | TTSModel)[];
@@ -97,17 +97,17 @@ interface PollResult {
 }
 
 // ============================================================
-// 全局声明
+// Global declarations
 // ============================================================
 
-declare const axios: any; // HTTP请求库
-declare const logger: (msg: string) => void; // 日志函数
-declare const jsonwebtoken: any; // JWT处理库
-declare const zipImage: (base64: string, size: number) => Promise<string>; // 图片压缩函数，返回有头base64字符串
-declare const zipImageResolution: (base64: string, w: number, h: number) => Promise<string>; // 图片分辨率调整函数，返回有头base64字符串
-declare const mergeImages: (base64Arr: string[], maxSize?: string) => Promise<string>; // 图片合成函数，返回有头base64字符串
-declare const urlToBase64: (url: string) => Promise<string>; // URL转Base64函数，返回有头base64字符串
-declare const pollTask: (fn: () => Promise<PollResult>, interval?: number, timeout?: number) => Promise<PollResult>; // 轮询函数，fn为异步函数，interval为轮询间隔，timeout为超时时间，返回fn的结果
+declare const axios: any; // HTTP request library
+declare const logger: (msg: string) => void; // logging function
+declare const jsonwebtoken: any; // JWT handling library
+declare const zipImage: (base64: string, size: number) => Promise<string>; // image compression function, returns a headed base64 string
+declare const zipImageResolution: (base64: string, w: number, h: number) => Promise<string>; // image resolution adjustment function, returns a headed base64 string
+declare const mergeImages: (base64Arr: string[], maxSize?: string) => Promise<string>; // image compositing function, returns a headed base64 string
+declare const urlToBase64: (url: string) => Promise<string>; // URL-to-Base64 function, returns a headed base64 string
+declare const pollTask: (fn: () => Promise<PollResult>, interval?: number, timeout?: number) => Promise<PollResult>; // polling function, fn is an async function, interval is the polling interval, timeout is the timeout, returns fn's result
 declare const createOpenAI: any;
 declare const createDeepSeek: any;
 declare const createZhipu: any;
@@ -119,38 +119,38 @@ declare const createMinimax: any;
 declare const createGoogleGenerativeAI: any;
 declare const exports: {
   vendor: VendorConfig;
-  textRequest: (m: TextModel, t: boolean, tl: 0 | 1 | 2 | 3) => any; //文本模型
-  imageRequest: (c: ImageConfig, m: ImageModel) => Promise<string>; //图片模型，返回有头base64字符串
-  videoRequest: (c: VideoConfig, m: VideoModel) => Promise<string>; //视频模型，返回有头base64字符串
-  ttsRequest: (c: TTSConfig, m: TTSModel) => Promise<string>; //（暂未开放）语音模型，返回有头base64字符串
-  checkForUpdates?: () => Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }>; //检查更新函数，返回是否有更新和最新版本号和更公告（支持Markdown格式）
-  updateVendor?: () => Promise<string>; //更新函数，返回最新的代码文本
+  textRequest: (m: TextModel, t: boolean, tl: 0 | 1 | 2 | 3) => any; // text model
+  imageRequest: (c: ImageConfig, m: ImageModel) => Promise<string>; // image model, returns a headed base64 string
+  videoRequest: (c: VideoConfig, m: VideoModel) => Promise<string>; // video model, returns a headed base64 string
+  ttsRequest: (c: TTSConfig, m: TTSModel) => Promise<string>; // (not yet available) speech model, returns a headed base64 string
+  checkForUpdates?: () => Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }>; // update-check function, returns whether an update is available, the latest version, and release notes (supports Markdown format)
+  updateVendor?: () => Promise<string>; // update function, returns the latest code text
 };
 
 // ============================================================
-// 供应商配置
+// Provider configuration
 // ============================================================
 
 const vendor: VendorConfig = {
   id: "null",
   version: "2.0",
   author: "Toonflow",
-  name: "空模板",
-  description: "## 开发模板，您可以使用此模板进行Vibe Coding",
+  name: "Blank Template",
+  description: "## Development template, you can use this template for Vibe Coding",
   inputs: [
-    { key: "apiKey", label: "API密钥", type: "password", required: true },
-    { key: "baseUrl", label: "请求地址", type: "url", required: true, placeholder: "示例：https://api.openai.com/v1" },
+    { key: "apiKey", label: "API Key", type: "password", required: true },
+    { key: "baseUrl", label: "Request URL", type: "url", required: true, placeholder: "Example: https://api.openai.com/v1" },
   ],
   inputValues: { apiKey: "", baseUrl: "https://api.openai.com/v1" },
   models: [{ name: "GPT-4o", modelName: "gpt-4o", type: "text", think: false }],
 };
 
 // ============================================================
-// 适配器函数
+// Adapter functions
 // ============================================================
 
 const textRequest = (model: TextModel, think: boolean, thinkLevel: 0 | 1 | 2 | 3) => {
-  if (!vendor.inputValues.apiKey) throw new Error("缺少API Key");
+  if (!vendor.inputValues.apiKey) throw new Error("Missing API Key");
   const apiKey = vendor.inputValues.apiKey.replace(/^Bearer\s+/i, "");
   return createOpenAI({ baseURL: vendor.inputValues.baseUrl, apiKey }).chat(model.modelName);
 };
@@ -168,7 +168,7 @@ const ttsRequest = async (config: TTSConfig, model: TTSModel): Promise<string> =
 };
 
 const checkForUpdates = async (): Promise<{ hasUpdate: boolean; latestVersion: string; notice: string }> => {
-  return { hasUpdate: false, latestVersion: "2.0", notice: "## 新版本更新公告" };
+  return { hasUpdate: false, latestVersion: "2.0", notice: "## New version release notes" };
 };
 
 const updateVendor = async (): Promise<string> => {
@@ -176,7 +176,7 @@ const updateVendor = async (): Promise<string> => {
 };
 
 // ============================================================
-// 导出
+// Exports
 // ============================================================
 
 exports.vendor = vendor;
@@ -187,148 +187,201 @@ exports.ttsRequest = ttsRequest;
 exports.checkForUpdates = checkForUpdates;
 exports.updateVendor = updateVendor;
 
-// 这行代码用于确保当前文件被识别为模块，避免全局变量冲突
+// This line ensures the current file is recognized as a module, avoiding global variable conflicts
 export {};
 
 /**
  * ============================================================
- * AI 代码生成指南
+ * AI Code Generation Guide
  * ============================================================
  *
- * 【概述】
- * 本文件是 Toonflow AI 供应商适配模板。AI 在生成新供应商适配代码时，
- * 必须严格遵守以下规则，并要求用户提供目标平台的 curl 调用示例或 API 文档信息作为输入依据。
+ * 【Overview】
+ * This file is the Toonflow AI provider adapter template. When an AI generates
+ * new provider adapter code, it must strictly follow the rules below, and must
+ * ask the user for the target platform's curl call examples or API documentation
+ * as the basis for the input.
  *
- * 【前置要求】
- * 在生成代码前，请向用户索要以下信息（至少其一）：
- *   1. 目标 API 的 curl 请求示例（包含请求地址、Headers、Body 结构、响应结构）
- *   2. 目标 API 的官方文档链接或文档截图/文本内容
- *   3. 需要适配的模型类型（text / image / video / tts）及其能力说明
- * 没有足够信息时，应主动追问，不要凭空编造 API 结构。
+ * 【Prerequisites】
+ * Before generating code, ask the user for at least one of the following:
+ *   1. A curl request example for the target API (including the request URL,
+ *      Headers, Body structure, and response structure)
+ *   2. A link to the target API's official documentation, or documentation
+ *      screenshots/text content
+ *   3. The model type(s) to adapt (text / image / video / tts) and their
+ *      capability descriptions
+ * If there isn't enough information, proactively ask follow-up questions —
+ * do not fabricate the API structure.
  *
- * 【代码规则】
+ * 【Code Rules】
  *
- * 1. 禁止引入任何外部包
- *    不可使用 import / require，仅能使用本文件「全局声明」区域中已声明的方法和对象，
- *    包括：axios、logger、jsonwebtoken、zipImage、zipImageResolution、mergeImages、
- *    urlToBase64、pollTask，以及 createOpenAI、createDeepSeek、createZhipu、createQwen、
- *    createAnthropic、createOpenAICompatible、createXai、createMinimax、
- *    createGoogleGenerativeAI 等 AI SDK 工厂函数。
+ * 1. Do not introduce any external packages
+ *    Do not use import / require — only use the methods and objects already
+ *    declared in this file's "Global declarations" section, including:
+ *    axios, logger, jsonwebtoken, zipImage, zipImageResolution, mergeImages,
+ *    urlToBase64, pollTask, and the AI SDK factory functions createOpenAI,
+ *    createDeepSeek, createZhipu, createQwen, createAnthropic,
+ *    createOpenAICompatible, createXai, createMinimax, createGoogleGenerativeAI.
  *
- * 2. 禁止在 exports.* 函数外部声明离散的全大写常量
- *    错误示例：const API_URL = "https://..."; const MAX_RETRY = 3;
- *    如果确实需要可配置的常量值，必须将其声明在 vendor.inputValues 中，
- *    通过 vendor.inputValues.xxx 访问，让用户可在界面上配置。
- *    如果是纯逻辑内部使用的临时变量，应内联在对应的 exports.* 函数体内部，使用小驼峰命名。
+ * 2. Do not declare discrete, all-caps constants outside the exports.* functions
+ *    Bad example: const API_URL = "https://..."; const MAX_RETRY = 3;
+ *    If a configurable constant value is genuinely needed, it must be declared
+ *    in vendor.inputValues, and accessed via vendor.inputValues.xxx, so the
+ *    user can configure it in the UI.
+ *    If it's a purely internal temporary variable used only within a single
+ *    function's logic, inline it inside the relevant exports.* function body,
+ *    using camelCase naming.
  *
- * 3. 逻辑尽量聚合在 exports.* 对应的函数内部
- *    每个适配函数（textRequest / imageRequest / videoRequest / ttsRequest）
- *    应自包含，将请求构造、发送、轮询、结果解析等逻辑写在函数体内，避免拆分出大量外部辅助函数。
- *    如果多个函数确实存在公共逻辑（如签名计算、Token 生成、请求头构造），
- *    可提取为文件内的小驼峰命名函数，放在「适配器函数」区块之前的「辅助工具」区块中，
- *    且不可使用全大写命名。
+ * 3. Keep logic aggregated inside the exports.* functions as much as possible
+ *    Each adapter function (textRequest / imageRequest / videoRequest /
+ *    ttsRequest) should be self-contained, with request construction, sending,
+ *    polling, and result parsing logic written inside the function body —
+ *    avoid splitting into many external helper functions.
+ *    If multiple functions genuinely share common logic (e.g. signature
+ *    calculation, token generation, request header construction), it may be
+ *    extracted into a camelCase-named function within the file, placed in the
+ *    "Helper utilities" section before the "Adapter functions" section, and
+ *    must not use all-caps naming.
  *
- * 4. 命名规范
- *    所有变量、函数一律使用小驼峰命名（camelCase），禁止使用 UPPER_SNAKE_CASE。
+ * 4. Naming conventions
+ *    All variables and functions must use camelCase; UPPER_SNAKE_CASE is
+ *    forbidden.
  *
- * 5. 不需要重新声明类型
- *    本文件顶部已完整定义了所有接口和类型（VendorConfig、ImageConfig、VideoConfig、
- *    TTSConfig、TextModel、ImageModel、VideoModel、TTSModel、ReferenceList、PollResult 等），
- *    AI 生成代码时直接使用即可，不要重复声明。
+ * 5. No need to redeclare types
+ *    All interfaces and types (VendorConfig, ImageConfig, VideoConfig,
+ *    TTSConfig, TextModel, ImageModel, VideoModel, TTSModel, ReferenceList,
+ *    PollResult, etc.) are already fully defined at the top of this file —
+ *    use them directly when generating code, do not redeclare them.
  *
- * 6. 返回值规范
- *    - textRequest(model)：返回 AI SDK 的 chat model 实例（通过 createOpenAI 等工厂函数创建）。
- *    - imageRequest(config, model)：返回有头 base64 字符串（如 "data:image/png;base64,..."）。
- *      config.referenceList 为 Extract<ReferenceList, { type: "image" }>[] 类型，
- *      每个引用条目均为 base64 形式（sourceType 固定为 "base64"）。
- *    - videoRequest(config, model)：返回有头 base64 字符串（如 "data:video/mp4;base64,..."）。
- *      config.referenceList 为 ReferenceList[] 类型，可包含 image / video / audio 三种引用，
- *      每个引用条目均为 base64 形式（sourceType 固定为 "base64"）。
- *      config.mode 为当前激活的视频模式数组，需根据 mode 决定如何使用 referenceList。
- *    - ttsRequest(config, model)：返回有头 base64 字符串（如 "data:audio/mp3;base64,..."）。
- *      config.referenceList 为 Extract<ReferenceList, { type: "audio" }>[] 类型（音频参考）。
- *    当 API 返回的是 URL 而非二进制数据时，使用 urlToBase64(url) 转换。
+ * 6. Return value conventions
+ *    - textRequest(model): returns an AI SDK chat model instance (created via
+ *      a factory function such as createOpenAI).
+ *    - imageRequest(config, model): returns a headed base64 string (e.g.
+ *      "data:image/png;base64,..."). config.referenceList is of type
+ *      Extract<ReferenceList, { type: "image" }>[], and every reference entry
+ *      is in base64 form (sourceType is always "base64").
+ *    - videoRequest(config, model): returns a headed base64 string (e.g.
+ *      "data:video/mp4;base64,..."). config.referenceList is of type
+ *      ReferenceList[] and can include image / video / audio references,
+ *      and every reference entry is in base64 form (sourceType is always
+ *      "base64"). config.mode is the array of currently active video modes —
+ *      use it to decide how to consume referenceList.
+ *    - ttsRequest(config, model): returns a headed base64 string (e.g.
+ *      "data:audio/mp3;base64,..."). config.referenceList is of type
+ *      Extract<ReferenceList, { type: "audio" }>[] (audio reference).
+ *    When the API returns a URL rather than binary data, convert it with
+ *    urlToBase64(url).
  *
- * 7. ReferenceList 与 VideoMode 说明
- *    ReferenceList 是统一的多媒体引用类型，每个条目包含：
- *      - type: "image" | "audio" | "video"（媒体类型）
- *      - sourceType: "base64"（当前模板固定为 base64）
- *      - base64（对应的数据）
+ * 7. ReferenceList and VideoMode explained
+ *    ReferenceList is the unified multimedia reference type; each entry
+ *    contains:
+ *      - type: "image" | "audio" | "video" (media type)
+ *      - sourceType: "base64" (fixed to base64 in this template)
+ *      - base64 (the corresponding data)
  *
- *    VideoMode 定义了视频模型支持的输入模式：
- *      - "text"：纯文本生成视频
- *      - "singleImage"：单张首帧图片
- *      - "startEndRequired"：首尾帧（两张都必须提供）
- *      - "endFrameOptional"：首尾帧（尾帧可选）
- *      - "startFrameOptional"：首尾帧（首帧可选）
- *      - 数组形式如 ["imageReference:9", "videoReference:3", "audioReference:3"]：
- *        多模态参考模式，数字表示该类型的最大数量限制。
+ *    VideoMode defines the input modes a video model supports:
+ *      - "text": pure text-to-video
+ *      - "singleImage": a single first-frame image
+ *      - "startEndRequired": first/last frame (both must be provided)
+ *      - "endFrameOptional": first/last frame (last frame optional)
+ *      - "startFrameOptional": first/last frame (first frame optional)
+ *      - Array form such as ["imageReference:9", "videoReference:3",
+ *        "audioReference:3"]: multimodal reference mode, where the number
+ *        indicates the maximum count for that type.
  *
- *    在 videoRequest 中，config.mode 表示当前选择的模式，需根据其值决定：
- *      - 如何从 config.referenceList 中提取对应类型的引用
- *      - 如何构造 API 请求体中的图片/视频/音频参数
+ *    In videoRequest, config.mode indicates the currently selected mode —
+ *    use its value to decide:
+ *      - how to extract the corresponding type of reference from
+ *        config.referenceList
+ *      - how to construct the image/video/audio parameters in the API
+ *        request body
  *
- * 8. 异步任务处理
- *    对于视频生成等需要轮询的异步任务，使用全局的 pollTask 函数：
+ * 8. Handling asynchronous tasks
+ *    For asynchronous tasks that require polling, such as video generation,
+ *    use the global pollTask function:
  *    const result = await pollTask(async () => {
  *      const resp = await axios.get(...);
  *      if (resp.data.status === "SUCCESS") return { completed: true, data: resp.data.url };
  *      if (resp.data.status === "FAILED") return { completed: true, error: resp.data.message };
  *      return { completed: false };
- *    }, 5000, 600000); // 每5秒轮询，10分钟超时
+ *    }, 5000, 600000); // poll every 5 seconds, 10-minute timeout
  *    if (result.error) throw new Error(result.error);
  *    return await urlToBase64(result.data!);
  *
- * 9. 错误处理
- *    在每个函数开头校验必需参数（如 API Key），缺失时使用 throw new Error("...") 抛出。
- *    API 请求失败时，从响应中提取有意义的错误信息抛出，不要吞掉异常。
+ * 9. Error handling
+ *    Validate required parameters (such as the API Key) at the start of each
+ *    function, and throw with throw new Error("...") when missing.
+ *    When an API request fails, extract a meaningful error message from the
+ *    response and throw it — do not swallow the exception.
  *
- * 10. 日志输出
- *     在关键步骤使用 logger("...") 输出日志（如"开始提交任务"、"任务ID: xxx"、"轮询中..."），
- *     便于调试。
+ * 10. Logging
+ *     Use logger("...") at key steps to output logs (e.g. "starting task
+ *     submission", "task ID: xxx", "polling..."), to aid debugging.
  *
- * 11. vendor 配置填写
- *     - id：纯英文小写，作为文件名使用，禁止特殊符号和空格。
- *     - version：语义化版本格式 "x.y"。
- *     - inputs：根据目标 API 所需的认证信息配置（API Key、Secret、请求地址等）。
- *     - models：根据目标平台支持的模型列表填写，注意正确设置 type 和各模型特有字段。
- *       - VideoModel 的 mode 对应 API 支持的输入模式（参见规则 7 的 VideoMode 说明）。
- *       - VideoModel 的 audio 字段：true（始终生成音频）、false（不生成）、"optional"（用户可选）。
- *       - VideoModel 的 durationResolutionMap 对应各时长下可选的分辨率。
- *       - VideoModel 的 associationSkills 可选，用于描述模型的特殊能力。
- *       - ImageModel 的 mode 对应 API 支持的生图模式（"text" 纯文本、"singleImage" 单图参考、"multiReference" 多图参考）。
- *       - TTSModel 的 voices 对应可选的音色列表。
+ * 11. Filling in the vendor configuration
+ *     - id: lowercase English only, used as the filename, no special symbols
+ *       or spaces.
+ *     - version: semantic version format "x.y".
+ *     - inputs: configure the authentication information required by the
+ *       target API (API Key, Secret, request URL, etc.).
+ *     - models: fill in based on the model list supported by the target
+ *       platform, taking care to set type and each model's specific fields
+ *       correctly.
+ *       - VideoModel's mode corresponds to the input modes the API supports
+ *         (see the VideoMode explanation in rule 7).
+ *       - VideoModel's audio field: true (always generates audio), false
+ *         (never generates audio), "optional" (user's choice).
+ *       - VideoModel's durationResolutionMap corresponds to the resolutions
+ *         available for each duration.
+ *       - VideoModel's associationSkills is optional, used to describe the
+ *         model's special capabilities.
+ *       - ImageModel's mode corresponds to the image generation modes the
+ *         API supports ("text" pure text, "singleImage" single-image
+ *         reference, "multiReference" multi-image reference).
+ *       - TTSModel's voices corresponds to the list of available voices.
  *
- * 12. 图片处理
- *     - 需要压缩图片体积时使用 zipImage(base64, maxSizeKB)。
- *     - 需要调整图片分辨率时使用 zipImageResolution(base64, width, height)。
- *     - 需要将多张图片拼合为一张时使用 mergeImages(base64Arr, maxSize)。
- *     - 以上函数均接收和返回有头 base64 字符串。
+ * 12. Image processing
+ *     - Use zipImage(base64, maxSizeKB) to compress image size when needed.
+ *     - Use zipImageResolution(base64, width, height) to adjust image
+ *       resolution when needed.
+ *     - Use mergeImages(base64Arr, maxSize) to merge multiple images into
+ *       one when needed.
+ *     - All of the above functions accept and return headed base64 strings.
  *
- * 13. 文件结构
- *     生成的代码必须保持本模板的整体结构：
- *     类型定义区 → 全局声明区 → 供应商配置区 → [辅助工具区（可选）] → 适配器函数区 → 导出区
- *     不要打乱顺序，不要删除已有的结构注释分隔线。
- *     辅助工具区用于放置多个适配器函数共享的小驼峰命名辅助函数（如 getHeaders、getBaseUrl）。
+ * 13. File structure
+ *     Generated code must preserve this template's overall structure:
+ *     Type definitions → Global declarations → Provider configuration →
+ *     [Helper utilities (optional)] → Adapter functions → Exports
+ *     Do not reorder these sections, and do not remove the existing
+ *     structural comment separators.
+ *     The helper utilities section is for camelCase-named helper functions
+ *     shared by multiple adapter functions (e.g. getHeaders, getBaseUrl).
  *
- * 14. 导出规范
- *     必须导出以下字段（通过 exports.xxx = xxx 赋值）：
- *       - exports.vendor（必须）
- *       - exports.textRequest（必须）
- *       - exports.imageRequest（必须）
- *       - exports.videoRequest（必须）
- *       - exports.ttsRequest（必须）
- *       - exports.checkForUpdates（可选）
- *       - exports.updateVendor（可选）
- *     未实现的适配器函数保留空实现（return ""），不可省略导出。
- *     文件末尾必须包含 export {}; 以确保文件被识别为模块。
+ * 14. Export conventions
+ *     The following fields must be exported (via exports.xxx = xxx
+ *     assignment):
+ *       - exports.vendor (required)
+ *       - exports.textRequest (required)
+ *       - exports.imageRequest (required)
+ *       - exports.videoRequest (required)
+ *       - exports.ttsRequest (required)
+ *       - exports.checkForUpdates (optional)
+ *       - exports.updateVendor (optional)
+ *     Unimplemented adapter functions must keep an empty implementation
+ *     (return ""); their export must not be omitted.
+ *     The file must end with export {}; to ensure it is recognized as a
+ *     module.
  *
- * 【生成流程】
- * 当用户请求生成新的供应商适配时：
- *   1. 确认用户已提供 curl 示例或 API 文档。
- *   2. 分析 API 的认证方式、端点地址、请求/响应结构。
- *   3. 基于本模板结构，填充 vendor 配置和对应的适配器函数。
- *   4. 根据当前模板的 ReferenceList 定义，按 base64 形式构造和消费 referenceList。
- *   5. 仅实现用户需要的模型类型，未用到的函数保留空实现（return ""）。
- *   6. 生成完整可用的代码，确保无语法错误、无遗漏导出。
+ * 【Generation Workflow】
+ * When a user requests generating a new provider adapter:
+ *   1. Confirm the user has provided a curl example or API documentation.
+ *   2. Analyze the API's authentication method, endpoint addresses, and
+ *      request/response structure.
+ *   3. Based on this template's structure, fill in the vendor configuration
+ *      and the corresponding adapter functions.
+ *   4. Following this template's ReferenceList definition, construct and
+ *      consume referenceList in base64 form.
+ *   5. Only implement the model types the user needs; leave unused functions
+ *      with an empty implementation (return "").
+ *   6. Generate complete, working code, ensuring there are no syntax errors
+ *      and no missing exports.
  */

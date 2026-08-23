@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 获取用户
@@ -19,6 +20,7 @@ export default router.post(
     modelDtype: z.string(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { messagesPerSummary, shortTermLimit, summaryMaxLength, summaryLimit, ragLimit, deepRetrieveSummaryLimit, modelOnnxFile, modelDtype } =
       req.body;
 
@@ -40,6 +42,6 @@ export default router.post(
     await upsert("modelOnnxFile", JSON.stringify(modelOnnxFile));
     await upsert("modelDtype", modelDtype);
 
-    res.status(200).send(success("保存设置成功"));
+    res.status(200).send(success(null, t("setting.memoryConfig.sureMemory.saved", {}, locale)));
   },
 );

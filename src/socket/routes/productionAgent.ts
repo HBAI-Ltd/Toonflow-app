@@ -3,6 +3,7 @@ import u from "@/utils";
 import { Namespace, Socket } from "socket.io";
 import * as agent from "@/agents/productionAgent/index";
 import ResTool from "@/socket/resTool";
+import { t, getLocale } from "@/i18n";
 
 async function verifyToken(rawToken: string): Promise<Boolean> {
   const setting = await u.db("o_setting").where("key", "tokenKey").select("value").first();
@@ -22,23 +23,28 @@ export default (nsp: Namespace) => {
   nsp.on("connection", async (socket: Socket) => {
     const token = socket.handshake.auth.token;
     if (!token || !(await verifyToken(token))) {
-      console.log("[productionAgent] 连接失败，token无效");
+      console.log("[productionAgent] Connection rejected, invalid token");
       socket.disconnect();
       return;
     }
     let isolationKey = socket.handshake.auth.isolationKey;
     if (!isolationKey) {
-      console.log("[productionAgent] 连接失败，缺少 isolationKey");
+      console.log("[productionAgent] Connection rejected, missing isolationKey");
       socket.disconnect();
       return;
     }
 
-    console.log("[productionAgent] 已连接:", socket.id);
+    console.log("[productionAgent] Connected:", socket.id);
 
-    let resTool = new ResTool(socket, {
-      projectId: socket.handshake.auth.projectId,
-      scriptId: socket.handshake.auth.scriptId,
-    });
+    const locale = await getLocale(socket.handshake as any);
+    let resTool = new ResTool(
+      socket,
+      {
+        projectId: socket.handshake.auth.projectId,
+        scriptId: socket.handshake.auth.scriptId,
+      },
+      locale,
+    );
     let abortController: AbortController | null = null;
 
     const thinkConfig: agent.AgentContext["thinkConfig"] = {
@@ -48,11 +54,15 @@ export default (nsp: Namespace) => {
 
     socket.on("updateContext", (data: { isolationKey: string; projectId: number; scriptId: number }, callback) => {
       isolationKey = data.isolationKey;
-      resTool = new ResTool(socket, {
-        projectId: data.projectId,
-        scriptId: data.scriptId,
-      });
-      console.log("[productionAgent] 上下文已更新:", isolationKey);
+      resTool = new ResTool(
+        socket,
+        {
+          projectId: data.projectId,
+          scriptId: data.scriptId,
+        },
+        locale,
+      );
+      console.log("[productionAgent] Context updated:", isolationKey);
       callback?.({ success: true });
     });
 
@@ -62,7 +72,7 @@ export default (nsp: Namespace) => {
       abortController = new AbortController();
       const currentController = abortController;
 
-      const msg = resTool.newMessage("assistant", "视频策划");
+      const msg = resTool.newMessage("assistant", t("socket.productionAgent.plannerName", {}, locale));
       const ctx: agent.AgentContext = {
         socket,
         isolationKey,
@@ -78,7 +88,7 @@ export default (nsp: Namespace) => {
         await agent.runDecisionAI(ctx);
       } catch (err: any) {
         if (err.name !== "AbortError" && !currentController.signal.aborted) {
-          console.error("[productionAgent] chat error:", u.error(err).message);
+          console.error("[productionAgent] Chat error:", u.error(err).message);
         }
       } finally {
         if (abortController === currentController) {
@@ -90,7 +100,7 @@ export default (nsp: Namespace) => {
     socket.on("updateThinkConfig", (data: { think: boolean; thinlLevel: 0 | 1 | 2 | 3 }) => {
       thinkConfig.think = data.think;
       thinkConfig.thinlLevel = data.thinlLevel;
-      console.log("[productionAgent] 更新思考配置:", thinkConfig);
+      console.log("[productionAgent] Updated think config:", thinkConfig);
     });
 
     socket.on("stop", () => {
@@ -99,6 +109,6 @@ export default (nsp: Namespace) => {
     });
   });
   nsp.on("disconnect", (socket: Socket) => {
-    console.log("[productionAgent] 已断开连接:", socket.id);
+    console.log("[productionAgent] Disconnected:", socket.id);
   });
 };

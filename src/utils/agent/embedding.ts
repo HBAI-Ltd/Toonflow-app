@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import getPath from "@/utils/getPath";
 import db from "@/utils/db";
+import { t, getLocale } from "@/i18n";
 
 // ── 模型配置 ──
 // const modelOnnxFile = ["all-MiniLM-L6-v2", "onnx", "model_fp16.onnx"]; // 模型文件路径
@@ -22,7 +23,8 @@ export async function initEmbedding(): Promise<void> {
   let modelDtype = modelObj?.modelDtype ?? ("fp16" as const); // 量化类型：fp32
   const onnxPath = path.join(getPath("models"), ...modelOnnxFile);
   if (!fs.existsSync(onnxPath)) {
-    throw new Error(`Embedding 模型文件不存在: ${onnxPath}`);
+    const locale = await getLocale();
+    throw new Error(t("utils.embedding.modelFileNotFound", { path: onnxPath }, locale));
   }
 
   transformersEnv.allowRemoteModels = false;

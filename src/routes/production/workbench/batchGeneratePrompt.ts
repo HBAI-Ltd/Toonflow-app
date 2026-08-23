@@ -6,6 +6,7 @@ import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import fs from "fs/promises";
 import path from "path";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -29,6 +30,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { trackData, projectId, mode, model, concurrentCount = 5 } = req.body;
+    const locale = await getLocale(req as any);
     try {
       // 预加载公共数据
       const [id, modelData] = model.split(/:(.+)/);
@@ -87,15 +89,15 @@ export default router.post(
         }
       }
 
-      const artStyle = projectData?.artStyle || "无";
+      const artStyle = projectData?.artStyle || "无"; // i18n-ignore — internal fallback key for art-style prompt lookup, not user-facing text
       const visualManual = u.getArtPrompt(artStyle, "art_skills", "art_storyboard_video");
       await u
         .db("o_videoTrack")
         .whereIn(
           "id",
-          trackData.map((t: { trackId: number }) => t.trackId),
+          trackData.map((tr: { trackId: number }) => tr.trackId),
         )
-        .update({ state: "生成中" });
+        .update({ state: "生成中" }); // i18n-ignore — stored o_videoTrack.state enum value, not user-facing text
       // 并发控制：每个 track 独立走 查询→拼装→AI调用→更新 流程
       const limit = pLimit(concurrentCount ?? 5);
       const tasks = trackData.map((track: { trackId: number; info: { id: number; sources: string }[] }) =>
@@ -158,13 +160,17 @@ export default router.post(
               });
           }
 
+          const modelLabel = t("agent.production.workbench.videoPrompt.modelLabel", {}, locale);
+          const assetsLabel = t("agent.production.workbench.videoPrompt.assetsLabel", {}, locale);
+          const storyboardLabel = t("agent.production.workbench.videoPrompt.storyboardLabel", {}, locale);
           const content = `
-          **模型名称**：${modelData},
-          **资产信息**（角色、场景、道具、音频):${assets
+          ${modelLabel}${modelData},
+          ${assetsLabel}${assets
             .filter((i: any) => i.filePath)
             .map((i: any) => `[${i.id},${i.type},${i.name}]`)
+            // i18n-ignore — AI-prompt list separator, only interpolated into an agent prompt, never rendered to a user
             .join("，")},
-          **分镜信息**：${storyboard.map(
+          ${storyboardLabel}${storyboard.map(
             (i: any) => `<storyboardItem
   videoDesc='${i.videoDesc}'
   duration='${i.duration}'
@@ -189,7 +195,7 @@ export default router.post(
 
             await u.db("o_videoTrack").where({ id: track.trackId }).update({
               prompt: text,
-              state: "已完成",
+              state: "已完成", // i18n-ignore — stored o_videoTrack.state enum value, not user-facing text
             });
 
             return { trackId: track.trackId, text };
@@ -197,14 +203,14 @@ export default router.post(
             await u
               .db("o_videoTrack")
               .where({ id: track.trackId })
-              .update({ state: "生成失败", reason: u.error(e).message });
+              .update({ state: "生成失败", reason: u.error(e).message }); // i18n-ignore — stored o_videoTrack.state enum value, not user-facing text
           }
         }),
       );
 
       // 后台执行，不等待结果
       Promise.all(tasks);
-      res.status(200).send(success("开始生成提示词"));
+      res.status(200).send(success(t("production.workbench.batchGeneratePrompt.started", {}, locale)));
     } catch (e) {
       res.status(400).send(error(u.error(e).message));
     }

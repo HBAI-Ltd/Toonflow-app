@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 获取生成图片
@@ -13,6 +14,7 @@ export default router.post(
     scriptId: z.number().optional(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { projectId, scriptId } = req.body;
     const list = await u
       .db("o_assets")
@@ -30,7 +32,7 @@ export default router.post(
     const ending = await u.oss.getFileUrl("/ending.mp4", "assets");
     data.push({
       id: 0,
-      name: "Toonflow片尾",
+      name: t("assets.getMaterialData.endingName", {}, locale),
       filePath: ending,
       type: "clip",
     });
@@ -43,7 +45,11 @@ export default router.post(
     // 按轨道分组处理视频
     const video = await Promise.all(
       trackRows.map(async (track) => {
-        const videoItems = await u.db("o_video").where("o_video.videoTrackId", track.trackId).andWhere("o_video.state", "生成成功").select("*");
+        const videoItems = await u
+          .db("o_video")
+          .where("o_video.videoTrackId", track.trackId)
+          .andWhere("o_video.state", "生成成功") // i18n-ignore — stored o_video.state enum value, not user-facing text
+          .select("*");
         const videoList = await Promise.all(
           videoItems.map(async (v) => ({
             id: v.id,

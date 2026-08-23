@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 新增导演手册
@@ -23,6 +24,7 @@ export default router.post(
     ),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     try {
       const { name, images, data, directorManual } = req.body as {
         name: string;
@@ -32,13 +34,13 @@ export default router.post(
       };
       // 安全校验：不允许包含路径分隔符、纯数字，防止越级删除或误删项目目录
       if (name.includes("/") || name.includes("\\") || name === "." || name === ".." || /^\d+$/.test(name)) {
-        res.status(400).send(error("名称不能包含路径分隔符或为纯数字"));
+        res.status(400).send(error(t("project.manual.invalidName", {}, locale)));
         return;
       }
 
       const mainPath = u.getPath(["skills", "story_skills", directorManual]);
       if (fs.existsSync(mainPath)) {
-        return res.status(400).send(error("请勿填写重复名称的视觉手册"));
+        return res.status(400).send(error(t("project.manual.duplicateName", {}, locale)));
       }
       // 字段映射表（与 getVisualManual 保持一致）
       const DATA_MAP: { value: string; subDir?: string }[] = [

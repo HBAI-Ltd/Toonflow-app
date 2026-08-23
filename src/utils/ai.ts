@@ -3,6 +3,7 @@ import { devToolsMiddleware } from "@ai-sdk/devtools";
 import axios from "axios";
 import { transform } from "sucrase";
 import u from "@/utils";
+import { t, getLocale } from "@/i18n";
 
 type AiType =
   | "scriptAgent"
@@ -45,20 +46,21 @@ const AiTypeValues: AiType[] = [
 ];
 async function resolveModelName(value: AiType | `${string}:${string}`): Promise<`${string}:${string}`> {
   if (AiTypeValues.includes(value as AiType)) {
+    const locale = await getLocale();
     const agentUseModeVal = await u.db("o_setting").where("key", "agentUseMode").first();
 
     //正常流程
     //高级配置
     if (agentUseModeVal?.value == "1") {
       const agentDeployData = await u.db("o_agentDeploy").where("key", value).first();
-      if (!agentDeployData?.modelName) throw new Error(`高级配置模式下，未找到对应的模型配置 ${value}`);
+      if (!agentDeployData?.modelName) throw new Error(t("utils.ai.modelConfigNotFoundAdvanced", { value }, locale));
       return agentDeployData?.modelName as `${number}:${string}`;
     }
     //简易配置
     if (agentUseModeVal?.value == "0") {
       const [mainly] = value!.split(/:(.+)/);
       const mainlyData = await u.db("o_agentDeploy").where("key", mainly).first();
-      if (!mainlyData?.modelName) throw new Error(`简易配置模式下，未找到部署配置 ${value}`);
+      if (!mainlyData?.modelName) throw new Error(t("utils.ai.deploymentNotFoundSimple", { value }, locale));
       return mainlyData?.modelName as `${number}:${string}`;
     }
 
@@ -69,7 +71,7 @@ async function resolveModelName(value: AiType | `${string}:${string}`): Promise<
     if (!agentDeployData?.modelName) {
       const [mainly] = agentDeployData!.key!.split(/:(.+)/);
       const mainlyData = await u.db("o_agentDeploy").where("key", mainly).first();
-      if (!mainlyData?.modelName) throw new Error(`未找到部署配置 ${value}`);
+      if (!mainlyData?.modelName) throw new Error(t("utils.ai.deploymentNotFound", { value }, locale));
       modelName = mainlyData.modelName;
     }
     modelName = agentDeployData?.modelName || modelName;
@@ -80,19 +82,20 @@ async function resolveModelName(value: AiType | `${string}:${string}`): Promise<
 
 async function getModelConfig(value: AiType | `${string}:${string}`) {
   if (AiTypeValues.includes(value as AiType)) {
+    const locale = await getLocale();
     const agentUseModeVal = await u.db("o_setting").where("key", "agentUseMode").first();
     //正常流程
     //高级配置
     if (agentUseModeVal?.value == "1") {
       const agentDeployData = await u.db("o_agentDeploy").where("key", value).first();
-      if (!agentDeployData?.modelName) throw new Error(`高级配置模式下，未找到对应的模型配置 ${value}`);
+      if (!agentDeployData?.modelName) throw new Error(t("utils.ai.modelConfigNotFoundAdvanced", { value }, locale));
       return agentDeployData;
     }
     //简易配置
     if (agentUseModeVal?.value == "0") {
       const [mainly] = value!.split(/:(.+)/);
       const mainlyData = await u.db("o_agentDeploy").where("key", mainly).first();
-      if (!mainlyData?.modelName) throw new Error(`简易配置模式下，未找到部署配置 ${value}`);
+      if (!mainlyData?.modelName) throw new Error(t("utils.ai.deploymentNotFoundSimple", { value }, locale));
       return mainlyData;
     }
 
@@ -102,7 +105,7 @@ async function getModelConfig(value: AiType | `${string}:${string}`) {
     if (!agentDeployData?.modelName) {
       const [mainly] = agentDeployData!.key!.split(/:(.+)/);
       const mainlyData = await u.db("o_agentDeploy").where("key", mainly).first();
-      if (!mainlyData?.modelName) throw new Error(`未找到部署配置 ${value}`);
+      if (!mainlyData?.modelName) throw new Error(t("utils.ai.deploymentNotFound", { value }, locale));
       return mainlyData;
     }
     return agentDeployData;
@@ -116,12 +119,13 @@ async function getVendorTemplateFn(
 ): Promise<(think?: boolean, thinkLevel?: 0 | 1 | 2 | 3) => any>;
 async function getVendorTemplateFn(fnName: Exclude<FnName, "textRequest">, modelName: `${string}:${string}`): Promise<(input: any) => any>;
 async function getVendorTemplateFn(fnName: FnName, modelName: `${string}:${string}`): Promise<any> {
+  const locale = await getLocale();
   const [id, name] = modelName.split(/:(.+)/);
   const vendorConfigData = await u.db("o_vendorConfig").where("id", id).first();
-  if (!vendorConfigData) throw new Error(`未找到供应商配置 id=${id}`);
+  if (!vendorConfigData) throw new Error(t("utils.ai.providerConfigNotFound", { id }, locale));
   const modelList = await u.vendor.getModelList(id);
   const selectedModel = modelList.find((i: any) => i.modelName == name);
-  if (!selectedModel) throw new Error(`未找到模型 ${name} id=${id}`);
+  if (!selectedModel) throw new Error(t("utils.ai.modelNotFound", { name, id }, locale));
   const code = u.vendor.getCode(id);
   const jsCode = transform(code, { transforms: ["typescript"] }).code;
   const running = u.vm(jsCode);
@@ -130,7 +134,7 @@ async function getVendorTemplateFn(fnName: FnName, modelName: `${string}:${strin
     running.vendor.models = modelList;
   }
   const fn = running[fnName];
-  if (!fn) throw new Error(`未找到供应商配置中的函数 ${fnName} id=${id}`);
+  if (!fn) throw new Error(t("utils.ai.vendorFunctionNotFound", { fnName, id }, locale));
   if (fnName == "textRequest")
     return (think?: boolean, thinkLevel: 0 | 1 | 2 | 3 = 0) => {
       const effectiveThink = think ?? !!selectedModel.think;

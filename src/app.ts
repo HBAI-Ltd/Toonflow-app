@@ -15,6 +15,7 @@ import jwt from "jsonwebtoken";
 import socketInit from "@/socket/index";
 import { isEletron } from "@/utils/getPath";
 import { ensureThumbnail, ThumbnailSize } from "@/utils/image";
+import { t, getLocale } from "@/i18n";
 
 const app = express();
 const server = http.createServer(app);
@@ -29,12 +30,17 @@ async function checkPermissions() {
     fs.unlinkSync(testFile);
   } catch (e) {
     const { dialog, app } = require("electron");
+    // This dialog fires when the app cannot read/write its data directory — the very directory that
+    // holds the SQLite file. At this point initDB/fixDB (which create/populate `o_setting.content_language`)
+    // may not have run yet, and are likely to fail too since they need the same directory. Reading a
+    // locale here would either race the database's own bootstrap or query a filesystem that is already
+    // known to be broken, so this native dialog is kept untranslated rather than risking either.
     const { response } = await dialog.showMessageBox({
       type: "warning",
-      title: "权限不足",
-      message: "应用无法访问数据目录",
-      detail: `无法读写以下目录：\n${userDataPath}\n\n请联系管理员授予权限，或以管理员身份运行本程序。`,
-      buttons: ["确认退出"],
+      title: "权限不足", // i18n-ignore — TODO(i18n): shown before database initialization can be relied on; see comment above
+      message: "应用无法访问数据目录", // i18n-ignore — TODO(i18n): shown before database initialization can be relied on; see comment above
+      detail: `无法读写以下目录：\n${userDataPath}\n\n请联系管理员授予权限，或以管理员身份运行本程序。`, // i18n-ignore — TODO(i18n): shown before database initialization can be relied on; see comment above
+      buttons: ["确认退出"], // i18n-ignore — TODO(i18n): shown before database initialization can be relied on; see comment above
       defaultId: 0,
     });
     if (response === 0) {
@@ -64,7 +70,7 @@ export default async function startServe(randomPort: Boolean = false) {
   if (!fs.existsSync(ossDir)) {
     fs.mkdirSync(ossDir, { recursive: true });
   }
-  console.log("文件目录:", ossDir);
+  console.log("OSS directory:", ossDir);
   app.use(
     "/oss",
     (req, res, next) => {
@@ -122,7 +128,7 @@ export default async function startServe(randomPort: Boolean = false) {
   if (!fs.existsSync(skillsDir)) {
     fs.mkdirSync(skillsDir, { recursive: true });
   }
-  console.log("文件目录:", skillsDir);
+  console.log("Skills directory:", skillsDir);
   // 只允许图片文件访问
   app.use(
     "/skills",
@@ -137,21 +143,22 @@ export default async function startServe(randomPort: Boolean = false) {
   if (!fs.existsSync(assetsDir)) {
     fs.mkdirSync(assetsDir, { recursive: true });
   }
-  console.log("文件目录:", assetsDir);
+  console.log("Assets directory:", assetsDir);
   app.use("/assets", express.static(assetsDir, { acceptRanges: false }));
 
   // data/web 静态网站
   const webDir = u.getPath("web");
   if (fs.existsSync(webDir)) {
-    console.log("静态网站目录:", webDir);
+    console.log("Static web directory:", webDir);
     app.use(express.static(webDir, { acceptRanges: false }));
   } else {
-    console.warn("静态网站目录不存在:", webDir);
+    console.warn("Static web directory does not exist:", webDir);
   }
 
   app.use(async (req, res, next) => {
+    const locale = await getLocale(req as any);
     const setting = await u.db("o_setting").where("key", "tokenKey").select("value").first();
-    if (!setting) return res.status(444).send({ message: "服务器秘钥未配置，请联系管理员" });
+    if (!setting) return res.status(444).send({ message: t("app.auth.serverKeyMissing", {}, locale) });
     const { value: tokenKey } = setting;
     // 从 header 或 query 参数获取 token
     const rawToken = req.headers.authorization || (req.query.token as string) || "";
@@ -159,13 +166,13 @@ export default async function startServe(randomPort: Boolean = false) {
     // 白名单路径
     if (req.path === "/api/login/login") return next();
 
-    if (!token) return res.status(401).send({ message: "未提供token" });
+    if (!token) return res.status(401).send({ message: t("app.auth.tokenMissing", {}, locale) });
     try {
       const decoded = jwt.verify(token, tokenKey as string);
       (req as any).user = decoded;
       next();
     } catch (err) {
-      return res.status(401).send({ message: "无效的token" });
+      return res.status(401).send({ message: t("app.auth.tokenInvalid", {}, locale) });
     }
   });
 
@@ -190,7 +197,7 @@ export default async function startServe(randomPort: Boolean = false) {
     server.listen(port, async () => {
       const address = server.address();
       const realPort = typeof address === "string" ? address : address?.port;
-      console.log(`[服务启动成功]: http://localhost:${realPort}`);
+      console.log(`[Server started]: http://localhost:${realPort}`);
       resolve(realPort);
     });
   });
@@ -202,7 +209,7 @@ export function closeServe(): Promise<void> {
     if (server) {
       server.close((err?: Error) => {
         if (err) return reject(err);
-        console.log("[服务已关闭]");
+        console.log("[Server closed]");
         resolve();
       });
     } else {

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import axios from "axios";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 async function urlToBase64(imageUrl: string): Promise<string> {
@@ -28,6 +29,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { model, references = [], quality, ratio, prompt, projectId } = req.body;
+    const locale = await getLocale(req as any);
     try {
       const imageClass = await u.Ai.Image(model).run(
         {
@@ -43,8 +45,8 @@ export default router.post(
           aspectRatio: ratio,
         },
         {
-          taskClass: "工作流图片生成",
-          describe: "工作流图片生成",
+          taskClass: t("taskClass.workflowImage", {}, locale),
+          describe: t("production.editImage.generateFlowImage.taskDescribe", {}, locale),
           relatedObjects: JSON.stringify(req.body),
           projectId: projectId,
         },

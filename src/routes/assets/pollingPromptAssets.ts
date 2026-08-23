@@ -12,7 +12,11 @@ export default router.post(
   }),
   async (req, res) => {
     const { ids } = req.body;
-    const data = await u.db("o_assets").whereIn("id", ids).whereNot("promptState", "生成中").select("*");
+    const data = await u
+      .db("o_assets")
+      .whereIn("id", ids)
+      .whereNot("promptState", "生成中") // i18n-ignore — stored promptState enum value, not user-facing text
+      .select("*");
     res.status(200).send(success(data));
   },
 );

@@ -8,12 +8,13 @@ import initDB from "@/lib/initDB";
 import type { DB } from "@/types/database";
 import crypto from "crypto";
 import fixDB from "@/lib/fixDB";
+import { t, getLocale } from "@/i18n";
 
 type TableName = keyof DB & string;
 type RowType<TName extends TableName> = DB[TName];
 
 const dbPath = getPath("db2.sqlite");
-console.log("数据库目录:", dbPath);
+console.log("数据库目录:", dbPath); // i18n-ignore — TODO(i18n): module top-level code, runs before `db` exists and before any async context; project is CommonJS so no top-level await is available here
 const dbDir = path.dirname(dbPath);
 
 // 确保数据库目录存在
@@ -58,7 +59,8 @@ async function initKnexType(knexDb: any) {
   }).fetchDatabase(knexDb);
   const declarations = await dbClient.toTypescript();
   const dbObject = await dbClient.toObject();
-  const customHeader = `//该文件由脚本自动生成，请勿手动修改`;
+  const locale = await getLocale();
+  const customHeader = `//${t("utils.db.generatedFileHeader", {}, locale)}`;
   // 清除上次的注释头
   let declBody = declarations.replace(/^\/\*[\s\S]*?\*\/\s*/, "");
   declBody = declBody.replace(/(\n\s*)\/\*([^*][\s\S]*?)\*\//g, "$1/**$2*/");

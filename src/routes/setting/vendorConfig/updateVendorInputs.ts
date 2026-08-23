@@ -4,6 +4,7 @@ import { validateFields } from "@/middleware/middleware";
 import u from "@/utils";
 import { z } from "zod";
 import { transform } from "sucrase";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -13,6 +14,7 @@ export default router.post(
     inputValues: z.record(z.string(), z.string()),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { id, inputValues } = req.body;
 
     await u
@@ -21,6 +23,6 @@ export default router.post(
       .update({
         inputValues: JSON.stringify(inputValues),
       });
-    res.status(200).send(success("更新成功"));
+    res.status(200).send(success(null, t("setting.vendorConfig.updateVendorInputs.updated", {}, locale)));
   },
 );

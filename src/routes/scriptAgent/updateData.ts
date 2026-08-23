@@ -3,6 +3,7 @@ import { success } from "@/lib/responseFormat";
 import u from "@/utils";
 import { z } from "zod";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -21,6 +22,7 @@ export default router.post(
     }),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { id, data } = req.body;
     await u
       .db("o_agentWorkData")
@@ -28,6 +30,6 @@ export default router.post(
       .update({
         data: JSON.stringify(data),
       });
-    res.status(200).send(success("更新成功"));
+    res.status(200).send(success(t("scriptAgent.updateData.updated", {}, locale)));
   },
 );

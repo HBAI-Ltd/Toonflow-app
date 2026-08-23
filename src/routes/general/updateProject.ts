@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 修改项目
@@ -17,6 +18,7 @@ export default router.post(
     projectType: z.string().optional().nullable(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { id, intro, type, artStyle, videoRatio, projectType } = req.body;
 
     await u.db("o_project").where("id", id).update({
@@ -27,6 +29,6 @@ export default router.post(
       projectType,
     });
 
-    res.status(200).send(success({ message: "修改成功" }));
+    res.status(200).send(success({ message: t("general.updateProject.updated", {}, locale) }));
   },
 );

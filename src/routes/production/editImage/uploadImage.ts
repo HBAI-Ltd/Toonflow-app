@@ -4,6 +4,7 @@ import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { z } from "zod";
 import { v4 as uuid } from "uuid";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 文件上传（支持图片、音频、视频）
@@ -16,6 +17,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { base64Data, projectId, scriptId } = req.body;
+    const locale = await getLocale(req as any);
     function getExtFromBase64(base64Data: string): string {
       const mime = base64Data.match(/^data:([^;]+);base64,/)?.[1] ?? "";
       const mimeMap: Record<string, string> = {
@@ -35,7 +37,7 @@ export default router.post(
     }
     const ext = getExtFromBase64(base64Data);
     if (!["jpeg", "jpg", "png"].includes(ext)) {
-      return res.status(400).send(error("不支持的文件类型"));
+      return res.status(400).send(error(t("production.editImage.uploadImage.unsupportedFileType", {}, locale)));
     }
     const savePath = `/${projectId}/imageFlow/${scriptId}/${uuid()}.${ext}`;
 

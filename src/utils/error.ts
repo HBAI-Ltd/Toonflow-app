@@ -35,7 +35,7 @@ export function normalizeError(error: unknown): NormalizedError {
     const serialized = serializeError(error);
     return {
       name: serialized.name || "Error",
-      message: serialized.message || "未知错误",
+      message: serialized.message || "未知错误", // i18n-ignore — TODO(i18n): normalizeError is sync and called at 35+ call sites across the codebase; making it async to reach a locale would be a wide cross-cutting refactor
       code: (serialized as any).code,
       stack: serialized.stack,
       cause: error.cause ? normalizeError(error.cause) : undefined,

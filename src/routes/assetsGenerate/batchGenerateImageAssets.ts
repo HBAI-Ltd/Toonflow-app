@@ -5,6 +5,7 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 
 const router = express.Router();
 
@@ -12,7 +13,6 @@ type AssetType = "role" | "scene" | "tool";
 
 interface AssetTypeConfig {
   label: string;
-  taskClass: string;
   dir: string;
   promptTitle: string;
   promptEnd: string;
@@ -20,41 +20,44 @@ interface AssetTypeConfig {
 
 const assetTypeConfig: Record<AssetType, AssetTypeConfig> = {
   role: {
-    label: "角色",
-    taskClass: "角色图生成",
+    label: "角色", // i18n-ignore — literal AI image-generation prompt fragment (cfg.label is interpolated into buildPrompt)
     dir: "role",
-    promptTitle: "角色标准四视图",
-    promptEnd: "人物角色四视图",
+    promptTitle: "角色标准四视图", // i18n-ignore — literal AI image-generation prompt fragment
+    promptEnd: "人物角色四视图", // i18n-ignore — literal AI image-generation prompt fragment
   },
   scene: {
-    label: "场景",
-    taskClass: "场景图生成",
+    label: "场景", // i18n-ignore — literal AI image-generation prompt fragment (cfg.label is interpolated into buildPrompt)
     dir: "scene",
-    promptTitle: "标准场景图",
-    promptEnd: "标准场景图",
+    promptTitle: "标准场景图", // i18n-ignore — literal AI image-generation prompt fragment
+    promptEnd: "标准场景图", // i18n-ignore — literal AI image-generation prompt fragment
   },
   tool: {
-    label: "道具",
-    taskClass: "道具图生成",
+    label: "道具", // i18n-ignore — literal AI image-generation prompt fragment (cfg.label is interpolated into buildPrompt)
     dir: "props",
-    promptTitle: "标准道具图",
-    promptEnd: "标准道具图",
+    promptTitle: "标准道具图", // i18n-ignore — literal AI image-generation prompt fragment
+    promptEnd: "标准道具图", // i18n-ignore — literal AI image-generation prompt fragment
   },
 };
 
+// Translated asset-type labels, used for human-readable task descriptions and task metadata
+// (describe, relatedObjects.type) — never fed into the AI prompt
+const assetTypeLabelKey: Record<AssetType, string> = {
+  role: "assetsGenerate.assetType.role.label",
+  scene: "assetsGenerate.assetType.scene.label",
+  tool: "assetsGenerate.assetType.tool.label",
+};
+
+// Translated o_tasks.taskClass values: the frontend uses this as both the display text and
+// the filter value in its filter dropdown, so it must be localized text
+const taskClassKey: Record<AssetType, string> = {
+  role: "taskClass.characterImage",
+  scene: "taskClass.sceneImage",
+  tool: "taskClass.propImage",
+};
+
 function buildPrompt(cfg: AssetTypeConfig, artStyle: string, name: string, prompt: string): string {
-  return `
-    请根据以下参数生成${cfg.promptTitle}：
-
-    **基础参数：**
-    - 画风风格: ${artStyle || "未指定"}
-
-    **${cfg.label}设定：**
-    - 名称:${name},
-    - 提示词:${prompt},
-
-    请严格按照系统规范生成${cfg.promptEnd}。
-  `;
+  // i18n-ignore — literal AI image-generation prompt template, not user-facing text
+  return `\n    请根据以下参数生成${cfg.promptTitle}：\n\n    **基础参数：**\n    - 画风风格: ${artStyle || "未指定"}\n\n    **${cfg.label}设定：**\n    - 名称:${name},\n    - 提示词:${prompt},\n\n    请严格按照系统规范生成${cfg.promptEnd}。\n  `;
 }
 
 const requestSchema = {
@@ -74,18 +77,19 @@ const requestSchema = {
 };
 
 export default router.post("/", validateFields(requestSchema), async (req, res) => {
+  const locale = await getLocale(req as any);
   const { projectId, model, resolution, concurrentCount, items } = req.body;
 
   // 1. 查询项目
   const project = await u.db("o_project").where("id", projectId).select("artStyle", "type", "intro").first();
-  if (!project) return res.status(500).send(error("项目为空"));
+  if (!project) return res.status(500).send(error(t("assetsGenerate.common.projectEmpty", {}, locale)));
 
   // 2. 逐条插入 o_image 占位记录，收集 imageId 列表
   const totalNovelId: number[] = [];
   for (const item of items) {
     const [imageId] = await u.db("o_image").insert({
       type: item.type,
-      state: "生成中",
+      state: "生成中", // i18n-ignore — stored o_image.state enum value, not user-facing text
       assetsId: item.id,
     });
     await u.db("o_assets").where("id", item.id).update({ imageId });
@@ -99,7 +103,7 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
     limit(async () => {
       const imageId = totalNovelId[index];
       const data = await u.db("o_image").where("id", imageId).select("state").first();
-      if (data?.state === "生成失败") {
+      if (data?.state === "生成失败") { // i18n-ignore — stored o_image.state enum value, not user-facing text
         return;
       }
       const cfg = assetTypeConfig[item.type as AssetType];
@@ -109,8 +113,13 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
 
       const imagePath = `/${projectId}/${cfg.dir}/${uuidv4()}.jpg`;
       const userPrompt = buildPrompt(cfg, project.artStyle ?? "", item.name, item.prompt);
-      const describe = `生成${cfg.label}图，名称：${item.name}，提示词：${item.prompt}`;
-      const relatedObjects = { id: item.id, projectId, type: cfg.label };
+      const translatedLabel = t(assetTypeLabelKey[item.type as AssetType], {}, locale);
+      const describe = t(
+        "assetsGenerate.batchGenerateImageAssets.describe",
+        { label: translatedLabel, name: item.name, prompt: item.prompt },
+        locale,
+      );
+      const relatedObjects = { id: item.id, projectId, type: translatedLabel };
       try {
         const aiImage = u.Ai.Image(model);
         await aiImage.run(
@@ -121,7 +130,7 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
             aspectRatio: "16:9",
           },
           {
-            taskClass: cfg.taskClass,
+            taskClass: t(taskClassKey[item.type as AssetType], {}, locale),
             describe,
             projectId,
             relatedObjects: JSON.stringify(relatedObjects),
@@ -130,14 +139,14 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
         aiImage.save(imagePath);
 
         const imageData = await u.db("o_image").where("id", imageId).select("*").first();
-        if (!imageData) return res.status(500).send("资产已被删除");
+        if (!imageData) return res.status(500).send(t("assetsGenerate.common.assetDeleted", {}, locale));
         if (!imageData) return;
-        if (imageData.state === "生成失败") return;
+        if (imageData.state === "生成失败") return; // i18n-ignore — stored o_image.state enum value, not user-facing text
         await u
           .db("o_image")
           .where("id", imageId)
           .update({
-            state: "已完成",
+            state: "已完成", // i18n-ignore — stored o_image.state enum value, not user-facing text
             filePath: imagePath,
             type: item.type,
             model: model.split(/:(.+)/)[1],
@@ -149,7 +158,7 @@ export default router.post("/", validateFields(requestSchema), async (req, res) 
         await u
           .db("o_image")
           .where("id", imageId)
-          .update({ state: "生成失败", errorReason: u.error(e).message });
+          .update({ state: "生成失败", errorReason: u.error(e).message }); // i18n-ignore — stored o_image.state enum value, not user-facing text
       }
     }),
   );

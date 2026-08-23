@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 编辑剧本
@@ -16,6 +17,7 @@ export default router.post(
   }),
   async (req, res) => {
     const { id, name, content, assets } = req.body;
+    const locale = await getLocale(req as any);
     await u.db("o_script").where({ id }).update({
       name,
       content,
@@ -34,6 +36,6 @@ export default router.post(
       }
     }
 
-    res.status(200).send(success({ message: "编辑剧本成功" }));
+    res.status(200).send(success({ message: t("script.updateScript.updated", {}, locale) }));
   },
 );

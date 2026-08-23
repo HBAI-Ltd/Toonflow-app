@@ -3,6 +3,7 @@ import getPath, { isEletron } from "@/utils/getPath";
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { t, getLocale } from "@/i18n";
 
 // 规范化路径：去除前导斜杠，并将路径分隔符统一转换为系统分隔符
 function normalizeUserPath(userPath: string): string {
@@ -14,11 +15,12 @@ function normalizeUserPath(userPath: string): string {
 }
 
 // 校验路径
-function resolveSafeLocalPath(userPath: string, rootDir: string): string {
+async function resolveSafeLocalPath(userPath: string, rootDir: string): Promise<string> {
   const safePath = normalizeUserPath(userPath);
   const absPath = path.join(rootDir, safePath);
   if (!isPathInside(absPath, rootDir)) {
-    throw new Error(`${userPath} 不在 OSS 根目录内`);
+    const locale = await getLocale();
+    throw new Error(t("utils.oss.pathOutsideRoot", { path: userPath }, locale));
   }
   return absPath;
 }
@@ -66,7 +68,7 @@ class OSS {
    */
   async getFile(userRelPath: string): Promise<Buffer> {
     await this.ensureInit();
-    return fs.readFile(resolveSafeLocalPath(userRelPath, this.rootDir));
+    return fs.readFile(await resolveSafeLocalPath(userRelPath, this.rootDir));
   }
 
   /**
@@ -77,12 +79,13 @@ class OSS {
    */
   async getImageBase64(userRelPath: string): Promise<string> {
     await this.ensureInit();
-    const absPath = resolveSafeLocalPath(userRelPath, this.rootDir);
+    const locale = await getLocale();
+    const absPath = await resolveSafeLocalPath(userRelPath, this.rootDir);
 
     // 检查文件是否存在且为文件
     const stat = await fs.stat(absPath);
     if (!stat.isFile()) {
-      throw new Error(`${userRelPath} 不是文件`);
+      throw new Error(t("utils.oss.notAFile", { path: userRelPath }, locale));
     }
 
     // 获取文件扩展名并确定 MIME 类型
@@ -104,7 +107,7 @@ class OSS {
 
     const mimeType = mimeTypes[ext];
     if (!mimeType) {
-      throw new Error(`不支持的图片格式: ${ext}。支持的格式: ${Object.keys(mimeTypes).join(", ")}`);
+      throw new Error(t("utils.oss.unsupportedImageFormat", { ext, supported: Object.keys(mimeTypes).join(", ") }, locale));
     }
 
     // 读取文件并转换为 base64
@@ -120,7 +123,7 @@ class OSS {
    */
   async deleteFile(userRelPath: string): Promise<void> {
     await this.ensureInit();
-    await fs.unlink(resolveSafeLocalPath(userRelPath, this.rootDir));
+    await fs.unlink(await resolveSafeLocalPath(userRelPath, this.rootDir));
   }
 
   /**
@@ -130,10 +133,11 @@ class OSS {
    */
   async deleteDirectory(userRelPath: string): Promise<void> {
     await this.ensureInit();
-    const absPath = resolveSafeLocalPath(userRelPath, this.rootDir);
+    const locale = await getLocale();
+    const absPath = await resolveSafeLocalPath(userRelPath, this.rootDir);
     const stat = await fs.stat(absPath);
     if (!stat.isDirectory()) {
-      throw new Error(`${userRelPath} 不是文件夹`);
+      throw new Error(t("utils.oss.notADirectory", { path: userRelPath }, locale));
     }
     await fs.rm(absPath, { recursive: true, force: true });
   }
@@ -147,7 +151,7 @@ class OSS {
    */
   async writeFile(userRelPath: string, data: Buffer | string): Promise<void> {
     await this.ensureInit();
-    const absPath = resolveSafeLocalPath(userRelPath, this.rootDir);
+    const absPath = await resolveSafeLocalPath(userRelPath, this.rootDir);
     await fs.mkdir(path.dirname(absPath), { recursive: true });
     // 如果 data 是 string，则视为 base64 编码，先解码再写入
     // 自动去除可能存在的 Data URL 前缀（如 "data:image/png;base64,"）
@@ -163,7 +167,7 @@ class OSS {
   async fileExists(userRelPath: string): Promise<boolean> {
     await this.ensureInit();
     try {
-      const stat = await fs.stat(resolveSafeLocalPath(userRelPath, this.rootDir));
+      const stat = await fs.stat(await resolveSafeLocalPath(userRelPath, this.rootDir));
       return stat.isFile();
     } catch {
       return false;

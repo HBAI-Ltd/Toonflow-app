@@ -65,7 +65,7 @@ export default router.post(
                   prompt: child.prompt,
                   desc: child.describe ?? "",
                   src: child.filePath && (await u.oss.getSmallImageUrl(child.filePath!)),
-                  state: child.state ?? "未生成", //todo：矫正状态值
+                  state: child.state ?? "未生成", //todo：矫正状态值 // i18n-ignore — stored o_image.state enum value, not user-facing text
                 })),
             ),
           })),
@@ -131,7 +131,7 @@ export default router.post(
                   type: child.type,
                   desc: child.describe ?? "",
                   src: child.filePath && (await u.oss.getSmallImageUrl(child.filePath!)),
-                  state: child.state ?? "未生成",
+                  state: child.state ?? "未生成", // i18n-ignore — stored o_image.state enum value, not user-facing text
                   errorReason: child?.errorReason ?? "",
                   flowId: child.flowId,
                 })),

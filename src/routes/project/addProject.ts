@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 新增项目
@@ -22,6 +23,7 @@ export default router.post(
     mode: z.string(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { projectType, name, intro, type, directorManual, artStyle, videoRatio, imageModel, videoModel, imageQuality, mode } = req.body;
 
     await u.db("o_project").insert({
@@ -41,6 +43,6 @@ export default router.post(
       mode,
     });
 
-    res.status(200).send(success({ message: "新增项目成功" }));
+    res.status(200).send(success({ message: t("project.addProject.added", {}, locale) }));
   },
 );

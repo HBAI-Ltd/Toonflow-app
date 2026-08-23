@@ -24,7 +24,7 @@ function getDirectDependencyNames(): string[] {
 // 执行主逻辑
 checker.init({ start: process.cwd() }, (err: Error, packages: Record<string, any>) => {
   if (err) {
-    console.error("license-checker 出错: ", err);
+    console.error("license-checker error: ", err);
     process.exit(1);
   }
   const directNames = getDirectDependencyNames();
@@ -95,5 +95,5 @@ checker.init({ start: process.cwd() }, (err: Error, packages: Record<string, any
     )
     .join("\n\n-----------------------------\n\n");
   fs.writeFileSync(path.resolve(process.cwd(), "NOTICES.txt"), content, "utf-8");
-  console.log("已生成依赖声明 NOTICES.txt");
+  console.log("Generated dependency notices: NOTICES.txt");
 });

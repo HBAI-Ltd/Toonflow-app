@@ -19,7 +19,7 @@ export default router.post(
       .where("projectId", projectId)
       .where("scriptId", scriptId)
       .whereIn("id", trackIds)
-      .whereIn("state", ["已完成", "生成失败"])
+      .whereIn("state", ["已完成", "生成失败"]) // i18n-ignore — stored o_videoTrack.state enum values, not user-facing text
       .select("id", "state", "reason", "prompt");
     res.status(200).send(success(promptList));
   },

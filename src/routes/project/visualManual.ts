@@ -6,6 +6,7 @@ import { validateFields } from "@/middleware/middleware";
 import getPath from "@/utils/getPath";
 import fs from "fs";
 import path from "path";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 视觉手册
@@ -15,6 +16,7 @@ export default router.post(
     type: z.string(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { type } = req.body;
     const basePath = getPath(["skills", "art_skills", "chinese_sweet_romance"]);
     // 递归查找 basePath 下名为 `${type}.md` 的文件
@@ -33,7 +35,7 @@ export default router.post(
     };
     const filePath = findFile(basePath, `${type}.md`);
     if (!filePath) {
-      res.status(404).json({ error: `未找到对应的文件: ${type}.md` });
+      res.status(404).json({ error: t("project.visualManual.fileNotFound", { type }, locale) });
       return;
     }
     const content = fs.readFileSync(filePath, "utf-8");

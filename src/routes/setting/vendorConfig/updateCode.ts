@@ -1,10 +1,11 @@
 import express from "express";
 import { serializeError } from "serialize-error";
 import { success, error } from "@/lib/responseFormat";
-import { validateFields } from "@/middleware/middleware";
+import { validateFields, safeParseWithLocale } from "@/middleware/middleware";
 import u from "@/utils";
 import { z } from "zod";
 import { transform } from "sucrase";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 const vendorConfigSchema = z.object({
@@ -66,20 +67,27 @@ export default router.post(
     tsCode: z.string(),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     try {
       const { tsCode, id } = req.body;
       const jsCode = transform(tsCode, { transforms: ["typescript"] }).code;
       const exports = u.vm(jsCode);
-      if (!exports) return res.status(400).send(success("脚本文件必须导出对象"));
-      if (!exports.textRequest) return res.status(400).send(success("脚本文件必须导出文本请求对象"));
-      if (!exports.imageRequest) return res.status(400).send(success("脚本文件必须导出图像请求对象"));
-      if (!exports.videoRequest) return res.status(400).send(success("脚本文件必须导出视频请求对象"));
-      if (!exports.vendor) return res.status(400).send(success("脚本文件必须导出vendor对象"));
+      if (!exports) return res.status(400).send(success(null, t("setting.vendorConfig.updateCode.mustExportObject", {}, locale)));
+      if (!exports.textRequest)
+        return res.status(400).send(success(null, t("setting.vendorConfig.updateCode.mustExportTextRequest", {}, locale)));
+      if (!exports.imageRequest)
+        return res.status(400).send(success(null, t("setting.vendorConfig.updateCode.mustExportImageRequest", {}, locale)));
+      if (!exports.videoRequest)
+        return res.status(400).send(success(null, t("setting.vendorConfig.updateCode.mustExportVideoRequest", {}, locale)));
+      if (!exports.vendor) return res.status(400).send(success(null, t("setting.vendorConfig.updateCode.mustExportVendorObject", {}, locale)));
       const vendor = exports.vendor;
-      const result = vendorConfigSchema.safeParse(vendor);
+      // z.config() is global; resolve it right next to the parse call with no
+      // await in between (see safeParseWithLocale in middleware.ts) so an
+      // interleaved request cannot flip the locale used for these messages.
+      const result = safeParseWithLocale(vendorConfigSchema, vendor, locale);
       if (!result.success) {
         const errorMsg = result.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; ");
-        return res.status(400).send(error(`vendor配置校验失败: ${errorMsg}`));
+        return res.status(400).send(error(t("setting.vendorConfig.updateCode.validationFailed", { errorMsg }, locale)));
       }
       await u
         .db("o_vendorConfig")
@@ -92,7 +100,7 @@ export default router.post(
       res.status(200).send(success(result.data));
     } catch (err) {
       console.log(err);
-      res.status(400).send(error(serializeError(err).message || "未知错误"));
+      res.status(400).send(error(serializeError(err).message || t("setting.vendorConfig.updateCode.unknownError", {}, locale)));
     }
   },
 );

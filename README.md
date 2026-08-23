@@ -1,4 +1,4 @@
-﻿<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=Toonflow&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=50" width="100%"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=Toonflow&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=50" width="100%"/>
 
 <p>
   <a href="https://github.com/HBAI-Ltd/Toonflow-app">
@@ -15,20 +15,31 @@
 </p>
 
 <p align="center">
-  <strong>简体中文</strong> | 
+<!-- i18n-ignore — language endonym, must not be translated -->
+  <a href="./docs/README.zh.md">简体中文</a> | 
+<!-- i18n-ignore — language endonym, must not be translated -->
   <a href="./docs/README.zhtw.md">繁體中文</a> | 
-  <a href="./docs/README.en.md">English</a> | 
+  <strong>English</strong> | 
   <a href="./docs/README.th.md">ไทย</a> | 
   <a href="./docs/README.vi.md">Tiếng Việt</a> | 
+<!-- i18n-ignore — language endonym, must not be translated -->
   <a href="./docs/README.ja.md">日本語</a> | 
   <a href="./docs/README.ru.md">Русский</a>
 </p>
 
 <div align="center">
+  <p align="center">
+    <img src="./docs/logo.png" alt="Toonflow Logo" height="120"/>
+  </p>
 
-<img src="./docs/logo.png" alt="Toonflow Logo" height="120"/>
-
-[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=000000&center=true&vCenter=true&width=600&lines=Toonflow;AI%E7%9F%AD%E5%89%A7%E5%B7%A5%E5%8E%82;%E5%8A%A8%E5%8A%A8%E6%89%8B%E6%8C%87%EF%BC%8C%E5%B0%8F%E8%AF%B4%E7%A7%92%E5%8F%98%E5%89%A7%E9%9B%86%EF%BC%81)](https://git.io/typing-svg)
+  <p align="center">
+    <a href="https://git.io/typing-svg" target="_blank">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=600&lines=Toonflow;AI+Short+Drama+Factory;Just+a+click%2C+novels+turn+into+episodes+in+seconds!" />
+        <img alt="Typing SVG" src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=000000&center=true&vCenter=true&width=600&lines=Toonflow;AI+Short+Drama+Factory;Just+a+click%2C+novels+turn+into+episodes+in+seconds!" />
+      </picture>
+    </a>
+  </p>
 
   <p align="center">
     <a href="https://github.com/HBAI-Ltd/Toonflow-app/stargazers">
@@ -70,7 +81,7 @@
     <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/Electron/electron2.svg" alt="Electron" />
   </p>
   
-  > 🚀 **一站式短剧工程**：从文本到角色，从分镜到视频，0门槛全流程AI化，创作效率提升10倍+！
+  > 🚀 **All-in-One Short Drama Workflow**: From text to characters, from storyboards to videos — zero-threshold full-process AI automation, boosting creative efficiency by 10x+!
 </div>
 
 <div align="center">
@@ -78,12 +89,12 @@
     <tr>
       <td width="50%" align="center">
         <a href="./docs/g-star.png" target="_blank">
-          <img src="./docs/g-star.png" alt="AtomGit G-Star 认证证书" width="100%"/>
+          <img src="./docs/g-star.png" alt="AtomGit G-Star Certificate" width="100%"/>
         </a>
       </td>
       <td width="50%" align="center">
         <a href="./docs/gvp.jpg" target="_blank">
-          <img src="./docs/gvp.jpg" alt="Gitee GVP 认证证书" width="100%"/>
+          <img src="./docs/gvp.jpg" alt="Gitee GVP Certificate" width="100%"/>
         </a>
       </td>
     </tr>
@@ -92,81 +103,81 @@
 
 ---
 
-# 🌐 多语言支持
+# 🌐 Multi-language Support
 
-Toonflow 支持以下语言界面：
+Toonflow supports the following interface languages:
 
-| 语言       | Language              |
-| ---------- | --------------------- |
-| 简体中文   | Chinese (Simplified)  |
-| 繁體中文   | Chinese (Traditional) |
-| English    | English               |
-| ไทย        | Thai                  |
-| Tiếng Việt | Vietnamese            |
-| 日本語     | Japanese              |
-| Русский    | Russian               |
+| Language             | Language              |
+| -------------------- | --------------------- |
+| Chinese (Simplified) | 简体中文              | <!-- i18n-ignore — language endonym, must not be translated -->
+| Chinese (Traditional)| 繁體中文              | <!-- i18n-ignore — language endonym, must not be translated -->
+| English              | English               |
+| Thai                 | ไทย                  |
+| Vietnamese           | Tiếng Việt            |
+| Japanese             | 日本語                | <!-- i18n-ignore — language endonym, must not be translated -->
+| Russian              | Русский               |
 
-> 💡 更多语言适配中，欢迎贡献翻译！
-
----
-
-# 🌟 主要功能
-
-Toonflow 是面向短剧生产的 AI 工作台，围绕“策划 → 编剧 → 分镜 → 出片”构建完整闭环，并支持本地化、可编程、可持续迭代的生产流程。
-
-- ✅ **无限画布生产工作台**  
-  以类无限画布形式组织剧本、角色、分镜、素材与视频节点，支持自由编排、回溯与并行生产，不受线性步骤限制。
-- ✅ **三层 Agent 协作体系**  
-  决策层、执行层、监督层协同工作，覆盖任务拆解、内容生成、质量审阅与修订反馈，提升稳定性与成片一致性。
-- ✅ **持久化 Agent 记忆**  
-  基于本地 ONNX 向量检索的跨会话记忆系统，支持短期消息、长期摘要和语义召回，确保多轮创作连续性。
-- ✅ **可编程供应商系统**  
-  支持在设置中心直接编写供应商 TypeScript 逻辑并即时生效，无需改源码或重启，便于私有化和多模型接入。
-- ✅ **章节事件图谱驱动改编**  
-  自动提取原著章节事件并结构化存储，剧本改编按事件图谱精准调用上下文，减少长文本信息丢失。
-- ✅ **Skill 文件化配置**  
-  ScriptAgent 与 ProductionAgent 的核心提示词外化为 Markdown Skill 文件，支持在线编辑与快速调优。
+> 💡 More languages are being adapted — contributions for translations are welcome!
 
 ---
 
-# 📦 应用场景
+# 🌟 Key Features
 
-- 短视频内容创作
-- 小说影视化实验
-- AI 文学改编工具
-- 剧本开发与快速原型
-- 视频素材生成
+Toonflow is an AI workstation designed for short drama production, building a complete closed loop around "Planning → Scriptwriting → Storyboarding → Final Output," supporting a localized, programmable, and continuously iterable production workflow.
+
+- ✅ **Infinite Canvas Production Workbench**  
+  Organize scripts, characters, storyboards, assets, and video nodes in an infinite canvas-like layout, supporting free arrangement, backtracking, and parallel production without linear constraints.
+- ✅ **Three-layer Agent Collaboration System**  
+  Decision, execution, and supervision layers work together, covering task decomposition, content generation, quality review, and revision feedback, improving stability and output consistency.
+- ✅ **Persistent Agent Memory**  
+  Cross-session memory system based on local ONNX vector retrieval, supporting short-term messages, long-term summaries, and semantic recall, ensuring multi-round creative continuity.
+- ✅ **Programmable Provider System**  
+  Write vendor TypeScript logic directly in the settings center, taking effect instantly without modifying source code or restarting, making it easy to privatize and integrate multiple models.
+- ✅ **Chapter Event Graph-driven Adaptation**  
+  Automatically extract chapter events from original novels and store them structurally. Script adaptation uses event graphs to precisely invoke context, reducing information loss in long texts.
+- ✅ **Skill File Configuration**  
+  Core prompts for ScriptAgent and ProductionAgent are externalized as Markdown Skill files, supporting online editing and rapid tuning.
 
 ---
 
-# 🔰 使用指南
+# 📦 Application Scenarios
 
-## 快速上手
+- Short video content creation
+- Novel-to-film experimentation
+- AI literary adaptation tool
+- Script development and rapid prototyping
+- Video asset generation
 
-1. 启动应用并登录（默认账号：`admin` / `admin123`）。
-2. 在设置中心完成模型供应商配置（文本/图像/视频模型）。
-3. 新建项目并导入原著，执行章节事件提取。
-4. 进入 ScriptAgent 生成故事骨架、改编策略与结构化剧本。
-5. 切换到 ProductionAgent，在无限画布中组织分镜、素材与视频节点。
-6. 对分镜图进行节点化精调后回流工作台，完成视频拼接与导出。
+---
 
-## 📺 视频教程
+# 🔰 User Guide
+
+## Quick Start
+
+1. Launch the application and log in (default: `admin` / `admin123`).
+2. Complete model vendor configuration in the settings center (text/image/video models).
+3. Create a new project and import the original novel, then execute chapter event extraction.
+4. Enter ScriptAgent to generate the story skeleton, adaptation strategy, and structured script.
+5. Switch to ProductionAgent to organize storyboards, assets, and video nodes on the infinite canvas.
+6. Perform node-based refinement on storyboard images, then return them to the workbench for video stitching and export.
+
+## 📺 Video Tutorial
 
 https://www.bilibili.com/video/BV1oXD7BqEqJ
-[![Toonflow 12 分钟快速上手 AI 视频](./docs/videoCover.jpg)](https://www.bilibili.com/video/BV1oXD7BqEqJ)
+[![Toonflow 12-minute Quick Start AI Video](./videoCover.jpg)](https://www.bilibili.com/video/BV1oXD7BqEqJ)
 
-**Toonflow 12 分钟快速上手 AI 视频**
-👉 [点击观看](https://www.bilibili.com/video/BV1oXD7BqEqJ)
+**Toonflow 12-minute Quick Start AI Video**
+👉 [Click to Watch](https://www.bilibili.com/video/BV1oXD7BqEqJ)
 
-📱 手机微信扫码观看
+📱 Scan with WeChat to watch
 
-<img src="./docs/videoQR.png" alt="微信扫码观看" width="150"/>
+<img src="./docs/videoQR.png" alt="Scan with WeChat" width="150"/>
 
 ---
 
-# 📸 演示截图与视频
+# 📸 Demo Screenshots & Video
 
-以下截图及视频来自使用 Toonflow 制作的一段 AI 短剧 Demo，全程约 2 小时完成，涵盖剧本生成、分镜制作及剪辑环节。
+The following screenshots and video are from a short AI drama demo made with Toonflow, completed in about 2 hours, covering script generation, storyboard creation, and editing.
 
 <div align="center">
 <table>
@@ -193,156 +204,162 @@ https://www.bilibili.com/video/BV1oXD7BqEqJ
 </table>
 </div>
 
-## 🎬 Demo 视频
+## 🎬 Demo Video
 
 <div align="center">
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-如无法播放，请[点击下载视频](./docs/screenshot/demo.mp4)
+If the video cannot play, please [click to download](./screenshot/demo.mp4)
 
 </div>
 
-## Demo 信息
+## Demo Info
 
-| 项目       | 详情                                            |
-| :--------- | :---------------------------------------------- |
-| 制作周期   | 约 2 小时                                       |
-| 视频模型   | Seedance 2.0                                    |
-| 图片模型   | GPT Image 2                                     |
-| 语言模型   | Claude Opus 4.6                                 |
-| 成片总时长 | 约 2 分钟（原始素材 3 分钟，剪除废片约 1 分钟） |
+| Item              | Details                                  |
+| :---------------- | :--------------------------------------- |
+| Production Cycle  | Approximately 2 hours                    |
+| Video Model       | Seedance 2.0                             |
+| Image Model       | GPT Image 2                              |
+| Language Model    | Claude Opus 4.6                          |
+| Total Duration    | Approximately 2 minutes (raw 3 min, cut ~1 min of unusable footage) |
 
-## 成本明细
+## Cost Breakdown
 
-| 模型类型             | 费用        |
-| :------------------- | :---------- |
-| 语言模型             | 约 ¥10      |
-| 视频模型（全量生成） | 约 ¥120     |
-| 图片模型             | 不足 ¥1     |
-| **合计**             | **约 ¥130** |
+| Model Type     | Cost         |
+| :------------- | :----------- |
+| Language Model | ~￥10        |
+| Video Model (full generation) | ~￥120 |
+| Image Model    | Less than ￥1|
+| **Total**      | **~￥130**   |
 
-> **声明**：Demo 原始分辨率为 1080×1882，发布版本已压缩至 480p。如涉及版权问题，请联系我们删除处理。
+> **Disclaimer**: The demo's original resolution is 1080×1882; the release version has been compressed to 480p. If there are any copyright issues, please contact us to delete it.
 
 ---
 
-# 🚀 安装
+# 🚀 Installation
 
-## 前置条件
+## Prerequisites
 
-在安装和使用本软件之前，请准备以下内容：
+Before installing and using this software, please prepare the following:
 
-- ✅ 大语言模型 AI 服务接口地址
-- ✅ Sora 或豆包视频服务接口地址
-- ✅ Nano Banana Pro 图片生成模型服务接口
+- ✅ Large language model AI service API endpoint
+- ✅ Sora or Doubao video service API endpoint
+- ✅ Nano Banana Pro image generation model service API
 
-## 本机安装
+## Language Support
 
-### 1. 下载与安装
+Toonflow's backend supports three interface/content locales: `en` (English), `vi` (Vietnamese), and `zh` (Chinese, the original language and fallback). The active locale is read from the `X-Toonflow-Lang` request header, falling back to the saved `o_setting.content_language` value, and finally to `en`. You can query and change it via `GET /api/setting/language/getLanguage` and `POST /api/setting/language/setLanguage`.
 
-| 操作系统 | GitHub                                                       | 说明           |
-| :------: | :----------------------------------------------------------- | :------------- |
-| Windows  | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | 官方发布安装包 |
-|  Linux   | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | 官方发布安装包 |
-|  macOS   | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | 官方发布安装包 |
+See [`docs/i18n/README.md`](./docs/i18n/README.md) for the full guide: how locales work, how to add a new translated string, when a string must stay in Chinese instead of being translated, and the upstream-sync procedure for this fork.
+
+## Local Installation
+
+### 1. Download & Install
+
+| OS      | GitHub                                                       | Notes                         |
+| :-----: | :----------------------------------------------------------- | :---------------------------- |
+| Windows | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | Official release package      |
+| Linux   | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | Official release package      |
+| macOS   | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) | Official release package      |
 
 > [!CAUTION]
-> MacOS 系统请到 设置-隐私与安全性 配置安全性否则可能因证书问题无法正常打开
+> On macOS, go to Settings > Privacy & Security to configure security settings; otherwise, the app may not open due to certificate issues.
 >
-> 参考知乎文档：[https://www.zhihu.com/question/433389276](https://www.zhihu.com/question/433389276)
+> Reference: [https://www.zhihu.com/question/433389276](https://www.zhihu.com/question/433389276)
 
-> 因 Gitee OS 环境限制及 Release 文件上传大小限制，暂不提供 Gitee Release 下载地址。
+> Due to Gitee OS environment limitations and Release file upload size restrictions, we currently do not provide a Gitee Release download link.
 
-### 2. 启动服务
+### 2. Start the Service
 
-安装完成后，启动程序即可开始使用本服务。
+After installation, launch the program to start using the service.
 
-> ⚠️ **首次登录**  
-> 账号：`admin`  
-> 密码：`admin123`
+> ⚠️ **First Login**  
+> Username: `admin`  
+> Password: `admin123`
 
-## Docker 部署
+## Docker Deployment
 
-### 前置条件
+### Prerequisites
 
-- 已安装 [Docker](https://docs.docker.com/get-docker/)（版本 20.10+）
+- [Docker](https://docs.docker.com/get-docker/) installed (version 20.10+)
 
-### 方式一：在线部署
+### Method 1: Online Deployment
 
-待完善，暂时使用本地构建。
+To be completed; use local build for now.
 
-### 方式二：本地构建
+### Method 2: Local Build
 
-使用本地已有的源码直接构建，适合开发者或已克隆仓库的用户，这需要你在本地安装 git：
+Build directly from existing local source code, suitable for developers or users who have already cloned the repository. Requires git installed locally:
 
 ```shell
-# 先克隆项目（如已有则跳过）
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+# Clone the project first (skip if already cloned)
+git clone https://github.com/kienmatu/Toonflow-app.git
 cd Toonflow-app
 
-# 使用 docker-compose 本地构建并启动
+# Build and start locally using docker-compose
 yarn docker:local
 
-# 或者手动构建
+# Or build manually
 docker build -t toonflow .
-docker run -d -p <本地端口>:10588 -v <本地数据路径>:/app/data toonflow
+docker run -d -p <local_port>:10588 -v <local_data_path>:/app/data toonflow
 
-# 此时在相应端口的 /web/index.html 路径即可访问页面
-# 例如 http://localhost:10588/web/index.html
+# Access the page at the corresponding port path /index.html
+# Example: http://localhost:10588/index.html
 ```
 
-### 服务端口说明
+### Service Port Description
 
-| 端口    | 用途     | 部署映射      |
-| ------- | -------- | ------------- |
-| `10588` | 软件界面 | `10588:10588` |
+| Port   | Purpose          | Deployment Mapping |
+| ------ | ---------------- | ------------------ |
+| `10588`| Software UI      | `10588:10588`      |
 
-**环境变量说明：**
+**Environment Variables:**
 
-| 变量       | 说明                               |
-| ---------- | ---------------------------------- |
-| `NODE_ENV` | 运行环境，`prod` 表示生产环境      |
-| `PORT`     | 服务监听端口（默认 10588）         |
-| `OSSURL`   | 文件存储访问地址，用于静态资源访问 |
+| Variable  | Description                                |
+| --------- | ------------------------------------------ |
+| `NODE_ENV`| Running environment; `prod` for production |
+| `PORT`    | Service listening port (default 10588)     |
+| `OSSURL`  | File storage access URL for static assets  |
 
 ---
 
-## 云端部署
+## Cloud Deployment
 
-### 云服务器部署
+### Cloud Server Deployment
 
-#### 一、服务器环境要求
+#### I. Server Environment Requirements
 
-- **系统**：Ubuntu 20.04+ / CentOS 7+
-- **Node.js**：24.x（推荐，最低 23.11.1+）
-- **内存**：2GB+
+- **OS**: Ubuntu 20.04+ / CentOS 7+
+- **Node.js**: 24.x (recommended, minimum 23.11.1+)
+- **Memory**: 2GB+
 
-#### 二、服务器部署
+#### II. Server Deployment
 
-##### 1. 安装环境
+##### 1. Install Environment
 
 ```bash
-# 安装 Node.js
+# Install Node.js
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
 nvm install 24
-# 安装 Yarn 和 PM2
+# Install Yarn and PM2
 npm install -g yarn pm2
 ```
 
-##### 2. 部署项目
+##### 2. Deploy the Project
 
-**从 GitHub 克隆：**
+**Clone from GitHub:**
 
 ```bash
 cd /opt
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+git clone https://github.com/kienmatu/Toonflow-app.git
 cd Toonflow-app
 yarn install
 yarn build
 ```
 
-**从 Gitee 克隆（国内推荐）：**
+**Clone from Gitee (recommended for China):**
 
 ```bash
 cd /opt
@@ -352,9 +369,9 @@ yarn install
 yarn build
 ```
 
-##### 3. 配置 PM2
+##### 3. Configure PM2
 
-创建 `pm2.json` 文件：
+Create `pm2.json` file:
 
 ```json
 {
@@ -370,17 +387,17 @@ yarn build
 }
 ```
 
-**环境变量说明：**
+**Environment Variable Description:**
 
-| 变量       | 说明                               |
-| ---------- | ---------------------------------- |
-| `NODE_ENV` | 运行环境，`prod` 表示生产环境      |
-| `PORT`     | 服务监听端口                       |
-| `OSSURL`   | 文件存储访问地址，用于静态资源访问 |
+| Variable  | Description                                |
+| --------- | ------------------------------------------ |
+| `NODE_ENV`| Running environment; `prod` for production |
+| `PORT`    | Service listening port                     |
+| `OSSURL`  | File storage access URL for static assets  |
 
 ---
 
-##### 4. 启动服务
+##### 4. Start the Service
 
 ```bash
 pm2 start pm2.json
@@ -388,328 +405,331 @@ pm2 startup
 pm2 save
 ```
 
-##### 5. 常用命令
+##### 5. Common Commands
 
 ```bash
-pm2 list              # 查看进程
-pm2 logs toonflow-app # 查看日志
-pm2 restart all       # 重启服务
-pm2 monit             # 监控面板
+pm2 list              # View processes
+pm2 logs toonflow-app # View logs
+pm2 restart all       # Restart services
+pm2 monit             # Monitoring dashboard
 ```
 
-> ⚠️ **首次登录**  
-> 账号：`admin`  
-> 密码：`admin123`
+> ⚠️ **First Login**  
+> Username: `admin`  
+> Password: `admin123`
 
-##### 6. 部署前端网站
+##### 6. Deploy the Frontend
 
-如需单独部署或定制前端界面，请参考前端仓库：
+If you need to deploy or customize the frontend separately, please refer to the frontend repository:
 
-- **GitHub**：[Toonflow-web](https://github.com/HBAI-Ltd/Toonflow-web)
-- **Gitee**：[Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
+- **GitHub**: [Toonflow-web](https://github.com/HBAI-Ltd/Toonflow-web)
+- **Gitee**: [Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
 
-> 💡 **说明**：本仓库已内置编译好的前端资源，普通用户无需单独部署前端。前端仓库仅供需要二次开发的开发者使用。
+> 💡 **Note**: This repository already includes pre-built frontend resources; regular users do not need to deploy the frontend separately. The frontend repository is for developers who need secondary development.
 
-### 云平台部署
+### Cloud Platform Deployment
 
-> 🎉 **官方认证算力合作平台 —— 智星云**
+> 🎉 **Newly Certified Official Compute Partner Platform — AI Galaxy**
 >
-> **[智星云](https://www.ai-galaxy.com/)** 是 **Toonflow 官方授权的商用镜像服务商**，已合法搭载、分发并支持商用全套 Toonflow AI 短剧制作镜像，**开箱即用，无需手动部署**。
+> **[AI Galaxy](https://www.ai-galaxy.com/)** is a **Toonflow officially authorized commercial image provider**, offering a fully compliant, pre-built Toonflow AI short-drama production image for commercial use — **ready to use out of the box, no manual deployment required**.
 >
-> - 🌐 官网：[https://www.ai-galaxy.com](https://www.ai-galaxy.com)
-> - 📖 镜像部署图文教程：[点击查看教程](https://mp.weixin.qq.com/s/lq9X1ovQ1_TKeXMOLgicKg?scene=1)
+> - 🌐 Website: [https://www.ai-galaxy.com](https://www.ai-galaxy.com)
+> - 📖 Official image deployment tutorial: [Click to view](https://mp.weixin.qq.com/s/lq9X1ovQ1_TKeXMOLgicKg?scene=1)
 
 <details>
-<summary>📄 点击展开文字版教程</summary>
+<summary>📄 Click to expand the text tutorial</summary>
 
-#### 一、租用 GPU 阶段教程
+#### I. GPU Rental Stage
 
-1. 智星云 - 算力市场 - 4090 / 4090 Plus，点击「立即租用」进入租用详情页。
-   > 💡 建议开启「按小时自动续租」模式，防止正在跑视频时实例到期停工。
-2. 镜像选择：`windows10LTSCwin10_Toonflow` - 创建实例。
-3. 等待实例启动 30s ~ 60s，查看链接方式 - RDP 登录文件下载 - 点击复制密码 - 双击已下载好的云端连接文件。
-4. 将复制好的密码粘贴并登录，连接进入云端桌面。
-   > 💡 鼠标移到云端桌面顶端稍作停留，会显示切换桌面操作栏，可点击“——”切换回自己的电脑桌面，或点击“□”缩小布置到自己的电脑桌面作为操作窗口。
+1. On AI Galaxy - Compute Marketplace - RTX 4090 / 4090 Plus, click "Rent Now" to open the rental details page.
+   > 💡 It's recommended to enable "hourly auto-renewal" to prevent the instance from expiring while a video render is still in progress.
+2. Select the image: `windows10LTSCwin10_Toonflow` - Create Instance.
+3. Wait 30–60 seconds for the instance to start, then check the connection method — download the RDP login file, copy the password, and double-click the downloaded remote desktop file.
+4. Paste the copied password and log in to enter the cloud desktop.
+   > 💡 Move the mouse to the top of the cloud desktop and pause briefly to reveal the desktop-switching toolbar. Click "──" to switch back to your local desktop, or "□" to shrink it into a window on your local desktop.
 
-#### 二、配置 Toonflow、启动 ComfyUI 阶段教程
+#### II. Configure Toonflow & Start ComfyUI Stage
 
-1. 先配置调用 Agent 的模型：打开桌面上的 Toonflow - 模型服务 - OpenAI 标准接口 - 填入 API 密钥以及请求地址。
-   默认账号：`admin`　密码：`admin123`（建议登录后修改密码）
-   > 💡 这里直接使用智星云的 AI 大模型 Token 服务，官方接口，稳定安全，低至 6 折（小说转剧本调用一次，约花费 6.4 毛钱）。
-   - 智星云调用模型 Token 请求地址：`https://token.ai-galaxy.com/v1`
-   - 智星云 Token 充值步骤：Token 市场 - 账户概览 - 充值 - 将智星云账户余额或算力券充值到 Token 账户中。
-   - 充值完成后进入「Key 管理」- 新建 API 管理，名称填 `Toonflow` 或其他均可，点击确定并复制 API 密钥。
-2. 回到步骤 1，将生成的 API 密钥和请求地址粘贴到 Toonflow 模型服务中，填好后点击空白处，系统会提示「供应商配置已更新」。
-   点击「手动添加」，回到智星云 - Token 市场页面，复制完整的模型名称。
-   > 💡 一个 Key 可以调用智星云上的所有模型，选择你想用的即可，推荐 `deepseek-v4-pro`。
-   > 将模型名称完整复制粘贴到 Toonflow 中并确认，完成模型配置。
-3. 配置完成后检查两处：
-   - 模型服务中的三个模型调用开关是否已开启
-   - Agent 配置中调用的模型是否与你配置的一致（不一致时点击选择改正即可）
-4. 启动 ComfyUI：云端桌面 - 绘世启动器 - 一键启动。
-5. 启动大约需要 1~2 分钟，启动完成后保持页面开启状态即可。
+1. First configure the model used by the Agent: open Toonflow on the desktop - Model Services - OpenAI-compatible interface - enter the API key and request URL.
+   Default account: `admin`  Password: `admin123` (recommended to change the password after logging in)
+   > 💡 This uses AI Galaxy's AI model Token service directly — an official interface that's stable, secure, and up to 40% off (converting a novel into a script cost about ¥0.64).
+   - AI Galaxy model Token request URL: `https://token.ai-galaxy.com/v1`
+   - AI Galaxy Token top-up steps: Token Marketplace - Account Overview - Top Up - transfer your AI Galaxy balance or compute vouchers into your Token account.
+   - After topping up, go to "Key Management" - New API, name it `Toonflow` or anything you like, confirm, and copy the API key.
+2. Back in step 1, paste the generated API key and request URL into Toonflow's Model Services, then click elsewhere; the system will show "Provider configuration updated".
+   Click "Add Manually", go back to the AI Galaxy Token Marketplace page, and copy the full model name.
+   > 💡 One key can call every model on AI Galaxy — just pick the one you want to use; `deepseek-v4-pro` is recommended.
+   Paste the full model name into Toonflow and confirm to complete the model configuration.
+3. After configuration, check two things:
+   - Whether all three model toggles in Model Services are enabled
+   - Whether the model configured in the Agent settings matches your configuration (click to correct it if not)
+4. Start ComfyUI: Cloud Desktop - ComfyUI Launcher - One-Click Start.
+5. Startup takes about 1–2 minutes; keep the page open once it's running.
 
 </details>
 
 ---
 
-# 🔧 开发流程指南
+# 🔧 Development Guide
 
 > [!CAUTION]
-> 🚧 **PR 提交规范** 🚧
+> 🚧 **PR Submission Guidelines** 🚧
 >
-> ⛔ `master` 分支不接受任何 PR ｜ ✅ 请将 PR 提交到 `develop` 分支
+> ⛔ Do not submit PRs to the `master` branch. ✅ Please submit PRs to the `develop` branch.
 >
-> 欢迎开发者们共同参与 Toonflow 的共创。如有兴趣加入，请在交流群内联系主理人 ACT
+> Developers are welcome to contribute to Toonflow. If interested, please contact the maintainer ACT in the community group.
 
-## 🛠️ 技术栈
+## 🛠️ Tech Stack
 
-| 类别       | 技术                                                                                      |
-| ---------- | ----------------------------------------------------------------------------------------- |
-| 运行时     | Node.js 23.11.1+                                                                          |
-| 语言       | TypeScript 5.x                                                                            |
-| 后端框架   | Express 5                                                                                 |
-| 数据库     | SQLite（better-sqlite3 / knex）                                                           |
-| AI 集成    | Vercel AI SDK（OpenAI / Anthropic / Google / DeepSeek / 智谱 / MiniMax / 通义千问 / xAI） |
-| 本地推理   | @huggingface/transformers（ONNX）                                                         |
-| 实时通信   | Socket.IO                                                                                 |
-| 桌面客户端 | Electron 40                                                                               |
-| 图像处理   | Sharp                                                                                     |
-| 容器化     | Docker                                                                                    |
+| Category      | Technology                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| Runtime       | Node.js 23.11.1+                                                                              |
+| Language      | TypeScript 5.x                                                                                |
+| Backend       | Express 5                                                                                     |
+| Database      | SQLite (better-sqlite3 / knex)                                                                |
+| AI Integration| Vercel AI SDK (OpenAI / Anthropic / Google / DeepSeek / Zhipu / MiniMax / Tongyi Qianwen / xAI)|
+| Local Inference| @huggingface/transformers (ONNX)                                                              |
+| Real-time     | Socket.IO                                                                                     |
+| Desktop       | Electron 40                                                                                   |
+| Image Processing| Sharp                                                                                       |
+| Containerization| Docker                                                                                     |
 
-## 开发环境准备
+## Development Environment Setup
 
-- **Node.js**：版本要求 23.11.1 及以上
-- **Yarn**：推荐作为项目包管理器
+- **Node.js**: Version 23.11.1 or higher
+- **Yarn**: Recommended as package manager
 
-## 快速启动项目
+## Quick Start Project
 
-1. **克隆项目**
+1. **Clone the Project**
 
-   **从 GitHub 克隆：**
+   **Clone from GitHub:**
 
    ```bash
-   git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+   git clone https://github.com/kienmatu/Toonflow-app.git
    cd Toonflow-app
    ```
 
-   **从 Gitee 克隆（国内推荐）：**
+   **Clone from Gitee (recommended for China):**
 
    ```bash
    git clone https://gitee.com/HBAI-Ltd/Toonflow-app.git
    cd Toonflow-app
    ```
 
-2. **安装依赖**
+2. **Install Dependencies**
 
-   请先在项目根目录下执行以下命令以安装依赖项：
+   Run the following command in the project root to install dependencies:
 
    ```bash
    yarn install
    ```
 
-3. **启动开发环境**
+3. **Start Development Environment**
 
-   本项目包含 **后端 API 服务** 和 **前端页面** 两部分，请根据需要选择启动方式：
-   - **方式一：仅启动后端服务**
+   This project includes both the **backend API service** and **frontend pages**. Choose the appropriate startup method:
+
+   - **Method 1: Start backend only**
 
      ```bash
      yarn dev
      ```
 
-     > ⚠️ 此命令仅启动后端 API 服务（端口 10588），**不包含前端页面**。直接访问 `http://localhost:10588` 只能调用 API 接口，无法看到完整的网页界面。如需同时使用前端页面，请配合前端项目单独启动，或使用下方的 GUI 模式。
+     > ⚠️ This command starts only the backend API service (port 10588), **without the frontend**. Accessing `http://localhost:10588` will only call API endpoints, not display the full UI. To use the frontend, either run the frontend project separately or use the GUI mode below.
 
-   - **方式二：启动 Electron 桌面客户端**
+   - **Method 2: Start Electron Desktop Client**
 
      ```bash
      yarn dev:gui
      ```
 
-     > 此命令会同时启动后端服务和 Electron 桌面窗口，自带内置前端页面，开箱即用，无需额外配置。适合想要完整体验所有功能的开发者。
+     > This command starts both the backend service and the Electron desktop window with a built-in frontend page, ready to use out of the box. Ideal for developers who want the full experience.
 
-   - **方式三：生产模式启动**
+   - **Method 3: Production Mode**
 
      ```bash
      yarn start
      ```
 
-     > 以生产模式直接运行编译后的服务（需先执行 `yarn build`）。
+     > Runs the compiled service in production mode (requires `yarn build` first).
 
-4. **项目打包**
-   - 编译并生成 TypeScript 文件：
+4. **Package the Project**
+
+   - Compile and generate TypeScript files:
 
      ```bash
      yarn build
      ```
 
-   - 打包为 Windows 平台可执行程序：
+   - Package as Windows executable:
 
      ```bash
      yarn dist:win
      ```
 
-   - 打包为 Mac 平台可执行程序：
+   - Package as macOS executable:
 
      ```bash
      yarn dist:mac
      ```
 
-   - 打包为 Linux 平台可执行程序：
+   - Package as Linux executable:
 
      ```bash
      yarn dist:linux
      ```
 
-5. **代码质量检查**
-   - 进行全局语法和规范检查：
+5. **Code Quality Check**
+
+   - Run global syntax and lint checks:
 
      ```bash
      yarn lint
      ```
 
-6. **AI 调试面板（可选）**
+6. **AI Debug Panel (Optional)**
 
-   启动 AI SDK 的可视化调试工具，方便调试 AI 调用：
+   Launch a visual debugging tool for the AI SDK to facilitate debugging AI calls:
 
    ```bash
    yarn debug:ai
    ```
 
-## 前端开发
+## Frontend Development
 
-如需修改前端界面，请前往前端仓库进行开发：
+To modify the frontend, please use the frontend repository:
 
-- **GitHub**：[Toonflow-web](https://github.com/HBAI-Ltd/Toonflow-web)
-- **Gitee**：[Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
+- **GitHub**: [Toonflow-web](https://github.com/HBAI-Ltd/Toonflow-web)
+- **Gitee**: [Toonflow-web](https://gitee.com/HBAI-Ltd/Toonflow-web)
 
-前端构建后，将 `dist` 目录内容复制到本项目的 `data/web` 目录即可集成。
+After building the frontend, copy the `dist` directory contents into the `data/web` directory of this project to integrate.
 
-## 项目结构
+## Project Structure
 
 ```
-📂 build/                    # 编译产物
-📂 data/                     # 运行时数据
-│  ├─ 📂 models/            # 本地推理模型（ONNX）
-│  ├─ 📂 oss/               # 对象存储（素材/角色/场景）
-│  ├─ 📂 serve/             # 生产环境入口
-│  ├─ 📂 skills/            # Agent 技能提示词
-│  └─ 📂 web/               # 前端编译产物（内置）
-📂 docs/                     # 文档资源
-📂 env/                      # 环境配置
-📂 scripts/                  # 构建与辅助脚本
+📂 build/                    # Build artifacts
+📂 data/                     # Runtime data
+│  ├─ 📂 models/            # Local inference models (ONNX)
+│  ├─ 📂 oss/               # Object storage (assets/characters/scenes)
+│  ├─ 📂 serve/             # Production entry point
+│  ├─ 📂 skills/            # Agent skill prompts
+│  └─ 📂 web/               # Frontend build artifacts (built-in)
+📂 docs/                     # Documentation resources
+📂 env/                      # Environment configuration
+📂 scripts/                  # Build and helper scripts
 📂 src/
-├─ 📂 agents/               # AI Agent 模块
-│  ├─ 📂 productionAgent/   # 生产 Agent
-│  └─ 📂 scriptAgent/       # 剧本 Agent
-├─ 📂 lib/                  # 公共库（数据库初始化、响应格式）
-├─ 📂 middleware/            # 中间件
-├─ 📂 routes/               # 路由模块
-│  ├─ 📂 agents/            # Agent 记忆管理
-│  ├─ 📂 artStyle/          # 画风管理
-│  ├─ 📂 assets/            # 素材管理
-│  ├─ 📂 assetsGenerate/    # 素材生成
-│  ├─ 📂 cornerScape/       # 分镜管理
-│  ├─ 📂 general/           # 通用接口
-│  ├─ 📂 login/             # 登录认证
-│  ├─ 📂 migrate/           # 数据迁移
-│  ├─ 📂 modelSelect/       # 模型选择
-│  ├─ 📂 novel/             # 小说管理
-│  ├─ 📂 other/             # 其他功能
-│  ├─ 📂 production/        # 制作管理
-│  ├─ 📂 project/           # 项目管理
-│  ├─ 📂 script/            # 剧本生成
-│  ├─ 📂 scriptAgent/       # 剧本 Agent 接口
-│  ├─ 📂 setting/           # 系统设置
-│  ├─ 📂 task/              # 任务管理
-│  └─ 📂 test/              # 测试接口
-├─ 📂 socket/               # WebSocket 实时通信
-├─ 📂 types/                # TypeScript 类型声明
-├─ 📂 utils/                # 工具函数
-├─ 📄 app.ts                # 应用入口
-├─ 📄 core.ts               # 核心初始化
-├─ 📄 env.ts                # 环境变量处理
-├─ 📄 err.ts                # 错误处理
-├─ 📄 logger.ts             # 日志模块
-├─ 📄 router.ts             # 路由注册
-└─ 📄 utils.ts              # 通用工具
-📄 Dockerfile                # Docker 构建文件
-📄 electron-builder.yml      # Electron 打包配置
-📄 skillList.json            # 技能清单
-📄 LICENSE                   # 许可证（Apache-2.0）
-📄 NOTICES.txt               # 第三方依赖声明
-📄 package.json              # 项目配置
-📄 tsconfig.json             # TypeScript 配置
+├─ 📂 agents/               # AI Agent modules
+│  ├─ 📂 productionAgent/   # Production Agent
+│  └─ 📂 scriptAgent/       # Script Agent
+├─ 📂 lib/                  # Common libraries (DB init, response formats)
+├─ 📂 middleware/            # Middleware
+├─ 📂 routes/               # Route modules
+│  ├─ 📂 agents/            # Agent memory management
+│  ├─ 📂 artStyle/          # Art style management
+│  ├─ 📂 assets/            # Asset management
+│  ├─ 📂 assetsGenerate/    # Asset generation
+│  ├─ 📂 cornerScape/       # Storyboard management
+│  ├─ 📂 general/           # General interfaces
+│  ├─ 📂 login/             # Login authentication
+│  ├─ 📂 migrate/           # Data migration
+│  ├─ 📂 modelSelect/       # Model selection
+│  ├─ 📂 novel/             # Novel management
+│  ├─ 📂 other/             # Other features
+│  ├─ 📂 production/        # Production management
+│  ├─ 📂 project/           # Project management
+│  ├─ 📂 script/            # Script generation
+│  ├─ 📂 scriptAgent/       # Script Agent API
+│  ├─ 📂 setting/           # System settings
+│  ├─ 📂 task/              # Task management
+│  └─ 📂 test/              # Test interfaces
+├─ 📂 socket/               # WebSocket real-time communication
+├─ 📂 types/                # TypeScript type declarations
+├─ 📂 utils/                # Utility functions
+├─ 📄 app.ts                # Application entry
+├─ 📄 core.ts               # Core initialization
+├─ 📄 env.ts                # Environment variable handling
+├─ 📄 err.ts                # Error handling
+├─ 📄 logger.ts             # Logging module
+├─ 📄 router.ts             # Route registration
+└─ 📄 utils.ts              # Common utilities
+📄 Dockerfile                # Docker build file
+📄 electron-builder.yml      # Electron packaging config
+📄 skillList.json            # Skill list
+📄 LICENSE                   # License (Apache-2.0)
+📄 NOTICES.txt               # Third-party dependency notices
+📄 package.json              # Project configuration
+📄 tsconfig.json             # TypeScript configuration
 ```
 
 ---
 
-# 🔗 相关仓库
+# 🔗 Related Repositories
 
-| 仓库             | 说明                               | GitHub                                             | Gitee                                            |
-| ---------------- | ---------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
-| **Toonflow-app** | 完整客户端（本仓库，推荐普通用户） | [GitHub](https://github.com/HBAI-Ltd/Toonflow-app) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-app) |
-| **Toonflow-web** | 前端源代码（适合前端开发者）       | [GitHub](https://github.com/HBAI-Ltd/Toonflow-web) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-web) |
+| Repository       | Description                              | GitHub                                             | Gitee                                            |
+| ---------------- | ---------------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
+| **Toonflow-app** | Full client (this repo, recommended for regular users) | [GitHub](https://github.com/HBAI-Ltd/Toonflow-app) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-app) |
+| **Toonflow-web** | Frontend source code (for frontend developers) | [GitHub](https://github.com/HBAI-Ltd/Toonflow-web) | [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-web) |
 
-> 💡 **提示**：如果您只是想使用 Toonflow，直接下载本仓库的客户端即可。前端仓库仅供需要二次开发或定制前端界面的开发者使用。
+> 💡 **Tip**: If you simply want to use Toonflow, download the client from this repository. The frontend repository is for developers who need secondary development or UI customization.
 
 ---
 
-# 👨‍👩‍👧‍👦 微信交流群
+# 👨‍👩‍👧‍👦 WeChat Group
 
-拉群小助手:
+Helper bot:
 
 <img src="./docs/QR.png" alt="Toonflow QR" height="400"/>
 
-也可以点击图标加入 Discord：
+You can also click the icon to join Discord:
 
 [![Join our Discord](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/67d00cf7266d2c75571aebde_Example.svg)](https://discord.gg/HEjKmpNpAZ)
 
-或点击邀请连接： [https://discord.gg/HEjKmpNpAZ](https://discord.gg/HEjKmpNpAZ)
+Or click the invite link: [https://discord.gg/HEjKmpNpAZ](https://discord.gg/HEjKmpNpAZ)
 
 ---
 
-# 💌 联系我们
+# 💌 Contact Us
 
-📧 邮箱：[ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow咨询)
-
----
-
-# 📜 许可证
-
-Toonflow 基于 Apache-2.0 协议开源发布，并附有补充商业协议。
-
-许可证详情：https://www.apache.org/licenses/LICENSE-2.0
-
-## 补充协议
-
-- 若将本软件以产品形式分发给 **2 个及以上独立第三方**使用，须取得 HBAI-Ltd **书面商业授权**。
-- **≤ 5 个法人**联合运营内部使用，不对外提供服务的，视为内部使用，**无需授权**。
-- 不得删除或修改 Toonflow 中的标识或版权信息。
-
-## 永久免费场景
-
-- ✅ 用 Toonflow 制作内容并获得平台分账
-- ✅ 二次开发供自己团队内部使用
-- ✅ ≤ 5 个法人联合运营内部使用
-- ✅ 个人学习、研究、非商业用途
-
-## 商业授权定价
-
-| 阶段      | 年销售额    | 年费                 |
-| --------- | ----------- | -------------------- |
-| 🌱 扶持期 | < ¥10 万    | **申请即可免费授权** |
-| 🚀 初创期 | ¥10–50 万   | ¥5,000/年            |
-| 📈 成长期 | ¥50–150 万  | ¥20,000/年           |
-| 🏢 规模期 | ¥150–500 万 | ¥80,000/年           |
-| 🌐 企业级 | > ¥500 万   | 面议                 |
-
-> **不追溯条款**：v1.0.8 发布前基于 AGPL-3.0 使用的用户，继续按 AGPL-3.0 执行，不受本协议变更约束。
-
-完整协议详见 [LICENSE](./LICENSE) 文件。
+📧 Email: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow Inquiry)
 
 ---
 
-# ⭐️ 星标历史
+# 📜 License
+
+Toonflow is open-sourced under the Apache-2.0 license, with supplementary commercial terms.
+
+License details: https://www.apache.org/licenses/LICENSE-2.0
+
+## Supplementary Agreement
+
+- If you distribute this software as a product to **2 or more independent third parties**, you must obtain **written commercial authorization** from HBAI-Ltd.
+- **≤ 5 legal entities** jointly operating for internal use without providing services externally is considered internal use and **does not require authorization**.
+- Do not remove or modify any Toonflow identifiers or copyright information.
+
+## Permanent Free Use Cases
+
+- ✅ Creating content with Toonflow and receiving platform revenue shares
+- ✅ Secondary development for internal team use
+- ✅ ≤ 5 legal entities joint internal operation
+- ✅ Personal learning, research, non-commercial use
+
+## Commercial License Pricing
+
+| Stage         | Annual Revenue | Annual Fee                    |
+| ------------- | -------------- | ----------------------------- |
+| 🌱 Support    | < ¥100,000     | **Free license upon request** |
+| 🚀 Startup    | ¥100–500,000   | ¥5,000/year                   |
+| 📈 Growth     | ¥500k–1.5M     | ¥20,000/year                  |
+| 🏢 Scale      | ¥1.5M–5M       | ¥80,000/year                  |
+| 🌐 Enterprise | > ¥5M          | Negotiable                    |
+
+> **Non-retroactive clause**: Users who used Toonflow under AGPL-3.0 before the v1.0.8 release will continue to be governed by AGPL-3.0 and are not affected by this agreement change.
+
+See the full agreement in the [LICENSE](./LICENSE) file.
+
+---
+
+# ⭐️ Star History
 
 [![Star History Rank](https://api.star-history.com/badge?repo=HBAI-Ltd/Toonflow-app)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app)
 
@@ -717,66 +737,69 @@ Toonflow 基于 Apache-2.0 协议开源发布，并附有补充商业协议。
 
 ---
 
-# 🙏 致谢
 
-感谢以下开源项目为 Toonflow 提供强大支持：
+# 🙏 Acknowledgements
 
-- [Express](https://expressjs.com/) - 快速、开放、极简的 Node.js Web 框架
-- [AI SDK](https://ai-sdk.dev/) - 面向 TypeScript 的 AI 工具包
-- [Better-SQLite3](https://github.com/WiseLibs/better-sqlite3) - 高性能 SQLite3 绑定库
-- [Sharp](https://sharp.pixelplumbing.com/) - 高性能 Node.js 图像处理库
-- [Axios](https://axios-http.com/) - 基于 Promise 的 HTTP 客户端
-- [Zod](https://zod.dev/) - TypeScript 优先的模式验证库
-- [Socket.IO](https://socket.io/) - 实时双向事件通信引擎
-- [Electron](https://www.electronjs.org/) - 跨平台桌面应用开发框架
-- [Hugging Face Transformers](https://huggingface.co/docs/transformers.js) - 本地 ML 推理库
+We thank the following open-source projects for providing powerful support to Toonflow:
 
-感谢以下组织/单位/个人为 Toonflow 提供支持：
+- [Express](https://expressjs.com/) - Fast, unopinionated, minimalist web framework for Node.js
+- [AI SDK](https://ai-sdk.dev/) - AI toolkit for TypeScript
+- [Better-SQLite3](https://github.com/WiseLibs/better-sqlite3) - High-performance SQLite3 binding
+- [Sharp](https://sharp.pixelplumbing.com/) - High-performance Node.js image processing
+- [Axios](https://axios-http.com/) - Promise-based HTTP client
+- [Zod](https://zod.dev/) - TypeScript-first schema validation
+- [Socket.IO](https://socket.io/) - Real-time bidirectional event-based communication
+- [Electron](https://www.electronjs.org/) - Cross-platform desktop application framework
+- [Hugging Face Transformers](https://huggingface.co/docs/transformers.js) - Local ML inference library
+
+We also thank the following organizations/units/individuals for their support:
 
 <table>
   <thead>
     <tr>
       <th align="center">Logo</th>
-      <th align="center">名称</th>
-      <th align="center">支持方式</th>
-      <th>简介</th>
-      <th align="center">官网</th>
+      <th align="center">Name</th>
+      <th align="center">Support Type</th>
+      <th>Introduction</th>
+      <th align="center">Website</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td align="center"><img src="./docs/sponsored/metaso.jpg" alt="秘塔 Logo" width="48"></td>
-      <td align="center"><b>秘塔</b></td>
-      <td align="center">💻 算力赞助</td>
-      <td>秘塔科技提供高性价比的 MiniMax H3 视频生成服务：<b>768P 仅 0.09 元/秒，2K 仅 0.15 元/秒</b>。支持原生 2K、音画同步，API 兼容 <b>OpenAI 协议</b>，同时支持 <b>ComfyUI</b>、<b>无限画布</b>，无需自行部署 GPU。<br/><br/>🎁 通过 <a href="https://metaso.cn/minimax-h3/?s=toon">专属链接注册</a>，即可领取赠送额度及专属优惠。商务对接可加wx:wxid_9rt077jmud6j22</td>
-      <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">官网</a></td>
+      <td align="center"><img src="./docs/sponsored/metaso.jpg" alt="Metaso Logo" width="48"></td>
+      <td align="center"><b>Metaso</b></td>
+      <td align="center">💻 Computing Sponsorship</td>
+      <td>Metaso Technology offers a cost-effective MiniMax H3 video generation service: <b>768P at just ¥0.09/sec, 2K at just ¥0.15/sec</b>. Supports native 2K, audio-video sync, and an API compatible with the <b>OpenAI protocol</b>, plus <b>ComfyUI</b> and <b>infinite canvas</b> support — no need to deploy your own GPU.<br/><br/>🎁 Sign up via the <a href="https://metaso.cn/minimax-h3/?s=toon">exclusive referral link</a> to claim bonus credits and exclusive discounts. For business inquiries, add WeChat: wxid_9rt077jmud6j22</td>
+      <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">Website</a></td>
     </tr>
     <tr>
-      <td align="center"><img src="./docs/sponsored/sophnet.png" alt="算能云 Logo" width="48"></td>
-      <td align="center"><b>算能云</b></td>
-      <td align="center">💻 算力赞助</td>
-      <td>致力于打造更快、更稳、更省的一站式模型推理API服务平台</td>
-      <td align="center"><a href="https://www.sophnet.com/">官网</a></td>
+      <td align="center"><img src="./docs/sponsored/sophnet.png" alt="Sophnet Logo" width="48"></td>
+      <td align="center"><b>Sophnet</b></td>
+      <td align="center">💻 Computing Sponsorship</td>
+      <td>Committed to building a faster, more stable, and more cost-effective one-stop model inference API service platform</td>
+      <td align="center"><a href="https://www.sophnet.com/">Website</a></td>
     </tr>
     <tr>
-      <td align="center"><img src="./docs/sponsored/hunyuan.webp" alt="腾讯混元3D Logo" width="48"></td>
-      <td align="center"><b>腾讯混元3D</b></td>
-      <td align="center">🌐 世界模型技术支持</td>
-      <td>腾讯混元3D AI创作引擎基于腾讯混元3D生成大模型2.5版本，业界首个一站式3D内容AI创作平台。具备文生、图生3D、3D动画生成、纹理生成等功能，支持草图生3D、3D人物生成，有低多边形模型生成优势。</td>
-      <td align="center"><a href="https://3d.hunyuan.tencent.com/">官网</a></td>
+      <td align="center"><img src="./docs/sponsored/hunyuan.webp" alt="Tencent Hunyuan 3D Logo" width="48"></td>
+      <td align="center"><b>Tencent Hunyuan 3D</b></td>
+      <td align="center">🌐 World Model Technical Support</td>
+      <td>Tencent Hunyuan 3D AI creation engine based on version 2.5 of the Hunyuan 3D generation large model, the industry's first one-stop 3D content AI creation platform. Features text-to-3D, image-to-3D, 3D animation generation, texture generation, supports sketch-to-3D, 3D character generation, with advantages in low-poly model generation.</td>
+      <td align="center"><a href="https://3d.hunyuan.tencent.com/">Website</a></td>
     </tr>
     <tr>
-      <td align="center"><img src="./docs/sponsored/ai-galaxy.png" alt="智星云 Logo" width="48"></td>
-      <td align="center"><b>智星云</b></td>
-      <td align="center">💻 算力支持 <br/> 🖼️ 镜像支持</td>
-      <td>国内知名专业算力服务品牌，提供便宜稳定的算力，服务国内清北、复旦、浙大等上千所985/211高校实验室、中科院及5000余家AI企业。</td>
-      <td align="center"><a href="https://www.ai-galaxy.com">官网</a></td>
+      <td align="center"><img src="./docs/sponsored/ai-galaxy.png" alt="AI Galaxy Logo" width="48"></td>
+      <td align="center"><b>AI Galaxy</b></td>
+      <td align="center">💻 Compute Support <br/> 🖼️ Image Support</td>
+      <td>A well-known professional compute service brand in China, providing affordable and stable compute power. Serves labs at over a thousand top universities (Tsinghua, Peking, Fudan, Zhejiang University, etc.), the Chinese Academy of Sciences, and 5,000+ AI companies.</td>
+      <td align="center"><a href="https://www.ai-galaxy.com">Website</a></td>
     </tr>
   </tbody>
 </table>
 
-完整的第三方依赖清单请查阅 `NOTICES.txt`
+For the complete list of third-party dependencies, please refer to `NOTICES.txt`
 
-##### copyright © 北京爱阿科技有限公司
+##### copyright © Beijing Ai'a Technology Co., Ltd.
+
+
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=100&section=footer" width="100%"/>

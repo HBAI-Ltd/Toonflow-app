@@ -3,6 +3,7 @@ import u from "@/utils";
 import { z } from "zod";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
+import { t, getLocale } from "@/i18n";
 const router = express.Router();
 
 // 新增资产
@@ -25,6 +26,7 @@ export default router.post(
     ),
   }),
   async (req, res) => {
+    const locale = await getLocale(req as any);
     const { id, name, describe, projectId, assetsItem } = req.body;
     await Promise.all(
       assetsItem.map(async (i: { src?: string; id?: number; base64: string; prompt: string }) => {
@@ -96,7 +98,7 @@ export default router.post(
           filePath: item.src,
           type: "audio",
           assetsId,
-          state: "已完成",
+          state: "已完成", // i18n-ignore — stored o_image.state enum value, not user-facing text
         });
         await u.db("o_assets").where("id", assetsId).update({
           imageId,
@@ -104,6 +106,6 @@ export default router.post(
       }
     }
 
-    res.status(200).send(success({ message: "新增资产成功" }));
+    res.status(200).send(success({ message: t("assets.common.added", {}, locale) }));
   },
 );

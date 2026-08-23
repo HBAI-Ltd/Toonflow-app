@@ -15,11 +15,14 @@
 </p>
 
 <p align="center">
-  <a href="../README.md">简体中文</a> | 
+<!-- i18n-ignore — language endonym, must not be translated -->
+  <a href="./README.zh.md">简体中文</a> | 
+<!-- i18n-ignore — language endonym, must not be translated -->
   <a href="./README.zhtw.md">繁體中文</a> | 
   <a href="./README.en.md">English</a> | 
   <a href="./README.th.md">ไทย</a> | 
   <strong>Tiếng Việt</strong> | 
+<!-- i18n-ignore — language endonym, must not be translated -->
   <a href="./README.ja.md">日本語</a> | 
   <a href="./README.ru.md">Русский</a>
 </p>
@@ -106,12 +109,12 @@ Toonflow hỗ trợ giao diện các ngôn ngữ sau:
 
 | Ngôn ngữ       | Ngôn ngữ              |
 | ---------- | --------------------- |
-| 简体中文   | Tiếng Trung (Giản thể) |
-| 繁體中文   | Tiếng Trung (Phồn thể) |
+| 简体中文   | Tiếng Trung (Giản thể) | <!-- i18n-ignore — language endonym, must not be translated -->
+| 繁體中文   | Tiếng Trung (Phồn thể) | <!-- i18n-ignore — language endonym, must not be translated -->
 | English    | Tiếng Anh               |
 | ไทย        | Tiếng Thái              |
 | Tiếng Việt | Tiếng Việt            |
-| 日本語     | Tiếng Nhật              |
+| 日本語     | Tiếng Nhật              | <!-- i18n-ignore — language endonym, must not be translated -->
 | Русский    | Tiếng Nga              |
 
 > 💡 Đang thích ứng thêm nhiều ngôn ngữ, hoan nghênh đóng góp bản dịch!
@@ -244,6 +247,12 @@ Trước khi cài đặt và sử dụng phần mềm này, vui lòng chuẩn b�
 - ✅ Địa chỉ giao diện dịch vụ video Sora hoặc Doubao
 - ✅ Giao diện dịch vụ mô hình tạo hình ảnh Nano Banana Pro
 
+## Hỗ trợ ngôn ngữ
+
+Phần backend của Toonflow hỗ trợ ba locale giao diện/nội dung: `en` (tiếng Anh), `vi` (tiếng Việt) và `zh` (tiếng Trung — ngôn ngữ gốc, đồng thời là locale dự phòng). Locale đang dùng được xác định từ header `X-Toonflow-Lang`, nếu không có thì lấy giá trị đã lưu ở `o_setting.content_language`, và cuối cùng mặc định về `en`. Bạn có thể truy vấn và đổi locale qua `GET /api/setting/language/getLanguage` và `POST /api/setting/language/setLanguage`.
+
+Xem [`docs/i18n/README.md`](./i18n/README.md) để có hướng dẫn đầy đủ: cách locale hoạt động, cách thêm một chuỗi dịch mới, khi nào một chuỗi phải giữ nguyên tiếng Trung thay vì dịch, và quy trình đồng bộ với upstream của fork này.
+
 ## Cài đặt máy
 
 ### 1. Tải xuống và cài đặt
@@ -285,7 +294,7 @@ Sử dụng mã nguồn có sẵn tại địa phương để xây dựng trực
 
 ```shell
 # Đầu tiên clone dự án (nếu đã có thì bỏ qua)
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+git clone https://github.com/kienmatu/Toonflow-app.git
 cd Toonflow-app
 
 # Sử dụng docker-compose để xây dựng và khởi động cục bộ
@@ -344,7 +353,7 @@ npm install -g yarn pm2
 
 ```bash
 cd /opt
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+git clone https://github.com/kienmatu/Toonflow-app.git
 cd Toonflow-app
 yarn install
 yarn build
@@ -466,7 +475,7 @@ Nếu cần triển khai riêng lẻ hoặc tùy chỉnh giao diện frontend, v
 > [!CAUTION]
 > 🚧 **Quy tắc gửi PR** 🚧
 >
-> ⛔ Nhánh `master` không chấp nhận bất kỳ PR nào ｜ ✅ Vui lòng gửi PR đến nhánh `develop`
+> ⛔ Không gửi PR vào nhánh `master`. ✅ Vui lòng gửi PR đến nhánh `develop`.
 >
 > Chào mừng các nhà phát triển cùng tham gia xây dựng Toonflow. Nếu có hứng thú tham gia, vui lòng liên hệ quản lý ACT trong nhóm trao đổi.
 
@@ -497,7 +506,7 @@ Nếu cần triển khai riêng lẻ hoặc tùy chỉnh giao diện frontend, v
    **Clone từ GitHub:**
 
    ```bash
-   git clone https://github.com/HBAI-Ltd/Toonflow-app.git
+   git clone https://github.com/kienmatu/Toonflow-app.git
    cd Toonflow-app
    ```
 
@@ -681,7 +690,7 @@ Hoặc nhấp vào liên kết mời: [https://discord.gg/HEjKmpNpAZ](https://di
 
 # 💌 Liên hệ với chúng tôi
 
-📧 Email: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow咨询)
+📧 Email: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow Inquiry)
 
 ---
 
@@ -779,7 +788,7 @@ Cảm ơn các tổ chức/đơn vị/cá nhân sau đã cung cấp hỗ trợ c
     </tr>
     <tr>
       <td align="center"><img src="./sponsored/ai-galaxy.png" alt="Zhixing Cloud Logo" width="48"></td>
-      <td align="center"><b>Zhixing Cloud (智星云)</b></td>
+      <td align="center"><b>Zhixing Cloud (AI Galaxy)</b></td>
       <td align="center">💻 Hỗ trợ tính toán <br/> 🖼️ Hỗ trợ image</td>
       <td>Thương hiệu dịch vụ tính toán chuyên nghiệp nổi tiếng tại Trung Quốc, cung cấp năng lực tính toán giá rẻ và ổn định. Phục vụ phòng thí nghiệm của hơn một nghìn trường đại học hàng đầu (Thanh Hoa, Bắc Kinh, Phục Đán, Chiết Giang...), Viện Hàn lâm Khoa học Trung Quốc và hơn 5.000 doanh nghiệp AI.</td>
       <td align="center"><a href="https://www.ai-galaxy.com">Trang chủ</a></td>
