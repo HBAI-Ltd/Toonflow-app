@@ -297,6 +297,10 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
             value: 3,
           },
           {
+            key: "content_language",
+            value: "en",
+          },
+          {
             key: "deepRetrieveSummaryLimit",
             value: 5,
           },
