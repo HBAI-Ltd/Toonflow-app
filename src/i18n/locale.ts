@@ -1,3 +1,4 @@
+import type { Knex } from "knex";
 import { DEFAULT_LOCALE, type Locale } from "./types";
 import { isLocale } from "./translate";
 
@@ -41,21 +42,40 @@ export async function getLocale(req?: { headers: Record<string, unknown> }): Pro
  */
 async function persistLocaleFromHeader(locale: Locale): Promise<void> {
   const u = (await import("@/utils")).default;
-  const existing = await u.db("o_setting").where("key", LANGUAGE_SETTING_KEY).first();
-  if (isLocale(existing?.value) && existing.value === locale) return;
-  if (existing) {
-    await u.db("o_setting").where("key", LANGUAGE_SETTING_KEY).update({ value: locale });
-  } else {
-    await u.db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: locale });
-  }
+  await writeLocaleIfChanged(locale, u.db);
 }
 
 export async function setLocale(locale: Locale): Promise<void> {
   const u = (await import("@/utils")).default;
-  const existing = await u.db("o_setting").where("key", LANGUAGE_SETTING_KEY).first();
+  await writeLocaleIfChanged(locale, u.db);
+}
+
+/**
+ * Single choke point for both places the stored locale changes: setLocale (called by
+ * POST /api/setting/language/setLanguage) and the header-driven persistence inside getLocale.
+ * Writes o_setting.content_language only when the value actually differs from what's stored — and,
+ * only on that actual change, re-syncs the four guarded seed prompts (o_prompt) to the new locale via
+ * syncGuardedPromptSeeds, so a language switch takes effect immediately instead of only on the next
+ * app restart (previously the only place that ran, from fixDB.ts at startup).
+ *
+ * The prompt sync is best-effort: its failure is caught and logged here in plain English and never
+ * propagates, because setLocale is called directly from the setLanguage route with no wrapping catch
+ * of its own — a sync failure must not fail that request (or any request through getLocale).
+ *
+ * No recursion: syncGuardedPromptSeeds takes the knex connection and locale as plain arguments and
+ * never calls getLocale or setLocale itself.
+ */
+async function writeLocaleIfChanged(locale: Locale, db: Knex): Promise<void> {
+  const existing = await db("o_setting").where("key", LANGUAGE_SETTING_KEY).first();
+  if (isLocale(existing?.value) && existing.value === locale) return;
   if (existing) {
-    await u.db("o_setting").where("key", LANGUAGE_SETTING_KEY).update({ value: locale });
+    await db("o_setting").where("key", LANGUAGE_SETTING_KEY).update({ value: locale });
   } else {
-    await u.db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: locale });
+    await db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: locale });
   }
+
+  const { syncGuardedPromptSeeds } = await import("@/lib/migrations/promptSeedSync");
+  await syncGuardedPromptSeeds(db, locale).catch((err) => {
+    console.error(`Failed to re-sync seed prompts to locale "${locale}" after a language change; continuing with the locale change anyway.`, err);
+  });
 }
