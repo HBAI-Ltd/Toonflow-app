@@ -233,25 +233,217 @@
       "en": 0,
       "vi": 0
     },
+    "data/skills/story_skills/Historical_epic/driector_skills/director_planning_narrative.md": {
+      "en": {
+        "residualCjk": 1,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 叙事推进段落 theo nghĩa văn xuôi (đoạn đẩy mạch truyện đi tới), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 1,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 叙事推进段落 theo nghĩa văn xuôi (đoạn đẩy mạch truyện đi tới), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      }
+    },
+    "data/skills/story_skills/Historical_epic/driector_skills/director_storyboard_table_narrative.md": {
+      "en": {
+        "residualCjk": 6,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 每个镜头必须推进叙事 theo nghĩa văn xuôi (đẩy mạch truyện đi tới), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 6,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 每个镜头必须推进叙事 theo nghĩa văn xuôi (đẩy mạch truyện đi tới), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      }
+    },
     "data/skills/story_skills/Horror_supernatural/README.md": {
       "en": 0,
       "vi": 0
+    },
+    "data/skills/story_skills/Horror_supernatural/driector_skills/director_planning_narrative.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Horror_supernatural/driector_skills/director_storyboard_table_narrative.md": {
+      "en": {
+        "residualCjk": 8,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc có 2 lần: 必须推进恐惧或叙事 là văn xuôi (đẩy nỗi sợ/mạch truyện đi tới), còn lần kia chỉ là chuỗi bắc cầu trong 缓推进入房间 (缓推 + 进入 phòng) — không lần nào là giá trị vận máy 推进 (push in); 缓推 vẫn được giữ đủ 3 lần"
+          },
+          "中景": {
+            "expected": 3,
+            "reason": "bản gốc có 4 lần, trong đó 1 lần ở 恐怖叙事中景别选择 chỉ là chuỗi bắc cầu giữa 中 (trong) và 景别, không phải cỡ cảnh 中景 (medium shot); 3 lần còn lại là giá trị cỡ cảnh và được giữ nguyên"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 8,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc có 2 lần: 必须推进恐惧或叙事 là văn xuôi (đẩy nỗi sợ/mạch truyện đi tới), còn lần kia chỉ là chuỗi bắc cầu trong 缓推进入房间 (缓推 + 进入 phòng) — không lần nào là giá trị vận máy 推进 (push in); 缓推 vẫn được giữ đủ 3 lần"
+          },
+          "中景": {
+            "expected": 3,
+            "reason": "bản gốc có 4 lần, trong đó 1 lần ở 恐怖叙事中景别选择 chỉ là chuỗi bắc cầu giữa 中 (trong) và 景别, không phải cỡ cảnh 中景 (medium shot); 3 lần còn lại là giá trị cỡ cảnh và được giữ nguyên"
+          }
+        }
+      }
     },
     "data/skills/story_skills/Hot_blooded_action/README.md": {
       "en": 0,
       "vi": 0
     },
+    "data/skills/story_skills/Hot_blooded_action/driector_skills/director_planning_narrative.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Hot_blooded_action/driector_skills/director_storyboard_table_narrative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 1,
+            "reason": "bản gốc có 2 lần, trong đó 1 lần ở 热血分镜中景别的核心逻辑 chỉ là chuỗi bắc cầu giữa 中 (trong) và 景别, không phải cỡ cảnh 中景 (medium shot); 1 lần còn lại là giá trị cỡ cảnh và được giữ nguyên"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 1,
+            "reason": "bản gốc có 2 lần, trong đó 1 lần ở 热血分镜中景别的核心逻辑 chỉ là chuỗi bắc cầu giữa 中 (trong) và 景别, không phải cỡ cảnh 中景 (medium shot); 1 lần còn lại là giá trị cỡ cảnh và được giữ nguyên"
+          }
+        }
+      }
+    },
     "data/skills/story_skills/Mystery_thriller/README.md": {
       "en": 0,
       "vi": 0
     },
+    "data/skills/story_skills/Mystery_thriller/driector_skills/director_planning_narrative.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Mystery_thriller/driector_skills/director_storyboard_table_narrative.md": {
+      "en": {
+        "residualCjk": 1,
+        "literalAllowance": {
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc đếm được 5 lần chuỗi 中景 nhưng 1 lần là trùng chuỗi ngẫu nhiên trong 悬疑分镜中景别的核心逻辑 (…分镜中 + 景别…), không phải giá trị cỡ cảnh 中景 (medium shot)"
+          },
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 不要立刻推进叙事 theo nghĩa văn xuôi (đẩy mạch truyện), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 1,
+        "literalAllowance": {
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc đếm được 5 lần chuỗi 中景 nhưng 1 lần là trùng chuỗi ngẫu nhiên trong 悬疑分镜中景别的核心逻辑 (…分镜中 + 景别…), không phải giá trị cỡ cảnh 中景 (medium shot)"
+          },
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 不要立刻推进叙事 theo nghĩa văn xuôi (đẩy mạch truyện), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      }
+    },
     "data/skills/story_skills/Psychological_drama/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Psychological_drama/driector_skills/director_planning_narrative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 2,
+            "reason": "bản gốc dùng 中景 lần thứ ba trong 前景/中景/背景 theo nghĩa lớp chiều sâu không gian (mid-ground), không phải giá trị cỡ cảnh 中景 (medium shot)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 2,
+            "reason": "bản gốc dùng 中景 lần thứ ba trong 前景/中景/背景 theo nghĩa lớp chiều sâu không gian (mid-ground), không phải giá trị cỡ cảnh 中景 (medium shot)"
+          }
+        }
+      }
+    },
+    "data/skills/story_skills/Psychological_drama/driector_skills/director_storyboard_table_narrative.md": {
       "en": 0,
       "vi": 0
     },
     "data/skills/story_skills/Scifi_post_apocalypse/README.md": {
       "en": 0,
       "vi": 0
+    },
+    "data/skills/story_skills/Scifi_post_apocalypse/driector_skills/director_planning_narrative.md": {
+      "en": {
+        "residualCjk": 1,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 缓慢推进 và 小心翼翼地推进 theo nghĩa văn xuôi (nhân vật tiến tới), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 1,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 缓慢推进 và 小心翼翼地推进 theo nghĩa văn xuôi (nhân vật tiến tới), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      }
+    },
+    "data/skills/story_skills/Scifi_post_apocalypse/driector_skills/director_storyboard_table_narrative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 小心推进 (nhân vật tiến tới) và 叙事推进 (đẩy mạch truyện) theo nghĩa văn xuôi, không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 小心推进 (nhân vật tiến tới) và 叙事推进 (đẩy mạch truyện) theo nghĩa văn xuôi, không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      }
     },
     "data/skills/story_skills/Sweet_romance_novel/README.md": {
       "en": 0,
