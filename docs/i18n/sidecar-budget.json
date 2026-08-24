@@ -1,5 +1,5 @@
 {
-  "$comment": "Ngân sách CJK còn sót cho phép trong từng sidecar bản dịch skill, sau khi đã xoá các literal term trong docs/i18n/prompt-terms.json. Sinh và ghi đè bằng `tsx scripts/i18n-check-sidecars.ts --update` sau khi rà lại các ký tự CJK còn sót là hợp lệ (tên riêng trong ví dụ, từ vựng gaps đã ghi nhận cố ý chưa đăng ký). Không sửa tay — mọi thay đổi phải qua --update để phản ánh đúng trạng thái đĩa.",
+  "$comment": "Hai loại dữ liệu cho từng sidecar bản dịch skill. (1) residualCjk — số ký tự CJK còn sót cho phép sau khi đã xoá các literal term trong docs/i18n/prompt-terms.json; sinh và ghi đè bằng `tsx scripts/i18n-check-sidecars.ts --update`, KHÔNG sửa tay, vì nó là số đo trạng thái đĩa. Chạy --update sau khi đã rà lại các ký tự CJK còn sót là hợp lệ (tên riêng trong ví dụ, từ vựng gaps đã ghi nhận cố ý chưa đăng ký). (2) literalAllowance — miễn trừ số đếm literal cho từng token, BẮT BUỘC viết tay kèm `reason` không rỗng, dùng khi bản gốc dùng chuỗi đó theo nghĩa văn xuôi chứ không phải làm giá trị khớp máy (ví dụ 推进叙事, 电梯升降, 前景/中景/背景). --update không bao giờ sinh, sửa hay xoá khối này.",
   "budget": {
     "data/skills/art_skills/2D_90s_japanese_anime/README.md": {
       "en": 0,
