@@ -777,6 +777,50 @@
         "residualCjk": 0
       }
     },
+    "data/skills/art_skills/2D_mature_urban_romance/driector_skills/director_planning_style.md": {
+      "en": {
+        "residualCjk": 0
+      },
+      "vi": {
+        "residualCjk": 0
+      }
+    },
+    "data/skills/art_skills/2D_mature_urban_romance/driector_skills/director_storyboard.md": {
+      "en": {
+        "residualCjk": 8,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc viết 远景虚淡 theo nghĩa văn xuôi (cảnh vật ở xa mờ nhạt do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 trong 固定风格锚定词 và 风格收尾（固定） theo nghĩa văn xuôi (từ neo phong cách cố định / câu chốt cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 8,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc viết 远景虚淡 theo nghĩa văn xuôi (cảnh vật ở xa mờ nhạt do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 trong 固定风格锚定词 và 风格收尾（固定） theo nghĩa văn xuôi (từ neo phong cách cố định / câu chốt cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/2D_mature_urban_romance/driector_skills/director_storyboard_table_style.md": {
+      "en": {
+        "residualCjk": 0
+      },
+      "vi": {
+        "residualCjk": 0
+      }
+    },
     "data/skills/art_skills/2D_mature_urban_romance/prefix.md": {
       "en": {
         "residualCjk": 0,
