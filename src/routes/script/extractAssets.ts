@@ -6,12 +6,15 @@ import { validateFields } from "@/middleware/middleware";
 import { useSkill } from "@/utils/agent/skillsTools";
 import { tool, jsonSchema } from "ai";
 import { o_script } from "@/types/database";
-import { t, getLocale } from "@/i18n";
+import { t, getLocale, getPromptLanguage } from "@/i18n";
 
 const router = express.Router();
 
+// NewAssetSchema/ExistingAssetRefSchema are Zod tool-schema descriptions read by the model
+// (see resultTool below), so they take prompt_language, never content_language.
+
 /** 新资产：AI 首次识别到的资产，需要完整信息 */
-const NewAssetSchema = (locale: Awaited<ReturnType<typeof getLocale>>) =>
+const NewAssetSchema = (locale: Awaited<ReturnType<typeof getPromptLanguage>>) =>
   z.object({
     name: z.string().describe(t("agent.script.extractAssets.assetName", {}, locale)),
     desc: z.string().describe(t("agent.script.extractAssets.assetDesc", {}, locale)),
@@ -20,7 +23,7 @@ const NewAssetSchema = (locale: Awaited<ReturnType<typeof getLocale>>) =>
   });
 
 /** 已有资产：数据库中已存在的资产，只需给出名称和关联的剧本 */
-const ExistingAssetRefSchema = (locale: Awaited<ReturnType<typeof getLocale>>) =>
+const ExistingAssetRefSchema = (locale: Awaited<ReturnType<typeof getPromptLanguage>>) =>
   z.object({
     name: z.string().describe(t("agent.script.extractAssets.existingAssetName", {}, locale)),
     scriptIds: z.array(z.number()).describe(t("agent.script.extractAssets.scriptIds", {}, locale)),
@@ -66,6 +69,10 @@ export default router.post(
   async (req, res) => {
     const { scriptIds, projectId, groupSize = 5 } = req.body;
     const locale = await getLocale(req as any);
+    // Text sent into u.Ai.Text().invoke() below (schema descriptions, tool description/result,
+    // system/user prompt content) is model-facing and follows prompt_language instead of
+    // `locale` (content_language) — see the resultTool/output block further down.
+    const promptLocale = await getPromptLanguage();
 
     if (!scriptIds.length) return res.status(400).send(error(t("script.extractAssets.selectScriptFirst", {}, locale)));
     const scripts = await u.db("o_script").whereIn("id", scriptIds);
@@ -184,7 +191,7 @@ export default router.post(
         const scriptsContent = validScripts
           .map(
             ({ id, script }) =>
-              `${t("agent.script.extractAssets.scriptMarker", { id, name: script.name || "" }, locale)}\n${script.content}`,
+              `${t("agent.script.extractAssets.scriptMarker", { id, name: script.name || "" }, promptLocale)}\n${script.content}`,
           )
           .join("\n\n");
 
@@ -192,21 +199,21 @@ export default router.post(
         let collectedExisting: ExistingAssetRef[] = [];
         try {
           const resultTool = tool({
-            description: t("agent.script.extractAssets.resultToolDescribe", {}, locale),
+            description: t("agent.script.extractAssets.resultToolDescribe", {}, promptLocale),
             inputSchema: jsonSchema<{ newAssets: NewAsset[]; existingAssetRefs: ExistingAssetRef[] }>(
               z
                 .object({
-                  newAssets: z.array(NewAssetSchema(locale)).describe(t("agent.script.extractAssets.newAssetsDescribe", {}, locale)),
+                  newAssets: z.array(NewAssetSchema(promptLocale)).describe(t("agent.script.extractAssets.newAssetsDescribe", {}, promptLocale)),
                   existingAssetRefs: z
-                    .array(ExistingAssetRefSchema(locale))
-                    .describe(t("agent.script.extractAssets.existingAssetRefsDescribe", {}, locale)),
+                    .array(ExistingAssetRefSchema(promptLocale))
+                    .describe(t("agent.script.extractAssets.existingAssetRefsDescribe", {}, promptLocale)),
                 })
                 .toJSONSchema(),
             ),
             execute: async ({ newAssets, existingAssetRefs }) => {
               if (newAssets?.length) collectedNew = newAssets;
               if (existingAssetRefs?.length) collectedExisting = existingAssetRefs;
-              return t("agent.script.extractAssets.toolResultReply", {}, locale);
+              return t("agent.script.extractAssets.toolResultReply", {}, promptLocale);
             },
           });
           const promptData = await u.db("o_prompt").where("type", "scriptAssetExtraction").first();
@@ -217,20 +224,20 @@ export default router.post(
             scriptAssetExtraction = promptData?.data ?? undefined;
           }
           const existingHint = existingAssetsList
-            ? t("agent.script.extractAssets.existingHint", { existingAssetsList }, locale)
+            ? t("agent.script.extractAssets.existingHint", { existingAssetsList }, promptLocale)
             : "";
           const output = await u.Ai.Text("universalAi").invoke({
             messages: [
               {
                 role: "system",
-                content: scriptAssetExtraction + t("agent.script.extractAssets.systemPromptSuffix", {}, locale),
+                content: scriptAssetExtraction + t("agent.script.extractAssets.systemPromptSuffix", {}, promptLocale),
               },
               {
                 role: "user",
                 content: t(
                   "agent.script.extractAssets.userPrompt",
                   { existingHint, count: validScripts.length, scriptsContent },
-                  locale,
+                  promptLocale,
                 ),
               },
             ],

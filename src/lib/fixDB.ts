@@ -5,7 +5,7 @@ import { Knex } from "knex";
 import db from "@/utils/db";
 import { transform } from "sucrase";
 import rawVendorData from "./vendor.json";
-import { t, getLocale } from "@/i18n";
+import { t, getLocale, getPromptLanguage } from "@/i18n";
 import { syncGuardedPromptSeeds, ensureAudioBindPromptSeeded } from "./migrations/promptSeedSync";
 
 const vendorData = rawVendorData as Record<string, string>;
@@ -33,9 +33,11 @@ export default async (knex: Knex): Promise<void> => {
       });
     }
   };
-  // `o_setting` (and its `content_language` row) is always created by initDB before fixDB runs, so getLocale()
-  // can safely query the database here — see task-6f-report.md for the full reachability analysis.
+  // `o_setting` (and its `content_language`/`prompt_language` rows) is always created by initDB before
+  // fixDB runs, so getLocale()/getPromptLanguage() can safely query the database here — see
+  // task-6f-report.md for the full reachability analysis.
   const locale = await getLocale();
+  const promptLocale = await getPromptLanguage();
   const exitReason = t("lib.fixDB.exitReason", {}, locale);
 
   //矫正因软件异常退出导致的状态不一致问题
@@ -100,8 +102,9 @@ export default async (knex: Knex): Promise<void> => {
       enable: 0,
     });
   }
-  //检测是否包含新增音色绑定提示词（仅在缺失时插入，不覆盖已存在的行）
-  await ensureAudioBindPromptSeeded(knex, locale);
+  //检测是否包含新增音色绑定提示词（仅在缺失时插入，不覆盖已存在的行）— model-facing seed text, follows
+  // prompt_language, not content_language.
+  await ensureAudioBindPromptSeeded(knex, promptLocale);
   //检测o_setting是否有agentUseMode
   const agentUserMode = await u.db("o_setting").where("key", "agentUseMode").first();
   if (!agentUserMode) {
@@ -156,8 +159,9 @@ export default async (knex: Knex): Promise<void> => {
   // seed variant (see src/lib/migrations/promptSeedSync.ts) — i.e. it still provably holds seed
   // text, not a hand-edited value. That guard is what makes it safe to re-sync this column on
   // every restart, including after a locale change, without ever clobbering a `data` value someone
-  // set by hand; see that module's doc comment for details.
-  await syncGuardedPromptSeeds(knex, locale);
+  // set by hand; see that module's doc comment for details. Model-facing seed text, follows
+  // prompt_language, not content_language.
+  await syncGuardedPromptSeeds(knex, promptLocale);
 
   //迁移供应商函数
   const data = await knex("o_vendorConfig").select("*");

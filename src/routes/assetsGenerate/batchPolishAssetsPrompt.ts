@@ -4,7 +4,7 @@ import pLimit from "p-limit";
 import * as zod from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import { t, getLocale } from "@/i18n";
+import { t, getLocale, getPromptLanguage } from "@/i18n";
 const router = express.Router();
 interface OutlineItem {
   description: string;
@@ -46,6 +46,7 @@ export default router.post(
   }),
   async (req, res) => {
     const locale = await getLocale(req as any);
+    const promptLocale = await getPromptLanguage();
     const { projectId, items, concurrentCount, otherTextPrompt } = req.body;
     //获取风格
     const project = await u.db("o_project").where("id", projectId).select("artStyle", "type", "intro").first();
@@ -97,7 +98,7 @@ export default router.post(
         const config = typeConfig[item.type];
         if (!config) return;
         //获取到视觉手册
-        const visualManual = await u.getArtPrompt(project.artStyle as string, "art_skills", config.visualManual);
+        const visualManual = await u.getArtPrompt(project.artStyle as string, "art_skills", config.visualManual, promptLocale);
         if (!visualManual) {
           await u
             .db("o_assets")

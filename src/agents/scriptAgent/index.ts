@@ -7,7 +7,7 @@ import useTools from "@/agents/scriptAgent/tools";
 import ResTool from "@/socket/resTool";
 import * as fs from "fs";
 import path from "path";
-import { t, getLocale, type Locale } from "@/i18n";
+import { t, getLocale, getPromptLanguage, type Locale } from "@/i18n";
 
 export interface AgentContext {
   socket: Socket;
@@ -23,6 +23,8 @@ export interface AgentContext {
   };
 }
 
+// Model-facing: this text is concatenated straight into the message content sent to the model,
+// so callers must pass prompt_language, not content_language.
 async function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>, locale: Locale): Promise<string> {
   let memoryContext = "";
   if (mem.rag.length) {
@@ -41,27 +43,32 @@ async function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>, locale: L
 
 export async function runDecisionAI(ctx: AgentContext) {
   const { isolationKey, text, userMessageTime, abortSignal, resTool } = ctx;
+  // locale (content_language) only feeds the "thinking" UI panel text inside useTools() below.
+  // promptLocale (prompt_language) covers everything sent to the model: the memory context, the
+  // projectInfo block, and the tool description/schema/result text useTools() and
+  // memory.getTools() build. See src/i18n/locale.ts.
   const locale = await getLocale();
+  const promptLocale = await getPromptLanguage();
   const memory = new Memory("scriptAgent", isolationKey);
   await memory.add("user", text, { createTime: userMessageTime });
 
   const skill = path.join(u.getPath("skills"), "script_agent_decision.md");
   const prompt = await fs.promises.readFile(skill, "utf-8");
 
-  const mem = await buildMemPrompt(await memory.get(text), locale);
+  const mem = await buildMemPrompt(await memory.get(text), promptLocale);
 
   const projectData = await u.db("o_project").where("id", resTool.data.projectId).first();
 
   const novelData = await u.db("o_novel").where("projectId", resTool.data.projectId).select("chapterIndex");
 
   const projectInfo = [
-    t("agent.script.orchestrator.projectInfoHeader", {}, locale),
-    t("agent.script.orchestrator.novelName", { name: projectData?.name ?? t("agent.script.orchestrator.unknown", {}, locale) }, locale),
-    t("agent.script.orchestrator.novelType", { type: projectData?.type ?? t("agent.script.orchestrator.unknown", {}, locale) }, locale),
-    t("agent.script.orchestrator.novelIntro", { intro: projectData?.intro ?? t("agent.script.orchestrator.none", {}, locale) }, locale),
-    t("agent.script.orchestrator.artStyle", { style: projectData?.artStyle ?? t("agent.script.orchestrator.none", {}, locale) }, locale),
-    t("agent.script.orchestrator.videoRatio", { ratio: projectData?.videoRatio ?? "16:9" }, locale),
-    t("agent.script.orchestrator.chapterCount", { count: novelData.length }, locale),
+    t("agent.script.orchestrator.projectInfoHeader", {}, promptLocale),
+    t("agent.script.orchestrator.novelName", { name: projectData?.name ?? t("agent.script.orchestrator.unknown", {}, promptLocale) }, promptLocale),
+    t("agent.script.orchestrator.novelType", { type: projectData?.type ?? t("agent.script.orchestrator.unknown", {}, promptLocale) }, promptLocale),
+    t("agent.script.orchestrator.novelIntro", { intro: projectData?.intro ?? t("agent.script.orchestrator.none", {}, promptLocale) }, promptLocale),
+    t("agent.script.orchestrator.artStyle", { style: projectData?.artStyle ?? t("agent.script.orchestrator.none", {}, promptLocale) }, promptLocale),
+    t("agent.script.orchestrator.videoRatio", { ratio: projectData?.videoRatio ?? "16:9" }, promptLocale),
+    t("agent.script.orchestrator.chapterCount", { count: novelData.length }, promptLocale),
   ].join("\n");
 
   const { fullStream } = await u.Ai.Text("scriptAgent:decisionAgent", ctx.thinkConfig.think, ctx.thinkConfig.thinlLevel).stream({
@@ -72,8 +79,8 @@ export async function runDecisionAI(ctx: AgentContext) {
     ],
     abortSignal,
     tools: {
-      ...memory.getTools(),
-      ...useTools({ resTool: ctx.resTool, msg: ctx.msg, locale }),
+      ...memory.getTools(promptLocale),
+      ...useTools({ resTool: ctx.resTool, msg: ctx.msg, locale, promptLocale }),
       ...(await createSubAgent(ctx)),
     },
     onFinish: async (completion) => {
@@ -92,7 +99,12 @@ export async function runDecisionAI(ctx: AgentContext) {
 
 async function createSubAgent(parentCtx: AgentContext) {
   const { resTool, abortSignal } = parentCtx;
+  // locale (content_language): `name` role labels (UI socket-message author + memory metadata,
+  // never read by the model — see Memory.get()/buildMemPrompt) and the "thinking" panel text
+  // inside useTools(). promptLocale (prompt_language): tool descriptions/schemas, formatPrompt/
+  // scriptPrompt text concatenated into system/user content sent to the model.
   const locale = await getLocale();
+  const promptLocale = await getPromptLanguage();
   const memory = new Memory("scriptAgent", parentCtx.isolationKey);
 
   async function runAgent({
@@ -119,7 +131,7 @@ async function createSubAgent(parentCtx: AgentContext) {
       system,
       messages: messages ?? [{ role: "user", content: prompt }],
       abortSignal,
-      tools: { ...extraTools, ...useTools({ resTool, msg: subMsg, locale }) },
+      tools: { ...extraTools, ...useTools({ resTool, msg: subMsg, locale, promptLocale }) },
     });
 
     const fullResponse = await consumeFullStream(fullStream, subMsg);
@@ -137,18 +149,18 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   const promptInput = z
     .object({
-      prompt: z.string().describe(t("agent.script.subAgent.promptDescribe", {}, locale)),
+      prompt: z.string().describe(t("agent.script.subAgent.promptDescribe", {}, promptLocale)),
     })
     .toJSONSchema();
 
   const run_sub_agent_storySkeleton = tool({
-    description: t("agent.script.subAgent.storySkeletonDescribe", {}, locale),
+    description: t("agent.script.subAgent.storySkeletonDescribe", {}, promptLocale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_execution_skeleton.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const formatPrompt = t("agent.script.subAgent.storySkeletonFormat", {}, locale);
+      const formatPrompt = t("agent.script.subAgent.storySkeletonFormat", {}, promptLocale);
 
       return runAgent({
         key: "scriptAgent:storySkeletonAgent",
@@ -162,13 +174,13 @@ async function createSubAgent(parentCtx: AgentContext) {
   });
 
   const run_sub_agent_adaptationStrategy = tool({
-    description: t("agent.script.subAgent.adaptationDescribe", {}, locale),
+    description: t("agent.script.subAgent.adaptationDescribe", {}, promptLocale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_execution_adaptation.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const formatPrompt = t("agent.script.subAgent.adaptationFormat", {}, locale);
+      const formatPrompt = t("agent.script.subAgent.adaptationFormat", {}, promptLocale);
 
       return runAgent({
         key: "scriptAgent:adaptationStrategyAgent",
@@ -182,7 +194,7 @@ async function createSubAgent(parentCtx: AgentContext) {
   });
 
   const run_sub_agent_script = tool({
-    description: t("agent.script.subAgent.scriptDescribe", {}, locale),
+    description: t("agent.script.subAgent.scriptDescribe", {}, promptLocale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_execution_script.md");
@@ -190,21 +202,21 @@ async function createSubAgent(parentCtx: AgentContext) {
 
       const scriptList = await u.db("o_script").where("projectId", resTool.data.projectId).select("id", "name");
       const scriptPrompt = [
-        t("agent.script.subAgent.scriptListHeader", {}, locale),
+        t("agent.script.subAgent.scriptListHeader", {}, promptLocale),
         scriptList.map((s: any) => `${s.id}:${(s.name || "").replace(/[,:]/g, "")}`).join(","),
         "",
       ].join("\n");
 
       const novelData = await u.db("o_novel").where("projectId", resTool.data.projectId).select("chapterIndex");
 
-      const formatPrompt = t("agent.script.subAgent.scriptFormat", {}, locale);
+      const formatPrompt = t("agent.script.subAgent.scriptFormat", {}, promptLocale);
 
       return runAgent({
         key: "scriptAgent:scriptAgent",
         prompt,
         system: systemPrompt + formatPrompt,
         messages: [
-          { role: "assistant", content: scriptPrompt + t("agent.script.orchestrator.chapterCount", { count: novelData.length }, locale) },
+          { role: "assistant", content: scriptPrompt + t("agent.script.orchestrator.chapterCount", { count: novelData.length }, promptLocale) },
           { role: "user", content: prompt + formatPrompt },
         ],
         name: t("agent.script.orchestrator.roleWriter", {}, locale),
@@ -214,7 +226,7 @@ async function createSubAgent(parentCtx: AgentContext) {
   });
 
   const run_supervision_agent = tool({
-    description: t("agent.script.subAgent.supervisionDescribe", {}, locale),
+    description: t("agent.script.subAgent.supervisionDescribe", {}, promptLocale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_agent_supervision.md");

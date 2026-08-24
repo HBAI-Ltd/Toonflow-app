@@ -75,7 +75,14 @@ interface ToolConfig {
   resTool: ResTool;
   toolsNames?: string[];
   msg: ReturnType<ResTool["newMessage"]>;
+  /** Person-facing: the "thinking" panel text shown to whoever is watching the agent run. */
   locale: Locale;
+  /**
+   * Model-facing: tool description/schema `.describe()` text and the string returned by
+   * `execute()` (a tool result the model reads on its next turn) all take this instead of
+   * `locale` — see src/i18n/locale.ts.
+   */
+  promptLocale: Locale;
 }
 
 /**
@@ -96,17 +103,17 @@ function createSocketQueue(delayMs = 800) {
 }
 
 export default (toolCpnfig: ToolConfig) => {
-  const { resTool, toolsNames, msg, locale } = toolCpnfig;
+  const { resTool, toolsNames, msg, locale, promptLocale } = toolCpnfig;
   const { socket } = resTool;
   const socketQueue = createSocketQueue(800);
   const workMap: Record<any, any> = {};
   const tools: Record<string, Tool> = {
     get_flowData: tool({
-      description: t("agent.production.tools.getFlowData.describe", {}, locale),
+      description: t("agent.production.tools.getFlowData.describe", {}, promptLocale),
       inputSchema: jsonSchema<{ key: keyof FlowData }>(
         z
           .object({
-            key: keySchema.describe(t("agent.production.tools.getFlowData.keyDescribe", {}, locale)),
+            key: keySchema.describe(t("agent.production.tools.getFlowData.keyDescribe", {}, promptLocale)),
           })
           .toJSONSchema(),
       ),
@@ -119,7 +126,10 @@ export default (toolCpnfig: ToolConfig) => {
         thinking.updateTitle(t("agent.production.tools.getFlowData.done", { label }, locale));
         thinking.complete();
         if (workMap[key] && JSON.stringify(workMap[key]) === JSON.stringify(flowData[key])) {
-          const unchanged = t("agent.production.tools.getFlowData.unchanged", { label }, locale);
+          // Returned as the tool's own result (read by the model on its next turn), unlike the
+          // `label`/thinking text above — resolves via prompt_language, not content_language.
+          const promptLabel = t(flowDataKeyI18nKeys[key], {}, promptLocale);
+          const unchanged = t("agent.production.tools.getFlowData.unchanged", { label: promptLabel }, promptLocale);
           console.info(`[tools] get_flowData: ${unchanged}`);
           return unchanged;
         }
@@ -128,14 +138,14 @@ export default (toolCpnfig: ToolConfig) => {
       },
     }),
     add_deriveAsset: tool({
-      description: t("agent.production.tools.addDeriveAsset.describe", {}, locale),
+      description: t("agent.production.tools.addDeriveAsset.describe", {}, promptLocale),
       inputSchema: jsonSchema<{ assetsId: number; id: number | null; name: string; desc: string }>(
         z
           .object({
-            assetsId: z.number().describe(t("agent.production.tools.deriveAsset.assetsId", {}, locale)),
-            id: z.number().nullable().describe(t("agent.production.tools.deriveAsset.id", {}, locale)),
-            name: z.string().describe(t("agent.production.tools.deriveAsset.name", {}, locale)),
-            desc: z.string().describe(t("agent.production.tools.deriveAsset.desc", {}, locale)),
+            assetsId: z.number().describe(t("agent.production.tools.deriveAsset.assetsId", {}, promptLocale)),
+            id: z.number().nullable().describe(t("agent.production.tools.deriveAsset.id", {}, promptLocale)),
+            name: z.string().describe(t("agent.production.tools.deriveAsset.name", {}, promptLocale)),
+            desc: z.string().describe(t("agent.production.tools.deriveAsset.desc", {}, promptLocale)),
           })
           .toJSONSchema(),
       ),
@@ -149,7 +159,7 @@ export default (toolCpnfig: ToolConfig) => {
         const { projectId, scriptId } = resTool.data;
         const startTime = Date.now();
         const parentAssets = await u.db("o_assets").where("id", deriveAsset.assetsId).select("id", "type").first();
-        if (!parentAssets) return t("agent.production.tools.addDeriveAsset.assetNotFound", {}, locale);
+        if (!parentAssets) return t("agent.production.tools.addDeriveAsset.assetNotFound", {}, promptLocale);
 
         const data = {
           id: deriveAsset.id ?? undefined,
@@ -172,16 +182,16 @@ export default (toolCpnfig: ToolConfig) => {
         const res = await new Promise((resolve) => socket.emit("addDeriveAsset", data, (res: any) => resolve(res)));
         thinking.updateTitle(t("agent.production.tools.addDeriveAsset.done", {}, locale));
         thinking.complete();
-        return res ?? t("agent.production.tools.addDeriveAsset.success", {}, locale);
+        return res ?? t("agent.production.tools.addDeriveAsset.success", {}, promptLocale);
       },
     }),
     del_deriveAsset: tool({
-      description: t("agent.production.tools.delDeriveAsset.describe", {}, locale),
+      description: t("agent.production.tools.delDeriveAsset.describe", {}, promptLocale),
       inputSchema: jsonSchema<{ assetsId: number; id: number }>(
         z
           .object({
-            assetsId: z.number().describe(t("agent.production.tools.deriveAsset.assetsId", {}, locale)),
-            id: z.number().describe(t("agent.production.tools.deriveAsset.idOnly", {}, locale)),
+            assetsId: z.number().describe(t("agent.production.tools.deriveAsset.assetsId", {}, promptLocale)),
+            id: z.number().describe(t("agent.production.tools.deriveAsset.idOnly", {}, promptLocale)),
           })
           .toJSONSchema(),
       ),
@@ -194,15 +204,15 @@ export default (toolCpnfig: ToolConfig) => {
         const res = await new Promise((resolve) => socket.emit("delDeriveAsset", { assetsId, id }, (res: any) => resolve(res)));
         thinking.updateTitle(t("agent.production.tools.addDeriveAsset.done", {}, locale));
         thinking.complete();
-        return res ?? t("agent.production.tools.delDeriveAsset.success", {}, locale);
+        return res ?? t("agent.production.tools.delDeriveAsset.success", {}, promptLocale);
       },
     }),
     generate_deriveAsset: tool({
-      description: t("agent.production.tools.generateDeriveAsset.describe", {}, locale),
+      description: t("agent.production.tools.generateDeriveAsset.describe", {}, promptLocale),
       inputSchema: jsonSchema<{ ids: number[] }>(
         z
           .object({
-            ids: z.array(z.number()).describe(t("agent.production.tools.generateDeriveAsset.idsDescribe", {}, locale)),
+            ids: z.array(z.number()).describe(t("agent.production.tools.generateDeriveAsset.idsDescribe", {}, promptLocale)),
           })
           .toJSONSchema(),
       ),
@@ -220,15 +230,16 @@ export default (toolCpnfig: ToolConfig) => {
             thinking.complete();
           });
 
-        return t("agent.production.tools.generateDeriveAsset.started", {}, locale);
+        // Returned immediately as this tool's own result — model-facing.
+        return t("agent.production.tools.generateDeriveAsset.started", {}, promptLocale);
       },
     }),
     generate_storyboard: tool({
-      description: t("agent.production.tools.generateStoryboard.describe", {}, locale),
+      description: t("agent.production.tools.generateStoryboard.describe", {}, promptLocale),
       inputSchema: jsonSchema<{ ids: number[] }>(
         z
           .object({
-            ids: z.array(z.number()).describe(t("agent.production.tools.generateStoryboard.idsDescribe", {}, locale)),
+            ids: z.array(z.number()).describe(t("agent.production.tools.generateStoryboard.idsDescribe", {}, promptLocale)),
           })
           .toJSONSchema(),
       ),
@@ -254,11 +265,12 @@ export default (toolCpnfig: ToolConfig) => {
             thinking.complete();
           });
 
-        return t("agent.production.tools.generateStoryboard.started", {}, locale);
+        // Returned immediately as this tool's own result — model-facing.
+        return t("agent.production.tools.generateStoryboard.started", {}, promptLocale);
       },
     }),
     add_flowData_storyboard: tool({
-      description: t("agent.production.tools.addStoryboardPanel.describe", {}, locale),
+      description: t("agent.production.tools.addStoryboardPanel.describe", {}, promptLocale),
       inputSchema: jsonSchema<{
         videoDesc: string;
         prompt: string | null;
@@ -269,12 +281,17 @@ export default (toolCpnfig: ToolConfig) => {
       }>(
         z
           .object({
-            videoDesc: z.string().describe(t("agent.production.tools.storyboardPanel.videoDesc", {}, locale)),
-            prompt: z.string().nullable().describe(t("agent.production.tools.storyboardPanel.prompt", {}, locale)),
-            track: z.string().describe(t("agent.production.tools.storyboardPanel.track", {}, locale)),
-            duration: z.number().describe(t("agent.production.tools.storyboardPanel.duration", {}, locale)),
-            associateAssetsIds: z.array(z.number()).nullable().describe(t("agent.production.tools.storyboardPanel.associateAssetsIds", {}, locale)),
-            shouldGenerateImage: z.enum(["true", "false"]).describe(t("agent.production.tools.storyboardPanel.shouldGenerateImage", {}, locale)),
+            videoDesc: z.string().describe(t("agent.production.tools.storyboardPanel.videoDesc", {}, promptLocale)),
+            prompt: z.string().nullable().describe(t("agent.production.tools.storyboardPanel.prompt", {}, promptLocale)),
+            track: z.string().describe(t("agent.production.tools.storyboardPanel.track", {}, promptLocale)),
+            duration: z.number().describe(t("agent.production.tools.storyboardPanel.duration", {}, promptLocale)),
+            associateAssetsIds: z
+              .array(z.number())
+              .nullable()
+              .describe(t("agent.production.tools.storyboardPanel.associateAssetsIds", {}, promptLocale)),
+            shouldGenerateImage: z
+              .enum(["true", "false"])
+              .describe(t("agent.production.tools.storyboardPanel.shouldGenerateImage", {}, promptLocale)),
           })
           .toJSONSchema(),
       ),

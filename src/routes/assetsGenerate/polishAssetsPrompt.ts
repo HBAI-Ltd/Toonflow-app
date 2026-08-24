@@ -3,7 +3,7 @@ import u from "@/utils";
 import * as zod from "zod";
 import { error, success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import { t, getLocale } from "@/i18n";
+import { t, getLocale, getPromptLanguage } from "@/i18n";
 const router = express.Router();
 
 
@@ -21,6 +21,7 @@ export default router.post(
   }),
   async (req, res) => {
     const locale = await getLocale(req as any);
+    const promptLocale = await getPromptLanguage();
     const { assetsId, projectId, type, name, describe } = req.body;
     //获取风格
     const project = await u.db("o_project").where("id", projectId).select("artStyle", "type", "intro").first();
@@ -60,7 +61,7 @@ export default router.post(
     if (!config) return res.status(500).send(error(t("assetsGenerate.common.unsupportedType", {}, locale)));
     if (!config.visualManual) return res.status(500).send(error(t("assetsGenerate.common.visualManualUndefined", {}, locale)));
     //获取到视觉手册
-    const visualManual = await u.getArtPrompt(project.artStyle as string, "art_skills", config.visualManual);
+    const visualManual = await u.getArtPrompt(project.artStyle as string, "art_skills", config.visualManual, promptLocale);
     if (!visualManual) return res.status(500).send(error(t("assetsGenerate.common.visualManualUndefined", {}, locale)));
     const systemPrompt = visualManual;
     try {

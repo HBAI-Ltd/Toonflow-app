@@ -8,7 +8,7 @@ import useTools from "@/agents/productionAgent/tools";
 import ResTool from "@/socket/resTool";
 import * as fs from "fs";
 import path from "path";
-import { t, getLocale, type Locale } from "@/i18n";
+import { t, getLocale, getPromptLanguage, type Locale } from "@/i18n";
 
 export interface AgentContext {
   socket: Socket;
@@ -25,6 +25,8 @@ export interface AgentContext {
   };
 }
 
+// Model-facing: this text is concatenated straight into the message content sent to the model,
+// so callers must pass prompt_language, not content_language.
 async function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>, locale: Locale): Promise<string> {
   let memoryContext = "";
   if (mem.rag.length) {
@@ -43,7 +45,12 @@ async function buildMemPrompt(mem: Awaited<ReturnType<Memory["get"]>>, locale: L
 
 export async function runDecisionAI(ctx: AgentContext) {
   const { isolationKey, text, abortSignal } = ctx;
+  // locale (content_language) is for errors surfaced to whoever is watching this run.
+  // promptLocale (prompt_language) is for everything below that is actually sent to the model:
+  // modelInfo, the memory context, and the tool description/schema/result text useTools() and
+  // memory.getTools() build. See src/i18n/locale.ts.
   const locale = await getLocale();
+  const promptLocale = await getPromptLanguage();
   const memory = new Memory("productionAgent", isolationKey);
   await memory.add("user", text);
 
@@ -71,12 +78,12 @@ export async function runDecisionAI(ctx: AgentContext) {
     {
       imageModel: imageModelName,
       videoModel: videoModelName,
-      multiParam: isRef ? t("agent.production.orchestrator.yes", {}, locale) : t("agent.production.orchestrator.no", {}, locale),
+      multiParam: isRef ? t("agent.production.orchestrator.yes", {}, promptLocale) : t("agent.production.orchestrator.no", {}, promptLocale),
     },
-    locale,
+    promptLocale,
   );
 
-  const mem = await buildMemPrompt(await memory.get(text), locale);
+  const mem = await buildMemPrompt(await memory.get(text), promptLocale);
 
   const { fullStream } = await u.Ai.Text("productionAgent:decisionAgent", ctx.thinkConfig.think, ctx.thinkConfig.thinlLevel).stream({
     messages: [
@@ -86,8 +93,8 @@ export async function runDecisionAI(ctx: AgentContext) {
     ],
     abortSignal,
     tools: {
-      ...memory.getTools(),
-      ...useTools({ resTool: ctx.resTool, msg: ctx.msg, locale }),
+      ...memory.getTools(promptLocale),
+      ...useTools({ resTool: ctx.resTool, msg: ctx.msg, locale, promptLocale }),
       ...(await createSubAgent(ctx)),
     },
     onFinish: async (completion) => {
@@ -106,7 +113,11 @@ export async function runDecisionAI(ctx: AgentContext) {
 
 async function createSubAgent(parentCtx: AgentContext) {
   const { resTool, abortSignal } = parentCtx;
+  // Same split as runDecisionAI: locale for thrown errors and `name` (UI/memory-metadata role
+  // labels — never read by the model, see Memory.get()/buildMemPrompt), promptLocale for
+  // everything sent to a model (tool descriptions/schemas, system/user prompt content).
   const locale = await getLocale();
+  const promptLocale = await getPromptLanguage();
   const memory = new Memory("productionAgent", parentCtx.isolationKey);
   async function runAgent({
     key,
@@ -132,7 +143,7 @@ async function createSubAgent(parentCtx: AgentContext) {
       system,
       messages: messages ?? [{ role: "user", content: prompt }],
       abortSignal,
-      tools: { ...extraTools, ...useTools({ resTool, msg: subMsg, locale }) },
+      tools: { ...extraTools, ...useTools({ resTool, msg: subMsg, locale, promptLocale }) },
     });
 
     const fullResponse = await consumeFullStream(fullStream, subMsg);
@@ -150,13 +161,13 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   const promptInput = z
     .object({
-      prompt: z.string().describe(t("agent.production.subAgent.promptDescribe", {}, locale)),
+      prompt: z.string().describe(t("agent.production.subAgent.promptDescribe", {}, promptLocale)),
     })
     .toJSONSchema();
 
   const projectInfo = await u.db("o_project").where("id", resTool.data.projectId).first();
   if (!projectInfo) throw new Error(t("agent.production.orchestrator.projectNotFound", { id: resTool.data.projectId }, locale));
-  const artSkills = await createArtSkills(projectInfo?.artStyle!, projectInfo?.directorManual!, locale);
+  const artSkills = await createArtSkills(projectInfo?.artStyle!, projectInfo?.directorManual!, locale, promptLocale);
 
   const [_, imageModelName] = projectInfo.imageModel!.split(/:(.+)/);
   const [id, videoModelName] = projectInfo.videoModel!.split(/:(.+)/);
@@ -177,9 +188,9 @@ async function createSubAgent(parentCtx: AgentContext) {
     {
       imageModel: imageModelName,
       videoModel: videoModelName,
-      multiParam: isRef ? t("agent.production.orchestrator.yes", {}, locale) : t("agent.production.orchestrator.no", {}, locale),
+      multiParam: isRef ? t("agent.production.orchestrator.yes", {}, promptLocale) : t("agent.production.orchestrator.no", {}, promptLocale),
     },
-    locale,
+    promptLocale,
   );
 
   // const run_sub_agent_execution = tool({
@@ -214,7 +225,7 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   //衍生资产分析与信息写入
   const run_sub_agent_derive_assets = tool({
-    description: t("agent.production.subAgent.deriveAssetsDescribe", {}, locale),
+    description: t("agent.production.subAgent.deriveAssetsDescribe", {}, promptLocale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_derive_assets.md");
@@ -236,7 +247,7 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   //衍生资产图片生成
   const run_sub_agent_generate_assets = tool({
-    description: t("agent.production.subAgent.generateAssetsDescribe", {}, locale),
+    description: t("agent.production.subAgent.generateAssetsDescribe", {}, promptLocale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_generate_assets.md");
@@ -258,13 +269,13 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   //拍摄计划
   const run_sub_agent_director_plan = tool({
-    description: t("agent.production.subAgent.directorPlanDescribe", {}, locale),
+    description: t("agent.production.subAgent.directorPlanDescribe", {}, promptLocale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_director_plan.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const addPrompt = t("agent.production.subAgent.formatDirectorPlan", {}, locale);
+      const addPrompt = t("agent.production.subAgent.formatDirectorPlan", {}, promptLocale);
 
       return runAgent({
         key: "productionAgent:directorPlanAgent",
@@ -283,7 +294,7 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   //分镜图生成
   const run_sub_agent_storyboard_gen = tool({
-    description: t("agent.production.subAgent.storyboardGenDescribe", {}, locale),
+    description: t("agent.production.subAgent.storyboardGenDescribe", {}, promptLocale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_storyboard_gen.md");
@@ -313,17 +324,17 @@ async function createSubAgent(parentCtx: AgentContext) {
   //   mainSkills.push({ path: skillPath, ...parsed });
   // }
 
-  const productionSkills = await useProductionSkills(projectInfo?.artStyle!, projectInfo?.directorManual!, locale);
+  const productionSkills = await useProductionSkills(projectInfo?.artStyle!, projectInfo?.directorManual!, locale, promptLocale);
 
   //分镜面板写入
   const run_sub_agent_storyboard_panel = tool({
-    description: t("agent.production.subAgent.storyboardPanelDescribe", {}, locale),
+    description: t("agent.production.subAgent.storyboardPanelDescribe", {}, promptLocale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_storyboard_panel.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const addPrompt = t("agent.production.subAgent.formatStoryboardPanel", {}, locale);
+      const addPrompt = t("agent.production.subAgent.formatStoryboardPanel", {}, promptLocale);
 
       return runAgent({
         key: "productionAgent:storyboardPanelAgent",
@@ -342,13 +353,13 @@ async function createSubAgent(parentCtx: AgentContext) {
 
   //分镜表写入
   const run_sub_agent_storyboard_table = tool({
-    description: t("agent.production.subAgent.storyboardTableDescribe", {}, locale),
+    description: t("agent.production.subAgent.storyboardTableDescribe", {}, promptLocale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_storyboard_table.md");
       const systemPrompt = await fs.promises.readFile(skill, "utf-8");
 
-      const addPrompt = t("agent.production.subAgent.formatStoryboardTable", {}, locale);
+      const addPrompt = t("agent.production.subAgent.formatStoryboardTable", {}, promptLocale);
 
       return runAgent({
         key: "productionAgent:storyboardTableAgent",
@@ -366,7 +377,7 @@ async function createSubAgent(parentCtx: AgentContext) {
   });
 
   const run_sub_agent_supervision = tool({
-    description: t("agent.production.subAgent.supervisionDescribe", {}, locale),
+    description: t("agent.production.subAgent.supervisionDescribe", {}, promptLocale),
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_agent_supervision.md");
@@ -392,7 +403,10 @@ async function createSubAgent(parentCtx: AgentContext) {
   };
 }
 
-async function createArtSkills(artName: string, storyName: string, locale: Locale) {
+// locale (content_language): the thrown mainSkillMissing error, surfaced to whoever is watching
+// the run. promptLocale (prompt_language): the returned `prompt`/`tools`, which the model reads —
+// see buildSkillPrompt/createSkillTools's own doc comments in skillsTools.ts.
+async function createArtSkills(artName: string, storyName: string, locale: Locale, promptLocale: Locale) {
   const artWorkerPath = u.getPath(["skills", "art_skills", artName, "driector_skills"]);
   const storyWorkerPath = u.getPath(["skills", "story_skills", storyName, "driector_skills"]);
   const skillList = [...(await scanSkills(artWorkerPath + "/*.md")), ...(await scanSkills(storyWorkerPath + "/*.md"))];
@@ -400,12 +414,12 @@ async function createArtSkills(artName: string, storyName: string, locale: Local
   for (const skillPath of skillList) {
     if (!fs.existsSync(skillPath)) throw new Error(t("agent.production.orchestrator.mainSkillMissing", { path: skillPath }, locale));
     const content = await fs.promises.readFile(skillPath, "utf-8");
-    const parsed = parseFrontmatter(content);
+    const parsed = parseFrontmatter(content, locale);
     mainSkills.push({ path: skillPath, ...parsed });
   }
   const res = {
-    prompt: t("agent.production.skills.header", { skillList: buildSkillPrompt(mainSkills) }, locale),
-    tools: createSkillTools(mainSkills, { mainSkill: mainSkills, secondarySkills: [], tertiarySkills: [] }),
+    prompt: t("agent.production.skills.header", { skillList: buildSkillPrompt(mainSkills) }, promptLocale),
+    tools: createSkillTools(mainSkills, { mainSkill: mainSkills, secondarySkills: [], tertiarySkills: [] }, undefined, promptLocale),
   };
   return res;
 }
@@ -479,7 +493,8 @@ ${skillEntries}
 </available_skills>`;
 }
 
-async function useProductionSkills(artName: string, storyName: string, locale: Locale) {
+// Same locale/promptLocale split as createArtSkills above.
+async function useProductionSkills(artName: string, storyName: string, locale: Locale, promptLocale: Locale) {
   const artWorkerPath = u.getPath(["skills", "art_skills", artName, "driector_skills"]);
   const storyWorkerPath = u.getPath(["skills", "story_skills", storyName, "driector_skills"]);
   const productionPath = u.getPath(["skills", "production_skills"]);
@@ -492,12 +507,12 @@ async function useProductionSkills(artName: string, storyName: string, locale: L
   for (const skillPath of skillList) {
     if (!fs.existsSync(skillPath)) throw new Error(t("agent.production.orchestrator.mainSkillMissing", { path: skillPath }, locale));
     const content = await fs.promises.readFile(skillPath, "utf-8");
-    const parsed = parseFrontmatter(content);
+    const parsed = parseFrontmatter(content, locale);
     mainSkills.push({ path: skillPath, ...parsed });
   }
   const res = {
-    prompt: t("agent.production.skills.header", { skillList: buildSkillPrompt(mainSkills) }, locale),
-    tools: createSkillTools(mainSkills, { mainSkill: mainSkills, secondarySkills: [], tertiarySkills: [] }),
+    prompt: t("agent.production.skills.header", { skillList: buildSkillPrompt(mainSkills) }, promptLocale),
+    tools: createSkillTools(mainSkills, { mainSkill: mainSkills, secondarySkills: [], tertiarySkills: [] }, undefined, promptLocale),
   };
   return res;
 }
