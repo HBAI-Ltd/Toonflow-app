@@ -1847,6 +1847,122 @@
         }
       }
     },
+    "data/skills/art_skills/realpeople_modern_city/driector_skills/director_planning_style.md": {
+      "en": {
+        "residualCjk": 7,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc viết 窗外远景 trong dãy lớp chiều sâu 前景/中景/背景/窗外远景 theo nghĩa văn xuôi (cảnh xa ngoài cửa sổ), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 2,
+            "reason": "2 trong 4 lần là lớp chiều sâu khung hình (前景→玻璃→中景→玻璃→后景 và 纵深位置：前景/中景/背景), không phải giá trị cỡ cảnh; 2 lần còn lại (景别跳切（中景→大特写） và [Shot 1: 中景 · 固定]) là giá trị nên vẫn giữ"
+          },
+          "固定": {
+            "expected": 2,
+            "reason": "2 trong 4 lần nằm trong 场景固定物 theo nghĩa văn xuôi (vật cố định trong bối cảnh), không phải giá trị vận máy; 2 lần trong khối ví dụ [Shot 1/3: … · 固定] là giá trị nên vẫn giữ"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 7,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc viết 窗外远景 trong dãy lớp chiều sâu 前景/中景/背景/窗外远景 theo nghĩa văn xuôi (cảnh xa ngoài cửa sổ), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 2,
+            "reason": "2 trong 4 lần là lớp chiều sâu khung hình (前景→玻璃→中景→玻璃→后景 và 纵深位置：前景/中景/背景), không phải giá trị cỡ cảnh; 2 lần còn lại (景别跳切（中景→大特写） và [Shot 1: 中景 · 固定]) là giá trị nên vẫn giữ"
+          },
+          "固定": {
+            "expected": 2,
+            "reason": "2 trong 4 lần nằm trong 场景固定物 theo nghĩa văn xuôi (vật cố định trong bối cảnh), không phải giá trị vận máy; 2 lần trong khối ví dụ [Shot 1/3: … · 固定] là giá trị nên vẫn giữ"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_modern_city/driector_skills/director_storyboard.md": {
+      "en": {
+        "residualCjk": 29,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc viết 浅景深虚化窗外远景 theo nghĩa văn xuôi (xóa nét cảnh xa ngoài cửa sổ), không phải giá trị cỡ cảnh 远景"
+          },
+          "全景": {
+            "expected": 2,
+            "reason": "1 trong 3 lần là 城市天际线全景 theo nghĩa văn xuôi (toàn bộ đường chân trời lọt vào khung), không phải giá trị cỡ cảnh; 2 lần còn lại trong bảng 景别 (全景 và 大全景/空镜) là giá trị nên vẫn giữ"
+          },
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc viết 情感推进 theo nghĩa văn xuôi (cảm xúc tiến triển) trong ô mô tả của hàng 缓推, không phải giá trị vận máy 推进"
+          },
+          "固定": {
+            "expected": 1,
+            "reason": "2 trong 3 lần là 固定风格锚定词 và 风格收尾（固定） theo nghĩa văn xuôi (từ neo phong cách cố định / câu chốt cố định), không phải giá trị vận máy; lần còn lại là giá trị hàng 固定 trong bảng 摄影机运动 nên vẫn giữ"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 29,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc viết 浅景深虚化窗外远景 theo nghĩa văn xuôi (xóa nét cảnh xa ngoài cửa sổ), không phải giá trị cỡ cảnh 远景"
+          },
+          "全景": {
+            "expected": 2,
+            "reason": "1 trong 3 lần là 城市天际线全景 theo nghĩa văn xuôi (toàn bộ đường chân trời lọt vào khung), không phải giá trị cỡ cảnh; 2 lần còn lại trong bảng 景别 (全景 và 大全景/空镜) là giá trị nên vẫn giữ"
+          },
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc viết 情感推进 theo nghĩa văn xuôi (cảm xúc tiến triển) trong ô mô tả của hàng 缓推, không phải giá trị vận máy 推进"
+          },
+          "固定": {
+            "expected": 1,
+            "reason": "2 trong 3 lần là 固定风格锚定词 và 风格收尾（固定） theo nghĩa văn xuôi (từ neo phong cách cố định / câu chốt cố định), không phải giá trị vận máy; lần còn lại là giá trị hàng 固定 trong bảng 摄影机运动 nên vẫn giữ"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_modern_city/driector_skills/director_storyboard_table_style.md": {
+      "en": {
+        "residualCjk": 28,
+        "literalAllowance": {
+          "中景": {
+            "expected": 1,
+            "reason": "2 trong 3 lần là lớp chiều sâu khung hình (自行车慢速骑过画面中景 và 前景/中景/背景), không phải giá trị cỡ cảnh; lần còn lại trong khuôn mẫu 景别：{…/中景/…} là giá trị nên vẫn giữ"
+          },
+          "环绕": {
+            "expected": 0,
+            "reason": "bản gốc viết 双臂环绕B的肩背 theo nghĩa văn xuôi (hai tay vòng qua vai lưng), không phải giá trị vận máy 环绕"
+          },
+          "固定": {
+            "expected": 4,
+            "reason": "2 trong 6 lần nằm trong 固定物 theo nghĩa văn xuôi (vật cố định trong bối cảnh), không phải giá trị vận máy; 4 lần còn lại (giá trị hàng 固定, 摄影机固定不动, 固定机位, khuôn mẫu 运镜：{固定/…}) là nghĩa vận máy nên vẫn giữ"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 28,
+        "literalAllowance": {
+          "中景": {
+            "expected": 1,
+            "reason": "2 trong 3 lần là lớp chiều sâu khung hình (自行车慢速骑过画面中景 và 前景/中景/背景), không phải giá trị cỡ cảnh; lần còn lại trong khuôn mẫu 景别：{…/中景/…} là giá trị nên vẫn giữ"
+          },
+          "环绕": {
+            "expected": 0,
+            "reason": "bản gốc viết 双臂环绕B的肩背 theo nghĩa văn xuôi (hai tay vòng qua vai lưng), không phải giá trị vận máy 环绕"
+          },
+          "固定": {
+            "expected": 4,
+            "reason": "2 trong 6 lần nằm trong 固定物 theo nghĩa văn xuôi (vật cố định trong bối cảnh), không phải giá trị vận máy; 4 lần còn lại (giá trị hàng 固定, 摄影机固定不动, 固定机位, khuôn mẫu 运镜：{固定/…}) là nghĩa vận máy nên vẫn giữ"
+          }
+        }
+      }
+    },
     "data/skills/art_skills/realpeople_urban_modern/README.md": {
       "en": 0,
       "vi": 0
