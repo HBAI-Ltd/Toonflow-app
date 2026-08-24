@@ -1579,6 +1579,34 @@
       "en": 0,
       "vi": 0
     },
+    "data/skills/art_skills/3D_guofeng_cyber/art_prompt/art_character_derivative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (机能结构固定/发扣固定 giữ chặt phụ kiện tóc, 腰间固定配饰 phụ kiện gắn cố định bên hông, 套用固定妆容 áp một kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (机能结构固定/发扣固定 giữ chặt phụ kiện tóc, 腰间固定配饰 phụ kiện gắn cố định bên hông, 套用固定妆容 áp một kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
     "data/skills/art_skills/3D_guofeng_cyber/art_prompt/art_character.md": {
       "en": {
         "residualCjk": 0,
