@@ -4,7 +4,7 @@ import { getEmbedding, cosineSimilarity } from "./embedding";
 import type { memories as MemoryRow } from "@/types/database";
 import { tool, jsonSchema } from "ai";
 import { z } from "zod";
-import { t, getLocale, FALLBACK_LOCALE, type Locale } from "@/i18n";
+import { t, getPromptLanguage, FALLBACK_LOCALE, type Locale } from "@/i18n";
 
 // ── 可调配置默认值 ──
 const DEFAULTS: {
@@ -44,7 +44,9 @@ class Memory {
   }
 
   private async generateSummary(contents: string[]): Promise<string> {
-    const locale = await getLocale();
+    // system/messages below go straight into u.Ai.Text().invoke() — model-facing, so this
+    // resolves through prompt_language, not content_language. See src/i18n/locale.ts.
+    const locale = await getPromptLanguage();
     const { summaryMaxLength } = await this.getConfigData({ summaryMaxLength: DEFAULTS.summaryMaxLength });
     const { text } = await u.Ai.Text(this.agentType as any).invoke({
       system: t("utils.memory.generateSummary.system", { summaryMaxLength: Number(summaryMaxLength) }, locale),
@@ -54,7 +56,8 @@ class Memory {
   }
 
   private async judgeSummaryRelevance(keyword: string, summaries: { id: string; content: string }[]): Promise<string[]> {
-    const locale = await getLocale();
+    // Same reasoning as generateSummary above: sent straight into u.Ai.Text().invoke().
+    const locale = await getPromptLanguage();
     const list = summaries.map((s) => `[${s.id}] ${s.content}`).join("\n");
     const { text } = await u.Ai.Text(this.agentType as any).invoke({
       system: t("utils.memory.judgeSummaryRelevance.system", {}, locale),
@@ -199,6 +202,9 @@ class Memory {
     return messages.map((m) => ({ id: m.id, content: m.content, createTime: m.createTime }));
   }
 
+  // description/keywordDescribe are tool-schema metadata read by the model, and notFound is
+  // returned as the tool's own result (also read by the model on its next turn) — so every
+  // caller of getTools() must pass prompt_language (getPromptLanguage()), not content_language.
   getTools(locale: Locale = FALLBACK_LOCALE) {
     return {
       deepRetrieve: tool({
