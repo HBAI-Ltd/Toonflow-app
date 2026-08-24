@@ -1087,9 +1087,453 @@
       "en": 0,
       "vi": 0
     },
+    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_character.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 不再固定五官特征参数 theo nghĩa văn xuôi (không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 不再固定五官特征参数 theo nghĩa văn xuôi (không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_character_derivative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 套用固定妆容 theo nghĩa văn xuôi (áp một kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 套用固定妆容 theo nghĩa văn xuôi (áp một kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_prop.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_prop_derivative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_scene.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục và của khuôn mẫu prompt), không phải giá trị cỡ cảnh 中景"
+          },
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi), không phải giá trị cỡ cảnh 远景"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục và của khuôn mẫu prompt), không phải giá trị cỡ cảnh 中景"
+          },
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi), không phải giá trị cỡ cảnh 远景"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_scene_derivative.md": {
+      "en": {
+        "residualCjk": 5,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 5,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_storyboard_video.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      }
+    },
+    "data/skills/art_skills/3D_chinese_traditional/driector_skills/director_planning_style.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      }
+    },
+    "data/skills/art_skills/3D_chinese_traditional/driector_skills/director_storyboard.md": {
+      "en": {
+        "residualCjk": 6,
+        "literalAllowance": {
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定风格锚定词 và 风格收尾（固定） theo nghĩa văn xuôi (từ neo phong cách cố định, phần kết đuôi cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 6,
+        "literalAllowance": {
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定风格锚定词 và 风格收尾（固定） theo nghĩa văn xuôi (từ neo phong cách cố định, phần kết đuôi cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_chinese_traditional/driector_skills/director_storyboard_table_style.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      }
+    },
+    "data/skills/art_skills/3D_chinese_traditional/prefix.md": {
+      "en": {
+        "residualCjk": 20,
+        "literalAllowance": {
+          "序号": {
+            "expected": 0,
+            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 20,
+        "literalAllowance": {
+          "序号": {
+            "expected": 0,
+            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
+          }
+        }
+      }
+    },
     "data/skills/art_skills/3D_clay_stopmotion/README.md": {
       "en": 0,
       "vi": 0
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/art_prompt/art_character.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写/特写展示 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 不再固定五官特征参数 theo nghĩa văn xuôi (không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写/特写展示 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 不再固定五官特征参数 theo nghĩa văn xuôi (không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/art_prompt/art_character_derivative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 套用固定妆容 theo nghĩa văn xuôi (áp một kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 套用固定妆容 theo nghĩa văn xuôi (áp một kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/art_prompt/art_prop.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/art_prompt/art_prop_derivative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/art_prompt/art_scene.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục và của khuôn mẫu prompt), không phải giá trị cỡ cảnh 中景"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục và của khuôn mẫu prompt), không phải giá trị cỡ cảnh 中景"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/art_prompt/art_scene_derivative.md": {
+      "en": {
+        "residualCjk": 5,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi khi trời sương), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 5,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi khi trời sương), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/art_prompt/art_storyboard_video.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      }
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/driector_skills/director_planning_style.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      }
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/driector_skills/director_storyboard.md": {
+      "en": {
+        "residualCjk": 6,
+        "literalAllowance": {
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定风格锚定词 theo nghĩa văn xuôi (từ neo phong cách cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 6,
+        "literalAllowance": {
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定风格锚定词 theo nghĩa văn xuôi (từ neo phong cách cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/driector_skills/director_storyboard_table_style.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      }
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/prefix.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "序号": {
+            "expected": 0,
+            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中近景提暖 theo nghĩa văn xuôi (tăng độ ấm ở các cú máy vừa và gần), token khớp bắc qua ranh giới từ 中+近景, không phải giá trị cỡ cảnh 近景"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "序号": {
+            "expected": 0,
+            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中近景提暖 theo nghĩa văn xuôi (tăng độ ấm ở các cú máy vừa và gần), token khớp bắc qua ranh giới từ 中+近景, không phải giá trị cỡ cảnh 近景"
+          }
+        }
+      }
     },
     "data/skills/art_skills/3D_guofeng_cyber/README.md": {
       "en": 0,
@@ -1098,6 +1542,226 @@
     "data/skills/art_skills/realpeople_ancient_chinese/README.md": {
       "en": 0,
       "vi": 0
+    },
+    "data/skills/art_skills/realpeople_ancient_chinese/art_prompt/art_character.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình chân dung trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (不再固定五官特征参数 — không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình chân dung trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (不再固定五官特征参数 — không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_ancient_chinese/art_prompt/art_character_derivative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình chân dung trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (套用固定妆容 — áp kiểu trang điểm định sẵn), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình chân dung trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (套用固定妆容 — áp kiểu trang điểm định sẵn), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_ancient_chinese/art_prompt/art_prop.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_ancient_chinese/art_prompt/art_prop_derivative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_ancient_chinese/art_prompt/art_scene.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục bối cảnh), không phải giá trị cỡ cảnh 中景"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục bối cảnh), không phải giá trị cỡ cảnh 中景"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_ancient_chinese/art_prompt/art_scene_derivative.md": {
+      "en": {
+        "residualCjk": 5,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景模糊 — cảnh vật ở xa mờ dần do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong 前景/中景/后景 của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 5,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景模糊 — cảnh vật ở xa mờ dần do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong 前景/中景/后景 của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_ancient_chinese/driector_skills/director_planning_style.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "远景": {
+            "expected": 1,
+            "reason": "bản gốc có 2 lần 远景: 1 lần là giá trị cỡ cảnh trong cột 适用情绪 (giữ nguyên) và 1 lần trong 青黛远景 là văn xuôi chỉ cảnh vật ở xa"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "远景": {
+            "expected": 1,
+            "reason": "bản gốc có 2 lần 远景: 1 lần là giá trị cỡ cảnh trong cột 适用情绪 (giữ nguyên) và 1 lần trong 青黛远景 là văn xuôi chỉ cảnh vật ở xa"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_ancient_chinese/driector_skills/director_storyboard.md": {
+      "en": {
+        "residualCjk": 8,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi cả 4 lần (远景大气透视/远景虚淡/远景层叠 — lớp cảnh vật ở xa trong khung hình), không phải giá trị cỡ cảnh 远景"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (固定风格锚定词 / 风格收尾（固定） — từ neo phong cách cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 8,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi cả 4 lần (远景大气透视/远景虚淡/远景层叠 — lớp cảnh vật ở xa trong khung hình), không phải giá trị cỡ cảnh 远景"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (固定风格锚定词 / 风格收尾（固定） — từ neo phong cách cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_ancient_chinese/prefix.md": {
+      "en": {
+        "residualCjk": 31,
+        "literalAllowance": {
+          "序号": {
+            "expected": 0,
+            "reason": "bản gốc dùng 序号 làm tiêu đề cột đánh số cho bảng màu, không phải marker 序号N mở đầu mỗi cú máy con trong videoDesc"
+          },
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景山水 và 远景 trong danh sách công dụng màu — cảnh vật ở xa), không phải giá trị cỡ cảnh 远景"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 31,
+        "literalAllowance": {
+          "序号": {
+            "expected": 0,
+            "reason": "bản gốc dùng 序号 làm tiêu đề cột đánh số cho bảng màu, không phải marker 序号N mở đầu mỗi cú máy con trong videoDesc"
+          },
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景山水 và 远景 trong danh sách công dụng màu — cảnh vật ở xa), không phải giá trị cỡ cảnh 远景"
+          }
+        }
+      }
     },
     "data/skills/art_skills/realpeople_modern_city/README.md": {
       "en": {
@@ -1119,9 +1783,309 @@
         }
       }
     },
+    "data/skills/art_skills/realpeople_modern_city/art_prompt/art_character.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 特写 để gọi tên ô hình cận trong bộ bốn góc (正面/侧面/背面/特写四角度, 近景特写) — tên ô hình của bảng chân dung bốn góc, không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 特写 để gọi tên ô hình cận trong bộ bốn góc (正面/侧面/背面/特写四角度, 近景特写) — tên ô hình của bảng chân dung bốn góc, không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_modern_city/art_prompt/art_character_derivative.md": {
+      "en": {
+        "residualCjk": 25,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 特写 ở hai nghĩa văn xuôi: 近景特写 là tên ô hình cận trong bộ bốn góc, và 镜头特写 là cụm văn xuôi chỉ 'cảnh cận trước ống kính' trong cột bối cảnh áp dụng — không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
+          },
+          "环绕": {
+            "expected": 0,
+            "reason": "bản gốc viết 碎发环绕面部 / 碎发环绕面部和颈部 theo nghĩa văn xuôi (tóc con vây quanh gương mặt), không phải giá trị vận máy 环绕 (orbit)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 25,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 特写 ở hai nghĩa văn xuôi: 近景特写 là tên ô hình cận trong bộ bốn góc, và 镜头特写 là cụm văn xuôi chỉ 'cảnh cận trước ống kính' trong cột bối cảnh áp dụng — không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
+          },
+          "环绕": {
+            "expected": 0,
+            "reason": "bản gốc viết 碎发环绕面部 / 碎发环绕面部和颈部 theo nghĩa văn xuôi (tóc con vây quanh gương mặt), không phải giá trị vận máy 环绕 (orbit)"
+          }
+        }
+      }
+    },
     "data/skills/art_skills/realpeople_urban_modern/README.md": {
       "en": 0,
       "vi": 0
+    },
+    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_character.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (不再固定五官特征参数 — không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (不再固定五官特征参数 — không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_character_derivative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (未分析用户线索就直接套用固定妆容 — áp thẳng kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (未分析用户线索就直接套用固定妆容 — áp thẳng kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_prop.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_prop_derivative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_scene.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景灰蓝 — cảnh vật ở xa ngả xám xanh do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục), không phải giá trị cỡ cảnh 中景"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景灰蓝 — cảnh vật ở xa ngả xám xanh do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục), không phải giá trị cỡ cảnh 中景"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_scene_derivative.md": {
+      "en": {
+        "residualCjk": 3,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景模糊 — cảnh vật ở xa mờ đi khi chuyển sang thời tiết sương mù), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 3,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景模糊 — cảnh vật ở xa mờ đi khi chuyển sang thời tiết sương mù), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_storyboard_video.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/realpeople_urban_modern/driector_skills/director_planning_style.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (城市远景噪声 — tiếng ồn thành phố vọng lại từ xa), không phải giá trị cỡ cảnh 远景"
+          },
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 推进 theo nghĩa văn xuôi (亲密推进 / 日常推进 — quan hệ và mạch truyện tiến triển), không phải giá trị vận máy 推进"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (城市远景噪声 — tiếng ồn thành phố vọng lại từ xa), không phải giá trị cỡ cảnh 远景"
+          },
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 推进 theo nghĩa văn xuôi (亲密推进 / 日常推进 — quan hệ và mạch truyện tiến triển), không phải giá trị vận máy 推进"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_urban_modern/driector_skills/director_storyboard.md": {
+      "en": {
+        "residualCjk": 8,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景虚淡 — cảnh vật ở xa mờ nhạt do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (固定风格锚定词 / 风格收尾（固定）— từ neo phong cách cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 8,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景虚淡 — cảnh vật ở xa mờ nhạt do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (固定风格锚定词 / 风格收尾（固定）— từ neo phong cách cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_urban_modern/driector_skills/director_storyboard_table_style.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/realpeople_urban_modern/prefix.md": {
+      "en": {
+        "residualCjk": 1,
+        "literalAllowance": {
+          "序号": {
+            "expected": 0,
+            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 1,
+        "literalAllowance": {
+          "序号": {
+            "expected": 0,
+            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
+          }
+        }
+      }
     },
     "data/skills/production_agent_decision.md": {
       "en": 0,
@@ -1586,528 +2550,6 @@
     "data/skills/story_skills/Xianxia_fantasy/README.md": {
       "en": 0,
       "vi": 0
-    },
-    "data/skills/art_skills/realpeople_modern_city/art_prompt/art_character.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 特写 để gọi tên ô hình cận trong bộ bốn góc (正面/侧面/背面/特写四角度, 近景特写) — tên ô hình của bảng chân dung bốn góc, không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "近景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 特写 để gọi tên ô hình cận trong bộ bốn góc (正面/侧面/背面/特写四角度, 近景特写) — tên ô hình của bảng chân dung bốn góc, không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "近景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/realpeople_modern_city/art_prompt/art_character_derivative.md": {
-      "en": {
-        "residualCjk": 25,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 特写 ở hai nghĩa văn xuôi: 近景特写 là tên ô hình cận trong bộ bốn góc, và 镜头特写 là cụm văn xuôi chỉ 'cảnh cận trước ống kính' trong cột bối cảnh áp dụng — không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "近景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
-          },
-          "环绕": {
-            "expected": 0,
-            "reason": "bản gốc viết 碎发环绕面部 / 碎发环绕面部和颈部 theo nghĩa văn xuôi (tóc con vây quanh gương mặt), không phải giá trị vận máy 环绕 (orbit)"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 25,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 特写 ở hai nghĩa văn xuôi: 近景特写 là tên ô hình cận trong bộ bốn góc, và 镜头特写 là cụm văn xuôi chỉ 'cảnh cận trước ống kính' trong cột bối cảnh áp dụng — không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "近景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
-          },
-          "环绕": {
-            "expected": 0,
-            "reason": "bản gốc viết 碎发环绕面部 / 碎发环绕面部和颈部 theo nghĩa văn xuôi (tóc con vây quanh gương mặt), không phải giá trị vận máy 环绕 (orbit)"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_character.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 不再固定五官特征参数 theo nghĩa văn xuôi (không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 不再固定五官特征参数 theo nghĩa văn xuôi (không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_character_derivative.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 套用固定妆容 theo nghĩa văn xuôi (áp một kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 套用固定妆容 theo nghĩa văn xuôi (áp một kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_prop.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_prop_derivative.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_scene.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "中景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục và của khuôn mẫu prompt), không phải giá trị cỡ cảnh 中景"
-          },
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi), không phải giá trị cỡ cảnh 远景"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "中景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục và của khuôn mẫu prompt), không phải giá trị cỡ cảnh 中景"
-          },
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi), không phải giá trị cỡ cảnh 远景"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_scene_derivative.md": {
-      "en": {
-        "residualCjk": 5,
-        "literalAllowance": {
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi), không phải giá trị cỡ cảnh 远景"
-          },
-          "中景": {
-            "expected": 4,
-            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 5,
-        "literalAllowance": {
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi), không phải giá trị cỡ cảnh 远景"
-          },
-          "中景": {
-            "expected": 4,
-            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/3D_chinese_traditional/art_prompt/art_storyboard_video.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {}
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {}
-      }
-    },
-    "data/skills/art_skills/3D_chinese_traditional/driector_skills/director_planning_style.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {}
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {}
-      }
-    },
-    "data/skills/art_skills/3D_chinese_traditional/driector_skills/director_storyboard.md": {
-      "en": {
-        "residualCjk": 6,
-        "literalAllowance": {
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 固定风格锚定词 và 风格收尾（固定） theo nghĩa văn xuôi (từ neo phong cách cố định, phần kết đuôi cố định), không phải giá trị vận máy 固定机位"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 6,
-        "literalAllowance": {
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 固定风格锚定词 và 风格收尾（固定） theo nghĩa văn xuôi (từ neo phong cách cố định, phần kết đuôi cố định), không phải giá trị vận máy 固定机位"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/3D_chinese_traditional/driector_skills/director_storyboard_table_style.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {}
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {}
-      }
-    },
-    "data/skills/art_skills/3D_chinese_traditional/prefix.md": {
-      "en": {
-        "residualCjk": 20,
-        "literalAllowance": {
-          "序号": {
-            "expected": 0,
-            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 20,
-        "literalAllowance": {
-          "序号": {
-            "expected": 0,
-            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_character.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (不再固定五官特征参数 — không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (不再固定五官特征参数 — không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_character_derivative.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (未分析用户线索就直接套用固定妆容 — áp thẳng kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
-          },
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (未分析用户线索就直接套用固定妆容 — áp thẳng kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_prop.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_prop_derivative.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "特写": {
-            "expected": 0,
-            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_scene.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景灰蓝 — cảnh vật ở xa ngả xám xanh do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
-          },
-          "中景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục), không phải giá trị cỡ cảnh 中景"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景灰蓝 — cảnh vật ở xa ngả xám xanh do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
-          },
-          "中景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục), không phải giá trị cỡ cảnh 中景"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_scene_derivative.md": {
-      "en": {
-        "residualCjk": 3,
-        "literalAllowance": {
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景模糊 — cảnh vật ở xa mờ đi khi chuyển sang thời tiết sương mù), không phải giá trị cỡ cảnh 远景"
-          },
-          "中景": {
-            "expected": 4,
-            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 3,
-        "literalAllowance": {
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景模糊 — cảnh vật ở xa mờ đi khi chuyển sang thời tiết sương mù), không phải giá trị cỡ cảnh 远景"
-          },
-          "中景": {
-            "expected": 4,
-            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/realpeople_urban_modern/art_prompt/art_storyboard_video.md": {
-      "en": 0,
-      "vi": 0
-    },
-    "data/skills/art_skills/realpeople_urban_modern/driector_skills/director_planning_style.md": {
-      "en": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (城市远景噪声 — tiếng ồn thành phố vọng lại từ xa), không phải giá trị cỡ cảnh 远景"
-          },
-          "推进": {
-            "expected": 0,
-            "reason": "bản gốc dùng 推进 theo nghĩa văn xuôi (亲密推进 / 日常推进 — quan hệ và mạch truyện tiến triển), không phải giá trị vận máy 推进"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 0,
-        "literalAllowance": {
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (城市远景噪声 — tiếng ồn thành phố vọng lại từ xa), không phải giá trị cỡ cảnh 远景"
-          },
-          "推进": {
-            "expected": 0,
-            "reason": "bản gốc dùng 推进 theo nghĩa văn xuôi (亲密推进 / 日常推进 — quan hệ và mạch truyện tiến triển), không phải giá trị vận máy 推进"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/realpeople_urban_modern/driector_skills/director_storyboard.md": {
-      "en": {
-        "residualCjk": 8,
-        "literalAllowance": {
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景虚淡 — cảnh vật ở xa mờ nhạt do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
-          },
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (固定风格锚定词 / 风格收尾（固定）— từ neo phong cách cố định), không phải giá trị vận máy 固定机位"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 8,
-        "literalAllowance": {
-          "远景": {
-            "expected": 0,
-            "reason": "bản gốc dùng 远景 theo nghĩa văn xuôi (远景虚淡 — cảnh vật ở xa mờ nhạt do phối cảnh không khí), không phải giá trị cỡ cảnh 远景"
-          },
-          "固定": {
-            "expected": 0,
-            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (固定风格锚定词 / 风格收尾（固定）— từ neo phong cách cố định), không phải giá trị vận máy 固定机位"
-          }
-        }
-      }
-    },
-    "data/skills/art_skills/realpeople_urban_modern/driector_skills/director_storyboard_table_style.md": {
-      "en": 0,
-      "vi": 0
-    },
-    "data/skills/art_skills/realpeople_urban_modern/prefix.md": {
-      "en": {
-        "residualCjk": 1,
-        "literalAllowance": {
-          "序号": {
-            "expected": 0,
-            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
-          }
-        }
-      },
-      "vi": {
-        "residualCjk": 1,
-        "literalAllowance": {
-          "序号": {
-            "expected": 0,
-            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
-          }
-        }
-      }
     }
   }
 }
