@@ -69,7 +69,9 @@ function knownSeedVariants(type: SeedPromptType): string[] {
  * Note: this guard is not what protects a user's edits made in Settings → Prompt Management — those
  * are written to o_prompt.useData (src/routes/setting/promptManage/updatePrompt.ts), a separate
  * column this function never touches, and every consumer reads `useData ?? data`
- * (getPrompt.ts, cleanNovel.ts, batchBindAudio.ts, extractAssets.ts, generateVideoPrompt.ts). What
+ * (getPrompt.ts, cleanNovel.ts, batchBindAudio.ts, extractAssets.ts, generateVideoPrompt.ts,
+ * batchGeneratePrompt.ts). This list is illustrative, not exhaustive — check each file directly
+ * rather than assuming it's complete. What
  * this guard makes safe is re-syncing/re-seeding the `data` column itself — idempotently, and
  * correctly across a locale change — without a false positive ever overwriting a hand-set `data`
  * value, which is a real (if today unused) possibility this column's shape allows.
