@@ -47,6 +47,14 @@
     "field-key": "JSON / XML attribute name.",
     "tool-name": "Callable tool name."
   },
+  "homonymRisk": {
+    "what": "Per-entry field on tokens whose `zh` form is ALSO an ordinary word (or a substring of one) in the source prose. The literal checker counts raw substrings, so those entries generate false positives that a translator must resolve by reading the sentence, not the count.",
+    "fields": {
+      "signals": "Concrete surface patterns that mark a hit as prose (or as an unrelated term), each with the reading that applies.",
+      "note": "How to decide, and what a wrong decision costs."
+    },
+    "rule": "When a hit is prose, translate it as prose and record a `literalAllowance` with a written reason in docs/i18n/sidecar-budget.json. NEVER inject the Chinese token into a sentence that is not about the value just to satisfy the count — that teaches the model to bind the token to the wrong concept."
+  },
   "glossary": {
     "file": "docs/i18n/glossary.json",
     "rule": "Where a term exists in both, en/vi must agree. Divergences are recorded per-entry in `glossaryDivergence`."
@@ -658,6 +666,14 @@
         "srcCode": 0
       },
       "note": "Matched value, row 2 of the 景别 mapping table.",
+      "homonymRisk": {
+        "signals": [
+          "全景深 is the photography term for deep focus (whole depth of field), usually next to an aperture such as f/8-f/11; the 全景 inside it is coincidental.",
+          "单张全景照片 / 全景摄影 mean a panoramic photograph of a whole space, not a shot size.",
+          "全景 in the 景别 column, or paired with 大全景 / 标准全景 as a framing variant name, IS the shot-size value."
+        ],
+        "note": "Counts prove nothing for this token: realpeople_modern_city/art_prompt/art_scene.md has 19 hits and NOT ONE is a shot size, while art_scene_derivative.md in the same style keeps 5 of 10 because 标准全景 there really is a framing variant. Decide per file."
+      },
       "modelTag": {
         "KlingOmni": "wide shot",
         "Seedance 1.5": "Wide establishing shot",
@@ -687,6 +703,14 @@
         "srcCode": 0
       },
       "note": "Matched value, row 3 of the 景别 mapping table.",
+      "homonymRisk": {
+        "signals": [
+          "分镜中景别 is a substring accident: the match straddles two words (…分镜中 + 景别…) and means nothing.",
+          "前景 / 中景 / 背景 as a series is about depth LAYERS in the frame, not shot size.",
+          "中景 in the 景别 column of a storyboard table, or in a 景别 mapping row, IS the shot-size value."
+        ],
+        "note": "12 of the first pass's 40 allowances are for this token, split between the two false-positive shapes above."
+      },
       "modelTag": {
         "KlingOmni": "medium shot",
         "Seedance 1.5": "Medium shot",
@@ -832,6 +856,14 @@
         "srcCode": 1
       },
       "note": "Matched value, row 2 of the 运镜 mapping table.",
+      "homonymRisk": {
+        "signals": [
+          "推进 next to 叙事 / 剧情 / 情绪 (推进叙事, 叙事推进, 情绪推进) is prose: advancing the story, not moving the camera.",
+          "推进 with a human subject (小心翼翼地推进) is a character walking forward.",
+          "镜头推进 / 缓推 / 向前推进 with a 镜头 subject IS the camera-movement value."
+        ],
+        "note": "The single biggest source of literal false positives in the skills layer: 18 of the 40 allowances written during the first translation pass are for this token. Always read the whole sentence before deciding."
+      },
       "modelTag": {
         "KlingOmni": "dolly in / push in",
         "Seedance 1.5": "Slow dolly forward",
