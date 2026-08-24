@@ -19,10 +19,14 @@
  *      bản dịch, số ký tự CJK còn lại không được vượt số đã ghi trong
  *      docs/i18n/sidecar-budget.json. File chưa có trong budget không fail, chỉ được
  *      liệt kê để chạy `--update`.
- *   4. Danh sách bản gốc thiếu sidecar (thông tin, không fail) — đếm theo thư mục.
+ *   4. Rào frontmatter `name` (hard fail) — trường `name` trong frontmatter YAML phải giống
+ *      hệt nhau ở cả ba file zh/en/vi (activate_skill dựng z.enum(skillNames) từ nó, đọc theo
+ *      locale — xem commit 1b95fcf). `description` được phép khác. File không có frontmatter
+ *      thì bỏ qua, không fail.
+ *   5. Danh sách bản gốc thiếu sidecar (thông tin, không fail) — đếm theo thư mục.
  *
  * Chạy `tsx scripts/i18n-check-sidecars.ts` để kiểm tra, hoặc `--update` để ghi lại
- * ngân sách CJK còn sót từ trạng thái đĩa hiện tại (kiểm tra 1 và 2 luôn phải đúng
+ * ngân sách CJK còn sót từ trạng thái đĩa hiện tại (kiểm tra 1, 2 và 4 luôn phải đúng
  * tuyệt đối, không có ngân sách cho chúng; `--update` giữ nguyên mọi `literalAllowance` đã
  * có, không tự sinh miễn trừ mới).
  *
@@ -324,6 +328,45 @@ export function matchesPathFilters(relPath: string, filters: string[]): boolean 
   });
 }
 
+const FRONTMATTER_NAME = /^name:\s*(.+?)\s*$/m;
+
+/**
+ * D3 — đọc trường `name` trong frontmatter YAML mở đầu file (nếu có). Trả undefined khi file
+ * không có frontmatter (không bắt đầu bằng `---`) — những file này bị bỏ qua kiểm tra name,
+ * không fail.
+ */
+export function extractFrontmatterName(text: string): string | undefined {
+  if (!text.startsWith("---")) return undefined;
+  const end = text.indexOf("\n---", 3);
+  if (end === -1) return undefined;
+  const frontmatter = text.slice(0, end);
+  const m = FRONTMATTER_NAME.exec(frontmatter);
+  return m ? m[1] : undefined;
+}
+
+/**
+ * D3 — `activate_skill` dựng `z.enum(skillNames)` từ trường `name` đọc theo locale (xem commit
+ * 1b95fcf). Nếu một bản dịch dịch luôn `name`, tập enum đổi theo locale. Bắt buộc `name` giống
+ * hệt nhau ở cả ba file zh/en/vi. `description` được phép khác — đó là văn xuôi cho người/model
+ * đọc, không phải khoá. File nào thiếu frontmatter (undefined) thì bỏ qua toàn bộ kiểm tra này.
+ */
+export function checkFrontmatterNameParity(zh: string, en: string, vi: string): Problem[] {
+  const zhName = extractFrontmatterName(zh);
+  const enName = extractFrontmatterName(en);
+  const viName = extractFrontmatterName(vi);
+  if (zhName === undefined || enName === undefined || viName === undefined) return [];
+  if (zhName === enName && zhName === viName) return [];
+  return [
+    {
+      check: "frontmatter-name",
+      detail:
+        `frontmatter \`name\` lệch giữa ba file: zh="${zhName}", en="${enName}", vi="${viName}" — ` +
+        `name dựng z.enum(skillNames) cho activate_skill nên phải giống hệt nhau ở mọi locale ` +
+        `(description được phép khác, đó là văn xuôi)`,
+    },
+  ];
+}
+
 const toPosix = (p: string) => p.split(path.sep).join("/");
 
 const walk = (dir: string, out: string[] = []): string[] => {
@@ -393,12 +436,23 @@ export function checkSidecars(
     const budgetEntry = budget[relPath];
     if (!budgetEntry) newInBudget.push(relPath);
 
-    for (const [locale, sidecarPath, exists] of [
-      ["en", enPath, hasEn],
-      ["vi", viPath, hasVi],
+    const enText = hasEn ? fs.readFileSync(enPath, "utf8") : undefined;
+    const viText = hasVi ? fs.readFileSync(viPath, "utf8") : undefined;
+
+    // D3 — rào frontmatter `name`: chỉ so sánh khi có đủ cả ba file (đọc lại từ zh/en/vi ở trên).
+    if (enText !== undefined && viText !== undefined) {
+      const nameProblems = checkFrontmatterNameParity(zhText, enText, viText);
+      if (nameProblems.length > 0) {
+        hasHardFail = true;
+        files.push({ file: relPath, problems: nameProblems });
+      }
+    }
+
+    for (const [locale, sidecarPath, exists, translated] of [
+      ["en", enPath, hasEn, enText],
+      ["vi", viPath, hasVi, viText],
     ] as const) {
-      if (!exists) continue;
-      const translated = fs.readFileSync(sidecarPath, "utf8");
+      if (!exists || translated === undefined) continue;
       const normalizedBudget = normalizeBudgetLocale(budgetEntry?.[locale]);
       const allowanceErrors = normalizedBudget ? validateLiteralAllowance(normalizedBudget.literalAllowance) : [];
       const problems = checkSidecarFile(zhText, translated, literalTerms, normalizedBudget?.literalAllowance);

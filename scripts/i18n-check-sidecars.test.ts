@@ -18,6 +18,8 @@ import {
   normalizeBudgetLocale,
   validateLiteralAllowance,
   matchesPathFilters,
+  extractFrontmatterName,
+  checkFrontmatterNameParity,
   type Budget,
 } from "./i18n-check-sidecars";
 
@@ -548,5 +550,82 @@ describe("checkSidecars — lọc theo pathFilters (D2)", () => {
     const skillsDir = path.join(dir, "skills");
     const report = checkSidecars(dir, skillsDir, [], {}, ["skills/b"]);
     expect(report.missingSidecars).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// D3 — rào frontmatter `name`
+// ---------------------------------------------------------------------------
+
+describe("extractFrontmatterName", () => {
+  it("đọc trường name trong frontmatter YAML", () => {
+    const text = "---\nname: foo_bar\ndescription: abc\n---\n# Nội dung";
+    expect(extractFrontmatterName(text)).toBe("foo_bar");
+  });
+
+  it("trả undefined khi không có frontmatter", () => {
+    expect(extractFrontmatterName("# Không có frontmatter")).toBeUndefined();
+  });
+});
+
+describe("checkFrontmatterNameParity", () => {
+  it("pass khi name giống hệt ở cả ba file, description khác nhau vẫn ok", () => {
+    const zh = "---\nname: foo\ndescription: mô tả zh\n---\n内容";
+    const en = "---\nname: foo\ndescription: desc en\n---\ncontent";
+    const vi = "---\nname: foo\ndescription: mo ta vi\n---\nnoi dung";
+    expect(checkFrontmatterNameParity(zh, en, vi)).toEqual([]);
+  });
+
+  it("fail khi name khác nhau ở bất kỳ file nào", () => {
+    const zh = "---\nname: foo\n---\n内容";
+    const en = "---\nname: foo_en\n---\ncontent";
+    const vi = "---\nname: foo\n---\nnoi dung";
+    const problems = checkFrontmatterNameParity(zh, en, vi);
+    expect(problems).toHaveLength(1);
+    expect(problems[0].check).toBe("frontmatter-name");
+  });
+
+  it("bỏ qua khi một trong ba file không có frontmatter, không fail", () => {
+    const zh = "# Không frontmatter";
+    const en = "---\nname: foo\n---\ncontent";
+    const vi = "---\nname: bar\n---\nnoi dung";
+    expect(checkFrontmatterNameParity(zh, en, vi)).toEqual([]);
+  });
+});
+
+describe("checkSidecars — rào frontmatter name (D3, end-to-end)", () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), "i18n-check-sidecars-d3-"));
+  });
+  afterEach(() => {
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+  function write(relPath: string, content: string) {
+    const abs = path.join(dir, relPath);
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, content, "utf-8");
+  }
+
+  it("hard fail khi name lệch giữa ba file", () => {
+    write("skills/a/foo.md", "---\nname: foo\n---\n内容");
+    write("skills/a/foo.en.md", "---\nname: foo_localized\n---\ncontent");
+    write("skills/a/foo.vi.md", "---\nname: foo\n---\nnoi dung");
+    const skillsDir = path.join(dir, "skills");
+    const report = checkSidecars(dir, skillsDir, [], {});
+    expect(report.hasHardFail).toBe(true);
+    expect(report.files.some((f) => f.problems.some((p) => p.check === "frontmatter-name"))).toBe(true);
+  });
+
+  it("pass khi name khớp nhau và không có frontmatter cũng không fail", () => {
+    write("skills/a/foo.md", "---\nname: foo\n---\n内容");
+    write("skills/a/foo.en.md", "---\nname: foo\n---\ncontent");
+    write("skills/a/foo.vi.md", "---\nname: foo\n---\nnoi dung");
+    write("skills/b/bar.md", "内容không frontmatter");
+    write("skills/b/bar.en.md", "content không frontmatter");
+    write("skills/b/bar.vi.md", "nội dung không frontmatter");
+    const skillsDir = path.join(dir, "skills");
+    const report = checkSidecars(dir, skillsDir, [], {});
+    expect(report.hasHardFail).toBe(false);
   });
 });
