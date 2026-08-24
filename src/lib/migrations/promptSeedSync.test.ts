@@ -29,14 +29,15 @@ afterEach(async () => {
 });
 
 describe("syncGuardedPromptSeeds", () => {
-  it("cập nhật bản ghi còn khớp seed hiện tại (zh)", async () => {
+  it("bản ghi đã khớp đúng seed hiện tại (zh) thì được nhận diện nhưng không ghi lại", async () => {
     await db("o_prompt").insert({
       id: 1,
       type: "scriptAssetExtraction",
       data: getSeedPrompt("scriptAssetExtraction", "zh"),
     });
     const result = await syncGuardedPromptSeeds(db, "zh");
-    expect(result.updated).toBe(1);
+    expect(result.updated).toBe(0);
+    expect(result.unchanged).toBe(1);
     expect(result.skipped).toBe(0);
     const row = await db("o_prompt").where("id", 1).first();
     expect(row.data).toBe(getSeedPrompt("scriptAssetExtraction", "zh"));
@@ -50,6 +51,7 @@ describe("syncGuardedPromptSeeds", () => {
     await db("o_prompt").insert({ id: 1, type: "scriptAssetExtraction", data: LEGACY_SCRIPT_ASSET_EXTRACTION_ZH });
     const result = await syncGuardedPromptSeeds(db, "zh");
     expect(result.updated).toBe(1);
+    expect(result.unchanged).toBe(0);
     expect(result.skipped).toBe(0);
     const row = await db("o_prompt").where("id", 1).first();
     expect(row.data).toBe(getSeedPrompt("scriptAssetExtraction", "zh"));
@@ -60,6 +62,7 @@ describe("syncGuardedPromptSeeds", () => {
     const result = await syncGuardedPromptSeeds(db, "zh");
     expect(result.skipped).toBe(1);
     expect(result.updated).toBe(0);
+    expect(result.unchanged).toBe(0);
   });
 
   it("không đè lên bản ghi người dùng đã sửa (so khớp đúng từng byte)", async () => {
@@ -68,6 +71,7 @@ describe("syncGuardedPromptSeeds", () => {
     const result = await syncGuardedPromptSeeds(db, "zh");
     expect(result.skipped).toBe(1);
     expect(result.updated).toBe(0);
+    expect(result.unchanged).toBe(0);
     const row = await db("o_prompt").where("id", 1).first();
     expect(row.data).toBe(userEdited);
   });
@@ -79,7 +83,9 @@ describe("syncGuardedPromptSeeds", () => {
       { id: 2, type: "videoPromptGeneration", data: userEdited },
     ]);
     const result = await syncGuardedPromptSeeds(db, "zh");
-    expect(result.updated).toBe(1);
+    // scriptAssetExtraction already holds the canonical zh text -> recognized but no write issued.
+    expect(result.updated).toBe(0);
+    expect(result.unchanged).toBe(1);
     expect(result.skipped).toBe(1);
     const script = await db("o_prompt").where("id", 1).first();
     const video = await db("o_prompt").where("id", 2).first();
@@ -90,10 +96,11 @@ describe("syncGuardedPromptSeeds", () => {
   it("bỏ qua khi không có bản ghi cho loại prompt đó", async () => {
     const result = await syncGuardedPromptSeeds(db, "zh");
     expect(result.updated).toBe(0);
+    expect(result.unchanged).toBe(0);
     expect(result.skipped).toBe(0);
   });
 
-  it("chạy lại lần hai không thay đổi gì (idempotent)", async () => {
+  it("chạy lại lần hai không thay đổi gì (idempotent) — counted as unchanged, not updated", async () => {
     await db("o_prompt").insert([
       { id: 1, type: "scriptAssetExtraction", data: getSeedPrompt("scriptAssetExtraction", "zh") },
       { id: 2, type: "videoPromptGeneration", data: getSeedPrompt("videoPromptGeneration", "zh") },
@@ -102,14 +109,17 @@ describe("syncGuardedPromptSeeds", () => {
     const before = await db("o_prompt").select("*").orderBy("id");
     const second = await syncGuardedPromptSeeds(db, "zh");
     const after = await db("o_prompt").select("*").orderBy("id");
-    expect(second.updated).toBe(2); // still "matches a seed variant" — but content unchanged, no write issued
+    // Still "matches a seed variant" — but content unchanged, so no write is issued and `updated`
+    // must stay 0; the recognized-but-untouched rows are counted in `unchanged` instead.
+    expect(second.updated).toBe(0);
+    expect(second.unchanged).toBe(2);
     expect(after).toEqual(before);
   });
 
-  it("bảng o_prompt chưa tồn tại thì không lỗi, trả về 0/0", async () => {
+  it("bảng o_prompt chưa tồn tại thì không lỗi, trả về toàn 0", async () => {
     await db.schema.dropTable("o_prompt");
     const result = await syncGuardedPromptSeeds(db, "zh");
-    expect(result).toEqual({ updated: 0, skipped: 0 });
+    expect(result).toEqual({ updated: 0, unchanged: 0, skipped: 0 });
   });
 
   it("đồng bộ cả bốn loại seed prompt (bug: eventExtraction/audioBindPrompt trước đây không bao giờ được đồng bộ lại)", async () => {
@@ -126,7 +136,9 @@ describe("syncGuardedPromptSeeds", () => {
       })),
     );
     const result = await syncGuardedPromptSeeds(db, "en");
+    // Locale changed zh -> en, so every recognized row's canonical text differs -> a real write for each.
     expect(result.updated).toBe(SEED_PROMPT_TYPES.length);
+    expect(result.unchanged).toBe(0);
     expect(result.skipped).toBe(0);
     for (const type of SEED_PROMPT_TYPES) {
       const row = await db("o_prompt").where("type", type).first();
@@ -144,6 +156,7 @@ describe("syncGuardedPromptSeeds", () => {
     const result = await syncGuardedPromptSeeds(db, "zh");
     expect(result.skipped).toBe(2);
     expect(result.updated).toBe(0);
+    expect(result.unchanged).toBe(0);
     const event = await db("o_prompt").where("id", 1).first();
     const audio = await db("o_prompt").where("id", 2).first();
     expect(event.data).toBe(eventEdited);

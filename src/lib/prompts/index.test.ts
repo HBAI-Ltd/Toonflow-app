@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getSeedPrompt, getSeedVariants, SEED_PROMPT_TYPES } from "./index";
+import { getSeedPrompt, getSeedVariants, SEED_PROMPT_TYPES, type LocaleText } from "./index";
 import { eventExtraction } from "./eventExtraction";
 import { scriptAssetExtraction } from "./scriptAssetExtraction";
 import { videoPromptGeneration } from "./videoPromptGeneration";
@@ -16,21 +16,54 @@ describe("getSeedPrompt — locale resolution", () => {
     expect(getSeedPrompt("audioBindPrompt", "zh")).toBe(audioBindPrompt.zh);
   });
 
-  it("en/vi chưa có nội dung, mọi locale đều fallback về đúng văn bản zh", () => {
+  it("locale đã có bản dịch thì trả về đúng bản dịch đó, chưa có thì fallback về zh", () => {
     for (const type of ALL_TYPES) {
+      const map = { eventExtraction, scriptAssetExtraction, videoPromptGeneration, audioBindPrompt }[type];
       const zhText = getSeedPrompt(type, "zh");
       expect(zhText.length).toBeGreaterThan(0);
       for (const locale of ALL_LOCALES) {
-        expect(getSeedPrompt(type, locale)).toBe(zhText);
+        const own = map[locale];
+        expect(getSeedPrompt(type, locale)).toBe(own !== undefined && own !== "" ? own : zhText);
       }
     }
   });
 
-  it("en/vi rỗng hoặc không tồn tại trong LocaleText của từng prompt", () => {
-    for (const type of ALL_TYPES) {
-      const map = { eventExtraction, scriptAssetExtraction, videoPromptGeneration, audioBindPrompt }[type];
-      expect(map.en ?? "").toBe("");
-      expect(map.vi ?? "").toBe("");
+  it("cả bốn prompt seed đã có đủ en/vi, khác hẳn văn bản zh, và chứa đúng nội dung dịch (không phải placeholder)", () => {
+    // Mỗi cặp (type, locale) có một cụm từ ổn định, đặc trưng riêng cho bản dịch đó -> một
+    // placeholder rỗng hay copy-paste nhầm từ locale khác sẽ làm assertion náy fail, khác với việc
+    // chỉ kiểm tra length > 0 và !== zh (một placeholder bất kỳ cũng thoả cả hai điều kiện đó).
+    const STABLE_SUBSTRING: Record<string, { en: string; vi: string }> = {
+      eventExtraction: {
+        en: "# Event Extraction Instructions",
+        vi: "# Chỉ dẫn trích xuất sự kiện",
+      },
+      scriptAssetExtraction: {
+        en: "You are a professional script content analysis assistant.",
+        vi: "Bạn là trợ lý phân tích nội dung kịch bản chuyên nghiệp",
+      },
+      videoPromptGeneration: {
+        en: "# Video Prompt Generation Skill",
+        vi: "# Skill sinh prompt video",
+      },
+      audioBindPrompt: {
+        en: "You are a voice matching assistant.",
+        vi: "Bạn là trợ lý so khớp chất giọng.",
+      },
+    };
+
+    const named: [string, LocaleText][] = [
+      ["eventExtraction", eventExtraction],
+      ["scriptAssetExtraction", scriptAssetExtraction],
+      ["audioBindPrompt", audioBindPrompt],
+      ["videoPromptGeneration", videoPromptGeneration],
+    ];
+
+    for (const [type, map] of named) {
+      for (const locale of ["en", "vi"] as const) {
+        expect(map[locale]?.length ?? 0).toBeGreaterThan(0);
+        expect(map[locale]).not.toBe(map.zh);
+        expect(map[locale]).toContain(STABLE_SUBSTRING[type][locale]);
+      }
     }
   });
 });
