@@ -39,7 +39,7 @@
     },
     "data/skills/art_skills/realpeople_modern_city/README.md": {
       "en": {
-        "residualCjk": 0,
+        "residualCjk": 1,
         "literalAllowance": {
           "推进": {
             "expected": 0,
@@ -48,7 +48,7 @@
         }
       },
       "vi": {
-        "residualCjk": 0,
+        "residualCjk": 1,
         "literalAllowance": {
           "推进": {
             "expected": 0,
@@ -66,16 +66,16 @@
       "vi": 0
     },
     "data/skills/production_agent_supervision.md": {
-      "en": 41,
-      "vi": 41
+      "en": 43,
+      "vi": 43
     },
     "data/skills/production_execution_derive_assets.md": {
-      "en": 0,
-      "vi": 0
+      "en": 4,
+      "vi": 4
     },
     "data/skills/production_execution_director_plan.md": {
-      "en": 0,
-      "vi": 0
+      "en": 4,
+      "vi": 4
     },
     "data/skills/production_execution_generate_assets.md": {
       "en": 0,
@@ -86,20 +86,20 @@
       "vi": 0
     },
     "data/skills/production_execution_storyboard_panel.md": {
-      "en": 14,
-      "vi": 14
+      "en": 20,
+      "vi": 20
     },
     "data/skills/production_execution_storyboard_table.md": {
-      "en": 67,
-      "vi": 67
+      "en": 68,
+      "vi": 68
     },
     "data/skills/production_skills/storyboard_prompt_techniques.md": {
-      "en": 540,
-      "vi": 543
+      "en": 548,
+      "vi": 548
     },
     "data/skills/production_skills/storyboard_table_techniques.md": {
-      "en": 176,
-      "vi": 176
+      "en": 194,
+      "vi": 194
     },
     "data/skills/script_agent_decision.md": {
       "en": 0,
@@ -110,16 +110,16 @@
       "vi": 0
     },
     "data/skills/script_execution_adaptation.md": {
-      "en": 0,
-      "vi": 0
+      "en": 14,
+      "vi": 14
     },
     "data/skills/script_execution_script.md": {
-      "en": 0,
-      "vi": 0
+      "en": 16,
+      "vi": 16
     },
     "data/skills/script_execution_skeleton.md": {
-      "en": 0,
-      "vi": 0
+      "en": 4,
+      "vi": 4
     },
     "data/skills/story_skills/Comedy_humor/README.md": {
       "en": 0,
@@ -169,6 +169,14 @@
       "en": 0,
       "vi": 0
     },
+    "data/skills/story_skills/Coming_of_age/driector_skills/director_planning_narrative.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Coming_of_age/driector_skills/director_storyboard_table_narrative.md": {
+      "en": 4,
+      "vi": 4
+    },
     "data/skills/story_skills/Family_warmth/README.md": {
       "en": 0,
       "vi": 0
@@ -195,7 +203,7 @@
     },
     "data/skills/story_skills/Family_warmth/driector_skills/director_storyboard_table_narrative.md": {
       "en": {
-        "residualCjk": 0,
+        "residualCjk": 4,
         "literalAllowance": {
           "推进": {
             "expected": 0,
@@ -208,7 +216,7 @@
         }
       },
       "vi": {
-        "residualCjk": 0,
+        "residualCjk": 4,
         "literalAllowance": {
           "推进": {
             "expected": 0,
