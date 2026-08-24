@@ -1,0 +1,385 @@
+/**
+ * i18n:check-sidecars — cổng kiểm tra cơ học cho các file dịch skill (data/skills/**).
+ *
+ * `data/skills/**` (mọi `*.md`) là bản gốc tiếng Trung (KHÔNG BAO GIỜ sửa ở đây). Bản dịch nằm
+ * cạnh nó dưới dạng sidecar: `foo.md` (zh) + `foo.en.md` + `foo.vi.md`. Script này chạy
+ * bốn kiểm tra trên từng bộ ba đã có đủ sidecar:
+ *
+ *   1. Bảo toàn literal (hard fail) — mọi entry trong docs/i18n/prompt-terms.json có
+ *      policy keep-zh-literal / never-translate và zh chứa ký tự CJK phải xuất hiện
+ *      đúng số lần trong bản dịch như trong bản gốc.
+ *   2. Parity cấu trúc (hard fail) — số heading ATX (và chuỗi cấp), số dòng bảng, số
+ *      hàng rào code, số token ảnh @图N/@图片N phải khớp giữa bản gốc và bản dịch. Nội
+ *      dung bên trong khối code không tính vào heading/bảng.
+ *   3. Ngân sách CJK còn sót (hard fail khi tăng) — sau khi xoá các literal term khỏi
+ *      bản dịch, số ký tự CJK còn lại không được vượt số đã ghi trong
+ *      docs/i18n/sidecar-budget.json. File chưa có trong budget không fail, chỉ được
+ *      liệt kê để chạy `--update`.
+ *   4. Danh sách bản gốc thiếu sidecar (thông tin, không fail) — đếm theo thư mục.
+ *
+ * Chạy `tsx scripts/i18n-check-sidecars.ts` để kiểm tra, hoặc `--update` để ghi lại
+ * ngân sách CJK còn sót từ trạng thái đĩa hiện tại (kiểm tra 1 và 2 luôn phải đúng
+ * tuyệt đối, không có ngân sách cho chúng).
+ */
+import fs from "node:fs";
+import path from "node:path";
+
+export const SKILLS_DIR_NAME = "data/skills";
+export const TERMS_PATH = "docs/i18n/prompt-terms.json";
+export const BUDGET_PATH = "docs/i18n/sidecar-budget.json";
+
+const CJK_CHAR = /[一-鿿]/;
+const IMAGE_REF = /@图片?\d+/g;
+
+export type Problem = { check: "literal" | "structure" | "cjk-budget"; detail: string };
+export type FileProblems = { file: string; problems: Problem[] };
+export type Budget = Record<string, { en: number; vi: number }>;
+
+/** Đếm số lần xuất hiện thô của một chuỗi con trong văn bản — không regex, không dedupe. */
+export function occurrences(needle: string, haystack: string): number {
+  if (!needle) return 0;
+  return haystack.split(needle).length - 1;
+}
+
+/** Đếm ký tự CJK cơ bản (U+4E00–U+9FFF) trong văn bản. */
+export function countCJK(text: string): number {
+  const matches = text.match(/[一-鿿]/g);
+  return matches ? matches.length : 0;
+}
+
+/**
+ * Các entry cần bảo toàn nguyên văn khi dịch: policy keep-zh-literal / never-translate
+ * mà zh chứa ký tự CJK (bỏ qua các never-translate thuần ASCII như `duration`, `tool`).
+ * Khử trùng lặp theo chuỗi zh — đếm chuỗi con thô cho từng chuỗi độc lập, không "khử
+ * trùng lặp thông minh" giữa các token lồng nhau như 远景/大远景.
+ */
+export function extractLiteralTerms(registry: { terms: Array<{ zh: string; policy: string }> }): string[] {
+  const seen = new Set<string>();
+  for (const term of registry.terms) {
+    if ((term.policy === "keep-zh-literal" || term.policy === "never-translate") && term.zh && CJK_CHAR.test(term.zh)) {
+      seen.add(term.zh);
+    }
+  }
+  return [...seen];
+}
+
+/** Chuỗi cấp heading ATX (`^#{1,6} `), bỏ qua nội dung bên trong khối code ```` ``` ````. */
+export function extractHeadingLevels(text: string): number[] {
+  const levels: number[] = [];
+  let inFence = false;
+  for (const rawLine of text.split("\n")) {
+    if (rawLine.trim().startsWith("```")) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    const m = /^(#{1,6})\s/.exec(rawLine);
+    if (m) levels.push(m[1].length);
+  }
+  return levels;
+}
+
+/** Số dòng bảng Markdown (bắt đầu bằng `|` sau khi trim), bỏ qua bên trong khối code. */
+export function countTableLines(text: string): number {
+  let count = 0;
+  let inFence = false;
+  for (const rawLine of text.split("\n")) {
+    const line = rawLine.trim();
+    if (line.startsWith("```")) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    if (line.startsWith("|")) count++;
+  }
+  return count;
+}
+
+/** Số hàng rào code (mỗi dòng ```` ``` ```` mở hoặc đóng đều tính). */
+export function countCodeFences(text: string): number {
+  return text.split("\n").filter((l) => l.trim().startsWith("```")).length;
+}
+
+/** Số token tham chiếu ảnh dạng `@图N` / `@图片N`. */
+export function countImageRefs(text: string): number {
+  const matches = text.match(IMAGE_REF);
+  return matches ? matches.length : 0;
+}
+
+/**
+ * Xoá mọi occurrence của từng literal term khỏi văn bản (dùng trước khi đếm CJK còn sót).
+ * Luôn xoá token DÀI nhất trước — với token lồng nhau như 远景/大远景, xoá 远景 trước sẽ để
+ * lại "大" mồ côi (không còn khớp 大远景 nữa) và làm CJK còn sót bị đếm sai. Xoá 大远景
+ * trước loại bỏ đúng nguyên khối, không phụ thuộc thứ tự literalTerms truyền vào.
+ */
+export function stripLiteralTerms(text: string, literalTerms: string[]): string {
+  const byLengthDesc = [...literalTerms].sort((a, b) => b.length - a.length);
+  let out = text;
+  for (const term of byLengthDesc) {
+    if (term) out = out.split(term).join("");
+  }
+  return out;
+}
+
+/** Diễn giải vì sao chuỗi cấp heading lệch nhau — số lượng theo từng cấp, hoặc chỉ thứ tự. */
+function headingDiffHint(zh: number[], translated: number[]): string {
+  const countBy = (arr: number[]) =>
+    arr.reduce<Record<number, number>>((m, v) => {
+      m[v] = (m[v] ?? 0) + 1;
+      return m;
+    }, {});
+  const zc = countBy(zh);
+  const tc = countBy(translated);
+  const levels = [...new Set([...Object.keys(zc), ...Object.keys(tc)].map(Number))].sort((a, b) => a - b);
+  const diffs: string[] = [];
+  for (const lvl of levels) {
+    const d = (zc[lvl] ?? 0) - (tc[lvl] ?? 0);
+    if (d > 0) diffs.push(`thiếu ${d} heading cấp ${lvl}`);
+    if (d < 0) diffs.push(`thừa ${-d} heading cấp ${lvl}`);
+  }
+  return diffs.length > 0 ? ` — ${diffs.join(", ")}` : " — thứ tự cấp heading khác bản gốc";
+}
+
+/**
+ * Kiểm tra 1 (literal) và kiểm tra 2 (parity cấu trúc) cho một file bản dịch so với bản
+ * gốc zh tương ứng. Không đụng đĩa — nhận thẳng nội dung văn bản.
+ */
+export function checkSidecarFile(zh: string, translated: string, literalTerms: string[]): Problem[] {
+  const problems: Problem[] = [];
+
+  // Kiểm tra 1 — bảo toàn literal.
+  for (const term of literalTerms) {
+    const zhCount = occurrences(term, zh);
+    if (zhCount === 0) continue; // token không xuất hiện trong bản gốc file này, bỏ qua
+    const trCount = occurrences(term, translated);
+    if (trCount !== zhCount) {
+      const diff = Math.abs(zhCount - trCount);
+      const verb = trCount < zhCount ? "đã bị dịch mất" : "xuất hiện thừa so với bản gốc";
+      problems.push({
+        check: "literal",
+        detail: `literal \`${term}\` xuất hiện ${trCount} lần, bản gốc có ${zhCount} lần — ${diff} lần ${verb}`,
+      });
+    }
+  }
+
+  // Kiểm tra 2 — parity cấu trúc.
+  const zhHeadings = extractHeadingLevels(zh);
+  const trHeadings = extractHeadingLevels(translated);
+  const headingsMatch = zhHeadings.length === trHeadings.length && zhHeadings.every((v, i) => v === trHeadings[i]);
+  if (!headingsMatch) {
+    problems.push({
+      check: "structure",
+      detail: `heading: bản gốc ${JSON.stringify(zhHeadings)}, bản dịch ${JSON.stringify(trHeadings)}${headingDiffHint(zhHeadings, trHeadings)}`,
+    });
+  }
+
+  const zhTables = countTableLines(zh);
+  const trTables = countTableLines(translated);
+  if (zhTables !== trTables) {
+    problems.push({ check: "structure", detail: `dòng bảng: bản gốc có ${zhTables}, bản dịch có ${trTables}` });
+  }
+
+  const zhFences = countCodeFences(zh);
+  const trFences = countCodeFences(translated);
+  if (zhFences !== trFences) {
+    problems.push({ check: "structure", detail: `hàng rào code: bản gốc có ${zhFences}, bản dịch có ${trFences}` });
+  }
+
+  const zhImages = countImageRefs(zh);
+  const trImages = countImageRefs(translated);
+  if (zhImages !== trImages) {
+    problems.push({ check: "structure", detail: `token ảnh @图N: bản gốc có ${zhImages}, bản dịch có ${trImages}` });
+  }
+
+  return problems;
+}
+
+/** Kiểm tra 3 — ngân sách CJK còn sót cho một file bản dịch. */
+export function checkCJKBudgetForFile(
+  translated: string,
+  literalTerms: string[],
+  budgetValue: number | undefined,
+): { problem?: Problem; actual: number; isNew: boolean } {
+  const actual = countCJK(stripLiteralTerms(translated, literalTerms));
+  if (budgetValue === undefined) {
+    return { actual, isNew: true };
+  }
+  if (actual > budgetValue) {
+    return {
+      problem: {
+        check: "cjk-budget",
+        detail: `CJK còn sót: ${actual} ký tự, ngân sách đã ghi ${budgetValue} — vượt ${actual - budgetValue}`,
+      },
+      actual,
+      isNew: false,
+    };
+  }
+  return { actual, isNew: false };
+}
+
+const toPosix = (p: string) => p.split(path.sep).join("/");
+
+const walk = (dir: string, out: string[] = []): string[] => {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(p, out);
+    else out.push(p);
+  }
+  return out;
+};
+
+const isSidecar = (f: string) => /\.(en|vi)\.md$/.test(f);
+
+/** Mọi bản gốc `*.md` dưới skillsDir (loại trừ sidecar `.en.md` / `.vi.md`), đã sắp xếp. */
+export function findSkillOriginals(skillsDir: string): string[] {
+  return walk(skillsDir)
+    .filter((f) => f.endsWith(".md") && !isSidecar(f))
+    .sort();
+}
+
+export type SidecarReport = {
+  files: FileProblems[];
+  hasHardFail: boolean;
+  missingSidecars: string[];
+  newInBudget: string[];
+};
+
+/**
+ * Chạy cả bốn kiểm tra trên toàn bộ cây skillsDir. `root` dùng để tính đường dẫn tương
+ * đối (key trong budget và trong report) — với repo thật root là thư mục gốc repo và
+ * skillsDir là `<root>/data/skills`.
+ */
+export function checkSidecars(root: string, skillsDir: string, literalTerms: string[], budget: Budget): SidecarReport {
+  const files: FileProblems[] = [];
+  const missingSidecars: string[] = [];
+  const newInBudget: string[] = [];
+  let hasHardFail = false;
+
+  for (const absZh of findSkillOriginals(skillsDir)) {
+    const relPath = toPosix(path.relative(root, absZh));
+    const base = absZh.slice(0, -".md".length);
+    const enPath = `${base}.en.md`;
+    const viPath = `${base}.vi.md`;
+    const hasEn = fs.existsSync(enPath);
+    const hasVi = fs.existsSync(viPath);
+
+    if (!hasEn || !hasVi) {
+      missingSidecars.push(relPath);
+    }
+    if (!hasEn && !hasVi) continue; // chưa có sidecar nào — không có gì để kiểm tra cơ học
+
+    const zhText = fs.readFileSync(absZh, "utf8");
+    const budgetEntry = budget[relPath];
+    if (!budgetEntry) newInBudget.push(relPath);
+
+    for (const [locale, sidecarPath, exists] of [
+      ["en", enPath, hasEn],
+      ["vi", viPath, hasVi],
+    ] as const) {
+      if (!exists) continue;
+      const translated = fs.readFileSync(sidecarPath, "utf8");
+      const problems = checkSidecarFile(zhText, translated, literalTerms);
+      const cjk = checkCJKBudgetForFile(translated, literalTerms, budgetEntry?.[locale]);
+      if (cjk.problem) problems.push(cjk.problem);
+      if (problems.length > 0) {
+        hasHardFail = true;
+        files.push({ file: toPosix(path.relative(root, sidecarPath)), problems });
+      }
+    }
+  }
+
+  return { files, hasHardFail, missingSidecars: missingSidecars.sort(), newInBudget: newInBudget.sort() };
+}
+
+/** Đếm bản gốc thiếu sidecar theo thư mục — dùng để in kiểm tra 4. */
+export function groupMissingByDir(missingRelPaths: string[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const p of missingRelPaths) {
+    const dir = path.posix.dirname(p);
+    counts[dir] = (counts[dir] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/**
+ * Tính lại toàn bộ ngân sách CJK còn sót từ trạng thái đĩa hiện tại — dùng cho `--update`.
+ * Chỉ ghi entry cho bộ ba có ĐỦ cả `.en.md` và `.vi.md`.
+ */
+export function buildBudget(root: string, skillsDir: string, literalTerms: string[]): Budget {
+  const budget: Budget = {};
+  for (const absZh of findSkillOriginals(skillsDir)) {
+    const relPath = toPosix(path.relative(root, absZh));
+    const base = absZh.slice(0, -".md".length);
+    const enPath = `${base}.en.md`;
+    const viPath = `${base}.vi.md`;
+    if (!fs.existsSync(enPath) || !fs.existsSync(viPath)) continue;
+    const en = fs.readFileSync(enPath, "utf8");
+    const vi = fs.readFileSync(viPath, "utf8");
+    budget[relPath] = {
+      en: countCJK(stripLiteralTerms(en, literalTerms)),
+      vi: countCJK(stripLiteralTerms(vi, literalTerms)),
+    };
+  }
+  const sorted: Budget = {};
+  for (const key of Object.keys(budget).sort()) sorted[key] = budget[key];
+  return sorted;
+}
+
+function main(): void {
+  const root = process.cwd();
+  const skillsDir = path.join(root, SKILLS_DIR_NAME);
+  const registry = JSON.parse(fs.readFileSync(path.join(root, TERMS_PATH), "utf8"));
+  const literalTerms = extractLiteralTerms(registry);
+
+  if (process.argv.includes("--update")) {
+    const budget = buildBudget(root, skillsDir, literalTerms);
+    const out = {
+      $comment:
+        "Ngân sách CJK còn sót cho phép trong từng sidecar bản dịch skill, sau khi đã xoá các literal term " +
+        "trong docs/i18n/prompt-terms.json. Sinh và ghi đè bằng `tsx scripts/i18n-check-sidecars.ts --update` " +
+        "sau khi rà lại các ký tự CJK còn sót là hợp lệ (tên riêng trong ví dụ, từ vựng gaps đã ghi nhận cố ý " +
+        "chưa đăng ký). Không sửa tay — mọi thay đổi phải qua --update để phản ánh đúng trạng thái đĩa.",
+      budget,
+    };
+    fs.writeFileSync(path.join(root, BUDGET_PATH), `${JSON.stringify(out, null, 2)}\n`);
+    console.log(`[i18n:check-sidecars] ngân sách CJK đã ghi lại cho ${Object.keys(budget).length} file trong ${BUDGET_PATH}`);
+    return;
+  }
+
+  let budget: Budget = {};
+  if (fs.existsSync(path.join(root, BUDGET_PATH))) {
+    const raw = JSON.parse(fs.readFileSync(path.join(root, BUDGET_PATH), "utf8"));
+    budget = raw.budget ?? {};
+  }
+
+  const report = checkSidecars(root, skillsDir, literalTerms, budget);
+
+  for (const f of report.files) {
+    console.error(`✗ ${f.file}`);
+    for (const p of f.problems) console.error(`    ${p.detail}`);
+  }
+
+  if (report.newInBudget.length > 0) {
+    console.log(`\nfile mới, chạy --update để ghi nhận (${report.newInBudget.length}):`);
+    for (const f of report.newInBudget) console.log(`  ${f}`);
+  }
+
+  if (report.missingSidecars.length > 0) {
+    const byDir = groupMissingByDir(report.missingSidecars);
+    console.log(`\nbản gốc chưa có sidecar (${report.missingSidecars.length} file, theo thư mục):`);
+    for (const dir of Object.keys(byDir).sort()) console.log(`  ${dir}: ${byDir[dir]}`);
+  }
+
+  const checkedFiles = report.files.length;
+  console.log(
+    `\n[i18n:check-sidecars] ${report.hasHardFail ? "FAILED" : "OK"} — ` +
+      `${report.missingSidecars.length} bản gốc thiếu sidecar, ${report.newInBudget.length} file mới chưa ghi ngân sách, ` +
+      `${checkedFiles} file bản dịch có vấn đề.`,
+  );
+
+  if (report.hasHardFail) process.exit(1);
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]).endsWith(path.join("scripts", "i18n-check-sidecars.ts"))) {
+  main();
+}

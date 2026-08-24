@@ -1,0 +1,157 @@
+{
+  "$comment": "Ngân sách CJK còn sót cho phép trong từng sidecar bản dịch skill, sau khi đã xoá các literal term trong docs/i18n/prompt-terms.json. Sinh và ghi đè bằng `tsx scripts/i18n-check-sidecars.ts --update` sau khi rà lại các ký tự CJK còn sót là hợp lệ (tên riêng trong ví dụ, từ vựng gaps đã ghi nhận cố ý chưa đăng ký). Không sửa tay — mọi thay đổi phải qua --update để phản ánh đúng trạng thái đĩa.",
+  "budget": {
+    "data/skills/art_skills/2D_90s_japanese_anime/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/2D_chinese_guofeng/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/2D_flat_design/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/2D_mature_urban_romance/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/3D_anime_render/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/3D_chinese_traditional/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/3D_clay_stopmotion/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/3D_guofeng_cyber/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/realpeople_ancient_chinese/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/realpeople_modern_city/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/realpeople_urban_modern/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/production_agent_decision.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/production_agent_supervision.md": {
+      "en": 41,
+      "vi": 41
+    },
+    "data/skills/production_execution_derive_assets.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/production_execution_director_plan.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/production_execution_generate_assets.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/production_execution_storyboard_gen.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/production_execution_storyboard_panel.md": {
+      "en": 14,
+      "vi": 14
+    },
+    "data/skills/production_execution_storyboard_table.md": {
+      "en": 67,
+      "vi": 67
+    },
+    "data/skills/production_skills/storyboard_prompt_techniques.md": {
+      "en": 540,
+      "vi": 543
+    },
+    "data/skills/production_skills/storyboard_table_techniques.md": {
+      "en": 176,
+      "vi": 176
+    },
+    "data/skills/script_agent_decision.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/script_agent_supervision.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/script_execution_adaptation.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/script_execution_script.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/script_execution_skeleton.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Comedy_humor/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Coming_of_age/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Family_warmth/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Historical_epic/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Horror_supernatural/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Hot_blooded_action/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Mystery_thriller/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Psychological_drama/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Scifi_post_apocalypse/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Sweet_romance_novel/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Urban_workplace_drama/README.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/story_skills/Xianxia_fantasy/README.md": {
+      "en": 0,
+      "vi": 0
+    }
+  }
+}
