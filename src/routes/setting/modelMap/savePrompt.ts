@@ -6,7 +6,7 @@ import { validateFields } from "@/middleware/middleware";
 import fs from "fs/promises";
 import path from "path";
 import { t, getLocale } from "@/i18n";
-import { isShippedModelPrompt } from "./shippedPrompts";
+import { isShippedModelPrompt } from "@/lib/shippedPrompts";
 
 const router = express.Router();
 

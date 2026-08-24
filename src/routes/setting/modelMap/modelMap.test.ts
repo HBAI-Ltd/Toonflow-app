@@ -68,7 +68,7 @@ describe("modelMap routes (getPromptList/bindingPrompt/deletePrompt/updatePrompt
     modelPromptRoot = path.join(tmpRoot, "modelPrompt");
     fs.mkdirSync(path.join(modelPromptRoot, "video"), { recursive: true });
 
-    // "mode": bản gốc zh (đặt tên trùng shipped list trong shippedPrompts.ts) + 2 sidecar en/vi,
+    // "mode": bản gốc zh (đặt tên trùng shipped list trong src/lib/shippedPrompts.ts) + 2 sidecar en/vi,
     // y hệt cấu trúc data/modelPrompt/video/ thật (4 mode x 3 file).
     fs.writeFileSync(path.join(modelPromptRoot, "video", "seedance2Multi-parameterMode.md"), "zh content", "utf-8");
     fs.writeFileSync(path.join(modelPromptRoot, "video", "seedance2Multi-parameterMode.en.md"), "en content", "utf-8");

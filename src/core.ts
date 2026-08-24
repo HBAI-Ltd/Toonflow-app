@@ -1,6 +1,7 @@
 import fg from "fast-glob";
 import path from "path";
 import { readFile, writeFile } from "fs/promises";
+import fsSync from "fs";
 import crypto from "crypto";
 
 function fileNameToRoutePath(fileName: string): string {
@@ -15,9 +16,37 @@ function fileNameToRoutePath(fileName: string): string {
 
 type RouteModulePair = { routePath: string; varName: string; entry: string };
 
+/**
+ * Chỉ file có `export default` mới là route. `src/routes/**` đôi khi chứa module tiện ích
+ * dùng chung giữa vài route (ví dụ src/lib/shippedPrompts.ts từng nằm ở đó) — nếu để lọt,
+ * bộ sinh router tạo ra `app.use(path, undefined)` và app chết lúc khởi động với
+ * "argument handler must be a function".
+ *
+ * Không có test nào bắt được lỗi ấy: `yarn test` và `yarn lint` đều không khởi động server.
+ * Nên bộ lọc này là chỗ duy nhất chặn nó.
+ *
+ * Nhận diện tĩnh, sau khi xoá bình luận và chuỗi để `export default` nằm trong chúng không
+ * bị tính nhầm.
+ */
+export function isRouteModule(entry: string): boolean {
+  const src = fsSync.readFileSync(entry, "utf-8");
+  const stripped = src
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/\/\/[^\n]*/g, " ")
+    .replace(/(["'`])(?:\\.|(?!\1)[^\\])*\1/g, '""');
+  if (/\bexport\s+default\b/.test(stripped)) return true;
+  // `export { x as default }` — dạng ít gặp nhưng hợp lệ.
+  return /\bexport\s*\{[^}]*\bas\s+default\b[^}]*\}/.test(stripped);
+}
+
 export default async function generateRouter(): Promise<void> {
   // glob 得到 entries
   let entries: string[] = await fg(["src/routes/**/*.ts"], { ignore: ["**/*.test.ts", "**/*.spec.ts", "**/__tests__/**"] });
+  const skipped = entries.filter((entry) => !isRouteModule(entry));
+  if (skipped.length) {
+    console.warn(`[router] bỏ qua ${skipped.length} file dưới src/routes không có export default:\n  ${skipped.join("\n  ")}`);
+  }
+  entries = entries.filter((entry) => isRouteModule(entry));
   // 排序
   entries = entries.sort((a, b) => a.localeCompare(b));
 

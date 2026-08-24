@@ -4,8 +4,9 @@ import {
   syncGuardedPromptSeeds,
   ensureAudioBindPromptSeeded,
   LEGACY_SCRIPT_ASSET_EXTRACTION_ZH,
+  LEGACY_VIDEO_PROMPT_GENERATION_VI,
 } from "./promptSeedSync";
-import { getSeedPrompt, SEED_PROMPT_TYPES } from "@/lib/prompts";
+import { getSeedPrompt, getSeedVariants, SEED_PROMPT_TYPES } from "@/lib/prompts";
 
 let db: Knex;
 
@@ -91,6 +92,37 @@ describe("syncGuardedPromptSeeds", () => {
     const video = await db("o_prompt").where("id", 2).first();
     expect(script.data).toBe(getSeedPrompt("scriptAssetExtraction", "zh"));
     expect(video.data).toBe(userEdited);
+  });
+
+  it("cập nhật hàng videoPromptGeneration còn giữ bản vi cũ (trước aa5130b), useData null, lên seed locale hiện hành", async () => {
+    // LEGACY_VIDEO_PROMPT_GENERATION_VI is the Vietnamese seed text shipped between 7397859 and
+    // aa5130b. It is no longer written anywhere, so getSeedVariants() alone cannot recognize it and
+    // such a row would stay stuck on the outdated Vietnamese text forever.
+    expect(getSeedVariants("videoPromptGeneration")).not.toContain(LEGACY_VIDEO_PROMPT_GENERATION_VI);
+    await db("o_prompt").insert({
+      id: 1,
+      type: "videoPromptGeneration",
+      data: LEGACY_VIDEO_PROMPT_GENERATION_VI,
+      useData: null,
+    });
+    const result = await syncGuardedPromptSeeds(db, "en");
+    expect(result.updated).toBe(1);
+    expect(result.unchanged).toBe(0);
+    expect(result.skipped).toBe(0);
+    const row = await db("o_prompt").where("id", 1).first();
+    expect(row.data).toBe(getSeedPrompt("videoPromptGeneration", "en"));
+    expect(row.useData).toBeNull();
+  });
+
+  it("không đụng vào hàng videoPromptGeneration do người dùng tự viết, dù chỉ khác bản vi cũ vài byte", async () => {
+    const userEdited = LEGACY_VIDEO_PROMPT_GENERATION_VI + "\n\nGhi chú riêng của tôi.";
+    await db("o_prompt").insert({ id: 1, type: "videoPromptGeneration", data: userEdited, useData: null });
+    const result = await syncGuardedPromptSeeds(db, "en");
+    expect(result.skipped).toBe(1);
+    expect(result.updated).toBe(0);
+    expect(result.unchanged).toBe(0);
+    const row = await db("o_prompt").where("id", 1).first();
+    expect(row.data).toBe(userEdited);
   });
 
   it("bỏ qua khi không có bản ghi cho loại prompt đó", async () => {
