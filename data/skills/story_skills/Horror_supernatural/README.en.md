@@ -34,7 +34,7 @@ The technique reference the director uses during the **narrative planning phase*
 | Per-Scene Mood Design | Six archetypal horror-passage designs, stripping away safety, spatial alienation |
 | Sound & Music Direction | The lethality of silence, low-frequency pressure, unidentified sound sources, sudden silence |
 | Composition & Shot-Size Narrative | Threat implied by negative space, restricted viewpoint, information control via shot size |
-| Camera Movement & Rhythm | Breathing camera moves, loss of control, voyeuristic POV, oppressive stillness |
+| Camera Movement & Rhythm | Breathing camera moves, loss of control, voyeuristic POV, oppressive stillness (静止) |
 
 ### 2. Storyboard Table Narrative Techniques (`director_storyboard_table_narrative.md`)
 
@@ -44,7 +44,7 @@ The technique reference the director uses during the **storyboard table producti
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core tool for controlling fear rhythm |
 | Shot Size Selection | Information-obscuring shot sizing, threat implication, restricted subjective view |
-| Camera Movement Rhythm | Slow approach, out-of-control shake, sudden stillness, voyeuristic tracking |
+| Camera Movement Rhythm | Slow approach, out-of-control shake, sudden stillness (静止), voyeuristic tracking (跟踪) |
 | Duration Control | Stretching fear, compressing the scare, controlling the length of silence |
 | Shot-Merging Strategy | Sustaining continuous unease, integrating atmosphere shots, narrative density |
-| One-Shot (Long Take) | The suffocation of a long take, chase-and-flee tracking, spatial exploration |
+| One-Shot (Long Take) | The suffocation of a long take, chase-and-flee tracking (跟踪), spatial exploration |

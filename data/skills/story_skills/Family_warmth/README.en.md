@@ -34,7 +34,7 @@ The technique reference the director uses during the **narrative planning phase*
 | Per-Scene Mood Design | Six archetypal family-passage designs, space-belonging narrative, objects carrying feeling |
 | Sound & Music Direction | The soundscape of home, silent affection, restrained music, everyday sound as score |
 | Composition & Shot-Size Narrative | Family spatial relationships, dinner-table framing, distance as relationship, doorframe narrative |
-| Camera Movement & Rhythm | Calm slow drift, bystander gaze, everyday follow shots, the warmth of stillness |
+| Camera Movement & Rhythm | Calm slow drift, bystander gaze, everyday follow shots, the warmth of stillness (静止) |
 
 ### 2. Storyboard Table Narrative Techniques (`director_storyboard_table_narrative.md`)
 
@@ -43,8 +43,8 @@ The technique reference the director uses during the **storyboard table producti
 | Section | Content Summary |
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core tool for controlling family emotional warmth |
-| Shot Size Selection | Everyday shot sizing, the warmth of detail close-ups, the watchfulness of wide shots |
-| Camera Movement Rhythm | Calm slow drift, bystander POV, everyday follow shots, still gazing |
+| Shot Size Selection | Everyday shot sizing, the warmth of detail close-ups (特写), the watchfulness of long shots (远景) |
+| Camera Movement Rhythm | Calm slow drift, bystander POV, everyday follow shots, static (静止) gazing |
 | Duration Control | Everyday shot duration, silence duration, lingering on detail, a breathing rhythm |
 | Shot-Merging Strategy | Continuous slice-of-life flow, single-shot dinner scenes, integrating daily movement lines |
 | One-Shot (Long Take) | Moving through the family's space, everyday movement lines, waiting and returning |

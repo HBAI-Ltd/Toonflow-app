@@ -34,7 +34,7 @@ The technique reference the director uses during the **narrative planning phase*
 | Per-Scene Mood Design | Six archetypal emotional-passage designs, distance-as-narrative, spatial metaphor |
 | Sound & Music Direction | Silence first, passage-based scoring, an emotional-escalation music model |
 | Composition & Shot-Size Narrative | Negative space / framing / rule-of-thirds composition, shot-size escalation strategy |
-| Camera Movement & Rhythm | Stillness over motion, the emotional meaning of slow push and pull, heartbeat camera moves |
+| Camera Movement & Rhythm | Stillness over motion, the emotional meaning of slow push in (缓推) and pull back, heartbeat camera moves |
 
 ### 2. Storyboard Table Narrative Techniques (`director_storyboard_table_narrative.md`)
 
@@ -43,13 +43,13 @@ The technique reference the director uses during the **storyboard table producti
 | Section | Content Summary |
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core tool of shot language |
-| Shot Size Selection | Shot-size escalation, the value of wide shots, restricted use of extreme close-ups, lean establishing shots |
-| Camera Movement Rhythm | Stillness by default, the emotional meaning of slow push and pull, heartbeat camera moves |
+| Shot Size Selection | Shot-size escalation, the value of long shots (远景), restricted use of extreme close-ups (大特写), lean establishing shots |
+| Camera Movement Rhythm | Static (静止) by default, the emotional meaning of slow push in (缓推) and pull back, heartbeat camera moves |
 | Duration Control | Reference durations by shot type, the golden 6-second rule |
 | Shot-Merging Strategy | Removing the "AI feel," prioritizing narrative density, a director's self-check mindset |
 | One-Shot (Long Take) | Conditions for using a long take, notation method, duration and risk |
 | Character Interaction Design | Single-shot action limits, implicative interaction |
-| Dialogue & Silence | Long duration without dialogue, one line per shot, handling voiceover |
+| Dialogue & Silence | Long duration with no dialogue (无台词), one line per shot, handling voiceover |
 | Transition Design | Hard cut / cutaway transition / cross-dissolve fade in-out |
 
 ## How to Use

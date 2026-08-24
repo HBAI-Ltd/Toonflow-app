@@ -33,7 +33,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn lập k
 | Cấu trúc tự sự và nhịp điệu sinh tồn | Nhịp độ dẫn dắt bởi khủng hoảng, đấu trí tài nguyên, thử thách lòng tin, đường cong hy vọng |
 | Thiết kế không khí theo cảnh | Sáu kiểu đoạn hậu tận thế điển hình, tự sự suy tàn không gian, ẩn dụ khủng hoảng môi trường |
 | Định hướng âm thanh và âm nhạc | Tạp âm công nghiệp, hoang mạc tĩnh lặng, tự sự bằng còi báo động, dư âm điện tử |
-| Bố cục và tự sự cỡ cảnh | Toàn cảnh tàn tích / cận cảnh sinh tồn / không gian đè nén, biểu đạt sinh tồn qua cỡ cảnh |
+| Bố cục và tự sự cỡ cảnh | Toàn cảnh (全景) tàn tích / đặc tả (特写) sinh tồn / không gian đè nén, biểu đạt sinh tồn qua cỡ cảnh |
 | Chuyển động máy quay và nhịp điệu | Cầm tay cảm giác sinh tồn, lang thang giữa tàn tích, đẩy nhanh khi khủng hoảng, kéo chậm giữa hoang mạc |
 
 ### 2. Kỹ thuật tự sự bảng phân cảnh (`director_storyboard_table_narrative.md`)
@@ -43,7 +43,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 | Mục | Tóm tắt nội dung |
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như công cụ cốt lõi của tự sự sinh tồn |
-| Lựa chọn cỡ cảnh | Giá trị của toàn cảnh tàn tích, cận cảnh sinh tồn, cỡ cảnh di tích công nghệ |
+| Lựa chọn cỡ cảnh | Giá trị của viễn cảnh (远景) tàn tích, đặc tả (特写) sinh tồn, cỡ cảnh di tích công nghệ |
 | Nhịp độ chuyển động máy quay | Cảm giác cầm tay khi sinh tồn, sự ổn định giữa hoang mạc, tăng tốc khi khủng hoảng, trôi chậm khi khám phá |
 | Kiểm soát thời lượng | Thời lượng nhìn ngắm tàn tích, nén khủng hoảng, khoảng lặng của hoang mạc im lìm |
 | Thiết kế hành động sinh tồn | Logic phân cảnh khi tìm kiếm / chiến đấu / chạy trốn, ngôn ngữ hình ảnh của tranh giành tài nguyên |

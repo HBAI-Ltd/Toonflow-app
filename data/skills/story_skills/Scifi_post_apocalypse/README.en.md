@@ -33,7 +33,7 @@ The technique reference the director uses during the **narrative planning phase*
 | Narrative Structure & Survival Rhythm | Crisis-driven pacing, resource game theory, trust tests, the hope curve |
 | Per-Scene Atmosphere Design | Six archetypal apocalypse-passage designs, spatial-decay narrative, environmental-crisis metaphor |
 | Sound & Music Direction | Industrial noise, silent wasteland, alarm-sound narrative, electronic reverb |
-| Composition & Shot-Size Narrative | Ruin wide shots / survival close-ups / oppressive space, survival expressed through shot size |
+| Composition & Shot-Size Narrative | Ruin wide shots (全景) / survival close-ups (特写) / oppressive space, survival expressed through shot size |
 | Camera Movement & Rhythm | Survival handheld, ruin wandering, crisis snap-push, wasteland slow pull |
 
 ### 2. Storyboard Table Narrative Techniques (`director_storyboard_table_narrative.md`)
@@ -43,7 +43,7 @@ The technique reference the director uses during the **storyboard table producti
 | Section | Content Summary |
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core tool for survival narrative |
-| Shot Size Selection | The value of ruin wide shots, survival close-ups, tech-relic shot sizing |
+| Shot Size Selection | The value of ruin long shots (远景), survival close-ups (特写), tech-relic shot sizing |
 | Camera Movement Rhythm | Survival handheld feel, wasteland stability, crisis acceleration, exploratory slow drift |
 | Duration Control | Duration of gazing at ruins, crisis compression, the negative space of a silent wasteland |
 | Survival Action Design | Shot logic for searching / fighting / fleeing, the shot language of resource conflict |

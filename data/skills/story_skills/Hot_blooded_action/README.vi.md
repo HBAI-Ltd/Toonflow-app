@@ -34,7 +34,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn lập k
 | Thiết kế tâm trạng theo cảnh | Sáu kiểu đoạn nhiệt huyết điển hình, tự sự đối đầu leo thang, không gian hóa thành chiến trường |
 | Định hướng âm thanh và âm nhạc | Tiếng trống tăng tiến, tích lũy trong im lặng, thời điểm bùng nổ của nhạc nền, khoảng lặng trước tiếng hét |
 | Bố cục và tự sự cỡ cảnh | Máy quay ngước cảm giác anh hùng / máy quay cúi cảm giác tuyệt vọng / đối đầu đối xứng, biểu đạt sức mạnh qua cỡ cảnh |
-| Chuyển động máy quay và nhịp điệu | Chuyển động máy quay đường tốc độ, quay chậm khi va chạm, quay vòng tăng tốc, đẩy nhanh khi bùng nổ |
+| Chuyển động máy quay và nhịp điệu | Chuyển động máy quay đường tốc độ, quay chậm khi va chạm, vòng quanh (环绕) tăng tốc, đẩy nhanh khi bùng nổ |
 
 ### 2. Kỹ thuật tự sự bảng phân cảnh (`director_storyboard_table_narrative.md`)
 
@@ -43,8 +43,8 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 | Mục | Tóm tắt nội dung |
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như động cơ nhịp điệu cốt lõi |
-| Lựa chọn cỡ cảnh | Cỡ cảnh truyền tải sức mạnh, chức năng tự sự của góc ngước và góc cúi, cận cảnh va chạm |
-| Nhịp độ chuyển động máy quay | Tĩnh rồi bùng nổ, chuyển động máy quay theo tốc độ, quay vòng và bám máy |
+| Lựa chọn cỡ cảnh | Cỡ cảnh truyền tải sức mạnh, chức năng tự sự của góc ngước và góc cúi, đặc tả (特写) va chạm |
+| Nhịp độ chuyển động máy quay | Tĩnh rồi bùng nổ, chuyển động máy quay theo tốc độ, vòng quanh (环绕) và bám máy |
 | Kiểm soát thời lượng | Kéo dài trước bùng nổ, nén khoảnh khắc va chạm, khoảnh khắc vàng của quay chậm |
 | Thiết kế cảnh chiến đấu | Nhịp điệu công thủ, tương phản sức mạnh, ngôn ngữ hình ảnh của đòn quyết định |
 | Tự sự đồng đội | Bố cục sát cánh chiến đấu, cảnh truyền tải sự tin tưởng, hy sinh và trở về |

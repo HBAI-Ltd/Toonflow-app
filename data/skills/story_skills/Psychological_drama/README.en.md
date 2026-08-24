@@ -34,7 +34,7 @@ The technique reference the director uses during the **narrative planning phase*
 | Per-Scene Mood Design | Six archetypal game-theory-passage designs, dialogue as battlefield, silent attack and defense |
 | Sound & Music Direction | Oppressive scoring, the lethality of silence, psychologically suggestive sound effects |
 | Composition & Shot-Size Narrative | Standoff framing, power shot sizing, capturing micro-expressions, spatial game-play |
-| Camera Movement & Rhythm | Standoff stillness, oppressive slow push, implying imbalance, rhythm as psychology |
+| Camera Movement & Rhythm | Standoff stillness (静止), oppressive slow push in (缓推), implying imbalance, rhythm as psychology |
 
 ### 2. Storyboard Table Narrative Techniques (`director_storyboard_table_narrative.md`)
 
@@ -44,7 +44,7 @@ The technique reference the director uses during the **storyboard table producti
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core tool for controlling psychological-drama rhythm |
 | Shot Size Selection | Micro-expression shot sizing, standoff shot sizing, information-control shot sizing |
-| Camera Movement Rhythm | Standoff stillness, oppressive slow push, imbalance drift, psychological rhythm |
+| Camera Movement Rhythm | Standoff stillness (静止), oppressive slow push in (缓推), imbalance drift, psychological rhythm |
 | Duration Control | Dialogue-tension duration, silent attack and defense, twist rhythm |
 | Shot-Merging Strategy | Dialogue continuity, integrating game-theory passages, narrative density |
 | One-Shot (Long Take) | Standoff long takes, spatial power transfer, psychological attack and defense |

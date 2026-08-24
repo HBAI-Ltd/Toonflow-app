@@ -33,8 +33,8 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn lập k
 | Cấu trúc tự sự và nhịp điệu điểm cười | Vòng lặp dẫn dắt→bung miếng hài, quy tắc ba lần, phi lý tăng tiến, nhịp cảm xúc |
 | Thiết kế chất hài theo cảnh | Sáu kiểu đoạn hài kịch điển hình, tự sự chuỗi hiểu lầm, leo thang ngượng ngùng |
 | Định hướng âm thanh và âm nhạc | Nhạc nền tương phản, chất hài của im lặng, hiệu ứng âm thanh hỗ trợ điểm cười, im lặng đột ngột |
-| Bố cục và tự sự cỡ cảnh | Cảnh phản ứng / chất hài toàn cảnh / bố cục lệch pha, thời điểm hài của cỡ cảnh |
-| Chuyển động máy quay và nhịp điệu | Đẩy nhanh cảnh phản ứng, ổn định so với hỗn loạn, quan sát điềm tĩnh, quay lia đột ngột |
+| Bố cục và tự sự cỡ cảnh | Cảnh phản ứng / chất hài toàn cảnh (全景) / bố cục lệch pha, thời điểm hài của cỡ cảnh |
+| Chuyển động máy quay và nhịp điệu | Đẩy nhanh cảnh phản ứng, ổn định so với hỗn loạn, quan sát điềm tĩnh, lia máy nhanh (甩镜) đột ngột |
 
 ### 2. Kỹ thuật tự sự bảng phân cảnh (`director_storyboard_table_narrative.md`)
 
@@ -43,8 +43,8 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 | Mục | Tóm tắt nội dung |
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như công cụ cốt lõi kiểm soát nhịp điệu hài kịch |
-| Lựa chọn cỡ cảnh | Cỡ cảnh phản ứng, chất phi lý toàn cảnh, cận cảnh lệch pha |
-| Nhịp độ chuyển động máy quay | Tĩnh điềm tĩnh so với đẩy nhanh phản ứng, quay lia gây cười, bám máy mất kiểm soát |
+| Lựa chọn cỡ cảnh | Cỡ cảnh phản ứng, chất phi lý toàn cảnh (全景), đặc tả (特写) lệch pha |
+| Nhịp độ chuyển động máy quay | Máy cố định (固定) điềm tĩnh so với đẩy nhanh phản ứng, lia máy nhanh (甩镜) gây cười, bám máy mất kiểm soát |
 | Kiểm soát thời lượng | Thời lượng dẫn dắt, nhịp bung miếng hài, khoảng lặng gây cười, cứu vãn cảnh nguội |
 | Thiết kế cảnh điểm cười | Ngôn ngữ hình ảnh dẫn dắt→bung miếng hài, gag thị giác, gag từ khoảng trống thông tin |
 | Dàn cảnh hài đông nhân vật | Chuỗi phản ứng dàn cảnh, bố cục va chạm nhân vật, góc nhìn người ngoài cuộc |

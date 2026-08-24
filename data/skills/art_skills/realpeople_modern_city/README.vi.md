@@ -153,11 +153,11 @@ Hình ảnh nhân vật cho chủ đề đô thị người thật lấy **"cá 
 
 | Cỡ cảnh | Chức năng tự sự | Đặc trưng đô thị người thật |
 |---|---|---|
-| Đại cận cảnh | Điểm bùng nổ cảm xúc, chi tiết then chốt | Ánh mắt, cử động nhỏ của ngón tay, giọt nước mắt, màn hình tin nhắn |
-| Cận cảnh | Cảm xúc nhân vật, phản ứng đối thoại | Biểu cảm vi mô trên mặt, từ vai trở lên, nhấn mạnh truyền tải cảm xúc |
-| Trung cận cảnh | Tương tác nhân vật, tự sự động tác | Từ eo trở lên, cân bằng giữa biểu cảm và cử chỉ |
-| Trung cảnh | Mối quan hệ nhân vật, giải thích không gian | Toàn thân vào khung hình, mối quan hệ giữa nhân vật và môi trường |
-| Toàn cảnh | Không khí môi trường, sự cô đơn/hòa nhập của nhân vật | Tỉ lệ nhân vật nhỏ, chủ yếu là tự sự không gian |
+| Đại đặc tả (大特写) | Điểm bùng nổ cảm xúc, chi tiết then chốt | Ánh mắt, cử động nhỏ của ngón tay, giọt nước mắt, màn hình tin nhắn |
+| Cận cảnh (近景) | Cảm xúc nhân vật, phản ứng đối thoại | Biểu cảm vi mô trên mặt, từ vai trở lên, nhấn mạnh truyền tải cảm xúc |
+| Trung cận cảnh (中近景) | Tương tác nhân vật, tự sự động tác | Từ eo trở lên, cân bằng giữa biểu cảm và cử chỉ |
+| Trung cảnh (中景) | Mối quan hệ nhân vật, giải thích không gian | Toàn thân vào khung hình, mối quan hệ giữa nhân vật và môi trường |
+| Toàn cảnh (全景) | Không khí môi trường, sự cô đơn/hòa nhập của nhân vật | Tỉ lệ nhân vật nhỏ, chủ yếu là tự sự không gian |
 | Cảnh trống | Đệm cảm xúc, khoảng lặng ẩn dụ | Không có nhân vật, cảnh quay môi trường thuần túy, cảnh quan thành phố |
 
 ---
@@ -177,7 +177,7 @@ Phong cách này loại trừ nghiêm ngặt các loại nội dung sau, để �
 
 ## VI. Kế hoạch giai đoạn dự án và kết quả kỳ vọng
 
-Dự án sổ tay hình ảnh này áp dụng chiến lược triển khai theo giai đoạn, đảm bảo bao phủ đầy đủ từ khung sườn vĩ mô đến chi tiết vi mô.
+Dự án sổ tay hình ảnh này áp dụng chiến lược triển khai (推进) theo giai đoạn, đảm bảo bao phủ đầy đủ từ khung sườn vĩ mô đến chi tiết vi mô.
 
 ### Giai đoạn 1: Xây dựng khung sườn và định vị phong cách (hoàn thành trong kỳ này)
 
@@ -260,8 +260,8 @@ Dự án sổ tay hình ảnh này áp dụng chiến lược triển khai theo 
 - ⬜ Tài liệu kế hoạch đạo diễn — ràng buộc đạo diễn toàn cục cho chủ đề đô thị người thật (hệ thống tông màu, phương án ánh sáng, hướng không khí, nhịp điệu tự sự)
 
 **Danh sách nhiệm vụ cốt lõi:**
-- Quy chuẩn prompt cho hệ thống cỡ cảnh (đại cận cảnh → toàn cảnh)
-- Quy chuẩn prompt cho hệ thống chuyển động máy quay (cố định/đẩy kéo/lia máy/theo dõi/nâng hạ/cầm tay)
+- Quy chuẩn prompt cho hệ thống cỡ cảnh (đại đặc tả 大特写 → toàn cảnh 全景)
+- Quy chuẩn prompt cho hệ thống chuyển động máy quay (máy cố định 固定/đẩy kéo/lia máy/theo dõi/nâng hạ máy 升降/cầm tay)
 - Biến thể phong cách phân cảnh theo loại cảm xúc tự sự (chữa lành đời thường/trưởng thành công sở/tuổi trẻ truyền cảm hứng/ly kỳ đô thị/đời sống ấm áp)
 - Quy chuẩn hình ảnh cho cảnh trống và chuyển cảnh
 - Phương pháp sắp xếp prompt cho chuỗi tự sự đa cảnh quay
