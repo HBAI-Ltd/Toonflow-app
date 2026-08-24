@@ -43,8 +43,8 @@ export const SKILLS_DIR_NAME = "data/skills";
 export const TERMS_PATH = "docs/i18n/prompt-terms.json";
 export const BUDGET_PATH = "docs/i18n/sidecar-budget.json";
 
-const CJK_CHAR = /[一-鿿]/;
-const IMAGE_REF = /@图片?\d+/g;
+const CJK_CHAR = /[一-鿿]/; // i18n-ignore — Unicode range boundary for this checker's own regex, not translatable text
+const IMAGE_REF = /@图片?\d+/g; // i18n-ignore — matches the literal @图N / @图片N reference token verbatim, not translatable text
 
 export type Problem = { check: "literal" | "structure" | "cjk-budget" | "literal-allowance" | "frontmatter-name"; detail: string };
 export type FileProblems = { file: string; problems: Problem[] };
@@ -97,7 +97,7 @@ export function occurrences(needle: string, haystack: string): number {
 
 /** Đếm ký tự CJK cơ bản (U+4E00–U+9FFF) trong văn bản. */
 export function countCJK(text: string): number {
-  const matches = text.match(/[一-鿿]/g);
+  const matches = text.match(/[一-鿿]/g); // i18n-ignore — Unicode range boundary for this checker's own regex, not translatable text
   return matches ? matches.length : 0;
 }
 
@@ -259,6 +259,7 @@ export function checkSidecarFile(
   const zhImages = countImageRefs(zh);
   const trImages = countImageRefs(translated);
   if (zhImages !== trImages) {
+    // i18n-ignore — @图N is the literal image-reference token this message names verbatim, not translatable text
     problems.push({ check: "structure", detail: `token ảnh @图N: bản gốc có ${zhImages}, bản dịch có ${trImages}` });
   }
 

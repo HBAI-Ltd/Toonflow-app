@@ -72,18 +72,19 @@ export type GlossConflicts = { sharedGloss: SharedGlossConflict[]; splitGloss: S
  * phải được giữ nguyên tiếng Trung theo quy ước đã chốt, nhưng registry không phủ nên
  * `i18n:check-sidecars` không canh giúp.
  */
+// i18n-ignore — literal 景别/运镜 values this checker looks for verbatim in translated files, not text to translate
 export const UNREGISTERED_SHOT_TOKENS = ["手持微晃", "稳定器流动", "跟拍", "空镜", "大远景", "中近景", "缓拉", "大全景", "一镜到底"];
 
 export type TokenLossRow = { file: string; token: string; zh: number; en: number; vi: number };
 
-const CJK_CHAR = /[一-鿿]/;
-const CJK_ONLY = /^[一-鿿·]+$/;
+const CJK_CHAR = /[一-鿿]/; // i18n-ignore — Unicode range boundary for this checker's own regex, not translatable text
+const CJK_ONLY = /^[一-鿿·]+$/; // i18n-ignore — Unicode range boundary for this checker's own regex, not translatable text
 const HAS_LETTER = /\p{L}/u;
 /** Ký tự được phép nằm trong một chú giải khi quét ngược từ dấu ngoặc mở. */
 const GLOSS_CHAR = /[\p{L}\p{M}\d \-/'’*_]/u;
 /** Chú giải dài hơn ngần này từ thì gần như chắc chắn là văn xuôi, không phải chú giải. */
 const MAX_GLOSS_WORDS = 6;
-const PAREN = /[(（]([^()（）]*)[)）]/g;
+const PAREN = /[(（]([^()（）]*)[)）]/g; // i18n-ignore — fullwidth paren chars for this checker's own regex, not translatable text
 
 /** Chuẩn hoá chú giải để so khớp: NFC, hạ chữ thường, gộp khoảng trắng. Cố ý không mờ hơn. */
 export function normalizeGloss(gloss: string): string {
@@ -293,6 +294,7 @@ export function formatGlossaryReport(conflicts: GlossConflicts): string {
 
 /** Bảng E2: file, token, số đếm gốc / en / vi. */
 export function formatTokenLossTable(rows: TokenLossRow[]): string {
+  // i18n-ignore — 景别/运镜 are the Chinese column names this report heading refers to verbatim, not translatable text
   const lines = [`## E2 — giá trị 景别/运镜 chưa đăng ký bị dịch mất (${rows.length})`, ""];
   if (rows.length === 0) {
     lines.push("  (không có — mọi giá trị chưa đăng ký đều được giữ nguyên tiếng Trung)");
