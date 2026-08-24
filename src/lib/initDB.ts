@@ -304,6 +304,13 @@ export default async (knex: Knex, forceInit: boolean = false): Promise<void> => 
             value: "en",
           },
           {
+            // Locale for text actually sent to image/video models — independent of
+            // content_language (the UI locale). Defaults to English, the high-resource language
+            // for these models. See src/i18n/locale.ts getPromptLanguage/setPromptLanguage.
+            key: "prompt_language",
+            value: "en",
+          },
+          {
             key: "deepRetrieveSummaryLimit",
             value: 5,
           },

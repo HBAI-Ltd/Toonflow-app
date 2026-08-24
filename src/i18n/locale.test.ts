@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import knexFactory, { type Knex } from "knex";
-import { localeFromHeader, getLocale, setLocale, LANGUAGE_SETTING_KEY } from "./locale";
+import { localeFromHeader, getLocale, setLocale, LANGUAGE_SETTING_KEY, getPromptLanguage, setPromptLanguage, PROMPT_LANGUAGE_SETTING_KEY } from "./locale";
 import { SEED_PROMPT_TYPES, getSeedPrompt } from "@/lib/prompts";
 
 // locale.ts lazily `await import("@/lib/migrations/promptSeedSync")` from inside writeLocaleIfChanged
@@ -178,7 +178,45 @@ describe("getLocale — đồng bộ o_setting theo header", () => {
   });
 });
 
-describe("đổi locale → đồng bộ lại prompt seed (không cần khởi động lại)", () => {
+describe("getPromptLanguage — mặc định 'en' khi chưa có bản ghi", () => {
+  let db: Knex;
+
+  beforeEach(async () => {
+    db = knexFactory({ client: "better-sqlite3", connection: { filename: ":memory:" }, useNullAsDefault: true });
+    await db.schema.createTable("o_setting", (t) => {
+      t.integer("id");
+      t.string("key");
+      t.string("value");
+    });
+    setMockDb(db);
+  });
+
+  afterEach(async () => {
+    await db.destroy();
+  });
+
+  it("chưa có bản ghi prompt_language (cài đặt cũ chưa migrate) -> trả 'en'", async () => {
+    expect(await getPromptLanguage()).toBe("en");
+  });
+
+  it("đã có bản ghi hợp lệ -> trả đúng giá trị đã lưu", async () => {
+    await db("o_setting").insert({ key: PROMPT_LANGUAGE_SETTING_KEY, value: "vi" });
+    expect(await getPromptLanguage()).toBe("vi");
+  });
+
+  it("bản ghi mang giá trị không hợp lệ -> lùi về 'en'", async () => {
+    await db("o_setting").insert({ key: PROMPT_LANGUAGE_SETTING_KEY, value: "ja" });
+    expect(await getPromptLanguage()).toBe("en");
+  });
+
+  it("prompt_language độc lập với content_language: đổi content_language không ảnh hưởng", async () => {
+    await db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: "vi" });
+    expect(await getPromptLanguage()).toBe("en");
+    expect(await getLocale()).toBe("vi");
+  });
+});
+
+describe("đổi prompt_language → đồng bộ lại prompt seed (không cần khởi động lại)", () => {
   let db: Knex;
 
   beforeEach(async () => {
@@ -211,10 +249,10 @@ describe("đổi locale → đồng bộ lại prompt seed (không cần khởi 
     await db.destroy();
   });
 
-  it("setLocale sang ngôn ngữ mới đồng bộ lại cả bốn prompt seed chưa sửa", async () => {
-    await db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: "zh" });
+  it("setPromptLanguage sang ngôn ngữ mới đồng bộ lại cả bốn prompt seed chưa sửa", async () => {
+    await db("o_setting").insert({ key: PROMPT_LANGUAGE_SETTING_KEY, value: "zh" });
 
-    await setLocale("en");
+    await setPromptLanguage("en");
 
     expect(syncCallCount).toBe(1);
     for (const type of SEED_PROMPT_TYPES) {
@@ -223,23 +261,12 @@ describe("đổi locale → đồng bộ lại prompt seed (không cần khởi 
     }
   });
 
-  it("header đổi locale (qua getLocale) cũng đồng bộ lại prompt, không cần khởi động lại", async () => {
-    await db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: "zh" });
-
-    const locale = await getLocale({ headers: { "x-toonflow-lang": "en-US" } });
-
-    expect(locale).toBe("en");
-    expect(syncCallCount).toBe(1);
-    const row = await db("o_prompt").where("type", "eventExtraction").first();
-    expect(row.data).toBe(getSeedPrompt("eventExtraction", "en"));
-  });
-
-  it("prompt đã bị người dùng sửa thì không bị đổi khi chuyển locale, các prompt chưa sửa khác vẫn được đồng bộ", async () => {
-    await db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: "zh" });
+  it("prompt đã bị người dùng sửa thì không bị đổi khi chuyển prompt_language, các prompt chưa sửa khác vẫn được đồng bộ", async () => {
+    await db("o_setting").insert({ key: PROMPT_LANGUAGE_SETTING_KEY, value: "zh" });
     const edited = "Nội dung tôi tự viết lại hoàn toàn, không phải seed.";
     await db("o_prompt").where("type", "eventExtraction").update({ data: edited });
 
-    await setLocale("en");
+    await setPromptLanguage("en");
 
     const editedRow = await db("o_prompt").where("type", "eventExtraction").first();
     expect(editedRow.data).toBe(edited);
@@ -248,53 +275,92 @@ describe("đổi locale → đồng bộ lại prompt seed (không cần khởi 
     expect(otherRow.data).toBe(getSeedPrompt(untouchedType, "en"));
   });
 
-  it("gọi getLocale lặp lại nhiều lần với header trùng locale đã lưu: không đồng bộ prompt lần nào", async () => {
-    await db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: "vi" });
-    const req = { headers: { "x-toonflow-lang": "vi-VN" } };
+  it("gọi setPromptLanguage với đúng giá trị hiện tại: không ghi DB, không đồng bộ prompt", async () => {
+    await db("o_setting").insert({ key: PROMPT_LANGUAGE_SETTING_KEY, value: "vi" });
 
-    await getLocale(req);
-    await getLocale(req);
-    await getLocale(req);
+    await setPromptLanguage("vi");
 
     expect(syncCallCount).toBe(0);
-    // and the prompts, seeded in zh above, are provably untouched
     const row = await db("o_prompt").where("type", "eventExtraction").first();
-    expect(row.data).toBe(getSeedPrompt("eventExtraction", "zh"));
+    expect(row.data).toBe(getSeedPrompt("eventExtraction", "zh")); // untouched
   });
 
-  it("gọi setLocale với đúng locale hiện tại: không ghi DB, không đồng bộ prompt", async () => {
-    await db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: "vi" });
+  it("chưa có bản ghi prompt_language: setPromptLanguage chèn mới và vẫn đồng bộ prompt", async () => {
+    await setPromptLanguage("vi");
 
-    await setLocale("vi");
-
-    expect(syncCallCount).toBe(0);
+    expect(syncCallCount).toBe(1);
+    const setting = await db("o_setting").where("key", PROMPT_LANGUAGE_SETTING_KEY).first();
+    expect(setting.value).toBe("vi");
   });
 
-  it("lỗi trong lúc đồng bộ prompt không làm hỏng request đổi locale, chỉ log lỗi ra console", async () => {
-    await db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: "zh" });
+  it("lỗi trong lúc đồng bộ prompt không làm hỏng request đổi prompt_language, chỉ log lỗi ra console", async () => {
+    await db("o_setting").insert({ key: PROMPT_LANGUAGE_SETTING_KEY, value: "zh" });
     const boom = new Error("simulated prompt sync failure");
     syncImplOverride = async () => {
       throw boom;
     };
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await expect(setLocale("en")).resolves.toBeUndefined();
+    await expect(setPromptLanguage("en")).resolves.toBeUndefined();
 
-    const setting = await db("o_setting").where("key", LANGUAGE_SETTING_KEY).first();
-    expect(setting.value).toBe("en"); // the locale change itself still took effect
+    const setting = await db("o_setting").where("key", PROMPT_LANGUAGE_SETTING_KEY).first();
+    expect(setting.value).toBe("en"); // the prompt_language change itself still took effect
     expect(errorSpy).toHaveBeenCalled();
     errorSpy.mockRestore();
   });
+});
 
-  it("lỗi trong lúc đồng bộ prompt (qua header) vẫn trả về locale mới cho request, không throw", async () => {
+describe("đổi content_language KHÔNG đồng bộ lại prompt seed — chỉ prompt_language mới đồng bộ", () => {
+  let db: Knex;
+
+  beforeEach(async () => {
+    db = knexFactory({ client: "better-sqlite3", connection: { filename: ":memory:" }, useNullAsDefault: true });
+    await db.schema.createTable("o_setting", (t) => {
+      t.integer("id");
+      t.string("key");
+      t.string("value");
+    });
+    await db.schema.createTable("o_prompt", (t) => {
+      t.integer("id");
+      t.string("name");
+      t.string("type");
+      t.text("data");
+      t.text("useData");
+    });
+    await db("o_prompt").insert(
+      SEED_PROMPT_TYPES.map((type, index) => ({
+        id: index + 1,
+        type,
+        data: getSeedPrompt(type, "zh"),
+      })),
+    );
+    setMockDb(db);
+    syncCallCount = 0;
+    syncImplOverride = null;
+  });
+
+  afterEach(async () => {
+    await db.destroy();
+  });
+
+  it("setLocale sang ngôn ngữ mới KHÔNG đồng bộ prompt seed", async () => {
     await db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: "zh" });
-    syncImplOverride = async () => {
-      throw new Error("simulated prompt sync failure");
-    };
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await expect(getLocale({ headers: { "x-toonflow-lang": "en-US" } })).resolves.toBe("en");
+    await setLocale("en");
 
-    errorSpy.mockRestore();
+    expect(syncCallCount).toBe(0);
+    const row = await db("o_prompt").where("type", "eventExtraction").first();
+    expect(row.data).toBe(getSeedPrompt("eventExtraction", "zh")); // untouched
+  });
+
+  it("header đổi content_language (qua getLocale) cũng KHÔNG đồng bộ prompt seed", async () => {
+    await db("o_setting").insert({ key: LANGUAGE_SETTING_KEY, value: "zh" });
+
+    const locale = await getLocale({ headers: { "x-toonflow-lang": "en-US" } });
+
+    expect(locale).toBe("en");
+    expect(syncCallCount).toBe(0);
+    const row = await db("o_prompt").where("type", "eventExtraction").first();
+    expect(row.data).toBe(getSeedPrompt("eventExtraction", "zh"));
   });
 });
