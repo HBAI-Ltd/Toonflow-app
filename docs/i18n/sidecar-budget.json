@@ -1539,6 +1539,46 @@
       "en": 0,
       "vi": 0
     },
+    "data/skills/art_skills/3D_guofeng_cyber/driector_skills/director_planning_style.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/3D_guofeng_cyber/driector_skills/director_storyboard.md": {
+      "en": {
+        "residualCjk": 32,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景纵深 / 楼宇霓虹远景 theo nghĩa văn xuôi (chiều sâu trải ra xa, neon tòa nhà ở phía xa), không phải giá trị cỡ cảnh 远景 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定风格锚定词 / 风格收尾（固定）theo nghĩa văn xuôi (từ neo phong cách cố định, phần kết phong cách cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 32,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景纵深 / 楼宇霓虹远景 theo nghĩa văn xuôi (chiều sâu trải ra xa, neon tòa nhà ở phía xa), không phải giá trị cỡ cảnh 远景 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定风格锚定词 / 风格收尾（固定）theo nghĩa văn xuôi (từ neo phong cách cố định, phần kết phong cách cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_guofeng_cyber/driector_skills/director_storyboard_table_style.md": {
+      "en": 0,
+      "vi": 0
+    },
+    "data/skills/art_skills/3D_guofeng_cyber/prefix.md": {
+      "en": 0,
+      "vi": 0
+    },
     "data/skills/art_skills/realpeople_ancient_chinese/README.md": {
       "en": 0,
       "vi": 0
