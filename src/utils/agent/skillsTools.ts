@@ -5,7 +5,7 @@ import isPathInside from "is-path-inside";
 import getPath from "@/utils/getPath";
 import * as fs from "fs";
 import fg from "fast-glob";
-import { t, getLocale, getPromptLanguage, FALLBACK_LOCALE, type Locale } from "@/i18n";
+import { t, getLocale, getPromptLanguage, FALLBACK_LOCALE, skillPathLocale, type Locale } from "@/i18n";
 
 type SkillAttribution =
   //剧本Agent
@@ -298,5 +298,8 @@ export async function scanSkills(folderPath: string) {
     onlyFiles: true,
     absolute: true,
   });
-  return entries;
+  // Glob *.md khớp luôn cả sidecar dịch (foo.en.md, foo.vi.md, ...), nên phải loại chúng ra —
+  // chỉ giữ bản gốc chuẩn. skillPathLocale suy locale sidecar từ LOCALES (src/i18n/types.ts),
+  // không hardcode "en"/"vi", nên thêm locale thứ tư sau này không lặng lẽ làm hỏng bộ lọc này.
+  return entries.filter((entry) => skillPathLocale(entry) === null);
 }

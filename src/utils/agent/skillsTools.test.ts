@@ -104,3 +104,28 @@ describe("skillsTools.useSkill — prompt vs content locale split", () => {
     await expect(useSkill({ mainSkill: ["does_not_exist"] as any })).rejects.toThrow("Main skill file does not exist");
   });
 });
+
+// F1 — scanSkills không được để sidecar dịch (foo.en.md/foo.vi.md) rò vào danh sách skill,
+// kể cả khi cả ba biến thể (gốc + en + vi) cùng tồn tại trong thư mục.
+describe("scanSkills — loại trừ sidecar dịch, chỉ trả bản gốc", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "scanskills-test-"));
+    fs.writeFileSync(path.join(tmpDir, "storyboard_prompt_techniques.md"), "zh body", "utf-8");
+    fs.writeFileSync(path.join(tmpDir, "storyboard_prompt_techniques.en.md"), "en body", "utf-8");
+    fs.writeFileSync(path.join(tmpDir, "storyboard_prompt_techniques.vi.md"), "vi body", "utf-8");
+    fs.writeFileSync(path.join(tmpDir, "storyboard_table_techniques.md"), "zh body 2", "utf-8");
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("chỉ trả về hai bản gốc, không trả sidecar .en.md/.vi.md", async () => {
+    const { scanSkills } = await import("./skillsTools");
+    const entries = await scanSkills(path.join(tmpDir, "*.md").replace(/\\/g, "/"));
+    const basenames = entries.map((p) => path.basename(p)).sort();
+    expect(basenames).toEqual(["storyboard_prompt_techniques.md", "storyboard_table_techniques.md"]);
+  });
+});
