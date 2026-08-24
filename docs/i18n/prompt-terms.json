@@ -1,0 +1,1901 @@
+{
+  "$comment": "Machine-matched term contract between the skills layer (data/skills/**, which EMITS videoDesc) and the prompt layer (data/modelPrompt/video/** + src/lib/prompts/**, which PARSES it). Narrower and stricter than docs/i18n/glossary.json: entries here are tokens code or a model matches on, not prose vocabulary. Verified by `yarn i18n:check-terms`.",
+  "version": 1,
+  "countFields": {
+    "counts": "Per-layer raw substring counts of the `zh` form. Recorded as evidence for why the term is here; the checker asserts only the presence rule for the entry's `boundary`, not the exact number.",
+    "literalCounts": "Occurrences of the `zh` form in the prompt layer in each of the three locales (the four data/modelPrompt/video files plus the matching locale string of videoPromptGeneration.ts). ASSERTED: en and vi may never fall below the recorded value, because that would mean a matched token was translated away.",
+    "labelCounts": "Occurrences of the `en` / `vi` form itself in the corresponding translated prompt files, case-insensitive. Present for translate-label entries only. ASSERTED as a floor, so switching to a second rendering of the same term is caught.",
+    "refresh": "After an intentional change run `tsx scripts/i18n-check-terms.ts --update` to rewrite all three count blocks."
+  },
+  "layers": {
+    "skills": {
+      "files": "data/skills/**/*.md excluding *.en.md and *.vi.md",
+      "role": "emitter"
+    },
+    "modelPrompt": {
+      "files": "data/modelPrompt/video/*.md excluding *.en.md and *.vi.md",
+      "role": "parser"
+    },
+    "srcPrompt": {
+      "files": "the zh locale string of src/lib/prompts/videoPromptGeneration.ts",
+      "role": "parser"
+    },
+    "catalog": {
+      "files": "src/i18n/locales/zh.json",
+      "role": "runtime emitter"
+    },
+    "srcCode": {
+      "files": "src/**/*.ts excluding src/i18n/locales/, promptSeedSync.ts and videoPromptGeneration.ts",
+      "role": "comparison sites"
+    }
+  },
+  "policies": {
+    "keep-zh-literal": "The token is matched or emitted verbatim: a value one layer writes into videoDesc and the other matches, or a key the video model must receive character-for-character. It MUST survive translation unchanged — the shipped *.en.md and *.vi.md files carry it in Chinese, at the same count as the zh original. The `en` / `vi` fields are a gloss for talking about the term, NOT a form to write into a file.",
+    "translate-label": "The token names a position, not a value: the videoDesc fields are delimiter-separated and the field name never appears in the data, so the label is free to be translated. The `en` / `vi` fields ARE the forms the shipped translations use, and the checker asserts they still appear in the translated prompt files. Where the Chinese also survives in a format spec, `literalCounts` pins that minimum too.",
+    "translate-in-lockstep": "The token IS translated per locale, because its emitter is the i18n catalog rather than a Chinese source file. The `en` / `vi` fields are the runtime forms (see `catalogKey` for the exact catalog entry); the prompt spec that matches them must carry the same locale form. Changing one side without the other breaks matching.",
+    "never-translate": "The token stays as written in every locale and has no translated form anywhere. `en` and `vi` repeat `zh` deliberately. Reasons: persisted database enum, schema enum, tool name, model identifier, reference syntax or field key."
+  },
+  "boundaries": {
+    "skills-internal": "Lives in the skills layer only, but is a near-miss of a boundary token: normalising or translating it would forge (or destroy) a real marker. Listed so a translator leaves it alone.",
+    "skills->prompts": "Emitted by data/skills/**, matched by the prompt layer. Counts must be non-zero in both `skills` and at least one of `modelPrompt` / `srcPrompt`.",
+    "prompts->model": "Emitted by the prompt layer for the downstream video model to consume. Lives in one layer only; included because it is still a literal a translator must preserve.",
+    "catalog->prompts": "Emitted at runtime from src/i18n/locales/*.json, matched by the prompt-layer input-format spec.",
+    "persisted-enum": "Compared against in src/**/*.ts (`.where()`, `===`). Not a pipeline boundary term; listed so no locale ever translates it.",
+    "schema-enum": "Validated by a Zod tool schema and matched by the prompts.",
+    "model-identifier": "Matched against the configured model name by the mode-routing table.",
+    "reference-syntax": "Reference token the model must emit verbatim.",
+    "field-key": "JSON / XML attribute name.",
+    "tool-name": "Callable tool name."
+  },
+  "glossary": {
+    "file": "docs/i18n/glossary.json",
+    "rule": "Where a term exists in both, en/vi must agree. Divergences are recorded per-entry in `glossaryDivergence`."
+  },
+  "conflicts": [
+    {
+      "id": "conflict.videoDescLabels.catalogVsPrompts",
+      "what": "The videoDesc field list is written twice — once as the prompt-layer spec tables, once as the Zod describe() text in src/agents/productionAgent/tools.ts via catalog key `agent.production.tools.storyboardPanel.videoDesc`. The two renderings disagree.",
+      "rows": [
+        {
+          "zh": "画面描述",
+          "prompts": "Shot description / Mô tả hình ảnh",
+          "catalog": "Shot description / Mô tả cảnh quay",
+          "diverges": "vi"
+        },
+        {
+          "zh": "关联资产名称",
+          "prompts": "Associated asset names / Tên tài nguyên liên quan",
+          "catalog": "associated asset names / tên tài nguyên liên kết",
+          "diverges": "vi"
+        },
+        {
+          "zh": "情绪",
+          "prompts": "Emotion / Cảm xúc",
+          "catalog": "mood / cảm xúc",
+          "diverges": "en"
+        },
+        {
+          "zh": "光影氛围",
+          "prompts": "Lighting and atmosphere / Ánh sáng và không khí",
+          "catalog": "lighting atmosphere / không khí ánh sáng",
+          "diverges": "en+vi"
+        },
+        {
+          "zh": "关联资产ID",
+          "prompts": "Associated asset IDs / ID tài nguyên liên quan",
+          "catalog": "associated asset IDs / ID tài nguyên liên kết",
+          "diverges": "vi"
+        }
+      ],
+      "registryChoice": "The registry records the prompt-layer form, because that is the text the parsing model reads. The catalog value should be brought into line; the checker does not yet compare it (see LIMITS)."
+    },
+    {
+      "id": "conflict.shotSizeTags.collision",
+      "what": "Every 景别 mapping table maps BOTH 近景 and 特写 onto the same English tag `close-up`, so two distinct matched values become indistinguishable downstream.",
+      "registryChoice": "The registry keeps them as separate entries with distinct en/vi glosses (Medium close-up / Cận cảnh vs Close-up / Đặc tả) and records the colliding tags under `modelTag`. This is a pre-existing defect in the Chinese originals, not a translation error."
+    },
+    {
+      "id": "conflict.shotSizeTags.wideShot",
+      "what": "全景 maps to `wide shot` in the KlingOmni column of src/lib/prompts/videoPromptGeneration.ts but to `wide establishing shot` in all four data/modelPrompt/video files.",
+      "registryChoice": "Both recorded under `modelTag`; unresolved, and pre-existing in the Chinese originals."
+    },
+    {
+      "id": "conflict.assetType.propVsTool",
+      "what": "The universal and Wan 2.6 modes call the prop asset type `prop`; the Seedance 2.0 mode calls it `tool` and adds `audio`. Both are schema enum values.",
+      "registryChoice": "Both listed as never-translate. Not resolvable from the i18n side."
+    },
+    {
+      "id": "conflict.glossary.completed",
+      "what": "docs/i18n/glossary.json translates 已完成 as Completed / Đã hoàn thành. As a persisted state value it must never be translated.",
+      "registryChoice": "Recorded on the `dbEnum.completed` entry as `glossaryDivergence`. The glossary entry is correct for prose and must not be applied to a state value."
+    },
+    {
+      "id": "conflict.glossary.soundEffect",
+      "what": "docs/i18n/glossary.json gives the singular `sound effect`; the shipped en prompt files use `Sound effects` for the videoDesc field label.",
+      "registryChoice": "Registry follows the shipped plural, recorded as `glossaryDivergence` on `field.soundEffects`."
+    }
+  ],
+  "gaps": [
+    {
+      "id": "gap.cameraMoveVocabularies",
+      "what": "The emitting skill (data/skills/production_skills/storyboard_table_techniques.md) defines the cameraMove vocabulary as 推 / 拉 / 摇 / 移 / 俯拍 / 仰拍 plus 静止. The parsing prompts map 静止 / 推进 / 拉远 / 跟踪 / 摇镜 / 甩镜 / 升降 / 环绕. Only 静止 is common to both lists.",
+      "status": "unresolved — a pipeline defect, not an i18n defect. The single-character values are not registered: they cross no boundary because the parser lists none of them."
+    },
+    {
+      "id": "gap.unmappedShotSize",
+      "what": "大远景 occurs 17× in the skills as a 景别 value but appears in no mapping table in the prompt layer.",
+      "status": "not registered (single-layer). Recorded here so it is not mistaken for an oversight."
+    },
+    {
+      "id": "gap.unmappedCameraMoves",
+      "what": "固定 and 缓推 are emitted by the skills and used verbatim in the Seedance 2.0 worked example, but neither appears in any 运镜 mapping table.",
+      "status": "registered (both layers contain them) and flagged in each entry's note."
+    },
+    {
+      "id": "gap.assetInfoLabelForm",
+      "what": "The prompt spec writes `资产信息[id, type, name]` while the runtime emits `**资产信息**（角色、场景、道具、音频):`. The two have never matched, in zh either.",
+      "status": "recorded on runtime.assetInfoLabel; the lockstep check only asserts the stem `资产信息` / `Asset info` / `Thông tin tài nguyên`."
+    }
+  ],
+  "terms": [
+    {
+      "id": "marker.carryOverPrevShot",
+      "kind": "structural-marker",
+      "zh": "承接上镜：",
+      "en": "Carry over from previous shot:",
+      "vi": "Nối tiếp cú máy trước:",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 1,
+        "modelPrompt": 12,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Prefix that production_execution_storyboard_panel writes at the head of videoDesc; seedance2Multi-parameterMode detects it with a literal startsWith and copies the text through verbatim. Translating the prefix in either layer breaks the detection. The panel skill also emits an inline half-width variant `(承接上镜:衔接动作)` inside the action column — a different token, see marker.carryOverPrevShot.inline.",
+      "literalCounts": {
+        "zh": 12,
+        "en": 12,
+        "vi": 12
+      }
+    },
+    {
+      "id": "marker.carryOverPrevShot.inline",
+      "kind": "structural-marker",
+      "zh": "承接上镜:",
+      "en": "(carry over from previous shot:)",
+      "vi": "(nối tiếp cú máy trước:)",
+      "policy": "keep-zh-literal",
+      "boundary": "skills-internal",
+      "counts": {
+        "skills": 3,
+        "modelPrompt": 0,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Half-width-colon variant used inside the storyboard table `action` column as `(承接上镜:衔接动作)`. It is NOT the videoDesc prefix and must not be normalised into it; both forms occur in the tree and both must survive translation.",
+      "literalCounts": {
+        "zh": 0,
+        "en": 0,
+        "vi": 0
+      }
+    },
+    {
+      "id": "marker.groupRowsVerbatim",
+      "kind": "structural-marker",
+      "zh": "该组分镜行原文",
+      "en": "Original storyboard rows of this group:",
+      "vi": "Nguyên văn các dòng phân cảnh của nhóm này:",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 1,
+        "modelPrompt": 5,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Parsing marker only: seedance2Multi-parameterMode explicitly says it is not content and is not written into the body. Emitted by production_execution_storyboard_panel step 2. The emitting skill writes it bold (`**该组分镜行原文**：`), the parser matches `该组分镜行原文：`; the registry records the colon-free stem so both forms are covered.",
+      "literalCounts": {
+        "zh": 5,
+        "en": 5,
+        "vi": 5
+      }
+    },
+    {
+      "id": "marker.rowNumber",
+      "kind": "structural-marker",
+      "zh": "序号",
+      "en": "No.",
+      "vi": "Số thứ tự",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 24,
+        "modelPrompt": 30,
+        "srcPrompt": 1,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "`序号N` opens each sub-shot inside the pipe-delimited videoDesc, and is also the first column of the storyboard table. The prompt splits on it. Translating the column header in the emitting skill would change the emitted token.",
+      "literalCounts": {
+        "zh": 31,
+        "en": 14,
+        "vi": 14
+      }
+    },
+    {
+      "id": "marker.sfxPrefix",
+      "kind": "structural-marker",
+      "zh": "音效：",
+      "en": "Sound effects:",
+      "vi": "Hiệu ứng âm thanh:",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 2,
+        "modelPrompt": 4,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Value prefix inside the 音效 cell (`音效：西瓜筐翻滚撞地声`). seedance2Multi-parameterMode strips this exact prefix before wrapping the rest in `<>`.",
+      "literalCounts": {
+        "zh": 4,
+        "en": 4,
+        "vi": 4
+      }
+    },
+    {
+      "id": "field.shotDescription",
+      "kind": "field-name",
+      "zh": "画面描述",
+      "en": "Shot description",
+      "vi": "Mô tả hình ảnh",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 118,
+        "modelPrompt": 19,
+        "srcPrompt": 14,
+        "catalog": 1,
+        "srcCode": 2
+      },
+      "note": "Field 1 of videoDesc and column 2 of the storyboard table.",
+      "literalCounts": {
+        "zh": 33,
+        "en": 1,
+        "vi": 1
+      },
+      "labelCounts": {
+        "en": 35,
+        "vi": 32
+      }
+    },
+    {
+      "id": "field.scene",
+      "kind": "field-name",
+      "zh": "场景",
+      "en": "Scene",
+      "vi": "Bối cảnh",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 1850,
+        "modelPrompt": 40,
+        "srcPrompt": 36,
+        "catalog": 8,
+        "srcCode": 27
+      },
+      "note": "Field 2 of videoDesc. Raw count is inflated: 场景 is also ordinary prose and an asset type name throughout both layers.",
+      "literalCounts": {
+        "zh": 76,
+        "en": 20,
+        "vi": 20
+      },
+      "labelCounts": {
+        "en": 89,
+        "vi": 55
+      }
+    },
+    {
+      "id": "field.associatedAssetNames",
+      "kind": "field-name",
+      "zh": "关联资产名称",
+      "en": "Associated asset names",
+      "vi": "Tên tài nguyên liên quan",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 17,
+        "modelPrompt": 6,
+        "srcPrompt": 4,
+        "catalog": 1,
+        "srcCode": 0
+      },
+      "note": "Field 3 of videoDesc.",
+      "literalCounts": {
+        "zh": 10,
+        "en": 1,
+        "vi": 1
+      },
+      "labelCounts": {
+        "en": 9,
+        "vi": 9
+      }
+    },
+    {
+      "id": "field.duration",
+      "kind": "field-name",
+      "zh": "时长",
+      "en": "Duration",
+      "vi": "Thời lượng",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 208,
+        "modelPrompt": 22,
+        "srcPrompt": 29,
+        "catalog": 1,
+        "srcCode": 6
+      },
+      "note": "Field 4 of videoDesc; also the storyboard-table 时长 column.",
+      "literalCounts": {
+        "zh": 51,
+        "en": 1,
+        "vi": 1
+      },
+      "labelCounts": {
+        "en": 69,
+        "vi": 52
+      }
+    },
+    {
+      "id": "field.shotSize",
+      "kind": "field-name",
+      "zh": "景别",
+      "en": "Shot size",
+      "vi": "Cỡ cảnh",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 371,
+        "modelPrompt": 25,
+        "srcPrompt": 18,
+        "catalog": 1,
+        "srcCode": 0
+      },
+      "note": "Field 5 of videoDesc; the left column of the 景别 → 镜头标签映射 table in all four modelPrompt files.",
+      "literalCounts": {
+        "zh": 43,
+        "en": 1,
+        "vi": 1
+      },
+      "labelCounts": {
+        "en": 42,
+        "vi": 42
+      }
+    },
+    {
+      "id": "field.cameraMovement",
+      "kind": "field-name",
+      "zh": "运镜",
+      "en": "Camera movement",
+      "vi": "Chuyển động máy quay",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 239,
+        "modelPrompt": 37,
+        "srcPrompt": 21,
+        "catalog": 1,
+        "srcCode": 0
+      },
+      "note": "Field 6 of videoDesc; the left column of the 运镜 → 镜头标签映射 table.",
+      "literalCounts": {
+        "zh": 58,
+        "en": 1,
+        "vi": 1
+      },
+      "labelCounts": {
+        "en": 58,
+        "vi": 51
+      }
+    },
+    {
+      "id": "field.characterAction",
+      "kind": "field-name",
+      "zh": "角色动作",
+      "en": "Character action",
+      "vi": "Hành động nhân vật",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 33,
+        "modelPrompt": 11,
+        "srcPrompt": 15,
+        "catalog": 1,
+        "srcCode": 0
+      },
+      "note": "Field 7 of videoDesc.",
+      "literalCounts": {
+        "zh": 26,
+        "en": 1,
+        "vi": 1
+      },
+      "labelCounts": {
+        "en": 25,
+        "vi": 25
+      }
+    },
+    {
+      "id": "field.emotion",
+      "kind": "field-name",
+      "zh": "情绪",
+      "en": "Emotion",
+      "vi": "Cảm xúc",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 758,
+        "modelPrompt": 19,
+        "srcPrompt": 18,
+        "catalog": 1,
+        "srcCode": 7
+      },
+      "note": "Field 8 of videoDesc. Raw count is heavily inflated by prose use.",
+      "literalCounts": {
+        "zh": 37,
+        "en": 1,
+        "vi": 1
+      },
+      "labelCounts": {
+        "en": 34,
+        "vi": 38
+      }
+    },
+    {
+      "id": "field.lightingAtmosphere",
+      "kind": "field-name",
+      "zh": "光影氛围",
+      "en": "Lighting and atmosphere",
+      "vi": "Ánh sáng và không khí",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 47,
+        "modelPrompt": 9,
+        "srcPrompt": 14,
+        "catalog": 1,
+        "srcCode": 0
+      },
+      "note": "Field 9 of videoDesc.",
+      "literalCounts": {
+        "zh": 23,
+        "en": 1,
+        "vi": 1
+      },
+      "labelCounts": {
+        "en": 22,
+        "vi": 22
+      }
+    },
+    {
+      "id": "field.dialogue",
+      "kind": "field-name",
+      "zh": "台词",
+      "en": "Dialogue",
+      "vi": "Thoại",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 287,
+        "modelPrompt": 84,
+        "srcPrompt": 81,
+        "catalog": 1,
+        "srcCode": 6
+      },
+      "note": "Field 10 of videoDesc. Highest-traffic boundary term after 景别.",
+      "literalCounts": {
+        "zh": 165,
+        "en": 23,
+        "vi": 23
+      },
+      "labelCounts": {
+        "en": 197,
+        "vi": 178
+      }
+    },
+    {
+      "id": "field.soundEffects",
+      "kind": "field-name",
+      "zh": "音效",
+      "en": "Sound effects",
+      "vi": "Hiệu ứng âm thanh",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 80,
+        "modelPrompt": 29,
+        "srcPrompt": 17,
+        "catalog": 1,
+        "srcCode": 1
+      },
+      "note": "Field 11 of videoDesc; also the storyboard-table 音效 column.",
+      "glossaryDivergence": "docs/i18n/glossary.json gives the singular \"sound effect\"; every shipped en file uses the plural \"Sound effects\" for the videoDesc field label, and the registry follows the shipped form. The glossary singular remains correct for prose.",
+      "literalCounts": {
+        "zh": 46,
+        "en": 5,
+        "vi": 5
+      },
+      "labelCounts": {
+        "en": 13,
+        "vi": 41
+      }
+    },
+    {
+      "id": "field.associatedAssetIds",
+      "kind": "field-name",
+      "zh": "关联资产ID",
+      "en": "Associated asset IDs",
+      "vi": "ID tài nguyên liên quan",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 4,
+        "modelPrompt": 6,
+        "srcPrompt": 4,
+        "catalog": 1,
+        "srcCode": 1
+      },
+      "note": "Field 12 of videoDesc.",
+      "literalCounts": {
+        "zh": 10,
+        "en": 1,
+        "vi": 1
+      },
+      "labelCounts": {
+        "en": 9,
+        "vi": 10
+      }
+    },
+    {
+      "id": "field.orientation",
+      "kind": "field-name",
+      "zh": "朝向",
+      "en": "Facing",
+      "vi": "Hướng nhìn",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 77,
+        "modelPrompt": 5,
+        "srcPrompt": 2,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Storyboard-table column (`orientation`) carried into videoDesc by production_execution_storyboard_panel; named in the seedance2 parse notes.",
+      "literalCounts": {
+        "zh": 7,
+        "en": 1,
+        "vi": 1
+      },
+      "labelCounts": {
+        "en": 5,
+        "vi": 6
+      }
+    },
+    {
+      "id": "field.spatialRelation",
+      "kind": "field-name",
+      "zh": "空间关系",
+      "en": "Spatial relations",
+      "vi": "Quan hệ không gian",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 27,
+        "modelPrompt": 5,
+        "srcPrompt": 1,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Storyboard-table column (`spatialRelation`) carried into videoDesc; named in the seedance2 parse notes.",
+      "literalCounts": {
+        "zh": 6,
+        "en": 0,
+        "vi": 0
+      },
+      "labelCounts": {
+        "en": 6,
+        "vi": 6
+      }
+    },
+    {
+      "id": "shotSize.extremeWide",
+      "kind": "vocab.shot-size",
+      "zh": "远景",
+      "en": "Long shot",
+      "vi": "Viễn cảnh",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 184,
+        "modelPrompt": 3,
+        "srcPrompt": 2,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 1 of the 景别 mapping table.",
+      "modelTag": {
+        "KlingOmni": "extreme wide shot",
+        "Seedance 1.5": "Extreme wide shot",
+        "Seedance 2.0": "远景",
+        "Wan 2.6": "an extreme wide shot capturing the vast expanse",
+        "universal": "extreme wide shot"
+      },
+      "literalCounts": {
+        "zh": 5,
+        "en": 5,
+        "vi": 5
+      }
+    },
+    {
+      "id": "shotSize.wide",
+      "kind": "vocab.shot-size",
+      "zh": "全景",
+      "en": "Wide shot",
+      "vi": "Toàn cảnh",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 192,
+        "modelPrompt": 6,
+        "srcPrompt": 13,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 2 of the 景别 mapping table.",
+      "modelTag": {
+        "KlingOmni": "wide shot",
+        "Seedance 1.5": "Wide establishing shot",
+        "Seedance 2.0": "全景",
+        "Wan 2.6": "a wide establishing shot",
+        "universal": "wide establishing shot"
+      },
+      "literalCounts": {
+        "zh": 19,
+        "en": 19,
+        "vi": 19
+      }
+    },
+    {
+      "id": "shotSize.medium",
+      "kind": "vocab.shot-size",
+      "zh": "中景",
+      "en": "Medium shot",
+      "vi": "Trung cảnh",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 184,
+        "modelPrompt": 10,
+        "srcPrompt": 12,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 3 of the 景别 mapping table.",
+      "modelTag": {
+        "KlingOmni": "medium shot",
+        "Seedance 1.5": "Medium shot",
+        "Seedance 2.0": "中景",
+        "Wan 2.6": "a medium shot",
+        "universal": "medium shot"
+      },
+      "literalCounts": {
+        "zh": 22,
+        "en": 22,
+        "vi": 22
+      }
+    },
+    {
+      "id": "shotSize.mediumCloseUp",
+      "kind": "vocab.shot-size",
+      "zh": "近景",
+      "en": "Medium close-up",
+      "vi": "Cận cảnh",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 149,
+        "modelPrompt": 3,
+        "srcPrompt": 2,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 4 of the 景别 mapping table. Every shipped mapping table collapses both 近景 and 特写 onto the English tag `close-up`; see conflicts.",
+      "modelTag": {
+        "KlingOmni": "close-up",
+        "Seedance 1.5": "Close-up",
+        "Seedance 2.0": "近景",
+        "Wan 2.6": "a close-up shot",
+        "universal": "close-up"
+      },
+      "literalCounts": {
+        "zh": 5,
+        "en": 5,
+        "vi": 5
+      }
+    },
+    {
+      "id": "shotSize.closeUp",
+      "kind": "vocab.shot-size",
+      "zh": "特写",
+      "en": "Close-up",
+      "vi": "Đặc tả",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 361,
+        "modelPrompt": 11,
+        "srcPrompt": 4,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 5 of the 景别 mapping table. Raw count is inflated: 特写 is also used as prose.",
+      "modelTag": {
+        "KlingOmni": "close-up",
+        "Seedance 1.5": "Close-up",
+        "Seedance 2.0": "特写",
+        "Wan 2.6": "a close-up capturing fine detail",
+        "universal": "close-up"
+      },
+      "literalCounts": {
+        "zh": 15,
+        "en": 15,
+        "vi": 15
+      }
+    },
+    {
+      "id": "shotSize.extremeCloseUp",
+      "kind": "vocab.shot-size",
+      "zh": "大特写",
+      "en": "Extreme close-up",
+      "vi": "Đại đặc tả",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 56,
+        "modelPrompt": 3,
+        "srcPrompt": 2,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 6 of the 景别 mapping table.",
+      "modelTag": {
+        "KlingOmni": "extreme close-up",
+        "Seedance 1.5": "Extreme close-up",
+        "Seedance 2.0": "大特写",
+        "Wan 2.6": "an extreme close-up",
+        "universal": "extreme close-up"
+      },
+      "literalCounts": {
+        "zh": 5,
+        "en": 5,
+        "vi": 5
+      }
+    },
+    {
+      "id": "camera.static",
+      "kind": "vocab.camera-movement",
+      "zh": "静止",
+      "en": "Static",
+      "vi": "Máy tĩnh",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 73,
+        "modelPrompt": 6,
+        "srcPrompt": 9,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 1 of the 运镜 mapping table; storyboard_table_techniques names it as the value to write when there is no movement.",
+      "modelTag": {
+        "KlingOmni": "static camera",
+        "Seedance 1.5": "Static, no camera movement",
+        "Seedance 2.0": "镜头静止",
+        "Wan 2.6": "static camera, locked off",
+        "universal": "static camera"
+      },
+      "literalCounts": {
+        "zh": 15,
+        "en": 15,
+        "vi": 15
+      }
+    },
+    {
+      "id": "camera.pushIn",
+      "kind": "vocab.camera-movement",
+      "zh": "推进",
+      "en": "Push in",
+      "vi": "Đẩy máy vào",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 56,
+        "modelPrompt": 3,
+        "srcPrompt": 2,
+        "catalog": 0,
+        "srcCode": 1
+      },
+      "note": "Matched value, row 2 of the 运镜 mapping table.",
+      "modelTag": {
+        "KlingOmni": "dolly in / push in",
+        "Seedance 1.5": "Slow dolly forward",
+        "Seedance 2.0": "镜头缓慢向前推进",
+        "Wan 2.6": "camera slowly pushing in",
+        "universal": "dolly in / push in"
+      },
+      "literalCounts": {
+        "zh": 5,
+        "en": 5,
+        "vi": 5
+      }
+    },
+    {
+      "id": "camera.pullBack",
+      "kind": "vocab.camera-movement",
+      "zh": "拉远",
+      "en": "Pull back",
+      "vi": "Kéo máy ra",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 7,
+        "modelPrompt": 3,
+        "srcPrompt": 2,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 3 of the 运镜 mapping table.",
+      "modelTag": {
+        "KlingOmni": "dolly out / pull back",
+        "Seedance 1.5": "Slow dolly backward pull",
+        "Seedance 2.0": "镜头缓慢向后拉远",
+        "Wan 2.6": "camera gently pulling back",
+        "universal": "dolly out / pull back"
+      },
+      "literalCounts": {
+        "zh": 5,
+        "en": 5,
+        "vi": 5
+      }
+    },
+    {
+      "id": "camera.tracking",
+      "kind": "vocab.camera-movement",
+      "zh": "跟踪",
+      "en": "Tracking",
+      "vi": "Bám theo",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 2,
+        "modelPrompt": 6,
+        "srcPrompt": 13,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 4 of the 运镜 mapping table.",
+      "modelTag": {
+        "KlingOmni": "tracking shot",
+        "Seedance 1.5": "Tracking shot, handheld",
+        "Seedance 2.0": "跟踪拍摄",
+        "Wan 2.6": "tracking shot following the subject",
+        "universal": "tracking shot"
+      },
+      "literalCounts": {
+        "zh": 19,
+        "en": 19,
+        "vi": 19
+      }
+    },
+    {
+      "id": "camera.pan",
+      "kind": "vocab.camera-movement",
+      "zh": "摇镜",
+      "en": "Pan",
+      "vi": "Lia máy",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 6,
+        "modelPrompt": 3,
+        "srcPrompt": 1,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 5 of the 运镜 mapping table.",
+      "modelTag": {
+        "KlingOmni": "pan left/right",
+        "Seedance 1.5": "Slow pan",
+        "Seedance 2.0": "镜头缓慢摇移",
+        "Wan 2.6": "smooth pan across the scene",
+        "universal": "pan left/right"
+      },
+      "literalCounts": {
+        "zh": 4,
+        "en": 4,
+        "vi": 4
+      }
+    },
+    {
+      "id": "camera.whipPan",
+      "kind": "vocab.camera-movement",
+      "zh": "甩镜",
+      "en": "Whip pan",
+      "vi": "Lia máy nhanh",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 15,
+        "modelPrompt": 3,
+        "srcPrompt": 2,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 6 of the 运镜 mapping table.",
+      "modelTag": {
+        "KlingOmni": "whip pan",
+        "Seedance 1.5": "Whip pan",
+        "Seedance 2.0": "快速甩镜",
+        "Wan 2.6": "whip pan",
+        "universal": "whip pan"
+      },
+      "literalCounts": {
+        "zh": 5,
+        "en": 5,
+        "vi": 5
+      }
+    },
+    {
+      "id": "camera.crane",
+      "kind": "vocab.camera-movement",
+      "zh": "升降",
+      "en": "Crane",
+      "vi": "Nâng hạ máy",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 8,
+        "modelPrompt": 3,
+        "srcPrompt": 2,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 7 of the 运镜 mapping table.",
+      "modelTag": {
+        "KlingOmni": "crane up/down",
+        "Seedance 1.5": "Crane up/down",
+        "Seedance 2.0": "镜头升降",
+        "Wan 2.6": "crane rising / descending",
+        "universal": "crane up/down"
+      },
+      "literalCounts": {
+        "zh": 5,
+        "en": 5,
+        "vi": 5
+      }
+    },
+    {
+      "id": "camera.orbit",
+      "kind": "vocab.camera-movement",
+      "zh": "环绕",
+      "en": "Orbit",
+      "vi": "Vòng quanh",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 22,
+        "modelPrompt": 3,
+        "srcPrompt": 2,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Matched value, row 8 of the 运镜 mapping table.",
+      "modelTag": {
+        "KlingOmni": "surround shooting",
+        "Seedance 1.5": "Orbiting shot",
+        "Seedance 2.0": "环绕拍摄",
+        "Wan 2.6": "orbiting around the subject",
+        "universal": "surround shooting"
+      },
+      "literalCounts": {
+        "zh": 5,
+        "en": 5,
+        "vi": 5
+      }
+    },
+    {
+      "id": "camera.locked",
+      "kind": "vocab.camera-movement",
+      "zh": "固定",
+      "en": "Locked off",
+      "vi": "Máy cố định",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 111,
+        "modelPrompt": 8,
+        "srcPrompt": 3,
+        "catalog": 0,
+        "srcCode": 3
+      },
+      "note": "Emitted by the skills as a 运镜 cell value and used in the seedance2 worked example, but ABSENT from every 运镜 mapping table. Unmapped boundary value — see gaps. Raw count is inflated by prose (固定文本 / 固定模式).",
+      "literalCounts": {
+        "zh": 11,
+        "en": 5,
+        "vi": 5
+      }
+    },
+    {
+      "id": "camera.slowPush",
+      "kind": "vocab.camera-movement",
+      "zh": "缓推",
+      "en": "Slow push in",
+      "vi": "Đẩy máy chậm",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 76,
+        "modelPrompt": 2,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Emitted by the skills as a 运镜 cell value and used in the seedance2 worked example, but ABSENT from every 运镜 mapping table. Unmapped boundary value — see gaps.",
+      "literalCounts": {
+        "zh": 2,
+        "en": 2,
+        "vi": 2
+      }
+    },
+    {
+      "id": "dialogueType.ordinary",
+      "kind": "vocab.dialogue-type",
+      "zh": "普通对白",
+      "en": "Ordinary dialogue",
+      "vi": "Đối thoại thường",
+      "policy": "translate-label",
+      "boundary": "prompts->model",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 7,
+        "srcPrompt": 10,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Dialogue-type label in the prompt layer only (skills count 0 — the skills write the narrower 对白 / OS / VO). Kept Chinese in the shipped en/vi files.",
+      "literalCounts": {
+        "zh": 17,
+        "en": 0,
+        "vi": 0
+      },
+      "labelCounts": {
+        "en": 17,
+        "vi": 17
+      }
+    },
+    {
+      "id": "dialogueType.innerMonologue",
+      "kind": "vocab.dialogue-type",
+      "zh": "内心独白",
+      "en": "Inner monologue",
+      "vi": "Độc thoại nội tâm",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 15,
+        "modelPrompt": 7,
+        "srcPrompt": 10,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Dialogue category the skills emit and the prompts branch on; pairs with the emitted key 内心OS.",
+      "literalCounts": {
+        "zh": 17,
+        "en": 0,
+        "vi": 0
+      },
+      "labelCounts": {
+        "en": 28,
+        "vi": 17
+      }
+    },
+    {
+      "id": "dialogueType.voiceover",
+      "kind": "vocab.dialogue-type",
+      "zh": "画外音",
+      "en": "Voiceover",
+      "vi": "Lời dẫn ngoài hình",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 6,
+        "modelPrompt": 12,
+        "srcPrompt": 14,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Dialogue category the skills emit and the prompts branch on; pairs with the emitted key 画外音VO.",
+      "literalCounts": {
+        "zh": 26,
+        "en": 9,
+        "vi": 9
+      },
+      "labelCounts": {
+        "en": 28,
+        "vi": 17
+      }
+    },
+    {
+      "id": "dialogueType.bgm",
+      "kind": "vocab.dialogue-type",
+      "zh": "背景音乐",
+      "en": "Background music",
+      "vi": "Nhạc nền",
+      "policy": "translate-label",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 3,
+        "modelPrompt": 1,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Both layers forbid it: the storyboard skills must not write it, the seedance2 prompt must not output it. Kept as a matched prohibition token.",
+      "literalCounts": {
+        "zh": 1,
+        "en": 0,
+        "vi": 0
+      },
+      "labelCounts": {
+        "en": 4,
+        "vi": 6
+      }
+    },
+    {
+      "id": "emit.says",
+      "kind": "format-key",
+      "zh": "说：",
+      "en": "says:",
+      "vi": "nói:",
+      "policy": "keep-zh-literal",
+      "boundary": "prompts->model",
+      "counts": {
+        "skills": 2,
+        "modelPrompt": 2,
+        "srcPrompt": 8,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Ordinary-dialogue marker the video model must receive verbatim. Also emitted by the storyboard table (`林刚暴怒说：『…』`). seedance2 uses the space-separated form `<主体N> 说 {台词}`.",
+      "literalCounts": {
+        "zh": 10,
+        "en": 10,
+        "vi": 10
+      }
+    },
+    {
+      "id": "emit.innerOS",
+      "kind": "format-key",
+      "zh": "内心OS",
+      "en": "内心OS",
+      "vi": "内心OS",
+      "policy": "keep-zh-literal",
+      "boundary": "prompts->model",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 5,
+        "srcPrompt": 4,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Inner-monologue marker the model must emit. Its ASCII half `OS` is already language-neutral; the whole token stays Chinese in every locale.",
+      "literalCounts": {
+        "zh": 9,
+        "en": 9,
+        "vi": 9
+      }
+    },
+    {
+      "id": "emit.voiceoverVO",
+      "kind": "format-key",
+      "zh": "画外音VO",
+      "en": "画外音VO",
+      "vi": "画外音VO",
+      "policy": "keep-zh-literal",
+      "boundary": "prompts->model",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 5,
+        "srcPrompt": 4,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Voiceover marker the model must emit.",
+      "literalCounts": {
+        "zh": 9,
+        "en": 9,
+        "vi": 9
+      }
+    },
+    {
+      "id": "emit.timbre",
+      "kind": "format-key",
+      "zh": "音色：",
+      "en": "音色：",
+      "vi": "音色：",
+      "policy": "keep-zh-literal",
+      "boundary": "prompts->model",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 6,
+        "srcPrompt": 5,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Voice-timbre key the model must emit after a dialogue line.",
+      "literalCounts": {
+        "zh": 11,
+        "en": 11,
+        "vi": 11
+      }
+    },
+    {
+      "id": "emit.noDialogue",
+      "kind": "format-key",
+      "zh": "无台词",
+      "en": "No dialogue",
+      "vi": "Không có thoại",
+      "policy": "keep-zh-literal",
+      "boundary": "skills->prompts",
+      "counts": {
+        "skills": 18,
+        "modelPrompt": 17,
+        "srcPrompt": 13,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Emitted by the storyboard skills as the 台词 cell value and by the prompts as the model-facing marker. The prompts pair it with the English `No dialogue` for English-output modes; the Chinese token itself is what is matched.",
+      "literalCounts": {
+        "zh": 30,
+        "en": 22,
+        "vi": 22
+      }
+    },
+    {
+      "id": "emit.styleAndType",
+      "kind": "format-key",
+      "zh": "画面风格和类型:",
+      "en": "画面风格和类型:",
+      "vi": "画面风格和类型:",
+      "policy": "keep-zh-literal",
+      "boundary": "prompts->model",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 0,
+        "srcPrompt": 4,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Seedance 2.0 mode requires the model's first output line to be exactly this key (half-width colon). Only in src/lib/prompts/videoPromptGeneration.ts.",
+      "literalCounts": {
+        "zh": 4,
+        "en": 4,
+        "vi": 4
+      }
+    },
+    {
+      "id": "runtime.modelNameLabel",
+      "kind": "runtime-label",
+      "zh": "模型名称",
+      "en": "Model name",
+      "vi": "Tên mô hình",
+      "policy": "translate-in-lockstep",
+      "boundary": "catalog->prompts",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 3,
+        "srcPrompt": 0,
+        "catalog": 1,
+        "srcCode": 3
+      },
+      "note": "Written at runtime by generateVideoPrompt.ts / batchGeneratePrompt.ts from catalog key `agent.production.workbench.videoPrompt.modelLabel`; the modelPrompt input-format spec must show the same locale form. This is the one class of boundary term that DOES change per locale — the emitter is the i18n catalog, not a Chinese source file.",
+      "catalogKey": "agent.production.workbench.videoPrompt.modelLabel",
+      "literalCounts": {
+        "zh": 3,
+        "en": 0,
+        "vi": 0
+      }
+    },
+    {
+      "id": "runtime.assetInfoLabel",
+      "kind": "runtime-label",
+      "zh": "资产信息",
+      "en": "Asset info",
+      "vi": "Thông tin tài nguyên",
+      "policy": "translate-in-lockstep",
+      "boundary": "catalog->prompts",
+      "counts": {
+        "skills": 1,
+        "modelPrompt": 24,
+        "srcPrompt": 13,
+        "catalog": 1,
+        "srcCode": 0
+      },
+      "note": "Catalog key `agent.production.workbench.videoPrompt.assetsLabel`. The prompt spec writes the bare `Asset info[id, type, name]` form while the runtime emits the bold + parenthetical form; that mismatch predates translation and exists in zh too.",
+      "catalogKey": "agent.production.workbench.videoPrompt.assetsLabel",
+      "literalCounts": {
+        "zh": 37,
+        "en": 0,
+        "vi": 0
+      }
+    },
+    {
+      "id": "runtime.storyboardInfoLabel",
+      "kind": "runtime-label",
+      "zh": "分镜信息",
+      "en": "Storyboard info",
+      "vi": "Thông tin phân cảnh",
+      "policy": "translate-in-lockstep",
+      "boundary": "catalog->prompts",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 9,
+        "srcPrompt": 2,
+        "catalog": 1,
+        "srcCode": 0
+      },
+      "note": "Catalog key `agent.production.workbench.videoPrompt.storyboardLabel`.",
+      "catalogKey": "agent.production.workbench.videoPrompt.storyboardLabel",
+      "literalCounts": {
+        "zh": 11,
+        "en": 0,
+        "vi": 0
+      }
+    },
+    {
+      "id": "dbEnum.notGenerated",
+      "kind": "do-not-translate",
+      "zh": "未生成",
+      "en": "未生成",
+      "vi": "未生成",
+      "policy": "never-translate",
+      "boundary": "persisted-enum",
+      "counts": {
+        "skills": 2,
+        "modelPrompt": 0,
+        "srcPrompt": 1,
+        "catalog": 0,
+        "srcCode": 11
+      },
+      "note": "Persisted o_assets / o_storyboard state value compared with `.where()` and `===` across src/**. Stays Chinese in every locale. NOTE: the same characters also occur as ordinary prose in the skills; only the compared value is frozen.",
+      "literalCounts": {
+        "zh": 1,
+        "en": 0,
+        "vi": 0
+      }
+    },
+    {
+      "id": "dbEnum.generating",
+      "kind": "do-not-translate",
+      "zh": "生成中",
+      "en": "生成中",
+      "vi": "生成中",
+      "policy": "never-translate",
+      "boundary": "persisted-enum",
+      "counts": {
+        "skills": 1,
+        "modelPrompt": 0,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 32
+      },
+      "note": "Persisted state value compared across src/**.",
+      "literalCounts": {
+        "zh": 0,
+        "en": 0,
+        "vi": 0
+      }
+    },
+    {
+      "id": "dbEnum.completed",
+      "kind": "do-not-translate",
+      "zh": "已完成",
+      "en": "已完成",
+      "vi": "已完成",
+      "policy": "never-translate",
+      "boundary": "persisted-enum",
+      "counts": {
+        "skills": 10,
+        "modelPrompt": 0,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 26
+      },
+      "note": "Persisted state value compared across src/**. CONTRADICTS docs/i18n/glossary.json, which gives 已完成 = Completed / Đã hoàn thành — that glossary entry is only valid for prose; as a state value it must never be translated.",
+      "glossaryDivergence": "docs/i18n/glossary.json gives 已完成 = Completed / Đã hoàn thành. That is correct for the word as prose, and WRONG for the persisted state value, which is compared with === and .where() across src/** and must stay Chinese in every locale. The two uses are homographs; the glossary entry must never be applied to a state value.",
+      "literalCounts": {
+        "zh": 0,
+        "en": 0,
+        "vi": 0
+      }
+    },
+    {
+      "id": "dbEnum.failed",
+      "kind": "do-not-translate",
+      "zh": "生成失败",
+      "en": "生成失败",
+      "vi": "生成失败",
+      "policy": "never-translate",
+      "boundary": "persisted-enum",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 0,
+        "srcPrompt": 0,
+        "catalog": 6,
+        "srcCode": 36
+      },
+      "note": "Persisted state value compared across src/**.",
+      "literalCounts": {
+        "zh": 0,
+        "en": 0,
+        "vi": 0
+      }
+    },
+    {
+      "id": "schemaEnum.role",
+      "kind": "do-not-translate",
+      "zh": "role",
+      "en": "role",
+      "vi": "role",
+      "policy": "never-translate",
+      "boundary": "schema-enum",
+      "counts": {
+        "skills": 29,
+        "modelPrompt": 15,
+        "srcPrompt": 20,
+        "catalog": 7,
+        "srcCode": 133
+      },
+      "note": "Asset `type` value validated by the tool schema and matched by the prompts. ASCII already; listed so a translator does not render it as 角色 / character / nhân vật.",
+      "literalCounts": {
+        "zh": 35,
+        "en": 35,
+        "vi": 35
+      }
+    },
+    {
+      "id": "schemaEnum.scene",
+      "kind": "do-not-translate",
+      "zh": "scene",
+      "en": "scene",
+      "vi": "scene",
+      "policy": "never-translate",
+      "boundary": "schema-enum",
+      "counts": {
+        "skills": 73,
+        "modelPrompt": 15,
+        "srcPrompt": 18,
+        "catalog": 4,
+        "srcCode": 77
+      },
+      "note": "Asset `type` value.",
+      "literalCounts": {
+        "zh": 33,
+        "en": 83,
+        "vi": 33
+      }
+    },
+    {
+      "id": "schemaEnum.prop",
+      "kind": "do-not-translate",
+      "zh": "prop",
+      "en": "prop",
+      "vi": "prop",
+      "policy": "never-translate",
+      "boundary": "schema-enum",
+      "counts": {
+        "skills": 45,
+        "modelPrompt": 4,
+        "srcPrompt": 4,
+        "catalog": 3,
+        "srcCode": 35
+      },
+      "note": "Asset `type` value used by the universal modes.",
+      "literalCounts": {
+        "zh": 8,
+        "en": 24,
+        "vi": 8
+      }
+    },
+    {
+      "id": "schemaEnum.tool",
+      "kind": "do-not-translate",
+      "zh": "tool",
+      "en": "tool",
+      "vi": "tool",
+      "policy": "never-translate",
+      "boundary": "schema-enum",
+      "counts": {
+        "skills": 5,
+        "modelPrompt": 6,
+        "srcPrompt": 0,
+        "catalog": 103,
+        "srcCode": 288
+      },
+      "note": "Asset `type` value used by the Seedance 2.0 mode INSTEAD of `prop` — the two modes disagree; see conflicts.",
+      "literalCounts": {
+        "zh": 6,
+        "en": 6,
+        "vi": 6
+      }
+    },
+    {
+      "id": "schemaEnum.audio",
+      "kind": "do-not-translate",
+      "zh": "audio",
+      "en": "audio",
+      "vi": "audio",
+      "policy": "never-translate",
+      "boundary": "schema-enum",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 8,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 153
+      },
+      "note": "Asset `type` value used by the Seedance 2.0 mode as the timbre source.",
+      "literalCounts": {
+        "zh": 8,
+        "en": 17,
+        "vi": 8
+      }
+    },
+    {
+      "id": "modelId.seedance2Zh",
+      "kind": "do-not-translate",
+      "zh": "即梦2.0",
+      "en": "即梦2.0",
+      "vi": "即梦2.0",
+      "policy": "never-translate",
+      "boundary": "model-identifier",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 0,
+        "srcPrompt": 1,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Chinese alias for Seedance 2.0 in the mode-routing table; matched against the model name the user configured. Must stay Chinese in every locale.",
+      "literalCounts": {
+        "zh": 1,
+        "en": 1,
+        "vi": 1
+      }
+    },
+    {
+      "id": "modelId.wan26Zh",
+      "kind": "do-not-translate",
+      "zh": "万象2.6",
+      "en": "万象2.6",
+      "vi": "万象2.6",
+      "policy": "never-translate",
+      "boundary": "model-identifier",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 0,
+        "srcPrompt": 1,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Chinese alias for Wan 2.6 in the mode-routing table.",
+      "literalCounts": {
+        "zh": 1,
+        "en": 1,
+        "vi": 1
+      }
+    },
+    {
+      "id": "ref.imageN",
+      "kind": "do-not-translate",
+      "zh": "@图N",
+      "en": "@图N",
+      "vi": "@图N",
+      "policy": "never-translate",
+      "boundary": "reference-syntax",
+      "counts": {
+        "skills": 14,
+        "modelPrompt": 7,
+        "srcPrompt": 20,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Asset/storyboard reference token for the universal and Seedance 1.5 modes. `N` is a number; the `@图` stem is literal.",
+      "literalCounts": {
+        "zh": 27,
+        "en": 27,
+        "vi": 27
+      }
+    },
+    {
+      "id": "ref.pictureN",
+      "kind": "do-not-translate",
+      "zh": "@图片N",
+      "en": "@图片N",
+      "vi": "@图片N",
+      "policy": "never-translate",
+      "boundary": "reference-syntax",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 13,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Asset reference token for the Seedance 2.0 mode. Distinct from @图N — the two modes use different stems and must not be unified.",
+      "literalCounts": {
+        "zh": 13,
+        "en": 13,
+        "vi": 13
+      }
+    },
+    {
+      "id": "tag.subject",
+      "kind": "do-not-translate",
+      "zh": "<主体",
+      "en": "<主体",
+      "vi": "<主体",
+      "policy": "never-translate",
+      "boundary": "reference-syntax",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 18,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Seedance 2.0 subject tag `<主体N>`; defined in part one of the output and referenced throughout the body.",
+      "literalCounts": {
+        "zh": 18,
+        "en": 18,
+        "vi": 18
+      }
+    },
+    {
+      "id": "tag.sceneTag",
+      "kind": "do-not-translate",
+      "zh": "<场景",
+      "en": "<场景",
+      "vi": "<场景",
+      "policy": "never-translate",
+      "boundary": "reference-syntax",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 11,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Seedance 2.0 scene tag `<场景N>`.",
+      "literalCounts": {
+        "zh": 11,
+        "en": 11,
+        "vi": 11
+      }
+    },
+    {
+      "id": "tag.propTag",
+      "kind": "do-not-translate",
+      "zh": "<道具",
+      "en": "<道具",
+      "vi": "<道具",
+      "policy": "never-translate",
+      "boundary": "reference-syntax",
+      "counts": {
+        "skills": 0,
+        "modelPrompt": 9,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Seedance 2.0 prop tag `<道具N>`.",
+      "literalCounts": {
+        "zh": 9,
+        "en": 9,
+        "vi": 9
+      }
+    },
+    {
+      "id": "key.videoDesc",
+      "kind": "do-not-translate",
+      "zh": "videoDesc",
+      "en": "videoDesc",
+      "vi": "videoDesc",
+      "policy": "never-translate",
+      "boundary": "field-key",
+      "counts": {
+        "skills": 14,
+        "modelPrompt": 53,
+        "srcPrompt": 45,
+        "catalog": 2,
+        "srcCode": 36
+      },
+      "note": "The storyboard field this whole registry is about. Written by add_flowData_storyboard, read by every video prompt.",
+      "literalCounts": {
+        "zh": 98,
+        "en": 98,
+        "vi": 98
+      }
+    },
+    {
+      "id": "key.storyboardItem",
+      "kind": "do-not-translate",
+      "zh": "storyboardItem",
+      "en": "storyboardItem",
+      "vi": "storyboardItem",
+      "policy": "never-translate",
+      "boundary": "field-key",
+      "counts": {
+        "skills": 2,
+        "modelPrompt": 34,
+        "srcPrompt": 32,
+        "catalog": 2,
+        "srcCode": 6
+      },
+      "note": "XML tag name assembled in src/routes/production/workbench/*.ts and parsed by the prompts.",
+      "literalCounts": {
+        "zh": 66,
+        "en": 66,
+        "vi": 66
+      }
+    },
+    {
+      "id": "key.associateAssetsIds",
+      "kind": "do-not-translate",
+      "zh": "associateAssetsIds",
+      "en": "associateAssetsIds",
+      "vi": "associateAssetsIds",
+      "policy": "never-translate",
+      "boundary": "field-key",
+      "counts": {
+        "skills": 12,
+        "modelPrompt": 4,
+        "srcPrompt": 11,
+        "catalog": 2,
+        "srcCode": 22
+      },
+      "note": "storyboardItem attribute.",
+      "literalCounts": {
+        "zh": 15,
+        "en": 15,
+        "vi": 15
+      }
+    },
+    {
+      "id": "key.shouldGenerateImage",
+      "kind": "do-not-translate",
+      "zh": "shouldGenerateImage",
+      "en": "shouldGenerateImage",
+      "vi": "shouldGenerateImage",
+      "policy": "never-translate",
+      "boundary": "field-key",
+      "counts": {
+        "skills": 6,
+        "modelPrompt": 12,
+        "srcPrompt": 13,
+        "catalog": 2,
+        "srcCode": 30
+      },
+      "note": "storyboardItem attribute; its values are the strings \"true\" / \"false\" and the prompts branch on them.",
+      "literalCounts": {
+        "zh": 25,
+        "en": 25,
+        "vi": 25
+      }
+    },
+    {
+      "id": "key.track",
+      "kind": "do-not-translate",
+      "zh": "track",
+      "en": "track",
+      "vi": "track",
+      "policy": "never-translate",
+      "boundary": "field-key",
+      "counts": {
+        "skills": 14,
+        "modelPrompt": 10,
+        "srcPrompt": 15,
+        "catalog": 2,
+        "srcCode": 143
+      },
+      "note": "storyboardItem attribute.",
+      "literalCounts": {
+        "zh": 25,
+        "en": 26,
+        "vi": 25
+      }
+    },
+    {
+      "id": "key.duration",
+      "kind": "do-not-translate",
+      "zh": "duration",
+      "en": "duration",
+      "vi": "duration",
+      "policy": "never-translate",
+      "boundary": "field-key",
+      "counts": {
+        "skills": 9,
+        "modelPrompt": 6,
+        "srcPrompt": 11,
+        "catalog": 2,
+        "srcCode": 78
+      },
+      "note": "storyboardItem attribute.",
+      "literalCounts": {
+        "zh": 17,
+        "en": 62,
+        "vi": 17
+      }
+    },
+    {
+      "id": "tool.getFlowData",
+      "kind": "do-not-translate",
+      "zh": "get_flowData",
+      "en": "get_flowData",
+      "vi": "get_flowData",
+      "policy": "never-translate",
+      "boundary": "tool-name",
+      "counts": {
+        "skills": 26,
+        "modelPrompt": 0,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 2
+      },
+      "note": "Tool the storyboard skills call to read script / assets / storyboardTable.",
+      "literalCounts": {
+        "zh": 0,
+        "en": 0,
+        "vi": 0
+      }
+    },
+    {
+      "id": "tool.addFlowDataStoryboard",
+      "kind": "do-not-translate",
+      "zh": "add_flowData_storyboard",
+      "en": "add_flowData_storyboard",
+      "vi": "add_flowData_storyboard",
+      "policy": "never-translate",
+      "boundary": "tool-name",
+      "counts": {
+        "skills": 11,
+        "modelPrompt": 0,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 1
+      },
+      "note": "Tool that writes videoDesc — the emitting end of the whole boundary.",
+      "literalCounts": {
+        "zh": 0,
+        "en": 0,
+        "vi": 0
+      }
+    }
+  ]
+}

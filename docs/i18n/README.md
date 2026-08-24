@@ -215,6 +215,21 @@ If a translation needs fixing, edit the `.en.md` / `.vi.md` sidecar, not the ori
   `src/router.ts`, and `*.test.ts`. Exits non-zero if any CJK remains outside those exclusions.
   This is the project's i18n regression gate — run it before committing anything that touches
   strings.
+- **`yarn i18n:check-terms`** (`scripts/i18n-check-terms.ts`) — verifies `docs/i18n/prompt-terms.json`,
+  the term registry for the AI pipeline's machine-matched boundary, against the tree. The registry is
+  narrower and stricter than `docs/i18n/glossary.json`: it holds only tokens that one layer *emits* and
+  another *matches* — the `videoDesc` field names and their closed value vocabularies, the structural
+  markers the parser splits on, the format keys the video model must receive verbatim, and the tokens
+  that must never be translated in any locale (persisted state values, schema enums, tool names, model
+  identifiers, `@图N` / `@图片N`). Each entry records its `zh` / `en` / `vi` forms, a `policy` saying
+  whether the token itself may be translated, the boundary it crosses, and raw occurrence counts in each
+  layer as evidence. The checker asserts that every `zh` form is still present where the registry says it
+  is, that tokens which survived translation before still survive it, that the `en` / `vi` forms the
+  registry lists are the ones actually in the translated files, that runtime labels and the prompt spec
+  that matches them move together, and that nothing contradicts the glossary without a declared reason.
+  Run `tsx scripts/i18n-check-terms.ts --update` after an intentional change to refresh the recorded
+  counts, and `--limits` to print what the check cannot detect. **It is not a substitute for reading the
+  registry** — it verifies what is in it, and cannot discover a boundary term nobody has added.
 - **`yarn i18n:patch-web`** (`scripts/patch-web-i18n.ts`) — patches missing menu-label keys into
   the prebuilt frontend bundle in `data/web/`, since that bundle is generated from
   `Toonflow-web` and isn't rebuilt from source in this repo. Re-run it whenever `data/web/`
@@ -272,6 +287,8 @@ Adapted from section 6 of
 | Catalogs | `src/i18n/locales/{en,vi,zh}.json` |
 | Skill sidecar resolution | `src/i18n/skillPath.ts` |
 | Skill translation manifest | `data/skills/.i18n-manifest.json` |
+| Prose terminology | `docs/i18n/glossary.json` |
+| Pipeline boundary term registry | `docs/i18n/prompt-terms.json` — `yarn i18n:check-terms` |
 | Seed migration for installed machines | `src/lib/migrations/i18nSeed.ts` |
 | CJK regression gate | `yarn i18n:scan` |
 | Frontend bundle patch | `yarn i18n:patch-web` |
