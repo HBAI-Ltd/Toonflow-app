@@ -166,6 +166,67 @@ describe("scriptAgent/index.ts — model-facing text follows prompt_language, pe
     expect(tools.run_sub_agent_storySkeleton.description).toContain("Chạy sub-agent thực thi");
   });
 
+  // F2 — thân skill (system prompt) gửi cho model phải theo prompt_language, không phải luôn
+  // đọc thẳng bản gốc .md (zh). script_agent_decision.md không có sidecar trong beforeEach,
+  // nên thêm sidecar .en.md/.vi.md riêng cho nhóm test này để phân biệt.
+  describe("F2 — skill system prompt (model-facing) follows prompt_language", () => {
+    beforeEach(() => {
+      fs.writeFileSync(path.join(tmpRoot, "skills", "script_agent_decision.en.md"), "EN_SYSTEM_SKILL", "utf-8");
+      fs.writeFileSync(path.join(tmpRoot, "skills", "script_agent_decision.vi.md"), "VI_SYSTEM_SKILL", "utf-8");
+    });
+
+    it("prompt_language=en -> system prompt đến từ script_agent_decision.en.md, không phải bản gốc zh", async () => {
+      await setSetting("content_language", "vi");
+      await setSetting("prompt_language", "en");
+      const { runDecisionAI } = await import("./index");
+      const resTool = makeResTool();
+      await runDecisionAI({
+        socket: {} as any,
+        isolationKey: "iso-f2-1",
+        text: "hello",
+        resTool,
+        msg: makeMsg() as any,
+        thinkConfig: { think: false, thinlLevel: 0 },
+      });
+      const systemContent = capturedStream!.messages.find((m: any) => m.role === "system").content as string;
+      expect(systemContent).toBe("EN_SYSTEM_SKILL");
+    });
+
+    it("prompt_language=vi -> system prompt đến từ script_agent_decision.vi.md, kể cả khi content_language=en", async () => {
+      await setSetting("content_language", "en");
+      await setSetting("prompt_language", "vi");
+      const { runDecisionAI } = await import("./index");
+      const resTool = makeResTool();
+      await runDecisionAI({
+        socket: {} as any,
+        isolationKey: "iso-f2-2",
+        text: "hello",
+        resTool,
+        msg: makeMsg() as any,
+        thinkConfig: { think: false, thinlLevel: 0 },
+      });
+      const systemContent = capturedStream!.messages.find((m: any) => m.role === "system").content as string;
+      expect(systemContent).toBe("VI_SYSTEM_SKILL");
+    });
+
+    it("prompt_language không có sidecar (zh) -> lùi về bản gốc script_agent_decision.md", async () => {
+      await setSetting("content_language", "en");
+      await setSetting("prompt_language", "zh");
+      const { runDecisionAI } = await import("./index");
+      const resTool = makeResTool();
+      await runDecisionAI({
+        socket: {} as any,
+        isolationKey: "iso-f2-3",
+        text: "hello",
+        resTool,
+        msg: makeMsg() as any,
+        thinkConfig: { think: false, thinlLevel: 0 },
+      });
+      const systemContent = capturedStream!.messages.find((m: any) => m.role === "system").content as string;
+      expect(systemContent).toBe("SYSTEM_SKILL");
+    });
+  });
+
   it("sub-agent 'name' role label (person-facing, socket message author) follows content_language=en, ignoring prompt_language=vi", async () => {
     await setSetting("content_language", "en");
     await setSetting("prompt_language", "vi");

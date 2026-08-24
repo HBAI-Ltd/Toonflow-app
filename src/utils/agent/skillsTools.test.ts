@@ -103,6 +103,55 @@ describe("skillsTools.useSkill — prompt vs content locale split", () => {
     const { useSkill } = await import("./skillsTools");
     await expect(useSkill({ mainSkill: ["does_not_exist"] as any })).rejects.toThrow("Main skill file does not exist");
   });
+
+  // F2 — skill body: thân skill kích hoạt (activate_skill) phải theo prompt_language, không phải
+  // luôn đọc thẳng bản gốc .md (zh). Thiết lập sidecar test_skill.en.md/.vi.md để phân biệt.
+  describe("F2 — activate_skill body follows prompt_language", () => {
+    beforeEach(() => {
+      fs.writeFileSync(
+        path.join(skillsDir, "test_skill.en.md"),
+        ["---", "name: test_skill", "description: a test skill", "---", "", "EN_BODY"].join("\n"),
+        "utf-8",
+      );
+      fs.writeFileSync(
+        path.join(skillsDir, "test_skill.vi.md"),
+        ["---", "name: test_skill", "description: a test skill", "---", "", "VI_BODY"].join("\n"),
+        "utf-8",
+      );
+    });
+
+    it("prompt_language=en -> activate_skill trả nội dung từ test_skill.en.md, không phải bản gốc zh", async () => {
+      await setSetting(db, "content_language", "vi");
+      await setSetting(db, "prompt_language", "en");
+      const { useSkill } = await import("./skillsTools");
+      const { tools } = await useSkill({ mainSkill: ["test_skill"] as any });
+      const result = await (tools.activate_skill as any).execute({ name: "test_skill" });
+      expect(result.content).toContain("EN_BODY");
+      expect(result.content).not.toContain("VI_BODY");
+      expect(result.content).not.toContain("\nbody");
+    });
+
+    it("prompt_language=vi -> activate_skill trả nội dung từ test_skill.vi.md", async () => {
+      await setSetting(db, "content_language", "en");
+      await setSetting(db, "prompt_language", "vi");
+      const { useSkill } = await import("./skillsTools");
+      const { tools } = await useSkill({ mainSkill: ["test_skill"] as any });
+      const result = await (tools.activate_skill as any).execute({ name: "test_skill" });
+      expect(result.content).toContain("VI_BODY");
+      expect(result.content).not.toContain("EN_BODY");
+    });
+
+    it("prompt_language không có sidecar (zh) -> lùi về bản gốc", async () => {
+      await setSetting(db, "content_language", "en");
+      await setSetting(db, "prompt_language", "zh");
+      const { useSkill } = await import("./skillsTools");
+      const { tools } = await useSkill({ mainSkill: ["test_skill"] as any });
+      const result = await (tools.activate_skill as any).execute({ name: "test_skill" });
+      expect(result.content).toContain("\nbody");
+      expect(result.content).not.toContain("EN_BODY");
+      expect(result.content).not.toContain("VI_BODY");
+    });
+  });
 });
 
 // F1 — scanSkills không được để sidecar dịch (foo.en.md/foo.vi.md) rò vào danh sách skill,
