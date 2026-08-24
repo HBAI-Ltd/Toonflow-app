@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import { o_novel } from "@/types/database";
 import u from "@/utils";
 import { stripThink } from "@/utils/stripThink";
-import { t, getLocale } from "@/i18n";
+import { t, getPromptLanguage } from "@/i18n";
 export interface EventType {
   id: number;
   event: string;
@@ -27,7 +27,9 @@ class CleanNovel {
 
   private async processChapter(novel: o_novel): Promise<EventType | null> {
     try {
-      const locale = await getLocale();
+      // system/content below go straight into u.Ai.Text().invoke() as the event-extraction
+      // prompt — model-facing, so this resolves through prompt_language, not content_language.
+      const locale = await getPromptLanguage();
       const prompt = await u.getPrompts("event");
       const promptData = await u.db("o_prompt").where("type", "eventExtraction").first();
       let eventExtraction = "" as string | undefined;
