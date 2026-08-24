@@ -5,7 +5,7 @@ import {
   ensureAudioBindPromptSeeded,
   LEGACY_SCRIPT_ASSET_EXTRACTION_ZH,
 } from "./promptSeedSync";
-import { getSeedPrompt } from "@/lib/prompts";
+import { getSeedPrompt, SEED_PROMPT_TYPES } from "@/lib/prompts";
 
 let db: Knex;
 
@@ -110,6 +110,44 @@ describe("syncGuardedPromptSeeds", () => {
     await db.schema.dropTable("o_prompt");
     const result = await syncGuardedPromptSeeds(db, "zh");
     expect(result).toEqual({ updated: 0, skipped: 0 });
+  });
+
+  it("đồng bộ cả bốn loại seed prompt (bug: eventExtraction/audioBindPrompt trước đây không bao giờ được đồng bộ lại)", async () => {
+    // Driven off SEED_PROMPT_TYPES so a fifth prompt type added later cannot be silently
+    // forgotten by the guarded sync.
+    expect(SEED_PROMPT_TYPES).toEqual(
+      expect.arrayContaining(["eventExtraction", "scriptAssetExtraction", "videoPromptGeneration", "audioBindPrompt"]),
+    );
+    await db("o_prompt").insert(
+      SEED_PROMPT_TYPES.map((type, index) => ({
+        id: index + 1,
+        type,
+        data: getSeedPrompt(type, "zh"),
+      })),
+    );
+    const result = await syncGuardedPromptSeeds(db, "en");
+    expect(result.updated).toBe(SEED_PROMPT_TYPES.length);
+    expect(result.skipped).toBe(0);
+    for (const type of SEED_PROMPT_TYPES) {
+      const row = await db("o_prompt").where("type", type).first();
+      expect(row.data).toBe(getSeedPrompt(type, "en"));
+    }
+  });
+
+  it("không đè lên eventExtraction hoặc audioBindPrompt đã bị người dùng sửa", async () => {
+    const eventEdited = "Nội dung eventExtraction tôi tự sửa.";
+    const audioEdited = "Nội dung audioBindPrompt tôi tự sửa.";
+    await db("o_prompt").insert([
+      { id: 1, type: "eventExtraction", data: eventEdited },
+      { id: 2, type: "audioBindPrompt", data: audioEdited },
+    ]);
+    const result = await syncGuardedPromptSeeds(db, "zh");
+    expect(result.skipped).toBe(2);
+    expect(result.updated).toBe(0);
+    const event = await db("o_prompt").where("id", 1).first();
+    const audio = await db("o_prompt").where("id", 2).first();
+    expect(event.data).toBe(eventEdited);
+    expect(audio.data).toBe(audioEdited);
   });
 });
 

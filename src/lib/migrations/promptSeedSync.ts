@@ -1,6 +1,6 @@
 import type { Knex } from "knex";
 import type { Locale } from "@/i18n/types";
-import { getSeedPrompt, getSeedVariants, type SeedPromptType } from "@/lib/prompts";
+import { getSeedPrompt, getSeedVariants, SEED_PROMPT_TYPES, type SeedPromptType } from "@/lib/prompts";
 
 /**
  * The scriptAssetExtraction / videoPromptGeneration seed text that src/lib/initDB.ts inserted
@@ -21,9 +21,19 @@ const LEGACY_SEED_VARIANTS: Partial<Record<SeedPromptType, string[]>> = {
   videoPromptGeneration: [LEGACY_VIDEO_PROMPT_GENERATION_ZH],
 };
 
-/** Prompt types that ship periodic corrections to their seed content and so need the guarded sync
- * below. (eventExtraction and audioBindPrompt are seeded once and never re-pushed.) */
-const GUARDED_PROMPT_TYPES: SeedPromptType[] = ["scriptAssetExtraction", "videoPromptGeneration"];
+/**
+ * Every seed prompt type gets the guarded re-sync below. Originally only scriptAssetExtraction and
+ * videoPromptGeneration were covered (mirroring the two prompts fixDB.ts used to force-update
+ * unconditionally); eventExtraction and audioBindPrompt were merely *seeded* — written once by
+ * initDB/fixDB and never revisited — so on an existing install they stayed in whichever language
+ * they were first written in, forever, even after the app's UI language changed. The guard (a row
+ * is only touched when its current value still exactly matches a known seed variant) makes it safe
+ * to extend to all seed prompt types: an edited row matches no seed variant and is left alone.
+ *
+ * Driven off SEED_PROMPT_TYPES (src/lib/prompts/index.ts) rather than a hand-maintained list, so a
+ * fifth prompt type added there is automatically covered here too.
+ */
+const GUARDED_PROMPT_TYPES: SeedPromptType[] = SEED_PROMPT_TYPES;
 
 export interface PromptSeedSyncResult {
   updated: number;
@@ -40,10 +50,10 @@ function knownSeedVariants(type: SeedPromptType): string[] {
 }
 
 /**
- * Keeps o_prompt.data in sync with the shipped seed content for prompt types that ship periodic
- * corrections (scriptAssetExtraction, videoPromptGeneration) — WITHOUT clobbering a user's own
- * edit. Replaces the pre-refactor unconditional UPDATE in fixDB.ts, which destroyed any edit a user
- * made in Settings → Prompt Management on every app restart.
+ * Keeps o_prompt.data in sync with the shipped seed content for every seed prompt type (see
+ * SEED_PROMPT_TYPES in src/lib/prompts/index.ts) — WITHOUT clobbering a user's own edit. Replaces
+ * the pre-refactor unconditional UPDATE in fixDB.ts, which destroyed any edit a user made in
+ * Settings → Prompt Management on every app restart.
  *
  * A row is only overwritten when its current `data` exactly equals one of the known seed variants
  * for that type (any locale's variant, or a retained legacy variant, not just the one matching
@@ -76,8 +86,10 @@ export async function syncGuardedPromptSeeds(knex: Knex, locale: Locale): Promis
 
 /**
  * Inserts the audioBindPrompt seed row only when it doesn't exist yet — mirrors the existing
- * insert-only-if-missing behaviour fixDB.ts already had for this prompt type (unlike the two
- * guarded types above, this one is never force-updated once seeded).
+ * insert-only-if-missing behaviour fixDB.ts already had for this prompt type. This is in addition
+ * to, not a replacement for, syncGuardedPromptSeeds: this handles the row not existing at all (a
+ * fresh install / a DB that predates audioBindPrompt), while syncGuardedPromptSeeds handles keeping
+ * an existing, unedited row's language in sync with the current locale on every subsequent boot.
  */
 export async function ensureAudioBindPromptSeeded(knex: Knex, locale: Locale): Promise<void> {
   if (!(await knex.schema.hasTable("o_prompt"))) return;
