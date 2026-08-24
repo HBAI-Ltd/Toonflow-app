@@ -25,7 +25,7 @@ metaData: director_skills
 ### Điểm cốt yếu của tự sự gia đình ấm áp
 
 - **Dòng chảy đời thường là công phu nền** — nhịp của tự sự gia đình nên gần với "nhịp của cuộc sống": chậm, lặp lại, có quy luật. Dậy sớm → nấu ăn → ra khỏi nhà → trở về → ăn cơm → nghỉ ngơi, chính vòng lặp đời thường ấy đã là cấu trúc tự sự
-- **Tuyến cảm xúc ngầm** — bề mặt là những vụn vặt đời thường, nhưng bên dưới phải có một tuyến cảm xúc ngầm đang chậm rãi đẩy (推进) tới (sự thân mật đang xa dần/cha mẹ đang già đi/đứa con sắp rời nhà). Tuyến ngầm không cần nói ra, khán giả sẽ cảm được
+- **Tuyến cảm xúc ngầm** — bề mặt là những vụn vặt đời thường, nhưng bên dưới phải có một tuyến cảm xúc ngầm đang chậm rãi đẩy tới (sự thân mật đang xa dần/cha mẹ đang già đi/đứa con sắp rời nhà). Tuyến ngầm không cần nói ra, khán giả sẽ cảm được
 - **Đối chiếu giữa các thế hệ** — tuyến truyện của hai thế hệ có thể tạo thành thế đối chiếu: lựa chọn của người cha năm xưa vs lựa chọn của người con lúc này; giấc mơ thời trẻ của người mẹ vs điều người con gái đang theo đuổi hôm nay. Trong sự đối chiếu vừa có kế thừa vừa có xung đột
 - **Khủng hoảng và trở về** — cao trào của tự sự gia đình thường không phải "xung đột bùng nổ", mà là "suýt nữa thì tan nhưng cuối cùng vẫn về". Chính mối đe doạ chia lìa làm cho sự đoàn tụ trở nên quý giá
 - **Bước ngoặt dùng hành động chứ không dùng lời** — sự hoà giải trong mâu thuẫn gia đình không dựa vào thoại xin lỗi, mà dựa vào một hành động: lặng lẽ bưng tới cốc nước, gắp món đối phương thích đặt trước mặt, ngày mưa ra bến xe đón người về. Hành động mang chất tự sự gia đình hơn ngàn lời nói

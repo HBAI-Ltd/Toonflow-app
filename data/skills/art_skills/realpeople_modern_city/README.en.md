@@ -177,7 +177,7 @@ This style strictly excludes the following content types, to keep the visual sys
 
 ## VI. Project Phase Plan and Expected Outcomes
 
-This visual-manual project follows a phased rollout (推进) strategy, ensuring complete coverage from the macro framework down to micro-level detail.
+This visual-manual project follows a phased rollout strategy, ensuring complete coverage from the macro framework down to micro-level detail.
 
 ### Phase 1: Framework Building and Style Anchoring (completed this cycle)
 

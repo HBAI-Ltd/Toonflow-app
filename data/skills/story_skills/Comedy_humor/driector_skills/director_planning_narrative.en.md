@@ -78,7 +78,7 @@ metaData: director_skills
 | True feeling surfaces | Scoring cuts out, pure ambience | None |
 | Return to the everyday | A relaxed close | Medium-low |
 
-- **"Metronome" comedy** — a repeating laugh (the same mistake happening again and again) can be reinforced with a background sound on a fixed (固定) tempo that builds the "here we go again" expectation; breaking the rhythm on the third pass maximises the laugh
+- **"Metronome" comedy** — a repeating laugh (the same mistake happening again and again) can be reinforced with a background sound on a fixed tempo that builds the "here we go again" expectation; breaking the rhythm on the third pass maximises the laugh
 
 ---
 

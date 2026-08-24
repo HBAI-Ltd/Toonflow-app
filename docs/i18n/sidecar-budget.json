@@ -38,8 +38,24 @@
       "vi": 0
     },
     "data/skills/art_skills/realpeople_modern_city/README.md": {
-      "en": 0,
-      "vi": 0
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 分阶段推进策略 theo nghĩa văn xuôi (triển khai theo giai đoạn), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 分阶段推进策略 theo nghĩa văn xuôi (triển khai theo giai đoạn), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      }
     },
     "data/skills/art_skills/realpeople_urban_modern/README.md": {
       "en": 0,
@@ -109,6 +125,46 @@
       "en": 0,
       "vi": 0
     },
+    "data/skills/story_skills/Comedy_humor/driector_skills/director_planning_narrative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "固定": {
+            "expected": 2,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (nhịp cố định / chỗ ngồi cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "固定": {
+            "expected": 2,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (nhịp cố định / chỗ ngồi cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/story_skills/Comedy_humor/driector_skills/director_storyboard_table_narrative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 推进 theo nghĩa văn xuôi (đẩy mạch truyện / đẩy tiến độ), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 推进 theo nghĩa văn xuôi (đẩy mạch truyện / đẩy tiến độ), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      }
+    },
     "data/skills/story_skills/Coming_of_age/README.md": {
       "en": 0,
       "vi": 0
@@ -116,6 +172,54 @@
     "data/skills/story_skills/Family_warmth/README.md": {
       "en": 0,
       "vi": 0
+    },
+    "data/skills/story_skills/Family_warmth/driector_skills/director_planning_narrative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 推进 theo nghĩa văn xuôi (đẩy mạch truyện / đẩy tiến độ), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 推进 theo nghĩa văn xuôi (đẩy mạch truyện / đẩy tiến độ), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      }
+    },
+    "data/skills/story_skills/Family_warmth/driector_skills/director_storyboard_table_narrative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 推进 theo nghĩa văn xuôi (đẩy mạch truyện / đẩy tiến độ), không phải giá trị vận máy 推进 (push in)"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (nhịp cố định / chỗ ngồi cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 推进 theo nghĩa văn xuôi (đẩy mạch truyện / đẩy tiến độ), không phải giá trị vận máy 推进 (push in)"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定 theo nghĩa văn xuôi (nhịp cố định / chỗ ngồi cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
     },
     "data/skills/story_skills/Historical_epic/README.md": {
       "en": 0,

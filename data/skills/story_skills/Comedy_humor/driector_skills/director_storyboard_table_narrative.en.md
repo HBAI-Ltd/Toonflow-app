@@ -40,7 +40,7 @@ The storyboard table is the director's core tool for turning the script into sho
 - **Give the setup enough time** — setup shots run 3-4s so the audience can fully build the expectation. If the setup is not full enough, the payoff does not land
 - **Hit the payoff on the exact beat** — the shot that drops the payoff runs 1.5-2s, crisp and clean. The force of a laugh is in its suddenness; drag it out and it stops being funny
 - **Reaction shot 2-3s** — give the bystander's or the victim's reaction enough "freeze" time for the audience to digest the laugh
-- **Leave air after the laugh** — leave 1-2s of "blank" after the laugh (the character silent / the air frozen) to give the audience time to laugh. If you advance (推进) the narrative at once, the laughter is cut off
+- **Leave air after the laugh** — leave 1-2s of "blank" after the laugh (the character silent / the air frozen) to give the audience time to laugh. If you advance the narrative at once, the laughter is cut off
 - **The golden 6-second rule** — comic rhythm requires a single shot to stay under 4s as a rule (faster than other genres); only setup and true-feeling passages may reach 5-6s
 - **Duration progression in the rule of three** — when the same laugh repeats three times: first pass at normal duration → second pass slightly shorter (the audience already knows the expectation) → third pass either shortest or longest (breaking the pattern)
 

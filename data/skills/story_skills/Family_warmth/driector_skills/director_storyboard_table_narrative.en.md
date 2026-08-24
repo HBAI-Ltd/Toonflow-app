@@ -49,7 +49,7 @@ The storyboard table is the director's core tool for turning the script into sho
 
 - **Run the everyday flow through one shot** — everyday family passages (cooking → carrying the dishes → sitting down → starting to eat) should as far as possible be done in one long take with camera movement, in a single breath; fragmented cutting destroys "the continuity of daily life"
 - **Cover a dining-table scene in one shot** — when a scene of the whole family eating can be covered by one shot panning slowly across everyone, do not split it into fragmented cuts of one person at a time
-- **Narrative density first** — every shot must advance (推进) the narrative or carry emotional warmth; a purely decorative display of the space should be merged into a shot that has a narrative function
+- **Narrative density first** — every shot must advance the narrative or carry emotional warmth; a purely decorative display of the space should be merged into a shot that has a narrative function
 - **The director's-thinking test** — once the storyboard is written, self-check: do the everyday passages have a smooth feeling of daily life? Do the emotional passages hold long enough? Does the fragmented cutting break the steady rhythm of the home?
 
 ---
@@ -66,7 +66,7 @@ The storyboard table is the director's core tool for turning the script into sho
 
 ## 7. Designing character interaction
 
-- **Family interaction runs on habitual actions** — interaction in a family is not improvised, it is "habitual": always refilling the other's rice, always sitting in the same fixed (固定) place, always calling the other by the same name in the same way
+- **Family interaction runs on habitual actions** — interaction in a family is not improvised, it is "habitual": always refilling the other's rice, always sitting in the same fixed place, always calling the other by the same name in the same way
 - **Write the unspoken love as action** — in the storyboard table, family feeling is carried first of all by shots of action: an extra piece of food put in the bowl, the good dish pushed towards the other person, the first thing on coming in being a glance to check whether the other is there
 - **Physical distance is security** — closeness in a family is "getting near without needing a reason": leaning on a shoulder naturally, holding a hand without thinking, a light pat in passing
 

@@ -40,7 +40,7 @@ Bảng phân cảnh là công cụ lõi để đạo diễn chuyển kịch bả
 - **Dọn nền phải đủ thời lượng** — cú máy dọn nền 3-4s để khán giả dựng kỳ vọng cho đầy. Dọn nền không đủ thì cú chốt không nổ
 - **Cú chốt phải đúng nhịp** — cú máy bung chốt 1.5-2s, dứt khoát gọn ghẽ. Sức đánh của điểm cười nằm ở chữ "đột ngột", lê thê là hết buồn cười
 - **Cú máy phản ứng 2-3s** — cho phản ứng của người chứng kiến/người trong cuộc đủ thời gian "đóng băng" để khán giả tiêu hoá điểm cười
-- **Chừa khoảng lặng sau điểm cười** — sau điểm cười chừa 1-2s "khoảng trắng" (nhân vật im lặng/không khí đông cứng) để khán giả có thời gian cười. Nếu đẩy (推进) tự sự đi tiếp ngay thì tiếng cười bị cắt ngang
+- **Chừa khoảng lặng sau điểm cười** — sau điểm cười chừa 1-2s "khoảng trắng" (nhân vật im lặng/không khí đông cứng) để khán giả có thời gian cười. Nếu đẩy tự sự đi tiếp ngay thì tiếng cười bị cắt ngang
 - **Quy tắc 6 giây vàng** — nhịp hài đòi hỏi một cú máy thường không quá 4s (nhanh hơn các thể loại khác), chỉ đoạn dọn nền và đoạn tình cảm thật mới được lên 5-6s
 - **Thời lượng tăng giảm theo luật ba lần** — khi cùng một điểm cười lặp ba lần: lần một thời lượng bình thường → lần hai ngắn hơn một chút (khán giả đã biết kỳ vọng) → lần ba ngắn nhất hoặc dài nhất (phá khuôn mẫu)
 

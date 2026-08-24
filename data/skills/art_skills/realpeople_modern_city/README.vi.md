@@ -177,7 +177,7 @@ Phong cách này loại trừ nghiêm ngặt các loại nội dung sau, để �
 
 ## VI. Kế hoạch giai đoạn dự án và kết quả kỳ vọng
 
-Dự án sổ tay hình ảnh này áp dụng chiến lược triển khai (推进) theo giai đoạn, đảm bảo bao phủ đầy đủ từ khung sườn vĩ mô đến chi tiết vi mô.
+Dự án sổ tay hình ảnh này áp dụng chiến lược triển khai theo giai đoạn, đảm bảo bao phủ đầy đủ từ khung sườn vĩ mô đến chi tiết vi mô.
 
 ### Giai đoạn 1: Xây dựng khung sườn và định vị phong cách (hoàn thành trong kỳ này)
 

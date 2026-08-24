@@ -49,7 +49,7 @@ Bảng phân cảnh là công cụ lõi để đạo diễn chuyển kịch bả
 
 - **Dòng đời thường chạy suốt một cú** — các đoạn đời thường của gia đình (nấu ăn → bưng thức ăn → dọn lên bàn → bắt đầu ăn) nên cố gắng làm gọn trong một cú dài có chuyển động máy quay, liền một mạch; cắt vụn sẽ phá "sự liền mạch của đời thường"
 - **Cảnh bàn ăn bao trong một cú** — cảnh cả nhà ăn cơm mà một cú máy lia chậm quét qua mọi người là nói đủ thì đừng tách thành các mẩu vụn theo từng nhân vật
-- **Ưu tiên mật độ tự sự** — mỗi cú máy bắt buộc phải đẩy (推进) tự sự đi tiếp hoặc truyền đi nhiệt độ cảm xúc; những màn khoe không gian thuần trang trí phải gộp vào cú máy có chức năng tự sự
+- **Ưu tiên mật độ tự sự** — mỗi cú máy bắt buộc phải đẩy tự sự đi tiếp hoặc truyền đi nhiệt độ cảm xúc; những màn khoe không gian thuần trang trí phải gộp vào cú máy có chức năng tự sự
 - **Kiểm bằng tư duy đạo diễn** — viết xong phân cảnh thì tự kiểm: đoạn đời thường có chất đời sống trôi chảy không? Đoạn cảm xúc có dừng đủ lâu không? Việc cắt vụn có cắt ngang nhịp vững vàng của mái nhà không?
 
 ---
@@ -66,7 +66,7 @@ Bảng phân cảnh là công cụ lõi để đạo diễn chuyển kịch bả
 
 ## 7. Thiết kế tương tác nhân vật
 
-- **Tương tác người nhà dùng động tác quen** — tương tác trong gia đình không phải ngẫu hứng, mà là "theo thói quen": lúc nào cũng xới thêm cơm cho người kia, lúc nào cũng ngồi đúng chỗ cố định (固定) ấy, lúc nào cũng gọi tên người kia theo đúng một kiểu
+- **Tương tác người nhà dùng động tác quen** — tương tác trong gia đình không phải ngẫu hứng, mà là "theo thói quen": lúc nào cũng xới thêm cơm cho người kia, lúc nào cũng ngồi đúng chỗ cố định ấy, lúc nào cũng gọi tên người kia theo đúng một kiểu
 - **Tình thương không nói thì viết bằng hành động** — trong bảng phân cảnh, tình cảm gia đình ưu tiên truyền đi bằng cú máy hành động: gắp thêm một đũa thức ăn, đẩy món ngon về phía người kia, việc đầu tiên khi vào cửa là đưa mắt xem người kia có nhà không
 - **Khoảng cách thân thể chính là cảm giác an toàn** — sự thân mật giữa người nhà là "lại gần mà không cần lý do": tự nhiên tựa vào vai, vô thức nắm tay, lướt qua nhau thì vỗ nhẹ một cái
 

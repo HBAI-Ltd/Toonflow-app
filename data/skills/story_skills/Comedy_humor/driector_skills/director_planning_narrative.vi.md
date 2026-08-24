@@ -78,7 +78,7 @@ metaData: director_skills
 | Lộ tình cảm thật | Nhạc dừng phắt, thuần tiếng môi trường | Không có |
 | Trở lại đời thường | Khép lại nhẹ nhõm | Vừa thấp |
 
-- **Chất hài kiểu "máy đập nhịp"** — điểm cười lặp lại (cùng một cái hỏng cứ tái diễn) có thể được tăng lực bằng tiếng nền chạy trên nhịp cố định (固定) để dựng cảm giác "lại nữa rồi"; phá nhịp ở lần thứ ba thì điểm cười đạt cực đại
+- **Chất hài kiểu "máy đập nhịp"** — điểm cười lặp lại (cùng một cái hỏng cứ tái diễn) có thể được tăng lực bằng tiếng nền chạy trên nhịp cố định để dựng cảm giác "lại nữa rồi"; phá nhịp ở lần thứ ba thì điểm cười đạt cực đại
 
 ---
 
