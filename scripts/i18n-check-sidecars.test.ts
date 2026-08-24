@@ -15,6 +15,8 @@ import {
   checkCJKBudgetForFile,
   checkSidecars,
   buildBudget,
+  normalizeBudgetLocale,
+  validateLiteralAllowance,
   type Budget,
 } from "./i18n-check-sidecars";
 
@@ -314,6 +316,171 @@ describe("buildBudget", () => {
       const skillsDir = path.join(dir, "skills");
       const budget = buildBudget(dir, skillsDir, []);
       expect(budget).toEqual({});
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// D1 — miễn trừ literal theo file/token (literalAllowance)
+// ---------------------------------------------------------------------------
+
+describe("normalizeBudgetLocale", () => {
+  it("chuẩn hoá dạng number cũ thành residualCjk, literalAllowance rỗng", () => {
+    expect(normalizeBudgetLocale(12)).toEqual({ residualCjk: 12, literalAllowance: {} });
+  });
+
+  it("chuẩn hoá dạng object mới, giữ nguyên literalAllowance", () => {
+    const raw = { residualCjk: 5, literalAllowance: { "推进": { expected: 0, reason: "abc" } } };
+    expect(normalizeBudgetLocale(raw)).toEqual({ residualCjk: 5, literalAllowance: raw.literalAllowance });
+  });
+
+  it("trả undefined khi input undefined (file chưa có trong budget)", () => {
+    expect(normalizeBudgetLocale(undefined)).toBeUndefined();
+  });
+});
+
+describe("validateLiteralAllowance", () => {
+  it("báo lỗi khi thiếu reason, reason rỗng, hoặc reason chỉ khoảng trắng", () => {
+    const errors = validateLiteralAllowance({
+      "推进": { expected: 0, reason: "" },
+      "固定": { expected: 0, reason: "   " },
+      "拉远": { expected: 0 } as unknown as { expected: number; reason: string },
+    });
+    expect(errors).toHaveLength(3);
+    for (const e of errors) expect(e.toLowerCase()).toContain("reason");
+  });
+
+  it("pass khi mọi miễn trừ có reason không rỗng", () => {
+    const errors = validateLiteralAllowance({
+      "推进": { expected: 0, reason: "bản gốc dùng 推进叙事 theo nghĩa văn xuôi" },
+    });
+    expect(errors).toEqual([]);
+  });
+});
+
+describe("checkSidecarFile — literalAllowance ghi đè số đếm yêu cầu (D1)", () => {
+  it("dùng expected trong literalAllowance thay vì số đếm bản gốc khi token là văn xuôi", () => {
+    const zh = "如果立刻推进叙事，笑声会被剪断"; // 推进 xuất hiện 1 lần, nghĩa văn xuôi
+    const en = "If you advance the narrative at once, the laughter is cut off"; // không còn 推进
+    const problems = checkSidecarFile(zh, en, ["推进"], {
+      "推进": { expected: 0, reason: "bản gốc dùng 推进叙事 theo nghĩa văn xuôi (đẩy mạch truyện), không phải giá trị vận máy" },
+    });
+    expect(problems.filter((p) => p.check === "literal")).toEqual([]);
+  });
+
+  it("vẫn fail nếu số đếm thực tế khác expected trong miễn trừ", () => {
+    const zh = "推进 推进";
+    const en = "advance 推进"; // còn 1 lần, miễn trừ yêu cầu 0
+    const problems = checkSidecarFile(zh, en, ["推进"], { "推进": { expected: 0, reason: "lý do hợp lệ" } });
+    const literalProblems = problems.filter((p) => p.check === "literal");
+    expect(literalProblems).toHaveLength(1);
+    expect(literalProblems[0].detail).toContain("miễn trừ");
+  });
+
+  it("không có miễn trừ thì hành vi giữ nguyên như cũ: phải bằng số đếm bản gốc", () => {
+    const zh = "推进 推进";
+    const en = "推进"; // chỉ còn 1 trong khi bản gốc 2, không miễn trừ
+    const problems = checkSidecarFile(zh, en, ["推进"]);
+    expect(problems.filter((p) => p.check === "literal")).toHaveLength(1);
+  });
+
+  it("thông báo lỗi literal gợi ý cả hai lối thoát: khôi phục token hoặc thêm miễn trừ", () => {
+    const zh = "中景 中景";
+    const en = "medium shot";
+    const problems = checkSidecarFile(zh, en, ["中景"]);
+    const detail = problems.find((p) => p.check === "literal")!.detail;
+    expect(detail).toContain("khôi phục");
+    expect(detail).toContain("miễn trừ");
+  });
+});
+
+describe("checkSidecars — literalAllowance từ budget (D1, end-to-end)", () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), "i18n-check-sidecars-d1-"));
+  });
+  afterEach(() => {
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+  function write(relPath: string, content: string) {
+    const abs = path.join(dir, relPath);
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, content, "utf-8");
+  }
+
+  it("pass khi bản dịch khớp expected trong literalAllowance dù khác số đếm bản gốc", () => {
+    write("skills/a/foo.md", "如果立刻推进叙事，笑声会被剪断");
+    write("skills/a/foo.en.md", "If you advance the narrative at once, the laughter is cut off");
+    write("skills/a/foo.vi.md", "Nếu đẩy tự sự đi tiếp ngay thì tiếng cười bị cắt ngang");
+    const skillsDir = path.join(dir, "skills");
+    const allowance = { "推进": { expected: 0, reason: "văn xuôi, không phải giá trị vận máy" } };
+    const budget: Budget = {
+      "skills/a/foo.md": {
+        en: { residualCjk: 0, literalAllowance: allowance },
+        vi: { residualCjk: 0, literalAllowance: allowance },
+      },
+    };
+    const report = checkSidecars(dir, skillsDir, ["推进"], budget);
+    expect(report.hasHardFail).toBe(false);
+  });
+
+  it("hard fail kèm thông báo rõ ràng khi literalAllowance thiếu reason", () => {
+    write("skills/a/foo.md", "推进");
+    write("skills/a/foo.en.md", "advance");
+    write("skills/a/foo.vi.md", "đẩy");
+    const skillsDir = path.join(dir, "skills");
+    const budget: Budget = {
+      "skills/a/foo.md": {
+        en: { residualCjk: 0, literalAllowance: { "推进": { expected: 0, reason: "" } } },
+        vi: 0,
+      },
+    };
+    const report = checkSidecars(dir, skillsDir, ["推进"], budget);
+    expect(report.hasHardFail).toBe(true);
+    const enFile = report.files.find((f) => f.file === "skills/a/foo.en.md");
+    expect(enFile?.problems.some((p) => p.detail.toLowerCase().includes("reason"))).toBe(true);
+  });
+});
+
+describe("buildBudget — giữ nguyên literalAllowance đã có khi --update (D1)", () => {
+  it("chỉ cập nhật residualCjk, không đụng literalAllowance", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "i18n-check-sidecars-d1-update-"));
+    try {
+      fs.mkdirSync(path.join(dir, "skills/a"), { recursive: true });
+      fs.writeFileSync(path.join(dir, "skills/a/foo.md"), "推进");
+      fs.writeFileSync(path.join(dir, "skills/a/foo.en.md"), "advance 苏晚卿"); // 2 CJK còn sót sau strip 推进 (không xuất hiện)
+      fs.writeFileSync(path.join(dir, "skills/a/foo.vi.md"), "day");
+      const skillsDir = path.join(dir, "skills");
+      const previousBudget: Budget = {
+        "skills/a/foo.md": {
+          en: { residualCjk: 99, literalAllowance: { "推进": { expected: 0, reason: "lý do cũ" } } },
+          vi: 0,
+        },
+      };
+      const budget = buildBudget(dir, skillsDir, ["推进"], previousBudget);
+      expect(budget["skills/a/foo.md"].en).toEqual({
+        residualCjk: countCJK("advance 苏晚卿"),
+        literalAllowance: { "推进": { expected: 0, reason: "lý do cũ" } },
+      });
+      expect(budget["skills/a/foo.md"].vi).toBe(0);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("không tự sinh literalAllowance cho file chưa từng có miễn trừ", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "i18n-check-sidecars-d1-update2-"));
+    try {
+      fs.mkdirSync(path.join(dir, "skills/a"), { recursive: true });
+      fs.writeFileSync(path.join(dir, "skills/a/bar.md"), "内容");
+      fs.writeFileSync(path.join(dir, "skills/a/bar.en.md"), "no cjk here");
+      fs.writeFileSync(path.join(dir, "skills/a/bar.vi.md"), "no cjk here either");
+      const skillsDir = path.join(dir, "skills");
+      const budget = buildBudget(dir, skillsDir, [], {});
+      expect(budget["skills/a/bar.md"].en).toBe(0);
+      expect(budget["skills/a/bar.md"].vi).toBe(0);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

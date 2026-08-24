@@ -3,11 +3,15 @@
  *
  * `data/skills/**` (mọi `*.md`) là bản gốc tiếng Trung (KHÔNG BAO GIỜ sửa ở đây). Bản dịch nằm
  * cạnh nó dưới dạng sidecar: `foo.md` (zh) + `foo.en.md` + `foo.vi.md`. Script này chạy
- * bốn kiểm tra trên từng bộ ba đã có đủ sidecar:
+ * năm kiểm tra trên từng bộ ba đã có đủ sidecar:
  *
  *   1. Bảo toàn literal (hard fail) — mọi entry trong docs/i18n/prompt-terms.json có
  *      policy keep-zh-literal / never-translate và zh chứa ký tự CJK phải xuất hiện
- *      đúng số lần trong bản dịch như trong bản gốc.
+ *      đúng số lần trong bản dịch như trong bản gốc. Ngoại lệ: nếu docs/i18n/sidecar-budget.json
+ *      ghi một `literalAllowance` cho file/locale/token đó (kèm `reason` không rỗng, do con
+ *      người viết — không phải `--update` tự sinh), số lần bắt buộc là `expected` trong miễn
+ *      trừ thay vì số đếm bản gốc. Dùng khi cùng một chuỗi vừa là giá trị vận máy vừa là từ
+ *      thường trong văn xuôi ở file đó.
  *   2. Parity cấu trúc (hard fail) — số heading ATX (và chuỗi cấp), số dòng bảng, số
  *      hàng rào code, số token ảnh @图N/@图片N phải khớp giữa bản gốc và bản dịch. Nội
  *      dung bên trong khối code không tính vào heading/bảng.
@@ -19,7 +23,8 @@
  *
  * Chạy `tsx scripts/i18n-check-sidecars.ts` để kiểm tra, hoặc `--update` để ghi lại
  * ngân sách CJK còn sót từ trạng thái đĩa hiện tại (kiểm tra 1 và 2 luôn phải đúng
- * tuyệt đối, không có ngân sách cho chúng).
+ * tuyệt đối, không có ngân sách cho chúng; `--update` giữ nguyên mọi `literalAllowance` đã
+ * có, không tự sinh miễn trừ mới).
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -31,9 +36,48 @@ export const BUDGET_PATH = "docs/i18n/sidecar-budget.json";
 const CJK_CHAR = /[一-鿿]/;
 const IMAGE_REF = /@图片?\d+/g;
 
-export type Problem = { check: "literal" | "structure" | "cjk-budget"; detail: string };
+export type Problem = { check: "literal" | "structure" | "cjk-budget" | "literal-allowance" | "frontmatter-name"; detail: string };
 export type FileProblems = { file: string; problems: Problem[] };
-export type Budget = Record<string, { en: number; vi: number }>;
+
+/**
+ * Miễn trừ literal cho một token, ghi theo từng file/locale trong sidecar-budget.json.
+ * `expected` thay cho số đếm bản gốc; `reason` bắt buộc, không được rỗng — do con người viết,
+ * không được `--update` tự sinh. Kiểu ở đây lỏng có chủ đích (Partial ngầm định qua optional
+ * trên `reason`) vì dữ liệu đọc từ đĩa chưa được validate; validateLiteralAllowance kiểm nghiêm.
+ */
+export type LiteralAllowanceEntry = { expected: number; reason: string };
+export type LiteralAllowance = Record<string, LiteralAllowanceEntry>;
+
+/** Giá trị ngân sách một locale: dạng số cũ (không có miễn trừ), hoặc dạng object mới mang literalAllowance. */
+export type BudgetLocaleValue = number | { residualCjk: number; literalAllowance?: LiteralAllowance };
+export type Budget = Record<string, { en: BudgetLocaleValue; vi: BudgetLocaleValue }>;
+
+/** Chuẩn hoá một giá trị ngân sách locale (dạng number cũ hoặc object mới) về cùng một hình dạng. */
+export function normalizeBudgetLocale(
+  raw: BudgetLocaleValue | undefined,
+): { residualCjk: number; literalAllowance: LiteralAllowance } | undefined {
+  if (raw === undefined) return undefined;
+  if (typeof raw === "number") return { residualCjk: raw, literalAllowance: {} };
+  return { residualCjk: raw.residualCjk, literalAllowance: raw.literalAllowance ?? {} };
+}
+
+/**
+ * Kiểm tra mọi miễn trừ literal đều có `reason` không rỗng, không chỉ khoảng trắng. Một miễn trừ
+ * không có lý do viết ra thì không phải phán đoán, chỉ là làm ngơ — hard fail, không im lặng bỏ qua.
+ */
+export function validateLiteralAllowance(literalAllowance: LiteralAllowance): string[] {
+  const errors: string[] = [];
+  for (const [token, entry] of Object.entries(literalAllowance)) {
+    const reason = entry?.reason;
+    if (typeof reason !== "string" || reason.trim() === "") {
+      errors.push(
+        `miễn trừ literal cho \`${token}\` thiếu \`reason\` hợp lệ (rỗng hoặc chỉ khoảng trắng) — mọi ` +
+          `literalAllowance phải ghi lý do rõ ràng, nếu không chỉ là làm ngơ lỗi, không phải phán đoán`,
+      );
+    }
+  }
+  return errors;
+}
 
 /** Đếm số lần xuất hiện thô của một chuỗi con trong văn bản — không regex, không dedupe. */
 export function occurrences(needle: string, haystack: string): number {
@@ -143,21 +187,38 @@ function headingDiffHint(zh: number[], translated: number[]): string {
 /**
  * Kiểm tra 1 (literal) và kiểm tra 2 (parity cấu trúc) cho một file bản dịch so với bản
  * gốc zh tương ứng. Không đụng đĩa — nhận thẳng nội dung văn bản.
+ *
+ * `literalAllowance` (D1): miễn trừ theo từng token, đọc từ sidecar-budget.json. Khi có mặt,
+ * `expected` thay cho số đếm bản gốc làm số lần bắt buộc trong bản dịch — dùng khi bản gốc
+ * dùng chuỗi đó theo nghĩa văn xuôi ở (một phần) các chỗ xuất hiện, không phải giá trị vận máy
+ * ở mọi chỗ. Không kiểm `reason` ở đây — đó là việc của validateLiteralAllowance, gọi riêng ở
+ * tầng checkSidecars vì nó áp dụng một lần cho cả budget entry, không phụ thuộc nội dung file.
  */
-export function checkSidecarFile(zh: string, translated: string, literalTerms: string[]): Problem[] {
+export function checkSidecarFile(
+  zh: string,
+  translated: string,
+  literalTerms: string[],
+  literalAllowance: LiteralAllowance = {},
+): Problem[] {
   const problems: Problem[] = [];
 
   // Kiểm tra 1 — bảo toàn literal.
   for (const term of literalTerms) {
     const zhCount = occurrences(term, zh);
     if (zhCount === 0) continue; // token không xuất hiện trong bản gốc file này, bỏ qua
+    const allowance = literalAllowance[term];
+    const requiredCount = allowance ? allowance.expected : zhCount;
     const trCount = occurrences(term, translated);
-    if (trCount !== zhCount) {
-      const diff = Math.abs(zhCount - trCount);
-      const verb = trCount < zhCount ? "đã bị dịch mất" : "xuất hiện thừa so với bản gốc";
+    if (trCount !== requiredCount) {
+      const diff = Math.abs(requiredCount - trCount);
+      const verb = trCount < requiredCount ? "đã bị dịch mất" : "xuất hiện thừa so với yêu cầu";
+      const baseline = allowance ? `miễn trừ literalAllowance yêu cầu ${requiredCount} lần` : `bản gốc có ${requiredCount} lần`;
       problems.push({
         check: "literal",
-        detail: `literal \`${term}\` xuất hiện ${trCount} lần, bản gốc có ${zhCount} lần — ${diff} lần ${verb}`,
+        detail:
+          `literal \`${term}\` xuất hiện ${trCount} lần, ${baseline} — ${diff} lần ${verb}. ` +
+          `Hãy khôi phục token về đúng số nếu đây là giá trị vận máy, hoặc thêm miễn trừ literalAllowance ` +
+          `có lý do trong docs/i18n/sidecar-budget.json nếu bản gốc dùng chuỗi này theo nghĩa văn xuôi.`,
       });
     }
   }
@@ -278,8 +339,11 @@ export function checkSidecars(root: string, skillsDir: string, literalTerms: str
     ] as const) {
       if (!exists) continue;
       const translated = fs.readFileSync(sidecarPath, "utf8");
-      const problems = checkSidecarFile(zhText, translated, literalTerms);
-      const cjk = checkCJKBudgetForFile(translated, literalTerms, budgetEntry?.[locale]);
+      const normalizedBudget = normalizeBudgetLocale(budgetEntry?.[locale]);
+      const allowanceErrors = normalizedBudget ? validateLiteralAllowance(normalizedBudget.literalAllowance) : [];
+      const problems = checkSidecarFile(zhText, translated, literalTerms, normalizedBudget?.literalAllowance);
+      for (const err of allowanceErrors) problems.push({ check: "literal-allowance", detail: err });
+      const cjk = checkCJKBudgetForFile(translated, literalTerms, normalizedBudget?.residualCjk);
       if (cjk.problem) problems.push(cjk.problem);
       if (problems.length > 0) {
         hasHardFail = true;
@@ -305,7 +369,13 @@ export function groupMissingByDir(missingRelPaths: string[]): Record<string, num
  * Tính lại toàn bộ ngân sách CJK còn sót từ trạng thái đĩa hiện tại — dùng cho `--update`.
  * Chỉ ghi entry cho bộ ba có ĐỦ cả `.en.md` và `.vi.md`.
  */
-export function buildBudget(root: string, skillsDir: string, literalTerms: string[]): Budget {
+/**
+ * `previousBudget` (D1): `--update` KHÔNG được tự sinh miễn trừ — chỉ ghi lại `residualCjk`
+ * và phải giữ nguyên mọi khối `literalAllowance` đã có (do con người viết tay). File chưa từng
+ * có literalAllowance vẫn ghi dạng số cũ (không bọc object) để không phát sinh diff thừa trên
+ * hàng trăm file không liên quan.
+ */
+export function buildBudget(root: string, skillsDir: string, literalTerms: string[], previousBudget: Budget = {}): Budget {
   const budget: Budget = {};
   for (const absZh of findSkillOriginals(skillsDir)) {
     const relPath = toPosix(path.relative(root, absZh));
@@ -315,9 +385,16 @@ export function buildBudget(root: string, skillsDir: string, literalTerms: strin
     if (!fs.existsSync(enPath) || !fs.existsSync(viPath)) continue;
     const en = fs.readFileSync(enPath, "utf8");
     const vi = fs.readFileSync(viPath, "utf8");
+    const enResidual = countCJK(stripLiteralTerms(en, literalTerms));
+    const viResidual = countCJK(stripLiteralTerms(vi, literalTerms));
+    const prevEntry = previousBudget[relPath];
+    const prevEn = normalizeBudgetLocale(prevEntry?.en);
+    const prevVi = normalizeBudgetLocale(prevEntry?.vi);
+    const hasPrevEnAllowance = prevEn && Object.keys(prevEn.literalAllowance).length > 0;
+    const hasPrevViAllowance = prevVi && Object.keys(prevVi.literalAllowance).length > 0;
     budget[relPath] = {
-      en: countCJK(stripLiteralTerms(en, literalTerms)),
-      vi: countCJK(stripLiteralTerms(vi, literalTerms)),
+      en: hasPrevEnAllowance ? { residualCjk: enResidual, literalAllowance: prevEn!.literalAllowance } : enResidual,
+      vi: hasPrevViAllowance ? { residualCjk: viResidual, literalAllowance: prevVi!.literalAllowance } : viResidual,
     };
   }
   const sorted: Budget = {};
@@ -332,7 +409,12 @@ function main(): void {
   const literalTerms = extractLiteralTerms(registry);
 
   if (process.argv.includes("--update")) {
-    const budget = buildBudget(root, skillsDir, literalTerms);
+    let previousBudget: Budget = {};
+    if (fs.existsSync(path.join(root, BUDGET_PATH))) {
+      const raw = JSON.parse(fs.readFileSync(path.join(root, BUDGET_PATH), "utf8"));
+      previousBudget = raw.budget ?? {};
+    }
+    const budget = buildBudget(root, skillsDir, literalTerms, previousBudget);
     const out = {
       $comment:
         "Ngân sách CJK còn sót cho phép trong từng sidecar bản dịch skill, sau khi đã xoá các literal term " +
