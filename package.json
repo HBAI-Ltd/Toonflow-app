@@ -38,6 +38,7 @@
     "i18n:scan": "tsx scripts/i18n-scan.ts",
     "i18n:patch-web": "tsx scripts/patch-web-i18n.ts",
     "i18n:patch-ui": "tsx scripts/patch-web-ui.ts",
+    "i18n:patch-settings": "tsx scripts/patch-web-settings.ts",
     "i18n:check-manifest": "tsx scripts/i18n-check-manifest.ts",
     "i18n:check-terms": "tsx scripts/i18n-check-terms.ts",
     "i18n:check-sidecars": "tsx scripts/i18n-check-sidecars.ts",
