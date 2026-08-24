@@ -2754,6 +2754,30 @@
           }
         }
       }
+    },
+    "data/skills/art_skills/realpeople_modern_city/art_prompt/art_prop.md": {
+      "en": {
+        "residualCjk": 28
+      },
+      "vi": {
+        "residualCjk": 28
+      }
+    },
+    "data/skills/art_skills/realpeople_modern_city/art_prompt/art_prop_derivative.md": {
+      "en": {
+        "residualCjk": 28
+      },
+      "vi": {
+        "residualCjk": 28
+      }
+    },
+    "data/skills/art_skills/realpeople_modern_city/art_prompt/art_storyboard_video.md": {
+      "en": {
+        "residualCjk": 0
+      },
+      "vi": {
+        "residualCjk": 0
+      }
     }
   }
 }
