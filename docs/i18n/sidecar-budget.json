@@ -2666,6 +2666,94 @@
     "data/skills/story_skills/Xianxia_fantasy/README.md": {
       "en": 0,
       "vi": 0
+    },
+    "data/skills/art_skills/realpeople_modern_city/art_prompt/art_scene.md": {
+      "en": {
+        "residualCjk": 31,
+        "literalAllowance": {
+          "全景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 全景 trong 全景摄影/单张全景照片/全景全貌/全景空间 (ảnh chụp trọn toàn cảnh không gian) và trong 全景深 (trường ảnh sâu, f/8-f/11) — đều là văn xuôi nhiếp ảnh, không lần nào là giá trị cỡ cảnh 全景 của bảng phân cảnh"
+          },
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 trong dãy 前景/中景/后景 chỉ lớp chiều sâu của bố cục, không phải giá trị cỡ cảnh 中景"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc viết 远景自然虚化、近景清晰 — 近景 ở đây chỉ lớp ở gần trong phối cảnh không khí, không phải giá trị cỡ cảnh 近景"
+          },
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc viết 远景自然虚化 / 城市天际线远景 / 后景{空间延伸/窗外/远景} — đều chỉ cảnh vật ở xa trong khung hình, không phải giá trị cỡ cảnh 远景"
+          },
+          "静止": {
+            "expected": 0,
+            "reason": "bản gốc viết 日常的静止瞬间 / 开始前的静止 / 日常的静止 theo nghĩa văn xuôi (khoảnh khắc đứng yên), không phải giá trị vận máy 静止"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 31,
+        "literalAllowance": {
+          "全景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 全景 trong 全景摄影/单张全景照片/全景全貌/全景空间 (ảnh chụp trọn toàn cảnh không gian) và trong 全景深 (trường ảnh sâu, f/8-f/11) — đều là văn xuôi nhiếp ảnh, không lần nào là giá trị cỡ cảnh 全景 của bảng phân cảnh"
+          },
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 trong dãy 前景/中景/后景 chỉ lớp chiều sâu của bố cục, không phải giá trị cỡ cảnh 中景"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc viết 远景自然虚化、近景清晰 — 近景 ở đây chỉ lớp ở gần trong phối cảnh không khí, không phải giá trị cỡ cảnh 近景"
+          },
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc viết 远景自然虚化 / 城市天际线远景 / 后景{空间延伸/窗外/远景} — đều chỉ cảnh vật ở xa trong khung hình, không phải giá trị cỡ cảnh 远景"
+          },
+          "静止": {
+            "expected": 0,
+            "reason": "bản gốc viết 日常的静止瞬间 / 开始前的静止 / 日常的静止 theo nghĩa văn xuôi (khoảnh khắc đứng yên), không phải giá trị vận máy 静止"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_modern_city/art_prompt/art_scene_derivative.md": {
+      "en": {
+        "residualCjk": 61,
+        "literalAllowance": {
+          "全景": {
+            "expected": 5,
+            "reason": "bản gốc có 10 lần 全景: 5 lần thuộc tên biến thể khung hình 标准全景 (giữ nguyên) và 5 lần là văn xuôi — 单张全景照片/单张全景摄影 (ảnh trọn không gian) và 全景深 (trường ảnh sâu)"
+          },
+          "近景": {
+            "expected": 6,
+            "reason": "bản gốc có 8 lần 近景: 6 lần thuộc tên biến thể khung hình 近景细节/85mm近景 (giữ nguyên) và 2 lần trong 远景自然虚化、近景清晰 là văn xuôi chỉ lớp ở gần của phối cảnh không khí"
+          },
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc viết 远景自然虚化 / 远景虚化 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi trong sương), không phải giá trị cỡ cảnh 远景"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 61,
+        "literalAllowance": {
+          "全景": {
+            "expected": 5,
+            "reason": "bản gốc có 10 lần 全景: 5 lần thuộc tên biến thể khung hình 标准全景 (giữ nguyên) và 5 lần là văn xuôi — 单张全景照片/单张全景摄影 (ảnh trọn không gian) và 全景深 (trường ảnh sâu)"
+          },
+          "近景": {
+            "expected": 6,
+            "reason": "bản gốc có 8 lần 近景: 6 lần thuộc tên biến thể khung hình 近景细节/85mm近景 (giữ nguyên) và 2 lần trong 远景自然虚化、近景清晰 là văn xuôi chỉ lớp ở gần của phối cảnh không khí"
+          },
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc viết 远景自然虚化 / 远景虚化 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi trong sương), không phải giá trị cỡ cảnh 远景"
+          }
+        }
+      }
     }
   }
 }
