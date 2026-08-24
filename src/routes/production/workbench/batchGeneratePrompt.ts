@@ -5,7 +5,7 @@ import { z } from "zod";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import path from "path";
-import { t, getLocale, readLocalizedSkill } from "@/i18n";
+import { t, getLocale, readLocalizedSkill, canonicalSkillPath } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -42,7 +42,9 @@ export default router.post(
       if (modelPromptData) {
         const modelPromptRoot = u.getPath(["modelPrompt"]);
         try {
-          const fullPath = path.join(modelPromptRoot, modelPromptData?.path!);
+          // See generateVideoPrompt.ts: canonicalize defensively in case this row still holds a
+          // locale-suffixed path from before bindingPrompt.ts started storing canonical paths.
+          const fullPath = path.join(modelPromptRoot, canonicalSkillPath(modelPromptData?.path!));
           const content = readLocalizedSkill(fullPath, locale);
           videoPromptGeneration = content || undefined;
         } catch {}
