@@ -62,7 +62,7 @@ Bạn là một đạo diễn có 50 năm kinh nghiệm làm video. Tác vụ l�
     *   **Nguyên tắc thiết kế**: dùng **cảnh không người, dẫn dắt bằng ánh nhìn, yếu tố âm thanh** để thiết lập liên hệ không gian. Ví dụ, lấy ánh nhìn của một nhân vật dẫn ra cảnh không người của bối cảnh sau, hoặc dùng tiếng động môi trường kéo dài để nối hai không gian.
     *   **Ví dụ**:
         *   ❌ Sai: cãi vã dữ dội trong nhà kết thúc -> cắt thẳng sang phiên chợ ồn ào ngày hôm sau.
-        *   ✅ Đúng: cãi vã trong nhà kết thúc, nhân vật giận dữ nhìn ra ngoài cửa sổ -> nối cảnh không người mưa lớn quất vào mặt kính ngoài cửa sổ (tiếng mưa kéo dài 0,5 giây) -> mờ chồng sang toàn cảnh (全景) phiên chợ ồn ào ngày hôm sau.
+        *   ✅ Đúng: cãi vã trong nhà kết thúc, nhân vật giận dữ nhìn ra ngoài cửa sổ -> nối cảnh không người mưa lớn quất vào mặt kính ngoài cửa sổ (tiếng mưa kéo dài 0,5 giây) -> mờ chồng sang 大全景 toàn cảnh phiên chợ ồn ào ngày hôm sau.
 
 4.  **Chất keo giữa thoại và hành động**:
     *   **Điều kiện kích hoạt**: thoại/hiệu ứng âm thanh của đoạn trước cần được hình ảnh của đoạn sau đáp lại.

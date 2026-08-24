@@ -61,7 +61,7 @@ Trường «Mô tả hình ảnh» của bảng phân cảnh gánh toàn bộ th
 | **Khoảnh khắc tĩnh** (dừng bước ngẩng nhìn, đứng yên nhìn chằm chằm, nghiêng đầu cười khẩy, cúi bàn viết) | **Sinh thẳng theo mô tả**, không viết lại hành động | "nhân vật dừng bước ngẩng nhìn một vật" → prompt viết thẳng "dừng bước ngẩng nhìn vật đó" |
 | **Quá trình hành động liên tục** (đi qua hành lang, vung kiếm chém xuống, quay lưng rời đi) | Lấy **trạng thái đông cứng ở khoảnh khắc khởi động tác** (không phải trạng thái chuẩn bị trừu tượng) | "vung kiếm chém xuống" → "kiếm đã giơ quá đầu, mũi kiếm chúc xuống, khoảnh khắc sắp bổ xuống" |
 | **Chuyển động máy quay** (缓推 đẩy chậm tới 中景, 拉远 kéo ra 全景, mờ dần vào) | Lấy **cỡ cảnh ở đầu khởi** làm bố cục khung đầu | "远景→中景" → khung đầu lấy "大远景" |
-| **Hiệu ứng chuyển tiếp** (từ màn đen mờ dần vào, chuyển cảnh mờ chồng) | Giữ phần mô tả nhưng ghi chú là trạng thái mở màn | "mở màn từ màn đen mờ dần vào" → "hình nổi lên từ màn đen, đại viễn cảnh (远景) mở màn…" |
+| **Hiệu ứng chuyển tiếp** (từ màn đen mờ dần vào, chuyển cảnh mờ chồng) | Giữ phần mô tả nhưng ghi chú là trạng thái mở màn | "mở màn từ màn đen mờ dần vào" → "hình nổi lên từ màn đen, 大远景 đại viễn cảnh mở màn…" |
 
 **Căn cứ phán đoán**: thì của động từ chính và mật độ tự sự trong phần mô tả hình ảnh.
 
@@ -94,7 +94,7 @@ Trường «Mô tả hình ảnh» của bảng phân cảnh gánh toàn bộ th
 
 | Cỡ cảnh đầu vào | Từ cú máy tiếng Anh của chế độ B (Nanobanana) | Từ hình ảnh của chế độ A (Seedream) |
 |----------|-------------------------------|---------------------------|
-| 大远景/大全景 | `extreme wide shot, establishing shot` | bố cục đại viễn cảnh (远景 rộng nhất), toàn cảnh môi trường, nhân vật nhỏ bé giữa bối cảnh |
+| 大远景/大全景 | `extreme wide shot, establishing shot` | bố cục 大远景 đại viễn cảnh, toàn cảnh môi trường, nhân vật nhỏ bé giữa bối cảnh |
 | 远景/全景 | `wide shot, full shot, full body` | lấy trọn người, bố cục viễn cảnh (远景), tỉ lệ người và cảnh hài hòa |
 | 中景 | `medium shot, cowboy shot, knee shot` | bố cục trung cảnh (中景), lấy nhân vật từ đầu gối trở lên |
 | 近景 | `medium close-up, upper body` | bố cục cận cảnh (近景), lấy nửa thân trên, hậu cảnh xóa phông |
@@ -171,7 +171,7 @@ Cấu trúc Prompt:
 
 Cơ chế: ảnh tham chiếu cùng prompt vào chung như đầu vào đa phương thức, prompt dùng JSON có cấu trúc để ràng buộc tính nhất quán của nhân vật.
 
-Cấu trúc Prompt (khung cố định 固定):
+Cấu trúc Prompt (khung cố định, 固定框架):
 
 ```json
 {
@@ -378,7 +378,7 @@ Dưới đây minh họa toàn bộ quy trình của một phân cảnh từ đ�
 ```
 @图1 为角色甲角色 @图2 为道具X 道具 @图3 为道具Y 道具 @图4 为某场景出口场景,
 
-【画面】Trong @图4, mở màn mờ dần lên từ nền đen, bố cục đại viễn cảnh (远景), dòng người cuộn chảy qua lại, bên phải khung hình sừng sững một vật chỉ dẫn nổi bật; @图1 đeo @图2 đi một mình giữa dòng người, tay nắm chặt @图3, thân người 3/4 chính diện hướng phải, dừng bước giữa đám đông, ngẩng đầu nhìn lên vật chỉ dẫn bên phải khung hình, ánh mắt căng thẳng mà quả quyết, gương mặt lúng túng nhưng ánh lên vẻ quyết tâm.
+【画面】Trong @图4, mở màn mờ dần lên từ nền đen, bố cục 大远景 đại viễn cảnh, dòng người cuộn chảy qua lại, bên phải khung hình sừng sững một vật chỉ dẫn nổi bật; @图1 đeo @图2 đi một mình giữa dòng người, tay nắm chặt @图3, thân người 3/4 chính diện hướng phải, dừng bước giữa đám đông, ngẩng đầu nhìn lên vật chỉ dẫn bên phải khung hình, ánh mắt căng thẳng mà quả quyết, gương mặt lúng túng nhưng ánh lên vẻ quyết tâm.
 
 【光影】Ánh nắng sớm dịu từ bên trái trải đều, sắc nền vàng ấm nhuộm nhẹ mặt đất, vật chỉ dẫn ăn sáng rõ và sáng bừng, bóng người xung quanh ngược sáng tối lại thành đường viền bóng đổ, thân hình @图1 nửa ăn sáng nửa ngược sáng, đường nét khuôn mặt hơi sáng.
 

@@ -61,7 +61,7 @@ The storyboard image is the **first-frame reference for the video**. The model s
 | **A static instant** (stopping to look up, standing and staring, turning the head with a sneer, bent over writing) | **Generate directly as described**, with no rewriting of the action | "the character stops and looks up at something" → the prompt writes "stops and looks up at something" directly |
 | **A continuous process of action** (walking down the corridor, swinging the sword down, turning and leaving) | Take the **frozen instant at which the action begins** (not an abstract preparatory state) | "swinging the sword down" → "the sword is already raised overhead, the tip pointing down, the instant before it cleaves" |
 | **A camera movement** (缓推 slow push to 中景, 拉远 pull back to 全景, fade in) | Take the **shot size at the starting end** as the first frame's framing | "远景→中景" → the first frame takes "大远景" |
-| **A transition effect** (fade in from black, dissolve) | Keep the description but mark it as the opening state | "fade in from black at the opening" → "the picture emerges from black, an opening extreme long shot (远景)…" |
+| **A transition effect** (fade in from black, dissolve) | Keep the description but mark it as the opening state | "fade in from black at the opening" → "the picture emerges from black, an opening 大远景 extreme long shot…" |
 
 **The basis for the judgement**: the tense of the shot description's main verb and its narrative density.
 
@@ -94,7 +94,7 @@ The storyboard image is the **first-frame reference for the video**. The model s
 
 | Shot size input | Mode B (Nanobanana) English shot word | Mode A (Seedream) picture word |
 |----------|-------------------------------|---------------------------|
-| 大远景/大全景 | `extreme wide shot, establishing shot` | extreme wide shot composition (远景 at its widest), the whole environment in view, the figure small against the scene |
+| 大远景/大全景 | `extreme wide shot, establishing shot` | 大远景 extreme wide shot composition, the whole environment in view, the figure small against the scene |
 | 远景/全景 | `wide shot, full shot, full body` | full body in frame, wide shot (远景) composition, figure and scene in balanced proportion |
 | 中景 | `medium shot, cowboy shot, knee shot` | medium shot (中景) composition, the figure framed from the knees up |
 | 近景 | `medium close-up, upper body` | medium close-up (近景) composition, upper body in frame, background blurred |
@@ -171,7 +171,7 @@ Prompt structure:
 
 Mechanism: the reference images go in together with the prompt as multimodal input, and the prompt uses structured JSON to constrain character consistency.
 
-Prompt structure (fixed framework 固定):
+Prompt structure (fixed framework, 固定框架):
 
 ```json
 {
@@ -378,7 +378,7 @@ The following demonstrates the complete flow of one shot from input to output, f
 ```
 @图1 为角色甲角色 @图2 为道具X 道具 @图3 为道具Y 道具 @图4 为某场景出口场景,
 
-【画面】In @图4, the opening fades in from black, extreme wide shot (远景) composition, a crowd surging through, a conspicuous sign standing at frame right; @图1 walks alone through the crowd with @图2 on his back, gripping @图3 tightly in his hand, body in 3/4 front view facing right, stopping among the crowd, raising his head to look up at the sign at frame right, eyes tense yet resolute, face uneasy but shot through with determination.
+【画面】In @图4, the opening fades in from black, 大远景 extreme wide shot composition, a crowd surging through, a conspicuous sign standing at frame right; @图1 walks alone through the crowd with @图2 on his back, gripping @图3 tightly in his hand, body in 3/4 front view facing right, stopping among the crowd, raising his head to look up at the sign at frame right, eyes tense yet resolute, face uneasy but shot through with determination.
 
 【光影】Soft morning light spreads evenly from the left, a warm yellow base tint lightly stains the ground, the sign is clearly and brightly lit, the surrounding figures are backlit and darkened into silhouettes, @图1's figure half lit and half backlit, the contours of the face faintly bright.
 
@@ -395,7 +395,7 @@ Keep @图1's facial features, hairstyle and costume exactly consistent with the 
 |-----------|---------------|---------|
 | 开场黑场淡入 | 【画面】"the opening fades in from black" | ✅ |
 | 某场景出口 | 【画面】"@图4" | ✅ |
-| 大远景 (the starting end for the first frame) | 【画面】"extreme wide shot (远景) composition" | ✅ |
+| 大远景 (the starting end for the first frame) | 【画面】"大远景构图" (extreme wide shot composition) | ✅ |
 | 人流涌动 | 【画面】"a crowd surging through" | ✅ |
 | 指示物在右侧 | 【画面】"a conspicuous sign standing at frame right" | ✅ |
 | 角色甲背道具X 独行 | 【画面】"@图1 walks alone through the crowd with @图2 on his back" | ✅ |

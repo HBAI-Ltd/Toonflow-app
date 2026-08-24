@@ -23,18 +23,18 @@ Tài liệu này là tham chiếu kỹ pháp chung cho việc thiết kế bản
 ## Quy tắc về cú máy định cảnh và gộp cú máy (chống thừa)
 
 **Cú máy định cảnh**: việc định cảnh cho mỗi bối cảnh/đoạn mới hoàn tất trong tối đa 1~2 cú máy, cấm tách thành từ 3 mảnh trở lên.
-- Cách nên làm: 1 远景 có 缓推 đẩy chậm (định cảnh + đưa chủ thể vào gọn trong một cú), hoặc 1 远景 cực rộng để định cảnh + 1 全景 đưa chủ thể vào
+- Cách nên làm: 1 远景 có 缓推 đẩy chậm (định cảnh + đưa chủ thể vào gọn trong một cú), hoặc 1 大远景 để định cảnh + 1 全景 đưa chủ thể vào
 - Cách cấm làm: kiểu ba đoạn thừa thãi là quay cảnh không người trước → rồi chi tiết cục bộ → rồi nhân vật đi tới
 
 **Tự kiểm việc gộp cú máy**:
 - Một cú nói được thì đừng tách hai — nếu một cú có chuyển động máy quay làm được cả định cảnh lẫn đưa chủ thể vào thì đừng tách thành hai
 - Các cú máy liên tiếp mô tả những phần khác nhau của cùng một không gian (cổng viện → giàn dây leo → gian nhà bên) nên gộp thành một cú, dùng phần mô tả hình ảnh để bao quát nhiều lớp không gian
-- Cú máy thuần trang trí (chỉ khoe chi tiết môi trường, không đẩy tự sự, 推进) nên gộp vào một cú có chức năng tự sự
+- Cú máy thuần trang trí (chỉ khoe chi tiết môi trường, không đẩy tự sự — 叙事推进) nên gộp vào một cú có chức năng tự sự
 - **Kiểm bằng tư duy đạo diễn**: viết xong tự kiểm —— nếu một đạo diễn người thật sẽ gộp 2~3 cú máy liền kề thành 1 mà quay, tức là bạn tách quá vụn, phải gộp lại
 
 **Chiến lược một cú tới cùng**: khi giữa các cú máy liền kề có **hành động biến chuyển liên tục, bối cảnh đổi nhẹ (dịch chuyển trong cùng bối cảnh), hoặc góc quay đổi dần**, có thể ghi 「一镜到底」 trong `cameraMove` hoặc `description` để gộp nhiều cú máy vụn thành một cú dài với chuyển động máy quay liên tục.
 - **Tình huống áp dụng**: nhân vật đi xuyên qua một không gian, bám theo hành động từ điểm A tới điểm B, 环绕 vòng quanh nhân vật để khoe môi trường, định cảnh rồi 缓推 đẩy chậm vào 特写 chủ thể…
-- **Cách ghi chú**: trong `cameraMove` ghi rõ đường đi của máy (như "一镜到底: 缓推 trên 远景 → bám vào trong viện → dừng ở 全景"), trong `description` mô tả nội dung hình ảnh lúc mở khuôn và lúc đóng khuôn
+- **Cách ghi chú**: trong `cameraMove` ghi rõ đường đi của máy (như "一镜到底：缓推远景→跟移至院内→落幅全景" — một cú đến cùng: đẩy chậm trên viễn cảnh, bám vào trong viện, dừng ở toàn cảnh), trong `description` mô tả nội dung hình ảnh lúc mở khuôn và lúc đóng khuôn
 - **Nới thời lượng**: cú một-cú-tới-cùng vì thông tin liên tục được làm mới nên có thể vượt trần 6s của một cú, nhưng không quá 12s
 - **Cảnh báo rủi ro**: một-cú-tới-cùng làm tăng độ khó "quay số" khi sinh hình (đòi hỏi liền mạch cao), chỉ dùng khi lợi ích về sự trôi chảy của tự sự rõ ràng lớn hơn việc cắt vụn, không lạm dụng
 
@@ -51,7 +51,7 @@ Tài liệu này là tham chiếu kỹ pháp chung cho việc thiết kế bản
 - Mở dần: 特写→近景→中景→远景 (cảm xúc giải phóng)
 - Cấm để các cú máy liên tiếp cùng cỡ cảnh mà không có lý do tự sự (từ 3 cú liên tiếp trở lên cùng cỡ cảnh = mệt mỏi thị giác)
 
-**③ Bảo toàn trục nhìn**: nguyên tắc đường 180 độ —— trong cảnh đối thoại/đối đầu, vị trí của nhân vật trong khung hình cố định (固定) cùng một phía suốt phim, không được nhảy trục
+**③ Bảo toàn trục nhìn**: nguyên tắc đường 180 độ —— trong cảnh đối thoại/đối đầu, vị trí của nhân vật trong khung hình cố định cùng một phía suốt phim (全片固定同侧), không được nhảy trục
 
 **④ Logic không gian của hướng nhìn**: hai người đối thoại thì mặt hướng về nhau, người thao tác vật thì mặt hướng về vật, người nhìn xa thì mặt hướng ra xa. Cấm để mọi nhân vật đều hướng thẳng vào ống kính
 
@@ -90,13 +90,13 @@ Tài liệu này là tham chiếu kỹ pháp chung cho việc thiết kế bản
 |------|------|---------|
 | 推 | Từ xa vào gần, nhấn chủ thể | Cảm xúc dâng dần / phát hiện / rình xem |
 | 拉 | Từ gần ra xa, khoe môi trường | Cảm xúc rút ra / phơi trọn diện mạo / ly biệt |
-| 摇 | Đứng yên một chỗ cố định (固定) mà xoay quét | Giao đãi môi trường / tìm kiếm |
+| 摇 | Xoay quét tại một vị trí cố định (固定位置) | Giao đãi môi trường / tìm kiếm |
 | 移 | Di chuyển theo chủ thể | Đồng hành / bám theo |
 | 俯拍 | Từ trên xuống | Đứng ngoài quan sát / nhỏ bé / toàn cục |
 | 仰拍 | Từ dưới lên | Anh hùng hóa / uy áp |
 
 **action** (Hành động nhân vật): mô tả cụ thể động tác của nhân vật/chủ thể trong khung hình (8~55 chữ), không có động tác nhân vật thì điền `空镜`. Định dạng là `(ghi chú nối tiếp)mô tả hành động`. Yêu cầu:
-- **Ghi chú nối tiếp đặt ở đầu**: bọc bằng ngoặc đơn nửa chiều, đặt trước phần mô tả hành động. Cú đầu tiên ghi `(开篇)`; các cú khác ghi `(承接上镜:động tác nối)`, như `(承接上镜:缓推 dừng khuôn ~ nhóm người đứng hình)`, `(承接上镜:cánh tay đang nâng nửa chừng → tiếp tục đưa lên)`
+- **Ghi chú nối tiếp đặt ở đầu**: bọc bằng ngoặc đơn nửa chiều, đặt trước phần mô tả hành động. Cú đầu tiên ghi `(开篇)`; các cú khác ghi `(承接上镜:động tác nối)`, như `(承接上镜:缓推落幅~群像定格)` (đẩy chậm dừng khuôn ~ nhóm người đứng hình), `(承接上镜:cánh tay đang nâng nửa chừng → tiếp tục đưa lên)`
 - **Cách viết chuỗi hành động**: viết chuỗi động tác vật lý liên tục + nhịp tốc độ ("từ từ nâng tay phải lên → đầu ngón khẽ run → siết chặt nắm đấm"), cấm chỉ viết trạng thái cuối tĩnh. Nhiều nhân vật thì động tác từng người ngăn bằng `;`, xếp theo thứ tự tên tài nguyên liên quan, như `黎雾 tay phải vuốt ve cổ tay áo → cánh tay trái ôm con thỏ bông vào lòng;聂薇 ánh mắt khóa chặt về phía con thỏ`
 - **Cột này không viết hướng nhìn/quan hệ không gian nữa**: hướng nhìn và quan hệ không gian đã tách thành cột riêng (`orientation` / `spatialRelation`), không ghi lặp trong action, để tránh dấu `|` xung khắc với dấu ngăn cột của bảng markdown
 
@@ -113,7 +113,7 @@ Tài liệu này là tham chiếu kỹ pháp chung cho việc thiết kế bản
 - Phải tự nhất quán với hướng nhìn, cỡ cảnh, chuyển động máy quay (nhân vật quay mặt sang phải thì mục tiêu nhìn/tương tác của họ phải nằm ở vị trí bên phải họ); các nhân vật cùng cảnh cùng nhóm phải có vị trí ổn định, muốn đổi chỗ thì phải nêu động tác nối trong `action` và cập nhật đồng bộ cột này
 
 **Ví dụ đầy đủ các trường** (nhóm 5 người):
-- `action`: `(开篇)远景 từ từ 缓推 đẩy về phía đám người, năm người đứng thưa —— 黎雾 hơi lệch trái, tay trái khuỳnh ôm con thỏ bông;聂薇 ánh mắt bị mảng trắng ấy hút lấy`
+- `action`: `(mở đầu) 远景, 缓推 đẩy chậm về phía đám người, năm người đứng thưa —— 黎雾 hơi lệch trái, tay trái khuỳnh ôm con thỏ bông; 聂薇 ánh mắt bị mảng trắng ấy hút lấy`
 - `orientation`: `黎雾-3/4正面朝右;聂薇-3/4正面朝左;何存羽-3/4正面朝左;秋瞳-3/4正面朝左;安娜-正面`
 - `spatialRelation`: `黎雾(左前)、安娜(右前)、聂薇(左后)、何存羽(中后)、秋瞳(右后)`
 

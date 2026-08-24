@@ -62,7 +62,7 @@ You are a director with 50 years of experience in video. This task does exactly 
     *   **Design principle**: use an **empty shot, eyeline guidance or a sound element** to establish the spatial connection. For example, let one character's eyeline lead into the empty shot of the next scene, or connect two spaces with a continuing ambient sound.
     *   **Examples**:
         *   ❌ Wrong: a fierce indoor argument ends -> cut straight to the noisy street market the next day.
-        *   ✅ Right: after the indoor argument ends, the character looks furiously out of the window -> cut to an empty shot of the rainstorm hammering the glass outside (the rain sound continues for 0.5 seconds) -> dissolve to a wide shot (全景) of the noisy street market the next day.
+        *   ✅ Right: after the indoor argument ends, the character looks furiously out of the window -> cut to an empty shot of the rainstorm hammering the glass outside (the rain sound continues for 0.5 seconds) -> dissolve to a 大全景 wide shot of the noisy street market the next day.
 
 4.  **The glue of dialogue and action**:
     *   **Trigger**: a line or sound effect from the previous clip needs an answer in the picture of the next clip.

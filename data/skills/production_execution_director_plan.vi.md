@@ -71,12 +71,12 @@ Chỉ trả về một câu xác nhận ngắn, không thuật lại toàn bộ 
 ### Tiêu chí phân tích cảm xúc
 
 - Mỗi cảnh cho một **độ đậm cảm xúc 0~10** (ước lượng tổng thể cường độ cảm xúc của cảnh đó) + **một câu tông cảm xúc**.
-- Trong cảnh nếu có sự đẩy cảm xúc (推进) rõ rệt thì ghi **X→Y** (như "dò xét→vỡ trận"); không đổi thì mô tả một điểm duy nhất.
+- Trong cảnh nếu có sự đẩy cảm xúc (情绪推进) rõ rệt thì ghi **X→Y** (như "dò xét→vỡ trận"); không đổi thì mô tả một điểm duy nhất.
 - Tông cảm xúc phải bám vào diễn biến có thể hiểu được trong kịch bản, không tự nâng lên vô căn cứ.
 
 ### Thiết kế chuyển cảnh
 
-- **Phán đoán có cần hay không trước, không cần thì không thêm**: với từng khoảng nối giữa hai cảnh, trước hết phân tích «ở đây rốt cuộc có cần một chuyển cảnh không» —— nếu hai cảnh trước sau cùng một không-thời gian và đẩy tiếp liên tục (推进), hoặc nối thẳng vốn đã mượt, thì **không cần thêm chuyển cảnh** (cắt thẳng là được), không bịa cảnh nối chỉ để cho đủ số khoảng. Chỉ khi khoảng cách không-thời gian, độ chênh cảm xúc thực sự cần đệm / cần nối thì mới thêm chuyển cảnh.
+- **Phán đoán có cần hay không trước, không cần thì không thêm**: với từng khoảng nối giữa hai cảnh, trước hết phân tích «ở đây rốt cuộc có cần một chuyển cảnh không» —— nếu hai cảnh trước sau cùng một không-thời gian và đẩy tiếp liên tục (连续推进), hoặc nối thẳng vốn đã mượt, thì **không cần thêm chuyển cảnh** (cắt thẳng là được), không bịa cảnh nối chỉ để cho đủ số khoảng. Chỉ khi khoảng cách không-thời gian, độ chênh cảm xúc thực sự cần đệm / cần nối thì mới thêm chuyển cảnh.
 - Với khoảng nối cần chuyển cảnh, căn cứ cảm xúc khép lại của cảnh trước, cảm xúc mở màn của cảnh sau, và quan hệ không-thời gian giữa hai cảnh mà **dựa vào kinh nghiệm phán đoán cách nối mượt nhất**; loại chuyển cảnh không giới hạn trong danh sách dưới đây, cần thì phối hợp tự do:
   - **Chuyển cảnh nối bằng hành động**: dùng một hành động nối tiếp làm cảnh chuyển (như "nhân vật đứng dậy đẩy cửa đi ra → nối sang cảnh sau bước vào"), để hai cảnh trước sau khớp vào nhau tự nhiên.
   - **Chuyển cảnh bằng cảnh không người**: khi vượt không-thời gian / cần đệm cảm xúc, chèn một cảnh không người cụ thể (nêu rõ hướng nội dung của nó, như "lia máy ra ngoài cửa sổ nơi tuyết bay → mờ chồng vào cảnh sau").

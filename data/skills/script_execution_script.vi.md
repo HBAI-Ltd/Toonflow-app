@@ -78,9 +78,9 @@ Viết xong tập này thì tự kiểm từng mục, cả ba mục đều khôn
 
 **Mật độ thông tin (khiến khán giả hiểu được, không dám lướt đi), khẩu quyết «nhanh chuẩn mới không»:**
 - **Nhanh** —— đặt thông tin lên trước, 10 giây đầu của tập 1 giao đãi "vai chính là ai/gặp khủng hoảng gì/xung đột cốt lõi là gì".
-- **Chuẩn** —— dùng ẩn ý hiệu quả, một câu vừa đẩy tình tiết (推进) + vừa khắc họa nhân vật + vừa truyền xung đột.
+- **Chuẩn** —— dùng ẩn ý hiệu quả, một câu vừa đẩy tình tiết (推进剧情) + vừa khắc họa nhân vật + vừa truyền xung đột.
 - **Mới** —— mỗi tập bắt buộc có thông tin mới (thân phận mới/lá bài mới của vai chính, âm mưu mới/sơ hở mới của phản diện, cú lật mới/khủng hoảng mới của tình tiết, quan hệ mới giữa các nhân vật); xem xong như chưa xem = viết công cốc.
-- **Không** —— mỗi câu phải thỏa một trong "đẩy tình tiết (推进)/khắc họa nhân vật/tạo móc câu/khơi cảm xúc", không thì xóa.
+- **Không** —— mỗi câu phải thỏa một trong "đẩy tình tiết (推进剧情)/khắc họa nhân vật/tạo móc câu/khơi cảm xúc", không thì xóa.
 
 **Mật độ tình tiết (khiến khán giả theo tiếp). Tình tiết ≠ sự kiện, ba tiêu chuẩn cứng (thiếu một là thành kể lể lưu thủy):**
 - **Neo nhân quả**: phục vụ mạch chính, quả của tình tiết trước là nhân của sự kiện này.
@@ -176,7 +176,7 @@ Ngoài 《Bảng đăng ký cú lật cấp giá cổ phiếu》 của khung xư
 2. **Bám tính cách nhân vật**: thói quen ngôn ngữ của mỗi nhân vật phải khớp nhân thiết
    - Cách tự kiểm: che tên nhân vật đi mà vẫn nhìn thoại là biết ai đang nói
    - Loại "trà xanh" thì dùng "người ta", "anh ơi", chờ nam chính đi khỏi mới lộ "nanh vuốt"
-3. **Dùng ẩn ý hiệu quả, tránh ẩn ý tối nghĩa**: dùng ẩn ý để một câu vừa đẩy tình tiết (推进) + vừa khắc họa nhân vật + vừa truyền xung đột (chữ "chuẩn" của mật độ thông tin); nhưng **đừng viết ẩn ý tối nghĩa bắt khán giả nhọc công đoán** —— khán giả phim ngắn thích hiểu ngay, ý phải rõ ngay lần đầu.
+3. **Dùng ẩn ý hiệu quả, tránh ẩn ý tối nghĩa**: dùng ẩn ý để một câu vừa đẩy tình tiết (推进剧情) + vừa khắc họa nhân vật + vừa truyền xung đột (chữ "chuẩn" của mật độ thông tin); nhưng **đừng viết ẩn ý tối nghĩa bắt khán giả nhọc công đoán** —— khán giả phim ngắn thích hiểu ngay, ý phải rõ ngay lần đầu.
 4. **Gần gũi, nói tiếng người**: cấm nửa văn nửa bạch, từ lạ từ lạnh, mọi ý đều diễn đạt bằng khẩu ngữ
 5. **Bỏ thoại vô hiệu**: mỗi câu thoại đều có lý do tồn tại, không nói lòng vòng
 6. **Tiết chế thoại**: một câu thoại ≤25 chữ (tốc độ đọc trên màn dọc); một lượt nói của một nhân vật cố gắng ≤70 chữ (những đoạn cả trăm chữ, đọc mất mấy chục giây chỉ để giao đãi tán gẫu thì xóa hết)
@@ -191,7 +191,7 @@ Ngoài 《Bảng đăng ký cú lật cấp giá cổ phiếu》 của khung xư
 4. **Viết cú máy**: chỉ ghi chú cú máy đặc biệt ở bốn nút cốt lõi —— **móc câu mở màn / khoảnh khắc điểm sướng / bùng nổ cảm xúc / bung nghi vấn**, các cảnh thường khác thì không viết, đừng giành việc của đạo diễn.
 5. **Viết thuật ngữ nghe nhìn**: một từ dùng đúng bằng trăm câu thừa —— **bóng đổ ngược sáng** (cách rẻ tiền để có vẻ cao cấp, quay phản diện ngược sáng lấy đường viền), **mờ chồng** (thần khí chuyển thời gian, cảnh khuân gạch ở công trường mờ chồng sang cảnh ký hợp đồng ở cao ốc mười năm sau).
 
-> Chú: thuật ngữ cú máy/nghe nhìn phải **hòa vào phần mô tả △ bằng ngôn ngữ hình ảnh** (như "ngược sáng chỉ còn một đường viền", "hình mờ chồng sang cao ốc mười năm sau"), **không được** viết thành các chú ngoặc kỹ thuật kiểu "全景 · 缓推 · khoảng 6 giây", "特写 · chụp từ trên xuống" (xem mục "Nội dung cấm xuất ra" bên dưới).
+> Chú: thuật ngữ cú máy/nghe nhìn phải **hòa vào phần mô tả △ bằng ngôn ngữ hình ảnh** (như "ngược sáng chỉ còn một đường viền", "hình mờ chồng sang cao ốc mười năm sau"), **không được** viết thành các chú ngoặc kỹ thuật kiểu "全景·缓推·约6秒", "特写·俯拍" (toàn cảnh · đẩy chậm · khoảng 6 giây; đặc tả · chụp từ trên xuống) (xem mục "Nội dung cấm xuất ra" bên dưới).
 
 ### V-b. Né năm lỗi kỹ thuật chí mạng của người mới (nhìn là bị loại)
 
@@ -389,7 +389,7 @@ Viết xong thì tự kiểm từng mục theo bảng dưới đây, phát hiệ
 - [ ] Tổng số chữ thoại khớp yêu cầu về thời lượng
 - [ ] Tổng thời lượng nằm trong khoảng mục tiêu
 - [ ] Thân kịch bản (các đoạn cảnh) khống chế trong 1400 chữ, nhịp nhanh, mật độ cao, không lê thê
-- [ ] Không có cú máy nào đặt vào chỉ vì ý cảnh/ẩn dụ/khoảng lặng, mỗi cảnh mỗi cú máy đều đang đẩy tình tiết (推进)
+- [ ] Không có cú máy nào đặt vào chỉ vì ý cảnh/ẩn dụ/khoảng lặng, mỗi cảnh mỗi cú máy đều đang đẩy tình tiết (推进剧情)
 - [ ] Mỗi đoạn cảnh đều có phần mô tả △ đầy đủ
 - [ ] Mọi chuyển cảnh đều đã ghi chú
 - [ ] Bước ngoặt cuối tập nhất quán với kiến trúc tổng thể
@@ -410,7 +410,7 @@ Các nội dung sau **nghiêm cấm** xuất hiện trong phần kịch bản xu
 - **Thống kê số chữ thoại**: không xuất ra tổng hợp hay thống kê số chữ thoại
 - **Dấu hiệu phiên bản**: tiêu đề tập không được kèm hậu tố phiên bản như "bản sửa", "v2", "bản chốt", giữ nguyên tiêu đề gốc
 - **Ghi chú thời gian của hồi/nhịp**: không xuất ra cấu trúc hồi hay khoảng thời gian nhịp kiểu "Hồi một: XXX (0s–40s)"
-- **Ghi chú kỹ thuật về cú máy**: phần mô tả △ không được kèm chú ngoặc ngôn ngữ cú máy kiểu "全景 · 缓推 · khoảng 6 giây", "特写 · chụp từ trên xuống"
+- **Ghi chú kỹ thuật về cú máy**: phần mô tả △ không được kèm chú ngoặc ngôn ngữ cú máy kiểu "全景·缓推·约6秒", "特写·俯拍" (toàn cảnh · đẩy chậm · khoảng 6 giây; đặc tả · chụp từ trên xuống)
 - **Bảng tự kiểm**: không xuất ra bản thân bảng tự kiểm
 - **Thước đo/thông tin thiết kế nội bộ**: mức xếp hạng ba mật độ, ghi chú nhịp 3-15-45, phần tách công thức tập vàng, dấu ghi cú lật trong tập, điểm chất liệu quảng cáo… chỉ để kiểm tra nội bộ, **tuyệt đối không viết vào thân kịch bản**
 - **Mọi siêu dữ liệu**: không xuất ra thống kê số chữ, thống kê số cảnh, thuyết minh sáng tác hay các nội dung phi kịch bản khác

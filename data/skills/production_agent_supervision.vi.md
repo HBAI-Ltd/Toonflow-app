@@ -242,7 +242,7 @@ Ví dụ không đạt: cột Hiệu ứng âm thanh viết "tiếng cello trầ
 
 #### Ngoại hình nhân vật không vào prompt
 
-1. Quét Mô tả hình ảnh của từng cú máy, đánh dấu phần tả ngoại hình cố hữu: kiểu dáng/màu sắc trang phục, kiểu tóc, dung mạo ngũ quan, trang sức cố định (固定)… (những thứ này giao cho tài nguyên ảnh)
+1. Quét Mô tả hình ảnh của từng cú máy, đánh dấu phần tả ngoại hình cố hữu: kiểu dáng/màu sắc trang phục, kiểu tóc, dung mạo ngũ quan, trang sức cố định (固定饰物)… (những thứ này giao cho tài nguyên ảnh)
 2. Được phép và khuyến khích: động tác, dáng thế, biểu cảm, biến chuyển trạng thái ngay lúc đó (ướt mồ hôi, vệt nước mắt, áo quần xộc xệch, gân xanh nổi cộm, dính máu)
 3. Đánh dấu những mô tả có lẫn ngoại hình cố hữu
 

@@ -71,12 +71,12 @@ Return one short confirmation sentence only; do not restate the full content. Th
 ### Criteria for emotion analysis
 
 - Give each scene an **emotional intensity of 0–10** (an overall estimate of that scene's emotional strength) plus a **one-sentence emotional keynote**.
-- If the emotion clearly progresses (推进) within the scene, mark it as **X→Y** (e.g. "probing→breaking down"); with no change, describe a single point.
+- If the emotion clearly progresses (情绪推进) within the scene, mark it as **X→Y** (e.g. "probing→breaking down"); with no change, describe a single point.
 - The emotional keynote must fit the plot as it is legible in the script; do not inflate it out of nothing.
 
 ### Scene transition design
 
-- **First judge whether one is necessary; if not, add nothing**: for each gap between scenes, first analyse "does this actually need a transition at all" — if the two scenes carry on continuously (推进) in the same time and place, or already join smoothly as they are, then **no transition needs to be added** (a hard cut is fine), and do not manufacture a transition just to fill the count. Only add a transition when the leap in time and place or the emotional drop genuinely needs a buffer / a link.
+- **First judge whether one is necessary; if not, add nothing**: for each gap between scenes, first analyse "does this actually need a transition at all" — if the two scenes carry on continuously (连续推进) in the same time and place, or already join smoothly as they are, then **no transition needs to be added** (a hard cut is fine), and do not manufacture a transition just to fill the count. Only add a transition when the leap in time and place or the emotional drop genuinely needs a buffer / a link.
 - For a gap that needs a transition, **judge from experience which link flows best**, based on the closing emotion of the preceding scene, the opening emotion of the following one, and the time-and-place relationship between them; the type is not limited to the list below, combine freely as needed:
   - **Action-link transition**: use one connecting action that carries the scene over (e.g. "the character stands, pushes the door open and walks out → cut to entering the next scene"), so the two scenes mesh naturally.
   - **Empty-shot transition**: when crossing time and place, or when an emotional buffer is needed, insert a concrete empty shot (state the direction of its content, e.g. "pan to the snow drifting outside the window → fade into the next scene").

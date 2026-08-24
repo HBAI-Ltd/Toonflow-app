@@ -73,7 +73,7 @@ A skeleton is not chapters flattened onto episodes; it lays the foundation for "
 **The three psychological-level payoffs (they do not cross the review line and have a future; the skeleton must lock 1 in as the core):**
 - **Advantage/golden finger**: an ability only the protagonist has, making the audience swoon or look up to them.
 - **Belonging**: solidarity and cooperation/a shared goal/love of family and country (gangs, cultivation, the strong female lead, the female war god).
-- **Order**: driving forward (推进) with logic to restore the truth (revenge, palace intrigue, mystery, rebirth, finding family, infinite-flow, transmigration).
+- **Order**: driving forward with logic (逻辑推进) to restore the truth (revenge, palace intrigue, mystery, rebirth, finding family, infinite-flow, transmigration).
 - Physiological-level payoffs (sex/violence) easily cross the review red line and fall into borderline territory — **use with care**.
 
 **The golden finger's originality = the key to whether it sells:**
@@ -100,7 +100,7 @@ Write profiles only for the **core triangle characters**: protagonist + chief an
 
 **3. Speaking style + entrance (against drift, to set the hook):**
 - **Speaking style**: preferred sentence shapes + 2-3 catchphrases reused across the show + how the tone changes in the contrasting state.
-- **Entrance design**: apply at least one of the **seven entrance techniques** (a close-up (特写) of a detail/an entrance through action/set off by a supporting character/an entrance through sound/a contrast of setting/an entrance through a prop/a build-up of atmosphere) to give the protagonist a memorable entrance.
+- **Entrance design**: apply at least one of the **seven entrance techniques** (a local close-up (局部特写)/an entrance through action/set off by a supporting character/an entrance through sound/a contrast of setting/an entrance through a prop/a build-up of atmosphere) to give the protagonist a memorable entrance.
 
 **The iron rule**: the villain must have a reasonable motive ("harms people out of pure envy" is low-grade writing, they are not a tool); the profile writes only information relevant to the main line.
 

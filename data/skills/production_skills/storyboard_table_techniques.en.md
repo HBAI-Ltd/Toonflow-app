@@ -23,18 +23,18 @@ Granularity: one independent picture = one shot; roughly every 35-70 words of sc
 ## Rules for establishing shots and shot merging (against redundancy)
 
 **Establishing shot**: the establishing of each new scene/section is done in at most 1-2 shots; splitting it into 3 or more fragments is forbidden.
-- Recommended: 1 远景 with a 缓推 slow push (establishing + introducing the subject in one shot), or 1 远景 at its widest to establish + 1 全景 to introduce the subject
+- Recommended: 1 远景 with a 缓推 slow push (establishing + introducing the subject in one shot), or 1 大远景 to establish + 1 全景 to introduce the subject
 - Forbidden: the redundant three-part form of an empty shot of the environment → then a local detail → then the character arriving
 
 **Shot-merging self-check**:
 - If one shot can convey it, do not split it into two — if one shot with a camera movement can do the establishing and the introduction at once, do not split it in two
 - Consecutive shots describing different parts of the same space (courtyard gate → vines → side room) should be merged into one shot, with the shot description covering the several layers of space
-- A purely decorative shot (showing environmental detail with no narrative advance, 推进) should be merged into a shot that has a narrative function
+- A purely decorative shot (showing environmental detail with no narrative advance — 叙事推进) should be merged into a shot that has a narrative function
 - **The director's-thinking test**: once written, self-check — if a real director would shoot 2-3 adjacent shots as 1, the split is too fine and they should be merged
 
 **The one-take strategy**: when adjacent shots have **continuous change of action, slight change of scene (movement within the same scene) or a gradual change of camera angle**, you may mark 「一镜到底」 in `cameraMove` or `description` and merge several fragmentary shots into one continuous long take.
 - **When it applies**: a character walking through a space, following an action from point A to point B, 环绕 orbiting a character to show the environment, an establishing 缓推 slow push into a 特写 of the subject, and so on
-- **How to mark it**: state the camera path in `cameraMove` (such as "一镜到底: 缓推 on the 远景 → track into the courtyard → settle on 全景") and describe the opening and closing framings in `description`
+- **How to mark it**: state the camera path in `cameraMove` (such as "一镜到底：缓推远景→跟移至院内→落幅全景" — one take: slow push on the long shot, track into the courtyard, settle on the wide shot) and describe the opening and closing framings in `description`
 - **Relaxed duration**: because a one-take shot keeps renewing its information, it may exceed the 6s single-shot limit, but not 12s
 - **Risk note**: a one-take raises the difficulty of rolling a usable generated picture (the continuity demands are high); use it only where the gain in narrative flow clearly outweighs cutting, and do not overuse it
 
@@ -51,7 +51,7 @@ Granularity: one independent picture = one shot; roughly every 35-70 words of sc
 - Progressive release: 特写→近景→中景→远景 (emotion releasing)
 - Consecutive shots at the same shot size with no narrative reason are forbidden (3 or more consecutive shots at the same shot size = visual fatigue)
 
-**③ Conservation of the axis**: the 180-degree line principle — in a conversation/confrontation scene the characters' positions in the frame stay on the same side throughout (固定), and the line must not be crossed
+**③ Conservation of the axis**: the 180-degree line principle — in a conversation/confrontation scene the characters' positions in the frame stay on the same side throughout the film (全片固定同侧), and the line must not be crossed
 
 **④ Spatial logic of facing**: two people in conversation face each other, someone handling an object faces the object, someone gazing into the distance faces the distance. Facing the camera indiscriminately is forbidden
 
@@ -90,13 +90,13 @@ Granularity: one independent picture = one shot; roughly every 35-70 words of sc
 |------|------|---------|
 | 推 | From far to near, emphasising the subject | Emotion building / discovery / spying |
 | 拉 | From near to far, showing the environment | Emotion detaching / revealing the whole / parting |
-| 摇 | Rotating and sweeping from a fixed (固定) position | Conveying the environment / searching |
+| 摇 | Rotating and sweeping from a fixed position (固定位置) | Conveying the environment / searching |
 | 移 | Moving with the subject | Accompanying / tracking |
 | 俯拍 | From above looking down | Observing / smallness / the whole picture |
 | 仰拍 | From below looking up | Heroising / oppression |
 
 **action** (Character action): a concrete description of the action of the character/subject in the picture (5-30 words); when there is no character action, fill in `空镜`. The format is `(carry-over note)action description`. Requirements:
-- **The carry-over note goes at the front**: wrapped in half-width parentheses and placed before the action description. The first shot writes `(开篇)`; the other shots write `(承接上镜:the linking action)`, such as `(承接上镜:缓推 settling ~ group freeze)` or `(承接上镜:arm half raised → continues to rise)`
+- **The carry-over note goes at the front**: wrapped in half-width parentheses and placed before the action description. The first shot writes `(开篇)`; the other shots write `(承接上镜:the linking action)`, such as `(承接上镜:缓推落幅~群像定格)` (slow push settling ~ group freeze) or `(承接上镜:arm half raised → continues to rise)`
 - **How to write an action chain**: write a continuous chain of physical actions + the speed and rhythm ("slowly raises the right hand → the fingertips tremble slightly → the fist clenches abruptly"); writing only a static end state is forbidden. With several characters, separate their actions with `;` and order them by the associated asset names, such as `黎雾 rubs her cuff with her right hand → gathers the rabbit toy into her chest with her left arm;聂薇 fixes her gaze on the rabbit`
 - **Facing/spatial relations are no longer written in this column**: facing and spatial relations have been split into their own columns (`orientation` / `spatialRelation`) and are not marked again inside action, avoiding a clash between `|` and the markdown table column separator
 
@@ -113,7 +113,7 @@ Granularity: one independent picture = one shot; roughly every 35-70 words of sc
 - It must be self-consistent with the facing, shot size and camera movement (a character facing right should have their gaze/interaction target in a position to their right); characters in the same scene and group keep stable positions, and a change of blocking must be given a linking action in `action` with this column updated in step
 
 **A complete field example** (a group of 5):
-- `action`: `(开篇)the 远景 pushes slowly (缓推) towards the group, the five loosely spaced —黎雾 slightly to the left, a rabbit toy in the crook of her left arm;聂薇's gaze is drawn to that patch of white`
+- `action`: `(opening) 远景, 缓推 slow push towards the group, the five loosely spaced — 黎雾 slightly to the left, a rabbit toy in the crook of her left arm; 聂薇's gaze is drawn to that patch of white`
 - `orientation`: `黎雾-3/4正面朝右;聂薇-3/4正面朝左;何存羽-3/4正面朝左;秋瞳-3/4正面朝左;安娜-正面`
 - `spatialRelation`: `黎雾(左前)、安娜(右前)、聂薇(左后)、何存羽(中后)、秋瞳(右后)`
 

@@ -242,7 +242,7 @@ Failing example: the Sound effects column says "a low cello underlay + the sound
 
 #### Character appearance stays out of the prompt
 
-1. Scan each shot's Shot description and flag inherent-appearance writing: costume cut/colour, hairstyle, facial features, fixed (固定) ornaments and so on (those are left to the image assets)
+1. Scan each shot's Shot description and flag inherent-appearance writing: costume cut/colour, hairstyle, facial features, fixed ornaments (固定饰物) and so on (those are left to the image assets)
 2. Allowed and encouraged: action, posture, expression, the state change happening now (sweat-soaked, tear-streaked, clothes in disarray, veins standing out, bloodstained)
 3. Flag descriptions that have inherent appearance mixed into them
 
