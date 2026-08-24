@@ -121,7 +121,7 @@ no plastic skin, no beauty filter, no studio lighting, no centered composition, 
 Các từ/phong cách sau không được xuất hiện trong prompt đầu ra:
 
 - ❌ Các từ liên quan đến người thật tả thực/nhiếp ảnh/render 3D (như: photorealistic, real photography, CGI)
-- ❌ Cổ trang Quốc phong/fantasy/khoa học viễn tưởng và các phong cách ngoài yếu tố hiện đại
+- ❌ Cổ phong Quốc phong/fantasy/khoa học viễn tưởng và các phong cách ngoài yếu tố hiện đại
 - ❌ Màu huỳnh quang bão hòa cao/màu neon
 - ❌ Tỉ lệ hoạt hình, mắt to, chibi và các mô tả biến dạng khác (trừ khi phong cách cụ thể yêu cầu)
 - ❌ Yếu tố công nghệ hiện đại lọt vào khung hình (màn hình điện thoại, giao diện máy tính, biển hiệu hiện đại...)

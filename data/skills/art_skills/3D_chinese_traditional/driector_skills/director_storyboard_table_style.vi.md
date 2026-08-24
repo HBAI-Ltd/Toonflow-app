@@ -27,16 +27,16 @@ Bảng phân cảnh là công cụ cốt lõi để đạo diễn chuyển kịc
 ## 3. Động thái môi trường
 
 - **Động thái môi trường giúp khung hình có chỗ thở** — cánh hoa rơi, khói bốc, sóng nước lăn tăn, rèm the lay động, hạt bụi trong luồng sáng thể tích. Cứ 3-4 cú máy phải bố trí ít nhất một cú máy có động thái môi trường, tránh để khung hình "chết"
-- **Ưu tiên yếu tố môi trường cổ trang** — động thái môi trường phải chọn yếu tố nằm trong thế giới quan cổ trang: hoa rụng, tơ liễu bay, khói nhẹ, nước chảy, gió qua rừng trúc, lửa nến chập chờn; cấm xuất hiện yếu tố hiện đại
+- **Ưu tiên yếu tố môi trường cổ phong** — động thái môi trường phải chọn yếu tố nằm trong thế giới quan cổ phong: hoa rụng, tơ liễu bay, khói nhẹ, nước chảy, gió qua rừng trúc, lửa nến chập chờn; cấm xuất hiện yếu tố hiện đại
 - **Hạt và hiệu ứng thể tích 3D** — động thái môi trường của 3D Quốc phong phải tận dụng tối đa ưu thế của render 3D: tán xạ ánh sáng thể tích trong sương, phản xạ PBR trên mặt nước, quỹ đạo rơi theo vật lý của cánh hoa, render thể tích của khói
 
 ---
 
-## 4. Nhịp hành động cổ trang
+## 4. Nhịp hành động cổ phong
 
-- **Hành động cổ trang phải chậm** — mọi hành động của nhân vật mặc định chậm. Đứng dậy, quay người, giơ tay đều phải ghi chú "chậm rãi"
-- **Động thái trang phục** — sự bay lượn của trang phục cổ trang (tay áo rộng, tà váy, khăn choàng lụa) là tài nguyên động tự nhiên; độ rủ và độ bay của mô phỏng vải trong render 3D phải được thể hiện trong mô tả hình ảnh, làm khung hình thêm "sống"
-- **Ràng buộc nghi thái** — cử chỉ của nhân vật cổ trang phải hợp khí chất thời đại: đi đứng khoan thai, cử chỉ kín đáo dè dặt, không xuất hiện ngôn ngữ hình thể hiện đại (như nhún vai, xòe tay)
+- **Hành động cổ phong phải chậm** — mọi hành động của nhân vật mặc định chậm. Đứng dậy, quay người, giơ tay đều phải ghi chú "chậm rãi"
+- **Động thái trang phục** — sự bay lượn của trang phục cổ phong (tay áo rộng, tà váy, khăn choàng lụa) là tài nguyên động tự nhiên; độ rủ và độ bay của mô phỏng vải trong render 3D phải được thể hiện trong mô tả hình ảnh, làm khung hình thêm "sống"
+- **Ràng buộc nghi thái** — cử chỉ của nhân vật cổ phong phải hợp khí chất thời đại: đi đứng khoan thai, cử chỉ kín đáo dè dặt, không xuất hiện ngôn ngữ hình thể hiện đại (như nhún vai, xòe tay)
 - **Chất hoạt hình 3D** — chuyển tiếp hành động phải tự nhiên mượt mà, thể hiện được sự tinh xảo của hoạt hình 3D. Tránh chuyển tư thế cứng nhắc, chú ý cung độ tự nhiên của khớp và sự dịch chuyển trọng tâm
 
 ---

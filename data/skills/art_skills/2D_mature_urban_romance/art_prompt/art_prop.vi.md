@@ -135,4 +135,4 @@ trong khung hình không được xuất hiện bất kỳ nhân vật, bàn tay
 | X5 | Xuất hiện yếu tố gợi ý có người (như dấu tay cầm, góc nhìn của người đeo, tư thế đang dùng) |
 | X6 | Dùng các từ liên quan đến người thật tả thực/nhiếp ảnh/render 3D |
 | X7 | Màu huỳnh quang bão hòa cao/màu neon |
-| X8 | Cổ trang Quốc phong/fantasy/khoa học viễn tưởng và các yếu tố khác xung đột với thế giới quan ngôn tình đô thị hiện đại |
+| X8 | Cổ phong Quốc phong/fantasy/khoa học viễn tưởng và các yếu tố khác xung đột với thế giới quan ngôn tình đô thị hiện đại |

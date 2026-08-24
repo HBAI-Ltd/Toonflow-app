@@ -1,4 +1,4 @@
-# Nền tảng thẩm mỹ toàn cục · Người thật cổ trang tả thực
+# Nền tảng thẩm mỹ toàn cục · Người thật cổ phong tả thực
 
 ---
 Bắt buộc tuân thủ nghiêm ngặt và đầy đủ toàn bộ ràng buộc phong cách cùng quy tắc toàn cục bên dưới, và sinh prompt đúng nghiêm ngặt theo định dạng khuôn mẫu prompt; chỉ xuất phần thân prompt, không được kèm bất kỳ giải thích, thuyết minh, chú thích, tiêu đề hay văn bản thừa nào khác.
@@ -6,10 +6,10 @@ Bắt buộc tuân thủ nghiêm ngặt và đầy đủ toàn bộ ràng buộc
 
 | Chiều | Định nghĩa |
 |---|---|
-| **Phong cách cấp một** | Người thật cổ trang tả thực (Ancient-Chinese Photorealism) |
+| **Phong cách cấp một** | Người thật cổ phong tả thực (Ancient-Chinese Photorealism) |
 | **Phong cách cấp hai** | Nhiếp ảnh người thật tả thực · chất ghi hình đẳng cấp điện ảnh truyền hình |
 | **Tông cảm xúc** | Thiên ngọt ngào — lạnh mà ấm, thưa mà đậm |
-| **Từ neo chất liệu** | Tương phản mạnh, chi tiết tối đa, ghi chép hiện thực cổ trang |
+| **Từ neo chất liệu** | Tương phản mạnh, chi tiết tối đa, ghi chép hiện thực cổ phong |
 
 ---
 
@@ -56,7 +56,7 @@ Bắt buộc tuân thủ nghiêm ngặt và đầy đủ toàn bộ ràng buộc
 | Cảnh cảm xúc | Màu chính | Màu phụ | Gợi ý hiệu ứng sáng và tương phản | Từ khóa hình ảnh |
 |---|---|---|---|---|
 | Rung động lần đầu (ngọt có kiềm chế) | C1 nguyệt bạch | C5 hồng yên hà + C8 bạc sương tuyết | Nền lạnh + cao sáng ấm dịu cục bộ, tương phản mạnh nhưng không cháy sáng | Lạnh trong, có khoảng thở, ngọt nhẹ |
-| Tình cảm ấm lên (thân mật kéo gần) | C5 hồng yên hà | C7 hổ phách ấm + C10 trắng mộc | Cỡ cảnh trung–cận (中近景) nâng độ ấm, màu da ấm lên chút, hậu cảnh giữ độ bão hòa thấp | Nét mềm, cảm giác thì thầm, sát gần |
+| Tình cảm ấm lên (thân mật kéo gần) | C5 hồng yên hà | C7 hổ phách ấm + C10 trắng mộc | Trung cận cảnh (中近景) nâng độ ấm, màu da ấm lên chút, hậu cảnh giữ độ bão hòa thấp | Nét mềm, cảm giác thì thầm, sát gần |
 | Lời thề chở che (vững vàng an toàn) | C10 trắng mộc | C3 vàng ánh ngọc trai + C4 đen mặc ngọc | Lớp sáng tối rõ ràng, màu vàng chỉ điểm xuyết ở viền | An định, nghi lễ, tin cậy |
 | Chia ly hiểu lầm (lạnh nhạt đè nén) | C6 xanh thanh đại | C1 nguyệt bạch + C9 xám trung tính | Hạ độ bão hòa tổng thể, nới rộng tương phản nóng lạnh, bóng đổ sâu hơn | Cảm giác xa cách, kiềm chế, đè nén tĩnh |
 | Trùng phùng buông bỏ (nước mắt ấm lại) | C1 nguyệt bạch | C7 hổ phách ấm + C5 hồng yên hà | Lạnh trước ấm sau, ánh sáng ấm dâng dần trên gương mặt nhân vật | Ấm lại, thanh thản, không khí ẩm |

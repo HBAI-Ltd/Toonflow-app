@@ -27,7 +27,7 @@ metaData: art_skills
 | L1 | Trang điểm (lớp ra quyết định) | Phân tích manh mối của người dùng trước, rồi quyết định mức "trang điểm nền / trang điểm nhẹ / trang điểm trang trọng" |
 | L2 | Tạo hình tóc | Búi/búi cao/tết + trang sức tóc |
 | L3 | Áo giữa/áo lót | Thay áo giữa nền màu trắng |
-| L4 | Áo ngoài/trang phục chính | Hoa phục/lễ phục/thường phục cổ trang... |
+| L4 | Áo ngoài/trang phục chính | Hoa phục/lễ phục/thường phục cổ phong... |
 | L5 | Phụ kiện | Trang sức đầu/tai/cổ/eo/tay |
 
 > **Ranh giới phạm vi**: tài nguyên nhân vật phái sinh chỉ gồm các lớp L0–L5 (phục trang hóa trang), không gồm đạo cụ (ô/kiếm/quạt/sách/đèn lồng và các vật cầm tay khác), môi trường bối cảnh (trong nhà/ngoài trời/thời tiết...), tư thế động tác (đi/ngoái nhìn/giơ tay...). Những thứ đó thuộc phạm vi của các loại tài nguyên khác.
@@ -259,7 +259,7 @@ metaData: art_skills
 
 Lấy ảnh hình ảnh cơ bản của nhân vật làm ảnh nền，chồng phục trang hóa trang bằng img2img，
 phong cách render 3D，tạo mô hình độ chính xác cao，chất liệu PBR，3D Quốc phong，ánh sáng đẳng cấp điện ảnh，
-bản vẽ bốn hướng nhìn của nhân vật {giới tính} cổ trang，render 3D，tạo mô hình độ chính xác cao，8K，siêu trung thực
+bản vẽ bốn hướng nhìn của nhân vật {giới tính} cổ phong，render 3D，tạo mô hình độ chính xác cao，8K，siêu trung thực
 character design sheet, character turnaround,
 giữ nguyên gương mặt của hình ảnh cơ bản，{khí chất tổng thể},
 【L1·Trang điểm】quyết định theo manh mối người dùng：{trang điểm nền/trang điểm nhẹ/trang điểm trang trọng}；dùng {phong cách trang điểm}, render chất liệu PBR, {trang điểm mày}, {trang điểm mắt}, {trang điểm môi},
@@ -268,7 +268,7 @@ giữ nguyên gương mặt của hình ảnh cơ bản，{khí chất tổng th
 【L5·Phụ kiện】{trang sức đầu}, {trang sức tai}, {trang sức cổ}, {trang sức eo},
 xếp cạnh nhau từ trái sang phải trong cùng khung hình：chân dung cận+hình chính diện+hình nhìn nghiêng+hình nhìn sau,
 đứng tự nhiên, phông nền màu xám mộc thuần, ánh sáng dịu đều, không bóng gắt,
-nhất quán bốn hướng nhìn, mô hình 3D cổ trang rõ ràng, tạo mô hình độ chính xác cao rõ ràng,
+nhất quán bốn hướng nhìn, mô hình 3D cổ phong rõ ràng, tạo mô hình độ chính xác cao rõ ràng,
 trong hình không được có bất kỳ chữ nào
 
 ---

@@ -1,16 +1,16 @@
 ---
 name: director_storyboard
-description: Kỹ pháp prompt phân cảnh của đạo diễn · Người thật cổ trang tả thực
+description: Kỹ pháp prompt phân cảnh của đạo diễn · Người thật cổ phong tả thực
 metaData: director_skills
 ---
 
-# Prompt phân cảnh · Người thật cổ trang tả thực · Kỹ pháp riêng của phong cách
+# Prompt phân cảnh · Người thật cổ phong tả thực · Kỹ pháp riêng của phong cách
 
 ---
 
 ## Phạm vi áp dụng
 
-Skill này chỉ dùng để sinh prompt phân cảnh cho phong cách **người thật cổ trang tả thực**.
+Skill này chỉ dùng để sinh prompt phân cảnh cho phong cách **người thật cổ phong tả thực**.
 
 ---
 
@@ -31,7 +31,7 @@ Skill này chỉ dùng để sinh prompt phân cảnh cho phong cách **người
 
 ---
 
-## Kho từ ánh sáng và không khí (người thật cổ trang tả thực)
+## Kho từ ánh sáng và không khí (người thật cổ phong tả thực)
 
 > **Nguyên tắc thiết kế**: ánh sáng của khung hình chia thành hai lớp: **ánh sáng môi trường (chính)** và **ánh sáng đèn thiết bị (phụ)**. Ánh sáng môi trường do thời gian, thời tiết, không gian của bối cảnh quyết định, là tông chủ đạo tuyệt đối của ánh sáng khung hình; ánh sáng đèn thiết bị chỉ dùng để tạo khối cho nhân vật và tăng cường cảm xúc, bắt buộc phục tùng hướng và nhiệt màu của ánh sáng môi trường, không được tạo cảm giác có nguồn sáng độc lập.
 
@@ -133,7 +133,7 @@ Giữ gương mặt nhân vật khớp với ảnh tham chiếu, giữ phối m�
 
 **Kết phong cách (cố định):**
 ```
-Thẩm mỹ tả thực cổ trang, khí vận cổ điển phương Đông, bố cục phân cảnh đẳng cấp điện ảnh
+Thẩm mỹ tả thực cổ phong, khí vận cổ điển phương Đông, bố cục phân cảnh đẳng cấp điện ảnh
 ```
 
 **Từ khóa chốt chất lượng hình (mọi đầu ra bắt buộc chứa, đặt sau phần kết phong cách):**
@@ -201,7 +201,7 @@ Các từ ngữ/phong cách sau không được xuất hiện trong prompt đầ
 
 ```
 [Prompt]
-Nhiếp ảnh người thật tả thực, chất lượng hình đẳng cấp điện ảnh, ghi chép siêu thực, tương phản mạnh, chi tiết tối đa, vân cực kỳ sắc nét, bố cục 全景 toàn cảnh, nhân vật lọt trọn toàn thân trong khung, da mịn tinh tế, render gương mặt tinh tế, ngũ quan có khối, tóc từng sợi rõ ràng, render sợi tóc tinh tế, nam chính đứng trên lầu thành, hai tay buông tự nhiên hai bên thân, vạt áo vừa chớm bị gió thổi, khẽ tung lên, chất vải của trang phục rõ nét, nếp gấp vải chân thực, trang phục bay theo chuyển động, thần sắc trầm nghị, tia nhìn sắp hướng ra phương xa, ánh mắt kiên định lạnh trong, vân gạch xanh của lầu thành rõ nét, chất phong hóa, cảnh xa xếp lớp, phối cảnh không khí, ngược sáng chếch tông lạnh lúc hoàng hôn, ánh sáng viền vẽ viền nhân vật, thẩm mỹ tả thực cổ trang, khí vận cổ điển phương Đông, bố cục phân cảnh đẳng cấp điện ảnh, chất lượng 4K siêu nét, độ nét tự nhiên, cảm giác trong trẻo tả thực, khung hình không phụ đề, không hình mờ, không chữ tiêu đề chồng lên.
+Nhiếp ảnh người thật tả thực, chất lượng hình đẳng cấp điện ảnh, ghi chép siêu thực, tương phản mạnh, chi tiết tối đa, vân cực kỳ sắc nét, bố cục 全景 toàn cảnh, nhân vật lọt trọn toàn thân trong khung, da mịn tinh tế, render gương mặt tinh tế, ngũ quan có khối, tóc từng sợi rõ ràng, render sợi tóc tinh tế, nam chính đứng trên lầu thành, hai tay buông tự nhiên hai bên thân, vạt áo vừa chớm bị gió thổi, khẽ tung lên, chất vải của trang phục rõ nét, nếp gấp vải chân thực, trang phục bay theo chuyển động, thần sắc trầm nghị, tia nhìn sắp hướng ra phương xa, ánh mắt kiên định lạnh trong, vân gạch xanh của lầu thành rõ nét, chất phong hóa, cảnh xa xếp lớp, phối cảnh không khí, ngược sáng chếch tông lạnh lúc hoàng hôn, ánh sáng viền vẽ viền nhân vật, thẩm mỹ tả thực cổ phong, khí vận cổ điển phương Đông, bố cục phân cảnh đẳng cấp điện ảnh, chất lượng 4K siêu nét, độ nét tự nhiên, cảm giác trong trẻo tả thực, khung hình không phụ đề, không hình mờ, không chữ tiêu đề chồng lên.
 Based on the reference image of 沈辞, maintain consistent: face features, hairstyle, costume details. Generate a new scene: standing on the ancient city wall at dusk, overlooking vast land. Keep character appearance identical to reference.
 ```
 

@@ -167,7 +167,7 @@ Hình ảnh nhân vật cho chủ đề đô thị người thật lấy **"cá 
 Phong cách này loại trừ nghiêm ngặt các loại nội dung sau, để đảm bảo hệ thống hình ảnh thuần khiết thống nhất:
 
 1. **Chất liệu phi người thật**: Render 3D/tạo mô hình CG/công cụ game thế hệ mới/phong cách hoạt hình/minh họa vẽ tay/màu nước hoặc sơn dầu/anime/voxel/low-poly và mọi chất liệu hình ảnh phi nhiếp ảnh người thật khác
-2. **Thế giới quan phi đô thị**: Cổ trang/trang phục cổ/kiến trúc cổ điển Trung Hoa truyền thống/tiên hiệp/huyền huyễn/võ hiệp/thời Dân Quốc/fantasy phương Tây/trung cổ/cyberpunk/khoa học viễn tưởng tương lai/không gian vũ trụ và mọi bối cảnh phi đô thị đương đại khác
+2. **Thế giới quan phi đô thị**: Cổ phong/cổ trang/kiến trúc cổ điển Trung Hoa truyền thống/tiên hiệp/huyền huyễn/võ hiệp/thời Dân Quốc/fantasy phương Tây/trung cổ/cyberpunk/khoa học viễn tưởng tương lai/không gian vũ trụ và mọi bối cảnh phi đô thị đương đại khác
 3. **Bối cảnh phi Trung Quốc đương đại**: Kiến trúc, đường phố, biển hiệu, tạo hình nhân vật rõ ràng mang đặc trưng phi đô thị Trung Quốc (như kimono, hanok Hàn Quốc, thị trấn kiểu châu Âu...)
 4. **Lỗi chất lượng kỹ thuật**: Độ phân giải thấp/mờ/nhiễu hạt/biến dạng/chi dị dạng/ngũ quan méo mó/tỉ lệ mất cân đối/cảm giác cắt ghép/cảm giác nhựa/làm mịn da quá mức/cảm giác mặt nạ
 5. **Vi phạm xu hướng thẩm mỹ**: Độ bão hòa cao quá mức/màu huỳnh quang chết chóc/cảm giác filter rẻ tiền/HDR quá mức/hình ảnh bẩn lộn xộn/tông màu u ám cố ý

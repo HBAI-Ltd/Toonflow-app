@@ -162,7 +162,7 @@ xếp cạnh nhau từ trái sang phải trong cùng khung hình：chân dung c�
 chân dung cận hiện đủ từ đỉnh đầu đến xương quai xanh, không cắt cúp đỉnh đầu, head to collarbone complete,
 hình toàn thân đứng hiện đủ từ đỉnh đầu đến gót chân, full body head to toe, không cắt cúp đỉnh đầu và bàn chân,
 đứng tự nhiên, phông nền màu xám mộc thuần, ánh sáng dịu đều, không bóng gắt,
-nhất quán bốn hướng nhìn, mô hình 3D cổ trang rõ ràng, tạo mô hình độ chính xác cao rõ ràng,
+nhất quán bốn hướng nhìn, mô hình 3D cổ phong rõ ràng, tạo mô hình độ chính xác cao rõ ràng,
 trong hình không được có bất kỳ chữ nào
 
 

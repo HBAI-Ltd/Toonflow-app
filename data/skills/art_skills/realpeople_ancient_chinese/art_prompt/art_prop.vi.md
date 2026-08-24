@@ -6,7 +6,7 @@
 
 1. **Công năng đọc được** — công dụng của đạo cụ rõ ngay từ cái nhìn đầu tiên, tạo hình phục vụ công năng
 2. **Chất liệu tối đa** — vân chất liệu bắt buộc rõ ràng nhận ra được (kim loại/ngọc thạch/gỗ/vải/giấy)
-3. **Nhất quán niên đại** — mọi đạo cụ bắt buộc hợp với thế giới quan cổ trang, cấm yếu tố hiện đại
+3. **Nhất quán niên đại** — mọi đạo cụ bắt buộc hợp với thế giới quan cổ phong, cấm yếu tố hiện đại
 4. **Kích thước rõ ràng** — gợi ý kích thước thật của đạo cụ qua vật tham chiếu hoặc chú thích
 5. **Chỉ có đạo cụ, trưng bày độc lập** — trong khung hình chỉ được xuất hiện bản thân đạo cụ, nghiêm cấm xuất hiện bất kỳ nhân vật, bàn tay, chi thể nào, đạo cụ không được ở trạng thái bị cầm/đeo/nắm, bắt buộc trình bày độc lập theo lối tĩnh vật
 
@@ -18,40 +18,40 @@
 
 | Hạng mục | Ràng buộc | Prompt |
 |---|---|---|
-| Loại | Kiếm/đao/cung/thương/quạt | {loại binh khí}，binh khí cổ trang |
+| Loại | Kiếm/đao/cung/thương/quạt | {loại binh khí}，binh khí cổ phong |
 | Chất liệu | Thép tinh/huyền thiết + nạm đá quý + tua kiếm bằng lụa | hàn quang lạnh lẽo、rèn từ thép tinh |
 | Trang trí | Chạm hoa trên vỏ kiếm/chuôi đao, tua rua, hoa văn chìm | chạm hoa tinh xảo、tua rua buông rủ |
 | Độ óng | Ánh kim loại lạnh, phản quang trên lưỡi | hàn quang lấp lánh、chất kim loại |
-| Prompt | {binh khí} cổ trang，rèn từ thép tinh，hàn quang lạnh lẽo，chạm hoa tinh xảo | — |
+| Prompt | {binh khí} cổ phong，rèn từ thép tinh，hàn quang lạnh lẽo，chạm hoa tinh xảo | — |
 
 ### 2.2 Nhóm trang sức
 
 | Hạng mục | Ràng buộc | Prompt |
 |---|---|---|
-| Loại | Trâm/thoa/anh lạc/ngọc bội/vòng tay/khuyên tai | {loại trang sức}，trang sức cổ trang |
+| Loại | Trâm/thoa/anh lạc/ngọc bội/vòng tay/khuyên tai | {loại trang sức}，trang sức cổ phong |
 | Chất liệu | Vàng/bạc/ngọc/trân châu/đá quý | đan chỉ vàng、ngọc trong veo |
 | Kỹ nghệ | Tinh xảo tối đa, kéo sợi/khảm sợi/nạm | kỹ nghệ bậc thầy、chạm khắc tỉ mỉ |
 | Độ óng | Ánh ngọc trai/ngọc ôn nhuận/ánh kim loại | ánh ngọc trai mượt mà、ánh kim loại |
-| Prompt | {trang sức} cổ trang，{chất liệu}，kỹ nghệ bậc thầy，chạm khắc tỉ mỉ | — |
+| Prompt | {trang sức} cổ phong，{chất liệu}，kỹ nghệ bậc thầy，chạm khắc tỉ mỉ | — |
 
 ### 2.3 Nhóm vật dụng sinh hoạt
 
 | Hạng mục | Ràng buộc | Prompt |
 |---|---|---|
-| Loại | Bộ trà/bộ rượu/lư hương/bàn cờ/sách vở/đèn lồng | {loại vật dụng}，vật dụng cổ trang |
+| Loại | Bộ trà/bộ rượu/lư hương/bàn cờ/sách vở/đèn lồng | {loại vật dụng}，vật dụng cổ phong |
 | Chất liệu | Sứ/đồng/tre/gỗ/giấy | thanh sứ ôn nhuận、đồng tía mộc mạc |
 | Chất cảm | Mặt men/vân gỗ/đốt tre rõ nét | men bóng、vân gỗ rõ nét |
 | Phong cách | Mộc nhã/hoa quý chuyển đổi theo bối cảnh | mộc nhã cổ phác / hoa quý tinh xảo |
-| Prompt | {vật dụng} cổ trang，chất liệu {chất liệu}，vân rõ nét | — |
+| Prompt | {vật dụng} cổ phong，chất liệu {chất liệu}，vân rõ nét | — |
 
 ### 2.4 Nhóm tín vật/đạo cụ then chốt
 
 | Hạng mục | Ràng buộc | Prompt |
 |---|---|---|
-| Loại | Tín vật/lệnh bài/cuộn thư/lọ thuốc/ấn ngọc | {loại đạo cụ}，đạo cụ cổ trang |
+| Loại | Tín vật/lệnh bài/cuộn thư/lọ thuốc/ấn ngọc | {loại đạo cụ}，đạo cụ cổ phong |
 | Tính đặc thù | Phải có độ nhận diện, mang ý nghĩa biểu tượng cho câu chuyện | tạo hình độc đáo、hàm ý sâu xa |
 | Cảm giác cũ kỹ | Có thể thêm cảm giác niên đại theo nhu cầu tình tiết | cũ kỹ loang lổ / mới tinh tinh xảo |
-| Prompt | {đạo cụ} cổ trang，{chất liệu}，{trạng thái}，tạo hình độc đáo | — |
+| Prompt | {đạo cụ} cổ phong，{chất liệu}，{trạng thái}，tạo hình độc đáo | — |
 
 ---
 
@@ -95,7 +95,7 @@
 ## 5. Khuôn mẫu prompt
 
 ```
-Bản vẽ thiết định đạo cụ cổ trang，phong cách nhiếp ảnh người thật tả thực，ghi chép hiện thực cổ trang，tương phản mạnh，chi tiết tối đa，
+Bản vẽ thiết định đạo cụ cổ phong，phong cách nhiếp ảnh người thật tả thực，ghi chép hiện thực cổ phong，tương phản mạnh，chi tiết tối đa，
 {loại đạo cụ}，{mô tả chất liệu}，{mô tả kỹ nghệ/trang trí}，{mô tả trạng thái}，
 trưng bày tĩnh vật chỉ có đạo cụ，đạo cụ bày độc lập，không ai cầm，không ai đeo，
 lưới bốn ô (2×2) trong cùng khung hình: trên trái hình chiếu trước+trên phải hình chiếu bên+dưới trái hình chiếu sau+dưới phải đặc tả chi tiết，
@@ -115,7 +115,7 @@ trong khung hình không được xuất hiện bất kỳ nhân vật, bàn tay
 |---|---|
 | R1 | Bắt buộc chỉ định "nền xám trung tính thuần" |
 | R2 | Bắt buộc nêu rõ chất liệu và kỹ nghệ của đạo cụ |
-| R3 | Tạo hình đạo cụ bắt buộc hợp với thế giới quan cổ trang |
+| R3 | Tạo hình đạo cụ bắt buộc hợp với thế giới quan cổ phong |
 
 ### Nghiêm cấm
 

@@ -48,22 +48,22 @@ metaData: director_skills
 
 ---
 
-## 4. Yếu tố không gian bối cảnh cổ trang
+## 4. Yếu tố không gian bối cảnh cổ phong
 
-Các yếu tố bối cảnh đặc thù của thế giới quan cổ trang và chức năng kể chuyện bằng hình của chúng:
+Các yếu tố bối cảnh đặc thù của thế giới quan cổ phong và chức năng kể chuyện bằng hình của chúng:
 
 - **Rèm the/bình phong/khung cửa** — đạo cụ tạo bố cục khung hình lồng khung một cách tự nhiên, tạo lớp lang "nhìn không thấu" và chiều sâu không gian. Trong render 3D, chất liệu bán trong suốt của rèm the và hiệu ứng ánh sáng xuyên qua là điểm sáng của khung hình
 - **Sân vườn/cây hoa/màn mưa** — vật mang tự nhiên cho bố cục để khoảng trống, cảnh chính là tình: đầy sân hoa nở = nhẹ lòng, ngồi một mình trong mưa = cô quạnh, lá rụng bay bay = nỗi biệt ly. Trong bối cảnh 3D, độ khối của cây cỏ và tương tác của nó với ánh sáng đặc biệt quan trọng
-- **Ánh nến/ánh trăng/ánh cửa sổ** — vật mang nguồn sáng của thế giới cổ trang, ánh nến = ấm/riêng tư (phương án C), ánh trăng = lạnh/thanh vắng (phương án F), ánh cửa sổ = thường ngày/tĩnh mịch (phương án E). Trong render 3D, hiệu ứng ánh sáng thể tích của nguồn sáng và phản xạ của chất liệu PBR là mấu chốt
-- **Mái cong/đấu củng/ngói xanh** — yếu tố mang tính biểu tượng của kiến trúc cổ trang, tạo mô hình 3D phải thể hiện được chi tiết tinh xảo của rường chạm cột vẽ, chất liệu phải có dấu ấn năm tháng
+- **Ánh nến/ánh trăng/ánh cửa sổ** — vật mang nguồn sáng của thế giới cổ phong, ánh nến = ấm/riêng tư (phương án C), ánh trăng = lạnh/thanh vắng (phương án F), ánh cửa sổ = thường ngày/tĩnh mịch (phương án E). Trong render 3D, hiệu ứng ánh sáng thể tích của nguồn sáng và phản xạ của chất liệu PBR là mấu chốt
+- **Mái cong/đấu củng/ngói xanh** — yếu tố mang tính biểu tượng của kiến trúc cổ phong, tạo mô hình 3D phải thể hiện được chi tiết tinh xảo của rường chạm cột vẽ, chất liệu phải có dấu ấn năm tháng
 - **Chuyển đoạn bằng cú máy bối cảnh không người** — phong cách này có kho tài nguyên bối cảnh phong phú (biến thể theo thời điểm/thời tiết/mùa), nên nối đoạn bằng cú máy bối cảnh không người làm đệm cảm xúc, đừng cắt cứng
 - **Điểm ngoặt dùng hình chứ không dùng thoại** — ưu tiên phương tiện hình ảnh (ánh sáng đổi đột ngột, cắt nhảy cỡ cảnh, ẩn dụ bằng cú máy không người) thay vì dựa vào đối thoại để giải thích
 
 ---
 
-## 5. Nhạc cụ cổ trang và âm thanh môi trường
+## 5. Nhạc cụ cổ phong và âm thanh môi trường
 
-Ràng buộc về yếu tố âm thanh trong thế giới quan cổ trang:
+Ràng buộc về yếu tố âm thanh trong thế giới quan cổ phong:
 
 ### Lựa chọn nhạc cụ
 
@@ -87,7 +87,7 @@ Ràng buộc về yếu tố âm thanh trong thế giới quan cổ trang:
 | Võ hiệp sát khí/căng thẳng | Tì bà điểm xuyết + dàn dây lót nền |
 | Dịu dàng thường ngày | Cổ cầm + sáo ngang + dàn dây nhẹ |
 
-### Âm thanh môi trường cổ trang
+### Âm thanh môi trường cổ phong
 
 - **Các lớp âm thanh môi trường điển hình** — ve sầu côn trùng kêu / suối chảy róc rách / gió qua rừng trúc / tiếng rao ngoài chợ / mưa đêm nhỏ giọt trên mái / tiếng vải cọ nhau / chuông gió khẽ ngân / chim hót ríu rít / hoa rơi lả tả
-- **Mỗi cảnh ghi chú 1-2 âm thanh môi trường cốt lõi**, để hỗ trợ thiết kế hiệu ứng âm thanh về sau. Các lớp âm thanh môi trường càng phong phú thì bối cảnh cổ trang càng có sức cuốn
+- **Mỗi cảnh ghi chú 1-2 âm thanh môi trường cốt lõi**, để hỗ trợ thiết kế hiệu ứng âm thanh về sau. Các lớp âm thanh môi trường càng phong phú thì bối cảnh cổ phong càng có sức cuốn

@@ -76,7 +76,7 @@ Phong cách render 3D, tạo mô hình độ chính xác cao, chất liệu PBR,
 
 **Chất liệu nhân vật (bắt buộc khi cú máy có nhân vật):**
 
-Mô hình 3D cổ trang, texture độ chính xác cao, vân trang phục rõ ràng, sợi tóc render tinh tế, lớp lang ánh sáng phong phú
+Mô hình 3D cổ phong, texture độ chính xác cao, vân trang phục rõ ràng, sợi tóc render tinh tế, lớp lang ánh sáng phong phú
 
 **Chất liệu bối cảnh (bắt buộc khi cú máy có bối cảnh):**
 
@@ -143,7 +143,7 @@ Các từ ngữ/phong cách sau không được xuất hiện trong prompt đầ
 ### Ví dụ đầu ra A (chế độ A · Seedream)
 
 [Prompt]
-Phong cách render 3D, tạo mô hình độ chính xác cao, chất liệu PBR, 3D Quốc phong, ánh sáng đẳng cấp điện ảnh, mô hình 3D cổ trang, texture độ chính xác cao, vân trang phục rõ ràng, sợi tóc render tinh tế, lớp lang ánh sáng phong phú, bố cục trung cảnh (中景), người phụ nữ khoác hoa phục đứng trước cung điện, tay cầm đèn lồng cung đình đứng nghiêng người, thần sắc dịu dàng, ánh mắt dịu dàng, phông tường cung chu sa, điểm xuyết cao sáng vàng kim, không khí ánh sáng thể tích, xóa phông theo chiều sâu, render 3D Quốc phong, thẩm mỹ phương Đông, chất liệu PBR, render 3D độ nét cao, chi tiết cao, tạo mô hình độ chính xác cao, chất liệu PBR, khung hình không phụ đề, không watermark, không chữ tiêu đề chồng lên.
+Phong cách render 3D, tạo mô hình độ chính xác cao, chất liệu PBR, 3D Quốc phong, ánh sáng đẳng cấp điện ảnh, mô hình 3D cổ phong, texture độ chính xác cao, vân trang phục rõ ràng, sợi tóc render tinh tế, lớp lang ánh sáng phong phú, bố cục trung cảnh (中景), người phụ nữ khoác hoa phục đứng trước cung điện, tay cầm đèn lồng cung đình đứng nghiêng người, thần sắc dịu dàng, ánh mắt dịu dàng, phông tường cung chu sa, điểm xuyết cao sáng vàng kim, không khí ánh sáng thể tích, xóa phông theo chiều sâu, render 3D Quốc phong, thẩm mỹ phương Đông, chất liệu PBR, render 3D độ nét cao, chi tiết cao, tạo mô hình độ chính xác cao, chất liệu PBR, khung hình không phụ đề, không watermark, không chữ tiêu đề chồng lên.
 Dựa trên ảnh tham chiếu của 女子, giữ nhất quán: đặc điểm khuôn mặt, kiểu tóc, chi tiết trang phục. Sinh một cảnh mới: đứng trước cung điện lúc hoàng hôn, tay cầm đèn lồng. Giữ phong cách hình ảnh giống hệt ảnh tham chiếu.
 
 ### Ví dụ đầu ra B (chế độ B · Nanobanana)

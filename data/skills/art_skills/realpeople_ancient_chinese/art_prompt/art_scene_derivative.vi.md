@@ -93,7 +93,7 @@
 | Mặt sau/nhìn sau | 180° về phía sau của bối cảnh | back view |
 | Nhìn chúc xuống | Nhìn từ trên cao xuống, trưng ra bố cục tổng thể | high angle、bird's eye view |
 | Nhìn hất lên | Nhìn từ thấp hất lên, nhấn mạnh chủ thể cao lớn | low angle、worm's eye view |
-| Đẩy vào gần hơn (近景推进) | Cùng hướng nhưng máy đẩy vào (镜头推进), tập trung vào phần cục bộ | push-in、closer angle |
+| Đẩy máy vào cận cảnh (近景推进) | Cùng hướng nhưng máy đẩy vào (镜头推进), tập trung vào phần cục bộ | push-in、closer angle |
 | Góc tự do | Mô tả góc bất kỳ do bên gọi tự định nghĩa | tiêm vào theo `{góc mục tiêu}` |
 
 ### Quy phạm phái sinh theo góc
@@ -112,7 +112,7 @@
 ## 6. Khuôn mẫu prompt
 
 ```
-Ảnh bối cảnh phái sinh cổ trang, dựa trên ảnh tham chiếu，
+Ảnh bối cảnh phái sinh cổ phong, dựa trên ảnh tham chiếu，
 real photography，photorealistic，shot on ARRI Alexa，35mm film grain，
 RAW photo，ultra realistic，hyper detailed，
 shallow depth of field，natural lens vignette，subtle chromatic aberration，bokeh，

@@ -212,7 +212,7 @@
 >
 > Khi bối cảnh/tình huống người dùng mô tả không có trong bảng trên, tự suy luận theo gen cốt lõi của phong cách này:
 >
-> | Chiều suy luận | Gen cổ trang người thật tả thực |
+> | Chiều suy luận | Gen cổ phong người thật tả thực |
 > |---|---|
 > | Cường độ trang điểm | Mặc định trang điểm mộc thanh nhã (da căng bóng + sợi tóc tả thực); quyền lực/đối đầu → trang điểm lạnh diễm sương; rung động/mập mờ → trang điểm đào hoa dịu dàng; bị thương/suy nhược → trang điểm lê hoa yếu bệnh; đại hôn/điển lễ → trang điểm phượng hoa quý |
 > | Kiểu tóc | Thường ngày/khuê phòng → búi vân nửa vấn; tiên cảnh/ra mắt → búi phi tiên; riêng tư/mập mờ → búi đọa mã; bị thương sa sút → xõa hoàn toàn; hành động → đuôi ngựa buộc cao; sợi tóc bắt buộc từng sợi rõ ràng |
@@ -264,7 +264,7 @@
 
 ```
 Lấy ảnh tạo hình cơ bản của nhân vật làm ảnh nền, img2img chồng lớp phục trang hóa trang tạo kiểu，
-bản vẽ thiết định bốn hướng nhìn nhân vật {giới tính} cổ trang，nhiếp ảnh người thật tả thực，ghi chép hiện thực cổ trang，tương phản mạnh，chi tiết tối đa，8K，siêu trung thực
+bản vẽ thiết định bốn hướng nhìn nhân vật {giới tính} cổ phong，nhiếp ảnh người thật tả thực，ghi chép hiện thực cổ phong，tương phản mạnh，chi tiết tối đa，8K，siêu trung thực
 character design sheet，character turnaround，
 giữ nguyên gương mặt của tạo hình cơ bản，{khí chất tổng thể}，
 【L1·Trang điểm】quyết định theo manh mối của người dùng: {trang điểm cơ bản/trang điểm nhẹ/trang điểm trang trọng}; dùng {phong cách trang điểm}，da sứ kem căng bóng，{trang điểm mày}，{trang điểm mắt}，{trang điểm môi}，

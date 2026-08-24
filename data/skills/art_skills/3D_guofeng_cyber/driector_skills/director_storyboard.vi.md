@@ -8,13 +8,13 @@ metaData: director_skills
 
 ## Phạm vi áp dụng
 Skill này chỉ dùng để sinh prompt phân cảnh cho phong cách **3D Quốc phong Cyber (cyberpunk tân Trung Hoa)**, cốt lõi là sự dung hợp hữu cơ theo tinh thần "thẩm mỹ Trung Hoa làm hồn, cyber viễn tưởng làm hình", **đồng thời thích ứng hoàn hảo với hai hướng sáng tác**:
-1.  Cyber hóa bối cảnh cổ trang truyền thống (cung đình, viên lâm, võ hiệp, tông môn và các bối cảnh cổ trang nguyên bản khác)
+1.  Cyber hóa bối cảnh cổ phong truyền thống (cung đình, viên lâm, võ hiệp, tông môn và các bối cảnh cổ phong nguyên bản khác)
 2.  Quốc phong cyber hóa bối cảnh đô thị hiện đại (khu thương mại, cao ốc văn phòng, chung cư, chợ đêm và các bối cảnh đô thị hiện đại khác)
 Từ chối kiểu ghép nối yếu tố sống sượng, giữ vững cốt lõi thẩm mỹ Trung Hoa.
 
 ---
 
-## Ánh xạ cảm xúc → từ về gương mặt/ánh mắt (thích ứng cả cổ trang lẫn đô thị)
+## Ánh xạ cảm xúc → từ về gương mặt/ánh mắt (thích ứng cả cổ phong lẫn đô thị)
 
 | Cảm xúc đầu vào | Từ về gương mặt | Từ về ánh mắt | Bổ sung vi biểu cảm |
 |----------|--------|--------|-----------|
@@ -39,11 +39,11 @@ Từ chối kiểu ghép nối yếu tố sống sượng, giữ vững cốt l�
 
 ---
 
-## Kho từ ánh sáng và không khí (3D Quốc phong Cyber · thích ứng cả cổ trang lẫn đô thị)
+## Kho từ ánh sáng và không khí (3D Quốc phong Cyber · thích ứng cả cổ phong lẫn đô thị)
 
 ### Ánh sáng theo thời điểm trong ngày (dùng chung cho hai loại bối cảnh)
 
-| Thời điểm | Từ về ánh chính (thích ứng cổ trang) | Từ về ánh chính (thích ứng đô thị) | Từ về tông màu | Từ về không khí (dùng chung cho hai loại bối cảnh) |
+| Thời điểm | Từ về ánh chính (thích ứng cổ phong) | Từ về ánh chính (thích ứng đô thị) | Từ về tông màu | Từ về không khí (dùng chung cho hai loại bối cảnh) |
 |--------|--------|--------|--------|--------|
 | Sáng sớm | Ánh mai dịu + ánh hologram dịu, ánh ấm chiếu xiên + ánh neon lạnh bù sáng | Ánh mai xuyên qua tường kính, ánh dịu tán xạ + dư quang neon giữa các tòa nhà, ánh xiên tạo khối đường viền công trình | Nguyệt bạch + thanh lục + neon xanh băng | Sương mỏng lan tỏa, hơi nước hologram, không khí trong lành, phù văn phát sáng lơ lửng, độ bão hòa thấp trong trẻo |
 | Chính ngọ | Nắng gắt chiếu thẳng + phản quang trên kết cấu kim loại của công trình, ánh dịu tán xạ | Ánh đỉnh đầu chiếu thẳng + phản quang trên kính tòa nhà, ánh gắt tán xạ + bóng đổ công trình phân lớp | Chu sa + cao sáng vàng kim + vân cơ khí vàng sẫm | Ánh sáng rõ nét, màu sắc rực rỡ, phản chiếu chất kim loại, bóng đổ của kết cấu lơ lửng, ranh giới sáng tối gọn gàng |
@@ -53,7 +53,7 @@ Từ chối kiểu ghép nối yếu tố sống sượng, giữ vững cốt l�
 
 ### Ánh sáng theo cảm xúc (chia cột theo hai loại bối cảnh)
 
-| Tông cảm xúc | Loại ánh sáng (thích ứng cổ trang) | Loại ánh sáng (thích ứng đô thị) | Ràng buộc bổ sung (dùng chung cho hai loại bối cảnh) |
+| Tông cảm xúc | Loại ánh sáng (thích ứng cổ phong) | Loại ánh sáng (thích ứng đô thị) | Ràng buộc bổ sung (dùng chung cho hai loại bối cảnh) |
 |----------|----------|----------|----------|
 | Xa hoa đại khí | Ánh chính neon vàng ấm, cao sáng cục bộ, phản quang kết cấu kim loại | Ánh đỉnh vàng ấm + ánh viền, ánh sáng theo chiều sâu đại sảnh, phản quang tường kính | Phản xạ chất liệu PBR, lớp lang chiều sâu, chiếu hoa văn Quốc phong hologram, chất kim loại đẩy lên mức tối đa |
 | Ý cảnh sơn thủy/đô thị trống vắng | Ánh thể tích tán xạ, không khí sương hologram, neon thanh lục bù sáng | Ánh thể tích giữa các tòa nhà, không khí sương trên cao, ánh lạnh tán xạ, tông màu độ bão hòa thấp | Tông thanh lục, xóa phông, chiếu hologram, ánh sáng phân lớp, không khí đẩy lên mức tối đa |
@@ -66,15 +66,15 @@ Từ chối kiểu ghép nối yếu tố sống sượng, giữ vững cốt l�
 
 ---
 
-## Từ ràng buộc chất bối cảnh (phủ đầy đủ hai loại bối cảnh cổ trang + đô thị)
+## Từ ràng buộc chất bối cảnh (phủ đầy đủ hai loại bối cảnh cổ phong + đô thị)
 
-### 1. Bối cảnh cyber cổ trang truyền thống (cyber hóa bối cảnh cổ trang nguyên bản)
+### 1. Bối cảnh cyber cổ phong truyền thống (cyber hóa bối cảnh cổ phong nguyên bản)
 | Loại bối cảnh | Từ ràng buộc bắt buộc thêm |
 |----------|-----------|
 | Kiến trúc cung đình cyber | Mái cong chu sa dung hợp kết cấu thép cơ khí, mái ngói lưu ly vàng hologram, chạm trổ rường cột khảm dải neon, lan can đá cẩm thạch trắng chạm phù văn phát sáng, đèn cung lơ lửng hologram, cấu kiện cơ khí hoa văn rồng, đấu củng kiểu Trung Hoa + kết cấu lơ lửng cyber |
 | Viên lâm sơn thủy cyber | Chiếu hologram tranh sơn thủy thanh lục, đình đài mái cong + kết cấu lơ lửng phản trọng lực, lối nhỏ quanh co + đường dạo neon phát sáng, hòn non bộ ao hồ + neon in bóng mặt nước, ảo cảnh hologram sương mù, cầu vòm kiểu Trung Hoa + lan can cơ khí, khóm trúc phát sáng |
 | Nội thất khuê phòng cyber | Bình phong hologram và cửa lá dở, song cửa chạm hoa + vân neon xuyên sáng, rèm the màn trướng + sợi quang phát sáng, đồ gỗ cổ điển Trung Hoa + cấu kiện cyber kim loại, bàn trang điểm hologram, đồ ngọc trang trí phát sáng, đèn cung kiểu Trung Hoa ánh ấm |
-| Bối cảnh võ hiệp cyber | Rừng trúc neon/tuyết địa cơ khí/vách núi lơ lửng, tông lạnh + điểm xuyết neon đỏ rực, không khí ngột ngạt, đường nét sắc lẻm, chi tiết chi giả cơ khí kim loại, binh khí cổ trang + cấu kiện phát sáng cyber, hiệu ứng sáng màn mưa, ambient occlusion |
+| Bối cảnh võ hiệp cyber | Rừng trúc neon/tuyết địa cơ khí/vách núi lơ lửng, tông lạnh + điểm xuyết neon đỏ rực, không khí ngột ngạt, đường nét sắc lẻm, chi tiết chi giả cơ khí kim loại, binh khí cổ phong + cấu kiện phát sáng cyber, hiệu ứng sáng màn mưa, ambient occlusion |
 | Lễ hội khánh điển cyber | Đèn lồng lơ lửng/dải lụa neon/pháo hoa hologram, chu sa bão hòa cao + tông ấm vàng dát, không khí náo nhiệt, người đông đúc, chiếu múa rồng hologram, cổng lầu kiểu Trung Hoa + dải neon, câu đối và chữ phúc phát sáng |
 | Cảnh đêm phố cổ cyber | Đèn lồng kiểu Trung Hoa + đèn đường neon/biển hiệu cửa hiệu hologram, điểm xuyết neon ánh ấm, nền lạnh màu chàm, phản quang màn mưa trên mặt đường, mái cong đấu củng viền neon, chiều sâu công trình nhiều tầng, chiếu quảng cáo hologram |
 | Xưởng chi giả cơ khí Quốc phong cyber | Kết cấu mộng-chốt kiểu Trung Hoa + bàn thao tác cơ khí, kệ bày đồ cổ bằng gỗ + tủ trưng bày chi giả, thiết bị y tế phù văn phát sáng, bình phong kiểu Trung Hoa + cửa trượt cơ khí, bàn dụng cụ kim loại, ánh đỉnh tông lạnh, chất của linh kiện vương vãi |
@@ -98,22 +98,22 @@ Từ chối kiểu ghép nối yếu tố sống sượng, giữ vững cốt l�
 
 ---
 
-## Từ neo phong cách cố định (thích ứng cả cổ trang lẫn đô thị · mọi đầu ra bắt buộc phải chứa)
+## Từ neo phong cách cố định (thích ứng cả cổ phong lẫn đô thị · mọi đầu ra bắt buộc phải chứa)
 
 **Neo render 3D (bắt buộc, mọi đầu ra phải đặt lên đầu):**
 phong cách render 3D, tạo mô hình high-poly độ chính xác cao, chất liệu vật lý PBR, 3D Quốc phong Cyber, cyberpunk tân Trung Hoa, thẩm mỹ viễn tưởng phương Đông, ánh sáng đẳng cấp điện ảnh, ray tracing, chiếu sáng toàn cục, 8K siêu nét
 
 **Chất nhân vật (bắt buộc khi cú máy có nhân vật, đặt ngay sau phần neo render):**
-tạo mô hình nhân vật 3D Quốc phong Cyber, texture PBR độ chính xác cao, vân trang phục tân Trung Hoa rõ ràng, chi tiết chi giả cơ khí/phù văn phát sáng đẩy lên mức tối đa, render vật lý sợi tóc tinh tế, chất da chân thực, phụ kiện neon/đạo cụ hologram chất trong trẻo, ánh sáng nhiều lớp phong phú, tạo hình cổ trang/đô thị thống nhất phong cách
+tạo mô hình nhân vật 3D Quốc phong Cyber, texture PBR độ chính xác cao, vân trang phục tân Trung Hoa rõ ràng, chi tiết chi giả cơ khí/phù văn phát sáng đẩy lên mức tối đa, render vật lý sợi tóc tinh tế, chất da chân thực, phụ kiện neon/đạo cụ hologram chất trong trẻo, ánh sáng nhiều lớp phong phú, tạo hình cổ phong/đô thị thống nhất phong cách
 
 **Chất bối cảnh (bắt buộc khi cú máy có bối cảnh, đặt ngay sau phần neo render):**
-render bối cảnh 3D Quốc phong Cyber, cốt lõi thẩm mỹ Trung Hoa dung hợp hữu cơ với vật mang bối cảnh, chi tiết kiến trúc/không gian phong phú, chiếu hologram/hiệu ứng neon chất chân thực, chất vật lý của chất liệu kim loại/gỗ/đá/kính chính xác, xóa phông, ánh sáng thể tích, ambient occlusion, hiệu ứng sáng vật lý của màn mưa/sương mù, bối cảnh cổ trang/đô thị thống nhất phong cách
+render bối cảnh 3D Quốc phong Cyber, cốt lõi thẩm mỹ Trung Hoa dung hợp hữu cơ với vật mang bối cảnh, chi tiết kiến trúc/không gian phong phú, chiếu hologram/hiệu ứng neon chất chân thực, chất vật lý của chất liệu kim loại/gỗ/đá/kính chính xác, xóa phông, ánh sáng thể tích, ambient occlusion, hiệu ứng sáng vật lý của màn mưa/sương mù, bối cảnh cổ phong/đô thị thống nhất phong cách
 
 **Neo nhất quán (bắt buộc ở chế độ ảnh tham chiếu, đặt trước phần logic cốt lõi ở cuối prompt):**
 giữ tạo hình nhân vật, đặc điểm gương mặt, chi tiết trang phục và chi giả cơ khí hoàn toàn nhất quán với ảnh tham chiếu, giữ phong cách dung hợp Quốc phong cyber của bối cảnh nhất quán với ảnh tham chiếu, giữ tông ánh sáng màu sắc thống nhất với ảnh tham chiếu, không tự ý sửa các thiết định cốt lõi
 
 **Phần kết phong cách (cố định, mọi đầu ra bắt buộc phải chứa, đặt trước các từ chốt chất lượng hình):**
-render 3D Quốc phong Cyber, thẩm mỹ viễn tưởng phương Đông, cốt lõi cyberpunk tân Trung Hoa, thẩm mỹ Trung Hoa dung hợp hữu cơ với yếu tố cyber, bối cảnh cổ trang/đô thị thống nhất phong cách, chất liệu vật lý PBR, render đẳng cấp chiếu rạp
+render 3D Quốc phong Cyber, thẩm mỹ viễn tưởng phương Đông, cốt lõi cyberpunk tân Trung Hoa, thẩm mỹ Trung Hoa dung hợp hữu cơ với yếu tố cyber, bối cảnh cổ phong/đô thị thống nhất phong cách, chất liệu vật lý PBR, render đẳng cấp chiếu rạp
 
 **Từ chốt chất lượng hình (mọi đầu ra bắt buộc phải chứa, đặt sau phần kết phong cách):**
 
@@ -157,22 +157,22 @@ Các từ ngữ/phong cách sau không được xuất hiện trong prompt đầ
 
 ---
 
-## Ví dụ sinh prompt đầy đủ (hai ví dụ cổ trang + đô thị)
+## Ví dụ sinh prompt đầy đủ (hai ví dụ cổ phong + đô thị)
 
-> Dưới đây là phần trình bày đối chiếu chế độ A và chế độ B cho bối cảnh cổ trang/đô thị, khi dùng thực tế **chỉ xuất một trong hai chế độ tương ứng với bối cảnh**.
+> Dưới đây là phần trình bày đối chiếu chế độ A và chế độ B cho bối cảnh cổ phong/đô thị, khi dùng thực tế **chỉ xuất một trong hai chế độ tương ứng với bối cảnh**.
 
 ### Khuôn mẫu đầu vào (dữ liệu dòng bảng phân cảnh · dùng chung cho hai loại bối cảnh)
 
 | 序号 | Mô tả hình ảnh | Bối cảnh | Tên tài nguyên liên quan | Thời lượng | Cỡ cảnh | Chuyển động máy quay | Hành động nhân vật | Cảm xúc | Ánh sáng và không khí |
 |------|---------|------|-------------|------|------|------|---------|------|----------|
-| 1 | Người phụ nữ mặc hoa phục Quốc phong cyber, đứng dưới mái cong của cung điện cyber, tay cầm đèn cung hologram lơ lửng | Cung đình cyber (bối cảnh cổ trang) | 国风赛博女子 | 6s | 中景 | 缓推 | Nghiêng người cầm đèn, mắt nhìn về phía xa, dáng người thẳng tắp | Ôn nhu / điển nhã | Ánh ấm neon + nền tối tông lạnh, ngược sáng hoàng hôn |
+| 1 | Người phụ nữ mặc hoa phục Quốc phong cyber, đứng dưới mái cong của cung điện cyber, tay cầm đèn cung hologram lơ lửng | Cung đình cyber (bối cảnh cổ phong) | 国风赛博女子 | 6s | 中景 | 缓推 | Nghiêng người cầm đèn, mắt nhìn về phía xa, dáng người thẳng tắp | Ôn nhu / điển nhã | Ánh ấm neon + nền tối tông lạnh, ngược sáng hoàng hôn |
 | 2 | Người đàn ông mặc vest Quốc phong cyber tân Trung Hoa, đứng trước cửa kính sát sàn của cao ốc văn phòng, tay cầm máy tính bảng hologram, nhìn xuống cảnh đêm thành phố | Cao ốc văn phòng Quốc phong cyber (bối cảnh đô thị) | 国风赛博男子 | 5s | 近景 | 缓拉 | Đứng nghiêng người, đầu ngón tay lướt trên máy tính bảng, mắt nhìn ra ngoài cửa sổ | Sắc sảo / quyết đoán | Ánh ấm trong nhà + neon lạnh của thành phố ngoài cửa sổ, tương phản nóng lạnh |
 
 ---
 
-### Ví dụ 1: bối cảnh cổ trang · chế độ A (Seedream)
+### Ví dụ 1: bối cảnh cổ phong · chế độ A (Seedream)
 [Prompt]
-phong cách render 3D, tạo mô hình high-poly độ chính xác cao, chất liệu vật lý PBR, 3D Quốc phong Cyber, cyberpunk tân Trung Hoa, thẩm mỹ viễn tưởng phương Đông, ánh sáng đẳng cấp điện ảnh, ray tracing, chiếu sáng toàn cục, tạo mô hình nhân vật 3D Quốc phong Cyber, texture PBR độ chính xác cao, vân trang phục cyber kiểu Trung Hoa rõ ràng, render vật lý sợi tóc tinh tế, chất da chân thực, ánh sáng nhiều lớp phong phú, bố cục trung cảnh (中景), người phụ nữ mặc hoa phục Quốc phong cyber đứng dưới mái cong của cung điện cyber, tay cầm đèn cung hologram lơ lửng và nghiêng người đứng, thần sắc ôn nhu điển nhã, ánh mắt trong sáng trầm ổn, phông nền mái cong chu sa + viền neon, điểm xuyết cao sáng vàng kim, bóng đổ ngược sáng hoàng hôn, không khí ánh sáng thể tích, xóa phông, render bối cảnh 3D Quốc phong Cyber, kiến trúc cổ Trung Hoa dung hợp hữu cơ với kết cấu cyber cơ khí, chi tiết kiến trúc phong phú, chiếu hologram chất chân thực, render 3D Quốc phong Cyber, thẩm mỹ viễn tưởng phương Đông, cốt lõi cyberpunk tân Trung Hoa, thẩm mỹ Trung Hoa dung hợp hữu cơ với yếu tố cyber, bối cảnh cổ trang thống nhất phong cách, chất liệu vật lý PBR, render đẳng cấp chiếu rạp, render 3D độ nét cao, 8K siêu nét, chi tiết cao, tạo mô hình high-poly độ chính xác cao, chất liệu vật lý PBR, khung hình không phụ đề, không watermark, không chữ tiêu đề chồng lên, không phần tử UI.
+phong cách render 3D, tạo mô hình high-poly độ chính xác cao, chất liệu vật lý PBR, 3D Quốc phong Cyber, cyberpunk tân Trung Hoa, thẩm mỹ viễn tưởng phương Đông, ánh sáng đẳng cấp điện ảnh, ray tracing, chiếu sáng toàn cục, tạo mô hình nhân vật 3D Quốc phong Cyber, texture PBR độ chính xác cao, vân trang phục cyber kiểu Trung Hoa rõ ràng, render vật lý sợi tóc tinh tế, chất da chân thực, ánh sáng nhiều lớp phong phú, bố cục trung cảnh (中景), người phụ nữ mặc hoa phục Quốc phong cyber đứng dưới mái cong của cung điện cyber, tay cầm đèn cung hologram lơ lửng và nghiêng người đứng, thần sắc ôn nhu điển nhã, ánh mắt trong sáng trầm ổn, phông nền mái cong chu sa + viền neon, điểm xuyết cao sáng vàng kim, bóng đổ ngược sáng hoàng hôn, không khí ánh sáng thể tích, xóa phông, render bối cảnh 3D Quốc phong Cyber, kiến trúc cổ Trung Hoa dung hợp hữu cơ với kết cấu cyber cơ khí, chi tiết kiến trúc phong phú, chiếu hologram chất chân thực, render 3D Quốc phong Cyber, thẩm mỹ viễn tưởng phương Đông, cốt lõi cyberpunk tân Trung Hoa, thẩm mỹ Trung Hoa dung hợp hữu cơ với yếu tố cyber, bối cảnh cổ phong thống nhất phong cách, chất liệu vật lý PBR, render đẳng cấp chiếu rạp, render 3D độ nét cao, 8K siêu nét, chi tiết cao, tạo mô hình high-poly độ chính xác cao, chất liệu vật lý PBR, khung hình không phụ đề, không watermark, không chữ tiêu đề chồng lên, không phần tử UI.
 Based on the reference image of 国风赛博女子，maintain consistent: face features, hairstyle, costume details, cybernetic accessory style. Generate a new scene: standing under the eaves of cyber Chinese palace at dusk, holding a floating holographic palace lantern. Keep 3D Chinese cyberpunk visual style identical to reference.
 
 ### Ví dụ 2: bối cảnh đô thị · chế độ A (Seedream)
@@ -208,10 +208,10 @@ no photorealistic, no realistic photography, no low-poly, no rough modeling, no 
 
 ---
 
-## Thẻ tra cứu nhanh (thích ứng cả cổ trang lẫn đô thị)
+## Thẻ tra cứu nhanh (thích ứng cả cổ phong lẫn đô thị)
 
 ### Tra nhanh cảm xúc → từ về hình ảnh
-| Cảm xúc | Từ khóa gương mặt | Ánh sáng khớp (cổ trang) | Ánh sáng khớp (đô thị) |
+| Cảm xúc | Từ khóa gương mặt | Ánh sáng khớp (cổ phong) | Ánh sáng khớp (đô thị) |
 |------|-----------|---------|---------|
 | Đoan trang điển nhã | Thần sắc đoan trang, ánh nhìn trầm ổn | Ánh chính neon vàng ấm + cao sáng kim loại | Ánh đỉnh vàng ấm + ánh sáng theo chiều sâu |
 | U buồn ai oán | Thần sắc ai oán, ánh mắt u tối | Bóng đổ tông lạnh + tương phản thấp + neon bù sáng yếu | Ánh cảnh cửa sổ yếu + tương phản thấp + ánh môi trường lạnh |

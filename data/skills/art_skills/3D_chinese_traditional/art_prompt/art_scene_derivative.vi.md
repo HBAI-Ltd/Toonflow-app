@@ -24,7 +24,7 @@ metaData: art_skills
 
 | Cỡ cảnh | Phạm vi | Chức năng kể chuyện | Prompt |
 |---|---|---|---|
-| Đại viễn cảnh (大全景) | Toàn cảnh bối cảnh + môi trường xung quanh | Thiết lập không gian, định vị | extreme wide shot、大全景 |
+| Đại toàn cảnh (大全景) | Toàn cảnh bối cảnh + môi trường xung quanh | Thiết lập không gian, định vị | extreme wide shot、大全景 |
 | Toàn cảnh (全景) | Bối cảnh hiện ra đầy đủ | Cho thấy kết cấu không gian | wide shot、全景 |
 | Trung cảnh (中景) | Một khu vực cục bộ của bối cảnh | Tập trung vào khu chức năng | medium shot、中景 |
 | Cận cảnh (近景) | Chi tiết của bối cảnh | Đặc tả (特写) chất liệu/đạo cụ tạo không khí | close shot、近景 |
@@ -117,7 +117,7 @@ metaData: art_skills
 
 ## 6. Khuôn mẫu prompt
 
-ảnh bối cảnh phái sinh cổ trang，dựa trên ảnh tham chiếu，
+ảnh bối cảnh phái sinh cổ phong，dựa trên ảnh tham chiếu，
 phong cách render 3D，tạo mô hình độ chính xác cao，chất liệu PBR，3D Quốc phong，ánh sáng đẳng cấp điện ảnh，
 3D rendered, volumetric lighting,
 depth of field, natural lens vignette, subtle chromatic aberration, bokeh,

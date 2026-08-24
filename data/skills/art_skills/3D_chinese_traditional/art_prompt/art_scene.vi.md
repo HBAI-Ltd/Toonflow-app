@@ -110,7 +110,7 @@ metaData: art_skills
 
 ## 6. Khuôn mẫu prompt
 
-concept art hình chủ bối cảnh cổ trang，
+concept art hình chủ bối cảnh cổ phong，
 phong cách render 3D，tạo mô hình độ chính xác cao，chất liệu PBR，3D Quốc phong，ánh sáng đẳng cấp điện ảnh，
 3D rendered, volumetric lighting,
 depth of field, natural lens vignette, subtle chromatic aberration, bokeh,

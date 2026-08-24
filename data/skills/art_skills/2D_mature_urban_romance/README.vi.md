@@ -3,7 +3,7 @@
 Phong cách này được xây dựng riêng cho chủ đề **anime ngôn tình đô thị trưởng thành**. Toàn bộ prompt mỹ thuật, quy chuẩn và nội dung tạo ra đều giới hạn nghiêm ngặt trong:
 
 - **Phong cách anime**: Toàn bộ nhân vật, bối cảnh, đạo cụ đều lấy chuẩn anime, nhấn mạnh tô màu kiểu cel, đường nét rõ ràng, ánh sáng kịch tính tông thấp (low-key).
-- **Bối cảnh ngôn tình đô thị hiện đại**: Bối cảnh đời sống đô thị hiện đại, bao gồm căn hộ, văn phòng, quán cà phê, đường phố thành thị..., tuyệt đối không có yếu tố cổ trang Quốc phong hay fantasy.
+- **Bối cảnh ngôn tình đô thị hiện đại**: Bối cảnh đời sống đô thị hiện đại, bao gồm căn hộ, văn phòng, quán cà phê, đường phố thành thị..., tuyệt đối không có yếu tố cổ phong Quốc phong hay fantasy.
 - **Bố cục đẳng cấp điện ảnh**: Bố cục hình ảnh nhấn mạnh chất điện ảnh — hiệu ứng xóa phông theo chiều sâu, đặc tính quang học của ống kính, phối cảnh không khí (aerial perspective).
 - **Tông màu lạnh độ bão hòa thấp**: Tổng thể tông màu nghiêng lạnh, màu ấm chỉ dùng điểm nhấn, làm nổi bật không khí ngọt ngào vừa lạnh lùng vừa dịu dàng.
 
@@ -17,7 +17,7 @@ Phong cách này được xây dựng riêng cho chủ đề **anime ngôn tình
 
 - Phong cách người thật tả thực / nhiếp ảnh / render 3D
 - Màu huỳnh quang, màu neon độ bão hòa cao
-- Các phong cách ngoài yếu tố hiện đại như cổ trang Quốc phong / fantasy / khoa học viễn tưởng
+- Các phong cách ngoài yếu tố hiện đại như cổ phong Quốc phong / fantasy / khoa học viễn tưởng
 - Nội dung gợi dục, hở hang, xuyên thấu hoặc các nội dung không phù hợp khác
 
 ## Trải nghiệm phong cách
@@ -31,4 +31,4 @@ Với phong cách này, bạn sẽ trải nghiệm:
 
 ---
 
-Phong cách này chỉ áp dụng cho các dự án liên quan đến "anime ngôn tình đô thị trưởng thành". Nếu cần phong cách khác (như người thật tả thực, cổ trang Quốc phong, fantasy...), vui lòng không sử dụng bộ prompt này.
+Phong cách này chỉ áp dụng cho các dự án liên quan đến "anime ngôn tình đô thị trưởng thành". Nếu cần phong cách khác (như người thật tả thực, cổ phong Quốc phong, fantasy...), vui lòng không sử dụng bộ prompt này.

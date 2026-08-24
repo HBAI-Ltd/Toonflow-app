@@ -27,7 +27,7 @@ Bảng phân cảnh là công cụ cốt lõi để đạo diễn chuyển kịc
 ## 3. Chuyển động môi trường
 
 - **Chuyển động môi trường cho khung hình chỗ thở** — rèm khẽ lay, hơi nóng bốc lên từ cốc cà phê, giọt mưa trượt trên kính cửa sổ, đèn thành phố chớp tắt, lá cây rơi. Cứ 3-4 cú máy hãy bố trí ít nhất một cú máy có chuyển động môi trường, tránh để khung hình "chết"
-- **Ưu tiên yếu tố môi trường đô thị hiện đại** — chuyển động môi trường nên lấy yếu tố trong thế giới quan đô thị hiện đại: rèm khẽ lay, ánh sáng xe cộ lướt qua, sợi mưa vạch trên kính, lá rụng bay qua đường phố, hơi cà phê bốc lên, quầng đèn đường chớp nhòe; cấm xuất hiện yếu tố cổ trang Quốc phong/fantasy
+- **Ưu tiên yếu tố môi trường đô thị hiện đại** — chuyển động môi trường nên lấy yếu tố trong thế giới quan đô thị hiện đại: rèm khẽ lay, ánh sáng xe cộ lướt qua, sợi mưa vạch trên kính, lá rụng bay qua đường phố, hơi cà phê bốc lên, quầng đèn đường chớp nhòe; cấm xuất hiện yếu tố cổ phong Quốc phong/fantasy
 - **Thể hiện chuyển động theo kiểu cel** — chuyển động môi trường phải hợp cách thể hiện của anime: chất vẽ tay của ánh sáng loang lổ, vẻ đẹp đường nét của vải bay, hiệu ứng render kiểu cel của sợi mưa và ánh đèn
 
 ---

@@ -80,7 +80,7 @@
 ### Biến thể một trạng thái
 
 ```
-Dựa trên bản vẽ thiết định của {tên đạo cụ}，phong cách nhiếp ảnh người thật tả thực，ghi chép hiện thực cổ trang，tương phản mạnh，chi tiết tối đa，
+Dựa trên bản vẽ thiết định của {tên đạo cụ}，phong cách nhiếp ảnh người thật tả thực，ghi chép hiện thực cổ phong，tương phản mạnh，chi tiết tối đa，
 {loại đạo cụ}，{mô tả chất liệu}，
 trạng thái hiện tại: {tên trạng thái}，{mô tả thị giác của trạng thái}，
 {mô tả biến đổi bề mặt chất liệu}，

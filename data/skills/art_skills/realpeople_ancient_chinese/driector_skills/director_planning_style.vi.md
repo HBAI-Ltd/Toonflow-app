@@ -1,10 +1,10 @@
 ---
 name: director_planning_style
-description: Ràng buộc cổ trang — định nghĩa các ràng buộc toàn cục của người thật cổ trang tả thực về hệ tông màu, phương án ánh sáng, hướng chất liệu, yếu tố không gian bối cảnh, lựa chọn nhạc cụ và tiếng động môi trường. Áp dụng cho mọi thể loại tự sự.
+description: Ràng buộc cổ phong — định nghĩa các ràng buộc toàn cục của người thật cổ phong tả thực về hệ tông màu, phương án ánh sáng, hướng chất liệu, yếu tố không gian bối cảnh, lựa chọn nhạc cụ và tiếng động môi trường. Áp dụng cho mọi thể loại tự sự.
 metaData: director_skills
 ---
 
-# Ràng buộc cổ trang · Người thật cổ trang tả thực · Tham chiếu kỹ pháp
+# Ràng buộc cổ phong · Người thật cổ phong tả thực · Tham chiếu kỹ pháp
 
 ---
 
@@ -44,25 +44,25 @@ metaData: director_skills
 - **Tương phản mạnh + chi tiết tối đa** — đây là điểm neo cho chất hình ảnh. Không phải hạt phim, không phải thủy mặc tả ý, mà là nhiếp ảnh ghi hình đẳng cấp điện ảnh truyền hình
 - **Chất liệu chân thực** — chất liệu của toàn bộ phục trang, hóa trang, đạo cụ bắt buộc phải đáng tin: độ óng của lụa, vân của vải bông và vải gai, phản quang của kim loại, độ mượt của ngọc thạch. Cấm "cảm giác nhựa" và "cảm giác CG"
 - **Chất da** — lỗ chân lông, khuyết điểm nhỏ, độ óng của làn da thật. Không làm mịn da quá tay cũng không cố ý phóng đại khuyết điểm, hướng tới "thật mà vẫn đẹp"
-- **Tả thực không đồng nghĩa với nhạt nhòa** — người thật cổ trang tả thực nhấn mạnh cách biểu đạt hình ảnh quay được thật (vị trí đèn thật, chất liệu thật, nhịp động tác thật), khuếch đại sức lay động bằng thiết kế cú máy và cảm xúc chứ không dựa vào kỹ xảo kỳ quan
+- **Tả thực không đồng nghĩa với nhạt nhòa** — người thật cổ phong tả thực nhấn mạnh cách biểu đạt hình ảnh quay được thật (vị trí đèn thật, chất liệu thật, nhịp động tác thật), khuếch đại sức lay động bằng thiết kế cú máy và cảm xúc chứ không dựa vào kỹ xảo kỳ quan
 
 ---
 
-## 4. Yếu tố không gian bối cảnh cổ trang
+## 4. Yếu tố không gian bối cảnh cổ phong
 
-Các yếu tố bối cảnh đặc trưng của thế giới quan cổ trang và chức năng tự sự thị giác của chúng:
+Các yếu tố bối cảnh đặc trưng của thế giới quan cổ phong và chức năng tự sự thị giác của chúng:
 
 - **Rèm the/bình phong/khung cửa** — đạo cụ tạo bố cục khung hình tự nhiên, tạo lớp lang "nhìn không thấu" và chiều sâu không gian
 - **Sân vườn/cây hoa/màn mưa** — vật chứa tự nhiên của bố cục chừa trống, cảnh chính là tình: hoa nở đầy sân = thanh thản, ngồi một mình dưới mưa = cô quạnh, lá rụng lả tả = nỗi buồn ly biệt
-- **Lửa nến/ánh trăng/ánh sáng qua cửa sổ** — vật mang nguồn sáng của thế giới cổ trang, ánh nến = ấm/riêng tư (phương án C), ánh trăng = lạnh/cô quạnh (phương án D), ánh sáng qua cửa sổ = thường ngày/tĩnh lặng (phương án E)
+- **Lửa nến/ánh trăng/ánh sáng qua cửa sổ** — vật mang nguồn sáng của thế giới cổ phong, ánh nến = ấm/riêng tư (phương án C), ánh trăng = lạnh/cô quạnh (phương án D), ánh sáng qua cửa sổ = thường ngày/tĩnh lặng (phương án E)
 - **Dùng cảnh không của bối cảnh để chuyển giữa các đoạn** — phong cách này có kho tài nguyên bối cảnh phong phú (biến thể theo khung giờ/thời tiết), khi nối đoạn nên dùng cảnh không của bối cảnh làm khoảng đệm cảm xúc, đừng cắt cứng
 - **Điểm ngoặt dùng hình ảnh chứ không dùng thoại** — ưu tiên thủ pháp hình ảnh (ánh sáng đột biến, cắt nhảy cỡ cảnh, ẩn dụ bằng cảnh không) thay vì dựa vào đối thoại để giải thích
 
 ---
 
-## 5. Nhạc cụ cổ trang và tiếng động môi trường
+## 5. Nhạc cụ cổ phong và tiếng động môi trường
 
-Ràng buộc về yếu tố âm thanh trong thế giới quan cổ trang:
+Ràng buộc về yếu tố âm thanh trong thế giới quan cổ phong:
 
 ### Lựa chọn nhạc cụ
 
@@ -82,7 +82,7 @@ Ràng buộc về yếu tố âm thanh trong thế giới quan cổ trang:
 | Cảm xúc bùng nổ/bước ngoặt số phận | Suona độc tấu hoặc suona + nhị hồ |
 | Căng thẳng/gấp gáp | Tỳ bà điểm xuyết + dàn dây lót nền |
 
-### Tiếng động môi trường cổ trang
+### Tiếng động môi trường cổ phong
 
 - **Các lớp tiếng động môi trường tiêu biểu** — ve kêu côn trùng rỉ rả / suối chảy róc rách / gió qua rừng trúc / tiếng rao chợ búa / mưa đêm nhỏ giọt mái hiên / vải vóc sột soạt / chuông gió khẽ ngân
-- **Mỗi cảnh ghi chú 1-2 tiếng động môi trường cốt lõi**, để hỗ trợ thiết kế hiệu ứng âm thanh về sau. Lớp tiếng động môi trường càng phong phú, bối cảnh cổ trang càng giàu tính nhập vai
+- **Mỗi cảnh ghi chú 1-2 tiếng động môi trường cốt lõi**, để hỗ trợ thiết kế hiệu ứng âm thanh về sau. Lớp tiếng động môi trường càng phong phú, bối cảnh cổ phong càng giàu tính nhập vai

@@ -21,7 +21,7 @@
 | Hạng mục | Ràng buộc |
 |---|---|
 | Ngũ quan | Suy ra tự nhiên từ mô tả nhân vật, không định sẵn dáng mặt/dáng mắt/dáng mày/dáng mũi/dáng môi |
-| Nền phong cách | Nhiếp ảnh người thật cổ trang tả thực, render tinh xảo tới mức lỗ chân lông, chiếu sáng tự nhiên, ánh sáng đúng vật lý |
+| Nền phong cách | Nhiếp ảnh người thật cổ phong tả thực, render tinh xảo tới mức lỗ chân lông, chiếu sáng tự nhiên, ánh sáng đúng vật lý |
 | Khí chất | Bắt buộc chắt ra từ khóa khí chất tổng thể từ mô tả nhân vật (như lạnh trong/ôn nhu/kiều diễm/hào khí hiệp sĩ) và viết vào prompt |
 | Biểu cảm | Vi biểu cảm trung tính, hợp với khí chất nhân vật |
 
@@ -127,7 +127,7 @@
 
 ### Quy tắc thống nhất trang phục
 
-- Phong cách trang phục phải khớp với thẩm mỹ người thật cổ trang tả thực (tông màu truyền thống Trung Hoa, chất liệu tả thực)
+- Phong cách trang phục phải khớp với thẩm mỹ người thật cổ phong tả thực (tông màu truyền thống Trung Hoa, chất liệu tả thực)
 - Màu bão hòa thấp, không hoa văn/trang trí phức tạp, để tiện chồng lớp phái sinh về sau
 - Kiểu dáng trang phục hoàn toàn giống nhau ở bốn hướng nhìn
 - Trang phục cơ bản là "trạng thái mặc định thường ngày", tiêu điểm vẫn nằm ở gương mặt và phong thái
@@ -165,7 +165,7 @@
 ## 8. Khuôn mẫu prompt
 
 ```
-Bản vẽ thiết định bốn hướng nhìn nhân vật {giới tính}，nhiếp ảnh người thật tả thực，ghi chép hiện thực cổ trang，tương phản mạnh，chi tiết tối đa，
+Bản vẽ thiết định bốn hướng nhìn nhân vật {giới tính}，nhiếp ảnh người thật tả thực，ghi chép hiện thực cổ phong，tương phản mạnh，chi tiết tối đa，
 character design sheet，character turnaround，
 {đặc trưng ngũ quan tương ứng với mô tả nhân vật - suy ra tự nhiên từ mô tả nhân vật}，{khí chất tổng thể}，mặt mộc không trang điểm，
 {màu da}，da căng bóng，da trong veo phát sáng，da mịn tinh tế，lỗ chân lông thấy nhẹ，

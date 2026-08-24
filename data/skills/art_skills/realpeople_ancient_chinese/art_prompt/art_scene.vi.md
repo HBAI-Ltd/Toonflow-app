@@ -105,7 +105,7 @@
 ## 6. Khuôn mẫu prompt
 
 ```
-Concept art hướng nhìn chính của bối cảnh cổ trang，
+Concept art hướng nhìn chính của bối cảnh cổ phong，
 real photography，photorealistic，shot on ARRI Alexa，35mm film grain，
 RAW photo，ultra realistic，hyper detailed，
 shallow depth of field，natural lens vignette，subtle chromatic aberration，bokeh，
