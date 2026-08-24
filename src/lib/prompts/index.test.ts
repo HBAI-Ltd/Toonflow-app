@@ -28,8 +28,8 @@ describe("getSeedPrompt — locale resolution", () => {
     }
   });
 
-  it("ba prompt seed nhỏ đã có đủ en/vi và khác hẳn văn bản zh", () => {
-    for (const map of [eventExtraction, scriptAssetExtraction, audioBindPrompt]) {
+  it("cả bốn prompt seed đã có đủ en/vi và khác hẳn văn bản zh", () => {
+    for (const map of [eventExtraction, scriptAssetExtraction, audioBindPrompt, videoPromptGeneration]) {
       for (const locale of ["en", "vi"] as const) {
         expect(map[locale]?.length ?? 0).toBeGreaterThan(0);
         expect(map[locale]).not.toBe(map.zh);

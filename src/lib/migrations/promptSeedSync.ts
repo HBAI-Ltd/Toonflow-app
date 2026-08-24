@@ -36,7 +36,11 @@ const LEGACY_SEED_VARIANTS: Partial<Record<SeedPromptType, string[]>> = {
 const GUARDED_PROMPT_TYPES: SeedPromptType[] = SEED_PROMPT_TYPES;
 
 export interface PromptSeedSyncResult {
+  /** Rows whose `data` was actually rewritten (its current value matched a known seed variant, but not the canonical text for `locale`). */
   updated: number;
+  /** Rows that matched a known seed variant and were already exactly the canonical text for `locale` — recognized, but no write was issued. */
+  unchanged: number;
+  /** Rows whose `data` matched no known seed variant — left untouched (this includes any hand-edited value). */
   skipped: number;
 }
 
@@ -58,7 +62,9 @@ function knownSeedVariants(type: SeedPromptType): string[] {
  * for that type (any locale's variant, or a retained legacy variant, not just the one matching
  * `locale`) — i.e. the value is still provably a seed, so re-syncing it (including to a different
  * locale after a language change) cannot lose anything written to that column by hand. Anything
- * else, including a partial edit, is left completely untouched.
+ * else, including a partial edit, is left completely untouched (counted in `skipped`). A recognized
+ * row that already holds the canonical text for `locale` issues no write (counted in `unchanged`,
+ * not `updated`) — this is what keeps a repeat run idempotent in both effect and reporting.
  *
  * Note: this guard is not what protects a user's edits made in Settings → Prompt Management — those
  * are written to o_prompt.useData (src/routes/setting/promptManage/updatePrompt.ts), a separate
@@ -73,7 +79,7 @@ function knownSeedVariants(type: SeedPromptType): string[] {
  * against a database that hasn't reached the expected shape yet.
  */
 export async function syncGuardedPromptSeeds(knex: Knex, locale: Locale): Promise<PromptSeedSyncResult> {
-  const result: PromptSeedSyncResult = { updated: 0, skipped: 0 };
+  const result: PromptSeedSyncResult = { updated: 0, unchanged: 0, skipped: 0 };
   if (!(await knex.schema.hasTable("o_prompt"))) return result;
   for (const type of GUARDED_PROMPT_TYPES) {
     const row = await knex("o_prompt").where("type", type).first();
@@ -85,8 +91,10 @@ export async function syncGuardedPromptSeeds(knex: Knex, locale: Locale): Promis
     const canonical = getSeedPrompt(type, locale);
     if (row.data !== canonical) {
       await knex("o_prompt").where("id", row.id).update({ data: canonical });
+      result.updated++;
+    } else {
+      result.unchanged++;
     }
-    result.updated++;
   }
   return result;
 }
