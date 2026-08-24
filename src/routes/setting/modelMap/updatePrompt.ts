@@ -6,6 +6,7 @@ import { validateFields } from "@/middleware/middleware";
 import fs from "fs/promises";
 import path from "path";
 import { t, getLocale } from "@/i18n";
+import { isShippedModelPrompt } from "./shippedPrompts";
 
 const router = express.Router();
 
@@ -35,6 +36,12 @@ export default router.post(
       await fs.access(resolvedFile);
     } catch {
       return res.status(404).send(error(t("setting.modelMap.updatePrompt.fileNotFound", {}, locale)));
+    }
+
+    // 内置文件（原始 zh 版本或其 en/vi 翻译 sidecar）不允许覆盖，理由同 deletePrompt.ts
+    const relFromRoot = path.relative(resolvedRoot, resolvedFile).split(path.sep).join("/");
+    if (isShippedModelPrompt(relFromRoot)) {
+      return res.status(400).send(error(t("setting.modelMap.updatePrompt.shipped", {}, locale)));
     }
 
     await fs.writeFile(resolvedFile, data, "utf-8");

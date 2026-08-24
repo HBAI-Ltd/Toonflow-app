@@ -3,9 +3,8 @@ import u from "@/utils";
 import { z } from "zod";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
-import fs from "fs/promises";
 import path from "path";
-import { t, getLocale } from "@/i18n";
+import { t, getLocale, readLocalizedSkill, canonicalSkillPath } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -108,9 +107,12 @@ export default router.post(
     if (modelPromptData) {
       const modelPromptRoot = u.getPath(["modelPrompt"]);
       try {
-        const fullPath = path.join(modelPromptRoot, modelPromptData?.path!);
-        const content = await fs.readFile(fullPath, "utf-8");
-        videoPromptGeneration = content ?? "";
+        // o_modelPrompt.path is stored canonical by bindingPrompt.ts as of this fix, but an
+        // existing row could still hold a locale-suffixed path (e.g. video/foo.vi.md) from before
+        // — canonicalize defensively so such a row can't pin one locale for every request.
+        const fullPath = path.join(modelPromptRoot, canonicalSkillPath(modelPromptData?.path!));
+        const content = readLocalizedSkill(fullPath, locale);
+        videoPromptGeneration = content || undefined;
       } catch {}
     }
 
@@ -138,7 +140,8 @@ export default router.post(
       if (fileName) {
         try {
           const fullPath = path.join(videoPromptDir, fileName);
-          videoPromptGeneration = await fs.readFile(fullPath, "utf-8");
+          const content = readLocalizedSkill(fullPath, locale);
+          if (content) videoPromptGeneration = content;
         } catch {
           // 文件不存在则忽略，继续用备选
         }
