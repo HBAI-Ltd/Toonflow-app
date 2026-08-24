@@ -34,7 +34,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn lập k
 | Thiết kế sức căng theo cảnh | Sáu kiểu đoạn công sở điển hình, ẩn dụ quyền lực không gian, tự sự khoảng cách xã giao |
 | Định hướng âm thanh và âm nhạc | Tạp âm đô thị, đấu trí trong im lặng, nhạc nền tạo nhịp, tự sự bằng âm thanh môi trường |
 | Bố cục và tự sự cỡ cảnh | Bố cục quyền lực / bố cục đối đầu / bố cục cô lập, biểu đạt quyền lực qua cỡ cảnh |
-| Chuyển động máy quay và nhịp điệu | Cầm tay kiểu phóng sự, tĩnh máy điềm tĩnh, đẩy máy đè nén, chuyển động máy quay như nhịp thở |
+| Chuyển động máy quay và nhịp điệu | Cầm tay kiểu phóng sự, máy cố định (固定) điềm tĩnh, đẩy máy đè nén, chuyển động máy quay như nhịp thở |
 
 ### 2. Kỹ thuật tự sự bảng phân cảnh (`director_storyboard_table_narrative.md`)
 
@@ -44,7 +44,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như công cụ cốt lõi cho quan hệ nhân vật và sức căng quyền lực |
 | Lựa chọn cỡ cảnh | Cỡ cảnh quyền lực, cỡ cảnh khoảng cách xã giao, cỡ cảnh cảm giác cô lập |
-| Nhịp độ chuyển động máy quay | Chủ yếu tĩnh máy điềm tĩnh, cầm tay kiểu phóng sự, đẩy chậm đè nén |
+| Nhịp độ chuyển động máy quay | Chủ yếu máy cố định (固定) điềm tĩnh, cầm tay kiểu phóng sự, đẩy máy chậm (缓推) đè nén |
 | Kiểm soát thời lượng | Nhịp điệu hội thoại, thời lượng đấu trí trong im lặng, dựng phim nhịp nhanh |
 | Thiết kế cảnh hội thoại | Cắt chéo theo vị thế quyền lực, bố cục quan hệ tam giác, ngôn ngữ hình ảnh của ẩn ý |
 | Đoạn cô đơn | Sự thật sau giờ làm, sụp đổ một mình, suy ngẫm lúc đêm khuya |

@@ -5,7 +5,7 @@ import isPathInside from "is-path-inside";
 import getPath from "@/utils/getPath";
 import * as fs from "fs";
 import fg from "fast-glob";
-import { t, getLocale, getPromptLanguage, FALLBACK_LOCALE, type Locale } from "@/i18n";
+import { t, getLocale, getPromptLanguage, FALLBACK_LOCALE, readLocalizedSkill, skillPathLocale, type Locale } from "@/i18n";
 
 type SkillAttribution =
   //剧本Agent
@@ -134,10 +134,13 @@ export async function useSkill(input: SkillInput) {
 
   const mainSkills: { path: string; name: string; description: string }[] = [];
   for (const skill of mainSkill) {
+    // skillPath luôn là đường dẫn CHUẨN (bản gốc zh) — dùng cho kiểm tra tồn tại và
+    // isPathInside (bảo mật đường dẫn). Nội dung đọc để đưa vào prompt cho model thì
+    // phải qua readLocalizedSkill(skillPath, promptLocale) để lấy đúng bản dịch.
     const skillPath = path.join(rootDir, skill + ".md");
     if (!fs.existsSync(skillPath)) throw new Error(t("utils.skillsTools.useSkill.mainSkillNotFound", { path: skillPath }, locale));
     if (!isPathInside(skillPath, normalizedRootDir)) throw new Error(t("utils.skillsTools.useSkill.invalidSkillName", { path: skillPath }, locale));
-    const content = await fs.promises.readFile(skillPath, "utf-8");
+    const content = readLocalizedSkill(skillPath, promptLocale);
     const parsed = parseFrontmatter(content, locale);
     mainSkills.push({ path: skillPath, ...parsed });
   }
@@ -216,9 +219,12 @@ export function createSkillTools(
         }
         const matched = skillMap.get(name);
         if (!matched) return { error: t("utils.skillsTools.tools.activateSkill.notFound", { name }, locale) };
+        // matched.path là đường dẫn CHUẨN (bản gốc zh). Nội dung gửi cho model thì đọc qua
+        // readLocalizedSkill với `locale` — ở createSkillTools tham số này thực chất LÀ
+        // promptLocale (xem doc comment trên createSkillTools), không phải content_language.
         let raw = "";
         try {
-          raw = await fs.promises.readFile(matched.path, "utf-8");
+          raw = readLocalizedSkill(matched.path, locale);
           console.log(t("utils.skillsTools.tools.activateSkill.readLog", { path: matched.path, length: raw.length }, locale));
         } catch (error) {
           console.log(t("utils.skillsTools.tools.activateSkill.readFailedLog", { path: matched.path }, locale));
@@ -298,5 +304,8 @@ export async function scanSkills(folderPath: string) {
     onlyFiles: true,
     absolute: true,
   });
-  return entries;
+  // Glob *.md khớp luôn cả sidecar dịch (foo.en.md, foo.vi.md, ...), nên phải loại chúng ra —
+  // chỉ giữ bản gốc chuẩn. skillPathLocale suy locale sidecar từ LOCALES (src/i18n/types.ts),
+  // không hardcode "en"/"vi", nên thêm locale thứ tư sau này không lặng lẽ làm hỏng bộ lọc này.
+  return entries.filter((entry) => skillPathLocale(entry) === null);
 }

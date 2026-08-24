@@ -34,7 +34,7 @@ The technique reference the director uses during the **narrative planning phase*
 | Per-Scene Mood Design | Six archetypal Xianxia-passage designs, heaven-and-man-resonance narrative, spatial-cultivation metaphor |
 | Sound & Music Direction | Negative space in classical music, celestial sound vs. silence, the emotional escalation of Buddhist chant / flute |
 | Composition & Shot-Size Narrative | Impressionistic landscape / cloud negative space / deep-perspective immortal realms, expressing spiritual realm through shot size |
-| Camera Movement & Rhythm | Wind-riding camera moves, slow drift of heaven and earth, meditative stillness, sudden cuts of thought |
+| Camera Movement & Rhythm | Wind-riding camera moves, slow drift of heaven and earth, meditative stillness (静止), sudden cuts of thought |
 
 ### 2. Storyboard Table Narrative Techniques (`director_storyboard_table_narrative.md`)
 
@@ -43,8 +43,8 @@ The technique reference the director uses during the **storyboard table producti
 | Section | Content Summary |
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core tool for recreating mood |
-| Shot Size Selection | The value of landscape wide shots, impressionistic medium shots, close-ups of spiritual charisma |
-| Camera Movement Rhythm | Wind-riding follow shots, slow cloud-wandering drift, meditative stillness, sword-energy snap-push |
+| Shot Size Selection | The value of landscape long shots (远景), impressionistic medium shots (中景), close-ups (特写) of spiritual charisma |
+| Camera Movement Rhythm | Wind-riding follow shots, slow cloud-wandering drift, meditative stillness (静止), sword-energy snap-push |
 | Duration Control | The unhurried pace of mood shots, give-and-take in combat, the negative space of enlightenment |
 | Immortal Combat Design | Impressionism first, balancing power and mood, echoing celestial phenomena |
 | Character Relationship Narrative | Master-disciple lineage, dao-companion bonds, mirrored rivals |

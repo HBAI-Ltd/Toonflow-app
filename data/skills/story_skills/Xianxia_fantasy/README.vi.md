@@ -34,7 +34,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn lập k
 | Thiết kế ý cảnh theo cảnh | Sáu kiểu đoạn tiên hiệp điển hình, tự sự cảm ứng trời người, ẩn dụ không gian tu luyện |
 | Định hướng âm thanh và âm nhạc | Khoảng lặng trong nhạc cổ, thanh âm trời đất và tĩnh lặng, tăng tiến cảm xúc qua Phạn âm / tiêu sáo |
 | Bố cục và tự sự cỡ cảnh | Sơn thủy ý cảnh / khoảng trống mây khói / cõi tiên chiều sâu, biểu đạt cảnh giới qua cỡ cảnh |
-| Chuyển động máy quay và nhịp điệu | Chuyển động máy quay cưỡi gió, trời đất trôi chậm, tĩnh lặng nhập định, cắt nhanh theo dòng ý niệm |
+| Chuyển động máy quay và nhịp điệu | Chuyển động máy quay cưỡi gió, trời đất trôi chậm, máy tĩnh (静止) khi nhập định, cắt nhanh theo dòng ý niệm |
 
 ### 2. Kỹ thuật tự sự bảng phân cảnh (`director_storyboard_table_narrative.md`)
 
@@ -43,8 +43,8 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 | Mục | Tóm tắt nội dung |
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như công cụ cốt lõi tái hiện ý cảnh |
-| Lựa chọn cỡ cảnh | Giá trị của viễn cảnh sơn thủy, trung cảnh mang ý vị, cận cảnh linh khí |
-| Nhịp độ chuyển động máy quay | Bám máy cưỡi gió, trôi chậm khi du ngoạn mây, tĩnh lặng nhập định, đẩy nhanh theo kiếm khí |
+| Lựa chọn cỡ cảnh | Giá trị của viễn cảnh (远景) sơn thủy, trung cảnh (中景) mang ý vị, đặc tả (特写) linh khí |
+| Nhịp độ chuyển động máy quay | Bám máy cưỡi gió, trôi chậm khi du ngoạn mây, máy tĩnh (静止) khi nhập định, đẩy nhanh theo kiếm khí |
 | Kiểm soát thời lượng | Sự thong dong của cảnh ý cảnh, thu phóng trong chiến đấu, khoảng lặng của ngộ đạo |
 | Thiết kế chiến đấu tiên thuật | Ưu tiên tính tả ý, cân bằng sức mạnh và ý cảnh, hô ứng thiên tượng |
 | Tự sự quan hệ nhân vật | Truyền thừa sư đồ, gắn bó đạo lữ, kỳ phùng địch thủ |

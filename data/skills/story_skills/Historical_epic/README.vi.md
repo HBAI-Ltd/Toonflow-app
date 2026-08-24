@@ -43,8 +43,8 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 | Mục | Tóm tắt nội dung |
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như công cụ cốt lõi kiểm soát nhịp điệu tự sự sử thi |
-| Lựa chọn cỡ cảnh | Đan xen vĩ mô và vi mô, giá trị sử thi của viễn cảnh, cận cảnh làm điểm neo nhân tính |
-| Nhịp độ chuyển động máy quay | Trôi chậm trang trọng, tự sự nhìn từ trên cao, tĩnh lặng đối đầu, chuyển động máy quay nghi lễ |
-| Kiểm soát thời lượng | Thời lượng viễn cảnh sử thi, nhịp điệu đoạn nghi lễ, nhịp điệu điềm tĩnh của lời thoại |
+| Lựa chọn cỡ cảnh | Đan xen vĩ mô và vi mô, giá trị sử thi của viễn cảnh (远景), đặc tả (特写) làm điểm neo nhân tính |
+| Nhịp độ chuyển động máy quay | Trôi chậm trang trọng, tự sự nhìn từ trên cao, máy tĩnh (静止) khi đối đầu, chuyển động máy quay nghi lễ |
+| Kiểm soát thời lượng | Thời lượng viễn cảnh (远景) sử thi, nhịp điệu đoạn nghi lễ, nhịp điệu điềm tĩnh của lời thoại |
 | Chiến lược gộp cảnh quay | Tích hợp dàn nhân vật, mật độ tự sự trận chiến, tính liên tục không gian |
 | Cảnh một cú máy (long take) | Xuyên qua chiến trường, trọn vẹn một nghi lễ, cảnh một cú máy dài về sự biến chuyển thời đại |

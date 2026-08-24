@@ -8,7 +8,7 @@ import useTools from "@/agents/productionAgent/tools";
 import ResTool from "@/socket/resTool";
 import * as fs from "fs";
 import path from "path";
-import { t, getLocale, getPromptLanguage, type Locale } from "@/i18n";
+import { t, getLocale, getPromptLanguage, readLocalizedSkill, type Locale } from "@/i18n";
 
 export interface AgentContext {
   socket: Socket;
@@ -55,7 +55,7 @@ export async function runDecisionAI(ctx: AgentContext) {
   await memory.add("user", text);
 
   const skill = path.join(u.getPath("skills"), "production_agent_decision.md");
-  const prompt = await fs.promises.readFile(skill, "utf-8");
+  const prompt = readLocalizedSkill(skill, promptLocale);
 
   const projectInfo = await u.db("o_project").where("id", ctx.resTool.data.projectId).first();
   if (!projectInfo) throw new Error(t("agent.production.orchestrator.projectNotFound", { id: ctx.resTool.data.projectId }, locale));
@@ -229,7 +229,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_derive_assets.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = readLocalizedSkill(skill, promptLocale);
       return runAgent({
         key: "productionAgent:deriveAssetsAgent",
         prompt,
@@ -251,7 +251,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_generate_assets.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = readLocalizedSkill(skill, promptLocale);
       return runAgent({
         key: "productionAgent:generateAssetsAgent",
         prompt,
@@ -273,7 +273,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_director_plan.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = readLocalizedSkill(skill, promptLocale);
 
       const addPrompt = t("agent.production.subAgent.formatDirectorPlan", {}, promptLocale);
 
@@ -298,7 +298,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_storyboard_gen.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = readLocalizedSkill(skill, promptLocale);
       return runAgent({
         key: "productionAgent:storyboardGenAgent",
         prompt,
@@ -332,7 +332,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_storyboard_panel.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = readLocalizedSkill(skill, promptLocale);
 
       const addPrompt = t("agent.production.subAgent.formatStoryboardPanel", {}, promptLocale);
 
@@ -357,7 +357,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_execution_storyboard_table.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = readLocalizedSkill(skill, promptLocale);
 
       const addPrompt = t("agent.production.subAgent.formatStoryboardTable", {}, promptLocale);
 
@@ -381,7 +381,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "production_agent_supervision.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = readLocalizedSkill(skill, promptLocale);
       return runAgent({
         key: "productionAgent:supervisionAgent",
         prompt,
@@ -413,7 +413,9 @@ async function createArtSkills(artName: string, storyName: string, locale: Local
   const mainSkills: { path: string; name: string; description: string }[] = [];
   for (const skillPath of skillList) {
     if (!fs.existsSync(skillPath)) throw new Error(t("agent.production.orchestrator.mainSkillMissing", { path: skillPath }, locale));
-    const content = await fs.promises.readFile(skillPath, "utf-8");
+    // skillPath là đường dẫn CHUẨN (scanSkills đã loại sidecar). Đọc nội dung gửi cho model
+    // qua readLocalizedSkill(skillPath, promptLocale) để lấy đúng bản dịch.
+    const content = readLocalizedSkill(skillPath, promptLocale);
     const parsed = parseFrontmatter(content, locale);
     mainSkills.push({ path: skillPath, ...parsed });
   }
@@ -506,7 +508,9 @@ async function useProductionSkills(artName: string, storyName: string, locale: L
   const mainSkills: { path: string; name: string; description: string }[] = [];
   for (const skillPath of skillList) {
     if (!fs.existsSync(skillPath)) throw new Error(t("agent.production.orchestrator.mainSkillMissing", { path: skillPath }, locale));
-    const content = await fs.promises.readFile(skillPath, "utf-8");
+    // skillPath là đường dẫn CHUẨN (scanSkills đã loại sidecar). Đọc nội dung gửi cho model
+    // qua readLocalizedSkill(skillPath, promptLocale) để lấy đúng bản dịch.
+    const content = readLocalizedSkill(skillPath, promptLocale);
     const parsed = parseFrontmatter(content, locale);
     mainSkills.push({ path: skillPath, ...parsed });
   }

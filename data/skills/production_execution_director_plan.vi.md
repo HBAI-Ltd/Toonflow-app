@@ -66,17 +66,17 @@ Chỉ trả về một câu xác nhận ngắn, không thuật lại toàn bộ 
 
 - Mỗi cảnh thống kê hai chỉ số: **số câu thoại** (đối thoại / độc thoại / lời dẫn ngoài hình / lời dẫn chuyện đều tính, tính theo câu hoặc theo lượt đối đáp) và **tổng số chữ thoại** (số chữ của nguyên văn thoại, gồm cả lời dẫn ngoài hình / lời dẫn chuyện).
 - **Chỉ đếm trung thành, không dự toán thời lượng / số cú máy** —— để bảng phân cảnh phía sau quy đổi nhịp theo tốc độ nói.
-- Cảnh không có thoại thì ghi **0 câu / 0 chữ** (cảnh thuần hành động / cảnh không người).
+- Cảnh không có thoại (无台词) thì ghi **0 câu / 0 chữ** (cảnh thuần hành động / cảnh không người).
 
 ### Tiêu chí phân tích cảm xúc
 
 - Mỗi cảnh cho một **độ đậm cảm xúc 0~10** (ước lượng tổng thể cường độ cảm xúc của cảnh đó) + **một câu tông cảm xúc**.
-- Trong cảnh nếu có sự đẩy cảm xúc rõ rệt thì ghi **X→Y** (như "dò xét→vỡ trận"); không đổi thì mô tả một điểm duy nhất.
+- Trong cảnh nếu có sự đẩy cảm xúc (情绪推进) rõ rệt thì ghi **X→Y** (như "dò xét→vỡ trận"); không đổi thì mô tả một điểm duy nhất.
 - Tông cảm xúc phải bám vào diễn biến có thể hiểu được trong kịch bản, không tự nâng lên vô căn cứ.
 
 ### Thiết kế chuyển cảnh
 
-- **Phán đoán có cần hay không trước, không cần thì không thêm**: với từng khoảng nối giữa hai cảnh, trước hết phân tích «ở đây rốt cuộc có cần một chuyển cảnh không» —— nếu hai cảnh trước sau cùng một không-thời gian và đẩy tiếp liên tục, hoặc nối thẳng vốn đã mượt, thì **không cần thêm chuyển cảnh** (cắt thẳng là được), không bịa cảnh nối chỉ để cho đủ số khoảng. Chỉ khi khoảng cách không-thời gian, độ chênh cảm xúc thực sự cần đệm / cần nối thì mới thêm chuyển cảnh.
+- **Phán đoán có cần hay không trước, không cần thì không thêm**: với từng khoảng nối giữa hai cảnh, trước hết phân tích «ở đây rốt cuộc có cần một chuyển cảnh không» —— nếu hai cảnh trước sau cùng một không-thời gian và đẩy tiếp liên tục (连续推进), hoặc nối thẳng vốn đã mượt, thì **không cần thêm chuyển cảnh** (cắt thẳng là được), không bịa cảnh nối chỉ để cho đủ số khoảng. Chỉ khi khoảng cách không-thời gian, độ chênh cảm xúc thực sự cần đệm / cần nối thì mới thêm chuyển cảnh.
 - Với khoảng nối cần chuyển cảnh, căn cứ cảm xúc khép lại của cảnh trước, cảm xúc mở màn của cảnh sau, và quan hệ không-thời gian giữa hai cảnh mà **dựa vào kinh nghiệm phán đoán cách nối mượt nhất**; loại chuyển cảnh không giới hạn trong danh sách dưới đây, cần thì phối hợp tự do:
   - **Chuyển cảnh nối bằng hành động**: dùng một hành động nối tiếp làm cảnh chuyển (như "nhân vật đứng dậy đẩy cửa đi ra → nối sang cảnh sau bước vào"), để hai cảnh trước sau khớp vào nhau tự nhiên.
   - **Chuyển cảnh bằng cảnh không người**: khi vượt không-thời gian / cần đệm cảm xúc, chèn một cảnh không người cụ thể (nêu rõ hướng nội dung của nó, như "lia máy ra ngoài cửa sổ nơi tuyết bay → mờ chồng vào cảnh sau").
@@ -109,7 +109,7 @@ Mỗi cảnh một dòng, **phủ kín toàn bộ cảnh**:
 | Sc1 | Địa điểm·khái quát | 3 | 86 | 2 | Chờ đợi một mình·nén lặng |
 | Sc2 | Địa điểm·khái quát | 0 | 0 | 5 | Sững sờ hội ngộ |
 
-Ràng buộc: đánh số liên tục theo thứ tự kịch bản; số câu/số chữ thoại đếm trung thành, không có thoại thì ghi 0; độ đậm cảm xúc 0~10.
+Ràng buộc: đánh số liên tục theo thứ tự kịch bản; số câu/số chữ thoại đếm trung thành, không có thoại (无台词) thì ghi 0; độ đậm cảm xúc 0~10.
 
 ### Điểm cần lưu ý theo từng cảnh
 
@@ -148,7 +148,7 @@ Mỗi cảnh một mục: số hiệu cảnh + các điểm cần để ý của
 3. **Chỉ xuất nội dung dành cho AI**: không viết các đoạn khái quát tường thuật cho người đọc như chủ đề tư tưởng / mạch cảm xúc / tổng số cảnh; toàn văn là dữ liệu cảnh có cấu trúc để phía sau đọc theo từng trường.
 4. **Phủ kín toàn bộ cảnh**: bảng tổng hợp cảnh phủ **toàn bộ các cảnh** của kịch bản, đánh số liên tục theo thứ tự, không sót không trùng.
 5. **Chỉ tách, không sáng tác (trừ chuyển cảnh)**: cảnh / thoại / cảm xúc / diễn biến trong cảnh chỉ tách kịch bản một cách trung thành, **không phát minh** tình tiết / chuỗi hành động / cú máy / delta giữa các cú (những thứ đó thuộc giai đoạn bảng phân cảnh); **chỉ «chuyển cảnh»** được phép kết hợp diễn biến, dựa vào kinh nghiệm bổ sung phần nối tiếp mà kịch bản chưa viết (hành động chuyển cảnh / cảnh không người…).
-6. **Đếm thoại đúng sự thật**: số câu / số chữ thoại thống kê trung thành, gồm cả lời dẫn ngoài hình/lời dẫn chuyện, không có thoại thì ghi 0.
+6. **Đếm thoại đúng sự thật**: số câu / số chữ thoại thống kê trung thành, gồm cả lời dẫn ngoài hình/lời dẫn chuyện, không có thoại (无台词) thì ghi 0.
 7. **Mỗi cảnh đủ cảm xúc + điểm cần lưu ý, chuyển cảnh thì theo nhu cầu**: mỗi cảnh có độ đậm và tông cảm xúc, mỗi cảnh có điểm cần lưu ý (không có thì ghi "Không có", mỗi điểm xuống dòng riêng); chuyển cảnh thì **phán đoán tính cần thiết trước, chỉ thêm ở chỗ cần**, không cần cho đủ N-1 dòng.
 8. **Cấm ánh sáng tông màu / cấm nhạc**: toàn văn không trường nào xuất hiện từ ngữ về ánh sáng/nhiệt độ màu/sáng tối/tông màu, không xuất hiện việc dùng nhạc/phối nhạc/nhạc cụ để tôn không khí.
 9. **XML trọn vẹn một lần**: thẻ `<scriptPlan>…</scriptPlan>` cùng toàn bộ nội dung xuất một lần, cấm tách thành nhiều lần xuất XML.

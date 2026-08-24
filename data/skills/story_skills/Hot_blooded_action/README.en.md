@@ -34,7 +34,7 @@ The technique reference the director uses during the **narrative planning phase*
 | Per-Scene Mood Design | Six archetypal hot-blooded-passage designs, escalating-conflict narrative, space turned battlefield |
 | Sound & Music Direction | Escalating drumbeats, silent charge-up, timing the anthem's eruption, restraint before the shout |
 | Composition & Shot-Size Narrative | Low-angle heroism / high-angle desperation / symmetrical standoff, power expressed through shot size |
-| Camera Movement & Rhythm | Speed-line camera moves, impact slow motion, orbiting ramping, eruption snap-push |
+| Camera Movement & Rhythm | Speed-line camera moves, impact slow motion, orbit (环绕) ramping, eruption snap-push |
 
 ### 2. Storyboard Table Narrative Techniques (`director_storyboard_table_narrative.md`)
 
@@ -43,8 +43,8 @@ The technique reference the director uses during the **storyboard table producti
 | Section | Content Summary |
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core engine of rhythm |
-| Shot Size Selection | Power-conveying shot sizing, the narrative function of low- vs. high-angle, impact close-ups |
-| Camera Movement Rhythm | Still-then-eruption, speed-driven camera moves, orbiting and follow shots |
+| Shot Size Selection | Power-conveying shot sizing, the narrative function of low- vs. high-angle, impact close-ups (特写) |
+| Camera Movement Rhythm | Still-then-eruption, speed-driven camera moves, orbit (环绕) and follow shots |
 | Duration Control | Stretching before the eruption, compressing the impact instant, the golden moment of slow motion |
 | Combat Shot Design | Attack-defense rhythm, power contrast, the shot language of a single decisive blow |
 | Companion Narrative | Fighting-side-by-side framing, trust-transfer shots, sacrifice and return |

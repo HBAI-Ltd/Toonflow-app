@@ -43,8 +43,8 @@ The technique reference the director uses during the **storyboard table producti
 | Section | Content Summary |
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core tool for controlling epic narrative rhythm |
-| Shot Size Selection | Macro-micro interweaving, the epic value of wide shots, close-ups as anchors of humanity |
-| Camera Movement Rhythm | Solemn slow drift, bird's-eye narrative, standoff stillness, ritual camera moves |
-| Duration Control | Epic wide-shot duration, ritual-passage rhythm, the steady rhythm of dialogue |
+| Shot Size Selection | Macro-micro interweaving, the epic value of long shots (远景), close-ups (特写) as anchors of humanity |
+| Camera Movement Rhythm | Solemn slow drift, bird's-eye narrative, standoff stillness (静止), ritual camera moves |
+| Duration Control | Epic long-shot (远景) duration, ritual-passage rhythm, the steady rhythm of dialogue |
 | Shot-Merging Strategy | Ensemble integration, battle-narrative density, spatial continuity |
 | One-Shot (Long Take) | Crossing the battlefield, a full ritual, long takes of a changing era |

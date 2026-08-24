@@ -34,7 +34,7 @@ The technique reference the director uses during the **narrative planning phase*
 | Per-Scene Atmosphere Design | Six archetypal mystery-passage designs, spatial-pressure narrative, planting visual clues |
 | Sound & Music Direction | Unsettling undertone, silence as terror, misleading sound effects, psychological soundscape |
 | Composition & Shot-Size Narrative | Tilted framing / obscured framing / deep-focus narrative, information control via shot size |
-| Camera Movement & Rhythm | Voyeuristic camera moves, uneasy handheld, sudden stillness, manipulation of time |
+| Camera Movement & Rhythm | Voyeuristic camera moves, uneasy handheld, sudden stillness (静止), manipulation of time |
 
 ### 2. Storyboard Table Narrative Techniques (`director_storyboard_table_narrative.md`)
 
@@ -43,8 +43,8 @@ The technique reference the director uses during the **storyboard table producti
 | Section | Content Summary |
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core tool for information control |
-| Shot Size Selection | Information-obscuring shot sizing, selective close-ups, misleading wide shots |
-| Camera Movement Rhythm | Voyeuristic slow push, uneasy pan-drift, the psychological impact of sudden stillness |
+| Shot Size Selection | Information-obscuring shot sizing, selective close-ups (特写), misleading wide shots (全景) |
+| Camera Movement Rhythm | Voyeuristic slow push in (缓推), uneasy pan-drift, the psychological impact of sudden stillness (静止) |
 | Duration Control | Stretching suspense, sudden rhythm shifts, the silent countdown |
 | Clue Shot Design | Planting foreshadowing, visual clues, handling of flashback |
 | Reveal Strategy | Truth-reveal pacing, twist-shot language, managing audience expectation |

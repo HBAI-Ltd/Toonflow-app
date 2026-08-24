@@ -43,7 +43,7 @@ The technique reference the director uses during the **storyboard table producti
 | Section | Content Summary |
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core tool for controlling youth emotional rhythm |
-| Shot Size Selection | Ensemble shot sizing, close-ups capturing micro-expressions, wide shots of solitude and freedom |
+| Shot Size Selection | Ensemble shot sizing, close-ups (特写) capturing micro-expressions, long shots (远景) of solitude and freedom |
 | Camera Movement Rhythm | Vital follow shots, still gazes, slow memory drift, the rhythm of youth |
 | Duration Control | Everyday-fragment duration, extended emotional passages, the weight of silence |
 | Shot-Merging Strategy | Everyday-fragment integration, single-shot ensemble scenes, narrative density |

@@ -15,7 +15,7 @@ Phong cách này được xây dựng riêng cho chủ đề "người thật đ
 ## Nội dung nghiêm cấm
 
 - Phong cách hoạt hình, anime, minh họa, 2D anime
-- Thiếu yếu tố hiện đại, cổ trang / trang phục cổ / kiến trúc truyền thống
+- Thiếu yếu tố hiện đại, cổ phong / cổ trang / kiến trúc truyền thống
 - Màu huỳnh quang, màu neon độ bão hòa cao
 - Nội dung gợi dục, hở hang, xuyên thấu hoặc các nội dung không phù hợp khác
 
@@ -30,4 +30,4 @@ Với phong cách này, bạn sẽ trải nghiệm:
 
 ---
 
-Phong cách này chỉ áp dụng cho các dự án liên quan đến "người thật đô thị tả thực". Nếu cần phong cách khác (như cổ trang, minh họa, anime, hiện đại...), vui lòng không sử dụng bộ prompt này.
+Phong cách này chỉ áp dụng cho các dự án liên quan đến "người thật đô thị tả thực". Nếu cần phong cách khác (như cổ phong, minh họa, anime, hiện đại...), vui lòng không sử dụng bộ prompt này.

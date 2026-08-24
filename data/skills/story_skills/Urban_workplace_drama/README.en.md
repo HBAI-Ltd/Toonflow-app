@@ -34,7 +34,7 @@ The technique reference the director uses during the **narrative planning phase*
 | Per-Scene Tension Design | Six archetypal workplace-passage designs, spatial power metaphor, social-distance narrative |
 | Sound & Music Direction | Urban white noise, silent power play, rhythmic scoring, environmental-sound narrative |
 | Composition & Shot-Size Narrative | Power framing / standoff framing / isolation framing, power expressed through shot size |
-| Camera Movement & Rhythm | Documentary handheld, calm static, oppressive push, breathing camera moves |
+| Camera Movement & Rhythm | Documentary handheld, calm locked-off (固定), oppressive push, breathing camera moves |
 
 ### 2. Storyboard Table Narrative Techniques (`director_storyboard_table_narrative.md`)
 
@@ -44,7 +44,7 @@ The technique reference the director uses during the **storyboard table producti
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core tool for character relationships and power tension |
 | Shot Size Selection | Power shot sizing, social-distance shot sizing, isolation shot sizing |
-| Camera Movement Rhythm | Predominantly calm static, documentary handheld, oppressive slow push |
+| Camera Movement Rhythm | Predominantly calm locked-off (固定), documentary handheld, oppressive slow push in (缓推) |
 | Duration Control | Dialogue rhythm, silent-power-play duration, fast-paced montage |
 | Dialogue Shot Design | Power-position cross-cutting, triangular-relationship framing, subtext shot language |
 | Solitary Passages | The reality of after work, breaking down alone, late-night reflection |

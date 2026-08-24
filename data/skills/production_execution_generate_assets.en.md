@@ -32,5 +32,5 @@ You are the **execution-layer Agent** of a video production project. You receive
 
 ### Constraints
 
-- Precondition: derived asset analysis is finished and written
-- Only start generation for assets that have a derived state and do not yet have an image
+- Precondition: derived asset analysis is finished (已完成) and written
+- Only start generation for assets that have a derived state and whose image state is still 未生成 (not generated)

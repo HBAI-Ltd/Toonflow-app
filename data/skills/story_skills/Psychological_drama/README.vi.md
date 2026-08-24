@@ -34,7 +34,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn lập k
 | Thiết kế tâm trạng theo cảnh | Sáu kiểu đoạn đấu trí điển hình, hội thoại như chiến trường, công thủ trong im lặng |
 | Định hướng âm thanh và âm nhạc | Nhạc nền đè nén, sức sát thương của im lặng, hiệu ứng âm thanh gợi ý tâm lý |
 | Bố cục và tự sự cỡ cảnh | Bố cục đối đầu, cỡ cảnh quyền lực, bắt biểu cảm nhỏ, đấu trí trong không gian |
-| Chuyển động máy quay và nhịp điệu | Tĩnh lặng đối đầu, đẩy chậm đè nén, ngụ ý mất cân bằng, nhịp điệu chính là tâm lý |
+| Chuyển động máy quay và nhịp điệu | Máy tĩnh (静止) khi đối đầu, đẩy máy chậm (缓推) đè nén, ngụ ý mất cân bằng, nhịp điệu chính là tâm lý |
 
 ### 2. Kỹ thuật tự sự bảng phân cảnh (`director_storyboard_table_narrative.md`)
 
@@ -44,7 +44,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như công cụ cốt lõi kiểm soát nhịp điệu tâm lý đấu trí |
 | Lựa chọn cỡ cảnh | Cỡ cảnh biểu cảm nhỏ, cỡ cảnh đối đầu, cỡ cảnh kiểm soát thông tin |
-| Nhịp độ chuyển động máy quay | Tĩnh lặng đối đầu, đẩy chậm đè nén, lệch trục ngụ ý mất cân bằng, nhịp điệu tâm lý |
+| Nhịp độ chuyển động máy quay | Máy tĩnh (静止) khi đối đầu, đẩy máy chậm (缓推) đè nén, lệch trục ngụ ý mất cân bằng, nhịp điệu tâm lý |
 | Kiểm soát thời lượng | Thời lượng sức căng hội thoại, công thủ trong im lặng, nhịp điệu bước ngoặt |
 | Chiến lược gộp cảnh quay | Tính liên tục của hội thoại, tích hợp đoạn đấu trí, mật độ tự sự |
 | Cảnh một cú máy (long take) | Cảnh một cú máy đối đầu, chuyển dịch quyền lực trong không gian, công thủ tâm lý |

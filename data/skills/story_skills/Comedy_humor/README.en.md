@@ -33,8 +33,8 @@ The technique reference the director uses during the **narrative planning phase*
 | Narrative Structure & Joke Rhythm | Setup→punchline cycle, rule of three, escalating absurdity, emotional beats |
 | Per-Scene Comic Design | Six archetypal comedy-passage designs, misunderstanding-chain narrative, escalating awkwardness |
 | Sound & Music Direction | Contrast scoring, comedy of silence, sound effects supporting the punchline, sudden silence |
-| Composition & Shot-Size Narrative | Reaction shot / wide-shot comedy / mismatched framing, comic timing of shot size |
-| Camera Movement & Rhythm | Snap-push reaction, stable vs. chaotic, deadpan observation, sudden whip pan |
+| Composition & Shot-Size Narrative | Reaction shot / wide-shot (全景) comedy / mismatched framing, comic timing of shot size |
+| Camera Movement & Rhythm | Snap-push reaction, stable vs. chaotic, deadpan observation, sudden whip pan (甩镜) |
 
 ### 2. Storyboard Table Narrative Techniques (`director_storyboard_table_narrative.md`)
 
@@ -43,8 +43,8 @@ The technique reference the director uses during the **storyboard table producti
 | Section | Content Summary |
 |---|---|
 | Storyboard Table's Role | The storyboard table's role as the core tool for controlling comic rhythm |
-| Shot Size Selection | Reaction-shot sizing, wide-shot absurdity, mismatched close-ups |
-| Camera Movement Rhythm | Deadpan static vs. snap-push reaction, whip-pan punchlines, out-of-control follow shots |
+| Shot Size Selection | Reaction-shot sizing, wide-shot (全景) absurdity, mismatched close-ups (特写) |
+| Camera Movement Rhythm | Deadpan locked-off (固定) vs. snap-push reaction, whip-pan (甩镜) punchlines, out-of-control follow shots |
 | Duration Control | Setup duration, punchline beats, comedic pauses, dead-air rescue |
 | Punchline Shot Design | Setup→delivery shot language, visual gags, information-gap gags |
 | Multi-Character Comedy Blocking | Ensemble reaction chains, character-collision framing, bystander POV |

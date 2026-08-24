@@ -34,7 +34,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn lập k
 | Thiết kế không khí theo cảnh | Sáu kiểu đoạn trinh thám điển hình, tự sự áp lực không gian, gài manh mối thị giác |
 | Định hướng âm thanh và âm nhạc | Tiếng nền bất an, im lặng gây sợ hãi, hiệu ứng âm thanh đánh lừa, âm cảnh tâm lý |
 | Bố cục và tự sự cỡ cảnh | Bố cục nghiêng / bố cục che khuất / tự sự lấy nét sâu, kiểm soát thông tin qua cỡ cảnh |
-| Chuyển động máy quay và nhịp điệu | Chuyển động máy quay rình rập, cầm tay bất an, đột ngột tĩnh lặng, thao túng thời gian |
+| Chuyển động máy quay và nhịp điệu | Chuyển động máy quay rình rập, cầm tay bất an, đột ngột máy tĩnh (静止), thao túng thời gian |
 
 ### 2. Kỹ thuật tự sự bảng phân cảnh (`director_storyboard_table_narrative.md`)
 
@@ -43,8 +43,8 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 | Mục | Tóm tắt nội dung |
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như công cụ cốt lõi kiểm soát thông tin |
-| Lựa chọn cỡ cảnh | Cỡ cảnh che giấu thông tin, cận cảnh có chọn lọc, toàn cảnh gây hiểu lầm |
-| Nhịp độ chuyển động máy quay | Đẩy chậm rình rập, lia máy bất an, tác động tâm lý của tĩnh lặng đột ngột |
+| Lựa chọn cỡ cảnh | Cỡ cảnh che giấu thông tin, đặc tả (特写) có chọn lọc, toàn cảnh (全景) gây hiểu lầm |
+| Nhịp độ chuyển động máy quay | Đẩy máy chậm (缓推) rình rập, lia máy bất an, tác động tâm lý của máy tĩnh (静止) đột ngột |
 | Kiểm soát thời lượng | Kéo dài sự hồi hộp, đổi nhịp đột ngột, đếm ngược trong im lặng |
 | Thiết kế cảnh manh mối | Gài dụng ý báo trước, manh mối thị giác, xử lý hồi tưởng |
 | Chiến lược hé lộ thông tin | Nhịp độ hé lộ sự thật, ngôn ngữ hình ảnh của bước ngoặt, quản lý kỳ vọng khán giả |

@@ -90,7 +90,7 @@ Giai đoạn 1: quy hoạch đạo diễn → Giai đoạn 2: phân tích tài n
 | Điều kiện tiên quyết | Giai đoạn 2 đã xong và người dùng đã xác nhận sinh |
 | Duyệt | Không cần |
 
-**Hành vi của lớp quyết định:** giao danh sách tài nguyên (hoặc tập con) người dùng đã xác nhận cho lớp thực thi. Nhận được xác nhận thì báo người dùng biết đang sinh ảnh, hỏi người dùng có vào giai đoạn 4 không.
+**Hành vi của lớp quyết định:** giao danh sách tài nguyên (hoặc tập con) người dùng đã xác nhận cho lớp thực thi. Nhận được xác nhận thì báo người dùng biết đang sinh ảnh (生成中), hỏi người dùng có vào giai đoạn 4 không.
 
 ---
 
@@ -237,10 +237,10 @@ Giữ nguyên phần còn lại.
 ## Chiến lược truy hồi ký ức
 
 Dùng `deepRetrieve` trong các tình huống sau:
-1. **Bắt đầu phiên mới**: truy hồi tiến độ hiện tại của dự án, các giai đoạn đã hoàn tất
+1. **Bắt đầu phiên mới**: truy hồi tiến độ hiện tại của dự án, các giai đoạn đã hoàn tất (已完成)
 2. **Người dùng nhắc đến nội dung trước đó**: truy hồi tóm tắt sản phẩm đầu ra lịch sử liên quan
 3. **Truy nguyên vấn đề chất lượng**: truy hồi kết quả duyệt và lịch sử chỉnh sửa trước đó
-4. **Phán đoán điều kiện tiên quyết**: truy hồi xem từng giai đoạn đã hoàn tất chưa
+4. **Phán đoán điều kiện tiên quyết**: truy hồi xem từng giai đoạn đã hoàn tất (已完成) chưa
 
 > `deepRetrieve` dùng để truy hồi ký ức lịch sử và trạng thái tiến độ, không dùng để đọc dữ liệu hiện tại của vùng làm việc.
 

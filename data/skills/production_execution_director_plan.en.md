@@ -66,17 +66,17 @@ Return one short confirmation sentence only; do not restate the full content. Th
 
 - Count two things per scene: **number of dialogue lines** (dialogue / monologue / voiceover / narration all count, per sentence or per conversational turn) and **total dialogue word count** (the word count of the dialogue text itself, including voiceover / narration).
 - **Count faithfully only; do not budget durations / shot counts** — downstream the storyboard table converts this into pacing using the speaking rate.
-- A scene with no dialogue is recorded as **0 lines / 0 words** (a pure-action / empty shot scene).
+- A scene with no dialogue (无台词) is recorded as **0 lines / 0 words** (a pure-action / empty shot scene).
 
 ### Criteria for emotion analysis
 
 - Give each scene an **emotional intensity of 0–10** (an overall estimate of that scene's emotional strength) plus a **one-sentence emotional keynote**.
-- If the emotion clearly progresses within the scene, mark it as **X→Y** (e.g. "probing→breaking down"); with no change, describe a single point.
+- If the emotion clearly progresses (情绪推进) within the scene, mark it as **X→Y** (e.g. "probing→breaking down"); with no change, describe a single point.
 - The emotional keynote must fit the plot as it is legible in the script; do not inflate it out of nothing.
 
 ### Scene transition design
 
-- **First judge whether one is necessary; if not, add nothing**: for each gap between scenes, first analyse "does this actually need a transition at all" — if the two scenes carry on continuously in the same time and place, or already join smoothly as they are, then **no transition needs to be added** (a hard cut is fine), and do not manufacture a transition just to fill the count. Only add a transition when the leap in time and place or the emotional drop genuinely needs a buffer / a link.
+- **First judge whether one is necessary; if not, add nothing**: for each gap between scenes, first analyse "does this actually need a transition at all" — if the two scenes carry on continuously (连续推进) in the same time and place, or already join smoothly as they are, then **no transition needs to be added** (a hard cut is fine), and do not manufacture a transition just to fill the count. Only add a transition when the leap in time and place or the emotional drop genuinely needs a buffer / a link.
 - For a gap that needs a transition, **judge from experience which link flows best**, based on the closing emotion of the preceding scene, the opening emotion of the following one, and the time-and-place relationship between them; the type is not limited to the list below, combine freely as needed:
   - **Action-link transition**: use one connecting action that carries the scene over (e.g. "the character stands, pushes the door open and walks out → cut to entering the next scene"), so the two scenes mesh naturally.
   - **Empty-shot transition**: when crossing time and place, or when an emotional buffer is needed, insert a concrete empty shot (state the direction of its content, e.g. "pan to the snow drifting outside the window → fade into the next scene").
@@ -109,7 +109,7 @@ One row per scene, **covering all scenes**:
 | Sc1 | Location · gist | 3 | 86 | 2 | waiting alone · silent oppression |
 | Sc2 | Location · gist | 0 | 0 | 5 | stunned reunion |
 
-Constraints: numbering is continuous in script order; dialogue lines/words are counted faithfully, with 0 recorded when there is no dialogue; emotional intensity is 0–10.
+Constraints: numbering is continuous in script order; dialogue lines/words are counted faithfully, with 0 recorded when there is no dialogue (无台词); emotional intensity is 0–10.
 
 ### Per-scene points to watch
 
@@ -148,7 +148,7 @@ One entry per scene: scene number + the points to watch in that scene. **Each ki
 3. **Output only content for the AI**: do not write human-facing summaries or narration such as theme / emotional arc / total scene count; the whole document is structured per-scene data that downstream can read field by field.
 4. **Scene coverage is complete**: the scene summary table covers **all scenes** of the script, numbered continuously in order, with none missing and none duplicated.
 5. **Split only, do not create (except scene transitions)**: scenes / dialogue / emotion / in-scene plot only split the script faithfully; **do not invent** plot / action chains / shots / between-take deltas (those belong to the storyboard table stage); **only "scene transitions"** may draw on the plot and add, from experience, connective linking material the script did not write (linking action / empty shot and so on).
-6. **Count dialogue truthfully**: dialogue lines / words are counted faithfully, including voiceover/narration, with 0 recorded when there is no dialogue.
+6. **Count dialogue truthfully**: dialogue lines / words are counted faithfully, including voiceover/narration, with 0 recorded when there is no dialogue (无台词).
 7. **Emotion + points to watch complete for every scene, transitions as needed**: every scene has an emotional intensity and keynote, every scene has points to watch (write "None" if there are none, with each point on its own line); for scene transitions **judge necessity first and add one only where it is necessary**, there is no need to fill N-1 rows.
 8. **No lighting/colour, no music**: no field anywhere in the document contains lighting/colour-temperature/brightness/colour-tone words, and none contains music/scoring/instrumental colouring.
 9. **The XML is complete in one go**: the `<scriptPlan>…</scriptPlan>` tag and all its content are emitted in one go; splitting it into several XML outputs is forbidden.

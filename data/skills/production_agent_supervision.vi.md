@@ -153,14 +153,14 @@ Việc duyệt bảng phân cảnh **chỉ phán xét bản thân bảng phân c
 | Hiệu ứng âm thanh cấm nhạc nền | Nghiêm trọng | Cột Hiệu ứng âm thanh chỉ có tiếng động môi trường + tiếng động tác/tiếng mô phỏng, cấm BGM/nhạc nền/âm nhạc/giai điệu/không khí nhạc cụ | — |
 | Ngoại hình nhân vật không vào prompt | Nghiêm trọng | Mô tả hình ảnh không viết trang phục/kiểu tóc/dung mạo hay ngoại hình cố hữu khác, chỉ viết động tác/dáng thế/biểu cảm/biến chuyển trạng thái ngay lúc đó (ướt mồ hôi/vệt nước mắt/áo quần xộc xệch/gân xanh nổi cộm…) | — |
 | Diễn đạt cụ thể | Nghiêm trọng | Mô tả hình ảnh/người nói thoại/Hiệu ứng âm thanh cụ thể, cảm nhận được, không có từ trừu tượng chung chung | R3 |
-| Thời lượng đoạn hợp lý | Nghiêm trọng | Mỗi **đoạn cộng dồn ≤15s**; cú máy có thoại thì thời lượng ≥ số chữ thoại ÷ tốc độ nói (~5 chữ/giây) + ngắt nghỉ + 1s biên an toàn; cú máy không thoại ≤6s | — |
-| Tách cú cho thoại dài | Trung bình | Thoại hoặc VO trong một cú máy > 25 chữ phải tách thành nhiều cú máy liên tiếp, mỗi cú đổi góc nhìn/cỡ cảnh, cắt theo điểm ngắt ngữ nghĩa, không chia đều; cú máy đơn mà ngữ nghĩa không cắt được thì phải dùng biến chuyển liên tục của biểu cảm/chuyển động máy quay lấp đầy thời lượng, cấm để một cú máy đứng yên | — |
+| Thời lượng đoạn hợp lý | Nghiêm trọng | Mỗi **đoạn cộng dồn ≤15s**; cú máy có thoại thì thời lượng ≥ số chữ thoại ÷ tốc độ nói (~5 chữ/giây) + ngắt nghỉ + 1s biên an toàn; cú máy 无台词 (không có thoại) ≤6s | — |
+| Tách cú cho thoại dài | Trung bình | Thoại hoặc VO trong một cú máy > 25 chữ phải tách thành nhiều cú máy liên tiếp, mỗi cú đổi góc nhìn/cỡ cảnh, cắt theo điểm ngắt ngữ nghĩa, không chia đều; cú máy đơn mà ngữ nghĩa không cắt được thì phải dùng biến chuyển liên tục của biểu cảm/chuyển động máy quay lấp đầy thời lượng, cấm để một cú máy đứng yên 「固定」 | — |
 | VO đồng bộ tiếng-hình | Trung bình | VO (lời dẫn chuyện/độc thoại/thông báo hệ thống/bảng/tin nhắn…) viết nguyên văn vào Thoại và hình vẫn mô tả bình thường động tác/phản ứng/môi trường; chữ thuần trên bảng/màn hình/tin nhắn phải sáng lên từng dòng + hiệu ứng âm thanh tích tắc, giá trị then chốt được làm nổi riêng một nhịp | — |
 | Nhân vật có mặt không biến mất | Trung bình | Nhân vật mà kịch bản không viết là rời đi thì mỗi cú máy phải có dấu vết thị giác (một trong: hậu cảnh/một phần cơ thể/cú phản ứng/bóng người nhòe/vật tiền cảnh che khuất/dấu vết bằng tiếng động môi trường) | — |
 | Diễn viên quần chúng không giành đất diễn | Trung bình | Diễn viên quần chúng chỉ dùng vi động tác để phục vụ cảm xúc lõi kịch hiện tại, không giành đất diễn của vai chính, không được cấp thoại riêng | — |
 | Ưu tiên liền mạch/độ mịn khi tách | Trung bình | Những đoạn kịch liền kề có thể xử lý liền mạch đã được gộp thành cú máy liên tục, không cắt thành mảnh vụn vô nghĩa; số chữ của Mô tả hình ảnh nằm trong giới hạn của lớp thực thi (20~70 chữ) | — |
 | Định dạng đầu cảnh đầy đủ | Trung bình | Mỗi đầu cảnh có `Cảnh N: tên cảnh` + `Nhân vật tham gia` (liệt kê đủ, kể cả người chỉ thấy một phần/thấy lưng/thấy nhòe, theo thứ tự xuất hiện); cảnh thuần không người thì ghi 「Nhân vật tham gia: không có」 | — |
-| Điền cỡ cảnh/chuyển động máy quay | Trung bình | Mỗi cú máy đều có điền cột Cỡ cảnh, Chuyển động máy quay (đặc tả vật thể thuần/cảnh không người thì chuyển động máy quay có thể là 「静止/固定」) | — |
+| Điền cỡ cảnh/chuyển động máy quay | Trung bình | Mỗi cú máy đều có điền cột Cỡ cảnh, Chuyển động máy quay (đặc tả (特写) vật thể thuần/cảnh không người thì chuyển động máy quay có thể là 「静止/固定」) | — |
 | So le cỡ cảnh góc nhìn | Nhẹ | Cú máy liền kề chú ý so le cỡ cảnh/góc nhìn; không có từ 3 cú máy liên tiếp trở lên cùng cỡ cảnh mà không có lý do | — |
 
 ### Cách kiểm chứng
@@ -242,7 +242,7 @@ Ví dụ không đạt: cột Hiệu ứng âm thanh viết "tiếng cello trầ
 
 #### Ngoại hình nhân vật không vào prompt
 
-1. Quét Mô tả hình ảnh của từng cú máy, đánh dấu phần tả ngoại hình cố hữu: kiểu dáng/màu sắc trang phục, kiểu tóc, dung mạo ngũ quan, trang sức cố định… (những thứ này giao cho tài nguyên ảnh)
+1. Quét Mô tả hình ảnh của từng cú máy, đánh dấu phần tả ngoại hình cố hữu: kiểu dáng/màu sắc trang phục, kiểu tóc, dung mạo ngũ quan, trang sức cố định (固定饰物)… (những thứ này giao cho tài nguyên ảnh)
 2. Được phép và khuyến khích: động tác, dáng thế, biểu cảm, biến chuyển trạng thái ngay lúc đó (ướt mồ hôi, vệt nước mắt, áo quần xộc xệch, gân xanh nổi cộm, dính máu)
 3. Đánh dấu những mô tả có lẫn ngoại hình cố hữu
 
@@ -252,13 +252,13 @@ Ví dụ không đạt: Mô tả hình ảnh "凌玄 khoác áo bào đỏ thêu
 
 1. Cộng dồn Thời lượng của các cú máy theo từng đoạn, kiểm tra có ≤15s không; quá 15s thì đánh dấu (phải tách thành nhiều đoạn)
 2. Cú máy có thoại: Thời lượng tối thiểu = số chữ thoại ÷ tốc độ nói (~5 chữ/giây, làm tròn lên) + tổng ngắt nghỉ theo dấu câu (mỗi dấu câu +0,3~0,5s) + 1s biên an toàn; thiếu thì đánh dấu
-3. Cú máy không thoại vượt quá 6s thì đánh dấu
+3. Cú máy 无台词 (không có thoại) vượt quá 6s thì đánh dấu
 
 #### Tách cú cho thoại dài
 
 1. Xác định các cú máy có Thoại hoặc VO trong một cú máy > 25 chữ
 2. Kiểm tra có tách thành nhiều cú máy liên tiếp không, mỗi cú có đổi góc nhìn/cỡ cảnh không, có cắt theo điểm ngắt ngữ nghĩa không (chứ không chia đều)
-3. Nếu ngữ nghĩa không cắt được mà trình bày trong một cú máy, kiểm tra Mô tả hình ảnh/Chuyển động máy quay có biến chuyển liên tục lấp đầy thời lượng không (cấm để một cú máy đứng yên)
+3. Nếu ngữ nghĩa không cắt được mà trình bày trong một cú máy, kiểm tra Mô tả hình ảnh/Chuyển động máy quay có biến chuyển liên tục lấp đầy thời lượng không (cấm để một cú máy đứng yên 「固定」)
 
 #### VO đồng bộ tiếng-hình
 
@@ -274,7 +274,7 @@ Ví dụ không đạt: Mô tả hình ảnh "凌玄 khoác áo bào đỏ thêu
 
 #### Diễn viên quần chúng không giành đất diễn
 
-1. Nhận diện diễn viên quần chúng trong Mô tả hình ảnh (nhân vật nền không có thoại, không phải vai chính)
+1. Nhận diện diễn viên quần chúng trong Mô tả hình ảnh (nhân vật nền không có thoại — 无台词 — không phải vai chính)
 2. Kiểm tra diễn viên quần chúng có chỉ dùng vi động tác (che, liếc, cụp, siết…) để phục vụ cảm xúc lõi kịch hiện tại không, tiêu điểm có khóa vào vai chính không
 3. Đánh dấu: trường hợp diễn viên quần chúng bị cấp thoại riêng, hoặc chiếm mất tiêu điểm của vai chính
 

@@ -7,7 +7,7 @@ import useTools from "@/agents/scriptAgent/tools";
 import ResTool from "@/socket/resTool";
 import * as fs from "fs";
 import path from "path";
-import { t, getLocale, getPromptLanguage, type Locale } from "@/i18n";
+import { t, getLocale, getPromptLanguage, readLocalizedSkill, type Locale } from "@/i18n";
 
 export interface AgentContext {
   socket: Socket;
@@ -53,7 +53,7 @@ export async function runDecisionAI(ctx: AgentContext) {
   await memory.add("user", text, { createTime: userMessageTime });
 
   const skill = path.join(u.getPath("skills"), "script_agent_decision.md");
-  const prompt = await fs.promises.readFile(skill, "utf-8");
+  const prompt = readLocalizedSkill(skill, promptLocale);
 
   const mem = await buildMemPrompt(await memory.get(text), promptLocale);
 
@@ -158,7 +158,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_execution_skeleton.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = readLocalizedSkill(skill, promptLocale);
 
       const formatPrompt = t("agent.script.subAgent.storySkeletonFormat", {}, promptLocale);
 
@@ -178,7 +178,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_execution_adaptation.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = readLocalizedSkill(skill, promptLocale);
 
       const formatPrompt = t("agent.script.subAgent.adaptationFormat", {}, promptLocale);
 
@@ -198,7 +198,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_execution_script.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = readLocalizedSkill(skill, promptLocale);
 
       const scriptList = await u.db("o_script").where("projectId", resTool.data.projectId).select("id", "name");
       const scriptPrompt = [
@@ -230,7 +230,7 @@ async function createSubAgent(parentCtx: AgentContext) {
     inputSchema: jsonSchema<{ prompt: string }>(promptInput),
     execute: async ({ prompt }) => {
       const skill = path.join(u.getPath("skills"), "script_agent_supervision.md");
-      const systemPrompt = await fs.promises.readFile(skill, "utf-8");
+      const systemPrompt = readLocalizedSkill(skill, promptLocale);
 
       return runAgent({
         key: "scriptAgent:supervisionAgent",

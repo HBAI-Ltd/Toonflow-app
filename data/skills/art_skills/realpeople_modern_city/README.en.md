@@ -153,11 +153,11 @@ Character visuals for live-action urban themes center on **"authentic individual
 
 | Shot size | Narrative function | Live-action urban characteristic |
 |---|---|---|
-| Extreme close-up | Emotional flashpoint, key detail | Eyes, a slight finger movement, a teardrop, a message on screen |
-| Close-up | Character emotion, dialogue reaction | Facial micro-expression, shoulders and above, emphasizes emotional transmission |
-| Medium close-up | Character interaction, action narrative | Waist and above, balances expression and gesture |
-| Medium shot | Character relationship, spatial context | Full body in frame, the relationship between character and environment |
-| Wide shot | Environmental atmosphere, character solitude/belonging | Character occupies a small portion of frame, primarily spatial narrative |
+| Extreme close-up (大特写) | Emotional flashpoint, key detail | Eyes, a slight finger movement, a teardrop, a message on screen |
+| Medium close-up (近景) | Character emotion, dialogue reaction | Facial micro-expression, shoulders and above, emphasizes emotional transmission |
+| Medium-close shot (中近景) | Character interaction, action narrative | Waist and above, balances expression and gesture |
+| Medium shot (中景) | Character relationship, spatial context | Full body in frame, the relationship between character and environment |
+| Wide shot (全景) | Environmental atmosphere, character solitude/belonging | Character occupies a small portion of frame, primarily spatial narrative |
 | Empty shot | Emotional buffer, metaphorical negative space | No characters, a pure environment shot, city landscape |
 
 ---
@@ -260,8 +260,8 @@ This visual-manual project follows a phased rollout strategy, ensuring complete 
 - ⬜ Director-planning document — global directorial constraints for live-action urban themes (color-tone system, lighting scheme, atmosphere direction, narrative pacing)
 
 **Core task checklist:**
-- Prompt specifications for the shot-size system (extreme close-up → wide shot)
-- Prompt specifications for the camera-movement system (static / dolly / pan-tilt / tracking / crane / handheld)
+- Prompt specifications for the shot-size system (extreme close-up 大特写 → wide shot 全景)
+- Prompt specifications for the camera-movement system (locked off 固定 / dolly / pan-tilt / tracking / crane 升降 / handheld)
 - Storyboard style variants for narrative mood types (everyday healing / workplace growth / youthful and inspiring / urban suspense / tender everyday life)
 - Visual specifications for empty shots and transitions
 - Prompt-arrangement method for multi-shot narrative sequences

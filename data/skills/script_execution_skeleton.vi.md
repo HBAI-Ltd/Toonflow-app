@@ -55,7 +55,7 @@ Khung xương không phải là trải phẳng các chương lên số tập, m�
 **Tam giác lõi lồng tam giác phụ:**
 - Tam giác lõi: 3 nhân vật/thế lực cốt lõi tạo nên mâu thuẫn chính của cả phim, xuyên suốt từ đầu tới cuối, không được tùy tiện đổi
 - Tam giác phụ: các mâu thuẫn thứ cấp xoay quanh vai chính, giải quyết xong một cái mới sang cái tiếp, tránh nhiều tuyến song song
-- Cấu trúc chủ lưu là **đơn tuyến**: tình tiết xoay quanh một mạch chính duy nhất, mâu thuẫn tập trung, nhịp liền mạch; phim ngắn hướng tới thị trường đại chúng, nhiều tuyến song song rất dễ bị trả bài
+- Cấu trúc chủ lưu là **đơn tuyến**: tình tiết xoay quanh một mạch chính duy nhất mà đẩy tới (推进), mâu thuẫn tập trung, nhịp liền mạch; phim ngắn hướng tới thị trường đại chúng, nhiều tuyến song song rất dễ bị trả bài
 
 **Mâu thuẫn ≠ xung đột (tam giác lõi bắt buộc đứng trên mâu thuẫn mạnh, không dựa vào chất đống cãi vã):**
 - Mâu thuẫn = trạng thái tĩnh bên trong kiểu "muốn mà không được" (dục vọng mãnh liệt của nhân vật «mâu» vs vật cản mạnh không kém «thuẫn»); xung đột = hành vi bên ngoài, động, kiểu "đối kháng với đối thủ để giải quyết mâu thuẫn".
@@ -73,7 +73,7 @@ Khung xương không phải là trải phẳng các chương lên số tập, m�
 **Ba loại điểm sướng cấp tâm lý (không giẫm vạch kiểm duyệt, có tương lai; khung xương phải khóa lấy 1 loại cốt lõi):**
 - **Ưu thế/kim thủ chỉ**: năng lực riêng có của vai chính, khiến khán giả mê mẩn hoặc ngưỡng mộ.
 - **Thuộc về**: đoàn kết hợp tác/mục tiêu chung/tình nhà tình nước (bang phái, tu tiên, đại nữ chủ, nữ chiến thần).
-- **Trật tự**: dùng logic đẩy tới để phục dựng sự thật (báo thù, đấu đá cung đình, trinh thám, trùng sinh, tìm người thân, vô hạn lưu, xuyên không).
+- **Trật tự**: dùng logic đẩy tới (逻辑推进) để phục dựng sự thật (báo thù, đấu đá cung đình, trinh thám, trùng sinh, tìm người thân, vô hạn lưu, xuyên không).
 - Điểm sướng cấp sinh lý (tình dục/bạo lực) dễ giẫm lằn ranh đỏ kiểm duyệt, bị xếp vào loại lách luật, **dùng thận trọng**.
 
 **Tính nguyên bản của kim thủ chỉ = mấu chốt bán được hay không:**
@@ -100,7 +100,7 @@ Chỉ viết tiểu sử cho **các nhân vật cốt lõi của tam giác lõi*
 
 **3. Phong cách nói + cách ra mắt (chống trôi dạt, dựng móc câu):**
 - **Phong cách nói**: kiểu câu ưa dùng + 2~3 câu cửa miệng dùng lại suốt phim + thay đổi khẩu khí khi ở trạng thái phản sai.
-- **Thiết kế cách ra mắt**: áp ít nhất một trong **bảy chiêu ra mắt** (đặc tả cục bộ/ra mắt bằng hành động/vai phụ tôn lên/ra mắt bằng âm thanh/phản sai bối cảnh/ra mắt bằng đạo cụ/dọn không khí), cho vai chính một màn ra mắt có điểm nhớ.
+- **Thiết kế cách ra mắt**: áp ít nhất một trong **bảy chiêu ra mắt** (đặc tả cục bộ (局部特写)/ra mắt bằng hành động/vai phụ tôn lên/ra mắt bằng âm thanh/phản sai bối cảnh/ra mắt bằng đạo cụ/dọn không khí), cho vai chính một màn ra mắt có điểm nhớ.
 
 **Quy tắc thép**: phản diện bắt buộc phải có động cơ hợp lý ("thuần ghen nên hại người" là lối viết hạ cấp, không phải nhân vật công cụ); tiểu sử chỉ viết thông tin liên quan mạch chính.
 
@@ -297,7 +297,7 @@ Mô tả quỹ đạo trưởng thành nội tâm của vai chính, theo định
 
 > bị X định nghĩa thành Y → dùng cách của Y để Z → phát hiện bản thân Y chính là W
 
-Nói rõ mỗi tập đẩy vòng cung này thế nào, xung đột bên ngoài là vật mang chứ không phải mục đích.
+Nói rõ mỗi tập đẩy (推进) vòng cung này thế nào, xung đột bên ngoài là vật mang chứ không phải mục đích.
 
 ### Tiểu sử nhân vật (nhân vật cốt lõi của tam giác lõi, ≤4 người)
 

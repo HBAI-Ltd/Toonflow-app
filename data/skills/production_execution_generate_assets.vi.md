@@ -32,5 +32,5 @@ Bạn là **Agent lớp thực thi** của dự án sản xuất video, nhận c
 
 ### Ràng buộc
 
-- Điều kiện tiên quyết: phần phân tích tài nguyên phái sinh đã hoàn tất và đã được ghi
-- Chỉ phát lệnh sinh ảnh cho những tài nguyên có trạng thái phái sinh và chưa sinh ảnh
+- Điều kiện tiên quyết: phần phân tích tài nguyên phái sinh đã hoàn tất (已完成) và đã được ghi
+- Chỉ phát lệnh sinh ảnh cho những tài nguyên có trạng thái phái sinh và trạng thái ảnh còn là 未生成 (chưa sinh)

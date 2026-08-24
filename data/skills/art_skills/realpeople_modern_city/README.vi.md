@@ -153,11 +153,11 @@ Hình ảnh nhân vật cho chủ đề đô thị người thật lấy **"cá 
 
 | Cỡ cảnh | Chức năng tự sự | Đặc trưng đô thị người thật |
 |---|---|---|
-| Đại cận cảnh | Điểm bùng nổ cảm xúc, chi tiết then chốt | Ánh mắt, cử động nhỏ của ngón tay, giọt nước mắt, màn hình tin nhắn |
-| Cận cảnh | Cảm xúc nhân vật, phản ứng đối thoại | Biểu cảm vi mô trên mặt, từ vai trở lên, nhấn mạnh truyền tải cảm xúc |
-| Trung cận cảnh | Tương tác nhân vật, tự sự động tác | Từ eo trở lên, cân bằng giữa biểu cảm và cử chỉ |
-| Trung cảnh | Mối quan hệ nhân vật, giải thích không gian | Toàn thân vào khung hình, mối quan hệ giữa nhân vật và môi trường |
-| Toàn cảnh | Không khí môi trường, sự cô đơn/hòa nhập của nhân vật | Tỉ lệ nhân vật nhỏ, chủ yếu là tự sự không gian |
+| Đại đặc tả (大特写) | Điểm bùng nổ cảm xúc, chi tiết then chốt | Ánh mắt, cử động nhỏ của ngón tay, giọt nước mắt, màn hình tin nhắn |
+| Cận cảnh (近景) | Cảm xúc nhân vật, phản ứng đối thoại | Biểu cảm vi mô trên mặt, từ vai trở lên, nhấn mạnh truyền tải cảm xúc |
+| Trung cận cảnh (中近景) | Tương tác nhân vật, tự sự động tác | Từ eo trở lên, cân bằng giữa biểu cảm và cử chỉ |
+| Trung cảnh (中景) | Mối quan hệ nhân vật, giải thích không gian | Toàn thân vào khung hình, mối quan hệ giữa nhân vật và môi trường |
+| Toàn cảnh (全景) | Không khí môi trường, sự cô đơn/hòa nhập của nhân vật | Tỉ lệ nhân vật nhỏ, chủ yếu là tự sự không gian |
 | Cảnh trống | Đệm cảm xúc, khoảng lặng ẩn dụ | Không có nhân vật, cảnh quay môi trường thuần túy, cảnh quan thành phố |
 
 ---
@@ -167,7 +167,7 @@ Hình ảnh nhân vật cho chủ đề đô thị người thật lấy **"cá 
 Phong cách này loại trừ nghiêm ngặt các loại nội dung sau, để đảm bảo hệ thống hình ảnh thuần khiết thống nhất:
 
 1. **Chất liệu phi người thật**: Render 3D/tạo mô hình CG/công cụ game thế hệ mới/phong cách hoạt hình/minh họa vẽ tay/màu nước hoặc sơn dầu/anime/voxel/low-poly và mọi chất liệu hình ảnh phi nhiếp ảnh người thật khác
-2. **Thế giới quan phi đô thị**: Cổ trang/trang phục cổ/kiến trúc cổ điển Trung Hoa truyền thống/tiên hiệp/huyền huyễn/võ hiệp/thời Dân Quốc/fantasy phương Tây/trung cổ/cyberpunk/khoa học viễn tưởng tương lai/không gian vũ trụ và mọi bối cảnh phi đô thị đương đại khác
+2. **Thế giới quan phi đô thị**: Cổ phong/cổ trang/kiến trúc cổ điển Trung Hoa truyền thống/tiên hiệp/huyền huyễn/võ hiệp/thời Dân Quốc/fantasy phương Tây/trung cổ/cyberpunk/khoa học viễn tưởng tương lai/không gian vũ trụ và mọi bối cảnh phi đô thị đương đại khác
 3. **Bối cảnh phi Trung Quốc đương đại**: Kiến trúc, đường phố, biển hiệu, tạo hình nhân vật rõ ràng mang đặc trưng phi đô thị Trung Quốc (như kimono, hanok Hàn Quốc, thị trấn kiểu châu Âu...)
 4. **Lỗi chất lượng kỹ thuật**: Độ phân giải thấp/mờ/nhiễu hạt/biến dạng/chi dị dạng/ngũ quan méo mó/tỉ lệ mất cân đối/cảm giác cắt ghép/cảm giác nhựa/làm mịn da quá mức/cảm giác mặt nạ
 5. **Vi phạm xu hướng thẩm mỹ**: Độ bão hòa cao quá mức/màu huỳnh quang chết chóc/cảm giác filter rẻ tiền/HDR quá mức/hình ảnh bẩn lộn xộn/tông màu u ám cố ý
@@ -260,8 +260,8 @@ Dự án sổ tay hình ảnh này áp dụng chiến lược triển khai theo 
 - ⬜ Tài liệu kế hoạch đạo diễn — ràng buộc đạo diễn toàn cục cho chủ đề đô thị người thật (hệ thống tông màu, phương án ánh sáng, hướng không khí, nhịp điệu tự sự)
 
 **Danh sách nhiệm vụ cốt lõi:**
-- Quy chuẩn prompt cho hệ thống cỡ cảnh (đại cận cảnh → toàn cảnh)
-- Quy chuẩn prompt cho hệ thống chuyển động máy quay (cố định/đẩy kéo/lia máy/theo dõi/nâng hạ/cầm tay)
+- Quy chuẩn prompt cho hệ thống cỡ cảnh (đại đặc tả 大特写 → toàn cảnh 全景)
+- Quy chuẩn prompt cho hệ thống chuyển động máy quay (máy cố định 固定/đẩy kéo/lia máy/theo dõi/nâng hạ máy 升降/cầm tay)
 - Biến thể phong cách phân cảnh theo loại cảm xúc tự sự (chữa lành đời thường/trưởng thành công sở/tuổi trẻ truyền cảm hứng/ly kỳ đô thị/đời sống ấm áp)
 - Quy chuẩn hình ảnh cho cảnh trống và chuyển cảnh
 - Phương pháp sắp xếp prompt cho chuỗi tự sự đa cảnh quay

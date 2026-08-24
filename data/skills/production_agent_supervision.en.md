@@ -153,14 +153,14 @@ The storyboard table review **judges the storyboard table itself only**, against
 | Sound effects contain no music | Serious | The Sound effects column carries ambient sound + action sound/foley only; BGM/scoring/music/melody/instrumental atmosphere is forbidden | — |
 | Character appearance stays out of the prompt | Serious | The Shot description does not write costume/hairstyle/facial features or other inherent appearance, only action/posture/expression/the state change happening now (sweat-soaked/tear-streaked/clothes in disarray/veins standing out and so on) | — |
 | Concrete expression | Serious | The Shot description/speaker of a line/Sound effects are concrete and perceptible, with no abstract blanket words | R3 |
-| Clip duration is sensible | Serious | Every **clip totals ≤15s**; a shot with dialogue has a duration ≥ the dialogue's word count ÷ speaking rate (~3 words/second) + pauses + 1s of safety margin; a shot without dialogue is ≤6s | — |
-| Long dialogue is split across shots | Moderate | Dialogue or VO of more than 15 words in a single shot must be split into several consecutive shots, each changing viewpoint/shot size, cut at semantic pauses rather than into equal pieces; a single shot whose meaning cannot be cut must fill its duration with continuous changes of expression/camera movement — a static single shot is forbidden | — |
+| Clip duration is sensible | Serious | Every **clip totals ≤15s**; a shot with dialogue has a duration ≥ the dialogue's word count ÷ speaking rate (~3 words/second) + pauses + 1s of safety margin; a shot with 无台词 (no dialogue) is ≤6s | — |
+| Long dialogue is split across shots | Moderate | Dialogue or VO of more than 15 words in a single shot must be split into several consecutive shots, each changing viewpoint/shot size, cut at semantic pauses rather than into equal pieces; a single shot whose meaning cannot be cut must fill its duration with continuous changes of expression/camera movement — a single shot must never be left locked off 「固定」 | — |
 | VO sound/picture sync | Moderate | VO (narration/monologue/system announcement/panel/text message and so on) is written into Dialogue verbatim and the picture still describes action/reaction/environment; pure text on a panel/screen/text message must light up line by line with a ticking sound effect, and key values get their own highlighted beat | — |
 | Characters present do not vanish | Moderate | A character the script does not write out of the scene must leave a visual trace in every shot (one of: background/a body part/a reaction shot/an out-of-focus silhouette/a foreground occlusion/an ambient-sound trace) | — |
 | Extras do not steal the scene | Moderate | Extras serve the emotional core of the current drama with micro-actions only; they do not steal the lead's scene and get no dialogue of their own | — |
 | Continuity first / splitting granularity | Moderate | Adjacent plot that can be handled continuously has been merged into continuous shots, not cut into pointless fragments; the Shot description's length is within the execution layer's limit (10–35 words) | — |
 | Scene header format complete | Moderate | Every scene header contains `Scene N: scene name` + `Cast` (listing everyone, including those visible only as a body part/from behind/out of focus, in order of appearance); a pure empty-shot scene says 「Cast: none」 | — |
-| Shot size/camera movement filled in | Moderate | Every shot has its Shot size and Camera movement columns filled in (for a pure object close-up/empty shot the camera movement may be 「静止/固定」) | — |
+| Shot size/camera movement filled in | Moderate | Every shot has its Shot size and Camera movement columns filled in (for a pure object close-up (特写)/empty shot the camera movement may be 「静止/固定」) | — |
 | Shot size and viewpoint staggered | Minor | Take care to stagger the shot size/viewpoint of adjacent shots; there is no run of 3 or more shots at the same shot size without a reason | — |
 
 ### Verification methods
@@ -242,7 +242,7 @@ Failing example: the Sound effects column says "a low cello underlay + the sound
 
 #### Character appearance stays out of the prompt
 
-1. Scan each shot's Shot description and flag inherent-appearance writing: costume cut/colour, hairstyle, facial features, fixed ornaments and so on (those are left to the image assets)
+1. Scan each shot's Shot description and flag inherent-appearance writing: costume cut/colour, hairstyle, facial features, fixed ornaments (固定饰物) and so on (those are left to the image assets)
 2. Allowed and encouraged: action, posture, expression, the state change happening now (sweat-soaked, tear-streaked, clothes in disarray, veins standing out, bloodstained)
 3. Flag descriptions that have inherent appearance mixed into them
 
@@ -252,13 +252,13 @@ Failing example: the Shot description "凌玄, in a red robe embroidered with go
 
 1. Add up the Duration of each shot clip by clip and check whether it is ≤15s; flag anything over 15s (it should be split into several clips)
 2. A shot with dialogue: minimum Duration = the dialogue's word count ÷ speaking rate (~3 words/second, rounded up) + the accumulated punctuation pauses (+0.3–0.5s per punctuation mark) + 1s of safety margin; flag it if it falls short
-3. Flag a shot without dialogue that exceeds 6s
+3. Flag a 无台词 (no dialogue) shot that exceeds 6s
 
 #### Long dialogue is split across shots
 
 1. Locate shots whose single-shot Dialogue or VO exceeds 15 words
 2. Check whether it is split into several consecutive shots, each changing viewpoint/shot size, cut at semantic pauses (not into equal pieces)
-3. If the meaning cannot be cut and it is shown in a single shot, check whether the Shot description/Camera movement has continuous change to fill the duration (a static single shot is forbidden)
+3. If the meaning cannot be cut and it is shown in a single shot, check whether the Shot description/Camera movement has continuous change to fill the duration (never leave the shot locked off 「固定」)
 
 #### VO sound/picture sync
 
@@ -274,7 +274,7 @@ Failing example: the Shot description "凌玄, in a red robe embroidered with go
 
 #### Extras do not steal the scene
 
-1. Identify the extras in the Shot description (background figures with no dialogue who are not leads)
+1. Identify the extras in the Shot description (background figures with no dialogue — 无台词 — who are not leads)
 2. Check whether the extras serve the emotional core of the current drama with micro-actions only (covering, glancing, lowering, clenching and so on) and whether the focus stays locked on the lead
 3. Flag: an extra given dialogue of their own, or taking the focus away from the lead
 

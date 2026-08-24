@@ -55,7 +55,7 @@ A skeleton is not chapters flattened onto episodes; it lays the foundation for "
 **The core triangle nesting sub-triangles:**
 - Core triangle: 3 core characters/forces constitute the show's main conflict, run through from start to finish and are not lightly changed
 - Sub-triangles: secondary conflicts around the protagonist, resolved one at a time before the next begins, avoiding parallel threads
-- The mainstream structure is **single-threaded**: the scenes push one main line, the conflict is concentrated and the pacing is coherent; short drama aims at the mass market, and parallel threads are easily rejected
+- The mainstream structure is **single-threaded**: the scenes push (推进) one main line, the conflict is concentrated and the pacing is coherent; short drama aims at the mass market, and parallel threads are easily rejected
 
 **A contradiction ≠ a clash (the core triangle must stand on a strong contradiction, not on piled-up quarrels):**
 - A contradiction = the inner, static "want it but cannot have it" (the character's fierce desire, the "spear", vs an equally powerful obstacle, the "shield"); a clash = the outward, dynamic "behaviour of confronting an opponent to resolve the contradiction".
@@ -73,7 +73,7 @@ A skeleton is not chapters flattened onto episodes; it lays the foundation for "
 **The three psychological-level payoffs (they do not cross the review line and have a future; the skeleton must lock 1 in as the core):**
 - **Advantage/golden finger**: an ability only the protagonist has, making the audience swoon or look up to them.
 - **Belonging**: solidarity and cooperation/a shared goal/love of family and country (gangs, cultivation, the strong female lead, the female war god).
-- **Order**: driving forward with logic to restore the truth (revenge, palace intrigue, mystery, rebirth, finding family, infinite-flow, transmigration).
+- **Order**: driving forward with logic (逻辑推进) to restore the truth (revenge, palace intrigue, mystery, rebirth, finding family, infinite-flow, transmigration).
 - Physiological-level payoffs (sex/violence) easily cross the review red line and fall into borderline territory — **use with care**.
 
 **The golden finger's originality = the key to whether it sells:**
@@ -100,7 +100,7 @@ Write profiles only for the **core triangle characters**: protagonist + chief an
 
 **3. Speaking style + entrance (against drift, to set the hook):**
 - **Speaking style**: preferred sentence shapes + 2-3 catchphrases reused across the show + how the tone changes in the contrasting state.
-- **Entrance design**: apply at least one of the **seven entrance techniques** (a close-up of a detail/an entrance through action/set off by a supporting character/an entrance through sound/a contrast of setting/an entrance through a prop/a build-up of atmosphere) to give the protagonist a memorable entrance.
+- **Entrance design**: apply at least one of the **seven entrance techniques** (a local close-up (局部特写)/an entrance through action/set off by a supporting character/an entrance through sound/a contrast of setting/an entrance through a prop/a build-up of atmosphere) to give the protagonist a memorable entrance.
 
 **The iron rule**: the villain must have a reasonable motive ("harms people out of pure envy" is low-grade writing, they are not a tool); the profile writes only information relevant to the main line.
 
@@ -297,7 +297,7 @@ Describe the protagonist's inner growth trajectory in the format:
 
 > defined by X as Y → doing Z in Y's way → discovering that Y itself is W
 
-Explain how each episode advances this arc; the outward conflict is the vehicle, not the purpose.
+Explain how each episode advances (推进) this arc; the outward conflict is the vehicle, not the purpose.
 
 ### Character profiles (core triangle characters, ≤4 people)
 

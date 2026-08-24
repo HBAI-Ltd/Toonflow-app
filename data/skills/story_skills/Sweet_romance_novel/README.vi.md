@@ -34,7 +34,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn lập k
 | Thiết kế tâm trạng theo cảnh | Sáu kiểu đoạn cảm xúc điển hình, tự sự bằng khoảng cách, ẩn dụ không gian |
 | Định hướng âm thanh và âm nhạc | Im lặng là ưu tiên, nhạc nền theo từng đoạn, mô hình tăng tiến cảm xúc qua âm nhạc |
 | Bố cục và tự sự cỡ cảnh | Khoảng lặng / khung hình / bố cục theo quy tắc một phần ba, chiến lược tăng tiến cỡ cảnh |
-| Chuyển động máy quay và nhịp điệu | Lấy tĩnh chế động, ý nghĩa cảm xúc của đẩy chậm kéo chậm, chuyển động máy quay nhịp tim |
+| Chuyển động máy quay và nhịp điệu | Lấy tĩnh chế động, ý nghĩa cảm xúc của đẩy máy chậm (缓推) và kéo máy chậm, chuyển động máy quay nhịp tim |
 
 ### 2. Kỹ thuật tự sự bảng phân cảnh (`director_storyboard_table_narrative.md`)
 
@@ -43,13 +43,13 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 | Mục | Tóm tắt nội dung |
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như công cụ cốt lõi của ngôn ngữ hình ảnh |
-| Lựa chọn cỡ cảnh | Tăng tiến cỡ cảnh, giá trị của viễn cảnh, hạn chế đại cận cảnh, cảnh thiết lập tinh giản |
-| Nhịp độ chuyển động máy quay | Mặc định tĩnh, ý nghĩa cảm xúc của đẩy chậm kéo chậm, chuyển động máy quay nhịp tim |
+| Lựa chọn cỡ cảnh | Tăng tiến cỡ cảnh, giá trị của viễn cảnh (远景), hạn chế đại đặc tả (大特写), cảnh thiết lập tinh giản |
+| Nhịp độ chuyển động máy quay | Mặc định máy tĩnh (静止), ý nghĩa cảm xúc của đẩy máy chậm (缓推) và kéo máy chậm, chuyển động máy quay nhịp tim |
 | Kiểm soát thời lượng | Thời lượng tham chiếu theo từng loại cảnh, quy tắc vàng 6 giây |
 | Chiến lược gộp cảnh quay | Loại bỏ cảm giác AI, ưu tiên mật độ tự sự, tự kiểm tra tư duy đạo diễn |
 | Cảnh một cú máy (long take) | Điều kiện áp dụng cú máy dài, cách ghi chú, thời lượng và rủi ro |
 | Thiết kế tương tác nhân vật | Giới hạn hành động trong một cảnh, tương tác mang tính gợi ý |
-| Thoại và khoảng lặng | Thời lượng dài không thoại, một câu một cảnh, xử lý lời dẫn |
+| Thoại và khoảng lặng | Thời lượng dài không có thoại (无台词), một câu một cảnh, xử lý lời dẫn |
 | Thiết kế chuyển cảnh | Cắt cứng / chuyển cảnh bằng cảnh trống / mờ dần chồng hình |
 
 ## Cách sử dụng

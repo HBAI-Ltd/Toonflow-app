@@ -60,8 +60,8 @@ Trường «Mô tả hình ảnh» của bảng phân cảnh gánh toàn bộ th
 |-------------|---------|------|
 | **Khoảnh khắc tĩnh** (dừng bước ngẩng nhìn, đứng yên nhìn chằm chằm, nghiêng đầu cười khẩy, cúi bàn viết) | **Sinh thẳng theo mô tả**, không viết lại hành động | "nhân vật dừng bước ngẩng nhìn một vật" → prompt viết thẳng "dừng bước ngẩng nhìn vật đó" |
 | **Quá trình hành động liên tục** (đi qua hành lang, vung kiếm chém xuống, quay lưng rời đi) | Lấy **trạng thái đông cứng ở khoảnh khắc khởi động tác** (không phải trạng thái chuẩn bị trừu tượng) | "vung kiếm chém xuống" → "kiếm đã giơ quá đầu, mũi kiếm chúc xuống, khoảnh khắc sắp bổ xuống" |
-| **Chuyển động máy quay** (đẩy chậm tới trung cảnh, kéo ra toàn cảnh, mờ dần vào) | Lấy **cỡ cảnh ở đầu khởi** làm bố cục khung đầu | "viễn cảnh→trung cảnh" → khung đầu lấy "大远景" |
-| **Hiệu ứng chuyển tiếp** (từ màn đen mờ dần vào, chuyển cảnh mờ chồng) | Giữ phần mô tả nhưng ghi chú là trạng thái mở màn | "mở màn từ màn đen mờ dần vào" → "hình nổi lên từ màn đen, đại viễn cảnh mở màn…" |
+| **Chuyển động máy quay** (缓推 đẩy chậm tới 中景, 拉远 kéo ra 全景, mờ dần vào) | Lấy **cỡ cảnh ở đầu khởi** làm bố cục khung đầu | "远景→中景" → khung đầu lấy "大远景" |
+| **Hiệu ứng chuyển tiếp** (từ màn đen mờ dần vào, chuyển cảnh mờ chồng) | Giữ phần mô tả nhưng ghi chú là trạng thái mở màn | "mở màn từ màn đen mờ dần vào" → "hình nổi lên từ màn đen, 大远景 đại viễn cảnh mở màn…" |
 
 **Căn cứ phán đoán**: thì của động từ chính và mật độ tự sự trong phần mô tả hình ảnh.
 
@@ -79,7 +79,7 @@ Trường «Mô tả hình ảnh» của bảng phân cảnh gánh toàn bộ th
 |----------|----------------|
 | Mô tả hình ảnh | **Nội dung thân chính**: nguồn thông tin cốt lõi cho đoạn 【画面】 trong thân prompt. Phải giữ trọn **mọi** chủ thể nhìn thấy được, lớp lang không gian, chi tiết then chốt, quan hệ cú máy trong mô tả hình ảnh, chỉ chuyển ngôn ngữ tự sự sang định dạng mô tả thị giác. Nghiêm cấm cắt bớt yếu tố then chốt, thay bằng ngữ nghĩa khác hoặc tự thêm yếu tố thị giác không có trong mô tả hình ảnh |
 | Bối cảnh | Hòa vào đoạn 【画面】 làm neo môi trường, chồng thêm các từ ràng buộc chất cảm bối cảnh của kỹ pháp riêng theo phong cách |
-| Cỡ cảnh | Từ bố cục cú máy (xem từ vựng cỡ cảnh bên dưới), phải khớp trường «Cỡ cảnh» của bảng phân cảnh. Cỡ cảnh phức hợp (như "viễn cảnh→trung cảnh") thì lấy **đầu khởi của khung đầu** |
+| Cỡ cảnh | Từ bố cục cú máy (xem từ vựng cỡ cảnh bên dưới), phải khớp trường «Cỡ cảnh» của bảng phân cảnh. Cỡ cảnh phức hợp (như "远景→中景") thì lấy **đầu khởi của khung đầu** |
 | Chuyển động máy quay | Chỉ là thông tin phục vụ làm phân cảnh, không vào prompt, không xuất ghi chú chuyển động máy quay |
 | Hành động nhân vật | Dựa trên trường «Hành động nhân vật» của bảng phân cảnh, xử lý theo "nguyên tắc nhận diện khung đầu". Bắt buộc giữ nội hàm ngữ nghĩa của hành động và phần ghi rõ `｜朝向：` |
 | Cảm xúc | Dựa trên trường «Cảm xúc» của bảng phân cảnh, chọn từ chỉ diện mạo/ánh mắt phù hợp từ bảng ánh xạ cảm xúc của kỹ pháp riêng theo phong cách. Tông cảm xúc phải nhất quán với bảng phân cảnh |
@@ -94,16 +94,16 @@ Trường «Mô tả hình ảnh» của bảng phân cảnh gánh toàn bộ th
 
 | Cỡ cảnh đầu vào | Từ cú máy tiếng Anh của chế độ B (Nanobanana) | Từ hình ảnh của chế độ A (Seedream) |
 |----------|-------------------------------|---------------------------|
-| 大远景/大全景 | `extreme wide shot, establishing shot` | bố cục đại viễn cảnh, toàn cảnh môi trường, nhân vật nhỏ bé giữa bối cảnh |
-| 远景/全景 | `wide shot, full shot, full body` | lấy trọn người, bố cục viễn cảnh, tỉ lệ người và cảnh hài hòa |
-| 中景 | `medium shot, cowboy shot, knee shot` | bố cục trung cảnh, lấy nhân vật từ đầu gối trở lên |
-| 近景 | `medium close-up, upper body` | bố cục cận cảnh, lấy nửa thân trên, hậu cảnh xóa phông |
+| 大远景/大全景 | `extreme wide shot, establishing shot` | bố cục 大远景 đại viễn cảnh, toàn cảnh môi trường, nhân vật nhỏ bé giữa bối cảnh |
+| 远景/全景 | `wide shot, full shot, full body` | lấy trọn người, bố cục viễn cảnh (远景), tỉ lệ người và cảnh hài hòa |
+| 中景 | `medium shot, cowboy shot, knee shot` | bố cục trung cảnh (中景), lấy nhân vật từ đầu gối trở lên |
+| 近景 | `medium close-up, upper body` | bố cục cận cảnh (近景), lấy nửa thân trên, hậu cảnh xóa phông |
 | 半身 | `half body shot, bust shot` | bố cục bán thân, lấy từ thắt lưng trở lên, độ sâu trường ảnh nông |
-| 特写 | `close-up, face focus` | bố cục đặc tả, phóng to khuôn mặt hoặc chi tiết cục bộ, hậu cảnh xóa phông sâu |
-| 大特写 | `extreme close-up, macro detail` | đại đặc tả, chi tiết cục bộ cực hạn, hậu cảnh xóa phông |
-| 过肩镜 | `over the shoulder shot, two shot` | bố cục qua vai, lưng nhân vật tiền cảnh xóa nhòe, nhân vật phía xa rõ nét |
+| 特写 | `close-up, face focus` | bố cục đặc tả (特写), phóng to khuôn mặt hoặc chi tiết cục bộ, hậu cảnh xóa phông sâu |
+| 大特写 | `extreme close-up, macro detail` | đại đặc tả (大特写), chi tiết cục bộ cực hạn, hậu cảnh xóa phông |
+| 过肩镜 | `over the shoulder shot, two shot` | bố cục qua vai, lưng nhân vật tiền cảnh xóa nhòe, nhân vật phía xa (远景) rõ nét |
 
-**Xử lý cỡ cảnh phức hợp**: nếu bảng phân cảnh viết chuyển động máy quay kiểu "viễn cảnh→trung cảnh", "trung cảnh→đặc tả"…, thì vì ảnh phân cảnh là tham chiếu cho khung đầu nên **lấy cỡ cảnh khởi đầu ở bên trái mũi tên**.
+**Xử lý cỡ cảnh phức hợp**: nếu bảng phân cảnh viết chuyển động máy quay kiểu "远景→中景", "中景→特写"…, thì vì ảnh phân cảnh là tham chiếu cho khung đầu nên **lấy cỡ cảnh khởi đầu ở bên trái mũi tên**.
 
 ---
 
@@ -171,7 +171,7 @@ Cấu trúc Prompt:
 
 Cơ chế: ảnh tham chiếu cùng prompt vào chung như đầu vào đa phương thức, prompt dùng JSON có cấu trúc để ràng buộc tính nhất quán của nhân vật.
 
-Cấu trúc Prompt (khung cố định):
+Cấu trúc Prompt (khung cố định, 固定框架):
 
 ```json
 {
@@ -288,7 +288,7 @@ Trường `prompt` của mỗi phân cảnh bắt buộc phải lấy **phần c
 ```
 @图1 为角色甲角色 @图2 为角色乙角色 @图3 为某场景场景,
 
-【画面】Bên trong @图3, bố cục trung cảnh, @图1 đứng thẳng ở bên trái khung hình, 3/4 nghiêng hướng phải, khóe miệng nhếch lên cười lạnh, từ trên cao nhìn xuống @图2 đang quỳ dưới đất bên phải khung hình; @图2 phủ phục sát đất, 3/4 lưng hướng trái, hai tay chống đất, vai lưng căng cứng……
+【画面】Bên trong @图3, bố cục trung cảnh (中景), @图1 đứng thẳng ở bên trái khung hình, 3/4 nghiêng hướng phải, khóe miệng nhếch lên cười lạnh, từ trên cao nhìn xuống @图2 đang quỳ dưới đất bên phải khung hình; @图2 phủ phục sát đất, 3/4 lưng hướng trái, hai tay chống đất, vai lưng căng cứng……
 ```
 
 ---
@@ -308,7 +308,7 @@ Trường «Hành động nhân vật» của bảng phân cảnh đã có phầ
 | **1** | **Phần ghi `｜朝向：` trong trường Hành động nhân vật** | Bảng phân cảnh đã ghi rõ → **dùng thẳng**, không cần suy luận |
 | 2 | **Từ chỉ phương vị nêu rõ trong mô tả hình ảnh** | Mô tả hình ảnh nhắc thẳng hướng nhìn (như "quay lưng vào ống kính", "nhìn ra ngoài cửa sổ", "hướng về khán giả") → dùng thẳng (chỉ khi ưu tiên 1 thiếu) |
 | 3 | **Quan hệ không gian nhiều nhân vật (trục nhìn 180°)** | Trong cảnh đối thoại/đối đầu/tương tác, hai nhân vật quay mặt về nhau: nhân vật bên trái khung quay mặt sang phải, nhân vật bên phải khung quay mặt sang trái. Lần đầu xuất hiện lập chuẩn xong thì khóa cho cả cảnh |
-| 4 | **Gợi ý từ cỡ cảnh** | Cú qua vai: nhân vật tiền cảnh quay lưng/nghiêng lưng vào ống kính, nhân vật ở xa quay mặt về phía ống kính; đặc tả/cận cảnh độc thoại: mặc định ba phần tư nghiêng |
+| 4 | **Gợi ý từ cỡ cảnh** | Cú qua vai: nhân vật tiền cảnh quay lưng/nghiêng lưng vào ống kính, nhân vật ở xa (远景) quay mặt về phía ống kính; đặc tả (特写)/cận cảnh (近景) độc thoại: mặc định ba phần tư nghiêng |
 | 5 | **Ngữ nghĩa cảm xúc và tự sự** | Cô độc/trầm tư/hồi tưởng → đường nét nghiêng hoặc ba phần tư mặt lưng; đối kháng/chất vấn → chính diện hoặc ba phần tư chính diện hướng về đối phương; né tránh/e thẹn → nghiêng nhẹ đầu tránh đối phương |
 | 6 | **Logic không gian của bối cảnh** | Đón khách ở cửa → quay mặt ra ngoài cửa; ngắm cảnh → quay mặt về phía cảnh; cúi bàn viết → cúi đầu hướng mặt bàn |
 
@@ -338,9 +338,9 @@ Trường «Hành động nhân vật» của bảng phân cảnh đã có phầ
 
 ### II. Quy tắc khóa vị trí và hướng nhìn
 
-- **Khóa vị trí trong khung**: cùng một nhân vật, ở nhiều phân cảnh trong cùng một bối cảnh, vị trí trái phải trong khung hình (bên trái khung / giữa / bên phải khung) phải giữ cố định, không được nhảy phía khi không có lý do tự sự
+- **Khóa vị trí trong khung**: cùng một nhân vật, ở nhiều phân cảnh trong cùng một bối cảnh, vị trí trái phải trong khung hình (bên trái khung / giữa / bên phải khung) phải giữ cố định (固定), không được nhảy phía khi không có lý do tự sự
 - **Bảo toàn hướng nhìn**: cảnh đối thoại/đối đầu tuân theo trục nhìn 180° —— nhân vật A quay mặt sang phải thì cả cảnh giữ quay mặt sang phải, nhân vật B quay mặt sang trái thì cả cảnh giữ quay mặt sang trái; trong prompt phải ghi rõ bằng từ chỉ phương vị (facing left, on the left side of frame…)
-- **Nhất quán lớp lang tiền cảnh hậu cảnh**: nếu ở phân cảnh N nhân vật A ở tiền cảnh, nhân vật B ở trung cảnh, thì ở các phân cảnh sau trong cùng bối cảnh, quan hệ trước sau của hai người không được đảo ngược vô cớ
+- **Nhất quán lớp lang tiền cảnh hậu cảnh**: nếu ở phân cảnh N nhân vật A ở tiền cảnh, nhân vật B ở trung cảnh (中景), thì ở các phân cảnh sau trong cùng bối cảnh, quan hệ trước sau của hai người không được đảo ngược vô cớ
 - **Đổi vị trí phải có động tác nối**: khi vị trí trong khung của nhân vật thực sự cần đổi (như nhân vật đi lại, xoay người), prompt của phân cảnh trước đó phải có phần tả động tác dịch chuyển/xoay người tương ứng, không được nhảy chỗ vô cớ
 - **Đổi hướng nhìn phải có động tác nối**: khi hướng nhìn của nhân vật thực sự cần đổi (như quay đầu, quay người), prompt của phân cảnh hiện tại phải có phần tả động tác chuyển hướng (như "khẽ quay đầu về phía trái khung hình"), và cú chuyển hướng đó phải nhất quán với trường «Hành động nhân vật» của bảng phân cảnh, không được đổi hướng vô cớ
 - **Được đặt lại khi đổi bối cảnh**: khi chuyển sang một bối cảnh hoàn toàn mới thì được phân bổ lại vị trí trong khung và hướng nhìn, nhưng bên trong bối cảnh mới vẫn phải giữ nhất quán
@@ -378,7 +378,7 @@ Dưới đây minh họa toàn bộ quy trình của một phân cảnh từ đ�
 ```
 @图1 为角色甲角色 @图2 为道具X 道具 @图3 为道具Y 道具 @图4 为某场景出口场景,
 
-【画面】Trong @图4, mở màn mờ dần lên từ nền đen, bố cục đại viễn cảnh, dòng người cuộn chảy qua lại, bên phải khung hình sừng sững một vật chỉ dẫn nổi bật; @图1 đeo @图2 đi một mình giữa dòng người, tay nắm chặt @图3, thân người 3/4 chính diện hướng phải, dừng bước giữa đám đông, ngẩng đầu nhìn lên vật chỉ dẫn bên phải khung hình, ánh mắt căng thẳng mà quả quyết, gương mặt lúng túng nhưng ánh lên vẻ quyết tâm.
+【画面】Trong @图4, mở màn mờ dần lên từ nền đen, bố cục 大远景 đại viễn cảnh, dòng người cuộn chảy qua lại, bên phải khung hình sừng sững một vật chỉ dẫn nổi bật; @图1 đeo @图2 đi một mình giữa dòng người, tay nắm chặt @图3, thân người 3/4 chính diện hướng phải, dừng bước giữa đám đông, ngẩng đầu nhìn lên vật chỉ dẫn bên phải khung hình, ánh mắt căng thẳng mà quả quyết, gương mặt lúng túng nhưng ánh lên vẻ quyết tâm.
 
 【光影】Ánh nắng sớm dịu từ bên trái trải đều, sắc nền vàng ấm nhuộm nhẹ mặt đất, vật chỉ dẫn ăn sáng rõ và sáng bừng, bóng người xung quanh ngược sáng tối lại thành đường viền bóng đổ, thân hình @图1 nửa ăn sáng nửa ngược sáng, đường nét khuôn mặt hơi sáng.
 

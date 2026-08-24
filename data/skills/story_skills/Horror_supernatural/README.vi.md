@@ -34,7 +34,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn lập k
 | Thiết kế tâm trạng theo cảnh | Sáu kiểu đoạn kinh dị điển hình, tước bỏ cảm giác an toàn, dị hóa không gian |
 | Định hướng âm thanh và âm nhạc | Sức sát thương của tĩnh lặng, áp lực tần số thấp, nguồn âm thanh không rõ, im lặng đột ngột |
 | Bố cục và tự sự cỡ cảnh | Đe dọa qua khoảng trống bố cục, góc nhìn bị giới hạn, kiểm soát thông tin qua cỡ cảnh |
-| Chuyển động máy quay và nhịp điệu | Chuyển động máy quay như nhịp thở, cảm giác mất kiểm soát, góc nhìn rình rập, tĩnh lặng đè nén |
+| Chuyển động máy quay và nhịp điệu | Chuyển động máy quay như nhịp thở, cảm giác mất kiểm soát, góc nhìn rình rập, máy tĩnh (静止) đè nén |
 
 ### 2. Kỹ thuật tự sự bảng phân cảnh (`director_storyboard_table_narrative.md`)
 
@@ -44,7 +44,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như công cụ cốt lõi kiểm soát nhịp điệu nỗi sợ |
 | Lựa chọn cỡ cảnh | Cỡ cảnh che giấu thông tin, ngụ ý đe dọa, góc nhìn chủ quan bị giới hạn |
-| Nhịp độ chuyển động máy quay | Áp sát chậm rãi, rung lắc mất kiểm soát, đột ngột tĩnh lặng, bám máy rình rập |
+| Nhịp độ chuyển động máy quay | Áp sát chậm rãi, rung lắc mất kiểm soát, đột ngột máy tĩnh (静止), bám theo (跟踪) rình rập |
 | Kiểm soát thời lượng | Kéo dài nỗi sợ, nén chặt cú hù dọa, kiểm soát độ dài của im lặng |
 | Chiến lược gộp cảnh quay | Duy trì bất an liên tục, tích hợp cảnh không khí, mật độ tự sự |
-| Cảnh một cú máy (long take) | Cảm giác ngạt thở của cú máy dài, bám theo cảnh chạy trốn, khám phá không gian |
+| Cảnh một cú máy (long take) | Cảm giác ngạt thở của cú máy dài, bám theo (跟踪) cảnh chạy trốn, khám phá không gian |

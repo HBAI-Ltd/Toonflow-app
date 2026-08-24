@@ -34,7 +34,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn lập k
 | Thiết kế tâm trạng theo cảnh | Sáu kiểu đoạn gia đình điển hình, tự sự không gian thuộc về, đồ vật gửi gắm tình cảm |
 | Định hướng âm thanh và âm nhạc | Âm cảnh của mái nhà, tình thân trong im lặng, âm nhạc tiết chế, âm thanh đời sống chính là nhạc nền |
 | Bố cục và tự sự cỡ cảnh | Quan hệ không gian gia đình, bố cục bàn ăn, khoảng cách chính là quan hệ, tự sự khung cửa |
-| Chuyển động máy quay và nhịp điệu | Trôi chậm an ổn, ánh nhìn người ngoài cuộc, bám máy đời thường, hơi ấm của sự tĩnh lặng |
+| Chuyển động máy quay và nhịp điệu | Trôi chậm an ổn, ánh nhìn người ngoài cuộc, bám máy đời thường, hơi ấm của máy tĩnh (静止) |
 
 ### 2. Kỹ thuật tự sự bảng phân cảnh (`director_storyboard_table_narrative.md`)
 
@@ -43,8 +43,8 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 | Mục | Tóm tắt nội dung |
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như công cụ cốt lõi kiểm soát hơi ấm cảm xúc gia đình |
-| Lựa chọn cỡ cảnh | Cỡ cảnh đời thường, hơi ấm của cận cảnh chi tiết, sự dõi theo của viễn cảnh |
-| Nhịp độ chuyển động máy quay | Trôi chậm an ổn, góc nhìn người ngoài cuộc, bám máy đời thường, ánh nhìn tĩnh lặng |
+| Lựa chọn cỡ cảnh | Cỡ cảnh đời thường, hơi ấm của đặc tả (特写) chi tiết, sự dõi theo của viễn cảnh (远景) |
+| Nhịp độ chuyển động máy quay | Trôi chậm an ổn, góc nhìn người ngoài cuộc, bám máy đời thường, ánh nhìn máy tĩnh (静止) |
 | Kiểm soát thời lượng | Thời lượng cảnh đời thường, thời lượng im lặng, dừng lại ở chi tiết, nhịp thở của cảnh quay |
 | Chiến lược gộp cảnh quay | Dòng chảy đời thường liên tục, cảnh bàn ăn trong một cú máy, tích hợp tuyến sinh hoạt |
 | Cảnh một cú máy (long take) | Di chuyển xuyên không gian gia đình, tuyến sinh hoạt đời thường, chờ đợi và trở về |

@@ -47,6 +47,14 @@
     "field-key": "JSON / XML attribute name.",
     "tool-name": "Callable tool name."
   },
+  "homonymRisk": {
+    "what": "Per-entry field on tokens whose `zh` form is ALSO an ordinary word (or a substring of one) in the source prose. The literal checker counts raw substrings, so those entries generate false positives that a translator must resolve by reading the sentence, not the count.",
+    "fields": {
+      "signals": "Concrete surface patterns that mark a hit as prose (or as an unrelated term), each with the reading that applies.",
+      "note": "How to decide, and what a wrong decision costs."
+    },
+    "rule": "When a hit is prose, translate it as prose and record a `literalAllowance` with a written reason in docs/i18n/sidecar-budget.json. NEVER inject the Chinese token into a sentence that is not about the value just to satisfy the count — that teaches the model to bind the token to the wrong concept."
+  },
   "glossary": {
     "file": "docs/i18n/glossary.json",
     "rule": "Where a term exists in both, en/vi must agree. Divergences are recorded per-entry in `glossaryDivergence`."
@@ -658,6 +666,14 @@
         "srcCode": 0
       },
       "note": "Matched value, row 2 of the 景别 mapping table.",
+      "homonymRisk": {
+        "signals": [
+          "全景深 is the photography term for deep focus (whole depth of field), usually next to an aperture such as f/8-f/11; the 全景 inside it is coincidental.",
+          "单张全景照片 / 全景摄影 mean a panoramic photograph of a whole space, not a shot size.",
+          "全景 in the 景别 column, or paired with 大全景 / 标准全景 as a framing variant name, IS the shot-size value."
+        ],
+        "note": "Counts prove nothing for this token: realpeople_modern_city/art_prompt/art_scene.md has 19 hits and NOT ONE is a shot size, while art_scene_derivative.md in the same style keeps 5 of 10 because 标准全景 there really is a framing variant. Decide per file."
+      },
       "modelTag": {
         "KlingOmni": "wide shot",
         "Seedance 1.5": "Wide establishing shot",
@@ -687,6 +703,14 @@
         "srcCode": 0
       },
       "note": "Matched value, row 3 of the 景别 mapping table.",
+      "homonymRisk": {
+        "signals": [
+          "分镜中景别 is a substring accident: the match straddles two words (…分镜中 + 景别…) and means nothing.",
+          "前景 / 中景 / 背景 as a series is about depth LAYERS in the frame, not shot size.",
+          "中景 in the 景别 column of a storyboard table, or in a 景别 mapping row, IS the shot-size value."
+        ],
+        "note": "12 of the first pass's 40 allowances are for this token, split between the two false-positive shapes above."
+      },
       "modelTag": {
         "KlingOmni": "medium shot",
         "Seedance 1.5": "Medium shot",
@@ -727,6 +751,35 @@
         "zh": 5,
         "en": 4,
         "vi": 4
+      }
+    },
+    {
+      "id": "shotSize.mediumCloseShot",
+      "kind": "vocab.shot-size",
+      "zh": "中近景",
+      "en": "Medium-close shot",
+      "vi": "Trung cận cảnh",
+      "policy": "keep-zh-literal",
+      "boundary": "skills-internal",
+      "counts": {
+        "skills": 9,
+        "modelPrompt": 0,
+        "srcPrompt": 0,
+        "catalog": 0,
+        "srcCode": 0
+      },
+      "note": "Extra 景别 row used only inside the skills layer's own shot-size tables — realpeople_modern_city/README.md's cỡ cảnh lookup table (between 近景 and 中景, waist-and-above for character interaction), driector_skills/director_storyboard.md's matching row, and the {大特写/近景/中近景/中景/全景/大全景/空镜} placeholder enum in driector_skills/director_storyboard_table_style.md. Never appears in any data/modelPrompt/video mapping table or the videoPromptGeneration seed prompt — no downstream parser or model consumes it, unlike the six canonical 景别 rows above.",
+      "homonymRisk": {
+        "signals": [
+          "中近景 as its own row in a skill's 景别 lookup table, or inside the {…/中近景/…} placeholder enum, IS the shot-size value.",
+          "中近景提暖 in an emotion-based color-grading table names a RANGE of shot sizes to warm up (提暖 = raise the warmth), not a single 景别 value — the phrase describes which shots get the warmer grade, it does not select one shot."
+        ],
+        "note": "9 occurrences across data/skills. 5 files keep it literal (translators wrote the gloss inline, e.g. \"Medium and close shots (中近景)\" in realpeople_urban_modern/prefix.md and realpeople_ancient_chinese/prefix.md, or the plain table-row value in realpeople_modern_city/README.md, director_storyboard.md, director_storyboard_table_style.md). 4 files translated the same 中近景提暖 phrase into pure prose without the gloss: 2D_90s_japanese_anime/prefix.md, 2D_mature_urban_romance/prefix.md, 3D_anime_render/prefix.md, 3D_clay_stopmotion/prefix.md. Both are acceptable — this token never crosses into data/modelPrompt/video or videoPromptGeneration.ts, so dropping the gloss in prose is a style choice, not a lost matched value; literalAllowance records the 4 that dropped it."
+      },
+      "literalCounts": {
+        "zh": 0,
+        "en": 0,
+        "vi": 0
       }
     },
     {
@@ -832,6 +885,14 @@
         "srcCode": 1
       },
       "note": "Matched value, row 2 of the 运镜 mapping table.",
+      "homonymRisk": {
+        "signals": [
+          "推进 next to 叙事 / 剧情 / 情绪 (推进叙事, 叙事推进, 情绪推进) is prose: advancing the story, not moving the camera.",
+          "推进 with a human subject (小心翼翼地推进) is a character walking forward.",
+          "镜头推进 / 缓推 / 向前推进 with a 镜头 subject IS the camera-movement value."
+        ],
+        "note": "The single biggest source of literal false positives in the skills layer: 18 of the 40 allowances written during the first translation pass are for this token. Always read the whole sentence before deciding."
+      },
       "modelTag": {
         "KlingOmni": "dolly in / push in",
         "Seedance 1.5": "Slow dolly forward",
@@ -1403,7 +1464,7 @@
         "modelPrompt": 0,
         "srcPrompt": 0,
         "catalog": 0,
-        "srcCode": 32
+        "srcCode": 33
       },
       "note": "Persisted state value compared across src/**.",
       "literalCounts": {
@@ -1470,7 +1531,7 @@
         "modelPrompt": 15,
         "srcPrompt": 20,
         "catalog": 7,
-        "srcCode": 133
+        "srcCode": 159
       },
       "note": "Asset `type` value validated by the tool schema and matched by the prompts. ASCII already; listed so a translator does not render it as 角色 / character / nhân vật.",
       "literalCounts": {
@@ -1492,7 +1553,7 @@
         "modelPrompt": 15,
         "srcPrompt": 18,
         "catalog": 4,
-        "srcCode": 77
+        "srcCode": 81
       },
       "note": "Asset `type` value.",
       "literalCounts": {
@@ -1514,7 +1575,7 @@
         "modelPrompt": 4,
         "srcPrompt": 4,
         "catalog": 3,
-        "srcCode": 35
+        "srcCode": 36
       },
       "note": "Asset `type` value used by the universal modes.",
       "literalCounts": {
@@ -1536,7 +1597,7 @@
         "modelPrompt": 6,
         "srcPrompt": 0,
         "catalog": 103,
-        "srcCode": 288
+        "srcCode": 406
       },
       "note": "Asset `type` value used by the Seedance 2.0 mode INSTEAD of `prop` — the two modes disagree; see conflicts.",
       "literalCounts": {
@@ -1822,7 +1883,7 @@
         "modelPrompt": 10,
         "srcPrompt": 15,
         "catalog": 2,
-        "srcCode": 143
+        "srcCode": 144
       },
       "note": "storyboardItem attribute.",
       "literalCounts": {
@@ -1866,7 +1927,7 @@
         "modelPrompt": 0,
         "srcPrompt": 0,
         "catalog": 0,
-        "srcCode": 2
+        "srcCode": 13
       },
       "note": "Tool the storyboard skills call to read script / assets / storyboardTable.",
       "literalCounts": {

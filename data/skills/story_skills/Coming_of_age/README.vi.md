@@ -43,7 +43,7 @@ Tham chiếu kỹ thuật đạo diễn sử dụng trong **giai đoạn dựng 
 | Mục | Tóm tắt nội dung |
 |---|---|
 | Định vị bảng phân cảnh | Vai trò của bảng phân cảnh như công cụ cốt lõi kiểm soát nhịp điệu cảm xúc thanh xuân |
-| Lựa chọn cỡ cảnh | Cỡ cảnh dàn nhân vật, cận cảnh bắt biểu cảm nhỏ, viễn cảnh của cô đơn và tự do |
+| Lựa chọn cỡ cảnh | Cỡ cảnh dàn nhân vật, đặc tả (特写) bắt biểu cảm nhỏ, viễn cảnh (远景) của cô đơn và tự do |
 | Nhịp độ chuyển động máy quay | Bám máy đầy sức sống, ánh nhìn tĩnh lặng, trôi chậm theo hồi ức, nhịp điệu của thanh xuân |
 | Kiểm soát thời lượng | Thời lượng mảnh vụn đời thường, kéo dài đoạn cảm xúc, trọng lượng của im lặng |
 | Chiến lược gộp cảnh quay | Tích hợp mảnh vụn đời thường, cảnh dàn nhân vật trong một cú máy, mật độ tự sự |
