@@ -40,7 +40,8 @@
     "i18n:patch-ui": "tsx scripts/patch-web-ui.ts",
     "i18n:check-manifest": "tsx scripts/i18n-check-manifest.ts",
     "i18n:check-terms": "tsx scripts/i18n-check-terms.ts",
-    "i18n:check-sidecars": "tsx scripts/i18n-check-sidecars.ts"
+    "i18n:check-sidecars": "tsx scripts/i18n-check-sidecars.ts",
+    "i18n:check-glossary": "tsx scripts/i18n-check-glossary.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.35",
