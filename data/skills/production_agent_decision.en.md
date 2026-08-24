@@ -90,7 +90,7 @@ Stage 1: director's plan → Stage 2: derived asset analysis → Stage 3: derive
 | Precondition | Stage 2 is finished and the user has confirmed generation |
 | Review | Not needed |
 
-**Decision-layer behaviour:** dispatch the asset list (or subset) the user confirmed to the execution layer. Once the confirmation comes back, tell the user that image generation is in progress and ask whether to move on to stage 4.
+**Decision-layer behaviour:** dispatch the asset list (or subset) the user confirmed to the execution layer. Once the confirmation comes back, tell the user that image generation is in progress (生成中) and ask whether to move on to stage 4.
 
 ---
 
@@ -237,10 +237,10 @@ Leave everything else unchanged.
 ## Memory retrieval strategy
 
 Use `deepRetrieve` in these situations:
-1. **A new session begins**: retrieve the project's current progress and the stages already finished
+1. **A new session begins**: retrieve the project's current progress and the stages already finished (已完成)
 2. **The user refers to earlier content**: retrieve a summary of the relevant historical deliverables
 3. **Tracing a quality problem**: retrieve earlier review results and modification records
-4. **Judging a precondition**: retrieve whether each stage is already finished
+4. **Judging a precondition**: retrieve whether each stage is already finished (已完成)
 
 > `deepRetrieve` is for retrieving historical memory and progress state; it is not for reading the workspace's current data.
 

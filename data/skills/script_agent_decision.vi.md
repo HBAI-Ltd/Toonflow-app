@@ -98,7 +98,7 @@ Xử lý: chia ba hồi, chia tập theo cấu hình dự án, quyết định c
 Đầu ra: planData.storySkeleton
 Công cụ: get_planData → set_planData_storySkeleton
 Cổng chất lượng: số tập × thời lượng mỗi tập khớp cấu hình, phủ hết chương, đường cong cảm xúc hợp lý
-Điều kiện tiên quyết: việc trích sự kiện đã hoàn tất
+Điều kiện tiên quyết: việc trích sự kiện đã hoàn tất (已完成)
 ```
 
 ### Giai đoạn 2: chiến lược chuyển thể (Adaptation Strategy)
@@ -128,7 +128,7 @@ Công cụ: get_novel_events + get_planData + get_novel_text → insert_script_t
 2. **Giao việc theo vòng lặp**: người dùng xác nhận số tập xong, lớp quyết định gọi `run_sub_agent_script` lặp theo thứ tự từng tập, mỗi lần chỉ xử lý **một tập** kịch bản
 3. **Thực thi im lặng**: trong lúc lặp **không gửi bất kỳ thông báo trung gian nào cho người dùng**
 4. **Thông báo hoàn tất**: xử lý xong toàn bộ số tập thì thông báo cho người dùng một lần
-5. **Hỏi viết tiếp**: nếu dự án còn tập chưa sinh, thì trong thông báo hoàn tất kèm câu hỏi "có tiếp tục sinh các tập sau không?", người dùng xác nhận rồi lại vào quy trình xác nhận số tập (vẫn tuân thủ quy tắc giới hạn 5 tập mỗi lượt)
+5. **Hỏi viết tiếp**: nếu dự án còn tập đang ở trạng thái 未生成 (chưa sinh), thì trong thông báo hoàn tất kèm câu hỏi "có tiếp tục sinh các tập sau không?", người dùng xác nhận rồi lại vào quy trình xác nhận số tập (vẫn tuân thủ quy tắc giới hạn 5 tập mỗi lượt)
 
 ---
 

@@ -60,8 +60,8 @@ The storyboard image is the **first-frame reference for the video**. The model s
 |-------------|---------|------|
 | **A static instant** (stopping to look up, standing and staring, turning the head with a sneer, bent over writing) | **Generate directly as described**, with no rewriting of the action | "the character stops and looks up at something" → the prompt writes "stops and looks up at something" directly |
 | **A continuous process of action** (walking down the corridor, swinging the sword down, turning and leaving) | Take the **frozen instant at which the action begins** (not an abstract preparatory state) | "swinging the sword down" → "the sword is already raised overhead, the tip pointing down, the instant before it cleaves" |
-| **A camera movement** (slow push to a medium shot, pull back to a wide shot, fade in) | Take the **shot size at the starting end** as the first frame's framing | "long shot → medium shot" → the first frame takes "大远景" |
-| **A transition effect** (fade in from black, dissolve) | Keep the description but mark it as the opening state | "fade in from black at the opening" → "the picture emerges from black, an opening extreme long shot…" |
+| **A camera movement** (缓推 slow push to 中景, 拉远 pull back to 全景, fade in) | Take the **shot size at the starting end** as the first frame's framing | "远景→中景" → the first frame takes "大远景" |
+| **A transition effect** (fade in from black, dissolve) | Keep the description but mark it as the opening state | "fade in from black at the opening" → "the picture emerges from black, an opening extreme long shot (远景)…" |
 
 **The basis for the judgement**: the tense of the shot description's main verb and its narrative density.
 
@@ -79,7 +79,7 @@ The storyboard image is the **first-frame reference for the video**. The model s
 |----------|----------------|
 | Shot description | **The backbone content**: the core source of information for the prompt body's 【画面】 section. **All** visible subjects, spatial layers, key details and shot relations in the shot description must be kept in full, converting only the narrative language into visual-description format. Cutting a key element, replacing it with a different meaning, or adding a visual element not present in the shot description is strictly forbidden |
 | Scene | Folded into the 【画面】 section as the environmental anchor, with the scene texture constraint words of the style-specific technique layered on |
-| Shot size | The shot framing word (see the shot-size vocabulary below); it must match the storyboard table's "Shot size" field. For a compound shot size (such as "long shot → medium shot") take the **starting end for the first frame** |
+| Shot size | The shot framing word (see the shot-size vocabulary below); it must match the storyboard table's "Shot size" field. For a compound shot size (such as "远景→中景") take the **starting end for the first frame** |
 | Camera movement | Storyboard production information only; it does not enter the prompt, and no camera-movement note is output |
 | Character action | Based on the storyboard table's "Character action" field, handled by the "first-frame recognition principle". The action's semantic content and the explicit `｜朝向：` annotation must be preserved |
 | Emotion | Based on the storyboard table's "Emotion" field, choosing the matching facial/gaze word from the style-specific technique's emotion mapping table. The emotional keynote must agree with the storyboard table |
@@ -94,16 +94,16 @@ The storyboard image is the **first-frame reference for the video**. The model s
 
 | Shot size input | Mode B (Nanobanana) English shot word | Mode A (Seedream) picture word |
 |----------|-------------------------------|---------------------------|
-| 大远景/大全景 | `extreme wide shot, establishing shot` | extreme wide shot composition, the whole environment in view, the figure small against the scene |
-| 远景/全景 | `wide shot, full shot, full body` | full body in frame, wide shot composition, figure and scene in balanced proportion |
-| 中景 | `medium shot, cowboy shot, knee shot` | medium shot composition, the figure framed from the knees up |
-| 近景 | `medium close-up, upper body` | medium close-up composition, upper body in frame, background blurred |
+| 大远景/大全景 | `extreme wide shot, establishing shot` | extreme wide shot composition (远景 at its widest), the whole environment in view, the figure small against the scene |
+| 远景/全景 | `wide shot, full shot, full body` | full body in frame, wide shot (远景) composition, figure and scene in balanced proportion |
+| 中景 | `medium shot, cowboy shot, knee shot` | medium shot (中景) composition, the figure framed from the knees up |
+| 近景 | `medium close-up, upper body` | medium close-up (近景) composition, upper body in frame, background blurred |
 | 半身 | `half body shot, bust shot` | half-body composition, framed from the waist up, shallow depth of field |
-| 特写 | `close-up, face focus` | close-up composition, the face or a detail enlarged, background deeply blurred |
-| 大特写 | `extreme close-up, macro detail` | extreme close-up, an extremely localised detail, blurred background |
-| 过肩镜 | `over the shoulder shot, two shot` | over-the-shoulder composition, the foreground figure's back blurred, the far figure sharp |
+| 特写 | `close-up, face focus` | close-up (特写) composition, the face or a detail enlarged, background deeply blurred |
+| 大特写 | `extreme close-up, macro detail` | extreme close-up (大特写), an extremely localised detail, blurred background |
+| 过肩镜 | `over the shoulder shot, two shot` | over-the-shoulder composition, the foreground figure's back blurred, the distant figure (远景) sharp |
 
-**Handling a compound shot size**: if the storyboard table writes a camera movement such as "long shot → medium shot" or "medium shot → close-up", the storyboard image is the first-frame reference, so **take the starting shot size on the left of the arrow**.
+**Handling a compound shot size**: if the storyboard table writes a camera movement such as "远景→中景" or "中景→特写", the storyboard image is the first-frame reference, so **take the starting shot size on the left of the arrow**.
 
 ---
 
@@ -171,7 +171,7 @@ Prompt structure:
 
 Mechanism: the reference images go in together with the prompt as multimodal input, and the prompt uses structured JSON to constrain character consistency.
 
-Prompt structure (a fixed framework):
+Prompt structure (fixed framework 固定):
 
 ```json
 {
@@ -288,7 +288,7 @@ The `prompt` field of every shot must have the **image-asset annotation** as its
 ```
 @图1 为角色甲角色 @图2 为角色乙角色 @图3 为某场景场景,
 
-【画面】Inside @图3, medium shot composition, @图1 stands erect at frame left, 3/4 profile facing right, the corner of the mouth lifted in a cold smile, looking down from above at @图2 kneeling on the ground at frame right; @图2 bows down to the ground, 3/4 rear view facing left, both hands braced on the floor, shoulders and back taut……
+【画面】Inside @图3, medium shot (中景) composition, @图1 stands erect at frame left, 3/4 profile facing right, the corner of the mouth lifted in a cold smile, looking down from above at @图2 kneeling on the ground at frame right; @图2 bows down to the ground, 3/4 rear view facing left, both hands braced on the floor, shoulders and back taut……
 ```
 
 ---
@@ -308,7 +308,7 @@ The storyboard table's "Character action" field already carries an explicit `｜
 | **1** | **The `｜朝向：` annotation in the Character action field** | The storyboard table has already stated it → **use it directly**, no inference needed |
 | 2 | **An explicit direction word in the shot description** | The shot description mentions the facing directly (such as "back to camera", "looking out of the window", "facing the audience") → use it directly (only when priority 1 is missing) |
 | 3 | **Multi-character spatial relations (the 180° axis)** | In a conversation/confrontation/interaction scene the two characters face each other: the character on the left of frame faces right, the one on the right of frame faces left. Once the baseline is established at their first appearance it is locked for the whole scene |
-| 4 | **What the shot size implies** | Over-the-shoulder: the foreground figure has their back/three-quarter back to camera and the distant figure faces towards camera; a close-up/medium close-up monologue: three-quarter view by default |
+| 4 | **What the shot size implies** | Over-the-shoulder: the foreground figure has their back/three-quarter back to camera and the distant figure (远景) faces towards camera; a close-up (特写)/medium close-up (近景) monologue: three-quarter view by default |
 | 5 | **Emotion and narrative meaning** | Solitude/brooding/remembering → a profile outline or a three-quarter back view; confrontation/interrogation → front on or three-quarter front towards the other; avoidance/shyness → head turned slightly away from the other |
 | 6 | **The spatial logic of the scene** | Greeting a guest at the door → facing out of the door; gazing at a view → facing the view; bent over writing → facing the desk with the head down |
 
@@ -338,9 +338,9 @@ The storyboard table's "Character action" field already carries an explicit `｜
 
 ### II. Position and facing locking rules
 
-- **Frame position is locked**: across the several shots of one character within the same scene, their left/right position in the frame (left of frame / centre / right of frame) must stay fixed and must not jump sides without a narrative reason
+- **Frame position is locked**: across the several shots of one character within the same scene, their left/right position in the frame (left of frame / centre / right of frame) must stay fixed (固定) and must not jump sides without a narrative reason
 - **Conservation of facing**: a conversation/confrontation scene obeys the 180° axis — if character A faces right they keep facing right for the whole scene, and if character B faces left they keep facing left; the prompt must state it explicitly with direction words (facing left, on the left side of frame and so on)
-- **Consistent foreground/background layering**: if character A is in the foreground and character B in the middle ground in shot N, their front-to-back relation should not reverse without reason in the following shots of the same scene
+- **Consistent foreground/background layering**: if character A is in the foreground and character B in the middle ground (中景) in shot N, their front-to-back relation should not reverse without reason in the following shots of the same scene
 - **A change of position needs a linking action**: when a character's frame position genuinely has to change (the character walks, turns and so on), the prompt of the preceding shot must contain the corresponding movement/turning action; the position must not jump out of nowhere
 - **A change of facing needs a linking action**: when a character's facing genuinely has to change (turning the head, turning round), the prompt of the current shot must contain the turning action (such as "turns the head slightly towards the left of frame"), and that turn must agree with the storyboard table's "Character action" field; the facing must not change out of nowhere
 - **It may be reset across scenes**: when cutting to an entirely new scene, frame positions and facings may be reassigned, but they must still stay consistent within the new scene
@@ -378,7 +378,7 @@ The following demonstrates the complete flow of one shot from input to output, f
 ```
 @图1 为角色甲角色 @图2 为道具X 道具 @图3 为道具Y 道具 @图4 为某场景出口场景,
 
-【画面】In @图4, the opening fades in from black, extreme wide shot composition, a crowd surging through, a conspicuous sign standing at frame right; @图1 walks alone through the crowd with @图2 on his back, gripping @图3 tightly in his hand, body in 3/4 front view facing right, stopping among the crowd, raising his head to look up at the sign at frame right, eyes tense yet resolute, face uneasy but shot through with determination.
+【画面】In @图4, the opening fades in from black, extreme wide shot (远景) composition, a crowd surging through, a conspicuous sign standing at frame right; @图1 walks alone through the crowd with @图2 on his back, gripping @图3 tightly in his hand, body in 3/4 front view facing right, stopping among the crowd, raising his head to look up at the sign at frame right, eyes tense yet resolute, face uneasy but shot through with determination.
 
 【光影】Soft morning light spreads evenly from the left, a warm yellow base tint lightly stains the ground, the sign is clearly and brightly lit, the surrounding figures are backlit and darkened into silhouettes, @图1's figure half lit and half backlit, the contours of the face faintly bright.
 
@@ -395,7 +395,7 @@ Keep @图1's facial features, hairstyle and costume exactly consistent with the 
 |-----------|---------------|---------|
 | 开场黑场淡入 | 【画面】"the opening fades in from black" | ✅ |
 | 某场景出口 | 【画面】"@图4" | ✅ |
-| 大远景 (the starting end for the first frame) | 【画面】"extreme wide shot composition" | ✅ |
+| 大远景 (the starting end for the first frame) | 【画面】"extreme wide shot (远景) composition" | ✅ |
 | 人流涌动 | 【画面】"a crowd surging through" | ✅ |
 | 指示物在右侧 | 【画面】"a conspicuous sign standing at frame right" | ✅ |
 | 角色甲背道具X 独行 | 【画面】"@图1 walks alone through the crowd with @图2 on his back" | ✅ |

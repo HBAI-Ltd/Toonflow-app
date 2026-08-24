@@ -98,7 +98,7 @@ Processing: three-act division, episode splitting per the project configuration,
 Output: planData.storySkeleton
 Tools: get_planData → set_planData_storySkeleton
 Quality gate: episode count × episode duration matches the configuration, full chapter coverage, sensible emotional curve
-Precondition: event extraction is finished
+Precondition: event extraction is finished (已完成)
 ```
 
 ### Stage 2: adaptation strategy
@@ -128,7 +128,7 @@ Precondition: stage 2 (adaptation strategy) has passed review
 2. **Loop dispatch**: once the user has confirmed the count, the decision layer calls `run_sub_agent_script` in a loop, episode by episode in order, handling **one episode** of script per call
 3. **Silent execution**: **send the user no intermediate notification at all** during the loop
 4. **Completion notice**: once all the episodes are handled, notify the user once
-5. **Continuation question**: if the project still has episodes left to generate, attach the question "would you like to keep generating the following episodes?" to the completion notice; once the user confirms, enter the episode-count confirmation flow again (still obeying the 5-episode per-round limit)
+5. **Continuation question**: if the project still has episodes left in the 未生成 (not generated) state, attach the question "would you like to keep generating the following episodes?" to the completion notice; once the user confirms, enter the episode-count confirmation flow again (still obeying the 5-episode per-round limit)
 
 ---
 
