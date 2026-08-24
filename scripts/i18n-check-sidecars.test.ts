@@ -17,6 +17,7 @@ import {
   buildBudget,
   normalizeBudgetLocale,
   validateLiteralAllowance,
+  matchesPathFilters,
   type Budget,
 } from "./i18n-check-sidecars";
 
@@ -484,5 +485,68 @@ describe("buildBudget — giữ nguyên literalAllowance đã có khi --update (
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// D2 — lọc theo --paths
+// ---------------------------------------------------------------------------
+
+describe("matchesPathFilters", () => {
+  it("không filter nào thì khớp tất cả", () => {
+    expect(matchesPathFilters("x/y.md", [])).toBe(true);
+  });
+
+  it("khớp đường dẫn file chính xác", () => {
+    expect(matchesPathFilters("data/skills/a/foo.md", ["data/skills/a/foo.md"])).toBe(true);
+    expect(matchesPathFilters("data/skills/a/foo.md", ["data/skills/a/bar.md"])).toBe(false);
+  });
+
+  it("khớp theo thư mục cha, không khớp thư mục có tên chỉ trùng tiền tố", () => {
+    expect(matchesPathFilters("data/skills/a/foo.md", ["data/skills/a"])).toBe(true);
+    expect(matchesPathFilters("data/skills/ab/foo.md", ["data/skills/a"])).toBe(false);
+  });
+
+  it("hỗ trợ glob dấu *", () => {
+    expect(matchesPathFilters("data/skills/a/foo.md", ["data/skills/*/foo.md"])).toBe(true);
+    expect(matchesPathFilters("data/skills/a/b/foo.md", ["data/skills/*/foo.md"])).toBe(false);
+  });
+});
+
+describe("checkSidecars — lọc theo pathFilters (D2)", () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), "i18n-check-sidecars-d2-"));
+  });
+  afterEach(() => {
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+  function write(relPath: string, content: string) {
+    const abs = path.join(dir, relPath);
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, content, "utf-8");
+  }
+
+  it("chỉ kiểm file khớp filter, file lỗi ngoài filter không kéo cả cổng xuống", () => {
+    write("skills/a/foo.md", "中景 中景");
+    write("skills/a/foo.en.md", "medium shot"); // thiếu literal, sẽ fail nếu bị kiểm
+    write("skills/a/foo.vi.md", "中景 中景");
+    write("skills/b/bar.md", "内容");
+    write("skills/b/bar.en.md", "content");
+    write("skills/b/bar.vi.md", "nội dung");
+    const skillsDir = path.join(dir, "skills");
+    const report = checkSidecars(dir, skillsDir, ["中景"], {}, ["skills/b"]);
+    expect(report.hasHardFail).toBe(false);
+    expect(report.files).toEqual([]);
+  });
+
+  it("bản gốc thiếu sidecar nằm ngoài filter không được tính vào missingSidecars", () => {
+    write("skills/a/foo.md", "nội dung"); // thiếu sidecar, nhưng ngoài filter
+    write("skills/b/bar.md", "nội dung");
+    write("skills/b/bar.en.md", "content");
+    write("skills/b/bar.vi.md", "nội dung");
+    const skillsDir = path.join(dir, "skills");
+    const report = checkSidecars(dir, skillsDir, [], {}, ["skills/b"]);
+    expect(report.missingSidecars).toEqual([]);
   });
 });

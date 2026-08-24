@@ -25,6 +25,12 @@
  * ngân sách CJK còn sót từ trạng thái đĩa hiện tại (kiểm tra 1 và 2 luôn phải đúng
  * tuyệt đối, không có ngân sách cho chúng; `--update` giữ nguyên mọi `literalAllowance` đã
  * có, không tự sinh miễn trừ mới).
+ *
+ * `--paths <glob-hoặc-đường-dẫn>...` giới hạn kiểm tra vào các bộ ba mà bản gốc khớp (đường dẫn
+ * file lẻ, thư mục, hoặc glob `*`/`**`/`?`) — dùng để một batch dịch chỉ đụng vài file có thể tự
+ * chứng minh phần mình sạch (exit 0) mà không bị các bản gốc chưa dịch còn lại kéo xuống. Không
+ * áp dụng cho `--update` — ngân sách luôn ghi lại cho toàn bộ cây, vì residualCjk phải phản ánh
+ * đúng trạng thái đĩa của mọi file, không chỉ phần đang được lọc.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -278,6 +284,46 @@ export function checkCJKBudgetForFile(
   return { actual, isNew: false };
 }
 
+/** Chuyển một pattern glob đơn giản (`*` = bất kỳ đoạn nào trong 1 segment, `**` = mọi segment, `?` = 1 ký tự) thành RegExp. */
+function globToRegExp(glob: string): RegExp {
+  let re = "";
+  for (let i = 0; i < glob.length; i++) {
+    const c = glob[i];
+    if (c === "*") {
+      if (glob[i + 1] === "*") {
+        re += ".*";
+        i++;
+      } else {
+        re += "[^/]*";
+      }
+    } else if (c === "?") {
+      re += "[^/]";
+    } else if ("\\^$+.()|{}[]".includes(c)) {
+      re += `\\${c}`;
+    } else {
+      re += c;
+    }
+  }
+  return new RegExp(`^${re}$`);
+}
+
+/**
+ * D2 — lọc theo `--paths`. Một bản gốc khớp filter nếu đường dẫn tương đối của nó trùng khớp
+ * chính xác một filter, nằm trong một thư mục filter chỉ định (so khớp theo segment, "a" không
+ * khớp nhầm "ab"), hoặc khớp một glob pattern (`*`, `**`, `?`). Mảng filter rỗng nghĩa là không
+ * lọc gì — mọi bản gốc đều khớp (hành vi mặc định khi không truyền `--paths`).
+ */
+export function matchesPathFilters(relPath: string, filters: string[]): boolean {
+  if (filters.length === 0) return true;
+  return filters.some((rawFilter) => {
+    const filter = rawFilter.split(path.sep).join("/").replace(/\/+$/, "");
+    if (relPath === filter) return true;
+    if (relPath.startsWith(`${filter}/`)) return true;
+    if (/[*?]/.test(filter)) return globToRegExp(filter).test(relPath);
+    return false;
+  });
+}
+
 const toPosix = (p: string) => p.split(path.sep).join("/");
 
 const walk = (dir: string, out: string[] = []): string[] => {
@@ -310,7 +356,19 @@ export type SidecarReport = {
  * đối (key trong budget và trong report) — với repo thật root là thư mục gốc repo và
  * skillsDir là `<root>/data/skills`.
  */
-export function checkSidecars(root: string, skillsDir: string, literalTerms: string[], budget: Budget): SidecarReport {
+/**
+ * `pathFilters` (D2, `--paths`): khi khác rỗng, chỉ các bộ ba mà bản gốc khớp filter mới được
+ * kiểm — kể cả liệt kê missingSidecars / newInBudget. Bản gốc thiếu sidecar nằm ngoài tập lọc
+ * không được tính vào kết quả, để một batch dịch chỉ đụng vài file có thể tự chứng minh phần
+ * mình sạch (exit 0) mà không bị 139 bản gốc chưa dịch còn lại kéo xuống.
+ */
+export function checkSidecars(
+  root: string,
+  skillsDir: string,
+  literalTerms: string[],
+  budget: Budget,
+  pathFilters: string[] = [],
+): SidecarReport {
   const files: FileProblems[] = [];
   const missingSidecars: string[] = [];
   const newInBudget: string[] = [];
@@ -318,6 +376,8 @@ export function checkSidecars(root: string, skillsDir: string, literalTerms: str
 
   for (const absZh of findSkillOriginals(skillsDir)) {
     const relPath = toPosix(path.relative(root, absZh));
+    if (!matchesPathFilters(relPath, pathFilters)) continue;
+
     const base = absZh.slice(0, -".md".length);
     const enPath = `${base}.en.md`;
     const viPath = `${base}.vi.md`;
@@ -402,11 +462,24 @@ export function buildBudget(root: string, skillsDir: string, literalTerms: strin
   return sorted;
 }
 
+/** Đọc danh sách giá trị theo sau flag `--paths` trên argv, dừng ở flag kế tiếp (bắt đầu `--`). */
+function parsePathsArg(argv: string[]): string[] {
+  const idx = argv.indexOf("--paths");
+  if (idx === -1) return [];
+  const paths: string[] = [];
+  for (const arg of argv.slice(idx + 1)) {
+    if (arg.startsWith("--")) break;
+    paths.push(arg);
+  }
+  return paths;
+}
+
 function main(): void {
   const root = process.cwd();
   const skillsDir = path.join(root, SKILLS_DIR_NAME);
   const registry = JSON.parse(fs.readFileSync(path.join(root, TERMS_PATH), "utf8"));
   const literalTerms = extractLiteralTerms(registry);
+  const pathFilters = parsePathsArg(process.argv);
 
   if (process.argv.includes("--update")) {
     let previousBudget: Budget = {};
@@ -434,7 +507,7 @@ function main(): void {
     budget = raw.budget ?? {};
   }
 
-  const report = checkSidecars(root, skillsDir, literalTerms, budget);
+  const report = checkSidecars(root, skillsDir, literalTerms, budget, pathFilters);
 
   for (const f of report.files) {
     console.error(`✗ ${f.file}`);
