@@ -1,7 +1,9 @@
 import fs from "fs";
+import en from "../src/i18n/locales/en.json";
+import vi from "../src/i18n/locales/vi.json";
 
 /**
- * Vá ba lỗi hiển thị trong bundle Vue đã build sẵn `data/web/index.html`
+ * Vá bốn lỗi hiển thị trong bundle Vue đã build sẵn `data/web/index.html`
  * (27MB, một dòng, minified — không fork được repo nguồn). Xem cùng quy ước
  * với scripts/patch-web-i18n.ts: neo trên cú pháp/token ổn định (không bao
  * giờ neo trên tên biến bị rút gọn kiểu $Ci/Jt/EF — các tên này đổi mỗi lần
@@ -190,6 +192,115 @@ function patchCjkStrings(source: string): { output: string; applied: string[] } 
   return { output, applied };
 }
 
+
+// ---------------------------------------------------------------------------
+// Lỗi 4 — nhãn tab tiếng Trung trong hai màn "tạo mới" manual
+// ---------------------------------------------------------------------------
+// Màn "New visual manual" và "New director manual" dựng danh sách tab từ hai
+// mảng object literal hardcode trong bundle:
+//
+//   const u=()=>[{label:"README",value:"README",data:""},{label:"角色",value:"art_character",data:""},…]
+//   const q=()=>[{label:"README",value:"README",data:""},{label:"导演规划",value:"director_planning_narrative",data:""},…]
+//
+// Khớp theo `value` chứ KHÔNG theo chuỗi tiếng Trung: `value` là khoá máy (đồng
+// thời là tên file skill) nên ổn định qua các lần rebuild, còn chuỗi tiếng Trung
+// chính là thứ ta đang thay. Chỉ phần `label` bị viết lại — `value` và `data`
+// giữ nguyên byte-for-byte. Cách khớp `,value:"…",data:""}` cũng tự loại được
+// từ điển i18n tiếng Trung của chính bundle (locale `zh` hợp lệ, ví dụ
+// `storyboardTable:{title:"分镜表"}`) — ở đó không có cặp label/value/data nào.
+//
+// Khác với 28 chuỗi ft("…") ở Lỗi 3: hai mảng này nằm trong hàm chạy lúc runtime
+// (`()=>[…]`), không phải static vnode bị hoist lúc build, nên nhãn được sinh
+// lại mỗi lần gọi — chèn được một biểu thức đọc locale từ localStorage, đúng cách
+// bản vá Lỗi 2 đọc (`localStorage.getItem("locale")` kèm bóc dấu nháy bọc quanh).
+// Nhờ vậy nhãn theo đúng locale người dùng: `vi` ra tiếng Việt, mọi locale khác
+// (gồm `en`) ra tiếng Anh.
+//
+// Giới hạn trung thực: người dùng locale `zh` cũng thấy nhãn tiếng Anh, vì bảng
+// tra chỉ có en/vi — đúng như phần còn lại của bản fork này.
+//
+// Bản dịch lấy thẳng từ src/i18n/locales/{en,vi}.json (cùng khoá mà backend dùng
+// cho các route xem/liệt kê manual), không tự đặt lại chuỗi mới ở đây.
+const MANUAL_LABEL_KEYS: [string, string][] = [
+  ["prefix", "project.visualManual.label.prefix"],
+  ["art_character", "project.visualManual.label.art_character"],
+  ["art_character_derivative", "project.visualManual.label.art_character_derivative"],
+  ["art_prop", "project.visualManual.label.art_prop"],
+  ["art_prop_derivative", "project.visualManual.label.art_prop_derivative"],
+  ["art_scene", "project.visualManual.label.art_scene"],
+  ["art_scene_derivative", "project.visualManual.label.art_scene_derivative"],
+  ["director_storyboard", "project.visualManual.label.director_storyboard"],
+  ["art_storyboard_video", "project.visualManual.label.art_storyboard_video"],
+  ["director_planning_style", "project.visualManual.label.director_planning_style"],
+  ["director_storyboard_table_style", "project.visualManual.label.director_storyboard_table_style"],
+  ["director_planning_narrative", "project.directorManual.label.director_planning_narrative"],
+  ["director_storyboard_table_narrative", "project.directorManual.label.director_storyboard_table_narrative"],
+];
+
+// Cách đọc locale y hệt bản vá Lỗi 2 (đã xử lý việc bóc dấu nháy bọc quanh giá
+// trị localStorage). Dùng làm luôn dấu hiệu "đã vá" cho tính idempotent.
+const LOCALE_EXPR = '(localStorage.getItem("locale")||"").replace(/^"|"$/g,"")';
+
+// i18n-ignore — dải Unicode dùng để nhận diện nhãn tiếng Trung chưa vá, không phải chuỗi dịch
+const CJK_LABEL_RANGE = /[一-鿿]/;
+
+function localeLabelExpr(enText: string, viText: string): string {
+  return `(${LOCALE_EXPR}==="vi"?${JSON.stringify(viText)}:${JSON.stringify(enText)})`;
+}
+
+function lookup(catalog: Record<string, string>, key: string, locale: string): string {
+  const text = catalog[key];
+  if (typeof text !== "string" || text.length === 0) {
+    throw new Error(`thiếu khoá dịch \`${key}\` trong src/i18n/locales/${locale}.json — dừng lại`);
+  }
+  return text;
+}
+
+function patchManualLabels(source: string): { output: string; patched: string[] } {
+  let output = source;
+  const patched: string[] = [];
+
+  for (const [value, key] of MANUAL_LABEL_KEYS) {
+    const tail = `,value:${JSON.stringify(value)},data:""}`;
+    const idx = output.indexOf(tail);
+    if (idx === -1) {
+      throw new Error(
+        `không tìm thấy neo \`${tail}\` trong bundle — mảng tab manual đã đổi cấu trúc, dừng lại`,
+      );
+    }
+    if (output.indexOf(tail, idx + 1) !== -1) {
+      throw new Error(
+        `neo \`${tail}\` xuất hiện nhiều hơn một lần trong bundle — không dám đoán chỗ nào là tab manual, dừng lại`,
+      );
+    }
+
+    const entryStart = output.lastIndexOf("{label:", idx);
+    if (entryStart === -1) {
+      throw new Error(`không tìm thấy \`{label:\` đứng trước \`${tail}\` — dừng lại`);
+    }
+    const labelExpr = output.slice(entryStart + "{label:".length, idx);
+
+    if (labelExpr.includes(LOCALE_EXPR)) continue; // đã vá từ lần chạy trước
+
+    const asLiteral = /^"((?:[^"\\]|\\.)*)"$/.exec(labelExpr);
+    if (!asLiteral || !CJK_LABEL_RANGE.test(asLiteral[1]!)) {
+      throw new Error(
+        `nhãn của \`value:"${value}"\` có dạng lạ (\`${labelExpr}\`) — không phải chuỗi tiếng Trung cũng không phải bản đã vá, dừng lại`,
+      );
+    }
+
+    const replacement = localeLabelExpr(
+      lookup(en as Record<string, string>, key, "en"),
+      lookup(vi as Record<string, string>, key, "vi"),
+    );
+    output =
+      output.slice(0, entryStart + "{label:".length) + replacement + output.slice(idx);
+    patched.push(value);
+  }
+
+  return { output, patched };
+}
+
 // ---------------------------------------------------------------------------
 
 export function patchBundle(source: string): {
@@ -197,6 +308,7 @@ export function patchBundle(source: string): {
   fontsChanged: number;
   interceptorPatched: boolean;
   stringsTranslated: string[];
+  manualLabelsPatched: string[];
 } {
   let output = source;
 
@@ -209,11 +321,15 @@ export function patchBundle(source: string): {
   const cjk = patchCjkStrings(output);
   output = cjk.output;
 
+  const manualLabels = patchManualLabels(output);
+  output = manualLabels.output;
+
   return {
     output,
     fontsChanged: fonts.count,
     interceptorPatched: interceptor.patched,
     stringsTranslated: cjk.applied,
+    manualLabelsPatched: manualLabels.patched,
   };
 }
 
@@ -222,7 +338,11 @@ function main() {
   const source = fs.readFileSync(file, "utf-8");
   const result = patchBundle(source);
 
-  const totalChanges = result.fontsChanged + (result.interceptorPatched ? 1 : 0) + result.stringsTranslated.length;
+  const totalChanges =
+    result.fontsChanged +
+    (result.interceptorPatched ? 1 : 0) +
+    result.stringsTranslated.length +
+    result.manualLabelsPatched.length;
   if (totalChanges === 0) {
     console.log("Không có gì để vá (đã vá từ trước).");
     return;
@@ -232,6 +352,7 @@ function main() {
   console.log(`Đã sửa ${result.fontsChanged} khai báo font.`);
   console.log(`Interceptor request: ${result.interceptorPatched ? "đã vá" : "đã vá từ trước, bỏ qua"}.`);
   console.log(`Đã dịch ${result.stringsTranslated.length} chuỗi hardcode trong ft("…").`);
+  console.log(`Đã vá ${result.manualLabelsPatched.length} nhãn tab manual (theo locale en/vi).`);
 }
 
 if (require.main === module) main();
