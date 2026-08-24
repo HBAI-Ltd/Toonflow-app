@@ -35,19 +35,26 @@ interface ToolConfig {
   resTool: ResTool;
   toolsNames?: string[];
   msg: ReturnType<ResTool["newMessage"]>;
+  /** Person-facing: the "thinking" panel text shown to whoever is watching the agent run. */
   locale: Locale;
+  /**
+   * Model-facing: tool description/schema `.describe()` text and any string returned by
+   * `execute()` (a tool result the model reads on its next turn) all take this instead of
+   * `locale` — see src/i18n/locale.ts.
+   */
+  promptLocale: Locale;
 }
 
 export default (toolCpnfig: ToolConfig) => {
-  const { resTool, toolsNames, msg, locale } = toolCpnfig;
+  const { resTool, toolsNames, msg, locale, promptLocale } = toolCpnfig;
   const { socket } = resTool;
   const tools: Record<string, Tool> = {
     get_novel_events: tool({
-      description: t("agent.script.tools.getNovelEvents.describe", {}, locale),
+      description: t("agent.script.tools.getNovelEvents.describe", {}, promptLocale),
       inputSchema: jsonSchema<{ chapterIndexs: number[] }>(
         z
           .object({
-            chapterIndexs: z.array(z.number()).describe(t("agent.script.tools.getNovelEvents.chapterIndexsDescribe", {}, locale)),
+            chapterIndexs: z.array(z.number()).describe(t("agent.script.tools.getNovelEvents.chapterIndexsDescribe", {}, promptLocale)),
           })
           .toJSONSchema(),
       ),
@@ -60,21 +67,25 @@ export default (toolCpnfig: ToolConfig) => {
           .select("id", "chapterIndex as index", "reel", "chapter", "chapterData", "event", "eventState")
           .whereIn("chapterIndex", chapterIndexs);
         thinking.appendText(t("agent.script.tools.getNovelEvents.queryingChapters", { chapters: chapterIndexs.join(",") }, locale));
+        // eventString is the tool's own return value (model-facing), even though it's also
+        // echoed into the "thinking" UI panel below — resolves via prompt_language.
         const eventString = data
-          .map((i: any) => [t("agent.script.tools.getNovelEvents.eventLine", { index: i.index, chapter: i.chapter, event: i.event }, locale)].join("\n"))
+          .map((i: any) =>
+            [t("agent.script.tools.getNovelEvents.eventLine", { index: i.index, chapter: i.chapter, event: i.event }, promptLocale)].join("\n"),
+          )
           .join("\n");
         thinking.appendText(t("agent.script.tools.getNovelEvents.result", { data: eventString }, locale));
         thinking.updateTitle(t("agent.script.tools.getNovelEvents.done", {}, locale));
         thinking.complete();
-        return eventString ?? t("agent.script.tools.noData", {}, locale);
+        return eventString ?? t("agent.script.tools.noData", {}, promptLocale);
       },
     }),
     get_planData: tool({
-      description: t("agent.script.tools.getPlanData.describe", {}, locale),
+      description: t("agent.script.tools.getPlanData.describe", {}, promptLocale),
       inputSchema: jsonSchema<{ key: keyof planData }>(
         z
           .object({
-            key: keySchema.describe(t("agent.script.tools.getPlanData.keyDescribe", {}, locale)),
+            key: keySchema.describe(t("agent.script.tools.getPlanData.keyDescribe", {}, promptLocale)),
           })
           .toJSONSchema(),
       ),
@@ -86,15 +97,15 @@ export default (toolCpnfig: ToolConfig) => {
         thinking.appendText(t("agent.script.tools.getPlanData.fetched", { label, data: planData[key] }, locale));
         thinking.updateTitle(t("agent.script.tools.getPlanData.done", { label }, locale));
         thinking.complete();
-        return planData[key] ?? t("agent.script.tools.noData", {}, locale);
+        return planData[key] ?? t("agent.script.tools.noData", {}, promptLocale);
       },
     }),
     get_novel_text: tool({
-      description: t("agent.script.tools.getNovelText.describe", {}, locale),
+      description: t("agent.script.tools.getNovelText.describe", {}, promptLocale),
       inputSchema: jsonSchema<{ chapterIndex: string }>(
         z
           .object({
-            chapterIndex: z.string().describe(t("agent.script.tools.getNovelText.chapterIndexDescribe", {}, locale)),
+            chapterIndex: z.string().describe(t("agent.script.tools.getNovelText.chapterIndexDescribe", {}, promptLocale)),
           })
           .toJSONSchema(),
       ),
@@ -106,15 +117,15 @@ export default (toolCpnfig: ToolConfig) => {
         thinking.appendText(t("agent.script.tools.getNovelText.fetched", { text }, locale));
         thinking.updateTitle(t("agent.script.tools.getNovelText.done", {}, locale));
         thinking.complete();
-        return text ?? t("agent.script.tools.noData", {}, locale);
+        return text ?? t("agent.script.tools.noData", {}, promptLocale);
       },
     }),
     get_script_content: tool({
-      description: t("agent.script.tools.getScriptContent.describe", {}, locale),
+      description: t("agent.script.tools.getScriptContent.describe", {}, promptLocale),
       inputSchema: jsonSchema<{ ids: string[] }>(
         z
           .object({
-            ids: z.array(z.string()).describe(t("agent.script.tools.getScriptContent.idsDescribe", {}, locale)),
+            ids: z.array(z.string()).describe(t("agent.script.tools.getScriptContent.idsDescribe", {}, promptLocale)),
           })
           .toJSONSchema(),
       ),
@@ -126,7 +137,7 @@ export default (toolCpnfig: ToolConfig) => {
         thinking.appendText(t("agent.script.tools.getScriptContent.fetched", { data: JSON.stringify(data, null, 2) }, locale));
         thinking.updateTitle(t("agent.script.tools.getScriptContent.done", {}, locale));
         thinking.complete();
-        return text ?? t("agent.script.tools.noData", {}, locale);
+        return text ?? t("agent.script.tools.noData", {}, promptLocale);
       },
     }),
   };
