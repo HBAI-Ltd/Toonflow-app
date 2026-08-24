@@ -449,9 +449,77 @@
       "en": 0,
       "vi": 0
     },
+    "data/skills/story_skills/Sweet_romance_novel/driector_skills/director_storyboard_table_narrative.md": {
+      "en": {
+        "residualCjk": 5,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 每个镜头必须推进叙事 theo nghĩa văn xuôi (đẩy mạch truyện đi tới), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 5,
+        "literalAllowance": {
+          "推进": {
+            "expected": 0,
+            "reason": "bản gốc dùng 每个镜头必须推进叙事 theo nghĩa văn xuôi (đẩy mạch truyện đi tới), không phải giá trị vận máy 推进 (push in)"
+          }
+        }
+      }
+    },
     "data/skills/story_skills/Urban_workplace_drama/README.md": {
       "en": 0,
       "vi": 0
+    },
+    "data/skills/story_skills/Urban_workplace_drama/driector_skills/director_planning_narrative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "远景": {
+            "expected": 1,
+            "reason": "bản gốc có 2 lần 远景: 1 lần là giá trị cỡ cảnh (远景/全景), 1 lần nằm trong 城市远景 ở cột gợi ý âm nhạc theo nghĩa văn xuôi (thành phố nhìn/nghe từ xa) — chỉ giữ literal cho lần là giá trị"
+          },
+          "升降": {
+            "expected": 0,
+            "reason": "bản gốc dùng 电梯升降 theo nghĩa văn xuôi (thang máy lên xuống), không phải giá trị vận máy 升降 (crane)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "远景": {
+            "expected": 1,
+            "reason": "bản gốc có 2 lần 远景: 1 lần là giá trị cỡ cảnh (远景/全景), 1 lần nằm trong 城市远景 ở cột gợi ý âm nhạc theo nghĩa văn xuôi (thành phố nhìn/nghe từ xa) — chỉ giữ literal cho lần là giá trị"
+          },
+          "升降": {
+            "expected": 0,
+            "reason": "bản gốc dùng 电梯升降 theo nghĩa văn xuôi (thang máy lên xuống), không phải giá trị vận máy 升降 (crane)"
+          }
+        }
+      }
+    },
+    "data/skills/story_skills/Urban_workplace_drama/driector_skills/director_storyboard_table_narrative.md": {
+      "en": {
+        "residualCjk": 1,
+        "literalAllowance": {
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần khớp chuỗi 中景 nhưng 1 lần chỉ là chuỗi con tình cờ trong 分镜中景别 (trong phân cảnh, cỡ cảnh…), không phải giá trị cỡ cảnh — chỉ giữ 4 lần là giá trị"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 1,
+        "literalAllowance": {
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần khớp chuỗi 中景 nhưng 1 lần chỉ là chuỗi con tình cờ trong 分镜中景别 (trong phân cảnh, cỡ cảnh…), không phải giá trị cỡ cảnh — chỉ giữ 4 lần là giá trị"
+          }
+        }
+      }
     },
     "data/skills/story_skills/Xianxia_fantasy/README.md": {
       "en": 0,
