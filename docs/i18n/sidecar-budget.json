@@ -1586,6 +1586,70 @@
     "data/skills/story_skills/Xianxia_fantasy/README.md": {
       "en": 0,
       "vi": 0
+    },
+    "data/skills/art_skills/realpeople_modern_city/art_prompt/art_character.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 特写 để gọi tên ô hình cận trong bộ bốn góc (正面/侧面/背面/特写四角度, 近景特写) — tên ô hình của bảng chân dung bốn góc, không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 特写 để gọi tên ô hình cận trong bộ bốn góc (正面/侧面/背面/特写四角度, 近景特写) — tên ô hình của bảng chân dung bốn góc, không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/realpeople_modern_city/art_prompt/art_character_derivative.md": {
+      "en": {
+        "residualCjk": 25,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 特写 ở hai nghĩa văn xuôi: 近景特写 là tên ô hình cận trong bộ bốn góc, và 镜头特写 là cụm văn xuôi chỉ 'cảnh cận trước ống kính' trong cột bối cảnh áp dụng — không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
+          },
+          "环绕": {
+            "expected": 0,
+            "reason": "bản gốc viết 碎发环绕面部 / 碎发环绕面部和颈部 theo nghĩa văn xuôi (tóc con vây quanh gương mặt), không phải giá trị vận máy 环绕 (orbit)"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 25,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 特写 ở hai nghĩa văn xuôi: 近景特写 là tên ô hình cận trong bộ bốn góc, và 镜头特写 là cụm văn xuôi chỉ 'cảnh cận trước ống kính' trong cột bối cảnh áp dụng — không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 正面近景/近景特写 để gọi tên ô hình cận trong bộ bốn góc (cột 景别 của bảng này mang giá trị 头顶至锁骨上缘/全身), không phải giá trị cỡ cảnh 近景 trong bảng phân cảnh"
+          },
+          "环绕": {
+            "expected": 0,
+            "reason": "bản gốc viết 碎发环绕面部 / 碎发环绕面部和颈部 theo nghĩa văn xuôi (tóc con vây quanh gương mặt), không phải giá trị vận máy 环绕 (orbit)"
+          }
+        }
+      }
     }
   }
 }
