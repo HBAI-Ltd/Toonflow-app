@@ -28,7 +28,7 @@ Bắt buộc tuân thủ nghiêm ngặt và đầy đủ toàn bộ ràng buộc
 
 | STT | Tên màu | Mã màu | Công dụng |
 |---|---|---|---|
-| C1 | Nguyệt bạch (月白) | #E0E8F0 | Bầu trời, mây sương, màu nền áo trắng |
+| C1 | Trắng nguyệt bạch (月白) | #E0E8F0 | Bầu trời, mây sương, màu nền áo trắng |
 | C2 | Thanh lục (青绿) | #4A8C7E | Sơn thủy, cây cỏ, tranh sơn thủy thanh lục |
 | C3 | Chu sa (朱红) | #B22222 | Kiến trúc, cửa nẻo, cảnh vui mừng |
 | C4 | Chàm (靛蓝) | #3B4B7C | Trời đêm, núi xa, tông lạnh |

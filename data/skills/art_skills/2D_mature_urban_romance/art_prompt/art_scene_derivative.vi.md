@@ -93,7 +93,7 @@
 | Mặt sau/nhìn sau | 180° về phía sau bối cảnh | `back view` |
 | Nhìn từ trên xuống | Nhìn bao quát từ vị trí cao, cho thấy bố cục tổng thể | `high angle`、`bird's eye view` |
 | Nhìn từ dưới lên | Ngước nhìn từ vị trí thấp, nhấn chủ thể cao lớn | `low angle`、`worm's eye view` |
-| Đẩy máy vào cận cảnh (近景推进) | Cùng hướng nhưng đẩy máy vào (镜头推进), tập trung vào phần cục bộ | `push-in`、`closer angle` |
+| Đẩy máy vào cận cảnh (近景推进) | Cùng hướng nhưng máy đẩy vào (镜头推进), tập trung vào phần cục bộ | `push-in`、`closer angle` |
 | Góc tự do | Mô tả góc bất kỳ do bên gọi tự định nghĩa | Đưa vào theo `{góc mục tiêu}` |
 
 ### Quy phạm phái sinh theo góc

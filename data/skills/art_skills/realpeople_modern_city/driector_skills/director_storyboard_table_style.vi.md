@@ -177,7 +177,7 @@ Trời ngoài cửa sổ đã chuyển sang giờ xanh — bầu trời xanh tí
 
 ### 7.3 Triết lý chuyển động máy quay của Đô thị người thật
 
-- Máy cố định (固定机位) là lựa chọn đầu tiên — để khán giả thấy người thật tồn tại tự nhiên trong không gian thật
+- Vị trí máy cố định (固定机位) là lựa chọn đầu tiên — để khán giả thấy người thật tồn tại tự nhiên trong không gian thật
 - Rung nhẹ máy cầm tay dùng ở các đoạn cảm xúc — nhưng biên độ rung không vượt khoảng thông thường của phong cách phim tài liệu điện ảnh
 - Điểm khởi và điểm kết của cú máy động bắt buộc êm, quá trình di chuyển phải đều — cấm tăng tốc đột ngột hoặc dừng gấp
 

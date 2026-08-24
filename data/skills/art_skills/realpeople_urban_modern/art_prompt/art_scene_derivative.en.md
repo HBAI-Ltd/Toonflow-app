@@ -93,7 +93,7 @@
 | Back/rear view | 180° to the back of the scene | back view |
 | High angle | Looking down from a high position, showing the overall layout | high angle、bird's eye view |
 | Low angle | Looking up from a low position, emphasizing a tall subject | low angle、worm's eye view |
-| Push-in to a closer shot (近景推进) | Same direction but the camera pushes in (推进), focusing on a local part | push-in、closer angle |
+| Closer push-in (近景推进) | Same direction but the camera pushes in (镜头推进), focusing on a local part | push-in、closer angle |
 | Free angle | Any angle description defined by the caller | injected via `{target angle}` |
 
 ### Angle derivation specification

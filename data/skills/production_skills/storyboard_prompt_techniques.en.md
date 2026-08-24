@@ -95,7 +95,7 @@ The storyboard image is the **first-frame reference for the video**. The model s
 | Shot size input | Mode B (Nanobanana) English shot word | Mode A (Seedream) picture word |
 |----------|-------------------------------|---------------------------|
 | 大远景/大全景 | `extreme wide shot, establishing shot` | 大远景 extreme wide shot composition, the whole environment in view, the figure small against the scene |
-| 远景/全景 | `wide shot, full shot, full body` | full body in frame, wide shot (远景) composition, figure and scene in balanced proportion |
+| 远景/全景 | `wide shot, full shot, full body` | full body in frame, long shot (远景) composition, figure and scene in balanced proportion |
 | 中景 | `medium shot, cowboy shot, knee shot` | medium shot (中景) composition, the figure framed from the knees up |
 | 近景 | `medium close-up, upper body` | medium close-up (近景) composition, upper body in frame, background blurred |
 | 半身 | `half body shot, bust shot` | half-body composition, framed from the waist up, shallow depth of field |

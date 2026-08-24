@@ -99,7 +99,7 @@ metaData: art_skills
 | Mặt sau/nhìn sau | Hướng về mặt sau bối cảnh 180° | back view |
 | Nhìn từ trên xuống | Nhìn bao quát từ vị trí cao, cho thấy bố cục tổng thể | high angle、bird's eye view |
 | Nhìn từ dưới lên | Ngước nhìn từ vị trí thấp, nhấn vào chủ thể cao lớn | low angle、worm's eye view |
-| Đẩy máy vào cận cảnh (近景推进) | Cùng hướng nhưng đẩy máy vào (镜头推进), tập trung vào một phần | push-in、closer angle |
+| Đẩy máy vào cận cảnh (近景推进) | Cùng hướng nhưng máy đẩy vào (镜头推进), tập trung vào một phần | push-in、closer angle |
 | Góc tự do | Mô tả góc tùy ý do bên gọi tự định | tiêm theo `{góc mục tiêu}` |
 
 ### Quy phạm phái sinh theo góc

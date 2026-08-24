@@ -41,7 +41,7 @@ Bắt buộc tuân thủ nghiêm ngặt và đầy đủ toàn bộ ràng buộc
 
 | Thủ pháp | Tâm lý thị giác | Tình huống dùng |
 |---|---|---|
-| Máy cố định (固定机位) | Điềm tĩnh, quan sát, để thời gian tự lên tiếng | Cảnh thường ngày, đối thoại, cảnh không để thở |
+| Vị trí máy cố định (固定机位) | Điềm tĩnh, quan sát, để thời gian tự lên tiếng | Cảnh thường ngày, đối thoại, cảnh không để thở |
 | Rung nhẹ máy cầm tay | Cảm giác hiện diện, nhịp thở, sự can dự chủ quan | Biến động cảm xúc, bước đi trên phố, bám theo thân mật |
 | Steadicam/gimbal | Trôi mượt thanh thoát, chất thơ của những chuyến lang thang đô thị | Chuyển cảnh quan trọng, nhân vật xuất hiện, giới thiệu không gian |
 | Máy quay từ trên cao | Cảm giác định mệnh, sự nhỏ bé, góc nhìn thượng đế | Nhìn xuống thành phố, cái ngoái nhìn ở đoạn kết, nhân vật bế tắc |
