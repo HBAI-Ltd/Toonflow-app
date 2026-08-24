@@ -150,10 +150,11 @@ export default async (knex: Knex): Promise<void> => {
       });
     }
   }
-  // Guarded re-sync (not an unconditional overwrite): only replaces o_prompt.data for
-  // scriptAssetExtraction / videoPromptGeneration when the stored value still exactly matches a
-  // known seed variant (see src/lib/migrations/promptSeedSync.ts) — i.e. it still provably holds
-  // seed text, not a hand-edited value. That guard is what makes it safe to re-sync this column on
+  // Guarded re-sync (not an unconditional overwrite): only replaces o_prompt.data for every seed
+  // prompt type (SEED_PROMPT_TYPES — eventExtraction, scriptAssetExtraction,
+  // videoPromptGeneration, audioBindPrompt) when the stored value still exactly matches a known
+  // seed variant (see src/lib/migrations/promptSeedSync.ts) — i.e. it still provably holds seed
+  // text, not a hand-edited value. That guard is what makes it safe to re-sync this column on
   // every restart, including after a locale change, without ever clobbering a `data` value someone
   // set by hand; see that module's doc comment for details.
   await syncGuardedPromptSeeds(knex, locale);
