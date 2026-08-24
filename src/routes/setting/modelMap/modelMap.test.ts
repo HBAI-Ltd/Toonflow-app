@@ -125,41 +125,53 @@ describe("modelMap routes (getPromptList/bindingPrompt/deletePrompt/updatePrompt
   }
 
   describe("getPromptList", () => {
-    it("mỗi prompt xuất hiện đúng một lần, kể cả khi có 3 file trên đĩa (gốc + en + vi sidecar)", async () => {
+    it("trả về 1 entry mặc định + 1 entry mỗi biến thể ngôn ngữ có trên đĩa (gốc zh + en + vi sidecar = 4 entries)", async () => {
       const { status, json } = await get("/getPromptList", "vi");
       expect(status).toBe(200);
       const entries: { path: string }[] = json.data;
       const mode = entries.filter((e) => e.path.includes("seedance2Multi-parameterMode"));
-      expect(mode).toHaveLength(1);
+      expect(mode).toHaveLength(4);
     });
 
-    it("locale vi -> path trả về là sidecar vi, data đọc đúng nội dung sidecar vi", async () => {
+    it("entry mặc định gắn với path canonical (không hậu tố)", async () => {
+      const { json } = await get("/getPromptList", "en");
+      const entries: { path: string; name: string }[] = json.data;
+      const mode = entries.filter((e) => e.path.includes("seedance2Multi-parameterMode"));
+      const defaultEntry = mode.find((e) => e.path === "video/seedance2Multi-parameterMode.md" && e.name.includes("Default"))!;
+      expect(defaultEntry).toBeTruthy();
+    });
+
+    it("mỗi biến thể ngôn ngữ có path và nhãn (name) riêng biệt, đọc đúng nội dung file đó", async () => {
+      const { json } = await get("/getPromptList", "en");
+      const entries: { path: string; name: string; data: string }[] = json.data;
+      const mode = entries.filter((e) => e.path.includes("seedance2Multi-parameterMode"));
+
+      const en = mode.find((e) => e.path === "video/seedance2Multi-parameterMode.en.md")!;
+      const vi = mode.find((e) => e.path === "video/seedance2Multi-parameterMode.vi.md")!;
+      const zh = mode.find((e) => e.path === "video/seedance2Multi-parameterMode.md" && !e.name.includes("Default"))!;
+
+      expect(en.data).toBe("en content");
+      expect(vi.data).toBe("vi content");
+      expect(zh.data).toBe("zh content");
+
+      // Distinct labels — every path in the group has a different name, so a user can tell them apart.
+      const names = new Set(mode.map((e) => e.name));
+      expect(names.size).toBe(mode.length);
+    });
+
+    it("prompt do người dùng tự thêm (không có sidecar) trả về 2 entries: mặc định + biến thể zh (không có en/vi)", async () => {
       const { json } = await get("/getPromptList", "vi");
-      const entries: { path: string; data: string }[] = json.data;
-      const mode = entries.find((e) => e.path.includes("seedance2Multi-parameterMode"))!;
-      expect(mode.path).toBe("video/seedance2Multi-parameterMode.vi.md");
-      expect(mode.data).toBe("vi content");
-    });
-
-    it("locale zh -> luôn trả bản gốc, không phải sidecar, dù sidecar tồn tại", async () => {
-      const { json } = await get("/getPromptList", "zh");
-      const entries: { path: string; data: string }[] = json.data;
-      const mode = entries.find((e) => e.path.includes("seedance2Multi-parameterMode"))!;
-      expect(mode.path).toBe("video/seedance2Multi-parameterMode.md");
-      expect(mode.data).toBe("zh content");
-    });
-
-    it("prompt do người dùng tự thêm (không có sidecar) vẫn xuất hiện đúng một lần", async () => {
-      const { json } = await get("/getPromptList", "vi");
-      const entries: { path: string }[] = json.data;
+      const entries: { path: string; name: string }[] = json.data;
       const custom = entries.filter((e) => e.path.includes("myCustomPrompt"));
-      expect(custom).toHaveLength(1);
-      expect(custom[0].path).toBe("video/myCustomPrompt.md");
+      expect(custom).toHaveLength(2);
+      expect(custom.every((e) => e.path === "video/myCustomPrompt.md")).toBe(true);
+      const names = new Set(custom.map((e) => e.name));
+      expect(names.size).toBe(2);
     });
   });
 
   describe("bindingPrompt", () => {
-    it("path gửi lên là sidecar (foo.vi.md) -> lưu vào DB path canonical (base, không hậu tố)", async () => {
+    it("path gửi lên là sidecar tường minh (foo.vi.md) -> lưu đúng path đó, ghim ngôn ngữ (tính năng có chủ đích)", async () => {
       const { status } = await post(
         "/bindingPrompt",
         {
@@ -172,10 +184,10 @@ describe("modelMap routes (getPromptList/bindingPrompt/deletePrompt/updatePrompt
       );
       expect(status).toBe(200);
       const row = modelPromptTable.find((r) => r.vendorId === "vendorA" && r.model === "modelA");
-      expect(row?.path).toBe("video/seedance2Multi-parameterMode.md");
+      expect(row?.path).toBe("video/seedance2Multi-parameterMode.vi.md");
     });
 
-    it("path gửi lên đã là base -> giữ nguyên base khi lưu", async () => {
+    it("path gửi lên đã là base (canonical) -> giữ nguyên base khi lưu (theo cài đặt)", async () => {
       const { status } = await post(
         "/bindingPrompt",
         { vendorId: "vendorB", model: "modelB", path: "video/myCustomPrompt.md", fileName: "myCustomPrompt.md" },
@@ -197,7 +209,7 @@ describe("modelMap routes (getPromptList/bindingPrompt/deletePrompt/updatePrompt
       expect(modelPromptTable.length).toBe(before);
     });
 
-    it("bind lại cùng vendorId/model -> update path canonical, không tạo dòng mới", async () => {
+    it("bind lại cùng vendorId/model với một sidecar khác -> update path (pinned), không tạo dòng mới", async () => {
       await post(
         "/bindingPrompt",
         { vendorId: "vendorA", model: "modelA", path: "video/seedance2Multi-parameterMode.en.md", fileName: "x" },
@@ -205,7 +217,7 @@ describe("modelMap routes (getPromptList/bindingPrompt/deletePrompt/updatePrompt
       );
       const rows = modelPromptTable.filter((r) => r.vendorId === "vendorA" && r.model === "modelA");
       expect(rows).toHaveLength(1);
-      expect(rows[0].path).toBe("video/seedance2Multi-parameterMode.md");
+      expect(rows[0].path).toBe("video/seedance2Multi-parameterMode.en.md");
     });
   });
 
