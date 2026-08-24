@@ -1,5 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { stripComments, scanText } from "./i18n-scan";
+import { describe, it, expect, afterEach } from "vitest";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { stripComments, scanText, runScan, loadRegisteredTerms, type ScanTarget } from "./i18n-scan";
 
 describe("stripComments", () => {
   it("bỏ comment dòng", () => {
@@ -147,5 +150,122 @@ describe("scanLines - jsonKeyExemptions", () => {
     const hits = scanText(source, { stripComments: false, jsonKeyExemptions: new Set(["a.b"]) });
     expect(hits).toHaveLength(1);
     expect(hits[0].text).toBe("另一个中文");
+  });
+});
+
+// Token thật lấy từ docs/i18n/prompt-terms.json (policy keep-zh-literal), dùng làm registeredTerms
+// giả lập trong test — không đọc registry thật ở đây, chỉ dùng đúng cách các token đã biết để
+// dựng ca kiểm thử cho phần lồng nhau (远景 là chuỗi con của 大远景).
+const SHOT_SIZE_TERMS = ["远景", "大远景", "全景", "中景", "近景", "特写", "大特写", "静止"];
+
+describe("scanText - registeredTerms (token khớp máy trong docs/i18n/prompt-terms.json)", () => {
+  // Trong file thật, token nằm giữa dấu ngoặc/pipe ASCII (vd. "Extreme wide shot (远景)"), nên mỗi
+  // chuỗi CJK khớp regex CJK đúng bằng một token — dùng dấu ngoặc ASCII ở đây để mô phỏng đúng ranh
+  // giới đó, tránh dấu câu fullwidth (，。：) nối liền các token thành một match CJK duy nhất.
+  it("bỏ qua chuỗi CJK chỉ gồm một token đã đăng ký", () => {
+    const hits = scanText("Shot size (远景), stay (静止).", { stripComments: false, registeredTerms: SHOT_SIZE_TERMS });
+    expect(hits).toHaveLength(0);
+  });
+
+  it("vẫn báo chuỗi CJK có phần NGOÀI token đã đăng ký, dù có chứa một token đã đăng ký", () => {
+    // "中全景" = "中" (chưa đăng ký) + "全景" (đã đăng ký) — phần "中" phải khiến hit vẫn bị báo.
+    const hits = scanText("Shot size (中全景).", { stripComments: false, registeredTerms: SHOT_SIZE_TERMS });
+    expect(hits).toHaveLength(1);
+    expect(hits[0].text).toBe("中全景");
+  });
+
+  it("token lồng nhau: 远景 là chuỗi con của 大远景 — 大远景 (cả hai đều đã đăng ký) vẫn được bỏ qua nguyên vẹn", () => {
+    const hits = scanText("Shot size (大远景).", { stripComments: false, registeredTerms: SHOT_SIZE_TERMS });
+    expect(hits).toHaveLength(0);
+  });
+
+  it("token lồng nhau nhưng có phần thừa chưa đăng ký vẫn phải báo", () => {
+    // "超大远景" = "超" (chưa đăng ký) + "大远景" (đã đăng ký) — phần "超" phải khiến hit vẫn bị báo.
+    const hits = scanText("Shot size (超大远景).", { stripComments: false, registeredTerms: SHOT_SIZE_TERMS });
+    expect(hits).toHaveLength(1);
+    expect(hits[0].text).toBe("超大远景");
+  });
+
+  it("không có registeredTerms (undefined) thì hành vi y hệt trước đây — mọi CJK đều bị báo", () => {
+    const hits = scanText("Shot size (远景), stay (静止).", { stripComments: false });
+    expect(hits).toHaveLength(2);
+    expect(hits.map((h) => h.text)).toEqual(["远景", "静止"]);
+  });
+
+  it("pragma i18n-ignore vẫn hoạt động y như cũ khi registeredTerms có mặt (chuỗi chưa dịch thật, không phải token)", () => {
+    const hits = scanText('const a = "未翻译文本"; // i18n-ignore', {
+      stripComments: true,
+      registeredTerms: SHOT_SIZE_TERMS,
+    });
+    expect(hits).toHaveLength(0);
+  });
+
+  it("pragma i18n-ignore không che giấu chuỗi chưa dịch thật khi KHÔNG có pragma, dù registeredTerms có mặt", () => {
+    const hits = scanText('const a = "未翻译文本";', { stripComments: true, registeredTerms: SHOT_SIZE_TERMS });
+    expect(hits).toHaveLength(1);
+    expect(hits[0].text).toBe("未翻译文本");
+  });
+});
+
+describe("loadRegisteredTerms", () => {
+  it("đọc registry lúc chạy — không hardcode danh sách token", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "i18n-scan-registry-"));
+    try {
+      fs.mkdirSync(path.join(dir, "docs/i18n"), { recursive: true });
+      fs.writeFileSync(
+        path.join(dir, "docs/i18n/prompt-terms.json"),
+        JSON.stringify({
+          terms: [
+            { zh: "远景", policy: "keep-zh-literal" },
+            { zh: "已完成", policy: "never-translate" },
+            { zh: "duration", policy: "never-translate" }, // ASCII thuần — không phải CJK, phải bị loại
+            { zh: "推进", policy: "translate-label" }, // policy khác — không phải literal, phải bị loại
+          ],
+        }),
+      );
+      const terms = loadRegisteredTerms(dir);
+      expect(terms.sort()).toEqual(["已完成", "远景"]);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("runScan - phạm vi áp dụng registeredTerms (chỉ hai target sidecar skill, không lan sang target khác)", () => {
+  let dir: string;
+
+  afterEach(() => {
+    if (dir) fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("bỏ qua token đăng ký trong data/skills/**/README.en.md nhưng vẫn báo cùng chuỗi đó trong src/**/*.ts", async () => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), "i18n-scan-runscan-"));
+    fs.mkdirSync(path.join(dir, "data/skills/foo"), { recursive: true });
+    fs.mkdirSync(path.join(dir, "src"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "data/skills/foo/README.en.md"), "Shot size: 远景, stay 静止.\n");
+    fs.writeFileSync(path.join(dir, "src/example.ts"), 'const shot = "远景"; // not a comment CJK\n');
+
+    const targets: ScanTarget[] = [
+      { glob: "data/skills/**/README.en.md", stripComments: false, registeredTerms: ["远景", "静止"] },
+      { glob: "src/**/*.ts", stripComments: true },
+    ];
+    const result = await runScan(dir, targets);
+    expect(result.total).toBe(1);
+    expect(result.hits).toHaveLength(1);
+    expect(result.hits[0].file).toBe("src/example.ts");
+    expect(result.hits[0].text).toBe("远景");
+  });
+
+  it("chuỗi chưa dịch thật trong README.en.md (không phải token đăng ký) vẫn bị báo", async () => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), "i18n-scan-runscan-real-"));
+    fs.mkdirSync(path.join(dir, "data/skills/foo"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "data/skills/foo/README.en.md"), "Shot size: 远景, but this line 未翻译.\n");
+
+    const targets: ScanTarget[] = [
+      { glob: "data/skills/**/README.en.md", stripComments: false, registeredTerms: ["远景"] },
+    ];
+    const result = await runScan(dir, targets);
+    expect(result.total).toBe(1);
+    expect(result.hits[0].text).toBe("未翻译");
   });
 });

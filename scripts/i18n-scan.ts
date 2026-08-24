@@ -1,5 +1,7 @@
 import fs from "fs";
+import path from "path";
 import fg from "fast-glob";
+import { extractLiteralTerms, stripLiteralTerms, TERMS_PATH } from "./i18n-check-sidecars";
 
 export interface CjkHit {
   file?: string;
@@ -18,6 +20,18 @@ export interface ScanOptions {
    * a line (this repo's locale JSON files are one key per line).
    */
   jsonKeyExemptions?: Set<string>;
+  /**
+   * `zh` forms of docs/i18n/prompt-terms.json entries with policy keep-zh-literal / never-translate
+   * (read at runtime via extractLiteralTerms — never hardcode this list). data/skills/**\/README.{en,vi}.md
+   * are required to carry these tokens verbatim (enforced by i18n:check-sidecars), so the scanner
+   * must not flag them as untranslated. A CJK hit is suppressed only when it is made up ENTIRELY of
+   * registered tokens once every occurrence is stripped out (nested tokens like 远景/大远景 handled by
+   * stripLiteralTerms's longest-first removal, shared with i18n-check-sidecars). Any leftover CJK
+   * outside a registered token (e.g. the "中" in "中近景", which is not itself a registered token even
+   * though it contains the registered "近景") still gets reported — this must never blind the gate to
+   * a real untranslated string just because part of it happens to overlap a registered token.
+   */
+  registeredTerms?: string[];
 }
 
 // Ranges: U+4E00-9FFF CJK Unified Ideographs, U+3000-303F CJK Symbols and Punctuation
@@ -147,6 +161,8 @@ export function stripComments(source: string): string {
 interface ScanResult {
   hits: CjkHit[];
   suppressed: number;
+  /** Of `suppressed`, how many were suppressed because they're entirely registered prompt-terms tokens. */
+  registrySuppressed: number;
 }
 
 /**
@@ -161,6 +177,7 @@ function scanLines(source: string, opts: ScanOptions): ScanResult {
   const lines = text.split("\n");
   const hits: CjkHit[] = [];
   let suppressed = 0;
+  let registrySuppressed = 0;
 
   lines.forEach((line, idx) => {
     const lineHasPragma = rawLines[idx].includes(IGNORE_PRAGMA);
@@ -172,13 +189,20 @@ function scanLines(source: string, opts: ScanOptions): ScanResult {
     for (const m of line.matchAll(CJK)) {
       if (ignored) {
         suppressed++;
+        continue;
+      }
+      const registeredOnly =
+        opts.registeredTerms !== undefined && stripLiteralTerms(m[0], opts.registeredTerms) === "";
+      if (registeredOnly) {
+        suppressed++;
+        registrySuppressed++;
       } else {
         hits.push({ line: idx + 1, text: m[0] });
       }
     }
   });
 
-  return { hits, suppressed };
+  return { hits, suppressed, registrySuppressed };
 }
 
 export function scanText(source: string, opts: ScanOptions): CjkHit[] {
@@ -189,7 +213,25 @@ export function scanText(source: string, opts: ScanOptions): CjkHit[] {
 // regex example) inside an otherwise-translated en/vi string. See ScanOptions.jsonKeyExemptions.
 const JSON_KEY_EXEMPTIONS = new Set(["agent.script.getAiRegex.systemPrompt"]);
 
-const TARGETS: { glob: string; stripComments: boolean; jsonKeyExemptions?: Set<string> }[] = [
+export interface ScanTarget {
+  glob: string;
+  stripComments: boolean;
+  jsonKeyExemptions?: Set<string>;
+  /** Only set for the skill-sidecar targets — see ScanOptions.registeredTerms. */
+  registeredTerms?: string[];
+}
+
+/**
+ * Globs whose hits get filtered against docs/i18n/prompt-terms.json's registered literal
+ * terms. Scoped deliberately: these are the translated skill sidecars that
+ * i18n-check-sidecars.ts requires to carry keep-zh-literal / never-translate tokens verbatim.
+ * Every other target (source code comments, top-level READMEs, locale catalogs) keeps the
+ * old strict all-CJK-is-a-miss behavior — a registered term appearing there would be a
+ * genuine translation gap, not a machine-matched token.
+ */
+const SKILL_SIDECAR_GLOBS = new Set(["data/skills/**/README.en.md", "data/skills/**/README.vi.md"]);
+
+const TARGETS: ScanTarget[] = [
   { glob: "src/**/*.ts", stripComments: true },
   { glob: "data/vendor/*.ts", stripComments: true },
   { glob: "scripts/*.ts", stripComments: true },
@@ -204,25 +246,52 @@ const TARGETS: { glob: string; stripComments: boolean; jsonKeyExemptions?: Set<s
 
 const IGNORE = ["src/i18n/locales/zh.json", "src/lib/vendor.json", "src/router.ts", "**/*.test.ts"];
 
-async function main() {
-  let total = 0;
-  let totalSuppressed = 0;
-  for (const target of TARGETS) {
-    const files = await fg(target.glob, { ignore: IGNORE, dot: false });
-    for (const file of files) {
-      const { hits, suppressed } = scanLines(fs.readFileSync(file, "utf-8"), {
+/** Reads docs/i18n/prompt-terms.json under `root` and returns its registered literal `zh` terms. */
+export function loadRegisteredTerms(root: string): string[] {
+  const registry = JSON.parse(fs.readFileSync(path.join(root, TERMS_PATH), "utf8"));
+  return extractLiteralTerms(registry);
+}
+
+/**
+ * Runs every target glob (resolved relative to `root`) and returns all hits plus the
+ * suppressed count. Pulled out of main() so tests can point it at a temp fixture directory
+ * instead of the real repo tree.
+ */
+export async function runScan(
+  root: string,
+  targets: ScanTarget[] = TARGETS,
+): Promise<{ hits: Required<CjkHit>[]; total: number; suppressed: number; registrySuppressed: number }> {
+  const hits: Required<CjkHit>[] = [];
+  let suppressed = 0;
+  let registrySuppressed = 0;
+  for (const target of targets) {
+    const files = await fg(target.glob, { cwd: root, ignore: IGNORE, dot: false });
+    for (const file of files.sort()) {
+      const result = scanLines(fs.readFileSync(path.join(root, file), "utf-8"), {
         stripComments: target.stripComments,
         jsonKeyExemptions: target.jsonKeyExemptions,
+        registeredTerms: target.registeredTerms,
       });
-      totalSuppressed += suppressed;
-      for (const hit of hits) {
-        console.log(`${file}:${hit.line}  ${hit.text}`);
-        total++;
-      }
+      suppressed += result.suppressed;
+      registrySuppressed += result.registrySuppressed;
+      for (const hit of result.hits) hits.push({ ...hit, file });
     }
   }
+  return { hits, total: hits.length, suppressed, registrySuppressed };
+}
+
+async function main() {
+  const root = process.cwd();
+  const registeredTerms = loadRegisteredTerms(root);
+  const targets = TARGETS.map((t) => (SKILL_SIDECAR_GLOBS.has(t.glob) ? { ...t, registeredTerms } : t));
+
+  const { hits, total, suppressed, registrySuppressed } = await runScan(root, targets);
+  for (const hit of hits) console.log(`${hit.file}:${hit.line}  ${hit.text}`);
   console.log(total === 0 ? "\nSạch: không còn CJK ngoài vùng cho phép." : `\nCòn ${total} chuỗi CJK.`);
-  console.log(`Đã bỏ qua ${totalSuppressed} chuỗi có pragma i18n-ignore.`);
+  console.log(`Đã bỏ qua ${suppressed - registrySuppressed} chuỗi có pragma i18n-ignore.`);
+  if (registrySuppressed > 0) {
+    console.log(`Đã bỏ qua ${registrySuppressed} chuỗi vì là token đăng ký trong ${TERMS_PATH} (keep-zh-literal / never-translate).`);
+  }
   process.exit(total === 0 ? 0 : 1);
 }
 
