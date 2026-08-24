@@ -5,7 +5,7 @@ import isPathInside from "is-path-inside";
 import getPath from "@/utils/getPath";
 import * as fs from "fs";
 import fg from "fast-glob";
-import { t, getLocale, FALLBACK_LOCALE, type Locale } from "@/i18n";
+import { t, getLocale, getPromptLanguage, FALLBACK_LOCALE, type Locale } from "@/i18n";
 
 type SkillAttribution =
   //剧本Agent
@@ -42,6 +42,9 @@ function ensureNonEmptyBody(body: string, fallback: string): string {
 
 // ==================== 解析 SKILL.md ====================
 
+// Person-facing: both errors are thrown and surfaced as a failure notice to whoever is watching
+// the run (API/socket error), never inserted into a model prompt — `locale` here is
+// content_language, not prompt_language.
 export function parseFrontmatter(content: string, locale: Locale = FALLBACK_LOCALE): { name: string; description: string } {
   const match = content.match(/^\uFEFF?---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/);
   if (!match?.[1]) {
@@ -120,7 +123,11 @@ export function parseFrontmatter(content: string, locale: Locale = FALLBACK_LOCA
 }
 
 export async function useSkill(input: SkillInput) {
+  // Thrown errors below are surfaced to whoever is watching this run (an API/socket error
+  // message), so they follow content_language. The returned `prompt`/`tools` are read by the
+  // model, so they follow prompt_language instead — see the return statement below.
   const locale = await getLocale();
+  const promptLocale = await getPromptLanguage();
   const { mainSkill, workspace = [], attachedSkills = [] } = input;
   const rootDir = getPath("skills");
   const normalizedRootDir = path.resolve(rootDir);
@@ -162,9 +169,15 @@ export async function useSkill(input: SkillInput) {
     tertiarySkills: collectMdFiles(attachedSkills, true),
   };
 
-  return { prompt: buildSkillPrompt(mainSkills, locale), tools: createSkillTools(mainSkills, skillPaths, undefined, locale), skillPaths };
+  return {
+    prompt: buildSkillPrompt(mainSkills, promptLocale),
+    tools: createSkillTools(mainSkills, skillPaths, undefined, promptLocale),
+    skillPaths,
+  };
 }
 
+// Model-facing: this text becomes the agent's system/user prompt, so `locale` here must always
+// be prompt_language (getPromptLanguage()), never content_language.
 export function buildSkillPrompt(skills: { name: string; description: string }[], locale: Locale = FALLBACK_LOCALE): string {
   const skillEntries = skills
     .map((s) => `  <skill>\n    <name>${s.name}</name>\n    <description>${s.description}</description>\n  </skill>`)
@@ -172,6 +185,10 @@ export function buildSkillPrompt(skills: { name: string; description: string }[]
   return t("utils.skillsTools.skillsHeader", { skillEntries }, locale);
 }
 
+// Model-facing: every string here is either tool-schema metadata (description/.describe()) or
+// tool-result `content` handed back to the model on its next turn — `locale` must always be
+// prompt_language (getPromptLanguage()), never content_language. (console.log lines inside
+// execute() are plain server diagnostics and are unaffected either way.)
 export function createSkillTools(
   skills: { name: string; description: string }[],
   skillPaths: SkillPaths,
