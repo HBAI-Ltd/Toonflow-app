@@ -92,16 +92,16 @@ The storyboard image is the **first-frame reference for the video**. The model s
 
 ## Shot-size vocabulary (general)
 
-| Shot size input | Mode B (Nanobanana) English shot word | Mode A (Seedream) Chinese picture word |
+| Shot size input | Mode B (Nanobanana) English shot word | Mode A (Seedream) picture word |
 |----------|-------------------------------|---------------------------|
-| 大远景/大全景 | `extreme wide shot, establishing shot` | 大远景构图，环境全貌，人物渺小于场景 |
-| 远景/全景 | `wide shot, full shot, full body` | 全身入镜，远景构图，人景比例协调 |
-| 中景 | `medium shot, cowboy shot, knee shot` | 中景构图，人物膝盖以上入镜 |
-| 近景 | `medium close-up, upper body` | 近景构图，上半身入镜，背景虚化 |
-| 半身 | `half body shot, bust shot` | 半身构图，腰部以上入镜，浅景深 |
-| 特写 | `close-up, face focus` | 特写构图，面部或细节局部放大，背景深度虚化 |
-| 大特写 | `extreme close-up, macro detail` | 大特写，极度局部细节，虚化背景 |
-| 过肩镜 | `over the shoulder shot, two shot` | 过肩构图，前景人物后背虚化，远景人物清晰 |
+| 大远景/大全景 | `extreme wide shot, establishing shot` | extreme wide shot composition, the whole environment in view, the figure small against the scene |
+| 远景/全景 | `wide shot, full shot, full body` | full body in frame, wide shot composition, figure and scene in balanced proportion |
+| 中景 | `medium shot, cowboy shot, knee shot` | medium shot composition, the figure framed from the knees up |
+| 近景 | `medium close-up, upper body` | medium close-up composition, upper body in frame, background blurred |
+| 半身 | `half body shot, bust shot` | half-body composition, framed from the waist up, shallow depth of field |
+| 特写 | `close-up, face focus` | close-up composition, the face or a detail enlarged, background deeply blurred |
+| 大特写 | `extreme close-up, macro detail` | extreme close-up, an extremely localised detail, blurred background |
+| 过肩镜 | `over the shoulder shot, two shot` | over-the-shoulder composition, the foreground figure's back blurred, the far figure sharp |
 
 **Handling a compound shot size**: if the storyboard table writes a camera movement such as "long shot → medium shot" or "medium shot → close-up", the storyboard image is the first-frame reference, so **take the starting shot size on the left of the arrow**.
 
@@ -115,7 +115,7 @@ Each shot **outputs the prompt body of one mode only** (one of the two); the sam
 
 | Condition | Mode chosen |
 |------|----------|
-| The target model is Seedream / the Doubao family | Mode A (Chinese prompt) |
+| The target model is Seedream / the Doubao family | Mode A (English prompt) |
 | The target model is Nanobanana / the Gemini family | Mode B (English JSON prompt) |
 | The user has not specified a model | Mode A by default, or ask the user to confirm |
 | Batch generation | Keep the same mode throughout; do not switch partway |
@@ -162,7 +162,7 @@ Prompt structure:
 **Key rules**:
 - The 【画面】 section must carry all the information of the storyboard table's "Shot description" field in full; **nothing may be cut**
 - Inside the 【画面】 section, the names of characters/scenes/props **must be replaced by `@图N`** (not written out as names)
-- The facing information must be written explicitly into the 【画面】 section (such as "3/4正面朝右")
+- The facing information must be written explicitly into the 【画面】 section (such as "3/4 front view facing right")
 - Do not append the English paragraph "Based on the reference image... Generate a new scene..." any more (the `@图N` mechanism already carries the reference-image binding, and appending the English paragraph produces two copies of the shot description that easily conflict)
 
 > The concrete content of `[style anchor words]` and `[image-quality lock words]` is defined by the **style-specific technique**.
@@ -206,7 +206,7 @@ Prompt structure (a fixed framework):
 
 ## General language and quality specification
 
-- Mode A (Seedream) prefers natural-language paragraphs in Chinese
+- Mode A (Seedream) prefers natural-language paragraphs in English
 - Mode B (Nanobanana) prefers structured JSON prompts in English
 - The prompt focuses on "content expression + image sharpness" and avoids blur-inducing words
 - Do not use expressions that make the image mushy (see the "Image-quality-degrading forbidden words" table below)
@@ -281,14 +281,14 @@ The `prompt` field of every shot must have the **image-asset annotation** as its
 
 ❌ Wrong (the body uses written names, disconnected from the prefix annotation):
 ```
-@图1 为角色甲角色 @图2 为角色乙角色 @图3 为某场景场景, 角色甲冷笑，居高临下看着跪地的角色乙，场景内柱影深沉……
+@图1 为角色甲角色 @图2 为角色乙角色 @图3 为某场景场景, 角色甲 smiles coldly, looking down from above at 角色乙 kneeling on the ground, the pillar shadows inside the scene deep and heavy……
 ```
 
 ✅ Right (the body uses @图N to bind the reference images directly):
 ```
 @图1 为角色甲角色 @图2 为角色乙角色 @图3 为某场景场景,
 
-【画面】@图3 内，中景构图，@图1 身形挺立于画面左侧，3/4侧面朝右，嘴角微扬冷笑，居高临下俯视跪于画面右侧地面的@图2；@图2 俯身伏地，3/4背面朝左，双手撑地，肩背紧绷……
+【画面】Inside @图3, medium shot composition, @图1 stands erect at frame left, 3/4 profile facing right, the corner of the mouth lifted in a cold smile, looking down from above at @图2 kneeling on the ground at frame right; @图2 bows down to the ground, 3/4 rear view facing left, both hands braced on the floor, shoulders and back taut……
 ```
 
 ---
@@ -322,24 +322,24 @@ The storyboard table's "Character action" field already carries an explicit `｜
 
 **Facing vocabulary**:
 
-| Facing type | Mode A (Chinese) | Mode B (English) | When it applies |
+| Facing type | Mode A (English) | Mode B (English tag) | When it applies |
 |---------|-------------|-------------|---------|
-| 正面 | 正面面朝镜头 | facing camera, front view | A declaration about oneself, confronting the audience's gaze directly |
-| 3/4正面 | 3/4侧面微朝镜头 | three-quarter view facing camera | A subject in conversation, conveying feeling |
-| 正侧面 | 正侧面轮廓 | profile view, side view | Monologue, brooding, a confrontation in silhouette |
-| 3/4背面 | 3/4侧背面 | three-quarter back view | Leaving, detachment, remembering |
-| 背面 | 背对镜头 | back view, from behind | A mysterious entrance, parting, gazing into the distance |
-| 面朝左 | 面朝画面左侧 | facing left | A character on the right of the 180° line, or facing a target on the left |
-| 面朝右 | 面朝画面右侧 | facing right | A character on the left of the 180° line, or facing a target on the right |
-| 微低头 | 微微低头 | slightly looking down | Grief, guilt, brooding |
-| 微仰头 | 微微仰头 | slightly looking up | Arrogance, looking up, anticipation |
+| 正面 | facing the camera head-on | facing camera, front view | A declaration about oneself, confronting the audience's gaze directly |
+| 3/4正面 | 3/4 profile turned slightly toward the camera | three-quarter view facing camera | A subject in conversation, conveying feeling |
+| 正侧面 | full profile silhouette | profile view, side view | Monologue, brooding, a confrontation in silhouette |
+| 3/4背面 | 3/4 rear three-quarter view | three-quarter back view | Leaving, detachment, remembering |
+| 背面 | back turned to the camera | back view, from behind | A mysterious entrance, parting, gazing into the distance |
+| 面朝左 | facing frame left | facing left | A character on the right of the 180° line, or facing a target on the left |
+| 面朝右 | facing frame right | facing right | A character on the left of the 180° line, or facing a target on the right |
+| 微低头 | head tilted slightly down | slightly looking down | Grief, guilt, brooding |
+| 微仰头 | head tilted slightly up | slightly looking up | Arrogance, looking up, anticipation |
 
 > A facing annotation must contain both the **horizontal facing** (facing left/right/camera) and the **tilt leaning** (if any), as in "3/4侧面朝右，微微仰头".
 
 ### II. Position and facing locking rules
 
 - **Frame position is locked**: across the several shots of one character within the same scene, their left/right position in the frame (left of frame / centre / right of frame) must stay fixed and must not jump sides without a narrative reason
-- **Conservation of facing**: a conversation/confrontation scene obeys the 180° axis — if character A faces right they keep facing right for the whole scene, and if character B faces left they keep facing left; the prompt must state it explicitly with direction words (facing left / 面朝左, on the left side of frame / 画面左侧 and so on)
+- **Conservation of facing**: a conversation/confrontation scene obeys the 180° axis — if character A faces right they keep facing right for the whole scene, and if character B faces left they keep facing left; the prompt must state it explicitly with direction words (facing left, on the left side of frame and so on)
 - **Consistent foreground/background layering**: if character A is in the foreground and character B in the middle ground in shot N, their front-to-back relation should not reverse without reason in the following shots of the same scene
 - **A change of position needs a linking action**: when a character's frame position genuinely has to change (the character walks, turns and so on), the prompt of the preceding shot must contain the corresponding movement/turning action; the position must not jump out of nowhere
 - **A change of facing needs a linking action**: when a character's facing genuinely has to change (turning the head, turning round), the prompt of the current shot must contain the turning action (such as "turns the head slightly towards the left of frame"), and that turn must agree with the storyboard table's "Character action" field; the facing must not change out of nowhere
@@ -349,10 +349,10 @@ The storyboard table's "Character action" field already carries an explicit `｜
 
 When the picture contains a reflective medium (a mirror, water, polished metal, window glass, a camera lens and so on), note the following rules:
 
-- **Mirror flip**: the character's left-right facing in the reflection is the opposite of the real one (the real body faces right → the reflection faces left), and the prompt must state the facing relation between the reflection and the real body explicitly (such as "@图1 面朝右，水面倒影中@图1 面朝左")
+- **Mirror flip**: the character's left-right facing in the reflection is the opposite of the real one (the real body faces right → the reflection faces left), and the prompt must state the facing relation between the reflection and the real body explicitly (such as "@图1 faces right, and in the water's reflection @图1 faces left")
 - **A reflective surface does not change the position baseline**: a character's frame position is set by the real body, and the image in the reflection does not count as a change of the character's position
 - **The reflection's content matches the real body**: the character's costume, hairstyle, expression and so on visible in the reflection must match the real body in the same frame, with no discrepancy
-- **Depth of field and sharpness of the reflection**: depending on the reflective surface's distance and material, the reflected image may be somewhat less sharp (blurred by ripples on water, say), but this must be annotated in the prompt (such as "水面倒影微微扭曲")
+- **Depth of field and sharpness of the reflection**: depending on the reflective surface's distance and material, the reflected image may be somewhat less sharp (blurred by ripples on water, say), but this must be annotated in the prompt (such as "the reflection on the water is slightly distorted")
 - **Recognition trigger**: this rule fires automatically when the storyboard's shot description or the scene asset contains a reflective element such as a mirror, water, a lake, a stream, glass, metallic reflection, or a camera/filming device
 
 ---
@@ -378,13 +378,13 @@ The following demonstrates the complete flow of one shot from input to output, f
 ```
 @图1 为角色甲角色 @图2 为道具X 道具 @图3 为道具Y 道具 @图4 为某场景出口场景,
 
-【画面】@图4，开场自黑场淡入，大远景构图，人流涌动穿行，画面右侧醒目立有指示物；@图1 背着@图2 独行于人流之中，手中紧攥@图3，身体3/4正面朝右，停步于人群之间，抬头仰望画面右侧的指示物，眼神紧张而笃定，面容局促中透着决意。
+【画面】In @图4, the opening fades in from black, extreme wide shot composition, a crowd surging through, a conspicuous sign standing at frame right; @图1 walks alone through the crowd with @图2 on his back, gripping @图3 tightly in his hand, body in 3/4 front view facing right, stopping among the crowd, raising his head to look up at the sign at frame right, eyes tense yet resolute, face uneasy but shot through with determination.
 
-【光影】左侧柔和晨光均匀铺洒，暖黄底色轻染地面，指示物受光清晰明亮，周围人影逆光偏暗形成剪影轮廓，@图1 身形半受光半逆光，面部轮廓微亮。
+【光影】Soft morning light spreads evenly from the left, a warm yellow base tint lightly stains the ground, the sign is clearly and brightly lit, the surrounding figures are backlit and darkened into silhouettes, @图1's figure half lit and half backlit, the contours of the face faintly bright.
 
-【风格】{风格锚定词}，{画质锁定词}，禁止画外字幕、水印、UI 文字。
+【风格】{风格锚定词}，{画质锁定词}, no off-picture subtitles, no watermark, no UI text.
 
-保持 @图1 面部特征、发型、服饰与参考图完全一致。
+Keep @图1's facial features, hairstyle and costume exactly consistent with the reference image.
 ```
 
 > The `{风格锚定词}` and `{画质锁定词}` in the 【风格】 section are supplied by the style-specific technique (`director_storyboard`); this general specification does not hard-code the entries.
@@ -393,17 +393,17 @@ The following demonstrates the complete flow of one shot from input to output, f
 
 | Storyboard table field | Where the prompt reflects it | Consistent |
 |-----------|---------------|---------|
-| 开场黑场淡入 | 【画面】"开场自黑场淡入" | ✅ |
+| 开场黑场淡入 | 【画面】"the opening fades in from black" | ✅ |
 | 某场景出口 | 【画面】"@图4" | ✅ |
-| 大远景 (the starting end for the first frame) | 【画面】"大远景构图" | ✅ |
-| 人流涌动 | 【画面】"人流涌动穿行" | ✅ |
-| 指示物在右侧 | 【画面】"画面右侧醒目立有指示物" | ✅ |
-| 角色甲背道具X 独行 | 【画面】"@图1 背着@图2 独行于人流之中" | ✅ |
-| 手攥道具Y | 【画面】"手中紧攥@图3" | ✅ |
-| 停步仰望指示物 | 【画面】"停步于人群之间，抬头仰望画面右侧的指示物" | ✅ |
-| 朝向3/4正面朝右 | 【画面】"身体3/4正面朝右" | ✅ |
-| 紧张而笃定 | 【画面】"眼神紧张而笃定" | ✅ |
-| 左侧晨光+暖黄底色 | 【光影】"左侧柔和晨光均匀铺洒，暖黄底色" | ✅ |
-| 人影逆光剪影 | 【光影】"人影逆光偏暗形成剪影轮廓" | ✅ |
+| 大远景 (the starting end for the first frame) | 【画面】"extreme wide shot composition" | ✅ |
+| 人流涌动 | 【画面】"a crowd surging through" | ✅ |
+| 指示物在右侧 | 【画面】"a conspicuous sign standing at frame right" | ✅ |
+| 角色甲背道具X 独行 | 【画面】"@图1 walks alone through the crowd with @图2 on his back" | ✅ |
+| 手攥道具Y | 【画面】"gripping @图3 tightly in his hand" | ✅ |
+| 停步仰望指示物 | 【画面】"stopping among the crowd, raising his head to look up at the sign at frame right" | ✅ |
+| 朝向3/4正面朝右 | 【画面】"body in 3/4 front view facing right" | ✅ |
+| 紧张而笃定 | 【画面】"eyes tense yet resolute" | ✅ |
+| 左侧晨光+暖黄底色 | 【光影】"soft morning light spreads evenly from the left, a warm yellow base tint" | ✅ |
+| 人影逆光剪影 | 【光影】"the surrounding figures are backlit and darkened into silhouettes" | ✅ |
 
 **Zero omissions, check passed.**

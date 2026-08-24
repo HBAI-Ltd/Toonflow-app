@@ -92,16 +92,16 @@ Trường «Mô tả hình ảnh» của bảng phân cảnh gánh toàn bộ th
 
 ## Từ vựng cỡ cảnh (dùng chung)
 
-| Cỡ cảnh đầu vào | Từ cú máy tiếng Anh của chế độ B (Nanobanana) | Từ hình ảnh tiếng Trung của chế độ A (Seedream) |
+| Cỡ cảnh đầu vào | Từ cú máy tiếng Anh của chế độ B (Nanobanana) | Từ hình ảnh của chế độ A (Seedream) |
 |----------|-------------------------------|---------------------------|
-| 大远景/大全景 | `extreme wide shot, establishing shot` | 大远景构图，环境全貌，人物渺小于场景 |
-| 远景/全景 | `wide shot, full shot, full body` | 全身入镜，远景构图，人景比例协调 |
-| 中景 | `medium shot, cowboy shot, knee shot` | 中景构图，人物膝盖以上入镜 |
-| 近景 | `medium close-up, upper body` | 近景构图，上半身入镜，背景虚化 |
-| 半身 | `half body shot, bust shot` | 半身构图，腰部以上入镜，浅景深 |
-| 特写 | `close-up, face focus` | 特写构图，面部或细节局部放大，背景深度虚化 |
-| 大特写 | `extreme close-up, macro detail` | 大特写，极度局部细节，虚化背景 |
-| 过肩镜 | `over the shoulder shot, two shot` | 过肩构图，前景人物后背虚化，远景人物清晰 |
+| 大远景/大全景 | `extreme wide shot, establishing shot` | bố cục đại viễn cảnh, toàn cảnh môi trường, nhân vật nhỏ bé giữa bối cảnh |
+| 远景/全景 | `wide shot, full shot, full body` | lấy trọn người, bố cục viễn cảnh, tỉ lệ người và cảnh hài hòa |
+| 中景 | `medium shot, cowboy shot, knee shot` | bố cục trung cảnh, lấy nhân vật từ đầu gối trở lên |
+| 近景 | `medium close-up, upper body` | bố cục cận cảnh, lấy nửa thân trên, hậu cảnh xóa phông |
+| 半身 | `half body shot, bust shot` | bố cục bán thân, lấy từ thắt lưng trở lên, độ sâu trường ảnh nông |
+| 特写 | `close-up, face focus` | bố cục đặc tả, phóng to khuôn mặt hoặc chi tiết cục bộ, hậu cảnh xóa phông sâu |
+| 大特写 | `extreme close-up, macro detail` | đại đặc tả, chi tiết cục bộ cực hạn, hậu cảnh xóa phông |
+| 过肩镜 | `over the shoulder shot, two shot` | bố cục qua vai, lưng nhân vật tiền cảnh xóa nhòe, nhân vật phía xa rõ nét |
 
 **Xử lý cỡ cảnh phức hợp**: nếu bảng phân cảnh viết chuyển động máy quay kiểu "viễn cảnh→trung cảnh", "trung cảnh→đặc tả"…, thì vì ảnh phân cảnh là tham chiếu cho khung đầu nên **lấy cỡ cảnh khởi đầu ở bên trái mũi tên**.
 
@@ -115,7 +115,7 @@ Mỗi phân cảnh **chỉ xuất phần thân prompt của một chế độ** 
 
 | Điều kiện | Chế độ được chọn |
 |------|----------|
-| Mô hình đích là Seedream / dòng Doubao | Chế độ A (Prompt tiếng Trung) |
+| Mô hình đích là Seedream / dòng Doubao | Chế độ A (Prompt tiếng Việt) |
 | Mô hình đích là Nanobanana / dòng Gemini | Chế độ B (JSON Prompt tiếng Anh) |
 | Người dùng chưa chỉ định mô hình | Mặc định chế độ A, hoặc hỏi người dùng xác nhận |
 | Sinh hàng loạt | Giữ nguyên một chế độ suốt quá trình, không được đổi giữa chừng |
@@ -162,7 +162,7 @@ Cấu trúc Prompt:
 **Quy tắc then chốt**:
 - Đoạn 【画面】 phải gánh trọn mọi thông tin của trường «Mô tả hình ảnh» trong bảng phân cảnh, **không được cắt bớt**
 - Trong đoạn 【画面】, tên nhân vật/bối cảnh/đạo cụ **bắt buộc phải thay bằng `@图N`** (không dùng tên bằng chữ)
-- Thông tin hướng nhìn phải ghi rõ vào đoạn 【画面】 (như "3/4正面朝右")
+- Thông tin hướng nhìn phải ghi rõ vào đoạn 【画面】 (như "3/4 chính diện hướng phải")
 - Không nối thêm đoạn tiếng Anh "Based on the reference image... Generate a new scene..." nữa (cơ chế `@图N` đã gánh chức năng ràng ảnh tham chiếu, nối thêm đoạn tiếng Anh sẽ khiến mô tả hình ảnh có hai bản, dễ xung khắc)
 
 > Nội dung cụ thể của `[từ neo phong cách]`, `[từ khóa chất lượng ảnh]` do **kỹ pháp riêng theo phong cách** định nghĩa.
@@ -206,7 +206,7 @@ Cấu trúc Prompt (khung cố định):
 
 ## Quy phạm chung về ngôn ngữ và chất lượng
 
-- Chế độ A (Seedream) ưu tiên đoạn văn ngôn ngữ tự nhiên bằng tiếng Trung
+- Chế độ A (Seedream) ưu tiên đoạn văn ngôn ngữ tự nhiên bằng tiếng Việt
 - Chế độ B (Nanobanana) ưu tiên prompt JSON có cấu trúc bằng tiếng Anh
 - Prompt tụ vào "thể hiện nội dung + chất ảnh sắc nét", tránh các từ gây mờ nhòe
 - Không dùng những cách diễn đạt làm nhòe ảnh (xem bảng «Từ cấm làm tụt chất lượng ảnh» bên dưới)
@@ -281,14 +281,14 @@ Trường `prompt` của mỗi phân cảnh bắt buộc phải lấy **phần c
 
 ❌ Sai (thân dùng tên bằng chữ, rời rạc với chú thích tiền tố):
 ```
-@图1 为角色甲角色 @图2 为角色乙角色 @图3 为某场景场景, 角色甲冷笑，居高临下看着跪地的角色乙，场景内柱影深沉……
+@图1 为角色甲角色 @图2 为角色乙角色 @图3 为某场景场景, 角色甲 cười lạnh, từ trên cao nhìn xuống 角色乙 đang quỳ dưới đất, bóng cột trong bối cảnh thâm trầm……
 ```
 
 ✅ Đúng (thân dùng @图N để ràng trực tiếp với ảnh tham chiếu):
 ```
 @图1 为角色甲角色 @图2 为角色乙角色 @图3 为某场景场景,
 
-【画面】@图3 内，中景构图，@图1 身形挺立于画面左侧，3/4侧面朝右，嘴角微扬冷笑，居高临下俯视跪于画面右侧地面的@图2；@图2 俯身伏地，3/4背面朝左，双手撑地，肩背紧绷……
+【画面】Bên trong @图3, bố cục trung cảnh, @图1 đứng thẳng ở bên trái khung hình, 3/4 nghiêng hướng phải, khóe miệng nhếch lên cười lạnh, từ trên cao nhìn xuống @图2 đang quỳ dưới đất bên phải khung hình; @图2 phủ phục sát đất, 3/4 lưng hướng trái, hai tay chống đất, vai lưng căng cứng……
 ```
 
 ---
@@ -322,24 +322,24 @@ Trường «Hành động nhân vật» của bảng phân cảnh đã có phầ
 
 **Từ vựng hướng nhìn**:
 
-| Loại hướng nhìn | Chế độ A (tiếng Trung) | Chế độ B (tiếng Anh) | Tình huống áp dụng |
+| Loại hướng nhìn | Chế độ A (tiếng Việt) | Chế độ B (nhãn tiếng Anh) | Tình huống áp dụng |
 |---------|-------------|-------------|---------|
-| 正面 | 正面面朝镜头 | facing camera, front view | Tuyên ngôn về bản thân, đối diện thẳng ánh nhìn khán giả |
-| 3/4正面 | 3/4侧面微朝镜头 | three-quarter view facing camera | Chủ thể đối thoại, truyền cảm xúc |
-| 正侧面 | 正侧面轮廓 | profile view, side view | Độc thoại, trầm tư, bóng đối đầu |
-| 3/4背面 | 3/4侧背面 | three-quarter back view | Rời đi, xa cách, hồi tưởng |
-| 背面 | 背对镜头 | back view, from behind | Ra mắt bí ẩn, ly biệt, nhìn về xa |
-| 面朝左 | 面朝画面左侧 | facing left | Nhân vật ở bên phải đường 180°, hoặc hướng về mục tiêu bên trái |
-| 面朝右 | 面朝画面右侧 | facing right | Nhân vật ở bên trái đường 180°, hoặc hướng về mục tiêu bên phải |
-| 微低头 | 微微低头 | slightly looking down | Buồn bã, áy náy, trầm tư |
-| 微仰头 | 微微仰头 | slightly looking up | Kiêu ngạo, ngước nhìn, chờ mong |
+| 正面 | chính diện hướng thẳng vào máy quay | facing camera, front view | Tuyên ngôn về bản thân, đối diện thẳng ánh nhìn khán giả |
+| 3/4正面 | 3/4 nghiêng hơi hướng về máy quay | three-quarter view facing camera | Chủ thể đối thoại, truyền cảm xúc |
+| 正侧面 | đường nét nghiêng chính diện | profile view, side view | Độc thoại, trầm tư, bóng đối đầu |
+| 3/4背面 | 3/4 nghiêng phía sau lưng | three-quarter back view | Rời đi, xa cách, hồi tưởng |
+| 背面 | quay lưng về máy quay | back view, from behind | Ra mắt bí ẩn, ly biệt, nhìn về xa |
+| 面朝左 | hướng về bên trái khung hình | facing left | Nhân vật ở bên phải đường 180°, hoặc hướng về mục tiêu bên trái |
+| 面朝右 | hướng về bên phải khung hình | facing right | Nhân vật ở bên trái đường 180°, hoặc hướng về mục tiêu bên phải |
+| 微低头 | hơi cúi đầu | slightly looking down | Buồn bã, áy náy, trầm tư |
+| 微仰头 | hơi ngẩng đầu | slightly looking up | Kiêu ngạo, ngước nhìn, chờ mong |
 
 > Phần ghi hướng nhìn phải đồng thời có **hướng ngang** (quay mặt trái/phải/vào ống kính) và **thiên hướng ngẩng cúi** (nếu có), như "3/4侧面朝右，微微仰头".
 
 ### II. Quy tắc khóa vị trí và hướng nhìn
 
 - **Khóa vị trí trong khung**: cùng một nhân vật, ở nhiều phân cảnh trong cùng một bối cảnh, vị trí trái phải trong khung hình (bên trái khung / giữa / bên phải khung) phải giữ cố định, không được nhảy phía khi không có lý do tự sự
-- **Bảo toàn hướng nhìn**: cảnh đối thoại/đối đầu tuân theo trục nhìn 180° —— nhân vật A quay mặt sang phải thì cả cảnh giữ quay mặt sang phải, nhân vật B quay mặt sang trái thì cả cảnh giữ quay mặt sang trái; trong prompt phải ghi rõ bằng từ chỉ phương vị (facing left / 面朝左, on the left side of frame / 画面左侧…)
+- **Bảo toàn hướng nhìn**: cảnh đối thoại/đối đầu tuân theo trục nhìn 180° —— nhân vật A quay mặt sang phải thì cả cảnh giữ quay mặt sang phải, nhân vật B quay mặt sang trái thì cả cảnh giữ quay mặt sang trái; trong prompt phải ghi rõ bằng từ chỉ phương vị (facing left, on the left side of frame…)
 - **Nhất quán lớp lang tiền cảnh hậu cảnh**: nếu ở phân cảnh N nhân vật A ở tiền cảnh, nhân vật B ở trung cảnh, thì ở các phân cảnh sau trong cùng bối cảnh, quan hệ trước sau của hai người không được đảo ngược vô cớ
 - **Đổi vị trí phải có động tác nối**: khi vị trí trong khung của nhân vật thực sự cần đổi (như nhân vật đi lại, xoay người), prompt của phân cảnh trước đó phải có phần tả động tác dịch chuyển/xoay người tương ứng, không được nhảy chỗ vô cớ
 - **Đổi hướng nhìn phải có động tác nối**: khi hướng nhìn của nhân vật thực sự cần đổi (như quay đầu, quay người), prompt của phân cảnh hiện tại phải có phần tả động tác chuyển hướng (như "khẽ quay đầu về phía trái khung hình"), và cú chuyển hướng đó phải nhất quán với trường «Hành động nhân vật» của bảng phân cảnh, không được đổi hướng vô cớ
@@ -349,10 +349,10 @@ Trường «Hành động nhân vật» của bảng phân cảnh đã có phầ
 
 Khi trong khung hình có môi trường phản chiếu (mặt gương, mặt nước, kim loại nhẵn, kính cửa sổ, ống kính máy ảnh…), phải lưu ý các quy tắc sau:
 
-- **Lật gương**: hướng trái phải của nhân vật trong mặt phản chiếu ngược với thực thể (thực thể quay mặt sang phải → ảnh phản chiếu quay mặt sang trái), trong prompt phải ghi rõ quan hệ hướng nhìn giữa ảnh phản chiếu và thực thể (như "@图1 面朝右，水面倒影中@图1 面朝左")
+- **Lật gương**: hướng trái phải của nhân vật trong mặt phản chiếu ngược với thực thể (thực thể quay mặt sang phải → ảnh phản chiếu quay mặt sang trái), trong prompt phải ghi rõ quan hệ hướng nhìn giữa ảnh phản chiếu và thực thể (như "@图1 hướng phải, trong bóng nước @图1 hướng trái")
 - **Mặt phản chiếu không làm đổi chuẩn vị trí**: vị trí trong khung của nhân vật lấy thực thể làm chuẩn, hình trong mặt phản chiếu không được coi là nhân vật đổi vị trí
 - **Nội dung mặt phản chiếu nhất quán với thực thể**: trang phục, kiểu tóc, biểu cảm… của nhân vật nhìn thấy trong mặt phản chiếu bắt buộc phải nhất quán với thực thể trong cùng khung, không được sai lệch
-- **Chiều sâu trường ảnh và độ nét của mặt phản chiếu**: tùy khoảng cách và chất liệu của mặt phản chiếu mà ảnh phản chiếu có thể giảm độ nét ở mức hợp lý (như bị nhòe do gợn sóng mặt nước), nhưng phải ghi chú trong prompt (như "水面倒影微微扭曲")
+- **Chiều sâu trường ảnh và độ nét của mặt phản chiếu**: tùy khoảng cách và chất liệu của mặt phản chiếu mà ảnh phản chiếu có thể giảm độ nét ở mức hợp lý (như bị nhòe do gợn sóng mặt nước), nhưng phải ghi chú trong prompt (như "bóng trên mặt nước hơi méo đi")
 - **Kích hoạt khi nhận diện**: khi mô tả hình ảnh của phân cảnh hoặc tài nguyên bối cảnh có các yếu tố phản chiếu như mặt gương, mặt nước, mặt hồ, dòng suối, kính, kim loại phản quang, máy ảnh/máy quay… thì quy tắc này tự động kích hoạt
 
 ---
@@ -378,13 +378,13 @@ Dưới đây minh họa toàn bộ quy trình của một phân cảnh từ đ�
 ```
 @图1 为角色甲角色 @图2 为道具X 道具 @图3 为道具Y 道具 @图4 为某场景出口场景,
 
-【画面】@图4，开场自黑场淡入，大远景构图，人流涌动穿行，画面右侧醒目立有指示物；@图1 背着@图2 独行于人流之中，手中紧攥@图3，身体3/4正面朝右，停步于人群之间，抬头仰望画面右侧的指示物，眼神紧张而笃定，面容局促中透着决意。
+【画面】Trong @图4, mở màn mờ dần lên từ nền đen, bố cục đại viễn cảnh, dòng người cuộn chảy qua lại, bên phải khung hình sừng sững một vật chỉ dẫn nổi bật; @图1 đeo @图2 đi một mình giữa dòng người, tay nắm chặt @图3, thân người 3/4 chính diện hướng phải, dừng bước giữa đám đông, ngẩng đầu nhìn lên vật chỉ dẫn bên phải khung hình, ánh mắt căng thẳng mà quả quyết, gương mặt lúng túng nhưng ánh lên vẻ quyết tâm.
 
-【光影】左侧柔和晨光均匀铺洒，暖黄底色轻染地面，指示物受光清晰明亮，周围人影逆光偏暗形成剪影轮廓，@图1 身形半受光半逆光，面部轮廓微亮。
+【光影】Ánh nắng sớm dịu từ bên trái trải đều, sắc nền vàng ấm nhuộm nhẹ mặt đất, vật chỉ dẫn ăn sáng rõ và sáng bừng, bóng người xung quanh ngược sáng tối lại thành đường viền bóng đổ, thân hình @图1 nửa ăn sáng nửa ngược sáng, đường nét khuôn mặt hơi sáng.
 
-【风格】{风格锚定词}，{画质锁定词}，禁止画外字幕、水印、UI 文字。
+【风格】{风格锚定词}，{画质锁定词}, cấm phụ đề ngoài hình, watermark, chữ UI.
 
-保持 @图1 面部特征、发型、服饰与参考图完全一致。
+Giữ đặc điểm khuôn mặt, kiểu tóc, trang phục của @图1 giống hệt ảnh tham chiếu.
 ```
 
 > `{风格锚定词}` và `{画质锁定词}` trong đoạn 【风格】 do kỹ pháp riêng theo phong cách (`director_storyboard`) cung cấp, quy phạm chung này không gán cứng các mục cụ thể.
@@ -393,17 +393,17 @@ Dưới đây minh họa toàn bộ quy trình của một phân cảnh từ đ�
 
 | Trường bảng phân cảnh | Vị trí prompt thể hiện | Có nhất quán |
 |-----------|---------------|---------|
-| 开场黑场淡入 | 【画面】"开场自黑场淡入" | ✅ |
+| 开场黑场淡入 | 【画面】"mở màn mờ dần lên từ nền đen" | ✅ |
 | 某场景出口 | 【画面】"@图4" | ✅ |
 | 大远景 (đầu khởi của khung đầu) | 【画面】"大远景构图" | ✅ |
-| 人流涌动 | 【画面】"人流涌动穿行" | ✅ |
-| 指示物在右侧 | 【画面】"画面右侧醒目立有指示物" | ✅ |
-| 角色甲背道具X 独行 | 【画面】"@图1 背着@图2 独行于人流之中" | ✅ |
-| 手攥道具Y | 【画面】"手中紧攥@图3" | ✅ |
-| 停步仰望指示物 | 【画面】"停步于人群之间，抬头仰望画面右侧的指示物" | ✅ |
-| 朝向3/4正面朝右 | 【画面】"身体3/4正面朝右" | ✅ |
-| 紧张而笃定 | 【画面】"眼神紧张而笃定" | ✅ |
-| 左侧晨光+暖黄底色 | 【光影】"左侧柔和晨光均匀铺洒，暖黄底色" | ✅ |
-| 人影逆光剪影 | 【光影】"人影逆光偏暗形成剪影轮廓" | ✅ |
+| 人流涌动 | 【画面】"dòng người cuộn chảy qua lại" | ✅ |
+| 指示物在右侧 | 【画面】"bên phải khung hình sừng sững một vật chỉ dẫn nổi bật" | ✅ |
+| 角色甲背道具X 独行 | 【画面】"@图1 đeo @图2 đi một mình giữa dòng người" | ✅ |
+| 手攥道具Y | 【画面】"tay nắm chặt @图3" | ✅ |
+| 停步仰望指示物 | 【画面】"dừng bước giữa đám đông, ngẩng đầu nhìn lên vật chỉ dẫn bên phải khung hình" | ✅ |
+| 朝向3/4正面朝右 | 【画面】"thân người 3/4 chính diện hướng phải" | ✅ |
+| 紧张而笃定 | 【画面】"ánh mắt căng thẳng mà quả quyết" | ✅ |
+| 左侧晨光+暖黄底色 | 【光影】"ánh nắng sớm dịu từ bên trái trải đều, sắc nền vàng ấm" | ✅ |
+| 人影逆光剪影 | 【光影】"bóng người xung quanh ngược sáng tối lại thành đường viền bóng đổ" | ✅ |
 
 **Không sót gì, kiểm chứng đạt.**

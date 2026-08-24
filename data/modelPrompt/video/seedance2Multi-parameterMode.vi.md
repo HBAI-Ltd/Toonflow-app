@@ -108,7 +108,7 @@ Mọi tài nguyên đều tham chiếu thống nhất bằng `@图片N`, số t�
 
 ### Ngắt câu tránh mơ hồ (bắt buộc)
 
-Dùng trần `@图片N` ngay trước động từ hoặc từ chỉ phương vị (ví dụ "@图片1跑向…") rất dễ gây mơ hồ do dính số, phải đổi thành `<主体N>@图片N`, hoặc thêm một danh từ sau `@图片N` để ngắt (ví dụ "@图片1 中的男子").
+Dùng trần `@图片N` ngay trước động từ hoặc từ chỉ phương vị (ví dụ "@图片1 chạy về phía…") rất dễ gây mơ hồ do dính số, phải đổi thành `<主体N>@图片N`, hoặc thêm một danh từ sau `@图片N` để ngắt (ví dụ "người đàn ông trong @图片1").
 
 ### Xử lý 承接上镜 (bắt buộc)
 
@@ -137,7 +137,7 @@ Thông tin tài nguyên[26, role, 张振华], [29, scene, 废弃地堡内部], [
 
 - **Nối tiếp trạng thái khởi đầu của cú máy đầu**: khi có 「承接上镜：……」, hướng nhìn / vị trí đứng / tư thế của cú máy đầu phải nối tiếp trạng thái định hình mà đoạn đó nêu, chứ không tự dựng lại từ đầu.
 - **Nối tiếp theo thứ tự trong nhóm**: hai cú máy liền kề trong cùng nhóm (số N → N+1) phải giữ liên tục vị trí / tư thế của cùng một chủ thể; khi có di chuyển thì nêu rõ đường đi trong phần hành động (ngồi xuống, đứng dậy, xoay người né sang bên, v.v.).
-- **Hướng nhìn / quan hệ không gian lấy từ mô tả hình ảnh**: định dạng này không có trường "hướng nhìn / quan hệ không gian" riêng, cả hai đều trích từ "mô tả hình ảnh" và phải viết rõ ra trong phần thân (ví dụ "画面左侧", "3/4 正面朝右"); với cú máy đối thoại / đối đầu thì dùng từ chỉ phương vị để nêu rõ ai ở bên trái / bên phải khung hình, xuyên suốt không vô cớ nhảy trục.
+- **Hướng nhìn / quan hệ không gian lấy từ mô tả hình ảnh**: định dạng này không có trường "hướng nhìn / quan hệ không gian" riêng, cả hai đều trích từ "mô tả hình ảnh" và phải viết rõ ra trong phần thân (ví dụ "bên trái khung hình", "3/4 chính diện hướng phải"); với cú máy đối thoại / đối đầu thì dùng từ chỉ phương vị để nêu rõ ai ở bên trái / bên phải khung hình, xuyên suốt không vô cớ nhảy trục.
 - **Một cú máy một chuyển động**: mỗi cú máy lấy theo trường chuyển động máy quay của `videoDesc`, một cú máy chỉ một kiểu chuyển động.
 
 ---
@@ -149,7 +149,7 @@ Thông tin tài nguyên[26, role, 张振华], [29, scene, 废弃地堡内部], [
 将 @图片1 中的[2-3 đặc điểm tĩnh ổn định] 定义为 <主体1>（{tên}{，音色参考 @图片M}）；将 @图片2 中的[…] 定义为 <场景1>（{bối cảnh}）{；将 @图片… 中的[…] 定义为 <道具1>（{đạo cụ}）}。
 ```
 
-> Chế độ này không có ảnh phân cảnh: đoạn một **không được xuất hiện** bất kỳ "@图片N 作为 镜头K 构图参考" nào.
+> Chế độ này không có ảnh phân cảnh: đoạn một **không được xuất hiện** bất kỳ "@图片N làm tham chiếu bố cục cho 镜头K" nào.
 
 **【承接上镜 · nếu có】** (giữ nguyên văn, tách thành dòng riêng, đặt sau phần định nghĩa chủ thể và trước 镜头1)
 ```
@@ -165,7 +165,7 @@ Thông tin tài nguyên[26, role, 张振华], [29, scene, 废弃地堡内部], [
 
 **Đoạn ba: phong cách + gói ràng buộc**
 ```
-{nhãn phong cách 「Seedance 2.0（中文）」 của kỹ pháp mỹ thuật}；高清，细节丰富，电影质感；人物面部稳定不变形、五官清晰、动作连贯自然，不僵硬，无穿模无卡顿；保持无字幕，避免生成任何文字或字幕；不要生成水印；不要生成 Logo{；多主体必挂：视频全程禁止出现外形、着装、配饰完全一致的人物，禁止生成同款分身、双胞胎效果，同一画面仅保留单个对应人物}{；多人正面动态必挂：明确左 / 右侧角色辨识特征 + 固定机位}。
+{nhãn phong cách 「Seedance 2.0（中文）」 của kỹ pháp mỹ thuật}; độ nét cao, chi tiết phong phú, chất điện ảnh; khuôn mặt nhân vật ổn định không biến dạng, ngũ quan rõ nét, chuyển động liền mạch tự nhiên, không cứng đờ, không xuyên vật thể, không giật hình; giữ nguyên không phụ đề, tránh sinh bất kỳ chữ hay phụ đề nào; không sinh watermark; không sinh Logo{; bắt buộc gắn khi có nhiều chủ thể: suốt video cấm xuất hiện nhân vật giống hệt nhau về ngoại hình, trang phục, phụ kiện, cấm sinh hiệu ứng phân thân cùng kiểu hay sinh đôi, trong cùng một khung hình chỉ giữ một nhân vật tương ứng}{; bắt buộc gắn khi nhiều người chuyển động chính diện: nêu rõ đặc điểm nhận dạng của nhân vật bên trái / bên phải + máy quay cố định}.
 ```
 
 > **Nguồn của tông mỹ thuật / nhãn phong cách**: kỹ năng này không tự sáng tác, luôn trích nhãn 「Seedance 2.0（中文）」 của kỹ pháp mỹ thuật đang kích hoạt (ví dụ cổ trang tả thực = `古风写实摄影，电影风格，强对比度，极致细节`; anime Nhật 2D = `90年代日式动画，手绘赛璐璐，柔和暖调，电影风格，清晰线条，怀旧质感`).
@@ -176,7 +176,7 @@ Thông tin tài nguyên[26, role, 张振华], [29, scene, 废弃地堡内部], [
 
 Định dạng thoại: `<主体N> 说 {nội dung thoại}，音色：{mô tả chất giọng}`
 
-- **Ưu tiên lấy từ tài nguyên audio**: khi nhân vật đó có gắn tài nguyên audio (âm thanh), trích thẳng chất giọng — `音色：取自 @图片M（{có thể bổ sung đặc điểm chất giọng ngắn gọn}）`.
+- **Ưu tiên lấy từ tài nguyên audio**: khi nhân vật đó có gắn tài nguyên audio (âm thanh), trích thẳng chất giọng — `音色：lấy từ @图片M（{có thể bổ sung đặc điểm chất giọng ngắn gọn}）`.
 - **Khi không có tài nguyên audio**: suy ra và điền theo 9 chiều dưới đây:
 
 ```
@@ -187,19 +187,19 @@ Thông tin tài nguyên[26, role, 张振华], [29, scene, 废弃地堡内部], [
 
 | Đặc điểm loại nhân vật | Chất giọng mặc định |
 |------------|---------|
-| Nhân vật nam uy quyền / bá khí | 男声，中年音色，音调低沉，音色浑厚有力，声音厚重，发音标准，气息极其沉稳，语速偏慢 |
-| Nhân vật nữ dịu dàng / ngọt ngào | 女声，青年音色，音调中等偏高，音色质感明亮清脆，声音清亮柔和，气息充沛平稳，带温婉真诚感 |
-| Nhân vật nam trẻ / bình thường | 男声，青年音色，音调中等，音色干净，声音厚度适中，发音清晰，气息平稳，语速适中 |
-| Nhân vật nữ hoạt bát / hướng ngoại | 女声，青年音色，音调偏高，音色清脆活泼，声音轻盈，气息充沛，语速偏快，带笑意和感染力 |
-| Nhân vật phản diện / lạnh lùng | 男声，中年音色，音调低沉，音色质感干燥偏暗，声音带沙砾感，气息平稳，语速极慢，有威胁感 |
+| Nhân vật nam uy quyền / bá khí | giọng nam, chất giọng trung niên, cao độ trầm, âm sắc dày và mạnh, giọng nặng, phát âm chuẩn, hơi thở cực kỳ điềm tĩnh, tốc độ nói hơi chậm |
+| Nhân vật nữ dịu dàng / ngọt ngào | giọng nữ, chất giọng thanh niên, cao độ trung bình hơi cao, chất cảm âm sắc trong sáng lảnh lót, giọng trong và mềm, hơi thở đầy đặn ổn định, mang cảm giác dịu dàng chân thành |
+| Nhân vật nam trẻ / bình thường | giọng nam, chất giọng thanh niên, cao độ trung bình, âm sắc sạch, độ dày giọng vừa phải, phát âm rõ, hơi thở ổn định, tốc độ nói vừa phải |
+| Nhân vật nữ hoạt bát / hướng ngoại | giọng nữ, chất giọng thanh niên, cao độ hơi cao, âm sắc lảnh lót hoạt bát, giọng nhẹ, hơi thở đầy đặn, tốc độ nói hơi nhanh, có nét cười và sức lan tỏa |
+| Nhân vật phản diện / lạnh lùng | giọng nam, chất giọng trung niên, cao độ trầm, chất cảm âm sắc khô và tối, giọng có độ sạn, hơi thở ổn định, tốc độ nói cực chậm, có cảm giác đe dọa |
 
 #### Định dạng theo loại thoại
 
 | Loại thoại | Định dạng | Mô tả khẩu hình |
 |----------|------|----------|
-| Đối thoại thường | `<主体N> 说 {thoại}，音色：{mô tả}` | 角色嘴部开合说话 |
-| Độc thoại nội tâm | `<主体N> 内心OS {thoại}，音色：{mô tả}` | 角色嘴部紧闭不动 |
-| Lời dẫn ngoài hình | `<主体N> 画外音VO {thoại}，音色：{mô tả}` | 角色嘴部紧闭不动（或角色不在画面中） |
+| Đối thoại thường | `<主体N> 说 {thoại}，音色：{mô tả}` | khẩu hình nhân vật mở khép khi nói |
+| Độc thoại nội tâm | `<主体N> 内心OS {thoại}，音色：{mô tả}` | miệng nhân vật khép chặt bất động |
+| Lời dẫn ngoài hình | `<主体N> 画外音VO {thoại}，音色：{mô tả}` | miệng nhân vật khép chặt bất động (hoặc nhân vật không có trong khung hình) |
 
 #### Xử lý cú máy không có thoại
 
@@ -212,16 +212,16 @@ Thông tin tài nguyên[26, role, 张振华], [29, scene, 废弃地堡内部], [
 
 | Loại thông tin | Ký hiệu | Ví dụ |
 |---|---|---|
-| Hiệu ứng âm thanh | `<>` | `<远处传来狗叫声>` |
-| Thoại | `{}` | `{你好，世界}`; tiếng của ngôn ngữ ít phổ biến cần ghi rõ ngôn ngữ |
-| Phụ đề / tiêu đề | `【】` | `【第一章：启程】` (chỉ khi có yêu cầu sinh chữ rõ ràng; mặc định phần bảo hiểm phụ đề là cấm phụ đề) |
+| Hiệu ứng âm thanh | `<>` | `<tiếng chó sủa vọng lại từ xa>` |
+| Thoại | `{}` | `{Xin chào, thế giới}`; tiếng của ngôn ngữ ít phổ biến cần ghi rõ ngôn ngữ |
+| Phụ đề / tiêu đề | `【】` | `【Chương một: Khởi hành】` (chỉ khi có yêu cầu sinh chữ rõ ràng; mặc định phần bảo hiểm phụ đề là cấm phụ đề) |
 | Nhạc nền | `（）` | **Kỹ năng này cấm dùng** (hệ thống cấm nhạc nền), không xuất bất kỳ mô tả nhạc / nhạc nền nào |
 
 ---
 
 ## Ràng buộc khi sinh (tổng hợp các nguyên tắc cốt lõi)
 
-1. **Prompt viết bằng tiếng Trung**.
+1. **Prompt viết bằng tiếng Việt**.
 2. **Xuất thẳng prompt video**: cấm xuất bất kỳ nội dung nào không thuộc prompt như quá trình phân tích, bước suy luận, giải thích việc khớp mô hình, bảng đánh số tài nguyên, đường phân cách. Dòng đầu tiên chính là câu định tông của đoạn một (định nghĩa chủ thể).
 3. **Thống nhất cú pháp tham chiếu + định nghĩa trước, viết thân sau**: chất liệu dùng `@图片N`; chủ thể phải định nghĩa `<主体N>`/`<场景N>`/`<道具N>` trước rồi mới tham chiếu trong phần thân; audio gắn sau chủ thể làm nguồn chất giọng; đoạn một ràng buộc tập trung toàn bộ chủ thể, phần thân không định nghĩa lại.
 4. **Che Asset ID + ngắt câu tránh mơ hồ**: phần thân không viết trần assetId; khi `@图片N` đứng ngay trước động từ / từ chỉ phương vị thì đổi thành `<主体N>@图片N` hoặc thêm danh từ để ngắt.
@@ -232,7 +232,7 @@ Thông tin tài nguyên[26, role, 张振华], [29, scene, 废弃地堡内部], [
 9. **Đánh số cú máy, không có số giây tuyệt đối**: dùng `镜头N` (giữ nguyên số thứ tự gốc), phần thân không được xuất hiện số giây tuyệt đối như `{N}s` / `0–3s` (Seedance 2.0 hỗ trợ thời gian chính xác không ổn định).
 10. **Ánh sáng dùng theo ánh sáng sẵn có của ảnh bối cảnh**: tài nguyên bối cảnh `@图片N` (`<场景N>`) đã mang sẵn ánh sáng, mô hình dựa vào đó suy ra sáng tối / nhiệt độ màu / hướng sáng; cả phần thân lẫn gói ràng buộc đều **không viết** bất kỳ hướng sáng / nhiệt độ màu / sáng tối / tông màu nào. Ngoại lệ duy nhất là nhãn phong cách cố hữu của kỹ pháp mỹ thuật được trích ở dòng "tông mỹ thuật tổng thể" của đoạn ba (thuộc về neo phong cách).
 11. **Bám sát mô tả hình ảnh**: mỗi cú máy được sinh nghiêm ngặt dựa trên "mô tả hình ảnh" và các trường còn lại, không bịa thêm thông tin.
-12. **Không được thiếu thoại, ghi đúng loại thoại**: cú máy có thoại thì bắt buộc phải xuất đầy đủ thoại (`{}`) và chất giọng, phân biệt 对白 / 内心OS / 画外音VO.
+12. **Không được thiếu thoại, ghi đúng loại thoại**: cú máy có thoại thì bắt buộc phải xuất đầy đủ thoại (`{}`) và chất giọng, phân biệt đối thoại thường / 内心OS / 画外音VO.
 13. **Cấm nhạc nền**: hiệu ứng âm thanh (`<>`) chỉ gánh nguồn âm vật lý có thật, không viết bất kỳ nhạc / nhạc nền nào.
 14. **Gói ràng buộc là bắt buộc**: gói chất lượng hình + gói ổn định + phần bảo hiểm watermark/Logo mặc định luôn gắn; tùy bối cảnh mà gắn thêm bảo hiểm phụ đề / bảo hiểm sinh đôi / ràng buộc phương vị mạnh.
 15. **Tông mỹ thuật trích theo nhãn của kỹ pháp mỹ thuật**, không tự sáng tác từ phong cách / tông màu.
@@ -250,13 +250,13 @@ Thông tin phân cảnh: <storyboardItem videoDesc='承接上镜：上镜定格�
 
 Đầu ra (cấu trúc ba đoạn):
 ```
-将 @图片1 中的[野战军装、坚毅面容、中年男性] 定义为 <主体1>（张振华）；将 @图片2 中的[混凝土墙体、斑驳开裂、昏暗空间] 定义为 <场景1>（废弃地堡内部）；将 @图片3 中的[密封黑色金属箱、冷硬质感] 定义为 <道具1>（黑色金属箱）。
+将 @图片1 中的[quân phục dã chiến, khuôn mặt kiên nghị, nam trung niên] 定义为 <主体1>（张振华）；将 @图片2 中的[tường bê tông, loang lổ nứt nẻ, không gian tối mờ] 定义为 <场景1>（废弃地堡内部）；将 @图片3 中的[hòm kim loại đen niêm phong, chất cảm lạnh cứng] 定义为 <道具1>（黑色金属箱）。
 
 承接上镜：上镜定格于保险柜密码锁锈迹斑斑布满灰尘的特写画面——柜体静置于控制台上等待操作——本镜从张振华已走到柜前、蹲下伸手操作的瞬间延续。
 
-镜头1：中景固定镜头，<主体1>（张振华）走到 <场景1> 控制台上的保险柜前蹲下，伸手在密码锁上输入密码、手指精准转动刻度盘，神情专注凝定。无台词，<手指转动密码盘的咔嗒咔嗒声>。
-镜头2：特写固定镜头，保险柜密码锁内部机簧咬合、咔嗒一声，柜门应声弹开。无台词，<机簧解锁声>，<柜门弹开金属声>。
-镜头3：中景缓推，保险柜门缓缓打开，里面是一个密封的 <道具1>（黑色金属箱），静静躺在柜中。无台词，<柜门打开铰链声>，<金属轻微碰撞声>。
+镜头1：中景固定镜头, <主体1>（张振华）bước tới trước két sắt trên bàn điều khiển trong <场景1>, ngồi xuống, đưa tay nhập mã trên khóa số, ngón tay xoay vòng khắc độ chính xác, nét mặt tập trung đanh lại. 无台词, <tiếng lách cách của ngón tay xoay vòng mã số>.
+镜头2：特写固定镜头, bên trong khóa số của két sắt các lẫy khớp vào nhau, một tiếng cách, cánh cửa két bật mở. 无台词, <tiếng lẫy khóa mở>, <tiếng kim loại của cánh cửa két bật ra>.
+镜头3：中景缓推, cửa két sắt từ từ mở ra, bên trong là một <道具1>（黑色金属箱）niêm phong, nằm im lìm trong két. 无台词, <tiếng bản lề khi cửa két mở>, <tiếng kim loại va chạm nhẹ>.
 
-古风写实摄影，电影风格，强对比度，极致细节；高清，细节丰富，电影质感；人物面部稳定不变形、五官清晰、动作连贯自然，不僵硬，无穿模无卡顿；保持无字幕，避免生成任何文字或字幕；不要生成水印；不要生成 Logo。
+古风写实摄影，电影风格，强对比度，极致细节; độ nét cao, chi tiết phong phú, chất điện ảnh; khuôn mặt nhân vật ổn định không biến dạng, ngũ quan rõ nét, chuyển động liền mạch tự nhiên, không cứng đờ, không xuyên vật thể, không giật hình; giữ nguyên không phụ đề, tránh sinh bất kỳ chữ hay phụ đề nào; không sinh watermark; không sinh Logo.
 ```

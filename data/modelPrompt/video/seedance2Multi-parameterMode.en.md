@@ -108,7 +108,7 @@ All assets are referenced with `@图片N`; numbers increase consecutively in the
 
 ### Break-up to avoid ambiguity (mandatory)
 
-A bare `@图片N` immediately followed by a verb or a position word (e.g. "@图片1跑向…") easily triggers digit-run ambiguity; change it to `<主体N>@图片N`, or insert a noun after `@图片N` to break it up (e.g. "@图片1 中的男子").
+A bare `@图片N` immediately followed by a verb or a position word (e.g. "@图片1 runs toward…") easily triggers digit-run ambiguity; change it to `<主体N>@图片N`, or insert a noun after `@图片N` to break it up (e.g. "the man in @图片1").
 
 ### Handling 承接上镜 (mandatory)
 
@@ -137,7 +137,7 @@ Asset info[26, role, 张振华], [29, scene, 废弃地堡内部], [32, tool, 黑
 
 - **Carry over the starting state of the first shot**: when a 「承接上镜：……」 exists, the facing / position / posture of the first shot must continue from the frozen state that text describes, rather than starting from nothing.
 - **Link consecutive shots within the group**: for adjacent shots in the same group (number N → N+1), the position / posture of the same subject must connect; when there is movement, give the blocking transition inside the action (crouching down, standing up, turning to step aside, etc.).
-- **Facing / spatial relations come from the shot description**: this format has no separate "facing / spatial relations" field, so both are extracted from the "shot description" and written out explicitly in the body (e.g. "画面左侧", "3/4 正面朝右"); for dialogue / confrontation shots, use position words to state explicitly who is on screen left / right, and never cross the line without reason.
+- **Facing / spatial relations come from the shot description**: this format has no separate "facing / spatial relations" field, so both are extracted from the "shot description" and written out explicitly in the body (e.g. "frame left", "3/4 front view facing right"); for dialogue / confrontation shots, use position words to state explicitly who is on screen left / right, and never cross the line without reason.
 - **One shot, one camera movement**: each shot follows the camera movement field of `videoDesc`; a single shot has only one camera movement.
 
 ---
@@ -149,7 +149,7 @@ Asset info[26, role, 张振华], [29, scene, 废弃地堡内部], [32, tool, 黑
 将 @图片1 中的[2-3 stable static features] 定义为 <主体1>（{name}{，音色参考 @图片M}）；将 @图片2 中的[…] 定义为 <场景1>（{scene}）{；将 @图片… 中的[…] 定义为 <道具1>（{prop}）}。
 ```
 
-> This mode has no storyboard images: part one **must not contain** any "@图片N 作为 镜头K 构图参考".
+> This mode has no storyboard images: part one **must not contain** any "@图片N as the composition reference for 镜头K".
 
 **【承接上镜 · if any】** (kept verbatim, on its own line, placed after the subject definitions and before 镜头1)
 ```
@@ -165,7 +165,7 @@ Asset info[26, role, 张振华], [29, scene, 废弃地堡内部], [32, tool, 黑
 
 **Part three: style + constraint pack**
 ```
-{Seedance 2.0 (Chinese) style tags of the art technique}；高清，细节丰富，电影质感；人物面部稳定不变形、五官清晰、动作连贯自然，不僵硬，无穿模无卡顿；保持无字幕，避免生成任何文字或字幕；不要生成水印；不要生成 Logo{；多主体必挂：视频全程禁止出现外形、着装、配饰完全一致的人物，禁止生成同款分身、双胞胎效果，同一画面仅保留单个对应人物}{；多人正面动态必挂：明确左 / 右侧角色辨识特征 + 固定机位}。
+{Seedance 2.0 (Chinese) style tags of the art technique}; high definition, rich detail, cinematic texture; character faces stable and undistorted, features clear, movement continuous and natural, not stiff, no clipping and no stutter; keep it subtitle-free, avoid generating any text or subtitles; do not generate a watermark; do not generate a Logo{; mandatory when there are several subjects: throughout the video, characters identical in appearance, costume and accessories are forbidden, generating duplicate-clone or twin effects is forbidden, only one corresponding character is kept in the same frame}{; mandatory for a frontal multi-character action: state the identifying features of the left / right character explicitly + locked camera position}.
 ```
 
 > **Where the art keynote / style tags come from**: this skill does not invent them; always quote the 「Seedance 2.0（中文）」 tags of the currently active art technique (e.g. ancient-style realism = `古风写实摄影，电影风格，强对比度，极致细节`; 2D Japanese anime = `90年代日式动画，手绘赛璐璐，柔和暖调，电影风格，清晰线条，怀旧质感`).
@@ -176,7 +176,7 @@ Asset info[26, role, 张振华], [29, scene, 废弃地堡内部], [32, tool, 黑
 
 Dialogue format: `<主体N> 说 {dialogue content}，音色：{voice-timbre description}`
 
-- **Prefer the audio asset**: when the character has an audio asset attached, quote the timbre directly — `音色：取自 @图片M（{optional brief timbre features}）`.
+- **Prefer the audio asset**: when the character has an audio asset attached, quote the timbre directly — `音色：taken from @图片M（{optional brief timbre features}）`.
 - **When there is no audio asset**: infer and fill in the 9 dimensions from the table below:
 
 ```
@@ -187,19 +187,19 @@ Dialogue format: `<主体N> 说 {dialogue content}，音色：{voice-timbre desc
 
 | Character type traits | Default voice timbre |
 |------------|---------|
-| Male authoritative / domineering character | 男声，中年音色，音调低沉，音色浑厚有力，声音厚重，发音标准，气息极其沉稳，语速偏慢 |
-| Female gentle / sweet character | 女声，青年音色，音调中等偏高，音色质感明亮清脆，声音清亮柔和，气息充沛平稳，带温婉真诚感 |
-| Male young / ordinary character | 男声，青年音色，音调中等，音色干净，声音厚度适中，发音清晰，气息平稳，语速适中 |
-| Female lively / outgoing character | 女声，青年音色，音调偏高，音色清脆活泼，声音轻盈，气息充沛，语速偏快，带笑意和感染力 |
-| Villain / cold-blooded character | 男声，中年音色，音调低沉，音色质感干燥偏暗，声音带沙砾感，气息平稳，语速极慢，有威胁感 |
+| Male authoritative / domineering character | male voice, middle-aged timbre, low pitch, rich and powerful timbre, heavy voice, standard articulation, extremely steady breath, slow-leaning speech rate |
+| Female gentle / sweet character | female voice, young-adult timbre, medium-high pitch, bright and crisp timbre texture, clear and gentle voice, full steady breath, with a warm sincere feel |
+| Male young / ordinary character | male voice, young-adult timbre, medium pitch, clean timbre, moderate voice thickness, clear articulation, steady breath, moderate speech rate |
+| Female lively / outgoing character | female voice, young-adult timbre, high-leaning pitch, crisp lively timbre, light voice, full breath, fast-leaning speech rate, with a smile in it and infectious energy |
+| Villain / cold-blooded character | male voice, middle-aged timbre, low pitch, dry dark-leaning timbre texture, gravelly voice, steady breath, extremely slow speech rate, with a sense of menace |
 
 #### Dialogue type formats
 
 | Dialogue type | Format | Lip description |
 |----------|------|----------|
-| Ordinary dialogue | `<主体N> 说 {dialogue}，音色：{description}` | 角色嘴部开合说话 |
-| Inner monologue | `<主体N> 内心OS {dialogue}，音色：{description}` | 角色嘴部紧闭不动 |
-| Voiceover | `<主体N> 画外音VO {dialogue}，音色：{description}` | 角色嘴部紧闭不动（或角色不在画面中） |
+| Ordinary dialogue | `<主体N> 说 {dialogue}，音色：{description}` | the character's mouth opens and closes while speaking |
+| Inner monologue | `<主体N> 内心OS {dialogue}，音色：{description}` | the character's mouth stays shut and still |
+| Voiceover | `<主体N> 画外音VO {dialogue}，音色：{description}` | the character's mouth stays shut and still (or the character is off screen) |
 
 #### Handling shots with no dialogue
 
@@ -212,16 +212,16 @@ Dialogue format: `<主体N> 说 {dialogue content}，音色：{voice-timbre desc
 
 | Information type | Symbol | Example |
 |---|---|---|
-| Sound effect | `<>` | `<远处传来狗叫声>` |
-| Dialogue | `{}` | `{你好，世界}`; a minority language must be labelled with its language |
-| Subtitle / title | `【】` | `【第一章：启程】` (only when text generation is explicitly required; by default the subtitle fallback forbids subtitles) |
+| Sound effect | `<>` | `<a dog barking in the distance>` |
+| Dialogue | `{}` | `{Hello, world}`; a minority language must be labelled with its language |
+| Subtitle / title | `【】` | `【Chapter One: Setting Out】` (only when text generation is explicitly required; by default the subtitle fallback forbids subtitles) |
 | Background music | `（）` | **Disabled in this skill** (the system forbids background music); output no music / score description of any kind |
 
 ---
 
 ## Generation constraints (summary of the core principles)
 
-1. **The prompt is written in Chinese**.
+1. **The prompt is written in English**.
 2. **Output the video prompt directly**: outputting any non-prompt content such as analysis, reasoning steps, model-matching notes, asset numbering tables or separator lines is forbidden. The first line is the keynote sentence of part one (subject definitions).
 3. **Unified reference syntax + define before body**: material is referenced with `@图片N`; subjects are first defined as `<主体N>`/`<场景N>`/`<道具N>` and only then referenced in the body; audio hangs after its subject as the timbre source; part one binds all subjects together and the body never defines them again.
 4. **Mask the asset ID + break up to avoid ambiguity**: never write a bare assetId in the body; when `@图片N` is immediately followed by a verb or position word, change it to `<主体N>@图片N` or insert a noun to break it up.
@@ -232,7 +232,7 @@ Dialogue format: `<主体N> 说 {dialogue content}，音色：{voice-timbre desc
 9. **Shot numbers, no absolute seconds**: use `镜头N` (keeping the original number); absolute seconds such as `{N}s` / `0–3s` must not appear in the body (Seedance 2.0's support for exact timing is unstable).
 10. **Lighting follows the lighting the scene image carries**: the scene asset `@图片N` (`<场景N>`) already carries its lighting, from which the model derives brightness / color temperature / direction; neither the body nor the constraint pack **may write** any lighting direction / color temperature / brightness / color tone. The only exception is the inherent style tags of the art technique quoted on the "overall art keynote" line of part three (which are style anchoring).
 11. **Follow the shot description strictly**: every shot is generated strictly from the "shot description" and the other fields; invent no extra information.
-12. **Dialogue must not be lost, and its type must be marked correctly**: a shot with dialogue must output the full dialogue (`{}`) and the voice timbre, distinguishing 对白 / 内心OS / 画外音VO.
+12. **Dialogue must not be lost, and its type must be marked correctly**: a shot with dialogue must output the full dialogue (`{}`) and the voice timbre, distinguishing ordinary dialogue / 内心OS / 画外音VO.
 13. **No background music**: the sound effect (`<>`) carries real physical sound sources only; write no music / score of any kind.
 14. **The constraint pack is mandatory**: the quality pack + the stability pack + the watermark/Logo fallback are attached by default; add the subtitle fallback / twin fallback / strong position constraints as the scene requires.
 15. **The art keynote quotes the art-technique tags**; do not invent style / color-tone words.
@@ -250,13 +250,13 @@ Storyboard info: <storyboardItem videoDesc='承接上镜：上镜定格于保险
 
 Output (three-part structure):
 ```
-将 @图片1 中的[野战军装、坚毅面容、中年男性] 定义为 <主体1>（张振华）；将 @图片2 中的[混凝土墙体、斑驳开裂、昏暗空间] 定义为 <场景1>（废弃地堡内部）；将 @图片3 中的[密封黑色金属箱、冷硬质感] 定义为 <道具1>（黑色金属箱）。
+将 @图片1 中的[field combat uniform, resolute face, middle-aged male] 定义为 <主体1>（张振华）；将 @图片2 中的[concrete walls, mottled and cracked, dim space] 定义为 <场景1>（废弃地堡内部）；将 @图片3 中的[sealed black metal case, cold hard texture] 定义为 <道具1>（黑色金属箱）。
 
 承接上镜：上镜定格于保险柜密码锁锈迹斑斑布满灰尘的特写画面——柜体静置于控制台上等待操作——本镜从张振华已走到柜前、蹲下伸手操作的瞬间延续。
 
-镜头1：中景固定镜头，<主体1>（张振华）走到 <场景1> 控制台上的保险柜前蹲下，伸手在密码锁上输入密码、手指精准转动刻度盘，神情专注凝定。无台词，<手指转动密码盘的咔嗒咔嗒声>。
-镜头2：特写固定镜头，保险柜密码锁内部机簧咬合、咔嗒一声，柜门应声弹开。无台词，<机簧解锁声>，<柜门弹开金属声>。
-镜头3：中景缓推，保险柜门缓缓打开，里面是一个密封的 <道具1>（黑色金属箱），静静躺在柜中。无台词，<柜门打开铰链声>，<金属轻微碰撞声>。
+镜头1：中景固定镜头, <主体1>（张振华）walks up to the safe on the console in <场景1>, crouches down and keys the combination into the lock, fingers turning the dial precisely, expression fixed and focused. 无台词, <the clack-clack of fingers turning the combination dial>.
+镜头2：特写固定镜头, inside the safe's combination lock the tumblers engage with a click and the door springs open. 无台词, <the sound of the tumblers unlocking>, <the metallic sound of the door springing open>.
+镜头3：中景缓推, the safe door swings slowly open to reveal a sealed <道具1>（黑色金属箱）lying quietly inside. 无台词, <the hinge sound of the door opening>, <a light metallic knock>.
 
-古风写实摄影，电影风格，强对比度，极致细节；高清，细节丰富，电影质感；人物面部稳定不变形、五官清晰、动作连贯自然，不僵硬，无穿模无卡顿；保持无字幕，避免生成任何文字或字幕；不要生成水印；不要生成 Logo。
+古风写实摄影，电影风格，强对比度，极致细节; high definition, rich detail, cinematic texture; character faces stable and undistorted, features clear, movement continuous and natural, not stiff, no clipping and no stutter; keep it subtitle-free, avoid generating any text or subtitles; do not generate a watermark; do not generate a Logo.
 ```

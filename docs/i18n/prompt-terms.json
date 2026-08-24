@@ -292,12 +292,12 @@
       "note": "Field 2 of videoDesc. Raw count is inflated: 场景 is also ordinary prose and an asset type name throughout both layers.",
       "literalCounts": {
         "zh": 76,
-        "en": 20,
-        "vi": 20
+        "en": 19,
+        "vi": 19
       },
       "labelCounts": {
         "en": 89,
-        "vi": 55
+        "vi": 56
       }
     },
     {
@@ -426,7 +426,7 @@
         "vi": 1
       },
       "labelCounts": {
-        "en": 25,
+        "en": 26,
         "vi": 25
       }
     },
@@ -504,8 +504,8 @@
         "vi": 23
       },
       "labelCounts": {
-        "en": 197,
-        "vi": 178
+        "en": 198,
+        "vi": 179
       }
     },
     {
@@ -579,11 +579,11 @@
       "note": "Storyboard-table column (`orientation`) carried into videoDesc by production_execution_storyboard_panel; named in the seedance2 parse notes.",
       "literalCounts": {
         "zh": 7,
-        "en": 1,
-        "vi": 1
+        "en": 0,
+        "vi": 0
       },
       "labelCounts": {
-        "en": 5,
+        "en": 6,
         "vi": 6
       }
     },
@@ -638,8 +638,8 @@
       },
       "literalCounts": {
         "zh": 5,
-        "en": 5,
-        "vi": 5
+        "en": 4,
+        "vi": 4
       }
     },
     {
@@ -667,8 +667,8 @@
       },
       "literalCounts": {
         "zh": 19,
-        "en": 19,
-        "vi": 19
+        "en": 16,
+        "vi": 16
       }
     },
     {
@@ -696,8 +696,8 @@
       },
       "literalCounts": {
         "zh": 22,
-        "en": 22,
-        "vi": 22
+        "en": 19,
+        "vi": 19
       }
     },
     {
@@ -725,8 +725,8 @@
       },
       "literalCounts": {
         "zh": 5,
-        "en": 5,
-        "vi": 5
+        "en": 4,
+        "vi": 4
       }
     },
     {
@@ -754,8 +754,8 @@
       },
       "literalCounts": {
         "zh": 15,
-        "en": 15,
-        "vi": 15
+        "en": 13,
+        "vi": 13
       }
     },
     {
@@ -783,8 +783,8 @@
       },
       "literalCounts": {
         "zh": 5,
-        "en": 5,
-        "vi": 5
+        "en": 4,
+        "vi": 4
       }
     },
     {
@@ -812,8 +812,8 @@
       },
       "literalCounts": {
         "zh": 15,
-        "en": 15,
-        "vi": 15
+        "en": 12,
+        "vi": 12
       }
     },
     {
@@ -841,8 +841,8 @@
       },
       "literalCounts": {
         "zh": 5,
-        "en": 5,
-        "vi": 5
+        "en": 4,
+        "vi": 4
       }
     },
     {
@@ -870,8 +870,8 @@
       },
       "literalCounts": {
         "zh": 5,
-        "en": 5,
-        "vi": 5
+        "en": 4,
+        "vi": 4
       }
     },
     {
@@ -899,8 +899,8 @@
       },
       "literalCounts": {
         "zh": 19,
-        "en": 19,
-        "vi": 19
+        "en": 15,
+        "vi": 15
       }
     },
     {
@@ -957,8 +957,8 @@
       },
       "literalCounts": {
         "zh": 5,
-        "en": 5,
-        "vi": 5
+        "en": 4,
+        "vi": 4
       }
     },
     {
@@ -986,8 +986,8 @@
       },
       "literalCounts": {
         "zh": 5,
-        "en": 5,
-        "vi": 5
+        "en": 4,
+        "vi": 4
       }
     },
     {
@@ -1015,8 +1015,8 @@
       },
       "literalCounts": {
         "zh": 5,
-        "en": 5,
-        "vi": 5
+        "en": 4,
+        "vi": 4
       }
     },
     {
@@ -1037,8 +1037,8 @@
       "note": "Emitted by the skills as a 运镜 cell value and used in the seedance2 worked example, but ABSENT from every 运镜 mapping table. Unmapped boundary value — see gaps. Raw count is inflated by prose (固定文本 / 固定模式).",
       "literalCounts": {
         "zh": 11,
-        "en": 5,
-        "vi": 5
+        "en": 4,
+        "vi": 4
       }
     },
     {
@@ -1085,8 +1085,8 @@
         "vi": 0
       },
       "labelCounts": {
-        "en": 17,
-        "vi": 17
+        "en": 18,
+        "vi": 18
       }
     },
     {
@@ -1827,7 +1827,7 @@
       "note": "storyboardItem attribute.",
       "literalCounts": {
         "zh": 25,
-        "en": 26,
+        "en": 30,
         "vi": 25
       }
     },
