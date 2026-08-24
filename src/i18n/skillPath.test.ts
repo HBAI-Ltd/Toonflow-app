@@ -25,8 +25,6 @@ const ART_SKILL_DIR = path.resolve(__dirname, "../../data/skills/art_skills/2D_9
 const README_ZH = path.join(ART_SKILL_DIR, "README.md");
 const README_EN = path.join(ART_SKILL_DIR, "README.en.md");
 const README_VI = path.join(ART_SKILL_DIR, "README.vi.md");
-// prefix.md không có sidecar cho bất kỳ locale nào -> dùng để kiểm tra fallback.
-const PREFIX_ZH = path.join(ART_SKILL_DIR, "prefix.md");
 
 describe("readLocalizedSkill", () => {
   it("có sidecar -> trả nội dung sidecar, không phải bản gốc", () => {
@@ -41,13 +39,21 @@ describe("readLocalizedSkill", () => {
   });
 
   it("không có sidecar -> lùi về nội dung bản gốc", () => {
-    // prefix.md chỉ tồn tại ở dạng gốc (zh), không có prefix.en.md/prefix.vi.md.
-    expect(fs.existsSync(localizedSkillPath(PREFIX_ZH, "en"))).toBe(false);
-    expect(fs.existsSync(localizedSkillPath(PREFIX_ZH, "vi"))).toBe(false);
+    // Dựng bản gốc zh trong thư mục tạm: từ khi cả 183 bản gốc dưới data/skills đều đã có
+    // sidecar en/vi, trong cây thật không còn file nào làm fixture cho nhánh fallback được nữa.
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "skillpath-fallback-"));
+    try {
+      const zhOnly = path.join(tmpDir, "prefix.md");
+      const zhContent = "# 前缀\n只有原文，没有 sidecar。\n";
+      fs.writeFileSync(zhOnly, zhContent, "utf-8");
+      expect(fs.existsSync(localizedSkillPath(zhOnly, "en"))).toBe(false);
+      expect(fs.existsSync(localizedSkillPath(zhOnly, "vi"))).toBe(false);
 
-    const zhContent = fs.readFileSync(PREFIX_ZH, "utf-8");
-    expect(readLocalizedSkill(PREFIX_ZH, "en")).toBe(zhContent);
-    expect(readLocalizedSkill(PREFIX_ZH, "vi")).toBe(zhContent);
+      expect(readLocalizedSkill(zhOnly, "en")).toBe(zhContent);
+      expect(readLocalizedSkill(zhOnly, "vi")).toBe(zhContent);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 
   it("locale zh đọc thẳng bản gốc, không thử đường dẫn sidecar", () => {
