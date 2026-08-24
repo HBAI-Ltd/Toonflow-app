@@ -16,21 +16,24 @@ describe("getSeedPrompt — locale resolution", () => {
     expect(getSeedPrompt("audioBindPrompt", "zh")).toBe(audioBindPrompt.zh);
   });
 
-  it("en/vi chưa có nội dung, mọi locale đều fallback về đúng văn bản zh", () => {
+  it("locale đã có bản dịch thì trả về đúng bản dịch đó, chưa có thì fallback về zh", () => {
     for (const type of ALL_TYPES) {
+      const map = { eventExtraction, scriptAssetExtraction, videoPromptGeneration, audioBindPrompt }[type];
       const zhText = getSeedPrompt(type, "zh");
       expect(zhText.length).toBeGreaterThan(0);
       for (const locale of ALL_LOCALES) {
-        expect(getSeedPrompt(type, locale)).toBe(zhText);
+        const own = map[locale];
+        expect(getSeedPrompt(type, locale)).toBe(own !== undefined && own !== "" ? own : zhText);
       }
     }
   });
 
-  it("en/vi rỗng hoặc không tồn tại trong LocaleText của từng prompt", () => {
-    for (const type of ALL_TYPES) {
-      const map = { eventExtraction, scriptAssetExtraction, videoPromptGeneration, audioBindPrompt }[type];
-      expect(map.en ?? "").toBe("");
-      expect(map.vi ?? "").toBe("");
+  it("ba prompt seed nhỏ đã có đủ en/vi và khác hẳn văn bản zh", () => {
+    for (const map of [eventExtraction, scriptAssetExtraction, audioBindPrompt]) {
+      for (const locale of ["en", "vi"] as const) {
+        expect(map[locale]?.length ?? 0).toBeGreaterThan(0);
+        expect(map[locale]).not.toBe(map.zh);
+      }
     }
   });
 });
