@@ -625,6 +625,228 @@
       "en": 0,
       "vi": 0
     },
+    "data/skills/art_skills/3D_anime_render/art_prompt/art_character.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写/特写展示 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 不再固定五官特征参数 theo nghĩa văn xuôi (không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写/特写展示 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 头顶至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 不再固定五官特征参数 theo nghĩa văn xuôi (không cố định tham số ngũ quan), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_anime_render/art_prompt/art_character_derivative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 套用固定妆容 theo nghĩa văn xuôi (áp một kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 人像特写 để gọi tên ô hình trong bản vẽ bốn hướng nhìn (cột 景别 của bảng này mang giá trị 面部至锁骨/全身立像), không phải giá trị cỡ cảnh 特写 trong bảng phân cảnh"
+          },
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 套用固定妆容 theo nghĩa văn xuôi (áp một kiểu trang điểm cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_anime_render/art_prompt/art_prop.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_anime_render/art_prompt/art_prop_derivative.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "特写": {
+            "expected": 0,
+            "reason": "bản gốc dùng 细节特写 để gọi tên ô hình phóng to chi tiết trong lưới bốn ô của bản vẽ đạo cụ, không phải giá trị cỡ cảnh 特写"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_anime_render/art_prompt/art_scene.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục và của khuôn mẫu prompt), không phải giá trị cỡ cảnh 中景"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "中景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中景 theo nghĩa văn xuôi (lớp trung cảnh trong bộ 前景/中景/后景 của bố cục và của khuôn mẫu prompt), không phải giá trị cỡ cảnh 中景"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_anime_render/art_prompt/art_scene_derivative.md": {
+      "en": {
+        "residualCjk": 5,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi khi trời sương), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 5,
+        "literalAllowance": {
+          "远景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 远景模糊 theo nghĩa văn xuôi (cảnh vật ở xa mờ đi khi trời sương), không phải giá trị cỡ cảnh 远景"
+          },
+          "中景": {
+            "expected": 4,
+            "reason": "bản gốc có 5 lần 中景: 4 lần là giá trị cỡ cảnh (giữ nguyên) và 1 lần trong {前景}，{中景}，{后景} của khuôn mẫu prompt là văn xuôi chỉ lớp trung cảnh của bố cục"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_anime_render/art_prompt/art_storyboard_video.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      }
+    },
+    "data/skills/art_skills/3D_anime_render/driector_skills/director_planning_style.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      }
+    },
+    "data/skills/art_skills/3D_anime_render/driector_skills/director_storyboard.md": {
+      "en": {
+        "residualCjk": 6,
+        "literalAllowance": {
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定风格锚定词 theo nghĩa văn xuôi (từ neo phong cách cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 6,
+        "literalAllowance": {
+          "固定": {
+            "expected": 0,
+            "reason": "bản gốc dùng 固定风格锚定词 theo nghĩa văn xuôi (từ neo phong cách cố định), không phải giá trị vận máy 固定机位"
+          }
+        }
+      }
+    },
+    "data/skills/art_skills/3D_anime_render/driector_skills/director_storyboard_table_style.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {}
+      }
+    },
+    "data/skills/art_skills/3D_anime_render/prefix.md": {
+      "en": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "序号": {
+            "expected": 0,
+            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中近景提暖 theo nghĩa văn xuôi (tăng độ ấm ở các cú máy vừa và gần), token khớp bắc qua ranh giới từ 中+近景, không phải giá trị cỡ cảnh 近景"
+          }
+        }
+      },
+      "vi": {
+        "residualCjk": 0,
+        "literalAllowance": {
+          "序号": {
+            "expected": 0,
+            "reason": "bản gốc dùng 序号 làm đầu cột đánh số của bảng màu, không phải đầu cột 序号 của bảng phân cảnh mà tầng prompt phải khớp"
+          },
+          "近景": {
+            "expected": 0,
+            "reason": "bản gốc dùng 中近景提暖 theo nghĩa văn xuôi (tăng độ ấm ở các cú máy vừa và gần), token khớp bắc qua ranh giới từ 中+近景, không phải giá trị cỡ cảnh 近景"
+          }
+        }
+      }
+    },
     "data/skills/art_skills/3D_chinese_traditional/README.md": {
       "en": 0,
       "vi": 0
