@@ -16,8 +16,29 @@ const VALID_INTERCEPTOR =
 
 const ONE_FT_CALL = 'ft("返回首页",-1)';
 
+// Hai mảng tab của màn "tạo mới" (manual mỹ thuật + manual đạo diễn), rút gọn
+// đúng hình dạng có thật trong bundle. patchBundle() áp cả bốn vá trong một
+// lượt nên mọi bundle giả đều phải mang đủ neo này.
+const VALID_MANUAL_TABS =
+  'const u=()=>[{label:"README",value:"README",data:""},' +
+  '{label:"前缀",value:"prefix",data:""},' +
+  '{label:"角色",value:"art_character",data:""},' +
+  '{label:"角色衍生",value:"art_character_derivative",data:""},' +
+  '{label:"道具",value:"art_prop",data:""},' +
+  '{label:"道具衍生",value:"art_prop_derivative",data:""},' +
+  '{label:"场景",value:"art_scene",data:""},' +
+  '{label:"场景衍生",value:"art_scene_derivative",data:""},' +
+  '{label:"分镜",value:"director_storyboard",data:""},' +
+  '{label:"分镜视频",value:"art_storyboard_video",data:""},' +
+  '{label:"技法-导演规划",value:"director_planning_style",data:""},' +
+  '{label:"技法-分镜表设计",value:"director_storyboard_table_style",data:""}],' +
+  'q=()=>[{label:"README",value:"README",data:""},' +
+  '{label:"导演规划",value:"director_planning_narrative",data:""},' +
+  '{label:"分镜表",value:"director_storyboard_table_narrative",data:""}];';
+
+
 function wrap(css: string): string {
-  return css + VALID_INTERCEPTOR + ONE_FT_CALL;
+  return css + VALID_INTERCEPTOR + ONE_FT_CALL + VALID_MANUAL_TABS;
 }
 
 describe("patchBundle — lỗi 1 (font tiếng Việt vỡ dấu)", () => {
@@ -50,7 +71,7 @@ describe("patchBundle — lỗi 1 (font tiếng Việt vỡ dấu)", () => {
   });
 
   it("báo lỗi khi thiếu neo --td-font-family", () => {
-    const src = VALID_INTERCEPTOR + ONE_FT_CALL; // không có CSS var nào
+    const src = VALID_INTERCEPTOR + ONE_FT_CALL + VALID_MANUAL_TABS; // không có CSS var nào
     expect(() => patchBundle(src)).toThrow(/--td-font-family/);
   });
 });
@@ -87,7 +108,7 @@ describe("patchBundle — lỗi 2 (interceptor không gửi X-Toonflow-Lang)", (
   });
 
   it("báo lỗi khi thiếu neo interceptors.request.use + localStorage token", () => {
-    const src = BROKEN_FONT_CSS + ONE_FT_CALL; // không có interceptor nào
+    const src = BROKEN_FONT_CSS + ONE_FT_CALL + VALID_MANUAL_TABS; // không có interceptor nào
     expect(() => patchBundle(src)).toThrow(/token/);
   });
 });
@@ -109,6 +130,7 @@ describe("patchBundle — lỗi 3 (chuỗi tiếng Trung hardcode trong ft(\"…
     const src =
       ':root{--td-font-family: -apple-system, sans-serif}' +
       VALID_INTERCEPTOR +
+      VALID_MANUAL_TABS +
       'ft(" 保存 ",-1)';
     const { output } = patchBundle(src);
     expect(output).toContain('ft(" Save ",-1)');
@@ -118,6 +140,7 @@ describe("patchBundle — lỗi 3 (chuỗi tiếng Trung hardcode trong ft(\"…
     const src =
       ':root{--td-font-family: -apple-system, sans-serif}' +
       VALID_INTERCEPTOR +
+      VALID_MANUAL_TABS +
       'ft("自动",-1);ft("浅色",-1);ft("深色",-1)';
     const { output } = patchBundle(src);
     expect(output).toContain('ft("Auto",-1)');
@@ -139,7 +162,7 @@ describe("patchBundle — lỗi 3 (chuỗi tiếng Trung hardcode trong ft(\"…
   });
 
   it("báo lỗi khi thiếu neo ft(\"…\") hoàn toàn", () => {
-    const src = BROKEN_FONT_CSS + VALID_INTERCEPTOR; // không có ft(...) nào
+    const src = BROKEN_FONT_CSS + VALID_INTERCEPTOR + VALID_MANUAL_TABS; // không có ft(...) nào
     expect(() => patchBundle(src)).toThrow(/ft\(/);
   });
 
@@ -158,6 +181,7 @@ describe("patchBundle — idempotence toàn cục", () => {
     const src =
       ':root{--td-font-family: PingFang SC, Microsoft YaHei, Arial Regular}' +
       VALID_INTERCEPTOR +
+      VALID_MANUAL_TABS +
       'ft("已上传",-1);ft("批量删除",-1)';
     const once = patchBundle(src);
     expect(once.fontsChanged).toBeGreaterThan(0);
@@ -169,5 +193,65 @@ describe("patchBundle — idempotence toàn cục", () => {
     expect(twice.fontsChanged).toBe(0);
     expect(twice.interceptorPatched).toBe(false);
     expect(twice.stringsTranslated).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Lỗi 4 — nhãn tab tiếng Trung trong hai màn "tạo mới"
+// ---------------------------------------------------------------------------
+
+describe('patchBundle — lỗi 4 (nhãn tab manual hardcode tiếng Trung)', () => {
+  it("thay label và giữ nguyên value của cả hai mảng", () => {
+    const { output, manualLabelsPatched } = patchBundle(wrap(BROKEN_FONT_CSS));
+    expect(manualLabelsPatched.length).toBe(13);
+    // value là tên file skill — không được đụng
+    for (const value of manualLabelsPatched) {
+      expect(output).toContain(`,value:"${value}",data:""}`);
+    }
+    // không còn nhãn tiếng Trung nào của hai mảng này
+    for (const zh of ["导演规划", "分镜表", "前缀", "角色衍生", "技法-分镜表设计"]) {
+      expect(output).not.toContain(`label:"${zh}"`);
+    }
+  });
+
+  it("nhãn đọc theo locale trong localStorage (en/vi)", () => {
+    const { output } = patchBundle(wrap(BROKEN_FONT_CSS));
+    expect(output).toContain('localStorage.getItem("locale")');
+    expect(output).toContain("Director planning"); // en
+    expect(output).toContain("Kế hoạch đạo diễn"); // vi
+    expect(output).toContain("Storyboard table");
+    expect(output).toContain("Bảng phân cảnh");
+  });
+
+  it("không đụng vào nhãn README", () => {
+    const { output } = patchBundle(wrap(BROKEN_FONT_CSS));
+    expect(output.match(/\{label:"README",value:"README",data:""\}/g)?.length).toBe(2);
+  });
+
+  it("không đụng vào từ điển i18n tiếng Trung của bundle (locale zh hợp lệ)", () => {
+    const zhCatalog = 'var Kzz={storyboardTable:{title:"分镜表",desc:"分镜表"}};';
+    const { output } = patchBundle(wrap(BROKEN_FONT_CSS) + zhCatalog);
+    expect(output).toContain(zhCatalog);
+  });
+
+  it("idempotent: chạy lần hai không đổi gì và không vá lại", () => {
+    const once = patchBundle(wrap(BROKEN_FONT_CSS)).output;
+    const twice = patchBundle(once);
+    expect(twice.output).toBe(once);
+    expect(twice.manualLabelsPatched).toEqual([]);
+  });
+
+  it("báo lỗi to khi thiếu neo mảng tab manual", () => {
+    const src = BROKEN_FONT_CSS + VALID_INTERCEPTOR + ONE_FT_CALL; // không có mảng tab nào
+    expect(() => patchBundle(src)).toThrow(/không tìm thấy neo .*value:"prefix"/);
+  });
+
+  it("báo lỗi to khi mảng tab thiếu một entry (bundle đã đổi cấu trúc)", () => {
+    const src =
+      BROKEN_FONT_CSS +
+      VALID_INTERCEPTOR +
+      ONE_FT_CALL +
+      VALID_MANUAL_TABS.replace('{label:"道具",value:"art_prop",data:""},', "");
+    expect(() => patchBundle(src)).toThrow(/art_prop/);
   });
 });
