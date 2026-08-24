@@ -5,7 +5,7 @@ import sharp from "sharp";
 import { success } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import { Output } from "ai";
-import { t, getLocale } from "@/i18n";
+import { t, getLocale, getPromptLanguage } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -19,6 +19,7 @@ export default router.post(
   async (req, res) => {
     const { assetIds, projectId, scriptId, concurrentCount = 5 } = req.body;
     const locale = await getLocale(req as any);
+    const promptLocale = await getPromptLanguage();
 
     const projectSettingData = await u.db("o_project").where("id", projectId).select("imageModel", "imageQuality", "artStyle").first();
 
@@ -39,9 +40,9 @@ export default router.post(
     parentAssetsData.forEach((item) => {
       if (item.filePath) imageUrlRecord[item.id] = item.filePath;
     });
-    const rolePrompt = u.getArtPrompt(projectSettingData!.artStyle!, "art_skills", "art_character_derivative");
-    const toolPrompt = u.getArtPrompt(projectSettingData!.artStyle!, "art_skills", "art_prop_derivative");
-    const scenePrompt = u.getArtPrompt(projectSettingData!.artStyle!, "art_skills", "art_scene_derivative");
+    const rolePrompt = u.getArtPrompt(projectSettingData!.artStyle!, "art_skills", "art_character_derivative", promptLocale);
+    const toolPrompt = u.getArtPrompt(projectSettingData!.artStyle!, "art_skills", "art_prop_derivative", promptLocale);
+    const scenePrompt = u.getArtPrompt(projectSettingData!.artStyle!, "art_skills", "art_scene_derivative", promptLocale);
     const promptRecord: Record<string, { prompt: string }> = {
       role: {
         prompt: rolePrompt,
@@ -73,7 +74,9 @@ export default router.post(
       const imageId = imageIdMap[item.id!];
       const typeConfig = promptRecord[item.type!] || promptRecord["role"];
 
-      const noDetail = t("agent.production.batchGenerateAssetsImage.noDetail", {}, locale);
+      // Model-facing: system/content here are sent directly to the AI model, so they follow
+      // promptLocale, not locale (content_language) — same reasoning as generateVideoPrompt.ts.
+      const noDetail = t("agent.production.batchGenerateAssetsImage.noDetail", {}, promptLocale);
       const { text } = await u.Ai.Text("universalAi").invoke({
         system: `${typeConfig.prompt}`,
         messages: [
@@ -82,7 +85,7 @@ export default router.post(
             content: t(
               "agent.production.batchGenerateAssetsImage.describePrompt",
               { parentDescribe: item.parentDescribe || noDetail, describe: item.describe || noDetail },
-              locale,
+              promptLocale,
             ),
           },
         ],

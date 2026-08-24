@@ -4,7 +4,7 @@ import { z } from "zod";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import path from "path";
-import { t, getLocale, readLocalizedSkill, canonicalSkillPath } from "@/i18n";
+import { t, getLocale, getPromptLanguage, readLocalizedSkill, canonicalSkillPath, skillPathLocale } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -24,6 +24,9 @@ export default router.post(
   async (req, res) => {
     const { trackId, projectId, info, model, mode } = req.body;
     const locale = await getLocale(req as any);
+    // Text actually sent to the AI model (system prompt file, visual manual, the labelled content
+    // block below) follows prompt_language, not content_language — see task-prompt-language report.
+    const promptLocale = await getPromptLanguage();
     await u.db("o_videoTrack").where({ id: trackId }).update({
       state: "生成中", // i18n-ignore — stored o_videoTrack.state enum value, not user-facing text
     });
@@ -107,11 +110,16 @@ export default router.post(
     if (modelPromptData) {
       const modelPromptRoot = u.getPath(["modelPrompt"]);
       try {
-        // o_modelPrompt.path is stored canonical by bindingPrompt.ts as of this fix, but an
-        // existing row could still hold a locale-suffixed path (e.g. video/foo.vi.md) from before
-        // — canonicalize defensively so such a row can't pin one locale for every request.
-        const fullPath = path.join(modelPromptRoot, canonicalSkillPath(modelPromptData?.path!));
-        const content = readLocalizedSkill(fullPath, locale);
+        // o_modelPrompt.path can be either a canonical path (no locale suffix — "follow the
+        // prompt_language setting") or an explicit locale-suffixed path a user deliberately bound
+        // via Settings → Model Map (e.g. video/foo.vi.md — "pin this language for this model").
+        // Resolving the canonical form with the pinned locale (falling back to promptLocale when
+        // there's no pin) reproduces exactly the right file in both cases through the same
+        // readLocalizedSkill fallback logic used everywhere else.
+        const storedPath = modelPromptData?.path!;
+        const pinnedLocale = skillPathLocale(storedPath);
+        const fullPath = path.join(modelPromptRoot, canonicalSkillPath(storedPath));
+        const content = readLocalizedSkill(fullPath, pinnedLocale ?? promptLocale);
         videoPromptGeneration = content || undefined;
       } catch {}
     }
@@ -140,7 +148,7 @@ export default router.post(
       if (fileName) {
         try {
           const fullPath = path.join(videoPromptDir, fileName);
-          const content = readLocalizedSkill(fullPath, locale);
+          const content = readLocalizedSkill(fullPath, promptLocale);
           if (content) videoPromptGeneration = content;
         } catch {
           // 文件不存在则忽略，继续用备选
@@ -159,10 +167,12 @@ export default router.post(
 
     const artStyle = projectData?.artStyle || "无"; // i18n-ignore — internal fallback key for art-style prompt lookup, not user-facing text
 
-    const visualManual = u.getArtPrompt(artStyle, "art_skills", "art_storyboard_video");
-    const modelLabel = t("agent.production.workbench.videoPrompt.modelLabel", {}, locale);
-    const assetsLabel = t("agent.production.workbench.videoPrompt.assetsLabel", {}, locale);
-    const storyboardLabel = t("agent.production.workbench.videoPrompt.storyboardLabel", {}, locale);
+    const visualManual = u.getArtPrompt(artStyle, "art_skills", "art_storyboard_video", promptLocale);
+    // These labels are interpolated straight into `content` below, which is sent to the AI model
+    // as the user message — model-facing text, so promptLocale, not locale (content_language).
+    const modelLabel = t("agent.production.workbench.videoPrompt.modelLabel", {}, promptLocale);
+    const assetsLabel = t("agent.production.workbench.videoPrompt.assetsLabel", {}, promptLocale);
+    const storyboardLabel = t("agent.production.workbench.videoPrompt.storyboardLabel", {}, promptLocale);
     const content = `
           ${modelLabel}${modelData},
 

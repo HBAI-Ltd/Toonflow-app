@@ -5,7 +5,7 @@ import { z } from "zod";
 import { success, error } from "@/lib/responseFormat";
 import { validateFields } from "@/middleware/middleware";
 import path from "path";
-import { t, getLocale, readLocalizedSkill, canonicalSkillPath } from "@/i18n";
+import { t, getLocale, getPromptLanguage, readLocalizedSkill, canonicalSkillPath, skillPathLocale } from "@/i18n";
 const router = express.Router();
 
 export default router.post(
@@ -30,6 +30,8 @@ export default router.post(
   async (req, res) => {
     const { trackData, projectId, mode, model, concurrentCount = 5 } = req.body;
     const locale = await getLocale(req as any);
+    // Text actually sent to the AI model follows prompt_language, not content_language.
+    const promptLocale = await getPromptLanguage();
     try {
       // 预加载公共数据
       const [id, modelData] = model.split(/:(.+)/);
@@ -42,10 +44,13 @@ export default router.post(
       if (modelPromptData) {
         const modelPromptRoot = u.getPath(["modelPrompt"]);
         try {
-          // See generateVideoPrompt.ts: canonicalize defensively in case this row still holds a
-          // locale-suffixed path from before bindingPrompt.ts started storing canonical paths.
-          const fullPath = path.join(modelPromptRoot, canonicalSkillPath(modelPromptData?.path!));
-          const content = readLocalizedSkill(fullPath, locale);
+          // See generateVideoPrompt.ts: a canonical path (no locale suffix) means "follow
+          // prompt_language"; an explicit locale-suffixed path is a deliberate per-model pin set
+          // via Settings → Model Map and takes priority over promptLocale.
+          const storedPath = modelPromptData?.path!;
+          const pinnedLocale = skillPathLocale(storedPath);
+          const fullPath = path.join(modelPromptRoot, canonicalSkillPath(storedPath));
+          const content = readLocalizedSkill(fullPath, pinnedLocale ?? promptLocale);
           videoPromptGeneration = content || undefined;
         } catch {}
       }
@@ -74,7 +79,7 @@ export default router.post(
         if (fileName) {
           try {
             const fullPath = path.join(videoPromptDir, fileName);
-            const content = readLocalizedSkill(fullPath, locale);
+            const content = readLocalizedSkill(fullPath, promptLocale);
             if (content) videoPromptGeneration = content;
           } catch {
             // 文件不存在则忽略，继续用备选
@@ -92,7 +97,7 @@ export default router.post(
       }
 
       const artStyle = projectData?.artStyle || "无"; // i18n-ignore — internal fallback key for art-style prompt lookup, not user-facing text
-      const visualManual = u.getArtPrompt(artStyle, "art_skills", "art_storyboard_video");
+      const visualManual = u.getArtPrompt(artStyle, "art_skills", "art_storyboard_video", promptLocale);
       await u
         .db("o_videoTrack")
         .whereIn(
@@ -162,9 +167,10 @@ export default router.post(
               });
           }
 
-          const modelLabel = t("agent.production.workbench.videoPrompt.modelLabel", {}, locale);
-          const assetsLabel = t("agent.production.workbench.videoPrompt.assetsLabel", {}, locale);
-          const storyboardLabel = t("agent.production.workbench.videoPrompt.storyboardLabel", {}, locale);
+          // Model-facing (interpolated into `content` below, sent to the AI as the user message).
+          const modelLabel = t("agent.production.workbench.videoPrompt.modelLabel", {}, promptLocale);
+          const assetsLabel = t("agent.production.workbench.videoPrompt.assetsLabel", {}, promptLocale);
+          const storyboardLabel = t("agent.production.workbench.videoPrompt.storyboardLabel", {}, promptLocale);
           const content = `
           ${modelLabel}${modelData},
           ${assetsLabel}${assets

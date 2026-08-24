@@ -1,14 +1,32 @@
 import fs from "fs";
 import path from "path";
 import getPath from "./getPath";
+import { DEFAULT_LOCALE, localizedSkillPath, type Locale } from "@/i18n";
+
+/**
+ * `found` (a base .md file) resolved to the sidecar for `locale` when one exists on disk,
+ * otherwise `found` itself unchanged. Mirrors src/i18n/skillPath.ts's resolveSkillReadPath, but
+ * operates on a path already located by findFileRecursive rather than a known canonical path.
+ */
+function resolveLocaleVariant(found: string, locale: Locale): string {
+  const candidate = localizedSkillPath(found, locale);
+  return candidate !== found && fs.existsSync(candidate) ? candidate : found;
+}
 
 /**
  * 传入一个指定路径参数（风格名称），以及一个指定文件名，递归获取该文件并返回其内容
+ *
+ * Model-facing: this content is assembled into prompts sent to an AI model (visual manuals,
+ * character/scene/prop derivative prompts), so `locale` here must be prompt_language
+ * (getPromptLanguage()), never content_language — see callers for how it's threaded through.
+ *
  * @param styleName - 风格目录名，例如 "chinese_sweet_romance"
  * @param fileName  - 目标文件名（不含 .md 后缀），例如 "art_character"、"prefix"
+ * @param locale    - Prompt language to resolve a translated variant for, if one exists on disk.
+ *                    Defaults to DEFAULT_LOCALE ("en") for backward compatibility.
  * @returns 文件内容字符串，未找到时返回空字符串
  */
-export function getArtPrompt(styleName: string, source: string, fileName: string): string {
+export function getArtPrompt(styleName: string, source: string, fileName: string, locale: Locale = DEFAULT_LOCALE): string {
   const baseDir = getPath(["skills", source, styleName]);
 
   if (!fs.existsSync(baseDir)) {
@@ -17,7 +35,7 @@ export function getArtPrompt(styleName: string, source: string, fileName: string
 
   // 获取 prefix.md 内容
   const prefixFile = findFileRecursive(baseDir, "prefix.md");
-  const prefixContent = prefixFile ? fs.readFileSync(prefixFile, "utf-8") : "";
+  const prefixContent = prefixFile ? fs.readFileSync(resolveLocaleVariant(prefixFile, locale), "utf-8") : "";
 
   const target = fileName.endsWith(".md") ? fileName : `${fileName}.md`;
   const found = findFileRecursive(baseDir, target);
@@ -26,7 +44,7 @@ export function getArtPrompt(styleName: string, source: string, fileName: string
     return prefixContent;
   }
 
-  const fileContent = fs.readFileSync(found, "utf-8");
+  const fileContent = fs.readFileSync(resolveLocaleVariant(found, locale), "utf-8");
   return prefixContent ? `${prefixContent}\n${fileContent}` : fileContent;
 }
 /**
