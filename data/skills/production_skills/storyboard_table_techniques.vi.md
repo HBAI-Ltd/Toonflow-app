@@ -96,7 +96,7 @@ Tài liệu này là tham chiếu kỹ pháp chung cho việc thiết kế bản
 | 仰拍 | Từ dưới lên | Anh hùng hóa / uy áp |
 
 **action** (Hành động nhân vật): mô tả cụ thể động tác của nhân vật/chủ thể trong khung hình (8~55 chữ), không có động tác nhân vật thì điền `空镜`. Định dạng là `(ghi chú nối tiếp)mô tả hành động`. Yêu cầu:
-- **Ghi chú nối tiếp đặt ở đầu**: bọc bằng ngoặc đơn nửa chiều, đặt trước phần mô tả hành động. Cú đầu tiên ghi `(开篇)`; các cú khác ghi `(承接上镜:động tác nối)`, như `(承接上镜:缓推落幅~群像定格)` (đẩy chậm dừng khuôn ~ nhóm người đứng hình), `(承接上镜:cánh tay đang nâng nửa chừng → tiếp tục đưa lên)`
+- **Ghi chú nối tiếp đặt ở đầu**: bọc bằng ngoặc đơn nửa chiều, đặt trước phần mô tả hành động. Cú đầu tiên ghi `(mở đầu)`; các cú khác ghi `(承接上镜:động tác nối)`, như `(承接上镜:缓推落幅~群像定格)` (đẩy chậm dừng khuôn ~ nhóm người đứng hình), `(承接上镜:cánh tay đang nâng nửa chừng → tiếp tục đưa lên)`
 - **Cách viết chuỗi hành động**: viết chuỗi động tác vật lý liên tục + nhịp tốc độ ("từ từ nâng tay phải lên → đầu ngón khẽ run → siết chặt nắm đấm"), cấm chỉ viết trạng thái cuối tĩnh. Nhiều nhân vật thì động tác từng người ngăn bằng `;`, xếp theo thứ tự tên tài nguyên liên quan, như `黎雾 tay phải vuốt ve cổ tay áo → cánh tay trái ôm con thỏ bông vào lòng;聂薇 ánh mắt khóa chặt về phía con thỏ`
 - **Cột này không viết hướng nhìn/quan hệ không gian nữa**: hướng nhìn và quan hệ không gian đã tách thành cột riêng (`orientation` / `spatialRelation`), không ghi lặp trong action, để tránh dấu `|` xung khắc với dấu ngăn cột của bảng markdown
 
