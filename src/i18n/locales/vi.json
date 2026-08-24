@@ -43,6 +43,7 @@
   "setting.modelMap.updatePrompt.fileNotFound": "Tệp không tồn tại.",
   "setting.modelMap.updatePrompt.updated": "Cập nhật thành công.",
   "setting.skillManagement.getSkillContent.invalidPath": "Đường dẫn không hợp lệ.",
+  "setting.skillManagement.pathLocaleMismatch": "Đường dẫn này thuộc một ngôn ngữ khác với ngôn ngữ hiện tại. Vui lòng tải lại trang trước khi lưu.",
   "setting.skillManagement.saveSkillContent.invalidPath": "Đường dẫn không hợp lệ.",
   "setting.skillManagement.saveSkillContent.fileNotFound": "Tệp không tồn tại.",
   "setting.vendorConfig.addVendor.mustExportObject": "Tệp script phải export một object.",

@@ -43,6 +43,7 @@
   "setting.modelMap.updatePrompt.fileNotFound": "File does not exist.",
   "setting.modelMap.updatePrompt.updated": "Updated successfully.",
   "setting.skillManagement.getSkillContent.invalidPath": "Invalid path.",
+  "setting.skillManagement.pathLocaleMismatch": "This path belongs to a different language than the current one. Please reload before saving.",
   "setting.skillManagement.saveSkillContent.invalidPath": "Invalid path.",
   "setting.skillManagement.saveSkillContent.fileNotFound": "File does not exist.",
   "setting.vendorConfig.addVendor.mustExportObject": "The script file must export an object.",
