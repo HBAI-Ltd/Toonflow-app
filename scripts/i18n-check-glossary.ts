@@ -73,7 +73,7 @@ export type GlossConflicts = { sharedGloss: SharedGlossConflict[]; splitGloss: S
  * `i18n:check-sidecars` không canh giúp.
  */
 // i18n-ignore — literal 景别/运镜 values this checker looks for verbatim in translated files, not text to translate
-export const UNREGISTERED_SHOT_TOKENS = ["手持微晃", "稳定器流动", "跟拍", "空镜", "大远景", "中近景", "缓拉", "大全景", "一镜到底"];
+export const UNREGISTERED_SHOT_TOKENS = ["手持微晃", "稳定器流动", "跟拍", "空镜", "大远景", "缓拉", "大全景", "一镜到底"];
 
 export type TokenLossRow = { file: string; token: string; zh: number; en: number; vi: number };
 

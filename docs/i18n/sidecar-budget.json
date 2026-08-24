@@ -200,6 +200,10 @@
           "近景": {
             "expected": 0,
             "reason": "bản gốc viết 中近景提暖 — 近景 ở đây là một nửa của cụm văn xuôi chỉ dải cỡ cảnh trung tới cận trong gợi ý ánh sáng, không phải giá trị cỡ cảnh 近景 của bảng phân cảnh"
+          },
+          "中近景": {
+            "expected": 0,
+            "reason": "bản gốc viết 中近景提暖 (tăng ấm ở dải cỡ cảnh trung đến cận), 肤色微红 trong bảng chỉnh màu theo cảm xúc (hàng 心动瞬间) — 中近景 ở đây chỉ NHÓM cỡ cảnh áp dụng chỉnh màu, không phải một giá trị cỡ cảnh đơn lẻ trong bảng 景别"
           }
         }
       },
@@ -213,6 +217,10 @@
           "近景": {
             "expected": 0,
             "reason": "bản gốc viết 中近景提暖 — 近景 ở đây là một nửa của cụm văn xuôi chỉ dải cỡ cảnh trung tới cận trong gợi ý ánh sáng, không phải giá trị cỡ cảnh 近景 của bảng phân cảnh"
+          },
+          "中近景": {
+            "expected": 0,
+            "reason": "bản gốc viết 中近景提暖 (tăng ấm ở dải cỡ cảnh trung đến cận), 肤色微红 trong bảng chỉnh màu theo cảm xúc (hàng 心动瞬间) — 中近景 ở đây chỉ NHÓM cỡ cảnh áp dụng chỉnh màu, không phải một giá trị cỡ cảnh đơn lẻ trong bảng 景别"
           }
         }
       }
@@ -836,6 +844,10 @@
           "近景": {
             "expected": 0,
             "reason": "bản gốc viết 中近景提暖 — 近景 ở đây là một nửa của cụm văn xuôi chỉ dải cỡ cảnh trung tới cận trong gợi ý ánh sáng, không phải giá trị cỡ cảnh 近景 của bảng phân cảnh"
+          },
+          "中近景": {
+            "expected": 0,
+            "reason": "bản gốc viết 中近景提暖 (tăng ấm ở dải cỡ cảnh trung đến cận), 肤色微升温 trong bảng chỉnh màu theo cảm xúc (hàng 暧昧升温（亲密拉近）) — 中近景 ở đây chỉ NHÓM cỡ cảnh áp dụng chỉnh màu, không phải một giá trị cỡ cảnh đơn lẻ trong bảng 景别"
           }
         }
       },
@@ -853,6 +865,10 @@
           "近景": {
             "expected": 0,
             "reason": "bản gốc viết 中近景提暖 — 近景 ở đây là một nửa của cụm văn xuôi chỉ dải cỡ cảnh trung tới cận trong gợi ý ánh sáng, không phải giá trị cỡ cảnh 近景 của bảng phân cảnh"
+          },
+          "中近景": {
+            "expected": 0,
+            "reason": "bản gốc viết 中近景提暖 (tăng ấm ở dải cỡ cảnh trung đến cận), 肤色微升温 trong bảng chỉnh màu theo cảm xúc (hàng 暧昧升温（亲密拉近）) — 中近景 ở đây chỉ NHÓM cỡ cảnh áp dụng chỉnh màu, không phải một giá trị cỡ cảnh đơn lẻ trong bảng 景别"
           }
         }
       }
@@ -1048,6 +1064,10 @@
           "近景": {
             "expected": 0,
             "reason": "bản gốc dùng 中近景提暖 theo nghĩa văn xuôi (tăng độ ấm ở các cú máy vừa và gần), token khớp bắc qua ranh giới từ 中+近景, không phải giá trị cỡ cảnh 近景"
+          },
+          "中近景": {
+            "expected": 0,
+            "reason": "bản gốc viết 中近景提暖 (tăng ấm ở dải cỡ cảnh trung đến cận), 肤色微红 trong bảng chỉnh màu theo cảm xúc (hàng 心动瞬间) — 中近景 ở đây chỉ NHÓM cỡ cảnh áp dụng chỉnh màu, không phải một giá trị cỡ cảnh đơn lẻ trong bảng 景别"
           }
         }
       },
@@ -1061,6 +1081,10 @@
           "近景": {
             "expected": 0,
             "reason": "bản gốc dùng 中近景提暖 theo nghĩa văn xuôi (tăng độ ấm ở các cú máy vừa và gần), token khớp bắc qua ranh giới từ 中+近景, không phải giá trị cỡ cảnh 近景"
+          },
+          "中近景": {
+            "expected": 0,
+            "reason": "bản gốc viết 中近景提暖 (tăng ấm ở dải cỡ cảnh trung đến cận), 肤色微红 trong bảng chỉnh màu theo cảm xúc (hàng 心动瞬间) — 中近景 ở đây chỉ NHÓM cỡ cảnh áp dụng chỉnh màu, không phải một giá trị cỡ cảnh đơn lẻ trong bảng 景别"
           }
         }
       }
@@ -1464,6 +1488,10 @@
           "近景": {
             "expected": 0,
             "reason": "bản gốc dùng 中近景提暖 theo nghĩa văn xuôi (tăng độ ấm ở các cú máy vừa và gần), token khớp bắc qua ranh giới từ 中+近景, không phải giá trị cỡ cảnh 近景"
+          },
+          "中近景": {
+            "expected": 0,
+            "reason": "bản gốc viết 中近景提暖 (tăng ấm ở dải cỡ cảnh trung đến cận), 肤色微红 trong bảng chỉnh màu theo cảm xúc (hàng 心动瞬间) — 中近景 ở đây chỉ NHÓM cỡ cảnh áp dụng chỉnh màu, không phải một giá trị cỡ cảnh đơn lẻ trong bảng 景别"
           }
         }
       },
@@ -1477,6 +1505,10 @@
           "近景": {
             "expected": 0,
             "reason": "bản gốc dùng 中近景提暖 theo nghĩa văn xuôi (tăng độ ấm ở các cú máy vừa và gần), token khớp bắc qua ranh giới từ 中+近景, không phải giá trị cỡ cảnh 近景"
+          },
+          "中近景": {
+            "expected": 0,
+            "reason": "bản gốc viết 中近景提暖 (tăng ấm ở dải cỡ cảnh trung đến cận), 肤色微红 trong bảng chỉnh màu theo cảm xúc (hàng 心动瞬间) — 中近景 ở đây chỉ NHÓM cỡ cảnh áp dụng chỉnh màu, không phải một giá trị cỡ cảnh đơn lẻ trong bảng 景别"
           }
         }
       }

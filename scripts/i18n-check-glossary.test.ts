@@ -166,8 +166,8 @@ describe("scanGlossary + countUnregisteredTokens (đọc đĩa, dùng thư mục
     expect(rows).toEqual([{ file: "skills/a/x.md", token: "空镜", zh: 1, en: 0, vi: 1 }]);
   });
 
-  it("danh sách token E2 đúng theo phán quyết đã chốt", () => {
-    expect(UNREGISTERED_SHOT_TOKENS).toEqual(["手持微晃", "稳定器流动", "跟拍", "空镜", "大远景", "中近景", "缓拉", "大全景", "一镜到底"]);
+  it("danh sách token E2 đúng theo phán quyết đã chốt (中近景 đã đăng ký vào prompt-terms.json nên rời khỏi danh sách này)", () => {
+    expect(UNREGISTERED_SHOT_TOKENS).toEqual(["手持微晃", "稳定器流动", "跟拍", "空镜", "大远景", "缓拉", "大全景", "一镜到底"]);
   });
 });
 
