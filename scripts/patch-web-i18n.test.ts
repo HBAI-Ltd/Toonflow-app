@@ -15,6 +15,24 @@ const FAKE = [
   'var Ccc={menu:{about:"Giới thiệu",skillsSkillsManagement:"Quản lý Skills"},other:1};',
 ].join("");
 
+const VENDOR_TEST_FAKE = [
+  'var Zh={settings:{menu:{about:"检查更新"},vendor:{test:{videoTitle:"视频生成测试"},addVendor:"添加供应商"}}};',
+  'var En={settings:{menu:{about:"Check for Updates",ui:"Interface Settings",modelMap:"Model Mapping",devConfig:"Developer Options",skillsSkillsManagement:"Skills Management"},vendor:{addVendor:"Add Provider",test:"Test",edit:"Edit"}}};',
+  'var Vi={settings:{menu:{about:"Kiểm tra cập nhật",ui:"Cài đặt giao diện",modelMap:"Ánh xạ mô hình",devConfig:"Tuỳ chọn nhà phát triển",skillsSkillsManagement:"Quản lý Skills"},vendor:{addVendor:"Thêm nhà cung cấp",test:"Kiểm tra",edit:"Chỉnh sửa"}}};',
+  'render($t("settings.vendor.test.videoTitle"),$t("settings.vendor.test.startTest"));',
+].join("");
+
+const VENDOR_TEST_KEYS = [
+  "textTitle", "imageTitle", "videoTitle", "textEmptyHint", "you", "assistant",
+  "textInputPlaceholder", "send", "clearHistory", "prompt", "promptPlaceholder",
+  "videoPromptPlaceholder", "uploadImage", "uploadVideo", "uploadAudio", "supportFormat",
+  "textToImage", "imageToImage", "multiRef", "textToVideo", "singleImageMode", "selectMode",
+  "result", "startTest", "cancel", "referenceImage", "startFrame", "endFrame",
+  "startFrameOptional", "endFrameOptional", "optional", "image", "video", "audio",
+  "multiRefDesc", "textToVideoDesc", "singleImageDesc", "startEndRequiredDesc",
+  "endFrameOptionalDesc", "startFrameOptionalDesc",
+] as const;
+
 describe("patchBundle", () => {
   it("chèn key thiếu vào catalog tiếng Anh", () => {
     const { output } = patchBundle(FAKE);
@@ -134,5 +152,60 @@ describe("patchBundle", () => {
     const { output, applied } = patchBundle(src);
     expect(output).toBe(src);
     expect(applied).toEqual([]);
+  });
+
+  it.each([
+    ["en", 'videoTitle:"Video Generation Test"', 'startTest:"Start Test"'],
+    ["vi", 'videoTitle:"Kiểm tra tạo video"', 'startTest:"Bắt đầu kiểm tra"'],
+  ])("vá đủ catalog settings.vendor.test cho %s", (locale, videoTitle, startTest) => {
+    const { output, applied } = patchBundle(VENDOR_TEST_FAKE);
+    const marker = `test:{textTitle:`;
+    const localeStart = output.indexOf(locale === "en" ? "var En=" : "var Vi=");
+    const localeEnd = output.indexOf("};", localeStart) + 2;
+    const block = output.slice(localeStart, localeEnd);
+
+    expect(block).toContain(marker);
+    expect(block).toContain(videoTitle);
+    expect(block).toContain(startTest);
+    for (const key of VENDOR_TEST_KEYS) expect(block).toMatch(new RegExp(`(?:^|[,\\{])${key}:`));
+    expect(applied).toContain(`${locale}.vendor.test (thêm)`);
+  });
+
+  it("vá vendor.test theo kiểu idempotent và không đụng catalog tiếng Trung", () => {
+    const once = patchBundle(VENDOR_TEST_FAKE);
+    const twice = patchBundle(once.output);
+    expect(twice.output).toBe(once.output);
+    expect(twice.applied).toEqual([]);
+    expect(once.output).toContain('var Zh={settings:{menu:{about:"检查更新"},vendor:{test:{videoTitle:"视频生成测试"}');
+  });
+
+  it("báo lỗi thay vì ghép menu locale với một vendor object nằm ngoài catalog đó", () => {
+    const source = [
+      'var En={settings:{menu:{about:"Check for Updates"}}};',
+      'var Unrelated={vendor:{test:"UNRELATED"}};',
+      'var Vi={settings:{menu:{about:"Kiểm tra cập nhật"},vendor:{test:"Kiểm tra"}}};',
+      'render($t("settings.vendor.test.videoTitle"));',
+    ].join("");
+
+    expect(() => patchBundle(source)).toThrow(/settings\.vendor.*en|en.*settings\.vendor/i);
+  });
+
+  it("báo lỗi và giữ key upstream lạ thay vì thay toàn bộ test object", () => {
+    const source = VENDOR_TEST_FAKE.replace('test:"Test"', 'test:{future:"keep"}');
+    expect(() => patchBundle(source)).toThrow(/vendor\.test.*en|en.*vendor\.test/i);
+    expect(source).toContain('test:{future:"keep"}');
+  });
+
+  it("báo lỗi khi usage anchor settings.vendor.test.* biến mất nhưng catalog cũ vẫn còn", () => {
+    const source = VENDOR_TEST_FAKE.replace('render($t("settings.vendor.test.videoTitle"),$t("settings.vendor.test.startTest"));', "");
+    expect(() => patchBundle(source)).toThrow(/settings\.vendor\.test/i);
+  });
+
+  it.each([
+    ['test:"Test"', 'test:"Test"+suffix'],
+    ['test:"Test"', 'test:"Test" /* changed shape */ + suffix'],
+  ])("báo lỗi khi giá trị legacy chỉ là prefix của biểu thức khác (%s)", (legacy, changed) => {
+    const source = VENDOR_TEST_FAKE.replace(legacy, changed);
+    expect(() => patchBundle(source)).toThrow(/vendor\.test.*en|en.*vendor\.test/i);
   });
 });

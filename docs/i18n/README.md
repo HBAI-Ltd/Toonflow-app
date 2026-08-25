@@ -230,9 +230,10 @@ If a translation needs fixing, edit the `.en.md` / `.vi.md` sidecar, not the ori
   Run `tsx scripts/i18n-check-terms.ts --update` after an intentional change to refresh the recorded
   counts, and `--limits` to print what the check cannot detect. **It is not a substitute for reading the
   registry** — it verifies what is in it, and cannot discover a boundary term nobody has added.
-- **`yarn i18n:patch-web`** (`scripts/patch-web-i18n.ts`) — patches missing menu-label keys into
-  the prebuilt frontend bundle in `data/web/`, since that bundle is generated from
-  `Toonflow-web` and isn't rebuilt from source in this repo. Re-run it whenever `data/web/`
+- **`yarn i18n:patch-web`** (`scripts/patch-web-i18n.ts`) — patches missing English/Vietnamese
+  catalog entries into the prebuilt frontend bundle in `data/web/`, including settings menu labels
+  and the nested `settings.vendor.test.*` dialog strings. The bundle is generated from
+  `Toonflow-web` and isn't rebuilt from source in this repo. Re-run the patch whenever `data/web/`
   changes. A second run with nothing left to patch reports that there's nothing to do — that's the
   expected steady state.
 - **`yarn vendor2json`** (`scripts/vendor2json.ts`) — regenerates `src/lib/vendor.json` from the
