@@ -5,6 +5,7 @@ logs
 uploads
 .git
 .gitignore
+.worktrees
 *.md
 LICENSE
 NOTICES.txt
