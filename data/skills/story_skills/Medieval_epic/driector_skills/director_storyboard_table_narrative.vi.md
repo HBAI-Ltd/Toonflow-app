@@ -59,7 +59,7 @@ Bảng phân cảnh là công cụ lõi để đạo diễn chuyển kịch bả
 - **Khi dùng** — băng qua cánh đồng hậu chiến, một nghi thức trọn vẹn, quãng đi từ cửa sảnh tới ghế cao, người hùng xuyên chốn nương đang cháy. Giá trị: "khán giả đứng bên trong lịch sử"
 - **Setup điển hình** — xuyên đại sảnh khi hội đồng tề tựu; dọc tường thành lúc rạng đông; quãng đi tới cú quỳ: cửa → lối giữa hàng anh em cũ → chiếc ấn chìa ra
 - **Cách ghi** — viết trọn đường máy trong trường chuyển máy (vd. "một cú: trôi cao trên đồng hoang → hạ xuống bên kỵ sĩ → tracking song hành → ghim khi anh dừng nơi rặng đồi"), nêu khung mở và khung đóng trong mô tả
-- **Nới thời lượng** — cú dài được vượt trần 6s của cú đơn nhưng ≤15s
+- **Nới thời lượng** — cú dài được vượt trần 7s của cú đơn nhưng ≤15s
 - **Trang nghiêm giữ trong cú** — tốc độ trong cú dài luôn chậm và có trọng lượng, kể cả xuyên hành động; không đoạn nào hối hả
 
 ---

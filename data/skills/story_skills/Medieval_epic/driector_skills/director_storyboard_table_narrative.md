@@ -59,7 +59,7 @@ The storyboard table is the director's core tool for turning script into shot la
 - **When to use** — crossing the aftermath field, a complete rite, the walk from the hall doors to the high seat, the hero moving through the burning refuge. Value: "the audience stands inside history"
 - **Typical setups** — through the guild hall as the council assembles; along the wall at first light; the walk to the kneeling: doors → aisle of former brothers → the seal held out
 - **Notation** — write the full path in the camera field (e.g. "one-shot: high drift over the moor → descend beside the rider → track alongside → hold as he halts at the ridge"), and state opening and closing frames in the description
-- **Duration extension** — long takes may exceed the 6s single-shot ceiling but stay ≤15s
+- **Duration extension** — long takes may exceed the 7s single-shot ceiling but stay ≤15s
 - **Solemnity holds inside the take** — movement stays slow and weighted even through action; no hurried passages
 
 ---

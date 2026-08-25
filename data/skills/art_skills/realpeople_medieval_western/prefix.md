@@ -49,7 +49,7 @@ All style constraints and global rules below must be followed strictly and compl
 | Betrayal / judgment | C2 cold steel | C8 ink night | Backlit, half the face in shadow, hard contrast | cold, ceremonial, irreversible |
 | Pursuit / exile | C1 stone grey | C6 bone snow | Overcast flat light, fog swallowing the distance | hunted, weary, exposed |
 | Bond / campfire | C3 candle amber | C7 worn leather | Single fire source, warm light on faces, black beyond | intimate, fragile warmth |
-| Creature moonlight | C6 bone snow | C5 forest moss | Silver rim light, cool night, soft edge glow | otherworldly, tender, still |
+| Creature moonlight | C6 bone snow | C5 forest moss | Silver rim light, cool night, soft rim highlight | otherworldly, tender, still |
 | Vindication / the kneeling | C6 bone snow | C3 candle amber | Low dawn light through dust, long shadows | earned, solemn, release |
 | Quiet ending | C1 stone grey | C6 bone snow | Diffuse daylight, no warm source | desolate, at peace |
 
@@ -107,7 +107,7 @@ Window daylight / overcast sky / candle / torch / hearth / moon. Every shot must
 | S3 | Violence in motion prompts is action-without-consequence: "blades clash, sparks on impact, cinematic slow motion", strikes directed off-screen — never impact wounds |
 | S4 | Death happens off-frame: the witness's face, a hand releasing a sword, crows lifting from a field — never bodies in explicit detail |
 | S5 | Battle aftermath speaks in metaphor: torn banners, broken shields, a riderless horse, smoke, grey snow — no corpses, no blood pools |
-| S6 | Banned vocabulary in any prompt: blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, torture. Substitute: battle-worn, aftermath, clash, strike toward off-screen, grim, fallen banner, empty helm |
+| S6 | Banned vocabulary in any prompt: blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, dead body, kill, torture. Substitute: battle-worn, aftermath, clash, strike toward off-screen, grim, fallen banner, empty helm |
 
 ### 4.3 Photographic quality constraints (Q — mandatory)
 

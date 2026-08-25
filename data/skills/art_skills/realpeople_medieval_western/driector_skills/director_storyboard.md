@@ -26,7 +26,7 @@ This skill is dedicated to storyboard prompt generation for the **live-action me
 | Tenderness / bond | Softened weathered face | Guarded warmth in the eyes | Faint ease at mouth corners, restrained |
 | Fear / hunted | Pale drawn face, alert | Darting then frozen gaze | Shallow breath fog, tension in neck |
 | Betrayal shock | Stillness collapsing inward | Disbelief hardening to cold | Slow blink, hand tightening |
-| Shame / accused | Lowered brow, held stillness | Downcast then rising defiant | Throat working, chin lifting |
+| Shame / accused | Lowered brow, held stillness | Rising defiant | Throat working, chin lifting |
 | Weariness | Deep-lined fatigue | Heavy-lidded distance | Slow movements, sagged shoulders |
 | Awe / dread | Slack stillness | Wide upturned gaze | Half step back, breath caught |
 | Quiet vindication | Weathered calm breaking | Wet steady gaze | Trembling jaw held firm |
@@ -55,7 +55,7 @@ This skill is dedicated to storyboard prompt generation for the **live-action me
 | Pursuit / dread | Moving torchlight, deep shadow | Shadows chase, sources unstable |
 | Grief / cost | Overcast flat diffusion | No warm source, detail held in shadow |
 | Vindication | Low dawn shafts through dust | Backlit dust, warm edge on faces |
-| Creature awe | Moon rim light, forest gloom | Silver edge glow, eyes catch light |
+| Creature awe | Moon rim light, forest gloom | Silver rim highlight, eyes catch light |
 
 ---
 
@@ -125,7 +125,7 @@ The following vocabulary/styles must not appear in output prompts:
 - ❌ Soft-focus / dreamy-filter / low-contrast prettiness
 - ❌ Cartoon proportions, big eyes, chibi deformation
 - ❌ Cyberpunk / steampunk / sci-fi elements
-- ❌ Gore vocabulary: blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, torture
+- ❌ Gore vocabulary: blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, dead body, kill, torture
 - ❌ Overlaid text of any kind (subtitles, watermarks, title cards, UI text — frames must be pure image)
 
 > 💡 **Safe substitution reference** (when the storyboard describes violence):
@@ -154,7 +154,7 @@ The following vocabulary/styles must not appear in output prompts:
 ### Example output A (Mode A · Seedream)
 
 [Prompt]
-live-action photography, cinematic film still, period drama realism, strong contrast, ultra-fine detail, texture ultra-clear, wide shot composition, lone figure standing in the open center of a medieval guild great hall, weathered skin with visible pores, individual hair strands, worn leather jerkin over wool, medieval fabric weave visible, high-seat dais above with council figures in shadow, cold window light shafts with drifting dust, hard light split across the accused face, downcast then rising defiant gaze, chin lifting, throat working, hearth cold and dark, long scarred tables pushed back, guild banners hanging still, medieval epic aesthetic, grim restrained period atmosphere, cinematic storyboard composition, ultra-sharp 4K, high detail, natural sharpness, photorealistic clarity, no subtitles, no captions, no watermark, no title overlay.
+live-action photography, cinematic film still, period drama realism, strong contrast, ultra-fine detail, texture ultra-clear, wide shot composition, lone figure standing in the open center of a medieval guild great hall, weathered skin with visible pores, individual hair strands, worn leather jerkin over wool, medieval fabric weave visible, high-seat dais above with council figures in shadow, cold window light shafts with drifting dust, hard light split across the accused face, rising defiant gaze, chin lifting, throat working, hearth cold and dark, long scarred tables pushed back, guild banners hanging still, medieval epic aesthetic, grim restrained period atmosphere, cinematic storyboard composition, ultra-sharp 4K, high detail, natural sharpness, photorealistic clarity, no subtitles, no captions, no watermark, no title overlay.
 Based on the reference image of Aldric, maintain consistent: face features, hairstyle, costume details. Generate a new scene: standing accused in the guild hall circle. Keep character appearance identical to reference.
 
 ### Example output B (Mode B · with negatives)
@@ -174,7 +174,7 @@ Image [1]: Aldric — weathered face, shoulder-length dark hair, worn leather je
 - Do NOT introduce new characters not in reference images
 </continuity_rules>
 <shot>
-Wide shot, lone figure standing in the open center of a medieval guild great hall, council on the high-seat dais above in shadow, cold window light shafts with drifting dust, hard split light on the accused face, downcast then rising defiant gaze, chin lifting, guild banners still, long scarred tables, hearth dark, grim restrained period atmosphere, medieval epic aesthetic, cinematic storyboard composition, ultra-sharp 4K, high detail, crisp textures, photorealistic clarity, no subtitles, no captions, no watermark, no title overlay.
+Wide shot, live-action photography, cinematic film still, period drama realism, strong contrast, ultra-fine detail, texture ultra-clear, lone figure standing in the open center of a medieval guild great hall, weathered skin with visible pores, individual hair strands, worn leather jerkin over wool, medieval fabric weave visible, council on the high-seat dais above in shadow, cold window light shafts with drifting dust, hard split light on the accused face, rising defiant gaze, chin lifting, guild banners still, long scarred tables, hearth dark, grim restrained period atmosphere, medieval epic aesthetic, cinematic storyboard composition, ultra-sharp 4K, high detail, crisp textures, photorealistic clarity, no subtitles, no captions, no watermark, no title overlay.
 </shot>
 <negative>
 no plastic skin, no beauty filter, no studio lighting, no centered composition, no oversaturation, no AI generated look, no motion blur, no noise, no blurry, no out of focus, no subtitles, no captions, no watermark, no title overlay, no UI text, no modern clothing, no modern buildings, no East Asian architecture, no hanfu, no church, no religious symbols, no neon, no glowing effects, no anime, no 3D render, no blood, no gore, no wounds

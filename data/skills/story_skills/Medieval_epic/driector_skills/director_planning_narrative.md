@@ -119,4 +119,4 @@ metaData: director_skills
 - **Impact lands off-frame** — plan every strike toward off-screen; coverage is the witness, the swing, the aftermath
 - **Death by stillness** — a hand releasing a sword, boots stopping, crows lifting, a riderless horse; the bond's or witness's face is the true death shot
 - **Aftermath in metaphor** — torn banners, broken shields, grey snow, drifting smoke; never bodies in detail
-- **Banned vocabulary in all downstream prompts** — blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, torture; substitute: battle-worn, clash, sparks on impact, strike toward off-screen, fallen banner, empty helm, aftermath
+- **Banned vocabulary in all downstream prompts** — blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, dead body, kill, torture; substitute: battle-worn, clash, sparks on impact, strike toward off-screen, fallen banner, empty helm, aftermath

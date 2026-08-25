@@ -107,7 +107,7 @@ Phải tuân thủ nghiêm ngặt, đầy đủ toàn bộ ràng buộc phong c�
 | S3 | Bạo lực trong prompt chuyển động là hành-động-không-hậu-quả: "blades clash, sparks on impact, cinematic slow motion", đòn đánh hướng ra ngoài khung — không bao giờ là vết thương do va chạm |
 | S4 | Cái chết diễn ra ngoài khung: gương mặt người chứng kiến, bàn tay buông kiếm, quạ bay lên từ cánh đồng — không bao giờ là thi thể chi tiết |
 | S5 | Hậu chiến trường nói bằng ẩn dụ: hiệu kỳ rách, khiên vỡ, ngựa không người cưỡi, khói, tuyết xám — không xác, không vũng máu |
-| S6 | Từ vựng cấm trong mọi prompt: blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, torture. Thay bằng: battle-worn, aftermath, clash, strike toward off-screen, grim, fallen banner, empty helm |
+| S6 | Từ vựng cấm trong mọi prompt: blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, dead body, kill, torture. Thay bằng: battle-worn, aftermath, clash, strike toward off-screen, grim, fallen banner, empty helm |
 
 ### 4.3 Ràng buộc chất lượng nhiếp ảnh (Q — bắt buộc)
 

@@ -39,10 +39,10 @@
 
 | Step | Processing | Result |
 |---|---|---|
-| S1 | Extract user cues: state words, emotion words, hardship words | Condition summary |
-| S2 | Filter non-condition cues: prop / scene / action words are not condition evidence | Prevent misreads |
-| S3 | Match the condition matrix and pick intensity | kept / travel-worn / campaign-worn |
-| S4 | Generate the final L1 prompt | Output conclusions only, never the analysis |
+| A1 | Extract user cues: state words, emotion words, hardship words | Condition summary |
+| A2 | Filter non-condition cues: prop / scene / action words are not condition evidence | Prevent misreads |
+| A3 | Match the condition matrix and pick intensity | kept / travel-worn / campaign-worn |
+| A4 | Generate the final L1 prompt | Output conclusions only, never the analysis |
 
 ### Cue-to-condition mapping
 
@@ -186,7 +186,7 @@ Using the character base image as the underlay, img2img costume overlay,
 medieval {gender or creature-type} character four-view design sheet, live-action photography, period drama realism, strong contrast, ultra-fine detail, 8K,
 character design sheet, character turnaround,
 keep base face unchanged, {overall temperament},
-[L1 · condition] decided from user cues: {kept / travel-worn / campaign-worn}; {condition surface description}, zero fresh wounds,
+[L1 · condition] decided from user cues: {kept / travel-worn / campaign-worn}; {condition surface description}, clean weathered surfaces only,
 [L2 · hair] {styling}, individual hair strands, {ornament description},
 [L3+L4 · garments] {color}{pieces}, {fabric}, visible weave and grain, worn creases, {wear description},
 [L5 · accessories] {belt}, {guild mark}, {jewelry}, {gloves/bracers},

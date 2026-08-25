@@ -39,10 +39,10 @@
 
 | Bước | Xử lý | Kết quả |
 |---|---|---|
-| S1 | Trích manh mối: từ trạng thái, từ cảm xúc, từ gian khổ | Tóm tắt nhu cầu trạng thái |
-| S2 | Lọc manh mối không thuộc trạng thái: từ đạo cụ / cảnh / động tác không làm căn cứ | Chống đọc nhầm |
-| S3 | Khớp ma trận trạng thái, chọn mức | chỉnh tề / dặm trường / trận mạc |
-| S4 | Sinh prompt L1 cuối | Chỉ xuất kết luận, không xuất phân tích |
+| A1 | Trích manh mối: từ trạng thái, từ cảm xúc, từ gian khổ | Tóm tắt nhu cầu trạng thái |
+| A2 | Lọc manh mối không thuộc trạng thái: từ đạo cụ / cảnh / động tác không làm căn cứ | Chống đọc nhầm |
+| A3 | Khớp ma trận trạng thái, chọn mức | chỉnh tề / dặm trường / trận mạc |
+| A4 | Sinh prompt L1 cuối | Chỉ xuất kết luận, không xuất phân tích |
 
 ### Ánh xạ manh mối → trạng thái
 
@@ -186,7 +186,7 @@ Lấy hình nhân vật gốc làm nền, img2img phủ phục trang,
 bản vẽ bốn hướng nhìn nhân vật trung cổ {giới tính hoặc loại sinh vật}, live-action photography, period drama realism, tương phản mạnh, chi tiết tối đa, 8K,
 character design sheet, character turnaround,
 giữ nguyên mặt bản gốc, {khí chất tổng thể},
-[L1 · trạng thái] quyết từ manh mối người dùng: {chỉnh tề / dặm trường / trận mạc}; {mô tả bề mặt trạng thái}, không vết thương tươi,
+[L1 · trạng thái] quyết từ manh mối người dùng: {chỉnh tề / dặm trường / trận mạc}; {mô tả bề mặt trạng thái}, chỉ bề mặt phong hóa sạch,
 [L2 · tóc] {tạo kiểu}, individual hair strands, {mô tả phụ kiện},
 [L3+L4 · y phục] {màu}{món}, {vải}, thấy thớ dệt và gân da, nếp mặc mòn, {mô tả độ mòn},
 [L5 · phụ kiện] {thắt lưng}, {dấu hội}, {trang sức}, {găng/bao tay},

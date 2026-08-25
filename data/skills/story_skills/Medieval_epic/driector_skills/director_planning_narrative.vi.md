@@ -119,4 +119,4 @@ metaData: director_skills
 - **Va chạm rơi ngoài khung** — hoạch định mọi đòn hướng ra ngoài màn hình; coverage là người chứng kiến, cú vung, hậu quả
 - **Chết bằng tĩnh lặng** — bàn tay buông kiếm, đôi ủng khựng lại, quạ bay lên, ngựa không người; gương mặt mối liên kết hay người chứng kiến mới là cú máy cái chết thật sự
 - **Hậu quả bằng ẩn dụ** — hiệu kỳ rách, khiên vỡ, tuyết xám, khói trôi; không bao giờ thi thể chi tiết
-- **Từ vựng cấm trong mọi prompt hạ nguồn** — blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, torture; thay bằng: battle-worn, clash, sparks on impact, strike toward off-screen, fallen banner, empty helm, aftermath
+- **Từ vựng cấm trong mọi prompt hạ nguồn** — blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, dead body, kill, torture; thay bằng: battle-worn, clash, sparks on impact, strike toward off-screen, fallen banner, empty helm, aftermath

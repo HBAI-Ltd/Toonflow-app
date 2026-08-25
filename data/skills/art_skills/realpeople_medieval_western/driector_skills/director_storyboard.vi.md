@@ -26,7 +26,7 @@ Skill này chuyên dùng cho sinh prompt phân cảnh phong cách **sử thi tru
 | Trìu mến / liên kết | Gương mặt dãi dầu dịu xuống | Hơi ấm dè chừng trong mắt | Khóe miệng thoáng giãn, tiết chế |
 | Sợ / bị săn | Mặt tái căng, cảnh giác | Mắt đảo rồi đông cứng | Thở nông hóa khói, gáy căng |
 | Sốc phản bội | Tĩnh lặng sụp vào trong | Hoài nghi đông thành lạnh | Chớp mắt chậm, bàn tay siết |
-| Nhục / bị buộc tội | Mày cụp, tĩnh ghìm | Mắt cụp rồi ngẩng ngang tàng | Cổ họng chuyển động, cằm nâng lên |
+| Nhục / bị buộc tội | Mày cụp, tĩnh ghìm | Ánh mắt ngẩng ngang tàng | Cổ họng chuyển động, cằm nâng lên |
 | Rã rời | Mệt hằn sâu | Mí nặng nhìn xa | Cử động chậm, vai trĩu |
 | Kính sợ | Tĩnh lặng thẫn thờ | Mắt mở lớn ngước lên | Lùi nửa bước, nín thở |
 | Minh oan lặng lẽ | Điềm tĩnh dãi dầu vỡ ra | Mắt ướt nhìn vững | Quai hàm run mà ghìm chặt |
@@ -125,7 +125,7 @@ Từ vựng/phong cách sau không được xuất hiện trong prompt đầu ra
 - ❌ Từ soft-focus / mơ màng / xinh xắn tương phản thấp
 - ❌ Tỉ lệ hoạt hình, mắt to, biến dạng chibi
 - ❌ Yếu tố cyberpunk / steampunk / sci-fi
-- ❌ Từ vựng gore: blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, torture
+- ❌ Từ vựng gore: blood, bleeding, gore, wound, stab, slash, execute, brutal, graphic, severed, corpse, dead body, kill, torture
 - ❌ Chữ phủ lên hình dưới mọi dạng (phụ đề, watermark, title card, chữ UI — khung phải là hình thuần)
 
 > 💡 **Tham chiếu thay thế an toàn** (khi phân cảnh mô tả bạo lực):
@@ -154,7 +154,7 @@ Từ vựng/phong cách sau không được xuất hiện trong prompt đầu ra
 ### Ví dụ đầu ra A (Chế độ A · Seedream)
 
 [Prompt]
-live-action photography, cinematic film still, period drama realism, strong contrast, ultra-fine detail, texture ultra-clear, wide shot composition, lone figure standing in the open center of a medieval guild great hall, weathered skin with visible pores, individual hair strands, worn leather jerkin over wool, medieval fabric weave visible, high-seat dais above with council figures in shadow, cold window light shafts with drifting dust, hard light split across the accused face, downcast then rising defiant gaze, chin lifting, throat working, hearth cold and dark, long scarred tables pushed back, guild banners hanging still, medieval epic aesthetic, grim restrained period atmosphere, cinematic storyboard composition, ultra-sharp 4K, high detail, natural sharpness, photorealistic clarity, no subtitles, no captions, no watermark, no title overlay.
+live-action photography, cinematic film still, period drama realism, strong contrast, ultra-fine detail, texture ultra-clear, wide shot composition, lone figure standing in the open center of a medieval guild great hall, weathered skin with visible pores, individual hair strands, worn leather jerkin over wool, medieval fabric weave visible, high-seat dais above with council figures in shadow, cold window light shafts with drifting dust, hard light split across the accused face, rising defiant gaze, chin lifting, throat working, hearth cold and dark, long scarred tables pushed back, guild banners hanging still, medieval epic aesthetic, grim restrained period atmosphere, cinematic storyboard composition, ultra-sharp 4K, high detail, natural sharpness, photorealistic clarity, no subtitles, no captions, no watermark, no title overlay.
 Based on the reference image of Aldric, maintain consistent: face features, hairstyle, costume details. Generate a new scene: standing accused in the guild hall circle. Keep character appearance identical to reference.
 
 ### Ví dụ đầu ra B (Chế độ B · có negative)
@@ -174,7 +174,7 @@ Image [1]: Aldric — weathered face, shoulder-length dark hair, worn leather je
 - Do NOT introduce new characters not in reference images
 </continuity_rules>
 <shot>
-Wide shot, lone figure standing in the open center of a medieval guild great hall, council on the high-seat dais above in shadow, cold window light shafts with drifting dust, hard split light on the accused face, downcast then rising defiant gaze, chin lifting, guild banners still, long scarred tables, hearth dark, grim restrained period atmosphere, medieval epic aesthetic, cinematic storyboard composition, ultra-sharp 4K, high detail, crisp textures, photorealistic clarity, no subtitles, no captions, no watermark, no title overlay.
+Wide shot, live-action photography, cinematic film still, period drama realism, strong contrast, ultra-fine detail, texture ultra-clear, lone figure standing in the open center of a medieval guild great hall, weathered skin with visible pores, individual hair strands, worn leather jerkin over wool, medieval fabric weave visible, council on the high-seat dais above in shadow, cold window light shafts with drifting dust, hard split light on the accused face, rising defiant gaze, chin lifting, guild banners still, long scarred tables, hearth dark, grim restrained period atmosphere, medieval epic aesthetic, cinematic storyboard composition, ultra-sharp 4K, high detail, crisp textures, photorealistic clarity, no subtitles, no captions, no watermark, no title overlay.
 </shot>
 <negative>
 no plastic skin, no beauty filter, no studio lighting, no centered composition, no oversaturation, no AI generated look, no motion blur, no noise, no blurry, no out of focus, no subtitles, no captions, no watermark, no title overlay, no UI text, no modern clothing, no modern buildings, no East Asian architecture, no hanfu, no church, no religious symbols, no neon, no glowing effects, no anime, no 3D render, no blood, no gore, no wounds
