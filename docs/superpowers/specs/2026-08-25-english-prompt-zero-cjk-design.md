@@ -264,7 +264,25 @@ after row classification, and an incompatible binding fails closed. Single-route
 cover default and custom bindings for all-legacy, all-V2, and mixed inputs. Thus no legacy row can
 reach a V2-only prompt and no V2 row can reach the legacy adapter.
 
+The template contract is explicit, not directory-wide. Seedance multi-parameter, universal multi-
+parameter, universal first/last-frame, and Wan 2.6 single-image first-frame templates advertise and
+receive only `toonflow.video-prompt-input/v2`. The exact-locale `legacy-v1-compat` template advertises
+and receives only `toonflow.video-prompt-input/legacy-v1`, containing provenance and the read-only raw
+opaque projection as verbatim data. Static metadata tests plus single/batch payload captures assert
+every locale variant advertises and receives only its declared contract; either cross-pairing fails
+before invocation. Only row/prompt contract compatibility logic selects a template.
+
 ```ts
+export interface LegacyVideoPromptInputV1 {
+  contract: "toonflow.video-prompt-input/legacy-v1";
+  model: { name: string; mode: string };
+  rows: Array<{
+    storyboardId: number;
+    provenance: LegacyGrammar | "manual-opaque";
+    rawOpaqueProjection: string;
+  }>;
+}
+
 export interface VideoPromptInputV2 {
   contract: "toonflow.video-prompt-input/v2";
   model: { name: string; mode: string };

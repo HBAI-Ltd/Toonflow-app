@@ -525,7 +525,7 @@ git commit -m "test(video): lock legacy prompt contract"
 
 ---
 
-### Task 5: Rewrite all shipped video templates around V2
+### Task 5: Rewrite shipped video templates with explicit input contracts
 
 **Files:**
 
@@ -553,7 +553,13 @@ git commit -m "test(video): lock legacy prompt contract"
 - Create: `scripts/i18n-check-provider-protocol.test.ts`
 - Modify: `package.json`
 
-**Interfaces:** All templates consume `toonflow.video-prompt-input/v2`. Seedance emits one prompt containing subject definitions, ordered shots, and style/constraints.
+**Interfaces:** The four rewritten shipped template families—Seedance multi-parameter, universal
+multi-parameter, universal first/last-frame, and Wan 2.6 single-image first-frame—declare and consume
+only `toonflow.video-prompt-input/v2`. The new exact-locale `legacy-v1-compat` template declares and
+consumes only `toonflow.video-prompt-input/legacy-v1`, whose envelope contains provenance plus the
+read-only raw opaque projection as verbatim data. It does not consume the V2 storyboard-group shape.
+Task 6's row classifier and prompt-contract resolver are the only selectors: they may choose compat
+only for homogeneous legacy-compatible rows and a V2 template only for homogeneous V2-capable rows.
 
 - [ ] **Step 1: Add failing purity tests**
 
@@ -575,7 +581,25 @@ expect(stripAllVerifiedStaticProviderTokens(readFileSync(legacyCompatEn, "utf8")
 expect(stripAllVerifiedStaticProviderTokens(readFileSync(legacyCompatVi, "utf8"), verifiedEvidenceSet)).not.toMatch(/[\u3400-\u9fff]/);
 expect(stripAllVerifiedStaticProviderTokens(legacyVideoPromptCompat.en, verifiedEvidenceSet)).not.toMatch(/[\u3400-\u9fff]/);
 expect(stripAllVerifiedStaticProviderTokens(legacyVideoPromptCompat.vi, verifiedEvidenceSet)).not.toMatch(/[\u3400-\u9fff]/);
+
+const declaredContracts = new Map([
+  ["seedance2Multi-parameterMode", "toonflow.video-prompt-input/v2"],
+  ["universalMulti-parameterMode", "toonflow.video-prompt-input/v2"],
+  ["universalFirstAndLastFrameMode", "toonflow.video-prompt-input/v2"],
+  ["wan2.6Single-imageFirstFrameMode", "toonflow.video-prompt-input/v2"],
+  ["legacy-v1-compat", "toonflow.video-prompt-input/legacy-v1"],
+]);
+expect(readDeclaredTemplateContracts()).toEqual(declaredContracts);
+expect(() => prepareTemplateRequest("legacy-v1-compat", v2Envelope)).toThrow("PROMPT_INPUT_CONTRACT_INCOMPATIBLE");
+expect(() => prepareTemplateRequest("seedance2Multi-parameterMode", legacyEnvelope)).toThrow("PROMPT_INPUT_CONTRACT_INCOMPATIBLE");
 ```
+
+For every locale variant, tests parse the declared contract metadata and capture the actual user
+message delivered beside that template. Each of the four V2 families receives only an object whose
+`contract` is `toonflow.video-prompt-input/v2`; each compat variant receives only
+`toonflow.video-prompt-input/legacy-v1` with the opaque raw projection byte-identical. Missing,
+mismatched, or unadvertised contracts fail before provider invocation. The resolver test exercises
+both directions so a template can neither advertise one contract nor receive the other.
 
 `stripStaticProviderTokens()` escapes the evidence-backed `staticPlaceholderTokens` and replaces only
 their single `N` slot with `(?:N|\d+)`; it never strips a bare prefix. At runtime,
