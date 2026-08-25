@@ -13,6 +13,9 @@
 ## Global Constraints
 
 - Implement backend/bundle work on `codex/web-i18n-production-flow`, never directly on `master`; push and open a PR after verification. The companion Toonflow-web source changes use their own branch and PR in that repository.
+- Ownership/order is explicit: Tasks 1–2 and 4–7 belong to this app repository; Task 3 alone belongs
+  to the companion Toonflow-web repository. Task 3 must land before app Task 4 imports anything;
+  app Task 4 owns the committed provenance manifest.
 - The companion Toonflow-web source PR must land first. Record its exact repository URL and final
   commit SHA plus the SHA-256 of the built `dist/index.html`; this repository may import only that
   verified artifact.
@@ -57,7 +60,7 @@ from fallback-capable `t()` to strict `tPrompt()` without changing its behavior.
 
 ---
 
-### Task 1: Stabilize the Model Mapping backend contract
+### Task 1: Stabilize the Model Mapping backend contract (app repository)
 
 **Files:**
 
@@ -143,7 +146,7 @@ git commit -m "fix(model-map): stabilize custom model rows"
 
 ---
 
-### Task 2: Fix the prompt-language widget authentication boundary
+### Task 2: Fix the prompt-language widget authentication boundary (app repository)
 
 **Files:**
 
@@ -194,7 +197,7 @@ Second patch run must be byte-identical.
 
 ---
 
-### Task 3: Add exact upstream Toonflow-web source fixes
+### Task 3: Add exact upstream Toonflow-web source fixes (companion repository)
 
 **Repository:** `HBAI-Ltd/Toonflow-web` (or the maintainer fork), based on commit `9c4cb0ec7d4f6b4067c7768e2df8cdc7f8587214`.
 
@@ -348,6 +351,27 @@ function syncNodePositions(): void {
 }
 
 let reflowGeneration = 0;
+let graphMutationQueue: Promise<void> = Promise.resolve();
+
+function enqueueGraphMutation(generation: number, mutation: () => Promise<void>): Promise<void> {
+  const run = graphMutationQueue.then(async () => {
+    if (generation !== reflowGeneration) return;
+    await mutation();
+  });
+  graphMutationQueue = run.catch(reportGraphMutationFailure);
+  return run;
+}
+
+async function applySuccessfulSave(snapshot: ReturnType<typeof toObject>): Promise<number> {
+  const generation = ++reflowGeneration;
+  await enqueueGraphMutation(generation, async () => {
+    if (generation !== reflowGeneration) return; // immediately before the queued mutation
+    await fromObject(snapshot);
+    await nextTick();
+    syncNodePositions();
+  });
+  return generation;
+}
 
 async function reflowDownstream(changedId: "scriptPlan" | "storyboardTable", generation: number) {
   await nextTick();
@@ -362,10 +386,12 @@ async function reflowDownstream(changedId: "scriptPlan" | "storyboardTable", gen
   if (generation !== reflowGeneration) return;
   const snapshot = toObject();
   snapshot.nodes = calculateDownstreamPositions(snapshot.nodes, measuredDimensions(mainChain), changedId, 80);
-  await fromObject(snapshot);
-  if (generation !== reflowGeneration) return;
-  await nextTick();
-  syncNodePositions();
+  await enqueueGraphMutation(generation, async () => {
+    if (generation !== reflowGeneration) return; // immediately before the queued mutation
+    await fromObject(snapshot);
+    await nextTick();
+    syncNodePositions();
+  });
 }
 
 let reflowTimer: ReturnType<typeof setTimeout> | undefined;
@@ -399,11 +425,15 @@ coordinate and relative x spacing. Nodes already farther right or vertically dis
 unchanged. Do not call `layoutGraph()` for content expansion.
 
 Every continuation after `nextTick` and stabilization checks the monotonically increasing generation.
-Serialize both successful save application and `fromObject` reflow commits through one graph-mutation
-queue so a new save cannot race an already-started older import; check the token again immediately
-before the queued atomic apply. Catch stabilization timeout, report it once, and retain the newest
-saved graph without an unhandled rejection. Fake-timer/deferred-promise tests cover rapid plan then
-table changes, table then plan changes, an older delayed `fromObject`, and timeout.
+Every save handler applies its returned graph through `applySuccessfulSave()`; direct save-side
+`fromObject()` calls are forbidden. Both save application and reflow import therefore share
+`graphMutationQueue`, and each checks the token immediately before its queued mutation. A save that
+arrives while an older import is running queues behind it and becomes the final mutation; a queued
+older generation becomes a no-op. Catch stabilization and mutation failures, report them once, and
+retain the newest saved graph without an unhandled rejection. Fake-timer/deferred-promise tests cover
+rapid plan then table changes, table then plan changes, a deferred old reflow followed by a newer
+save, a deferred save followed by a newer reflow, and timeout; they assert the newest graph is the
+only final state and that no stale `fromObject` begins after its generation is superseded.
 
 - [ ] **Step 8: Add source-level tests**
 
@@ -430,14 +460,14 @@ git add src package.json yarn.lock vitest.config.ts
 git commit -m "fix(web): localize editors, mappings, and production layout"
 ```
 
-After the source PR is finalized, record the exact repository URL, final commit SHA (not merely the
+After the source PR is finalized, hand off the exact repository URL, final commit SHA (not merely the
 starting baseline), build command/toolchain lock hash, and SHA-256 of its produced `dist/index.html`
-in a signed/reviewed provenance record handed to this repository's Task 4. The app import PR must not
-start from an uncommitted upstream workspace or a different commit.
+to this repository's Task 4. Task 3 does not commit the app provenance manifest. The app import PR
+must not start from an uncommitted upstream workspace or a different commit.
 
 ---
 
-### Task 4: Import the rebuilt frontend and add a guarded compatibility patch
+### Task 4: Commit provenance and import the rebuilt frontend (app repository)
 
 **Files in this repository:**
 

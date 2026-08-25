@@ -27,9 +27,10 @@ This roadmap coordinates three independently reviewable implementation plans und
    - Model-prompt plan Tasks 3–5.
    - Add closed provider-token checks and localize the six known hardcoded route wrappers only after their required corpus is available.
 4. **Structured video contract**
-   - Video plan Task 1 may land as read-only compatibility only after route-level replay passes for
-     every captured historical grammar and the opaque manual-edit case. Tasks 2–6 then land
-     atomically in one compatibility release.
+   - Video plan Task 1 may land after decoder-fixture coverage for every captured historical grammar
+     and the opaque manual-edit case; it does not claim route-level compatibility. Tasks 2–6 then
+     land atomically, and Task 6's single/batch replay plus row-contract matrix is the route-level
+     compatibility release gate.
    - Add v2 parsing/writes, a canonical JSON envelope, rewritten Seedance/universal/Wan prompts, centralized routes, and quarantined legacy markers/seeds.
 5. **Finish the full en/vi prompt corpus**
    - Model-prompt plan Task 7B after the provider protocol gate is verified.
@@ -45,11 +46,13 @@ This roadmap coordinates three independently reviewable implementation plans und
      scan. Update `.github/workflows/debug.yml` to target `master` and require that quality job;
      update `.github/workflows/release.yml` so packaging depends on the same job.
 8. **Fix frontend source, then import it**
-   - Web plan Tasks 1–3 land in a companion Toonflow-web PR first. Record the exact upstream
-     repository and commit SHA and the SHA-256 of its built `dist/index.html` in a provenance
-     manifest.
-   - Only after that source commit is reviewable/landed may Web plan Tasks 4–6 import the bundle,
-     verify its artifact hash and origin in CI, retain guarded shims, and replace cover art.
+   - Web plan Tasks 1–2 are app-repository backend/widget prerequisites and may land in the app PR.
+   - Web plan Task 3 alone is the companion Toonflow-web source PR and must land before bundle
+     import. It hands off the exact upstream repository/final commit SHA and built
+     `dist/index.html` SHA-256.
+   - Only after that source commit is reviewable/landed may app-repository Task 4 commit the
+     provenance manifest and import/verify the bundle; Tasks 5–6 then enforce release gating and
+     replace cover art.
 9. **Repeat end-to-end QA**
    - Web plan Task 7.
    - Run the same medieval project-to-export flow in English, Vietnamese, and Chinese with a real configured provider.
@@ -65,6 +68,9 @@ This roadmap coordinates three independently reviewable implementation plans und
   V2 record only when generated from the same recoverable normalized data; compare the canonical
   recoverable projection and separately assert documented defaults/loss. Truly unstructured text
   remains read-only `legacy-opaque-single-shot` and never fabricates absent fields.
+  This gate belongs to Video Task 6's atomic integration release, not the decoder-only Task 1 commit.
+  First/last free-form and opaque rows force the locked legacy adapter; V2-capable rows require a V2
+  prompt; a mixed batch fails before invocation with row indices.
 - Gate C: with explicit provider/credential/spend approval, run and record the protocol comparison for every reference-capable family (Seedance 2.0 and universal multi-reference). The final zero-Chinese prompt guarantee cannot merge/release while any selected syntax remains unverified.
 - Gate D: do not enable strict readers until the full required prompt corpus is complete.
 - Gate E: do not package a frontend bundle unless every subpatch reports a known old anchor patched,
@@ -73,6 +79,7 @@ This roadmap coordinates three independently reviewable implementation plans und
 - Gate F: do not claim a final video pass with a no-op provider; QA must use a valid media provider and confirm the exported file is playable.
 - Gate G: provider tokens are authorized only by approval-gated harness artifacts whose active
   vendor/model/version/config fingerprint and template/token-builder hashes exactly match runtime.
+  Each family may contain multiple composite-identity evidence entries; runtime selects exactly one.
   Evidence from one family or configured model never authorizes another.
 - Gate H: imported web bundles require an exact Toonflow-web repository/commit SHA plus built
   artifact SHA-256; CI rebuilds or otherwise verifies that provenance before packaging.
@@ -84,10 +91,10 @@ Each task ends in its own focused commit. Do not combine the video data contract
 1. strict prompt/manifest primitives, medieval corpus, and hardcoded route localization;
 2. videoDesc v2 compatibility plus the atomic prompt-template/route/seed cutover and verified provider protocol;
 3. complete en/vi prompt-corpus cleanup, strict reader adoption, and repository-wide gates;
-4. a companion Toonflow-web source localization/layout PR, including its exact source commit and
-   built-artifact provenance manifest;
-5. backend model-map, provenance-verified imported bundle, guarded compatibility patches, and
-   text-free covers, based on PR 4's exact commit.
+4. a companion Toonflow-web source localization/layout PR, handing off its exact final source commit
+   and built-artifact hash;
+5. app-repository backend/widget prerequisites, the committed provenance manifest, verified imported
+   bundle, guarded compatibility patches, and text-free covers, based on PR 4's exact commit.
 
 Recommended branch names:
 

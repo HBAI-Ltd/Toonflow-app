@@ -71,7 +71,8 @@ export type ShotSize = "extreme-wide" | "long-shot" | "wide" | "medium" | "mediu
 export type CameraMovement = "static" | "push-in" | "pull-back" | "pan" | "truck" | "tracking" | "follow" | "whip-pan" | "crane" | "orbit" | "high-angle" | "low-angle" | "handheld" | "one-take";
 export type VideoDescParseErrorCode = "INVALID_JSON" | "INVALID_V2" | "UNSUPPORTED_LEGACY_FORMAT" | "LEGACY_FIELD_COUNT" | "LEGACY_INVALID_DURATION" | "LEGACY_INVALID_SHOT_NUMBER" | "DURATION_MISMATCH" | "DUPLICATE_SOURCE_ROW" | "NON_MONOTONIC_SOURCE_ROW" | "REFERENCE_DUPLICATE_ID" | "REFERENCE_UNKNOWN_ASSET" | "REFERENCE_NAME_MISMATCH" | "REFERENCE_NOT_ASSOCIATED" | "REFERENCE_WRONG_PROJECT" | "DIALOGUE_SPEAKER_NOT_REFERENCED";
 export type VideoDescParseResult =
-  | { ok: true; value: VideoDescV2 | LegacyOpaqueSingleShot; source: "v2" | "legacy"; grammar: LegacyGrammar }
+  | { ok: true; value: VideoDescV2; source: "v2" }
+  | { ok: true; value: VideoDescV2 | LegacyOpaqueSingleShot; source: "legacy"; legacyGrammar: LegacyGrammar }
   | { ok: false; error: { code: VideoDescParseErrorCode; message: string } };
 export function serializeVideoDesc(value: VideoDescV2): string;
 export function parseStoredVideoDesc(raw: string, context: LegacyDecodeContext): VideoDescParseResult;
@@ -145,13 +146,16 @@ it("serializes property-order permutations byte-identically", () => expect(seria
 
 Test every legacy alias listed in Step 4, not only a sample.
 
-Add real captured fixtures for every persisted historical family and replay each through both single
-and batch route preparation: marker/pipe `序号N`; numeric Markdown table rows with leading/trailing
-pipes; a 12-field ideographic-comma single shot; first/last-frame free-form text;
+Add real captured decoder fixtures for every persisted historical family: marker/pipe `序号N`;
+numeric Markdown table rows with leading/trailing pipes; a 12-field ideographic-comma single shot;
+first/last-frame free-form text;
 storyboard-assisted fixed text `参考故事板内容进行视频生成`; and an arbitrary manual edit accepted
 by `editStoryboardInfo.ts`. Each fixture supplies `LegacyDecodeContext` with provenance/source,
 `mode`, outer duration, `shouldGenerateImage`, prompt/image availability, associated IDs, and project.
 The arbitrary edit must become read-only `legacy-opaque-single-shot`; no absent field is fabricated.
+Every legacy success asserts its exact `legacyGrammar`; native V2 success asserts that
+`legacyGrammar` is absent. The success result is discriminated by `source`, so V2 can never carry a
+legacy grammar label.
 
 - [ ] **Step 2: Run and confirm failure**
 
@@ -190,8 +194,11 @@ only `{ unit, raw, readOnly: true }` and is never agent-writable.
 `serializeVideoDesc()` validates semantic invariants, then constructs a new object in the fixed
 property order defined in the spec (including each shot and dialogue) before `JSON.stringify()`.
 Make the dialogue, carry-over, storyboard-reference, shot, and top-level objects `.strict()`. Require
-`Math.abs(groupDurationSeconds - sum(shots[].durationSeconds)) <= 1e-9` and unique, strictly increasing
-`sourceRow` values. Map custom Zod issues named `DURATION_MISMATCH`, `DUPLICATE_SOURCE_ROW`,
+For `text-multi-reference-group` only, require
+`Math.abs(groupDurationSeconds - sum(shots[].durationSeconds)) <= 1e-9` and unique, strictly
+increasing `sourceRow` values. `single-shot` validates its singular `shot`; storyboard-assisted and
+opaque records expose neither duration nor detailed-shot arrays. Map custom Zod issues named
+`DURATION_MISMATCH`, `DUPLICATE_SOURCE_ROW`,
 `NON_MONOTONIC_SOURCE_ROW`, `SINGLE_SHOT_CARDINALITY`, `STORYBOARD_ASSISTED_CARDINALITY`,
 reference-integrity issue to the same public code; map every other Zod issue to `INVALID_V2`.
 
@@ -219,8 +226,8 @@ include `大远景/大全景`, `远景`, `全景`, `中景`, `中近景/近景`,
 wrapped read-only and never guessed or sent through a detailed-shot schema. Return typed errors; do
 not invoke a model.
 
-Task 1 is not called read-compatible until every captured fixture passes route-level replay, not
-just the isolated parser tests.
+Task 1 is decoder-fixture compatible only. It must not claim route-level read compatibility: the
+single/batch service adapters and atomic compatibility release gate land in Task 6.
 
 - [ ] **Step 5: Verify and commit**
 
@@ -284,16 +291,20 @@ invalid structured input is rejected. The agent cannot reach this compatibility 
 Specify each mode explicitly:
 
 - `text-multi-reference-group`: one persisted v2 object per storyboard group; `shots[]` contains every row in that group; no `storyboardReference`.
-- `single-shot`: one persisted v2 object per storyboard row; `shots[]` contains exactly one row and no `storyboardReference`.
+- `single-shot`: one persisted V2 object per storyboard row with the singular `shot` field and no
+  `groupDurationSeconds`, `shots`, or `storyboardReference`.
 - `storyboard-assisted`: one persisted V2 object per storyboard row containing only
   `storyboardReference: { source: "current-item" }` and optional guidance. It does not fabricate a
   detailed shot; the tool cannot name a database id before it creates the row.
 
-Preserve table order and place same-scene continuity in `carryOver.priorEndState`. English prose/examples contain no Chinese markers or Chinese example data. Add one valid tool-call example for each unit and schema-validation tests for invalid cardinality.
+Preserve table order and place same-scene continuity in the detailed group's
+`carryOver.priorEndState`. English prose/examples contain no Chinese markers or Chinese example
+data. Add one valid tool-call example for each unit and schema-validation tests proving fields from
+another discriminant are rejected.
 
 ```ts
 const textGroup = { ...base, unit: "text-multi-reference-group", shots: [row1, row2] };
-const singleShot = { ...base, unit: "single-shot", groupDurationSeconds: row1.durationSeconds, shots: [row1] };
+const singleShot = { schema: VIDEO_DESC_V2_SCHEMA, unit: "single-shot", shot: row1 };
 const storyboardAssisted = { schema: VIDEO_DESC_V2_SCHEMA, unit: "storyboard-assisted", storyboardReference: { source: "current-item" } };
 ```
 
@@ -439,6 +450,20 @@ git commit -m "feat(video): build canonical video prompt envelope"
 - Modify: `scripts/i18n-check-terms.ts`
 - Modify: `scripts/i18n-check-terms.test.ts`
 
+**Interfaces:**
+
+```ts
+export type PromptInputContract = "legacy-v1" | "video-prompt-input/v2";
+export type RowContractClassification =
+  | { ok: true; contract: PromptInputContract; rowContracts: PromptInputContract[] }
+  | { ok: false; code: "MIXED_PROMPT_INPUT_CONTRACTS"; storyboardIndices: number[] };
+export function classifyVideoPromptRows(rows: ParsedStoredStoryboard[]): RowContractClassification;
+export function resolveCompatiblePrompt(args: {
+  classification: Extract<RowContractClassification, { ok: true }>;
+  binding: PromptBinding | null;
+}): CompatiblePromptResult;
+```
+
 - [ ] **Step 1: Extract the locked seed before any Task 5 rewrite**
 
 Mechanically extract `videoPromptGeneration.en` from pinned base commit
@@ -456,12 +481,14 @@ non-null `useData`, pinned file, or custom prompt remains byte-identical.
 - [ ] **Step 2: Version every prompt input contract**
 
 Shipped rewritten templates declare `video-prompt-input/v2`. Existing `o_prompt.useData`, existing
-pinned files, and custom prompts default to `legacy-v1`; they always receive the legacy adapter and
-must never silently receive the V2 JSON envelope. V2 storyboard rows require a V2-capable prompt or
-return a localized `PROMPT_INPUT_CONTRACT_INCOMPATIBLE` error before provider invocation. Add
-language-policy/contract metadata to list and binding results plus a migration preview. Tests cover
-legacy rows with legacy custom prompts, V2 rows with V2 shipped prompts, both incompatible pairings,
-upgrade preservation, and explicit opt-in migration.
+pinned files, and custom prompts default to `legacy-v1`, but binding metadata never decides the row
+adapter. Task 6 first classifies rows: first/last free-form and opaque historical rows force the
+locked legacy adapter; V2-capable rows require a V2 prompt; mixed batches fail. Only a binding with
+the already-required contract may then be selected. No legacy request silently receives the V2 JSON
+envelope and no V2 request receives legacy input. Add language-policy/contract metadata to list and
+binding results plus a migration preview. Tests cover legacy rows with legacy custom prompts, legacy
+rows under a shipped V2 default, V2 rows with V2 shipped prompts, both incompatible explicit
+pairings, mixed batches, upgrade preservation, and explicit opt-in migration.
 
 - [ ] **Step 3: Quarantine registry terms**
 
@@ -601,24 +628,29 @@ artifact hashes. The evidence index has this shape:
 ```ts
 interface ProviderProtocolEvidence {
   schema: "toonflow.provider-protocol/v1";
-  families: Record<string, {
-    provider: string;
-    model: string;
-    modelVersion: string;
-    configFingerprint: string;
-    templateHash: string;
-    tokenBuilderHash: string;
-    verifiedAt: string;
-    status: "verified";
-    selectedSyntax: "han" | "english";
-    staticPlaceholderTokens: string[];
-    testCaseId: string;
-    assetCount: number;
-    observedBindings: Array<{ token: string; assetId: number; bound: boolean }>;
-    requestArtifact: { path: string; sha256: string };
-    responseArtifact: { path: string; sha256: string };
-    outputArtifacts: Array<{ path: string; sha256: string }>;
-    evaluatorArtifact: { path: string; sha256: string; passed: true };
+  families: Record<"seedance2-text-multi" | "universal-multi-reference", {
+    entries: Array<{
+      identity: {
+        family: "seedance2-text-multi" | "universal-multi-reference";
+        vendor: string;
+        model: string;
+        modelVersion: string;
+        configFingerprint: string;
+      };
+      templateHash: string;
+      tokenBuilderHash: string;
+      verifiedAt: string;
+      status: "verified";
+      selectedSyntax: "han" | "english";
+      staticPlaceholderTokens: string[];
+      testCaseId: string;
+      assetCount: number;
+      observedBindings: Array<{ token: string; assetId: number; bound: boolean }>;
+      requestArtifact: { path: string; sha256: string };
+      responseArtifact: { path: string; sha256: string };
+      outputArtifacts: Array<{ path: string; sha256: string }>;
+      evaluatorArtifact: { path: string; sha256: string; passed: true };
+    }>;
   }>;
 }
 ```
@@ -640,7 +672,9 @@ is deterministic: identity/config/template/token-builder hash mismatch invalidat
 `verifiedAt` is ISO audit metadata and has no arbitrary wall-clock expiry. The checker rehashes every
 artifact and validates every binding. Tests cover tampering, missing artifacts, provider/model/
 version/config/family mismatch, template/token-builder changes, cross-family reuse, and malformed
-timestamps.
+timestamps. Add two verified entries in the same family with distinct vendor/model/config identities;
+runtime selection must choose only the exact composite identity and reject ambiguous, partial, or
+cross-entry matches.
 
 - [ ] **Step 5: Verify and commit**
 
@@ -675,22 +709,39 @@ export async function prepareVideoPromptRequest(args: {
   promptLocale: Locale;
 }): Promise<
   | { ok: true; request: { system: string; assistant: string; user: string; outputSchema: unknown }; promptInputContract: "legacy-v1" | "video-prompt-input/v2" }
-  | { ok: false; code: VideoPromptInputErrorCode | "STORYBOARD_NOT_FOUND" | "PROMPT_TEMPLATE_NOT_FOUND" | "PROMPT_INPUT_CONTRACT_INCOMPATIBLE" | "REFERENCE_DUPLICATE_ID" | "REFERENCE_UNKNOWN_ASSET" | "REFERENCE_NAME_MISMATCH" | "REFERENCE_NOT_ASSOCIATED" | "REFERENCE_WRONG_PROJECT" | "DIALOGUE_SPEAKER_NOT_REFERENCED" | "REFERENCE_FILE_MISSING"; storyboardIndex?: number; detail: string }
+  | { ok: false; code: VideoPromptInputErrorCode | "STORYBOARD_NOT_FOUND" | "PROMPT_TEMPLATE_NOT_FOUND" | "PROMPT_INPUT_CONTRACT_INCOMPATIBLE" | "MIXED_PROMPT_INPUT_CONTRACTS" | "REFERENCE_DUPLICATE_ID" | "REFERENCE_UNKNOWN_ASSET" | "REFERENCE_NAME_MISMATCH" | "REFERENCE_NOT_ASSOCIATED" | "REFERENCE_WRONG_PROJECT" | "DIALOGUE_SPEAKER_NOT_REFERENCED" | "REFERENCE_FILE_MISSING"; storyboardIndex?: number; storyboardIndices?: number[]; detail: string }
 >;
 ```
 
-- [ ] **Step 1: Extend route tests to capture all messages**
+- [ ] **Step 1: Establish the atomic route-level compatibility gate**
 
-Insert one legacy and one v2 storyboard. Assert `JSON.parse(user).contract` is v2, every group appears once in order, and neither route emits XML, `join("，")`, or legacy marker prose.
+Replay every real captured Task 1 historical fixture through both single and batch route preparation:
+marker/pipe, leading/trailing-pipe Markdown rows, 12-field ideographic-comma, first/last free form,
+storyboard-assisted fixed text, and arbitrary manual edit. Detailed grammars that normalize
+losslessly build the V2 envelope; first/last free-form and opaque rows automatically use the locked
+byte-identical `legacy-v1` adapter. Assert each group appears once in order and neither V2 route emits
+XML, `join("，")`, or legacy marker prose. Task 6, not Task 1, is the first point at which the plan
+may claim route-level read compatibility.
+
+Add a row-contract matrix for both routes: all-V2 plus shipped V2 default succeeds; all-legacy plus
+that same default still forces the locked legacy adapter; all-legacy plus compatible custom legacy
+prompt succeeds; V2 plus legacy-only binding fails before invocation; legacy plus V2-only explicit
+binding cannot override the locked adapter; and a mixed legacy/V2 batch returns localized
+`MIXED_PROMPT_INPUT_CONTRACTS` with row indices and zero provider calls. A legacy row never reaches a
+V2 prompt, and a V2 row never reaches the legacy adapter.
 
 - [ ] **Step 2: Extract shared preparation**
 
-Move duplicate asset/storyboard queries, audio binding, canonical/pinned/custom prompt resolution,
+Move duplicate asset/storyboard queries, audio binding, row-contract classification,
+canonical/pinned/custom prompt resolution,
 automatic mode selection, strict localized art-manual lookup, envelope construction, output validation,
 and deterministic rendering into the service. The service returns typed, nonlocalized errors. Routes
 retain validation, state transitions, HTTP responses, per-track orchestration, and translate every
 operational error with `content_language` catalog keys before responding. Parser, reference,
-prompt-contract, and structured-output failures stop before provider invocation or DB prompt update.
+prompt-contract, mixed-contract, and structured-output failures stop before provider invocation or
+DB prompt update. Prompt binding provenance never chooses the adapter: classify every row first,
+require a homogeneous contract, force the locked adapter for legacy-compatible requests, and only
+then consider bindings that declare the same contract.
 
 Route payload tests include Han-bearing verbatim names, descriptions, dialogue, carry-over, and
 sound effects; assert byte identity through the request and structured response while invocation
@@ -752,11 +803,13 @@ Skip this commit when `data/serve/app.js` is unchanged.
 
 ## Rollout Order
 
-1. Ship Task 1 first only after every captured historical family passes route-level replay; it adds
-   read compatibility and opaque manual-text handling without changing writes.
+1. Ship Task 1 first after every captured historical family passes decoder-fixture tests. It adds
+   parsing types and opaque manual-text representation only; it does not claim route-level read
+   compatibility or change writes.
 2. Execute Task 4's pinned-base seed extraction and prompt-contract metadata before Task 5 rewrites
    any template. The verified length/hash are immutable review gates.
-3. After Task 1 is available, ship Tasks 2–6 atomically in one compatibility release. The V2-only
+3. After Task 1 is available, ship Tasks 2–6 atomically in one compatibility release. Task 6's full
+   single/batch replay and row-contract matrix are the route-level compatibility gate. The V2-only
    agent, provenance-aware manual ingestion, canonical envelope, versioned prompt adapters, templates,
    structured-output renderer, provider evidence, and shared routes must not be enabled independently.
 4. Within that release, deploy normalization before route traffic and keep legacy strings readable

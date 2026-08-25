@@ -59,6 +59,8 @@ evidence plan before Task 7B and the final full-tree gates in Tasks 8–9.
 - Modify: `src/i18n/translate.ts`
 - Modify: `src/i18n/translate.test.ts`
 - Modify: `src/i18n/index.ts`
+- Create: `src/i18n/promptError.ts`
+- Create: `src/i18n/promptError.test.ts`
 - Modify: `src/lib/prompts/types.ts`
 - Modify: `src/lib/prompts/index.ts`
 - Modify: `src/lib/prompts/index.test.ts`
@@ -78,6 +80,18 @@ evidence plan before Task 7B and the final full-tree gates in Tasks 8–9.
 - Modify: `src/utils/agent/memory.test.ts`
 - Modify: `src/utils/agent/skillsTools.ts`
 - Modify: `src/utils/agent/skillsTools.test.ts`
+- Modify: `src/utils/cleanNovel.ts`
+- Modify: `src/utils/cleanNovel.test.ts`
+- Modify: `src/routes/setting/agentDeploy/agentSetKey.ts`
+- Create: `src/routes/setting/agentDeploy/agentSetKey.test.ts`
+- Modify: `src/routes/setting/vendorConfig/modelTest.ts`
+- Create: `src/routes/setting/vendorConfig/modelTest.test.ts`
+- Modify: `src/routes/setting/vendorConfig/modelTest/textTest.ts`
+- Create: `src/routes/setting/vendorConfig/modelTest/textTest.test.ts`
+- Modify: `src/routes/setting/vendorConfig/modelTest/imageTest.ts`
+- Create: `src/routes/setting/vendorConfig/modelTest/imageTest.test.ts`
+- Modify: `src/routes/setting/vendorConfig/modelTest/videoTest.ts`
+- Create: `src/routes/setting/vendorConfig/modelTest/videoTest.test.ts`
 - Modify: `src/routes/production/assets/batchGenerateAssetsImage.ts`
 - Create: `src/routes/production/assets/batchGenerateAssetsImage.test.ts`
 - Modify: `src/routes/production/workbench/generateVideoPrompt.ts`
@@ -154,22 +168,22 @@ an unclassified literal, and an unclassified `t()` call. The companion catalog-c
 collects literal `tPrompt` keys plus declared dynamic key maps and asserts non-empty `en`, `vi`, and
 `zh` values. Route/payload tests migrate every discovered authored segment to exact locale.
 
-- [ ] **Step 5: Map strict-read failures at every execution boundary**
+- [ ] **Step 5: Map strict translation failures at every execution boundary**
 
-Add stable `content_language` catalog keys for `MissingPromptTranslationError` and
-`MissingPromptLocaleFileError`, including the requested prompt locale and safe relative path/key.
-Centralize mapping so HTTP routes return a typed 4xx response, agent/socket tools return a localized
+Create the centralized mapper here for `MissingPromptTranslationError` only, because Task 2 has not
+created `MissingPromptLocaleFileError` yet. Add stable `content_language` catalog keys containing the
+requested locale and safe key. HTTP routes return a typed 4xx, agent/socket tools return a localized
 tool error without scheduling downstream work, and background/batch tasks persist a localized
-failure reason and terminal state. Tests for HTTP, agent/socket, and background-task boundaries
-assert the exact error code, localized message, no `Ai.*` invocation, and no partial DB/provider
-side effect. Do not leak absolute paths or silently fall back.
+failure reason and terminal state. Tests for all three boundaries assert the exact error code,
+localized message, no `Ai.*` invocation, and no partial DB/provider side effect. Task 2B extends the
+same mapper for locale-file errors. Do not leak absolute paths or silently fall back.
 
 - [ ] **Step 6: Verify and commit**
 
 ```bash
-yarn vitest run src/i18n/translate.test.ts src/lib/prompts/index.test.ts src/i18n/locale.test.ts src/routes/script/getAiRegex.test.ts src/routes/script/extractAssets.test.ts src/agents/scriptAgent/index.test.ts src/agents/scriptAgent/tools.test.ts src/agents/productionAgent/index.test.ts src/agents/productionAgent/tools.test.ts src/utils/agent/memory.test.ts src/utils/agent/skillsTools.test.ts src/routes/production/assets/batchGenerateAssetsImage.test.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.test.ts scripts/i18n-audit-prompt-lookups.test.ts
+yarn vitest run src/i18n/translate.test.ts src/i18n/promptError.test.ts src/lib/prompts/index.test.ts src/i18n/locale.test.ts src/routes/script/getAiRegex.test.ts src/routes/script/extractAssets.test.ts src/agents/scriptAgent/index.test.ts src/agents/scriptAgent/tools.test.ts src/agents/productionAgent/index.test.ts src/agents/productionAgent/tools.test.ts src/utils/agent/memory.test.ts src/utils/agent/skillsTools.test.ts src/utils/cleanNovel.test.ts src/routes/setting/agentDeploy/agentSetKey.test.ts src/routes/setting/vendorConfig/modelTest.test.ts src/routes/setting/vendorConfig/modelTest/textTest.test.ts src/routes/setting/vendorConfig/modelTest/imageTest.test.ts src/routes/setting/vendorConfig/modelTest/videoTest.test.ts src/routes/production/assets/batchGenerateAssetsImage.test.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.test.ts scripts/i18n-audit-prompt-lookups.test.ts
 yarn i18n:audit-prompt-lookups
-git add src/i18n src/lib/prompts src/routes/script src/agents src/utils/agent src/routes/production/assets/batchGenerateAssetsImage.ts src/routes/production/assets/batchGenerateAssetsImage.test.ts src/routes/production/workbench/generateVideoPrompt.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.ts src/routes/production/workbench/batchGeneratePrompt.test.ts scripts/i18n-audit-prompt-lookups.ts scripts/i18n-audit-prompt-lookups.test.ts package.json
+git add src/i18n src/lib/prompts src/routes/script src/agents src/utils/agent src/utils/cleanNovel.ts src/utils/cleanNovel.test.ts src/routes/setting/agentDeploy/agentSetKey.ts src/routes/setting/agentDeploy/agentSetKey.test.ts src/routes/setting/vendorConfig/modelTest.ts src/routes/setting/vendorConfig/modelTest.test.ts src/routes/setting/vendorConfig/modelTest/textTest.ts src/routes/setting/vendorConfig/modelTest/textTest.test.ts src/routes/setting/vendorConfig/modelTest/imageTest.ts src/routes/setting/vendorConfig/modelTest/imageTest.test.ts src/routes/setting/vendorConfig/modelTest/videoTest.ts src/routes/setting/vendorConfig/modelTest/videoTest.test.ts src/routes/production/assets/batchGenerateAssetsImage.ts src/routes/production/assets/batchGenerateAssetsImage.test.ts src/routes/production/workbench/generateVideoPrompt.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.ts src/routes/production/workbench/batchGeneratePrompt.test.ts scripts/i18n-audit-prompt-lookups.ts scripts/i18n-audit-prompt-lookups.test.ts package.json
 git commit -m "feat(i18n): add exact-locale model prompt translation"
 ```
 
@@ -279,6 +293,13 @@ git commit -m "feat(i18n): add strict model skill resolution"
 - Modify: `scripts/main.ts`
 - Create: `scripts/main.test.ts`
 - Create: `scripts/shippedContent.ts`
+- Modify: `src/i18n/promptError.ts`
+- Modify: `src/i18n/promptError.test.ts`
+- Modify: `src/agents/scriptAgent/index.test.ts`
+- Modify: `src/agents/productionAgent/index.test.ts`
+- Modify: `src/routes/production/assets/batchGenerateAssetsImage.test.ts`
+- Modify: `src/routes/production/workbench/generateVideoPrompt.test.ts`
+- Modify: `src/routes/production/workbench/batchGeneratePrompt.test.ts`
 - Create/regenerate: `data/.shipped-content-manifest.json`
 - Modify: `scripts/build.ts`
 - Modify: `package.json`
@@ -311,12 +332,20 @@ preserved; an unsuffixed custom prompt is preserved; a removed untouched shipped
 a removed modified file is retained; and recovery metadata/backups restore every changed or deleted
 file after an injected mid-upgrade failure.
 
-- [ ] **Step 4: Verify and commit before strict readers or Medieval Task 7**
+- [ ] **Step 4: Extend boundary mapping for locale-file errors**
+
+Now that Task 2 has created `MissingPromptLocaleFileError`, extend Task 1's centralized mapper with a
+stable localized code/message containing only the requested locale and safe relative canonical path.
+HTTP, agent/socket, and background/batch tests assert the locale-file error is mapped consistently,
+stops before provider invocation, schedules no downstream work, and leaves no partial side effect.
+Keep the translation-error tests from Task 1 unchanged.
+
+- [ ] **Step 5: Verify and commit before strict readers or Medieval Task 7**
 
 ```bash
-yarn vitest run scripts/main.test.ts
+yarn vitest run scripts/main.test.ts src/i18n/promptError.test.ts src/agents/scriptAgent/index.test.ts src/agents/productionAgent/index.test.ts src/routes/production/assets/batchGenerateAssetsImage.test.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.test.ts
 yarn build
-git add scripts/main.ts scripts/main.test.ts scripts/shippedContent.ts scripts/build.ts data/.shipped-content-manifest.json package.json
+git add scripts/main.ts scripts/main.test.ts scripts/shippedContent.ts scripts/build.ts data/.shipped-content-manifest.json src/i18n/promptError.ts src/i18n/promptError.test.ts src/agents/scriptAgent/index.test.ts src/agents/productionAgent/index.test.ts src/routes/production/assets/batchGenerateAssetsImage.test.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.test.ts package.json
 git commit -m "fix(packaging): preserve and provision prompt corpus"
 ```
 

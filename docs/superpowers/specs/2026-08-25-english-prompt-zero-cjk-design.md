@@ -204,7 +204,8 @@ export type VideoDescParseErrorCode =
   | "NON_MONOTONIC_SOURCE_ROW";
 export interface VideoDescParseError { code: VideoDescParseErrorCode; message: string; }
 export type VideoDescParseResult =
-  | { ok: true; value: VideoDescV2 | z.infer<typeof legacyOpaqueSingleShotSchema>; source: "v2" | "legacy"; grammar: string }
+  | { ok: true; value: VideoDescV2; source: "v2" }
+  | { ok: true; value: VideoDescV2 | z.infer<typeof legacyOpaqueSingleShotSchema>; source: "legacy"; legacyGrammar: LegacyGrammar }
   | { ok: false; error: VideoDescParseError };
 
 export function serializeVideoDesc(value: VideoDescV2): string;
@@ -224,8 +225,9 @@ id. Explicit decoders cover captured marker/pipe `序号N` groups, numeric Markd
 leading/trailing pipes, 12-field ideographic-comma single shots, first/last free-form text, and the
 storyboard-assisted fixed text `参考故事板内容进行视频生成`. Arbitrary strings accepted by
 `editStoryboardInfo.ts` become read-only `legacy-opaque-single-shot`; they are never guessed into
-detailed fields or emitted as V2 by the agent. Read compatibility is not claimed until real captured
-fixtures for every family pass route-level replay.
+detailed fields or emitted as V2 by the agent. The decoder task proves real captured fixtures only;
+route-level read compatibility is claimed later, when the shared single/batch adapters replay every
+family in the atomic integration release.
 
 The decoder normalizes Chinese, English, and Vietnamese aliases only when a known grammar supplies
 that field. It returns typed errors for invalid duration, missing cells, duplicate/non-monotonic shot
@@ -250,6 +252,17 @@ record; non-storyboard units forbid the field.
 
 Create `src/lib/videoPrompt/input.ts`:
 
+Prompt selection is row-aware before it considers a model binding. Parsing classifies each stored
+row as `video-prompt-input/v2` or `legacy-v1`: native V2 and losslessly recoverable detailed legacy
+grammars are V2-capable; historical first/last free-form and `legacy-opaque-single-shot` rows are
+locked to the byte-identical legacy adapter. An all-legacy request automatically selects that locked
+adapter even when the model has a shipped V2 default. An all-V2 request may select only a V2 prompt.
+A mixed batch fails with localized `MIXED_PROMPT_INPUT_CONTRACTS` and offending row indices before
+any provider call; it is never concatenated into either envelope. Explicit bindings are checked only
+after row classification, and an incompatible binding fails closed. Single-route and batch tests
+cover default and custom bindings for all-legacy, all-V2, and mixed inputs. Thus no legacy row can
+reach a V2-only prompt and no V2 row can reach the legacy adapter.
+
 ```ts
 export interface VideoPromptInputV2 {
   contract: "toonflow.video-prompt-input/v2";
@@ -265,7 +278,7 @@ export interface VideoPromptInputV2 {
   storyboardGroups: Array<{
     storyboardId: number;
     duration: number | null;
-    videoDesc: VideoDescV2; // opaque legacy text is served only through the legacy-v1 adapter
+    videoDesc: VideoDescV2;
     resolvedStoryboardReference?: { storyboardId: number };
   }>;
 }
@@ -392,10 +405,12 @@ Resolution policy:
 - A missing required prompt translation throws before model invocation. The API returns a
   `content_language`-localized operational error naming the missing file/key.
 
-`MissingPromptTranslationError` and `MissingPromptLocaleFileError` have one centralized mapping at
-HTTP, agent/socket, and background-task boundaries. HTTP returns a typed localized 4xx; tools return
-a localized tool failure without scheduling work; background tasks persist a terminal localized
-failure. All three paths are tested to stop before provider invocation and avoid partial writes.
+The foundation builds one centralized boundary mapper in dependency order: Task 1 adds
+`MissingPromptTranslationError`; after Task 2 defines strict file resolution, Task 2B extends it with
+`MissingPromptLocaleFileError`. At HTTP, agent/socket, and background-task boundaries, HTTP returns a
+typed localized 4xx, tools return a localized failure without scheduling work, and background tasks
+persist a terminal localized failure. Both error families are tested on all three paths to stop
+before provider invocation and avoid partial writes.
 
 `tPrompt` requires the exact selected locale: `en -> en`, `vi -> vi`, and `zh -> zh`. A missing
 entry fails before model invocation rather than silently changing the prompt language.
@@ -486,11 +501,13 @@ The release patch covers:
 - Model Mapping stable row keys/type labels;
 - measured production-node re-layout after content resize.
 
-Reflow is serialized or guarded by a monotonically increasing generation token. Every async
-`nextTick`/dimension-stabilization/`fromObject` continuation verifies it is still the newest
-generation before writing. Stabilization timeout is caught and reported without an unhandled
-rejection. Fake-timer/deferred-promise tests prove rapid plan/table saves cannot let an older reflow
-overwrite a newer one and timeout leaves the latest saved graph intact.
+Successful save application and reflow `fromObject` calls use the same serialized graph-mutation
+queue plus a monotonically increasing generation token. Every async `nextTick` and dimension-
+stabilization continuation verifies freshness, and the token is checked immediately before the
+queued mutation. No save handler calls `fromObject` outside that queue. Stabilization/mutation
+failures are caught and reported without an unhandled rejection. Fake-timer/deferred-promise tests
+prove rapid plan/table saves and delayed imports cannot let an older generation overwrite a newer
+one; timeout leaves the latest saved graph intact.
 
 Every bundle sub-patch validates all anchor cardinalities before writing. A second run is byte
 identical. Chinese locale output remains unchanged. The build/release process runs the patch suite
@@ -531,20 +548,26 @@ role in decoding `videoDesc`.
 No destructive bulk database rewrite is required. Existing rows decode on read. A later background
 backfill may rewrite only rows successfully decoded from a known legacy grammar.
 
-Prompt input contracts are versioned. Existing `o_prompt.useData`, existing pinned files, and custom
-prompts default to `legacy-v1` and always receive the legacy adapter; they must never silently receive
-the V2 JSON envelope. V2 rows require a V2-capable prompt or return a localized incompatibility error
-before invocation. Shipped rewritten templates declare `video-prompt-input/v2`. Migration preview
-and upgrade tests show each binding's policy/contract and preserve overrides byte-identically.
+Prompt input contracts are versioned and selection starts from the rows, not the prompt binding.
+Historical first/last free-form and opaque rows force the locked `legacy-v1` adapter; native or
+losslessly normalized detailed rows require `video-prompt-input/v2`. A mixed batch fails before
+invocation with row indices. Existing `o_prompt.useData`, pinned files, and custom prompts default to
+`legacy-v1`, but they are selected only for a legacy-compatible request; they never silently receive
+the V2 JSON envelope. V2 rows require a V2-capable prompt or return a localized incompatibility
+error. Shipped rewritten templates declare `video-prompt-input/v2`. Migration preview and upgrade
+tests show each binding's policy/contract and preserve overrides byte-identically.
 
-Provider evidence comes only from an approval-gated executable harness. For every reference-capable
-family and every selected provider/model, it stores the exact request, input asset hashes, seed,
+Provider evidence comes only from an approval-gated executable harness. Each family owns an array of
+entries keyed by the composite family/vendor/model/version/config identity, so multiple configured
+models in one family coexist without overwriting or authorizing each other. For every entry it stores
+the exact request, input asset hashes, seed,
 provider response/output artifacts, evaluator result, and hashes of all artifacts. Runtime token
 selection receives the active vendor/model/version/config fingerprint and fails closed unless it
 exactly matches evidence. Evidence staleness is deterministic: any identity, config, template, or
 token-builder hash mismatch invalidates it. `verifiedAt` is ISO audit metadata, not a wall-clock
-expiry. Evidence for one family/configured model never authorizes another; tamper and mismatch tests
-cover every field.
+expiry. Evidence for one family/configured model never authorizes another; tests include two entries
+in one family, exact runtime selection, ambiguity/partial-match rejection, tampering, and every
+identity/hash mismatch.
 
 ## 12. Acceptance criteria
 
