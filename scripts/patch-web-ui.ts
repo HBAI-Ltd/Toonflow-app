@@ -302,6 +302,154 @@ function patchManualLabels(source: string): { output: string; patched: string[] 
 }
 
 // ---------------------------------------------------------------------------
+// Lỗi 5 — regex import chapter bị hardcode tiếng Trung
+// ---------------------------------------------------------------------------
+// Locale giao diện là tín hiệu đúng cho default mà người dùng nhìn thấy:
+// en/vi dùng Chapter/Episode, còn zh/zh-CN/zh-TW giữ cú pháp 第…章/回/节.
+// Prompt language vẫn độc lập; nút AI Regex phân tích chính văn bản được gửi.
+const ENGLISH_CHAPTER_RE =
+  /^(?:Chapter|Episode)\s+([0-9]+)\s*(?:[:.\-–—]\s*)?([^\n\r]*)/gim;
+const CHINESE_CHAPTER_RE =
+  /第\s*([0-9０-９零一二三四五六七八九十百千万]+)\s*[章回节]\s*([^\n\r]*)/g;
+const LEGACY_PARSER_RE =
+  /第\s*([0-9０-９零一二三四五六七八九十百千万]+)\s*集\s*([^\n\r]*)/g;
+
+/** Trả RegExp mới mỗi lần để lastIndex của cờ g không rò giữa các lần parse. */
+export function defaultChapterRegex(locale: string): RegExp {
+  const selected = /^zh(?:-|$)/i.test(locale.trim()) ? CHINESE_CHAPTER_RE : ENGLISH_CHAPTER_RE;
+  return new RegExp(selected.source, selected.flags);
+}
+
+const CHAPTER_REGEX_RUNTIME_MARKER = "function __toonflowDefaultChapterRegex";
+const MODULE_SCRIPT_OPEN = '<script type="module" crossorigin>';
+const CHAPTER_REGEX_RUNTIME =
+  'function __toonflowDefaultChapterRegex(){let e="";try{e=(localStorage.getItem("locale")||"").replace(/^"|"$/g,"")}catch{}' +
+  `return /^zh(?:-|$)/i.test(e)?new RegExp(${JSON.stringify(CHINESE_CHAPTER_RE.source)},${JSON.stringify(CHINESE_CHAPTER_RE.flags)}):` +
+  `new RegExp(${JSON.stringify(ENGLISH_CHAPTER_RE.source)},${JSON.stringify(ENGLISH_CHAPTER_RE.flags)})}`;
+
+function assertChapterRegexPatched(source: string): void {
+  const required = [
+    "chapterReg:__toonflowDefaultChapterRegex().toString()",
+    "=__toonflowDefaultChapterRegex(),",
+    "=ue(__toonflowDefaultChapterRegex().toString())",
+    ".value=__toonflowDefaultChapterRegex().toString()",
+  ];
+  for (const marker of required) {
+    if (!source.includes(marker)) {
+      throw new Error(`bản vá chapter regex thiếu neo runtime \`${marker}\` — dừng lại`);
+    }
+  }
+  const helperIndex = source.indexOf(CHAPTER_REGEX_RUNTIME_MARKER);
+  const firstUseIndex = source.indexOf("__toonflowDefaultChapterRegex().toString()");
+  if (!source.includes(MODULE_SCRIPT_OPEN + CHAPTER_REGEX_RUNTIME_MARKER) || helperIndex > firstUseIndex) {
+    throw new Error("helper chapter regex không nằm ở đầu module trước mọi call site — dừng lại");
+  }
+}
+
+function moduleScriptCodeStart(source: string): number {
+  const openIndex = source.indexOf(MODULE_SCRIPT_OPEN);
+  if (openIndex === -1 || source.indexOf(MODULE_SCRIPT_OPEN, openIndex + 1) !== -1) {
+    throw new Error("không tìm thấy duy nhất thẻ script module của bundle — dừng lại");
+  }
+  return openIndex + MODULE_SCRIPT_OPEN.length;
+}
+
+function patchChapterRegex(source: string): { output: string; patched: boolean } {
+  if (source.includes(CHAPTER_REGEX_RUNTIME_MARKER)) {
+    const helperIndex = source.indexOf(CHAPTER_REGEX_RUNTIME);
+    if (helperIndex === -1 || source.indexOf(CHAPTER_REGEX_RUNTIME, helperIndex + 1) !== -1) {
+      throw new Error("helper chapter regex đã vá trước đó có dạng lạ hoặc bị nhân đôi — dừng lại");
+    }
+    const desiredIndex = moduleScriptCodeStart(source);
+    if (helperIndex === desiredIndex) {
+      assertChapterRegexPatched(source);
+      return { output: source, patched: false };
+    }
+    // Nâng cấp bản vá cũ từng đặt helper trong render closure: gỡ đúng helper
+    // byte-for-byte rồi đưa nó lên đầu script module, trước mọi call site.
+    const withoutHelper =
+      source.slice(0, helperIndex) + source.slice(helperIndex + CHAPTER_REGEX_RUNTIME.length);
+    const moduleStart = moduleScriptCodeStart(withoutHelper);
+    const relocated =
+      withoutHelper.slice(0, moduleStart) + CHAPTER_REGEX_RUNTIME + withoutHelper.slice(moduleStart);
+    assertChapterRegexPatched(relocated);
+    return { output: relocated, patched: true };
+  }
+
+  let output = source;
+  moduleScriptCodeStart(output); // fail trước khi thực hiện bất kỳ thay đổi nào
+
+  const storeDefault = `chapterReg:${JSON.stringify(CHINESE_CHAPTER_RE.toString())}`;
+  const storeIndex = output.indexOf(storeDefault);
+  if (storeIndex === -1 || output.indexOf(storeDefault, storeIndex + 1) !== -1) {
+    throw new Error("không tìm thấy duy nhất default chapterReg tiếng Trung trong store — dừng lại");
+  }
+  output = output.replace(storeDefault, "chapterReg:__toonflowDefaultChapterRegex().toString()");
+
+  // Regex literal này là neo máy ổn định hơn tên biến minified (IJo hiện tại).
+  // Lấy tên biến từ declaration để patch vẫn sống qua lần rebuild đổi identifier.
+  const legacyRegexText = LEGACY_PARSER_RE.toString();
+  const legacyRegexIndex = output.indexOf(legacyRegexText);
+  if (legacyRegexIndex === -1 || output.indexOf(legacyRegexText, legacyRegexIndex + 1) !== -1) {
+    throw new Error("không tìm thấy duy nhất regex fallback của batchAddScript — dừng lại");
+  }
+  const declarationStart = output.lastIndexOf("const ", legacyRegexIndex);
+  const previousComma = output.lastIndexOf(",", legacyRegexIndex);
+  const assignmentStart = Math.max(declarationStart + "const ".length - 1, previousComma);
+  const assignmentPrefix = output.slice(assignmentStart + 1, legacyRegexIndex);
+  const parserVarMatch = /^([A-Za-z_$][\w$]*)=$/.exec(assignmentPrefix);
+  if (declarationStart === -1 || !parserVarMatch || output[legacyRegexIndex + legacyRegexText.length] !== ",") {
+    throw new Error("declaration regex fallback của batchAddScript đã đổi cấu trúc — dừng lại");
+  }
+  const parserRegexVar = parserVarMatch[1]!;
+  output =
+    output.slice(0, legacyRegexIndex) +
+    CHINESE_CHAPTER_RE.toString() +
+    output.slice(legacyRegexIndex + legacyRegexText.length);
+
+  const fallbackRe = new RegExp(
+    `:([A-Za-z_$][\\w$]*)=${escapeRegExp(parserRegexVar)},\\1\\.lastIndex=0`,
+  );
+  if (!fallbackRe.test(output)) {
+    throw new Error("không tìm thấy nhánh fallback parser dùng regex mặc định — dừng lại");
+  }
+  output = output.replace(fallbackRe, ":$1=__toonflowDefaultChapterRegex(),$1.lastIndex=0");
+
+  // Neo vào ba refs liên tiếp ngay trước watcher validate regex. Cặp đầu là ô
+  // regex và lỗi validate; ref cuối là loading của nút AI Regex.
+  const fieldInitRe = /([A-Za-z_$][\w$]*)=ue\(""\),([A-Za-z_$][\w$]*)=ue\(""\),([A-Za-z_$][\w$]*)=ue\(!1\);lt\(\1,/;
+  const fieldInit = fieldInitRe.exec(output);
+  if (!fieldInit) {
+    throw new Error("không tìm thấy ô regex của batchAddScript — dừng lại");
+  }
+  const regexFieldVar = fieldInit[1]!;
+  const regexErrorVar = fieldInit[2]!;
+  output = output.replace(
+    fieldInitRe,
+    `${regexFieldVar}=ue(__toonflowDefaultChapterRegex().toString()),${regexErrorVar}=ue(""),$3=ue(!1);lt(${regexFieldVar},`,
+  );
+
+  const resetRe = new RegExp(
+    `([A-Za-z_$][\\w$]*\\.value="To1",)${escapeRegExp(regexFieldVar)}\\.value="",${escapeRegExp(regexErrorVar)}\\.value=""`,
+  );
+  if (!resetRe.test(output)) {
+    throw new Error("không tìm thấy reset của ô regex khi đóng batchAddScript — dừng lại");
+  }
+  output = output.replace(
+    resetRe,
+    `$1${regexFieldVar}.value=__toonflowDefaultChapterRegex().toString(),${regexErrorVar}.value=""`,
+  );
+
+  // Đầu script module là scope chung duy nhất chắc chắn đứng trước store,
+  // parser và render function, không phụ thuộc identifier minified nào.
+  const moduleStart = moduleScriptCodeStart(output);
+  output = output.slice(0, moduleStart) + CHAPTER_REGEX_RUNTIME + output.slice(moduleStart);
+
+  assertChapterRegexPatched(output);
+  return { output, patched: true };
+}
+
+// ---------------------------------------------------------------------------
 
 export function patchBundle(source: string): {
   output: string;
@@ -309,6 +457,7 @@ export function patchBundle(source: string): {
   interceptorPatched: boolean;
   stringsTranslated: string[];
   manualLabelsPatched: string[];
+  chapterRegexPatched: boolean;
 } {
   let output = source;
 
@@ -324,12 +473,16 @@ export function patchBundle(source: string): {
   const manualLabels = patchManualLabels(output);
   output = manualLabels.output;
 
+  const chapterRegex = patchChapterRegex(output);
+  output = chapterRegex.output;
+
   return {
     output,
     fontsChanged: fonts.count,
     interceptorPatched: interceptor.patched,
     stringsTranslated: cjk.applied,
     manualLabelsPatched: manualLabels.patched,
+    chapterRegexPatched: chapterRegex.patched,
   };
 }
 
@@ -342,7 +495,8 @@ function main() {
     result.fontsChanged +
     (result.interceptorPatched ? 1 : 0) +
     result.stringsTranslated.length +
-    result.manualLabelsPatched.length;
+    result.manualLabelsPatched.length +
+    (result.chapterRegexPatched ? 1 : 0);
   if (totalChanges === 0) {
     console.log("Không có gì để vá (đã vá từ trước).");
     return;
@@ -353,6 +507,7 @@ function main() {
   console.log(`Interceptor request: ${result.interceptorPatched ? "đã vá" : "đã vá từ trước, bỏ qua"}.`);
   console.log(`Đã dịch ${result.stringsTranslated.length} chuỗi hardcode trong ft("…").`);
   console.log(`Đã vá ${result.manualLabelsPatched.length} nhãn tab manual (theo locale en/vi).`);
+  console.log(`Chapter regex theo locale giao diện: ${result.chapterRegexPatched ? "đã vá" : "đã vá từ trước, bỏ qua"}.`);
 }
 
 if (require.main === module) main();
