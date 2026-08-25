@@ -201,7 +201,9 @@ export type VideoDescParseErrorCode =
   | "DIALOGUE_SPEAKER_NOT_REFERENCED"
   | "DURATION_MISMATCH"
   | "DUPLICATE_SOURCE_ROW"
-  | "NON_MONOTONIC_SOURCE_ROW";
+  | "NON_MONOTONIC_SOURCE_ROW"
+  | "SINGLE_SHOT_CARDINALITY"
+  | "STORYBOARD_ASSISTED_CARDINALITY";
 export interface VideoDescParseError { code: VideoDescParseErrorCode; message: string; }
 export type VideoDescParseResult =
   | { ok: true; value: VideoDescV2; source: "v2" }
@@ -233,6 +235,13 @@ The decoder normalizes Chinese, English, and Vietnamese aliases only when a know
 that field. It returns typed errors for invalid duration, missing cells, duplicate/non-monotonic shot
 numbers, empty descriptions, unsupported closed vocabulary, and reference-integrity failures. It
 never asks the LLM to repair malformed structure and never invents absent fields.
+
+The discriminated-union error mapper preserves two semantic cardinality codes before falling back to
+`INVALID_V2`: malformed `single-shot` input that does not contain exactly one singular detailed
+`shot` returns `SINGLE_SHOT_CARDINALITY`; malformed `storyboard-assisted` input that lacks exactly
+its current-item reference or attempts to substitute detailed shots returns
+`STORYBOARD_ASSISTED_CARDINALITY`. Tests cover both codes, valid counterparts, and strict unknown-key
+rejection.
 
 The alias table must preserve distinctions present in source data: `大远景/大全景 -> extreme-wide`,
 `远景 -> long-shot`, `全景 -> wide`, `中景 -> medium`, `中近景/近景 -> medium-close`,
@@ -283,6 +292,18 @@ export interface LegacyVideoPromptInputV1 {
   }>;
 }
 
+export interface LegacyCustomPromptRequest {
+  contract: "toonflow.video-prompt-input/legacy-v1-custom";
+  bytes: string; // exact current XML-like request serialization
+}
+
+export interface LegacyCustomSerializerArgs {
+  labels: { model: string; assets: string; storyboard: string };
+  modelName: string;
+  references: readonly TrustedPromptReference[];
+  rows: ReadonlyArray<{ videoDesc: string; duration: string | number | null }>;
+}
+
 export interface VideoPromptInputV2 {
   contract: "toonflow.video-prompt-input/v2";
   model: { name: string; mode: string };
@@ -304,29 +325,57 @@ export interface VideoPromptInputV2 {
 
 export type VideoPromptInputErrorCode = VideoDescParseErrorCode | "MISSING_OUTER_DURATION" | "OUTER_DURATION_MISMATCH";
 export type BuildVideoPromptInputResult =
-  | { ok: true; value: VideoPromptInputV2; json: string }
+  | { ok: true; kind: "v2-json"; inputContract: "toonflow.video-prompt-input/v2"; value: VideoPromptInputV2; userMessage: string }
+  | { ok: true; kind: "legacy-compat-json"; inputContract: "toonflow.video-prompt-input/legacy-v1"; value: LegacyVideoPromptInputV1; userMessage: string }
+  | { ok: true; kind: "legacy-custom-bytes"; inputContract: "toonflow.video-prompt-input/legacy-v1-custom"; value: LegacyCustomPromptRequest; userMessage: string }
   | { ok: false; code: VideoPromptInputErrorCode; message: string; storyboardIndex?: number };
 
-export function buildVideoPromptInput(args: {
-  projectId: number;
+export interface TrustedPromptReference {
+  readonly id: number;
+  readonly projectId: number;
+  readonly type: "role" | "scene" | "prop" | "clip" | "audio";
+  readonly name: string;
+  readonly filePath: string;
+  readonly referenceRole: "visual-subject" | "visual-scene" | "visual-prop" | "video-reference" | "audio-reference";
+  readonly __trustedPromptReference: unique symbol;
+}
+
+export function buildV2PromptInput(args: {
   modelName: string;
   mode: string;
-  assets: Array<{ id: number; type: "role" | "scene" | "prop" | "tool" | "clip" | "audio"; name: string; filePath: string; audioAssetId?: number }>;
+  references: readonly TrustedPromptReference[];
   storyboards: Array<{ id: number; videoDesc: string; duration: string | number | null; shouldGenerateImage: number | string | null; prompt: string | null; filePath: string | null; associateAssetsIds: number[] }>;
 }): BuildVideoPromptInputResult;
+export function buildLegacyCompatInput(args: { modelName: string; mode: string; rows: ParsedLegacyRow[] }): BuildVideoPromptInputResult;
+export function serializeLegacyCustomRequest(args: LegacyCustomSerializerArgs): BuildVideoPromptInputResult;
 ```
 
-Single and batch routes must share one repository/service function for:
+Single and batch routes share one async repository/service boundary for:
 
-1. loading storyboard/assets;
-2. parsing every stored `videoDesc`;
-3. selecting the locale/model prompt;
-4. building the JSON user message;
-5. validating the returned model prompt.
+1. loading storyboard/assets by `projectId` and selected IDs;
+2. validating project ownership, exact database ID/name, association subset, duplicates, modality,
+   file presence, and speaker membership;
+3. returning branded immutable `TrustedPromptReference` records;
+4. parsing every stored `videoDesc` and selecting the row/prompt contract;
+5. dispatching to the matching pure serializer and output validator.
 
-This removes XML attribute injection and accidental comma-joining of `storyboard.map(...)`.
-The route normalizes legacy `tool` assets to canonical `prop` and validates file presence plus
-project ownership. Visual image assets (`role`, `scene`, `prop`), `clip`/video, and audio all retain
+Pure builders never query the database and never accept raw client asset names/paths. The async
+boundary is the only constructor for trusted references. Its tests cover cross-project IDs, wrong
+name/ID pairs, missing files, duplicates, invalid modality/speaker/association, and prove no provider
+invocation on failure.
+
+The three input paths remain distinct. The four shipped V2 templates receive canonical V2 JSON.
+The shipped exact-locale compat template receives versioned legacy JSON with provenance and opaque
+raw projection. Explicit existing `useData`, pinned, or custom `legacy-v1` prompts receive the byte-
+exact current XML-like request serialization, named `legacy-v1-custom`; golden single/batch fixtures
+lock labels, asset formatting/order, ideographic-comma separators, implicit storyboard commas,
+`storyboardItem` element/attribute whitespace, raw `videoDesc`, duration, and surrounding newlines.
+That serializer is retained until the user migrates the prompt and is never conflated with compat JSON.
+
+The V2 and compat JSON paths remove XML attribute injection and accidental comma-joining. The custom
+legacy path deliberately freezes the current bytes for compatibility and remains an explicit warned
+override. The service normalizes legacy `tool` assets to canonical `prop`. Visual image assets
+(`role`, `scene`, `prop`), `clip`/video, and audio all retain
 explicit reference roles. Seedance text multi-reference numbers only visual asset images; it never
 numbers storyboard images, clips, or audio. Universal modes retain their valid image, video, and
 audio reference roles. Mixed-modality and missing-file tests cover each mode.
@@ -337,10 +386,13 @@ group, missing/non-numeric duration returns `MISSING_OUTER_DURATION`; a numeric 
 For storyboard-assisted input, prompt preparation resolves `{ source: "current-item" }` to the
 outer record's id in `resolvedStoryboardReference` after persistence.
 
-## 6. Seedance output contract
+## 6. Output contracts
 
-The prompt generator receives every `storyboardGroups[].videoDesc` and returns strict structured
-Zod/tool output, not the final free-form string:
+Output validation is discriminated by the selected input/template contract; there is no universal
+detailed-shot output schema.
+
+For `video-prompt-input/v2`, the prompt generator receives every
+`storyboardGroups[].videoDesc` and returns strict structured Zod/tool output, not the final free-form string:
 
 1. `subjectDefinitions`;
 2. ordered shot objects containing global ordinal, group index, source row, semantic text, and
@@ -354,7 +406,18 @@ exactly three semantic parts: subject/reference definitions; optional carry-over
 shots; and style/constraints. The LLM remains responsible for semantic compression, while TypeScript
 owns structure and final rendering.
 
-`sourceRow` may restart inside each group. The output assigns one global ordinal across the flattened
+For shipped `legacy-v1-compat`, use a separate strict schema such as
+`{ prompt: z.string().trim().min(1), rawOpaqueProjection: z.string().min(1) }`. The projection must
+equal the input bytes; the prompt must be nonempty. The schema forbids `sourceRow`, dialogue, shot
+ordinals, and other fabricated detailed fields. It makes no detailed count/order/dialogue guarantee.
+
+For explicit custom/useData/pinned `legacy-v1`, preserve current behavior: accept the provider's raw
+nonempty text result and store it without the V2 structured renderer or compat projection schema.
+The UI/API warning identifies this as an unverified user override. Validator-selection tests cover
+all three contracts, both wrong-validator directions, absent/extra compat fields, byte mismatch,
+nonempty custom raw text, and prove opaque inputs never acquire fabricated source rows or dialogue.
+
+For V2 detailed output, `sourceRow` may restart inside each group. The output assigns one global ordinal across the flattened
 group/row order (`Shot 1`, `Shot 2`, ...); tests also retain `(groupIndex, sourceRow)` metadata so
 every output shot is traceable without duplicate labels.
 
@@ -543,6 +606,14 @@ provenance manifest records the exact upstream repository URL, source commit SHA
 SHA-256 of `dist/index.html`; CI verifies the imported `data/web/index.html` against that source
 artifact before packaging.
 
+Web-plan Task 7 owns the final real-media gate. With explicit provider/credential/spend approval, it
+runs a fresh Medieval manual-director project from import/AI Regex through script, plan, storyboard,
+assets, prompt generation, configured media jobs, final-editor export, media probe, and playback in
+`en`, `vi`, and `zh`. Evidence includes sanitized console/network logs, screenshots, provider/job/
+request/input/output hashes, and export existence/size/SHA-256/streams/duration/playability. English
+and Vietnamese UI plus authored payload segments have no unexpected Han; Chinese behavior remains.
+A mocked/no-op provider cannot satisfy this gate.
+
 Merged PR #15 remains a separate, intentional boundary: the batch-import UI chooses its editable
 default chapter regex from the interface locale, while `/script/getAiRegex` uses `prompt_language`
 only for its model instruction and infers the actual headings in the submitted script. That helper
@@ -610,8 +681,10 @@ identity/hash mismatch.
 - Opaque/first-last historical rows use the new exact-locale `legacy-v1-compat` runtime prompt. Its
   en/vi authored text passes the same Han gate; the locked old seed is never selected. An explicit
   custom legacy override is warned and remains outside the shipped-prompt guarantee.
-- All sub-shots from one group reach one LLM request; strict structured output preserves count,
-  order, traceability, and dialogue before deterministic three-part rendering.
+- For V2 detailed rows, all sub-shots reach one LLM request and strict structured output preserves
+  count, order, traceability, and dialogue before deterministic three-part rendering. Compat opaque
+  output validates only nonempty prompt plus byte-identical raw projection without fabricated
+  details; explicit custom legacy output preserves current raw-text behavior.
 - Dialogue, names, and other verbatim user data remain unchanged.
 - Missing English/Vietnamese prompt translations fail before model invocation; there is no silent
   Chinese fallback.

@@ -82,6 +82,7 @@ export interface ModelMapRow {
   path?: string;
   languagePolicy: "shipped-strict" | "pinned-locale" | "custom-unscoped";
   promptInputContract: "legacy-v1-compat" | "legacy-v1" | "video-prompt-input/v2";
+  requestContract: "toonflow.video-prompt-input/legacy-v1" | "toonflow.video-prompt-input/legacy-v1-custom" | "toonflow.video-prompt-input/v2";
   compatible: boolean;
 }
 ```
@@ -258,6 +259,7 @@ values, use `row.key` for prompt rows, and use `item.id` for the outer vendor co
 localized badges/warnings for `shipped-strict`, `pinned-locale`, and `custom-unscoped`, plus safe
 `legacy-v1-compat`, custom override `legacy-v1`, and `video-prompt-input/v2` compatibility. A custom
 legacy prompt displays an explicit localized warning that prompt-language purity is not guaranteed.
+Show the concrete request contract too: compat JSON, byte-exact custom-legacy request, or V2 JSON.
 Block an incompatible binding or generation with
 a localized warning before provider invocation; do not imply that custom content was validated or
 translated. In
@@ -692,7 +694,9 @@ git commit -m "fix(covers): remove baked-language director titles"
 
 ### Task 7: Full browser and build verification
 
-**Files:** Verify Tasks 1–6; update only files tied to reproducible failures.
+**Files:** Verify Tasks 1–6; update only files tied to reproducible failures. Store approved run
+artifacts under `docs/i18n/e2e-provider-qa/<run-id>/` with a hashed manifest; do not commit credentials
+or user-private media.
 
 - [ ] **Step 1: Run source and bundle gates**
 
@@ -705,22 +709,47 @@ yarn build
 git diff --check
 ```
 
-- [ ] **Step 2: Repeat English QA**
+- [ ] **Step 2: Obtain approval and define the real-media run**
 
-Verify: AI Regex/Chapter labels; an English `Chapter 12: ...` import splits correctly; AI Regex infers
-the submitted format; Interface Settings labels; Text to Video; English Markdown tooltips; English
-final editor/snap/track labels/guidance; custom Model Mapping with no console TypeError; no login
-prompt-language request; clickable Storyboard Table and Workbench after expanded saves; text-free
-director covers.
+Before network/provider use, obtain explicit approval for provider/account, credential access,
+model/version/config, spend cap, generated-media retention, and export destination. Record only safe
+provider/config fingerprints. A mocked/no-op provider cannot satisfy this task or roadmap Gate F.
 
-- [ ] **Step 3: Run locale regressions**
+- [ ] **Step 3: Run the full English creation-to-export flow**
 
-Repeat the critical UI path in `vi` and `zh`. Chinese locale keeps its `第…章/回/节` default;
-Vietnamese keeps the `Chapter|Episode` default and does not fall back to Chinese; AI Regex still
-detects headings that differ from the UI/prompt language. All three retain identical mode IDs and
-model-map keys.
+In a clean profile, create a new Medieval project and select the manual director. Import a fresh
+script, exercise AI Regex and confirm chapter splitting, then complete script, shooting plan,
+storyboard table, storyboard/assets, video-prompt generation, real configured image/video/audio
+generation as required by the selected mode, final-editor assembly, and export. Exercise Model
+Mapping, editor locale, expanded-node reflow, and authentication boundaries during the same run.
 
-- [ ] **Step 4: Inspect status**
+Capture accessible UI text, actual model payload segments by provenance, console logs, failed/all
+network requests, provider/job IDs, sanitized request hashes, selected input asset hashes, provider
+output hashes, screenshots at every major stage, and final export hash. English UI and application-
+authored prompt segments contain no unexpected Han after exact verified tokens are stripped;
+verbatim story data remains unchanged. Any console exception, unexpected 4xx/5xx, missing job, or
+unexplained network failure fails the run.
+
+- [ ] **Step 4: Repeat the complete flow in Vietnamese and Chinese**
+
+Repeat the same new-project-to-export scenario, inputs, selected models/modes, and assertions in `vi`
+and `zh`, not merely a critical-path smoke test. Vietnamese UI/payload authored prose has no
+unexpected Han and uses the `Chapter|Episode` default; Chinese retains its `第…章/回/节` default and
+Chinese authored behavior. AI Regex detects headings that differ from UI/prompt language. All three
+retain identical persisted mode IDs/model-map keys and produce a real export.
+
+For every locale, verify the exported file exists outside temporary browser state, is nonempty,
+opens in a media probe/player, contains decodable audio/video streams expected by the project, and
+has duration within the documented tolerance of the assembled timeline. Record probe output,
+duration, file size, SHA-256, and a playback screenshot. This approval-gated three-locale flow owns
+and is the only completion evidence for roadmap Gate F.
+
+- [ ] **Step 5: Finalize evidence and inspect status**
+
+Write a deterministic manifest linking locale, app/source commit, provider/config fingerprint,
+prompt/template/token-builder hashes, job IDs, sanitized request/response hashes, input/output asset
+hashes, screenshots, console/network logs, media-probe results, export hash, and evaluator outcome.
+Rehash every artifact and fail on missing/tampered evidence. Never include secrets or bearer tokens.
 
 ```bash
 git status --short
@@ -731,4 +760,5 @@ git log --oneline -12
 Expected: only intended files/commits; pre-existing `.gstack/` remains untouched.
 
 The shared `i18n:ci` quality job and web-provenance check are mandatory packaging gates; do not
-waive either because of unrelated failures.
+waive either because of unrelated failures. Gate F additionally requires the approved real-provider
+manifest and playable exports for all three locales.

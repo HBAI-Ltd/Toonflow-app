@@ -7,9 +7,10 @@
 **Architecture:** Store self-describing v2 JSON in the existing `o_storyboard.videoDesc TEXT` column.
 New agent writes are V2-only. Provenance-aware server ingestion handles legacy/manual strings before
 persistence, while old rows pass through explicit decoders for every known grammar or a read-only
-opaque representation. Single and batch generation share one JSON request builder and prompt
-resolver. The LLM returns structured semantics; TypeScript validates and deterministically renders
-the final three-part prompt.
+opaque representation. Single and batch generation share one row/prompt contract resolver that
+dispatches to V2 JSON, legacy-compat JSON, or byte-exact custom-legacy serialization. Output
+validation is contract-specific: V2 uses detailed structured semantics, compat uses a strict opaque
+projection result, and custom legacy preserves raw text.
 
 **Tech Stack:** TypeScript, Zod, Express, Knex/SQLite, Vitest, Markdown model prompts.
 
@@ -26,7 +27,9 @@ the final three-part prompt.
   server path; never expose string bypass in the agent tool schema.
 - Preserve `o_prompt.useData` and explicit locale-pinned/custom prompt bindings as byte-identical
   user-owned overrides with explicit `languagePolicy` and `promptInputContract` metadata.
-- Never interpolate `videoDesc` into XML attributes after Task 6.
+- Shipped V2 and compat paths never interpolate `videoDesc` into XML. Preserve the current XML-like
+  bytes only inside the quarantined `legacy-v1-custom` serializer for explicitly selected existing
+  `useData`/pinned/custom overrides until migration.
 - Do not hand-edit `data/serve/app.js`; regenerate it with `yarn build` after source verification.
 - Run the provider-literal harness only after explicit approval of the provider, credentials, and
   spend cap; final merge/release is blocked until evidence matches the active vendor/model/version/
@@ -39,7 +42,8 @@ the final three-part prompt.
 | `src/lib/videoDesc/schema.ts` | V2 schemas, types, ASCII enum vocabulary. |
 | `src/lib/videoDesc/legacy.ts` | Provenance-aware explicit decoders plus read-only opaque fallback. |
 | `src/lib/videoDesc/index.ts` | Deterministic serializer and v2-or-legacy parser. |
-| `src/lib/videoPrompt/input.ts` | Typed JSON request envelope shared by both routes. |
+| `src/lib/videoPrompt/input.ts` | Discriminated V2-JSON and legacy-compat-JSON builders. |
+| `src/lib/videoPrompt/legacyCustomSerializer.ts` | Golden byte-exact current request serializer for explicit legacy overrides. |
 | `src/lib/videoPrompt/providerTokens.ts` | Exact request-cardinality token builder per reference-capable model family. |
 | `src/lib/videoPrompt/output.ts` | Strict semantic output schema, validation, and deterministic renderer. |
 | `src/agents/productionAgent/tools.ts` | Accept V2 objects only and serialize at the socket boundary. |
@@ -71,7 +75,7 @@ the final three-part prompt.
 export const VIDEO_DESC_V2_SCHEMA = "toonflow.video-desc/v2" as const;
 export type ShotSize = "extreme-wide" | "long-shot" | "wide" | "medium" | "medium-close" | "close-up" | "extreme-close-up";
 export type CameraMovement = "static" | "push-in" | "pull-back" | "pan" | "truck" | "tracking" | "follow" | "whip-pan" | "crane" | "orbit" | "high-angle" | "low-angle" | "handheld" | "one-take";
-export type VideoDescParseErrorCode = "INVALID_JSON" | "INVALID_V2" | "UNSUPPORTED_LEGACY_FORMAT" | "LEGACY_FIELD_COUNT" | "LEGACY_INVALID_DURATION" | "LEGACY_INVALID_SHOT_NUMBER" | "DURATION_MISMATCH" | "DUPLICATE_SOURCE_ROW" | "NON_MONOTONIC_SOURCE_ROW" | "REFERENCE_DUPLICATE_ID" | "REFERENCE_UNKNOWN_ASSET" | "REFERENCE_NAME_MISMATCH" | "REFERENCE_NOT_ASSOCIATED" | "REFERENCE_WRONG_PROJECT" | "DIALOGUE_SPEAKER_NOT_REFERENCED";
+export type VideoDescParseErrorCode = "INVALID_JSON" | "INVALID_V2" | "UNSUPPORTED_LEGACY_FORMAT" | "LEGACY_FIELD_COUNT" | "LEGACY_INVALID_DURATION" | "LEGACY_INVALID_SHOT_NUMBER" | "DURATION_MISMATCH" | "DUPLICATE_SOURCE_ROW" | "NON_MONOTONIC_SOURCE_ROW" | "SINGLE_SHOT_CARDINALITY" | "STORYBOARD_ASSISTED_CARDINALITY" | "REFERENCE_DUPLICATE_ID" | "REFERENCE_UNKNOWN_ASSET" | "REFERENCE_NAME_MISMATCH" | "REFERENCE_NOT_ASSOCIATED" | "REFERENCE_WRONG_PROJECT" | "DIALOGUE_SPEAKER_NOT_REFERENCED";
 export type VideoDescParseResult =
   | { ok: true; value: VideoDescV2; source: "v2" }
   | { ok: true; value: VideoDescV2 | LegacyOpaqueSingleShot; source: "legacy"; legacyGrammar: LegacyGrammar }
@@ -139,6 +143,8 @@ it("returns DURATION_MISMATCH for duration mismatch", () => expectCode(JSON.stri
 it("returns UNSUPPORTED_LEGACY_FORMAT for an unknown alias", () => expectCode("该组分镜行原文：序号1 | desc | 3 | 未知景别 | 固定 | |", "UNSUPPORTED_LEGACY_FORMAT"));
 it("returns INVALID_V2 for an empty description", () => expectCode(JSON.stringify({ ...value, shots: [{ ...value.shots[0], description: "" }] }), "INVALID_V2"));
 it("returns INVALID_V2 for an unexpected top-level key", () => expectCode(JSON.stringify({ ...value, surprise: true }), "INVALID_V2"));
+it("returns SINGLE_SHOT_CARDINALITY for a single-shot without exactly one singular shot", () => expectCode(malformedSingleShot, "SINGLE_SHOT_CARDINALITY"));
+it("returns STORYBOARD_ASSISTED_CARDINALITY for missing reference or substituted detailed shots", () => expectCode(malformedStoryboardAssisted, "STORYBOARD_ASSISTED_CARDINALITY"));
 it("accepts fractional durations within epsilon", () => {
   const fractional = { ...value, groupDurationSeconds: 0.3, shots: [{ ...value.shots[0], sourceRow: 1, durationSeconds: 0.1 }, { ...value.shots[0], sourceRow: 2, durationSeconds: 0.2 }] };
   expect(parseStoredVideoDesc(serializeVideoDesc(fractional), v2Context)).toMatchObject({ ok: true, source: "v2", value: fractional });
@@ -203,6 +209,12 @@ opaque records expose neither duration nor detailed-shot arrays. Map custom Zod 
 `DURATION_MISMATCH`, `DUPLICATE_SOURCE_ROW`,
 `NON_MONOTONIC_SOURCE_ROW`, `SINGLE_SHOT_CARDINALITY`, `STORYBOARD_ASSISTED_CARDINALITY`,
 reference-integrity issue to the same public code; map every other Zod issue to `INVALID_V2`.
+
+Before generic union failure mapping, recognize malformed discriminants: a `single-shot` without
+exactly one singular `shot` maps to `SINGLE_SHOT_CARDINALITY`; a `storyboard-assisted` record without
+its exact current-item reference or with substituted detailed shots maps to
+`STORYBOARD_ASSISTED_CARDINALITY`. Keep every branch strict and test valid counterparts plus unknown
+keys.
 
 Validate reference IDs as positive and unique. At persistence and request preparation, require every
 reference to be a subset of `associateAssetsIds`, owned by the project, and an exact database
@@ -321,12 +333,14 @@ git commit -m "feat(video): emit videoDesc v2 from production agent"
 
 ---
 
-### Task 3: Build one canonical JSON request envelope
+### Task 3: Build contract-discriminated request serializers
 
 **Files:**
 
 - Create: `src/lib/videoPrompt/input.ts`
 - Create: `src/lib/videoPrompt/input.test.ts`
+- Create: `src/lib/videoPrompt/legacyCustomSerializer.ts`
+- Create: `src/lib/videoPrompt/legacyCustomSerializer.test.ts`
 
 **Interfaces:**
 
@@ -343,18 +357,49 @@ export interface VideoPromptInputV2 {
   }>;
 }
 
+export interface LegacyCompatPromptInputV1 {
+  contract: "toonflow.video-prompt-input/legacy-v1";
+  model: { name: string; mode: string };
+  rows: Array<{ storyboardId: number; provenance: LegacyGrammar | "manual-opaque"; rawOpaqueProjection: string }>;
+}
+
+export interface LegacyCustomPromptRequest {
+  contract: "toonflow.video-prompt-input/legacy-v1-custom";
+  bytes: string;
+}
+
+export interface LegacyCustomSerializerArgs {
+  labels: { model: string; assets: string; storyboard: string };
+  modelName: string;
+  references: readonly TrustedPromptReference[];
+  rows: ReadonlyArray<{ videoDesc: string; duration: string | number | null }>;
+}
+
+export interface TrustedPromptReference {
+  readonly id: number;
+  readonly projectId: number;
+  readonly type: "role" | "scene" | "prop" | "clip" | "audio";
+  readonly name: string;
+  readonly filePath: string;
+  readonly referenceRole: "visual-subject" | "visual-scene" | "visual-prop" | "video-reference" | "audio-reference";
+  readonly __trustedPromptReference: unique symbol;
+}
+
 export type VideoPromptInputErrorCode = VideoDescParseErrorCode | "MISSING_OUTER_DURATION" | "OUTER_DURATION_MISMATCH";
 export type BuildVideoPromptInputResult =
-  | { ok: true; value: VideoPromptInputV2; json: string }
+  | { ok: true; kind: "v2-json"; inputContract: "toonflow.video-prompt-input/v2"; value: VideoPromptInputV2; userMessage: string }
+  | { ok: true; kind: "legacy-compat-json"; inputContract: "toonflow.video-prompt-input/legacy-v1"; value: LegacyCompatPromptInputV1; userMessage: string }
+  | { ok: true; kind: "legacy-custom-bytes"; inputContract: "toonflow.video-prompt-input/legacy-v1-custom"; value: LegacyCustomPromptRequest; userMessage: string }
   | { ok: false; code: VideoPromptInputErrorCode; message: string; storyboardIndex?: number };
 
-export function buildVideoPromptInput(args: {
+export function buildV2PromptInput(args: {
   modelName: string;
   mode: string;
-  projectId: number;
-  assets: Array<{ id: number; type: "role" | "scene" | "prop" | "tool" | "clip" | "audio"; name: string; filePath: string; audioAssetId?: number }>;
+  references: readonly TrustedPromptReference[];
   storyboards: Array<{ id: number; videoDesc: string; duration: string | number | null; shouldGenerateImage: number | string | null; prompt: string | null; filePath: string | null; associateAssetsIds: number[] }>;
 }): BuildVideoPromptInputResult;
+export function buildLegacyCompatInput(args: { modelName: string; mode: string; rows: ParsedLegacyRow[] }): BuildVideoPromptInputResult;
+export function serializeLegacyCustomRequest(args: LegacyCustomSerializerArgs): BuildVideoPromptInputResult;
 ```
 
 - [ ] **Step 1: Write failing tests**
@@ -382,33 +427,47 @@ const recoverableValue: VideoDescV2 = {
 const equivalentV2 = serializeVideoDesc(recoverableValue);
 const legacyInput = { id: 7001, duration: 3, videoDesc: legacy, shouldGenerateImage: 0, prompt: null, filePath: null, associateAssetsIds: [102] };
 const baseArgs = {
-  projectId: 9,
   modelName: "seedance-2.0",
   mode: "text-multi-reference-group",
-  assets: [{ id: 102, type: "tool", name: "safe", filePath: "/fixtures/safe.png" }],
+  references: [trustedReference({ id: 102, projectId: 9, type: "prop", name: "safe", filePath: "/fixtures/safe.png", referenceRole: "visual-prop" })],
   storyboards: [legacyInput],
 };
 
 it("builds identical canonical recoverable projections for equivalent legacy and v2 rows", () => {
-  const oldResult = buildVideoPromptInput(baseArgs);
-  const v2Result = buildVideoPromptInput({ ...baseArgs, storyboards: [{ ...legacyInput, videoDesc: equivalentV2 }] });
+  const oldResult = buildV2PromptInput(baseArgs);
+  const v2Result = buildV2PromptInput({ ...baseArgs, storyboards: [{ ...legacyInput, videoDesc: equivalentV2 }] });
   expect(canonicalRecoverableProjection(oldResult)).toEqual(canonicalRecoverableProjection(v2Result));
 });
 it("documents legacy defaults and loss separately", () => {
-  expect(legacyCompatibilityLoss(buildVideoPromptInput(baseArgs))).toEqual({ scene: "absent", references: "outer-associations-only" });
+  expect(legacyCompatibilityLoss(buildV2PromptInput(baseArgs))).toEqual({ scene: "absent", references: "outer-associations-only" });
 });
 it("preserves storyboard order and special characters", () => {
   const first = serializeVideoDesc({ ...value, groupDurationSeconds: 3, carryOver: undefined, shots: [{ ...value.shots[0], description: "A says 'open | now <quietly>'" }] });
   const second = serializeVideoDesc({ ...value, groupDurationSeconds: 3, carryOver: undefined, shots: [{ ...value.shots[0], description: "B waits" }] });
-  const result = assertOk(buildVideoPromptInput({ ...baseArgs, storyboards: [{ ...legacyInput, videoDesc: first }, { ...legacyInput, id: 7002, videoDesc: second }] }));
-  expect(JSON.parse(result.json).storyboardGroups.map((group: any) => [group.storyboardId, group.videoDesc.shots[0].description])).toEqual([[7001, "A says 'open | now <quietly>'"], [7002, "B waits"]]);
+  const result = assertOk(buildV2PromptInput({ ...baseArgs, storyboards: [{ ...legacyInput, videoDesc: first }, { ...legacyInput, id: 7002, videoDesc: second }] }));
+  expect(JSON.parse(result.userMessage).storyboardGroups.map((group: any) => [group.storyboardId, group.videoDesc.shots[0].description])).toEqual([[7001, "A says 'open | now <quietly>'"], [7002, "B waits"]]);
 });
-it("returns the structured parser code with storyboardIndex", () => expect(buildVideoPromptInput({ ...baseArgs, storyboards: [{ ...legacyInput, id: 42, videoDesc: '{"schema":"toonflow.video-desc/v2"}' }] })).toMatchObject({ ok: false, code: "INVALID_V2", storyboardIndex: 0 }));
-it("returns MISSING_OUTER_DURATION for a text group with null duration", () => expect(buildVideoPromptInput({ ...baseArgs, storyboards: [{ ...legacyInput, id: 42, duration: null, videoDesc: equivalentV2 }] })).toMatchObject({ ok: false, code: "MISSING_OUTER_DURATION" }));
-it("returns OUTER_DURATION_MISMATCH for a text group duration mismatch", () => expect(buildVideoPromptInput({ ...baseArgs, storyboards: [{ ...legacyInput, id: 42, duration: 4, videoDesc: equivalentV2 }] })).toMatchObject({ ok: false, code: "OUTER_DURATION_MISMATCH" }));
-it("normalizes tool assets to prop", () => expect(JSON.parse(assertOk(buildVideoPromptInput(baseArgs)).json).assets[0].type).toBe("prop"));
-it("emits no XML or legacy marker prose", () => expect(assertOk(buildVideoPromptInput(baseArgs)).json).not.toMatch(/<storyboardItem|该组分镜行原文|序号1/));
+it("returns the structured parser code with storyboardIndex", () => expect(buildV2PromptInput({ ...baseArgs, storyboards: [{ ...legacyInput, id: 42, videoDesc: '{"schema":"toonflow.video-desc/v2"}' }] })).toMatchObject({ ok: false, code: "INVALID_V2", storyboardIndex: 0 }));
+it("returns MISSING_OUTER_DURATION for a text group with null duration", () => expect(buildV2PromptInput({ ...baseArgs, storyboards: [{ ...legacyInput, id: 42, duration: null, videoDesc: equivalentV2 }] })).toMatchObject({ ok: false, code: "MISSING_OUTER_DURATION" }));
+it("returns OUTER_DURATION_MISMATCH for a text group duration mismatch", () => expect(buildV2PromptInput({ ...baseArgs, storyboards: [{ ...legacyInput, id: 42, duration: 4, videoDesc: equivalentV2 }] })).toMatchObject({ ok: false, code: "OUTER_DURATION_MISMATCH" }));
+it("emits no XML or legacy marker prose", () => expect(assertOk(buildV2PromptInput(baseArgs)).userMessage).not.toMatch(/<storyboardItem|该组分镜行原文|序号1/));
 ```
+
+Add separate fixtures for the other success branches. `buildLegacyCompatInput()` returns canonical
+JSON with `contract: "toonflow.video-prompt-input/legacy-v1"`, ordered provenance, and byte-identical
+`rawOpaqueProjection`; it never returns a V2 group. `serializeLegacyCustomRequest()` returns the
+current XML-like bytes under `contract: "toonflow.video-prompt-input/legacy-v1-custom"` and never
+returns compat JSON.
+
+Capture the current single and batch request bytes from `generateVideoPrompt.ts` and
+`batchGeneratePrompt.ts` before refactoring and lock them as golden fixtures. The serializer preserves
+the exact localized label values, model line, blank lines/indentation, filtered asset order and
+`[id,type,name audio:id ] ` formatting, ideographic-comma asset separator, storyboard order,
+implicit comma between mapped storyboard items, `<storyboardItem` line breaks, single-quoted
+`videoDesc`/`duration` attributes, raw values, and trailing whitespace. Existing `useData`, explicit
+locale-pinned, and custom `legacy-v1` prompts receive those identical bytes until explicitly
+migrated. Tests compare complete strings for one single and one multi-storyboard request; no parsed
+or normalized comparison is sufficient.
 
 - [ ] **Step 2: Implement parse-before-serialize behavior**
 
@@ -417,23 +476,21 @@ return `MISSING_OUTER_DURATION` when outer `duration` is null/non-numeric and
 `OUTER_DURATION_MISMATCH` when it differs from `groupDurationSeconds`; do not compare outer duration
 for units whose grammar lacks that invariant. Resolve storyboard-assisted `{ source: "current-item" }`
 to the outer id only in `resolvedStoryboardReference`. Return the first row-indexed error and
-normalize `tool -> prop`.
+preserve the trusted reference vocabulary supplied by Task 6.
 
-Validate every reference at this boundary: positive/unique ID, subset of `associateAssetsIds`,
-current-project ownership, exact database name/ID agreement, and speaker membership. Model visual
-images (`role`, `scene`, `prop`), `clip`/video, and audio with explicit roles and require an existing
-file for selected media. Seedance text multi-reference numbers only visual asset images, never
-storyboard images, clips, or audio; universal modes preserve supported image/video/audio roles. Add
-mixed-mode, cross-project, name mismatch, duplicate, non-associated, invalid speaker, and missing-file
-tests. Otherwise build the typed envelope and return `JSON.stringify(value)` as the only V2 user
-message serialization.
+The pure builders accept only branded `TrustedPromptReference` values and perform deterministic
+schema/order/serialization checks. They do not receive `projectId`, selection IDs, raw DB rows, or
+client-supplied names/paths and cannot claim ownership/file validation. Seedance text multi-reference
+numbers only trusted visual asset images, never storyboard images, clips, or audio; universal modes
+preserve supported trusted image/video/audio roles. The async Task 6 service owns all lookup and
+integrity checks before invoking these builders.
 
 - [ ] **Step 3: Verify and commit**
 
 ```bash
-yarn vitest run src/lib/videoPrompt/input.test.ts
-git add src/lib/videoPrompt
-git commit -m "feat(video): build canonical video prompt envelope"
+yarn vitest run src/lib/videoPrompt/input.test.ts src/lib/videoPrompt/legacyCustomSerializer.test.ts
+git add src/lib/videoPrompt/input.ts src/lib/videoPrompt/input.test.ts src/lib/videoPrompt/legacyCustomSerializer.ts src/lib/videoPrompt/legacyCustomSerializer.test.ts
+git commit -m "feat(video): add contract-specific prompt inputs"
 ```
 
 ---
@@ -649,7 +706,7 @@ Do not number storyboard images, `clip`/video, or audio; do not derive reference
 `storyboardGroups`; and do not use legacy `prompt`, `src`, or `shouldGenerateImage` fields as visual
 material. Universal modes retain the valid explicit image/video/audio reference roles.
 
-Flatten all groups in array order and each group's shots in `sourceRow` order. Assign one global
+For the four V2 template families, flatten all groups in array order and each group's shots in `sourceRow` order. Assign one global
 output ordinal (`Shot 1`, `Shot 2`, ...) so rows that restart at 1 in a later group remain unique.
 Retain `(groupIndex, sourceRow)` internally for traceability, but emit subject definitions and the
 style/constraint section only once for the complete prompt.
@@ -669,11 +726,25 @@ subject-definition part; one style part; global shot ordinals; and four ordered 
 test validates the authored contract, not nondeterministic LLM output. Provider/integration QA under
 the spend gate validates actual generated output.
 
-Require structured Zod/tool output with `subjectDefinitions`, ordered shot objects containing global
-ordinal/group index/source row/semantic text/dialogue, and `styleConstraints`. Validate exact shot
-count and order, unique traceability, and byte-identical dialogue; missing, extra, reordered, or
-altered output fails before DB update. `renderVideoPromptOutput()` deterministically emits the one
-three-part text prompt. The LLM supplies semantics but never controls final section structure.
+Define output validation per selected contract:
+
+- `video-prompt-input/v2` uses strict Zod/tool output with `subjectDefinitions`, ordered shot objects
+  containing global ordinal/group index/source row/semantic text/dialogue, and `styleConstraints`.
+  Validate exact shot count/order, traceability, and byte-identical dialogue; then
+  `renderVideoPromptOutput()` deterministically emits the three-part prompt.
+- Shipped `legacy-v1-compat` uses a separate strict schema
+  `{ prompt: nonempty string, rawOpaqueProjection: nonempty string }`. The projection must equal the
+  input bytes. This schema forbids and never fabricates `sourceRow`, dialogue, ordinals, subject
+  definitions, or detailed-shot guarantees.
+- Explicit custom/useData/pinned `legacy-v1` keeps current raw text output behavior: require only the
+  provider's nonempty text and persist it without either structured renderer. This warned override
+  is not validated as shipped authored prose.
+
+`selectVideoPromptOutputValidator(runtimePromptContract)` is exhaustive and fails on unknown or
+mismatched contracts. Tests exercise all three validators, both cross-validator directions, strict
+extra/missing compat fields, raw-projection byte mismatch, empty custom text, and an opaque Han row;
+they assert no opaque result contains fabricated `sourceRow` or dialogue and no DB update occurs on
+validation failure.
 
 - [ ] **Step 4: Verify and record the provider protocol before release**
 
@@ -752,6 +823,8 @@ git commit -m "feat(video): consume structured video prompt input"
 
 - Create: `src/services/videoPromptGeneration.ts`
 - Create: `src/services/videoPromptGeneration.test.ts`
+- Create: `src/repositories/videoPromptReferences.ts`
+- Create: `src/repositories/videoPromptReferences.test.ts`
 - Modify: `src/routes/production/workbench/generateVideoPrompt.ts`
 - Modify: `src/routes/production/workbench/generateVideoPrompt.test.ts`
 - Modify: `src/routes/production/workbench/batchGeneratePrompt.ts`
@@ -767,7 +840,7 @@ export async function prepareVideoPromptRequest(args: {
   info: Array<{ id: number; sources: "storyboard" | "assets" }>;
   promptLocale: Locale;
 }): Promise<
-  | { ok: true; request: { system: string; assistant: string; user: string; outputSchema: unknown }; rowContract: "legacy-v1" | "video-prompt-input/v2"; runtimePromptContract: "legacy-v1-compat" | "legacy-v1" | "video-prompt-input/v2"; overrideWarning?: string }
+  | { ok: true; request: { system: string; assistant: string; user: string; outputMode: "v2-structured" | "legacy-compat-structured" | "legacy-custom-raw" }; inputKind: "v2-json" | "legacy-compat-json" | "legacy-custom-bytes"; rowContract: "legacy-v1" | "video-prompt-input/v2"; runtimePromptContract: "legacy-v1-compat" | "legacy-v1" | "video-prompt-input/v2"; overrideWarning?: string }
   | { ok: false; code: VideoPromptInputErrorCode | "STORYBOARD_NOT_FOUND" | "PROMPT_TEMPLATE_NOT_FOUND" | "PROMPT_INPUT_CONTRACT_INCOMPATIBLE" | "MIXED_PROMPT_INPUT_CONTRACTS" | "REFERENCE_DUPLICATE_ID" | "REFERENCE_UNKNOWN_ASSET" | "REFERENCE_NAME_MISMATCH" | "REFERENCE_NOT_ASSOCIATED" | "REFERENCE_WRONG_PROJECT" | "DIALOGUE_SPEAKER_NOT_REFERENCED" | "REFERENCE_FILE_MISSING"; storyboardIndex?: number; storyboardIndices?: number[]; detail: string }
 >;
 ```
@@ -779,7 +852,8 @@ marker/pipe, leading/trailing-pipe Markdown rows, 12-field ideographic-comma, fi
 storyboard-assisted fixed text, and arbitrary manual edit. Detailed grammars that normalize
 losslessly build the V2 envelope; first/last free-form and opaque rows automatically use the new
 strict exact-locale `legacy-v1-compat` adapter. Assert each group appears once in order and neither V2 route emits
-XML, `join("，")`, or legacy marker prose. Task 6, not Task 1, is the first point at which the plan
+XML, `join("，")`, or legacy marker prose on shipped V2/compat paths. The explicit custom
+`legacy-v1` path instead matches Task 3's byte-exact XML-like golden serializer. Task 6, not Task 1, is the first point at which the plan
 may claim route-level read compatibility.
 
 Run the opaque/default route capture with `prompt_language=en`, `vi`, and `zh`; each selects only its
@@ -811,6 +885,18 @@ require a homogeneous contract, select shipped exact-locale `legacy-v1-compat` f
 fallback, and only then honor an explicitly selected compatible custom `legacy-v1` override with a
 warning. The locked recognition seed is never a runtime candidate.
 
+`loadTrustedPromptReferences({ projectId, selectedAssetIds, storyboards })` is the async ownership
+boundary. In one consistent snapshot/query transaction it loads selected assets and associations,
+checks positive/unique IDs, current-project ownership, exact persisted ID/name, subset of each
+storyboard's `associateAssetsIds`, speaker membership, supported modality, and required file
+existence, normalizes `tool -> prop`, then constructs the branded immutable trusted records consumed
+by the pure builders. The pure builders never query DB/storage or accept raw names/paths.
+
+Repository/service tests cover cross-project selection, wrong name/ID, missing file, duplicate ID,
+non-associated reference, invalid dialogue speaker, image/video/audio modality matrices, and storage
+lookup failure. Each returns its exact reference-integrity code before serializer/provider invocation;
+spies assert zero `Ai.*` calls and zero prompt DB updates.
+
 Route payload tests include Han-bearing verbatim names, descriptions, dialogue, carry-over, and
 sound effects; assert byte identity through the request and structured response while invocation
 occurs. A neighboring authored Han instruction must fail. Test every reference-integrity error code,
@@ -819,9 +905,9 @@ all strict unknown-key failures, mixed image/video/audio modes, and missing file
 - [ ] **Step 3: Verify and commit**
 
 ```bash
-yarn vitest run src/services/videoPromptGeneration.test.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.test.ts
+yarn vitest run src/repositories/videoPromptReferences.test.ts src/services/videoPromptGeneration.test.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.test.ts
 yarn lint
-git add src/services/videoPromptGeneration.ts src/services/videoPromptGeneration.test.ts src/routes/production/workbench/generateVideoPrompt.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.ts src/routes/production/workbench/batchGeneratePrompt.test.ts
+git add src/repositories/videoPromptReferences.ts src/repositories/videoPromptReferences.test.ts src/services/videoPromptGeneration.ts src/services/videoPromptGeneration.test.ts src/routes/production/workbench/generateVideoPrompt.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.ts src/routes/production/workbench/batchGeneratePrompt.test.ts
 git commit -m "refactor(video): centralize prompt request preparation"
 ```
 
@@ -834,7 +920,7 @@ git commit -m "refactor(video): centralize prompt request preparation"
 - [ ] **Step 1: Run focused and repository suites**
 
 ```bash
-yarn vitest run src/lib/videoDesc/videoDesc.test.ts src/lib/videoPrompt/input.test.ts src/lib/videoPrompt/providerTokens.test.ts src/lib/videoPrompt/output.test.ts src/lib/prompts/promptInputContract.test.ts src/lib/prompts/legacyVideoPromptCompat.test.ts src/agents/productionAgent/tools.test.ts src/routes/production/storyboard/videoDescIngestion.test.ts src/services/videoPromptGeneration.test.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.test.ts src/lib/prompts/index.test.ts src/lib/migrations/promptSeedSync.test.ts scripts/i18n-check-terms.test.ts scripts/i18n-capture-provider-evidence.test.ts scripts/i18n-check-provider-protocol.test.ts
+yarn vitest run src/lib/videoDesc/videoDesc.test.ts src/lib/videoPrompt/input.test.ts src/lib/videoPrompt/legacyCustomSerializer.test.ts src/lib/videoPrompt/providerTokens.test.ts src/lib/videoPrompt/output.test.ts src/lib/prompts/promptInputContract.test.ts src/lib/prompts/legacyVideoPromptCompat.test.ts src/agents/productionAgent/tools.test.ts src/routes/production/storyboard/videoDescIngestion.test.ts src/repositories/videoPromptReferences.test.ts src/services/videoPromptGeneration.test.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.test.ts src/lib/prompts/index.test.ts src/lib/migrations/promptSeedSync.test.ts scripts/i18n-check-terms.test.ts scripts/i18n-capture-provider-evidence.test.ts scripts/i18n-check-provider-protocol.test.ts
 yarn i18n:check-terms
 yarn i18n:check-provider-protocol
 yarn lint

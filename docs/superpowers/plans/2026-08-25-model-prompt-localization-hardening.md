@@ -150,10 +150,13 @@ replace all model instructions, tool descriptions/schema descriptions/results, m
 asset/storyboard/model labels, and fallback model text from `t(..., promptLocale)` to
 `tPrompt(..., promptLocale)`. Keep UI progress/log/HTTP errors on ordinary `t(..., locale)`.
 
-`scripts/i18n-audit-prompt-lookups.ts` uses the TypeScript compiler AST to discover every
-`u.Ai.Text(...)`, `u.Ai.Image(...)`, and `u.Ai.Video(...)` invocation in `src`, then traces each
+`scripts/i18n-audit-prompt-lookups.ts` uses the TypeScript compiler AST plus symbol/alias resolution
+to discover every model-client construction and terminal `.run()`, `.invoke()`, or `.stream()` call.
+It covers direct members (`u.Ai.Text(...)`), aliased imports/objects, destructured constructors,
+computed members (`u.Ai[aiTypeFn[type]](...)`), constructor-to-terminal chains, optional/parenthesized
+access, and variables/fields that hold a model client before later invocation. It then traces each
 argument, template segment, tool description/schema/result, helper return, imported prompt value,
-and literal or `t()`/`tPrompt()` call that can flow into it. The generated inventory is exact and
+and literal or `t()`/`tPrompt()` call that can flow into the terminal call. The generated inventory is exact and
 sorted by file/span; every segment must be classified as `instruction`, `protocol`, or
 `verbatim-data`. Any unclassified literal or catalog call is a hard failure. This discovery must
 include current non-route omissions such as `src/utils/cleanNovel.ts`,
@@ -164,7 +167,11 @@ UI progress, log, and HTTP-error text nested in a model call graph stays on ordi
 with an immediately leading `// prompt-ui-only: <reason>` annotation, and the audit proves that the
 annotated value does not reach a model argument. Tests cover renamed variables, aliased/imported
 helpers, module-scope builders, inline `await getPromptLanguage()`, each of the three AI families,
-an unclassified literal, and an unclassified `t()` call. The companion catalog-completeness test
+and an unclassified literal/catalog call. Exact regression fixtures include the current
+`vendorConfig/modelTest.ts` computed dispatch `u.Ai[aiTypeFn[type]](...).run(...)`, an aliased
+constructor, a destructured constructor, `const client = u.Ai.Text(...); await client.invoke(...)`,
+and a client passed through one local helper. Each must be discovered; a prompt segment flowing into
+any of them without classification fails. The companion catalog-completeness test
 collects literal `tPrompt` keys plus declared dynamic key maps and asserts non-empty `en`, `vi`, and
 `zh` values. Route/payload tests migrate every discovered authored segment to exact locale.
 

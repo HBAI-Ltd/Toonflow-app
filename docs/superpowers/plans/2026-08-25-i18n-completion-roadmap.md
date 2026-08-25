@@ -31,7 +31,9 @@ This roadmap coordinates three independently reviewable implementation plans und
      and the opaque manual-edit case; it does not claim route-level compatibility. Tasks 2–6 then
      land atomically, and Task 6's single/batch replay plus row-contract matrix is the route-level
      compatibility release gate.
-   - Add v2 parsing/writes, a canonical JSON envelope, rewritten Seedance/universal/Wan prompts, centralized routes, and quarantined legacy markers/seeds.
+   - Add V2 parsing/writes, contract-discriminated V2 JSON and compat JSON builders, the quarantined
+     byte-exact `legacy-v1-custom` serializer, rewritten Seedance/universal/Wan/compat prompts,
+     contract-specific output validators, centralized routes, and quarantined legacy markers/seeds.
 5. **Finish the full en/vi prompt corpus**
    - Model-prompt plan Task 7B after the provider protocol gate is verified.
    - Inventory every resolved `data/skills` and `data/modelPrompt` variant, translate all remaining application-authored Han prose, and eliminate the old blanket sidecar budget.
@@ -55,7 +57,10 @@ This roadmap coordinates three independently reviewable implementation plans und
      replace cover art.
 9. **Repeat end-to-end QA**
    - Web plan Task 7.
-   - Run the same medieval project-to-export flow in English, Vietnamese, and Chinese with a real configured provider.
+   - With explicit provider/credential/spend approval, run the same new Medieval manual-director
+     project from import/AI Regex through script, plan, storyboard, assets, prompt generation, real
+     media generation, final-editor export, media probe, and playback in English, Vietnamese, and
+     Chinese. Retain hashed screenshots, logs, provider/job evidence, and playable export artifacts.
 
 ## Review gates
 
@@ -76,12 +81,21 @@ This roadmap coordinates three independently reviewable implementation plans und
   `toonflow.video-prompt-input/v2`; the compat template advertises/receives only the explicitly
   versioned `toonflow.video-prompt-input/legacy-v1` envelope/raw opaque projection. Contract metadata
   and route payload tests reject either cross-pairing before invocation.
+  Explicit existing `useData`/pinned/custom legacy prompts alone receive the golden byte-exact
+  `toonflow.video-prompt-input/legacy-v1-custom` XML-like request until migration. V2 uses detailed
+  structured output; compat validates nonempty prompt plus byte-identical raw projection without
+  fabricated shot fields; custom legacy preserves current raw text output.
+  Project ownership/name/file/modality checks belong to the async shared repository/service; pure
+  serializers accept only trusted canonical references and cannot perform database validation.
 - Gate C: with explicit provider/credential/spend approval, run and record the protocol comparison for every reference-capable family (Seedance 2.0 and universal multi-reference). The final zero-Chinese prompt guarantee cannot merge/release while any selected syntax remains unverified.
 - Gate D: do not enable strict readers until the full required prompt corpus is complete.
 - Gate E: do not package a frontend bundle unless every subpatch reports a known old anchor patched,
   a known source-fixed shape verified, or an expected local extension injected. Different subpatches
   may report different allowed states; an unrecognized or contradictory shape within one subpatch fails.
-- Gate F: do not claim a final video pass with a no-op provider; QA must use a valid media provider and confirm the exported file is playable.
+- Gate F: owned by Web Task 7. Do not claim a final video pass with a no-op provider. The approval-
+  gated en/vi/zh creation-to-export run must use a valid configured media provider and record
+  console/network logs, sanitized provider/job/request/output hashes, screenshots, and final file
+  existence, nonzero size, SHA-256, decodable streams, duration tolerance, and playback evidence.
 - Gate G: provider tokens are authorized only by approval-gated harness artifacts whose active
   vendor/model/version/config fingerprint and template/token-builder hashes exactly match runtime.
   Each family may contain multiple composite-identity evidence entries; runtime selects exactly one.
