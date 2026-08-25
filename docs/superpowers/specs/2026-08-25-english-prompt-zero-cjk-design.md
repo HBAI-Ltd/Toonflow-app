@@ -124,18 +124,22 @@ export const cameraMovementSchema = z.enum([
   "one-take",
 ]);
 
-export const dialogueSchema = z.object({
-  kind: z.enum(["spoken", "inner-monologue", "voiceover", "none"]),
-  text: z.string(),
-  speakerAssetId: z.number().int().optional(),
+const assetReferenceSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string().min(1),
 }).strict();
 
-export const videoDescShotSchema = z.object({
+const dialogueSchema = z.object({
+  kind: z.enum(["spoken", "inner-monologue", "voiceover", "none"]),
+  text: z.string(),
+  speakerAssetId: z.number().int().positive().optional(),
+}).strict();
+
+const detailedShotSchema = z.object({
   sourceRow: z.number().int().positive(),
   description: z.string().min(1),
   scene: z.string().optional(),
-  assetNames: z.array(z.string()),
-  assetIds: z.array(z.number().int()),
+  assetReferences: z.array(assetReferenceSchema),
   durationSeconds: z.number().positive(),
   shotSize: shotSizeSchema,
   cameraMovement: cameraMovementSchema,
@@ -147,34 +151,32 @@ export const videoDescShotSchema = z.object({
   soundEffects: z.array(z.string()),
 }).strict();
 
-export const videoDescV2Schema = z.object({
-  schema: z.literal("toonflow.video-desc/v2"),
-  unit: z.enum([
-    "text-multi-reference-group",
-    "single-shot",
-    "storyboard-assisted",
-  ]),
-  groupDurationSeconds: z.number().positive(),
-  carryOver: z.object({ priorEndState: z.string().min(1) }).strict().optional(),
-  storyboardReference: z.object({ source: z.literal("current-item") }).strict().optional(),
-  shots: z.array(videoDescShotSchema).min(1),
-}).strict().superRefine((value, ctx) => {
-  const duration = value.shots.reduce((sum, shot) => sum + shot.durationSeconds, 0);
-  if (Math.abs(duration - value.groupDurationSeconds) > 1e-9) ctx.addIssue({ code: "custom", message: "DURATION_MISMATCH" });
-  const rows = value.shots.map((shot) => shot.sourceRow);
-  if (new Set(rows).size !== rows.length) ctx.addIssue({ code: "custom", message: "DUPLICATE_SOURCE_ROW" });
-  if (rows.some((row, index) => index > 0 && row <= rows[index - 1])) ctx.addIssue({ code: "custom", message: "NON_MONOTONIC_SOURCE_ROW" });
-  if (value.unit === "single-shot" && value.shots.length !== 1) ctx.addIssue({ code: "custom", message: "SINGLE_SHOT_CARDINALITY" });
-  if (value.unit === "storyboard-assisted" && (value.shots.length !== 1 || !value.storyboardReference)) {
-    ctx.addIssue({ code: "custom", message: "STORYBOARD_ASSISTED_CARDINALITY" });
-  }
-  if (value.unit === "text-multi-reference-group" && value.storyboardReference) {
-    ctx.addIssue({ code: "custom", message: "TEXT_MODE_FORBIDS_STORYBOARD_REFERENCE" });
-  }
-  if (value.unit === "single-shot" && value.storyboardReference) {
-    ctx.addIssue({ code: "custom", message: "SINGLE_SHOT_FORBIDS_STORYBOARD_REFERENCE" });
-  }
-});
+export const videoDescV2Schema = z.discriminatedUnion("unit", [
+  z.object({
+    schema: z.literal("toonflow.video-desc/v2"),
+    unit: z.literal("text-multi-reference-group"),
+    groupDurationSeconds: z.number().positive(),
+    carryOver: z.object({ priorEndState: z.string().min(1) }).strict().optional(),
+    shots: z.array(detailedShotSchema).min(1),
+  }).strict(),
+  z.object({
+    schema: z.literal("toonflow.video-desc/v2"),
+    unit: z.literal("single-shot"),
+    shot: detailedShotSchema,
+  }).strict(),
+  z.object({
+    schema: z.literal("toonflow.video-desc/v2"),
+    unit: z.literal("storyboard-assisted"),
+    storyboardReference: z.object({ source: z.literal("current-item") }).strict(),
+    guidance: z.string().optional(),
+  }).strict(),
+]);
+
+export const legacyOpaqueSingleShotSchema = z.object({
+  unit: z.literal("legacy-opaque-single-shot"),
+  raw: z.string().min(1),
+  readOnly: z.literal(true),
+}).strict();
 ```
 
 `description`, names, dialogue, sound effects, and carry-over values are data and may use any
@@ -191,21 +193,23 @@ export type VideoDescParseErrorCode =
   | "LEGACY_FIELD_COUNT"
   | "LEGACY_INVALID_DURATION"
   | "LEGACY_INVALID_SHOT_NUMBER"
+  | "REFERENCE_DUPLICATE_ID"
+  | "REFERENCE_UNKNOWN_ASSET"
+  | "REFERENCE_NAME_MISMATCH"
+  | "REFERENCE_NOT_ASSOCIATED"
+  | "REFERENCE_WRONG_PROJECT"
+  | "DIALOGUE_SPEAKER_NOT_REFERENCED"
   | "DURATION_MISMATCH"
   | "DUPLICATE_SOURCE_ROW"
-  | "NON_MONOTONIC_SOURCE_ROW"
-  | "SINGLE_SHOT_CARDINALITY"
-  | "STORYBOARD_ASSISTED_CARDINALITY"
-  | "TEXT_MODE_FORBIDS_STORYBOARD_REFERENCE"
-  | "SINGLE_SHOT_FORBIDS_STORYBOARD_REFERENCE";
+  | "NON_MONOTONIC_SOURCE_ROW";
 export interface VideoDescParseError { code: VideoDescParseErrorCode; message: string; }
 export type VideoDescParseResult =
-  | { ok: true; value: VideoDescV2; source: "v2" | "legacy" }
+  | { ok: true; value: VideoDescV2 | z.infer<typeof legacyOpaqueSingleShotSchema>; source: "v2" | "legacy"; grammar: string }
   | { ok: false; error: VideoDescParseError };
 
 export function serializeVideoDesc(value: VideoDescV2): string;
-export function parseStoredVideoDesc(raw: string): VideoDescParseResult;
-export function decodeLegacyVideoDesc(raw: string): VideoDescParseResult;
+export function parseStoredVideoDesc(raw: string, context: LegacyDecodeContext): VideoDescParseResult;
+export function decodeLegacyVideoDesc(raw: string, context: LegacyDecodeContext): VideoDescParseResult;
 ```
 
 The serializer constructs a canonical object with a fixed top-level, shot, and dialogue property
@@ -214,10 +218,19 @@ produce byte-identical compact JSON. No database schema change is required. The 
 the only runtime module allowed to contain `承接上镜：`,
 `该组分镜行原文：`, `序号`, and `音效：`.
 
-The decoder normalizes Chinese, English, and Vietnamese aliases for shot size, camera movement,
-dialogue kind, and no-dialogue values into the ASCII enums. It returns typed errors for an invalid
-duration, missing cells, duplicate/non-monotonic shot numbers, empty descriptions, or unsupported
-closed vocabulary. It never asks the LLM to repair malformed structure.
+Parsing is provenance/context-aware. `LegacyDecodeContext` includes route/source, generation `mode`,
+outer duration, `shouldGenerateImage`, prompt/image availability, associated asset IDs, and project
+id. Explicit decoders cover captured marker/pipe `序号N` groups, numeric Markdown table rows with
+leading/trailing pipes, 12-field ideographic-comma single shots, first/last free-form text, and the
+storyboard-assisted fixed text `参考故事板内容进行视频生成`. Arbitrary strings accepted by
+`editStoryboardInfo.ts` become read-only `legacy-opaque-single-shot`; they are never guessed into
+detailed fields or emitted as V2 by the agent. Read compatibility is not claimed until real captured
+fixtures for every family pass route-level replay.
+
+The decoder normalizes Chinese, English, and Vietnamese aliases only when a known grammar supplies
+that field. It returns typed errors for invalid duration, missing cells, duplicate/non-monotonic shot
+numbers, empty descriptions, unsupported closed vocabulary, and reference-integrity failures. It
+never asks the LLM to repair malformed structure and never invents absent fields.
 
 The alias table must preserve distinctions present in source data: `大远景/大全景 -> extreme-wide`,
 `远景 -> long-shot`, `全景 -> wide`, `中景 -> medium`, `中近景/近景 -> medium-close`,
@@ -226,7 +239,9 @@ The alias table must preserve distinctions present in source data: `大远景/�
 `升降`, `环绕`, `手持微晃`, and `一镜到底` without collapsing an unsupported value silently.
 
 Map a Zod custom issue whose message is one of the public semantic codes to that exact code; map
-all other schema issues to `INVALID_V2`. The agent can declare only
+all other schema issues to `INVALID_V2`. All schemas are strict. `assetReferences` replaces parallel
+arrays: IDs are positive and unique, names exactly match current-project database rows, references
+are a subset of `associateAssetsIds`, and each dialogue speaker is a referenced role. The agent can declare only
 `storyboardReference: { source: "current-item" }` because the database id does not exist until the
 tool persists the row. Prompt preparation resolves that discriminant against the outer storyboard
 record; non-storyboard units forbid the field.
@@ -241,14 +256,16 @@ export interface VideoPromptInputV2 {
   model: { name: string; mode: string };
   assets: Array<{
     id: number;
-    type: "role" | "scene" | "prop" | "audio";
+    type: "role" | "scene" | "prop" | "clip" | "audio";
     name: string;
+    referenceRole: "visual-subject" | "visual-scene" | "visual-prop" | "video-reference" | "audio-reference";
+    filePath: string;
     audioAssetId?: number;
   }>;
   storyboardGroups: Array<{
     storyboardId: number;
     duration: number | null;
-    videoDesc: VideoDescV2;
+    videoDesc: VideoDescV2; // opaque legacy text is served only through the legacy-v1 adapter
     resolvedStoryboardReference?: { storyboardId: number };
   }>;
 }
@@ -259,10 +276,11 @@ export type BuildVideoPromptInputResult =
   | { ok: false; code: VideoPromptInputErrorCode; message: string; storyboardIndex?: number };
 
 export function buildVideoPromptInput(args: {
+  projectId: number;
   modelName: string;
   mode: string;
-  assets: Array<{ id: number; type: "role" | "scene" | "prop" | "tool" | "audio"; name: string; audioAssetId?: number }>;
-  storyboards: Array<{ id: number; videoDesc: string; duration: string | number | null }>;
+  assets: Array<{ id: number; type: "role" | "scene" | "prop" | "tool" | "clip" | "audio"; name: string; filePath: string; audioAssetId?: number }>;
+  storyboards: Array<{ id: number; videoDesc: string; duration: string | number | null; shouldGenerateImage: number | string | null; prompt: string | null; filePath: string | null; associateAssetsIds: number[] }>;
 }): BuildVideoPromptInputResult;
 ```
 
@@ -275,8 +293,11 @@ Single and batch routes must share one repository/service function for:
 5. validating the returned model prompt.
 
 This removes XML attribute injection and accidental comma-joining of `storyboard.map(...)`.
-The route normalizes legacy `tool` assets to canonical `prop`; the Seedance template renders
-`prop` as its provider-facing `tool` vocabulary only at the model boundary.
+The route normalizes legacy `tool` assets to canonical `prop` and validates file presence plus
+project ownership. Visual image assets (`role`, `scene`, `prop`), `clip`/video, and audio all retain
+explicit reference roles. Seedance text multi-reference numbers only visual asset images; it never
+numbers storyboard images, clips, or audio. Universal modes retain their valid image, video, and
+audio reference roles. Mixed-modality and missing-file tests cover each mode.
 
 Each stored storyboard input includes its outer `id` and `duration`. For a text-multi-reference
 group, missing/non-numeric duration returns `MISSING_OUTER_DURATION`; a numeric mismatch returns
@@ -286,12 +307,20 @@ outer record's id in `resolvedStoryboardReference` after persistence.
 
 ## 6. Seedance output contract
 
-The prompt generator receives every `storyboardGroups[].videoDesc` and emits one prompt with exactly
-three semantic parts:
+The prompt generator receives every `storyboardGroups[].videoDesc` and returns strict structured
+Zod/tool output, not the final free-form string:
 
-1. subject/reference definitions;
-2. optional carry-over data once, followed by every shot in `sourceRow` order;
-3. style and constraints.
+1. `subjectDefinitions`;
+2. ordered shot objects containing global ordinal, group index, source row, semantic text, and
+   dialogue;
+3. `styleConstraints`.
+
+The service validates exact shot count, global ordering, `(groupIndex, sourceRow)` traceability, and
+byte-identical dialogue preservation. Missing, extra, or reordered shots and omitted/changed
+dialogue fail before any DB update. A deterministic renderer then produces the one final prompt in
+exactly three semantic parts: subject/reference definitions; optional carry-over once plus all
+shots; and style/constraints. The LLM remains responsible for semantic compression, while TypeScript
+owns structure and final rendering.
 
 `sourceRow` may restart inside each group. The output assigns one global ordinal across the flattened
 group/row order (`Shot 1`, `Shot 2`, ...); tests also retain `(groupIndex, sourceRow)` metadata so
@@ -363,6 +392,11 @@ Resolution policy:
 - A missing required prompt translation throws before model invocation. The API returns a
   `content_language`-localized operational error naming the missing file/key.
 
+`MissingPromptTranslationError` and `MissingPromptLocaleFileError` have one centralized mapping at
+HTTP, agent/socket, and background-task boundaries. HTTP returns a typed localized 4xx; tools return
+a localized tool failure without scheduling work; background tasks persist a terminal localized
+failure. All three paths are tested to stop before provider invocation and avoid partial writes.
+
 `tPrompt` requires the exact selected locale: `en -> en`, `vi -> vi`, and `zh -> zh`. A missing
 entry fails before model invocation rather than silently changing the prompt language.
 
@@ -379,10 +413,13 @@ type PromptSegmentKind = "instruction" | "protocol" | "verbatim-data";
   current request's reference cardinality.
 - `verbatim-data`: not translated or scanned as application prose.
 
-Tests capture the actual payload passed to `Ai.Text().invoke()` or `Ai.Image().run()` and use ASCII
-sentinels for dynamic data. Static checks validate shipped templates and application-authored
-wrappers. Sampled provider QA evaluates generated output; this design does not attempt to infer
-provenance or reject mixed-language free-form model output at runtime.
+Tests capture the actual payload passed to `Ai.Text().invoke()`, `Ai.Image().run()`, or video-model
+invocation. Fixtures include Han-bearing verbatim names, descriptions, dialogue, carry-over, and
+sound effects and assert byte identity plus invocation; neighboring authored Han instructions still
+fail. ASCII sentinels remain useful for shell isolation but are not the only data fixtures. Static
+checks validate shipped templates and application-authored wrappers. Sampled provider QA evaluates
+generated output; this design does not infer provenance or reject mixed-language free-form model
+output at runtime.
 
 Fixed translation/legacy policy stays in `docs/i18n/prompt-terms.json`. Provider evidence is stored
 separately in `docs/i18n/provider-protocol.json`; a typed runtime builder enumerates complete tokens
@@ -392,6 +429,14 @@ markers are `legacy-decode-only` and may occur only in `src/lib/videoDesc/legacy
 fixtures. Stored database enums do not enter prompts.
 
 `i18n-ignore` is not sufficient for model-facing prompt prose.
+
+The callsite audit discovers every `u.Ai.Text`, `u.Ai.Image`, and `u.Ai.Video` invocation through the
+TypeScript AST and traces all authored segments that flow into it. Every literal and `t()`/`tPrompt()`
+call must be classified; there is no hand-maintained scope list. The inventory includes helpers such
+as `src/utils/cleanNovel.ts`, `src/routes/setting/agentDeploy/agentSetKey.ts`, and vendor model-test
+routes. UI/log/error text may use ordinary `t()` only under an explicit `prompt-ui-only` annotation
+whose non-flow into model arguments is verified. `findUnexpectedHan()` returns `string[]`
+everywhere; an empty array means clean.
 
 ## 9. Remaining model prompts and medieval skills
 
@@ -411,6 +456,20 @@ budget cannot satisfy the final gate.
 
 Model-facing readers switch to `readPromptSkill`; UI/manual viewers may retain graceful fallback.
 
+Packaged strict readers require a safe corpus installer first. A versioned shipped-content manifest
+hashes every `data/skills` and `data/modelPrompt` file. Fresh install provisions both trees. Upgrade
+overwrites or deletes a shipped path only when the destination still matches its previous shipped
+hash; modified shipped files and custom files are preserved. Backup/recovery metadata is written
+before atomic changes. Tests cover fresh install, untouched upgrade, modified skill, custom prompt,
+removed shipped file, retained modified removal, and injected-failure recovery. The installer never
+force-deletes the installed `skills` or `modelPrompt` tree.
+
+Prompt bindings declare `languagePolicy: "shipped-strict" | "pinned-locale" | "custom-unscoped"`
+and a versioned `promptInputContract`. Only shipped files use strict source maps. Explicit
+locale-pinned custom files and unsuffixed custom prompts remain byte-identical user overrides and
+never pass through shipped-only source-locale rejection. Backend list/binding/generation tests and
+localized web badges/warnings cover all policies.
+
 ## 10. Frontend and production workflow ownership
 
 The maintainable fix belongs in Toonflow-web source. Until that source fix is released, this repo
@@ -427,6 +486,12 @@ The release patch covers:
 - Model Mapping stable row keys/type labels;
 - measured production-node re-layout after content resize.
 
+Reflow is serialized or guarded by a monotonically increasing generation token. Every async
+`nextTick`/dimension-stabilization/`fromObject` continuation verifies it is still the newest
+generation before writing. Stabilization timeout is caught and reported without an unhandled
+rejection. Fake-timer/deferred-promise tests prove rapid plan/table saves cannot let an older reflow
+overwrite a newer one and timeout leaves the latest saved graph intact.
+
 Every bundle sub-patch validates all anchor cardinalities before writing. A second run is byte
 identical. Chinese locale output remains unchanged. The build/release process runs the patch suite
 in a fixed order; merely changing a patch script without regenerating `data/web/index.html` is a
@@ -434,6 +499,11 @@ failed release.
 
 Backend hardening adds a stable Model Mapping `key` and corrects the inverse `findIndex` predicate
 in `upVendorModel.ts`. Director cover artwork becomes text-free so one asset works in every locale.
+
+The companion Toonflow-web source PR lands before this repository imports its bundle. A committed
+provenance manifest records the exact upstream repository URL, source commit SHA, build command, and
+SHA-256 of `dist/index.html`; CI verifies the imported `data/web/index.html` against that source
+artifact before packaging.
 
 Merged PR #15 remains a separate, intentional boundary: the batch-import UI chooses its editable
 default chapter regex from the interface locale, while `/script/getAiRegex` uses `prompt_language`
@@ -443,22 +513,38 @@ role in decoding `videoDesc`.
 
 ## 11. Compatibility and rollout
 
-1. Land prompt/manifest primitives, then complete the medieval canonical-English plus Vi/Zh corpus.
+1. Land prompt/manifest primitives, arbitrary-source-locale sidecar/glossary validators, localized
+   failure mapping, and the hash-aware packaged-corpus installer; then complete the medieval
+   canonical-English plus Vi/Zh corpus.
 2. Ship the v2 parser and legacy decoder alone; it changes no writes or model requests.
 3. Release producer writes, route normalization, JSON envelopes, rewritten templates, and guarded
    seed recognition atomically. A producer must never write v2 JSON while the active template still
    expects the old marker/pipe grammar.
-4. Keep known old English seed variants in `promptSeedSync` so untouched installs upgrade; never
-   overwrite `useData`, hand-edited seed text, or an explicit locale-pinned model prompt.
+4. Before rewriting templates, extract the locked legacy English seed byte-identically from pinned
+   base SHA `8c8c2e917ce714b18dd588ba13d6553a99e6a71b` and verify length `37851` plus SHA-256
+   `9fc6b347e12977d89cf3798fae89b2182b9f636584e9d913021391633ca7fa6a`. Keep known old
+   variants in `promptSeedSync`; never overwrite `useData`, hand-edited seed text, or a pinned/custom
+   model prompt.
 5. Adopt strict readers and tighten scanners only after all required sidecars/templates exist.
 6. Apply and verify frontend patches, then run the end-to-end QA flow in `en`, `vi`, and `zh`.
 
 No destructive bulk database rewrite is required. Existing rows decode on read. A later background
 backfill may rewrite only rows successfully decoded from a known legacy grammar.
 
-Explicit user overrides are an exception to the shipped-prompt guarantee. If a user pins a Chinese
-model-prompt file or edits `o_prompt.useData`, the UI must label it as a custom/pinned override;
-strict mode may warn or reject it, but migration must not overwrite it silently.
+Prompt input contracts are versioned. Existing `o_prompt.useData`, existing pinned files, and custom
+prompts default to `legacy-v1` and always receive the legacy adapter; they must never silently receive
+the V2 JSON envelope. V2 rows require a V2-capable prompt or return a localized incompatibility error
+before invocation. Shipped rewritten templates declare `video-prompt-input/v2`. Migration preview
+and upgrade tests show each binding's policy/contract and preserve overrides byte-identically.
+
+Provider evidence comes only from an approval-gated executable harness. For every reference-capable
+family and every selected provider/model, it stores the exact request, input asset hashes, seed,
+provider response/output artifacts, evaluator result, and hashes of all artifacts. Runtime token
+selection receives the active vendor/model/version/config fingerprint and fails closed unless it
+exactly matches evidence. Evidence staleness is deterministic: any identity, config, template, or
+token-builder hash mismatch invalidates it. `verifiedAt` is ISO audit metadata, not a wall-clock
+expiry. Evidence for one family/configured model never authorizes another; tamper and mismatch tests
+cover every field.
 
 ## 12. Acceptance criteria
 
@@ -469,8 +555,11 @@ strict mode may warn or reject it, but migration must not overwrite it silently.
   exact tokens generated for that request.
 - The old Chinese `videoDesc` markers exist only in the legacy decoder, compatibility fixtures,
   the Chinese locale, and registry history.
-- A legacy record and its equivalent v2 record build byte-identical JSON prompt input.
-- All sub-shots from one group reach one LLM request and one three-part Seedance output contract.
+- Every captured historical grammar passes route-level replay. Legacy and V2 fixtures derived from
+  the same recoverable data have identical canonical recoverable projections; tests separately
+  assert documented defaults/loss for fields absent from legacy input.
+- All sub-shots from one group reach one LLM request; strict structured output preserves count,
+  order, traceability, and dialogue before deterministic three-part rendering.
 - Dialogue, names, and other verbatim user data remain unchanged.
 - Missing English/Vietnamese prompt translations fail before model invocation; there is no silent
   Chinese fallback.
@@ -482,9 +571,13 @@ strict mode may warn or reject it, but migration must not overwrite it silently.
 - English UI contains no raw keys or Chinese labels in the tested creation-to-export flow.
 - Manual production nodes do not overlap downstream controls after resize.
 - Model Mapping expands custom models without console exceptions.
+- Model Mapping labels all language policies and prompt-input compatibility; incompatible legacy/V2
+  bindings fail locally before provider invocation.
+- The imported frontend bundle's SHA-256 is verified against the exact companion source commit.
 - Existing Chinese locale behavior remains available.
-- `yarn lint`, the full test suite, strict prompt scan, sidecar/manifest/term/glossary gates, and
-  browser QA all pass.
+- `yarn i18n:ci` owns lint, full tests, manifest, sidecars, glossary, terms, provider evidence,
+  prompt-callsite audit, corpus inventory, and CJK scan; both debug (`master`) and release workflows
+  require it before packaging. Browser QA also passes.
 
 ## 13. Out of scope
 

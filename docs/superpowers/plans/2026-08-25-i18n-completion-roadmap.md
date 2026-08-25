@@ -14,16 +14,22 @@ This roadmap coordinates three independently reviewable implementation plans und
 ## Required execution order
 
 1. **Prompt and manifest foundations**
-   - Model-prompt plan Task 1 and Task 2 Steps 1–3.
-   - Establish `tPrompt`, the `sourceLocale` manifest schema, locale-neutral sidecar helpers, and strict generic/skill resolvers before any route adopts them.
+   - Model-prompt plan Tasks 1, 2, and 2B.
+   - Commit `tPrompt`, the `sourceLocale` manifest/schema, arbitrary-source-locale sidecar and
+     glossary validators, locale-neutral resolvers, localized boundary-error mapping, and the
+     hash-aware packaged prompt-corpus installer before any corpus or route PR depends on them.
+   - This foundation is a complete prerequisite commit. Do not run Medieval Task 7 with the old
+     validators that assume every canonical Markdown file is Chinese-origin.
 2. **Medieval locale corpus**
    - Model-prompt plan Task 7.
    - Keep the 15 canonical medieval files as English, add `.zh.md` sidecars, retain/update `.vi.md`, and remove Chinese style prose from the English/Vietnamese variants.
 3. **Prompt guards and localized route shells**
-   - Model-prompt plan Task 2 Step 4, followed by Tasks 3–5.
+   - Model-prompt plan Tasks 3–5.
    - Add closed provider-token checks and localize the six known hardcoded route wrappers only after their required corpus is available.
 4. **Structured video contract**
-   - Video plan Task 1 may land as read-only compatibility by itself. Tasks 2–6 then land atomically in one compatibility release.
+   - Video plan Task 1 may land as read-only compatibility only after route-level replay passes for
+     every captured historical grammar and the opaque manual-edit case. Tasks 2–6 then land
+     atomically in one compatibility release.
    - Add v2 parsing/writes, a canonical JSON envelope, rewritten Seedance/universal/Wan prompts, centralized routes, and quarantined legacy markers/seeds.
 5. **Finish the full en/vi prompt corpus**
    - Model-prompt plan Task 7B after the provider protocol gate is verified.
@@ -32,11 +38,18 @@ This roadmap coordinates three independently reviewable implementation plans und
    - Model-prompt plan Task 6.
    - Switch agents, model map, and workbench reads only after required locale files exist.
 7. **Turn warnings into CI gates**
-   - Model-prompt plan Task 8 (building on the Task 2 manifest foundation), Task 9, and Video plan Task 7.
-   - Run full manifest, sidecar, glossary, term, CJK, lint, test, and build checks.
-8. **Fix and import frontend source**
-   - Web plan Tasks 1–6.
-   - Land backend model-map contract, upstream Toonflow-web fixes, import the rebuilt bundle, retain guarded shims, and replace cover art.
+   - Model-prompt plan Task 8 (enabling full-tree enforcement from the already-landed foundation),
+     Task 9, and Video plan Task 7.
+   - Add the single `yarn i18n:ci` owner for lint, the full test suite, manifest, sidecars,
+     glossary, terms, provider evidence, prompt-callsite audit, prompt-corpus inventory, and CJK
+     scan. Update `.github/workflows/debug.yml` to target `master` and require that quality job;
+     update `.github/workflows/release.yml` so packaging depends on the same job.
+8. **Fix frontend source, then import it**
+   - Web plan Tasks 1–3 land in a companion Toonflow-web PR first. Record the exact upstream
+     repository and commit SHA and the SHA-256 of its built `dist/index.html` in a provenance
+     manifest.
+   - Only after that source commit is reviewable/landed may Web plan Tasks 4–6 import the bundle,
+     verify its artifact hash and origin in CI, retain guarded shims, and replace cover art.
 9. **Repeat end-to-end QA**
    - Web plan Task 7.
    - Run the same medieval project-to-export flow in English, Vietnamese, and Chinese with a real configured provider.
@@ -46,13 +59,23 @@ This roadmap coordinates three independently reviewable implementation plans und
 - Gate 0: never implement or commit on `master`. Create a fresh `codex/...` branch from the latest
   `origin/master`, keep the worktree isolated, and open a PR for review before merge.
 - Gate A: approve the prompt invariant and v2 types before any producer writes change.
-- Gate B: verify a legacy and v2 storyboard build identical JSON request envelopes.
+- Gate B: route-level replay every captured historical `videoDesc` family: marker/pipe `序号N`,
+  Markdown rows with leading/trailing pipes, 12-field ideographic-comma single shots, first/last
+  free-form text, storyboard-assisted fixed text, and arbitrary manual edits. Compare a legacy and
+  V2 record only when generated from the same recoverable normalized data; compare the canonical
+  recoverable projection and separately assert documented defaults/loss. Truly unstructured text
+  remains read-only `legacy-opaque-single-shot` and never fabricates absent fields.
 - Gate C: with explicit provider/credential/spend approval, run and record the protocol comparison for every reference-capable family (Seedance 2.0 and universal multi-reference). The final zero-Chinese prompt guarantee cannot merge/release while any selected syntax remains unverified.
 - Gate D: do not enable strict readers until the full required prompt corpus is complete.
 - Gate E: do not package a frontend bundle unless every subpatch reports a known old anchor patched,
   a known source-fixed shape verified, or an expected local extension injected. Different subpatches
   may report different allowed states; an unrecognized or contradictory shape within one subpatch fails.
 - Gate F: do not claim a final video pass with a no-op provider; QA must use a valid media provider and confirm the exported file is playable.
+- Gate G: provider tokens are authorized only by approval-gated harness artifacts whose active
+  vendor/model/version/config fingerprint and template/token-builder hashes exactly match runtime.
+  Evidence from one family or configured model never authorizes another.
+- Gate H: imported web bundles require an exact Toonflow-web repository/commit SHA plus built
+  artifact SHA-256; CI rebuilds or otherwise verifies that provenance before packaging.
 
 ## Deliverable boundaries
 
@@ -61,8 +84,10 @@ Each task ends in its own focused commit. Do not combine the video data contract
 1. strict prompt/manifest primitives, medieval corpus, and hardcoded route localization;
 2. videoDesc v2 compatibility plus the atomic prompt-template/route/seed cutover and verified provider protocol;
 3. complete en/vi prompt-corpus cleanup, strict reader adoption, and repository-wide gates;
-4. backend model-map, imported bundle, guarded compatibility patches, and text-free covers;
-5. a companion Toonflow-web source localization/layout PR in that repository.
+4. a companion Toonflow-web source localization/layout PR, including its exact source commit and
+   built-artifact provenance manifest;
+5. backend model-map, provenance-verified imported bundle, guarded compatibility patches, and
+   text-free covers, based on PR 4's exact commit.
 
 Recommended branch names:
 

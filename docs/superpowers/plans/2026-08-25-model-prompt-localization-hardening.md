@@ -12,7 +12,8 @@
 
 ## Global Constraints
 
-- Implement Tasks 1–5, Task 2, and medieval Task 7 on `codex/prompt-locale-foundation`. After the
+- Implement Tasks 1–5 (including prerequisite Task 2B) and medieval Task 7 on
+  `codex/prompt-locale-foundation`. After the
   video/provider PR merges, implement Tasks 7B, 6, 8, and 9 on a fresh
   `codex/prompt-corpus-zero-han`. Never work directly on `master`; push and open one PR per branch
   after its own verification.
@@ -25,7 +26,12 @@
 - Do not use broad file-level CJK exemptions, broad token fragments, or new `i18n-ignore` pragmas for prompt prose.
 - Preserve user/DB values byte-for-byte; route tests use ASCII sentinels to isolate authored wrappers.
 
-**Execution dependency:** follow the ordering in `2026-08-25-i18n-completion-roadmap.md`. In particular, establish the Task 2 manifest schema before using its strict reader, complete Task 7 before any production route adopts strict art/skill reads, complete Tasks 7 and 7B before Task 6, and complete the video-contract/provider-evidence plan before Task 7B and the final strict repository gates in Tasks 8–9.
+**Execution dependency:** follow the ordering in `2026-08-25-i18n-completion-roadmap.md`. In
+particular, commit Task 2's manifest/source-locale schema and source-locale-aware sidecar/glossary
+validators plus Task 2B's packaged-corpus installer before Medieval Task 7. Task 7 must never run
+the old canonical-Chinese validators. Complete Task 7 before any production route adopts strict
+art/skill reads, complete Tasks 7 and 7B before Task 6, and complete the video-contract/provider-
+evidence plan before Task 7B and the final full-tree gates in Tasks 8–9.
 
 ## File Structure
 
@@ -40,7 +46,9 @@
 | Six route families below | Locale-driven model prompt wrappers. |
 | `data/skills/**` | Explicit medieval en/vi/zh model-facing content. |
 | `data/skills/.i18n-manifest.json` | Source locale, hash, required prompt locales. |
+| `data/.shipped-content-manifest.json` | Versioned hashes for packaged `skills` and `modelPrompt` content. |
 | `scripts/i18n-*` | Hard CI gates for every translated sidecar. |
+| `.github/workflows/{debug,release}.yml` | Required shared `i18n:ci` quality gate before merge/package. |
 
 ---
 
@@ -128,17 +136,35 @@ replace all model instructions, tool descriptions/schema descriptions/results, m
 asset/storyboard/model labels, and fallback model text from `t(..., promptLocale)` to
 `tPrompt(..., promptLocale)`. Keep UI progress/log/HTTP errors on ordinary `t(..., locale)`.
 
-`scripts/i18n-audit-prompt-lookups.ts` uses the TypeScript compiler AST over an exported
-`MODEL_FACING_SCOPES` map of exact file plus function/method names (including module-scope prompt
-builders). Inside those scopes, any call bound to the ordinary `t` import fails regardless of its
-argument names or whether the locale is inline. The few UI-progress/log/HTTP-error calls nested in a
-model function require an immediately leading `// prompt-ui-only: <reason>` annotation; tests prove
-an unannotated `t(key, {}, locale)`, renamed parameter, and inline `await getPromptLanguage()` all
-fail, while an annotated UI-only call passes. Its companion catalog-completeness test collects
-literal `tPrompt` keys plus the declared dynamic key maps and asserts a non-empty value exists in
-`en`, `vi`, and `zh`.
+`scripts/i18n-audit-prompt-lookups.ts` uses the TypeScript compiler AST to discover every
+`u.Ai.Text(...)`, `u.Ai.Image(...)`, and `u.Ai.Video(...)` invocation in `src`, then traces each
+argument, template segment, tool description/schema/result, helper return, imported prompt value,
+and literal or `t()`/`tPrompt()` call that can flow into it. The generated inventory is exact and
+sorted by file/span; every segment must be classified as `instruction`, `protocol`, or
+`verbatim-data`. Any unclassified literal or catalog call is a hard failure. This discovery must
+include current non-route omissions such as `src/utils/cleanNovel.ts`,
+`src/routes/setting/agentDeploy/agentSetKey.ts`, and vendor model-test routes; do not maintain a
+handwritten scope allowlist.
 
-- [ ] **Step 5: Verify and commit**
+UI progress, log, and HTTP-error text nested in a model call graph stays on ordinary `t()` only
+with an immediately leading `// prompt-ui-only: <reason>` annotation, and the audit proves that the
+annotated value does not reach a model argument. Tests cover renamed variables, aliased/imported
+helpers, module-scope builders, inline `await getPromptLanguage()`, each of the three AI families,
+an unclassified literal, and an unclassified `t()` call. The companion catalog-completeness test
+collects literal `tPrompt` keys plus declared dynamic key maps and asserts non-empty `en`, `vi`, and
+`zh` values. Route/payload tests migrate every discovered authored segment to exact locale.
+
+- [ ] **Step 5: Map strict-read failures at every execution boundary**
+
+Add stable `content_language` catalog keys for `MissingPromptTranslationError` and
+`MissingPromptLocaleFileError`, including the requested prompt locale and safe relative path/key.
+Centralize mapping so HTTP routes return a typed 4xx response, agent/socket tools return a localized
+tool error without scheduling downstream work, and background/batch tasks persist a localized
+failure reason and terminal state. Tests for HTTP, agent/socket, and background-task boundaries
+assert the exact error code, localized message, no `Ai.*` invocation, and no partial DB/provider
+side effect. Do not leak absolute paths or silently fall back.
+
+- [ ] **Step 6: Verify and commit**
 
 ```bash
 yarn vitest run src/i18n/translate.test.ts src/lib/prompts/index.test.ts src/i18n/locale.test.ts src/routes/script/getAiRegex.test.ts src/routes/script/extractAssets.test.ts src/agents/scriptAgent/index.test.ts src/agents/scriptAgent/tools.test.ts src/agents/productionAgent/index.test.ts src/agents/productionAgent/tools.test.ts src/utils/agent/memory.test.ts src/utils/agent/skillsTools.test.ts src/routes/production/assets/batchGenerateAssetsImage.test.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.test.ts scripts/i18n-audit-prompt-lookups.test.ts
@@ -163,6 +189,10 @@ git commit -m "feat(i18n): add exact-locale model prompt translation"
 - Modify: `src/utils.ts`
 - Modify: `scripts/i18n-check-manifest.ts`
 - Modify: `scripts/i18n-check-manifest.test.ts`
+- Modify: `scripts/i18n-check-sidecars.ts`
+- Modify: `scripts/i18n-check-sidecars.test.ts`
+- Modify: `scripts/i18n-check-glossary.ts`
+- Modify: `scripts/i18n-check-glossary.test.ts`
 - Modify: `package.json`
 - Create: `data/skills/.i18n-source-locales.json`
 - Create: `data/modelPrompt/.i18n-source-locales.json`
@@ -221,6 +251,13 @@ manifest. In both cases, canonicalize all locale suffixes first, use the canonic
 requested locale equals the source locale, otherwise require the exact sidecar, and never cascade to
 another prompt language.
 
+In the same prerequisite commit, upgrade sidecar and glossary discovery to read `sourceLocale` for
+every canonical file. Structural parity and glossary checks compare each non-source variant with
+its declared source regardless of whether the canonical file is `en`, `vi`, or `zh`. Fixture tests
+cover all three source locales, English-origin non-README files, missing/extra metadata, stale hashes,
+and a missing exact locale. These validators must be usable by Task 7; Task 8 only enables them as
+full-tree hard gates after corpus completion.
+
 - [ ] **Step 4: Add strict art-manual composition**
 
 Compose localized `prefix.md` plus target Markdown with `readPromptSkill()`. Return empty only when the style/target does not exist at all; throw when the canonical file exists but its required locale is missing.
@@ -228,9 +265,59 @@ Compose localized `prefix.md` plus target Markdown with `readPromptSkill()`. Ret
 - [ ] **Step 5: Verify and commit**
 
 ```bash
-yarn vitest run src/i18n/promptFile.test.ts src/i18n/skillPath.test.ts src/utils/getArtPrompt.test.ts scripts/i18n-check-manifest.test.ts
-git add src/i18n/promptFile.ts src/i18n/promptFile.test.ts src/i18n/skillPath.ts src/i18n/skillPath.test.ts src/i18n/index.ts src/utils/getArtPrompt.ts src/utils/getArtPrompt.test.ts src/utils.ts scripts/i18n-check-manifest.ts scripts/i18n-check-manifest.test.ts package.json data/skills/.i18n-source-locales.json data/modelPrompt/.i18n-source-locales.json data/skills/.i18n-manifest.json
+yarn vitest run src/i18n/promptFile.test.ts src/i18n/skillPath.test.ts src/utils/getArtPrompt.test.ts scripts/i18n-check-manifest.test.ts scripts/i18n-check-sidecars.test.ts scripts/i18n-check-glossary.test.ts
+git add src/i18n/promptFile.ts src/i18n/promptFile.test.ts src/i18n/skillPath.ts src/i18n/skillPath.test.ts src/i18n/index.ts src/utils/getArtPrompt.ts src/utils/getArtPrompt.test.ts src/utils.ts scripts/i18n-check-manifest.ts scripts/i18n-check-manifest.test.ts scripts/i18n-check-sidecars.ts scripts/i18n-check-sidecars.test.ts scripts/i18n-check-glossary.ts scripts/i18n-check-glossary.test.ts package.json data/skills/.i18n-source-locales.json data/modelPrompt/.i18n-source-locales.json data/skills/.i18n-manifest.json
 git commit -m "feat(i18n): add strict model skill resolution"
+```
+
+---
+
+### Task 2B: Install the packaged prompt corpus without destroying user changes
+
+**Files:**
+
+- Modify: `scripts/main.ts`
+- Create: `scripts/main.test.ts`
+- Create: `scripts/shippedContent.ts`
+- Create/regenerate: `data/.shipped-content-manifest.json`
+- Modify: `scripts/build.ts`
+- Modify: `package.json`
+
+The current installer omits `modelPrompt` from `TARGET_ENTRIES` and removes the entire installed
+`skills` directory on every version upgrade. Strict readers are not deployable until the package
+can provision their corpus safely.
+
+- [ ] **Step 1: Specify a versioned shipped-content manifest**
+
+Generate a deterministic manifest containing schema/version, package version, and sorted SHA-256
+entries for every shipped file under `data/skills` and `data/modelPrompt`. Include directories in
+the packaged resource set and fail the build if either tree or its locale metadata is absent.
+
+- [ ] **Step 2: Implement hash-aware installation and recovery**
+
+On a fresh install, copy both trees completely and persist the installed manifest. On upgrade,
+compare each destination with the previous shipped hash: overwrite changed shipped files and delete
+removed shipped files only when the destination still matches the previous hash. Preserve modified
+shipped files, unsuffixed custom prompts, locale-pinned custom files, and other untracked files.
+Write deterministic backup/recovery metadata (old/new hash, path, backup path, action, versions)
+before changing any eligible destination, perform atomic file replacement, and update the installed
+manifest only after success. Never recursively remove `skills` or `modelPrompt`.
+
+- [ ] **Step 3: Test every install/upgrade policy**
+
+Use temporary resource/user-data roots to cover: fresh install provisions `skills` plus
+`modelPrompt`; untouched upgrade replaces changed shipped files; a modified shipped skill is
+preserved; an unsuffixed custom prompt is preserved; a removed untouched shipped file is deleted;
+a removed modified file is retained; and recovery metadata/backups restore every changed or deleted
+file after an injected mid-upgrade failure.
+
+- [ ] **Step 4: Verify and commit before strict readers or Medieval Task 7**
+
+```bash
+yarn vitest run scripts/main.test.ts
+yarn build
+git add scripts/main.ts scripts/main.test.ts scripts/shippedContent.ts scripts/build.ts data/.shipped-content-manifest.json package.json
+git commit -m "fix(packaging): preserve and provision prompt corpus"
 ```
 
 ---
@@ -267,14 +354,19 @@ Accept complete literal strings only, sort longest-first, remove exact matches, 
 `/[\u3400-\u9fff]+/g` runs with context. The generic guard accepts only complete literal values passed
 by its caller; never register fragments such as `@图片` or `<主体`. `instruction` en/vi throws and
 `verbatim-data` is untouched. Production `protocol` segments must receive the exact per-request list
-from the provider-token builder owned by Video-plan Task 4. That task also creates
+from the provider-token builder owned by Video-plan Task 5. That task also creates
 `docs/i18n/provider-protocol.json`, its validator/test, and the package gate. Candidate syntax may be
 used only in the approval-gated provider test; `assertPromptSegment()` and release scans reject it
 until provider/model/version evidence is verified.
 
 - [ ] **Step 3: Add a reusable route-capture harness**
 
-`promptCapture.ts` captures `system`, every message, tool descriptions/schema, tool results, image prompt, and locale. Tests pass ASCII dynamic values and assert only authored segments.
+`promptCapture.ts` captures `system`, every message, tool descriptions/schema, tool results, image
+prompt, video prompt, and locale. Guard and route payload fixtures must include Han-bearing verbatim
+names, descriptions, dialogue, carry-over, and sound effects. Assert each value is byte-identical in
+the captured payload and invocation still occurs, while neighboring application-authored Han
+instructions fail before invocation. ASCII sentinels remain useful for authored-shell isolation but
+are not sufficient as the verbatim-data regression suite.
 
 - [ ] **Step 4: Verify and commit**
 
@@ -433,6 +525,20 @@ user-selected overrides; do not silently reinterpret or rewrite them. Replace al
 `getArtPrompt()` reads in `batchGenerateAssetsImage.ts` with
 `getRequiredLocalizedArtPrompt()` and prove a missing exact locale stops before image invocation.
 
+Define prompt provenance before resolving any binding:
+
+- `shipped-strict`: a shipped canonical prompt resolved through its source map and exact requested
+  locale;
+- `pinned-locale`: an explicitly locale-suffixed custom/bound file, read byte-identically at its
+  pinned locale;
+- `custom-unscoped`: an unsuffixed custom prompt, read byte-identically as a user override.
+
+Only `shipped-strict` paths call `modelPromptSourceLocale()`. Pinned and unsuffixed custom files
+must never be rejected as unknown shipped paths or rewritten/resolved through a sidecar. Every
+result carries `languagePolicy` and versioned `promptInputContract` metadata. Backend list, binding,
+and generation tests cover all policies, missing files, and exact bytes; the companion web plan
+renders localized badges/warnings and contract compatibility before save or invocation.
+
 - [ ] **Step 3: Verify and commit**
 
 ```bash
@@ -498,7 +604,7 @@ Set `sourceLocale: "en"` and `translated: ["vi", "zh"]` for these 15 entries. Th
 represented by the canonical file and is not duplicated in `translated`. Existing upstream Chinese
 sources use `sourceLocale: "zh"` with their non-source sidecars listed in `translated`.
 
-- [ ] **Step 5: Verify and commit**
+- [ ] **Step 5: Verify with the already-landed arbitrary-source-locale validators and commit**
 
 ```bash
 yarn i18n:check-sidecars --paths data/skills/story_skills/Medieval_epic data/skills/art_skills/realpeople_medieval_western
@@ -561,7 +667,7 @@ git commit -m "fix(prompts): remove residual Han from English and Vietnamese cor
 
 ---
 
-### Task 8: Finish strict manifest, sidecar, glossary, and scan gates
+### Task 8: Enable full-tree manifest, sidecar, glossary, and scan gates
 
 **Files:**
 
@@ -572,7 +678,7 @@ git commit -m "fix(prompts): remove residual Han from English and Vietnamese cor
 - Modify: `package.json`
 - Regenerate: `data/skills/.i18n-manifest.json`, `docs/i18n/sidecar-budget.json`
 
-- [ ] **Step 1: Enforce the Task 2 manifest across the full tree**
+- [ ] **Step 1: Enable the Task 2 foundation validators across the full tree**
 
 Verify deterministic discovery of every canonical `data/skills/**/*.md`, excluding all locale
 sidecars. Require sorted path, SHA-256, explicit `sourceLocale`, and sorted non-source translated
@@ -596,7 +702,16 @@ the exact per-request list from the typed provider-token builder. Assert unexpec
 English and `.en.md` fixtures fails, while adjacent prose around an allowed complete token still
 fails. Chinese variants are required and structurally checked but are not subject to a no-Han rule.
 
-- [ ] **Step 4: Run and commit gates**
+- [ ] **Step 4: Add the single CI/release owner**
+
+Add `i18n:ci` to `package.json`; it runs lint, the full test suite, manifest, sidecars, strict
+glossary, terms, provider evidence, AST prompt-callsite audit, corpus inventory, and CJK scan.
+Update `.github/workflows/debug.yml` to trigger against `master` (not `main`) and expose a required
+`quality` job that runs `yarn i18n:ci`. Update `.github/workflows/release.yml` so packaging depends
+on the identical quality job rather than duplicating or omitting checks. Workflow fixture tests
+assert the base branch, job dependency, and command.
+
+- [ ] **Step 5: Run and commit gates**
 
 ```bash
 yarn vitest run scripts/i18n-check-manifest.test.ts scripts/i18n-check-sidecars.test.ts scripts/i18n-scan.test.ts scripts/i18n-check-glossary.test.ts
@@ -605,7 +720,8 @@ yarn i18n:check-manifest
 yarn i18n:check-sidecars
 yarn i18n:check-glossary --strict
 yarn i18n:scan
-git add scripts/i18n-check-manifest.ts scripts/i18n-check-manifest.test.ts scripts/i18n-check-sidecars.ts scripts/i18n-check-sidecars.test.ts scripts/i18n-scan.ts scripts/i18n-scan.test.ts scripts/i18n-check-glossary.ts scripts/i18n-check-glossary.test.ts package.json data/skills/.i18n-manifest.json docs/i18n/sidecar-budget.json
+ yarn i18n:ci
+git add scripts/i18n-check-manifest.ts scripts/i18n-check-manifest.test.ts scripts/i18n-check-sidecars.ts scripts/i18n-check-sidecars.test.ts scripts/i18n-scan.ts scripts/i18n-scan.test.ts scripts/i18n-check-glossary.ts scripts/i18n-check-glossary.test.ts package.json data/skills/.i18n-manifest.json docs/i18n/sidecar-budget.json .github/workflows/debug.yml .github/workflows/release.yml
 git commit -m "test(i18n): enforce complete prompt locales"
 ```
 
@@ -624,16 +740,7 @@ yarn vitest run src/i18n/translate.test.ts src/i18n/promptFile.test.ts src/i18n/
 - [ ] **Step 2: Run repository gates**
 
 ```bash
-yarn lint
-yarn i18n:check-manifest
-yarn i18n:check-sidecars
-yarn i18n:check-glossary --strict
-yarn i18n:check-terms
-yarn i18n:check-provider-protocol
-yarn i18n:audit-prompt-lookups
-yarn i18n:inventory-prompt-corpus --check
-yarn i18n:scan
-yarn test
+yarn i18n:ci
 ```
 
 - [ ] **Step 3: Confirm route contract matrix**

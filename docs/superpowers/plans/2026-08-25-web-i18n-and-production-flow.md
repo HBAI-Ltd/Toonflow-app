@@ -13,11 +13,16 @@
 ## Global Constraints
 
 - Implement backend/bundle work on `codex/web-i18n-production-flow`, never directly on `master`; push and open a PR after verification. The companion Toonflow-web source changes use their own branch and PR in that repository.
+- The companion Toonflow-web source PR must land first. Record its exact repository URL and final
+  commit SHA plus the SHA-256 of the built `dist/index.html`; this repository may import only that
+  verified artifact.
 - Never translate persisted mode IDs, task states, or chapter-parser compatibility patterns.
 - Keep `getPromptLanguage` authenticated; fix the injected widget, not backend auth.
 - Every bundle patch validates all anchors before writing, rejects duplicates/unexpected shapes, preserves Chinese locale, and is byte-idempotent.
 - Unsupported embedded editor locales fall back to English, never Chinese.
 - Production reflow uses measured node dimensions; do not hardcode wider x coordinates.
+- Reflow is serialized or generation-token guarded; an older async stabilization/import may never
+  overwrite a newer save, and timeout must be handled without an unhandled rejection.
 - Director cover images contain no readable language; title overlays remain localized UI text.
 - Run bundle patches in a fixed order after any frontend import and before packaging.
 - Current backend master includes PR #17; `settings.other.openIsInteracting` is unrelated to final-editor `关闭吸附`.
@@ -33,7 +38,7 @@
 | Markdown tooltips | Toonflow-web MdEditor hosts | MdEditor locale patch |
 | Final editor Chinese | Toonflow-web editVideo/mediaLibrary + vue-clip-track locale | VideoTrack locale/guidance patch |
 | Login 401 | `scripts/patch-web-settings.ts` | Token and page-mount guard |
-| Model Mapping TypeError | Backend row contract + Toonflow-web `modelMap.vue` | Stable key + type labels |
+| Model Mapping TypeError/prompt policy | Backend row contract + Toonflow-web `modelMap.vue` | Stable key + localized policy/contract badges |
 | Node overlap | Toonflow-web `views/production/index.vue` | Import rebuilt bundle |
 | Cover text | `data/skills/story_skills/*/images/title.png` | Text-free replacement |
 
@@ -72,6 +77,9 @@ export interface ModelMapRow {
   model: string;
   fileName?: string;
   path?: string;
+  languagePolicy: "shipped-strict" | "pinned-locale" | "custom-unscoped";
+  promptInputContract: "legacy-v1" | "video-prompt-input/v2";
+  compatible: boolean;
 }
 ```
 
@@ -90,7 +98,10 @@ expect(response.body.data[0].promptList).toEqual([
 ]);
 ```
 
-For `upVendorModel`, persist `first` and `second`, update `second`, and assert only index 1 changes. Updating an absent model returns a localized error and leaves JSON byte-equivalent.
+For `upVendorModel`, persist `first` and `second`, update `second`, and assert only index 1 changes.
+Updating an absent model returns a localized error and leaves JSON byte-equivalent. The prompt list
+matrix also covers all three language policies and both prompt-input contracts, and flags a V2 row
+bound to a legacy prompt as incompatible before generation.
 
 - [ ] **Step 2: Implement stable filtering and keys**
 
@@ -240,7 +251,11 @@ frame/suffix variant. Component tests assert `AI Regex`, `Chapter`, `Color mode`
 
 In `uiConfig.vue`, replace `颜色模式`, `主题色`, `字体大小`. In `modelMap.vue`, add `key: string`
 to `PromptList`, keep `fileName`/`path` optional, replace the ternary `文本/视频/图片` with catalog
-values, use `row.key` for prompt rows, and use `item.id` for the outer vendor collapse key. In
+values, use `row.key` for prompt rows, and use `item.id` for the outer vendor collapse key. Render
+localized badges/warnings for `shipped-strict`, `pinned-locale`, and `custom-unscoped`, plus
+`legacy-v1`/`video-prompt-input/v2` compatibility. Block an incompatible binding or generation with
+a localized warning before provider invocation; do not imply that custom content was validated or
+translated. In
 `generate/index.vue`, replace the local Chinese `modeLabelMap` with computed `$t()` values while
 preserving mode IDs.
 
@@ -332,13 +347,23 @@ function syncNodePositions(): void {
   }
 }
 
-async function reflowDownstream(changedId: "scriptPlan" | "storyboardTable") {
+let reflowGeneration = 0;
+
+async function reflowDownstream(changedId: "scriptPlan" | "storyboardTable", generation: number) {
   await nextTick();
+  if (generation !== reflowGeneration) return;
   updateNodeInternals([...mainChain]);
-  await waitForStableDimensions(mainChain);
+  try {
+    await waitForStableDimensions(mainChain);
+  } catch (error) {
+    if (generation === reflowGeneration) reportReflowTimeout(error);
+    return;
+  }
+  if (generation !== reflowGeneration) return;
   const snapshot = toObject();
   snapshot.nodes = calculateDownstreamPositions(snapshot.nodes, measuredDimensions(mainChain), changedId, 80);
   await fromObject(snapshot);
+  if (generation !== reflowGeneration) return;
   await nextTick();
   syncNodePositions();
 }
@@ -346,7 +371,8 @@ async function reflowDownstream(changedId: "scriptPlan" | "storyboardTable") {
 let reflowTimer: ReturnType<typeof setTimeout> | undefined;
 function scheduleDownstreamReflow(changedId: "scriptPlan" | "storyboardTable") {
   clearTimeout(reflowTimer);
-  reflowTimer = setTimeout(() => void reflowDownstream(changedId), 0);
+  const generation = ++reflowGeneration;
+  reflowTimer = setTimeout(() => void reflowDownstream(changedId, generation), 0);
 }
 
 watch(
@@ -372,6 +398,13 @@ When collided, shift that node and its remaining successors by the minimum delta
 coordinate and relative x spacing. Nodes already farther right or vertically disjoint remain
 unchanged. Do not call `layoutGraph()` for content expansion.
 
+Every continuation after `nextTick` and stabilization checks the monotonically increasing generation.
+Serialize both successful save application and `fromObject` reflow commits through one graph-mutation
+queue so a new save cannot race an already-started older import; check the token again immediately
+before the queued atomic apply. Catch stabilization timeout, report it once, and retain the newest
+saved graph without an unhandled rejection. Fake-timer/deferred-promise tests cover rapid plan then
+table changes, table then plan changes, an older delayed `fromObject`, and timeout.
+
 - [ ] **Step 8: Add source-level tests**
 
 Add `"test": "vitest run"` and Vitest/jsdom/component tests for locale normalization, mode labels,
@@ -382,6 +415,9 @@ y coordinates remain unchanged, and relative order is preserved. The component t
 Plan and asserts the correct changed-node id is scheduled without mounting the full Vue Flow canvas.
 The real Storyboard Table/Workbench click-through remains a required browser assertion in Task 7,
 because jsdom cannot validate Vue Flow hit-testing and rendered geometry reliably.
+
+Model-map component tests assert localized badges/warnings for all language policies and both input
+contracts, and prove an incompatible save/generate action never calls the backend generation API.
 
 - [ ] **Step 9: Verify and commit upstream**
 
@@ -394,6 +430,11 @@ git add src package.json yarn.lock vitest.config.ts
 git commit -m "fix(web): localize editors, mappings, and production layout"
 ```
 
+After the source PR is finalized, record the exact repository URL, final commit SHA (not merely the
+starting baseline), build command/toolchain lock hash, and SHA-256 of its produced `dist/index.html`
+in a signed/reviewed provenance record handed to this repository's Task 4. The app import PR must not
+start from an uncommitted upstream workspace or a different commit.
+
 ---
 
 ### Task 4: Import the rebuilt frontend and add a guarded compatibility patch
@@ -401,6 +442,9 @@ git commit -m "fix(web): localize editors, mappings, and production layout"
 **Files in this repository:**
 
 - Replace from upstream build: `data/web/index.html`
+- Create: `docs/i18n/toonflow-web-bundle-provenance.json`
+- Create: `scripts/i18n-check-web-provenance.ts`
+- Create: `scripts/i18n-check-web-provenance.test.ts`
 - Create: `scripts/patch-web-production-ui.ts`
 - Create: `scripts/patch-web-production-ui.test.ts`
 - Create: `scripts/patch-web-all.ts`
@@ -467,9 +511,13 @@ prompt-language widget is such a local extension and must still be injected into
 bundle unless it is later source-owned. A rebuilt bundle may therefore mix allowed states across
 subpatches. Only an unknown, duplicate, or contradictory partial state within one subpatch fails.
 
-- [ ] **Step 2: Patch only compatibility targets**
+- [ ] **Step 2: Verify source provenance, then patch only compatibility targets**
 
-Build upstream with `yarn build`, copy the resulting `dist/index.html` to this repository's exact
+Require Task 3's finalized companion source PR first. Commit a manifest containing exact upstream
+repository URL, final source commit SHA, build command, lockfile/toolchain hash, unpatched
+`dist/index.html` SHA-256, and final patched bundle SHA-256. CI checks out/rebuilds that exact commit
+or verifies the immutable source artifact, then rejects any hash mismatch before importing or
+packaging. Copy only the verified `dist/index.html` to this repository's exact
 `data/web/index.html`, then run the patch chain. Inject one module-scope locale helper after the unique
 module script tag only for a subpatch that still needs it. Patch remaining known legacy catalog/UI
 anchors and inject expected local extensions; verify/no-op the chapter regex, locale header, editor,
@@ -487,6 +535,8 @@ bundle as globally old or fixed.
 
 ```bash
 yarn vitest run scripts/patch-web-ui.test.ts scripts/patch-web-i18n.test.ts scripts/patch-web-settings.test.ts scripts/patch-web-production-ui.test.ts scripts/patch-web-all.test.ts
+yarn vitest run scripts/i18n-check-web-provenance.test.ts
+yarn i18n:check-web-provenance
 yarn i18n:patch-web-all
 first_hash="$(shasum -a 256 data/web/index.html | awk '{print $1}')"
 yarn i18n:patch-web-all
@@ -499,7 +549,7 @@ The final assertion must exit zero.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add data/web/index.html scripts/patch-web-i18n.ts scripts/patch-web-i18n.test.ts scripts/patch-web-ui.ts scripts/patch-web-ui.test.ts scripts/patch-web-settings.ts scripts/patch-web-settings.test.ts scripts/patch-web-production-ui.ts scripts/patch-web-production-ui.test.ts scripts/patch-web-all.ts scripts/patch-web-all.test.ts package.json docs/i18n/README.md
+git add data/web/index.html docs/i18n/toonflow-web-bundle-provenance.json scripts/i18n-check-web-provenance.ts scripts/i18n-check-web-provenance.test.ts scripts/patch-web-i18n.ts scripts/patch-web-i18n.test.ts scripts/patch-web-ui.ts scripts/patch-web-ui.test.ts scripts/patch-web-settings.ts scripts/patch-web-settings.test.ts scripts/patch-web-production-ui.ts scripts/patch-web-production-ui.test.ts scripts/patch-web-all.ts scripts/patch-web-all.test.ts package.json docs/i18n/README.md
 git commit -m "fix(web): import localized production workflow"
 ```
 
@@ -523,7 +573,8 @@ export async function build(run = execFileSync): Promise<void>;
 ```
 
 Keep a `require.main === module` entry guard. Mock process execution and assert this exact order before
-esbuild: `i18n:check-manifest`, then the atomic `i18n:patch-web-all` orchestrator. In
+esbuild: the shared `i18n:ci` quality gate, `i18n:check-web-provenance`, then the atomic
+`i18n:patch-web-all` orchestrator. In
 `patch-web-all.test.ts`, separately assert its pure-function order is i18n -> ui -> settings ->
 productionUi and that a failure writes nothing. Assert any failed prerequisite prevents both
 `esbuild.build()` calls.
@@ -532,7 +583,7 @@ productionUi and that a failure writes nothing. Assert any failed prerequisite p
 
 Use `execFileSync("yarn", [script], { stdio: "inherit" })` for each command before the existing build
 calls. Sequential execution is required because all patchers mutate one bundle. Packaging must not
-proceed unless `i18n:check-manifest` exits successfully.
+proceed unless the full shared quality gate and provenance check exit successfully.
 
 - [ ] **Step 3: Verify and commit**
 
@@ -596,9 +647,8 @@ git commit -m "fix(covers): remove baked-language director titles"
 - [ ] **Step 1: Run source and bundle gates**
 
 ```bash
-yarn lint
-yarn test
-yarn i18n:check-manifest
+yarn i18n:ci
+yarn i18n:check-web-provenance
 yarn i18n:patch-web-all
 yarn i18n:patch-web-all
 yarn build
@@ -630,4 +680,5 @@ git log --oneline -12
 
 Expected: only intended files/commits; pre-existing `.gstack/` remains untouched.
 
-`i18n:check-manifest` is a mandatory packaging gate; do not waive it because of unrelated failures.
+The shared `i18n:ci` quality job and web-provenance check are mandatory packaging gates; do not
+waive either because of unrelated failures.
