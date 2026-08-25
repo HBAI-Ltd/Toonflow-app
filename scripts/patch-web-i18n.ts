@@ -102,6 +102,11 @@ const LEGACY_VENDOR_TEST: Record<"en" | "vi", string> = {
   vi: "Kiểm tra",
 };
 
+const OTHER_ADDITIONS: Record<"en" | "vi", Record<string, string>> = {
+  en: { openIsInteracting: "Enable" },
+  vi: { openIsInteracting: "Bật" },
+};
+
 function objectLiteral(values: Record<string, string>): string {
   return `{${Object.entries(values).map(([key, value]) => `${key}:${JSON.stringify(value)}`).join(",")}}`;
 }
@@ -264,6 +269,51 @@ function patchVendorTests(source: string, applied: string[]): string {
   return source;
 }
 
+function patchOtherSettings(source: string, applied: string[]): string {
+  if (!source.includes("settings.other.openIsInteracting")) return source;
+
+  const insertions: { at: number; value: string }[] = [];
+  const menuRe = /menu:\{([^{}]*)\}/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = menuRe.exec(source))) {
+    const locale = detectLocale(match[0]);
+    if (locale === "other") continue;
+
+    const catalogOpen = enclosingObjectOpen(source, match.index);
+    const catalogClose = matchingBrace(source, catalogOpen);
+    const otherProperties = topLevelProperties(source, catalogOpen, catalogClose, "other");
+    if (otherProperties.length !== 1) {
+      throw new Error(
+        `catalog settings.other của ${locale} không tồn tại hoặc không duy nhất — cấu trúc đã đổi, dừng lại`,
+      );
+    }
+
+    const property = otherProperties[0];
+    if (!source.startsWith("other:{", property)) {
+      throw new Error(`catalog settings.other của ${locale} không còn là object literal — dừng lại`);
+    }
+    const otherOpen = property + "other:".length;
+    const otherClose = matchingBrace(source, otherOpen);
+
+    for (const [key, value] of Object.entries(OTHER_ADDITIONS[locale])) {
+      const existing = topLevelProperties(source, otherOpen, otherClose, key);
+      if (existing.length > 1) {
+        throw new Error(`settings.other.${key} của ${locale} xuất hiện nhiều lần — dừng lại`);
+      }
+      if (existing.length === 1) continue; // giữ bản dịch upstream nếu họ đã thêm
+      const comma = otherClose === otherOpen + 1 ? "" : ",";
+      insertions.push({ at: otherClose, value: `${comma}${key}:${JSON.stringify(value)}` });
+      applied.push(`${locale}.settings.other.${key} (thêm)`);
+    }
+  }
+
+  for (const insertion of insertions.sort((a, b) => b.at - a.at)) {
+    source = source.slice(0, insertion.at) + insertion.value + source.slice(insertion.at);
+  }
+  return source;
+}
+
 /**
  * Đoán locale của một khối menu qua giá trị key `about` — dùng dải Unicode
  * theo hệ chữ viết (script), KHÔNG so khớp một câu chữ cụ thể. Trong bundle
@@ -332,6 +382,7 @@ export function patchBundle(source: string): { output: string; applied: string[]
   }
 
   output = patchVendorTests(output, applied);
+  output = patchOtherSettings(output, applied);
 
   return { output, applied };
 }

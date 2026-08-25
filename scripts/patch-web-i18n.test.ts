@@ -22,6 +22,13 @@ const VENDOR_TEST_FAKE = [
   'render($t("settings.vendor.test.videoTitle"),$t("settings.vendor.test.startTest"));',
 ].join("");
 
+const OTHER_SETTINGS_FAKE = [
+  'var Zh={settings:{menu:{about:"检查更新"},other:{closeIsInteracting:"关闭",openIsInteracting:"开启"}}};',
+  'var En={settings:{menu:{about:"Check for Updates",ui:"Interface Settings",modelMap:"Model Mapping",devConfig:"Developer Options",skillsSkillsManagement:"Skills Management"},other:{closeIsInteracting:"closure"}}};',
+  'var Vi={settings:{menu:{about:"Kiểm tra cập nhật",ui:"Cài đặt giao diện",modelMap:"Ánh xạ mô hình",devConfig:"Tuỳ chọn nhà phát triển",skillsSkillsManagement:"Quản lý Skills"},other:{closeIsInteracting:"đóng cửa"}}};',
+  'render($t("settings.other.openIsInteracting"));',
+].join("");
+
 const VENDOR_TEST_KEYS = [
   "textTitle", "imageTitle", "videoTitle", "textEmptyHint", "you", "assistant",
   "textInputPlaceholder", "send", "clearHistory", "prompt", "promptPlaceholder",
@@ -169,6 +176,29 @@ describe("patchBundle", () => {
     expect(block).toContain(startTest);
     for (const key of VENDOR_TEST_KEYS) expect(block).toMatch(new RegExp(`(?:^|[,\\{])${key}:`));
     expect(applied).toContain(`${locale}.vendor.test (thêm)`);
+  });
+
+  it("thêm settings.other.openIsInteracting cho catalog tiếng Anh và tiếng Việt", () => {
+    const { output, applied } = patchBundle(OTHER_SETTINGS_FAKE);
+
+    expect(output).toContain('other:{closeIsInteracting:"closure",openIsInteracting:"Enable"}');
+    expect(output).toContain('other:{closeIsInteracting:"đóng cửa",openIsInteracting:"Bật"}');
+    expect(applied).toContain("en.settings.other.openIsInteracting (thêm)");
+    expect(applied).toContain("vi.settings.other.openIsInteracting (thêm)");
+  });
+
+  it("giữ nguyên bản dịch openIsInteracting tiếng Trung và chạy idempotent", () => {
+    const once = patchBundle(OTHER_SETTINGS_FAKE);
+    const twice = patchBundle(once.output);
+
+    expect(once.output).toContain('other:{closeIsInteracting:"关闭",openIsInteracting:"开启"}');
+    expect(twice.output).toBe(once.output);
+    expect(twice.applied).toEqual([]);
+  });
+
+  it("báo lỗi nếu UI dùng openIsInteracting nhưng catalog en thiếu settings.other", () => {
+    const source = OTHER_SETTINGS_FAKE.replace('other:{closeIsInteracting:"closure"}', 'request:{save:"Save"}');
+    expect(() => patchBundle(source)).toThrow(/settings\.other.*en|en.*settings\.other/i);
   });
 
   it("vá vendor.test theo kiểu idempotent và không đụng catalog tiếng Trung", () => {
