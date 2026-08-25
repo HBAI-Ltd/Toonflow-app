@@ -81,7 +81,7 @@ export interface ModelMapRow {
   fileName?: string;
   path?: string;
   languagePolicy: "shipped-strict" | "pinned-locale" | "custom-unscoped";
-  promptInputContract: "legacy-v1" | "video-prompt-input/v2";
+  promptInputContract: "legacy-v1-compat" | "legacy-v1" | "video-prompt-input/v2";
   compatible: boolean;
 }
 ```
@@ -255,8 +255,10 @@ frame/suffix variant. Component tests assert `AI Regex`, `Chapter`, `Color mode`
 In `uiConfig.vue`, replace `颜色模式`, `主题色`, `字体大小`. In `modelMap.vue`, add `key: string`
 to `PromptList`, keep `fileName`/`path` optional, replace the ternary `文本/视频/图片` with catalog
 values, use `row.key` for prompt rows, and use `item.id` for the outer vendor collapse key. Render
-localized badges/warnings for `shipped-strict`, `pinned-locale`, and `custom-unscoped`, plus
-`legacy-v1`/`video-prompt-input/v2` compatibility. Block an incompatible binding or generation with
+localized badges/warnings for `shipped-strict`, `pinned-locale`, and `custom-unscoped`, plus safe
+`legacy-v1-compat`, custom override `legacy-v1`, and `video-prompt-input/v2` compatibility. A custom
+legacy prompt displays an explicit localized warning that prompt-language purity is not guaranteed.
+Block an incompatible binding or generation with
 a localized warning before provider invocation; do not imply that custom content was validated or
 translated. In
 `generate/index.vue`, replace the local Chinese `modeLabelMap` with computed `$t()` values while
@@ -353,13 +355,22 @@ function syncNodePositions(): void {
 let reflowGeneration = 0;
 let graphMutationQueue: Promise<void> = Promise.resolve();
 
+function safeReportGraphFailure(error: unknown): void {
+  try {
+    reportGraphMutationFailure(error);
+  } catch (reportError) {
+    console.error("Failed to report graph mutation failure", reportError);
+  }
+}
+
 function enqueueGraphMutation(generation: number, mutation: () => Promise<void>): Promise<void> {
   const run = graphMutationQueue.then(async () => {
     if (generation !== reflowGeneration) return;
     await mutation();
   });
-  graphMutationQueue = run.catch(reportGraphMutationFailure);
-  return run;
+  const handled = run.catch(safeReportGraphFailure);
+  graphMutationQueue = handled;
+  return handled;
 }
 
 async function applySuccessfulSave(snapshot: ReturnType<typeof toObject>): Promise<number> {
@@ -398,7 +409,9 @@ let reflowTimer: ReturnType<typeof setTimeout> | undefined;
 function scheduleDownstreamReflow(changedId: "scriptPlan" | "storyboardTable") {
   clearTimeout(reflowTimer);
   const generation = ++reflowGeneration;
-  reflowTimer = setTimeout(() => void reflowDownstream(changedId, generation), 0);
+  reflowTimer = setTimeout(() => {
+    void reflowDownstream(changedId, generation).catch(safeReportGraphFailure);
+  }, 0);
 }
 
 watch(
@@ -434,6 +447,13 @@ retain the newest saved graph without an unhandled rejection. Fake-timer/deferre
 rapid plan then table changes, table then plan changes, a deferred old reflow followed by a newer
 save, a deferred save followed by a newer reflow, and timeout; they assert the newest graph is the
 only final state and that no stale `fromObject` begins after its generation is superseded.
+
+`enqueueGraphMutation()` returns the handled promise assigned to `graphMutationQueue`, never the
+original rejected `run`. A rejected `fromObject`/mutation is reported, resolves the queue tail, and
+does not prevent a subsequent queued mutation from succeeding. Timer callbacks attach their own
+terminal catch for failures raised before queue entry. Tests install an `unhandledrejection` spy,
+reject the first mutation and a timer-started reflow, assert one report and no unhandled rejection,
+then enqueue a second mutation and assert it executes successfully in order.
 
 - [ ] **Step 8: Add source-level tests**
 

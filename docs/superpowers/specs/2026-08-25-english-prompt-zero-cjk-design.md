@@ -254,9 +254,10 @@ Create `src/lib/videoPrompt/input.ts`:
 
 Prompt selection is row-aware before it considers a model binding. Parsing classifies each stored
 row as `video-prompt-input/v2` or `legacy-v1`: native V2 and losslessly recoverable detailed legacy
-grammars are V2-capable; historical first/last free-form and `legacy-opaque-single-shot` rows are
-locked to the byte-identical legacy adapter. An all-legacy request automatically selects that locked
-adapter even when the model has a shipped V2 default. An all-V2 request may select only a V2 prompt.
+grammars are V2-capable; historical first/last free-form and `legacy-opaque-single-shot` rows require
+the new strict exact-locale `legacy-v1-compat` prompt/adapter. An all-legacy request automatically
+selects that compat prompt even when the model has a shipped V2 default. The locked old English seed
+is recognition/migration data only and is never executable. An all-V2 request may select only a V2 prompt.
 A mixed batch fails with localized `MIXED_PROMPT_INPUT_CONTRACTS` and offending row indices before
 any provider call; it is never concatenated into either envelope. Explicit bindings are checked only
 after row classification, and an incompatible binding fails closed. Single-route and batch tests
@@ -507,7 +508,9 @@ stabilization continuation verifies freshness, and the token is checked immediat
 queued mutation. No save handler calls `fromObject` outside that queue. Stabilization/mutation
 failures are caught and reported without an unhandled rejection. Fake-timer/deferred-promise tests
 prove rapid plan/table saves and delayed imports cannot let an older generation overwrite a newer
-one; timeout leaves the latest saved graph intact.
+one; timeout leaves the latest saved graph intact. The queue stores and returns its handled promise,
+and timer callbacks attach a terminal nonthrowing catch. Tests reject `fromObject`, observe one
+report and no `unhandledrejection`, then prove a subsequent queued mutation still succeeds.
 
 Every bundle sub-patch validates all anchor cardinalities before writing. A second run is byte
 identical. Chinese locale output remains unchanged. The build/release process runs the patch suite
@@ -540,8 +543,8 @@ role in decoding `videoDesc`.
 4. Before rewriting templates, extract the locked legacy English seed byte-identically from pinned
    base SHA `8c8c2e917ce714b18dd588ba13d6553a99e6a71b` and verify length `37851` plus SHA-256
    `9fc6b347e12977d89cf3798fae89b2182b9f636584e9d913021391633ca7fa6a`. Keep known old
-   variants in `promptSeedSync`; never overwrite `useData`, hand-edited seed text, or a pinned/custom
-   model prompt.
+   variants in `promptSeedSync` for recognition/migration only; never expose those bytes as a runtime
+   prompt, and never overwrite `useData`, hand-edited seed text, or a pinned/custom model prompt.
 5. Adopt strict readers and tighten scanners only after all required sidecars/templates exist.
 6. Apply and verify frontend patches, then run the end-to-end QA flow in `en`, `vi`, and `zh`.
 
@@ -549,13 +552,18 @@ No destructive bulk database rewrite is required. Existing rows decode on read. 
 backfill may rewrite only rows successfully decoded from a known legacy grammar.
 
 Prompt input contracts are versioned and selection starts from the rows, not the prompt binding.
-Historical first/last free-form and opaque rows force the locked `legacy-v1` adapter; native or
-losslessly normalized detailed rows require `video-prompt-input/v2`. A mixed batch fails before
+Historical first/last free-form and opaque rows force the new strict exact-locale
+`legacy-v1-compat` adapter; native or losslessly normalized detailed rows require
+`video-prompt-input/v2`. A mixed batch fails before
 invocation with row indices. Existing `o_prompt.useData`, pinned files, and custom prompts default to
-`legacy-v1`, but they are selected only for a legacy-compatible request; they never silently receive
-the V2 JSON envelope. V2 rows require a V2-capable prompt or return a localized incompatibility
-error. Shipped rewritten templates declare `video-prompt-input/v2`. Migration preview and upgrade
-tests show each binding's policy/contract and preserve overrides byte-identically.
+`legacy-v1`, but they are selected only as explicit legacy-compatible user overrides and produce a
+localized warning that authored-language purity is not guaranteed; they never silently receive the
+V2 JSON envelope. V2 rows require a V2-capable prompt or return a localized incompatibility error.
+Shipped rewritten templates declare `video-prompt-input/v2`; the new compat prompt has canonical
+English plus exact Vietnamese/Chinese variants. Static scans and route captures prove the English/
+Vietnamese compat instructions have no authored Han except evidence-backed exact provider tokens,
+while opaque raw text remains byte-identical. Migration preview and upgrade tests show each binding's
+policy/contract and preserve overrides byte-identically.
 
 Provider evidence comes only from an approval-gated executable harness. Each family owns an array of
 entries keyed by the composite family/vendor/model/version/config identity, so multiple configured
@@ -581,6 +589,9 @@ identity/hash mismatch.
 - Every captured historical grammar passes route-level replay. Legacy and V2 fixtures derived from
   the same recoverable data have identical canonical recoverable projections; tests separately
   assert documented defaults/loss for fields absent from legacy input.
+- Opaque/first-last historical rows use the new exact-locale `legacy-v1-compat` runtime prompt. Its
+  en/vi authored text passes the same Han gate; the locked old seed is never selected. An explicit
+  custom legacy override is warned and remains outside the shipped-prompt guarantee.
 - All sub-shots from one group reach one LLM request; strict structured output preserves count,
   order, traceability, and dialogue before deterministic three-part rendering.
 - Dialogue, names, and other verbatim user data remain unchanged.

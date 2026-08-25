@@ -48,6 +48,8 @@ the final three-part prompt.
 | `data/modelPrompt/video/*.{md,en.md,vi.md}` | Consume v2 JSON instead of parsing marker prose. |
 | `src/services/videoPromptGeneration.ts` | Shared prompt resolution and request preparation. |
 | `src/lib/migrations/promptSeedSync.ts` | Recognize the old English seed as untouched legacy. |
+| `data/modelPrompt/video/legacy-v1-compat.{md,vi.md,zh.md}` | Strict exact-locale runtime prompt for opaque/free-form legacy envelopes. |
+| `src/lib/prompts/legacyVideoPromptCompat.ts` | Total en/vi/zh fallback text for the safe legacy compatibility adapter. |
 | `docs/i18n/prompt-terms.json` | Fixed translation terms and legacy-decode-only tokens only. |
 | `docs/i18n/provider-protocol.json` | Evidence index for every selected reference family/provider/model/config. |
 | `docs/i18n/provider-evidence/**` | Approval-gated requests, asset/output hashes, responses, evaluations, and artifacts. |
@@ -454,6 +456,7 @@ git commit -m "feat(video): build canonical video prompt envelope"
 
 ```ts
 export type PromptInputContract = "legacy-v1" | "video-prompt-input/v2";
+export type RuntimePromptContract = "legacy-v1-compat" | "legacy-v1" | "video-prompt-input/v2";
 export type RowContractClassification =
   | { ok: true; contract: PromptInputContract; rowContracts: PromptInputContract[] }
   | { ok: false; code: "MIXED_PROMPT_INPUT_CONTRACTS"; storyboardIndices: number[] };
@@ -461,7 +464,7 @@ export function classifyVideoPromptRows(rows: ParsedStoredStoryboard[]): RowCont
 export function resolveCompatiblePrompt(args: {
   classification: Extract<RowContractClassification, { ok: true }>;
   binding: PromptBinding | null;
-}): CompatiblePromptResult;
+}): CompatiblePromptResult; // default legacy-v1 rows resolve only to shipped legacy-v1-compat
 ```
 
 - [ ] **Step 1: Extract the locked seed before any Task 5 rewrite**
@@ -478,17 +481,27 @@ expect(sha256(LEGACY_VIDEO_PROMPT_GENERATION_EN_V1)).toBe("9fc6b347e12977d89cf37
 Add it to guarded legacy variants. An untouched old English row updates; a one-character edit,
 non-null `useData`, pinned file, or custom prompt remains byte-identical.
 
+`LEGACY_VIDEO_PROMPT_GENERATION_EN_V1` is recognition/migration source data only. Its known 1,133
+Han characters make it ineligible for any English runtime request. Export no runtime resolver for
+it, keep it outside prompt lists, and add a test proving default, fallback, and explicit shipped-path
+resolution can never return those locked bytes.
+
 - [ ] **Step 2: Version every prompt input contract**
 
-Shipped rewritten templates declare `video-prompt-input/v2`. Existing `o_prompt.useData`, existing
-pinned files, and custom prompts default to `legacy-v1`, but binding metadata never decides the row
-adapter. Task 6 first classifies rows: first/last free-form and opaque historical rows force the
-locked legacy adapter; V2-capable rows require a V2 prompt; mixed batches fail. Only a binding with
-the already-required contract may then be selected. No legacy request silently receives the V2 JSON
-envelope and no V2 request receives legacy input. Add language-policy/contract metadata to list and
-binding results plus a migration preview. Tests cover legacy rows with legacy custom prompts, legacy
-rows under a shipped V2 default, V2 rows with V2 shipped prompts, both incompatible explicit
-pairings, mixed batches, upgrade preservation, and explicit opt-in migration.
+Shipped rewritten V2 templates declare `video-prompt-input/v2`. Task 5 also ships a new
+`legacy-v1-compat` prompt/adapter in exact `en`, `vi`, and `zh` variants. Task 6 first classifies rows:
+first/last free-form and opaque historical rows require the compat adapter; V2-capable rows require a
+V2 prompt; mixed batches fail. The automatic/default legacy path always chooses the new exact-locale
+compat prompt and never the locked old seed, regardless of the model's shipped V2 default.
+
+Existing `o_prompt.useData`, pinned files, and custom prompts default to the older `legacy-v1`
+contract and are not silently rewritten. They may run only when explicitly selected as a user
+override for legacy-compatible rows; the API/UI returns a localized warning that authored-language
+purity is not guaranteed. They never become an automatic fallback. No legacy request silently
+receives the V2 JSON envelope and no V2 request receives legacy input. Add language-policy/contract
+metadata to list/binding results plus migration preview. Tests cover safe compat fallback under a V2
+default, explicit custom legacy override plus warning, V2/V2, incompatible pairings, mixed batches,
+old-seed non-selection, upgrade preservation, and opt-in migration.
 
 - [ ] **Step 3: Quarantine registry terms**
 
@@ -520,7 +533,13 @@ git commit -m "test(video): lock legacy prompt contract"
 - Modify: `data/modelPrompt/video/universalMulti-parameterMode.{md,en.md,vi.md}`
 - Modify: `data/modelPrompt/video/universalFirstAndLastFrameMode.{md,en.md,vi.md}`
 - Modify: `data/modelPrompt/video/wan2.6Single-imageFirstFrameMode.{md,en.md,vi.md}`
+- Create: `data/modelPrompt/video/legacy-v1-compat.md`
+- Create: `data/modelPrompt/video/legacy-v1-compat.vi.md`
+- Create: `data/modelPrompt/video/legacy-v1-compat.zh.md`
+- Modify: `data/modelPrompt/.i18n-source-locales.json`
 - Modify: `src/lib/prompts/videoPromptGeneration.ts`
+- Create: `src/lib/prompts/legacyVideoPromptCompat.ts`
+- Create: `src/lib/prompts/legacyVideoPromptCompat.test.ts`
 - Modify: `src/lib/prompts/index.test.ts`
 - Create: `src/lib/videoPrompt/providerTokens.ts`
 - Create: `src/lib/videoPrompt/providerTokens.test.ts`
@@ -543,6 +562,8 @@ const seedanceEn = path.join(videoPromptDir, "seedance2Multi-parameterMode.en.md
 const seedanceVi = path.join(videoPromptDir, "seedance2Multi-parameterMode.vi.md");
 const universalEn = path.join(videoPromptDir, "universalMulti-parameterMode.en.md");
 const universalVi = path.join(videoPromptDir, "universalMulti-parameterMode.vi.md");
+const legacyCompatEn = path.join(videoPromptDir, "legacy-v1-compat.md");
+const legacyCompatVi = path.join(videoPromptDir, "legacy-v1-compat.vi.md");
 
 expect(stripStaticProviderTokens(readFileSync(seedanceEn, "utf8"), "seedance2-text-multi", verifiedFixture)).not.toMatch(/[\u3400-\u9fff]/);
 expect(stripStaticProviderTokens(readFileSync(seedanceVi, "utf8"), "seedance2-text-multi", verifiedFixture)).not.toMatch(/[\u3400-\u9fff]/);
@@ -550,6 +571,10 @@ expect(stripStaticProviderTokens(readFileSync(universalEn, "utf8"), "universal-m
 expect(stripStaticProviderTokens(readFileSync(universalVi, "utf8"), "universal-multi-reference", verifiedFixture)).not.toMatch(/[\u3400-\u9fff]/);
 expect(stripStaticProviderTokens(videoPromptGeneration.en, "seedance2-text-multi", verifiedFixture)).not.toMatch(/[\u3400-\u9fff]/);
 expect(stripStaticProviderTokens(videoPromptGeneration.vi, "seedance2-text-multi", verifiedFixture)).not.toMatch(/[\u3400-\u9fff]/);
+expect(stripAllVerifiedStaticProviderTokens(readFileSync(legacyCompatEn, "utf8"), verifiedEvidenceSet)).not.toMatch(/[\u3400-\u9fff]/);
+expect(stripAllVerifiedStaticProviderTokens(readFileSync(legacyCompatVi, "utf8"), verifiedEvidenceSet)).not.toMatch(/[\u3400-\u9fff]/);
+expect(stripAllVerifiedStaticProviderTokens(legacyVideoPromptCompat.en, verifiedEvidenceSet)).not.toMatch(/[\u3400-\u9fff]/);
+expect(stripAllVerifiedStaticProviderTokens(legacyVideoPromptCompat.vi, verifiedEvidenceSet)).not.toMatch(/[\u3400-\u9fff]/);
 ```
 
 `stripStaticProviderTokens()` escapes the evidence-backed `staticPlaceholderTokens` and replaces only
@@ -558,7 +583,17 @@ their single `N` slot with `(?:N|\d+)`; it never strips a bare prefix. At runtim
 request cardinality and type order (for example, `@图片1`, `@图片2`, `<主体1>`, and `<场景1>`).
 Test that a one-asset allowlist rejects `@图片2`; never exempt fragments such as `@图片` or `<主体`.
 
-Expected now: fail against 823 Han in the Seedance file and 1,133 Han in the fallback seed.
+Expected now: fail against 823 Han in the Seedance file; the separately scanned locked recognition
+seed contains 1,133 Han and is asserted non-runnable rather than accepted by any runtime purity gate.
+
+The 1,133-Han old fallback is not translated in place or executed; Task 4 preserves it solely for
+hash recognition. The new compat prompt is authored independently in strict English, Vietnamese,
+and Chinese. Its English/Vietnamese instructions contain no Han after stripping only evidence-backed
+complete provider tokens. It accepts a versioned legacy envelope with opaque raw text classified as
+verbatim data, preserves that text byte-for-byte, and never asks the model to parse application-
+authored Chinese marker prose. Exact-locale resolution fails closed when a compat variant is missing.
+Register its canonical `.md` as `sourceLocale: "en"` with `vi`/`zh` translations in the model-prompt
+source map.
 
 - [ ] **Step 2: Replace parsing prose with the v2 contract**
 
@@ -679,9 +714,9 @@ cross-entry matches.
 - [ ] **Step 5: Verify and commit**
 
 ```bash
-yarn vitest run src/lib/prompts/index.test.ts src/lib/videoPrompt/providerTokens.test.ts src/lib/videoPrompt/output.test.ts scripts/i18n-capture-provider-evidence.test.ts scripts/i18n-check-provider-protocol.test.ts
+yarn vitest run src/lib/prompts/index.test.ts src/lib/prompts/legacyVideoPromptCompat.test.ts src/lib/videoPrompt/providerTokens.test.ts src/lib/videoPrompt/output.test.ts scripts/i18n-capture-provider-evidence.test.ts scripts/i18n-check-provider-protocol.test.ts
 yarn i18n:check-provider-protocol
-git add data/modelPrompt/video src/lib/prompts/videoPromptGeneration.ts src/lib/prompts/index.test.ts src/lib/videoPrompt/providerTokens.ts src/lib/videoPrompt/providerTokens.test.ts src/lib/videoPrompt/output.ts src/lib/videoPrompt/output.test.ts docs/i18n/provider-protocol.json docs/i18n/provider-evidence scripts/i18n-capture-provider-evidence.ts scripts/i18n-capture-provider-evidence.test.ts scripts/i18n-check-provider-protocol.ts scripts/i18n-check-provider-protocol.test.ts package.json
+git add data/modelPrompt/video data/modelPrompt/.i18n-source-locales.json src/lib/prompts/videoPromptGeneration.ts src/lib/prompts/legacyVideoPromptCompat.ts src/lib/prompts/legacyVideoPromptCompat.test.ts src/lib/prompts/index.test.ts src/lib/videoPrompt/providerTokens.ts src/lib/videoPrompt/providerTokens.test.ts src/lib/videoPrompt/output.ts src/lib/videoPrompt/output.test.ts docs/i18n/provider-protocol.json docs/i18n/provider-evidence scripts/i18n-capture-provider-evidence.ts scripts/i18n-capture-provider-evidence.test.ts scripts/i18n-check-provider-protocol.ts scripts/i18n-check-provider-protocol.test.ts package.json
 git commit -m "feat(video): consume structured video prompt input"
 ```
 
@@ -708,7 +743,7 @@ export async function prepareVideoPromptRequest(args: {
   info: Array<{ id: number; sources: "storyboard" | "assets" }>;
   promptLocale: Locale;
 }): Promise<
-  | { ok: true; request: { system: string; assistant: string; user: string; outputSchema: unknown }; promptInputContract: "legacy-v1" | "video-prompt-input/v2" }
+  | { ok: true; request: { system: string; assistant: string; user: string; outputSchema: unknown }; rowContract: "legacy-v1" | "video-prompt-input/v2"; runtimePromptContract: "legacy-v1-compat" | "legacy-v1" | "video-prompt-input/v2"; overrideWarning?: string }
   | { ok: false; code: VideoPromptInputErrorCode | "STORYBOARD_NOT_FOUND" | "PROMPT_TEMPLATE_NOT_FOUND" | "PROMPT_INPUT_CONTRACT_INCOMPATIBLE" | "MIXED_PROMPT_INPUT_CONTRACTS" | "REFERENCE_DUPLICATE_ID" | "REFERENCE_UNKNOWN_ASSET" | "REFERENCE_NAME_MISMATCH" | "REFERENCE_NOT_ASSOCIATED" | "REFERENCE_WRONG_PROJECT" | "DIALOGUE_SPEAKER_NOT_REFERENCED" | "REFERENCE_FILE_MISSING"; storyboardIndex?: number; storyboardIndices?: number[]; detail: string }
 >;
 ```
@@ -718,15 +753,23 @@ export async function prepareVideoPromptRequest(args: {
 Replay every real captured Task 1 historical fixture through both single and batch route preparation:
 marker/pipe, leading/trailing-pipe Markdown rows, 12-field ideographic-comma, first/last free form,
 storyboard-assisted fixed text, and arbitrary manual edit. Detailed grammars that normalize
-losslessly build the V2 envelope; first/last free-form and opaque rows automatically use the locked
-byte-identical `legacy-v1` adapter. Assert each group appears once in order and neither V2 route emits
+losslessly build the V2 envelope; first/last free-form and opaque rows automatically use the new
+strict exact-locale `legacy-v1-compat` adapter. Assert each group appears once in order and neither V2 route emits
 XML, `join("，")`, or legacy marker prose. Task 6, not Task 1, is the first point at which the plan
 may claim route-level read compatibility.
 
+Run the opaque/default route capture with `prompt_language=en`, `vi`, and `zh`; each selects only its
+compat variant, and a missing variant fails before invocation. English/Vietnamese authored segments
+pass the Han guard after exact evidence-backed token stripping; Han-bearing opaque raw text remains
+byte-identical as `verbatim-data` and the model is invoked.
+
 Add a row-contract matrix for both routes: all-V2 plus shipped V2 default succeeds; all-legacy plus
-that same default still forces the locked legacy adapter; all-legacy plus compatible custom legacy
-prompt succeeds; V2 plus legacy-only binding fails before invocation; legacy plus V2-only explicit
-binding cannot override the locked adapter; and a mixed legacy/V2 batch returns localized
+that same default forces the new `legacy-v1-compat` prompt and proves the old locked seed was not
+selected; English/Vietnamese route payload captures contain no authored Han after exact provider
+tokens are removed while Han-bearing opaque raw text remains byte-identical and invocation occurs.
+All-legacy plus an explicitly selected custom legacy prompt succeeds only with a localized override
+warning; V2 plus legacy-only binding fails before invocation; legacy plus V2-only explicit binding
+cannot replace the compat fallback; and a mixed legacy/V2 batch returns localized
 `MIXED_PROMPT_INPUT_CONTRACTS` with row indices and zero provider calls. A legacy row never reaches a
 V2 prompt, and a V2 row never reaches the legacy adapter.
 
@@ -740,8 +783,9 @@ retain validation, state transitions, HTTP responses, per-track orchestration, a
 operational error with `content_language` catalog keys before responding. Parser, reference,
 prompt-contract, mixed-contract, and structured-output failures stop before provider invocation or
 DB prompt update. Prompt binding provenance never chooses the adapter: classify every row first,
-require a homogeneous contract, force the locked adapter for legacy-compatible requests, and only
-then consider bindings that declare the same contract.
+require a homogeneous contract, select shipped exact-locale `legacy-v1-compat` for automatic legacy
+fallback, and only then honor an explicitly selected compatible custom `legacy-v1` override with a
+warning. The locked recognition seed is never a runtime candidate.
 
 Route payload tests include Han-bearing verbatim names, descriptions, dialogue, carry-over, and
 sound effects; assert byte identity through the request and structured response while invocation
@@ -766,7 +810,7 @@ git commit -m "refactor(video): centralize prompt request preparation"
 - [ ] **Step 1: Run focused and repository suites**
 
 ```bash
-yarn vitest run src/lib/videoDesc/videoDesc.test.ts src/lib/videoPrompt/input.test.ts src/lib/videoPrompt/providerTokens.test.ts src/lib/videoPrompt/output.test.ts src/lib/prompts/promptInputContract.test.ts src/agents/productionAgent/tools.test.ts src/routes/production/storyboard/videoDescIngestion.test.ts src/services/videoPromptGeneration.test.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.test.ts src/lib/prompts/index.test.ts src/lib/migrations/promptSeedSync.test.ts scripts/i18n-check-terms.test.ts scripts/i18n-capture-provider-evidence.test.ts scripts/i18n-check-provider-protocol.test.ts
+yarn vitest run src/lib/videoDesc/videoDesc.test.ts src/lib/videoPrompt/input.test.ts src/lib/videoPrompt/providerTokens.test.ts src/lib/videoPrompt/output.test.ts src/lib/prompts/promptInputContract.test.ts src/lib/prompts/legacyVideoPromptCompat.test.ts src/agents/productionAgent/tools.test.ts src/routes/production/storyboard/videoDescIngestion.test.ts src/services/videoPromptGeneration.test.ts src/routes/production/workbench/generateVideoPrompt.test.ts src/routes/production/workbench/batchGeneratePrompt.test.ts src/lib/prompts/index.test.ts src/lib/migrations/promptSeedSync.test.ts scripts/i18n-check-terms.test.ts scripts/i18n-capture-provider-evidence.test.ts scripts/i18n-check-provider-protocol.test.ts
 yarn i18n:check-terms
 yarn i18n:check-provider-protocol
 yarn lint

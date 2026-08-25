@@ -69,8 +69,9 @@ This roadmap coordinates three independently reviewable implementation plans und
   recoverable projection and separately assert documented defaults/loss. Truly unstructured text
   remains read-only `legacy-opaque-single-shot` and never fabricates absent fields.
   This gate belongs to Video Task 6's atomic integration release, not the decoder-only Task 1 commit.
-  First/last free-form and opaque rows force the locked legacy adapter; V2-capable rows require a V2
-  prompt; a mixed batch fails before invocation with row indices.
+  First/last free-form and opaque rows force the new strict exact-locale `legacy-v1-compat` adapter;
+  the locked old seed is recognition-only and never executable. V2-capable rows require a V2 prompt;
+  a mixed batch fails before invocation with row indices.
 - Gate C: with explicit provider/credential/spend approval, run and record the protocol comparison for every reference-capable family (Seedance 2.0 and universal multi-reference). The final zero-Chinese prompt guarantee cannot merge/release while any selected syntax remains unverified.
 - Gate D: do not enable strict readers until the full required prompt corpus is complete.
 - Gate E: do not package a frontend bundle unless every subpatch reports a known old anchor patched,

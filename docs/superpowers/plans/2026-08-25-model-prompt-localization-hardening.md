@@ -670,6 +670,12 @@ with canonical path, resolved path, locale, line, Han run, context, and disposit
 English, Chinese-origin `.en.md`, canonical Vietnamese, `.vi.md`, missing source-locale metadata, and
 stable sorting.
 
+After the video compatibility PR, discovery includes canonical-English
+`data/modelPrompt/video/legacy-v1-compat.md` plus its exact Vi/Zh variants. Its effective English and
+Vietnamese authored text is subject to the same zero-Han gate. The locked old seed module is
+recognition/migration data, not a resolvable prompt-corpus entry, and tests assert it is never
+selected at runtime.
+
 - [ ] **Step 2: Classify without blanket exemptions**
 
 Every hit must be removed by translation or be one complete provider token whose protocol evidence
