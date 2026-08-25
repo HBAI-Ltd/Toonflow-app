@@ -23,6 +23,7 @@
     "dev:gui": "electronmon -r tsx scripts/main.ts",
     "dev:gui-vite": "cross-env VITE_DEV=1 electronmon -r tsx scripts/main.ts",
     "start": "cross-env NODE_ENV=prod node data/serve/app.js",
+    "test": "node --import tsx --test tests/*.test.ts",
     "lint": "tsc --noEmit",
     "build": "cross-env NODE_ENV=prod tsx scripts/build.ts",
     "pack": "electron-builder --dir",

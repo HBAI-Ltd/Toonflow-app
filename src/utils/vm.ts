@@ -1,6 +1,6 @@
 import { VM } from "vm2";
 import sharp from "sharp";
-import axios from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createZhipu } from "zhipu-ai-provider";
@@ -12,9 +12,20 @@ import { createXai } from "@ai-sdk/xai";
 import { createMinimax } from "vercel-minimax-ai-provider";
 import FormData from "form-data";
 import jsonwebtoken from "jsonwebtoken";
-import u from "@/utils";
 import crypto from "node:crypto";
-export default function runCode(code: string, vendor?: Record<string, any>) {
+import normalizeError from "@/utils/error";
+
+export interface VmBoundaryOverrides {
+  axios?: any;
+  fetch?: any;
+  logger?: (message: any) => void;
+  pollTask?: typeof pollTask;
+  urlToBase64?: typeof urlToBase64;
+  sleep?: typeof sleep;
+  createOpenAICompatible?: any;
+}
+
+export default function runCode(code: string, vendor?: Record<string, any>, dependencyOverrides: VmBoundaryOverrides = {}) {
   code = code.replace(/export\s*\{\s*\};?/g, ""); // 去掉 export {} 以免沙盒环境报错
   // 创建一个沙盒
   const exports = {};
@@ -31,6 +42,7 @@ export default function runCode(code: string, vendor?: Record<string, any>) {
     zipImage,
     zipImageResolution,
     urlToBase64,
+    sleep,
     mergeImages,
     pollTask,
     fetch: fetch,
@@ -43,6 +55,9 @@ export default function runCode(code: string, vendor?: Record<string, any>) {
   };
   if (vendor !== undefined) {
     sandbox.vendor = vendor;
+  }
+  for (const key of ["axios", "fetch", "logger", "pollTask", "urlToBase64", "sleep", "createOpenAICompatible"] as const) {
+    if (dependencyOverrides[key] !== undefined) sandbox[key] = dependencyOverrides[key];
   }
   const vm = new VM({
     timeout: 0,
@@ -80,11 +95,15 @@ export async function zipImageResolution(completeBase64: string, width: number, 
 }
 
 //url转Base64
-export async function urlToBase64(url: string): Promise<string> {
-  const res = await axios.get(url, { responseType: "arraybuffer" });
+export async function urlToBase64(url: string, config: AxiosRequestConfig = {}): Promise<string> {
+  const res = await axios.get(url, { ...config, responseType: "arraybuffer" });
   const mime = res.headers["content-type"] || "image/jpeg";
   const b64 = Buffer.from(res.data).toString("base64");
   return `data:${mime};base64,${b64}`;
+}
+
+export async function sleep(milliseconds: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 export async function pollTask(
@@ -99,7 +118,7 @@ export async function pollTask(
       if (result.completed) return result;
       if (result?.error) return result;
     } catch (e: any) {
-      return { completed: false, error: u.error(e).message || "poll error" };
+      return { completed: false, error: normalizeError(e).message || "poll error" };
     }
     await new Promise((res) => setTimeout(res, interval));
   }
