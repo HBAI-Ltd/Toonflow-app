@@ -72,6 +72,8 @@ describe("getAiRegex — model-facing system prompt follows prompt_language", ()
     await setSetting("prompt_language", "en");
     const system = await call();
     expect(system).toContain("You are a regular expression expert");
+    expect(system).toContain("Chapter 12: A New Beginning");
+    expect(system).toContain("Infer the separator pattern from the submitted text");
   });
 
   it("prompt_language=vi is used even when content_language=en", async () => {
@@ -79,5 +81,15 @@ describe("getAiRegex — model-facing system prompt follows prompt_language", ()
     await setSetting("prompt_language", "vi");
     const system = await call();
     expect(system).toContain("Bạn là chuyên gia biểu thức chính quy");
+    expect(system).toContain("Chapter 12: A New Beginning");
+    expect(system).toContain("suy ra mẫu phân tách từ chính văn bản được gửi");
+  });
+
+  it("prompt_language=zh giữ ví dụ Trung Quốc nhưng vẫn dò format từ input", async () => {
+    await setSetting("content_language", "en");
+    await setSetting("prompt_language", "zh");
+    const system = await call();
+    expect(system).toContain("第十二章 新的开始");
+    expect(system).toContain("必须根据用户提交的文本推断分隔格式");
   });
 });

@@ -173,7 +173,7 @@
   "agent.script.extractAssets.existingHint": "\n\n【已有资产列表】：{existingAssetsList}\n对于已有资产，如果在剧本中出现，只需在 existingAssetRefs 中给出资产名称和对应的 scriptIds 数组即可，无需重复生成 desc/type。对于新发现的资产（不在已有列表中），请在 newAssets 中给出完整信息。",
   "agent.script.extractAssets.userPrompt": "当前已有资产列表：{existingHint}\n\n请根据以下{count}集剧本提取对应的剧本资产（角色、场景、道具）:\n\n{scriptsContent}",
   "agent.script.extractAssets.scriptMarker": "===== 【剧本ID: {id}】{name} =====",
-  "agent.script.getAiRegex.systemPrompt": "你是一个正则表达式专家。用户会提供一段剧本文本，你需要分析其中的集/章节分隔模式，返回一个JavaScript正则表达式字符串。\n\n要求：\n1. 正则必须包含两个捕获组：第一个捕获组匹配集数/章节编号（数字或中文数字），第二个捕获组匹配该集的标题/名称（scriptName）。\n2. 返回格式为 /正则表达式/g，例如：/第s*([0-9一二三四五六七八九十百千万]+)s*集s*([^\n\r]*)/g\n3. 只返回正则表达式字符串本身，不要有任何其他解释文字或markdown格式。\n4. 如果文本中没有明显的章节分隔模式，返回空字符串。",
+  "agent.script.getAiRegex.systemPrompt": "你是一个正则表达式专家。用户会提供一段剧本文本。必须根据用户提交的文本推断分隔格式，不要假设剧本与这些说明使用相同语言。请返回一个能够匹配实际集/章节标题的 JavaScript 正则表达式字符串。\n\n要求：\n1. 正则必须包含两个捕获组：第一个捕获组匹配集数/章节编号（数字或中文数字），第二个捕获组匹配该集的标题/名称（scriptName）。\n2. 返回格式为 /正则表达式/g。对于“第十二章 新的开始”这样的标题，合适的结果是 /第\\s*([0-9０-９零一二三四五六七八九十百千万]+)\\s*[章回节]\\s*([^\\n\\r]*)/g。\n3. 只返回正则表达式字符串本身，不要附加解释或 markdown 格式。\n4. 如果文本中没有明显的章节分隔模式，返回空字符串。",
   "production.assets.batchGenerateAssetsImage.started": "开始生成资产图片",
   "production.assets.batchGenerateAssetsImage.taskDescribe": "资产图片生成",
   "agent.production.batchGenerateAssetsImage.noDetail": "无详细描述",
