@@ -764,6 +764,13 @@ Toonflow เผยแพร่ภายใต้สัญญาอนุญา�
       <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">เว็บไซต์</a></td>
     </tr>
     <tr>
+      <td align="center"><img src="./sponsored/apimart.jpg" alt="โลโก้ APIMart" width="48"></td>
+      <td align="center"><b>APIMart</b></td>
+      <td align="center">💻 สนับสนุนพลังประมวลผล</td>
+      <td>ขอขอบคุณ APIMart ที่ให้การสนับสนุนโปรเจกต์นี้! APIMart เป็นแพลตฟอร์ม API ราคาประหยัดสำหรับการสร้างภาพและวิดีโอด้วย AI โดยเฉพาะ <b>GPT-Image-2 เริ่มต้นเพียง $0.006/ภาพ</b> 1 ดอลลาร์สร้างภาพได้มากกว่า 160 ภาพ รองรับ API แบบอะซิงโครนัสชุดเดียวสำหรับทั้งภาพและวิดีโอ: ส่งงานรับ ID แล้วดึงผลลัพธ์ผ่านการ poll หรือ callback ประมวลผลเป็นชุดนับหมื่นภาพไม่ timeout เปลี่ยนโมเดลไม่ต้องแก้โค้ด จ่ายตามการใช้งานจริง ไม่มีค่าธรรมเนียมรายเดือน — <a href="https://go.apimart.ai/gh-toonflow-app">สมัครที่นี่</a>เพื่อเริ่มใช้งาน</td>
+      <td align="center"><a href="https://go.apimart.ai/gh-toonflow-app">เว็บไซต์</a></td>
+    </tr>
+    <tr>
       <td align="center"><img src="./sponsored/sophnet.png" alt="โลโก้ Sophnet Cloud" width="48"></td>
       <td align="center"><b>Sophnet Cloud</b></td>
       <td align="center">💻 สนับสนุนพลังประมวลผล</td>

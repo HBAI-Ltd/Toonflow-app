@@ -764,6 +764,13 @@ We also thank the following organizations/units/individuals for their support:
       <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">Website</a></td>
     </tr>
     <tr>
+      <td align="center"><img src="./sponsored/apimart.jpg" alt="APIMart Logo" width="48"></td>
+      <td align="center"><b>APIMart</b></td>
+      <td align="center">💻 Computing Sponsorship</td>
+      <td>Thanks to APIMart for sponsoring this project! APIMart is a low-cost API platform for AI image & video generation — <b>GPT-Image-2 from $0.006/image</b>, 160+ images per dollar. One async API covers both image and video: submit a task, get an ID, fetch results via polling or callback. Batch tens of thousands of images without timeouts, switch models without changing code. Pay-as-you-go with no monthly fee — <a href="https://go.apimart.ai/gh-toonflow-app">sign up here</a> to get started.</td>
+      <td align="center"><a href="https://go.apimart.ai/gh-toonflow-app">Website</a></td>
+    </tr>
+    <tr>
       <td align="center"><img src="./sponsored/sophnet.png" alt="Sophnet Logo" width="48"></td>
       <td align="center"><b>Sophnet</b></td>
       <td align="center">💻 Computing Sponsorship</td>

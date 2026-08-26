@@ -764,6 +764,13 @@ Toonflow распространяется с открытым исходным �
       <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">Веб-сайт</a></td>
     </tr>
     <tr>
+      <td align="center"><img src="./sponsored/apimart.jpg" alt="APIMart Logo" width="48"></td>
+      <td align="center"><b>APIMart</b></td>
+      <td align="center">💻 Спонсорство вычислительных мощностей</td>
+      <td>Благодарим APIMart за спонсорскую поддержку этого проекта! APIMart — недорогая API-платформа для генерации изображений и видео с помощью ИИ: <b>GPT-Image-2 от $0,006 за изображение</b>, более 160 изображений за доллар. Единый асинхронный API для изображений и видео: отправьте задачу, получите ID, получите результат через опрос или колбэк. Пакетная обработка десятков тысяч изображений без таймаутов, смена моделей без изменения кода. Оплата по факту использования, без ежемесячной платы — <a href="https://go.apimart.ai/gh-toonflow-app">зарегистрируйтесь здесь</a>, чтобы начать.</td>
+      <td align="center"><a href="https://go.apimart.ai/gh-toonflow-app">Веб-сайт</a></td>
+    </tr>
+    <tr>
       <td align="center"><img src="./sponsored/sophnet.png" alt="SuanNeng Cloud Logo" width="48"></td>
       <td align="center"><b>SuanNeng Cloud</b></td>
       <td align="center">💻 Спонсорство вычислительных мощностей</td>

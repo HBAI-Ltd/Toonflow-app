@@ -764,6 +764,13 @@ Toonflow は Apache-2.0 ライセンスのもとでオープンソース公開�
       <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">公式サイト</a></td>
     </tr>
     <tr>
+      <td align="center"><img src="./sponsored/apimart.jpg" alt="APIMart ロゴ" width="48"></td>
+      <td align="center"><b>APIMart</b></td>
+      <td align="center">💻 計算リソーススポンサー</td>
+      <td>APIMart を本プロジェクトのスポンサーとしてお迎えしました！APIMart は AI 画像・動画生成に特化した低価格 API プラットフォームで、<b>GPT-Image-2 は $0.006/枚から</b>、1ドルで160枚以上の画像生成が可能です。画像・動画とも同一の非同期APIに対応：タスクを送信してIDを取得し、ポーリングまたはコールバックで結果を取得。数万枚のバッチ処理でもタイムアウトせず、モデルを切り替えてもコード変更不要。従量課金制で月額料金なし — <a href="https://go.apimart.ai/gh-toonflow-app">こちらから登録</a>してすぐに利用開始できます。</td>
+      <td align="center"><a href="https://go.apimart.ai/gh-toonflow-app">公式サイト</a></td>
+    </tr>
+    <tr>
       <td align="center"><img src="./sponsored/sophnet.png" alt="算能雲 ロゴ" width="48"></td>
       <td align="center"><b>算能雲</b></td>
       <td align="center">💻 計算リソーススポンサー</td>
