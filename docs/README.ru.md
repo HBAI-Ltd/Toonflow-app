@@ -757,18 +757,18 @@ Toonflow распространяется с открытым исходным �
   </thead>
   <tbody>
     <tr>
+      <td align="center"><img src="./sponsored/metaso.jpg" alt="Metaso Logo" width="48"></td>
+      <td align="center"><b>Metaso</b></td>
+      <td align="center">💻 Спонсорство вычислительных мощностей</td>
+      <td>Metaso Technology предлагает экономичный сервис генерации видео MiniMax H3: <b>768P всего за 0,09 юаня/сек, 2K всего за 0,15 юаня/сек</b>. Поддерживает нативное 2K, синхронизацию аудио и видео, API совместим с <b>протоколом OpenAI</b>, а также поддерживает <b>ComfyUI</b> и <b>безграничный холст</b> — не требуется развёртывание собственного GPU.<br/><br/>🎁 Зарегистрируйтесь по <a href="https://metaso.cn/minimax-h3/?s=toon">эксклюзивной ссылке</a>, чтобы получить бонусные кредиты и эксклюзивные скидки. По вопросам сотрудничества добавьте WeChat: metasota12</td>
+      <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">Веб-сайт</a></td>
+    </tr>
+    <tr>
       <td align="center"><img src="./sponsored/sophnet.png" alt="SuanNeng Cloud Logo" width="48"></td>
       <td align="center"><b>SuanNeng Cloud</b></td>
       <td align="center">💻 Спонсорство вычислительных мощностей</td>
       <td>Стремится создать более быструю, стабильную и экономичную универсальную платформу API-сервисов для инференса моделей.</td>
       <td align="center"><a href="https://www.sophnet.com/">Веб-сайт</a></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="./sponsored/atlascloud.png" alt="Atlas Cloud Logo" width="48"></td>
-      <td align="center"><b>Atlas Cloud</b></td>
-      <td align="center">💻 Спонсорство вычислительных мощностей</td>
-      <td>Первая в мире универсальная мультимодальная платформа инференса. Диалог, изображения, видео, аудио — всё через единый API. Более 300 моделей, совместимость с OpenAI.</td>
-      <td align="center"><a href="https://www.atlascloud.ai/">Веб-сайт</a></td>
     </tr>
     <tr>
       <td align="center"><img src="./sponsored/hunyuan.webp" alt="Tencent Hunyuan 3D Logo" width="48"></td>

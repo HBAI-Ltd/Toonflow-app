@@ -757,18 +757,18 @@ Cảm ơn các tổ chức/đơn vị/cá nhân sau đã cung cấp hỗ trợ c
   </thead>
   <tbody>
     <tr>
+      <td align="center"><img src="./sponsored/metaso.jpg" alt="Metaso Logo" width="48"></td>
+      <td align="center"><b>Metaso</b></td>
+      <td align="center">💻 Tài trợ sức mạnh tính toán</td>
+      <td>Metaso Technology cung cấp dịch vụ tạo video MiniMax H3 với chi phí hợp lý: <b>768P chỉ 0,09 NDT/giây, 2K chỉ 0,15 NDT/giây</b>. Hỗ trợ 2K gốc, đồng bộ âm thanh - hình ảnh, API tương thích <b>giao thức OpenAI</b>, đồng thời hỗ trợ <b>ComfyUI</b>, <b>canvas vô hạn</b>, không cần tự triển khai GPU.<br/><br/>🎁 Đăng ký qua <a href="https://metaso.cn/minimax-h3/?s=toon">liên kết độc quyền</a> để nhận credit tặng kèm và ưu đãi độc quyền. Liên hệ hợp tác kinh doanh qua WeChat: metasota12</td>
+      <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">Trang web</a></td>
+    </tr>
+    <tr>
       <td align="center"><img src="./sponsored/sophnet.png" alt="Sophnet Logo" width="48"></td>
       <td align="center"><b>Sophnet</b></td>
       <td align="center">💻 Tài trợ sức mạnh tính toán</td>
       <td>Cam kết tạo nền tảng dịch vụ API suy luận mô hình tất cả trong một nhanh hơn, ổn định hơn, tiết kiệm hơn</td>
       <td align="center"><a href="https://www.sophnet.com/">Trang web</a></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="./sponsored/atlascloud.png" alt="Atlas Cloud Logo" width="48"></td>
-      <td align="center"><b>Atlas Cloud</b></td>
-      <td align="center">💻 Tài trợ sức mạnh tính toán</td>
-      <td>Nền tảng suy luận đa phương thức toàn diện đầu tiên trên thế giới. Hội thoại, hình ảnh, video, âm thanh - tất cả API thống nhất. Hơn 300 mô hình, tương thích OpenAI.</td>
-      <td align="center"><a href="https://www.atlascloud.ai/">Trang web</a></td>
     </tr>
     <tr>
       <td align="center"><img src="./sponsored/hunyuan.webp" alt="Tencent Hunyuan 3D Logo" width="48"></td>
