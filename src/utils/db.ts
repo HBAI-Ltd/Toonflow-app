@@ -42,6 +42,7 @@ const db = knex({
 
 const dbClient = Object.assign(<TName extends TableName>(table: TName) => db<RowType<TName>, RowType<TName>[]>(table), db);
 dbClient.schema = db.schema;
+dbClient.transaction = db.transaction.bind(db);
 export default dbClient;
 
 export { db };
