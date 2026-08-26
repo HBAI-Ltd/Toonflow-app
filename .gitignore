@@ -58,3 +58,5 @@ version.txt
 # git worktrees
 .worktrees
 .superpowers
+.gstack
+.artifacts
