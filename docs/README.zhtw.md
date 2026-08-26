@@ -760,7 +760,7 @@ Toonflow 基於 Apache-2.0 協議開源發布，並附有補充商業協議。
       <td align="center"><img src="./sponsored/metaso.jpg" alt="秘塔 Logo" width="48"></td>
       <td align="center"><b>秘塔</b></td>
       <td align="center">💻 算力贊助</td>
-      <td>秘塔科技提供高性價比的 MiniMax H3 影片生成服務：<b>768P 僅 0.09 元/秒，2K 僅 0.15 元/秒</b>。支援原生 2K、音畫同步，API 相容 <b>OpenAI 協議</b>，同時支援 <b>ComfyUI</b>、<b>無限畫布</b>，無需自行部署 GPU。<br/><br/>🎁 透過<a href="https://metaso.cn/minimax-h3/?s=toon">專屬連結註冊</a>，即可領取贈送額度及專屬優惠。商務對接可加wx:wxid_9rt077jmud6j22</td>
+      <td>秘塔科技提供高性價比的 MiniMax H3 影片生成服務：<b>768P 僅 0.09 元/秒，2K 僅 0.15 元/秒</b>。支援原生 2K、音畫同步，API 相容 <b>OpenAI 協議</b>，同時支援 <b>ComfyUI</b>、<b>無限畫布</b>，無需自行部署 GPU。<br/><br/>🎁 透過<a href="https://metaso.cn/minimax-h3/?s=toon">專屬連結註冊</a>，即可領取贈送額度及專屬優惠。商務對接可加微信：metasota12</td>
       <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">官網</a></td>
     </tr>
     <tr>

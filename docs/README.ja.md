@@ -760,7 +760,7 @@ Toonflow は Apache-2.0 ライセンスのもとでオープンソース公開�
       <td align="center"><img src="./sponsored/metaso.jpg" alt="Metaso ロゴ" width="48"></td>
       <td align="center"><b>Metaso（秘塔）</b></td>
       <td align="center">💻 計算リソーススポンサー</td>
-      <td>Metaso（秘塔科技）は高コストパフォーマンスの MiniMax H3 動画生成サービスを提供：<b>768P はわずか0.09元/秒、2K はわずか0.15元/秒</b>。ネイティブ2K、音声・映像同期に対応し、APIは<b>OpenAIプロトコル</b>互換、さらに<b>ComfyUI</b>、<b>無限キャンバス</b>にも対応、GPUを自前で用意する必要はありません。<br/><br/>🎁 <a href="https://metaso.cn/minimax-h3/?s=toon">専用リンクから登録</a>すると、無料クレジットや専用割引を受け取れます。ビジネス連携はWeChat: wxid_9rt077jmud6j22まで</td>
+      <td>Metaso（秘塔科技）は高コストパフォーマンスの MiniMax H3 動画生成サービスを提供：<b>768P はわずか0.09元/秒、2K はわずか0.15元/秒</b>。ネイティブ2K、音声・映像同期に対応し、APIは<b>OpenAIプロトコル</b>互換、さらに<b>ComfyUI</b>、<b>無限キャンバス</b>にも対応、GPUを自前で用意する必要はありません。<br/><br/>🎁 <a href="https://metaso.cn/minimax-h3/?s=toon">専用リンクから登録</a>すると、無料クレジットや専用割引を受け取れます。ビジネス連携はWeChat: metasota12まで</td>
       <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">公式サイト</a></td>
     </tr>
     <tr>

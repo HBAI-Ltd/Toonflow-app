@@ -760,7 +760,7 @@ Cảm ơn các tổ chức/đơn vị/cá nhân sau đã cung cấp hỗ trợ c
       <td align="center"><img src="./sponsored/metaso.jpg" alt="Metaso Logo" width="48"></td>
       <td align="center"><b>Metaso</b></td>
       <td align="center">💻 Tài trợ sức mạnh tính toán</td>
-      <td>Metaso Technology cung cấp dịch vụ tạo video MiniMax H3 với chi phí hợp lý: <b>768P chỉ 0,09 NDT/giây, 2K chỉ 0,15 NDT/giây</b>. Hỗ trợ 2K gốc, đồng bộ âm thanh - hình ảnh, API tương thích <b>giao thức OpenAI</b>, đồng thời hỗ trợ <b>ComfyUI</b>, <b>canvas vô hạn</b>, không cần tự triển khai GPU.<br/><br/>🎁 Đăng ký qua <a href="https://metaso.cn/minimax-h3/?s=toon">liên kết độc quyền</a> để nhận credit tặng kèm và ưu đãi độc quyền. Liên hệ hợp tác kinh doanh qua WeChat: wxid_9rt077jmud6j22</td>
+      <td>Metaso Technology cung cấp dịch vụ tạo video MiniMax H3 với chi phí hợp lý: <b>768P chỉ 0,09 NDT/giây, 2K chỉ 0,15 NDT/giây</b>. Hỗ trợ 2K gốc, đồng bộ âm thanh - hình ảnh, API tương thích <b>giao thức OpenAI</b>, đồng thời hỗ trợ <b>ComfyUI</b>, <b>canvas vô hạn</b>, không cần tự triển khai GPU.<br/><br/>🎁 Đăng ký qua <a href="https://metaso.cn/minimax-h3/?s=toon">liên kết độc quyền</a> để nhận credit tặng kèm và ưu đãi độc quyền. Liên hệ hợp tác kinh doanh qua WeChat: metasota12</td>
       <td align="center"><a href="https://metaso.cn/minimax-h3/?s=toon">Trang web</a></td>
     </tr>
     <tr>
