@@ -10,7 +10,7 @@ export interface VideoPromptAssetReference {
 
 export function isSeedance2Model(modelName: string | null | undefined): boolean {
   const normalized = (modelName ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  return /(?:^|-)seedance(?:-[a-z]+)*-?2(?:-0)?(?=$|-[a-z])/.test(normalized);
+  return /(?:^|-)seedance(?:-[a-z]+)*-?2(?:-0)?(?=$|-(?:[a-z]|\d{6}(?:$|-)))/.test(normalized);
 }
 
 export function resolveVideoReferenceMediaType(
