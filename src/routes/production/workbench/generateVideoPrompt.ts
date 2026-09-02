@@ -11,6 +11,7 @@ import {
   isSeedance2Model,
   type VideoPromptAssetReference,
 } from "@/lib/videoPromptReferences";
+import { getTrackStoryboardsForVideoPrompt } from "@/lib/videoPromptContext";
 const router = express.Router();
 
 export default router.post(
@@ -35,24 +36,9 @@ export default router.post(
     });
     //查询参数
     const images = await Promise.all(
-      info.map(async (item: { id: number; sources: string; fileType?: "image" | "video" | "audio" }) => {
-        if (item.sources === "storyboard") {
-          // 查询分镜主信息
-          const storyboard = await u
-            .db("o_storyboard")
-            .where("o_storyboard.id", item.id)
-            .select("videoDesc", "prompt", "track", "duration", "shouldGenerateImage")
-            .first();
-          // 查询分镜关联的资产ID
-          const assetRows = await u.db("o_assets2Storyboard").where("storyboardId", item.id).orderBy("rowid").select("assetId");
-          const associateAssetsIds = assetRows.map((row: any) => row.assetId);
-          return {
-            ...storyboard,
-            associateAssetsIds,
-            _type: "storyboard", // 标记类型，便于后续区分
-          };
-        }
-        if (item.sources === "assets") {
+      info
+        .filter((item: { sources: string }) => item.sources === "assets")
+        .map(async (item: { id: number; sources: string; fileType?: "image" | "video" | "audio" }) => {
           // 查询素材
           const assetsData = await u
             .db("o_assets")
@@ -65,13 +51,17 @@ export default router.post(
             mediaType: item.fileType ?? assetsData?.storedFileType,
             _type: "assets", // 标记类型
           };
-        }
-      }),
+        }),
     );
 
-    // 拆分 assets 和 storyboard
+    // 参考资产由前端选择，剧情分镜始终以当前轨道的数据库记录为准。
     const assets: VideoPromptAssetReference[] = [];
-    const storyboard: any[] = [];
+    const storyboard = await getTrackStoryboardsForVideoPrompt(u.db, trackId, projectId);
+    if (!storyboard.length) {
+      const reason = "当前视频轨道没有可用的分镜文字";
+      await u.db("o_videoTrack").where({ id: trackId }).update({ state: "生成失败", reason });
+      return res.status(400).send(error(reason));
+    }
     for (const item of images) {
       if (!item) continue; // 忽略空
       if (item._type === "assets")
@@ -81,15 +71,6 @@ export default router.post(
           name: item.name,
           filePath: item.filePath,
           mediaType: item.mediaType,
-        });
-      if (item._type === "storyboard")
-        storyboard.push({
-          videoDesc: item.videoDesc,
-          prompt: item.prompt,
-          track: item.track,
-          duration: item.duration,
-          associateAssetsIds: item.associateAssetsIds,
-          shouldGenerateImage: item.shouldGenerateImage,
         });
     }
     const assetsNotAudioIds = assets.filter((i) => i.type == "audio").map((i) => i.id);
