@@ -12,6 +12,7 @@ import {
   isSeedance2Model,
   type VideoPromptAssetReference,
 } from "@/lib/videoPromptReferences";
+import { selectVideoPromptTemplateFile } from "@/lib/videoPromptTemplate";
 const router = express.Router();
 
 export default router.post(
@@ -58,23 +59,7 @@ export default router.post(
       if (!videoPromptGeneration) {
         const modelPromptRoot = u.getPath(["modelPrompt"]);
         const videoPromptDir = path.join(modelPromptRoot, "video");
-        const modelLower = (modelData ?? "").toLowerCase();
-
-        let fileName: string | null = null;
-
-        if (modelLower.includes("wan") && modelLower.includes("2.6")) {
-          // wan2.6 系列 => 单图首尾帧模式
-          fileName = "wan2.6Single-imageFirstFrameMode.md";
-        } else if (isSeedance2Model(modelLower)) {
-          // seedance 2.0 / 2-0 系列
-          fileName = "seedance2Multi-parameterMode.md";
-        } else if (mode === "startEndRequired" || mode === "endFrameOptional" || mode === "startFrameOptional") {
-          // body.mode 为首尾帧相关 => 通用首尾帧模式
-          fileName = "universalFirstAndLastFrameMode.md";
-        } else if (typeof mode === "string" && mode.startsWith('["') && mode.endsWith('"]')) {
-          // 其他 => 通用多参模式
-          fileName = "universalMulti-parameterMode.md";
-        }
+        const fileName = selectVideoPromptTemplateFile(modelData, mode);
         if (fileName) {
           try {
             const fullPath = path.join(videoPromptDir, fileName);
