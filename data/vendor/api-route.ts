@@ -1,5 +1,5 @@
 /**
- * Toonflow AI供应商模板 - API-Route
+ * Toonflow AI供应商模板 - API Route
  * @version 1.0
  */
 
@@ -128,13 +128,13 @@ declare const exports: {
 const vendor: VendorConfig = {
   id: "api-route",
   version: "1.0",
-  author: "API-Route",
-  name: "API-Route",
+  author: "API Route",
+  name: "API Route",
   description:
-    "API-Route 高并发 AI 网关适配，支持 Claude、GPT-4o、DeepSeek、Gemini 等主流大语言模型，赋能 AI 剧本生成与分镜创意。\n\n[访问官网](https://www.api-route.com)",
+    "API Route 高并发 AI 网关适配，支持 Claude、GPT-4o、DeepSeek、Gemini 等主流大语言模型，赋能 AI 剧本生成与分镜创意。\n\n[访问官网](https://www.api-route.com)",
   icon: "",
   inputs: [
-    { key: "apiKey", label: "API密钥", type: "password", required: true, placeholder: "请输入 API-Route API Key (sk-...)" },
+    { key: "apiKey", label: "API密钥", type: "password", required: true, placeholder: "请输入 API Route API Key (sk-...)" },
     { key: "baseUrl", label: "请求地址", type: "url", required: true, placeholder: "示例：https://global.api-route.com/v1" },
   ],
   inputValues: {
