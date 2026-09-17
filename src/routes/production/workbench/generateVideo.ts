@@ -7,6 +7,18 @@ import { validateFields } from "@/middleware/middleware";
 import { ReferenceList } from "@/utils/ai";
 const router = express.Router();
 
+function resolveSelectedFilePath(src: string | undefined, fallback: string | undefined) {
+  if (!src || src.startsWith("data:") || src.startsWith("blob:")) return fallback;
+  try {
+    const pathname = decodeURIComponent(new URL(src, "http://localhost").pathname);
+    if (!pathname.startsWith("/oss/")) return fallback;
+    const selected = pathname.slice(4);
+    return selected.includes("..") ? fallback : selected;
+  } catch {
+    return fallback;
+  }
+}
+
 type Type = "imageReference" | "startImage" | "endImage" | "videoReference" | "audioReference";
 interface UploadItem {
   fileType: "image" | "video" | "audio";
@@ -27,6 +39,7 @@ export default router.post(
       z.object({
         id: z.number(),
         sources: z.string(),
+        src: z.string().optional(),
       }),
     ),
     prompt: z.string(),
@@ -54,7 +67,7 @@ export default router.post(
       uploadData.map(async (item: UploadItem) => {
         if (item.sources === "storyboard") {
           const filePath = await u.db("o_storyboard").where("id", item.id).select("filePath").first();
-          return { path: filePath?.filePath, sources: "storyBoard" };
+          return { path: resolveSelectedFilePath(item.src, filePath?.filePath), sources: "storyBoard", id: item.id };
         }
         if (item.sources === "assets") {
           const filePath = await u
@@ -63,7 +76,7 @@ export default router.post(
             .leftJoin("o_image", "o_assets.imageId", "o_image.id")
             .select("o_image.filePath", "o_image.type")
             .first();
-          return { path: filePath?.filePath, sources: filePath.type };
+          return { path: resolveSelectedFilePath(item.src, filePath?.filePath), sources: filePath.type, id: item.id };
         }
       }),
     );
@@ -74,6 +87,7 @@ export default router.post(
         return { base64: await u.oss.getImageBase64(item.path), type: item.sources == "audio" ? "audio" : "image" };
       }),
     );
+    console.log(`[videoSource] trackId=${trackId} duration=${duration} images=${JSON.stringify(images)}`);
     //新增
     const [videoId] = await u.db("o_video").insert({
       filePath: videoPath,

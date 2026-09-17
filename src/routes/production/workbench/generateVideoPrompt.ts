@@ -7,6 +7,18 @@ import fs from "fs/promises";
 import path from "path";
 const router = express.Router();
 
+function resolveSelectedFilePath(src: string | undefined, fallback: string | undefined) {
+  if (!src || src.startsWith("data:") || src.startsWith("blob:")) return fallback;
+  try {
+    const pathname = decodeURIComponent(new URL(src, "http://localhost").pathname);
+    if (!pathname.startsWith("/oss/")) return fallback;
+    const selected = pathname.slice(4);
+    return selected.includes("..") ? fallback : selected;
+  } catch {
+    return fallback;
+  }
+}
+
 export default router.post(
   "/",
   validateFields({
@@ -16,31 +28,37 @@ export default router.post(
       z.object({
         id: z.number(),
         sources: z.string(),
+        src: z.string().optional(),
       }),
     ),
     model: z.string(),
     mode: z.string(),
+    duration: z.number().positive().optional(),
   }),
   async (req, res) => {
-    const { trackId, projectId, info, model, mode } = req.body;
+    const { trackId, projectId, info, model, mode, duration } = req.body;
+    if (duration != null) {
+      await u.db("o_videoTrack").where({ id: trackId }).update({ duration });
+    }
     await u.db("o_videoTrack").where({ id: trackId }).update({
       state: "生成中",
     });
     //查询参数
     const images = await Promise.all(
-      info.map(async (item: { id: number; sources: string }) => {
+      info.map(async (item: { id: number; sources: string; src?: string }) => {
         if (item.sources === "storyboard") {
           // 查询分镜主信息
           const storyboard = await u
             .db("o_storyboard")
             .where("o_storyboard.id", item.id)
-            .select("videoDesc", "prompt", "track", "duration", "shouldGenerateImage")
+            .select("id", "filePath", "videoDesc", "prompt", "track", "duration", "shouldGenerateImage")
             .first();
           // 查询分镜关联的资产ID
           const assetRows = await u.db("o_assets2Storyboard").where("storyboardId", item.id).orderBy("rowid").select("assetId");
           const associateAssetsIds = assetRows.map((row: any) => row.assetId);
           return {
             ...storyboard,
+            filePath: resolveSelectedFilePath(item.src, storyboard?.filePath),
             associateAssetsIds,
             _type: "storyboard", // 标记类型，便于后续区分
           };
@@ -55,6 +73,7 @@ export default router.post(
             .first();
           return {
             ...assetsData,
+            filePath: resolveSelectedFilePath(item.src, assetsData?.filePath),
             _type: "assets", // 标记类型
           };
         }
@@ -75,6 +94,8 @@ export default router.post(
         });
       if (item._type === "storyboard")
         storyboard.push({
+          id: item.id,
+          filePath: item.filePath,
           videoDesc: item.videoDesc,
           prompt: item.prompt,
           track: item.track,
@@ -98,6 +119,14 @@ export default router.post(
 
     const [id, modelData] = model.split(/:(.+)/);
     const projectData = await u.db("o_project").select("*").where({ id: projectId }).first();
+    const videoTrackData = await u.db("o_videoTrack").select("duration").where({ id: trackId }).first();
+    const requestedDuration = Number(duration);
+    const selectedDuration = Number(videoTrackData?.duration);
+    const effectiveDuration = Number.isFinite(requestedDuration) && requestedDuration > 0
+      ? requestedDuration
+      : Number.isFinite(selectedDuration) && selectedDuration > 0
+        ? selectedDuration
+        : Number(storyboard[0]?.duration) || 5;
     const videoPrompt = await u.db("o_prompt").where("type", "videoPromptGeneration").first();
     let videoPromptGeneration = "" as string | undefined;
 
@@ -120,7 +149,10 @@ export default router.post(
 
       let fileName: string | null = null;
 
-      if (modelLower.includes("wan") && modelLower.includes("2.6")) {
+      if (modelLower.includes("minimax") && modelLower.includes("h3")) {
+        // MiniMax H3 单图生视频：首帧必须以本地视觉模型分析为准
+        fileName = "minimaxH3ImageAware.md";
+      } else if (modelLower.includes("wan") && modelLower.includes("2.6")) {
         // wan2.6 系列 => 单图首尾帧模式
         fileName = "wan2.6Single-imageFirstFrameMode.md";
       } else if (/seedance.*2[.\-]0/i.test(modelData)) {
@@ -155,8 +187,31 @@ export default router.post(
     const artStyle = projectData?.artStyle || "无";
 
     const visualManual = u.getArtPrompt(artStyle, "art_skills", "art_storyboard_video");
+    const selectedImages = images.filter(
+      (item: any) => item?.filePath && /\.(?:jpe?g|png|webp|bmp|gif|tiff?)$/i.test(item.filePath),
+    );
+    console.log(
+      `[videoPromptSource] trackId=${trackId} mode=${mode} duration=${effectiveDuration} info=${JSON.stringify(info)} images=${JSON.stringify(
+        selectedImages.map((item: any) => ({ id: item.id, source: item._type, filePath: item.filePath })),
+      )}`,
+    );
+    const selectedImageInputs = await Promise.all(
+      selectedImages.map(async (item: any, index: number) => ({
+        index: index + 1,
+        source: item._type,
+        id: item.id,
+        image: await u.oss.getImageBase64(item.filePath),
+      })),
+    );
     const content = `
           **模型名称**：${modelData},
+
+          **当前所选图片（首帧事实，最高优先级）**：本消息附带 ${selectedImageInputs.length} 张图片，顺序如下：
+          ${selectedImageInputs.map((i) => `<selectedImage index="${i.index}" source="${i.source}" id="${i.id}" />`).join("\n")}
+
+          **硬性要求**：必须直接观察本消息附带的当前图片，并以图片为首帧依据。分镜文字只用于推导图片之后的合理动作和台词；不得把图片中看不到的人物、姿势或道具写成首帧已有内容；不得复用其他图片的提示词。
+
+          **用户当前选择的视频总时长（最高优先级）**：${effectiveDuration} 秒。输出中的动作时间轴必须从 0s 完整覆盖到 ${effectiveDuration}s，结尾必须明确写到 ${effectiveDuration}s。分镜原始描述里若出现 3s、4s 等其他时长，全部忽略，不得据此缩短提示词。
 
           **资产信息**（角色、场景、道具、音频):${assets
             .filter((i) => i.filePath)
@@ -165,7 +220,7 @@ export default router.post(
           **分镜信息**：${storyboard.map(
             (i) => `<storyboardItem
   videoDesc='${i.videoDesc}'
-  duration='${i.duration}'
+  duration='${effectiveDuration}'
 ></storyboardItem>`,
           )},
           `;
@@ -180,15 +235,27 @@ export default router.post(
           },
           {
             role: "user",
-            content: content,
+            content: [
+              { type: "text" as const, text: content },
+              ...selectedImageInputs.map((item) => {
+                const match = item.image.match(/^data:([^;]+);base64,(.+)$/s);
+                if (!match) throw new Error("所选图片不是有效的 base64 Data URL");
+                return { type: "image" as const, image: Buffer.from(match[2], "base64"), mediaType: match[1] };
+              }),
+            ],
           },
         ],
       });
+      const cleanText = text
+        .trim()
+        .replace(/^```(?:text)?\s*/i, "")
+        .replace(/\s*```$/, "")
+        .trim();
       await u.db("o_videoTrack").where({ id: trackId }).update({
         state: "已完成",
-        prompt: text,
+        prompt: cleanText,
       });
-      res.status(200).send(success(text));
+      res.status(200).send(success(cleanText));
     } catch (e) {
       await u
         .db("o_videoTrack")

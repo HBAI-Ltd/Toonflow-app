@@ -7,6 +7,18 @@ import { validateFields } from "@/middleware/middleware";
 import { ReferenceList } from "@/utils/ai";
 const router = express.Router();
 
+function resolveSelectedFilePath(src: string | undefined, fallback: string | undefined) {
+  if (!src || src.startsWith("data:") || src.startsWith("blob:")) return fallback;
+  try {
+    const pathname = decodeURIComponent(new URL(src, "http://localhost").pathname);
+    if (!pathname.startsWith("/oss/")) return fallback;
+    const selected = pathname.slice(4);
+    return selected.includes("..") ? fallback : selected;
+  } catch {
+    return fallback;
+  }
+}
+
 type Type = "imageReference" | "startImage" | "endImage" | "videoReference" | "audioReference";
 interface UploadItem {
   fileType: "image" | "video" | "audio";
@@ -29,6 +41,7 @@ export default router.post(
           z.object({
             id: z.number(),
             sources: z.string(),
+            src: z.string().optional(),
           }),
         ),
         trackId: z.number(),
@@ -57,7 +70,7 @@ export default router.post(
 
     // 为每个 track 预处理数据并插入数据库，返回任务列表
     const tasks = await Promise.all(
-      (trackData as { uploadData: { id: number; sources: string }[]; trackId: number; prompt: string; duration: number }[]).map(async (track) => {
+      (trackData as { uploadData: { id: number; sources: string; src?: string }[]; trackId: number; prompt: string; duration: number }[]).map(async (track) => {
         const { uploadData, trackId, prompt, duration } = track;
 
         // 查询出图片数据
@@ -65,7 +78,7 @@ export default router.post(
           uploadData.map(async (item) => {
             if (item.sources === "storyboard") {
               const filePath = await u.db("o_storyboard").where("id", item.id).select("filePath").first();
-              return { path: filePath?.filePath, sources: "storyBoard" };
+              return { path: resolveSelectedFilePath(item.src, filePath?.filePath), sources: "storyBoard", id: item.id };
             }
             if (item.sources === "assets") {
               const filePath = await u
@@ -74,7 +87,7 @@ export default router.post(
                 .leftJoin("o_image", "o_assets.imageId", "o_image.id")
                 .select("o_image.filePath", "o_image.type")
                 .first();
-              return { path: filePath?.filePath, sources: filePath.type };
+              return { path: resolveSelectedFilePath(item.src, filePath?.filePath), sources: filePath.type, id: item.id };
             }
           }),
         );
