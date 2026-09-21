@@ -118,52 +118,52 @@
         </el-popover>
       </div>
     </section>
-  </div>
 
-  <el-dialog v-model="resultVisible" title="版本更新" width="min(480px, 92vw)" alignCenter appendToBody>
-    <div class="updateResult" aria-live="polite" :aria-busy="working">
-      <div class="resultHeader">
-        <span class="resultIcon" :class="{ warning: !!updateError, success: !working && !updateError && !snapshot?.updateAvailable }">
-          <icon-refresh v-if="working" class="loadingIcon" :size="22" aria-hidden="true" />
-          <icon-alert-circle v-else-if="updateError" :size="22" aria-hidden="true" />
-          <icon-arrow-up-circle v-else-if="snapshot?.updateAvailable" :size="22" aria-hidden="true" />
-          <icon-circle-check v-else :size="22" aria-hidden="true" />
-        </span>
-        <div class="resultCopy">
-          <h3>{{ resultTitle }}</h3>
-          <p>{{ resultMessage }}</p>
-        </div>
-      </div>
-      <div v-if="!checking && !updateError && snapshot?.updateAvailable" class="releaseInfo">
-        <div class="versionComparison">
-          <div class="versionItem">
-            <span>当前版本</span>
-            <strong>v{{ currentVersion }}</strong>
-          </div>
-          <icon-arrow-right class="versionArrow" :size="18" aria-hidden="true" />
-          <div class="versionItem latestVersion">
-            <span>最新版本</span>
-            <strong>v{{ snapshot.latestVersion }}</strong>
+    <el-dialog v-model="resultVisible" title="版本更新" width="min(480px, 92vw)" alignCenter appendToBody>
+      <div class="updateResult" aria-live="polite" :aria-busy="working">
+        <div class="resultHeader">
+          <span class="resultIcon" :class="{ warning: !!updateError, success: !working && !updateError && !snapshot?.updateAvailable }">
+            <icon-refresh v-if="working" class="loadingIcon" :size="22" aria-hidden="true" />
+            <icon-alert-circle v-else-if="updateError" :size="22" aria-hidden="true" />
+            <icon-arrow-up-circle v-else-if="snapshot?.updateAvailable" :size="22" aria-hidden="true" />
+            <icon-circle-check v-else :size="22" aria-hidden="true" />
+          </span>
+          <div class="resultCopy">
+            <h3>{{ resultTitle }}</h3>
+            <p>{{ resultMessage }}</p>
           </div>
         </div>
-        <div v-if="snapshot.channel || snapshot.latestHash" class="releaseMeta">
-          <el-tag v-if="snapshot.channel" type="info" size="small" round>{{ snapshot.channel }}</el-tag>
-          <code v-if="snapshot.latestHash" :title="snapshot.latestHash">{{ snapshot.latestHash }}</code>
+        <div v-if="!checking && !updateError && snapshot?.updateAvailable" class="releaseInfo">
+          <div class="versionComparison">
+            <div class="versionItem">
+              <span>当前版本</span>
+              <strong>v{{ currentVersion }}</strong>
+            </div>
+            <icon-arrow-right class="versionArrow" :size="18" aria-hidden="true" />
+            <div class="versionItem latestVersion">
+              <span>最新版本</span>
+              <strong>v{{ snapshot.latestVersion }}</strong>
+            </div>
+          </div>
+          <div v-if="snapshot.channel || snapshot.latestHash" class="releaseMeta">
+            <el-tag v-if="snapshot.channel" type="info" size="small" round>{{ snapshot.channel }}</el-tag>
+            <code v-if="snapshot.latestHash" :title="snapshot.latestHash">{{ snapshot.latestHash }}</code>
+          </div>
         </div>
       </div>
-    </div>
-    <template #footer>
-      <el-button size="small" @click="resultVisible = false">关闭</el-button>
-      <el-button
-        v-if="snapshot?.canUpdate && snapshot.updateAvailable"
-        size="small"
-        type="primary"
-        :loading="working"
-        @click="runUpdate(snapshot.updateReady ? 'apply' : 'download')">
-        {{ snapshot.updateReady ? "重启并更新" : "下载更新" }}
-      </el-button>
-    </template>
-  </el-dialog>
+      <template #footer>
+        <el-button size="small" @click="resultVisible = false">关闭</el-button>
+        <el-button
+          v-if="snapshot?.canUpdate && snapshot.updateAvailable"
+          size="small"
+          type="primary"
+          :loading="working"
+          @click="runUpdate(snapshot.updateReady ? 'apply' : 'download')">
+          {{ snapshot.updateReady ? "重启并更新" : "下载更新" }}
+        </el-button>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">

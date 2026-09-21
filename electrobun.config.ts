@@ -38,7 +38,7 @@ export default {
     },
   },
   release: {
-    baseUrl: process.env.updateBaseUrl ?? "http://127.0.0.1:8091",
+    baseUrl: process.env.updateBaseUrl ?? "http://127.0.0.1:8091/version/desktopUpdates",
     // ACT: 常规构建不访问更新服务器；release:desktop 显式开启增量构建。
     generatePatch: process.env.generateUpdatePatch === "1",
   },
