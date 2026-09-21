@@ -18,6 +18,11 @@ export default {
     },
     buildFolder: "../../build/desktop/macIntel",
     artifactFolder: "../../build/desktop/artifacts/macX64",
+    mac: {
+      icons: "../../packages/assets/logo.iconset",
+      codesign: true,
+      notarize: false,
+    },
   },
   release: shared.release,
 } satisfies ElectrobunConfig;

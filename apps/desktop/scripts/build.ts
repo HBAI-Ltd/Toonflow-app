@@ -19,6 +19,8 @@ if (!(isMac && ["x64", "arm64"].includes(process.arch)) && !(process.platform ==
 }
 if (mode === "dev") process.env.TOONFLOW_DATA_DIR = resolve(projectDir, "data");
 if (isMac) {
+  // ACT: 本地测试默认 ad-hoc 签名；正式签名身份可通过环境变量覆盖，公证仍需另行配置。
+  $.env({ ...process.env, ELECTROBUN_DEVELOPER_ID: process.env.ELECTROBUN_DEVELOPER_ID || "-" });
   const startupTarget = isIntelMac ? "macX64" : "macArm64";
   for (const name of ["libthorvg.dylib", "nativeSplash.dylib"]) {
     if (!existsSync(resolve(projectDir, "packages/startup/assets", startupTarget, name))) {

@@ -124,7 +124,15 @@ Windows 启动动画在加载本地服务前显示，窗口、绘制和消息循
 
 Agent 每次发送消息时同时扫描全局 `data/skills/` 和当前工作区的 `skill/`，同名技能优先使用工作区版本。“Skill 操作器”统一提供目录查询、读取、新建和修改，三个读写权限默认开启；新建默认保存在工作区，也可指定全局范围。技能说明与权限随工具打包，发布只需一个 `.tool.js`。
 
-Mac 在对应架构机器上执行相同的 `build:desktop`、`package:desktop` 命令，不支持跨系统或跨架构构建。Intel 与 Apple Silicon 产物分别在 `build/desktop/artifacts/macX64/`、`macArm64/`。将 DMG 内的应用复制到 `~/Applications/` 后再运行；当前不签名或公证。
+Mac 在对应架构机器上执行相同的 `build:desktop`、`package:desktop` 命令，不支持跨系统或跨架构构建。Intel 与 Apple Silicon 产物分别在 `build/desktop/artifacts/macX64/`、`macArm64/`。两者共用 `packages/assets/logo.iconset`，默认通过 Electrobun 对应用、更新包内的应用和 DMG 做 ad-hoc 临时签名，不进行 Apple 公证。可用 `ELECTROBUN_DEVELOPER_ID` 覆盖签名身份，正式分发还需要配置公证。
+
+将 DMG 内的应用复制到 `/Applications/` 或 `~/Applications/` 后再运行。ad-hoc 签名不代表通过 Gatekeeper；浏览器或微信下载的测试包仍可能被隔离。仅对自己构建且确认来源的测试版本，可移除该应用的隔离属性（按实际安装位置调整路径）：
+
+```sh
+xattr -dr com.apple.quarantine "/Applications/toonflow.app"
+```
+
+此操作仅作用于指定的测试应用，不关闭系统 Gatekeeper，也不替代正式签名和公证。
 
 ## GitHub Actions
 
@@ -133,7 +141,7 @@ Mac 在对应架构机器上执行相同的 `build:desktop`、`package:desktop` 
 
 工作流固定使用 `package.json` 中的 Bun 版本，自动准备 NSIS、Mac 原生启动库和 Intel 兼容 SDK。本次仅包含 Windows/macOS 桌面端；手动 debug 是打包验证，未自动启动 GUI 或安装应用。
 
-可在仓库 **Settings → Secrets and variables → Actions → Variables** 配置 `UPDATE_BASE_URL`，写入应用使用的更新服务地址；未配置时沿用项目配置（目前是 `http://127.0.0.1:8091`）。工作流使用 `release:desktop <版本> --initial` 生成完整包，不请求旧版基线、不生成增量补丁，也不执行 `publish:update`；独立更新服务仍按下文单独发布。Mac 仍沿用当前未签名、未公证的打包方式。
+可在仓库 **Settings → Secrets and variables → Actions → Variables** 配置 `UPDATE_BASE_URL`，写入应用使用的更新服务地址；未配置时沿用项目配置。工作流使用 `release:desktop <版本> --initial` 生成完整包，不请求旧版基线、不生成增量补丁，也不执行 `publish:update`；独立更新服务仍按下文单独发布。Mac 上传前会解包检查图标、Bun 和应用入口，并验证应用签名、DMG 完整性及签名；这些检查不等于通过 Gatekeeper 或真机启动验证。
 
 ## 更新构建和发布
 

@@ -36,6 +36,11 @@ export default {
     win: {
       icon: "packages/assets/logo.ico",
     },
+    mac: {
+      icons: "packages/assets/logo.iconset",
+      codesign: true,
+      notarize: false,
+    },
   },
   release: {
     baseUrl: process.env.updateBaseUrl ?? "http://127.0.0.1:8091/version/desktopUpdates",

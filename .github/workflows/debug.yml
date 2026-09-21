@@ -141,6 +141,32 @@ jobs:
         if: runner.os == 'macOS'
         # ACT: CI 构建完整包，不依赖更新服务器已有版本，也不向更新服务器发布。
         run: bun run release:desktop "$appVersion" --initial
+      - name: 验证 macOS 更新包与安装镜像
+        if: runner.os == 'macOS'
+        env:
+          releaseDirectory: ${{ matrix.releaseFolder }}/${{ needs.prepare.outputs.version }}
+        run: |
+          inspectionDirectory="$RUNNER_TEMP/toonflowPackageCheck"
+          mkdir -p "$inspectionDirectory"
+          export inspectionDirectory
+          bun -e '
+          import { readdirSync } from "node:fs";
+          import { join } from "node:path";
+          const directory = process.env.releaseDirectory;
+          const archives = readdirSync(directory).filter(name => name.endsWith(".tar.zst"));
+          if (archives.length !== 1) throw new Error("更新包数量不正确");
+          await Bun.write(join(process.env.inspectionDirectory, "app.tar"), Bun.zstdDecompressSync(await Bun.file(join(directory, archives[0])).arrayBuffer()));
+          '
+          tar -xf "$inspectionDirectory/app.tar" -C "$inspectionDirectory"
+          app="$inspectionDirectory/toonflow.app"
+          test -s "$app/Contents/Resources/AppIcon.icns"
+          test -s "$app/Contents/Resources/app/bun/index.js"
+          test -x "$app/Contents/MacOS/bun"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          for dmg in "$releaseDirectory"/*.dmg; do
+            hdiutil verify "$dmg"
+            codesign --verify --verbose=2 "$dmg"
+          done
       - name: 上传构建产物
         id: artifact
         uses: actions/upload-artifact@v7
