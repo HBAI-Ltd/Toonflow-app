@@ -32,14 +32,13 @@ function modulePath(from: string, to: string) {
   return relative(dirname(from), to).replaceAll("\\", "/");
 }
 
-// ACT: 桌面源码使用 TypeScript，复制后适配 SDK 和工作区子包导入。
+// ACT: 复制后仍从原桌面包解析工作区依赖，避免新增的动态导入被遗漏在产物中。
 const sourceDir = resolve(generatedDir, "src");
 cpSync(resolve(projectDir, "apps/desktop/src"), sourceDir, { recursive: true });
 for (const target of new Bun.Glob("**/*.ts").scanSync({ cwd: sourceDir, absolute: true })) {
   const code = readFileSync(target, "utf8")
     .replace(/(["'])electrobun\/main\1/g, () => JSON.stringify(modulePath(target, resolve(generatedDir, "electrobun.ts"))))
-    .replace(/(["'])@toonflow\/server\/app\1/g, () => JSON.stringify(modulePath(target, resolve(projectDir, "apps/server/src/app.ts"))))
-    .replace(/(["'])@toonflow\/startup\1/g, () => JSON.stringify(modulePath(target, resolve(projectDir, "packages/startup/src/index.ts"))));
+    .replace(/(["'])(@toonflow\/[^"']+)\1/g, (_match, _quote, specifier) => JSON.stringify(modulePath(target, Bun.resolveSync(specifier, resolve(projectDir, "apps/desktop")))));
   writeFileSync(target, code);
 }
 const cli = resolve(compatDir, "node_modules/electrobun/bin/electrobun.cjs");

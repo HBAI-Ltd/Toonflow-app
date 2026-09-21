@@ -163,9 +163,16 @@ jobs:
           test -s "$app/Contents/Resources/app/bun/index.js"
           test -x "$app/Contents/MacOS/bun"
           codesign --verify --deep --strict --verbose=2 "$app"
+          mountDirectory="$inspectionDirectory/dmg"
+          mkdir -p "$mountDirectory"
           for dmg in "$releaseDirectory"/*.dmg; do
             hdiutil verify "$dmg"
             codesign --verify --verbose=2 "$dmg"
+            hdiutil attach "$dmg" -readonly -nobrowse -mountpoint "$mountDirectory"
+            trap 'hdiutil detach "$mountDirectory"' EXIT
+            codesign --verify --deep --strict --verbose=2 "$mountDirectory/toonflow.app"
+            hdiutil detach "$mountDirectory"
+            trap - EXIT
           done
       - name: 上传构建产物
         id: artifact
