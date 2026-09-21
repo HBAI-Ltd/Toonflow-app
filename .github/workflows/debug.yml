@@ -132,7 +132,13 @@ jobs:
           }
           if (!(Test-Path -LiteralPath $nsisPath)) { throw '找不到 makensis.exe' }
           "NSIS_PATH=$nsisPath" >> $env:GITHUB_ENV
-      - name: 构建安装包及完整更新文件
+      - name: 构建 Windows 安装包及完整更新文件
+        if: runner.os == 'Windows'
+        # ACT: 使用原生环境，避免 Git Bash 的 GNU tar 将 Windows 盘符识别为远程主机。
+        shell: pwsh
+        run: bun run release:desktop "$env:appVersion" --initial
+      - name: 构建 macOS 安装包及完整更新文件
+        if: runner.os == 'macOS'
         # ACT: CI 构建完整包，不依赖更新服务器已有版本，也不向更新服务器发布。
         run: bun run release:desktop "$appVersion" --initial
       - name: 上传构建产物
