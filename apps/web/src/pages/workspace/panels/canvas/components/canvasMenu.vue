@@ -18,12 +18,13 @@
             </div>
             <el-scrollbar maxHeight="280px">
               <div v-for="canvas in canvases" :key="canvas.id" class="canvasItem">
-                <el-input v-if="editingId === canvas.id" ref="nameInputs" v-model="canvasName" class="nameEditor" size="small" :disabled="busy" :maxlength="120" :aria-label="newCanvasId === canvas.id ? '新画布名称' : '画布名称'" @keydown.stop @blur="saveCanvas" />
+                <el-input v-if="editingId === canvas.id" ref="nameInputs" v-model="canvasName" class="nameEditor" size="small" :disabled="busy" :maxlength="120" :aria-label="newCanvasId === canvas.id ? '新画布名称' : '画布名称'" @keydown.stop @keydown.enter="saveCanvas" @blur="saveCanvas" />
                 <template v-else>
                   <button class="canvasChoice" type="button" :disabled="busy || editingId !== null" :aria-pressed="activeCanvasId === canvas.id" :title="canvas.name" @click="handleSwitchCanvas(canvas.id)">{{ canvas.name }}</button>
                   <div class="itemAction">
                     <icon-check v-if="activeCanvasId === canvas.id" class="selectedIcon" :size="18" aria-hidden="true" />
                     <el-button class="iconButton renameButton" text :icon="IconEdit" :disabled="busy || editingId !== null" :aria-label="`编辑 ${canvas.name}`" title="编辑" @click="editCanvas(canvas)" />
+                    <el-button class="iconButton deleteButton" text type="danger" :icon="IconTrash" :disabled="busy || editingId !== null || canvases.length <= 1" :aria-label="`删除 ${canvas.name}`" :title="canvases.length <= 1 ? '至少保留一个画布' : '删除画布'" @click="removeCanvas(canvas)" />
                   </div>
                 </template>
               </div>
@@ -41,11 +42,11 @@
 import axios from "axios";
 import { computed, inject, nextTick, ref, shallowRef, watch, type ShallowRef } from "vue";
 import { Panel, useVueFlow, type FlowExportObject } from "@vue-flow/core";
-import { ElMessage, type InputInstance } from "element-plus";
-import { IconEdit, IconCheck, IconChevronDown, IconPlus } from "@tabler/icons-vue";
+import { ElMessage, ElMessageBox, type InputInstance } from "element-plus";
+import { IconEdit, IconCheck, IconChevronDown, IconPlus, IconTrash } from "@tabler/icons-vue";
 import { useWorkspaceStore } from "@/stores/workspace";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
-import { isCanvasFile } from "@/pages/workspace/canvasFile";
+import { getCanvasAssetDirectories, isCanvasFile } from "@/pages/workspace/canvasFile";
 
 const props = defineProps<{
   directory?: string;
@@ -69,10 +70,11 @@ function saveProjectName(event: Event) {
 
 type Canvas = { id: string; name: string; flow?: Pick<FlowExportObject, "nodes" | "edges" | "viewport"> };
 const canvases = inject<ShallowRef<Canvas[]>>("canvasList", shallowRef<Canvas[]>([]));
+const getRetainedNodes = inject<(id: string) => { id: string; data?: unknown }[]>("canvasAssetNodes", () => []);
 const boundCanvas = shallowRef<Canvas>();
 const activeCanvasId = defineModel<string>("canvasId", { default: "" });
 watch(canvases, () => {
-  if (boundCanvas.value && canvases.value.includes(boundCanvas.value)) activeCanvasId.value = boundCanvas.value.id;
+  if (boundCanvas.value) activeCanvasId.value = canvases.value.includes(boundCanvas.value) ? boundCanvas.value.id : "";
 }, { flush: "sync" });
 const canvasListVisible = ref(false);
 const activeCanvasName = computed(() => canvases.value.find(canvas => canvas.id === activeCanvasId.value)?.name || "选择画布");
@@ -206,6 +208,57 @@ async function handleSwitchCanvas(canvasId: string) {
   }
 }
 
+async function removeCanvas(canvas: Canvas) {
+  if (busy.value || editingId.value !== null || !props.directory || canvases.value.length <= 1) return;
+  const directory = props.directory;
+  const id = canvas.id;
+  busy.value = true;
+  canvasListVisible.value = false;
+  try {
+    const confirmed = await ElMessageBox.confirm(`确定删除“${canvas.name}”？对应的 ${id} 文件及独占的节点素材也会被删除，其他画布共用的素材会保留。此操作不可撤销。`, "删除画布", {
+      type: "warning", confirmButtonText: "删除", cancelButtonText: "取消", closeOnClickModal: false,
+    }).then(() => true, () => false);
+    if (!confirmed) return;
+    checkCanvasDirectory(directory);
+    const nextCanvas = canvases.value.find(item => item.id !== id);
+    if (!nextCanvas) throw new Error("至少保留一个画布");
+    if (activeCanvasId.value === id) await applyCanvas(nextCanvas.id, directory);
+    await props.flushSave(async () => {
+      checkCanvasDirectory(directory);
+      if (canvas.id !== id || !canvases.value.includes(canvas)) throw new Error("画布已变更，请重新选择");
+      if (canvases.value.length <= 1) throw new Error("至少保留一个画布");
+      const files = useWorkspaceFiles(directory);
+      const storedCanvases = await Promise.all((await listCanvases(directory)).map(async canvas => {
+        const data = await files.readJson<{ toonflowCanvas?: boolean; nodes?: { id: string; data?: unknown }[] }>(canvas.id);
+        if (data?.toonflowCanvas !== true || !Array.isArray(data.nodes) || data.nodes.some(node => !node || typeof node.id !== "string")) {
+          throw new Error(`无法确认 ${canvas.id} 的素材引用，已停止删除`);
+        }
+        return { id: canvas.id, nodes: [...data.nodes, ...getRetainedNodes(canvas.id)] };
+      }));
+      const removedCanvas = storedCanvases.find(canvas => canvas.id === id);
+      if (!removedCanvas) throw new Error("画布不存在，请重新获取画布列表");
+      if (storedCanvases.length <= 1) throw new Error("至少保留一个画布");
+      const assetDirectories = getCanvasAssetDirectories(removedCanvas.nodes, storedCanvases.filter(canvas => canvas.id !== id).flatMap(canvas => canvas.nodes));
+      checkCanvasDirectory(directory);
+      await files.remove(id);
+      checkCanvasDirectory(directory);
+      canvases.value = canvases.value.filter(item => item !== canvas);
+      // 等待宿主停止并卸载已删除画布，再恢复其他画布的自动保存。
+      await nextTick();
+      const results = await Promise.allSettled(assetDirectories.map(path => files.remove(path, true).catch(error => {
+        if (!axios.isAxiosError<{ data?: { code?: string } }>(error) || error.response?.data.data?.code !== "ENOENT") throw error;
+      })));
+      const failed = results.flatMap((result, index) => result.status === "rejected" ? [assetDirectories[index]] : []);
+      if (failed.length) throw new Error(`画布已删除，但 ${failed.length} 个素材目录清理失败：${failed.join("、")}`);
+    });
+    if (props.directory === directory) ElMessage.success("画布已删除");
+  } catch (err) {
+    if (props.directory === directory) ElMessage.error(errorMessage(err, "删除画布失败"));
+  } finally {
+    if (props.directory === directory) busy.value = false;
+  }
+}
+
 async function createCanvasFile(directory: string, name?: string, signal?: AbortSignal) {
   if (name !== undefined) name = normalizeCanvasName(name);
   const files = useWorkspaceFiles(directory);
@@ -327,7 +380,8 @@ async function renameCanvas(canvasId: string, name: string, signal?: AbortSignal
   }
 }
 
-async function saveCanvas() {
+async function saveCanvas(event?: Event) {
+  if (event instanceof KeyboardEvent && event.isComposing) return;
   const id = editingId.value;
   if (busy.value || !props.directory || id === null) return;
   const directory = props.directory;
@@ -394,7 +448,7 @@ defineExpose({ getCanvases, addCanvas, switchCanvas, renameCanvas, syncDocumentN
     &:hover, &:focus-within {
       background: var(--el-fill-color);
       .itemAction {
-        .renameButton { opacity: 1; }
+        .renameButton, .deleteButton { opacity: 1; }
         .selectedIcon { visibility: hidden; }
       }
     }
@@ -418,13 +472,14 @@ defineExpose({ getCanvases, addCanvas, switchCanvas, renameCanvas, syncDocumentN
 
     .itemAction {
       position: relative;
+      display: flex;
       flex-shrink: 0;
-      width: 28px;
+      width: 56px;
       height: 28px;
       margin-right: 2px;
 
       .selectedIcon { position: absolute; top: 5px; left: 5px; pointer-events: none; }
-      .renameButton { opacity: 0; }
+      .renameButton, .deleteButton { opacity: 0; }
     }
   }
 
@@ -434,7 +489,7 @@ defineExpose({ getCanvases, addCanvas, switchCanvas, renameCanvas, syncDocumentN
       width: auto;
       align-items: center;
       .selectedIcon { position: static; visibility: visible; }
-      .renameButton { opacity: 1; }
+      .renameButton, .deleteButton { opacity: 1; }
     }
   }
 }

@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onScopeDispose, provide, shallowReactive, shallowRef, ref, type ComponentPublicInstance } from "vue";
+import { computed, onScopeDispose, provide, shallowReactive, shallowRef, ref, watch, type ComponentPublicInstance } from "vue";
 import type { CanvasContext } from "@toonflow/tool-canvas/runtime";
 import { waitForControlValue } from "@/lib/mcpControl";
 import canvasPanel from "./index.vue";
@@ -33,7 +33,21 @@ const activeInstance = computed(() => instances.get(activeKey.value));
 const canvasId = computed(() => activeInstance.value?.canvasId ?? "");
 const canvasReady = computed(() => activeInstance.value?.canvasReady ?? false);
 const lifetime = new AbortController();
-provide("canvasList", shallowRef([]));
+const canvases = shallowRef<{ id: string }[]>([]);
+provide("canvasList", canvases);
+provide("canvasAssetNodes", (id: string) => [...instances.values()].find(panel => panel.canvasId === id)?.getRetainedNodes() ?? []);
+watch(canvases, (current, previous) => {
+  const removed = new Set(previous.filter(canvas => !current.includes(canvas)).map(canvas => canvas.id));
+  if (!removed.size) return;
+  entries.value = entries.value.filter(entry => {
+    const panel = instances.get(entry.key);
+    if (!removed.has(panel?.canvasId || entry.fileName || "")) return true;
+    // 卸载会刷新待保存内容，删除文件后必须先取消，避免重新创建 JSON。
+    panel?.cancelSave();
+    return false;
+  });
+  if (!entries.value.some(entry => entry.key === activeKey.value)) activeKey.value = entries.value[0]?.key ?? "";
+}, { flush: "sync" });
 onScopeDispose(() => lifetime.abort(new Error("工作区已关闭")));
 
 function setInstance(key: string, value: Element | ComponentPublicInstance | null) {
