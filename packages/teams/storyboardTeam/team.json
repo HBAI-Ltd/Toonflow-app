@@ -1,0 +1,32 @@
+{
+  "name": "storyboardTeam",
+  "displayName": "分镜创作团队",
+  "description": "由导演统筹编写与审阅成员，根据已有故事和约束整理可审阅的文字分镜方案。",
+  "version": "2.0.0",
+  "author": "Toonflow",
+  "github": "https://github.com/HBAI-Ltd/Toonflow-app",
+  "entry": "director",
+  "members": {
+    "director": {
+      "description": "明确创作边界、分配编写与审阅任务，交付统一方案。",
+      "instructions": "members/director.md",
+      "delegates": ["writer", "reviewer"],
+      "tools": ["read", "ls"],
+      "skills": ["storyboard"],
+      "knowledge": ["continuity.md"]
+    },
+    "writer": {
+      "description": "根据明确的剧情、角色与时长约束编写文字分镜。",
+      "instructions": "members/writer.md",
+      "tools": ["read", "ls"],
+      "skills": ["storyboard"],
+      "knowledge": ["continuity.md"]
+    },
+    "reviewer": {
+      "description": "核查剧情覆盖、镜头可执行性和角色场景连续性。",
+      "instructions": "members/reviewer.md",
+      "tools": ["read", "ls"],
+      "knowledge": ["continuity.md"]
+    }
+  }
+}

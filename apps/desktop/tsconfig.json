@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "WebWorker"],
+    "paths": {
+      "@/*": ["../server/src/*"],
+      "electrobun/main": ["../../.hutch/devkit/api/sdks/main/index.ts"]
+    }
+  },
+  "include": ["src", "scripts", "../../packages/startup/src", "../../electrobun.config.ts", "../../hutch.config.ts"]
+}

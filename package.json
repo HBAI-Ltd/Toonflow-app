@@ -1,0 +1,51 @@
+{
+  "name": "toonflow",
+  "description": "Toonflow 是一款 AI 短剧漫剧工具，能够利用 AI 技术将小说自动转化为剧本，并结合 AI 生成的图片和视频，实现高效的短剧创作。",
+  "author": "HBAI-Ltd <ltlctools@outlook.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/HBAI-Ltd/Toonflow-app#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HBAI-Ltd/Toonflow-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HBAI-Ltd/Toonflow-app/issues",
+    "email": "ltlctools@outlook.com"
+  },
+  "type": "module",
+  "packageManager": "bun@1.3.14",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "packages/nodes/*",
+    "packages/tools/*",
+    "packages/teams/*"
+  ],
+  "scripts": {
+    "dev": "bun run --filter '@toonflow/web' --filter '@toonflow/server' dev",
+    "dev:web": "bun run --filter '@toonflow/web' dev",
+    "dev:server": "bun run --filter '@toonflow/server' dev",
+    "dev:desktop": "bun run --filter '@toonflow/desktop' dev",
+    "dev:plugins": "NODE_ENV=dev bun run --filter './packages/tools/*' --filter './packages/nodes/*' build",
+    "dev:updateServer": "bun run --filter '@toonflow/updateServer' dev",
+    "start:updateServer": "bun run --filter '@toonflow/updateServer' start",
+    "publish:update": "bun run apps/updateServer/scripts/publish.ts",
+    "start:server": "bun run --filter '@toonflow/server' start",
+    "build": "bun run build:tools && bun run --filter '@toonflow/web' --filter '@toonflow/server' build",
+    "build:nodes": "bun -e \"import { rmSync } from 'node:fs'; import { resolve } from 'node:path'; rmSync(resolve('build/nodes'), { recursive: true, force: true });\" && NODE_ENV=production bun run --filter './packages/nodes/*' build",
+    "build:desktop": "bun run --filter '@toonflow/desktop' build",
+    "build:mcp": "bun run --filter '@toonflow/mcp' build",
+    "build:teams": "NODE_ENV=production bun run --filter './packages/teams/*' build",
+    "package:desktop": "bun run --filter '@toonflow/desktop' package",
+    "release:desktop": "bun run apps/desktop/scripts/release.ts",
+    "typecheck": "bun run --filter '@toonflow/*' typecheck",
+    "build:tools": "bun -e \"import { rmSync } from 'node:fs'; import { resolve } from 'node:path'; rmSync(resolve('build/tools'), { recursive: true, force: true });\" && NODE_ENV=production bun run --filter './packages/tools/*' build"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.2",
+    "@types/postcss-pxtorem": "^6.1.0",
+    "postcss": "^8.5.28",
+    "postcss-pxtorem": "^6.1.0",
+    "typescript": "^7.0.2"
+  }
+}

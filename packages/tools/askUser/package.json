@@ -1,0 +1,25 @@
+{
+  "name": "@toonflow/tool-ask-user",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build.ts",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.2",
+    "@tabler/icons-vue": "^3.46.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.42",
+    "element-plus": "^2.14.5",
+    "axios": "^1.20.0",
+    "@form-create/element-ui": "^3"
+  },
+  "devDependencies": {
+    "@toonflow/tools-scaffold": "workspace:*",
+    "typescript": "~6.0.3",
+    "vue-tsc": "^3.3.11"
+  }
+}

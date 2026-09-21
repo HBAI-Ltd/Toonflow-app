@@ -1,0 +1,19 @@
+LIBRARY thorvg-1
+EXPORTS
+tvg_engine_init
+tvg_engine_term
+tvg_animation_new
+tvg_animation_get_picture
+tvg_animation_get_total_frame
+tvg_animation_get_duration
+tvg_animation_set_frame
+tvg_animation_del
+tvg_picture_load_data
+tvg_picture_set_size
+tvg_swcanvas_create
+tvg_swcanvas_set_target
+tvg_canvas_add
+tvg_canvas_update
+tvg_canvas_draw
+tvg_canvas_sync
+tvg_canvas_destroy

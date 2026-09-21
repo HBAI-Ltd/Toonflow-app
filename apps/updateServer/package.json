@@ -1,0 +1,20 @@
+{
+  "name": "@toonflow/updateServer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build src/index.ts --target=bun --minify --outdir build",
+    "publish": "bun scripts/publish.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/bun": "^1.4.2",
+    "typescript": "^7.0.2"
+  }
+}

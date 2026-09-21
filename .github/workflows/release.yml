@@ -1,0 +1,44 @@
+name: Release desktop
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: 构建所有桌面版本
+    uses: ./.github/workflows/debug.yml
+    with:
+      target: all
+      ref: ${{ github.sha }}
+      version: ${{ github.ref_name }}
+
+  release:
+    name: 发布 GitHub Release
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: 下载各平台产物
+        uses: actions/download-artifact@v8
+        with:
+          pattern: toonflow-${{ needs.build.outputs.version }}-*
+          path: artifacts
+          merge-multiple: true
+      - name: 发布安装包及更新文件
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Toonflow ${{ needs.build.outputs.version }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: artifacts/*

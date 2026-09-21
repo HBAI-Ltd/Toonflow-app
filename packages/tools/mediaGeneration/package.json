@@ -1,0 +1,19 @@
+{
+  "name": "@toonflow/tool-media-generation",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./runtime": "./src/runtime.ts"
+  },
+  "scripts": {
+    "build": "bun build.ts",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@toonflow/tools-scaffold": "workspace:*"
+  }
+}

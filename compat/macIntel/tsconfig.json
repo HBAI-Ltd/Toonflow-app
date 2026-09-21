@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "WebWorker"],
+    "resolveJsonModule": true,
+    "paths": {
+      "@/*": ["../../apps/server/src/*"],
+      "electrobun/main": ["./generated/electrobun.ts"]
+    }
+  },
+  "include": ["../../apps/desktop/src", "build.ts", "electrobun.config.ts", "sdkTypes.d.ts"]
+}

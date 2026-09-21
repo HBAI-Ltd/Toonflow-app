@@ -1,0 +1,152 @@
+name: Debug desktop build
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 构建平台
+        type: choice
+        default: windowsX64
+        options: [windowsX64, macArm64, macX64, all]
+      ref:
+        description: 代码分支、标签或提交，留空使用当前选择的版本
+        type: string
+      version:
+        description: 包版本号（如 2.0.1），留空使用标签或项目配置
+        type: string
+  workflow_call:
+    inputs:
+      target:
+        type: string
+        default: all
+      ref:
+        type: string
+        default: ""
+      version:
+        type: string
+        default: ""
+    outputs:
+      version:
+        description: 实际构建的包版本号
+        value: ${{ jobs.prepare.outputs.version }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    name: 确定版本与平台
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.config.outputs.version }}
+      matrix: ${{ steps.config.outputs.matrix }}
+      updateBaseUrl: ${{ steps.config.outputs.updateBaseUrl }}
+      commit: ${{ steps.checkout.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v7
+        id: checkout
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: 校验构建参数
+        id: config
+        env:
+          buildTarget: ${{ inputs.target }}
+          buildRef: ${{ inputs.ref || github.ref_name }}
+          buildVersion: ${{ inputs.version }}
+          configuredUpdateUrl: ${{ vars.UPDATE_BASE_URL }}
+        run: |
+          bun -e '
+          import { appendFileSync } from "node:fs";
+          import config from "./electrobun.config.ts";
+          const targets = [
+            { target: "windowsX64", os: "windows-2025", platform: "win32", arch: "x64", releaseFolder: "build/desktop/releases" },
+            { target: "macArm64", os: "macos-15", platform: "darwin", arch: "arm64", releaseFolder: "build/desktop/releases/macArm64" },
+            { target: "macX64", os: "macos-15-intel", platform: "darwin", arch: "x64", releaseFolder: "build/desktop/releases/macX64" },
+          ];
+          const selected = process.env.buildTarget || "all";
+          const include = targets.filter(item => selected === "all" || item.target === selected);
+          if (!include.length) throw new Error(`不支持的构建平台：${selected}`);
+          const refVersion = /^v\d+\.\d+\.\d+$/.test(process.env.buildRef ?? "") ? process.env.buildRef : "";
+          const version = (process.env.buildVersion?.trim() || refVersion || config.app.version).replace(/^v/, "");
+          if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("版本号必须为 X.Y.Z，与 release:desktop 保持一致");
+          const updateBaseUrl = process.env.configuredUpdateUrl?.trim() || config.release.baseUrl;
+          const url = new URL(updateBaseUrl);
+          if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || /[\r\n]/.test(updateBaseUrl)) {
+            throw new Error("UPDATE_BASE_URL 必须为不含账号密码的 HTTP(S) 地址");
+          }
+          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nmatrix=${JSON.stringify({ include })}\nupdateBaseUrl=${updateBaseUrl}\n`);
+          '
+
+  build:
+    name: 构建 ${{ matrix.target }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    env:
+      appVersion: ${{ needs.prepare.outputs.version }}
+      updateBaseUrl: ${{ needs.prepare.outputs.updateBaseUrl }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: 确认运行器系统与架构
+        env:
+          expectedPlatform: ${{ matrix.platform }}
+          expectedArch: ${{ matrix.arch }}
+        run: bun -e 'if (process.platform !== process.env.expectedPlatform || process.arch !== process.env.expectedArch) throw new Error("运行器系统或架构与目标不一致");'
+      - name: 安装依赖
+        run: bun install --frozen-lockfile
+      - name: 安装 Intel Mac 兼容 SDK
+        if: matrix.target == 'macX64'
+        working-directory: compat/macIntel
+        run: bun install --frozen-lockfile
+      - name: 准备 Electrobun SDK
+        if: matrix.target != 'macX64'
+        run: bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
+      - name: 编译 macOS 原生启动库
+        if: runner.os == 'macOS'
+        run: bun packages/startup/scripts/buildMac.ts
+      - name: 准备 NSIS
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $nsisPath = 'C:/Program Files (x86)/NSIS/makensis.exe'
+          if (!(Test-Path -LiteralPath $nsisPath)) {
+            choco install nsis --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'NSIS 安装失败' }
+          }
+          if (!(Test-Path -LiteralPath $nsisPath)) { throw '找不到 makensis.exe' }
+          "NSIS_PATH=$nsisPath" >> $env:GITHUB_ENV
+      - name: 构建安装包及完整更新文件
+        # ACT: CI 构建完整包，不依赖更新服务器已有版本，也不向更新服务器发布。
+        run: bun run release:desktop "$appVersion" --initial
+      - name: 上传构建产物
+        id: artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: toonflow-${{ needs.prepare.outputs.version }}-${{ matrix.target }}
+          path: ${{ matrix.releaseFolder }}/${{ needs.prepare.outputs.version }}/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+      - name: 输出下载链接
+        env:
+          artifactUrl: ${{ steps.artifact.outputs.artifact-url }}
+          artifactTarget: ${{ matrix.target }}
+        run: |
+          printf '[下载 Toonflow %s · %s](%s)\n' "$appVersion" "$artifactTarget" "$artifactUrl" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,45 @@
+{
+  "name": "@toonflow/server",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./app": "./src/app.ts",
+    "./desktop": "./src/types/desktop.ts",
+    "./mcp": "./src/utils/mcp/runtime.ts",
+    "./agent/types": "./src/agent/runtime/types.ts"
+  },
+  "scripts": {
+    "routes": "bun src/core.ts",
+    "dev": "NODE_ENV=dev bun --watch src/index.ts",
+    "build": "bun scripts/build.ts",
+    "start": "bun ../../build/server/index.js",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.29.8",
+    "@breezystack/lamejs": "^1.2.7",
+    "@earendil-works/pi-ai": "0.85.1",
+    "@earendil-works/pi-coding-agent": "^0.85.1",
+    "@renmu/fluent-ffmpeg": "^2.3.3",
+    "@toonflow/ffmpeg": "workspace:*",
+    "@toonflow/mcp": "workspace:*",
+    "@toonflow/providers": "workspace:*",
+    "@toonflow/teams-scaffold": "workspace:*",
+    "@toonflow/tool-canvas": "workspace:*",
+    "@toonflow/tool-media-generation": "workspace:*",
+    "@toonflow/tools-scaffold": "workspace:*",
+    "conf": "^15.1.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "fast-glob": "^3.3.3",
+    "fflate": "^0.8.3",
+    "morgan": "^1.12.1",
+    "wavefile": "^11.0.0",
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10"
+  }
+}

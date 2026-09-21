@@ -1,0 +1,8 @@
+{
+  "name": "@toonflow/team-storyboard",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "bun build.ts", "typecheck": "tsc" },
+  "devDependencies": { "@toonflow/teams-scaffold": "workspace:*" }
+}

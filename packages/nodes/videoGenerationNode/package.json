@@ -1,0 +1,25 @@
+{
+  "name": "@toonflow/node-video-generation",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.42",
+    "@vue-flow/core": "^1.48.2",
+    "element-plus": "^2.14.5"
+  },
+  "dependencies": {
+    "@tabler/icons-vue": "^3.46.0"
+  },
+  "devDependencies": {
+    "@toonflow/nodes-scaffold": "workspace:*",
+    "typescript": "~6.0.3",
+    "vite": "^8.2.2",
+    "vue-tsc": "^3.3.11"
+  }
+}

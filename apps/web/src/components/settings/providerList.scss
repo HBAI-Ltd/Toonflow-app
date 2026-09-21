@@ -1,0 +1,92 @@
+.providerList {
+  .itemList {
+    .providerItem {
+      margin-bottom: 12px;
+
+      .providerHeader {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .providerMark {
+          display: grid;
+          place-items: center;
+          flex: 0 0 40px;
+          height: 40px;
+          background: var(--el-fill-color-light);
+          border-radius: var(--el-border-radius-base);
+
+          .providerLogo {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+
+            .dark & {
+              filter: invert(1);
+            }
+          }
+        }
+
+        .providerInfo {
+          flex: 1;
+          min-width: 0;
+          display: grid;
+          justify-items: start;
+          gap: 4px;
+
+          .providerHeading {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+
+            .providerName {
+              color: var(--el-text-color-primary);
+              font-size: 15px;
+              line-height: 1.5;
+              overflow-wrap: anywhere;
+            }
+          }
+
+          .providerId {
+            overflow-wrap: anywhere;
+            line-height: 1.5;
+          }
+        }
+      }
+
+      .providerFooter {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 16px;
+        margin-top: 16px;
+
+        .providerMeta {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 8px 12px;
+        }
+
+        .itemActions {
+          max-width: 100%;
+          margin-left: auto;
+        }
+      }
+    }
+  }
+
+  .providerActions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    padding-top: 16px;
+
+    .addButton {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@toonflow/providers",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types.d.ts",
+    "./language/tfRouter": "./src/language/tfRouter.ts",
+    "./language/deepSeek": "./src/language/deepSeek.ts",
+    "./media/tfRouter": "./src/media/tfRouter.ts"
+  }
+}

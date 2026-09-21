@@ -1,0 +1,19 @@
+{
+  "name": "@toonflow/teams-scaffold",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./runtime": "./src/runtime.ts",
+    "./a2a": "./src/a2a.ts"
+  },
+  "scripts": { "typecheck": "tsc" },
+  "dependencies": {
+    "@a2a-js/sdk": "1.2.0",
+    "fflate": "^0.8.3",
+    "zod": "^4.6.2"
+  },
+  "peerDependencies": { "express": "^5.2.1" },
+  "devDependencies": { "@types/express": "^5.0.6" }
+}
