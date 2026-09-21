@@ -124,7 +124,7 @@ Windows 启动动画在加载本地服务前显示，窗口、绘制和消息循
 
 Agent 每次发送消息时同时扫描全局 `data/skills/` 和当前工作区的 `skill/`，同名技能优先使用工作区版本。“Skill 操作器”统一提供目录查询、读取、新建和修改，三个读写权限默认开启；新建默认保存在工作区，也可指定全局范围。技能说明与权限随工具打包，发布只需一个 `.tool.js`。
 
-Mac 在对应架构机器上执行相同的 `build:desktop`、`package:desktop` 命令，不支持跨系统或跨架构构建。Intel 与 Apple Silicon 产物分别在 `build/desktop/artifacts/macX64/`、`macArm64/`。两者共用 `packages/assets/logo.iconset`，默认通过 Electrobun 对应用、更新包内的应用和 DMG 做 ad-hoc 临时签名，不进行 Apple 公证。可用 `ELECTROBUN_DEVELOPER_ID` 覆盖签名身份，正式分发还需要配置公证。
+Mac 在对应架构机器上执行相同的 `build:desktop`、`package:desktop` 命令，不支持跨系统或跨架构构建。Intel 与 Apple Silicon 产物分别在 `build/desktop/artifacts/macX64/`、`macArm64/`，两者共用 `packages/assets/logo.iconset`。Apple Silicon 默认通过 Electrobun 对应用、更新包内的应用和 DMG 做 ad-hoc 临时签名，可用 `ELECTROBUN_DEVELOPER_ID` 覆盖签名身份；正式分发还需要配置公证。Intel 1.18.1 的原生二进制缺少签名头空间，重新签名会覆盖机器码（[上游问题 #485](https://github.com/blackboardsh/electrobun/issues/485)），因此目前保留 SDK 原始二进制，仅供本地测试，换用修复的 SDK 后才能开启整包签名。CI 对两种架构检查关键文件和 DMG 完整性，仅对 Apple Silicon 验证签名。
 
 将 DMG 内的应用复制到 `/Applications/` 或 `~/Applications/` 后再运行。ad-hoc 签名不代表通过 Gatekeeper；浏览器或微信下载的测试包仍可能被隔离。仅对自己构建且确认来源的测试版本，可移除该应用的隔离属性（按实际安装位置调整路径）：
 

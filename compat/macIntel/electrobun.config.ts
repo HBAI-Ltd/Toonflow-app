@@ -20,7 +20,9 @@ export default {
     artifactFolder: "../../build/desktop/artifacts/macX64",
     mac: {
       icons: "../../packages/assets/logo.iconset",
-      codesign: true,
+      // ACT: 1.18.1 的 x64 二进制缺少签名头空间，重签会覆盖机器码；修复 SDK 后再开启。
+      // https://github.com/blackboardsh/electrobun/issues/485
+      codesign: false,
       notarize: false,
     },
   },

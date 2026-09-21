@@ -145,6 +145,8 @@ jobs:
         if: runner.os == 'macOS'
         env:
           releaseDirectory: ${{ matrix.releaseFolder }}/${{ needs.prepare.outputs.version }}
+          # ACT: Intel 1.18.1 重签会损坏原生程序，仅 ARM 验证签名；两者仍检查文件与 DMG。
+          verifySignature: ${{ matrix.target == 'macArm64' }}
         run: |
           inspectionDirectory="$RUNNER_TEMP/toonflowPackageCheck"
           mkdir -p "$inspectionDirectory"
@@ -162,15 +164,16 @@ jobs:
           test -s "$app/Contents/Resources/AppIcon.icns"
           test -s "$app/Contents/Resources/app/bun/index.js"
           test -x "$app/Contents/MacOS/bun"
-          codesign --verify --deep --strict --verbose=2 "$app"
+          if [[ "$verifySignature" == "true" ]]; then codesign --verify --deep --strict --verbose=2 "$app"; fi
           mountDirectory="$inspectionDirectory/dmg"
           mkdir -p "$mountDirectory"
           for dmg in "$releaseDirectory"/*.dmg; do
             hdiutil verify "$dmg"
-            codesign --verify --verbose=2 "$dmg"
+            if [[ "$verifySignature" == "true" ]]; then codesign --verify --verbose=2 "$dmg"; fi
             hdiutil attach "$dmg" -readonly -nobrowse -mountpoint "$mountDirectory"
             trap 'hdiutil detach "$mountDirectory"' EXIT
-            codesign --verify --deep --strict --verbose=2 "$mountDirectory/toonflow.app"
+            test -x "$mountDirectory/toonflow.app/Contents/MacOS/launcher"
+            if [[ "$verifySignature" == "true" ]]; then codesign --verify --deep --strict --verbose=2 "$mountDirectory/toonflow.app"; fi
             hdiutil detach "$mountDirectory"
             trap - EXIT
           done
