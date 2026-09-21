@@ -38,7 +38,8 @@ export default {
     },
     mac: {
       icons: "packages/assets/logo.iconset",
-      codesign: true,
+      // ACT: 测试包不做整包和 DMG 重签，保留 SDK 原始二进制签名。
+      codesign: false,
       notarize: false,
     },
   },

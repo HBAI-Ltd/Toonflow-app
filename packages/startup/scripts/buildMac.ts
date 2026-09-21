@@ -48,10 +48,8 @@ await run(["xcrun", "clang", ...targetFlags, "-dynamiclib", "-Os", "-fobjc-arc",
   "-framework", "AppKit", "-framework", "QuartzCore", "-framework", "CoreGraphics",
   join(packageDir, "native/macSplash.m"), "-Wl,-dead_strip", "-Wl,-install_name,@rpath/nativeSplash.dylib", "-o", join(targetDir, "nativeSplash.dylib")]);
 mkdirSync(outputDir, { recursive: true });
+// ACT: 直接保留链接器产物，不再 strip 或重签；ARM 依赖链接器自带的签名。
 for (const fileName of ["libthorvg.dylib", "nativeSplash.dylib"]) {
-  const filePath = join(targetDir, fileName);
-  await run(["xcrun", "strip", "-x", filePath]);
-  await run(["codesign", "--force", "--sign", "-", filePath]);
-  copyFileSync(filePath, join(outputDir, fileName));
+  copyFileSync(join(targetDir, fileName), join(outputDir, fileName));
 }
 console.log(`macOS 启动画面原生库已生成：${outputDir}`);
