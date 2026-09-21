@@ -18,7 +18,8 @@ export default function createWindowsUpdater(resourcesDirectory: string, lifecyc
   const extractionDirectory = join(installDirectory, "self-extraction");
   const preparedPath = join(extractionDirectory, "preparedUpdate.json");
   const resultPath = join(extractionDirectory, "updateResult.json");
-  const tarExecutable = join(process.env.WINDIR!, "System32", "tar.exe");
+  // ACT: Electrobun 在 Worker 中加载应用，环境变量区分大小写，不能只读取 WINDIR。
+  const tarExecutable = join(process.env.SystemRoot ?? process.env.windir ?? process.env.WINDIR!, "System32", "tar.exe");
   let localInfo: versionInfo;
   let manifest: { version: string; hash: string; artifact: { file: string } } | undefined;
   let busy = false;
