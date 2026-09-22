@@ -157,12 +157,12 @@ Toonflow 是面向短剧、漫剧与短视频制作的开源 AI 创作平台，�
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/🏠_纯本地-42B883?style=for-the-badge&labelColor=1a1a2e" height="42" alt="纯本地" />
-  <img src="https://img.shields.io/badge/🖼️_无限画布-FF6B6B?style=for-the-badge&labelColor=1a1a2e" height="42" alt="无限画布" />
-  <img src="https://img.shields.io/badge/🔌_MCP-6366F1?style=for-the-badge&labelColor=1a1a2e" height="42" alt="MCP" />
+  <img src="https://img.shields.io/badge/🏠_纯本地-42B883?style=for-the-badge&labelColor=1a1a2e" height="72" alt="纯本地" />
+  <img src="https://img.shields.io/badge/🖼️_无限画布-FF6B6B?style=for-the-badge&labelColor=1a1a2e" height="72" alt="无限画布" />
+  <img src="https://img.shields.io/badge/🔌_MCP-6366F1?style=for-the-badge&labelColor=1a1a2e" height="72" alt="MCP" />
   <br />
-  <img src="https://img.shields.io/badge/🧩_插件市场-F59E0B?style=for-the-badge&labelColor=1a1a2e" height="42" alt="插件市场" />
-  <img src="https://img.shields.io/badge/🤖_开放_Agent-06B6D4?style=for-the-badge&labelColor=1a1a2e" height="42" alt="开放 Agent" />
+  <img src="https://img.shields.io/badge/🧩_插件市场-F59E0B?style=for-the-badge&labelColor=1a1a2e" height="72" alt="插件市场" />
+  <img src="https://img.shields.io/badge/🤖_开放_Agent-06B6D4?style=for-the-badge&labelColor=1a1a2e" height="72" alt="开放 Agent" />
 </p>
 
 <h3 align="center">🔒 数据永远留在本地，创作从不被托管</h3>
@@ -215,8 +215,6 @@ macOS（Apple Silicon）首次安装前，请在终端执行：`sudo xattr -rd c
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-[在新页面打开演示视频](https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9)
-
 ### 案例信息
 
 | 项目           | 原仓库记录                                          |
@@ -243,10 +241,9 @@ TF-Router 是 Toonflow 自营的官方模型中转平台，欢迎使用。其平
 <summary><strong>致 Toonflow 社区的一封信（发于2026-06-08）</strong></summary>
 
 > ## 致 Toonflow 社区的一封信
->
-> 130 天。
+> 130天。
 > 不长，但足够让我们看清楚一些事情。
-> 从第一行代码提交到今天，我们走过了 130 天，发布了 20 个版本，留下了 800+ 次 Commits，写下了 213,765 行代码、640,810 个字符。
+> 从第一行代码提交到今天，我们走过了 130天，发布了 20个版本，留下了 800+ 次Commits，写下了 213,765 行代码、640,810 个字符。
 > 两次重构，一套供应商系统，一个我们引以为傲的工作流程。
 > 我们以为这已经足够了。
 > 但它不够。
@@ -260,27 +257,27 @@ TF-Router 是 Toonflow 自营的官方模型中转平台，欢迎使用。其平
 > 所以，我们决定进行第三次重构。
 > Toonflow 的每一次重构，都往更开源更开放的方向发展。
 > 这一次重构，我们选择：彻底开放。
->
+> 　
 > 一、MIT License
 > 重构完成后我们决定把许可证从 Apache-2.0 更换为 MIT License 并去掉全部的商业附加条款。
 > 它将完全的开放。没有任何的商业限制。
 > 你可以用它做任何事。
->
+> 　
 > 二、全自由度插件系统
 > 我们要重新设计整个插件架构。
 > 故事板、全景图、时间轴、甚至——小游戏。
 > 只要你想得到，就可以塞进来。
 > 不是 Hack，是设计如此。
->
+> 　
 > 三、Drizzle ORM + 多数据库支持
 > 升级至 Drizzle ORM。
 > 本地、PostgreSQL、MySQL，按你的需要选择。
 > 二开不再是噩梦。
->
+> 　
 > 四、Monorepo 全链路打通
 > 插件开发、SDK 集成、发布上线，一条龙。
 > 让贡献变得足够简单，简单到一个人就能做到。
->
+> 　
 > 五、新模块
 > 无限画布 —— 不止于大，更在于自由
 > 灵感模式 —— 为创作者而生
@@ -288,7 +285,7 @@ TF-Router 是 Toonflow 自营的官方模型中转平台，欢迎使用。其平
 > Skill Hub —— 让经验可以传递
 > 供应商 Hub —— 生态从这里开始
 > 完善的 Docker 整合 —— 部署不再是门槛
->
+> 　
 > 然后，说一件我们一直不太好意思说的事。
 > 重构需要时间。这段时间里，服务器在跑，域名在续费，团队在熬夜，咖啡在涨价。
 > 我们没有融资，没有广告，没有任何隐藏的商业计划。
@@ -298,10 +295,10 @@ TF-Router 是 Toonflow 自营的官方模型中转平台，欢迎使用。其平
 > 这个平台，不是我们想做的，我们不想因为一个中转平台，让人觉得 Toonflow 开始"恰饭"了。
 > 这个包袱，我们背了很久。
 > 但很多用户没有开白资格，用不上 Seedance 2.0，反复问我们有没有办法。
-> 我们想了很久，没办法最后只能决定搭一个，我们自己和火山签了 Seedance 年框合同。
-> **同时，我们决定平台活动期间对 Seedance 2.0 平进平出，不赚一分钱差价。**
+> 我们想了很久，没办法最后只能决定搭一个，我们自己和火山签了Seedance年框合同。
+> **同时，我们决定平台活动期间对Seedance 2.0平进平出，不赚一分钱差价。**
 > 活动结束后我们会正常收取一点点点点服务费——但现在，先让你们用上再说。
-> 更重要的是——TF-Router 平台源码已经全部开源打包【<a href="https://github.com/HBAI-Ltd/TF-Router" target="_blank">开源地址</a>】。
+> 更重要的是——TF-Router平台源码已经全部开源打包【<a href="https://github.com/HBAI-Ltd/TF-Router" target="_blank">开源地址</a>】。
 > 你不信任我们？没关系，你可以自己看代码，自己部署，自己跑。
 > 这就是我们的态度。
 > 如果你愿意去试用，是对我们目前唯一能支撑下去的方式投一票信任。
