@@ -12,6 +12,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@toonflow/ffmpeg": "workspace:*",
     "@toonflow/providers": "workspace:*",
     "@vitejs/plugin-vue": "^6.0.8",
     "vite": "^8.2.2",

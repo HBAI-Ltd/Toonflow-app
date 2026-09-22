@@ -68,29 +68,7 @@ interface AudioConvertOptions {
 }
 
 /** FFmpeg 仅开放结构化转换选项，不接受文件路径、URL 或任意命令参数。 */
-interface FfmpegConvertOptions {
-  /** png、jpeg 输出裁剪起点处的单张图片。 */
-  format: "mp4" | "webm" | "wav" | "mp3" | "aac" | "ogg" | "flac" | "png" | "jpeg" | "gif";
-  /** 裁剪起点，单位秒；缺省为 0。 */
-  startSeconds?: number;
-  /** 裁剪终点，单位秒；缺省为媒体末尾。 */
-  endSeconds?: number;
-  /** 目标宽度，2～8192；MP4/WebM 须为偶数。只填宽或高时按比例缩放。 */
-  width?: number;
-  /** 目标高度，2～8192；MP4/WebM 须为偶数。 */
-  height?: number;
-  /** 画面翻转：hflip 左右镜像，vflip 上下镜像；不支持其他滤镜或纯音频输出。 */
-  vf?: "hflip" | "vflip";
-  /** 输出帧率，1～120；不适用于纯音频输出。 */
-  fps?: number;
-  /** false 去掉声音，仅用于视频或 GIF 输出。 */
-  audio?: boolean;
-  /** 音频采样率，单位 Hz。 */
-  sampleRate?: number;
-  channels?: 1 | 2;
-  /** 音频比特率，单位 kbps。 */
-  bitrateKbps?: number;
-}
+type FfmpegConvertOptions = import("@toonflow/ffmpeg/types").FfmpegConvertOptions;
 
 /** 缺少可用 FFmpeg 时抛出；由宿主前端询问下载安装，供应商应继续向上抛出。 */
 interface FfmpegRequiredError extends Error {
@@ -115,7 +93,7 @@ interface ProviderTools {
    * 缺失时抛出 FfmpegRequiredError，并通知在线前端询问下载；不会后台自动安装。
    * 安装后由用户重新发起操作，供应商不要捕获此错误后自动重试完整生成请求。
    * 输入、输出均限 100 MB；处理最长 5 分钟，响应 this.signal 的取消。
-   * 输入须支持管道读取；moov 位于尾部等需要 seek 的普通 MP4 可能无法处理。
+   * 宿主在独立临时目录转换，支持需要随机寻址的输入；临时文件由宿主清理。
    * @throws {FfmpegRequiredError} 未安装或当前设置未找到可用的 FFmpeg。
    * @example await this.tool.ffmpeg.convert(bytes, { format: "mp4", width: 1280, audio: false });
    * @example await this.tool.ffmpeg.convert(bytes, { format: "png", vf: "hflip" });

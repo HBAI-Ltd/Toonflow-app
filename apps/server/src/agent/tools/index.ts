@@ -1,5 +1,5 @@
 import { listMediaModels, generateMedia } from "@/utils/media/generation";
-import { convertMedia } from "@/utils/media/ffmpegProcessor";
+import { createWorkspaceFfmpeg } from "@/utils/ffmpeg";
 import { dirname, join, relative, resolve } from "node:path";
 import {
   defineTool, createReadToolDefinition, createWriteToolDefinition, createEditToolDefinition, createLsToolDefinition,
@@ -27,7 +27,7 @@ export function createAgentToolContext(cwd: string, config: Record<string, unkno
   };
   return {
     cwd, config, resolvePath, writeFile, canvas, question, skills: createSkillContext(cwd),
-    ffmpeg: { convert: convertMedia },
+    ffmpeg: createWorkspaceFfmpeg(cwd),
     media: {
       listModels: listMediaModels,
       generateImage: (request, signal) => generateMedia(cwd, "image", request, signal),

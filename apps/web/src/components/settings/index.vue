@@ -4,8 +4,10 @@
       <aside class="sidebar" aria-label="设置分类">
         <template v-for="item in settingsPanels" :key="item.id">
           <h3 v-if="item.groupLabel" class="settingsGroupLabel">{{ item.groupLabel }}</h3>
-          <button class="settingsItem" type="button" :aria-label="item.label" :aria-pressed="activePanel.id === item.id" @click="activePanel = item">
-            <component :is="item.icon" :size="18" aria-hidden="true" />
+          <button class="settingsItem" type="button" :aria-label="item.id === 'about' && hasDesktopUpdate ? `${item.label}，有新版本可用` : item.label" :aria-pressed="activePanel.id === item.id" @click="activePanel = item">
+            <el-badge class="panelIcon" isDot :hidden="item.id !== 'about' || !hasDesktopUpdate">
+              <component :is="item.icon" :size="18" aria-hidden="true" />
+            </el-badge>
             <span>{{ item.label }}</span>
           </button>
         </template>
@@ -28,6 +30,7 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent, shallowRef } from "vue";
+import { hasDesktopUpdate } from "@/stores/desktopUpdate";
 import {
   IconPalette,
   IconSettings,
@@ -103,6 +106,8 @@ const visible = defineModel<boolean>({ default: false });
       font: inherit;
       text-align: left;
       cursor: pointer;
+
+      .panelIcon { display: inline-flex; }
 
       &:hover {
         background: var(--el-fill-color-light);

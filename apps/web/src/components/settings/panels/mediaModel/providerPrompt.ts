@@ -1,4 +1,9 @@
 import providerTypes from "@toonflow/providers/types?raw";
+import ffmpegTypes from "@toonflow/ffmpeg/types?raw";
+
+const ffmpegConvertTypes = ffmpegTypes.match(/export interface FfmpegConvertOptions \{[\s\S]*?\n\}/)?.[0];
+if (!ffmpegConvertTypes) throw new Error("FFmpeg 转换类型声明缺失");
+const completeProviderTypes = providerTypes.replace(/^type FfmpegConvertOptions = .*;\r?$/m, ffmpegConvertTypes.replace("export ", ""));
 
 export const providerPrompt = `你是一位耐心的 Toonflow 媒体模型接入助手，也负责完成适配代码。我是完全不懂编程的普通用户，可能不知道「供应商」「模型」「API」「接口地址」是什么。我想让 Toonflow 能调用某个平台或 ComfyUI 工作流生成图片、视频或音频。请通过多轮对话带我确认需求，再帮我生成一个能在 Toonflow 导入的 .ts 文件。
 
@@ -111,9 +116,9 @@ ComfyUI 接入分支（仅在我的资料或回答涉及 ComfyUI 时使用）
 - 对照模型声明映射公共请求字段。参考素材可能是 URL、Base64 或二进制，由适配器按厂商协议转换；需要上传素材时，也应在适配器内完成。明确校验无法支持的字段，不要悄悄丢掉参考图、首尾帧、参考视频或音频。request.other 只用于厂商专属参数，不允许覆盖鉴权信息或绕过公共字段校验。
 - 没有明确要求时，不添加检查更新、自动升级或其他与模型生成无关的行为。
 
-以下原样嵌入 packages/providers/types.d.ts 的当前完整内容，这是 Toonflow 的接口类型约定，请以此为准。它是给你编写代码参考的，不需要用户阅读、修改或额外提供：
+以下嵌入 packages/providers/types.d.ts 的当前内容，并展开共享的 FFmpeg 转换类型。这是 Toonflow 的接口类型约定，请以此为准，不需要用户阅读、修改或额外提供：
 
-${providerTypes}
+${completeProviderTypes}
 
 下面是独立的最小结构示例，使用虚构的同步图片接口。它只演示导出形式、API Key 配置、鉴权、错误处理和结果归一化。真实实现必须使用用户已确认的实际服务平台资料，准确实现其接口、模型、字段和能力。用户使用聚合平台或自建接口时，不得擅自换成模型原厂或其他平台的协议；不要照抄示例地址和响应格式。
 

@@ -11,6 +11,7 @@ export type AgentContext = { tokens: number | null; contextWindow: number; perce
 
 export type AgentEvent =
   | { type: "text" | "thinking"; blockId: string; delta?: string; content?: string; done?: boolean }
+  | { type: "compaction"; active: boolean }
   | { type: "tool"; blockId: string; tool: AgentToolCall }
   | ({ type: "canvasCall"; callId: string } & CanvasToolCall)
   | ({ type: "question"; callId: string; toolCallId: string } & QuestionRequest)

@@ -17,9 +17,11 @@
           <icon-refresh :size="18" aria-hidden="true" />
           <span>版本更新</span>
         </div>
-        <el-button size="small" type="primary" plain :loading="checking" @click="openUpdate">
-          {{ snapshot?.updateReady ? "更新已就绪" : snapshot?.updating || action === "download" ? "查看更新进度" : "检查更新" }}
-        </el-button>
+        <el-badge isDot :hidden="!hasDesktopUpdate">
+          <el-button size="small" type="primary" plain :loading="checking" @click="openUpdate">
+            {{ snapshot?.updateReady ? "更新已就绪" : snapshot?.updating || action === "download" ? "查看更新进度" : "检查更新" }}
+          </el-button>
+        </el-badge>
       </div>
       <p class="cardDescription">检查是否有可用的新版本</p>
       <div v-if="snapshot?.hash" class="buildInfo">
@@ -187,18 +189,17 @@ import {
 import logoUrl from "@toonflow/assets/logo.svg";
 import tf, { type TfSponsor } from "@/lib/tf";
 import type { updateSnapshot } from "@toonflow/server/desktop";
+import { desktopUpdateSnapshot as snapshot, desktopUpdateError as updateError, desktopUpdateChecking, hasDesktopUpdate, checkDesktopUpdate } from "@/stores/desktopUpdate";
 
 const messageMarkdown = defineAsyncComponent(() => import("@/components/messageMarkdown.vue"));
 const repositoryUrl = "https://github.com/HBAI-Ltd/Toonflow-app";
 const communityUrl = "https://work.weixin.qq.com/u/vc36adcc89845edcbe?v=5.0.3.63936&bb=85b8d228e8";
 const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
-const snapshot = ref<updateSnapshot | null>(null);
 const currentVersion = computed(() => snapshot.value?.version || import.meta.env.appVersion);
 const action = ref<"check" | "download" | "apply" | null>(null);
-const checking = computed(() => action.value === "check");
-const working = computed(() => !!action.value || !!snapshot.value?.updating);
+const checking = computed(() => desktopUpdateChecking.value || action.value === "check");
+const working = computed(() => checking.value || !!action.value || !!snapshot.value?.updating);
 const resultVisible = ref(false);
-const updateError = ref("");
 const activeSponsorId = ref<number>();
 const controller = new AbortController();
 const resultTitle = computed(() => {
@@ -230,10 +231,11 @@ onMounted(async () => {
 });
 
 onMounted(async () => {
-  if (!isDesktop) return;
+  if (!isDesktop || desktopUpdateChecking.value) return;
+  const previous = snapshot.value;
   try {
-    const { data } = await axios.get<{ data: updateSnapshot }>("/api/desktop/update", { signal: controller.signal });
-    if (!snapshot.value && !action.value) {
+    const { data } = await axios.get<{ data: updateSnapshot }>("/api/desktop/update", { signal: controller.signal, timeout: 10000 });
+    if (snapshot.value === previous && !action.value && !desktopUpdateChecking.value) {
       snapshot.value = data.data;
       updateError.value = data.data.error;
     }
@@ -295,13 +297,14 @@ async function runUpdate(nextAction: "check" | "download" | "apply") {
   }
   action.value = nextAction;
   try {
-    const { data } = await axios.post<{ data: updateSnapshot }>(`/api/desktop/update/${nextAction}`, null, {
-      headers: { "x-toonflow-desktop": "1" },
-      signal: controller.signal,
-      timeout: nextAction === "check" ? 45000 : 0,
-    });
-    snapshot.value = data.data;
-    updateError.value = data.data.error || (data.data.channel === "dev" ? "开发版本不提供更新检查，请使用正式桌面客户端。" : "");
+    if (nextAction === "check") await checkDesktopUpdate();
+    else {
+      const { data } = await axios.post<{ data: updateSnapshot }>(`/api/desktop/update/${nextAction}`, null, {
+        headers: { "x-toonflow-desktop": "1" }, signal: controller.signal, timeout: 0,
+      });
+      snapshot.value = data.data;
+    }
+    updateError.value = snapshot.value?.error || (snapshot.value?.channel === "dev" ? "开发版本不提供更新检查，请使用正式桌面客户端。" : "");
   } catch (error) {
     if (!controller.signal.aborted) {
       updateError.value = getUpdateError(error);

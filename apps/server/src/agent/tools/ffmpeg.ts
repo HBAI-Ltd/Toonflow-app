@@ -1,50 +1,32 @@
-import { lstat, readFile, realpath, stat } from "node:fs/promises";
-import { relative } from "node:path";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
+import { ffmpegPlanSchema } from "@toonflow/ffmpeg/runtime";
 import { z } from "zod";
-import { getStatus } from "@/utils/media/ffmpeg";
-import { convertMedia, ffmpegOptionsSchema, maxMediaBytes } from "@/utils/media/ffmpegProcessor";
-import { lockWorkspaceFiles, resolveWorkspacePath, writeWorkspaceFile } from "@/utils/workspace/files";
+import { executePlan, getStatus } from "@/utils/ffmpeg";
 
 const parameters = z.strictObject({
-  input: z.string().min(1).max(4096).describe("工作区内的输入媒体文件相对路径"),
-  output: z.string().min(1).max(4096).describe("工作区内的新输出文件相对路径，父目录须已存在，不能覆盖文件"),
-  options: ffmpegOptionsSchema,
+  plan: ffmpegPlanSchema.describe("按 fluent-ffmpeg 顺序执行的链式方法记录。每步为 {method,args}；input/output 为工作区相对路径；ffprobe 放在末尾进行媒体探测。"),
 });
 
 export async function createFfmpegTool(cwd: string): Promise<ToolDefinition | undefined> {
   const { tools } = await getStatus();
   if (!tools.ffmpeg.path || tools.ffmpeg.error) return;
-  const directory = await realpath(cwd);
   return {
     name: "ffmpeg",
     label: "处理媒体",
-    description: "使用本机 FFmpeg 对工作区媒体进行转码、按秒裁剪、缩放、水平或垂直翻转、截取单帧、提取音轨或静音。翻转设置 options.vf 为 hflip（左右镜像）或 vflip（上下镜像）。输入输出各不超过 100 MB；输出仅新建文件，父目录须存在。路径必须相对当前工作区，不支持 URL、绝对路径或任意命令。使用字节管道，需要随机寻址的输入可能无法转换。",
-    promptSnippet: "使用 ffmpeg 处理工作区媒体；保留原素材，将结果写入新的相对路径。",
+    description: "使用本机 FFmpeg/FFprobe 处理工作区媒体：支持多输入、多输出、混音、叠加、字幕、时间滤镜、转场、转码和截帧。调用传 plan.steps，每步为 fluent-ffmpeg 方法及参数数组；回调、命令执行和程序路径设置不开放。input/output 及滤镜中的文件参数必须为当前工作区相对路径，不能使用 URL、绝对路径或越界路径。输出只创建新文件，不覆盖素材。探测使用 input 后接 ffprobe，返回真实媒体信息。",
+    promptSnippet: "使用 ffmpeg 的 plan.steps 链式处理工作区媒体；保留原素材并写入新相对路径。",
+    promptGuidelines: [
+      '翻转示例：{"plan":{"steps":[{"method":"input","args":["assets/input.png"]},{"method":"videoFilters","args":["hflip"]},{"method":"frames","args":[1]},{"method":"output","args":["assets/flipped.png"]}]}}。',
+      '复杂滤镜：使用多次 input、complexFilter（数组或字符串）、outputOptions（如 ["-map", "[out]"]）及 output。字幕优先结构化写法：{"method":"videoFilters","args":[[{"filter":"subtitles","options":{"filename":"assets/subtitles.srt"}}]]}；滤镜文件必须位于工作区。',
+      '探测示例：{"plan":{"steps":[{"method":"input","args":["assets/input.mp4"]},{"method":"ffprobe","args":[]}]}}。仅支持包内已审查的文件访问入口；被拒绝的参数不能绕过。',
+    ],
     parameters: z.toJSONSchema(parameters, { io: "input", target: "draft-07" }),
     executionMode: "sequential",
     async execute(_id, params, signal) {
       signal?.throwIfAborted();
       const args = parameters.parse(params);
-      const input = await resolveWorkspacePath(directory, args.input);
-      const output = await resolveWorkspacePath(directory, args.output);
-      const release = lockWorkspaceFiles([input.path, output.path]);
-      try {
-        const exists = await lstat(output.path).catch((error: NodeJS.ErrnoException) => {
-          if (error.code === "ENOENT") return null;
-          throw error;
-        });
-        if (exists) throw new Error("输出文件或目录已存在，请使用新的文件名");
-        const info = await stat(input.path);
-        if (!info.isFile() || !info.size || info.size > maxMediaBytes) throw new Error("输入必须是工作区内非空且不超过 100 MB 的普通文件");
-        const result = await convertMedia(await readFile(input.path, { signal }), args.options, signal);
-        // 转换期间目录可能变化，落盘前再次检查真实路径；沿用工作区原子写入且不覆盖。
-        const target = await resolveWorkspacePath(directory, relative(directory, output.path));
-        signal?.throwIfAborted();
-        await writeWorkspaceFile(target.path, result.data, true);
-        const details = { path: relative(directory, target.path).replaceAll("\\", "/"), mimeType: result.mimeType };
-        return { content: [{ type: "text", text: JSON.stringify(details) }], details };
-      } finally { release(); }
+      const details = await executePlan(cwd, args.plan, signal);
+      return { content: [{ type: "text", text: JSON.stringify(details) }], details };
     },
   };
 }

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validateFields } from "@/lib/middleware";
-import { convertMedia, ffmpegOptionsSchema } from "@/utils/media/ffmpegProcessor";
+import { ffmpegOptionsSchema } from "@toonflow/ffmpeg/convert";
 import u from "@/utils";
 
 const optionsSchema = z.string().max(4096).transform((value, context) => {
@@ -24,7 +24,7 @@ export default Router().post("/", validateFields({ options: optionsSchema }, "qu
   req.once("aborted", close);
   req.socket.once("close", close);
   try {
-    const result = await convertMedia(req.body, options, controller.signal);
+    const result = await u.ffmpeg.convertMedia(req.body, options, controller.signal);
     if (!res.destroyed) res.set({ "Content-Type": result.mimeType, "Cache-Control": "no-store" }).send(Buffer.from(result.data));
   } finally {
     res.off("close", close);

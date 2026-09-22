@@ -2,12 +2,13 @@ import { createHash } from "node:crypto";
 import { lstat, mkdir, readFile, readdir, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { createContext, SourceTextModule } from "node:vm";
-import type { AudioConvertOptions, FfmpegConvertOptions, Provider, ProviderTools } from "@toonflow/providers";
+import type { AudioConvertOptions, Provider, ProviderTools } from "@toonflow/providers";
+import type { FfmpegConvertOptions } from "@toonflow/ffmpeg/types";
 import { parse, parseExpression } from "@babel/parser";
 import { z } from "zod";
 import conf from "@/utils/conf";
 import { convertAudio } from "@/utils/media/audioProcessor";
-import { convertMedia } from "@/utils/media/ffmpegProcessor";
+import { convertMedia } from "@/utils/ffmpeg";
 import { lockWorkspaceFiles, writeWorkspaceFile } from "@/utils/workspace/files";
 
 type Expression = Extract<ReturnType<typeof parseExpression>, { type: "ParenthesizedExpression" }>["expression"];

@@ -5,8 +5,10 @@
         <el-button class="toolButton" text aria-label="退出项目" title="退出项目" @click="exitVisible = true">
           <icon-x :size="17" aria-hidden="true" />
         </el-button>
-        <el-button class="toolButton" text aria-label="设置" title="设置" @click="emit('openSettings')">
-          <icon-settings :size="17" aria-hidden="true" />
+        <el-button class="toolButton" text :aria-label="hasDesktopUpdate ? '设置，有新版本可用' : '设置'" title="设置" @click="emit('openSettings')">
+          <el-badge isDot :hidden="!hasDesktopUpdate">
+            <icon-settings :size="17" aria-hidden="true" />
+          </el-badge>
         </el-button>
       </div>
     </el-card>
@@ -24,6 +26,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { IconX, IconSettings } from "@tabler/icons-vue";
+import { hasDesktopUpdate } from "@/stores/desktopUpdate";
 
 const emit = defineEmits<{ openSettings: [] }>();
 const router = useRouter();

@@ -24,7 +24,7 @@
         </template>
       </chat-item>
       <div v-for="item in messages" :key="item.id" class="messageRow" :class="{ userMessage: item.role === 'user', editingMessage: editingId === item.id }">
-        <chat-item :role="item.role" :variant="item.role === 'user' ? 'base' : 'text'" :textLoading="!!item.streaming && !item.parts?.some(part => part.type === 'tool' || part.content)" animation="moving">
+        <chat-item :role="item.role" :variant="item.role === 'user' ? 'base' : 'text'" :textLoading="!!item.streaming && !compacting && !item.parts?.some(part => part.type === 'tool' || part.content)" animation="moving">
           <template #content>
             <div class="messageContent">
               <template v-for="part in item.parts" :key="part.id">
@@ -63,6 +63,10 @@
         </div>
       </div>
     </chat-list>
+    <div v-if="compacting" class="compactionStatus" role="status">
+      <el-icon class="is-loading" aria-hidden="true"><icon-loader-2 :size="14" /></el-icon>
+      <span>正在压缩上下文…</span>
+    </div>
     <div class="messageInput">
       <div
         class="senderResizeHandle"
@@ -133,7 +137,7 @@ import { computed, inject, reactive, ref, watch } from "vue";
 import axios from "axios";
 import {
   IconArrowUp, IconAtom, IconCopy,
-  IconCircleDashed, IconPencil, IconPlayerStopFilled, IconX,
+  IconCircleDashed, IconPencil, IconPlayerStopFilled, IconX, IconLoader2,
   IconTrash, IconSparkles, IconLayoutGrid, IconMovie, IconPhoto, IconArrowUpRight,
 } from "@tabler/icons-vue";
 import { ElMessage } from "element-plus";
@@ -169,6 +173,7 @@ const messages = ref<AgentMessage[]>((props.initialSession?.messages ?? []).map(
 const stats = ref(props.initialSession?.stats);
 const contextUsage = ref(props.initialSession?.contextUsage);
 const busy = ref(false);
+const compacting = ref(false);
 const deletingId = ref<string>();
 const locked = computed(() => props.disabled || busy.value || deletingId.value !== undefined);
 const editingId = ref<string>();
@@ -355,6 +360,7 @@ async function sendMessage(source?: AgentMessage) {
   const canvasContext = createCanvasContext?.();
   controller = requestController;
   busy.value = true;
+  compacting.value = false;
   instance.disable();
   const reply = reactive<AgentMessage>({ id: crypto.randomUUID(), role: "assistant", content: "", parts: [], streaming: true });
   const userMessage = reactive<AgentMessage>({ id: crypto.randomUUID(), role: "user", content: prompt, attachments });
@@ -379,6 +385,7 @@ async function sendMessage(source?: AgentMessage) {
     });
     for await (const event of readAgentEvents(response, requestController.signal)) {
       switch (event.type) {
+        case "compaction": compacting.value = event.active; break;
         case "session": emit("session", event.file); break;
         case "userMessage":
           userMessage.entryId = event.id;
@@ -431,6 +438,7 @@ async function sendMessage(source?: AgentMessage) {
       }).catch(() => {});
     }
     stream.finish();
+    compacting.value = false;
     busy.value = false;
     controller = undefined;
   }
@@ -710,6 +718,16 @@ watch(() => !!workspaceStore.pendingAgentMessage && props.active && !locked.valu
         line-height: 1.6;
       }
     }
+  }
+
+  .compactionStatus {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    margin: 0 12px 8px;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
   }
 
   .messageInput {

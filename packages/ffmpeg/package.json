@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "scripts": { "typecheck": "tsc" }
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./client": "./src/client.ts",
+    "./runtime": "./src/runtime.ts",
+    "./convert": "./src/convert.ts"
+  },
+  "scripts": { "typecheck": "tsc" },
+  "dependencies": {
+    "@renmu/fluent-ffmpeg": "2.3.3",
+    "zod": "^4.6.2"
+  }
 }

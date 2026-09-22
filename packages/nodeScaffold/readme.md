@@ -87,20 +87,32 @@ const { nodeProps, outputs } = useNode({
 
 ### FFmpeg 媒体处理
 
-`useNode()` 返回的 `ffmpeg.convert(input, options, signal?)` 复用服务端 FFmpeg，与供应商、工具插件使用相同的受限转换选项。只传入 `Uint8Array`，返回 `{ data: Uint8Array, mimeType: string }`；FFmpeg 本体和执行库不会打入节点 UMD。也可以在组件 setup 中从运行时入口单独调用 `useNodeFfmpeg()`。
+`useNode()` 返回可直接调用的 `ffmpeg(command => ..., signal?)`，链式方法沿用 fluent-ffmpeg 的常用写法。节点只记录配置并请求宿主执行，FFmpeg 本体和执行库不会打入节点 UMD；也可以在组件 setup 中单独调用 `useNodeFfmpeg()`。配置回调必须同步，不调用 `.run()` 或传入事件回调，`await ffmpeg(...)` 即等待执行完成。
 
 ```ts
-const { files, ffmpeg } = useNode();
+const { ffmpeg } = useNode();
+const result = await ffmpeg(command => command
+  .input("assets/clip.mp4")
+  .input("assets/music.wav")
+  .complexFilter("[1:a]volume=0.4[music]")
+  .outputOptions(["-map 0:v:0", "-map [music]", "-shortest"])
+  .videoCodec("libx264")
+  .audioCodec("aac")
+  .output("assets/edited.mp4"));
+// result.outputs: [{ path: "assets/edited.mp4", mimeType: "video/mp4" }]
 
-async function flipImage(path: string) {
-  const workspace = files.getWorkspaceFiles();
-  const input = new Uint8Array(await workspace.read(path));
-  const result = await ffmpeg.convert(input, { format: "png", vf: "hflip" });
-  await workspace.write("assets/flipped.png", new Blob([new Uint8Array(result.data)], { type: result.mimeType }), true);
-}
+const { probe } = await ffmpeg(command => command.input("assets/clip.mp4").ffprobe());
+// probe 为实际 ffprobe 的 streams、format、chapters 元数据。
+
+await ffmpeg(command => command.input("assets/clip.mp4")
+  .seekInput(2).frames(1).output("assets/frame.png"));
 ```
 
-转换不接受文件路径、URL 或任意命令；文件读写继续使用 `files`。输入输出均限 100 MB，最长处理 5 分钟，节点卸载或传入 signal 取消时会停止请求及后端转换。输入须支持管道读取，需要 seek 的普通 MP4 可能无法处理。未安装时保留 `FFMPEG_REQUIRED` 错误并触发现有下载提示，安装后由用户重新发起操作，不自动重试。
+输入、输出使用当前工作区相对路径。每次调用绑定当时的工作目录，文件留在服务端处理，不再往返上传整个视频。支持多输入、多输出、复杂滤镜、编码参数与探测；滤镜和选项仍经宿主审查，涉及字幕等文件的选项同样受工作区约束，不接受外部 URL、原始命令、模块加载或可执行程序路径。已有输出文件不会被覆盖。自定义节点宿主需提供 `workspaceDirectory` getter。
+
+节点卸载或传入 signal 取消时会停止请求及后端处理。未安装时保留 `FFMPEG_REQUIRED` 错误并触发现有下载提示，安装后由用户重新发起操作，不自动重试。
+
+旧 `ffmpeg.convert(bytes, options, signal?)` 继续兼容，返回 `{ data: Uint8Array, mimeType: string }`，仍限输入输出各 100 MB、5 分钟和原有字节流选项；需要随机寻址或复杂处理时使用上述文件模式。`FfmpegContext`、`FfmpegCommand`、`FfmpegResult`、`FfmpegConvertOptions` 可从 `@toonflow/ffmpeg/types` 或节点运行时入口导入。
 
 ### AI 模型调用
 

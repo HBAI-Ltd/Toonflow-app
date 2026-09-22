@@ -1,10 +1,10 @@
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import type { Rule } from "@form-create/element-ui";
-import type { FfmpegConvertOptions } from "@toonflow/providers";
+import type { FfmpegContext } from "@toonflow/ffmpeg/types";
 import { z } from "zod";
 
 export type { ToolDefinition } from "@earendil-works/pi-coding-agent";
-export type { FfmpegConvertOptions } from "@toonflow/providers";
+export type { FfmpegContext, FfmpegConvertOptions, FfmpegPlan, FfmpegResult } from "@toonflow/ffmpeg/types";
 
 export const toolNameSchema = z.string().max(96).regex(/^[a-z][a-zA-Z0-9]*$/);
 export const toolMetadataSchema = z.object({
@@ -121,11 +121,6 @@ export interface MediaContext {
   generateImage(request: MediaGenerationRequest, signal?: AbortSignal): Promise<GeneratedMedia[]>;
   generateVideo(request: MediaGenerationRequest, signal?: AbortSignal): Promise<GeneratedMedia[]>;
   generateAudio(request: MediaGenerationRequest, signal?: AbortSignal): Promise<GeneratedMedia[]>;
-}
-
-export interface FfmpegContext {
-  /** 仅处理内存字节；未安装时提示用户下载并抛错，不自动重试。 */
-  convert(input: Uint8Array, options: FfmpegConvertOptions, signal?: AbortSignal): Promise<{ data: Uint8Array; mimeType: string }>;
 }
 
 export interface QuestionField {

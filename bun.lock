@@ -29,7 +29,6 @@
         "@breezystack/lamejs": "^1.2.7",
         "@earendil-works/pi-ai": "0.85.1",
         "@earendil-works/pi-coding-agent": "^0.85.1",
-        "@renmu/fluent-ffmpeg": "^2.3.3",
         "@toonflow/ffmpeg": "workspace:*",
         "@toonflow/mcp": "workspace:*",
         "@toonflow/providers": "workspace:*",
@@ -127,6 +126,10 @@
     "packages/ffmpeg": {
       "name": "@toonflow/ffmpeg",
       "version": "0.0.0",
+      "dependencies": {
+        "@renmu/fluent-ffmpeg": "2.3.3",
+        "zod": "^4.6.2",
+      },
     },
     "packages/mcp": {
       "name": "@toonflow/mcp",
@@ -165,6 +168,7 @@
         "@earendil-works/pi-agent-core": "0.85.1",
         "@earendil-works/pi-ai": "0.85.1",
         "@tabler/icons-vue": "^3.46.0",
+        "@toonflow/ffmpeg": "workspace:*",
         "@vitejs/plugin-vue": "^6.0.8",
         "eventsource-parser": "3.1.1",
         "vite": "^8.2.2",
@@ -319,6 +323,9 @@
     "packages/providers": {
       "name": "@toonflow/providers",
       "version": "2.0.0",
+      "dependencies": {
+        "@toonflow/ffmpeg": "workspace:*",
+      },
     },
     "packages/startup": {
       "name": "@toonflow/startup",
@@ -350,6 +357,7 @@
       "name": "@toonflow/tools-scaffold",
       "version": "0.0.0",
       "dependencies": {
+        "@toonflow/ffmpeg": "workspace:*",
         "@toonflow/providers": "workspace:*",
         "@vitejs/plugin-vue": "^6.0.8",
         "vite": "^8.2.2",

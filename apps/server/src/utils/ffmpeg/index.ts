@@ -1,7 +1,13 @@
 import { dirname, join } from "node:path";
+import { realpath } from "node:fs/promises";
 import { build, downloadSources, getToolStatus, installFfmpeg, target } from "@toonflow/ffmpeg";
 import type { DownloadState, FfmpegMode, SourceId } from "@toonflow/ffmpeg";
+import { createFfmpegClient } from "@toonflow/ffmpeg/client";
+import { convertMedia as convertBytes } from "@toonflow/ffmpeg/convert";
+import { executeFfmpeg } from "@toonflow/ffmpeg/runtime";
+import type { FfmpegConvertOptions, FfmpegPlan } from "@toonflow/ffmpeg/types";
 import conf from "@/utils/conf";
+import { lockWorkspaceFiles, resolveWorkspacePath } from "@/utils/workspace/files";
 
 const directory = join(dirname(conf.path), "ffmpeg", target);
 let download: DownloadState = { phase: "idle", received: 0 };
@@ -14,15 +20,36 @@ export function onRequired(listener: () => void) {
   return () => { requiredListeners.delete(listener); };
 }
 
-export async function requireFfmpeg(signal?: AbortSignal) {
+async function requireTools(signal?: AbortSignal, probe = false) {
   signal?.throwIfAborted();
   const { tools } = await getStatus();
   signal?.throwIfAborted();
-  if (tools.ffmpeg.path && !tools.ffmpeg.error) return tools.ffmpeg.path;
+  if (tools.ffmpeg.path && !tools.ffmpeg.error && (!probe || (tools.ffprobe.path && !tools.ffprobe.error))) {
+    return { ffmpegPath: tools.ffmpeg.path, ffprobePath: tools.ffprobe.error ? undefined : tools.ffprobe.path ?? undefined };
+  }
   for (const listener of requiredListeners) listener();
   throw Object.assign(new Error("当前操作需要 FFmpeg，请在插件市场下载安装或配置可用版本后重试。"), {
     name: "FfmpegRequiredError", code: "FFMPEG_REQUIRED", status: 424,
   });
+}
+
+export async function convertMedia(input: Uint8Array, options: FfmpegConvertOptions, signal?: AbortSignal) {
+  return convertBytes(input, options, await requireTools(signal), signal);
+}
+
+export async function executePlan(cwd: string, plan: FfmpegPlan, signal?: AbortSignal) {
+  const root = await realpath(cwd);
+  const paths = await requireTools(signal, plan.steps.some(step => step.method === "ffprobe"));
+  return executeFfmpeg(plan, {
+    ...paths,
+    directory: root,
+    resolvePath: async path => (await resolveWorkspacePath(root, path, true)).path,
+    lockPaths: lockWorkspaceFiles,
+  }, signal);
+}
+
+export function createWorkspaceFfmpeg(cwd: string) {
+  return createFfmpegClient((plan, signal) => executePlan(cwd, plan, signal), convertMedia);
 }
 
 export function getProgress() {

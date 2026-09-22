@@ -7,7 +7,7 @@ import tfRouterMedia from "./src/media/tfRouter";
 export type Provider = ProviderDefinition;
 export type ProviderTools = ProviderContext["tool"];
 export type AudioConvertOptions = Parameters<ProviderTools["audio"]["convert"]>[1];
-export type FfmpegConvertOptions = Parameters<ProviderTools["ffmpeg"]["convert"]>[1];
+export type { FfmpegConvertOptions } from "@toonflow/ffmpeg/types";
 
 export const languageProviders = [tfRouterLanguage, deepSeek] as const;
 export const mediaProviders = [tfRouterMedia] as const;

@@ -28,16 +28,24 @@
 
 `context.skills` 提供统一的技能扫描、读取、新建和修改，复用宿主的 SDK 扫描与文件落盘。`skillOperator` 据此操作工作区 `skill/` 和全局 `data/skills/`，无需把 Pi SDK 打入工具。读取、新建、修改默认开启，可在工具配置中分别关闭；目录查询始终保留，普通工作区文件的写入范围不因此扩大。
 
-`context.ffmpeg.convert(bytes, options, signal?)` 复用宿主 FFmpeg，不随工具打包 FFmpeg 或调用库；全局工具和团队私有工具均可使用。`FfmpegContext`、`FfmpegConvertOptions` 从 `@toonflow/tools-scaffold/runtime` 导出，选项与供应商保持一致。仅接收、返回内存字节，支持已有的格式转换、裁剪、缩放、`hflip`/`vflip` 翻转及音频参数，不接受路径、URL 或任意命令参数。输入和输出各限 100 MB，处理最长 5 分钟，传入当前工具调用的 `signal` 可取消处理；需要 seek 的输入仍受管道读取限制。
+`context.ffmpeg(command => ..., signal?)` 复用宿主 FFmpeg，全局工具和团队私有工具均可使用；工具不打包 FFmpeg 或执行库。链式配置使用常见 fluent-ffmpeg 方法，输入输出均为当前工具工作区的相对路径，支持多输入、多输出、复杂滤镜、编解码参数和真实 ffprobe 元数据。回调必须同步；不需要 `.run()`、事件回调或单独的合成、探测、截帧入口。
 
 ```ts
-const { data, mimeType } = await context.ffmpeg.convert(bytes, {
-  format: "png",
-  vf: "hflip",
-}, signal);
+const result = await context.ffmpeg(command => command
+  .input("assets/first.mp4")
+  .input("assets/second.mp4")
+  .complexFilter("[0:v][1:v]hstack=inputs=2[video]")
+  .outputOptions(["-map [video]"])
+  .videoCodec("libx264")
+  .output("assets/sideBySide.mp4"), signal);
+// result.outputs 返回工作区相对路径与 MIME 类型。
+
+const { probe } = await context.ffmpeg(command => command.input("assets/first.mp4").ffprobe(), signal);
 ```
 
-接口始终注入，调用时才检查 FFmpeg。未安装时沿用宿主的下载询问通知并抛出 `FfmpegRequiredError`，工具应继续向上抛出，不自动重试；安装后由用户重新发起操作。文件读取、落盘继续使用工作区能力，并通过 `context.resolvePath` 校验路径。
+调用时绑定的工作区始终为 `context.cwd`，输出不能覆盖现有文件。选项和滤镜经宿主审查，包含字幕等间接文件路径时仍须位于工作区；不开放原始进程、模块加载、外部 URL 或任意可执行程序。传入当前工具 execute 的 `signal` 可中止执行。接口始终注入，调用时才检查 FFmpeg；未安装时沿用宿主的下载询问通知并抛出 `FfmpegRequiredError`，工具应继续向上抛出，不自动重试。
+
+旧 `context.ffmpeg.convert(bytes, options, signal?)` 保持兼容，返回 `{ data: Uint8Array, mimeType: string }`；仍限输入输出各 100 MB、5 分钟及原有单文件字节流选项。新功能使用可调用入口，避免全文件读入内存。共享类型统一在 `@toonflow/ffmpeg/types`；`FfmpegContext`、`FfmpegConvertOptions` 也从 `@toonflow/tools-scaffold/runtime` 转导出。
 
 工具包的静态提示词在 `build.ts` 的 `createToolConfig({ ..., prompt: "工具操作规则", configRules: [...] }, import.meta.url)` 中声明。`prompt` 为可选字符串，最多 20000 个字符，支持多行文本；随元数据打包，旧插件未声明时按空字符串处理。
 

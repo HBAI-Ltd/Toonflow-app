@@ -20,7 +20,6 @@
     "@breezystack/lamejs": "^1.2.7",
     "@earendil-works/pi-ai": "0.85.1",
     "@earendil-works/pi-coding-agent": "^0.85.1",
-    "@renmu/fluent-ffmpeg": "^2.3.3",
     "@toonflow/ffmpeg": "workspace:*",
     "@toonflow/mcp": "workspace:*",
     "@toonflow/providers": "workspace:*",

@@ -171,10 +171,17 @@ export async function run(
     }
     let firstTokenAt: number | undefined;
     let modelError: string | undefined;
+    let compactionError: string | undefined;
     let messageIndex = 0;
     const toolBlocks = new Map<string, string>();
     const timing = { outputTokens: 0, decodeMs: 0 };
     session.subscribe((event) => {
+      if (event.type === "compaction_start" || event.type === "compaction_end") {
+        send({ type: "compaction", active: event.type === "compaction_start" });
+        if (event.type === "compaction_end" && event.errorMessage) {
+          compactionError = `上下文压缩失败：${event.errorMessage}`;
+        }
+      }
       if (event.type === "message_start" && event.message.role === "assistant") {
         sendUserMessage();
         messageIndex++;
@@ -246,7 +253,8 @@ export async function run(
           }
         }
         firstTokenAt = undefined;
-        modelError = event.message.stopReason === "error" ? event.message.errorMessage || "模型请求失败" : undefined;
+        modelError = event.message.stopReason === "error" ? event.message.errorMessage || "模型请求失败"
+          : event.message.stopReason === "length" ? "模型回复因长度限制被截断，未能完整生成回答。" : undefined;
       }
     });
     const abort = () => {
@@ -273,6 +281,7 @@ export async function run(
         : prompt.trim();
       // SDK 仅以空格分隔技能名；兼容换行输入与追加的附件说明。
       await session.prompt(content.replace(/^(\/skill:\S+)\s+/, "$1 "));
+      if (compactionError) throw new Error(compactionError);
       if (modelError) throw new Error(modelError);
     } finally {
       signal?.removeEventListener("abort", abort);

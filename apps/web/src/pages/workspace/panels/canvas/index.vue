@@ -757,6 +757,11 @@ provide("workspaceFiles", () => {
   if (!directory) throw new Error("请先选择工作目录");
   return useWorkspaceFiles(directory);
 });
+provide("workspaceDirectory", () => {
+  const directory = project.value?.directory;
+  if (!directory) throw new Error("请先选择工作目录");
+  return directory;
+});
 provide("reloadRemoteNode", (type: string) => {
   const name = type.replace(/^remote-/, "");
   if (!type.startsWith("remote-") || !/^[a-z][a-zA-Z0-9]*$/.test(name)) throw new Error("节点类型无效");
