@@ -114,6 +114,20 @@ export async function run(
       customTools: tools,
     });
 
+    const streamFunction = session.agent.streamFunction;
+    session.agent.streamFunction = async (...args) => {
+      const compacting = session.isCompacting;
+      const stream = await streamFunction(...args);
+      // ACT: 摘要落盘前拒绝空正文，压缩、重试和普通回复仍由 SDK 处理。
+      if (compacting) {
+        const response = await stream.result();
+        if (response.stopReason === "stop" && !response.content.some(part => part.type === "text" && part.text.trim())) {
+          throw new Error("模型返回了空摘要，已保留原上下文");
+        }
+      }
+      return stream;
+    };
+
     // ACT: SDK 原生只有文字和图片；视频复用媒体协议转换，会话仍只保存文件引用。
     const videoContents = new Map<string, ReturnType<typeof readAiReferences>>();
     const onPayload = session.agent.onPayload;
