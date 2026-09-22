@@ -5,8 +5,11 @@ import { buildSystemPrompt } from "@/agent/runtime/prompt";
 import { loadAgentSkills } from "@/agent/skills";
 import { resolveWorkspacePath } from "@/utils/workspace/files";
 import { isMemoryEnabled, readDocument } from "@/utils/personalization";
+import conf from "@/utils/conf";
 
 export async function createAgentResources(cwd: string, tools: ToolDefinition[], settings = SettingsManager.inMemory(), instructions = "") {
+  const savedPrompt = conf.get("settings", {}).agentSystemPrompt;
+  const systemPrompt = typeof savedPrompt === "string" ? savedPrompt : undefined;
   const agentDir = join(cwd, ".agent");
   const { path: agentsPath } = await resolveWorkspacePath(cwd, "AGENTS.md");
   const agentsContent = await readFile(agentsPath, "utf8").catch((error: NodeJS.ErrnoException) => {
@@ -32,7 +35,7 @@ export async function createAgentResources(cwd: string, tools: ToolDefinition[],
     // ACT: 技能正文按需读取；每个会话独立创建 loader，避免 SDK 的会话绑定互相覆盖。
     skillsOverride: () => sdkSkills,
     systemPrompt: "",
-    systemPromptOverride: () => [buildSystemPrompt({ tools, skills: skills.skills, platform: process.platform }), instructions].filter(Boolean).join("\n\n"),
+    systemPromptOverride: () => [buildSystemPrompt({ systemPrompt, tools, skills: skills.skills, platform: process.platform }), instructions].filter(Boolean).join("\n\n"),
     appendSystemPrompt: [
       globalAgents.content.trim() ? `## 全局协作规范（AGENTS.md）\n${globalAgents.content}` : "",
       memory.content.trim() ? `## 全局长期记忆\n以下是跨对话保存的偏好与事实，使用前核对适用项目，以用户本轮要求为准。\n<global_memory>\n${memory.content}\n</global_memory>` : "",

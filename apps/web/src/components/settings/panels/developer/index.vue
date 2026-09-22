@@ -24,6 +24,13 @@
         </div>
         <el-button :icon="IconCode" @click="providerDebugVisible = true">开发供应商</el-button>
       </div>
+      <div class="developerRow">
+        <div class="toolDescription">
+          <h3>Agent 系统提示词</h3>
+          <p>编辑 Agent 的基础指令，保存后下一条消息生效。</p>
+        </div>
+        <el-button :icon="IconEdit" @click="systemPromptVisible = true">编辑提示词</el-button>
+      </div>
       <div class="pluginInstaller">
         <div class="installerHeader">
           <h3>手动安装插件</h3>
@@ -84,6 +91,7 @@
       </div>
     </div>
     <providerDebugDialog v-if="providerDebugVisible" v-model="providerDebugVisible" />
+    <systemPromptDialog v-if="systemPromptVisible" v-model="systemPromptVisible" />
     <div v-if="developerLocked" class="developerConfirm">
       <icon-code :size="28" aria-hidden="true" />
       <h3>确认进入开发者选项</h3>
@@ -110,6 +118,8 @@ const router = useRouter();
 const resettingHello = ref(false);
 const providerDebugDialog = defineAsyncComponent(() => import("./providerDebugDialog.vue"));
 const providerDebugVisible = ref(false);
+const systemPromptDialog = defineAsyncComponent(() => import("./systemPromptDialog.vue"));
+const systemPromptVisible = ref(false);
 const developerLocked = computed(() => !developerStore.developerConfirmed);
 
 async function resetHello() {

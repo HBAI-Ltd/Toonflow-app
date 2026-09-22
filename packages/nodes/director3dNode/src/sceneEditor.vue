@@ -35,6 +35,7 @@
             @keyup="handleKeyUp"
             @blur="exitControl"
             @wheel.prevent.stop="changeFocalLength" />
+          <div v-if="captureFlash" :key="captureFlash" class="captureFlash" aria-hidden="true" @animationend="captureFlash = 0" />
           <div class="viewportInfo">
             <span>{{ playing ? "播放中" : controlling ? "" : "点击画布取景" }}</span>
             <span>{{ focalLength.toFixed(0) }} mm</span>
@@ -213,6 +214,7 @@ const sceneAspect = computed(() => {
 const currentTime = ref(0);
 const focalLength = ref(0);
 const activeAnchorId = ref("");
+const captureFlash = ref(0);
 const pressedKeys = new Set<string>();
 const moveKeys = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "Space", "ShiftLeft", "ShiftRight"]);
 const focalSteps = [...Array.from({ length: 30 }, (_, index) => index + 6), 40, 45, 50, 55, 60, 65, 70, 80, 90, 100, 110];
@@ -474,6 +476,7 @@ function addAnchor() {
   anchorPreviews.value[anchor.id] = captureThumbnail();
   anchors.value = [...anchors.value, anchor];
   activeAnchorId.value = anchor.id;
+  captureFlash.value++;
 }
 function restoreAnchor(anchor: CameraAnchor) {
   if (!runtime || !ready.value) return;
@@ -620,10 +623,13 @@ onBeforeUnmount(() => {
       min-height: 180px;
       overflow: hidden;
       background: var(--el-fill-color-light);
-      .sceneCanvas {
-        display: block;
+      .sceneCanvas,
+      .captureFlash {
         width: min(100cqw, calc(100cqh * var(--sceneAspect)));
         height: min(100cqh, calc(100cqw / var(--sceneAspect)));
+      }
+      .sceneCanvas {
+        display: block;
         object-fit: contain;
         touch-action: none;
         outline: 3px solid transparent;
@@ -632,6 +638,20 @@ onBeforeUnmount(() => {
         &.playing {
           outline-color: var(--el-color-primary);
           box-shadow: 0 0 18px color-mix(in srgb, var(--el-color-primary) 35%, transparent);
+        }
+      }
+      .captureFlash {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        background: #fff;
+        opacity: 0;
+        pointer-events: none;
+        animation: directorCapture 280ms ease-out;
+        @media (prefers-reduced-motion: reduce) {
+          background: transparent;
+          box-shadow: inset 0 0 0 2px var(--el-color-primary);
+          animation-timing-function: step-end;
         }
       }
       .viewportInfo {
@@ -782,6 +802,10 @@ onBeforeUnmount(() => {
       }
     }
   }
+}
+@keyframes directorCapture {
+  from { opacity: 0.55; }
+  to { opacity: 0; }
 }
 @keyframes directorLoading {
   to {

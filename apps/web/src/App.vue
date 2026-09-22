@@ -20,6 +20,21 @@ import "element-plus/theme-chalk/dark/css-vars.css";
 
 useMcpControl();
 
+function preventPageZoom(event: WheelEvent) {
+  if (event.ctrlKey || event.metaKey) event.preventDefault();
+}
+function preventPageZoomShortcut(event: KeyboardEvent) {
+  if ((event.ctrlKey || event.metaKey) && !event.altKey && ["+", "=", "-", "0"].includes(event.key)) event.preventDefault();
+}
+// 仅取消浏览器默认缩放，继续传递事件供 Vue Flow 缩放画布。
+window.addEventListener("wheel", preventPageZoom, { capture: true, passive: false });
+// 画布在捕获阶段先处理自己的快捷键，再在冒泡阶段取消浏览器缩放。
+window.addEventListener("keydown", preventPageZoomShortcut);
+onBeforeUnmount(() => {
+  window.removeEventListener("wheel", preventPageZoom, true);
+  window.removeEventListener("keydown", preventPageZoomShortcut);
+});
+
 const { currentZIndex } = useZIndex();
 watchEffect(() => document.documentElement.style.setProperty("--markdown-tooltip-z-index", String(currentZIndex.value + 1)));
 

@@ -101,6 +101,7 @@ declare module 'vue' {
     Settings: typeof import('./../components/settings/index.vue')['default']
     SkillMenu: typeof import('./../components/agent/skillMenu.vue')['default']
     SubAgentMessage: typeof import('./../components/agent/subAgentMessage.vue')['default']
+    SystemPromptDialog: typeof import('./../components/settings/panels/developer/systemPromptDialog.vue')['default']
     TfAccount: typeof import('./../components/settings/tfAccount.vue')['default']
     TfRechargeDialog: typeof import('./../components/settings/tfRechargeDialog.vue')['default']
     ToolMessage: typeof import('./../components/agent/toolMessage.vue')['default']
