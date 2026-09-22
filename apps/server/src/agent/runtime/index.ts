@@ -78,7 +78,10 @@ export async function run(
     if (tools.some(tool => tool.name === memoryTool.name)) throw new Error("工具名称 memory 已被内置全局记忆工具占用");
     tools.push(memoryTool);
   }
-  tools.push(await createSubAgentTool({ cwd, tools, canvas, modelRuntime: runtime, model: runtime.getModel(providerId, modelId), thinkingLevel }));
+  tools.push(await createSubAgentTool({
+    cwd, tools, canvas, modelRuntime: runtime, model: runtime.getModel(providerId, modelId), thinkingLevel,
+    onTool: tool => send({ type: "tool", blockId: `subAgentQuestion:${tool.id}`, tool }),
+  }));
   const resources = await createAgentResources(cwd, tools);
   signal?.throwIfAborted();
   const { path: sessionsDir } = await resolveWorkspacePath(cwd, ".agent/sessions", true);

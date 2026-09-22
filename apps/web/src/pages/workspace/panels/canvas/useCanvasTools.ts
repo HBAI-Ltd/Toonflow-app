@@ -44,6 +44,12 @@ export function useCanvasTools(options: {
     return {
       get id() { return redirected?.id ?? options.getCanvasBinding().id; },
       get tools() { return redirected?.tools ?? getNodeTools().tools; },
+      getNodeLabel(nodeId) {
+        if (redirected) return redirected.getNodeLabel?.(nodeId);
+        const node = flow.findNode(nodeId);
+        const label = node?.data.label ?? node?.label;
+        return typeof label === "string" && label.trim() ? label : undefined;
+      },
       async call(request, signal) {
         if (redirected) return redirected.call(request, signal);
         canvasSignal.throwIfAborted();

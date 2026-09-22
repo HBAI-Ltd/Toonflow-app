@@ -14,9 +14,6 @@ export async function runRemoteTeam(options: {
 }): Promise<{ result: SubAgentResult; usage: Usage }> {
   const { name, task, signal, onProgress } = options;
   const result: SubAgentResult = { name, status: "running", result: "准备连接远端团队", taskId: options.taskId, contextId: options.contextId };
-  const controller = new AbortController();
-  const taskSignal = signal ? AbortSignal.any([signal, controller.signal]) : controller.signal;
-  const timer = setTimeout(() => controller.abort(new Error("远端团队超过 10 分钟，已请求停止")), 10 * 60 * 1000);
   const artifacts = new Map<string, string>();
   let client: Awaited<ReturnType<typeof createTeamA2aClient>> | undefined;
   let sent = false;
@@ -84,23 +81,23 @@ export async function runRemoteTeam(options: {
   }
 
   try {
-    taskSignal.throwIfAborted();
+    signal?.throwIfAborted();
     const remote = getRemoteTeam(name);
     if (!remote) throw new Error(`远端团队 ${name} 不存在`);
     if (!remote.enabled) throw new Error(`远端团队 ${name} 已禁用`);
     client = await createTeamA2aClient({
       url: remote.cardUrl, token: remote.token,
-      fetch: ((input, init) => fetch(input, { ...init, signal: init?.signal ?? taskSignal })) as typeof fetch,
+      fetch: ((input, init) => fetch(input, { ...init, signal: init?.signal ?? signal })) as typeof fetch,
     });
-    const card = await client.getAgentCard({ signal: taskSignal });
-    taskSignal.throwIfAborted();
+    const card = await client.getAgentCard({ signal });
+    signal?.throwIfAborted();
     if (!getRemoteTeam(name)?.enabled) throw new Error(`远端团队 ${name} 已禁用`);
     const request = SendMessageRequest.fromJSON({ message: {
       messageId: randomUUID(), role: "ROLE_USER", parts: [{ text: task }], taskId: result.taskId, contextId: result.contextId,
     } });
     sent = true;
     if (card.capabilities?.streaming) {
-      for await (const event of client.sendMessageStream(request, { signal: taskSignal })) {
+      for await (const event of client.sendMessageStream(request, { signal })) {
         const payload = event.payload;
         if (!payload) continue;
         if (payload.$case === "task") snapshot(payload.value);
@@ -115,24 +112,24 @@ export async function runRemoteTeam(options: {
         }
       }
     } else {
-      const reply = await client.sendMessage(request, { signal: taskSignal });
+      const reply = await client.sendMessage(request, { signal });
       if ("id" in reply) snapshot(reply);
       else { identify(reply.taskId, reply.contextId); text = partsText(reply.parts); directReply = true; }
     }
-    taskSignal.throwIfAborted();
+    signal?.throwIfAborted();
     if (!finish()) throw new Error("远端响应结束，但没有返回完成、失败或等待输入状态");
   } catch (error) {
-    const reason = taskSignal.aborted ? taskSignal.reason : error;
+    const reason = signal?.aborted ? signal.reason : error;
     const description = reason instanceof Error ? reason.message : String(reason ?? "远端调用失败");
     result.status = "error";
     result.result = description;
     if (client && (sent || options.taskId) && result.taskId) {
       try {
-        if (taskSignal.aborted) {
+        if (signal?.aborted) {
           const cancelled = await client.cancelTask(CancelTaskRequest.fromJSON({ id: result.taskId }), { signal: AbortSignal.timeout(15000) });
           snapshot(cancelled);
           if (state !== TaskState.TASK_STATE_CANCELED) throw new Error("远端没有确认取消");
-          result.status = signal?.aborted ? "cancelled" : "limited";
+          result.status = "cancelled";
           result.result = `${description}；远端已确认取消`;
         } else {
           // 断流只核对任务，不重发消息，避免重复执行有副作用的工作。
@@ -141,12 +138,12 @@ export async function runRemoteTeam(options: {
         }
       } catch (checkError) {
         result.status = "error";
-        result.result = `${description}；${taskSignal.aborted ? "无法确认远端已取消" : "无法确认远端任务状态"}：${checkError instanceof Error ? checkError.message : String(checkError)}`;
+        result.result = `${description}；${signal?.aborted ? "无法确认远端已取消" : "无法确认远端任务状态"}：${checkError instanceof Error ? checkError.message : String(checkError)}`;
       }
-    } else if (taskSignal.aborted && !sent) {
+    } else if (signal?.aborted && !sent) {
       if (result.taskId) result.result += "；本次请求尚未提交，原远端任务未执行取消";
-      else result.status = signal?.aborted ? "cancelled" : "limited";
+      else result.status = "cancelled";
     } else if (sent) result.result += "；尚未获得任务标识，远端状态未知，未自动重试";
-  } finally { clearTimeout(timer); }
+  }
   return { result, usage: emptyUsage() };
 }

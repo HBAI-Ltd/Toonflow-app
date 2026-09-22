@@ -36,10 +36,10 @@ function toSummary(node: unknown): NodeSummary | undefined {
   if (!node || typeof node !== "object") return undefined;
   const { id, data } = node as { id?: unknown; data?: { label?: unknown } };
   if (typeof id !== "string") return undefined;
-  return { nodeId: id, label: typeof data?.label === "string" ? data.label : id };
+  return { nodeId: id, label: typeof data?.label === "string" && data.label.trim() ? data.label : id };
 }
 
-const nodes = computed<NodeSummary[]>(() => {
+const nodeSummaries = computed<NodeSummary[]>(() => {
   const args = props.tool.args ?? {};
   if (props.tool.name === "nodeTools") {
     return typeof args.nodeId === "string" && args.nodeId ? [{ nodeId: args.nodeId, label: args.nodeId }] : [];
@@ -71,6 +71,10 @@ const nodes = computed<NodeSummary[]>(() => {
 
 const getCanvas = inject<() => CanvasContext | undefined>("canvas");
 const activateCanvasPanel = inject<() => Promise<boolean>>("activateCanvasPanel");
+const nodes = computed(() => {
+  const canvas = getCanvas?.();
+  return nodeSummaries.value.map(item => ({ ...item, label: canvas?.getNodeLabel?.(item.nodeId) || item.label }));
+});
 
 async function focusNode(nodeId: string) {
   if (await activateCanvasPanel?.() === false) return;

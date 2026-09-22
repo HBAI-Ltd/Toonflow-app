@@ -4,7 +4,7 @@ import { SessionManager, type ToolDefinition } from "@earendil-works/pi-coding-a
 import type { CanvasContext } from "@toonflow/tools-scaffold/runtime";
 import { teamResourcePathSchema } from "@toonflow/teams-scaffold/runtime";
 import { createAgentToolContext } from "@/agent/tools";
-import { addUsage, emptyUsage, createToolQueue, runSubAgent, type SubAgentModel } from "@/agent/runtime/subAgent";
+import { addUsage, emptyUsage, runSubAgent, type SubAgentModel } from "@/agent/runtime/subAgent";
 import { readTeam, saveTeamFile } from "@/utils/teams";
 import { loadTool, validateToolConfig } from "@/utils/plugins/tools";
 
@@ -14,7 +14,7 @@ const resourceSchema = z.strictObject({
   content: z.string().max(200000).optional(),
 });
 const delegationSchema = z.strictObject({
-  tasks: z.array(z.strictObject({ member: z.string().min(1), task: z.string().trim().min(1).max(24000) })).min(1).max(3),
+  tasks: z.array(z.strictObject({ member: z.string().min(1), task: z.string().trim().min(1).max(24000) })).min(1),
 });
 
 export async function createTeamRunner(options: SubAgentModel & {
@@ -52,15 +52,13 @@ export async function createTeamRunner(options: SubAgentModel & {
   }
   // ACT: 协调成员保留内存历史供 A2A 补充输入；本地调用结束即释放，不创建额外对话文件。
   const history = SessionManager.inMemory(cwd);
-  let executions = 0;
 
   return {
     manifest,
     async run(task: string, signal?: AbortSignal, onProgress?: (text: string) => void, allowInput = false) {
-      const queue = createToolQueue();
       let question: string | undefined;
       async function runMember(memberName: string, task: string, signal?: AbortSignal, depth = 0): ReturnType<typeof runSubAgent> {
-        if (++executions > 24 || depth > 8) throw new Error("团队已达到本任务的成员调用上限，请缩小任务范围");
+        signal?.throwIfAborted();
         const member = manifest.members[memberName]!;
         const roots = [member.instructions, ...(member.skills ?? []).map(skill => `skills/${skill}`), ...(member.knowledge ?? []).map(path => `knowledge/${path}`)];
         const allowed = (path: string) => roots.some(root => path === root || path.startsWith(`${root}/`));
@@ -87,17 +85,18 @@ export async function createTeamRunner(options: SubAgentModel & {
             return { content: [{ type: "text", text: JSON.stringify(result) }], details: {} };
           },
         };
-        const selected = queue([...(memberTools.get(memberName) ?? []), resourceTool]);
+        onProgress?.(`${memberName}：准备执行`);
+        const selected = [...(memberTools.get(memberName) ?? []), resourceTool];
         if (member.delegates?.length) selected.push({
           name: "delegate", label: "团队委派",
-          description: `将独立任务交给获准成员。可用成员：${JSON.stringify(member.delegates.map(name => ({ name, description: manifest.members[name]!.description })))}。每批最多3个任务；不得并行修改同一文件或画布，结果返回后由你核验汇总。`,
+          description: `将独立任务交给获准成员。可用成员：${JSON.stringify(member.delegates.map(name => ({ name, description: manifest.members[name]!.description })))}。不得并行修改同一文件或画布，结果返回后由你核验汇总。`,
           parameters: z.toJSONSchema(delegationSchema), executionMode: "sequential",
           async execute(_id, params, childSignal, onUpdate) {
             const { tasks } = delegationSchema.parse(params);
             if (tasks.some(task => !member.delegates!.includes(task.member))) throw new Error("不能委派给未授权的成员");
             const outputs = await Promise.all(tasks.map(async task => {
               try { return await runMember(task.member, task.task, childSignal, depth + 1); }
-              catch (error) { return { result: { name: task.member, status: "error" as const, result: error instanceof Error ? error.message : String(error) } }; }
+              catch (error) { return { result: { name: task.member, status: childSignal?.aborted ? "cancelled" as const : "error" as const, result: error instanceof Error ? error.message : String(error) } }; }
             }));
             const usage = emptyUsage();
             for (const output of outputs) if ("usage" in output) addUsage(usage, output.usage);
