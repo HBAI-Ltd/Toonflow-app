@@ -5,7 +5,7 @@
         <template #content>
           <section class="welcomeMessage" aria-label="开始新对话">
             <div class="welcomeHeader">
-              <span class="welcomeIcon"><icon-sparkles :size="22" aria-hidden="true" /></span>
+              <span class="welcomeIcon" aria-hidden="true"><span class="welcomeLogo" :style="{ maskImage: `url(${logoUrl})` }" /></span>
               <div>
                 <p class="welcomeLabel">你好，我是 Toonflow 助手</p>
                 <h3>从一个想法开始</h3>
@@ -138,9 +138,10 @@ import axios from "axios";
 import {
   IconArrowUp, IconAtom, IconCopy,
   IconCircleDashed, IconPencil, IconPlayerStopFilled, IconX, IconLoader2,
-  IconTrash, IconSparkles, IconLayoutGrid, IconMovie, IconPhoto, IconArrowUpRight,
+  IconTrash, IconLayoutGrid, IconMovie, IconPhoto, IconArrowUpRight,
 } from "@tabler/icons-vue";
 import { ElMessage } from "element-plus";
+import logoUrl from "@toonflow/assets/logo.svg";
 import modelPopover from "@/components/modelPopover.vue";
 import skillMenu from "./skillMenu.vue";
 import toolMessage from "./toolMessage.vue";
@@ -543,6 +544,15 @@ watch(() => !!workspaceStore.pendingAgentMessage && props.active && !locked.valu
           border-radius: var(--ui-radius-large);
           background: var(--el-color-primary-light-9);
           color: var(--el-color-primary);
+
+          .welcomeLogo {
+            width: 28px;
+            height: 28px;
+            background: currentColor;
+            mask-size: contain;
+            mask-position: center;
+            mask-repeat: no-repeat;
+          }
         }
 
         .welcomeLabel { margin: 0 0 4px; font-size: 12px; color: var(--el-text-color-secondary); }

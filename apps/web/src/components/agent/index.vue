@@ -1,20 +1,5 @@
 <template>
-  <el-drawer
-    id="agentPanel"
-    v-model="visible"
-    class="agent"
-    :withHeader="false"
-    aria-label="AI 对话"
-    :size="panelWidth"
-    resizable
-    :modal="false"
-    modalPenetrable
-    :lockScroll="false"
-    :closeOnClickModal="false"
-    :destroyOnClose="false"
-    appendToBody
-    @resize="(_event, width) => emit('resize', Math.max(320, width))"
-    @resize-end="saveWidth">
+  <section v-show="visible" class="agent">
     <agentMenu
       :key="conversationKey"
       :name="name"
@@ -26,7 +11,9 @@
       @select="selectConversation"
       @rename="renameConversation"
       @remove="removeConversation"
-      @close="visible = false" />
+      @close="visible = false">
+      <template #actions><slot name="menuActions" /></template>
+    </agentMenu>
     <conversation
       v-for="item in conversations"
       v-show="item.key === conversationKey"
@@ -37,7 +24,7 @@
       :disabled="loading || !initialized"
       @session="setSessionFile(item, $event)"
       @sent="updateConversationName(item, $event)" />
-  </el-drawer>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -51,7 +38,6 @@ import agentMenu from "./menu.vue";
 import conversation from "./conversation.vue";
 
 const visible = defineModel<boolean>({ default: false });
-const emit = defineEmits<{ resize: [width: number] }>();
 type OpenConversation = { key: number; name: string; file?: string; session: AgentConversation | null };
 // ACT: 会话实例保留到工作区关闭，让切换后的回复继续接收流式内容。
 const conversations = ref<OpenConversation[]>([]);
@@ -59,7 +45,6 @@ const conversationKey = ref(0);
 const selectedConversation = computed(() => conversations.value.find(item => item.key === conversationKey.value));
 const name = computed(() => selectedConversation.value?.name || "新对话");
 const sessionFile = computed(() => selectedConversation.value?.file);
-const panelWidth = ref(420);
 const workspaceStore = useWorkspaceStore();
 const history = ref<AgentHistory[]>([]);
 const loading = ref(false);
@@ -245,28 +230,20 @@ watch(visible, active => {
 });
 onBeforeUnmount(() => { requestId++; });
 
-function saveWidth(_event: MouseEvent, width: number) {
-  panelWidth.value = Math.min(window.innerWidth, Math.max(320, width));
-}
 </script>
 
-<style lang="scss">
-.agent.el-drawer {
-  height: 100vh;
-  min-width: min(320px, 100vw);
-  max-width: 100vw;
-  border-left: 1px solid var(--el-border-color-light);
-  border-radius: 0;
-  box-shadow: none;
+<style scoped lang="scss">
+.agent {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  padding-bottom: 8px;
+  overflow: hidden;
   font-size: 13px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-
-  .el-drawer__body {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    padding: 0 0 8px;
-    overflow: hidden;
-  }
 }
 </style>

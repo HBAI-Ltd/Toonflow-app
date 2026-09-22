@@ -11,7 +11,9 @@
       @keydown.enter="saveName"
       @keydown.esc.prevent="editingName = false"
       @blur="saveName" />
-    <span v-else class="conversationName" :title="name" :tabindex="sessionFile ? 0 : -1" @dblclick="editName" @keydown.enter.prevent="editName">{{ name }}</span>
+    <span v-else class="conversationName">
+      <span class="conversationTitle" :title="name" :tabindex="sessionFile ? 0 : -1" @dblclick="editName" @keydown.enter.prevent="editName">{{ name }}</span>
+    </span>
     <div class="menuActions">
       <el-button text circle aria-label="新建对话" title="新建对话" @click="emit('newChat')"><icon-message-plus :size="17" /></el-button>
       <el-popover v-model:visible="historyVisible" trigger="click" placement="bottom-end" :width="280" :showArrow="false" @show="emit('history')">
@@ -45,6 +47,7 @@
         </div>
       </el-popover>
       <el-button text circle :loading="configLoading" :icon="IconAdjustmentsHorizontal" aria-label="媒体生成控制" title="媒体生成控制" @click="openMediaConfig" />
+      <slot name="actions" />
       <el-button text circle aria-label="关闭对话" title="关闭" @click="emit('close')"><icon-x :size="17" /></el-button>
     </div>
   </header>
@@ -142,6 +145,8 @@ async function renameHistory(item: AgentHistory) {
     white-space: nowrap;
     font-size: 14px;
     font-weight: 500;
+
+    .conversationTitle { cursor: text; user-select: text; }
   }
 
   .menuActions {
@@ -149,7 +154,7 @@ async function renameHistory(item: AgentHistory) {
     flex-shrink: 0;
     gap: 4px;
 
-    .el-button {
+    :deep(.el-button) {
       width: 28px;
       height: 28px;
       margin: 0;

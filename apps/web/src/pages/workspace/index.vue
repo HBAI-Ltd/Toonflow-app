@@ -1,6 +1,14 @@
 <template>
   <main class="workspacePage" :style="{ '--agentWidth': `${agentVisible ? agentWidth : 0}px` }">
-    <canvasPanel :key="workspaceStore.project?.directory" ref="canvasPanelRef" class="canvasPanel" :class="{ backgroundPanel: activePanel !== 'canvas' }" :inert="activePanel !== 'canvas'" :aria-hidden="activePanel !== 'canvas'" :active="activePanel === 'canvas'" :settingsVisible="settingsVisible" />
+    <canvasPanel
+      :key="workspaceStore.project?.directory"
+      ref="canvasPanelRef"
+      class="canvasPanel"
+      :class="{ backgroundPanel: activePanel !== 'canvas' }"
+      :inert="activePanel !== 'canvas'"
+      :aria-hidden="activePanel !== 'canvas'"
+      :active="activePanel === 'canvas'"
+      :settingsVisible="settingsVisible" />
     <keep-alive :max="1">
       <documentPanel
         v-if="activePanel === 'document'"
@@ -18,16 +26,16 @@
         </span>
       </template>
     </el-segmented>
-    <el-button
-      class="agentButton"
-      :class="{ active: agentVisible }"
-      :aria-expanded="agentVisible"
-      aria-controls="agentPanel"
-      @click="agentVisible = !agentVisible">
-      <span class="agentLogo" :style="{ maskImage: `url(${logoUrl})` }" aria-hidden="true" />
-      <span>Toonflow Agent</span>
-    </el-button>
-    <agent v-model="agentVisible" @resize="agentWidth = $event" />
+    <el-tooltip v-if="!agentVisible" content="Toonflow Agent" placement="bottom" :showArrow="false" :hideAfter="0">
+      <el-button
+        class="agentButton"
+        :class="{ active: agentVisible }"
+        :aria-expanded="agentVisible"
+        aria-label="Toonflow Agent"
+        aria-controls="agentPanel"
+        @click="agentVisible = !agentVisible"></el-button>
+    </el-tooltip>
+    <floatingAgent v-model="agentVisible" @resize="agentWidth = $event" />
     <settings v-model="settingsVisible" />
   </main>
 </template>
@@ -38,14 +46,13 @@ import { onBeforeRouteLeave } from "vue-router";
 import axios from "axios";
 import { IconLayoutDashboard, IconFileText } from "@tabler/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import logoUrl from "@toonflow/assets/logo.svg";
-import agent from "@/components/agent/index.vue";
 import settings from "@/components/settings/index.vue";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { registerWorkspaceControl, waitForControlValue } from "@/lib/mcpControl";
 import anonymousData from "@/lib/anonymousData";
 import canvasPanel from "./panels/canvas/canvasHost.vue";
 import workspaceMenu from "./components/workspaceMenu.vue";
+import floatingAgent from "./components/floatingAgent.vue";
 
 const documentPanel = defineAsyncComponent(() => import("./panels/document/index.vue"));
 
@@ -57,7 +64,7 @@ const panelOptions = [
   { label: "文档", value: "document", icon: IconFileText },
 ];
 const agentVisible = ref(true);
-const agentWidth = ref(420);
+const agentWidth = ref(0);
 const settingsVisible = ref(false);
 const canvasPanelRef = ref<InstanceType<typeof canvasPanel>>();
 const documentPanelRef = ref<InstanceType<typeof documentPanel>>();
@@ -125,12 +132,18 @@ onBeforeRouteLeave(async () => {
   } catch (error) {
     const message = axios.isAxiosError<{ message?: string }>(error)
       ? error.response?.data?.message || error.message
-      : error instanceof Error ? error.message : "项目保存失败";
-    const leave = await ElMessageBox.confirm(
-      `无法保存项目：${message}。文件或目录可能已被移动或删除。仍然退出将丢弃尚未保存的修改。`,
-      "项目未保存",
-      { type: "warning", confirmButtonText: "仍然退出", cancelButtonText: "留在项目", closeOnClickModal: false },
-    ).then(() => true, () => false);
+      : error instanceof Error
+      ? error.message
+      : "项目保存失败";
+    const leave = await ElMessageBox.confirm(`无法保存项目：${message}。文件或目录可能已被移动或删除。仍然退出将丢弃尚未保存的修改。`, "项目未保存", {
+      type: "warning",
+      confirmButtonText: "仍然退出",
+      cancelButtonText: "留在项目",
+      closeOnClickModal: false,
+    }).then(
+      () => true,
+      () => false
+    );
     if (leave) {
       documentPanelRef.value?.cancelSave();
       canvasPanelRef.value?.cancelSave();
@@ -221,22 +234,52 @@ function saveDocumentNode(directory: string, canvasPath: string, nodeId: string,
     top: 15px;
     right: 15px;
     z-index: 5;
-    height: 40px;
-    padding: 0 14px;
-    border-radius: var(--ui-radius-large, var(--el-border-radius-base));
-    font-weight: 600;
-    box-shadow: var(--el-box-shadow-lighter);
-    --el-button-bg-color: var(--el-bg-color-overlay);
-    --el-button-text-color: var(--el-text-color-primary);
-    --el-button-border-color: var(--el-border-color-light);
-    --el-button-hover-bg-color: var(--el-color-primary-light-9);
-    --el-button-hover-text-color: var(--el-color-primary);
-    --el-button-hover-border-color: var(--el-color-primary-light-5);
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 50%;
+    background: linear-gradient(145deg, var(--el-fill-color-light), var(--el-bg-color-overlay));
+    color: #f4fffe;
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform 180ms ease;
 
-    &.active {
-      color: var(--el-color-primary);
-      background: var(--el-color-primary-light-9);
-      border-color: var(--el-color-primary-light-5);
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    &::before {
+      z-index: -2;
+      background: radial-gradient(ellipse at 22% 15%, #a5fff0, transparent 55%), radial-gradient(ellipse at 85% 85%, #a999ff, transparent 60%),
+        radial-gradient(ellipse at 85% 20%, #1dd6cb, transparent 55%), linear-gradient(150deg, #12b8c9, #2765ba 65%, #5a5cc4);
+      animation: agentFlow 10s linear infinite;
+      filter: saturate(0.85);
+      transition: filter 180ms ease;
+    }
+
+    &::after {
+      z-index: -1;
+      background: radial-gradient(ellipse at 30% 12%, #ffffff80, transparent 48%), radial-gradient(ellipse at 65% 95%, #17246070, transparent 65%);
+      box-shadow: inset 0 1px 2px #ffffff80, inset 0 -2px 4px #14255460;
+    }
+
+    &.active::before,
+    &:hover::before {
+      filter: saturate(1.15);
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: scale(0.95);
     }
 
     &:focus-visible {
@@ -247,13 +290,26 @@ function saveDocumentNode(directory: string, canvasPath: string, nodeId: string,
     .agentLogo {
       width: 24px;
       height: 24px;
-      margin-right: 8px;
       flex-shrink: 0;
       background: currentColor;
       mask-size: contain;
       mask-position: center;
       mask-repeat: no-repeat;
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+
+      &::before {
+        animation: none;
+      }
+    }
+  }
+}
+
+@keyframes agentFlow {
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>
