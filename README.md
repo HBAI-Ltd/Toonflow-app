@@ -157,12 +157,12 @@ Toonflow 是面向短剧、漫剧与短视频制作的开源 AI 创作平台，�
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/🏠_纯本地-42B883?style=for-the-badge&labelColor=1a1a2e" height="72" alt="纯本地" />
-  <img src="https://img.shields.io/badge/🖼️_无限画布-FF6B6B?style=for-the-badge&labelColor=1a1a2e" height="72" alt="无限画布" />
-  <img src="https://img.shields.io/badge/🔌_MCP-6366F1?style=for-the-badge&labelColor=1a1a2e" height="72" alt="MCP" />
+  <img src="https://img.shields.io/badge/🏠_纯本地-42B883?style=for-the-badge&labelColor=1a1a2e" height="120" alt="纯本地" />
+  <img src="https://img.shields.io/badge/🖼️_无限画布-FF6B6B?style=for-the-badge&labelColor=1a1a2e" height="120" alt="无限画布" />
+  <img src="https://img.shields.io/badge/🔌_MCP-6366F1?style=for-the-badge&labelColor=1a1a2e" height="120" alt="MCP" />
   <br />
-  <img src="https://img.shields.io/badge/🧩_插件市场-F59E0B?style=for-the-badge&labelColor=1a1a2e" height="72" alt="插件市场" />
-  <img src="https://img.shields.io/badge/🤖_开放_Agent-06B6D4?style=for-the-badge&labelColor=1a1a2e" height="72" alt="开放 Agent" />
+  <a href="https://api.toonflow.net/console/plugIn"><img src="https://img.shields.io/badge/🧩_插件市场-F59E0B?style=for-the-badge&labelColor=1a1a2e" height="120" alt="插件市场" /></a>
+  <img src="https://img.shields.io/badge/🤖_开放_Agent-06B6D4?style=for-the-badge&labelColor=1a1a2e" height="120" alt="开放 Agent" />
 </p>
 
 <h3 align="center">🔒 数据永远留在本地，创作从不被托管</h3>
