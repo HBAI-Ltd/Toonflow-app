@@ -5,7 +5,11 @@
       :name="name"
       :history="history"
       :sessionFile="sessionFile"
+      :parentFile="selectedConversation?.parentFile"
+      :subAgents="selectedConversation?.subAgents"
       :loading="loading || historyLoading"
+      @open-sub-agent="selectConversation"
+      @back="backToParent"
       @new-chat="newConversation"
       @history="loadHistory(!initialized)"
       @select="selectConversation"
@@ -18,27 +22,30 @@
       v-for="item in conversations"
       v-show="item.key === conversationKey"
       :key="item.key"
+      :ref="instance => setConversationRef(item, instance)"
       :active="visible && item.key === conversationKey"
       :initialSession="item.session"
       :sessionFile="item.file"
       :disabled="loading || !initialized"
       @session="setSessionFile(item, $event)"
+      @event="receiveAgentEvent"
       @sent="updateConversationName(item, $event)" />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
 import { useWorkspaceStore } from "@/stores/workspace";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import type { AgentConversation, AgentHistory } from "./types";
+import type { AgentEvent, AgentSubAgent } from "@toonflow/server/agent/types";
 import agentMenu from "./menu.vue";
 import conversation from "./conversation.vue";
 
 const visible = defineModel<boolean>({ default: false });
-type OpenConversation = { key: number; name: string; file?: string; session: AgentConversation | null };
+type OpenConversation = { key: number; name: string; file?: string; parentFile?: string; subAgents: AgentSubAgent[]; session: AgentConversation | null };
 // ACT: 会话实例保留到工作区关闭，让切换后的回复继续接收流式内容。
 const conversations = ref<OpenConversation[]>([]);
 const conversationKey = ref(0);
@@ -52,16 +59,70 @@ const historyLoading = ref(false);
 const initialized = ref(false);
 let requestId = 0;
 let nextConversationKey = 0;
+const conversationRefs = new Map<number, InstanceType<typeof conversation>>();
+const pendingEvents = new Map<number, AgentEvent[]>();
 
-function showConversation(session: AgentConversation | null) {
+function showConversation(session: AgentConversation | null, activate = true) {
   const existing = session && conversations.value.find(item => item.file === session.file);
   if (existing) {
-    conversationKey.value = existing.key;
-    return;
+    if (activate) conversationKey.value = existing.key;
+    return existing;
   }
   const key = ++nextConversationKey;
-  conversations.value.push({ key, name: session?.name || "新对话", file: session?.file, session });
-  conversationKey.value = key;
+  const item = { key, name: session?.name || "新对话", file: session?.file, parentFile: session?.parentFile, subAgents: session?.subAgents ?? [], session };
+  conversations.value.push(item);
+  if (activate) conversationKey.value = key;
+  return conversations.value[conversations.value.length - 1]!;
+}
+
+function setConversationRef(item: OpenConversation, instance: Element | ComponentPublicInstance | null) {
+  if (!instance) { conversationRefs.delete(item.key); return; }
+  const view = instance as InstanceType<typeof conversation>;
+  conversationRefs.set(item.key, view);
+  for (const event of pendingEvents.get(item.key) ?? []) view.receiveEvent(event);
+  pendingEvents.delete(item.key);
+}
+
+function deliverEvent(item: OpenConversation, event: AgentEvent) {
+  const view = conversationRefs.get(item.key);
+  if (view) view.receiveEvent(event);
+  else {
+    const events = pendingEvents.get(item.key) ?? [];
+    events.push(event);
+    pendingEvents.set(item.key, events);
+  }
+}
+
+function receiveAgentEvent(event: AgentEvent) {
+  if (event.type === "subAgent") {
+    const parent = conversations.value.find(item => item.file === event.agent.parentFile);
+    if (!parent) return;
+    const current = parent.subAgents.find(agent => agent.file === event.agent.file);
+    if (current) Object.assign(current, event.agent);
+    else parent.subAgents.push(event.agent);
+    if (event.agent.status === "running" && !conversations.value.some(item => item.file === event.agent.file)) {
+      showConversation({ ...event.agent, parentFile: parent.file, messages: [], running: true }, false);
+    }
+    return;
+  }
+  if (event.type === "subAgentEvent") {
+    const child = conversations.value.find(item => item.file === event.file);
+    if (event.event.type === "error") {
+      const agent = conversations.value.find(item => item.file === child?.parentFile)?.subAgents.find(agent => agent.file === event.file);
+      if (agent?.status === "running") Object.assign(agent, { status: "cancelled", result: event.event.message });
+    }
+    if (child) deliverEvent(child, event.event);
+    return;
+  }
+  if (event.type === "report") {
+    const parent = conversations.value.find(item => item.file === event.parentFile);
+    if (parent) deliverEvent(parent, event);
+  }
+}
+
+function backToParent() {
+  const file = selectedConversation.value?.parentFile;
+  if (file) void selectConversation(file);
 }
 
 function updateConversationName(item: OpenConversation, prompt: string) {
@@ -73,6 +134,7 @@ function updateConversationName(item: OpenConversation, prompt: string) {
 
 function setSessionFile(item: OpenConversation, file: string) {
   item.file = file;
+  if (item.parentFile) return;
   if (!history.value.some(entry => entry.file === file)) {
     history.value.unshift({ file, name: item.name, modified: new Date().toISOString(), messageCount: 0 });
   }
@@ -219,6 +281,8 @@ watch(() => workspaceStore.project?.directory, directory => {
   requestId++;
   history.value = [];
   conversations.value = [];
+  conversationRefs.clear();
+  pendingEvents.clear();
   initialized.value = false;
   loading.value = false;
   historyLoading.value = false;

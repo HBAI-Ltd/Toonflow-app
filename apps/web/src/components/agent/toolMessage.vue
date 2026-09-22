@@ -31,7 +31,6 @@ import { IconCopy, IconTool } from "@tabler/icons-vue";
 import chatReasoning from "@tdesign-vue-next/chat/es/chat-reasoning";
 import type { AgentToolCall } from "@toonflow/server/agent/types";
 import messageMarkdown from "@/components/messageMarkdown.vue";
-import subAgentMessage from "./subAgentMessage.vue";
 
 const { tool, directory } = defineProps<{ tool: AgentToolCall; directory?: string }>();
 const emit = defineEmits<{ copy: [content: string] }>();
@@ -42,7 +41,7 @@ watch(() => [tool.name, tool.question?.callId] as const, async ([name], _previou
   onCleanup(() => { active = false; });
   renderer.value = undefined;
   rendererError.value = "";
-  if (name === "subAgent") { renderer.value = subAgentMessage; return; }
+  if (name === "subAgent") return;
   try {
     const component = await loadToolComponent(name);
     if (active) {

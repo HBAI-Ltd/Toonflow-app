@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/Gitee-C71D23?style=flat-square&logo=gitee&logoColor=white" alt="Gitee" />
   </a>
   &nbsp;|&nbsp;
-  <a href="https://gitcode.com/HBAI-Ltd/Toonflow-app">
+  <a href="https://atomgit.com/HBAI-Ltd/Toonflow-app">
     <img src="./docs/atomgitLogo.svg" alt="AtomGit" height="20" />
   </a>
 </p>
@@ -79,7 +79,15 @@
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
 
-> 🚀 **一站式短剧创作**：从剧本到角色，从素材到视频，在无限画布上与 AI 一起把故事做出来。
+<p align="center">
+  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197" target="_blank" rel="noopener noreferrer">
+    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/daily?language=TypeScript" alt="HBAI-Ltd/Toonflow-app | Trendshift" width="250" height="55" />
+  </a>
+</p>
+
+**开源 AI 短剧与漫剧创作平台**
+
+> 🚀 **一站式短剧创作**：集成剧本创作、资产管理、图像与视频生成，在无限画布中组织完整的创作流程。
 
 </div>
 
@@ -110,384 +118,240 @@
 
 ---
 
-## ✨ 在一张画布里完成创作
+## 💛 赞助与支持
 
-Toonflow 将对话、文件与节点放进同一个工作区。你可以从一句话开始，也可以带着已有剧本和素材继续制作：先确定故事，再准备资产，将剧本拆成片段，逐段生成与调整视频。
+感谢以下合作伙伴对 Toonflow 开源项目的支持。
 
-| 能力 | 你可以做什么 |
-| --- | --- |
-| **无限画布** | 自由摆放文本、图片、音频、视频和生成节点；连接素材、框选、复制、打组，并在多张画布之间切换。 |
-| **Agent 协作** | 通过对话整理剧本、读取工作区文件、编辑节点与提示词，使用问题表单确认需求和阶段方案。 |
-| **图片与视频生成** | 在节点中选择模型、设置参数、引用真实素材并查看输出，保留可以继续修改的制作过程。 |
-| **素材管理** | 将文件直接拖入画布或批量上传，在素材库预览图片、音频和视频，并在节点中替换素材。 |
-| **3D 导演台** | 用文字生成场景、动作与运镜，在三维画面中调整取景和光照，记录关键帧并导出图片或视频，用于镜头预演。 |
-| **模型提供方** | 分别配置文本模型和媒体模型，接入预设或自定义提供方；媒体接口由提供方适配。 |
-| **插件与技能** | 安装节点、工具和 Markdown 技能，扩展画布能力、Agent 工具和创作方法。 |
-| **MCP 与个性化** | 通过 MCP 让外部工具接入 Toonflow，管理全局说明和本地 Markdown 记忆，让不同工作区沿用你的创作偏好。 |
-
----
-
-## 📦 应用场景
-
-- **短剧与漫剧制作**：围绕角色、场景和片段组织素材，持续迭代一集或一组故事。
-- **小说视听化**：从原著提取内容，改编成可审阅的剧本与镜头方案。
-- **短视频创作**：从一个主题或灵感开始，准备画面素材并生成视频片段。
-- **角色与场景设计**：统一视觉风格，积累可以在后续制作中复用的资产。
-- **动作与镜头预演**：在 3D 导演台中尝试构图、走位和运镜，再导出参考。
-
----
-
-## 🎬 从剧本到视频
-
-内置的视频制作工作流围绕可审阅的阶段成果推进。已有剧本或素材可以直接接续，局部修改也可以只处理受影响的部分。
-
-```mermaid
-flowchart LR
-    idea[创意 / 小说 / 已有剧本] --> script[完整剧本与范围确认]
-    script --> assets[角色 / 场景 / 道具资产]
-    script --> segments[剧本分片段与视频提示词]
-    assets --> video[多参视频生成]
-    segments --> video
-    video --> review[预览与反馈]
-    review --> delivery[采用片段与素材交付]
-    review -->|调整当前片段| segments
-```
-
-- **资产来自剧本。** 先明确角色、场景、道具和视觉风格，再制作可复用的资产；角色参考按需要组织面部与正、侧、背三视图。
-- **提示词来自完整片段。** 一个片段可以包含多个镜头，动作、对白、声音和前后衔接共同组成视频提示词。
-- **素材直接参与生成。** 在模型支持多参输入时，将角色图、场景图、道具图等作为实际参考传给视频节点；首帧、首尾帧等流程按具体需求使用。
-- **由你决定采用什么。** 内置工作流要求展示阶段成果，并在消耗算力生成前确认具体方案；已授权的同一批次沿用既有确认，调整与额外生成另行核对。
-
-模型能力、生成规格与费用取决于所配置的服务。生成得到的片段需要预览和选择，最终剪辑与合成按项目需要继续完成。
-
----
-
-## 🚀 下载与快速上手
-
-### 下载客户端
-
-前往 [GitHub Releases](https://github.com/HBAI-Ltd/Toonflow-app/releases)，按系统和处理器架构选择安装包，具体文件与说明以对应发布页为准。
-
-| 系统 | 架构 | 安装方式 |
-| --- | --- | --- |
-| Windows | x64 | 运行 `toonflow-<版本>-Setup.exe`，选择安装目录并按向导完成安装。 |
-| macOS | Apple Silicon / arm64 | 选择 `macArm64` 对应的 DMG，将应用复制到“应用程序”后运行。 |
-| macOS | Intel / x64 | 选择 `macX64` 对应的 DMG，将应用复制到“应用程序”后运行。 |
-
-Windows 安装器会检查 WebView2，缺少运行时时提示安装。当前 macOS 构建未做 Developer ID 签名与公证，首次打开可能需要按系统提示处理；自行构建的准备步骤见下方开发说明。
-
-### 开始第一个项目
-
-1. **配置模型。** 首次启动可选择“登录 TF-Router 自动配置”，也可以添加私有提供商，或先选择“稍后配置”浏览界面。
-2. **检查可用模型。** 在“设置 → 文本模型”配置 Agent 使用的模型，在“设置 → 媒体模型”配置图片和视频生成所需的提供方与模型。填写 TF-Router 的文本模型 Key 后会自动获取模型列表。
-3. **创建工作区。** 从首页输入创作灵感，或新建、打开本地工作区，准备剧本和参考素材。
-4. **搭建画布。** 拖入文件、通过右键菜单添加节点，也可以让 Agent 按需求整理内容和节点。
-5. **逐阶段制作。** 审阅剧本、资产与视频方案，确认生成范围后执行，预览结果并提出调整意见。
-
-[TF-Router](https://api.toonflow.net/) 是 Toonflow 的官方模型中转平台，也可以使用其他已支持或自行适配的提供方。模型调用需要相应的 API Key，图像、视频等生成消耗由对应服务计费。
-
-需要图文操作说明时，请查看 [使用教程](https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink)。画布底部的帮助菜单也提供教程、反馈和交流入口。
-
----
-
-## 🧩 插件与模型扩展
-
-通过“设置 → 插件市场”发现和管理节点、工具与技能；市场顶部可以直接打开 [网页版市场](https://api.toonflow.net/console/plugIn) 和 [开发者文档](https://scnpmvaimya1.feishu.cn/docx/I6nZdSHBeoimGQx5HvtcrYgMntd)。市场需要 TF-Router API Key，未配置时会提示填写。
-
-| 扩展类型 | 用途 | 开发入口 |
-| --- | --- | --- |
-| 节点 | 为画布增加交互组件、输入输出端口与节点操作。 | [节点脚手架](./packages/nodeScaffold/readme.md) · [内置节点](./packages/nodes/) |
-| 工具 | 为 Agent 增加工作区操作、搜索、媒体生成等能力，可附带交互 UI。 | [工具脚手架](./packages/toolScaffold/readme.md) · [内置工具](./packages/tools/) |
-| 技能 | 用 `SKILL.md` 和附属资料描述创作流程、方法与操作约定。 | [内置技能](./packages/skills/) |
-| 提供方 | 适配不同平台的模型列表、请求参数和媒体返回结果。 | [提供方实现](./packages/providers/src/) |
-
-节点与工具的配置表单统一使用 `@form-create/element-ui` 的规则；有必填项未填写时，配置按钮会显示红点。工具只接收自身配置，宿主不向工具直接传递完整应用设置。
-
-媒体接口包含图片、视频和音频的扩展类型，实际能力由各提供方实现；当前内置 TF-Router 媒体适配提供图片与视频生成。技能既可以全局安装，也可以放在当前工作区的 `skill/` 目录，同名时优先使用工作区版本。
-
-需要从外部 Coding 工具操作 Toonflow 时，在“设置 → MCP”开启服务并复制客户端配置，支持 HTTP 与 stdio 连接。画布和节点等界面操作需要保持 Toonflow 窗口或网页打开，详见 [MCP 接入说明](./packages/mcp/README.md)。
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="https://metaso.cn/minimax-h3/?s=toon"><img src="./docs/sponsors/metaso.svg" alt="秘塔" height="28" valign="middle" /> <strong>秘塔</strong></a>
+      <br />
+      <sub>提供高性价比的 MiniMax H3 视频生成服务：768P 仅 0.09 元/秒，2K 仅 0.15 元/秒；支持原生 2K、音画同步，API 兼容 OpenAI 协议，同时支持 ComfyUI、无限画布，无需自行部署 GPU。通过<a href="https://metaso.cn/minimax-h3/?s=toon">专属链接注册</a>可领取赠送额度及专属优惠，商务对接可加微信 metasota12。</sub>
+    </td>
+    <td width="50%" valign="top">
+      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="./docs/sponsors/apiMart.svg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
+      <br />
+      <sub>感谢 APIMart 赞助本项目算力！专注 AI 图片/视频生成的低价 API 平台，GPT-Image-2 低至 $0.006/张，1 美元可出图 160+ 张；图片、视频一套异步 API，提交任务拿 ID、回调取结果，跑批万张不超时、换模型不改代码，按量付费、无月费。通过此<a href="https://go.apimart.ai/gh-toonflow-app">注册链接</a>注册即可开用。</sub>
+    </td>
+  </tr>
+</table>
 
 <details>
-<summary><strong>通过网页唤起桌面安装插件</strong></summary>
+<summary><strong>成为赞助商👈</strong></summary>
 
-安装桌面客户端后，网页可通过 `toonflow://install` 请求安装插件。应用会先展示类型、文件名和下载地址，用户确认后再下载与安装。
+<p align="center">
+  <img src="./docs/businessQr.png" alt="商务合作微信二维码" width="200" />
+</p>
 
-```ts
-const link = new URL("toonflow://install");
-link.searchParams.set("type", "node");
-link.searchParams.set("url", "https://example.com/plugins/exampleNode.umd.js");
-window.location.href = link.href;
-```
-
-| `type` | 文件格式 | 安装位置 |
-| --- | --- | --- |
-| `node` | `.umd.js` | `data/nodes/` |
-| `tool` | `.tool.js` | `data/tools/` |
-| `skill` | `SKILL.md`、`.zip`、`.tar`、`.tar.gz`、`.tgz` | `data/skills/<name>/` |
-| `provider` | 媒体提供方 `.ts` | `data/providers/` |
-
-下载地址须为 HTTP/HTTPS，文件名来自 URL 路径。同名节点、工具和技能在版本更高时允许更新；覆盖同版本或降级需在开发者选项中使用强制安装，提供方不覆盖同名项。
-
-普通插件与技能包最多 20 MB，技能解压后也受此限制；提供方最多 2 MB。技能包支持 ZIP 和 TAR，须包含带有 `name`、`description` frontmatter 的 `SKILL.md`，附属资源放在其所在目录内。TAR 包使用普通 USTAR 格式，不包含链接及 PAX/GNU 扩展条目。
-
-Windows 安装器负责注册协议；macOS 需要将应用放入 `/Applications` 或 `~/Applications`。普通浏览器开发模式不注册桌面协议。
+<p align="center"><sub>此联系方式仅用于商务合作接洽，不提供问题答疑。使用问题欢迎在交流群交流，需求与 BUG 可通过反馈表提交。感谢理解。</sub></p>
 
 </details>
 
----
-
-## 🛠️ 开发与构建
-
-前端、业务服务和桌面端在同一个 Bun Workspaces 仓库中维护。
-
-| 层级 | 技术 |
-| --- | --- |
-| 运行时与包管理 | Bun 1.3.14、Bun Workspaces |
-| 前端 | Vue 3、Vite、TypeScript、Pinia、Element Plus、Vue Flow |
-| 服务端 | Bun、Express 5、Zod |
-| Agent | Pi Agent SDK、工具插件、Markdown 技能与记忆 |
-| 桌面 | Electrobun；Windows 使用 WebView2 和 NSIS 安装器 |
-| 3D 与媒体 | Three.js、FFmpeg、可扩展的媒体提供方 |
-
-### 本地开发
-
-先安装 Git 和项目指定版本的 [Bun](https://bun.sh/)，然后执行：
-
-```sh
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
-cd Toonflow-app
-bun install
-
-# 首次开发或修改插件后，构建节点和工具并同步到 data/
-bun run dev:plugins
-
-# 同时启动 Web 与业务 Server
-bun run dev
-```
-
-打开 `http://localhost:5173`。独立 Server 默认监听 `3000`，Web 开发服务会代理 API 请求。`dev` 不会自动构建或同步插件，因此首次启动需要上面的 `dev:plugins` 步骤。
-
-### 常用命令
-
-以下命令在仓库根目录执行：
-
-| 命令 | 用途 |
-| --- | --- |
-| `bun run dev:web` | 单独启动 Web 开发服务。 |
-| `bun run dev:server` | 单独启动业务 Server。 |
-| `bun run dev:plugins` | 构建节点和工具，并同步到开发数据目录。 |
-| `bun run dev:desktop` | 同步开发插件、构建 Web，并启动桌面应用。 |
-| `bun run build` | 构建工具、Web、Server、MCP，并输出技能和提供方文件。 |
-| `bun run build:nodes` | 构建节点到 `build/nodes/`，不写入 `data/nodes/`。 |
-| `bun run build:tools` | 构建工具到 `build/tools/`，不写入 `data/tools/`。 |
-| `bun run start:server` | 运行 `build/server/` 中已构建的服务。 |
-| `bun run build:desktop` | 构建当前平台的桌面应用及随包资源。 |
-| `bun run package:desktop` | 生成当前平台的 Windows NSIS 安装包或 macOS DMG。 |
-| `bun run typecheck` | 单独执行各工作区的类型检查。 |
-
-构建与类型检查分别执行。新增、移动或删除业务接口后，在 `apps/server` 执行 `bun run routes` 生成路由。
-
-<details>
-<summary><strong>在本机运行构建后的 Web 与 Server</strong></summary>
-
-首次从源码运行，完成依赖安装后执行：
-
-```sh
-bun run dev:plugins
-bun run build
-bun run start:server
-```
-
-然后打开 `http://localhost:3000`。这套命令使用仓库根目录的默认 `data/`；`build` 本身不初始化节点。迁移到其他目录或机器时，需一并处理节点、配置和工作区，不能只复制 `build/` 就视作完整安装。
-
-独立 Server 采用单进程运行。桌面端复用同一个 `createApp`，在主进程监听系统分配的本机端口。目录选择、原生保存与桌面更新等接口仅由桌面宿主提供。
-
-</details>
-
-<details>
-<summary><strong>桌面构建准备：Windows 与 macOS</strong></summary>
-
-桌面脚本支持 Windows x64、macOS arm64 和 macOS x64，需要在对应系统与架构上构建。
-
-**Windows x64**
-
-使用 Electrobun 2.0.1。打包需要 NSIS，默认查找 `C:/Program Files (x86)/NSIS/makensis.exe`，可通过 `NSIS_PATH` 指定路径。首次打包会下载并验证微软 WebView2 引导程序。
-
-```sh
-bun run build:desktop
-bun run package:desktop
-```
-
-安装包输出到 `build/desktop/artifacts/toonflow-<版本>-Setup.exe`。
-
-**macOS**
-
-先安装 Xcode Command Line Tools。Apple Silicon 使用 Electrobun 2.0.1；Intel Mac 使用 `compat/macIntel/` 中的 Electrobun 1.18.1 兼容构建，需先准备其依赖：
-
-```sh
-# 仅 Intel Mac 需要
-cd compat/macIntel
-bun install --frozen-lockfile
-cd ../..
-```
-
-在对应架构的 Mac 上生成原生启动库，然后构建：
-
-```sh
-bun packages/startup/scripts/buildMac.ts
-bun run build:desktop
-bun run package:desktop
-```
-
-启动库脚本会下载固定版本的 ThorVG 源码并校验摘要。产物分别位于 `build/desktop/artifacts/macArm64/` 和 `build/desktop/artifacts/macX64/`。
-
-当前 macOS 测试包未做 Developer ID 签名与公证。对于自己构建且确认来源的测试应用，若被隔离属性拦截，可仅移除该应用的隔离属性，路径按实际位置调整：
-
-```sh
-xattr -dr com.apple.quarantine "/Applications/toonflow.app"
-```
-
-**类型检查与 SDK**
-
-若 Windows x64 或 Apple Silicon 在首次构建前单独进行类型检查，先准备 Electrobun SDK：
-
-```sh
-bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
-bun run typecheck
-```
-
-Intel Mac 在安装兼容 SDK 后，先运行桌面开发或构建命令生成适配文件。类型检查不会隐式安装依赖或编译原生库。
-
-</details>
-
-<details>
-<summary><strong>发布、更新与插件同步</strong></summary>
-
-- [Debug 工作流](./.github/workflows/debug.yml) 支持手动选择 Windows x64、Apple Silicon、Intel Mac 或全部目标，产物保留 7 天，不创建 Release。
-- [Release 工作流](./.github/workflows/release.yml) 在推送 `vX.Y.Z` 标签后构建桌面包，并上传到 GitHub Release。可通过 Actions Variable `UPDATE_BASE_URL` 配置客户端更新地址。
-- CI 构建和归档检查不等于已验证真实安装、GUI 启动或 macOS Gatekeeper。
-
-独立更新服务与业务 Server 分开运行，默认地址为 `http://127.0.0.1:8091`。其配置、部署与发布规则见 [更新服务说明](./apps/updateServer/readme.md)。
-
-```sh
-bun run start:updateServer
-
-# 首次基线，版本号仅为示例
-bun run release:desktop 2.0.0 --initial
-bun run publish:update build/desktop/releases/2.0.0
-
-# 服务器保留上一版时，构建并发布下一版本
-bun run release:desktop 2.0.1
-bun run publish:update build/desktop/releases/2.0.1
-```
-
-Mac 发布目录增加 `macX64/` 或 `macArm64/`，例如 `build/desktop/releases/macArm64/2.0.1`。同一平台、架构和版本不能重复发布；普通构建不访问更新服务器，非 initial 的 release 才生成增量更新。GitHub Release 工作流生成完整更新包，不自动发布到独立更新服务。
-
-桌面用户可在“设置 → 关于”检查更新、下载并重启应用。Windows 更新交换程序目录，保留 `data/` 和 `WebView2/`；卸载时也默认保留这些数据，选择“同时删除用户数据”才会一并清理。
-
-内置节点与工具按构建 hash 同步：升级或降级后首次启动会替换同名内置插件；Windows 同版本重装也会触发同步。普通重启不重复覆盖。技能和提供方按首次初始化规则处理，保留已有文件；第三方插件和用户素材不随内置节点、工具的同步被覆盖。
-
-</details>
-
-### 项目结构
-
-```text
-apps/
-  web/                 Vue 页面、设置、工作区与画布
-  server/              业务接口与 Agent 运行时，桌面共享此服务
-  desktop/             Electrobun 入口、构建脚本与安装器
-  updateServer/        独立更新文件服务器与发布脚本
-packages/
-  assets/              共享图片与图标
-  nodes/               内置画布节点
-  nodeScaffold/        节点开发脚手架与运行时
-  tools/               Agent 工具插件
-  toolScaffold/        工具开发脚手架与运行时
-  providers/           文本与媒体模型提供方
-  skills/              Markdown 技能及附属资料
-  mcp/                 MCP 服务与协议适配
-  ffmpeg/              FFmpeg 能力
-  startup/             原生启动窗口与动画
-compat/macIntel/       Intel Mac 兼容构建
-build/                 构建产物
-data/                  本机运行数据，不提交到仓库
-```
-
----
-
-## 📝 工作区、记忆与隐私
-
-项目使用本地工作区组织画布、文本和素材。画布结构保存为 JSON，文本节点正文保存为 Markdown，媒体与 3D 模型等文件保存在工作区的素材目录中；备份项目时请保留完整目录。
-
-在“设置 → 个性化”中可以管理：
-
-- **Toonflow 说明**：全局 `AGENTS.md`，为所有聊天提供额外说明和上下文。
-- **Toonflow 记忆**：所有工作区共用的本地 Markdown 记忆，默认启用，可查看、编辑、删除或关闭。
-
-工作区根目录的 `AGENTS.md` 也会在对话中自动读取，用于补充该项目的具体要求。
-
-全局配置与已安装插件位于应用的 `data/`，项目内容位于各自工作区。调用在线模型时，请求所需的提示词和参考素材会发送给所选服务；本地保存不代表模型在本地运行。
-
-“设置 → 隐私”提供匿名使用统计开关，默认开启，可随时关闭。统计用于了解功能使用情况，不包含提示词、对话、文件内容、项目名称、路径、账号或密钥。
-
----
-
-## 💬 交流与反馈
-
-| 入口 | 用途 |
-| --- | --- |
-| [使用教程](https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink) | 查看使用方法与操作说明。 |
-| [需求 / BUG 反馈表](https://docs.qq.com/smartsheet/form/EmvmQBrmlPmr%2Fss_vsqk2v%2FvhiGzE?tab=ss_vsqk2v) | 提交复现步骤、应用版本和相关截图。 |
-| [GitHub Issues](https://github.com/HBAI-Ltd/Toonflow-app/issues) | 跟踪公开问题和改进建议。 |
-| [加入交流群](https://work.weixin.qq.com/u/vc36adcc89845edcbe?v=5.0.3.63936&bb=85b8d228e8) | 交流创作经验与使用问题；应用内帮助菜单也可显示入群二维码。 |
-| [商务合作](https://work.weixin.qq.com/u/vc0f54596c5837d05a?v=5.0.8.70675) | 仅用于商务接洽，使用答疑请前往交流群，需求和 BUG 请通过反馈入口提交。 |
-| [联系邮箱](mailto:ltlctools@outlook.com) | ltlctools@outlook.com |
-
-我们正在全职投入 Toonflow，为爱发电。欢迎分享作品、友善反馈，也请为回复留出一些时间。这里是创作者与开发者共同交流的社区，感谢彼此的耐心与尊重。
-
----
-
-## 🤝 参与共建
-
-欢迎提交问题、改进文档、开发插件，或通过 Pull Request 贡献代码。开始修改前请阅读仓库的 [开发规范](./AGENTS.md)，较大的改动建议先在 Issue 中说明问题和方案。
-
-提交时请写清改动目的、复现方式与实际完成的验证。涉及模型服务、桌面安装或媒体生成时，请区分类型检查、构建结果与真实运行结果，并避免提交 API Key、个人设置和工作区素材。
-
----
-
-## 🙏 致谢
-
-感谢 Bun、Vue、Vite、Element Plus、Vue Flow、Electrobun、Express、Pi、Three.js、FFmpeg、form-create 等项目，以及所有贡献者和提供反馈的创作者。
-
-感谢以下伙伴对 Toonflow 的支持：
-
-| 伙伴 | 链接 |
-| --- | --- |
-| <img src="./docs/sponsors/metaso.svg" alt="秘塔" width="24" /> 秘塔 | [访问网站](https://metaso.cn/minimax-h3/?s=toon) |
-| <img src="./docs/sponsors/apiMart.svg" alt="APIMart" width="24" /> APIMart | [访问网站](https://go.apimart.ai/gh-toonflow-app) |
-| 算能云 | [访问网站](https://www.sophnet.com/) |
-| 腾讯混元 3D | [访问网站](https://3d.hunyuan.tencent.com/) |
-| 智星云 | [访问网站](https://www.ai-galaxy.com/) |
-
----
-
-## 📜 许可证
-
-Toonflow 采用 **MIT** 许可证，完整条款见 [LICENSE](./LICENSE)。
-
-Copyright (c) 2026 HBAI-Ltd
-
-第三方依赖及随附资源仍遵循各自的许可证与版权声明。
-
----
-
-## ⭐ Star History
-
-[![Toonflow Star History](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-app&type=Date)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app&Date)
+## 🌟 亮点
+
+Toonflow 是面向短剧、漫剧与短视频制作的开源 AI 创作平台，把剧本、资产与视频片段整合进同一张无限画布。
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=6,11,20&height=4&width=100%25" alt="" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/🏠_纯本地-42B883?style=for-the-badge&labelColor=1a1a2e" height="42" alt="纯本地" />
+  <img src="https://img.shields.io/badge/🖼️_无限画布-FF6B6B?style=for-the-badge&labelColor=1a1a2e" height="42" alt="无限画布" />
+  <img src="https://img.shields.io/badge/🔌_MCP-6366F1?style=for-the-badge&labelColor=1a1a2e" height="42" alt="MCP" />
+  <br />
+  <img src="https://img.shields.io/badge/🧩_插件市场-F59E0B?style=for-the-badge&labelColor=1a1a2e" height="42" alt="插件市场" />
+  <img src="https://img.shields.io/badge/🤖_开放_Agent-06B6D4?style=for-the-badge&labelColor=1a1a2e" height="42" alt="开放 Agent" />
+</p>
+
+<h3 align="center">🔒 数据永远留在本地，创作从不被托管</h3>
+<h3 align="center">🧩 画布 · 插件 · Agent，一套协议全打通</h3>
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=6,11,20&height=4&width=100%25" alt="" />
+</p>
+
+## 📸 截图
 
 <div align="center">
 
-**Toonflow · 和创作者一起，把故事做出来。**
+<a href="./docs/screenshots/projectHome.png"><img src="./docs/screenshots/projectHome.png" alt="Toonflow 项目首页与灵感创作" width="80%" /></a><br /><sub>项目首页与灵感创作</sub>
+
+<a href="./docs/screenshots/quickStart.png"><img src="./docs/screenshots/quickStart.png" alt="Toonflow 首次启动与快速配置" width="80%" /></a><br /><sub>首次启动与快速配置</sub>
+
+<a href="./docs/screenshots/canvasDark.png"><img src="./docs/screenshots/canvasDark.png" alt="Toonflow 深色主题画布与 AI 助手" width="80%" /></a><br /><sub>创作画布 · 深色主题</sub>
+
+<a href="./docs/screenshots/canvasLight.png"><img src="./docs/screenshots/canvasLight.png" alt="Toonflow 浅色主题画布与 AI 助手" width="80%" /></a><br /><sub>创作画布 · 浅色主题</sub>
+
+<a href="./docs/screenshots/assetCanvas.png"><img src="./docs/screenshots/assetCanvas.png" alt="Toonflow 角色、场景与道具资产画布" width="80%" /></a><br /><sub>角色、场景与道具资产</sub>
+
+<a href="./docs/screenshots/directorStudio.png"><img src="./docs/screenshots/directorStudio.png" alt="Toonflow 3D 导演台与镜头预演" width="80%" /></a><br /><sub>3D 导演台与镜头预演</sub>
+
+<a href="./docs/screenshots/characterImageGeneration.png"><img src="./docs/screenshots/characterImageGeneration.png" alt="Toonflow 角色三视图图片生成" width="80%" /></a><br /><sub>角色三视图与图片生成</sub>
+
+<a href="./docs/screenshots/videoGeneration.png"><img src="./docs/screenshots/videoGeneration.png" alt="Toonflow 多参考素材视频生成" width="80%" /></a><br /><sub>多参考素材视频生成</sub>
+
+<a href="./docs/screenshots/nodeMenu.png"><img src="./docs/screenshots/nodeMenu.png" alt="Toonflow 节点菜单与分组操作" width="80%" /></a><br /><sub>节点菜单与分组操作</sub>
+
+<a href="./docs/screenshots/pluginMarket.png"><img src="./docs/screenshots/pluginMarket.png" alt="Toonflow 插件市场" width="80%" /></a><br /><sub>插件市场</sub>
+
+</div>
+
+## 🚀 下载并安装
+
+| 操作系统 | GitHub                                                       |
+| -------- | ------------------------------------------------------------ |
+| Windows  | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| macOS    | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+
+Windows 安装器会自动检测并安装 WebView2；如果安装后打开闪退，请前往 [WebView2 下载页面](https://developer.microsoft.com/microsoft-edge/webview2/) 手动安装运行时。
+
+macOS（Apple Silicon）首次安装前，请在终端执行：`sudo xattr -rd com.apple.quarantine /Applications/toonflow.app`
+
+更多操作说明请查看 [使用教程](https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink)。
+
+## 🎬 作品示例
+
+https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
+
+[在新页面打开演示视频](https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9)
+
+### 案例信息
+
+| 项目           | 原仓库记录                                          |
+| -------------- | --------------------------------------------------- |
+| 制作周期与成片 | 约 2 小时，成片约 2 分钟。                          |
+| 视频模型       | Seedance 2.0                                        |
+| 图片模型       | GPT Image 2                                         |
+| 语言模型       | Claude Opus 4.6                                     |
+| 模型调用费用   | 约 ¥130，其中语言约 ¥10、视频约 ¥120、图片不足 ¥1。 |
+
+费用为该案例的记录，仅供参考，实际成本取决于模型服务、生成次数与参数。演示视频为压缩后的 480p 版本。
+
+# 🚀 TF-Router 官方中转平台
+
+<p align="center">
+  <a href="https://api.toonflow.net/">
+    <img src="https://img.shields.io/badge/TF--Router_官方中转平台-181717?style=for-the-badge&logoColor=white" alt="TF-Router" />
+  </a>
+</p>
+
+TF-Router 是 Toonflow 自营的官方模型中转平台，欢迎使用。其平台源码已完全开源，可自行部署审计：[HBAI-Ltd/TF-Router](https://github.com/HBAI-Ltd/TF-Router)。
+
+<details>
+<summary><strong>致 Toonflow 社区的一封信（发于2026-06-08）</strong></summary>
+
+> ## 致 Toonflow 社区的一封信
+>
+> 130 天。
+> 不长，但足够让我们看清楚一些事情。
+> 从第一行代码提交到今天，我们走过了 130 天，发布了 20 个版本，留下了 800+ 次 Commits，写下了 213,765 行代码、640,810 个字符。
+> 两次重构，一套供应商系统，一个我们引以为傲的工作流程。
+> 我们以为这已经足够了。
+> 但它不够。
+> 有人跟我们说，想在 Toonflow 里加一个自己的模块，改半天看不懂。
+> 有人跟我们说，社区太小，遇到问题找不到人。
+> 有人跟我们说，商业条款让他们的项目无法落地。
+> 我们听到了。
+> 这 130 天里，团队成员轮流守在群里，7×24 小时回答每一个问题。没有赞助，没有补贴，全部是我们自己掏腰包支撑的人力成本。
+> 不是因为我们有多少钱。
+> 是因为我们相信这件事值得做。
+> 所以，我们决定进行第三次重构。
+> Toonflow 的每一次重构，都往更开源更开放的方向发展。
+> 这一次重构，我们选择：彻底开放。
+>
+> 一、MIT License
+> 重构完成后我们决定把许可证从 Apache-2.0 更换为 MIT License 并去掉全部的商业附加条款。
+> 它将完全的开放。没有任何的商业限制。
+> 你可以用它做任何事。
+>
+> 二、全自由度插件系统
+> 我们要重新设计整个插件架构。
+> 故事板、全景图、时间轴、甚至——小游戏。
+> 只要你想得到，就可以塞进来。
+> 不是 Hack，是设计如此。
+>
+> 三、Drizzle ORM + 多数据库支持
+> 升级至 Drizzle ORM。
+> 本地、PostgreSQL、MySQL，按你的需要选择。
+> 二开不再是噩梦。
+>
+> 四、Monorepo 全链路打通
+> 插件开发、SDK 集成、发布上线，一条龙。
+> 让贡献变得足够简单，简单到一个人就能做到。
+>
+> 五、新模块
+> 无限画布 —— 不止于大，更在于自由
+> 灵感模式 —— 为创作者而生
+> 插件 Hub —— 让好插件被看见
+> Skill Hub —— 让经验可以传递
+> 供应商 Hub —— 生态从这里开始
+> 完善的 Docker 整合 —— 部署不再是门槛
+>
+> 然后，说一件我们一直不太好意思说的事。
+> 重构需要时间。这段时间里，服务器在跑，域名在续费，团队在熬夜，咖啡在涨价。
+> 我们没有融资，没有广告，没有任何隐藏的商业计划。
+> 但我们需要活着，才能继续把这件事做完。
+> 所以我们上线了「Toonflow 官方中转平台」 TF-Router。
+> 说实话，这个平台我们犹豫了很久。
+> 这个平台，不是我们想做的，我们不想因为一个中转平台，让人觉得 Toonflow 开始"恰饭"了。
+> 这个包袱，我们背了很久。
+> 但很多用户没有开白资格，用不上 Seedance 2.0，反复问我们有没有办法。
+> 我们想了很久，没办法最后只能决定搭一个，我们自己和火山签了 Seedance 年框合同。
+> **同时，我们决定平台活动期间对 Seedance 2.0 平进平出，不赚一分钱差价。**
+> 活动结束后我们会正常收取一点点点点服务费——但现在，先让你们用上再说。
+> 更重要的是——TF-Router 平台源码已经全部开源打包【<a href="https://github.com/HBAI-Ltd/TF-Router" target="_blank">开源地址</a>】。
+> 你不信任我们？没关系，你可以自己看代码，自己部署，自己跑。
+> 这就是我们的态度。
+> 如果你愿意去试用，是对我们目前唯一能支撑下去的方式投一票信任。
+> 如果你不愿意，也没关系，继续用 Toonflow，继续骂我们，继续提需求。
+> 我们都在。
+> 最后说一句真心话
+> 我们只是一群相信「创作工具应该属于每个人」的普通人。
+> Toonflow 从来不是我们的产品。
+> 它是我们一起写的故事。
+> 第三次重构，不是终点。
+> 是我们重新出发的地方。
+> 感谢每一个用过它、骂过它、给过建议的人。
+> 你们才是让它走到今天的原因。
+> 谢谢你们。
+
+</details>
+
+# 👨‍👩‍👧‍👦 微信交流群
+
+拉群小助手:
+
+<img src="./docs/qr.png" alt="Toonflow QR" height="400"/>
+
+也可以点击图标加入 Discord：
+
+[![Join our Discord](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/67d00cf7266d2c75571aebde_Example.svg)](https://discord.gg/HEjKmpNpAZ)
+
+或点击邀请连接： [https://discord.gg/HEjKmpNpAZ](https://discord.gg/HEjKmpNpAZ)
+
+---
+
+# 💌 联系我们
+
+📧 邮箱：[ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow咨询)
+
+## 📜 开源许可
+
+Toonflow 采用 [MIT 许可证](./LICENSE)。第三方依赖和素材遵循各自的许可与版权声明。
+
+[![Toonflow Star History](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-app&type=Date)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app&Date)
+
+> **不追溯条款**：v1.0.8 发布前基于 AGPL-3.0 使用的用户，继续按 AGPL-3.0 执行，v1.0.8 ~ v1.1.8 继续按 Apache-2.0 与附加协议执行，不受本协议变更约束。
+
+## 🙏 致谢
+
+- **合作伙伴**：算能云、腾讯混元 3D、智星云。
+- **项目贡献者**：感谢参与代码开发、文档完善、插件分享和问题排查的所有贡献者。[查看贡献者](https://github.com/HBAI-Ltd/Toonflow-app/graphs/contributors)。
+- **社区用户**：感谢持续提供反馈、分享创作成果并支持项目发展的所有用户。
+
+<div align="center">
 
 Copyright © 2026 HBAI-Ltd
 

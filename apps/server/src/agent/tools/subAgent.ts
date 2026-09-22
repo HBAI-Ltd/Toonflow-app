@@ -1,8 +1,8 @@
 import { z } from "zod";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
-import type { CanvasContext, ToolCall } from "@toonflow/tools-scaffold/runtime";
+import type { CanvasContext } from "@toonflow/tools-scaffold/runtime";
 import { teamNameSchema } from "@toonflow/teams-scaffold/runtime";
-import { addUsage, emptyUsage, runSubAgent, type SubAgentModel, type SubAgentResult } from "@/agent/runtime/subAgent";
+import { addUsage, emptyUsage, type SubAgentModel, type SubAgentResult } from "@/agent/runtime/subAgent";
 import { createTeamRunner } from "@/agent/teams";
 import { runRemoteTeam } from "@/agent/teams/remote";
 import { listTeams, getRemoteTeam } from "@/utils/teams";
@@ -17,14 +17,15 @@ const parameters = z.strictObject({
   })).min(1),
 });
 
-export async function createSubAgentTool({ cwd, tools, canvas, onTool, ...modelOptions }: SubAgentModel & {
-  cwd: string; tools: ToolDefinition[]; canvas?: CanvasContext; onTool?: (tool: ToolCall) => void;
+export async function createSubAgentTool({ cwd, tools, canvas, runTask, ...modelOptions }: SubAgentModel & {
+  cwd: string; tools: ToolDefinition[]; canvas?: CanvasContext;
+  runTask: (name: string, task: string, signal?: AbortSignal, onProgress?: (text: string) => void) => Promise<{ result: SubAgentResult; usage: ReturnType<typeof emptyUsage> }>;
 }): Promise<ToolDefinition> {
   if (tools.some(tool => tool.name === "subAgent")) throw new Error("工具名称 subAgent 已被内置子任务工具占用");
   const teams = (await listTeams()).filter(team => team.enabled && !team.loadError);
   const subAgentTool: ToolDefinition = {
     name: "subAgent", label: "子任务与团队",
-    description: `并行执行委派的独立任务。省略 team 使用临时子 Agent，完整继承父 Agent 的工具，包括提问和继续委派；指定 team 调用已安装团队或外部 A2A。宿主工具：${[...tools.map(tool => tool.name), "subAgent"].join("、")}。团队目录：${JSON.stringify(teams.map(({ name, description, kind }) => ({ name, description, kind })))}。本地团队按清单分工。任务数量、并发数、执行轮次和总时长不设固定上限，可由用户停止。`,
+    description: `并行执行委派的独立任务。省略 team 创建可继续对话的子 Agent，继承宿主工具，包括提问、继续委派和 report 上报；指定 team 调用已安装团队或外部 A2A。宿主工具：${[...tools.map(tool => tool.name), "subAgent"].join("、")}。团队目录：${JSON.stringify(teams.map(({ name, description, kind }) => ({ name, description, kind })))}。本地团队按清单分工。任务数量、并发数、执行轮次和总时长不设固定上限，可由用户停止。`,
     promptSnippet: "按需使用 subAgent 委派独立工作，或指定已安装 team 调用专用团队。",
     promptGuidelines: [
       "简单任务直接完成；只委派相互独立的工作，提供必要背景和真实授权。并行任务不得修改同一文件或画布，依赖任务分次处理。",
@@ -50,7 +51,7 @@ export async function createSubAgentTool({ cwd, tools, canvas, onTool, ...modelO
             ? await runRemoteTeam({ ...task, name: task.team!, signal, onProgress })
             : task.team
               ? await (await createTeamRunner({ ...modelOptions, cwd, tools: inheritedTools, canvas, name: task.team })).run(task.task, signal, onProgress)
-              : await runSubAgent({ ...modelOptions, cwd, ...task, tools: inheritedTools, signal, onTool, onProgress });
+              : await runTask(task.name, task.task, signal, onProgress);
           results[index] = { ...output.result, name: task.name };
           addUsage(usage, output.usage);
         } catch (error) {

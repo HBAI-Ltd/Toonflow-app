@@ -29,7 +29,10 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
   const cwd = await u.workspace.resolveWorkspace(req, directory);
   res.set({ "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-cache", "X-Accel-Buffering": "no" });
   res.flushHeaders();
-  const send = (event: AgentEvent) => { if (!res.destroyed) res.write(`${JSON.stringify(event)}\n`); };
+  const send = (event: AgentEvent) => {
+    u.agent.trackAgentEvent(cwd, options.sessionFile, event);
+    if (!res.destroyed) res.write(`${JSON.stringify(event)}\n`);
+  };
   const bridge = canvas ? u.canvas.createCanvasContext(cwd, canvas as CanvasInfo, send) : undefined;
   const controller = new AbortController();
   const questions = u.question.createQuestionContext(cwd, send, () => controller.abort());

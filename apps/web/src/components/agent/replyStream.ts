@@ -1,4 +1,4 @@
-import { reactive } from "vue";
+import { reactive, type Ref } from "vue";
 import { throttle } from "lodash-es";
 import type { AgentEvent } from "@toonflow/server/agent/types";
 import type { AgentMessage, AgentMessagePart } from "./types";
@@ -103,4 +103,53 @@ export function createReplyStream(reply: AgentMessage) {
   }
 
   return { receive, finish };
+}
+
+// 父会话请求和转发的子会话事件共用消息归并，切换界面不改变正在接收的回复。
+export function createConversationStream(messages: Ref<AgentMessage[]>) {
+  let reply: AgentMessage | undefined;
+  let stream: ReturnType<typeof createReplyStream> | undefined;
+
+  function finish() {
+    stream?.finish();
+    stream = undefined;
+    reply = undefined;
+  }
+
+  function begin(message: AgentMessage) {
+    finish();
+    reply = message;
+    stream = createReplyStream(message);
+  }
+
+  function ensureReply(userId?: string) {
+    if (reply && userId && reply.replyTo && reply.replyTo !== userId) finish();
+    if (!reply) {
+      const user = messages.value.findLast(message => message.role === "user");
+      const last = messages.value.findLast(message => message.role === "assistant" && message.streaming);
+      const message = last ?? reactive<AgentMessage>({ id: crypto.randomUUID(), role: "assistant", content: "", parts: [], streaming: true, replyTo: userId ?? user?.entryId });
+      if (!last) messages.value.push(message);
+      begin(message);
+    }
+    if (userId) reply!.replyTo = userId;
+    return stream!;
+  }
+
+  function receive(event: AgentEvent) {
+    if (event.type === "userMessage") {
+      const existing = messages.value.find(message => message.entryId === event.id)
+        ?? messages.value.find(message => message.role === "user" && !message.entryId && message.content === event.content);
+      if (existing) { existing.entryId = event.id; existing.error = undefined; }
+      else messages.value.push({ id: event.id, entryId: event.id, role: "user", content: event.content ?? "", attachments: event.attachments });
+      ensureReply(event.id);
+    } else if (["text", "thinking", "tool", "question"].includes(event.type)) {
+      ensureReply().receive(event as Extract<AgentEvent, { type: "text" | "thinking" | "tool" | "question" }>);
+    } else if (event.type === "error") {
+      ensureReply();
+      reply!.error = event.message;
+      finish();
+    } else if (event.type === "done") finish();
+  }
+
+  return { begin, receive, finish };
 }

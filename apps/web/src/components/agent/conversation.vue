@@ -27,6 +27,7 @@
         <chat-item :role="item.role" :variant="item.role === 'user' ? 'base' : 'text'" :textLoading="!!item.streaming && !compacting && !item.parts?.some(part => part.type === 'tool' || part.content)" animation="moving">
           <template #content>
             <div class="messageContent">
+              <div v-if="item.report" class="reportHeader"><icon-users-group :size="14" />{{ item.report.name }} 上报</div>
               <template v-for="part in item.parts" :key="part.id">
                 <chat-reasoning v-if="part.type === 'thinking' && part.content" class="messageReasoning" :collapsed="part.collapsed ?? true" expandIconPlacement="left" @update:collapsed="part.collapsed = $event">
                   <template #header>
@@ -56,9 +57,9 @@
           <template v-else>
             <el-button v-if="item.content" class="messageAction" text circle aria-label="复制消息" title="复制消息" @click="copyMessage(item.content)"><icon-copy :size="14" /></el-button>
             <template v-if="item.role === 'user'">
-              <el-button class="messageAction" text circle :disabled="locked" aria-label="编辑消息" title="编辑消息" @click="editMessage(item)"><icon-pencil :size="14" /></el-button>
+              <el-button class="messageAction" text circle :disabled="locked || remoteRunning" aria-label="编辑消息" title="编辑消息" @click="editMessage(item)"><icon-pencil :size="14" /></el-button>
             </template>
-            <el-button class="messageAction" text circle :loading="deletingId === item.id" :disabled="locked" aria-label="删除消息" title="删除消息" @click="deleteMessage(item)"><icon-trash v-if="deletingId !== item.id" :size="14" /></el-button>
+            <el-button v-if="!item.report" class="messageAction" text circle :loading="deletingId === item.id" :disabled="locked || remoteRunning" aria-label="删除消息" title="删除消息" @click="deleteMessage(item)"><icon-trash v-if="deletingId !== item.id" :size="14" /></el-button>
           </template>
         </div>
       </div>
@@ -138,7 +139,7 @@ import axios from "axios";
 import {
   IconArrowUp, IconAtom, IconCopy,
   IconCircleDashed, IconPencil, IconPlayerStopFilled, IconX, IconLoader2,
-  IconTrash, IconLayoutGrid, IconMovie, IconPhoto, IconArrowUpRight,
+  IconTrash, IconLayoutGrid, IconMovie, IconPhoto, IconArrowUpRight, IconUsersGroup,
 } from "@tabler/icons-vue";
 import { ElMessage } from "element-plus";
 import logoUrl from "@toonflow/assets/logo.svg";
@@ -153,7 +154,7 @@ import { modelChoices } from "@/stores/settings";
 import { useWorkspaceStore } from "@/stores/workspace";
 import type { AgentAttachment, AgentConversation, AgentMessage } from "./types";
 import type { AgentEvent } from "@toonflow/server/agent/types";
-import { createReplyStream, readAgentEvents } from "./replyStream";
+import { createConversationStream, readAgentEvents } from "./replyStream";
 import type { CanvasContext } from "@toonflow/tool-canvas/runtime";
 import chatList from "@tdesign-vue-next/chat/es/chat-list";
 import chatItem from "@tdesign-vue-next/chat/es/chat-item";
@@ -165,12 +166,14 @@ import "@tdesign-vue-next/chat/es/style/index.css";
 import "x-sender/lib/XSender.css";
 
 const props = defineProps<{ active: boolean; initialSession: AgentConversation | null; sessionFile?: string; disabled: boolean }>();
-const emit = defineEmits<{ session: [file: string]; sent: [prompt: string] }>();
+const emit = defineEmits<{ session: [file: string]; sent: [prompt: string]; event: [event: AgentEvent] }>();
 const workspaceStore = useWorkspaceStore();
 const directory = workspaceStore.project?.directory;
 const draftAttachments = ref<AgentAttachment[]>([]);
 const createCanvasContext = inject<(() => CanvasContext | undefined) | undefined>("canvas", undefined);
 const messages = ref<AgentMessage[]>((props.initialSession?.messages ?? []).map(message => ({ ...message })));
+const stream = createConversationStream(messages);
+const remoteRunning = ref(props.initialSession?.running ?? false);
 const stats = ref(props.initialSession?.stats);
 const contextUsage = ref(props.initialSession?.contextUsage);
 const busy = ref(false);
@@ -187,10 +190,11 @@ const skillQuery = ref<string>();
 const senderHeight = ref(44);
 const senderMaxHeight = ref(Math.max(44, window.innerHeight / 2));
 let senderResize: { pointerId: number; y: number; height: number } | undefined;
-const selectedModel = ref(workspaceStore.pendingAgentMessage?.model ?? (props.initialSession?.providerId && props.initialSession.modelId
+const pendingMessage = props.initialSession?.parentFile ? undefined : workspaceStore.pendingAgentMessage;
+const selectedModel = ref(pendingMessage?.model ?? (props.initialSession?.providerId && props.initialSession.modelId
   ? JSON.stringify([props.initialSession.providerId, props.initialSession.modelId]) : ""));
 const contextMenuVisible = ref(false);
-const reasoningEffort = ref(workspaceStore.pendingAgentMessage?.reasoningEffort ?? (props.initialSession?.thinkingLevel === "off" ? "" : props.initialSession?.thinkingLevel ?? ""));
+const reasoningEffort = ref(pendingMessage?.reasoningEffort ?? (props.initialSession?.thinkingLevel === "off" ? "" : props.initialSession?.thinkingLevel ?? ""));
 const selectedModelChoice = computed(() => modelChoices.value.find(item => item.value === selectedModel.value));
 const contextWindow = computed(() => contextUsage.value?.contextWindow ?? selectedModelChoice.value?.contextWindow ?? 262144);
 const contextPercent = computed(() => (contextUsage.value?.tokens ?? 0) / contextWindow.value * 100);
@@ -207,6 +211,34 @@ watch([locked, editingId, () => props.active], ([locked, editingId, active]) => 
 watch(() => props.active, active => {
   if (!active) contextMenuVisible.value = false;
 });
+
+function applyEvent(event: AgentEvent) {
+  switch (event.type) {
+    case "subAgent":
+    case "subAgentEvent": emit("event", event); break;
+    case "report":
+      if (event.parentFile !== props.sessionFile) { emit("event", event); break; }
+      if (!messages.value.some(message => message.id === event.id)) messages.value.push({
+        id: event.id, role: "assistant", content: event.content,
+        parts: [{ id: event.id, type: "text", content: event.content }], report: { file: event.file, name: event.name },
+      });
+      break;
+    case "compaction": compacting.value = event.active; break;
+    case "session": emit("session", event.file); break;
+    case "stats": stats.value = event.stats; contextUsage.value = event.contextUsage; break;
+    default: stream.receive(event);
+  }
+}
+
+function receiveEvent(event: AgentEvent) {
+  if (event.type === "done" || event.type === "error") {
+    remoteRunning.value = false;
+    compacting.value = false;
+  } else if (["userMessage", "text", "thinking", "tool"].includes(event.type)) remoteRunning.value = true;
+  applyEvent(event);
+}
+
+defineExpose({ receiveEvent });
 
 async function selectSkill(name: string) {
   const instance = sender;
@@ -235,7 +267,7 @@ async function copyMessage(content: string) {
 }
 
 function editMessage(item: AgentMessage) {
-  if (locked.value || item.role !== "user") return;
+  if (locked.value || remoteRunning.value || item.role !== "user") return;
   editingId.value = item.id;
   editingText.value = item.content;
 }
@@ -247,7 +279,7 @@ function cancelEdit() {
 }
 
 async function deleteMessage(item: AgentMessage) {
-  if (locked.value || item.streaming) return;
+  if (locked.value || remoteRunning.value || item.streaming || item.report) return;
   deletingId.value = item.id;
   try {
     if (item.entryId || item.replyTo) {
@@ -365,14 +397,18 @@ async function sendMessage(source?: AgentMessage) {
   instance.disable();
   const reply = reactive<AgentMessage>({ id: crypto.randomUUID(), role: "assistant", content: "", parts: [], streaming: true });
   const userMessage = reactive<AgentMessage>({ id: crypto.randomUUID(), role: "user", content: prompt, attachments });
+  let ownsStream = !remoteRunning.value;
+  let forwarded = false;
   if (!source) {
-    messages.value.push(userMessage, reply);
+    messages.value.push(userMessage);
+    if (ownsStream) messages.value.push(reply);
     draftAttachments.value = [];
   }
   let accepted = false;
-  const stream = createReplyStream(reply);
+  if (ownsStream) stream.begin(reply);
   const handledCanvasCalls = new Set<string>();
   const pendingQuestions = new Map<string, string>();
+  const activeChildFiles = new Set<string>();
   const finishStats = anonymousData.startAgent();
   try {
     if (!source) await instance.reset();
@@ -385,10 +421,36 @@ async function sendMessage(source?: AgentMessage) {
       signal: requestController.signal,
     });
     for await (const event of readAgentEvents(response, requestController.signal)) {
+      // 子任务复用发起委派时的画布与取消通道，界面切换不改变工具执行目标。
+      let toolEvent: AgentEvent = event;
+      let scope = "";
+      while (toolEvent.type === "subAgentEvent") {
+        if (toolEvent.event.type === "done" || toolEvent.event.type === "error") activeChildFiles.delete(toolEvent.file);
+        else activeChildFiles.add(toolEvent.file);
+        scope += `${toolEvent.file}/`;
+        toolEvent = toolEvent.event;
+      }
+      if (toolEvent.type === "question") pendingQuestions.set(`${scope}${toolEvent.toolCallId}`, toolEvent.callId);
+      if (toolEvent.type === "tool" && toolEvent.tool.status !== "running") pendingQuestions.delete(`${scope}${toolEvent.tool.id}`);
+      if (toolEvent.type === "canvasCall") {
+        if (handledCanvasCalls.has(toolEvent.callId)) throw new Error("收到重复的画布调用");
+        handledCanvasCalls.add(toolEvent.callId);
+        await sendCanvasResult(toolEvent, canvasContext, requestController.signal);
+        continue;
+      }
       switch (event.type) {
-        case "compaction": compacting.value = event.active; break;
-        case "session": emit("session", event.file); break;
+        case "accepted":
+          forwarded = true;
+          if (ownsStream) {
+            stream.finish();
+            messages.value = messages.value.filter(message => message !== reply);
+          }
+          break;
         case "userMessage":
+          if (!ownsStream) {
+            messages.value.push(reply);
+            stream.begin(reply);
+          }
           userMessage.entryId = event.id;
           reply.replyTo = event.id;
           if (source && !accepted) {
@@ -399,26 +461,14 @@ async function sendMessage(source?: AgentMessage) {
             editingText.value = "";
           }
           accepted = true;
+          ownsStream = true;
+          applyEvent(event);
           break;
         case "stats":
           if (source && !accepted) break;
-          stats.value = event.stats;
-          contextUsage.value = event.contextUsage;
+          applyEvent(event);
           break;
-        case "text":
-        case "thinking":
-          stream.receive(event); break;
-        case "question":
-          pendingQuestions.set(event.toolCallId, event.callId);
-          stream.receive(event); break;
-        case "tool":
-          if (event.tool.status !== "running") pendingQuestions.delete(event.tool.id);
-          stream.receive(event); break;
-        case "canvasCall":
-          if (handledCanvasCalls.has(event.callId)) throw new Error("收到重复的画布调用");
-          handledCanvasCalls.add(event.callId);
-          await sendCanvasResult(event, canvasContext, requestController.signal);
-          break;
+        default: applyEvent(event);
       }
     }
     if (source && !accepted) throw new Error("服务端未确认重发，请重新打开对话后重试");
@@ -428,9 +478,13 @@ async function sendMessage(source?: AgentMessage) {
     finishStats(requestController.signal.aborted ? "cancelled" : "failed");
     const responseMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
     const message = requestController.signal.aborted ? "已停止生成" : responseMessage || (error instanceof Error ? error.message : "发送失败，请重试");
-    if (source && !accepted) ElMessage.error(message);
+    if ((source && !accepted) || !ownsStream) { userMessage.error = message; ElMessage.error(message); }
     else reply.error = message;
+    if (ownsStream && props.initialSession?.parentFile && props.sessionFile) {
+      emit("event", { type: "subAgentEvent", file: props.sessionFile, event: { type: "error", message } });
+    }
   } finally {
+    for (const file of activeChildFiles) emit("event", { type: "subAgentEvent", file, event: { type: "error", message: "委派连接已结束，请重新打开子会话查看结果" } });
     // ACT: Bun 的流断开事件可能不触发；主动结束仍在等待的提问，不依赖断开通知。
     for (const callId of pendingQuestions.values()) {
       void fetch("/api/agent/answer", {
@@ -438,7 +492,7 @@ async function sendMessage(source?: AgentMessage) {
         body: JSON.stringify({ directory, callId, cancelled: true }), keepalive: true,
       }).catch(() => {});
     }
-    stream.finish();
+    if (ownsStream && !forwarded) stream.finish();
     compacting.value = false;
     busy.value = false;
     controller = undefined;
@@ -497,7 +551,7 @@ watch(senderElement, (element, _previous, onCleanup) => {
   });
 });
 
-watch(() => !!workspaceStore.pendingAgentMessage && props.active && !locked.value && !!senderElement.value && !!createCanvasContext?.(), async ready => {
+watch(() => !props.initialSession?.parentFile && !!workspaceStore.pendingAgentMessage && props.active && !locked.value && !!senderElement.value && !!createCanvasContext?.(), async ready => {
   const message = workspaceStore.pendingAgentMessage;
   const instance = sender;
   if (!ready || !message || !instance || message.directory !== directory) return;
@@ -717,6 +771,14 @@ watch(() => !!workspaceStore.pendingAgentMessage && props.active && !locked.valu
 
       .messageError {
         color: var(--el-color-danger);
+        font-size: 12px;
+      }
+
+      .reportHeader {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--el-text-color-secondary);
         font-size: 12px;
       }
 

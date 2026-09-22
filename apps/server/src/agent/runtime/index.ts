@@ -1,36 +1,27 @@
 import { z } from "zod";
-import { basename, dirname } from "node:path";
-import { readFile, readdir, stat } from "node:fs/promises";
+import { basename } from "node:path";
+import { stat } from "node:fs/promises";
 import {
   createAgentSession,
-  calculateContextTokens,
-  estimateTokens,
-  getLastAssistantUsage,
-  parseSessionEntries,
   SessionManager,
 } from "@earendil-works/pi-coding-agent";
-import type { FileEntry, SessionEntry } from "@earendil-works/pi-coding-agent";
 import type { CanvasContext, QuestionContext } from "@toonflow/tools-scaffold/runtime";
-import type { AgentEvent } from "@/agent/runtime/types";
-import conf from "@/utils/conf";
-import { providerSchema, getModelLimits, readAiReferences, referenceContent } from "@/utils/ai";
+import type { AgentEvent, AgentToolCall } from "@/agent/runtime/types";
+import { readAiReferences, referenceContent } from "@/utils/ai";
 import { createAgentTools } from "@/agent/tools";
 import { createAgentResources } from "@/agent/runtime/resources";
 import { createAgentModel } from "@/agent/runtime/model";
 import { createSubAgentTool } from "@/agent/tools/subAgent";
 import { createMemoryTool } from "@/agent/tools/memory";
+import { createReportTool } from "@/agent/tools/report";
+import { runDelegatedAgent } from "@/agent/runtime/delegation";
+import {
+  agentAttachmentsSchema, getActiveAgentSession, getAgentStats, getParentSessionFile, getSubAgentInfo,
+  getToolResultText, registerAgentSession, updateSubAgent,
+  type ActiveAgentSession,
+} from "@/agent/runtime/sessions";
 import { isMemoryEnabled } from "@/utils/personalization";
-import { lockWorkspaceFiles, resolveWorkspacePath, writeWorkspaceFile } from "@/utils/workspace/files";
-
-export const agentAttachmentsSchema = z
-  .array(
-    z.strictObject({
-      name: z.string().min(1).max(255),
-      path: z.string().min(1).max(4096),
-      mimeType: z.string().regex(/^(image|video)\/[a-zA-Z0-9.+-]+$/),
-    })
-  )
-  .max(20);
+import { lockWorkspaceFiles, resolveWorkspacePath } from "@/utils/workspace/files";
 
 type AgentOptions = {
   prompt: string;
@@ -71,33 +62,70 @@ export async function run(
     }
   }
   if (resendFrom && !sessionFile) throw Object.assign(new Error("重发需要指定原对话"), { status: 400 });
-  const { provider, runtime } = await createAgentModel(providerId, modelId, thinkingLevel);
-  const tools = await createAgentTools(cwd, canvas, question);
-  if (isMemoryEnabled()) {
-    const memoryTool = createMemoryTool();
-    if (tools.some(tool => tool.name === memoryTool.name)) throw new Error("工具名称 memory 已被内置全局记忆工具占用");
-    tools.push(memoryTool);
-  }
-  tools.push(await createSubAgentTool({
-    cwd, tools, canvas, modelRuntime: runtime, model: runtime.getModel(providerId, modelId), thinkingLevel,
-    onTool: tool => send({ type: "tool", blockId: `subAgentQuestion:${tool.id}`, tool }),
-  }));
-  const resources = await createAgentResources(cwd, tools);
   signal?.throwIfAborted();
   const { path: sessionsDir } = await resolveWorkspacePath(cwd, ".agent/sessions", true);
   const sessionPath = sessionFile ? (await resolveWorkspacePath(sessionsDir, sessionFile)).path : undefined;
+  const active = sessionPath ? getActiveAgentSession(sessionPath) : undefined;
+  if (active) {
+    if (!getParentSessionFile(active.history)) throw Object.assign(new Error("对话正在运行，请等待回复完成"), { status: 409 });
+    if (resendFrom) throw Object.assign(new Error("子 Agent 运行时不能重发历史消息"), { status: 409 });
+    if (!active.session?.isStreaming) throw Object.assign(new Error("子 Agent 正在准备或结束回复，请稍后发送"), { status: 409 });
+    if (attachments.length) throw Object.assign(new Error("请等子 Agent 当前回复结束后发送附件"), { status: 400 });
+    await active.session.prompt(prompt.trim(), { streamingBehavior: "steer", expandPromptTemplates: false });
+    send({ type: "accepted" });
+    return;
+  }
+  const { provider, runtime } = await createAgentModel(providerId, modelId, thinkingLevel);
+  if (sessionPath) {
+    const file = await stat(sessionPath).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") throw Object.assign(new Error("会话不存在，请重新打开对话"), { status: 404 });
+      throw error;
+    });
+    if (!file.isFile()) throw Object.assign(new Error("会话必须是普通文件"), { status: 400 });
+  }
   // ACT: SDK 新会话先分配文件名、首条回复才落盘；只锁所属文件，允许不同对话同时运行。
   const newHistory = sessionPath ? undefined : SessionManager.create(cwd, sessionsDir);
   const release = lockWorkspaceFiles([sessionPath ?? newHistory!.getSessionFile()!]);
+  let unregister = () => {};
   try {
-    if (sessionPath) {
-      const file = await stat(sessionPath).catch((error: NodeJS.ErrnoException) => {
-        if (error.code === "ENOENT") throw Object.assign(new Error("会话不存在，请重新打开对话"), { status: 404 });
-        throw error;
-      });
-      if (!file.isFile()) throw Object.assign(new Error("会话必须是普通文件"), { status: 400 });
-    }
     const history = newHistory ?? SessionManager.open(sessionPath!, sessionsDir, cwd);
+    const file = basename(history.getSessionFile()!);
+    const parentFile = getParentSessionFile(history);
+    const child = getSubAgentInfo(history)?.data;
+    const liveTools = new Map<string, AgentToolCall>();
+    const publish = send;
+    send = event => {
+      if (event.type === "tool") {
+        const tool = { ...liveTools.get(event.tool.id), ...event.tool };
+        if (tool.status !== "running") delete tool.question;
+        liveTools.set(tool.id, tool);
+      }
+      publish(event);
+    };
+    const active: ActiveAgentSession = {
+      history, send, tools: liveTools,
+      entryOffset: history.getEntries().length,
+    };
+    unregister = registerAgentSession(history.getSessionFile()!, active);
+    const tools = await createAgentTools(cwd, canvas, question);
+    if (isMemoryEnabled()) {
+      const memoryTool = createMemoryTool();
+      if (tools.some(tool => tool.name === memoryTool.name)) throw new Error("工具名称 memory 已被内置全局记忆工具占用");
+      tools.push(memoryTool);
+    }
+    if (parentFile && child) {
+      if (tools.some(tool => tool.name === "report")) throw new Error("工具名称 report 已被内置上报工具占用");
+      tools.push(createReportTool(cwd, parentFile, file, child.name, send));
+    }
+    tools.push(await createSubAgentTool({
+      cwd, tools, canvas, modelRuntime: runtime, model: runtime.getModel(providerId, modelId), thinkingLevel,
+      runTask: (name, task, taskSignal, onProgress) => runDelegatedAgent({
+        cwd, parentFile: file, name, task, providerId, modelId, thinkingLevel, canvas, signal: taskSignal, send, onProgress,
+      }),
+    }));
+    const resources = await createAgentResources(cwd, tools, undefined, child
+      ? `## 子 Agent 职责\n你正在执行委派任务：${JSON.stringify({ name: child.name, task: child.task })}。遵守当前工作区规则与授权，用户可以进入此子会话补充要求。重要进展与最终结论使用 report 上报父 Agent。`
+      : "");
     const resendEntry = resendFrom ? history.getBranch().find((item) => item.id === resendFrom) : undefined;
     if (resendFrom && (resendEntry?.type !== "message" || resendEntry.message.role !== "user")) {
       throw Object.assign(new Error("重发消息不在当前对话中，请重新打开对话"), { status: 400 });
@@ -116,6 +144,7 @@ export async function run(
       tools: tools.map((tool) => tool.name),
       customTools: tools,
     });
+    active.session = session;
 
     const streamFunction = session.agent.streamFunction;
     session.agent.streamFunction = async (...args) => {
@@ -177,17 +206,22 @@ export async function run(
       const entry = history.getBranch().findLast((item) => item.type === "message" && item.message.role === "user");
       if (!entry || entry.id === userMessageId) return;
       userMessageId = entry.id;
+      const firstMessage = !messageAccepted;
       messageAccepted = true;
-      if (attachments.length || prompt.trimStart().startsWith("/skill:")) {
+      if (firstMessage && (attachments.length || prompt.trimStart().startsWith("/skill:"))) {
         history.appendCustomEntry("toonflowUserMessage", { messageId: entry.id, content: prompt.trim(), attachments });
         if (!history.getSessionName() && history.getBranch().filter((item) => item.type === "message" && item.message.role === "user").length === 1) {
           history.appendSessionInfo((prompt.trim() || attachments[0]!.name).slice(0, 60));
         }
       }
-      send({ type: "userMessage", id: entry.id });
+      const saved = history.getBranch().findLast(item => item.type === "custom" && item.customType === "toonflowUserMessage" && (item.data as { messageId?: string })?.messageId === entry.id);
+      const original = saved?.type === "custom" ? saved.data as { content: string; attachments: z.infer<typeof agentAttachmentsSchema> } : undefined;
+      const content = entry.type === "message" && entry.message.role === "user" ? entry.message.content : "";
+      send({ type: "userMessage", id: entry.id, content: original?.content ?? (typeof content === "string" ? content : getToolResultText(content)), attachments: original?.attachments });
     }
     let firstTokenAt: number | undefined;
     let modelError: string | undefined;
+    let limited = false;
     let compactionError: string | undefined;
     let messageIndex = 0;
     const toolBlocks = new Map<string, string>();
@@ -272,14 +306,21 @@ export async function run(
         firstTokenAt = undefined;
         modelError = event.message.stopReason === "error" ? event.message.errorMessage || "模型请求失败"
           : event.message.stopReason === "length" ? "模型回复因长度限制被截断，未能完整生成回答。" : undefined;
+        limited = event.message.stopReason === "length";
       }
     });
     const abort = () => {
       void session.abort();
     };
     signal?.addEventListener("abort", abort, { once: true });
+    let failure: unknown;
     try {
       signal?.throwIfAborted();
+      if (parentFile && child) {
+        const agent = { ...child, file, parentFile, providerId, modelId, thinkingLevel, status: "running" as const, result: undefined };
+        await updateSubAgent(cwd, parentFile, agent);
+        send({ type: "subAgent", agent });
+      }
       if (resendEntry) {
         // ACT: 只截断 SDK 当前分支；旧记录留在 JSONL 中，不再进入当前上下文。
         if (resendEntry.parentId) history.branch(resendEntry.parentId);
@@ -299,10 +340,19 @@ export async function run(
       // SDK 仅以空格分隔技能名；兼容换行输入与追加的附件说明。
       await session.prompt(content.replace(/^(\/skill:\S+)\s+/, "$1 "));
       if (compactionError) throw new Error(compactionError);
-      if (modelError) throw new Error(modelError);
+      if (modelError) throw Object.assign(new Error(modelError), limited ? { code: "AGENT_LENGTH" } : {});
+    } catch (error) {
+      failure = error;
+      throw error;
     } finally {
       signal?.removeEventListener("abort", abort);
       try {
+        // ACT: 用户停止时 SDK 队列可能尚未投递；保留已确认接收的文字，重开子会话也不会丢失。
+        const pending = session.clearQueue();
+        for (const content of [...pending.steering, ...pending.followUp]) {
+          history.appendMessage({ role: "user", content, timestamp: Date.now() });
+          sendUserMessage();
+        }
         sendUserMessage();
         if (resendEntry && !messageAccepted && resumeLeafId) {
           history.branch(resumeLeafId);
@@ -313,316 +363,23 @@ export async function run(
         // ACT: 只记录有首个内容增量的生成耗时，旧历史和未计时输出不参与速度统计。
         if (timing.decodeMs > 0) history.appendCustomEntry("toonflowTiming", timing);
         send({ type: "stats", stats: getAgentStats(history), contextUsage: session.getContextUsage() });
+        if (parentFile && child) {
+          const entry = history.getBranch().findLast(entry => entry.type === "message" && entry.message.role === "assistant");
+          const last = entry?.type === "message" ? entry.message : undefined;
+          const result = failure instanceof Error && !limited ? failure.message : last?.role === "assistant" ? getToolResultText(last.content.filter(part => part.type === "text")) : "";
+          const status = signal?.aborted ? "cancelled" : limited ? "limited" : failure ? "error" : "completed";
+          const agent = { ...child, file, parentFile, providerId, modelId, thinkingLevel, status, result } as const;
+          await updateSubAgent(cwd, parentFile, agent);
+          send({ type: "subAgent", agent });
+        }
       } finally {
         session.dispose();
       }
     }
   } finally {
+    unregister();
     release();
   }
 }
 
-export async function deleteAgentMessage(cwd: string, path: string, options: { entryIds?: string[]; replyTo?: string }) {
-  if (Boolean(options.entryIds) === Boolean(options.replyTo)) {
-    throw Object.assign(new Error("请选择要删除的消息"), { status: 400 });
-  }
-  const release = lockWorkspaceFiles([path]);
-  try {
-    // ACT: 删除会重写 JSONL，必须拒绝损坏行，不能沿用 SDK 会跳过损坏行的读取器。
-    let entries: FileEntry[];
-    try {
-      entries = (await readFile(path, "utf8"))
-        .split("\n")
-        .filter((line) => line.trim())
-        .map((line) => JSON.parse(line));
-    } catch (error) {
-      if (!(error instanceof SyntaxError)) throw error;
-      throw Object.assign(new Error("会话文件损坏，无法删除消息"), { status: 400 });
-    }
-    if (entries[0]?.type !== "session") throw Object.assign(new Error("会话文件无效"), { status: 400 });
-    const entrySchema = z.object({ type: z.string(), id: z.string().min(1), parentId: z.string().nullable(), timestamp: z.string() });
-    const knownIds = new Set<string>();
-    for (const entry of entries.slice(1)) {
-      const parsed = entrySchema.safeParse(entry);
-      if (!parsed.success || knownIds.has(parsed.data.id) || (parsed.data.parentId !== null && !knownIds.has(parsed.data.parentId))) {
-        throw Object.assign(new Error("会话记录结构无效，无法删除消息"), { status: 400 });
-      }
-      knownIds.add(parsed.data.id);
-    }
-    const history = SessionManager.inMemory(cwd, undefined, entries);
-    const branch = history.getBranch();
-    const isUserEntry = (entry: SessionEntry) =>
-      (entry.type === "message" && entry.message.role === "user") || (entry.type === "custom" && entry.customType === "toonflowDeletedUser");
-    let targets = branch.filter((entry) => options.entryIds?.includes(entry.id));
-    if (options.replyTo) {
-      const index = branch.findIndex((entry) => entry.id === options.replyTo && isUserEntry(entry));
-      if (index < 0) throw Object.assign(new Error("消息不在当前对话中，请重新打开对话"), { status: 400 });
-      const nextUser = branch.findIndex((entry, position) => position > index && isUserEntry(entry));
-      targets = branch
-        .slice(index + 1, nextUser < 0 ? undefined : nextUser)
-        .filter((entry) => entry.type === "message" && entry.message.role === "assistant");
-    }
-    if (
-      options.entryIds &&
-      (new Set(options.entryIds).size !== targets.length ||
-        targets.some((entry) => entry.type !== "message" || (entry.message.role !== "user" && entry.message.role !== "assistant")))
-    ) {
-      throw Object.assign(new Error("消息不在当前对话中，请重新打开对话"), { status: 400 });
-    }
-    if (!targets.length) return await getAgentSession(cwd, path);
-
-    const removedIds = new Set(targets.map((entry) => entry.id));
-    const toolCallIds = new Set(
-      targets.flatMap((entry) =>
-        entry.type === "message" && entry.message.role === "assistant"
-          ? entry.message.content.filter((part) => part.type === "toolCall").map((part) => part.id)
-          : []
-      )
-    );
-    const affectedIds = new Set(removedIds);
-    const timedTurns = new Map<string, boolean>();
-    for (const entry of history.getEntries()) {
-      if ((entry.parentId && affectedIds.has(entry.parentId)) || (entry.type === "branch_summary" && affectedIds.has(entry.fromId))) {
-        affectedIds.add(entry.id);
-      }
-      const timingChanged = !isUserEntry(entry) && (removedIds.has(entry.id) || Boolean(entry.parentId && timedTurns.get(entry.parentId)));
-      timedTurns.set(entry.id, timingChanged);
-      if (
-        (entry.type === "message" && entry.message.role === "toolResult" && toolCallIds.has(entry.message.toolCallId)) ||
-        (entry.type === "custom" &&
-          ["toonflowAttachments", "toonflowUserMessage"].includes(entry.customType) &&
-          removedIds.has((entry.data as { messageId?: string } | undefined)?.messageId ?? "")) ||
-        (entry.type === "custom" && entry.customType === "toonflowTiming" && timingChanged) ||
-        ((entry.type === "compaction" || entry.type === "branch_summary") && affectedIds.has(entry.id)) ||
-        (entry.type === "label" && removedIds.has(entry.targetId))
-      ) {
-        removedIds.add(entry.id);
-      }
-    }
-    // ACT: 清除正文并保留树节点，避免分支、叶指针和实时回复的 user 锚点失效；摘要也不能带回已删内容。
-    entries = [
-      entries[0],
-      ...history.getEntries().map((entry) =>
-        removedIds.has(entry.id)
-          ? {
-              type: "custom" as const,
-              id: entry.id,
-              parentId: entry.parentId,
-              timestamp: new Date().toISOString(),
-              customType: isUserEntry(entry) ? "toonflowDeletedUser" : "toonflowDeletedEntry",
-            }
-          : entry
-      ),
-    ];
-    await writeWorkspaceFile(path, entries.map((entry) => JSON.stringify(entry)).join("\n") + "\n");
-    return await getAgentSession(cwd, path);
-  } finally {
-    release();
-  }
-}
-
-export async function createAgentConversation(cwd: string) {
-  const { path: directory } = await resolveWorkspacePath(cwd, ".agent/sessions", true);
-  const history = SessionManager.create(cwd, directory);
-  const path = history.getSessionFile()!;
-  // ACT: SDK 默认等首条回复才落盘；先保存会话头，让空对话也能被历史列表读取。
-  await writeWorkspaceFile(path, `${JSON.stringify(history.getHeader())}\n`, true);
-  return getAgentSession(cwd, path);
-}
-
-export async function renameAgentSession(cwd: string, path: string, name: string) {
-  const release = lockWorkspaceFiles([path]);
-  try {
-    const entries = parseSessionEntries(await readFile(path, "utf8"));
-    if (entries[0]?.type !== "session") throw Object.assign(new Error("会话文件无效"), { status: 400 });
-    const history = SessionManager.open(path, dirname(path), cwd);
-    history.appendSessionInfo(name);
-    return { name: history.getSessionName()! };
-  } finally {
-    release();
-  }
-}
-
-export async function listAgentSessions(cwd: string, directory: string) {
-  const files = new Set((await readdir(directory, { withFileTypes: true })).filter((item) => item.isFile()).map((item) => item.name));
-  const sessions = await SessionManager.list(cwd, directory);
-  return sessions
-    .filter((item) => files.has(basename(item.path)))
-    .sort((left, right) => right.modified.getTime() - left.modified.getTime())
-    .map((item) => ({
-      file: basename(item.path),
-      name: item.name || (item.messageCount ? item.firstMessage.trim().slice(0, 60) : "") || "新对话",
-      modified: item.modified,
-      messageCount: item.messageCount,
-    }));
-}
-
-export async function getAgentSession(cwd: string, path: string) {
-  const entries = parseSessionEntries(await readFile(path, "utf8"));
-  if (entries[0]?.type !== "session") throw Object.assign(new Error("会话文件无效"), { status: 400 });
-  const history = SessionManager.inMemory(cwd, undefined, entries);
-  const branch = history.getBranch();
-  const attachmentMessages = new Map(
-    branch.flatMap((entry) => {
-      if (entry.type !== "custom" || !["toonflowAttachments", "toonflowUserMessage"].includes(entry.customType)) return [];
-      const parsed = z.object({ messageId: z.string(), content: z.string(), attachments: agentAttachmentsSchema }).safeParse(entry.data);
-      return parsed.success ? [[parsed.data.messageId, parsed.data] as const] : [];
-    })
-  );
-  const toolResults = new Map(
-    branch.flatMap((entry) =>
-      entry.type === "message" && entry.message.role === "toolResult" ? [[entry.message.toolCallId, entry.message] as const] : []
-    )
-  );
-  let replyTo: string | undefined;
-  const entriesMessages = branch.flatMap((entry) => {
-    if (entry.type === "custom" && entry.customType === "toonflowDeletedUser") replyTo = entry.id;
-    if (entry.type !== "message" || (entry.message.role !== "user" && entry.message.role !== "assistant")) return [];
-    const message = entry.message;
-    if (message.role === "user") replyTo = entry.id;
-    const attachmentMessage = message.role === "user" ? attachmentMessages.get(entry.id) : undefined;
-    const attachments = attachmentMessage?.attachments;
-    const parts =
-      message.role === "assistant"
-        ? message.content
-            .map((part, index) => {
-              const id = `${entry.id}:${index}`;
-              if (part.type === "text") return { id, type: "text" as const, content: part.text };
-              if (part.type === "thinking") return { id, type: "thinking" as const, content: part.thinking, collapsed: true };
-              if (part.type === "toolCall") {
-                const result = toolResults.get(part.id);
-                return {
-                  id,
-                  type: "tool" as const,
-                  tool: {
-                    id: part.id,
-                    name: part.name,
-                    args: part.arguments,
-                    status: result ? (result.isError ? "error" : "success") : "interrupted",
-                    result: result ? getToolResultText(result.content) : undefined,
-                  },
-                };
-              }
-            })
-            .filter((part) => part !== undefined)
-        : [];
-    const content =
-      message.role === "assistant"
-        ? ""
-        : attachmentMessage?.content ??
-          (typeof message.content === "string"
-            ? message.content
-            : message.content
-                .filter((part) => part.type === "text")
-                .map((part) => part.text)
-                .join(""));
-    const error = message.role === "assistant" ? message.errorMessage : undefined;
-    return [
-      {
-        id: entry.id,
-        entryId: entry.id,
-        replyTo: message.role === "assistant" ? replyTo : undefined,
-        role: message.role,
-        content,
-        parts,
-        error,
-        attachments,
-      },
-    ];
-  });
-  const groupedMessages: typeof entriesMessages = [];
-  for (const message of entriesMessages) {
-    const previous = groupedMessages.at(-1);
-    if (message.role === "assistant" && message.replyTo && previous?.role === "assistant" && previous.replyTo === message.replyTo) {
-      previous.parts.push(...message.parts);
-      previous.error = message.error;
-    } else groupedMessages.push(message);
-  }
-  // ACT: 同轮的工具调用与多步回复合并后，只拼接一次正文。
-  for (const message of groupedMessages) {
-    if (message.role === "assistant") message.content = message.parts.filter((part) => part.type === "text").map((part) => part.content).join("\n\n");
-  }
-  const messages = groupedMessages.filter((message) => message.content || message.parts.length || message.error || message.attachments?.length);
-  const firstUserMessage = messages.find((item) => item.role === "user");
-  const context = history.buildSessionContext();
-  const lastReply = history.getBranch().findLast((entry) => entry.type === "message" && entry.message.role === "assistant");
-  const model =
-    lastReply?.type === "message" && lastReply.message.role === "assistant"
-      ? { provider: lastReply.message.provider, modelId: lastReply.message.model }
-      : context.model;
-  const providers = conf.get("settings", {}).customProviders;
-  const provider = providerSchema.safeParse(Array.isArray(providers) ? providers.find((item) => item?.id === model?.provider) : undefined);
-  const configuredModel = provider.success ? provider.data.models.find((item) => item.id === model?.modelId) : undefined;
-  return {
-    file: basename(path),
-    name: history.getSessionName() || (firstUserMessage?.content.trim() || firstUserMessage?.attachments?.[0]?.name)?.slice(0, 60) || "新对话",
-    messages,
-    stats: getAgentStats(history),
-    contextUsage: configuredModel && model ? getAgentContext(history, getModelLimits(model.provider, configuredModel).contextWindow) : undefined,
-    providerId: model?.provider,
-    modelId: model?.modelId,
-    thinkingLevel: context.thinkingLevel,
-  };
-}
-
-function getToolResultText(content: { type: string; text?: string }[]) {
-  return content.map((part) => (part.type === "text" ? part.text : `[${part.type}]`)).join("\n");
-}
-
-function getAgentStats(history: SessionManager) {
-  const tokens = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 };
-  let outputTokens = 0;
-  let decodeMs = 0;
-  for (const entry of history.getBranch()) {
-    const usage =
-      entry.type === "compaction" || entry.type === "branch_summary"
-        ? entry.usage
-        : entry.type === "message" && (entry.message.role === "assistant" || entry.message.role === "toolResult")
-        ? entry.message.usage
-        : undefined;
-    if (usage) {
-      tokens.input += usage.input;
-      tokens.output += usage.output;
-      tokens.cacheRead += usage.cacheRead;
-      tokens.cacheWrite += usage.cacheWrite;
-    }
-    if (entry.type === "custom" && entry.customType === "toonflowTiming") {
-      const timing = entry.data as { outputTokens?: number; decodeMs?: number } | undefined;
-      if (
-        typeof timing?.outputTokens === "number" &&
-        Number.isFinite(timing.outputTokens) &&
-        timing.outputTokens > 0 &&
-        typeof timing.decodeMs === "number" &&
-        Number.isFinite(timing.decodeMs) &&
-        timing.decodeMs > 0
-      ) {
-        outputTokens += timing.outputTokens;
-        decodeMs += timing.decodeMs;
-      }
-    }
-  }
-  tokens.total = tokens.input + tokens.output + tokens.cacheRead + tokens.cacheWrite;
-  return { tokens, tokensPerSecond: decodeMs > 0 ? (outputTokens * 1000) / decodeMs : undefined };
-}
-
-function getAgentContext(history: SessionManager, contextWindow: number) {
-  const branch = history.getBranch();
-  const compactionIndex = branch.findLastIndex((entry) => entry.type === "compaction");
-  const recent = branch.slice(compactionIndex + 1);
-  const usage = getLastAssistantUsage(recent);
-  const messages = history.buildSessionContext().messages;
-  const usageIndex = messages.findLastIndex((message) => message.role === "assistant" && message.usage === usage);
-  const deletedAfterReply = branch.some(
-    (entry) =>
-      entry.type === "custom" &&
-      (entry.customType === "toonflowDeletedUser" || entry.customType === "toonflowDeletedEntry") &&
-      Date.parse(entry.timestamp) >= (messages[usageIndex]?.timestamp ?? 0)
-  );
-  const tokens =
-    usage && usageIndex >= 0 && !deletedAfterReply
-      ? calculateContextTokens(usage) + messages.slice(usageIndex + 1).reduce((total, message) => total + estimateTokens(message), 0)
-      : compactionIndex >= 0 && !deletedAfterReply
-      ? null
-      : messages.reduce((total, message) => total + estimateTokens(message), 0);
-  return { tokens, contextWindow, percent: tokens === null ? null : (tokens / contextWindow) * 100 };
-}
+export * from "@/agent/runtime/sessions";

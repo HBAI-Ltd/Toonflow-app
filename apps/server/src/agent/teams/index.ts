@@ -26,7 +26,7 @@ export async function createTeamRunner(options: SubAgentModel & {
   const { name, cwd, tools, canvas, ...modelOptions } = options;
   const { directory, manifest, files, enabled } = await readTeam(name);
   if (!enabled) throw new Error(`团队 ${name} 已禁用`);
-  const hostTools = tools.filter(tool => !["subAgent", "askUser", "delegate", "teamResources", "requestInput"].includes(tool.name));
+  const hostTools = tools.filter(tool => !["subAgent", "report", "askUser", "delegate", "teamResources", "requestInput"].includes(tool.name));
   const privatePlugins = await Promise.all(Object.entries(manifest.tools ?? {}).map(async ([pluginName, config]) => {
     const { plugin, metadata } = await loadTool(pluginName, join(directory, "tools"));
     return { plugin, metadata, config: validateToolConfig(plugin, config) };
