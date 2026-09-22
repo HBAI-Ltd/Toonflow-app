@@ -85,7 +85,7 @@
   </a>
 </p>
 
-**开源 AI 短剧与漫剧创作平台**
+**开源 AI 短剧漫剧视频创作平台**
 
 > 🚀 **一站式短剧创作**：集成剧本创作、资产管理、图像与视频生成，在无限画布中组织完整的创作流程。
 
@@ -138,7 +138,7 @@
 </table>
 
 <details>
-<summary><strong>成为赞助商👈</strong></summary>
+<summary><strong>👉成为赞助商👈</strong></summary>
 
 <p align="center">
   <img src="./docs/businessQr.png" alt="商务合作微信二维码" width="200" />
@@ -345,12 +345,14 @@ Toonflow 采用 [MIT 许可证](./LICENSE)。第三方依赖和素材遵循各�
 ## 🙏 致谢
 
 - **合作伙伴**：算能云、腾讯混元 3D、智星云。
-- **项目贡献者**：感谢参与代码开发、文档完善、插件分享和问题排查的所有贡献者。[查看贡献者](https://github.com/HBAI-Ltd/Toonflow-app/graphs/contributors)。
+- **项目贡献者**：感谢参与代码开发、文档完善、插件分享和问题排查的所有贡献者。
 - **社区用户**：感谢持续提供反馈、分享创作成果并支持项目发展的所有用户。
+
+**仰起脸笑的像满月**：感谢贡献 Codex 20x 开发算力。
 
 <div align="center">
 
-Copyright © 2026 HBAI-Ltd
+Copyright © 2026 北京爱阿科技有限公司
 
 </div>
 
