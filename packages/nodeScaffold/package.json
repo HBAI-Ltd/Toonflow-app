@@ -13,7 +13,6 @@
     "./utils": "./src/nodeInputs.ts",
     "./nodeEvent": "./src/nodeEvent.ts",
     "./nodeAi": "./src/nodeAi.ts",
-    "./nodeFfmpeg": "./src/nodeFfmpeg.ts",
     "./workspaceFiles": "./src/workspaceFiles.ts",
     "./nodeTools": "./src/nodeTools.ts",
     "./promptInput": "./src/components/promptInput.vue",
@@ -29,7 +28,6 @@
     "element-plus": "^2.14.5"
   },
   "dependencies": {
-    "@toonflow/ffmpeg": "workspace:*",
     "@earendil-works/pi-agent-core": "0.85.1",
     "@earendil-works/pi-ai": "0.85.1",
     "@tabler/icons-vue": "^3.46.0",

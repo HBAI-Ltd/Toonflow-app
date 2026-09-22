@@ -28,24 +28,31 @@
 
 `context.skills` 提供统一的技能扫描、读取、新建和修改，复用宿主的 SDK 扫描与文件落盘。`skillOperator` 据此操作工作区 `skill/` 和全局 `data/skills/`，无需把 Pi SDK 打入工具。读取、新建、修改默认开启，可在工具配置中分别关闭；目录查询始终保留，普通工作区文件的写入范围不因此扩大。
 
-`context.ffmpeg(command => ..., signal?)` 复用宿主 FFmpeg，全局工具和团队私有工具均可使用；工具不打包 FFmpeg 或执行库。链式配置使用常见 fluent-ffmpeg 方法，输入输出均为当前工具工作区的相对路径，支持多输入、多输出、复杂滤镜、编解码参数和真实 ffprobe 元数据。回调必须同步；不需要 `.run()`、事件回调或单独的合成、探测、截帧入口。
+`await context.ffmpeg(signal?)` 获取绑定 `context.cwd` 的原生 `@renmu/fluent-ffmpeg` 工厂，全局工具和团队私有工具均可使用；工具无需打包执行库。工厂构造参数、链式方法、事件、流、`.run()`、`.save()`、`.pipe()`、`.clone()` 和 `ffprobe` 回调均沿用原生 API，不再记录 JSON 计划。
 
 ```ts
-const result = await context.ffmpeg(command => command
-  .input("assets/first.mp4")
-  .input("assets/second.mp4")
-  .complexFilter("[0:v][1:v]hstack=inputs=2[video]")
-  .outputOptions(["-map [video]"])
-  .videoCodec("libx264")
-  .output("assets/sideBySide.mp4"), signal);
-// result.outputs 返回工作区相对路径与 MIME 类型。
+const ffmpeg = await context.ffmpeg(signal);
+await new Promise<void>((resolve, reject) => {
+  ffmpeg("assets/first.mp4")
+    .input("assets/second.mp4")
+    .complexFilter("[0:v][1:v]hstack=inputs=2[video]")
+    .outputOptions("-map [video]")
+    .videoCodec("libx264")
+    .on("error", reject)
+    .on("end", () => resolve())
+    .save("assets/sideBySide.mp4");
+});
 
-const { probe } = await context.ffmpeg(command => command.input("assets/first.mp4").ffprobe(), signal);
+ffmpeg.ffprobe("assets/first.mp4", (error, data) => {
+  // 按原生回调处理错误和媒体信息。
+});
 ```
 
-调用时绑定的工作区始终为 `context.cwd`，输出不能覆盖现有文件。选项和滤镜经宿主审查，包含字幕等间接文件路径时仍须位于工作区；不开放原始进程、模块加载、外部 URL 或任意可执行程序。传入当前工具 execute 的 `signal` 可中止执行。接口始终注入，调用时才检查 FFmpeg；未安装时沿用宿主的下载询问通知并抛出 `FfmpegRequiredError`，工具应继续向上抛出，不自动重试。
+显式文件路径可以是工作区相对路径或工作区内的绝对路径；原型检查覆盖输入、输出及其别名、截图目录、预设文件和克隆实例，并检查符号链接及待创建路径的已有父目录。原生输入输出流保持原样。FFmpeg 参数、滤镜、媒体清单中的间接文件访问不另做解析，**这些能力只供可信代码使用，不是文件系统沙箱**；也不隔离其他进程在检查后替换目录的竞态。
 
-旧 `context.ffmpeg.convert(bytes, options, signal?)` 保持兼容，返回 `{ data: Uint8Array, mimeType: string }`；仍限输入输出各 100 MB、5 分钟及原有单文件字节流选项。新功能使用可调用入口，避免全文件读入内存。共享类型统一在 `@toonflow/ffmpeg/types`；`FfmpegContext`、`FfmpegConvertOptions` 也从 `@toonflow/tools-scaffold/runtime` 转导出。
+输出覆盖、超时、事件和错误处理沿用原生库，调用方负责使用新文件名保护素材。`signal` 仅取消工厂准备阶段；运行中的命令由调用方监听取消并调用 `command.kill("SIGKILL")`，同时处理启动前已取消的情况和监听器清理。入口按需检查 FFmpeg/FFprobe，缺失时仍通知前端下载并抛出 `FfmpegRequiredError`；不自动安装或重试。
+
+不再提供 `convert`、配置回调、JSON plan 或浏览器 HTTP 执行桥。`FfmpegFactory`、`FfmpegCommand`、`FfprobeData` 从 `@toonflow/ffmpeg/types` 和 `@toonflow/tools-scaffold/runtime` 导出，直接复用原生类型。
 
 工具包的静态提示词在 `build.ts` 的 `createToolConfig({ ..., prompt: "工具操作规则", configRules: [...] }, import.meta.url)` 中声明。`prompt` 为可选字符串，最多 20000 个字符，支持多行文本；随元数据打包，旧插件未声明时按空字符串处理。
 

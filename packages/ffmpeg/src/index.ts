@@ -7,6 +7,8 @@ import { pipeline } from "node:stream/promises";
 import { createGunzip } from "node:zlib";
 import { builds, downloadSources } from "./catalog";
 
+export { createFfmpeg } from "./runtime";
+export type * from "./types";
 export { downloadSources };
 export type SourceId = typeof downloadSources[number]["id"];
 export type FfmpegMode = "auto" | "download" | "system";
@@ -90,7 +92,7 @@ export async function installFfmpeg(directory: string, sourceId: SourceId, signa
       let received = 0;
       const hash = createHash("sha256");
       const compressed = join(temporary, asset.fileName);
-      await pipeline(Readable.fromWeb(response.body), new Transform({
+      await pipeline(Readable.from(response.body), new Transform({
         transform(chunk: Buffer, _encoding, callback) {
           received += chunk.length;
           if (received > 128 * 1024 * 1024) return callback(new Error("下载文件超过允许大小"));

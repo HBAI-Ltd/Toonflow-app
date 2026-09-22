@@ -67,9 +67,6 @@ interface AudioConvertOptions {
   bitrateKbps?: number;
 }
 
-/** FFmpeg 仅开放结构化转换选项，不接受文件路径、URL 或任意命令参数。 */
-type FfmpegConvertOptions = import("@toonflow/ffmpeg/types").FfmpegConvertOptions;
-
 /** 缺少可用 FFmpeg 时抛出；由宿主前端询问下载安装，供应商应继续向上抛出。 */
 interface FfmpegRequiredError extends Error {
   name: "FfmpegRequiredError";
@@ -88,19 +85,16 @@ interface ProviderTools {
     convert(input: Uint8Array, options: AudioConvertOptions): Promise<{ data: Uint8Array; mimeType: string }>;
   };
   /**
-   * 只接收、返回内存字节，不提供文件、URL 或任意 FFmpeg 参数操作。
-   * 宿主始终注入此接口，但不保证已安装 FFmpeg；仅调用 convert 时检测。
+   * 获取绑定当前工作区的原生 @renmu/fluent-ffmpeg 工厂，沿用链式调用、事件、流和 ffprobe 回调。
+   * 仅显式文件路径经过工作区边界检查；原始参数、滤镜及清单中的间接 I/O 不是沙箱。
+   * 宿主始终注入此入口，调用时检查 FFmpeg/FFprobe；没有工作目录的调试上下文不能使用。
    * 缺失时抛出 FfmpegRequiredError，并通知在线前端询问下载；不会后台自动安装。
    * 安装后由用户重新发起操作，供应商不要捕获此错误后自动重试完整生成请求。
-   * 输入、输出均限 100 MB；处理最长 5 分钟，响应 this.signal 的取消。
-   * 宿主在独立临时目录转换，支持需要随机寻址的输入；临时文件由宿主清理。
+   * 输出覆盖行为沿用原生库；调用方负责文件命名、处理 end/error 及通过 command.kill 取消运行。
    * @throws {FfmpegRequiredError} 未安装或当前设置未找到可用的 FFmpeg。
-   * @example await this.tool.ffmpeg.convert(bytes, { format: "mp4", width: 1280, audio: false });
-   * @example await this.tool.ffmpeg.convert(bytes, { format: "png", vf: "hflip" });
+   * @example const ffmpeg = await this.tool.ffmpeg(); const command = ffmpeg("assets/input.mp4").videoCodec("libx264");
    */
-  ffmpeg: {
-    convert(input: Uint8Array, options: FfmpegConvertOptions): Promise<{ data: Uint8Array; mimeType: string }>;
-  };
+  ffmpeg(): Promise<import("@toonflow/ffmpeg/types").FfmpegFactory>;
 }
 
 interface ImageRequest extends MediaRequest {

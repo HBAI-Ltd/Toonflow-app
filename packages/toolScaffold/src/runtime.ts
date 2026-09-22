@@ -1,10 +1,10 @@
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import type { Rule } from "@form-create/element-ui";
-import type { FfmpegContext } from "@toonflow/ffmpeg/types";
+import type { FfmpegFactory } from "@toonflow/ffmpeg/types";
 import { z } from "zod";
 
 export type { ToolDefinition } from "@earendil-works/pi-coding-agent";
-export type { FfmpegContext, FfmpegConvertOptions, FfmpegPlan, FfmpegResult } from "@toonflow/ffmpeg/types";
+export type { FfmpegFactory, FfmpegCommand, FfprobeData } from "@toonflow/ffmpeg/types";
 
 export const toolNameSchema = z.string().max(96).regex(/^[a-z][a-zA-Z0-9]*$/);
 export const toolMetadataSchema = z.object({
@@ -170,7 +170,7 @@ export interface SkillContext {
 }
 
 export interface ToolContext {
-  ffmpeg: FfmpegContext;
+  ffmpeg(signal?: AbortSignal): Promise<FfmpegFactory>;
   media?: MediaContext;
   canvas?: CanvasContext;
   question?: QuestionContext;

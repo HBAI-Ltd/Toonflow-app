@@ -3,12 +3,11 @@ import { lstat, mkdir, readFile, readdir, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { createContext, SourceTextModule } from "node:vm";
 import type { AudioConvertOptions, Provider, ProviderTools } from "@toonflow/providers";
-import type { FfmpegConvertOptions } from "@toonflow/ffmpeg/types";
 import { parse, parseExpression } from "@babel/parser";
 import { z } from "zod";
 import conf from "@/utils/conf";
 import { convertAudio } from "@/utils/media/audioProcessor";
-import { convertMedia } from "@/utils/ffmpeg";
+import { createWorkspaceFfmpeg } from "@/utils/ffmpeg";
 import { lockWorkspaceFiles, writeWorkspaceFile } from "@/utils/workspace/files";
 
 type Expression = Extract<ReturnType<typeof parseExpression>, { type: "ParenthesizedExpression" }>["expression"];
@@ -214,7 +213,7 @@ export async function deleteMediaProvider(fileName: string, revision: string) {
   } finally { release(); }
 }
 
-export async function loadMediaProviderSource(source: string, config: Record<string, unknown> = {}, signal?: AbortSignal, fetchRequest = fetch) {
+export async function loadMediaProviderSource(source: string, config: Record<string, unknown> = {}, signal?: AbortSignal, fetchRequest = fetch, cwd?: string) {
   signal?.throwIfAborted();
   const { id } = parseProvider(source);
   // ACT: VM 只隔离可信供应商的全局上下文；不可信代码需要独立进程等更强隔离。
@@ -246,7 +245,10 @@ export async function loadMediaProviderSource(source: string, config: Record<str
       hash: Bun.hash,
       image: Bun.Image,
       audio: { convert: (input: Uint8Array, options: AudioConvertOptions) => convertAudio(input, options, signal) },
-      ffmpeg: { convert: (input: Uint8Array, options: FfmpegConvertOptions) => convertMedia(input, options, signal) },
+      ffmpeg: async () => {
+        if (!cwd) throw new Error("当前操作没有工作目录，无法使用 FFmpeg");
+        return createWorkspaceFfmpeg(cwd, signal);
+      },
     } satisfies ProviderTools,
   };
 }

@@ -141,7 +141,7 @@ export async function generateMedia(
   const model = providerInfo.models.find(model => model.id === request.modelId && model.type === mediaType);
   if (!model) invalid("所选媒体模型不存在或类型不匹配，请重新选择");
   const configurations = record(conf.get("settings", {}).mediaProviderConfigs);
-  const provider = await loadMediaProviderSource(providerInfo.source, record(configurations[providerInfo.id]), signal);
+  const provider = await loadMediaProviderSource(providerInfo.source, record(configurations[providerInfo.id]), signal, undefined, directory);
   const generate = mediaType === "image" ? provider.generateImage : mediaType === "video" ? provider.generateVideo : provider.generateAudio;
   if (typeof generate !== "function") invalid(`此供应商不支持${{ image: "图片", video: "视频", audio: "音频" }[mediaType]}生成`);
   const rules = Array.isArray(provider.rules) ? provider.rules : [];

@@ -75,7 +75,7 @@ const { nodeProps, outputs } = useNode({
 </script>
 ```
 
-`useNode(options?)` 接受 `label`、`icon`、`handles`、`outputs`，返回 `id`、`node`、`config`、`nodeProps`、`handles`、`outputs`、`nodeEvent`、`nodeTools`、`files`、`ai`、`ffmpeg`、`updateNodeInternals`。`nodeProps` 是供骨架绑定的 computed，包含标题、图标、端口和输出；`outputs` 根据默认值推导类型，并恢复当前节点保存的合法输出，只接受仍存在的 source 端口及匹配类型。文本默认值保持 `STRING`；图片节点无已保存输出时保持为空。
+`useNode(options?)` 接受 `label`、`icon`、`handles`、`outputs`，返回 `id`、`node`、`config`、`nodeProps`、`handles`、`outputs`、`nodeEvent`、`nodeTools`、`files`、`ai`、`updateNodeInternals`。`nodeProps` 是供骨架绑定的 computed，包含标题、图标、端口和输出；`outputs` 根据默认值推导类型，并恢复当前节点保存的合法输出，只接受仍存在的 source 端口及匹配类型。文本默认值保持 `STRING`；图片节点无已保存输出时保持为空。
 
 `files.uploadFile(file)`、`files.removeNodeFiles()` 和 `updateNodeInternals()` 已绑定当前节点，无需再次传 ID；`files` 同时提供 `getWorkspaceFiles()`、`useFileUrl()`。端口定义、具体 UI、上传校验和上传/删除互斥仍由业务节点管理。选中状态可直接使用 `node.selected`，例如绑定 `v-model:bottomVisible="node.selected"`。
 
@@ -87,32 +87,7 @@ const { nodeProps, outputs } = useNode({
 
 ### FFmpeg 媒体处理
 
-`useNode()` 返回可直接调用的 `ffmpeg(command => ..., signal?)`，链式方法沿用 fluent-ffmpeg 的常用写法。节点只记录配置并请求宿主执行，FFmpeg 本体和执行库不会打入节点 UMD；也可以在组件 setup 中单独调用 `useNodeFfmpeg()`。配置回调必须同步，不调用 `.run()` 或传入事件回调，`await ffmpeg(...)` 即等待执行完成。
-
-```ts
-const { ffmpeg } = useNode();
-const result = await ffmpeg(command => command
-  .input("assets/clip.mp4")
-  .input("assets/music.wav")
-  .complexFilter("[1:a]volume=0.4[music]")
-  .outputOptions(["-map 0:v:0", "-map [music]", "-shortest"])
-  .videoCodec("libx264")
-  .audioCodec("aac")
-  .output("assets/edited.mp4"));
-// result.outputs: [{ path: "assets/edited.mp4", mimeType: "video/mp4" }]
-
-const { probe } = await ffmpeg(command => command.input("assets/clip.mp4").ffprobe());
-// probe 为实际 ffprobe 的 streams、format、chapters 元数据。
-
-await ffmpeg(command => command.input("assets/clip.mp4")
-  .seekInput(2).frames(1).output("assets/frame.png"));
-```
-
-输入、输出使用当前工作区相对路径。每次调用绑定当时的工作目录，文件留在服务端处理，不再往返上传整个视频。支持多输入、多输出、复杂滤镜、编码参数与探测；滤镜和选项仍经宿主审查，涉及字幕等文件的选项同样受工作区约束，不接受外部 URL、原始命令、模块加载或可执行程序路径。已有输出文件不会被覆盖。自定义节点宿主需提供 `workspaceDirectory` getter。
-
-节点卸载或传入 signal 取消时会停止请求及后端处理。未安装时保留 `FFMPEG_REQUIRED` 错误并触发现有下载提示，安装后由用户重新发起操作，不自动重试。
-
-旧 `ffmpeg.convert(bytes, options, signal?)` 继续兼容，返回 `{ data: Uint8Array, mimeType: string }`，仍限输入输出各 100 MB、5 分钟和原有字节流选项；需要随机寻址或复杂处理时使用上述文件模式。`FfmpegContext`、`FfmpegCommand`、`FfmpegResult`、`FfmpegConvertOptions` 可从 `@toonflow/ffmpeg/types` 或节点运行时入口导入。
+FFmpeg 现在仅向服务端工具和供应商提供原生链式 API，参见 `packages/toolScaffold/readme.md`。浏览器节点不再提供 `useNodeFfmpeg`、`useNode().ffmpeg` 或 JSON 计划/字节转换桥，也不打包 Node.js 执行库。
 
 ### AI 模型调用
 

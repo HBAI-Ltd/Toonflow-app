@@ -128,7 +128,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@renmu/fluent-ffmpeg": "2.3.3",
-        "zod": "^4.6.2",
       },
     },
     "packages/mcp": {
@@ -168,7 +167,6 @@
         "@earendil-works/pi-agent-core": "0.85.1",
         "@earendil-works/pi-ai": "0.85.1",
         "@tabler/icons-vue": "^3.46.0",
-        "@toonflow/ffmpeg": "workspace:*",
         "@vitejs/plugin-vue": "^6.0.8",
         "eventsource-parser": "3.1.1",
         "vite": "^8.2.2",

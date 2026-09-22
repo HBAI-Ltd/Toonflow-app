@@ -10,7 +10,6 @@ import conf from "@/utils/conf";
 import { isWithin, resolveWorkspacePath, writeWorkspaceFile, lockWorkspaceFiles } from "@/utils/workspace/files";
 import { listTools, loadTool, validateToolConfig } from "@/utils/plugins/tools";
 import { createSkillContext } from "@/agent/skills";
-import { createFfmpegTool } from "@/agent/tools/ffmpeg";
 
 export function createAgentToolContext(cwd: string, config: Record<string, unknown> = {}, canvas?: CanvasContext, question?: QuestionContext): ToolContext {
   const skillsDirectory = join(dirname(conf.path), "skills");
@@ -27,7 +26,7 @@ export function createAgentToolContext(cwd: string, config: Record<string, unkno
   };
   return {
     cwd, config, resolvePath, writeFile, canvas, question, skills: createSkillContext(cwd),
-    ffmpeg: createWorkspaceFfmpeg(cwd),
+    ffmpeg: signal => createWorkspaceFfmpeg(cwd, signal),
     media: {
       listModels: listMediaModels,
       generateImage: (request, signal) => generateMedia(cwd, "image", request, signal),
@@ -39,9 +38,8 @@ export function createAgentToolContext(cwd: string, config: Record<string, unkno
 }
 
 export async function createAgentTools(cwd: string, canvas?: CanvasContext, question?: QuestionContext): Promise<ToolDefinition[]> {
-  const ffmpegTool = await createFfmpegTool(cwd);
-  const tools: ToolDefinition[] = ffmpegTool ? [ffmpegTool] : [];
-  const names = new Set(tools.map(tool => tool.name));
+  const tools: ToolDefinition[] = [];
+  const names = new Set<string>();
   const context = createAgentToolContext(cwd, {}, canvas, question);
   for (const item of await listTools()) {
     if (!item.enabled) continue;
