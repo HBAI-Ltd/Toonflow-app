@@ -33,9 +33,6 @@ jobs:
     secrets:
       MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
       MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-      MACOS_NOTARIZATION_KEY_ID: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
-      MACOS_NOTARIZATION_ISSUER_ID: ${{ secrets.MACOS_NOTARIZATION_ISSUER_ID }}
-      MACOS_NOTARIZATION_KEY_BASE64: ${{ secrets.MACOS_NOTARIZATION_KEY_BASE64 }}
 
   release:
     name: 发布 GitHub Release
@@ -105,7 +102,7 @@ jobs:
             "- 💻 **Windows**：双击下载的安装包，按提示完成安装。",
             "- 🍎 **Mac**：打开下载的安装包，将 `toonflow.app` 拖入“应用程序”，再从“应用程序”打开。",
             "",
-            "M 系列 Mac 安装包已完成 Developer ID 签名与 Apple 公证。首次打开时，macOS 仍可能提示确认打开从互联网下载的应用。",
+            "M 系列 Mac 安装包已签名，暂未进行 Apple 公证。若首次打开被拦截，请在确认下载来源可信后，尝试通过“系统设置 → 隐私与安全性 → 仍要打开”允许运行。",
             "",
             "---",
             "",

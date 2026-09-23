@@ -34,19 +34,10 @@ on:
         default: false
     secrets:
       MACOS_CERTIFICATE_BASE64:
-        description: 包含 Developer ID Application 证书及私钥的 P12 Base64
+        description: 包含 Developer ID Application 或临时 Apple Development 证书及私钥的 P12 Base64
         required: false
       MACOS_CERTIFICATE_PASSWORD:
         description: P12 导出密码
-        required: false
-      MACOS_NOTARIZATION_KEY_ID:
-        description: App Store Connect 团队 API Key ID
-        required: false
-      MACOS_NOTARIZATION_ISSUER_ID:
-        description: App Store Connect 团队 API Issuer ID
-        required: false
-      MACOS_NOTARIZATION_KEY_BASE64:
-        description: 对应 API 密钥的 P8 私钥文件 Base64
         required: false
     outputs:
       version:
@@ -168,29 +159,20 @@ jobs:
         # ACT: 使用原生环境，避免 Git Bash 的 GNU tar 将 Windows 盘符识别为远程主机。
         shell: pwsh
         run: bun run release:desktop "$env:appVersion" "$env:releaseMode"
-      - name: 准备 ARM 签名与公证凭据
+      - name: 准备 ARM 签名凭据
         if: matrix.target == 'macArm64'
         id: signing
         env:
           certificateBase64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
           certificatePassword: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-          notarizationKeyId: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
-          notarizationIssuerId: ${{ secrets.MACOS_NOTARIZATION_ISSUER_ID }}
-          notarizationKeyBase64: ${{ secrets.MACOS_NOTARIZATION_KEY_BASE64 }}
         run: |
           set +x
           : "${certificateBase64:?请配置 MACOS_CERTIFICATE_BASE64 Secret}"
           : "${certificatePassword:?请配置 MACOS_CERTIFICATE_PASSWORD Secret}"
-          : "${notarizationKeyId:?请配置 MACOS_NOTARIZATION_KEY_ID Secret}"
-          : "${notarizationIssuerId:?请配置 MACOS_NOTARIZATION_ISSUER_ID Secret}"
-          : "${notarizationKeyBase64:?请配置 MACOS_NOTARIZATION_KEY_BASE64 Secret}"
           umask 077
           certificatePath="$RUNNER_TEMP/toonflowSigning.p12"
           keychainPath="$RUNNER_TEMP/toonflowSigning.keychain-db"
-          notarizationKeyPath="$RUNNER_TEMP/toonflowNotarization.p8"
           trap 'rm -f "$certificatePath"' EXIT
-          printf '%s' "$notarizationKeyBase64" | base64 --decode > "$notarizationKeyPath"
-          openssl pkey -in "$notarizationKeyPath" -passin pass: -check -noout > /dev/null
           keychainPassword="$(openssl rand -hex 32)"
           echo "::add-mask::$keychainPassword"
           printf '%s' "$certificateBase64" | base64 --decode > "$certificatePath"
@@ -200,25 +182,36 @@ jobs:
           security import "$certificatePath" -P "$certificatePassword" -k "$keychainPath" -T /usr/bin/codesign > /dev/null
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychainPassword" "$keychainPath" > /dev/null
           security list-keychains -d user -s "$keychainPath"
-          identity="$(security find-identity -v -p codesigning "$keychainPath" | awk '/"Developer ID Application: / { print $2 }')"
+          # ACT: 暂时兼容开发证书，只保证签名完整性；正式分发需 Developer ID 与公证。
+          identity="$(security find-identity -v -p codesigning "$keychainPath" | awk '/"(Developer ID Application|Apple Development): / { print $2 }')"
           if [[ ! "$identity" =~ ^[[:xdigit:]]{40}$ ]]; then
-            echo '::error::P12 必须包含且仅包含一个有效的 Developer ID Application 签名身份及私钥。'
+            echo '::error::未找到唯一有效的 Developer ID Application 或 Apple Development 身份。请检查下方证书类型、有效期及系统信任诊断；不会输出私钥或密码。'
+            # ACT: 身份列表保留系统错误码、隐藏证书姓名。
+            security find-identity -p codesigning "$keychainPath" | sed -E 's/"[^"]*"/"<certificate name hidden>"/g'
+            security find-certificate -a -p "$keychainPath" | bun -e '
+            import { X509Certificate } from "node:crypto";
+            const pem = await Bun.stdin.text();
+            const certificates = pem.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g) ?? [];
+            console.log(`导入证书数量：${certificates.length}`);
+            for (const entry of certificates) {
+              const certificate = new X509Certificate(entry);
+              const type = certificate.subject.match(/^CN=(Developer ID Application|Developer ID Installer|Apple Development|Apple Distribution|Mac Developer|3rd Party Mac Developer Application|3rd Party Mac Developer Installer|iPhone Developer|iPhone Distribution):/m)?.[1] ?? "其他或 CA 证书";
+              console.log(JSON.stringify({ type, validFrom: certificate.validFrom, validTo: certificate.validTo }));
+            }
+            '
             exit 1
           fi
+          echo '::warning::当前 ARM 包仅签名，未进行 Apple 公证；macOS 仍可能拦截首次打开。'
           printf 'identity=%s\n' "$identity" >> "$GITHUB_OUTPUT"
-          printf 'notarizationKeyPath=%s\n' "$notarizationKeyPath" >> "$GITHUB_OUTPUT"
-      - name: 构建 macOS 安装包及更新文件（ARM 自动公证）
+      - name: 构建 macOS 安装包及更新文件（ARM 仅签名）
         if: runner.os == 'macOS'
         env:
           ELECTROBUN_DEVELOPER_ID: ${{ steps.signing.outputs.identity }}
-          ELECTROBUN_APPLEAPIKEY: ${{ matrix.target == 'macArm64' && secrets.MACOS_NOTARIZATION_KEY_ID || '' }}
-          ELECTROBUN_APPLEAPIISSUER: ${{ matrix.target == 'macArm64' && secrets.MACOS_NOTARIZATION_ISSUER_ID || '' }}
-          ELECTROBUN_APPLEAPIKEYPATH: ${{ steps.signing.outputs.notarizationKeyPath }}
         run: bun run release:desktop "$appVersion" "$releaseMode"
-      - name: 清理 ARM 签名与公证凭据
+      - name: 清理 ARM 签名凭据
         if: always() && matrix.target == 'macArm64'
         run: |
-          rm -f "$RUNNER_TEMP/toonflowSigning.p12" "$RUNNER_TEMP/toonflowNotarization.p8"
+          rm -f "$RUNNER_TEMP/toonflowSigning.p12"
           keychainPath="$RUNNER_TEMP/toonflowSigning.keychain-db"
           if [[ -f "$keychainPath" ]]; then
             security delete-keychain "$keychainPath"
@@ -232,8 +225,7 @@ jobs:
           verifyMacArtifact() {
             if [[ "$macCodesign" == '1' ]]; then
               codesign --verify --deep --strict --verbose=2 \
-                --test-requirement "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf = H\"$signingIdentity\"" "$1"
-              xcrun stapler validate "$1"
+                --test-requirement "=anchor apple generic and certificate leaf = H\"$signingIdentity\"" "$1"
             fi
           }
           inspectionDirectory="$RUNNER_TEMP/toonflowPackageCheck"
