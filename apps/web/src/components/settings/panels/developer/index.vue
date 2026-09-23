@@ -31,6 +31,17 @@
         </div>
         <el-button :icon="IconEdit" @click="systemPromptVisible = true">编辑提示词</el-button>
       </div>
+      <div class="developerRow">
+        <div class="toolDescription">
+          <h3>自定义更新源</h3>
+          <p>填写更新清单和安装包所在的目录地址，保存后可在关于页选择。</p>
+        </div>
+        <div class="updateSourceEditor">
+          <el-input v-model="customUpdateUrl" placeholder="https://example.com/desktopUpdates" aria-label="自定义更新源目录地址" clearable :disabled="savingUpdateUrl" @keyup.enter="saveCustomUpdateUrl" />
+          <el-button type="primary" :loading="savingUpdateUrl" @click="saveCustomUpdateUrl">保存</el-button>
+        </div>
+      </div>
+      <el-text v-if="updateUrlError" type="danger" role="alert">{{ updateUrlError }}</el-text>
       <div class="pluginInstaller">
         <div class="installerHeader">
           <h3>手动安装插件</h3>
@@ -106,6 +117,7 @@ import { computed, defineAsyncComponent, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useDeveloperStore } from "@/stores/developer";
 import { useHelloStore } from "@/stores/hello";
+import { saveSettings, settings } from "@/stores/settings";
 import saveFile from "@/lib/saveFile";
 import { installPluginFile } from "../../installPluginFile";
 import { ElMessage } from "element-plus";
@@ -121,6 +133,34 @@ const providerDebugVisible = ref(false);
 const systemPromptDialog = defineAsyncComponent(() => import("./systemPromptDialog.vue"));
 const systemPromptVisible = ref(false);
 const developerLocked = computed(() => !developerStore.developerConfirmed);
+const customUpdateUrl = ref(typeof settings.value.desktopUpdateCustomUrl === "string" ? settings.value.desktopUpdateCustomUrl : "");
+const savingUpdateUrl = ref(false);
+const updateUrlError = ref("");
+
+async function saveCustomUpdateUrl() {
+  if (savingUpdateUrl.value) return;
+  const url = customUpdateUrl.value.trim();
+  updateUrlError.value = "";
+  try {
+    if (url && !URL.canParse(url)) throw new Error("请输入有效的 HTTP(S) 目录地址");
+    if (url) {
+      const parsed = new URL(url);
+      if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password || parsed.search || parsed.hash || url.length > 2048)
+        throw new Error("请输入不含账号、查询参数或锚点的 HTTP(S) 目录地址");
+    }
+    savingUpdateUrl.value = true;
+    await saveSettings(current => ({
+      desktopUpdateCustomUrl: url,
+      ...(url || current.desktopUpdateSource !== "custom" ? {} : { desktopUpdateSource: "official" }),
+    }));
+    customUpdateUrl.value = url;
+    ElMessage.success("自定义更新源已保存");
+  } catch (error) {
+    updateUrlError.value = axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || error.message : error instanceof Error ? error.message : "保存更新源失败";
+  } finally {
+    savingUpdateUrl.value = false;
+  }
+}
 
 async function resetHello() {
   if (storageBusy.value) return;
@@ -372,6 +412,15 @@ async function openDevTools() {
       flex-wrap: wrap;
       gap: 16px;
 
+      .updateSourceEditor {
+        display: flex;
+        flex: 1;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-width: min(100%, 280px);
+
+        .el-input { flex: 1; min-width: 200px; }
+      }
     }
 
     .storageManager {

@@ -27,6 +27,7 @@
             </template>
             <el-option label="官方源" value="official" />
             <el-option label="GitHub" value="github" />
+            <el-option v-if="customUpdateUrl" label="自定义源" value="custom" />
           </el-select>
           <el-badge isDot :hidden="!hasDesktopUpdate">
             <el-button size="small" type="primary" plain :loading="checking" :disabled="sourceSaving" @click="openUpdate">
@@ -201,6 +202,8 @@ import type { updateSnapshot } from "@toonflow/server/desktop";
 import { saveSettings } from "@/stores/settings";
 import {
   desktopUpdateSource as updateSource,
+  desktopUpdateCustomUrl as customUpdateUrl,
+  desktopUpdateKey as updateKey,
   desktopUpdateSnapshot as snapshot,
   desktopUpdateError as updateError,
   desktopUpdateChecking,
@@ -251,10 +254,10 @@ onMounted(async () => {
 onMounted(async () => {
   if (!isDesktop || desktopUpdateChecking.value) return;
   const previous = snapshot.value;
-  const source = updateSource.value;
+  const source = updateKey.value;
   try {
     const { data } = await axios.get<{ data: updateSnapshot }>("/api/desktop/update", { signal: controller.signal, timeout: 10000 });
-    if (snapshot.value === previous && updateSource.value === source && !sourceSaving.value && !action.value && !desktopUpdateChecking.value) {
+    if (snapshot.value === previous && updateKey.value === source && !sourceSaving.value && !action.value && !desktopUpdateChecking.value) {
       snapshot.value = data.data;
       updateError.value = data.data.error;
     }
@@ -305,12 +308,10 @@ function openUpdate() {
 
 async function saveUpdateSource(source: string) {
   if (source === updateSource.value || sourceSaving.value || working.value) return;
+  if (source !== "official" && source !== "github" && (source !== "custom" || !customUpdateUrl.value)) return;
   sourceSaving.value = true;
   try {
-    await saveSettings(() => ({ desktopUpdateSource: source === "github" ? "github" : "official" }));
-    if (snapshot.value)
-      snapshot.value = { ...snapshot.value, latestVersion: "", latestHash: "", error: "", updateAvailable: false, updateReady: false };
-    updateError.value = "";
+    await saveSettings(() => ({ desktopUpdateSource: source }));
   } catch (error) {
     ElMessage.error(getUpdateError(error));
   } finally {
