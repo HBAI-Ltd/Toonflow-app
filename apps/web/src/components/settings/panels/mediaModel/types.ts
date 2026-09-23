@@ -11,6 +11,7 @@ export type MediaProvider = {
   label: string;
   version?: string;
   readme?: string;
+  modelsUrl?: string;
   models: MediaProviderModel[];
   revision: string;
   loadError?: string;

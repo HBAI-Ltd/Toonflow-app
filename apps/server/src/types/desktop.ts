@@ -25,7 +25,7 @@ export interface DesktopRuntime {
   ready(failed?: boolean): Promise<void>;
   openDevTools(): void;
   updater: {
-    getLocalInfo(): Promise<{ version: string; channel: string; hash: string }>;
+    getLocalInfo(): Promise<{ version: string; channel: string; hash: string; baseUrl: string }>;
     updateInfo(): { version?: string; hash?: string; error?: string; updateAvailable?: boolean; updateReady?: boolean } | undefined;
     checkForUpdate(): Promise<{ error?: string }>;
     downloadUpdate?(): Promise<void>;

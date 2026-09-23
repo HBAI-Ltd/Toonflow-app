@@ -44,7 +44,7 @@ export default {
     },
   },
   release: {
-    baseUrl: process.env.updateBaseUrl ?? "https://api.toonflow.net/version/desktopUpdates",
+    baseUrl: "https://api.toonflow.net/version/desktopUpdates",
     // ACT: 常规构建不访问更新服务器；release:desktop 显式开启增量构建。
     generatePatch: process.env.generateUpdatePatch === "1",
   },

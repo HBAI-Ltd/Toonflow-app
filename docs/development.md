@@ -190,9 +190,9 @@ Intel Mac 在安装兼容 SDK 后，先运行桌面开发或构建命令生成�
 | macOS Intel | DMG | `stable-macos-x64-*` |
 | macOS Apple Silicon | DMG | `stable-macos-arm64-*` |
 
-各平台包含完整更新包 `.tar.zst`、更新清单 `*-update.json`，以及**上一发布版本 → 当前版本**的 `<平台前缀>-<旧 hash>.patch`。首次发布找不到该平台清单（HTTP 404）时只生成安装包和完整更新包；其他网络错误、无效清单或缺失 patch 会中止构建。版本号必须高于更新源中的上一版。
+各平台包含完整更新包 `.tar.zst`、更新清单 `*-update.json`，以及**官方更新源中的上一版 → 当前版本**的 `<平台前缀>-<旧 hash>.patch`。首次发布找不到该平台清单（HTTP 404）时只生成安装包和完整更新包；其他网络错误、无效清单或缺失 patch 会中止构建。版本号必须高于更新源中的上一版。
 
-未配置更新地址时，正式发布使用本仓库的 `releases/latest/download` 获取上一版，并将该地址写入客户端。若使用独立更新服务，在仓库 **Settings → Secrets and variables → Actions → Variables** 设置 `UPDATE_BASE_URL`；此地址同时用于客户端更新和构建补丁。GitHub 工作流不会自动同步到独立更新服务，构建后仍需按下方命令发布到该服务；已安装客户端继续使用安装时的更新地址。
+构建始终使用官方更新源 `https://api.toonflow.net/version/desktopUpdates` 读取上一版，并将其写入安装包。GitHub Release 仍上传安装包和更新文件，但工作流不会自动同步到官方更新服务；构建后需按下方命令单独发布，下一次增量构建才能使用这次的版本作为基线。客户端可在“设置 → 关于”选择更新源，默认使用官方更新源，也可切换到 GitHub Releases。
 
 [Debug 工作流](../.github/workflows/debug.yml) 可单独选择平台或全部平台，产物保留 7 天，不创建 Release。默认只打完整包，勾选 `generatePatch` 可验证增量构建。CI 构建和归档检查不等于已验证真实安装、GUI 启动或 macOS Gatekeeper。
 

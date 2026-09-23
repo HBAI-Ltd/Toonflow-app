@@ -11,19 +11,30 @@
       </div>
     </div>
 
-    <el-card class="infoCard" shadow="never">
+    <el-card class="infoCard updateCard" shadow="never">
       <div class="cardHeader">
-        <div class="cardLabel">
-          <icon-refresh :size="18" aria-hidden="true" />
-          <span>版本更新</span>
+        <div class="updateCopy">
+          <div class="cardLabel">
+            <icon-refresh :size="18" aria-hidden="true" />
+            <span>版本更新</span>
+          </div>
         </div>
-        <el-badge isDot :hidden="!hasDesktopUpdate">
-          <el-button size="small" type="primary" plain :loading="checking" @click="openUpdate">
-            {{ snapshot?.updateReady ? "更新已就绪" : snapshot?.updating || action === "download" ? "查看更新进度" : "检查更新" }}
-          </el-button>
-        </el-badge>
+        <div class="updateActions">
+          <el-select :modelValue="updateSource" aria-label="更新源" size="small" :disabled="working || sourceSaving" @change="saveUpdateSource">
+            <template #prefix>
+              <icon-brand-github v-if="updateSource === 'github'" :size="14" aria-hidden="true" />
+              <icon-world v-else :size="14" aria-hidden="true" />
+            </template>
+            <el-option label="官方源" value="official" />
+            <el-option label="GitHub" value="github" />
+          </el-select>
+          <el-badge isDot :hidden="!hasDesktopUpdate">
+            <el-button size="small" type="primary" plain :loading="checking" :disabled="sourceSaving" @click="openUpdate">
+              {{ snapshot?.updateReady ? "更新已就绪" : snapshot?.updating || action === "download" ? "查看更新进度" : "检查更新" }}
+            </el-button>
+          </el-badge>
+        </div>
       </div>
-      <p class="cardDescription">检查是否有可用的新版本</p>
       <div v-if="snapshot?.hash" class="buildInfo">
         <span>构建标识</span>
         <code>{{ snapshot.hash }}</code>
@@ -35,7 +46,6 @@
         <icon-brand-github class="repositoryIcon" :size="22" aria-hidden="true" />
         <div class="repositoryInfo">
           <span class="repositoryTitle">GitHub 仓库</span>
-          <span class="repositoryAddress">HBAI-Ltd/Toonflow-app</span>
         </div>
         <icon-external-link class="externalIcon" :size="16" aria-hidden="true" />
       </a>
@@ -46,7 +56,6 @@
         <icon-world class="repositoryIcon" :size="22" aria-hidden="true" />
         <div class="repositoryInfo">
           <span class="repositoryTitle">官方中转平台 TF-Router</span>
-          <span class="repositoryAddress">api.toonflow.net</span>
         </div>
         <icon-external-link class="externalIcon" :size="16" aria-hidden="true" />
       </a>
@@ -189,7 +198,15 @@ import {
 import logoUrl from "@toonflow/assets/logo.svg";
 import tf, { type TfSponsor } from "@/lib/tf";
 import type { updateSnapshot } from "@toonflow/server/desktop";
-import { desktopUpdateSnapshot as snapshot, desktopUpdateError as updateError, desktopUpdateChecking, hasDesktopUpdate, checkDesktopUpdate } from "@/stores/desktopUpdate";
+import { saveSettings } from "@/stores/settings";
+import {
+  desktopUpdateSource as updateSource,
+  desktopUpdateSnapshot as snapshot,
+  desktopUpdateError as updateError,
+  desktopUpdateChecking,
+  hasDesktopUpdate,
+  checkDesktopUpdate,
+} from "@/stores/desktopUpdate";
 
 const messageMarkdown = defineAsyncComponent(() => import("@/components/messageMarkdown.vue"));
 const repositoryUrl = "https://github.com/HBAI-Ltd/Toonflow-app";
@@ -197,6 +214,7 @@ const communityUrl = "https://work.weixin.qq.com/u/vc36adcc89845edcbe?v=5.0.3.63
 const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
 const currentVersion = computed(() => snapshot.value?.version || import.meta.env.appVersion);
 const action = ref<"check" | "download" | "apply" | null>(null);
+const sourceSaving = ref(false);
 const checking = computed(() => desktopUpdateChecking.value || action.value === "check");
 const working = computed(() => checking.value || !!action.value || !!snapshot.value?.updating);
 const resultVisible = ref(false);
@@ -233,9 +251,10 @@ onMounted(async () => {
 onMounted(async () => {
   if (!isDesktop || desktopUpdateChecking.value) return;
   const previous = snapshot.value;
+  const source = updateSource.value;
   try {
     const { data } = await axios.get<{ data: updateSnapshot }>("/api/desktop/update", { signal: controller.signal, timeout: 10000 });
-    if (snapshot.value === previous && !action.value && !desktopUpdateChecking.value) {
+    if (snapshot.value === previous && updateSource.value === source && !sourceSaving.value && !action.value && !desktopUpdateChecking.value) {
       snapshot.value = data.data;
       updateError.value = data.data.error;
     }
@@ -284,12 +303,27 @@ function openUpdate() {
   void runUpdate("check");
 }
 
+async function saveUpdateSource(source: string) {
+  if (source === updateSource.value || sourceSaving.value || working.value) return;
+  sourceSaving.value = true;
+  try {
+    await saveSettings(() => ({ desktopUpdateSource: source === "github" ? "github" : "official" }));
+    if (snapshot.value)
+      snapshot.value = { ...snapshot.value, latestVersion: "", latestHash: "", error: "", updateAvailable: false, updateReady: false };
+    updateError.value = "";
+  } catch (error) {
+    ElMessage.error(getUpdateError(error));
+  } finally {
+    sourceSaving.value = false;
+  }
+}
+
 function getUpdateError(error: unknown) {
   return axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || error.message : String(error);
 }
 
 async function runUpdate(nextAction: "check" | "download" | "apply") {
-  if (working.value) return;
+  if (working.value || sourceSaving.value) return;
   updateError.value = "";
   if (!isDesktop) {
     updateError.value = "请在桌面客户端中检查更新。";
@@ -300,7 +334,9 @@ async function runUpdate(nextAction: "check" | "download" | "apply") {
     if (nextAction === "check") await checkDesktopUpdate();
     else {
       const { data } = await axios.post<{ data: updateSnapshot }>(`/api/desktop/update/${nextAction}`, null, {
-        headers: { "x-toonflow-desktop": "1" }, signal: controller.signal, timeout: 0,
+        headers: { "x-toonflow-desktop": "1" },
+        signal: controller.signal,
+        timeout: 0,
       });
       snapshot.value = data.data;
     }
@@ -399,11 +435,27 @@ async function runUpdate(nextAction: "check" | "download" | "apply") {
       }
     }
 
-    .cardDescription {
-      margin: 8px 0 0;
-      color: var(--el-text-color-secondary);
-      font-size: 12px;
-      line-height: 1.5;
+    &.updateCard {
+      .cardHeader {
+        .updateCopy {
+          flex: 1;
+          min-width: 120px;
+
+          .cardDescription {
+            margin-top: 4px;
+          }
+        }
+
+        .updateActions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          :deep(.el-select) {
+            width: 120px;
+          }
+        }
+      }
     }
 
     .buildInfo {
@@ -411,9 +463,7 @@ async function runUpdate(nextAction: "check" | "download" | "apply") {
       align-items: baseline;
       flex-wrap: wrap;
       gap: 8px 12px;
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px solid var(--el-border-color-lighter);
+      margin-top: 12px;
       color: var(--el-text-color-secondary);
       font-size: 12px;
 
@@ -464,14 +514,6 @@ async function runUpdate(nextAction: "check" | "download" | "apply") {
           .repositoryTitle {
             font-size: 14px;
             font-weight: 600;
-          }
-          .repositoryAddress {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px 10px;
-            color: var(--el-text-color-secondary);
-            font-size: 12px;
-            overflow-wrap: anywhere;
           }
         }
       }

@@ -52,6 +52,8 @@ export async function createApp({
   app.use(express.urlencoded({ extended: true, limit: "100mb" }));
   app.use("/api/desktop", desktopRequest);
 
+  const { default: initializeProviderModels } = await import("@/utils/ai/initialize");
+  await initializeProviderModels();
   const router = await import("@/router");
   router.default(app);
   const [{ createMcpRouter }, { getMcpTools }, { authorizeMcp }, { skillResources }] = await Promise.all([

@@ -54,7 +54,6 @@ jobs:
     outputs:
       version: ${{ steps.config.outputs.version }}
       matrix: ${{ steps.config.outputs.matrix }}
-      updateBaseUrl: ${{ steps.config.outputs.updateBaseUrl }}
       commit: ${{ steps.checkout.outputs.commit }}
     steps:
       - uses: actions/checkout@v7
@@ -71,8 +70,6 @@ jobs:
           buildTarget: ${{ inputs.target }}
           buildRef: ${{ inputs.ref || github.ref_name }}
           buildVersion: ${{ inputs.version }}
-          generatePatch: ${{ inputs.generatePatch }}
-          configuredUpdateUrl: ${{ vars.UPDATE_BASE_URL }}
         run: |
           bun -e '
           import { appendFileSync } from "node:fs";
@@ -88,14 +85,7 @@ jobs:
           const refVersion = /^v\d+\.\d+\.\d+$/.test(process.env.buildRef ?? "") ? process.env.buildRef : "";
           const version = (process.env.buildVersion?.trim() || refVersion || config.app.version).replace(/^v/, "");
           if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("版本号必须为 X.Y.Z，与 release:desktop 保持一致");
-          const updateBaseUrl = process.env.configuredUpdateUrl?.trim() || (process.env.generatePatch === "true"
-            ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/releases/latest/download`
-            : config.release.baseUrl);
-          const url = new URL(updateBaseUrl);
-          if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || /[\r\n]/.test(updateBaseUrl)) {
-            throw new Error("UPDATE_BASE_URL 必须为不含账号密码的 HTTP(S) 地址");
-          }
-          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nmatrix=${JSON.stringify({ include })}\nupdateBaseUrl=${updateBaseUrl}\n`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nmatrix=${JSON.stringify({ include })}\n`);
           '
 
   build:
@@ -108,7 +98,6 @@ jobs:
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     env:
       appVersion: ${{ needs.prepare.outputs.version }}
-      updateBaseUrl: ${{ needs.prepare.outputs.updateBaseUrl }}
       releaseMode: ${{ inputs.generatePatch && '--auto' || '--initial' }}
     steps:
       - uses: actions/checkout@v7
