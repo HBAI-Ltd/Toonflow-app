@@ -10,7 +10,7 @@
         <el-button tag="a" href="https://api.toonflow.net/console/plugIn" target="_blank" rel="noopener noreferrer" size="small" text :icon="IconExternalLink">
           网页版市场
         </el-button>
-        <el-button tag="a" href="https://scnpmvaimya1.feishu.cn/docx/I6nZdSHBeoimGQx5HvtcrYgMntd" target="_blank" rel="noopener noreferrer" size="small" text :icon="IconBook">
+        <el-button tag="a" href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd" target="_blank" rel="noopener noreferrer" size="small" text :icon="IconBook">
           开发者文档
         </el-button>
         <template v-if="activeTab === 'installed'">

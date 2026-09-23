@@ -112,7 +112,7 @@
   <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">下载客户端</a> ·
   <a href="https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink">使用教程</a> ·
   <a href="https://api.toonflow.net/console/plugIn">插件市场</a> ·
-  <a href="https://scnpmvaimya1.feishu.cn/docx/I6nZdSHBeoimGQx5HvtcrYgMntd">开发者文档</a> ·
+  <a href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd">开发者文档</a> ·
   <a href="https://api.toonflow.net/">官方模型平台</a>
 </p>
 
