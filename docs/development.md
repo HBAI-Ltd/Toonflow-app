@@ -97,6 +97,7 @@ bun run dev
 | `bun run start:server` | 运行 `build/server/` 中已构建的服务。 |
 | `bun run build:desktop` | 构建当前平台的桌面应用及随包资源。 |
 | `bun run package:desktop` | 生成当前平台的 Windows NSIS 安装包或 macOS DMG。 |
+| `bun run release:desktop <版本号> --auto` | 生成当前平台安装包、完整更新包，并在存在上一版时生成 patch。 |
 | `bun run typecheck` | 单独执行各工作区的类型检查。 |
 
 构建与类型检查分别执行。新增、移动或删除业务接口后，在 `apps/server` 执行 `bun run routes` 生成路由。
@@ -177,17 +178,33 @@ Intel Mac 在安装兼容 SDK 后，先运行桌面开发或构建命令生成�
 <details>
 <summary><strong>发布、更新与插件同步</strong></summary>
 
-- [Debug 工作流](../.github/workflows/debug.yml) 支持手动选择 Windows x64、Apple Silicon、Intel Mac 或全部目标，产物保留 7 天，不创建 Release。
-- [Release 工作流](../.github/workflows/release.yml) 在推送 `vX.Y.Z` 标签后构建桌面包，并上传到 GitHub Release。可通过 Actions Variable `UPDATE_BASE_URL` 配置客户端更新地址。
-- CI 构建和归档检查不等于已验证真实安装、GUI 启动或 macOS Gatekeeper。
+**一次构建三个平台**
+
+在 GitHub 仓库打开 **Actions → Release desktop → Run workflow**，填写版本号（例如 `2.0.1`），运行即可。`ref` 留空使用所选分支，也可指定标签或提交。推送 `vX.Y.Z` 标签同样会触发发布。
+
+工作流分别在 Windows、Intel Mac 和 Apple Silicon 运行器上构建，全部成功后统一上传到对应 GitHub Release：
+
+| 平台 | 安装包 | 更新文件 |
+| --- | --- | --- |
+| Windows x64 | `toonflow-<版本号>-Setup.exe` | `stable-win-x64-*` |
+| macOS Intel | DMG | `stable-macos-x64-*` |
+| macOS Apple Silicon | DMG | `stable-macos-arm64-*` |
+
+各平台包含完整更新包 `.tar.zst`、更新清单 `*-update.json`，以及**上一发布版本 → 当前版本**的 `<平台前缀>-<旧 hash>.patch`。首次发布找不到该平台清单（HTTP 404）时只生成安装包和完整更新包；其他网络错误、无效清单或缺失 patch 会中止构建。版本号必须高于更新源中的上一版。
+
+未配置更新地址时，正式发布使用本仓库的 `releases/latest/download` 获取上一版，并将该地址写入客户端。若使用独立更新服务，在仓库 **Settings → Secrets and variables → Actions → Variables** 设置 `UPDATE_BASE_URL`；此地址同时用于客户端更新和构建补丁。GitHub 工作流不会自动同步到独立更新服务，构建后仍需按下方命令发布到该服务；已安装客户端继续使用安装时的更新地址。
+
+[Debug 工作流](../.github/workflows/debug.yml) 可单独选择平台或全部平台，产物保留 7 天，不创建 Release。默认只打完整包，勾选 `generatePatch` 可验证增量构建。CI 构建和归档检查不等于已验证真实安装、GUI 启动或 macOS Gatekeeper。
+
+**本机打包与独立更新服务**
 
 独立更新服务与业务 Server 分开运行，默认地址为 `http://127.0.0.1:8091`。其配置、部署与发布规则见 [更新服务说明](../apps/updateServer/readme.md)。
 
 ```sh
 bun run start:updateServer
 
-# 首次基线，版本号仅为示例
-bun run release:desktop 2.0.0 --initial
+# 本机仅构建当前系统与架构；自动判断是否已有上一版
+bun run release:desktop 2.0.0 --auto
 bun run publish:update build/desktop/releases/2.0.0
 
 # 服务器保留上一版时，构建并发布下一版本
@@ -195,7 +212,7 @@ bun run release:desktop 2.0.1
 bun run publish:update build/desktop/releases/2.0.1
 ```
 
-Mac 发布目录增加 `macX64/` 或 `macArm64/`，例如 `build/desktop/releases/macArm64/2.0.1`。同一平台、架构和版本不能重复发布；普通构建不访问更新服务器，非 initial 的 release 才生成增量更新。GitHub Release 工作流生成完整更新包，不自动发布到独立更新服务。
+Mac 发布目录增加 `macX64/` 或 `macArm64/`，例如 `build/desktop/releases/macArm64/2.0.1`。所有 release 模式都会生成安装包；`--auto` 自动判断基线，不带选项要求已有上一版，`--initial` 跳过基线检查且不生成 patch。同一平台、架构和版本不能重复生成快照。普通 `build:desktop`、`package:desktop` 不访问更新服务器。
 
 桌面用户可在“设置 → 关于”检查更新、下载并重启应用。Windows 更新交换程序目录，保留 `data/` 和 `WebView2/`；卸载时也默认保留这些数据，选择“同时删除用户数据”才会一并清理。
 

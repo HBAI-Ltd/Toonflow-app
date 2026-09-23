@@ -14,6 +14,10 @@ on:
       version:
         description: 包版本号（如 2.0.1），留空使用标签或项目配置
         type: string
+      generatePatch:
+        description: 基于上一版本生成增量更新，尚无基线时生成首版完整包
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       target:
@@ -25,10 +29,16 @@ on:
       version:
         type: string
         default: ""
+      generatePatch:
+        type: boolean
+        default: false
     outputs:
       version:
         description: 实际构建的包版本号
         value: ${{ jobs.prepare.outputs.version }}
+      commit:
+        description: 实际构建的提交
+        value: ${{ jobs.prepare.outputs.commit }}
 
 permissions:
   contents: read
@@ -61,6 +71,7 @@ jobs:
           buildTarget: ${{ inputs.target }}
           buildRef: ${{ inputs.ref || github.ref_name }}
           buildVersion: ${{ inputs.version }}
+          generatePatch: ${{ inputs.generatePatch }}
           configuredUpdateUrl: ${{ vars.UPDATE_BASE_URL }}
         run: |
           bun -e '
@@ -77,7 +88,9 @@ jobs:
           const refVersion = /^v\d+\.\d+\.\d+$/.test(process.env.buildRef ?? "") ? process.env.buildRef : "";
           const version = (process.env.buildVersion?.trim() || refVersion || config.app.version).replace(/^v/, "");
           if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("版本号必须为 X.Y.Z，与 release:desktop 保持一致");
-          const updateBaseUrl = process.env.configuredUpdateUrl?.trim() || config.release.baseUrl;
+          const updateBaseUrl = process.env.configuredUpdateUrl?.trim() || (process.env.generatePatch === "true"
+            ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/releases/latest/download`
+            : config.release.baseUrl);
           const url = new URL(updateBaseUrl);
           if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || /[\r\n]/.test(updateBaseUrl)) {
             throw new Error("UPDATE_BASE_URL 必须为不含账号密码的 HTTP(S) 地址");
@@ -96,6 +109,7 @@ jobs:
     env:
       appVersion: ${{ needs.prepare.outputs.version }}
       updateBaseUrl: ${{ needs.prepare.outputs.updateBaseUrl }}
+      releaseMode: ${{ inputs.generatePatch && '--auto' || '--initial' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -132,15 +146,14 @@ jobs:
           }
           if (!(Test-Path -LiteralPath $nsisPath)) { throw '找不到 makensis.exe' }
           "NSIS_PATH=$nsisPath" >> $env:GITHUB_ENV
-      - name: 构建 Windows 安装包及完整更新文件
+      - name: 构建 Windows 安装包及更新文件
         if: runner.os == 'Windows'
         # ACT: 使用原生环境，避免 Git Bash 的 GNU tar 将 Windows 盘符识别为远程主机。
         shell: pwsh
-        run: bun run release:desktop "$env:appVersion" --initial
-      - name: 构建 macOS 安装包及完整更新文件
+        run: bun run release:desktop "$env:appVersion" "$env:releaseMode"
+      - name: 构建 macOS 安装包及更新文件
         if: runner.os == 'macOS'
-        # ACT: CI 构建完整包，不依赖更新服务器已有版本，也不向更新服务器发布。
-        run: bun run release:desktop "$appVersion" --initial
+        run: bun run release:desktop "$appVersion" "$releaseMode"
       - name: 验证 macOS 更新包与安装镜像
         if: runner.os == 'macOS'
         env:

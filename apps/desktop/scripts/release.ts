@@ -6,12 +6,13 @@ import desktopConfig from "../../../electrobun.config";
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
-  options: { initial: { type: "boolean" } },
+  options: { initial: { type: "boolean" }, auto: { type: "boolean" } },
 });
 const version = positionals[0];
 if (positionals.length !== 1 || !/^\d+\.\d+\.\d+$/.test(version)) {
-  throw new Error("用法：bun run release:desktop 2.0.0 --initial，后续版本使用 bun run release:desktop 2.0.1");
+  throw new Error("用法：bun run release:desktop 2.0.1 [--auto | --initial]；--auto 在更新源没有基线时自动构建首次版本。");
 }
+if (values.initial && values.auto) throw new Error("--initial 与 --auto 不能同时使用。");
 const isMac = process.platform === "darwin";
 if ((!isMac || !["x64", "arm64"].includes(process.arch)) && (process.platform !== "win32" || process.arch !== "x64")) {
   throw new Error("增量发布需在 Windows x64 或 macOS x64/arm64 本机执行。");
@@ -27,13 +28,25 @@ const prefix = `stable-${platform}-${process.arch}`;
 const manifestName = `${prefix}-update.json`;
 if (existsSync(releaseDir)) throw new Error(`版本已保留，请使用新版本号：${releaseDir}`);
 
-let previousHash: string | undefined;
+let previousResponse: Response | undefined;
 if (!values.initial) {
-  const response = await fetch(`${desktopConfig.release.baseUrl.replace(/\/+$/, "")}/${manifestName}`, {
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!response.ok) throw new Error("更新服务器尚无基线，请先构建并发布 --initial 版本。");
-  const previous = await response.json();
+  try {
+    previousResponse = await fetch(`${desktopConfig.release.baseUrl.replace(/\/+$/, "")}/${manifestName}`, {
+      signal: AbortSignal.timeout(30000),
+    });
+  } catch (error) {
+    throw new Error("无法读取上一版本，请检查更新地址与网络；为避免漏打补丁，已停止构建。", { cause: error });
+  }
+}
+const initial = values.initial || (values.auto && previousResponse?.status === 404);
+let previousHash: string | undefined;
+if (!initial) {
+  if (!previousResponse?.ok) {
+    throw new Error(previousResponse?.status === 404
+      ? "更新源尚无基线，请使用 --initial 或 --auto 构建首次版本。"
+      : `读取上一版本失败（HTTP ${previousResponse?.status}），已停止构建。`);
+  }
+  const previous = await previousResponse.json();
   if (!previous || previous.platform !== platform || previous.arch !== process.arch ||
       typeof previous.hash !== "string" || !/^[a-zA-Z0-9]+$/.test(previous.hash) ||
       typeof previous.version !== "string" || !/^\d+\.\d+\.\d+$/.test(previous.version)) {
@@ -56,11 +69,13 @@ if (!values.initial) {
     throw new Error(`新版本 ${version} 必须高于服务器版本 ${previous.version}。`);
   }
   console.log(`构建增量更新：${previous.version} → ${version}`);
+} else {
+  console.log(`构建首次完整版本：${version}，不生成增量补丁。`);
 }
 
-await $`${process.execPath} run ${values.initial ? "package:desktop" : "build:desktop"}`
+await $`${process.execPath} run package:desktop`
   .cwd(projectDir)
-  .env({ ...process.env, appVersion: version, generateUpdatePatch: values.initial ? "0" : "1" });
+  .env({ ...process.env, appVersion: version, generateUpdatePatch: initial ? "0" : "1" });
 
 // ACT: 本机 SDK 产物直接读取，完整清单校验仅用于远程基线。
 const manifest = await Bun.file(join(artifactDir, manifestName)).json();
@@ -70,13 +85,11 @@ if (manifest.version !== version) {
 const names: string[] = [isMac && process.arch === "x64"
   ? `${prefix}-${desktopConfig.app.name.replace(/\s/g, "")}.app.tar.zst`
   : manifest.artifact.file];
-if (values.initial) {
-  if (isMac) {
-    const installers = readdirSync(artifactDir).filter((name) => name.endsWith(".dmg"));
-    if (installers.length !== 1) throw new Error("Mac 基线必须包含且仅包含一个 DMG 安装包。");
-    names.push(installers[0]!);
-  } else names.push(`toonflow-${version}-Setup.exe`);
-}
+if (isMac) {
+  const installers = readdirSync(artifactDir).filter((name) => name.endsWith(".dmg"));
+  if (installers.length !== 1) throw new Error("Mac 发布必须包含且仅包含一个 DMG 安装包。");
+  names.push(installers[0]!);
+} else names.push(`toonflow-${version}-Setup.exe`);
 if (previousHash) names.push(`${prefix}-${previousHash}.patch`);
 for (const name of names) {
   if (!existsSync(join(artifactDir, name))) throw new Error(`构建产物缺失，未创建发布快照：${name}`);

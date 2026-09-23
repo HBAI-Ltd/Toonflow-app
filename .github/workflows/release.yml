@@ -1,6 +1,15 @@
 name: Release desktop
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 发布版本号（X.Y.Z）
+        type: string
+        required: true
+      ref:
+        description: 代码分支、标签或提交，留空使用当前选择的版本
+        type: string
   push:
     tags:
       - "v*"
@@ -9,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: desktop-release
   cancel-in-progress: false
 
 jobs:
@@ -18,8 +27,9 @@ jobs:
     uses: ./.github/workflows/debug.yml
     with:
       target: all
-      ref: ${{ github.sha }}
-      version: ${{ github.ref_name }}
+      ref: ${{ inputs.ref || github.sha }}
+      version: ${{ inputs.version || github.ref_name }}
+      generatePatch: true
 
   release:
     name: 发布 GitHub Release
@@ -28,6 +38,24 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: 校验已有版本标签
+        env:
+          GH_TOKEN: ${{ github.token }}
+          releaseVersion: ${{ needs.build.outputs.version }}
+          buildCommit: ${{ needs.build.outputs.commit }}
+        run: |
+          node --input-type=module <<'JS'
+          const tag = `refs/tags/v${process.env.releaseVersion}`;
+          const response = await fetch(`${process.env.GITHUB_API_URL}/repos/${process.env.GITHUB_REPOSITORY}/commits/${encodeURIComponent(tag)}`, {
+            headers: { Authorization: `Bearer ${process.env.GH_TOKEN}`, Accept: "application/vnd.github+json" },
+            signal: AbortSignal.timeout(30000),
+          });
+          if (response.status !== 404) {
+            if (!response.ok) throw new Error(`读取版本标签失败（HTTP ${response.status}）`);
+            const { sha } = await response.json();
+            if (sha !== process.env.buildCommit) throw new Error(`${tag} 与构建提交不一致，请使用新版本号或选择该标签对应的代码。`);
+          }
+          JS
       - name: 下载各平台产物
         uses: actions/download-artifact@v8
         with:
@@ -37,8 +65,10 @@ jobs:
       - name: 发布安装包及更新文件
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: v${{ needs.build.outputs.version }}
+          target_commitish: ${{ needs.build.outputs.commit }}
           name: Toonflow ${{ needs.build.outputs.version }}
+          make_latest: true
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: artifacts/*
