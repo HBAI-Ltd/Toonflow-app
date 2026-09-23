@@ -37,6 +37,7 @@
       :zoomOnScroll="false"
       :zoomOnPinch="active && !settingsVisible"
       :panOnScroll="active && !settingsVisible"
+      :panOnScrollSpeed="1"
       :panOnDrag="handMode ? true : [1]"
       :panOnScrollMode="PanOnScrollMode.Free"
       :delete-key-code="null"
@@ -661,12 +662,8 @@ function zoomCanvas(event: WheelEvent | (Event & { scale: number })) {
   if (event.type === "gestureend") gestureScale = undefined;
   if (!props.active || props.settingsVisible || document.fullscreenElement || flow.userSelectionActive.value) return;
   if (!(event.target instanceof Element) || !event.target.closest(".vue-flow__pane, .vue-flow__node, .vue-flow__edge, .vue-flow__nodesselection")) return;
-  const zoom = flow.d3Zoom.value;
-  const selection = flow.d3Selection.value;
-  const bounds = selection?.node()?.getBoundingClientRect();
-  if (!zoom || !selection || !bounds) return;
   let factor: number;
-  let point = pointerPosition ?? { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+  let point = pointerPosition;
   if ("scale" in event) {
     if (!Number.isFinite(event.scale) || event.scale <= 0) return;
     factor = event.type === "gesturechange" && gestureScale !== undefined ? event.scale / gestureScale : 1;
@@ -683,9 +680,16 @@ function zoomCanvas(event: WheelEvent | (Event & { scale: number })) {
     }
     point = { x: event.clientX, y: event.clientY };
   }
+  const zoom = flow.d3Zoom.value;
+  const selection = flow.d3Selection.value;
+  if (!zoom || !selection) return;
   event.preventDefault();
   event.stopPropagation();
-  if (factor !== 1) selection.call<[number, [number, number], Event]>(zoom.scaleBy, factor, [point.x - bounds.left, point.y - bounds.top], event);
+  if (factor === 1) return;
+  const bounds = selection.node()?.getBoundingClientRect();
+  if (!bounds) return;
+  point ??= { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+  selection.call<[number, [number, number], Event]>(zoom.scaleBy, factor, [point.x - bounds.left, point.y - bounds.top], event);
 }
 
 function updateCanvasKeys(event: KeyboardEvent) {
