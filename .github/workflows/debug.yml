@@ -9,7 +9,7 @@ on:
         default: windowsX64
         options: [windowsX64, macArm64, macX64, all]
       ref:
-        description: 代码分支、标签或提交，留空使用当前选择的版本
+        description: 代码分支、标签或提交；ARM 签名要求与所选工作流版本为同一提交
         type: string
       version:
         description: 包版本号（如 2.0.1），留空使用标签或项目配置
@@ -32,6 +32,13 @@ on:
       generatePatch:
         type: boolean
         default: false
+    secrets:
+      MACOS_CERTIFICATE_BASE64:
+        description: 包含 Developer ID Application 证书及私钥的 P12 Base64
+        required: false
+      MACOS_CERTIFICATE_PASSWORD:
+        description: P12 导出密码
+        required: false
     outputs:
       version:
         description: 实际构建的包版本号
@@ -91,6 +98,7 @@ jobs:
   build:
     name: 构建 ${{ matrix.target }}
     needs: prepare
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     strategy:
@@ -99,11 +107,22 @@ jobs:
     env:
       appVersion: ${{ needs.prepare.outputs.version }}
       releaseMode: ${{ inputs.generatePatch && '--auto' || '--initial' }}
+      macCodesign: ${{ matrix.target == 'macArm64' && '1' || '0' }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.prepare.outputs.commit }}
+          # ACT: 签名只使用触发工作流的代码，避免额外 ref 引入未审查的 PR 代码。
+          ref: ${{ matrix.target == 'macArm64' && github.sha || needs.prepare.outputs.commit }}
           persist-credentials: false
+      - name: 校验 ARM 签名来源
+        if: matrix.target == 'macArm64'
+        env:
+          buildCommit: ${{ needs.prepare.outputs.commit }}
+        run: |
+          if [[ "$(git rev-parse HEAD)" != "$buildCommit" ]]; then
+            echo '::error::ARM 签名不能构建其他提交。请选择对应的工作流分支或标签，并将 ref 留空。'
+            exit 1
+          fi
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
@@ -140,14 +159,60 @@ jobs:
         # ACT: 使用原生环境，避免 Git Bash 的 GNU tar 将 Windows 盘符识别为远程主机。
         shell: pwsh
         run: bun run release:desktop "$env:appVersion" "$env:releaseMode"
+      - name: 导入 ARM 签名证书
+        if: matrix.target == 'macArm64'
+        id: signing
+        env:
+          certificateBase64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+          certificatePassword: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          set +x
+          : "${certificateBase64:?请配置 MACOS_CERTIFICATE_BASE64 Secret}"
+          : "${certificatePassword:?请配置 MACOS_CERTIFICATE_PASSWORD Secret}"
+          umask 077
+          certificatePath="$RUNNER_TEMP/toonflowSigning.p12"
+          keychainPath="$RUNNER_TEMP/toonflowSigning.keychain-db"
+          trap 'rm -f "$certificatePath"' EXIT
+          keychainPassword="$(openssl rand -hex 32)"
+          echo "::add-mask::$keychainPassword"
+          printf '%s' "$certificateBase64" | base64 --decode > "$certificatePath"
+          security create-keychain -p "$keychainPassword" "$keychainPath"
+          security set-keychain-settings -lut 7200 "$keychainPath"
+          security unlock-keychain -p "$keychainPassword" "$keychainPath"
+          security import "$certificatePath" -P "$certificatePassword" -k "$keychainPath" -T /usr/bin/codesign > /dev/null
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychainPassword" "$keychainPath" > /dev/null
+          security list-keychains -d user -s "$keychainPath"
+          identity="$(security find-identity -v -p codesigning "$keychainPath" | awk '/"Developer ID Application: / { print $2 }')"
+          if [[ ! "$identity" =~ ^[[:xdigit:]]{40}$ ]]; then
+            echo '::error::P12 必须包含且仅包含一个有效的 Developer ID Application 签名身份及私钥。'
+            exit 1
+          fi
+          printf 'identity=%s\n' "$identity" >> "$GITHUB_OUTPUT"
       - name: 构建 macOS 安装包及更新文件
         if: runner.os == 'macOS'
+        env:
+          ELECTROBUN_DEVELOPER_ID: ${{ steps.signing.outputs.identity }}
         run: bun run release:desktop "$appVersion" "$releaseMode"
+      - name: 清理 ARM 签名证书
+        if: always() && matrix.target == 'macArm64'
+        run: |
+          keychainPath="$RUNNER_TEMP/toonflowSigning.keychain-db"
+          if [[ -f "$keychainPath" ]]; then
+            security delete-keychain "$keychainPath"
+          fi
+          rm -f "$RUNNER_TEMP/toonflowSigning.p12"
       - name: 验证 macOS 更新包与安装镜像
         if: runner.os == 'macOS'
         env:
           releaseDirectory: ${{ matrix.releaseFolder }}/${{ needs.prepare.outputs.version }}
+          signingIdentity: ${{ steps.signing.outputs.identity }}
         run: |
+          verifySignature() {
+            if [[ "$macCodesign" == '1' ]]; then
+              codesign --verify --deep --strict --verbose=2 \
+                --test-requirement "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf = H\"$signingIdentity\"" "$1"
+            fi
+          }
           inspectionDirectory="$RUNNER_TEMP/toonflowPackageCheck"
           mkdir -p "$inspectionDirectory"
           export inspectionDirectory
@@ -164,13 +229,16 @@ jobs:
           test -s "$app/Contents/Resources/AppIcon.icns"
           test -s "$app/Contents/Resources/app/bun/index.js"
           test -x "$app/Contents/MacOS/bun"
+          verifySignature "$app"
           mountDirectory="$inspectionDirectory/dmg"
           mkdir -p "$mountDirectory"
           for dmg in "$releaseDirectory"/*.dmg; do
             hdiutil verify "$dmg"
+            verifySignature "$dmg"
             hdiutil attach "$dmg" -readonly -nobrowse -mountpoint "$mountDirectory"
             trap 'hdiutil detach "$mountDirectory"' EXIT
             test -x "$mountDirectory/toonflow.app/Contents/MacOS/launcher"
+            verifySignature "$mountDirectory/toonflow.app"
             hdiutil detach "$mountDirectory"
             trap - EXIT
           done

@@ -25,3 +25,8 @@ Thumbs.db
 !.env.example
 /apps/updateServer/build/
 .vscode
+*.p12
+*.pfx
+*.p8
+*.keychain
+*.keychain-db

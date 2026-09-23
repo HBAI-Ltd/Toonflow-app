@@ -8,7 +8,7 @@ on:
         type: string
         required: true
       ref:
-        description: 代码分支、标签或提交，留空使用当前选择的版本
+        description: 留空使用当前选择的版本；ARM 签名要求与所选工作流版本为同一提交
         type: string
   push:
     tags:
@@ -30,6 +30,9 @@ jobs:
       ref: ${{ inputs.ref || github.sha }}
       version: ${{ inputs.version || github.ref_name }}
       generatePatch: true
+    secrets:
+      MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
 
   release:
     name: 发布 GitHub Release

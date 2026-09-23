@@ -38,8 +38,8 @@ export default {
     },
     mac: {
       icons: "packages/assets/logo.iconset",
-      // ACT: 测试包不做整包和 DMG 重签，保留 SDK 原始二进制签名。
-      codesign: false,
+      // ACT: CI 为 ARM 显式开启签名；本地未配置证书时仍可构建测试包。
+      codesign: process.env.macCodesign === "1",
       notarize: false,
     },
   },
