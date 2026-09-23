@@ -62,6 +62,46 @@ jobs:
           pattern: toonflow-${{ needs.build.outputs.version }}-*
           path: artifacts
           merge-multiple: true
+      - name: 生成下载说明
+        env:
+          releaseVersion: ${{ needs.build.outputs.version }}
+        run: |
+          node --input-type=module <<'JS'
+          import { readdirSync, writeFileSync } from "node:fs";
+
+          const files = readdirSync("artifacts");
+          const version = process.env.releaseVersion;
+          const findInstaller = (label, matches) => {
+            const names = files.filter(matches);
+            if (names.length !== 1) throw new Error(`${label} 安装包数量应为 1，实际为 ${names.length}`);
+            return names[0];
+          };
+          const windows = findInstaller("Windows", name => name === `toonflow-${version}-Setup.exe`);
+          const macArm = findInstaller("macOS ARM64", name => name.endsWith(".dmg") && name.includes("arm64"));
+          const macIntel = findInstaller("macOS x64", name => name.endsWith(".dmg") && name.includes("x64"));
+          const baseUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/releases/download/v${version}`;
+          const download = name => `${baseUrl}/${encodeURIComponent(name)}`;
+          writeFileSync("releaseBody.md", [
+            `## 下载 Toonflow ${version}`,
+            "",
+            "| 设备 | 安装包 |",
+            "| --- | --- |",
+            `| Windows 64 位 | [下载安装包（.exe）](${download(windows)}) |`,
+            `| Mac M 系列芯片（Apple Silicon） | [下载 Apple Silicon 版（.dmg）](${download(macArm)}) |`,
+            `| Intel Mac | [下载 Intel 版（.dmg）](${download(macIntel)}) |`,
+            "",
+            "Windows：下载 `.exe` 后运行安装程序。macOS：打开 `.dmg`，将 `toonflow.app` 拖入“应用程序”。",
+            "",
+            "**Apple Silicon 安装后，请在终端执行以下命令，再打开 Toonflow：**",
+            "",
+            "```bash",
+            "sudo xattr -rd com.apple.quarantine /Applications/toonflow.app",
+            "```",
+            "",
+            "> 下方附件中的 `.tar.zst` 和 `-update.json` 供应用自动更新使用，手动安装请选择上表的安装包。",
+            "",
+          ].join("\n"));
+          JS
       - name: 发布安装包及更新文件
         uses: softprops/action-gh-release@v3
         with:
@@ -69,6 +109,7 @@ jobs:
           target_commitish: ${{ needs.build.outputs.commit }}
           name: Toonflow ${{ needs.build.outputs.version }}
           make_latest: true
+          body_path: releaseBody.md
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: artifacts/*
