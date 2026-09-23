@@ -39,6 +39,15 @@ on:
       MACOS_CERTIFICATE_PASSWORD:
         description: P12 导出密码
         required: false
+      MACOS_NOTARIZATION_KEY_ID:
+        description: App Store Connect 团队 API Key ID
+        required: false
+      MACOS_NOTARIZATION_ISSUER_ID:
+        description: App Store Connect 团队 API Issuer ID
+        required: false
+      MACOS_NOTARIZATION_KEY_BASE64:
+        description: 对应 API 密钥的 P8 私钥文件 Base64
+        required: false
     outputs:
       version:
         description: 实际构建的包版本号
@@ -159,20 +168,29 @@ jobs:
         # ACT: 使用原生环境，避免 Git Bash 的 GNU tar 将 Windows 盘符识别为远程主机。
         shell: pwsh
         run: bun run release:desktop "$env:appVersion" "$env:releaseMode"
-      - name: 导入 ARM 签名证书
+      - name: 准备 ARM 签名与公证凭据
         if: matrix.target == 'macArm64'
         id: signing
         env:
           certificateBase64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
           certificatePassword: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          notarizationKeyId: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
+          notarizationIssuerId: ${{ secrets.MACOS_NOTARIZATION_ISSUER_ID }}
+          notarizationKeyBase64: ${{ secrets.MACOS_NOTARIZATION_KEY_BASE64 }}
         run: |
           set +x
           : "${certificateBase64:?请配置 MACOS_CERTIFICATE_BASE64 Secret}"
           : "${certificatePassword:?请配置 MACOS_CERTIFICATE_PASSWORD Secret}"
+          : "${notarizationKeyId:?请配置 MACOS_NOTARIZATION_KEY_ID Secret}"
+          : "${notarizationIssuerId:?请配置 MACOS_NOTARIZATION_ISSUER_ID Secret}"
+          : "${notarizationKeyBase64:?请配置 MACOS_NOTARIZATION_KEY_BASE64 Secret}"
           umask 077
           certificatePath="$RUNNER_TEMP/toonflowSigning.p12"
           keychainPath="$RUNNER_TEMP/toonflowSigning.keychain-db"
+          notarizationKeyPath="$RUNNER_TEMP/toonflowNotarization.p8"
           trap 'rm -f "$certificatePath"' EXIT
+          printf '%s' "$notarizationKeyBase64" | base64 --decode > "$notarizationKeyPath"
+          openssl pkey -in "$notarizationKeyPath" -passin pass: -check -noout > /dev/null
           keychainPassword="$(openssl rand -hex 32)"
           echo "::add-mask::$keychainPassword"
           printf '%s' "$certificateBase64" | base64 --decode > "$certificatePath"
@@ -188,29 +206,34 @@ jobs:
             exit 1
           fi
           printf 'identity=%s\n' "$identity" >> "$GITHUB_OUTPUT"
-      - name: 构建 macOS 安装包及更新文件
+          printf 'notarizationKeyPath=%s\n' "$notarizationKeyPath" >> "$GITHUB_OUTPUT"
+      - name: 构建 macOS 安装包及更新文件（ARM 自动公证）
         if: runner.os == 'macOS'
         env:
           ELECTROBUN_DEVELOPER_ID: ${{ steps.signing.outputs.identity }}
+          ELECTROBUN_APPLEAPIKEY: ${{ matrix.target == 'macArm64' && secrets.MACOS_NOTARIZATION_KEY_ID || '' }}
+          ELECTROBUN_APPLEAPIISSUER: ${{ matrix.target == 'macArm64' && secrets.MACOS_NOTARIZATION_ISSUER_ID || '' }}
+          ELECTROBUN_APPLEAPIKEYPATH: ${{ steps.signing.outputs.notarizationKeyPath }}
         run: bun run release:desktop "$appVersion" "$releaseMode"
-      - name: 清理 ARM 签名证书
+      - name: 清理 ARM 签名与公证凭据
         if: always() && matrix.target == 'macArm64'
         run: |
+          rm -f "$RUNNER_TEMP/toonflowSigning.p12" "$RUNNER_TEMP/toonflowNotarization.p8"
           keychainPath="$RUNNER_TEMP/toonflowSigning.keychain-db"
           if [[ -f "$keychainPath" ]]; then
             security delete-keychain "$keychainPath"
           fi
-          rm -f "$RUNNER_TEMP/toonflowSigning.p12"
       - name: 验证 macOS 更新包与安装镜像
         if: runner.os == 'macOS'
         env:
           releaseDirectory: ${{ matrix.releaseFolder }}/${{ needs.prepare.outputs.version }}
           signingIdentity: ${{ steps.signing.outputs.identity }}
         run: |
-          verifySignature() {
+          verifyMacArtifact() {
             if [[ "$macCodesign" == '1' ]]; then
               codesign --verify --deep --strict --verbose=2 \
                 --test-requirement "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf = H\"$signingIdentity\"" "$1"
+              xcrun stapler validate "$1"
             fi
           }
           inspectionDirectory="$RUNNER_TEMP/toonflowPackageCheck"
@@ -229,16 +252,16 @@ jobs:
           test -s "$app/Contents/Resources/AppIcon.icns"
           test -s "$app/Contents/Resources/app/bun/index.js"
           test -x "$app/Contents/MacOS/bun"
-          verifySignature "$app"
+          verifyMacArtifact "$app"
           mountDirectory="$inspectionDirectory/dmg"
           mkdir -p "$mountDirectory"
           for dmg in "$releaseDirectory"/*.dmg; do
             hdiutil verify "$dmg"
-            verifySignature "$dmg"
+            verifyMacArtifact "$dmg"
             hdiutil attach "$dmg" -readonly -nobrowse -mountpoint "$mountDirectory"
             trap 'hdiutil detach "$mountDirectory"' EXIT
             test -x "$mountDirectory/toonflow.app/Contents/MacOS/launcher"
-            verifySignature "$mountDirectory/toonflow.app"
+            verifyMacArtifact "$mountDirectory/toonflow.app"
             hdiutil detach "$mountDirectory"
             trap - EXIT
           done

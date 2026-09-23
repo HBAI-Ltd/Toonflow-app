@@ -156,7 +156,7 @@ bun run package:desktop
 
 启动库脚本会下载固定版本的 ThorVG 源码并校验摘要。产物分别位于 `build/desktop/artifacts/macArm64/` 和 `build/desktop/artifacts/macX64/`。
 
-本机默认生成未做 Developer ID 签名与公证的测试包；GitHub Actions 的 ARM 包会按下方配置自动签名，Intel 仍不重签。对于自己构建且确认来源的测试应用，若被隔离属性拦截，可仅移除该应用的隔离属性，路径按实际位置调整：
+本机默认生成未做 Developer ID 签名与公证的测试包；GitHub Actions 的 ARM 包会按下方配置自动签名并公证，Intel 仍不重签。对于自己构建且确认来源的测试应用，若被隔离属性拦截，可仅移除该应用的隔离属性，路径按实际位置调整：
 
 ```sh
 xattr -dr com.apple.quarantine "/Applications/toonflow.app"
@@ -196,7 +196,7 @@ Intel Mac 在安装兼容 SDK 后，先运行桌面开发或构建命令生成�
 
 [Debug 工作流](../.github/workflows/debug.yml) 可单独选择平台或全部平台，产物保留 7 天，不创建 Release。默认只打完整包，勾选 `generatePatch` 可验证增量构建。CI 构建和归档检查不等于已验证真实安装、GUI 启动或 macOS Gatekeeper。
 
-**ARM 自动签名：首次配置**
+**ARM 自动签名与公证：首次配置**
 
 在 GitHub 仓库的 **Settings → Secrets and variables → Actions → New repository secret** 添加：
 
@@ -204,6 +204,9 @@ Intel Mac 在安装兼容 SDK 后，先运行桌面开发或构建命令生成�
 | --- | --- |
 | `MACOS_CERTIFICATE_BASE64` | 包含一个有效 **Developer ID Application** 证书及其私钥的 `.p12` 文件，编码为 Base64。 |
 | `MACOS_CERTIFICATE_PASSWORD` | 导出该 `.p12` 时设置的非空密码。 |
+| `MACOS_NOTARIZATION_KEY_ID` | App Store Connect 团队 API 密钥的 Key ID。 |
+| `MACOS_NOTARIZATION_ISSUER_ID` | 该团队 API 密钥的完整 Issuer ID，不是 Team ID。 |
+| `MACOS_NOTARIZATION_KEY_BASE64` | 对应 API 密钥的 `.p8` 私钥文件，编码为 Base64。 |
 
 在 Windows PowerShell 中执行以下命令，把路径替换为本机证书路径。命令只复制到剪贴板，不打印证书内容，也不生成文件；随后粘贴到 `MACOS_CERTIFICATE_BASE64` 的 Secret 输入框：
 
@@ -211,13 +214,23 @@ Intel Mac 在安装兼容 SDK 后，先运行桌面开发或构建命令生成�
 [Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\证书目录\signing.p12')) | Set-Clipboard
 ```
 
-粘贴保存后可执行 `Set-Clipboard -Value ''` 清空剪贴板。密码直接填写到 `MACOS_CERTIFICATE_PASSWORD`，不写进命令、源码或聊天记录。Base64 只是编码，不是加密；P12、Base64、密码均不得提交到公开仓库或上传为构建产物。
+然后单独执行下面的命令，把 `.p8` 路径替换为本机文件路径，将剪贴板内容保存到 `MACOS_NOTARIZATION_KEY_BASE64`：
 
-配置后，Debug 与 Release 的 ARM 构建都会自动导入临时钥匙串，使用 Electrobun 签署应用内的原生代码、完整更新包中的应用、安装包装程序和 DMG。缺少 Secret、证书类型不符或签名失败会中止构建，不回退为未签名包；上传前还会检查更新包内应用、DMG 及镜像内应用的签名与导入证书一致。临时 P12 在导入步骤结束后删除，钥匙串在构建成功、失败或取消后的清理步骤中删除；Secrets 只显式传给签名步骤。
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\证书目录\AuthKey_你的KeyID.p8')) | Set-Clipboard
+```
+
+粘贴保存后可执行 `Set-Clipboard -Value ''` 清空剪贴板。密码直接填写到 `MACOS_CERTIFICATE_PASSWORD`，不写进命令、源码或聊天记录。Base64 只是编码，不是加密；P12、P8、Base64、密码均不得提交到公开仓库或上传为构建产物。
+
+公证使用 App Store Connect **团队 API 密钥**，Key ID、Issuer ID 与 P8 必须对应同一把有权限的密钥。这种认证方式不需要 Apple ID 密码或 Team ID；P12 及其密码仍用于代码签名。详见 [Apple API 公证认证说明](https://developer.apple.com/documentation/technotes/tn3147-migrating-to-the-latest-notarization-tool)。
+
+配置后，Debug 与 Release 的 ARM 构建都会自动导入临时钥匙串，使用 Electrobun 签署应用内的原生代码、完整更新包中的应用、安装包装程序和 DMG，并分别提交 Apple 公证、等待通过、附加并验证公证票据。完整更新归档在应用公证后生成；上传前还会验证解压后的应用、DMG 及镜像内应用的签名和公证票据，避免打包过程中遗漏票据。
+
+缺少 Secret、证书类型不符、Apple 拒绝公证或验收失败都会中止构建，不回退为未签名或未公证包。临时 P12 在导入步骤结束后删除；P8 与钥匙串在构建成功、失败或取消后的清理步骤中删除，均放在运行器临时目录。证书和 P8 Base64 只注入凭据准备步骤，API 标识只额外传给 ARM 构建步骤。公证等待计入工作流现有的 90 分钟超时，超时不会发布；如需排查，可使用同一 API 凭据通过 `notarytool history` 查询 Apple 的提交记录。
 
 公开仓库只从可信的手动操作或 `v*` 标签触发签名，不接入 `pull_request` / `pull_request_target`。请用 GitHub Rulesets 保护发布分支及 `v*` 标签，并限制仓库写权限；签名构建会执行所选提交的代码，有权修改发布代码或工作流的人也处于 Secrets 的信任边界内。证书导入方式参见 [GitHub 官方说明](https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms/sign-xcode-applications)。
 
-签名不等于 Apple 公证，本次仍保留 `notarize: false`，不能据此保证 Gatekeeper 放行。若需要公证，还需另行配置 Apple ID、App 专用密码与 Team ID，或 App Store Connect API 凭据，再接入公证流程；参见 [Apple 公证说明](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)。Intel 的旧 SDK 重签限制未在本次修改范围内。
+ARM 的 CI 构建强制同时签名与公证，本机构建默认不启用；Intel 的旧 SDK 重签限制保持不变。CI 验收不代替实际 Mac 上从浏览器下载、安装、启动及升级的验证。公证是站外分发的自动安全检查，无需上架 App Store；参见 [Apple 公证说明](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)。
 
 **本机打包与独立更新服务**
 

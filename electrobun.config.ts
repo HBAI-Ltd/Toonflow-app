@@ -38,9 +38,9 @@ export default {
     },
     mac: {
       icons: "packages/assets/logo.iconset",
-      // ACT: CI 为 ARM 显式开启签名；本地未配置证书时仍可构建测试包。
+      // ACT: CI 为 ARM 显式开启签名与公证；本地未配置凭据时仍可构建测试包。
       codesign: process.env.macCodesign === "1",
-      notarize: false,
+      notarize: process.env.macCodesign === "1",
     },
   },
   release: {
