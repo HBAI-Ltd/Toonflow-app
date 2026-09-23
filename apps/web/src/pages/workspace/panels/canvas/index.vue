@@ -6,6 +6,9 @@
     :style="{ '--canvasEdgeColor': generalSettings.canvasEdgeColorMode === 'custom' ? generalSettings.canvasEdgeColor : 'var(--el-color-primary)' }"
     @dblclick="openNodeMenu"
     @wheel.capture="zoomCanvas"
+    @gesturestart.capture="zoomCanvas"
+    @gesturechange.capture="zoomCanvas"
+    @gestureend.capture="zoomCanvas"
     @pointermove="pointerPosition = { x: $event.clientX, y: $event.clientY }"
     @pointerleave="pointerPosition = undefined"
     @dragover="dragFilesOver"
@@ -206,6 +209,7 @@ const selectedTool = ref<"move" | "hand">("move");
 const handMode = computed(() => props.active && !props.settingsVisible && (selectedTool.value === "hand" || panKeyPressed.value));
 let pointerPosition: XYPosition | undefined;
 const pressedCodes = new Set<string>();
+let gestureScale: number | undefined;
 let nativePasteRequested = false;
 const showEdges = ref(true);
 const assetsVisible = ref(false);
@@ -653,20 +657,35 @@ async function pasteClipboardNode(position: { x: number; y: number }, command?: 
   }
 }
 
-function zoomCanvas(event: WheelEvent) {
+function zoomCanvas(event: WheelEvent | (Event & { scale: number })) {
+  if (event.type === "gestureend") gestureScale = undefined;
   if (!props.active || props.settingsVisible || document.fullscreenElement || flow.userSelectionActive.value) return;
   if (!(event.target instanceof Element) || !event.target.closest(".vue-flow__pane, .vue-flow__node, .vue-flow__edge, .vue-flow__nodesselection")) return;
-  // ACT: 触摸板捏合发送 Ctrl+wheel，但不发送 Control 按键事件；不依赖操作系统或鼠标缩放快捷键。
-  const pinching = event.ctrlKey && !pressedCodes.has("ControlLeft") && !pressedCodes.has("ControlRight");
-  if (!pinching && !shortcutPressed(event, generalSettings.value.canvasShortcuts.zoom, pressedCodes)) return;
   const zoom = flow.d3Zoom.value;
   const selection = flow.d3Selection.value;
   const bounds = selection?.node()?.getBoundingClientRect();
   if (!zoom || !selection || !bounds) return;
+  let factor: number;
+  let point = pointerPosition ?? { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+  if ("scale" in event) {
+    if (!Number.isFinite(event.scale) || event.scale <= 0) return;
+    factor = event.type === "gesturechange" && gestureScale !== undefined ? event.scale / gestureScale : 1;
+    gestureScale = event.type === "gestureend" ? undefined : event.scale;
+  } else {
+    // ACT: Chromium 捏合发送 Ctrl+wheel，但不发送 Control 按键；WebKit 使用上方原生 gesture 事件。
+    const pinching = event.ctrlKey && !pressedCodes.has("ControlLeft") && !pressedCodes.has("ControlRight");
+    if (!pinching && !shortcutPressed(event, generalSettings.value.canvasShortcuts.zoom, pressedCodes)) {
+      if (!event.ctrlKey) return;
+      // 实体 Ctrl 未绑定缩放时，阻止 Vue Flow 和节点骨架将它误判为捏合。
+      factor = 1;
+    } else {
+      factor = pinching && gestureScale !== undefined ? 1 : 2 ** (pinching ? -event.deltaY * 0.02 : wheelDelta(event));
+    }
+    point = { x: event.clientX, y: event.clientY };
+  }
   event.preventDefault();
   event.stopPropagation();
-  const delta = pinching ? -event.deltaY * 0.02 : wheelDelta(event);
-  selection.call<[number, [number, number], WheelEvent]>(zoom.scaleBy, 2 ** delta, [event.clientX - bounds.left, event.clientY - bounds.top], event);
+  if (factor !== 1) selection.call<[number, [number, number], Event]>(zoom.scaleBy, factor, [point.x - bounds.left, point.y - bounds.top], event);
 }
 
 function updateCanvasKeys(event: KeyboardEvent) {
@@ -728,6 +747,7 @@ function updateCanvasKeys(event: KeyboardEvent) {
 
 function resetCanvasKeys() {
   pressedCodes.clear();
+  gestureScale = undefined;
   nativePasteRequested = false;
   zoomKeyPressed.value = false;
   panKeyPressed.value = false;
