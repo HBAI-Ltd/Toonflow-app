@@ -26,12 +26,14 @@ const releaseDir = join(releasesDir, version);
 const artifactDir = resolve(projectDir, desktopConfig.build.artifactFolder);
 const prefix = `stable-${platform}-${process.arch}`;
 const manifestName = `${prefix}-update.json`;
+const manifestUrl = `${desktopConfig.release.baseUrl.replace(/\/+$/, "")}/${manifestName}`;
 if (existsSync(releaseDir)) throw new Error(`版本已保留，请使用新版本号：${releaseDir}`);
 
 let previousResponse: Response | undefined;
 if (!values.initial) {
+  console.log(`读取构建基线：${manifestUrl}`);
   try {
-    previousResponse = await fetch(`${desktopConfig.release.baseUrl.replace(/\/+$/, "")}/${manifestName}`, {
+    previousResponse = await fetch(manifestUrl, {
       signal: AbortSignal.timeout(30000),
     });
   } catch (error) {
@@ -46,7 +48,9 @@ if (!initial) {
       ? "更新源尚无基线，请使用 --initial 或 --auto 构建首次版本。"
       : `读取上一版本失败（HTTP ${previousResponse?.status}），已停止构建。`);
   }
-  const previous = await previousResponse.json();
+  const previous = await previousResponse.json().catch((error) => {
+    throw new Error(`上一版本清单不是有效 JSON：${manifestUrl}（Content-Type: ${previousResponse.headers.get("content-type") || "未提供"}）`, { cause: error });
+  });
   if (!previous || previous.platform !== platform || previous.arch !== process.arch ||
       typeof previous.hash !== "string" || !/^[a-zA-Z0-9]+$/.test(previous.hash) ||
       typeof previous.version !== "string" || !/^\d+\.\d+\.\d+$/.test(previous.version)) {
