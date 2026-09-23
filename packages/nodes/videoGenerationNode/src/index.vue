@@ -13,7 +13,7 @@
       <el-button :icon="IconTransfer" :loading="uploading" :disabled="generating || deleting" text title="替换视频" aria-label="替换视频" @click.stop="fileInput?.click()" />
       <input ref="fileInput" type="file" accept="video/*" hidden aria-label="选择替换视频" :disabled="generating || deleting || uploading" @change="replaceOutput" />
     </template>
-    <div v-loading="generating || uploading" class="videoContent nopan nowheel" :aria-busy="generating || uploading">
+    <div v-loading="generating || uploading" class="videoContent nopan" :aria-busy="generating || uploading">
       <videoPlayer
         v-if="previewUrl"
         ref="player"

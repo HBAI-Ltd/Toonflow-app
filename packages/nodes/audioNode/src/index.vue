@@ -16,10 +16,10 @@
         aria-label="替换音频"
         @click.stop="fileInput?.click()" />
     </template>
-    <div ref="audioContent" class="audioContent nopan nowheel">
+    <div ref="audioContent" class="audioContent nopan">
       <audio
         v-if="previewUrl"
-        class="audioPreview nodrag"
+        class="audioPreview nodrag nowheel"
         :src="previewUrl"
         controls
         preload="metadata"

@@ -5,6 +5,7 @@
     :class="{ edgesHidden: !showEdges, handMode, compositingEnabled: generalSettings.canvasCompositingEnabled }"
     :style="{ '--canvasEdgeColor': generalSettings.canvasEdgeColorMode === 'custom' ? generalSettings.canvasEdgeColor : 'var(--el-color-primary)' }"
     @dblclick="openNodeMenu"
+    @wheel.capture="zoomCanvas"
     @pointermove="pointerPosition = { x: $event.clientX, y: $event.clientY }"
     @pointerleave="pointerPosition = undefined"
     @dragover="dragFilesOver"
@@ -30,11 +31,11 @@
       :auto-pan-on-node-drag="false"
       :auto-pan-on-connect="false"
       :zoom-on-double-click="false"
-      :zoom-on-scroll="false"
-      :zoomOnPinch="!settingsVisible && (zoomKeyPressed || getShortcutBindings(generalSettings.canvasShortcuts.zoom).includes('Ctrl'))"
-      :pan-on-scroll="true"
+      :zoomOnScroll="false"
+      :zoomOnPinch="active && !settingsVisible"
+      :panOnScroll="active && !settingsVisible"
       :panOnDrag="handMode ? true : [1]"
-      :pan-on-scroll-mode="PanOnScrollMode.Free"
+      :panOnScrollMode="PanOnScrollMode.Free"
       :delete-key-code="null"
       :selectionKeyCode="!handMode"
       :selectionMode="SelectionMode.Partial"
@@ -128,6 +129,7 @@ import {
   ConnectionMode,
   SelectionMode,
   useVueFlow,
+  wheelDelta,
   isNode,
   type Node,
   type Edge,
@@ -649,6 +651,22 @@ async function pasteClipboardNode(position: { x: number; y: number }, command?: 
       );
     return false;
   }
+}
+
+function zoomCanvas(event: WheelEvent) {
+  if (!props.active || props.settingsVisible || document.fullscreenElement || flow.userSelectionActive.value) return;
+  if (!(event.target instanceof Element) || !event.target.closest(".vue-flow__pane, .vue-flow__node, .vue-flow__edge, .vue-flow__nodesselection")) return;
+  // ACT: 触摸板捏合发送 Ctrl+wheel，但不发送 Control 按键事件；不依赖操作系统或鼠标缩放快捷键。
+  const pinching = event.ctrlKey && !pressedCodes.has("ControlLeft") && !pressedCodes.has("ControlRight");
+  if (!pinching && !shortcutPressed(event, generalSettings.value.canvasShortcuts.zoom, pressedCodes)) return;
+  const zoom = flow.d3Zoom.value;
+  const selection = flow.d3Selection.value;
+  const bounds = selection?.node()?.getBoundingClientRect();
+  if (!zoom || !selection || !bounds) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const delta = pinching ? -event.deltaY * 0.02 : wheelDelta(event);
+  selection.call<[number, [number, number], WheelEvent]>(zoom.scaleBy, 2 ** delta, [event.clientX - bounds.left, event.clientY - bounds.top], event);
 }
 
 function updateCanvasKeys(event: KeyboardEvent) {

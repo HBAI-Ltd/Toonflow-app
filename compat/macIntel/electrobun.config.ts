@@ -27,4 +27,8 @@ export default {
     },
   },
   release: shared.release,
+  scripts: {
+    postBuild: "../../apps/desktop/scripts/localizeMac.ts",
+    postWrap: "../../apps/desktop/scripts/localizeMac.ts",
+  },
 } satisfies ElectrobunConfig;

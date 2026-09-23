@@ -163,10 +163,11 @@ Toonflow 是面向短剧、漫剧与短视频制作的开源 AI 创作平台，�
   <br />
   <a href="https://api.toonflow.net/console/plugIn"><img src="https://img.shields.io/badge/🧩_插件市场-F59E0B?style=for-the-badge&labelColor=1a1a2e" height="120" alt="插件市场" /></a>
   <img src="https://img.shields.io/badge/🤖_开放_Agent-06B6D4?style=for-the-badge&labelColor=1a1a2e" height="120" alt="开放 Agent" />
+  <img src="https://img.shields.io/badge/🔧_任意供应商-EC4899?style=for-the-badge&labelColor=1a1a2e" height="120" alt="任意供应商" />
 </p>
 
 <h3 align="center">🔒 数据永远留在本地，创作从不被托管</h3>
-<h3 align="center">🧩 画布 · 插件 · Agent，一套协议全打通</h3>
+<h3 align="center">🔧 任意配置第三方 API 供应商，本地 ComfyUI、本地 LLM 一样能接</h3>
 
 <p align="center">
   <img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=6,11,20&height=4&width=100%25" alt="" />
@@ -210,6 +211,10 @@ Windows 安装器会自动检测并安装 WebView2；如果安装后打开闪退
 macOS（Apple Silicon）首次安装前，请在终端执行：`sudo xattr -rd com.apple.quarantine /Applications/toonflow.app`
 
 更多操作说明请查看 [使用教程](https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink)。
+
+### 镜像部署
+
+施工中
 
 ## 🎬 作品示例
 

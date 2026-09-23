@@ -13,7 +13,7 @@
       <el-button :icon="IconTransfer" :loading="uploading" :disabled="generating || deleting" text title="替换图片" aria-label="替换图片" @click.stop="fileInput?.click()" />
       <input ref="fileInput" type="file" accept="image/*" hidden aria-label="选择替换图片" :disabled="generating || deleting || uploading" @change="replaceOutput" />
     </template>
-    <div v-loading="generating || uploading" class="imageContent nopan nowheel" :aria-busy="generating || uploading">
+    <div v-loading="generating || uploading" class="imageContent nopan" :aria-busy="generating || uploading">
       <img
         v-if="previewUrl"
         class="imagePreview"

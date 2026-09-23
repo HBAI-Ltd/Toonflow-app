@@ -16,7 +16,7 @@
         aria-label="替换图片"
         @click.stop="fileInput?.click()" />
     </template>
-    <div class="imageContent nopan nowheel">
+    <div class="imageContent nopan">
       <img
         v-if="previewUrl"
         class="imagePreview"

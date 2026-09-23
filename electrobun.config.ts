@@ -48,4 +48,10 @@ export default {
     // ACT: 常规构建不访问更新服务器；release:desktop 显式开启增量构建。
     generatePatch: process.env.generateUpdatePatch === "1",
   },
+  ...(process.platform === "darwin" ? {
+    scripts: {
+      postBuild: "apps/desktop/scripts/localizeMac.ts",
+      postWrap: "apps/desktop/scripts/localizeMac.ts",
+    },
+  } : {}),
 } satisfies ElectrobunConfig;
