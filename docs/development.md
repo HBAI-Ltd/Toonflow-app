@@ -178,6 +178,25 @@ Intel Mac 在安装兼容 SDK 后，先运行桌面开发或构建命令生成�
 <details>
 <summary><strong>发布、更新与插件同步</strong></summary>
 
+**通过版本标签自动发布**
+
+发布直接使用现有提交上的 `vX.Y.Z` 标签，无需 Git Flow 或 release 分支。
+
+1. 提交要发布的代码，在 SourceTree 中选中该提交，点击 **标签**。
+2. 填写完整标签名，例如 `v2.0.0`，确认标签指向要发布的提交。
+3. 在左侧标签列表右键这个新标签，选择 **推送标签**，目标选择正式仓库 `origin`。只推送本次标签，不勾选“推送所有标签”。
+
+推送标签会一并上传它所引用的提交，无需创建或推送发布分支。GitHub Actions 会自动运行 **Release desktop v2.0.0**，构建 Windows x64、macOS ARM64 和 macOS x64，全部成功后创建对应 GitHub Release。
+
+也可在仓库终端执行下面两条命令（将 `2.0.0` 换成本次版本）：
+
+```sh
+git tag -a v2.0.0 -m "Release v2.0.0"
+git push --no-follow-tags origin refs/tags/v2.0.0:refs/tags/v2.0.0
+```
+
+版本格式为小写 `v` 加 `X.Y.Z`；轻量标签和附注标签均支持。使用新的版本号，不覆盖已有标签。构建失败时，在 Actions 中查看日志；代码不变可重跑任务，修改代码后使用新版本号。
+
 **一次构建三个平台**
 
 在 GitHub 仓库打开 **Actions → Release desktop → Run workflow**，选择要发布的可信分支，填写版本号（例如 `2.0.1`），将 `ref` 留空后运行。推送 `vX.Y.Z` 标签同样会触发发布。包含 ARM 的构建要求 `ref` 与触发工作流的分支或标签指向同一提交，不允许借此切换到其他提交；仅构建 Windows 或 Intel 时仍可指定其他 `ref`。

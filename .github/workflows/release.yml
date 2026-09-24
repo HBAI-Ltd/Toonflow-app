@@ -1,4 +1,5 @@
 name: Release desktop
+run-name: Release desktop ${{ github.event_name == 'push' && github.ref_name || (startsWith(inputs.version, 'v') && inputs.version || format('v{0}', inputs.version)) }}
 
 on:
   workflow_dispatch:
@@ -52,14 +53,21 @@ jobs:
         run: |
           node --input-type=module <<'JS'
           const tag = `refs/tags/v${process.env.releaseVersion}`;
-          const response = await fetch(`${process.env.GITHUB_API_URL}/repos/${process.env.GITHUB_REPOSITORY}/commits/${encodeURIComponent(tag)}`, {
-            headers: { Authorization: `Bearer ${process.env.GH_TOKEN}`, Accept: "application/vnd.github+json" },
+          const api = `${process.env.GITHUB_API_URL}/repos/${process.env.GITHUB_REPOSITORY}`;
+          const headers = { Authorization: `Bearer ${process.env.GH_TOKEN}`, Accept: "application/vnd.github+json" };
+          let response = await fetch(`${api}/git/ref/tags/v${process.env.releaseVersion}`, {
+            headers,
             signal: AbortSignal.timeout(30000),
           });
           if (response.status !== 404) {
             if (!response.ok) throw new Error(`读取版本标签失败（HTTP ${response.status}）`);
-            const { sha } = await response.json();
-            if (sha !== process.env.buildCommit) throw new Error(`${tag} 与构建提交不一致，请使用新版本号或选择该标签对应的代码。`);
+            let { object } = await response.json();
+            while (object.type === "tag") {
+              response = await fetch(`${api}/git/tags/${object.sha}`, { headers, signal: AbortSignal.timeout(30000) });
+              if (!response.ok) throw new Error(`解析版本标签失败（HTTP ${response.status}）`);
+              ({ object } = await response.json());
+            }
+            if (object.type !== "commit" || object.sha !== process.env.buildCommit) throw new Error(`${tag} 与构建提交不一致，请使用新版本号或选择该标签对应的代码。`);
           }
           JS
       - name: 下载各平台产物
