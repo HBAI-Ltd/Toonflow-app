@@ -136,9 +136,10 @@
     </td>
   </tr>
   <tr>
-    <td colspan="2" valign="top">
-      <a href="https://www.compshare.cn/"><strong>优云智算</strong></a>
+    <td width="50%" valign="top">
+      <a href="https://www.compshare.cn/"><img src="./docs/sponsors/compShare.png" alt="优云智算" height="28" valign="middle" /></a>
     </td>
+    <td width="50%" valign="top"></td>
   </tr>
 </table>
 
