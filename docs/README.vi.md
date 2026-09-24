@@ -133,6 +133,16 @@ Xin cảm ơn các đối tác sau đã hỗ trợ dự án mã nguồn mở Too
       <sub>Cảm ơn APIMart đã tài trợ tài nguyên tính toán cho dự án! Nền tảng API giá thấp chuyên tạo ảnh và video bằng AI, với GPT-Image-2 chỉ từ $0.006/ảnh, 1 đô la có thể tạo hơn 160 ảnh. Ảnh và video dùng chung một API bất đồng bộ: gửi tác vụ để nhận ID, nhận kết quả qua callback; xử lý hàng chục nghìn ảnh theo lô mà không hết thời gian chờ, đổi mô hình không cần sửa mã, thanh toán theo mức sử dụng và không có phí tháng. Đăng ký qua <a href="https://go.apimart.ai/gh-toonflow-app">liên kết này</a> để bắt đầu sử dụng.</sub>
     </td>
   </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow"><img src="./sponsors/compShare.png" alt="CompShare" height="28" valign="middle" /> <strong>CompShare</strong></a>
+      <br />
+      <sub>CompShare cung cấp dịch vụ tạo video H3 với chi phí hợp lý, hỗ trợ tạo video từ văn bản, chỉ định khung hình đầu và cuối, cùng chế độ tham chiếu toàn diện. Hỗ trợ video dài tối đa 30 giây với chất lượng 2K gốc; 768P chỉ 0.08 nhân dân tệ/giây. Hỗ trợ gọi API, xử lý số lượng lớn yêu cầu đồng thời cho doanh nghiệp và tự yêu cầu xuất hóa đơn.</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">Đăng ký qua liên kết riêng</a> để nhận miễn phí 5 nhân dân tệ tín dụng dùng thử trên nền tảng!</sub>
+    </td>
+    <td width="50%" valign="top"></td>
+  </tr>
 </table>
 
 <details>

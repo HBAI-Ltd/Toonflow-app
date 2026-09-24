@@ -133,6 +133,16 @@
       <sub>感謝 APIMart 贊助本專案的運算資源！專注於 AI 圖片與影片生成的平價 API 平台，GPT-Image-2 每張低至 $0.006，1 美元可生成 160+ 張圖片；圖片與影片共用一套非同步 API，提交任務取得 ID，透過回呼取得結果，批次處理上萬張也不逾時，切換模型無需修改程式碼，按用量計費、無月費。透過此<a href="https://go.apimart.ai/gh-toonflow-app">註冊連結</a>註冊即可使用。</sub>
     </td>
   </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow"><img src="./sponsors/compShare.png" alt="優雲智算" height="28" valign="middle" /> <strong>優雲智算</strong></a>
+      <br />
+      <sub>優雲智算提供高性價比 H3 影片生成服務，涵蓋文字生成影片、首尾影格及全能參考。支援最長 30 秒影片、原生 2K 畫質，768P 僅人民幣 0.08 元/秒。支援 API 呼叫、企業高併發、自助開立發票。</sub>
+      <br /><br />
+      <sub>🎁 透過<a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">專屬連結註冊</a>，即可獲得免費人民幣 5 元平台體驗金！</sub>
+    </td>
+    <td width="50%" valign="top"></td>
+  </tr>
 </table>
 
 <details>

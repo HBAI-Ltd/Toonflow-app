@@ -133,6 +133,16 @@ Toonflow オープンソースプロジェクトをご支援くださるパー�
       <sub>本プロジェクトへの計算リソースのご支援に感謝します！APIMart は AI 画像・動画生成に特化した低価格 API プラットフォームです。GPT-Image-2 は 1 枚あたり $0.006 からで、1 ドルで 160 枚以上の画像を生成できます。画像と動画に共通の非同期 API を使用し、タスクを送信して ID を取得すると、結果はコールバックで受け取れます。1 万枚の一括処理でもタイムアウトせず、モデルを変更してもコードの修正は不要。従量課金制で月額料金はありません。こちらの<a href="https://go.apimart.ai/gh-toonflow-app">登録リンク</a>から登録して利用を開始できます。</sub>
     </td>
   </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow"><img src="./sponsors/compShare.png" alt="优云智算（CompShare）" height="28" valign="middle" /> <strong>优云智算（CompShare）</strong></a>
+      <br />
+      <sub>优云智算（CompShare）は、コストパフォーマンスに優れた H3 動画生成サービスを提供しています。テキストからの動画生成、開始・終了フレームの指定、オムニリファレンスに対応。最長 30 秒の動画とネイティブ 2K 画質をサポートし、768P は 1 秒あたりわずか 0.08 人民元です。API 呼び出し、企業向けの大量同時処理、セルフサービスでの請求書発行にも対応しています。</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">専用リンクから登録</a>すると、プラットフォームで使える 5 人民元分のお試しクレジットを無料で受け取れます！</sub>
+    </td>
+    <td width="50%" valign="top"></td>
+  </tr>
 </table>
 
 <details>

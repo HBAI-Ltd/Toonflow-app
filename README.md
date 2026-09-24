@@ -137,7 +137,11 @@
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <a href="https://www.compshare.cn/"><img src="./docs/sponsors/compShare.png" alt="优云智算" height="28" valign="middle" /></a>
+      <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow"><img src="./docs/sponsors/compShare.png" alt="优云智算" height="28" valign="middle" /> <strong>优云智算</strong></a>
+      <br />
+      <sub>优云智算提供高性价比 H3 视频生成服务，涵盖文生视频、首尾帧及全能参考。支持最长 30s 视频、原生 2K 画质，768P 仅 0.08 元/秒。支持 API 调用、企业高并发、自助开票。</sub>
+      <br /><br />
+      <sub>🎁 通过 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">专属链接注册</a>，可得免费 5 元平台体验金！</sub>
     </td>
     <td width="50%" valign="top"></td>
   </tr>
