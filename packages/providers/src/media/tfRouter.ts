@@ -17,7 +17,13 @@ function object(value: unknown): Record<string, unknown> {
 }
 
 async function fetchJson(context: ProviderContext, path: string, body?: unknown, signal = context.signal) {
-  const apiKey = typeof context.config.apiKey === "string" ? context.config.apiKey.trim().replace(/^Bearer\s+/i, "").trim() : "";
+  const apiKey =
+    typeof context.config.apiKey === "string"
+      ? context.config.apiKey
+          .trim()
+          .replace(/^Bearer\s+/i, "")
+          .trim()
+      : "";
   if (!apiKey) throw new Error("请填写 TF-router API Key");
   signal?.throwIfAborted();
   const response = await context.tool.fetch(`${apiUrl}/${path}`, {
@@ -92,18 +98,20 @@ export default {
   models: [
     {
       id: "Seedance 2.5",
-      label: "Seedance-2.5 (支持真人)",
+      label: "Seedance-2.5",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:30", "videoReference:10", "audioReference:10"]],
       audio: "optional",
-      durationResolutionMap: [{
-        duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
-        resolution: ["480p", "720p", "1080p"],
-      }],
+      durationResolutionMap: [
+        {
+          duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+          resolution: ["480p", "720p", "1080p"],
+        },
+      ],
     },
     {
       id: "Seedance 2.0",
-      label: "Seedance-2.0 (支持真人)",
+      label: "Seedance-2.0",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
       audio: "optional",
@@ -111,7 +119,7 @@ export default {
     },
     {
       id: "Seedance 2.0 fast",
-      label: "Seedance 2.0 fast (支持真人)",
+      label: "Seedance 2.0 fast",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
       audio: "optional",
@@ -119,7 +127,7 @@ export default {
     },
     {
       id: "Seedance 2.0 mini",
-      label: "Seedance 2.0 mini (支持真人)",
+      label: "Seedance 2.0 mini",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
       audio: "optional",
@@ -131,66 +139,44 @@ export default {
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:10", "videoReference:5", "audioReference:5"]],
       audio: "optional",
-      durationResolutionMap: [{
-        duration: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
-        resolution: ["480p", "720p", "1080p"],
-      }],
+      durationResolutionMap: [
+        {
+          duration: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+          resolution: ["480p", "720p", "1080p"],
+        },
+      ],
     },
     {
-      id: "wan2.6",
-      label: "Wan2.6",
+      id: "MiniMax-H3",
+      label: "MiniMax-H3",
       type: "video",
-      mode: ["singleImage"],
+      mode: ["text", "startFrameOptional", ["imageReference:9", "audioReference:3"]],
+      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["480p", "768p"] }],
       audio: true,
-      durationResolutionMap: [{ duration: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["720p", "1080p"] }],
     },
     {
-      id: "doubao-seedance-1-5-pro",
-      label: "Seedance 1.5 Pro",
-      type: "video",
-      mode: ["text", "endFrameOptional"],
-      audio: true,
-      durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12], resolution: ["480p", "720p", "1080p"] }],
-    },
-    {
-      id: "ViduQ3-pro",
-      label: "ViduQ3 pro",
-      type: "video",
-      mode: ["singleImage", "startEndRequired"],
-      audio: false,
-      durationResolutionMap: [{ duration: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], resolution: ["540p", "720p", "1080p"] }],
-    },
-    {
-      id: "Kling-Video-O1",
-      label: "Kling-Video-O1",
-      type: "video",
-      mode: ["startFrameOptional", ["imageReference:7", "videoReference:1"]],
-      audio: "optional",
-      durationResolutionMap: [{ duration: [5, 10, 15], resolution: ["720p", "1080p"] }],
-    },
-    {
-      id: "Kling-V3-Omni",
-      label: "Kling-V3-Omni",
-      type: "video",
-      mode: ["startFrameOptional", ["imageReference:7", "videoReference:1"]],
-      audio: "optional",
-      durationResolutionMap: [{ duration: [5, 10, 15], resolution: ["720p", "1080p"] }],
+      id: "doubao-seedream-5.0-Pro",
+      label: "Doubao Seedream 5.0 Pro",
+      type: "image",
+      mode: ["text", "singleImage", "multiReference"],
+      imageSizes: ["1K", "1.5K", "2K"],
+      imageRatios: ["16:9", "9:16"],
     },
     {
       id: "doubao-seedream-5.0-Lite",
       label: "Doubao Seedream 5.0 Lite",
       type: "image",
       mode: ["text", "singleImage", "multiReference"],
-      imageSizes: ["2K", "4K"],
+      imageSizes: ["2K", "3K", "4K"],
       imageRatios: ["16:9", "9:16"],
     },
     {
-      id: "doubao-seedream-4-5",
-      label: "Doubao Seedream 4.5",
+      id: "全能图片G-2.5",
+      label: "全能图片G-2.5",
       type: "image",
       mode: ["text", "singleImage", "multiReference"],
-      imageSizes: ["2K", "4K"],
-      imageRatios: ["16:9", "9:16"],
+      imageSizes: ["1K", "2K", "4K"],
+      imageRatios: ["1:1", "9:16", "16:9", "3:4", "4:3", "3:2", "2:3", "21:9"],
     },
     {
       id: "全能图片G-2.0",
@@ -206,38 +192,20 @@ export default {
     const images = (request.images ?? []).map(mediaUrl);
     const size = (request.size ?? "2K").toUpperCase();
     const ratio = request.ratio ?? "16:9";
-    if (!["1K", "2K", "4K"].includes(size)) throw new Error("TF-router 图片尺寸仅支持 1K、2K、4K");
-
-    if (model.includes("gemini") || model.includes("nano")) {
-      const messages: unknown[] = [];
-      if (images.length) messages.push({ role: "user", content: images.map((url) => ({ type: "image_url", image_url: { url } })) });
-      messages.push({ role: "user", content: request.prompt + "请直接输出图片" });
-      const result = await fetchJson(this, "chat/completions", {
-        model: request.model,
-        messages,
-        extra_body: { google: { image_config: { aspect_ratio: ratio, image_size: size } } },
-      });
-      const choice = Array.isArray(result.choices) ? object(result.choices[0]) : {};
-      const content = object(choice.message).content;
-      const image = typeof content === "string" ? /!\[[^\]]*\]\(([^\s)]+)/.exec(content)?.[1] : undefined;
-      return mediaAsset(image, "image");
-    }
+    // if (!["1K", "2K", "4K"].includes(size)) throw new Error("TF-router 图片尺寸仅支持 1K、2K、4K");
 
     let metadata: Record<string, unknown>;
     let resolvedSize: string;
     if (model.includes("doubao") || model.includes("seedream")) {
-      const sizes: Record<string, Record<string, string>> = {
-        "16:9": { "2K": "2848x1600", "4K": "4096x2304" },
-        "9:16": { "2K": "1600x2848", "4K": "2304x4096" },
-      };
-      resolvedSize = sizes[ratio]?.[size === "1K" ? "2K" : size] ?? "";
+      resolvedSize = size.toLowerCase();
       if (!resolvedSize) throw new Error("TF-router Seedream 适配仅支持 16:9、9:16");
-      metadata = { response_format: "url", sequential_image_generation: "disabled", stream: false, watermark: false };
+      metadata = { response_format: "url", aspectRatio: ratio, sequential_image_generation: "disabled", stream: false, watermark: false };
     } else if (model.includes("gpt") || model.includes("全能图片")) {
       resolvedSize = size.toLowerCase();
       metadata = { aspectRatio: ratio };
     } else {
-      throw new Error(`不支持的图像模型：${request.model}`);
+      resolvedSize = size.toLowerCase();
+      metadata = { aspectRatio: ratio };
     }
     return generateTask(this, "image", {
       model: request.model,
@@ -262,12 +230,33 @@ export default {
     const imageRefs = isFrames ? frameImages.map((item) => item.url) : images;
     const ratio = request.ratio ?? "16:9";
     let metadata: Record<string, unknown>;
-    let includeImages = false;
 
-    if (model.includes("doubao") || model.includes("seedance") || model === "wan-3.0") {
+    if (model.includes("kling")) {
+      metadata = {
+        aspect_ratio: ratio,
+        sound: request.generateAudio ? "on" : "off",
+        video_list: videos.map((url) => ({ video_url: url })),
+        image_list: [],
+      };
+
+      if (model.includes("omni") || model.includes("o1")) {
+        metadata.image_list = isFrames
+          ? frameImages.map(({ url, role }) => ({ image_url: url, type: role === "first_frame" ? "first_frame" : "end_frame" }))
+          : images.map((url) => ({ image_url: url }));
+      } else {
+        if (imageRefs[0]) metadata.image = imageRefs[0];
+        if (isFrames && imageRefs[1]) metadata.image_tail = imageRefs[1];
+      }
+    } else if (model.includes("grok")) {
+      metadata = { aspectRatio: ratio };
+    } else {
       const references: Record<string, unknown>[] = [];
       if (Array.isArray(mode)) {
-        for (const [type, urls] of [["image", images], ["video", videos], ["audio", audios]] as const) {
+        for (const [type, urls] of [
+          ["image", images],
+          ["video", videos],
+          ["audio", audios],
+        ] as const) {
           references.push(...urls.map((url) => ({ role: `reference_${type}`, type: `${type}_url`, [`${type}_url`]: { url } })));
         }
       } else if (isFrames) {
@@ -281,45 +270,12 @@ export default {
         references,
         resolution: request.resolution,
       };
-    } else if (model.includes("vidu")) {
-      includeImages = true;
-      metadata = { aspect_ratio: ratio, audio: request.generateAudio ?? false, off_peak: false };
-    } else if (model.includes("kling")) {
-      metadata = {
-        aspect_ratio: ratio,
-        sound: request.generateAudio ? "on" : "off",
-        video_list: videos.map((url) => ({ video_url: url })),
-        image_list: [],
-      };
-      if (model.includes("omni") || model.includes("o1")) {
-        metadata.image_list = isFrames
-          ? frameImages.map(({ url, role }) => ({ image_url: url, type: role === "first_frame" ? "first_frame" : "end_frame" }))
-          : images.map((url) => ({ image_url: url }));
-      } else {
-        if (imageRefs[0]) metadata.image = imageRefs[0];
-        if (isFrames && imageRefs[1]) metadata.image_tail = imageRefs[1];
-      }
-    } else if (model.includes("grok")) {
-      metadata = { aspectRatio: ratio };
-    } else if (model.includes("wan")) {
-      includeImages = true;
-      metadata = {};
-      if (isFrames && frameImages.length >= 2) {
-        metadata.first_frame_url = frameImages.find((item) => item.role === "first_frame")?.url;
-        metadata.last_frame_url = frameImages.find((item) => item.role === "last_frame")?.url;
-      } else if (imageRefs[0]) {
-        metadata.img_url = imageRefs[0];
-      }
-      if (typeof request.generateAudio === "boolean") metadata.audio = request.generateAudio;
-    } else {
-      throw new Error(`不支持的视频模型：${request.model}`);
     }
     return generateTask(this, "video", {
       model: request.model,
       prompt: request.prompt,
       duration: request.duration,
       resolution: request.resolution,
-      ...(includeImages && imageRefs.length ? { images: imageRefs } : {}),
       metadata,
     });
   },

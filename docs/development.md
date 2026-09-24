@@ -156,7 +156,7 @@ bun run package:desktop
 
 启动库脚本会下载固定版本的 ThorVG 源码并校验摘要。产物分别位于 `build/desktop/artifacts/macArm64/` 和 `build/desktop/artifacts/macX64/`。
 
-本机默认生成未做 Developer ID 签名与公证的测试包；GitHub Actions 的 ARM 包会按下方配置自动签名，暂不公证，Intel 仍不重签。对于自己构建且确认来源的测试应用，若被隔离属性拦截，可仅移除该应用的隔离属性，路径按实际位置调整：
+本机默认生成未做 Developer ID 签名与公证的测试包；GitHub Actions 的 ARM 包会按下方配置自动签名并公证，Intel 仍不重签。对于自己构建且确认来源的测试应用，若被隔离属性拦截，可仅移除该应用的隔离属性，路径按实际位置调整：
 
 ```sh
 xattr -dr com.apple.quarantine "/Applications/toonflow.app"
@@ -196,14 +196,17 @@ Intel Mac 在安装兼容 SDK 后，先运行桌面开发或构建命令生成�
 
 [Debug 工作流](../.github/workflows/debug.yml) 可单独选择平台或全部平台，产物保留 7 天，不创建 Release。默认只打完整包，勾选 `generatePatch` 可验证增量构建。CI 构建和归档检查不等于已验证真实安装、GUI 启动或 macOS Gatekeeper。
 
-**ARM 自动签名：首次配置（暂不公证）**
+**ARM 自动签名与公证：首次配置**
 
 在 GitHub 仓库的 **Settings → Secrets and variables → Actions → New repository secret** 添加：
 
 | Secret | 内容 |
 | --- | --- |
-| `MACOS_CERTIFICATE_BASE64` | 包含一个有效 **Developer ID Application** 或临时 **Apple Development** 证书及其私钥的 `.p12` 文件，编码为 Base64。 |
+| `MACOS_CERTIFICATE_BASE64` | 包含一个有效 **Developer ID Application** 证书及其私钥的 `.p12` 文件，编码为 Base64。 |
 | `MACOS_CERTIFICATE_PASSWORD` | 导出该 `.p12` 时设置的非空密码。 |
+| `MACOS_NOTARIZATION_KEY_ID` | App Store Connect 团队 API 密钥的 Key ID。 |
+| `MACOS_NOTARIZATION_ISSUER_ID` | 该团队 API 密钥的完整 Issuer ID，不是 Team ID。 |
+| `MACOS_NOTARIZATION_KEY_BASE64` | 对应 API 密钥的 `.p8` 私钥文件，编码为 Base64。 |
 
 在 Windows PowerShell 中执行以下命令，把路径替换为本机证书路径。命令只复制到剪贴板，不打印证书内容，也不生成文件；随后粘贴到 `MACOS_CERTIFICATE_BASE64` 的 Secret 输入框：
 
@@ -211,19 +214,25 @@ Intel Mac 在安装兼容 SDK 后，先运行桌面开发或构建命令生成�
 [Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\证书目录\signing.p12')) | Set-Clipboard
 ```
 
+然后单独执行下面的命令，把 `.p8` 路径替换为本机文件路径，将剪贴板内容保存到 `MACOS_NOTARIZATION_KEY_BASE64`：
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\证书目录\AuthKey_你的KeyID.p8')) | Set-Clipboard
+```
+
 粘贴保存后可执行 `Set-Clipboard -Value ''` 清空剪贴板。密码直接填写到 `MACOS_CERTIFICATE_PASSWORD`，不写进命令、源码或聊天记录。Base64 只是编码，不是加密；P12、P8、Base64、密码均不得提交到公开仓库或上传为构建产物。
 
-当前不读取公证用的 Key ID、Issuer ID 或 P8；此前配置的三个 `MACOS_NOTARIZATION_*` Secrets 可以保留，工作流不会使用。
+公证使用 App Store Connect **团队 API 密钥**，Key ID、Issuer ID 与 P8 必须对应同一把有权限的密钥。更换签名 P12 不要求同时更换仍有效且有权限的公证 API 密钥。这种认证方式不需要 Apple ID 密码或 Team ID；P12 及其密码用于代码签名。
 
-配置后，Debug 与 Release 的 ARM 构建都会自动导入临时钥匙串，使用 Electrobun 签署应用内的原生代码、完整更新包中的应用、安装包装程序和 DMG。上传前还会严格验证解压后的应用、DMG 及镜像内应用的签名，并核对是否使用本次导入的证书，避免打包过程破坏签名。流程不提交 Apple 公证，也不检查公证票据。
+配置后，Debug 与 Release 的 ARM 构建都会自动导入临时钥匙串，使用 Electrobun 签署应用内的原生代码、完整更新包中的应用、安装包装程序和 DMG，并分别提交 Apple 公证、等待通过、附加并验证公证票据。完整更新归档在应用公证后生成；上传前还会严格验证解压后的应用、DMG 及镜像内应用的签名和公证票据，并核对是否使用本次导入的 Developer ID 证书。
 
-缺少签名 Secret、没有唯一有效的支持证书或签名验收失败都会中止构建，不回退为未签名包。临时 P12 在导入步骤结束后删除；钥匙串在构建成功、失败或取消后的清理步骤中删除，均放在运行器临时目录。证书 Base64 与密码只注入凭据准备步骤。
+缺少 Secret、没有唯一有效的 Developer ID Application 身份、Apple 拒绝公证或验收失败都会中止构建，不回退为未签名或未公证包。临时 P12 在导入步骤结束后删除；P8 与钥匙串在构建成功、失败或取消后的清理步骤中删除，均放在运行器临时目录。证书 Base64、密码和 P8 Base64 只注入凭据准备步骤，公证 API 标识只额外传给 ARM 构建步骤。公证等待计入工作流现有的 90 分钟超时，超时不会发布。
 
 公开仓库只从可信的手动操作或 `v*` 标签触发签名，不接入 `pull_request` / `pull_request_target`。请用 GitHub Rulesets 保护发布分支及 `v*` 标签，并限制仓库写权限；签名构建会执行所选提交的代码，有权修改发布代码或工作流的人也处于 Secrets 的信任边界内。证书导入方式参见 [GitHub 官方说明](https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms/sign-xcode-applications)。
 
-ARM 的 CI 构建强制签名，本机构建默认不启用；Intel 的旧 SDK 重签限制保持不变。`Apple Development` 仅用于当前临时开发签名，不能替代正式站外分发的 `Developer ID Application`。即使签名完整，未公证应用仍可能被 macOS 拦截；确认来源可信后，可尝试“系统设置 → 隐私与安全性 → 仍要打开”，但不能保证所有电脑均可安装运行。CI 验收不代替实际 Mac 上从浏览器下载、安装、启动及升级的验证。后续正式分发应换用 Developer ID 并恢复公证，参见 [Apple 安全打开应用说明](https://support.apple.com/en-us/102445)。
+ARM 的 CI 构建强制同时签名与公证，本机构建默认不启用；Intel 的旧 SDK 重签限制保持不变。公证无需上架 App Store，首次打开仍可能出现确认打开互联网下载应用的提示。CI 验收不代替实际 Mac 上从浏览器下载、安装、启动及升级的验证，参见 [Apple 安全打开应用说明](https://support.apple.com/en-us/102445)。
 
-若凭据准备步骤提示“未找到唯一有效的 Developer ID Application 或 Apple Development 身份”，查看该步骤后续输出的证书类别、有效期和系统诊断。`Apple Distribution`、`Developer ID Installer` 不属于当前支持的证书类型。若类别正确，仍需检查是否含匹配私钥、是否过期，以及证书信任链；成功导入 P12 不等于存在有效的代码签名身份。诊断不会打印私钥、密码或证书姓名。
+若凭据准备步骤提示“未找到唯一有效的 Developer ID Application 身份”，查看该步骤后续输出的证书类别、有效期和系统诊断。`Apple Development`、`Apple Distribution`、`Developer ID Installer` 均不能替代当前所需的 `Developer ID Application`。若类别正确，仍需检查是否含匹配私钥、是否过期，以及证书信任链；成功导入 P12 不等于存在有效的代码签名身份。诊断不会打印私钥、密码或证书姓名。
 
 **本机打包与独立更新服务**
 
