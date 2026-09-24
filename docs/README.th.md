@@ -108,7 +108,7 @@
 
 <p align="center">
   <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">ดาวน์โหลดแอป</a> ·
-  <a href="https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink">คู่มือการใช้งาน</a> ·
+  <a href="https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf">คู่มือการใช้งาน</a> ·
   <a href="https://api.toonflow.net/console/plugIn">ตลาดปลั๊กอิน</a> ·
   <a href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd">เอกสารสำหรับนักพัฒนา</a> ·
   <a href="https://api.toonflow.net/">แพลตฟอร์มโมเดลอย่างเป็นทางการ</a>
@@ -233,7 +233,7 @@ sudo spctl --master-disable
 
 </details>
 
-ดูคำแนะนำเพิ่มเติมได้ใน[คู่มือการใช้งาน](https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink)
+ดูคำแนะนำเพิ่มเติมได้ใน[คู่มือการใช้งาน](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)
 
 ---
 

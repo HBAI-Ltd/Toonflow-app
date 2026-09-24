@@ -108,7 +108,7 @@
 
 <p align="center">
   <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">下載桌面版</a> ·
-  <a href="https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink">使用教學</a> ·
+  <a href="https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf">使用教學</a> ·
   <a href="https://api.toonflow.net/console/plugIn">外掛市集</a> ·
   <a href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd">開發者文件</a> ·
   <a href="https://api.toonflow.net/">官方模型平台</a>
@@ -233,7 +233,7 @@ sudo spctl --master-disable
 
 </details>
 
-更多操作說明請參閱[使用教學](https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink)。
+更多操作說明請參閱[使用教學](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)。
 
 ---
 

@@ -108,7 +108,7 @@
 
 <p align="center">
   <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">Download</a> ·
-  <a href="https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink">User Guide</a> ·
+  <a href="https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf">User Guide</a> ·
   <a href="https://api.toonflow.net/console/plugIn">Plugin Marketplace</a> ·
   <a href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd">Developer Documentation</a> ·
   <a href="https://api.toonflow.net/">Official Model Platform</a>
@@ -233,7 +233,7 @@ This relaxes security restrictions for all apps. Afterward, we recommend restori
 
 </details>
 
-For more instructions, see the [User Guide](https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink).
+For more instructions, see the [User Guide](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf).
 
 ---
 

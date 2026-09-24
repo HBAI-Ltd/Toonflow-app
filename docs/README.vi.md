@@ -108,7 +108,7 @@
 
 <p align="center">
   <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">Tải ứng dụng</a> ·
-  <a href="https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink">Hướng dẫn sử dụng</a> ·
+  <a href="https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf">Hướng dẫn sử dụng</a> ·
   <a href="https://api.toonflow.net/console/plugIn">Chợ plugin</a> ·
   <a href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd">Tài liệu nhà phát triển</a> ·
   <a href="https://api.toonflow.net/">Nền tảng mô hình chính thức</a>
@@ -233,7 +233,7 @@ Thao tác này nới lỏng hạn chế bảo mật cho tất cả ứng dụng.
 
 </details>
 
-Xem thêm trong [hướng dẫn sử dụng](https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink).
+Xem thêm trong [hướng dẫn sử dụng](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf).
 
 ---
 

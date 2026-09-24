@@ -124,7 +124,7 @@
                   tag="a"
                   text
                   :icon="IconBook"
-                  href="https://bcn73rj0zcx7.feishu.cn/docx/Ps90dTzumoFppLxAHqocimGenFf?from=from_copylink"
+                  href="https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf"
                   target="_blank"
                   rel="noopener noreferrer"
                   @click="helpVisible = false">
