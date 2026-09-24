@@ -10,3 +10,4 @@ export * from "./nodeTools";
 export * from "./workspaceFiles";
 
 export * from "./nodeAi";
+export * from "./nodeFfmpeg";

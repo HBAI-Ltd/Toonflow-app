@@ -6,10 +6,12 @@
   "exports": {
     ".": "./src/index.ts",
     "./types": "./src/types.ts",
+    "./browser": "./src/browser.ts",
     "./runtime": "./src/runtime.ts"
   },
   "scripts": { "typecheck": "tsc" },
   "dependencies": {
+    "eventsource-parser": "3.1.1",
     "@renmu/fluent-ffmpeg": "2.3.3"
   }
 }

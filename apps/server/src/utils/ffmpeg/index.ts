@@ -3,6 +3,8 @@ import { build, createFfmpeg, downloadSources, getToolStatus, installFfmpeg, tar
 import type { DownloadState, FfmpegMode, SourceId } from "@toonflow/ffmpeg";
 import conf from "@/utils/conf";
 
+export { executeRemoteFfmpeg } from "@toonflow/ffmpeg";
+
 const directory = join(dirname(conf.path), "ffmpeg", target);
 let download: DownloadState = { phase: "idle", received: 0 };
 // ACT: 沿用 server 单进程模型，每次只下载一套程序；不持久化运行中的任务。

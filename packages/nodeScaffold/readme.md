@@ -75,7 +75,7 @@ const { nodeProps, outputs } = useNode({
 </script>
 ```
 
-`useNode(options?)` 接受 `label`、`icon`、`handles`、`outputs`，返回 `id`、`node`、`config`、`nodeProps`、`handles`、`outputs`、`nodeEvent`、`nodeTools`、`files`、`ai`、`updateNodeInternals`。`nodeProps` 是供骨架绑定的 computed，包含标题、图标、端口和输出；`outputs` 根据默认值推导类型，并恢复当前节点保存的合法输出，只接受仍存在的 source 端口及匹配类型。文本默认值保持 `STRING`；图片节点无已保存输出时保持为空。
+`useNode(options?)` 接受 `label`、`icon`、`handles`、`outputs`，返回 `id`、`node`、`config`、`nodeProps`、`handles`、`outputs`、`nodeEvent`、`nodeTools`、`files`、`ai`、`ffmpeg`、`updateNodeInternals`。`nodeProps` 是供骨架绑定的 computed，包含标题、图标、端口和输出；`outputs` 根据默认值推导类型，并恢复当前节点保存的合法输出，只接受仍存在的 source 端口及匹配类型。文本默认值保持 `STRING`；图片节点无已保存输出时保持为空。
 
 `files.uploadFile(file)`、`files.removeNodeFiles()` 和 `updateNodeInternals()` 已绑定当前节点，无需再次传 ID；`files` 同时提供 `getWorkspaceFiles()`、`useFileUrl()`。端口定义、具体 UI、上传校验和上传/删除互斥仍由业务节点管理。选中状态可直接使用 `node.selected`，例如绑定 `v-model:bottomVisible="node.selected"`。
 
@@ -87,7 +87,37 @@ const { nodeProps, outputs } = useNode({
 
 ### FFmpeg 媒体处理
 
-FFmpeg 现在仅向服务端工具和供应商提供原生链式 API，参见 `packages/toolScaffold/readme.md`。浏览器节点不再提供 `useNodeFfmpeg`、`useNode().ffmpeg` 或 JSON 计划/字节转换桥，也不打包 Node.js 执行库。
+`await useNode().ffmpeg(signal?)` 获取绑定当前工作区的工厂；在组件 setup 中获取 `ffmpeg`，事件处理函数中再调用。也可以单独使用 `useNodeFfmpeg()`（从 runtime 或 `@toonflow/nodes-scaffold/nodeFfmpeg` 导入）。调用方式与 tools 的 fluent 链一致，支持多输入、多输出、复杂滤镜、截图、拼接、`clone()`、`ffprobe` 和编码器等能力查询。
+
+```ts
+const { ffmpeg: loadFfmpeg, id } = useNode();
+
+async function compose(signal?: AbortSignal) {
+  const ffmpeg = await loadFfmpeg(signal);
+  // 输出目录应事先通过 files 创建；新文件名避免覆盖原素材。
+  const output = `assets/${id}/combined.mp4`;
+  await new Promise<void>((resolve, reject) => {
+    ffmpeg("assets/first.mp4")
+      .input("assets/second.mp4")
+      .complexFilter("[0:v][1:v]hstack=inputs=2[video]")
+      .outputOptions("-map [video]")
+      .videoCodec("libx264")
+      .on("progress", progress => console.log(progress.timemark))
+      .on("error", reject)
+      .on("end", () => resolve())
+      .save(output);
+  });
+  return output;
+}
+```
+
+链式调用通过 `/api/ffmpeg/execute` 交给宿主的 `@toonflow/ffmpeg` 执行，节点 UMD 不包含 Node.js 执行库。支持 `start`、`progress`、`stderr`、`codecData`、`filenames`、`end`、`error` 事件及 `on/once/off`；配置在执行前完成，并行使用独立命令或 `clone()`。目录在获取工厂时固定，切换工作区后不会写入新项目。
+
+输入输出使用工作区文件路径，上传和读取二进制复用 `files`。浏览器不能传递 Node.js Stream、logger 或子进程，不提供 `.pipe()`、执行程序路径 setter 和服务器预设文件加载；`preset(command => ...)` 可在节点内复用配置。类型使用 `BrowserFfmpegFactory` / `BrowserFfmpegCommand`，不冒充原生 Node.js 对象。
+
+节点卸载、传入 signal 取消或 `command.kill()` 会取消请求并终止转换；开始前取消也会阻止随后启动的 FFmpeg 继续执行。FFprobe/能力查询的原生库未暴露子进程，取消仅停止等待查询结果。缺少 FFmpeg 时复用设置中的下载提示，不自动安装或重试。
+
+显式输入输出与截图路径沿用宿主的工作区、符号链接检查；原始参数、滤镜和媒体清单中的间接 I/O 仍仅供可信节点使用，**不是文件系统沙箱**。服务端原生 API 参见 `packages/toolScaffold/readme.md`。
 
 ### AI 模型调用
 

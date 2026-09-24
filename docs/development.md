@@ -92,6 +92,7 @@ bun run dev
 | `bun run dev:plugins` | 构建节点和工具，并同步到开发数据目录。 |
 | `bun run dev:desktop` | 同步开发插件、构建 Web，并启动桌面应用。 |
 | `bun run build` | 构建工具、Web、Server、MCP，并输出技能和提供方文件。 |
+| `bun run build:server` | 构建独立部署所需的节点、工具、Web、Server、MCP、技能和提供方，支持 Linux。 |
 | `bun run build:nodes` | 构建节点到 `build/nodes/`，不写入 `data/nodes/`。 |
 | `bun run build:tools` | 构建工具到 `build/tools/`，不写入 `data/tools/`。 |
 | `bun run start:server` | 运行 `build/server/` 中已构建的服务。 |
@@ -108,12 +109,11 @@ bun run dev
 首次从源码运行，完成依赖安装后执行：
 
 ```sh
-bun run dev:plugins
-bun run build
+bun run build:server
 bun run start:server
 ```
 
-然后打开 `http://localhost:3000`。这套命令使用仓库根目录的默认 `data/`；`build` 本身不初始化节点。迁移到其他目录或机器时，需一并处理节点、配置和工作区，不能只复制 `build/` 就视作完整安装。
+然后打开 `http://localhost:3000`。这套命令使用仓库根目录的默认 `data/`；服务首次启动会从构建产物初始化内置节点、工具、技能和提供方，保留已有插件文件。迁移到其他目录或机器时，需一并处理运行依赖、配置和工作区，不能只复制 `build/` 就视作完整安装。
 
 独立 Server 采用单进程运行。桌面端复用同一个 `createApp`，在主进程监听系统分配的本机端口。目录选择、原生保存与桌面更新等接口仅由桌面宿主提供。
 

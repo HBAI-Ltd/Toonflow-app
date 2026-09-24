@@ -52,7 +52,7 @@ ffmpeg.ffprobe("assets/first.mp4", (error, data) => {
 
 输出覆盖、超时、事件和错误处理沿用原生库，调用方负责使用新文件名保护素材。`signal` 仅取消工厂准备阶段；运行中的命令由调用方监听取消并调用 `command.kill("SIGKILL")`，同时处理启动前已取消的情况和监听器清理。入口按需检查 FFmpeg/FFprobe，缺失时仍通知前端下载并抛出 `FfmpegRequiredError`；不自动安装或重试。
 
-不再提供 `convert`、配置回调、JSON plan 或浏览器 HTTP 执行桥。`FfmpegFactory`、`FfmpegCommand`、`FfprobeData` 从 `@toonflow/ffmpeg/types` 和 `@toonflow/tools-scaffold/runtime` 导出，直接复用原生类型。
+工具不再使用 `convert`、配置回调或 JSON plan。`FfmpegFactory`、`FfmpegCommand`、`FfprobeData` 从 `@toonflow/ffmpeg/types` 和 `@toonflow/tools-scaffold/runtime` 导出，直接复用原生类型。浏览器节点通过 `await useNode().ffmpeg(signal?)` 使用对应的文件型链式 API，由 HTTP 事件流交给同一宿主执行，具体边界见 `packages/nodeScaffold/readme.md`。
 
 工具包的静态提示词在 `build.ts` 的 `createToolConfig({ ..., prompt: "工具操作规则", configRules: [...] }, import.meta.url)` 中声明。`prompt` 为可选字符串，最多 20000 个字符，支持多行文本；随元数据打包，旧插件未声明时按空字符串处理。
 

@@ -8,6 +8,8 @@ import { createGunzip } from "node:zlib";
 import { builds, downloadSources } from "./catalog";
 
 export { createFfmpeg } from "./runtime";
+export { executeRemoteFfmpeg } from "./remote";
+export type { BrowserFfmpegRequest } from "./browserTypes";
 export type * from "./types";
 export { downloadSources };
 export type SourceId = typeof downloadSources[number]["id"];

@@ -8,6 +8,7 @@ type FfmpegInternals = ffmpeg.FfmpegCommand & {
   options: ffmpeg.FfmpegCommandOptions;
   _inputs: { source: string | Readable }[];
   _outputs: { target?: string | NodeJS.WritableStream }[];
+  _currentOutput?: FfmpegInternals["_outputs"][number];
 };
 
 const require = createRequire(import.meta.url);
@@ -77,7 +78,14 @@ export function createFfmpeg(directory: string): typeof ffmpeg {
     return native.output.call(this, fileArgument(target), options);
   };
   proto.clone = function() {
-    return Object.setPrototypeOf(native.clone.call(this), proto);
+    // ACT: fluent 2.3.3 已设置输出时 clone.output() 会抛错；用空输出保留原生“不复制输出”的语义。
+    const source = Object.create(this) as FfmpegInternals;
+    if (this._outputs[0] && "target" in this._outputs[0]) {
+      const empty = factory() as FfmpegInternals;
+      source._outputs = empty._outputs;
+      source._currentOutput = empty._currentOutput;
+    }
+    return Object.setPrototypeOf(native.clone.call(source), proto);
   };
   proto._getArguments = function() {
     checkFiles(this);
