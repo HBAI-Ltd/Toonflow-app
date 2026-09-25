@@ -17,6 +17,7 @@ const { nextZIndex } = useZIndex();
 const previewReferenceId = ref<string>();
 const previewUrl = computed(() => String(props.references.find(item => item.id === previewReferenceId.value)?.avatar ?? ""));
 let sender: xSender | undefined;
+let resetTask: Promise<void> | undefined;
 
 function previewReference(event: MouseEvent) {
   const tag = event.target instanceof Element ? event.target.closest<HTMLElement>(".imageReference[data-reference-id]") : null;
@@ -46,37 +47,86 @@ function referenceHtml(reference: MentionItem & { value: string }) {
 
 function normalizeModel(value: AnyTagProps[][]): AnyTagProps[][] {
   if (!value.length) return [[{ type: "Write", text: "" }]];
-  return value.map(line => line.flatMap((tag): AnyTagProps[] => {
-    if (tag.type === "Write") return tag.text.split(/(\{\{ref \d+\}\})/g).map(text => {
-      const reference = props.references.find(item => item.value === text);
-      return reference
-        ? { type: "Custom", html: `<span style="display: inline-block;">${referenceHtml(reference)}</span>` }
-        : { type: "Write", text };
+  return value.map(line => {
+    const tags = line.flatMap((tag): AnyTagProps[] => {
+      if (tag.type === "Write") return tag.text.split(/(\{\{ref \d+\}\})/g).map(text => {
+        const reference = props.references.find(item => item.value === text);
+        return reference
+          ? { type: "Custom", html: `<span style="display: inline-block;">${referenceHtml(reference)}</span>` }
+          : { type: "Write", text };
+      });
+      if (tag.type !== "Custom") return [tag];
+      const template = document.createElement("template");
+      template.innerHTML = tag.html;
+      const id = template.content.querySelector<HTMLElement>(".imageReference[data-reference-id]")?.dataset.referenceId;
+      if (!id) return [tag];
+      const reference = props.references.find(item => item.id === id);
+      if (!reference) return [];
+      return [{ type: "Custom", html: `<span style="display: inline-block;">${referenceHtml(reference)}</span>` }];
     });
-    if (tag.type !== "Custom") return [tag];
-    const template = document.createElement("template");
-    template.innerHTML = tag.html;
-    const id = template.content.querySelector<HTMLElement>(".imageReference[data-reference-id]")?.dataset.referenceId;
-    if (!id) return [tag];
-    const reference = props.references.find(item => item.id === id);
-    if (!reference) return [];
-    return [{ type: "Custom", html: `<span style="display: inline-block;">${referenceHtml(reference)}</span>` }];
-  }));
+    const next: AnyTagProps[] = [{ type: "Write", text: "" }];
+    for (const tag of tags) {
+      const previous = next[next.length - 1];
+      if (tag.type === "Write" && previous.type === "Write") previous.text += tag.text;
+      else {
+        if (tag.type !== "Write" && previous.type !== "Write") next.push({ type: "Write", text: "" });
+        next.push(tag);
+      }
+    }
+    if (next[next.length - 1].type !== "Write") next.push({ type: "Write", text: "" });
+    return next;
+  });
+}
+
+function releaseNodeFocus(instance: xSender) {
+  // ACT: 1.4.6 的排队输入回调仍会聚焦旧 Write；仅让即将移除的节点失效，库支持取消回调后可移除。
+  for (const grid of instance.chatEditor.NODES) {
+    for (const node of grid.children) {
+      if (node.type === "Write" || node.type === "Input") node.focus = () => {};
+    }
+  }
 }
 
 function syncModel(value = sender?.getModel() ?? model.value) {
-  const next = normalizeModel(value);
+  // 输入法组字时只同步文本，等 compositionend 后再替换参考标签，保留正在编辑的 DOM。
+  const next = sender?.chatEditor.isComposition ? value : normalizeModel(value);
   if (sender && JSON.stringify(sender.getModel()) !== JSON.stringify(next)) {
     const instance = sender;
-    const cursor = document.activeElement === instance.chatElement.richText ? instance.getCurrentNode() : undefined;
-    const grid = cursor?.instance?.context;
-    const gridIndex = grid ? instance.chatEditor.NODES.indexOf(grid) : -1;
-    const childIndex = grid && cursor ? grid.children.indexOf(cursor.instance) : -1;
-    void instance.reset({ chatNode: next, clearHistory: false }).then(() => {
-      if (sender !== instance || !cursor) return;
-      const target = instance.chatEditor.NODES[gridIndex]?.children[childIndex];
-      if (target?.type === "Write" && target.text === cursor.instance.text) target.focus(cursor.offset);
+    const editor = instance.chatElement.richText;
+    const selection = instance.getSelection();
+    const focused = document.activeElement === editor;
+    const endpoints = focused ? [selection.anchorNode, selection.focusNode].map((node, index) => {
+      const gridIndex = instance.chatEditor.NODES.findIndex(grid => grid.$el.contains(node));
+      const grid = instance.chatEditor.NODES[gridIndex];
+      const childIndex = grid?.children.findIndex(child => child.$el.contains(node)) ?? -1;
+      const child = grid?.children[childIndex];
+      return {
+        gridIndex, childIndex,
+        text: child?.type === "Write" || child?.type === "Input" ? child.text : undefined,
+        offset: index ? selection.focusOffset : selection.anchorOffset,
+      };
+    }) : [];
+    releaseNodeFocus(instance);
+    const task = instance.reset({ chatNode: next, clearHistory: false });
+    resetTask = task;
+    void task.finally(() => { if (resetTask === task) resetTask = undefined; });
+    // ACT: reset 同步重建 DOM，但下一帧会强制移到末尾；在此恢复选区，并在 reset 完成前抑制该次聚焦。
+    const last = instance.chatEditor.NODES.at(-1)?.children.at(-1);
+    if (last?.type === "Write") {
+      Object.assign(instance.getCurrentNode(), { instance: last, node: last.$el.children[0].firstChild, offset: last.text.length || 1 });
+    }
+    const restored = endpoints.map(endpoint => {
+      const target = instance.chatEditor.NODES[endpoint.gridIndex]?.children[endpoint.childIndex];
+      if ((target?.type !== "Write" && target?.type !== "Input") || target.text !== endpoint.text) return;
+      const node = target.type === "Write" ? target.$el.children[0].firstChild : target.$el.children[0].children[0].firstChild;
+      if (node?.nodeType !== Node.TEXT_NODE || endpoint.offset > (node.textContent?.length ?? 0)) return;
+      return { target, node, offset: endpoint.offset };
     });
+    const [anchor, focus] = restored;
+    if (anchor && focus) {
+      focus.target.focus(focus.offset);
+      selection.setBaseAndExtent(anchor.node, anchor.offset, focus.node, focus.offset);
+    } else if (focused && last?.type === "Write") last.focus(-1);
   }
   model.value = next;
   text.value = getPromptText(next);
@@ -103,11 +153,14 @@ watch(model, (value) => {
   if (sender && JSON.stringify(value) !== JSON.stringify(sender.getModel())) syncModel(value);
 }, { deep: true });
 
-watch(() => props.references, (options) => {
-  if (!sender) return;
-  sender.bus.emit(xSender.EventSet.EVENT_COMMON_DIALOG_CLOSE);
-  sender.updateConfig({ mentionConfig: { dialogTitle: "选择参考", callEvery: false, options } });
-  syncModel();
+watch(() => props.references, async (options) => {
+  const instance = sender;
+  if (!instance) return;
+  instance.bus.emit(xSender.EventSet.EVENT_COMMON_DIALOG_CLOSE);
+  instance.updateConfig({ mentionConfig: { dialogTitle: "选择参考", callEvery: false, options } });
+  // 等库将本帧的输入 DOM 写回模型后再更新参考，避免用旧文本重建输入框。
+  await instance.nextTick();
+  if (sender === instance) syncModel();
 }, { deep: true });
 
 watch(senderElement, (element, _previous, onCleanup) => {
@@ -128,6 +181,36 @@ watch(senderElement, (element, _previous, onCleanup) => {
   });
   sender = instance;
   const editor = instance.chatElement.richText;
+  // ACT: 1.4.6 未检查卸载节点和空 Range 矩形；只适配当前实例，升级到库内修复后可移除。
+  const chatEditor = instance.chatEditor as typeof instance.chatEditor & {
+    focusFirst(): void;
+    focusLast(): void;
+    focusMark(): void;
+    cursorView(): void;
+    insertNodes(nodes: AnyTagProps[][]): Promise<void>;
+  };
+  for (const method of ["focusFirst", "focusLast", "focusMark"] as const) {
+    const focus = chatEditor[method].bind(chatEditor);
+    chatEditor[method] = () => {
+      if (sender !== instance || !editor.isConnected || !editor.getClientRects().length) return;
+      if (method === "focusLast" && resetTask) return;
+      if (method === "focusMark" && !editor.contains(instance.getCurrentNode().node)) return chatEditor.focusLast();
+      focus();
+    };
+  }
+  const cursorView = chatEditor.cursorView.bind(chatEditor);
+  chatEditor.cursorView = () => {
+    const selection = instance.getSelection();
+    if (sender !== instance || !editor.isConnected || !selection.rangeCount) return;
+    const range = selection.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer) || !range.getClientRects().length || !editor.parentElement?.getClientRects().length) return;
+    cursorView();
+  };
+  const insertNodes = chatEditor.insertNodes.bind(chatEditor);
+  chatEditor.insertNodes = async nodes => {
+    // 选区粘贴会先异步删除，再插入；关闭输入框后不再创建并聚焦新节点。
+    if (sender === instance && editor.isConnected) await insertNodes(nodes);
+  };
   editor.setAttribute("role", "textbox");
   editor.setAttribute("aria-label", "生成提示词");
   editor.setAttribute("aria-multiline", "true");
@@ -158,6 +241,7 @@ watch(senderElement, (element, _previous, onCleanup) => {
   document.addEventListener("pointerdown", closeOutside, true);
   onCleanup(() => {
     model.value = instance.getModel();
+    releaseNodeFocus(instance);
     sender = undefined;
     editor.removeEventListener("copy", copyText);
     editor.removeEventListener("cut", copyText);
@@ -237,6 +321,7 @@ function handleMentionKey(event: KeyboardEvent) {
 .promptInput {
   display: block;
   margin: 12px 0 16px;
+  cursor: text;
   -webkit-user-select: text;
   user-select: text;
 

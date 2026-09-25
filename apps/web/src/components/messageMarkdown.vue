@@ -3,7 +3,7 @@
     <markdown
       v-for="(chunk, index) in chunks"
       :key="index + '-' + !!definitions"
-      v-memo="[chunk, streaming && index === chunks.length - 1, codeOptions]"
+      v-memo="[chunk, streaming && index === chunks.length - 1, codeOptions, directory]"
       class="markdownChunk"
       :content="chunk"
       :mode="streaming && index === chunks.length - 1 ? 'streaming' : 'static'"
@@ -13,21 +13,25 @@
       :linkOptions="{ safetyCheck: false }"
       :cdnOptions="cdnOptions"
       :components="markdownOverlays"
+      :nodeRenderers="nodeRenderers"
       :parseMarkdownIntoBlocks="definitions ? keepChunk : undefined"
       locale="zh-CN" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, h } from "vue";
 import { Markdown, parseMarkdownIntoBlocks } from "vue-stream-markdown";
 import { MarkdownAstParser } from "@markmend/ast";
-import type { CodeOptions, ShikiOptions } from "vue-stream-markdown";
+import type { CodeOptions, ImageNodeRendererProps, ShikiOptions } from "vue-stream-markdown";
 import "vue-stream-markdown/index.css";
 import "vue-stream-markdown/theme.css";
 import markdownOverlays from "./markdownOverlays";
+import markdownImage from "./markdownImage.vue";
 
-const { content, streaming = false, codeOptions } = defineProps<{ content: string; streaming?: boolean; codeOptions?: CodeOptions }>();
+const { content, streaming = false, codeOptions, directory } = defineProps<{ content: string; streaming?: boolean; codeOptions?: CodeOptions; directory?: string }>();
+const renderImage = (image: ImageNodeRendererProps) => h(markdownImage, { image, directory: directory! });
+const nodeRenderers = computed(() => directory ? { image: renderImage } : {});
 const shikiOptions: ShikiOptions = { theme: ["github-light", "github-dark"] };
 const cdnOptions = { shiki: false } as const;
 const keepChunk = (value: string) => [value];

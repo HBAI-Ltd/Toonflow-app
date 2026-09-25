@@ -5,11 +5,11 @@ const router = createRouter({
   routes: [
     {
       path: "/",
-      redirect: () => useHelloStore().load() ? "/home" : "/hello",
+      redirect: "/hello",
     },
     {
       path: "/hello",
-      beforeEnter: () => useHelloStore().load() ? { path: "/home", replace: true } : true,
+      beforeEnter: async () => await useHelloStore().load() ? { path: "/home", replace: true } : true,
       component: () => import("@/pages/hello/index.vue"),
     },
     {

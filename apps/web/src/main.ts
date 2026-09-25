@@ -17,6 +17,8 @@ import { checkDesktopUpdate } from "@/stores/desktopUpdate";
 
 const app = createApp(App);
 const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
+const requiresWebView2Update = isDesktop && /Windows/i.test(navigator.userAgent)
+  && [Map.groupBy, URL.canParse, Promise.withResolvers].some(method => typeof method !== "function");
 let isMounted = false;
 
 async function notifyDesktopReady(failed = false) {
@@ -29,7 +31,10 @@ async function notifyDesktopReady(failed = false) {
   if (!response.ok) throw new Error((await response.json()).message || `通知桌面就绪失败（${response.status}）`);
 }
 
-loadSettings().then(async () => {
+// ACT: 已安装客户端的自动更新不经过 NSIS；启动时阻止缺少所需 API 的旧 WebView2 进入业务页面。
+(requiresWebView2Update
+  ? Promise.reject(new Error("当前 Microsoft Edge WebView2 Runtime 版本过旧。请以管理员身份运行微软最新版安装器；若仍提示已安装，请修复 WebView2 或联系管理员检查更新服务。更新完成后，请完全退出 Toonflow 再重新打开。"))
+  : loadSettings()).then(async () => {
   app.use(createPinia().use(createPersistedState({ storage: settingsStorage })));
   app.use(router);
   await router.isReady();
@@ -53,10 +58,15 @@ loadSettings().then(async () => {
   createApp({
     render: () => h(ElResult, {
       icon: "error",
-      title: "启动失败",
+      title: requiresWebView2Update ? "需要更新 WebView2" : "启动失败",
       subTitle: error instanceof Error ? error.message : "无法加载应用，请重试。",
     }, {
-      extra: () => h(ElButton, { type: "primary", onClick: () => window.location.reload() }, () => "重试"),
+      extra: () => h(ElButton, {
+        type: "primary",
+        onClick: () => requiresWebView2Update
+          ? window.open("https://developer.microsoft.com/microsoft-edge/webview2/#download", "_blank")
+          : window.location.reload(),
+      }, () => requiresWebView2Update ? "前往微软官网更新" : "重试"),
     }),
   }).mount("#app");
   await nextTick();

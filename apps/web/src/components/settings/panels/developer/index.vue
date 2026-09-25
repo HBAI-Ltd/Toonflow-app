@@ -13,7 +13,7 @@
       <div class="developerRow">
         <div class="toolDescription">
           <h3>首次使用引导</h3>
-          <p>当前{{ hello.completed ? '已完成' : '未完成' }}。标记仅保存在本机浏览器，重置后打开引导页，保留已配置的模型。</p>
+          <p>当前{{ hello.completed ? '已完成' : '未完成' }}。重置后打开引导页，保留已配置的模型。</p>
         </div>
         <el-button :icon="IconRefresh" :loading="resettingHello" :disabled="importingStorage || writingStorage" @click="resetHello">重置并打开引导页</el-button>
       </div>
@@ -67,7 +67,7 @@
         <div class="developerRow">
           <div class="toolDescription">
             <h3>浏览器持久缓存</h3>
-            <p>管理当前站点的 localStorage。删除 toonflow.hello 可恢复引导页；其他修改重新加载后生效。导入会覆盖同名项，保留其他项。</p>
+            <p>管理当前站点的 localStorage。修改重新加载后生效；首次使用引导请通过上方按钮重置。导入会覆盖同名项，保留其他项。</p>
           </div>
           <div class="storageToolbar">
             <input ref="storageFileInput" type="file" accept=".json,application/json" hidden @change="importStorage" />
@@ -166,7 +166,7 @@ async function resetHello() {
   if (storageBusy.value) return;
   resettingHello.value = true;
   try {
-    hello.reset();
+    await hello.reset();
     loadStorage();
     await router.replace("/hello");
   } catch {
@@ -266,7 +266,6 @@ async function exportStorage() {
 }
 
 function loadStorage() {
-  hello.load();
   storageError.value = "";
   storageMessage.value = "";
   try {
@@ -292,7 +291,7 @@ function writeStorage(entry: { key: string; value: string }, value: string | nul
     saveStorage([[entry.key, value]]);
     if (editingKey.value === entry.key) editingKey.value = null;
     loadStorage();
-    storageMessage.value = entry.key === "toonflow.hello" && value === null ? "引导标记已删除，现在可以访问 hello 页面。" : "已保存，重新加载页面后生效。";
+    storageMessage.value = "已保存，重新加载页面后生效。";
   } catch (err) {
     storageError.value = err instanceof Error ? err.message : "更新缓存失败";
   } finally {

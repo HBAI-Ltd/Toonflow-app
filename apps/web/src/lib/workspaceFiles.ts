@@ -38,12 +38,13 @@ export default function useWorkspaceFiles(directory?: MaybeRefOrGetter<string | 
     return data;
   }
 
-  function acquireUrl(path: string, mimeType: string) {
+  function acquireUrl(path: string, mimeType?: string) {
     const directory = getDirectory();
     const key = JSON.stringify([directory, path, mimeType]);
     let entry = fileUrls.get(key);
     if (!entry) {
-      const url = read(path).then(content => URL.createObjectURL(new Blob([content], { type: mimeType })));
+      const url = client.get<Blob>("/read", { params: { directory, path }, responseType: "blob" })
+        .then(({ data }) => URL.createObjectURL(mimeType ? new Blob([data], { type: mimeType }) : data));
       entry = { directory, path, url, users: 0 };
       fileUrls.set(key, entry);
       const current = entry;

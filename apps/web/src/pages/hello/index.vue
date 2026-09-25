@@ -99,7 +99,7 @@ async function completeSetup() {
   if (saving.value) return;
   saving.value = true;
   try {
-    hello.complete();
+    await hello.complete();
     anonymousData.track(view.value === "custom" ? "onboarding.complete" : "onboarding.skip");
     await router.replace("/home");
   } catch {
@@ -188,7 +188,7 @@ async function configureProviders() {
     });
     invalidateNodeModels("media");
     if (request.signal.aborted) return;
-    hello.complete();
+    await hello.complete();
     anonymousData.track("onboarding.complete");
     loginKey.value = "";
     ElMessage.success("文本模型和媒体模型已配置完成");
