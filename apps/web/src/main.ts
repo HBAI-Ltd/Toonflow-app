@@ -2,6 +2,7 @@ import { createApp, h, nextTick } from "vue";
 import { ElButton, ElResult } from "element-plus";
 import { createPinia } from "pinia";
 import { createPersistedState } from "pinia-plugin-persistedstate";
+import { bindLocale } from "@toonflow/i18n";
 import App from "./App.vue";
 import "@/assets/main.scss";
 import "element-plus/es/components/message-box/style/css";
@@ -12,7 +13,7 @@ import router from "@/router";
 import { registerDesktopProtocol } from "@/lib/desktopProtocol";
 import { registerDesktopDownloads } from "@/lib/saveFile";
 import { registerAnonymousData } from "@/lib/anonymousData";
-import { loadSettings, settingsStorage } from "@/stores/settings";
+import { loadSettings, settingsStorage, uiLocale } from "@/stores/settings";
 import { checkDesktopUpdate } from "@/stores/desktopUpdate";
 
 const app = createApp(App);
@@ -36,6 +37,7 @@ async function notifyDesktopReady(failed = false) {
   ? Promise.reject(new Error("当前 Microsoft Edge WebView2 Runtime 版本过旧。请以管理员身份运行微软最新版安装器；若仍提示已安装，请修复 WebView2 或联系管理员检查更新服务。更新完成后，请完全退出 Toonflow 再重新打开。"))
   : loadSettings()).then(async () => {
   app.use(createPinia().use(createPersistedState({ storage: settingsStorage })));
+  app.onUnmount(bindLocale(uiLocale));
   app.use(router);
   await router.isReady();
   app.onUnmount(registerAnonymousData());

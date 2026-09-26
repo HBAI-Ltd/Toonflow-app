@@ -1,5 +1,5 @@
 <template>
-  <el-config-provider :locale="zhCn">
+  <el-config-provider :locale="elementLocale">
     <router-view v-slot="{ Component: currentComponent }">
       <transition name="el-fade-in">
         <component :is="currentComponent" />
@@ -10,15 +10,18 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watchEffect } from "vue";
+import { computed, onBeforeUnmount, ref, watchEffect } from "vue";
 import { useZIndex } from "element-plus";
+import en from "element-plus/es/locale/lang/en";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
-import { uiSettings } from "@/stores/settings";
+import { uiLocale, uiSettings } from "@/stores/settings";
 import { useMcpControl } from "@/lib/mcpControl";
 import ffmpegRequired from "@/components/settings/ffmpegRequired.vue";
 import "element-plus/theme-chalk/dark/css-vars.css";
 
 useMcpControl();
+const elementLocale = computed(() => uiLocale.value === "en" ? en : zhCn);
+watchEffect(() => document.documentElement.lang = uiLocale.value === "en" ? "en" : "zh-CN");
 
 function preventPageZoom(event: WheelEvent) {
   if (event.ctrlKey || event.metaKey) event.preventDefault();

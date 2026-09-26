@@ -1,6 +1,7 @@
 import axios from "axios";
 import { computed, nextTick, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
+import type { UiLocale } from "@toonflow/i18n";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
 import { canvasShortcutFields, defaultCanvasShortcuts, getShortcutBindings, isShortcutAllowed, normalizeShortcut, type CanvasShortcuts } from "@/lib/canvasShortcuts";
 import "element-plus/es/components/message/style/css";
@@ -25,7 +26,7 @@ export const settingsStorage = {
   },
 };
 
-export const defaultUiSettings = { theme: "light", primaryColor: "#409eff", fontScale: 100, radius: 8, startupAnimation: true };
+export const defaultUiSettings = { theme: "light", primaryColor: "#409eff", fontScale: 100, radius: 8, startupAnimation: true, locale: "zh" as UiLocale };
 export const uiSettings = computed(() => {
   const raw = settings.value.ui;
   const ui = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
@@ -35,7 +36,13 @@ export const uiSettings = computed(() => {
     fontScale: typeof ui.fontScale === "number" && Number.isFinite(ui.fontScale) ? Math.min(125, Math.max(85, ui.fontScale)) : defaultUiSettings.fontScale,
     radius: typeof ui.radius === "number" && Number.isFinite(ui.radius) ? Math.min(16, Math.max(0, ui.radius)) : defaultUiSettings.radius,
     startupAnimation: ui.startupAnimation !== false,
+    locale: ui.locale === "en" ? "en" : "zh" as UiLocale,
   };
+});
+
+export const uiLocale = computed<UiLocale>({
+  get: () => uiSettings.value.locale,
+  set: locale => updateUiSettings({ locale }),
 });
 
 export function updateUiSettings(patch: Partial<typeof defaultUiSettings>) {

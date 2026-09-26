@@ -86,6 +86,7 @@
         "@tiptap/starter-kit": "3.31.3",
         "@tiptap/vue-3": "3.31.3",
         "@toonflow/assets": "workspace:*",
+        "@toonflow/i18n": "workspace:*",
         "@toonflow/model-icons": "workspace:*",
         "@toonflow/nodes-scaffold": "workspace:*",
         "@toonflow/providers": "workspace:*",
@@ -129,6 +130,16 @@
       "dependencies": {
         "@renmu/fluent-ffmpeg": "2.3.3",
         "eventsource-parser": "3.1.1",
+      },
+    },
+    "packages/i18n": {
+      "name": "@toonflow/i18n",
+      "version": "0.0.0",
+      "devDependencies": {
+        "typescript": "~6.0.3",
+      },
+      "peerDependencies": {
+        "vue": "^3.5.42",
       },
     },
     "packages/mcp": {
@@ -1000,6 +1011,8 @@
     "@toonflow/desktop": ["@toonflow/desktop@workspace:apps/desktop"],
 
     "@toonflow/ffmpeg": ["@toonflow/ffmpeg@workspace:packages/ffmpeg"],
+
+    "@toonflow/i18n": ["@toonflow/i18n@workspace:packages/i18n"],
 
     "@toonflow/mcp": ["@toonflow/mcp@workspace:packages/mcp"],
 
@@ -2348,6 +2361,8 @@
     "@tdesign/web-components/@popperjs/core": ["@popperjs/core@2.11.8", "https://registry.npmmirror.com/@popperjs/core/-/core-2.11.8.tgz", {}, "sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A=="],
 
     "@tiptap/markdown/marked": ["marked@17.0.6", "https://registry.npmmirror.com/marked/-/marked-17.0.6.tgz", { "bin": { "marked": "bin/marked.js" } }, "sha512-gB0gkNafnonOw0obSTEGZTT86IuhILt2Wfx0mWH/1Au83kybTayroZ/V6nS25mN7u8ASy+5fMhgB3XPNrOZdmA=="],
+
+    "@toonflow/i18n/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@toonflow/node-audio/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 

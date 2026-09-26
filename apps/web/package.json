@@ -30,6 +30,7 @@
     "@tiptap/starter-kit": "3.31.3",
     "@tiptap/vue-3": "3.31.3",
     "@toonflow/assets": "workspace:*",
+    "@toonflow/i18n": "workspace:*",
     "@toonflow/model-icons": "workspace:*",
     "@toonflow/nodes-scaffold": "workspace:*",
     "@toonflow/providers": "workspace:*",
