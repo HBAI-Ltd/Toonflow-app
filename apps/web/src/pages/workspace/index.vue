@@ -18,7 +18,7 @@
         :saveNode="saveDocumentNode" />
     </keep-alive>
     <workspaceMenu class="workspaceMenu" @openSettings="settingsVisible = true" />
-    <el-segmented :modelValue="activePanel" class="panelSwitcher" :options="panelOptions" size="small" aria-label="切换面板" @change="switchPanel">
+    <el-segmented :modelValue="activePanel" class="panelSwitcher" :options="panelOptions" size="small" :aria-label="t('switchPanel')" @change="switchPanel">
       <template #default="{ item }">
         <span class="panelOption">
           <component :is="item.icon" :size="14" aria-hidden="true" />
@@ -41,7 +41,9 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, nextTick, onMounted, onScopeDispose, provide, ref } from "vue";
+import { t } from "@/pages/i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
+import { computed, defineAsyncComponent, nextTick, onMounted, onScopeDispose, provide, ref } from "vue";
 import { onBeforeRouteLeave } from "vue-router";
 import axios from "axios";
 import { IconLayoutDashboard, IconFileText } from "@tabler/icons-vue";
@@ -59,10 +61,10 @@ const documentPanel = defineAsyncComponent(() => import("./panels/document/index
 const activePanel = ref<"canvas" | "document">("canvas");
 onMounted(() => anonymousData.track("workspace.canvas"));
 const workspaceStore = useWorkspaceStore();
-const panelOptions = [
-  { label: "画布", value: "canvas", icon: IconLayoutDashboard },
-  { label: "文档", value: "document", icon: IconFileText },
-];
+const panelOptions = computed(() => [
+  { label: t("canvas"), value: "canvas", icon: IconLayoutDashboard },
+  { label: t("documents"), value: "document", icon: IconFileText },
+]);
 const agentVisible = ref(true);
 const agentWidth = ref(0);
 const settingsVisible = ref(false);
@@ -72,7 +74,7 @@ provide("canvas", () => canvasPanelRef.value?.getCanvasContext());
 provide("activateCanvasPanel", () => switchPanel("canvas"));
 
 const controlLifetime = new AbortController();
-onScopeDispose(() => controlLifetime.abort(new Error("工作区已关闭")));
+onScopeDispose(() => controlLifetime.abort(createDisplayError("工作区已关闭", () => t("workspaceClosed"))));
 registerWorkspaceControl({
   getState: () => ({
     directory: workspaceStore.project?.directory ?? null,
@@ -84,21 +86,21 @@ registerWorkspaceControl({
   flushSave,
   async call(request, signal) {
     const directory = workspaceStore.project?.directory;
-    if (!directory) throw new Error("请先打开工作区");
+    if (!directory) throw createDisplayError("请先打开工作区", () => t("openWorkspaceFirst"));
     const callSignal = AbortSignal.any([signal, controlLifetime.signal]);
     const checkDirectory = () => {
       callSignal.throwIfAborted();
-      if (directory !== workspaceStore.project?.directory) throw new Error("工作区已切换，本次调用已停止");
+      if (directory !== workspaceStore.project?.directory) throw createDisplayError("工作区已切换，本次调用已停止", () => t("workspaceChangedRequestStopped"));
     };
     checkDirectory();
     if (request.name === "switchPanel") {
-      if (request.args.panel !== "canvas" && request.args.panel !== "document") throw new Error("未知面板");
-      if (!(await switchPanel(request.args.panel))) throw new Error("面板切换失败，请检查文档是否保存成功");
+      if (request.args.panel !== "canvas" && request.args.panel !== "document") throw createDisplayError("未知面板", () => t("unknownPanel"));
+      if (!(await switchPanel(request.args.panel))) throw createDisplayError("面板切换失败，请检查文档是否保存成功", () => t("panelSwitchFailed"));
       checkDirectory();
       return { panel: activePanel.value };
     }
     if (["getDocument", "openDocument", "writeDocument"].includes(request.name)) {
-      if (!(await switchPanel("document"))) throw new Error("文档面板无法打开");
+      if (!(await switchPanel("document"))) throw createDisplayError("文档面板无法打开", () => t("documentsPanelOpenFailed"));
       const panel = await waitForControlValue(() => documentPanelRef.value, callSignal);
       checkDirectory();
       if (request.name === "openDocument") await panel.openDocument(request.args, callSignal);
@@ -106,7 +108,7 @@ registerWorkspaceControl({
       checkDirectory();
       return panel.getDocument();
     }
-    if (!(await switchPanel("canvas"))) throw new Error("画布面板无法打开");
+    if (!(await switchPanel("canvas"))) throw createDisplayError("画布面板无法打开", () => t("canvasPanelOpenFailed"));
     const context = await waitForControlValue(
       () => (canvasPanelRef.value?.canvasReady ? canvasPanelRef.value.getCanvasContext() : undefined),
       callSignal
@@ -123,7 +125,7 @@ async function flushSave() {
 
 onBeforeRouteLeave(async () => {
   if (canvasPanelRef.value?.saveBusy) {
-    ElMessage.warning("画布操作尚未完成，请稍后退出");
+    ElMessage.warning(t("canvasOperationInProgress"));
     return false;
   }
   try {
@@ -133,12 +135,12 @@ onBeforeRouteLeave(async () => {
     const message = axios.isAxiosError<{ message?: string }>(error)
       ? error.response?.data?.message || error.message
       : error instanceof Error
-      ? error.message
-      : "项目保存失败";
-    const leave = await ElMessageBox.confirm(`无法保存项目：${message}。文件或目录可能已被移动或删除。仍然退出将丢弃尚未保存的修改。`, "项目未保存", {
+      ? getErrorDisplay(error)
+      : t("projectSaveError");
+    const leave = await ElMessageBox.confirm(t("projectSaveFailed", { message }), t("projectNotSaved"), {
       type: "warning",
-      confirmButtonText: "仍然退出",
-      cancelButtonText: "留在项目",
+      confirmButtonText: t("exitAnyway"),
+      cancelButtonText: t("stayInProject"),
       closeOnClickModal: false,
     }).then(
       () => true,
@@ -162,18 +164,18 @@ async function switchPanel(value: string | number | boolean) {
     if (changed) anonymousData.track(value === "canvas" ? "workspace.canvas" : "workspace.document");
     return true;
   } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : "文本保存失败");
+    ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("textSaveFailed"));
     return false;
   }
 }
 
 function readDocumentNode(directory: string, canvasPath: string, nodeId: string) {
-  if (!canvasPanelRef.value) throw new Error("画布尚未就绪");
+  if (!canvasPanelRef.value) throw createDisplayError("画布尚未就绪", () => t("canvasNotReady"));
   return canvasPanelRef.value.readDocumentNode(directory, canvasPath, nodeId);
 }
 
 function saveDocumentNode(directory: string, canvasPath: string, nodeId: string, handleId: string, text: string) {
-  if (!canvasPanelRef.value) throw new Error("画布尚未就绪");
+  if (!canvasPanelRef.value) throw createDisplayError("画布尚未就绪", () => t("canvasNotReady"));
   return canvasPanelRef.value.saveDocumentNode(directory, canvasPath, nodeId, handleId, text);
 }
 </script>

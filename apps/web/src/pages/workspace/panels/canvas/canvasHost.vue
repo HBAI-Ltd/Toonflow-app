@@ -19,6 +19,8 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "@/pages/i18n";
+import { createDisplayError } from "@toonflow/i18n";
 import { computed, onScopeDispose, provide, shallowReactive, shallowRef, ref, watch, type ComponentPublicInstance } from "vue";
 import type { CanvasContext } from "@toonflow/tool-canvas/runtime";
 import { waitForControlValue } from "@/lib/mcpControl";
@@ -48,7 +50,7 @@ watch(canvases, (current, previous) => {
   });
   if (!entries.value.some(entry => entry.key === activeKey.value)) activeKey.value = entries.value[0]?.key ?? "";
 }, { flush: "sync" });
-onScopeDispose(() => lifetime.abort(new Error("工作区已关闭")));
+onScopeDispose(() => lifetime.abort(createDisplayError("工作区已关闭", () => t("workspaceClosed"))));
 
 function setInstance(key: string, value: Element | ComponentPublicInstance | null) {
   if (value) instances.set(key, value as CanvasInstance);
@@ -72,7 +74,7 @@ async function activateCanvas(fileName: string, signal?: AbortSignal) {
       const instance = instances.get(key);
       return instance?.canvasReady || instance?.loadError ? instance : undefined;
     }, callSignal);
-    if (panel.loadError) throw new Error(panel.loadError);
+    if (panel.loadError) throw panel.loadError;
   } catch (error) {
     if (activeKey.value === key) activeKey.value = previousKey;
     if (!instances.get(key)?.canvasId) entries.value = entries.value.filter(item => item.key !== key);
@@ -101,7 +103,7 @@ async function flushSave(action?: () => Promise<void>) {
 
 function documentInstance(canvasPath: string) {
   const instance = [...instances.values()].find(panel => panel.canvasId === canvasPath) ?? activeInstance.value;
-  if (!instance) throw new Error("画布尚未就绪");
+  if (!instance) throw createDisplayError("画布尚未就绪", () => t("canvasIsNotReady"));
   return instance;
 }
 

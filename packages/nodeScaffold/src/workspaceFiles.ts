@@ -1,4 +1,9 @@
-import { inject, ref, toValue, watch, type MaybeRefOrGetter } from "vue";
+import { inject, onScopeDispose, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
+import { createDisplayError, createTranslator } from "@toonflow/i18n";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
+
+const t = createTranslator({ zh, en });
 import type { NodeMediaValue } from "./values";
 import { useNodePreviewReady } from "./useNodePreviewReady";
 
@@ -16,7 +21,7 @@ export interface WorkspaceFiles {
 }
 
 function getNodeDirectory(nodeId: string) {
-  if (!nodeId || /[\\/]/.test(nodeId) || nodeId === "." || nodeId === "..") throw new Error("节点 ID 不能作为文件夹名称");
+  if (!nodeId || /[\\/]/.test(nodeId) || nodeId === "." || nodeId === "..") throw createDisplayError("节点 ID 不能作为文件夹名称", () => t("nodeIdInvalid"));
   return `assets/${nodeId}`;
 }
 
@@ -38,7 +43,7 @@ export function useNodeFiles() {
   const retainNodeFiles = inject("retainNodeFiles", false);
 
   function getWorkspaceFiles() {
-    if (!createFiles) throw new Error("当前画布未提供工作区文件能力");
+    if (!createFiles) throw createDisplayError("当前画布未提供工作区文件能力", () => t("workspaceFilesUnavailable"));
     return createFiles();
   }
 

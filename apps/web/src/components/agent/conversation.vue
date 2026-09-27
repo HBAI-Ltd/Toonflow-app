@@ -3,23 +3,23 @@
     <chat-list class="messageList" :clearHistory="false">
       <chat-item v-if="!messages.length && !disabled" role="assistant" variant="text">
         <template #content>
-          <section class="welcomeMessage" aria-label="开始新对话">
+          <section class="welcomeMessage" :aria-label="t('startNewConversation')">
             <div class="welcomeHeader">
               <span class="welcomeIcon" aria-hidden="true"><span class="welcomeLogo" :style="{ maskImage: `url(${logoUrl})` }" /></span>
               <div>
-                <p class="welcomeLabel">你好，我是 Toonflow 助手</p>
-                <h3>从一个想法开始</h3>
+                <p class="welcomeLabel">{{ t("welcomeLabel") }}</p>
+                <h3>{{ t("welcomeTitle") }}</h3>
               </div>
             </div>
-            <p class="welcomeDescription">聊聊你的故事、画面或镜头，让我们一起把想法落到画布上。</p>
+            <p class="welcomeDescription">{{ t("welcomeDescription") }}</p>
             <div class="welcomeSuggestions">
-              <el-button v-for="item in welcomeSuggestions" :key="item.label" class="welcomeSuggestion" text bg :disabled="locked" :aria-label="`填入提示：${item.label}`" @click="fillPrompt(item.prompt)">
+              <el-button v-for="item in welcomeSuggestions" :key="item.label" class="welcomeSuggestion" text bg :disabled="locked" :aria-label="t('fillPrompt', { label: item.label })" @click="fillPrompt(item.prompt)">
                 <component :is="item.icon" :size="19" aria-hidden="true" />
                 <span class="suggestionContent"><strong>{{ item.label }}</strong><span>{{ item.description }}</span></span>
                 <icon-arrow-up-right class="suggestionArrow" :size="15" aria-hidden="true" />
               </el-button>
             </div>
-            <p class="welcomeHint">点击填入提示，也可以直接输入，或粘贴图片、视频。</p>
+            <p class="welcomeHint">{{ t("welcomeHint") }}</p>
           </section>
         </template>
       </chat-item>
@@ -27,14 +27,14 @@
         <chat-item :role="item.role" :variant="item.role === 'user' ? 'base' : 'text'" :textLoading="!!item.streaming && !compacting && !item.parts?.some(part => part.type === 'tool' || part.content)" animation="moving">
           <template #content>
             <div class="messageContent">
-              <div v-if="item.report" class="reportHeader"><icon-users-group :size="14" />{{ item.report.name }} 上报</div>
+              <div v-if="item.report" class="reportHeader"><icon-users-group :size="14" />{{ t("reportFrom", { name: item.report.name }) }}</div>
               <template v-for="part in item.parts" :key="part.id">
                 <chat-reasoning v-if="part.type === 'thinking' && part.content" class="messageReasoning" :collapsed="part.collapsed ?? true" expandIconPlacement="left" @update:collapsed="part.collapsed = $event">
                   <template #header>
                     <span class="reasoningHeader">
                       <icon-atom :size="14" />
-                      <span>思考</span>
-                      <span v-if="part.duration !== undefined" class="thinkingDuration">{{ part.duration.toFixed(1) }} 秒</span>
+                      <span>{{ t("thinking") }}</span>
+                      <span v-if="part.duration !== undefined" class="thinkingDuration">{{ t("seconds", { duration: part.duration.toFixed(1) }) }}</span>
                     </span>
                   </template>
                   <messageMarkdown v-if="!(part.collapsed ?? true)" :content="part.content" :streaming="!!item.streaming" :directory="directory" />
@@ -43,42 +43,42 @@
                 <messageMarkdown v-else-if="part.type === 'text' && part.content" :content="part.content" :streaming="!!item.streaming" :directory="directory" />
               </template>
               <attachmentList v-if="item.attachments?.length" :attachments="item.attachments" :directory="directory" />
-              <el-input v-if="item.role === 'user' && editingId === item.id" v-model="editingText" type="textarea" :autosize="{ minRows: 2, maxRows: 10 }" :disabled="locked" aria-label="编辑消息" @keydown.esc.prevent="cancelEdit" />
+              <el-input v-if="item.role === 'user' && editingId === item.id" v-model="editingText" type="textarea" :autosize="{ minRows: 2, maxRows: 10 }" :disabled="locked" :aria-label="t('editMessage')" @keydown.esc.prevent="cancelEdit" />
               <div v-else-if="item.role === 'user'" class="messageText">{{ item.content }}</div>
-              <div v-if="item.error" class="messageError" role="alert">{{ item.error }}</div>
+              <div v-if="item.error" class="messageError" role="alert">{{ getErrorDisplay(item.error) }}</div>
             </div>
           </template>
         </chat-item>
         <div v-if="!item.streaming" class="messageActions">
           <template v-if="editingId === item.id">
-            <el-button text size="small" :disabled="busy || deletingId !== undefined" @click="cancelEdit"><icon-x :size="14" />取消</el-button>
-            <el-button type="primary" size="small" :loading="busy" :disabled="locked || (!editingText.trim() && !item.attachments?.length)" @click="sendMessage(item)"><icon-arrow-up v-if="!busy" :size="14" />重发</el-button>
+            <el-button text size="small" :disabled="busy || deletingId !== undefined" @click="cancelEdit"><icon-x :size="14" />{{ t("cancel") }}</el-button>
+            <el-button type="primary" size="small" :loading="busy" :disabled="locked || (!editingText.trim() && !item.attachments?.length)" @click="sendMessage(item)"><icon-arrow-up v-if="!busy" :size="14" />{{ t("resend") }}</el-button>
           </template>
           <template v-else>
-            <el-button v-if="item.content" class="messageAction" text circle aria-label="复制消息" title="复制消息" @click="copyMessage(item.content)"><icon-copy :size="14" /></el-button>
+            <el-button v-if="item.content" class="messageAction" text circle :aria-label="t('copyMessage')" :title="t('copyMessage')" @click="copyMessage(item.content)"><icon-copy :size="14" /></el-button>
             <template v-if="item.role === 'user'">
-              <el-button class="messageAction" text circle :disabled="locked || remoteRunning" aria-label="编辑消息" title="编辑消息" @click="editMessage(item)"><icon-pencil :size="14" /></el-button>
+              <el-button class="messageAction" text circle :disabled="locked || remoteRunning" :aria-label="t('editMessage')" :title="t('editMessage')" @click="editMessage(item)"><icon-pencil :size="14" /></el-button>
             </template>
-            <el-button v-if="!item.report" class="messageAction" text circle :loading="deletingId === item.id" :disabled="locked || remoteRunning" aria-label="删除消息" title="删除消息" @click="deleteMessage(item)"><icon-trash v-if="deletingId !== item.id" :size="14" /></el-button>
+            <el-button v-if="!item.report" class="messageAction" text circle :loading="deletingId === item.id" :disabled="locked || remoteRunning" :aria-label="t('deleteMessage')" :title="t('deleteMessage')" @click="deleteMessage(item)"><icon-trash v-if="deletingId !== item.id" :size="14" /></el-button>
           </template>
         </div>
       </div>
     </chat-list>
     <div v-if="compacting" class="compactionStatus" role="status">
       <el-icon class="is-loading" aria-hidden="true"><icon-loader-2 :size="14" /></el-icon>
-      <span>正在压缩上下文…</span>
+      <span>{{ t("compressingContext") }}</span>
     </div>
     <div class="messageInput">
       <div
         class="senderResizeHandle"
         role="separator"
         aria-orientation="horizontal"
-        aria-label="调整输入框高度"
+        :aria-label="t('resizeMessageBox')"
         aria-valuemin="44"
         :aria-valuemax="senderMaxHeight"
         :aria-valuenow="senderHeight"
         tabindex="0"
-        title="拖动调整输入框高度"
+        :title="t('dragToResizeMessageBox')"
         @focus="senderHeight = sender?.chatElement.rollBox.clientHeight ?? 44"
         @pointerdown="startSenderResize"
         @pointermove="moveSenderResize"
@@ -101,30 +101,30 @@
           :showArrow="false"
           popperClass="agentContextPopover">
           <template #reference>
-            <el-button class="contextButton" text circle aria-label="查看上下文用量" title="查看上下文用量">
+            <el-button class="contextButton" text circle :aria-label="t('viewContextUsage')" :title="t('viewContextUsage')">
               <icon-circle-dashed :size="14" />
             </el-button>
           </template>
           <div class="contextUsage">
-            <div class="contextHeader"><span>上下文用量</span><span class="contextHint">估算</span></div>
+            <div class="contextHeader"><span>{{ t("contextUsage") }}</span><span class="contextHint">{{ t("estimated") }}</span></div>
             <template v-if="contextUsage?.tokens != null">
               <div class="contextTokens">
-                <span>{{ contextUsage.tokens.toLocaleString() }} / {{ contextWindow.toLocaleString() }} tok</span>
+                <span>{{ contextUsage.tokens.toLocaleString(numberLocale) }} / {{ contextWindow.toLocaleString(numberLocale) }} tok</span>
                 <span>{{ contextPercent.toFixed(1) }}%</span>
               </div>
               <el-progress :percentage="Math.min(100, contextPercent)" :showText="false" />
             </template>
-            <span v-else class="contextHint">{{ contextUsage ? "等待下一次回复更新用量" : "尚无用量数据" }}</span>
+            <span v-else class="contextHint">{{ contextUsage ? t("usageUpdatesNextReply") : t("noUsageData") }}</span>
             <div v-if="stats" class="contextStats">
-              <div class="contextHeader">对话累计用量</div>
-              <div class="contextTokens"><span>输入</span><span>{{ inputTokens.toLocaleString() }} tok</span></div>
-              <div class="contextTokens"><span>输出</span><span>{{ stats.tokens.output.toLocaleString() }} tok</span></div>
-              <div v-if="inputTokens > 0" class="contextTokens"><span>缓存命中</span><span>{{ (stats.tokens.cacheRead / inputTokens * 100).toFixed(1) }}%</span></div>
-              <div v-if="stats.tokensPerSecond !== undefined" class="contextTokens"><span>生成速度</span><span>{{ stats.tokensPerSecond.toFixed(1) }} tok/s</span></div>
+              <div class="contextHeader">{{ t("totalConversationUsage") }}</div>
+              <div class="contextTokens"><span>{{ t("input") }}</span><span>{{ inputTokens.toLocaleString(numberLocale) }} tok</span></div>
+              <div class="contextTokens"><span>{{ t("output") }}</span><span>{{ stats.tokens.output.toLocaleString(numberLocale) }} tok</span></div>
+              <div v-if="inputTokens > 0" class="contextTokens"><span>{{ t("cacheHit") }}</span><span>{{ (stats.tokens.cacheRead / inputTokens * 100).toFixed(1) }}%</span></div>
+              <div v-if="stats.tokensPerSecond !== undefined" class="contextTokens"><span>{{ t("generationSpeed") }}</span><span>{{ stats.tokensPerSecond.toFixed(1) }} tok/s</span></div>
             </div>
           </div>
         </el-popover>
-        <el-button class="sendButton" type="primary" circle :disabled="!busy && (locked || editingId !== undefined)" :aria-label="busy ? '停止生成' : '发送消息'" :title="busy ? '停止生成' : '发送消息'" @click="busy ? stopMessage() : sendMessage()">
+        <el-button class="sendButton" type="primary" circle :disabled="!busy && (locked || editingId !== undefined)" :aria-label="busy ? t('stopGenerating') : t('sendMessage')" :title="busy ? t('stopGenerating') : t('sendMessage')" @click="busy ? stopMessage() : sendMessage()">
           <icon-player-stop-filled v-if="busy" :size="14" />
           <icon-arrow-up v-else :size="16" />
         </el-button>
@@ -142,6 +142,7 @@ import {
   IconTrash, IconLayoutGrid, IconMovie, IconPhoto, IconArrowUpRight, IconUsersGroup,
 } from "@tabler/icons-vue";
 import { ElMessage } from "element-plus";
+import { createDisplayError, createTranslator, getErrorDisplay, getLocale } from "@toonflow/i18n";
 import logoUrl from "@toonflow/assets/logo.svg";
 import modelPopover from "@/components/modelPopover.vue";
 import skillMenu from "./skillMenu.vue";
@@ -161,10 +162,13 @@ import chatItem from "@tdesign-vue-next/chat/es/chat-item";
 import chatReasoning from "@tdesign-vue-next/chat/es/chat-reasoning";
 import messageMarkdown from "@/components/messageMarkdown.vue";
 import xSender from "x-sender";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
 import "tdesign-vue-next/es/style/index.css";
 import "@tdesign-vue-next/chat/es/style/index.css";
 import "x-sender/lib/XSender.css";
 
+const t = createTranslator({ zh, en });
 const props = defineProps<{ active: boolean; initialSession: AgentConversation | null; sessionFile?: string; disabled: boolean }>();
 const emit = defineEmits<{ session: [file: string]; sent: [prompt: string]; event: [event: AgentEvent] }>();
 const workspaceStore = useWorkspaceStore();
@@ -199,17 +203,22 @@ const selectedModelChoice = computed(() => modelChoices.value.find(item => item.
 const contextWindow = computed(() => contextUsage.value?.contextWindow ?? selectedModelChoice.value?.contextWindow ?? 262144);
 const contextPercent = computed(() => (contextUsage.value?.tokens ?? 0) / contextWindow.value * 100);
 const inputTokens = computed(() => stats.value ? stats.value.tokens.input + stats.value.tokens.cacheRead + stats.value.tokens.cacheWrite : 0);
-const welcomeSuggestions = [
-  { label: "搭建创作画布", description: "把创意串成清晰的节点流程", icon: IconLayoutGrid, prompt: "帮我搭建一个创作画布，先和我确认需要的节点与流程。" },
-  { label: "梳理故事分镜", description: "拆解故事，安排画面与镜头", icon: IconMovie, prompt: "帮我把故事整理成分镜，先和我确认故事内容、时长和画面风格。" },
-  { label: "生成图片素材", description: "为角色和场景寻找视觉方向", icon: IconPhoto, prompt: "帮我生成图片素材，先和我确认画面内容、风格和使用的模型。" },
-];
+const numberLocale = computed(() => getLocale() === "en" ? "en-US" : "zh-CN");
+const welcomeSuggestions = computed(() => [
+  { label: t("suggestionCanvasLabel"), description: t("suggestionCanvasDescription"), icon: IconLayoutGrid, prompt: "帮我搭建一个创作画布，先和我确认需要的节点与流程。" },
+  { label: t("suggestionStoryboardLabel"), description: t("suggestionStoryboardDescription"), icon: IconMovie, prompt: "帮我把故事整理成分镜，先和我确认故事内容、时长和画面风格。" },
+  { label: t("suggestionImageLabel"), description: t("suggestionImageDescription"), icon: IconPhoto, prompt: "帮我生成图片素材，先和我确认画面内容、风格和使用的模型。" },
+]);
 watch([locked, editingId, () => props.active], ([locked, editingId, active]) => {
   if (!active || locked || editingId !== undefined) sender?.disable();
   else sender?.enable();
 });
 watch(() => props.active, active => {
   if (!active) contextMenuVisible.value = false;
+});
+watch(() => getLocale(), () => {
+  sender?.updateConfig({ placeholder: t("messagePlaceholder") });
+  sender?.chatElement.richText.setAttribute("aria-label", t("message"));
 });
 
 function applyEvent(event: AgentEvent) {
@@ -260,9 +269,9 @@ async function fillPrompt(prompt: string) {
 async function copyMessage(content: string) {
   try {
     await writeClipboardText(content);
-    ElMessage.success("已复制");
+    ElMessage.success(t("copied"));
   } catch {
-    ElMessage.error("复制失败，请重试");
+    ElMessage.error(t("copyFailed"));
   }
 }
 
@@ -283,7 +292,7 @@ async function deleteMessage(item: AgentMessage) {
   deletingId.value = item.id;
   try {
     if (item.entryId || item.replyTo) {
-      if (!directory || !props.sessionFile) throw new Error("请重新打开对话后再删除");
+      if (!directory || !props.sessionFile) throw createDisplayError("请重新打开对话后再删除", () => t("reopenBeforeDelete"));
       const { data } = await axios.delete<{ code: number; data: AgentConversation; message?: string }>("/api/agent/message", {
         data: {
           directory, sessionFile: props.sessionFile,
@@ -291,14 +300,15 @@ async function deleteMessage(item: AgentMessage) {
         },
         headers: { "x-toonflow-workspace": "1" },
       });
-      if (data.code !== 200) throw new Error(data.message || "删除消息失败");
+      if (data.code !== 200) throw data.message ? new Error(data.message) : createDisplayError("删除消息失败", () => t("deleteMessageFailed"));
       stats.value = data.data.stats;
       contextUsage.value = data.data.contextUsage;
     }
     messages.value = messages.value.filter(message => message.id !== item.id);
   } catch (error) {
     const message = axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message : undefined;
-    ElMessage.error(message || (error instanceof Error ? error.message : "删除消息失败"));
+    const failure = message ? new Error(message) : error instanceof Error ? error : createDisplayError("删除消息失败", () => t("deleteMessageFailed"));
+    ElMessage.error(getErrorDisplay(failure));
   } finally {
     deletingId.value = undefined;
   }
@@ -372,7 +382,7 @@ async function sendCanvasResult(event: Extract<AgentEvent, { type: "canvasCall" 
   });
   if (!response.ok) {
     const error = await response.json().catch(() => null);
-    throw new Error(error?.message || "画布操作结果回传失败");
+    throw error?.message ? new Error(error.message) : createDisplayError("画布操作结果回传失败", () => t("sendCanvasResultFailed"));
   }
 }
 
@@ -386,8 +396,8 @@ async function sendMessage(source?: AgentMessage) {
   const resendFrom = source ? source.entryId ?? messages.value.slice(resendIndex + 1).find(item => item.role === "user" && item.entryId)?.entryId : undefined;
   if (locked.value || !instance || (!prompt && !attachments.length)) return;
   const model = selectedModelChoice.value;
-  if (!directory) return ElMessage.warning("请先打开项目");
-  if (!model) return ElMessage.warning("请先选择模型");
+  if (!directory) return ElMessage.warning(t("openProjectFirst"));
+  if (!model) return ElMessage.warning(t("selectModelFirst"));
 
   const requestController = new AbortController();
   const canvasContext = createCanvasContext?.();
@@ -433,7 +443,7 @@ async function sendMessage(source?: AgentMessage) {
       if (toolEvent.type === "question") pendingQuestions.set(`${scope}${toolEvent.toolCallId}`, toolEvent.callId);
       if (toolEvent.type === "tool" && toolEvent.tool.status !== "running") pendingQuestions.delete(`${scope}${toolEvent.tool.id}`);
       if (toolEvent.type === "canvasCall") {
-        if (handledCanvasCalls.has(toolEvent.callId)) throw new Error("收到重复的画布调用");
+        if (handledCanvasCalls.has(toolEvent.callId)) throw createDisplayError("收到重复的画布调用", () => t("duplicateCanvasCall"));
         handledCanvasCalls.add(toolEvent.callId);
         await sendCanvasResult(toolEvent, canvasContext, requestController.signal);
         continue;
@@ -471,17 +481,21 @@ async function sendMessage(source?: AgentMessage) {
         default: applyEvent(event);
       }
     }
-    if (source && !accepted) throw new Error("服务端未确认重发，请重新打开对话后重试");
+    if (source && !accepted) throw createDisplayError("服务端未确认重发，请重新打开对话后重试", () => t("resendNotConfirmed"));
     finishStats("success");
     emit("sent", prompt || attachments[0]?.name || "新对话");
   } catch (error) {
     finishStats(requestController.signal.aborted ? "cancelled" : "failed");
     const responseMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
-    const message = requestController.signal.aborted ? "已停止生成" : responseMessage || (error instanceof Error ? error.message : "发送失败，请重试");
-    if ((source && !accepted) || !ownsStream) { userMessage.error = message; ElMessage.error(message); }
-    else reply.error = message;
+    const failure = requestController.signal.aborted
+      ? createDisplayError("已停止生成", () => t("generationStopped"))
+      : responseMessage ? new Error(responseMessage)
+      : error instanceof Error ? error
+      : createDisplayError("发送失败，请重试", () => t("sendFailed"));
+    if ((source && !accepted) || !ownsStream) { userMessage.error = failure; ElMessage.error(getErrorDisplay(failure)); }
+    else reply.error = failure;
     if (ownsStream && props.initialSession?.parentFile && props.sessionFile) {
-      emit("event", { type: "subAgentEvent", file: props.sessionFile, event: { type: "error", message } });
+      emit("event", { type: "subAgentEvent", file: props.sessionFile, event: { type: "error", message: failure.message } });
     }
   } finally {
     for (const file of activeChildFiles) emit("event", { type: "subAgentEvent", file, event: { type: "error", message: "委派连接已结束，请重新打开子会话查看结果" } });
@@ -507,15 +521,15 @@ function pasteAttachments(event: ClipboardEvent) {
   if (locked.value || editingId.value !== undefined) return;
   for (const file of files) {
     if (!/^(image|video)\//.test(file.type)) {
-      ElMessage.warning("只支持图片和视频文件");
+      ElMessage.warning(t("imagesAndVideosOnly"));
       continue;
     }
     if (!file.size || file.size > 100 * 1024 * 1024) {
-      ElMessage.warning("附件不能为空且不能超过 100 MB");
+      ElMessage.warning(t("attachmentSizeLimit"));
       continue;
     }
     if (draftAttachments.value.length >= 20) {
-      ElMessage.warning("每条消息最多添加 20 个附件");
+      ElMessage.warning(t("attachmentCountLimit"));
       break;
     }
     draftAttachments.value.push({ name: file.name, path: "", mimeType: file.type, file });
@@ -526,7 +540,7 @@ watch(senderElement, (element, _previous, onCleanup) => {
   if (!element) return;
   const instance = new xSender(element, {
     autoFocus: props.active,
-    placeholder: "输入消息…",
+    placeholder: t("messagePlaceholder"),
     chatStyle: { minHeight: "44px", maxHeight: "50vh", fontSize: "14px", lineHeight: "24px" },
     keyboardSendFun: event => event.key === "Enter" && !event.shiftKey && !event.isComposing,
     keyboardWrapFun: event => event.key === "Enter" && event.shiftKey && !event.isComposing,
@@ -539,7 +553,7 @@ watch(senderElement, (element, _previous, onCleanup) => {
   });
   const editor = instance.chatElement.richText;
   editor.setAttribute("role", "textbox");
-  editor.setAttribute("aria-label", "消息");
+  editor.setAttribute("aria-label", t("message"));
   editor.setAttribute("aria-multiline", "true");
   element.addEventListener("paste", pasteAttachments, true);
   onCleanup(() => {

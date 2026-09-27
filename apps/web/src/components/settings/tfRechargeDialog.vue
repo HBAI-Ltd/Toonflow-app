@@ -1,30 +1,30 @@
 <template>
-  <el-dialog v-model="visible" title="TF-Router 充值" :width="payment && payType === 'alipay' ? 'min(960px, calc(100vw - 32px))' : 'min(480px, calc(100vw - 32px))'" alignCenter appendToBody destroyOnClose :closeOnClickModal="false">
+  <el-dialog v-model="visible" :title="t('recharge.title')" :width="payment && payType === 'alipay' ? 'min(960px, calc(100vw - 32px))' : 'min(480px, calc(100vw - 32px))'" alignCenter appendToBody destroyOnClose :closeOnClickModal="false">
     <div class="rechargeContent">
       <el-form v-if="!payment" labelPosition="top" :disabled="creating" @submit.prevent="createPayment">
-        <el-form-item label="充值套餐">
+        <el-form-item :label="t('recharge.plan')">
           <el-skeleton v-if="loadingSkus" :rows="3" animated />
           <template v-else>
             <div v-if="skuError" class="skuError" role="alert">
               <el-text type="danger" size="small">{{ skuError }}</el-text>
-              <el-button text size="small" :disabled="creating" @click="loadSkus">重试</el-button>
+              <el-button text size="small" :disabled="creating" @click="loadSkus">{{ t("common.retry") }}</el-button>
             </div>
-            <el-radio-group v-model="selectedSkuId" class="rechargeOptions" aria-label="充值套餐">
+            <el-radio-group v-model="selectedSkuId" class="rechargeOptions" :aria-label="t('recharge.plan')">
               <el-radio v-for="sku in skus" :key="sku.id" :value="sku.id" border>
                 <strong class="skuPrice">{{ moneyFormat.format(sku.price) }}</strong>
                 <span v-if="sku.describe" class="skuDescription">{{ sku.describe }}</span>
               </el-radio>
-              <el-radio :value="-1" class="customOption" border>自定义金额</el-radio>
+              <el-radio :value="-1" class="customOption" border>{{ t("recharge.customAmount") }}</el-radio>
             </el-radio-group>
           </template>
         </el-form-item>
-        <el-form-item v-if="!loadingSkus && selectedSkuId === -1" label="充值金额（元）">
-          <el-input-number v-model="amount" class="amountInput" :min="0.01" :max="50000" :precision="2" :step="1" controlsPosition="right" placeholder="输入充值金额" aria-label="充值金额（元）" />
+        <el-form-item v-if="!loadingSkus && selectedSkuId === -1" :label="t('recharge.amountCny')">
+          <el-input-number v-model="amount" class="amountInput" :min="0.01" :max="50000" :precision="2" :step="1" controlsPosition="right" :placeholder="t('recharge.amountPlaceholder')" :aria-label="t('recharge.amountCny')" />
         </el-form-item>
-        <el-form-item label="支付方式">
-          <el-radio-group v-model="payType" class="paymentMethods" aria-label="支付方式">
-            <el-radio-button value="wechat"><icon-brand-wechat :size="18" />微信支付</el-radio-button>
-            <el-radio-button value="alipay"><icon-brand-alipay :size="18" />支付宝</el-radio-button>
+        <el-form-item :label="t('recharge.paymentMethod')">
+          <el-radio-group v-model="payType" class="paymentMethods" :aria-label="t('recharge.paymentMethod')">
+            <el-radio-button value="wechat"><icon-brand-wechat :size="18" />{{ t("recharge.wechatPay") }}</el-radio-button>
+            <el-radio-button value="alipay"><icon-brand-alipay :size="18" />{{ t("recharge.alipay") }}</el-radio-button>
           </el-radio-group>
         </el-form-item>
       </el-form>
@@ -32,37 +32,38 @@
         <strong class="paymentAmount">{{ moneyFormat.format(paymentAmount) }}</strong>
         <template v-if="paymentLink">
           <template v-if="payType === 'wechat'">
-            <el-image class="paymentQr" :src="paymentLink" fit="contain" alt="微信支付二维码">
-              <template #error><el-text type="danger" size="small">二维码图片加载失败</el-text></template>
+            <el-image class="paymentQr" :src="paymentLink" fit="contain" :alt="t('recharge.wechatQrAlt')">
+              <template #error><el-text type="danger" size="small">{{ t("recharge.qrLoadFailed") }}</el-text></template>
             </el-image>
-            <el-text>使用微信扫码支付</el-text>
+            <el-text>{{ t("recharge.scanWechat") }}</el-text>
           </template>
           <template v-else>
-            <iframe class="paymentFrame" :src="paymentLink" title="支付宝支付页面" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" />
+            <iframe class="paymentFrame" :src="paymentLink" :title="t('recharge.alipayFrameTitle')" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" />
             <div class="paymentFallback">
-              <el-text size="small" type="info">页面无法显示或无法支付？</el-text>
-              <el-button tag="a" :href="paymentLink" target="_blank" rel="noopener noreferrer" text type="primary" :icon="IconExternalLink">打开支付页面</el-button>
+              <el-text size="small" type="info">{{ t("recharge.paymentPageUnavailable") }}</el-text>
+              <el-button tag="a" :href="paymentLink" target="_blank" rel="noopener noreferrer" text type="primary" :icon="IconExternalLink">{{ t("recharge.openPaymentPage") }}</el-button>
             </div>
           </template>
         </template>
-        <el-alert v-else title="订单已创建，但接口未返回有效的支付链接" type="warning" :closable="false" showIcon />
+        <el-alert v-else :title="t('recharge.missingPaymentLink')" type="warning" :closable="false" showIcon />
         <div class="orderInfo">
-          <el-text size="small" type="info">订单号</el-text>
+          <el-text size="small" type="info">{{ t("recharge.orderNumber") }}</el-text>
           <span>{{ payment.orderNumber }}</span>
         </div>
-        <el-text size="small" type="info">支付后关闭窗口，将自动刷新账户余额。</el-text>
+        <el-text size="small" type="info">{{ t("recharge.closeRefreshHint") }}</el-text>
       </div>
       <el-alert v-if="errorMessage" :title="errorMessage" type="error" :closable="false" showIcon />
     </div>
     <template #footer>
-      <el-button @click="visible = false">{{ payment ? '关闭' : '取消' }}</el-button>
-      <el-button v-if="!payment" type="primary" :icon="IconCreditCard" :loading="creating" :disabled="!canPay" @click="createPayment">{{ payType === 'wechat' ? '获取支付二维码' : '前往支付宝支付' }}</el-button>
-      <el-button v-else type="primary" :icon="IconRefresh" @click="visible = false">查看余额</el-button>
+      <el-button @click="visible = false">{{ payment ? t('common.close') : t('common.cancel') }}</el-button>
+      <el-button v-if="!payment" type="primary" :icon="IconCreditCard" :loading="creating" :disabled="!canPay" @click="createPayment">{{ payType === 'wechat' ? t('recharge.getQrCode') : t('recharge.goToAlipay') }}</el-button>
+      <el-button v-else type="primary" :icon="IconRefresh" @click="visible = false">{{ t("recharge.viewBalance") }}</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { t } from "./i18n";
 import axios from "axios";
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { IconBrandAlipay, IconBrandWechat, IconCreditCard, IconExternalLink, IconRefresh } from "@tabler/icons-vue";
@@ -108,7 +109,7 @@ async function loadSkus() {
     if (!request.signal.aborted) {
       skuError.value = axios.isAxiosError<{ message?: string }>(error)
         ? error.response?.data?.message || error.message
-        : error instanceof Error ? error.message : "读取充值套餐失败，请重试";
+        : error instanceof Error ? error.message : t("recharge.loadPlansFailed");
     }
   } finally {
     if (!request.signal.aborted) loadingSkus.value = false;
@@ -132,7 +133,7 @@ async function createPayment() {
     if (!request.signal.aborted) {
       errorMessage.value = axios.isAxiosError<{ message?: string }>(error)
         ? error.response?.data?.message || error.message
-        : error instanceof Error ? error.message : "创建充值订单失败，请重试";
+        : error instanceof Error ? error.message : t("recharge.createOrderFailed");
     }
   } finally {
     if (!request.signal.aborted) creating.value = false;

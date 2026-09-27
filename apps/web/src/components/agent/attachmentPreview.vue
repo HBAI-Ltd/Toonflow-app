@@ -12,16 +12,16 @@
       :title="attachment.name"
       tabindex="0"
       role="button"
-      :aria-label="`预览 ${attachment.name}`"
+      :aria-label="t('previewAttachment', { name: attachment.name })"
       @keydown.enter.prevent="imageRef?.showPreview()"
       @keydown.space.prevent="imageRef?.showPreview()">
       <template #error><icon-photo :size="20" /></template>
     </el-image>
-    <button v-else class="thumbnailButton" type="button" :title="attachment.name" :aria-label="`预览 ${attachment.name}`" :disabled="!thumbnailUrl" @click="videoPreviewVisible = true">
+    <button v-else class="thumbnailButton" type="button" :title="attachment.name" :aria-label="t('previewAttachment', { name: attachment.name })" :disabled="!thumbnailUrl" @click="videoPreviewVisible = true">
       <video v-if="thumbnailUrl" :src="thumbnailUrl" preload="metadata" muted playsinline aria-hidden="true" />
       <icon-video class="videoIcon" :size="16" />
     </button>
-    <el-button v-if="removable" class="removeAttachment" circle :aria-label="`移除 ${attachment.name}`" title="移除附件" @click="emit('remove')"><icon-x :size="10" /></el-button>
+    <el-button v-if="removable" class="removeAttachment" circle :aria-label="t('removeAttachmentWithName', { name: attachment.name })" :title="t('removeAttachment')" @click="emit('remove')"><icon-x :size="10" /></el-button>
     <el-dialog v-model="videoPreviewVisible" :title="attachment.name" width="min(800px, 90vw)" alignCenter appendToBody destroyOnClose>
       <video v-if="videoPreviewVisible" class="videoPreview" :src="thumbnailUrl" controls playsinline preload="metadata" />
     </el-dialog>
@@ -32,9 +32,13 @@
 import { ref, watch } from "vue";
 import type { ImageInstance } from "element-plus";
 import { IconPhoto, IconVideo, IconX } from "@tabler/icons-vue";
+import { createTranslator } from "@toonflow/i18n";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import type { AgentAttachment } from "./types";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
 
+const t = createTranslator({ zh, en });
 const props = defineProps<{ attachment: AgentAttachment; directory?: string; removable?: boolean }>();
 const emit = defineEmits<{ remove: [] }>();
 const imageRef = ref<ImageInstance>();

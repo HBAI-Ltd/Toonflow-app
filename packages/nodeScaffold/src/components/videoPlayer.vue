@@ -4,12 +4,12 @@
       ref="video"
       class="videoPreview"
       :class="{ nodrag: fullscreen }"
-      :src="src"
+      :src="props.src"
       :controls="fullscreen"
       playsinline
       preload="auto"
       draggable="false"
-      :aria-label="label"
+      :aria-label="visibleLabel"
       @fullscreenchange="fullscreen = !!video?.matches(':fullscreen')"
       @loadedmetadata="readMetadata"
       @loadeddata="ready = true"
@@ -20,28 +20,28 @@
       @volumechange="readVolume"
       @error="mediaError" />
     <div v-show="!fullscreen" class="playerControls nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.stop>
-      <el-button class="playerButton playButton" text circle :icon="playing ? IconPlayerPause : IconPlayerPlay" :disabled="!ready" :aria-label="playing ? '暂停视频' : '播放视频'" :title="playing ? '暂停' : '播放'" @click="togglePlayback" />
+      <el-button class="playerButton playButton" text circle :icon="playing ? IconPlayerPause : IconPlayerPlay" :disabled="!ready" :aria-label="playing ? t('pauseVideo') : t('playVideo')" :title="playing ? t('pause') : t('play')" @click="togglePlayback" />
       <span class="currentTime">{{ formatTime(currentTime) }}</span>
-      <el-slider class="progressSlider" :modelValue="currentTime" :min="0" :max="duration || 1" :step="0.01" :disabled="!ready || !duration" :formatTooltip="formatTime" aria-label="视频播放进度" @input="seek" />
+      <el-slider class="progressSlider" :modelValue="currentTime" :min="0" :max="duration || 1" :step="0.01" :disabled="!ready || !duration" :formatTooltip="formatTime" :aria-label="t('videoProgress')" @input="seek" />
       <span class="durationLabel"><span class="timeSeparator">/</span>{{ formatTime(duration) }}</span>
       <div class="volumeControl">
         <el-popover trigger="hover" placement="top" :width="40" :popperStyle="{ minWidth: '40px', padding: '8px 0', borderRadius: 'var(--el-border-radius-base)' }" :showArrow="false" :showAfter="80" :hideAfter="150" :disabled="!ready">
           <template #reference>
-            <el-button class="playerButton volumeButton" text circle :icon="muted || !volume ? IconVolumeOff : IconVolume" :disabled="!ready" :aria-pressed="muted || !volume" :aria-label="muted || !volume ? '取消静音' : '静音视频'" title="音量 · 点击切换静音" @click="toggleMute" />
+            <el-button class="playerButton volumeButton" text circle :icon="muted || !volume ? IconVolumeOff : IconVolume" :disabled="!ready" :aria-pressed="muted || !volume" :aria-label="muted || !volume ? t('unmute') : t('muteVideo')" :title="t('volumeHint')" @click="toggleMute" />
           </template>
           <div class="volumePanel nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.stop>
             <span class="volumeValue">{{ muted ? 0 : volume }}%</span>
-            <el-slider class="volumeSlider" :modelValue="muted ? 0 : volume" vertical height="60px" :min="0" :max="100" :showTooltip="false" aria-label="视频音量" @input="setVolume" />
+            <el-slider class="volumeSlider" :modelValue="muted ? 0 : volume" vertical height="60px" :min="0" :max="100" :showTooltip="false" :aria-label="t('videoVolume')" @input="setVolume" />
           </div>
         </el-popover>
       </div>
       <el-dropdown class="captureMenu" trigger="click" placement="top-end" :disabled="!ready || capturing" @visibleChange="captureMenuVisible = $event" @command="captureFrame">
-        <el-button class="playerButton" text circle :icon="IconPhotoScan" :loading="capturing" :disabled="!ready || capturing" :aria-expanded="captureMenuVisible" aria-label="截取视频帧" title="截取视频帧" />
+        <el-button class="playerButton" text circle :icon="IconPhotoScan" :loading="capturing" :disabled="!ready || capturing" :aria-expanded="captureMenuVisible" :aria-label="t('captureVideoFrame')" :title="t('captureVideoFrame')" />
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item command="current" :icon="IconPhotoScan">截取当前帧</el-dropdown-item>
-            <el-dropdown-item command="first" :icon="IconPlayerSkipBack">截取首帧</el-dropdown-item>
-            <el-dropdown-item command="last" :icon="IconPlayerSkipForward">截取尾帧</el-dropdown-item>
+            <el-dropdown-item command="current" :icon="IconPhotoScan">{{ t("captureCurrentFrame") }}</el-dropdown-item>
+            <el-dropdown-item command="first" :icon="IconPlayerSkipBack">{{ t("captureFirstFrame") }}</el-dropdown-item>
+            <el-dropdown-item command="last" :icon="IconPlayerSkipForward">{{ t("captureLastFrame") }}</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -50,13 +50,19 @@
 </template>
 
 <script setup lang="ts">
-import { inject, onBeforeUnmount, ref, watch } from "vue";
+import { computed, inject, onBeforeUnmount, ref, watch } from "vue";
 import { useNode, useVueFlow } from "@vue-flow/core";
 import { ElButton, ElDropdown, ElDropdownMenu, ElDropdownItem, ElMessage, ElPopover, ElSlider } from "element-plus";
 import { IconPlayerPlay, IconPlayerPause, IconVolume, IconVolumeOff, IconPhotoScan, IconPlayerSkipBack, IconPlayerSkipForward } from "@tabler/icons-vue";
 import { useNodeFiles } from "../workspaceFiles";
+import { createDisplayError, createTranslator, getErrorDisplay } from "@toonflow/i18n";
+import zh from "../locales/zh.json";
+import en from "../locales/en.json";
 
-const { src, label = "节点视频" } = defineProps<{ src: string; label?: string }>();
+const t = createTranslator({ zh, en });
+
+const props = withDefaults(defineProps<{ src: string; label?: string }>(), { label: "" });
+const visibleLabel = computed(() => props.label || t("nodeVideo"));
 const emit = defineEmits<{ loadedmetadata: [event: Event] }>();
 const video = ref<HTMLVideoElement>();
 const fullscreen = ref(false);
@@ -76,7 +82,7 @@ const getCanvas = inject<(() => { id: string } | undefined) | undefined>("canvas
 let captureController: AbortController | undefined;
 
 watch(() => getCanvas?.()?.id, () => captureController?.abort(), { flush: "sync" });
-watch(() => src, () => {
+watch(() => props.src, () => {
   captureController?.abort();
   ready.value = false;
   playing.value = false;
@@ -92,7 +98,7 @@ async function enterFullscreen() {
     await video.value.requestFullscreen();
   } catch {
     fullscreen.value = false;
-    ElMessage.error("无法进入视频全屏");
+    ElMessage.error(t("videoFullscreenFailed"));
   }
 }
 
@@ -112,7 +118,7 @@ function readMetadata(event: Event) {
 function mediaError() {
   ready.value = false;
   playing.value = false;
-  ElMessage.error("无法预览该视频");
+  ElMessage.error(t("videoPreviewFailed"));
 }
 
 async function togglePlayback() {
@@ -120,7 +126,7 @@ async function togglePlayback() {
   if (playing.value) video.value.pause();
   else {
     try { await video.value.play(); }
-    catch (error) { if (!(error instanceof DOMException && error.name === "AbortError")) ElMessage.error("视频播放失败"); }
+    catch (error) { if (!(error instanceof DOMException && error.name === "AbortError")) ElMessage.error(t("videoPlaybackFailed")); }
   }
 }
 
@@ -154,7 +160,7 @@ function toggleMute() {
 
 function loadFrame(source: HTMLVideoElement, time: number, signal: AbortSignal) {
   return new Promise<void>((resolve, reject) => {
-    const timer = window.setTimeout(() => finish(new Error("视频帧读取超时")), 15000);
+    const timer = window.setTimeout(() => finish(createDisplayError("视频帧读取超时", () => t("videoFrameTimeout"))), 15000);
     function finish(error?: unknown) {
       clearTimeout(timer);
       source.onloadeddata = null;
@@ -169,9 +175,9 @@ function loadFrame(source: HTMLVideoElement, time: number, signal: AbortSignal) 
       else source.currentTime = time;
     };
     source.onseeked = () => finish();
-    source.onerror = () => finish(new Error("无法读取视频帧"));
+    source.onerror = () => finish(createDisplayError("无法读取视频帧", () => t("videoFrameReadFailed")));
     signal.addEventListener("abort", abort, { once: true });
-    source.src = src;
+    source.src = props.src;
     source.load();
     if (signal.aborted) abort();
   });
@@ -179,7 +185,7 @@ function loadFrame(source: HTMLVideoElement, time: number, signal: AbortSignal) 
 
 async function captureFrame(command: "current" | "first" | "last") {
   if (!video.value || !ready.value || capturing.value) return;
-  if (!nodeTypes?.value?.["remote-imageNode"]) return void ElMessage.error("请先启用图片节点插件");
+  if (!nodeTypes?.value?.["remote-imageNode"]) return void ElMessage.error(t("enableImageNode"));
   capturing.value = true;
   const controller = captureController = new AbortController();
   const id = crypto.randomUUID();
@@ -202,18 +208,18 @@ async function captureFrame(command: "current" | "first" | "last") {
     canvas.width = source.videoWidth;
     canvas.height = source.videoHeight;
     const context = canvas.getContext("2d");
-    if (!context || !canvas.width || !canvas.height) throw new Error("视频帧尚未就绪");
+    if (!context || !canvas.width || !canvas.height) throw createDisplayError("视频帧尚未就绪", () => t("videoFrameNotReady"));
     context.drawImage(source, 0, 0);
-    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error("截图生成失败")), "image/png"));
+    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(createDisplayError("截图生成失败", () => t("screenshotFailed"))), "image/png"));
     controller.signal.throwIfAborted();
-    const frameLabel = { current: "当前帧", first: "首帧", last: "尾帧" }[command];
-    const name = `${node.data.label || label} · ${frameLabel}`;
-    if (findNode(node.id) !== node) throw new Error("画布节点已变化，请重新截帧");
+    const frameLabel = { current: t("currentFrame"), first: t("firstFrame"), last: t("lastFrame") }[command];
+    const name = `${node.data.label || visibleLabel.value} · ${frameLabel}`;
+    if (findNode(node.id) !== node) throw createDisplayError("画布节点已变化，请重新截帧", () => t("canvasChangedCaptureAgain"));
     workspace = files.getWorkspaceFiles();
     uploadStarted = true;
     const path = await files.uploadFile(id, new File([blob], "frame.png", { type: "image/png" }));
     controller.signal.throwIfAborted();
-    if (findNode(node.id) !== node || !nodeTypes?.value?.["remote-imageNode"]) throw new Error("画布节点已变化，请重新截帧");
+    if (findNode(node.id) !== node || !nodeTypes?.value?.["remote-imageNode"]) throw createDisplayError("画布节点已变化，请重新截帧", () => t("canvasChangedCaptureAgain"));
     const x = node.computedPosition.x + node.dimensions.width + 40;
     let y = node.computedPosition.y;
     const width = 240 * canvas.width / canvas.height + 18;
@@ -223,14 +229,14 @@ async function captureFrame(command: "current" | "first" | "last") {
     }
     addNodes({ id, type: "remote-imageNode", position: { x, y }, data: { label: name, outputs: { image: { dataType: "IMAGE", value: { url: path, mimeType: "image/png" } } } } });
     committed = true;
-    ElMessage.success("已截取为图片节点");
+    ElMessage.success(t("capturedAsImageNode"));
   } catch (error) {
-    if (!controller.signal.aborted) ElMessage.error(error instanceof Error ? error.message : "截帧失败");
+    if (!controller.signal.aborted) ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("captureFailed"));
   } finally {
     if (frameVideo) { frameVideo.removeAttribute("src"); frameVideo.load(); }
     if (uploadStarted && !committed) {
       await workspace!.remove(`assets/${id}`, true).catch(error => {
-        if (error?.response?.data?.data?.code !== "ENOENT") ElMessage.error("截帧中断，临时图片清理失败");
+        if (error?.response?.data?.data?.code !== "ENOENT") ElMessage.error(t("captureCleanupFailed"));
       });
     }
     capturing.value = false;

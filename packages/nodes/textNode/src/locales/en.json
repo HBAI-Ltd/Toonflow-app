@@ -1,0 +1,20 @@
+{
+  "textContent": "Text content",
+  "edit": "Edit",
+  "selectModel": "Select a model",
+  "generationModel": "Generation model",
+  "addModelFirst": "Add a model in Settings first",
+  "generate": "Generate",
+  "editText": "Edit Text",
+  "editTextContent": "Edit text content",
+  "textNotLoadedSave": "The text has not loaded and cannot be saved",
+  "textGeneratingRefresh": "Text is being generated. Wait for it to finish before refreshing the node",
+  "nodeIdInvalid": "The node ID cannot be used as a folder name",
+  "textPathInvalid": "The text file path is invalid",
+  "textContentInvalid": "The text content is invalid",
+  "textLoadFailed": "Failed to load text",
+  "textSaveFailed": "Failed to save text",
+  "textNotLoaded": "The text has not loaded",
+  "referenceNoContent": "A referenced node has no content. Add content to it first",
+  "textGeneratingEdit": "Text is being generated. Edit it later"
+}

@@ -1,0 +1,15 @@
+{
+  "replaceVideo": "Replace video",
+  "videoExporting": "Video export in progress",
+  "exportingVideo": "Exporting video",
+  "chooseVideo": "Choose video",
+  "uploadVideo": "Upload video",
+  "videoReadFailed": "Failed to load video",
+  "videoBusySave": "Video is being processed. Wait for it to finish before switching or refreshing the node",
+  "videoExportingSave": "Video is being exported. Wait for it to finish before refreshing the node",
+  "videoUploadingDelete": "Video is uploading. Wait before deleting the node",
+  "videoBusy": "Video is being processed. Please try again later",
+  "videoSize": "The video must not be empty or larger than 100 MB",
+  "chooseVideoFile": "Please choose a video file",
+  "videoReplaceFailed": "Failed to replace video"
+}

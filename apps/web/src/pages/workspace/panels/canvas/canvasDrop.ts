@@ -1,8 +1,10 @@
+import { t } from "@/pages/i18n";
 import axios from "axios";
 import { ElMessage } from "element-plus";
 import type { useVueFlow } from "@vue-flow/core";
 import { uploadNodeFile } from "@toonflow/nodes-scaffold/workspaceFiles";
 import type { NodeOutput } from "@toonflow/nodes-scaffold/values";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 
 const assetDragType = "application/toonflow-asset";
@@ -64,9 +66,9 @@ export async function importCanvasFiles(droppedFiles: File[], position: { x: num
       const mimeType = !fileType || fileType === "application/octet-stream" ? fileMimeTypes[extension] ?? fileType : fileType;
       const kind = mimeType.startsWith("image/") ? "image" : mimeType.startsWith("audio/") ? "audio" : mimeType.startsWith("video/") ? "video"
         : mimeType.startsWith("text/") || /^application\/(json|xml|javascript|x-ndjson)$/.test(mimeType) ? "text" : undefined;
-      if (!kind) throw new Error(`${file.name}：该文件类型暂不支持导入画布`);
+      if (!kind) throw createDisplayError(`${file.name}：该文件类型暂不支持导入画布`, () => t("unsupportedCanvasImport", { name: file.name }));
       const type = `remote-${kind}Node`;
-      if (!availableNodes.some(node => node.type === type)) throw new Error(`${file.name}：请先安装并启用对应的基础节点`);
+      if (!availableNodes.some(node => node.type === type)) throw createDisplayError(`${file.name}：请先安装并启用对应的基础节点`, () => t("missingBaseNode", { name: file.name }));
       let output: NodeOutput | undefined;
       let textSnapshot: string | undefined;
       if (kind === "text") {
@@ -86,5 +88,5 @@ export async function importCanvasFiles(droppedFiles: File[], position: { x: num
 }
 
 function showError(error: unknown) {
-  ElMessage.error(axios.isAxiosError<{ message: string }>(error) ? error.response?.data.message || error.message : error instanceof Error ? error.message : "文件导入失败");
+  ElMessage.error(axios.isAxiosError<{ message: string }>(error) ? error.response?.data.message || error.message : error instanceof Error ? getErrorDisplay(error) : t("fileImportFailed"));
 }

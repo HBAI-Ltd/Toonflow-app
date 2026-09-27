@@ -1,5 +1,7 @@
+import { t } from "@/pages/i18n";
 import type { Node } from "@vue-flow/core";
 import { isNodeOutput } from "@toonflow/nodes-scaffold/values";
+import { createDisplayError } from "@toonflow/i18n";
 import { writeClipboardText } from "@/lib/clipboard";
 
 export const nodeClipboardCommand = /^toonflow:paste-node:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -25,7 +27,7 @@ async function accessClipboard(entry?: ClipboardEntry) {
       // ACT: 只保留最近一次快照；旧命令失效，不累计复制历史。
       const request = entry ? store.put(entry, "latest") : store.get("latest");
       transaction.oncomplete = () => resolve(entry ?? request.result);
-      transaction.onabort = () => reject(transaction.error ?? new Error("节点剪贴数据读写失败"));
+      transaction.onabort = () => reject(transaction.error ?? createDisplayError("节点剪贴数据读写失败", () => t("couldNotAccessNodeClipboard")));
     });
   } finally {
     database.close();
@@ -33,8 +35,8 @@ async function accessClipboard(entry?: ClipboardEntry) {
 }
 
 export async function copyNodeToClipboard(node: Pick<Node, "type" | "data">, directory: string) {
-  if (!node.type) throw new Error("节点类型无效");
-  if (!directory) throw new Error("请先打开项目");
+  if (!node.type) throw createDisplayError("节点类型无效", () => t("invalidNodeType"));
+  if (!directory) throw createDisplayError("请先打开项目", () => t("openAProjectFirst"));
   const command = `toonflow:paste-node:${crypto.randomUUID()}`;
   const snapshot: ClipboardNode = { type: node.type, data: JSON.parse(JSON.stringify(node.data ?? {})) };
   await accessClipboard({ command, directory, node: snapshot });
@@ -44,15 +46,17 @@ export async function copyNodeToClipboard(node: Pick<Node, "type" | "data">, dir
 export async function readClipboardNode(command: string, directory: string) {
   if (!nodeClipboardCommand.test(command)) return;
   const entry = await accessClipboard();
-  if (!entry || entry.command !== command) throw new Error("节点剪贴数据已失效，请重新复制");
+  if (!entry || entry.command !== command) throw createDisplayError("节点剪贴数据已失效，请重新复制", () => t("nodeClipboardDataExpiredCopy"));
   const node = entry.node;
   if (!node || typeof node.type !== "string" || !node.type || !node.data || typeof node.data !== "object" || Array.isArray(node.data)) {
-    throw new Error("节点剪贴数据格式错误，请重新复制");
+    throw createDisplayError("节点剪贴数据格式错误，请重新复制", () => t("invalidNodeClipboardDataCopy"));
   }
   const hasWorkspaceFile = Object.values(node.data.outputs ?? {}).some(output => isNodeOutput(output)
     && typeof output.value === "object" && !/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(output.value.url));
   if (hasWorkspaceFile && entry.directory !== directory) {
-    throw new Error(entry.directory ? "此节点引用工作区文件，不能跨项目粘贴" : "节点剪贴数据缺少工作目录，请重新复制");
+    throw entry.directory
+      ? createDisplayError("此节点引用工作区文件，不能跨项目粘贴", () => t("thisNodeReferencesWorkspaceFiles"))
+      : createDisplayError("节点剪贴数据缺少工作目录，请重新复制", () => t("nodeClipboardDataHasNo"));
   }
   return node;
 }

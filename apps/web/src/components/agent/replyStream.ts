@@ -1,14 +1,21 @@
 import { reactive, type Ref } from "vue";
 import { throttle } from "lodash-es";
+import { createDisplayError, createTranslator } from "@toonflow/i18n";
 import type { AgentEvent } from "@toonflow/server/agent/types";
 import type { AgentMessage, AgentMessagePart } from "./types";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
+
+const t = createTranslator({ zh, en });
 
 export async function* readAgentEvents(response: Response, signal: AbortSignal) {
   if (!response.ok) {
     const error = await response.json().catch(() => null);
-    throw new Error(error?.message || `请求失败（${response.status}）`);
+    throw error?.message
+      ? new Error(error.message)
+      : createDisplayError(`请求失败（${response.status}）`, () => t("requestFailed", { status: response.status }));
   }
-  if (!response.body) throw new Error("未收到响应流");
+  if (!response.body) throw createDisplayError("未收到响应流", () => t("responseStreamMissing"));
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
   let pending = "";
   try {
@@ -27,7 +34,7 @@ export async function* readAgentEvents(response: Response, signal: AbortSignal) 
         yield event;
         signal.throwIfAborted();
       }
-      if (done) throw new Error("连接已中断，请重试");
+      if (done) throw createDisplayError("连接已中断，请重试", () => t("connectionInterrupted"));
     }
   } finally {
     await reader.cancel().catch(() => {});
@@ -59,7 +66,7 @@ export function createReplyStream(reply: AgentMessage) {
   function receive(event: Extract<AgentEvent, { type: "text" | "thinking" | "tool" | "question" }>) {
     if (event.type === "question") {
       const part = parts.find(part => part.type === "tool" && part.tool.id === event.toolCallId);
-      if (part?.type !== "tool") throw new Error("提问缺少对应的工具调用");
+      if (part?.type !== "tool") throw createDisplayError("提问缺少对应的工具调用", () => t("questionToolCallMissing"));
       part.tool.question = { callId: event.callId, title: event.title, question: event.question, options: event.options, fields: event.fields };
       return;
     }

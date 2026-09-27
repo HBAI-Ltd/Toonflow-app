@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     class="directorDialog"
-    title="3D 导演台"
+    :title="t('directorStudio')"
     :modelValue="visible"
     width="min(1440px, calc(100vw - 40px))"
     alignCenter
@@ -14,12 +14,12 @@
     <template #header>
       <div class="directorHeader">
         <icon-cube3d-sphere :size="20" />
-        <span>3D 导演台</span>
+        <span>{{ t("directorStudio") }}</span>
         <small v-if="result">{{ result.name }}</small>
       </div>
     </template>
     <div ref="workspace" class="directorWorkspace">
-      <section class="stagePanel" aria-label="场景与镜头">
+      <section class="stagePanel" :aria-label="t('sceneAndCamera')">
         <div class="viewport" :style="{ '--sceneAspect': sceneAspect }">
           <canvas
             :key="canvasKey"
@@ -27,7 +27,7 @@
             class="sceneCanvas"
             :class="{ playing }"
             tabindex="0"
-            aria-label="导演台场景"
+            :aria-label="t('directorScene')"
             @click.left="toggleControl"
             @mousedown.right.prevent="addAnchor"
             @contextmenu.prevent
@@ -37,29 +37,29 @@
             @wheel.prevent.stop="changeFocalLength" />
           <div v-if="captureFlash" :key="captureFlash" class="captureFlash" aria-hidden="true" @animationend="captureFlash = 0" />
           <div class="viewportInfo">
-            <span>{{ playing ? "播放中" : controlling ? "" : "点击画布取景" }}</span>
+            <span>{{ playing ? t("playing") : controlling ? "" : t("clickCanvasToFrame") }}</span>
             <span>{{ focalLength.toFixed(0) }} mm</span>
           </div>
           <div v-if="!ready" class="stageLoading">
             <icon-loader-2 class="loadingIcon" :size="24" />
-            <span>正在载入场景</span>
+            <span>{{ t("loadingScene") }}</span>
           </div>
         </div>
         <div class="playbackBar">
           <el-popover trigger="click" placement="top-start" :width="180">
             <template #reference>
-              <el-button :icon="IconSettings" :disabled="!ready" aria-label="场景设置">设置</el-button>
+              <el-button :icon="IconSettings" :disabled="!ready" :aria-label="t('sceneSettings')">{{ t("settings") }}</el-button>
             </template>
             <div class="sceneSettingsPanel">
               <div class="settingRow">
-                <span>网格</span>
-                <el-switch :modelValue="sceneSettings.gridVisible" aria-label="显示网格" @change="sceneSettings = { ...sceneSettings, gridVisible: $event === true }" />
+                <span>{{ t("grid") }}</span>
+                <el-switch :modelValue="sceneSettings.gridVisible" :aria-label="t('showGrid')" @change="sceneSettings = { ...sceneSettings, gridVisible: $event === true }" />
               </div>
               <div class="settingRow">
-                <span>天空盒</span>
-                <el-switch :modelValue="sceneSettings.skyVisible" aria-label="显示天空盒" @change="sceneSettings = { ...sceneSettings, skyVisible: $event === true }" />
+                <span>{{ t("skybox") }}</span>
+                <el-switch :modelValue="sceneSettings.skyVisible" :aria-label="t('showSkybox')" @change="sceneSettings = { ...sceneSettings, skyVisible: $event === true }" />
               </div>
-              <el-button :icon="IconUserPlus" :loading="addingMannequin" :disabled="!ready || addingMannequin || exportingVideo || !!exportingImage || tasks.some(task => !task.error)" @click="emit('addMannequin')">添加人偶</el-button>
+              <el-button :icon="IconUserPlus" :loading="addingMannequin" :disabled="!ready || addingMannequin || exportingVideo || !!exportingImage || tasks.some(task => !task.error)" @click="emit('addMannequin')">{{ t("addMannequin") }}</el-button>
             </div>
           </el-popover>
           <el-button
@@ -67,7 +67,7 @@
             :icon="playing ? IconPlayerPause : IconPlayerPlay"
             :disabled="!ready || !result"
             text
-            :aria-label="playing ? '暂停影片' : '播放影片'"
+            :aria-label="playing ? t('pauseFilm') : t('playFilm')"
             @click="togglePlayback" />
           <el-slider
             :modelValue="currentTime"
@@ -75,66 +75,66 @@
             :step="0.01"
             :showTooltip="false"
             :disabled="!ready || !result"
-            aria-label="影片播放进度"
+            :aria-label="t('filmProgress')"
             @pointerdown.capture="pausePlayback"
             @update:modelValue="seekTime" />
           <span class="timeLabel">{{ formatTime(currentTime) }} / {{ formatTime(result?.duration ?? 0) }}</span>
-          <el-select v-model="aspectRatio" class="aspectSelect" aria-label="画面比例" :disabled="!ready">
+          <el-select v-model="aspectRatio" class="aspectSelect" :aria-label="t('aspectRatio')" :disabled="!ready">
             <el-option v-for="ratio in ['16:9', '9:16', '4:3', '1:1']" :key="ratio" :label="ratio" :value="ratio" />
           </el-select>
           <el-popover trigger="click" placement="top" :width="340" @beforeEnter="captureLightingReference">
             <template #reference>
-              <el-button :icon="IconSun" :disabled="!ready" aria-label="光照设置">光照</el-button>
+              <el-button :icon="IconSun" :disabled="!ready" :aria-label="t('lightingSettings')">{{ t("lighting") }}</el-button>
             </template>
             <div class="lightingPanel">
               <div class="lightingRow">
-                <span>全局光照 <small>无阴影</small></span>
+                <span>{{ t("globalLighting") }} <small>{{ t("noShadows") }}</small></span>
                 <div class="lightingInputs">
-                  <el-switch :modelValue="lighting.globalEnabled" aria-label="全局光照" @change="updateLighting({ globalEnabled: $event === true })" />
-                  <el-input-number :modelValue="lighting.globalIntensity" :min="0" :max="100" :step="0.1" :precision="2" controlsPosition="right" aria-label="全局光照强度" @update:modelValue="$event != null && updateLighting({ globalIntensity: $event })" />
+                  <el-switch :modelValue="lighting.globalEnabled" :aria-label="t('globalLighting')" @change="updateLighting({ globalEnabled: $event === true })" />
+                  <el-input-number :modelValue="lighting.globalIntensity" :min="0" :max="100" :step="0.1" :precision="2" controlsPosition="right" :aria-label="t('globalLightingIntensity')" @update:modelValue="$event != null && updateLighting({ globalIntensity: $event })" />
                 </div>
               </div>
               <div class="lightingRow">
-                <span>太阳光 <small>有阴影</small></span>
-                <el-switch :modelValue="lighting.sunEnabled" aria-label="太阳光" @change="updateLighting({ sunEnabled: $event === true })" />
+                <span>{{ t("sunlight") }} <small>{{ t("withShadows") }}</small></span>
+                <el-switch :modelValue="lighting.sunEnabled" :aria-label="t('sunlight')" @change="updateLighting({ sunEnabled: $event === true })" />
               </div>
               <template v-if="lighting.sunEnabled">
                 <lightDirection v-model:azimuth="lightingDraft.azimuth" v-model:elevation="lightingDraft.elevation" :referenceAzimuth="lightingReference" @change="updateLighting" />
                 <div class="lightingRow">
                   <div class="lightingInputs">
-                    <span>颜色</span>
-                    <el-color-picker :modelValue="lighting.color" :teleported="false" colorFormat="hex" aria-label="太阳光颜色" @change="$event && updateLighting({ color: $event })" />
+                    <span>{{ t("color") }}</span>
+                    <el-color-picker :modelValue="lighting.color" :teleported="false" colorFormat="hex" :aria-label="t('sunlightColor')" @change="$event && updateLighting({ color: $event })" />
                   </div>
                   <div class="lightingInputs">
-                    <span>强度</span>
-                    <el-input-number :modelValue="lighting.intensity" :min="0" :max="100" :step="0.1" :precision="2" controlsPosition="right" aria-label="太阳光强度" @update:modelValue="$event != null && updateLighting({ intensity: $event })" />
+                    <span>{{ t("intensity") }}</span>
+                    <el-input-number :modelValue="lighting.intensity" :min="0" :max="100" :step="0.1" :precision="2" controlsPosition="right" :aria-label="t('sunlightIntensity')" @update:modelValue="$event != null && updateLighting({ intensity: $event })" />
                   </div>
                 </div>
               </template>
             </div>
           </el-popover>
-          <el-button :icon="IconPlus" :disabled="!ready" aria-label="添加关键帧" @click="addAnchor">添加关键帧</el-button>
-          <el-button :icon="IconMovie" :disabled="!ready || !result || exportingVideo" :loading="exportingVideo" aria-label="导出视频节点" @click="emit('exportVideo', sceneAspect)">
-            {{ exportingVideo ? `导出视频 ${exportProgress ?? 0}%` : '导出视频节点' }}
+          <el-button :icon="IconPlus" :disabled="!ready" :aria-label="t('addKeyframe')" @click="addAnchor">{{ t("addKeyframe") }}</el-button>
+          <el-button :icon="IconMovie" :disabled="!ready || !result || exportingVideo" :loading="exportingVideo" :aria-label="t('exportVideoNode')" @click="emit('exportVideo', sceneAspect)">
+            {{ exportingVideo ? t("exportVideoProgress", { progress: exportProgress ?? 0 }) : t("exportVideoNode") }}
           </el-button>
         </div>
-        <div class="controlHint">WASD 移动 · 空格上升 · Shift 下降 · 滚轮调焦 · 右键记录 · 左键 / Esc 退出取景</div>
+        <div class="controlHint">{{ t("cameraControlsHint") }}</div>
         <div class="referenceHeader">
           <span>
-            关键帧
+            {{ t("keyframes") }}
             <small>{{ anchors.length }}</small>
           </span>
-          <small>拖动调整顺序</small>
+          <small>{{ t("dragToReorder") }}</small>
         </div>
         <vue-draggable v-model="anchors" class="referenceList" direction="horizontal" handle=".referenceImage" :animation="150">
           <div v-for="(anchor, index) in anchors" :key="anchor.id" class="referenceItem" :class="{ selected: activeAnchorId === anchor.id }">
-            <button class="referenceImage" type="button" :disabled="!ready" :aria-label="'查看关键帧 ' + (index + 1)" @click="restoreAnchor(anchor)">
+            <button class="referenceImage" type="button" :disabled="!ready" :aria-label="t('viewKeyframe', { count: index + 1 })" @click="restoreAnchor(anchor)">
               <img v-if="anchorPreviews[anchor.id]" :src="anchorPreviews[anchor.id]" alt="" draggable="false" />
               <icon-camera v-else :size="22" />
               <span>{{ String(index + 1).padStart(2, "0") }}</span>
             </button>
-            <el-button class="removeReference" :icon="IconX" text circle :aria-label="'删除关键帧 ' + (index + 1)" @click="removeAnchor(anchor.id)" />
-            <el-button class="exportReference" :icon="IconPhotoPlus" text circle size="small" title="导出画布" :disabled="!ready || !!exportingImage" :loading="exportingImage === anchor.id" :aria-label="'导出关键帧 ' + (index + 1) + ' 到画布'" @click="emit('exportImage', anchor, sceneAspect, anchor.time ?? currentTime)" />
+            <el-button class="removeReference" :icon="IconX" text circle :aria-label="t('deleteKeyframe', { count: index + 1 })" @click="removeAnchor(anchor.id)" />
+            <el-button class="exportReference" :icon="IconPhotoPlus" text circle size="small" :title="t('exportToCanvas')" :disabled="!ready || !!exportingImage" :loading="exportingImage === anchor.id" :aria-label="t('exportKeyframeToCanvas', { count: index + 1 })" @click="emit('exportImage', anchor, sceneAspect, anchor.time ?? currentTime)" />
           </div>
         </vue-draggable>
       </section>
@@ -175,6 +175,7 @@ import type { NodeAiModel } from "@toonflow/nodes-scaffold/runtime";
 import { applyLighting, applySceneSettings, captureCamera, createStage, disposeStage, type LightingSettings, type SceneDocument, type SceneSettings } from "./scene";
 import { anchorSchema, applyCamera, prepareMotion, sampleMotion, type CameraAnchor } from "./motion";
 import { prepareSceneAnimation, type DirectorPlan, type DirectorPlanItem, type DirectorGeneration } from "./sceneAnimation";
+import { getErrorDisplay, t } from "./i18n";
 
 const props = defineProps<{
   scene: SceneDocument;
@@ -282,7 +283,7 @@ async function loadScene() {
   } catch (error) {
     if (!disposed && version === loadVersion) {
       releaseStage();
-      ElMessage.error(error instanceof Error ? error.message : "场景载入失败");
+      ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("sceneLoadFailed"));
     }
   }
 }
@@ -346,7 +347,7 @@ async function toggleControl() {
   try {
     await canvas.value.requestPointerLock();
   } catch (error) {
-    if (!disposed) ElMessage.error(error instanceof Error ? error.message : "无法进入第一人称取景");
+    if (!disposed) ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("firstPersonFailed"));
   }
 }
 function exitControl() {
@@ -470,7 +471,7 @@ watch(() => [lightingDraft.value.azimuth, lightingDraft.value.elevation], ([azim
 });
 function addAnchor() {
   if (!ready.value || !runtime) return;
-  if (anchors.value.length >= 100) return void ElMessage.warning("最多记录 100 个关键帧");
+  if (anchors.value.length >= 100) return void ElMessage.warning(t("keyframeLimit"));
   pausePlayback();
   const anchor = anchorSchema.parse({ ...captureCamera(runtime), time: currentTime.value });
   anchorPreviews.value[anchor.id] = captureThumbnail();
@@ -521,7 +522,7 @@ watch(
     try {
       setAnimation();
     } catch (error) {
-      ElMessage.error(error instanceof Error ? error.message : "动画载入失败");
+      ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("animationLoadFailed"));
     }
   },
   { flush: "post" }

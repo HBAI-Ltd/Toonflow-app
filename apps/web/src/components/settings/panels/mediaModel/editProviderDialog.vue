@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="visible"
-    :title="`编辑媒体供应商：${provider?.label ?? ''}`"
+    :title="t('mediaProviders.editTitle', { name: provider?.label ?? '' })"
     width="min(800px, calc(100vw - 32px))"
     alignCenter
     appendToBody
@@ -12,13 +12,13 @@
     <div class="providerEditor">
       <messageMarkdown v-if="provider?.readme" class="providerReadme" :content="provider.readme" />
       <el-form labelPosition="top" :disabled="saving">
-        <el-form-item label="API Key">
-          <el-input v-model="apiKey" :prefixIcon="IconKey" type="password" showPassword autocomplete="off" aria-label="媒体供应商 API Key" />
+        <el-form-item :label="t('providers.apiKey')">
+          <el-input v-model="apiKey" :prefixIcon="IconKey" type="password" showPassword autocomplete="off" :aria-label="t('mediaProviders.apiKeyLabel')" />
         </el-form-item>
       </el-form>
       <div class="modelHeader">
-        <h4>模型配置 <el-text type="info">{{ models.length }}</el-text></h4>
-        <el-button :icon="IconPlus" size="small" :disabled="saving" @click="editModel()">手动添加</el-button>
+        <h4>{{ t("mediaProviders.modelSettings") }} <el-text type="info">{{ models.length }}</el-text></h4>
+        <el-button :icon="IconPlus" size="small" :disabled="saving" @click="editModel()">{{ t("models.addManually") }}</el-button>
       </div>
       <div class="modelList">
         <el-card v-for="(item, index) in models" :key="index" class="modelCard" shadow="never">
@@ -31,8 +31,8 @@
               </div>
             </div>
             <div class="actionButtons">
-              <el-button text size="small" :icon="IconEdit" :disabled="saving" :aria-label="`编辑模型 ${item.label}`" @click="editModel(index)">编辑</el-button>
-              <el-button text size="small" type="danger" :icon="IconTrash" :disabled="saving" :aria-label="`删除模型 ${item.label}`" @click="models.splice(index, 1)">删除</el-button>
+              <el-button text size="small" :icon="IconEdit" :disabled="saving" :aria-label="t('models.editLabel', { name: item.label })" @click="editModel(index)">{{ t("common.edit") }}</el-button>
+              <el-button text size="small" type="danger" :icon="IconTrash" :disabled="saving" :aria-label="t('models.deleteLabel', { name: item.label })" @click="models.splice(index, 1)">{{ t("common.delete") }}</el-button>
             </div>
           </div>
           <div class="modelTags">
@@ -40,13 +40,13 @@
             <el-tag v-for="(tag, tagIndex) in modelTags(item)" :key="tagIndex" size="small" type="info">{{ tag }}</el-tag>
           </div>
         </el-card>
-        <el-text v-if="!models.length" type="info">暂无模型</el-text>
+        <el-text v-if="!models.length" type="info">{{ t("models.none") }}</el-text>
       </div>
     </div>
-    <el-alert v-if="formError" class="formError" :title="formError" type="error" :closable="false" showIcon />
+    <el-alert v-if="formError" class="formError" :title="getErrorDisplay(formError)" type="error" :closable="false" showIcon />
     <template #footer>
-      <el-button :disabled="saving" @click="visible = false">取消</el-button>
-      <el-button type="primary" :icon="IconDeviceFloppy" :loading="saving" @click="saveModels">保存</el-button>
+      <el-button :disabled="saving" @click="visible = false">{{ t("common.cancel") }}</el-button>
+      <el-button type="primary" :icon="IconDeviceFloppy" :loading="saving" @click="saveModels">{{ t("common.save") }}</el-button>
     </template>
     <component
       :is="modelEditorDialog"
@@ -58,8 +58,10 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "../../i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import axios from "axios";
-import { defineAsyncComponent, ref, shallowRef, watch, type Component } from "vue";
+import { computed, defineAsyncComponent, ref, shallowRef, watch, type Component } from "vue";
 import { IconPlus, IconTrash, IconDeviceFloppy, IconEdit, IconKey } from "@tabler/icons-vue";
 import { modelIcon } from "@toonflow/model-icons";
 import messageMarkdown from "@/components/messageMarkdown.vue";
@@ -76,17 +78,17 @@ const modelEditorVisible = ref(false);
 const editingModelIndex = ref<number>();
 const saving = ref(false);
 const apiKey = ref("");
-const formError = ref("");
-const modelTypes = { image: "图片", video: "视频", audio: "音频", text: "文本" };
-const modeLabels: Record<string, string> = {
-  singleImage: "单图参考", multiReference: "多图参考", startEndRequired: "首尾帧必填",
-  endFrameOptional: "尾帧可选", startFrameOptional: "首帧可选",
-  imageReference: "图片参考", videoReference: "视频参考", audioReference: "音频参考",
-};
+const formError = shallowRef<Error>();
+const modelTypes = computed(() => ({ image: t("common.image"), video: t("common.video"), audio: t("common.audio"), text: t("common.text") }));
+const modeLabels = computed<Record<string, string>>(() => ({
+  singleImage: t("models.modeSingleImage"), multiReference: t("models.modeMultipleReferences"), startEndRequired: t("models.modeFirstLastRequired"),
+  endFrameOptional: t("models.modeLastOptional"), startFrameOptional: t("models.modeFirstOptional"),
+  imageReference: t("models.modeImageReference"), videoReference: t("models.modeVideoReference"), audioReference: t("models.modeAudioReference"),
+}));
 
 watch(visible, isVisible => {
   if (!isVisible) return;
-  formError.value = "";
+  formError.value = undefined;
   modelEditorVisible.value = false;
   editingModelIndex.value = undefined;
   const configs = settings.value.mediaProviderConfigs as Record<string, { apiKey?: unknown }> | undefined;
@@ -98,9 +100,9 @@ watch(visible, isVisible => {
 function modelTags(model: MediaProviderModel) {
   const modes = Array.isArray(model.mode) ? model.mode.flat().filter((mode): mode is string => typeof mode === "string") : [];
   return modes.map(mode => {
-    if (mode === "text") return model.type === "image" ? "文生图" : "文生视频";
+    if (mode === "text") return t(model.type === "image" ? "models.textToImage" : "models.textToVideo");
     const reference = /^(imageReference|videoReference|audioReference):(\d+)$/.exec(mode);
-    return reference ? `${modeLabels[reference[1]!]} ×${reference[2]}` : modeLabels[mode] ?? mode;
+    return reference ? `${modeLabels.value[reference[1]!]} ×${reference[2]}` : modeLabels.value[mode] ?? mode;
   });
 }
 
@@ -119,26 +121,26 @@ function confirmModel(model: MediaProviderModel) {
 async function saveModels() {
   if (saving.value || !provider) return;
   const { id: providerId, fileName, revision } = provider;
-  formError.value = "";
+  formError.value = undefined;
   let configSaved = false;
   try {
     const ids = new Set<string>();
     const values = models.value.map((item, index) => {
       const id = item.id.trim();
       const label = item.label.trim();
-      if (!id || !label) throw new Error(`请填写第 ${index + 1} 个模型的 ID 和显示名称`);
-      if (ids.has(id)) throw new Error(`模型 ID 重复：${id}`);
+      if (!id || !label) throw createDisplayError(`请填写第 ${index + 1} 个模型的 ID 和显示名称`, () => t("models.rowRequired", { index: index + 1 }));
+      if (ids.has(id)) throw createDisplayError(`模型 ID 重复：${id}`, () => t("models.duplicateId", { id }));
       ids.add(id);
       return { ...item, id, label };
     });
-    if (apiKey.value.length > 8192) throw new Error("API Key 过长");
+    if (apiKey.value.length > 8192) throw createDisplayError("API Key 过长", () => t("providers.apiKeyTooLong"));
     saving.value = true;
     const nextKey = apiKey.value.trim();
     configSaved = await saveSettings(settings => {
       const configs = settings.mediaProviderConfigs as Record<string, Record<string, unknown>> | undefined;
-      if (configs !== undefined && (!configs || typeof configs !== "object" || Array.isArray(configs))) throw new Error("媒体供应商配置格式无效");
+      if (configs !== undefined && (!configs || typeof configs !== "object" || Array.isArray(configs))) throw createDisplayError("媒体供应商配置格式无效", () => t("mediaProviders.invalidSettings"));
       const current = configs?.[providerId];
-      if (current !== undefined && (!current || typeof current !== "object" || Array.isArray(current))) throw new Error("当前供应商配置格式无效");
+      if (current !== undefined && (!current || typeof current !== "object" || Array.isArray(current))) throw createDisplayError("当前供应商配置格式无效", () => t("mediaProviders.invalidCurrentSettings"));
       if (nextKey === (current?.apiKey ?? "")) return;
       return { mediaProviderConfigs: { ...configs, [providerId]: { ...current, apiKey: nextKey } } };
     });
@@ -149,8 +151,11 @@ async function saveModels() {
     emit("saved", data.data);
     visible.value = false;
   } catch (error) {
-    const message = axios.isAxiosError(error) ? error.response?.data?.message || error.message : error instanceof Error ? error.message : "保存失败，请重试";
-    formError.value = configSaved ? `连接配置已保存，模型未保存：${message}。模型修改已保留，请重试。` : message;
+    const cause = axios.isAxiosError(error) ? new Error(error.response?.data?.message || error.message) : error instanceof Error ? error : createDisplayError("保存失败，请重试", () => t("common.saveFailedRetry"));
+    const message = cause.message;
+    formError.value = configSaved
+      ? createDisplayError(`连接配置已保存，模型未保存：${message}。模型修改已保留，请重试。`, () => t("mediaProviders.modelsSaveFailed", { message: getErrorDisplay(cause) }))
+      : cause;
   } finally {
     saving.value = false;
   }

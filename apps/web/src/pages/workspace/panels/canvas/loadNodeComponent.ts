@@ -1,3 +1,5 @@
+import { t } from "@/pages/i18n";
+import { createDisplayError } from "@toonflow/i18n";
 import type { NodeTypesObject } from "@vue-flow/core";
 
 type NodeComponent = Exclude<NodeTypesObject[string], string>;
@@ -24,7 +26,7 @@ export function loadNodeComponent(name: string, url: string, force = false): Pro
       script.remove();
       const component = nodeWindow.toonflowNodes?.[name];
       if (!Object.hasOwn(nodeWindow.toonflowNodes ?? {}, name) || !component || (typeof component !== "object" && typeof component !== "function")) {
-        reject(new Error(`节点脚本未导出 ${name} 组件`));
+        reject(createDisplayError(`节点脚本未导出 ${name} 组件`, () => t("nodeScriptMissingExport", { name })));
         return;
       }
       resolve(component);
@@ -32,7 +34,7 @@ export function loadNodeComponent(name: string, url: string, force = false): Pro
     script.onerror = () => {
       script.remove();
       delete nodeWindow.toonflowNodes?.[name];
-      reject(new Error("节点脚本加载失败"));
+      reject(createDisplayError("节点脚本加载失败", () => t("couldNotLoadNodeScript")));
     };
     document.head.append(script);
   }).then(component => {

@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="visible"
-    :title="provider ? '编辑供应商' : '添加自定义供应商'"
+    :title="t(provider ? 'languageProviders.editTitle' : 'languageProviders.addCustomTitle')"
     width="min(760px, 94vw)"
     alignCenter
     appendToBody
@@ -13,77 +13,77 @@
     <el-scrollbar maxHeight="65vh">
       <el-form ref="providerForm" :model="form" :rules="rules" labelPosition="top" :disabled="saving" class="customProviderForm">
         <div class="formGrid">
-          <el-form-item label="Provider ID" prop="id"><el-input v-model="form.id" placeholder="例如 myProvider" /></el-form-item>
-          <el-form-item label="显示名称" prop="label"><el-input v-model="form.label" placeholder="供应商的显示名称" /></el-form-item>
-          <el-form-item label="API 地址" prop="apiUrl"><el-input v-model="form.apiUrl" placeholder="https://api.example.com/v1" /></el-form-item>
-          <el-form-item label="API 协议" prop="protocol">
-            <el-select v-model="form.protocol" aria-label="API 协议">
+          <el-form-item :label="t('providers.id')" prop="id"><el-input v-model="form.id" :placeholder="t('providers.idPlaceholder')" /></el-form-item>
+          <el-form-item :label="t('providers.displayName')" prop="label"><el-input v-model="form.label" :placeholder="t('providers.displayNamePlaceholder')" /></el-form-item>
+          <el-form-item :label="t('providers.apiUrl')" prop="apiUrl"><el-input v-model="form.apiUrl" placeholder="https://api.example.com/v1" /></el-form-item>
+          <el-form-item :label="t('providers.apiProtocol')" prop="protocol">
+            <el-select v-model="form.protocol" :aria-label="t('providers.apiProtocol')">
               <el-option v-for="protocol in protocols" :key="protocol" :label="protocol" :value="protocol" />
             </el-select>
           </el-form-item>
         </div>
-        <el-form-item label="API 密钥" prop="apiKey">
-          <el-input v-model="form.apiKey" type="password" showPassword autocomplete="off" placeholder="本地无鉴权服务可留空" />
+        <el-form-item :label="t('providers.apiKey')" prop="apiKey">
+          <el-input v-model="form.apiKey" type="password" showPassword autocomplete="off" :placeholder="t('providers.apiKeyOptionalPlaceholder')" />
         </el-form-item>
         <div class="modelHeader">
-          <el-text tag="strong">模型列表</el-text>
-          <el-button :icon="IconDownload" :loading="fetching || modelRefreshPending" @click="fetchModels()">获取模型列表</el-button>
+          <el-text tag="strong">{{ t("common.models") }}</el-text>
+          <el-button :icon="IconDownload" :loading="fetching || modelRefreshPending" @click="fetchModels()">{{ t("models.fetch") }}</el-button>
         </div>
         <div class="modelList">
           <div v-for="item in models" :key="item.key" class="modelItem">
             <div class="modelRow">
-              <el-input v-model="item.id" placeholder="模型 ID" aria-label="模型 ID" />
-              <el-input v-model="item.label" placeholder="显示名称" aria-label="模型显示名称" />
+              <el-input v-model="item.id" :placeholder="t('models.id')" :aria-label="t('models.id')" />
+              <el-input v-model="item.label" :placeholder="t('providers.displayName')" :aria-label="t('models.displayNameLabel')" />
               <el-button
                 text
                 :icon="expandedModels.has(item.key) ? IconChevronUp : IconChevronDown"
                 :aria-expanded="expandedModels.has(item.key)"
-                aria-label="展开 token 设置"
+                :aria-label="t('models.expandTokenSettings')"
                 @click="expandedModels.has(item.key) ? expandedModels.delete(item.key) : expandedModels.add(item.key)" />
               <el-button
                 text
                 type="danger"
                 :icon="IconTrash"
-                aria-label="删除模型"
+                :aria-label="t('models.delete')"
                 @click="models = models.filter((model) => model.key !== item.key)" />
             </div>
             <div v-if="expandedModels.has(item.key)" class="formGrid tokenSettings">
-              <el-form-item label="上下文窗口">
+              <el-form-item :label="t('models.contextWindow')">
                 <el-input-number
                   v-model="item.contextWindow"
                   :min="1"
                   :max="Number.MAX_SAFE_INTEGER"
                   :precision="0"
                   controlsPosition="right"
-                  placeholder="未设置"
-                  aria-label="上下文窗口" />
+                   :placeholder="t('common.notSet')"
+                  :aria-label="t('models.contextWindow')" />
               </el-form-item>
-              <el-form-item label="最大输出 token">
+              <el-form-item :label="t('models.maxOutputTokens')">
                 <el-input-number
                   v-model="item.maxOutputTokens"
                   :min="1"
                   :max="Number.MAX_SAFE_INTEGER"
                   :precision="0"
                   controlsPosition="right"
-                  placeholder="未设置"
-                  aria-label="最大输出 token" />
+                   :placeholder="t('common.notSet')"
+                  :aria-label="t('models.maxOutputTokens')" />
               </el-form-item>
             </div>
           </div>
         </div>
-        <el-button class="manualAdd" :icon="IconPlus" @click="addManualModel">手动添加模型</el-button>
-        <el-alert v-if="formError" :title="formError" type="error" :closable="false" showIcon />
+        <el-button class="manualAdd" :icon="IconPlus" @click="addManualModel">{{ t("models.addManually") }}</el-button>
+        <el-alert v-if="formError" :title="getErrorDisplay(formError)" type="error" :closable="false" showIcon />
       </el-form>
     </el-scrollbar>
     <template #footer>
-      <el-button :disabled="saving" @click="visible = false">取消</el-button>
+      <el-button :disabled="saving" @click="visible = false">{{ t("common.cancel") }}</el-button>
       <el-button type="primary" :loading="saving" :disabled="fetching || modelRefreshPending" @click="addProvider">
-        {{ provider ? "保存修改" : "确定添加供应商" }}
+        {{ t(provider ? "languageProviders.saveChanges" : "languageProviders.addTitle") }}
       </el-button>
     </template>
   </el-dialog>
-  <el-dialog v-model="resultsVisible" title="选择要添加的模型" width="min(680px, 92vw)" alignCenter appendToBody destroyOnClose>
-    <el-input v-model="modelSearch" clearable :prefixIcon="IconSearch" placeholder="搜索模型 ID 或显示名称" aria-label="搜索模型" />
+  <el-dialog v-model="resultsVisible" :title="t('models.selectToAdd')" width="min(680px, 92vw)" alignCenter appendToBody destroyOnClose>
+    <el-input v-model="modelSearch" clearable :prefixIcon="IconSearch" :placeholder="t('models.searchPlaceholder')" :aria-label="t('models.searchLabel')" />
     <div class="modelResults">
       <el-auto-resizer>
         <template #default="{ height, width }">
@@ -99,15 +99,17 @@
         </template>
       </el-auto-resizer>
     </div>
-    <el-text type="info">{{ filteredModels.length }} 个结果，已勾选 {{ selectedIds.size }} 个</el-text>
+    <el-text type="info">{{ t("models.resultSummary", { results: filteredModels.length, selected: selectedIds.size }) }}</el-text>
     <template #footer>
-      <el-button @click="resultsVisible = false">取消</el-button>
-      <el-button type="primary" :disabled="!selectedIds.size" @click="addSelectedModels">添加勾选的模型（{{ selectedIds.size }}）</el-button>
+      <el-button @click="resultsVisible = false">{{ t("common.cancel") }}</el-button>
+      <el-button type="primary" :disabled="!selectedIds.size" @click="addSelectedModels">{{ t("models.addSelectedCount", { count: selectedIds.size }) }}</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { t } from "../../i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import { computed, h, onBeforeUnmount, reactive, ref, shallowRef, watch } from "vue";
 import axios from "axios";
 import { ElCheckbox, type FormInstance, type FormRules, type Column } from "element-plus";
@@ -147,28 +149,28 @@ const resultColumns = computed<Column[]>(() => [
       h(ElCheckbox, {
         modelValue: selectedIds.value.has(rowData.id),
         disabled: addedIds.value.has(rowData.id),
-        ariaLabel: `选择 ${rowData.id}`,
+        ariaLabel: t("models.selectLabel", { id: rowData.id }),
         onChange: (value: boolean | string | number) => {
           if (value) selectedIds.value.add(rowData.id);
           else selectedIds.value.delete(rowData.id);
         },
       }),
   },
-  { key: "id", dataKey: "id", title: "模型 ID", width: 240, flexGrow: 1 },
-  { key: "label", dataKey: "label", title: "显示名称", width: 200, flexGrow: 1 },
+  { key: "id", dataKey: "id", title: t("models.id"), width: 240, flexGrow: 1 },
+  { key: "label", dataKey: "label", title: t("providers.displayName"), width: 200, flexGrow: 1 },
 ]);
 const resultsVisible = ref(false);
 const fetching = ref(false);
 const modelRefreshPending = ref(false);
 const modelFetchFailed = ref(false);
-const formError = ref("");
+const formError = shallowRef<Error>();
 let request: AbortController | undefined;
-const rules: FormRules = {
+const rules = computed<FormRules>(() => ({
   id: [
-    { required: true, message: "请输入 Provider ID", trigger: "blur" },
-    { pattern: /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/, message: "仅支持字母、数字、点、下划线和短横线", trigger: "blur" },
+    { required: true, message: t("providers.idRequired"), trigger: "blur" },
+    { pattern: /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/, message: t("providers.idPattern"), trigger: "blur" },
   ],
-  label: [{ required: true, whitespace: true, message: "请输入显示名称", trigger: "blur" }],
+  label: [{ required: true, whitespace: true, message: t("providers.displayNameRequired"), trigger: "blur" }],
   apiUrl: [
     {
       validator: (_rule, value, callback) => {
@@ -177,13 +179,13 @@ const rules: FormRules = {
           if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error();
           callback();
         } catch {
-          callback(new Error("请输入有效的 HTTP API 基础地址，不包含查询参数"));
+          callback(createDisplayError("请输入有效的 HTTP API 基础地址，不包含查询参数", () => t("providers.invalidApiUrl")));
         }
       },
       trigger: "blur",
     },
   ],
-};
+}));
 
 watch(visible, (value) => {
   if (value) {
@@ -226,14 +228,14 @@ function resetForm() {
   fetchedModels.value = [];
   selectedIds.value = new Set();
   modelSearch.value = "";
-  formError.value = "";
+  formError.value = undefined;
   modelFetchFailed.value = false;
 }
 
 async function fetchModels(autoApply = false) {
   if (fetching.value || !(await providerForm.value?.validateField("apiUrl").catch(() => false))) return;
   fetching.value = true;
-  formError.value = "";
+  formError.value = undefined;
   modelFetchFailed.value = false;
   const controller = new AbortController();
   request = controller;
@@ -244,9 +246,11 @@ async function fetchModels(autoApply = false) {
       { signal: controller.signal, timeout: 35000 }
     );
     if (controller.signal.aborted) return;
-    if (data.code !== 200 || !Array.isArray(data.data)) throw new Error(data.message || "获取模型列表失败");
+    if (data.code !== 200 || !Array.isArray(data.data)) throw data.message
+      ? new Error(data.message)
+      : createDisplayError("获取模型列表失败", () => t("models.fetchFailed"));
     if (autoApply || isTfRouterProvider(form)) {
-      if (!data.data.length) throw new Error("未获取到可用模型，请检查 API Key 后重试");
+      if (!data.data.length) throw createDisplayError("未获取到可用模型，请检查 API Key 后重试", () => t("models.noneAvailable"));
       models.value = data.data.map((item: CustomProviderModel) => ({ ...item, key: crypto.randomUUID() }));
       return;
     }
@@ -258,10 +262,10 @@ async function fetchModels(autoApply = false) {
     if (!controller.signal.aborted) {
       modelFetchFailed.value = true;
       formError.value = axios.isAxiosError(error)
-        ? error.response?.data?.message || "获取模型列表失败，请检查连接配置"
+        ? error.response?.data?.message ? new Error(error.response.data.message) : createDisplayError("获取模型列表失败，请检查连接配置", () => t("models.fetchFailedCheckConnection"))
         : error instanceof Error
-        ? error.message
-        : "获取模型列表失败";
+        ? error
+        : createDisplayError("获取模型列表失败", () => t("models.fetchFailed"));
     }
   } finally {
     fetching.value = false;
@@ -286,12 +290,12 @@ function addManualModel() {
 
 async function addProvider() {
   if (fetching.value || modelRefreshPending.value || (isTfRouterProvider(form) && modelFetchFailed.value)) return;
-  formError.value = "";
+  formError.value = undefined;
   if (saving.value || !(await providerForm.value?.validate().catch(() => false))) return;
   const providerId = props.provider?.id;
   const ids = models.value.map((item) => item.id.trim());
   if (ids.some((id) => !id) || new Set(ids).size !== ids.length) {
-    formError.value = "模型 ID 不能为空或重复";
+    formError.value = createDisplayError("模型 ID 不能为空或重复", () => t("models.idsUnique"));
     return;
   }
   if (
@@ -299,7 +303,7 @@ async function addProvider() {
       [item.contextWindow, item.maxOutputTokens].some((value) => value != null && (!Number.isSafeInteger(value) || value < 1))
     )
   ) {
-    formError.value = "token 限制必须为正整数或留空";
+    formError.value = createDisplayError("token 限制必须为正整数或留空", () => t("models.tokenLimits"));
     return;
   }
   saving.value = true;
@@ -319,19 +323,19 @@ async function addProvider() {
     };
     await saveSettings(settings => {
       const existing = settings.customProviders;
-      if (existing !== undefined && !Array.isArray(existing)) throw new Error("已保存的供应商配置格式不正确");
+      if (existing !== undefined && !Array.isArray(existing)) throw createDisplayError("已保存的供应商配置格式不正确", () => t("providers.savedSettingsInvalid"));
       if (languageProviders.some(item => item.id !== providerId && item.id.toLowerCase() === updatedProvider.id.toLowerCase())
         || existing?.some(item => typeof item?.id === "string" && item.id !== providerId && item.id.toLowerCase() === updatedProvider.id.toLowerCase())) {
-        throw new Error("Provider ID 已存在");
+        throw createDisplayError("Provider ID 已存在", () => t("providers.idExists"));
       }
-      if (providerId && !existing?.some(item => item.id === providerId)) throw new Error("供应商已不存在");
+      if (providerId && !existing?.some(item => item.id === providerId)) throw createDisplayError("供应商已不存在", () => t("providers.noLongerExists"));
       return { customProviders: providerId
         ? existing!.map(item => item.id === providerId ? updatedProvider : item)
         : [...(existing ?? []), updatedProvider] };
     });
     visible.value = false;
   } catch (error) {
-    formError.value = error instanceof Error ? error.message : "保存失败，请重试；当前填写的内容已保留";
+    formError.value = error instanceof Error ? error : createDisplayError("保存失败，请重试；当前填写的内容已保留", () => t("common.saveFailedPreserved"));
   } finally {
     saving.value = false;
   }

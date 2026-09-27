@@ -1,0 +1,14 @@
+{
+  "replaceImage": "替换图片",
+  "nodeImage": "节点图片",
+  "imagePreviewFailed": "无法预览该图片",
+  "chooseImage": "选择图片",
+  "uploadImage": "上传图片",
+  "imageReadFailed": "图片读取失败",
+  "imageBusySave": "图片处理中，请完成后再切换或刷新节点",
+  "imageUploadingDelete": "图片上传中，请稍后删除节点",
+  "imageBusy": "图片处理中，请稍后重试",
+  "imageSize": "图片不能为空且不能超过 100 MB",
+  "chooseImageFile": "请选择图片文件",
+  "imageReplaceFailed": "图片替换失败"
+}

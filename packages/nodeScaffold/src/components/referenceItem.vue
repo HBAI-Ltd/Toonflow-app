@@ -2,7 +2,7 @@
   <vue-draggable
     v-model="items"
     class="referenceList"
-    aria-label="输入引用"
+    :aria-label="t('inputReferences')"
     :animation="180"
     direction="horizontal"
     ghostClass="referenceGhost"
@@ -24,8 +24,13 @@
 
 <script setup lang="ts">
 import { VueDraggable } from "vue-draggable-plus";
+import { createTranslator } from "@toonflow/i18n";
 import type { NodeInputValue } from "../values";
+import zh from "../locales/zh.json";
+import en from "../locales/en.json";
 import referenceCard from "./referenceCard.vue";
+
+const t = createTranslator({ zh, en });
 
 const items = defineModel<NodeInputValue[]>({ required: true });
 const emit = defineEmits<{ remove: [item: NodeInputValue]; preview: [item: NodeInputValue, url: string] }>();

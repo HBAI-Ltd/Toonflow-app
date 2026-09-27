@@ -1,5 +1,5 @@
 <template>
-  <section class="documentPanel" aria-label="文档编辑" @keydown.ctrl.f.prevent="searchVisible = true" @keydown.meta.f.prevent="searchVisible = true">
+  <section class="documentPanel" :aria-label="t('documentEditor')" @keydown.ctrl.f.prevent="searchVisible = true" @keydown.meta.f.prevent="searchVisible = true">
     <fileTree :directory="workspaceStore.project?.directory" @selectNode="openNode" />
     <div v-loading="opening" class="editorSurface">
       <div v-if="selectedNode" class="documentHeader">
@@ -9,23 +9,23 @@
           :modelValue="outputId"
           class="outputSelect"
           size="small"
-          aria-label="文本输出"
+          :aria-label="t('textOutput')"
           :disabled="opening"
           @change="openOutput">
           <el-option v-for="output in nodeOutputs" :key="output.id" :label="output.label" :value="output.id" />
         </el-select>
-        <el-button v-if="saveError" text type="danger" size="small" :title="saveError" @click="flushSave().catch(() => {})">保存失败，重试</el-button>
-        <span v-else class="saveStatus" role="status">{{ dirty ? "保存中…" : "已保存" }}</span>
+        <el-button v-if="saveError" text type="danger" size="small" :title="getErrorDisplay(saveError)" @click="flushSave().catch(() => {})">{{ t("saveFailedRetry") }}</el-button>
+        <span v-else class="saveStatus" role="status">{{ dirty ? t("saving") : t("saved") }}</span>
       </div>
-      <div v-if="editor" class="editorToolbar" role="group" aria-label="文档格式">
+      <div v-if="editor" class="editorToolbar" role="group" :aria-label="t('documentFormatting')">
         <div class="toolbarGroup">
           <el-button
             class="toolButton"
             text
             size="small"
             :disabled="!editor.can().undo()"
-            aria-label="撤销"
-            title="撤销"
+            :aria-label="t('undo')"
+            :title="t('undo')"
             @mousedown.prevent
             @click="editor.chain().focus().undo().run()">
             <icon-arrow-back-up :size="17" />
@@ -35,8 +35,8 @@
             text
             size="small"
             :disabled="!editor.can().redo()"
-            aria-label="重做"
-            title="重做"
+            :aria-label="t('redo')"
+            :title="t('redo')"
             @mousedown.prevent
             @click="editor.chain().focus().redo().run()">
             <icon-arrow-forward-up :size="17" />
@@ -49,15 +49,15 @@
               :class="{ active: editor.isActive('heading') }"
               text
               size="small"
-              aria-label="段落样式"
+              :aria-label="t('paragraphStyle')"
               :title="textStyle">
               <icon-heading :size="17" />
               <icon-chevron-down :size="12" />
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item :command="0">正文</el-dropdown-item>
-                <el-dropdown-item v-for="level in headingLevels" :key="level" :command="level">标题 {{ level }}</el-dropdown-item>
+                <el-dropdown-item :command="0">{{ t("body") }}</el-dropdown-item>
+                <el-dropdown-item v-for="level in headingLevels" :key="level" :command="level">{{ t("headingLevel", { level }) }}</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -67,8 +67,8 @@
               :class="{ active: listTools.some(item => editor!.isActive(item.name)) }"
               text
               size="small"
-              aria-label="列表"
-              title="列表">
+              :aria-label="t('list')"
+              :title="t('list')">
               <icon-list :size="17" />
               <icon-chevron-down :size="12" />
             </el-button>
@@ -108,13 +108,13 @@
               <component :is="item.icon" :size="17" />
             </el-button>
           </el-tooltip>
-          <el-tooltip content="链接" placement="bottom">
+          <el-tooltip :content="t('link')" placement="bottom">
             <el-button
               class="toolButton"
               :class="{ active: editor.isActive('link') }"
               text
               size="small"
-              aria-label="链接"
+              :aria-label="t('link')"
               :aria-pressed="editor.isActive('link')"
               @mousedown.prevent
               @click="editLink">
@@ -154,21 +154,21 @@
         </div>
         <div class="toolbarGroup">
           <el-dropdown trigger="click" @command="insertContent">
-            <el-button text size="small" aria-label="插入内容">
+            <el-button text size="small" :aria-label="t('insertContent')">
               <icon-photo :size="17" />
-              添加
+              {{ t("add") }}
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="image" :icon="IconPhoto">图片链接</el-dropdown-item>
-                <el-dropdown-item command="table" :icon="IconTable">表格</el-dropdown-item>
-                <el-dropdown-item command="divider" :icon="IconSeparator">分隔线</el-dropdown-item>
+                <el-dropdown-item command="image" :icon="IconPhoto">{{ t("imageUrl") }}</el-dropdown-item>
+                <el-dropdown-item command="table" :icon="IconTable">{{ t("table") }}</el-dropdown-item>
+                <el-dropdown-item command="divider" :icon="IconSeparator">{{ t("divider") }}</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
           <el-dropdown v-if="editor.isActive('table')" trigger="click" @command="editTable">
             <el-button text size="small">
-              表格
+              {{ t("table") }}
               <icon-chevron-down :size="12" />
             </el-button>
             <template #dropdown>
@@ -179,8 +179,8 @@
           </el-dropdown>
         </div>
         <div class="toolbarGroup">
-          <el-tooltip content="复制 Markdown" placement="bottom">
-            <el-button class="toolButton" text size="small" :disabled="editor.isEmpty" aria-label="复制 Markdown" @click="copyMarkdown">
+          <el-tooltip :content="t('copyMarkdown')" placement="bottom">
+            <el-button class="toolButton" text size="small" :disabled="editor.isEmpty" :aria-label="t('copyMarkdown')" @click="copyMarkdown">
               <icon-copy :size="17" />
             </el-button>
           </el-tooltip>
@@ -192,7 +192,7 @@
             @show="openSearch"
             @hide="editor.commands.clearSearch()">
             <template #reference>
-              <el-button class="toolButton" :class="{ active: searchVisible }" text size="small" aria-label="查找正文" title="查找正文">
+              <el-button class="toolButton" :class="{ active: searchVisible }" text size="small" :aria-label="t('findInDocument')" :title="t('findInDocument')">
                 <icon-search :size="17" />
               </el-button>
             </template>
@@ -201,8 +201,8 @@
                 ref="searchInput"
                 v-model="searchTerm"
                 size="small"
-                placeholder="查找正文"
-                aria-label="查找正文内容"
+                :placeholder="t('findInDocument')"
+                :aria-label="t('findInDocument2')"
                 clearable
                 @input="value => editor!.commands.setSearchTerm(value)"
                 @keydown.enter.prevent="editor.commands.goToNextResult()" />
@@ -212,7 +212,7 @@
                   text
                   size="small"
                   :disabled="!editor.storage.findAndReplace.results.length"
-                  aria-label="上一个匹配"
+                  :aria-label="t('previousMatch')"
                   @click="editor.commands.goToPreviousResult()">
                   <icon-chevron-up :size="16" />
                 </el-button>
@@ -220,11 +220,11 @@
                   text
                   size="small"
                   :disabled="!editor.storage.findAndReplace.results.length"
-                  aria-label="下一个匹配"
+                  :aria-label="t('nextMatch')"
                   @click="editor.commands.goToNextResult()">
                   <icon-chevron-down :size="16" />
                 </el-button>
-                <el-button text size="small" aria-label="关闭查找" @click="searchVisible = false"><icon-x :size="16" /></el-button>
+                <el-button text size="small" :aria-label="t('closeFind')" @click="searchVisible = false"><icon-x :size="16" /></el-button>
               </div>
             </div>
           </el-popover>
@@ -236,12 +236,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onDeactivated, ref } from "vue";
+import { t } from "@/pages/i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
+import { computed, nextTick, onBeforeUnmount, onDeactivated, ref, shallowRef, watch } from "vue";
 import { debounce } from "lodash-es";
 import { ElMessage, ElMessageBox, type InputInstance } from "element-plus";
 import { Editor, EditorContent, useEditor } from "@tiptap/vue-3";
 import type { ChainedCommands, EditorOptions } from "@tiptap/core";
 import { useWorkspaceStore } from "@/stores/workspace";
+import { uiLocale } from "@/stores/settings";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { writeClipboardText } from "@/lib/clipboard";
 import fileTree, { type TreeSelection } from "./components/fileTree.vue";
@@ -289,7 +292,7 @@ const nodeOutputs = ref<TextOutput[]>([]);
 const outputId = ref("");
 const opening = ref(false);
 const dirty = ref(false);
-const saveError = ref("");
+const saveError = shallowRef<Error>();
 const selectedPath = computed(() => {
   const selection = selectedNode.value;
   if (!selection) return "";
@@ -308,11 +311,11 @@ const saveDocument = debounce((change: NonNullable<typeof draft>) => {
     .then(() => {
       if (draft === change) {
         dirty.value = false;
-        saveError.value = "";
+        saveError.value = undefined;
       }
     })
     .catch((error) => {
-      saveError.value = error instanceof Error ? error.message : "文本保存失败";
+      saveError.value = error instanceof Error ? error : createDisplayError("文本保存失败", () => t("couldNotSaveText"));
       throw error;
     });
   void saving.catch(() => {});
@@ -320,6 +323,18 @@ const saveDocument = debounce((change: NonNullable<typeof draft>) => {
 const searchVisible = ref(false);
 const searchTerm = ref("");
 const searchInput = ref<InputInstance>();
+function createEditorProps(): NonNullable<EditorOptions["editorProps"]> {
+  return {
+    attributes: { role: "textbox", "aria-label": t("markdownDocument"), "aria-multiline": "true" },
+    handlePaste: (_view, event) => {
+      const clipboard = event.clipboardData;
+      const markdown = clipboard?.getData("text/markdown");
+      const text = markdown || clipboard?.getData("text/plain");
+      if (!text || (!markdown && clipboard?.getData("text/html")) || editor.value?.isActive("codeBlock")) return false;
+      return editor.value?.commands.insertContent(text, { contentType: "markdown" }) ?? false;
+    },
+  };
+}
 const editorOptions: Partial<EditorOptions> = {
   extensions: markdownExtensions,
   content: "",
@@ -332,21 +347,15 @@ const editorOptions: Partial<EditorOptions> = {
     if (output) output.text = text;
     draft = { directory, selection: selectedNode.value, handleId: outputId.value, text };
     dirty.value = true;
-    saveError.value = "";
+    saveError.value = undefined;
     saveDocument(draft);
   },
-  editorProps: {
-    attributes: { role: "textbox", "aria-label": "Markdown 文档", "aria-multiline": "true" },
-    handlePaste: (_view, event) => {
-      const clipboard = event.clipboardData;
-      const markdown = clipboard?.getData("text/markdown");
-      const text = markdown || clipboard?.getData("text/plain");
-      if (!text || (!markdown && clipboard?.getData("text/html")) || editor.value?.isActive("codeBlock")) return false;
-      return editor.value?.commands.insertContent(text, { contentType: "markdown" }) ?? false;
-    },
-  },
 };
-const editor = useEditor(editorOptions);
+const editor = useEditor({ ...editorOptions, editorProps: createEditorProps() });
+watch(uiLocale, () => {
+  const current = editor.value;
+  if (current) current.setOptions({ editorProps: { ...current.options.editorProps, attributes: createEditorProps().attributes } });
+});
 
 async function flushSave() {
   if (saveError.value && draft) saveDocument(draft);
@@ -356,15 +365,15 @@ async function flushSave() {
 
 function showOutput(id: string) {
   const output = nodeOutputs.value.find((output) => output.id === id);
-  if (!output) throw new Error("文本输出不存在");
+  if (!output) throw createDisplayError("文本输出不存在", () => t("textOutputNotFound"));
   outputId.value = id;
   searchVisible.value = false;
   draft = undefined;
   dirty.value = false;
-  saveError.value = "";
+  saveError.value = undefined;
   // 每个节点/输出重新建立编辑器，避免撤销跨文档修改。
   editor.value?.destroy();
-  editor.value = new Editor({ ...editorOptions, content: output.text });
+  editor.value = new Editor({ ...editorOptions, editorProps: createEditorProps(), content: output.text });
 }
 
 async function openNode(selection: TreeSelection, reportError = true, signal?: AbortSignal) {
@@ -389,15 +398,15 @@ async function openNode(selection: TreeSelection, reportError = true, signal?: A
     const document = await props.readNode(directory, selection.canvasPath, selection.nodeId);
     signal?.throwIfAborted();
     if (request !== openRequest || directory !== workspaceStore.project?.directory) return;
-    if (!document.outputs.length) throw new Error("节点没有文本输出");
+    if (!document.outputs.length) throw createDisplayError("节点没有文本输出", () => t("nodeHasNoTextOutput"));
     selectedNode.value = { ...selection, label: document.label };
     nodeOutputs.value = document.outputs;
     showOutput(document.outputs[0]!.id);
   } catch (error) {
     if (!reportError) throw error;
     if (request === openRequest) {
-      const fallback = "filePath" in selection ? "读取文件失败" : "读取节点失败";
-      ElMessage.error(error instanceof Error ? error.message : fallback);
+      const fallback = "filePath" in selection ? t("couldNotReadFile") : t("couldNotReadNode");
+      ElMessage.error(error instanceof Error ? getErrorDisplay(error) : fallback);
     }
   } finally {
     if (request === openRequest) {
@@ -418,7 +427,7 @@ async function openOutput(id: string, reportError = true, signal?: AbortSignal) 
     if (request === openRequest) showOutput(id);
   } catch (error) {
     if (!reportError) throw error;
-    if (request === openRequest) ElMessage.error(error instanceof Error ? error.message : "切换文本输出失败");
+    if (request === openRequest) ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("couldNotSwitchTextOutput"));
   } finally {
     if (request === openRequest) {
       opening.value = false;
@@ -436,7 +445,7 @@ function getDocument(includeText = true) {
     selection: selectedNode.value ?? null,
     handleId: outputId.value || null,
     dirty: dirty.value,
-    saveError: saveError.value || null,
+    saveError: saveError.value?.message || null,
     ...(includeText ? { text: editor.value ? serializeMarkdown(editor.value) : "" } : {}),
   };
 }
@@ -448,17 +457,17 @@ async function openDocument(args: Record<string, unknown>, signal: AbortSignal) 
     selection = { filePath: args.path, label: args.path.split(/[\\/]/).at(-1)! };
   } else if (typeof args.canvasPath === "string" && typeof args.nodeId === "string") {
     selection = { canvasPath: args.canvasPath, nodeId: args.nodeId, label: args.nodeId };
-  } else throw new Error("请指定 Markdown 文件 path，或画布 canvasPath 和 nodeId");
+  } else throw createDisplayError("请指定 Markdown 文件 path，或画布 canvasPath 和 nodeId", () => t("specifyAMarkdownFilePath"));
   await openNode(selection, false, signal);
   signal.throwIfAborted();
   const current = selectedNode.value;
   if (!current || ("filePath" in selection
     ? !("filePath" in current) || current.filePath !== selection.filePath
     : !("canvasPath" in current) || current.canvasPath !== selection.canvasPath || current.nodeId !== selection.nodeId)) {
-    throw new Error("文档已切换，请重新读取当前文档");
+    throw createDisplayError("文档已切换，请重新读取当前文档", () => t("theDocumentChangedReadThe"));
   }
   if (typeof args.handleId === "string") {
-    if (!nodeOutputs.value.some(output => output.id === args.handleId)) throw new Error("文本输出不存在");
+    if (!nodeOutputs.value.some(output => output.id === args.handleId)) throw createDisplayError("文本输出不存在", () => t("textOutputNotFound"));
     await openOutput(args.handleId, false, signal);
     signal.throwIfAborted();
   }
@@ -466,9 +475,9 @@ async function openDocument(args: Record<string, unknown>, signal: AbortSignal) 
 
 async function writeDocument(args: Record<string, unknown>, signal: AbortSignal) {
   signal.throwIfAborted();
-  if (!selectedNode.value || !editor.value || opening.value) throw new Error("请先打开需要编辑的文档");
-  if (typeof args.text !== "string" || typeof args.expectedText !== "string") throw new Error("需要 text 和读取时的 expectedText");
-  if (serializeMarkdown(editor.value) !== args.expectedText) throw new Error("文档内容已变化，请重新读取后编辑");
+  if (!selectedNode.value || !editor.value || opening.value) throw createDisplayError("请先打开需要编辑的文档", () => t("openADocumentToEdit"));
+  if (typeof args.text !== "string" || typeof args.expectedText !== "string") throw createDisplayError("需要 text 和读取时的 expectedText", () => t("bothTextAndTheExpectedtext"));
+  if (serializeMarkdown(editor.value) !== args.expectedText) throw createDisplayError("文档内容已变化，请重新读取后编辑", () => t("theDocumentChangedReadIt"));
   editor.value.commands.setContent(args.text, { contentType: "markdown" });
   await flushSave();
   signal.throwIfAborted();
@@ -480,46 +489,46 @@ const headingLevels = [1, 2, 3, 4, 5, 6] as const;
 type HeadingLevel = (typeof headingLevels)[number];
 const textStyle = computed(() => {
   const level = headingLevels.find((level) => editor.value?.isActive("heading", { level }));
-  return level ? `标题 ${level}` : "正文";
+  return level ? t("headingLevel", { level }) : t("body");
 });
 const searchStatus = computed(() => {
   const search = editor.value?.storage.findAndReplace;
   return search?.results.length ? `${(search.currentIndex ?? 0) + 1} / ${search.results.length}` : "0 / 0";
 });
-const formatTools = [
-  { name: "bold", label: "加粗", icon: IconBold, run: (chain: ChainedCommands) => chain.toggleBold() },
-  { name: "italic", label: "斜体", icon: IconItalic, run: (chain: ChainedCommands) => chain.toggleItalic() },
-  { name: "strike", label: "删除线", icon: IconStrikethrough, run: (chain: ChainedCommands) => chain.toggleStrike() },
-  { name: "code", label: "行内代码", icon: IconCode, run: (chain: ChainedCommands) => chain.toggleCode() },
-  { name: "underline", label: "下划线", icon: IconUnderline, run: (chain: ChainedCommands) => chain.toggleUnderline() },
-  { name: "highlight", label: "高亮", icon: IconHighlight, run: (chain: ChainedCommands) => chain.toggleHighlight() },
-];
-const listTools = [
-  { name: "bulletList", label: "无序列表", icon: IconList, run: (chain: ChainedCommands) => chain.toggleBulletList() },
-  { name: "orderedList", label: "有序列表", icon: IconListNumbers, run: (chain: ChainedCommands) => chain.toggleOrderedList() },
-  { name: "taskList", label: "任务列表", icon: IconListCheck, run: (chain: ChainedCommands) => chain.toggleTaskList() },
-];
-const blockTools = [
-  { name: "blockquote", label: "引用", icon: IconBlockquote, run: (chain: ChainedCommands) => chain.toggleBlockquote() },
-  { name: "codeBlock", label: "代码块", icon: IconSourceCode, run: (chain: ChainedCommands) => chain.toggleCodeBlock() },
-];
-const scriptTools = [
-  { name: "superscript", label: "上标", icon: IconSuperscript, run: (chain: ChainedCommands) => chain.unsetSubscript().toggleSuperscript() },
-  { name: "subscript", label: "下标", icon: IconSubscript, run: (chain: ChainedCommands) => chain.unsetSuperscript().toggleSubscript() },
-];
-const alignmentTools = [
-  { value: "left", label: "左对齐", icon: IconAlignLeft },
-  { value: "center", label: "居中对齐", icon: IconAlignCenter },
-  { value: "right", label: "右对齐", icon: IconAlignRight },
-  { value: "justify", label: "两端对齐", icon: IconAlignJustified },
-];
-const tableTools = [
-  { command: "addRowAfter", label: "在下方插入行" },
-  { command: "addColumnAfter", label: "在右侧插入列" },
-  { command: "deleteRow", label: "删除当前行" },
-  { command: "deleteColumn", label: "删除当前列" },
-  { command: "deleteTable", label: "删除表格" },
-] as const;
+const formatTools = computed(() => [
+  { name: "bold", label: t("bold"), icon: IconBold, run: (chain: ChainedCommands) => chain.toggleBold() },
+  { name: "italic", label: t("italic"), icon: IconItalic, run: (chain: ChainedCommands) => chain.toggleItalic() },
+  { name: "strike", label: t("strikethrough"), icon: IconStrikethrough, run: (chain: ChainedCommands) => chain.toggleStrike() },
+  { name: "code", label: t("inlineCode"), icon: IconCode, run: (chain: ChainedCommands) => chain.toggleCode() },
+  { name: "underline", label: t("underline"), icon: IconUnderline, run: (chain: ChainedCommands) => chain.toggleUnderline() },
+  { name: "highlight", label: t("highlight"), icon: IconHighlight, run: (chain: ChainedCommands) => chain.toggleHighlight() },
+]);
+const listTools = computed(() => [
+  { name: "bulletList", label: t("bulletedList"), icon: IconList, run: (chain: ChainedCommands) => chain.toggleBulletList() },
+  { name: "orderedList", label: t("numberedList"), icon: IconListNumbers, run: (chain: ChainedCommands) => chain.toggleOrderedList() },
+  { name: "taskList", label: t("taskList"), icon: IconListCheck, run: (chain: ChainedCommands) => chain.toggleTaskList() },
+]);
+const blockTools = computed(() => [
+  { name: "blockquote", label: t("blockquote"), icon: IconBlockquote, run: (chain: ChainedCommands) => chain.toggleBlockquote() },
+  { name: "codeBlock", label: t("codeBlock"), icon: IconSourceCode, run: (chain: ChainedCommands) => chain.toggleCodeBlock() },
+]);
+const scriptTools = computed(() => [
+  { name: "superscript", label: t("superscript"), icon: IconSuperscript, run: (chain: ChainedCommands) => chain.unsetSubscript().toggleSuperscript() },
+  { name: "subscript", label: t("subscript"), icon: IconSubscript, run: (chain: ChainedCommands) => chain.unsetSuperscript().toggleSubscript() },
+]);
+const alignmentTools = computed(() => [
+  { value: "left", label: t("alignLeft"), icon: IconAlignLeft },
+  { value: "center", label: t("alignCenter"), icon: IconAlignCenter },
+  { value: "right", label: t("alignRight"), icon: IconAlignRight },
+  { value: "justify", label: t("justify"), icon: IconAlignJustified },
+]);
+const tableTools = computed(() => [
+  { command: "addRowAfter", label: t("insertRowBelow") },
+  { command: "addColumnAfter", label: t("insertColumnRight") },
+  { command: "deleteRow", label: t("deleteRow") },
+  { command: "deleteColumn", label: t("deleteColumn") },
+  { command: "deleteTable", label: t("deleteTable") },
+] as const);
 
 function setTextStyle(level: HeadingLevel | 0) {
   const chain = editor.value?.chain().focus();
@@ -527,7 +536,7 @@ function setTextStyle(level: HeadingLevel | 0) {
   else chain?.setHeading({ level }).run();
 }
 
-function editTable(command: (typeof tableTools)[number]["command"]) {
+function editTable(command: (typeof tableTools.value)[number]["command"]) {
   editor.value?.chain().focus()[command]().run();
 }
 
@@ -541,11 +550,11 @@ async function editLink() {
   const currentEditor = editor.value;
   if (!currentEditor) return;
   try {
-    const { value } = await ElMessageBox.prompt("输入链接地址，留空可移除链接", "链接", {
+    const { value } = await ElMessageBox.prompt(t("enterALinkUrlOr"), t("link"), {
       inputValue: currentEditor.getAttributes("link").href || "",
-      inputValidator: (value) => !value?.trim() || /^(https?:\/\/|mailto:)\S+$/i.test(value.trim()) || "请输入有效的 https、http 或 mailto 链接",
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
+      inputValidator: (value) => !value?.trim() || /^(https?:\/\/|mailto:)\S+$/i.test(value.trim()) || t("enterAValidHttpsHttp"),
+      confirmButtonText: t("confirm"),
+      cancelButtonText: t("cancel"),
     });
     if (currentEditor.isDestroyed) return;
     const chain = currentEditor.chain().focus().extendMarkRange("link");
@@ -562,10 +571,10 @@ async function insertContent(command: "image" | "table" | "divider") {
   if (command === "table") return currentEditor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   if (command === "divider") return currentEditor.chain().focus().setHorizontalRule().run();
   try {
-    const { value } = await ElMessageBox.prompt("输入图片地址", "插入图片", {
-      inputValidator: (value) => /^https?:\/\/\S+$/i.test(value?.trim() || "") || "请输入有效的 https 或 http 图片地址",
-      confirmButtonText: "插入",
-      cancelButtonText: "取消",
+    const { value } = await ElMessageBox.prompt(t("enterAnImageUrl"), t("insertImage"), {
+      inputValidator: (value) => /^https?:\/\/\S+$/i.test(value?.trim() || "") || t("enterAValidHttpsOr"),
+      confirmButtonText: t("insert"),
+      cancelButtonText: t("cancel"),
     });
     if (!currentEditor.isDestroyed) currentEditor.chain().focus().setImage({ src: value.trim() }).run();
   } catch {
@@ -577,9 +586,9 @@ async function copyMarkdown() {
   if (!editor.value) return;
   try {
     await writeClipboardText(serializeMarkdown(editor.value));
-    ElMessage.success("已复制 Markdown");
+    ElMessage.success(t("markdownCopied"));
   } catch {
-    ElMessage.error("复制失败，请检查剪贴板权限");
+    ElMessage.error(t("copyFailedCheckClipboardPermissions"));
   }
 }
 

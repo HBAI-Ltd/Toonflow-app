@@ -3,18 +3,18 @@
     <section class="welcomePanel" aria-labelledby="welcomeTitle">
       <div v-if="view !== 'welcome'" class="providerContent">
         <header class="providerHeader">
-          <el-button text :icon="IconArrowLeft" :disabled="saving" @click="view = 'welcome'">返回</el-button>
-          <h1 id="welcomeTitle">{{ view === "login" ? "登录 TF-Router" : "配置语言模型" }}</h1>
+          <el-button text :icon="IconArrowLeft" :disabled="saving" @click="view = 'welcome'">{{ t("back") }}</el-button>
+          <h1 id="welcomeTitle">{{ view === "login" ? t("signInToTfRouter") : t("configureLanguageModels") }}</h1>
         </header>
-        <div v-if="view === 'login'" v-loading="saving" class="loginBody" element-loading-text="正在配置文本模型和媒体模型…">
-          <iframe ref="loginFrame" class="loginFrame" :src="loginUrl" title="TF-Router 登录与注册" />
+        <div v-if="view === 'login'" v-loading="saving" class="loginBody" :element-loading-text="t('configuringTextAndMediaModels')">
+          <iframe ref="loginFrame" class="loginFrame" :src="loginUrl" :title="t('tfRouterSignInAnd')" />
         </div>
         <div v-else class="providerBody">
           <languageModel />
         </div>
         <div v-if="view === 'login' && loginError" class="loginFeedback" role="status">
-          <el-alert :title="loginError" type="error" :closable="false" showIcon />
-          <el-button v-if="loginKey" type="primary" :loading="saving" @click="configureProviders">重试配置</el-button>
+          <el-alert :title="getErrorDisplay(loginError)" type="error" :closable="false" showIcon />
+          <el-button v-if="loginKey" type="primary" :loading="saving" @click="configureProviders">{{ t("retrySetup") }}</el-button>
         </div>
         <el-button
           v-else-if="view === 'custom'"
@@ -22,29 +22,33 @@
           :loading="saving"
           :disabled="!customProviders.some((provider) => provider.models.length)"
           @click="completeSetup">
-          开始使用
+          {{ t("getStarted") }}
         </el-button>
       </div>
       <div v-else class="welcomeContent">
-        <h1 id="welcomeTitle">快速开始</h1>
-        <p class="description">选择登录TF-Router可直接自动配置，无需任何复杂操作，即可开始创作。</p>
+        <div class="localePicker" role="group" :aria-label="t('localeLabel')">
+          <el-button text :type="uiLocale === 'zh' ? 'primary' : 'default'" @click="uiLocale = 'zh'">{{ t("locale.zh") }}</el-button>
+          <el-button text :type="uiLocale === 'en' ? 'primary' : 'default'" @click="uiLocale = 'en'">{{ t("locale.en") }}</el-button>
+        </div>
+        <h1 id="welcomeTitle">{{ t("quickStart") }}</h1>
+        <p class="description">{{ t("signInToTfRouter3") }}</p>
 
         <el-button class="loginButton" type="primary" @click="openLogin">
           <icon-login class="buttonIcon" />
-          登录 TF-Router 自动配置
+          {{ t("signInToTfRouter2") }}
         </el-button>
         <div class="secondaryActions">
           <el-button class="secondaryButton" round @click="view = 'custom'">
             <icon-key class="buttonIcon" />
-            添加私有提供商
+            {{ t("addAPrivateProvider") }}
           </el-button>
-          <span class="separator">或</span>
-          <el-button class="secondaryButton" round :loading="saving" @click="completeSetup">稍后配置</el-button>
+          <span class="separator">{{ t("or") }}</span>
+          <el-button class="secondaryButton" round :loading="saving" @click="completeSetup">{{ t("setUpLater") }}</el-button>
         </div>
       </div>
 
       <footer class="pageFooter">
-        <p>© {{ new Date().getFullYear() }} Toonflow · 保留所有权利。</p>
+        <p>© {{ new Date().getFullYear() }} Toonflow · {{ t("allRightsReserved") }}</p>
       </footer>
     </section>
     <div class="artPanel" aria-hidden="true">
@@ -58,15 +62,17 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "@/pages/i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import axios from "axios";
-import { defineAsyncComponent, onMounted, onBeforeUnmount, ref } from "vue";
+import { defineAsyncComponent, onMounted, onBeforeUnmount, ref, shallowRef } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { IconArrowLeft } from "@tabler/icons-vue";
 import tfRouter from "@toonflow/providers/language/tfRouter";
 import tfRouterSource from "@toonflow/providers/media/tfRouter?raw";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
-import { customProviders, saveSettings, type CustomProviderModel } from "@/stores/settings";
+import { customProviders, saveSettings, uiLocale, type CustomProviderModel } from "@/stores/settings";
 import type { MediaProvider } from "@/components/settings/panels/mediaModel/types";
 import { useHelloStore } from "@/stores/hello";
 import anonymousData from "@/lib/anonymousData";
@@ -79,7 +85,7 @@ const loginUrl = ref("https://api.toonflow.net/login?type=toonflow");
 const loginOrigin = new URL(loginUrl.value).origin;
 const loginFrame = ref<HTMLIFrameElement>();
 const loginKey = ref("");
-const loginError = ref("");
+const loginError = shallowRef<Error>();
 const saving = ref(false);
 const router = useRouter();
 const hello = useHelloStore();
@@ -91,7 +97,8 @@ function openLogin() {
   url.searchParams.set("bgcolor", "white");
   url.searchParams.set("txtcolor", pageStyle.getPropertyValue("--el-color-primary").trim());
   loginUrl.value = url.href;
-  loginKey.value = loginError.value = "";
+  loginKey.value = "";
+  loginError.value = undefined;
   view.value = "login";
 }
 
@@ -103,7 +110,7 @@ async function completeSetup() {
     anonymousData.track(view.value === "custom" ? "onboarding.complete" : "onboarding.skip");
     await router.replace("/home");
   } catch {
-    ElMessage.error("保存引导状态失败，请重试");
+    ElMessage.error(t("couldNotSaveOnboardingProgress"));
   } finally {
     saving.value = false;
   }
@@ -115,18 +122,22 @@ function receiveLogin(event: MessageEvent) {
   if (!data || typeof data !== "object" || !["register", "login"].includes(data.type)) return;
   if (data.msg === "failed") {
     loginKey.value = "";
-    loginError.value = typeof data.error === "string" && data.error.trim() ? data.error : data.type === "register" ? "注册失败" : "登录失败";
+    loginError.value = typeof data.error === "string" && data.error.trim()
+      ? new Error(data.error)
+      : data.type === "register"
+      ? createDisplayError("注册失败", () => t("registrationFailed"))
+      : createDisplayError("登录失败", () => t("signInFailed"));
     return;
   }
   if (data.msg !== "success") return;
-  loginError.value = "";
+  loginError.value = undefined;
   if (data.type === "register") {
-    ElMessage.success("注册成功，请继续登录以自动配置模型");
+    ElMessage.success(t("registrationCompleteSignInTo"));
     return;
   }
   if (typeof data.key !== "string" || !data.key.trim() || data.key.length > 8192) {
     loginKey.value = "";
-    loginError.value = "登录未返回有效的 API Key，请重新登录";
+    loginError.value = createDisplayError("登录未返回有效的 API Key，请重新登录", () => t("signInDidNotReturn"));
     return;
   }
   loginKey.value = data.key.trim();
@@ -136,7 +147,7 @@ function receiveLogin(event: MessageEvent) {
 async function configureProviders() {
   if (saving.value || !loginKey.value) return;
   saving.value = true;
-  loginError.value = "";
+  loginError.value = undefined;
   const apiKey = loginKey.value;
   const request = new AbortController();
   loginRequest = request;
@@ -154,8 +165,8 @@ async function configureProviders() {
       axios.get<{ code: number; data: MediaProvider[] }>("/api/providers/media/list", { signal: request.signal }),
     ]);
     const models = modelsResponse.data.data;
-    if (modelsResponse.data.code !== 200 || !Array.isArray(models) || !models.length) throw new Error("未获取到文本模型，请重试配置");
-    if (mediaResponse.data.code !== 200 || !Array.isArray(mediaResponse.data.data)) throw new Error("读取媒体供应商失败，请重试配置");
+    if (modelsResponse.data.code !== 200 || !Array.isArray(models) || !models.length) throw createDisplayError("未获取到文本模型，请重试配置", () => t("noTextModelsWereFound"));
+    if (mediaResponse.data.code !== 200 || !Array.isArray(mediaResponse.data.data)) throw createDisplayError("读取媒体供应商失败，请重试配置", () => t("couldNotLoadMediaProviders"));
     request.signal.throwIfAborted();
     if (!mediaResponse.data.data.some((provider) => provider.id === tfRouter.id)) {
       await axios.post("/api/providers/media/add", { source: tfRouterSource }, { signal: request.signal });
@@ -165,11 +176,11 @@ async function configureProviders() {
     await saveSettings(settings => {
       request.signal.throwIfAborted();
       const providers = settings.customProviders ?? [];
-      if (!Array.isArray(providers)) throw new Error("语言模型配置格式无效");
+      if (!Array.isArray(providers)) throw createDisplayError("语言模型配置格式无效", () => t("invalidLanguageModelConfigurationFormat"));
       const configs = settings.mediaProviderConfigs as Record<string, Record<string, unknown>> | undefined;
-      if (configs !== undefined && (!configs || typeof configs !== "object" || Array.isArray(configs))) throw new Error("媒体供应商配置格式无效");
+      if (configs !== undefined && (!configs || typeof configs !== "object" || Array.isArray(configs))) throw createDisplayError("媒体供应商配置格式无效", () => t("invalidMediaProviderConfigurationFormat"));
       const current = configs?.[tfRouter.id];
-      if (current !== undefined && (!current || typeof current !== "object" || Array.isArray(current))) throw new Error("当前供应商配置格式无效");
+      if (current !== undefined && (!current || typeof current !== "object" || Array.isArray(current))) throw createDisplayError("当前供应商配置格式无效", () => t("invalidCurrentProviderConfigurationFormat"));
       const index = providers.findIndex(provider => typeof provider?.id === "string" && provider.id.toLowerCase() === tfRouter.id.toLowerCase());
       const previous = providers[index];
       const provider = {
@@ -191,15 +202,15 @@ async function configureProviders() {
     await hello.complete();
     anonymousData.track("onboarding.complete");
     loginKey.value = "";
-    ElMessage.success("文本模型和媒体模型已配置完成");
+    ElMessage.success(t("textAndMediaModelsAre"));
     await router.replace("/home");
   } catch (error) {
     if (!request.signal.aborted)
-      loginError.value = axios.isAxiosError(error)
-        ? error.response?.data?.message || "自动配置失败，请重试"
+      loginError.value = axios.isAxiosError(error) && error.response?.data?.message
+        ? new Error(error.response.data.message)
         : error instanceof Error
-        ? error.message
-        : "自动配置失败，请重试";
+        ? error
+        : createDisplayError("自动配置失败，请重试", () => t("automaticSetupFailedPleaseTry"));
   } finally {
     saving.value = false;
   }
@@ -286,6 +297,13 @@ onBeforeUnmount(() => {
       width: 100%;
       max-width: 420px;
       text-align: center;
+
+      .localePicker {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 16px;
+      }
 
       h1 {
         margin: 0 0 12px;

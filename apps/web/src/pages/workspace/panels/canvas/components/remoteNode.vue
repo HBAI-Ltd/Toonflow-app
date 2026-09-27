@@ -4,43 +4,49 @@
   <el-card v-else class="remoteNodeState failed" shadow="never" role="alert">
     <div class="stateHeader">
       <strong>{{ node.data.label || node.type }}</strong>
-      <span class="stateLabel">error</span>
+      <span class="stateLabel">{{ t("error") }}</span>
       <div class="stateActions nodrag nopan" @pointerdown.stop @mousedown.stop @dblclick.stop>
-        <el-button :icon="IconRefresh" text :loading="reloading" title="重新加载节点" aria-label="重新加载节点" @click.stop="retry" />
-        <el-button :icon="IconX" text title="移除节点" aria-label="移除节点" @click.stop="removeNodes(node.id)" />
+        <el-button :icon="IconRefresh" text :loading="reloading" :title="t('reloadNode')" :aria-label="t('reloadNode')" @click.stop="retry" />
+        <el-button :icon="IconX" text :title="t('removeNode')" :aria-label="t('removeNode')" @click.stop="removeNodes(node.id)" />
       </div>
     </div>
-    <p>{{ error || runtimeError || "远程节点未加载，请确认插件已安装并启用" }}</p>
+    <p>{{ displayedError }}</p>
   </el-card>
 </template>
 
 <script setup lang="ts">
-import { inject, onErrorCaptured, ref, watch, type Component } from "vue";
+import { t } from "@/pages/i18n";
+import { getErrorDisplay } from "@toonflow/i18n";
+import { computed, inject, onErrorCaptured, ref, shallowRef, watch, type Component } from "vue";
 import { useNode, useVueFlow } from "@vue-flow/core";
 import { ElButton, ElCard } from "element-plus";
 import { IconRefresh, IconX } from "@tabler/icons-vue";
 import { nodeSkeleton, type NodeData } from "@toonflow/nodes-scaffold/runtime";
 
 defineOptions({ inheritAttrs: false });
-const props = defineProps<{ component?: Component | string; error?: string; loading?: boolean }>();
+const props = defineProps<{ component?: Component | string; error?: Error; loading?: boolean }>();
 const { node } = useNode<NodeData>();
 const { removeNodes } = useVueFlow();
 const reload = inject<((type: string) => Promise<void>)>("reloadRemoteNode");
-const runtimeError = ref("");
+const runtimeError = shallowRef<Error>();
 const reloading = ref(false);
+const displayedError = computed(() => {
+  const error = props.error ?? runtimeError.value;
+  return error ? getErrorDisplay(error) : t("remoteNodeNotLoadedMake");
+});
 
 onErrorCaptured(error => {
-  runtimeError.value = error instanceof Error ? error.message : String(error);
-  console.error(`远程节点 ${node.type} (${node.id}) 运行失败`, error);
+  runtimeError.value = error instanceof Error ? error : new Error(String(error));
+  console.error(t("remoteNodeFailed", { type: node.type ?? "", id: node.id }), error);
   return false;
 });
-watch(() => props.component, () => { runtimeError.value = ""; });
+watch(() => props.component, () => { runtimeError.value = undefined; });
 
 async function retry() {
   if (!reload || reloading.value) return;
   reloading.value = true;
   try { await reload(node.type); }
-  catch (error) { runtimeError.value = error instanceof Error ? error.message : String(error); }
+  catch (error) { runtimeError.value = error instanceof Error ? error : new Error(String(error)); }
   finally { reloading.value = false; }
 }
 </script>

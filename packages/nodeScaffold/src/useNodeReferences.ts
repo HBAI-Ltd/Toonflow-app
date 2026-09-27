@@ -1,4 +1,9 @@
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
+import { createTranslator } from "@toonflow/i18n";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
+
+const t = createTranslator({ zh, en });
 import { useNode, useVueFlow } from "@vue-flow/core";
 import type { NodeData } from "./connection";
 import { useNodeEvent } from "./nodeEvent";
@@ -22,7 +27,7 @@ export function useNodeReferences(handleId = "in") {
     typeof item.dataType === "string" && ["IMAGE", "VIDEO", "AUDIO", "STRING"].includes(item.dataType)
       ? [{
           id: referenceKey(item),
-          name: `参考 ${index + 1}`,
+          name: t("reference", { index: index + 1 }),
           value: `{{ref ${index + 1}}}`,
           avatar: previews.value.get(referenceKey(item)) || undefined,
         }]

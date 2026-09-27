@@ -3,7 +3,7 @@
     <markdown
       v-for="(chunk, index) in chunks"
       :key="index + '-' + !!definitions"
-      v-memo="[chunk, streaming && index === chunks.length - 1, codeOptions, directory]"
+      v-memo="[chunk, streaming && index === chunks.length - 1, codeOptions, directory, markdownLocale]"
       class="markdownChunk"
       :content="chunk"
       :mode="streaming && index === chunks.length - 1 ? 'streaming' : 'static'"
@@ -15,7 +15,7 @@
       :components="markdownOverlays"
       :nodeRenderers="nodeRenderers"
       :parseMarkdownIntoBlocks="definitions ? keepChunk : undefined"
-      locale="zh-CN" />
+      :locale="markdownLocale" />
   </div>
 </template>
 
@@ -23,6 +23,7 @@
 import { computed, h } from "vue";
 import { Markdown, parseMarkdownIntoBlocks } from "vue-stream-markdown";
 import { MarkdownAstParser } from "@markmend/ast";
+import { getLocale } from "@toonflow/i18n";
 import type { CodeOptions, ImageNodeRendererProps, ShikiOptions } from "vue-stream-markdown";
 import "vue-stream-markdown/index.css";
 import "vue-stream-markdown/theme.css";
@@ -34,6 +35,7 @@ const renderImage = (image: ImageNodeRendererProps) => h(markdownImage, { image,
 const nodeRenderers = computed(() => directory ? { image: renderImage } : {});
 const shikiOptions: ShikiOptions = { theme: ["github-light", "github-dark"] };
 const cdnOptions = { shiki: false } as const;
+const markdownLocale = computed<"zh-CN" | "en-US">(() => getLocale() === "en" ? "en-US" : "zh-CN");
 const keepChunk = (value: string) => [value];
 const blocks = computed(() => parseMarkdownIntoBlocks(content));
 const definitionParser = new MarkdownAstParser({ mode: "static" });

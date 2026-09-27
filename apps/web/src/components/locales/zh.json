@@ -1,0 +1,11 @@
+{
+  "modelAndReasoningSettings": "模型与推理设置",
+  "selectModel": "选择模型",
+  "model": "模型",
+  "addModelFirst": "请先在设置中添加模型",
+  "reasoningLevel": "推理等级",
+  "reasoningDefault": "默认",
+  "reasoningLow": "低",
+  "reasoningMedium": "中",
+  "reasoningHigh": "高"
+}

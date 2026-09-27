@@ -1,19 +1,19 @@
 <template>
-  <aside class="fileTree" aria-label="工作区文件">
+  <aside class="fileTree" :aria-label="t('workspaceFiles')">
     <header class="treeHeader">
-      <span class="treeTitle"><icon-folder :size="16" aria-hidden="true" />工作区文件</span>
+      <span class="treeTitle"><icon-folder :size="16" aria-hidden="true" />{{ t("workspaceFiles") }}</span>
       <span class="treeActions">
-        <el-button text circle size="small" :disabled="!directory || creating" aria-label="新建 Markdown 文件" title="新建 Markdown 文件" @click="createMarkdownFile">
+        <el-button text circle size="small" :disabled="!directory || creating" :aria-label="t('newMarkdownFile')" :title="t('newMarkdownFile')" @click="createMarkdownFile">
           <icon-file-plus :size="15" aria-hidden="true" />
         </el-button>
-        <el-button text circle size="small" :disabled="!directory" aria-label="刷新文件树" title="刷新文件树" @click="refreshTree">
+        <el-button text circle size="small" :disabled="!directory" :aria-label="t('refreshFileTree')" :title="t('refreshFileTree')" @click="refreshTree">
           <icon-refresh :size="15" aria-hidden="true" />
         </el-button>
       </span>
     </header>
-    <el-alert v-if="loadError" class="loadError" :title="loadError" type="error" :closable="false" showIcon />
+    <el-alert v-if="loadError" class="loadError" :title="loadErrorDisplay" type="error" :closable="false" showIcon />
     <div class="treeContent">
-      <el-tree v-if="directory" :key="treeVersion" lazy highlightCurrent :load="loadChildren" :props="treeProps" nodeKey="key" emptyText="暂无文件" @node-click="selectNode">
+      <el-tree v-if="directory" :key="treeVersion" lazy highlightCurrent :load="loadChildren" :props="treeProps" nodeKey="key" :emptyText="t('noFiles')" @node-click="selectNode">
         <template #default="{ node, data }">
           <span class="fileItem" :title="data.name">
             <icon-layout-dashboard v-if="data.type === 'canvas'" :size="16" aria-hidden="true" />
@@ -30,7 +30,9 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from "vue";
+import { t } from "@/pages/i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
+import { computed, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import axios from "axios";
 import type { LoadFunction } from "element-plus";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -54,7 +56,10 @@ const props = defineProps<{ directory?: string }>();
 const emit = defineEmits<{ selectNode: [selection: TreeSelection] }>();
 const markdownNamePattern = /\.(md|markdown)$/i;
 const treeVersion = ref(0);
-const loadError = ref("");
+const loadError = shallowRef<{ path: string; error: Error }>();
+const loadErrorDisplay = computed(() => loadError.value
+  ? t("loadPathFailed", { path: loadError.value.path || t("workspace"), message: getErrorDisplay(loadError.value.error) })
+  : "");
 const treeProps = { label: "name", isLeaf: "isLeaf" };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -96,7 +101,7 @@ function selectNode(item: FileTreeItem) {
 
 function refreshTree() {
   treeVersion.value++;
-  loadError.value = "";
+  loadError.value = undefined;
 }
 
 const creating = ref(false);
@@ -106,13 +111,13 @@ async function createMarkdownFile() {
   if (!currentDirectory || creating.value) return;
   let value: string;
   try {
-    ({ value } = await ElMessageBox.prompt("在工作区根目录新建 Markdown 文件", "新建文件", {
+    ({ value } = await ElMessageBox.prompt(t("createAMarkdownFileIn"), t("newFile"), {
       inputValue: "文档.md",
       inputPattern: /^[^\\/]+$/,
-      inputErrorMessage: "名称不能包含斜杠",
-      inputValidator: name => !!name?.trim() || "请输入文件名称",
-      confirmButtonText: "创建",
-      cancelButtonText: "取消",
+      inputErrorMessage: t("nameCannotContainSlashes"),
+      inputValidator: name => !!name?.trim() || t("enterAFileName"),
+      confirmButtonText: t("create"),
+      cancelButtonText: t("cancel"),
     }));
   } catch {
     return;
@@ -125,7 +130,7 @@ async function createMarkdownFile() {
     if (currentDirectory === props.directory) refreshTree();
   } catch (error) {
     const message = axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message : undefined;
-    ElMessage.error(message || (error instanceof Error ? error.message : "创建文件失败"));
+    ElMessage.error(message || (error instanceof Error ? getErrorDisplay(error) : t("couldNotCreateFile")));
   } finally {
     creating.value = false;
   }
@@ -139,12 +144,12 @@ const loadChildren: LoadFunction = async (node, resolve, reject) => {
   const version = treeVersion.value;
   const path = node.level === 0 ? "" : node.data.path;
   if (!directory) return reject();
-  loadError.value = "";
+  loadError.value = undefined;
   try {
     const files = useWorkspaceFiles(directory);
     if (node.level > 0 && node.data.type === "canvas") {
       const canvas = await files.readJson(path);
-      if (!isRecord(canvas) || canvas.toonflowCanvas !== true || !Array.isArray(canvas.nodes)) throw new Error("不是有效的画布文件");
+      if (!isRecord(canvas) || canvas.toonflowCanvas !== true || !Array.isArray(canvas.nodes)) throw createDisplayError("不是有效的画布文件", () => t("notAValidCanvasFile"));
       if (version !== treeVersion.value || directory !== props.directory) return reject();
       return resolve(canvasItems(canvas, path));
     }
@@ -167,7 +172,10 @@ const loadChildren: LoadFunction = async (node, resolve, reject) => {
   } catch (error) {
     if (version === treeVersion.value && directory === props.directory) {
       const message = axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message : undefined;
-      loadError.value = `读取${path || "工作区"}失败：${message || (error instanceof Error ? error.message : "请重试")}。可重新展开目录或刷新重试。`;
+      loadError.value = {
+        path,
+        error: message ? new Error(message) : error instanceof Error ? error : createDisplayError("请重试", () => t("pleaseTryAgain")),
+      };
     }
     reject();
   }

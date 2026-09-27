@@ -1,9 +1,9 @@
 <template>
   <el-dialog v-model="visible" :title="`Agent · ${agent.displayName}`" width="min(1080px, calc(100vw - 32px))" alignCenter appendToBody :beforeClose="close" @closed="emit('closed')">
-    <el-alert v-if="error" :title="error" type="error" :closable="false" showIcon />
+    <el-alert v-if="error" :title="getErrorDisplay(error)" type="error" :closable="false" showIcon />
     <div v-loading="loading" class="agentEditor">
-      <nav class="fileList" aria-label="Agent 文件">
-        <el-button v-if="readme" text :type="selectedPath === '' ? 'primary' : undefined" @click="selectFile('')"><icon-book :size="15" />说明</el-button>
+      <nav class="fileList" :aria-label="t('agentEditor.filesLabel')">
+        <el-button v-if="readme" text :type="selectedPath === '' ? 'primary' : undefined" @click="selectFile('')"><icon-book :size="15" />{{ t("common.readme") }}</el-button>
         <el-button v-for="file in files" :key="file.path" text :type="selectedPath === file.path ? 'primary' : undefined" :disabled="saving" @click="selectFile(file.path)">
           <icon-file :size="15" /><span class="fileName">{{ file.path }}</span><span v-if="file.content !== file.original" class="dirtyMark">●</span>
         </el-button>
@@ -14,13 +14,15 @@
       </div>
     </div>
     <template #footer>
-      <el-button :disabled="saving || confirming" @click="close()">关闭</el-button>
-      <el-button v-if="canManage" type="primary" :loading="saving" :disabled="loading || !selectedFile || selectedFile.content === selectedFile.original" @click="save">保存当前文件</el-button>
+      <el-button :disabled="saving || confirming" @click="close()">{{ t("common.close") }}</el-button>
+      <el-button v-if="canManage" type="primary" :loading="saving" :disabled="loading || !selectedFile || selectedFile.content === selectedFile.original" @click="save">{{ t("agentEditor.saveCurrentFile") }}</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { t } from "../../i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import axios from "axios";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -34,7 +36,7 @@ const visible = ref(true);
 const loading = ref(true);
 const saving = ref(false);
 const confirming = ref(false);
-const error = ref("");
+const error = ref<Error>();
 const readme = ref("");
 const files = ref<{ path: string; content: string; original: string }[]>([]);
 const selectedPath = ref("");
@@ -46,7 +48,7 @@ onMounted(async () => {
   try {
     const { data } = await axios.get("/api/agents/read", { params: { name: agent.name }, headers, signal: controller.signal });
     if (data.code !== 200 || !Array.isArray(data.data?.files) || !data.data.files.every((file: { path?: unknown; content?: unknown }) => typeof file.path === "string" && typeof file.content === "string")) {
-      throw new Error(data.message || "Agent 文件列表无效");
+      throw data.message ? new Error(data.message) : createDisplayError("Agent 文件列表无效", () => t("agentEditor.invalidFiles"));
     }
     files.value = data.data.files.map((file: { path: string; content: string }) => ({ ...file, original: file.content }));
     readme.value = typeof data.data.readme === "string" ? data.data.readme : agent.readme ?? "";
@@ -57,7 +59,9 @@ onMounted(async () => {
 });
 
 function errorMessage(cause: unknown) {
-  return axios.isAxiosError(cause) ? cause.response?.data?.message || cause.message : cause instanceof Error ? cause.message : "操作失败";
+  return axios.isAxiosError(cause) && typeof cause.response?.data?.message === "string"
+    ? new Error(cause.response.data.message)
+    : cause instanceof Error ? cause : createDisplayError("操作失败", () => t("common.operationFailed"));
 }
 
 function selectFile(path: string) {
@@ -68,7 +72,7 @@ async function close(done?: () => void) {
   if (saving.value || confirming.value) return;
   if (files.value.some(file => file.content !== file.original)) {
     confirming.value = true;
-    try { await ElMessageBox.confirm("修改尚未保存，确定放弃修改并关闭吗？", "未保存的修改", { confirmButtonText: "放弃修改", cancelButtonText: "继续编辑", type: "warning" }); }
+    try { await ElMessageBox.confirm(t("common.unsavedClosePrompt"), t("common.unsavedChanges"), { confirmButtonText: t("common.discardChanges"), cancelButtonText: t("personalization.continueEditing"), type: "warning" }); }
     catch { return; }
     finally { confirming.value = false; }
   }
@@ -80,14 +84,14 @@ async function save() {
   const file = selectedFile.value;
   if (!file || !canManage || saving.value || file.content === file.original) return;
   saving.value = true;
-  error.value = "";
+  error.value = undefined;
   const content = file.content;
   try {
     const { data } = await axios.put("/api/agents/save", { name: agent.name, path: file.path, content }, { headers });
-    if (data.code !== 200) throw new Error(data.message || "保存失败");
+    if (data.code !== 200) throw data.message ? new Error(data.message) : createDisplayError("保存失败", () => t("common.saveFailed"));
     file.original = content;
     emit("saved");
-    ElMessage.success("已保存");
+    ElMessage.success(t("common.saved"));
   } catch (cause) { error.value = errorMessage(cause); }
   finally { saving.value = false; }
 }

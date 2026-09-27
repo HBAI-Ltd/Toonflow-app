@@ -5,7 +5,7 @@
       ref="labelInput"
       v-model="labelDraft"
       class="groupLabelInput nodrag nopan"
-      aria-label="分组名称"
+      :aria-label="t('groupName')"
       @pointerdown.stop
       @mousedown.stop
       @click.stop
@@ -14,8 +14,8 @@
       @keydown.enter="confirmLabel"
       @keydown.esc.prevent="editingLabel = false"
       @blur="saveLabel" />
-    <span v-else class="groupLabel" tabindex="0" :title="`${data.label || '分组'}（双击编辑名称）`" @dblclick.stop="editLabel" @keydown.enter.stop.prevent="editLabel">
-      {{ data.label || "分组" }}
+    <span v-else class="groupLabel" tabindex="0" :title="t('groupEditTitle', { name: data.label || t('defaultGroupDisplay') })" @dblclick.stop="editLabel" @keydown.enter.stop.prevent="editLabel">
+      {{ data.label || t("defaultGroupDisplay") }}
     </span>
     <button
       v-for="corner in resizeCorners"
@@ -23,7 +23,7 @@
       class="resizeCorner nodrag nopan"
       :class="corner.name"
       type="button"
-      :aria-label="`调整分组${corner.label}`"
+      :aria-label="t('resizeGroup', { corner: corner.label })"
       @pointerdown.stop.prevent="startResize($event, corner)"
       @pointermove.stop="moveResize"
       @pointerup.stop="finishResize"
@@ -36,7 +36,9 @@
 </template>
 
 <script setup lang="ts">
-import { inject, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
+import { t } from "@/pages/i18n";
+import { getErrorDisplay } from "@toonflow/i18n";
+import { computed, inject, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { useVueFlow, type GraphNode, type NodeProps } from "@vue-flow/core";
 import { ElMessage } from "element-plus";
 
@@ -46,13 +48,13 @@ const batchHistory = inject<((action: () => Promise<void>) => Promise<void>) | u
 const editingLabel = ref(false);
 const labelDraft = ref("");
 const labelInput = ref<HTMLInputElement>();
-const resizeCorners = [
-  { name: "topLeft", label: "左上角", x: -1, y: -1 },
-  { name: "topRight", label: "右上角", x: 1, y: -1 },
-  { name: "bottomLeft", label: "左下角", x: -1, y: 1 },
-  { name: "bottomRight", label: "右下角", x: 1, y: 1 },
-] as const;
-type ResizeCorner = typeof resizeCorners[number];
+const resizeCorners = computed(() => [
+  { name: "topLeft", label: t("topLeftCorner"), x: -1, y: -1 },
+  { name: "topRight", label: t("topRightCorner"), x: 1, y: -1 },
+  { name: "bottomLeft", label: t("bottomLeftCorner"), x: -1, y: 1 },
+  { name: "bottomRight", label: t("bottomRightCorner"), x: 1, y: 1 },
+] as const);
+type ResizeCorner = (typeof resizeCorners.value)[number];
 const resize = shallowRef<{
   node: GraphNode;
   corner: ResizeCorner;
@@ -101,7 +103,7 @@ function startResize(event: PointerEvent, corner: ResizeCorner) {
   });
   void (batchHistory ? batchHistory(action) : action()).catch(error => {
     finishResize();
-    ElMessage.error(error instanceof Error ? error.message : "分组缩放失败");
+    ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("couldNotResizeGroup"));
   });
 }
 

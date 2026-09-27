@@ -2,34 +2,34 @@
   <panel class="canvasMenuPanel" position="top-left">
     <el-card class="canvasMenu" shadow="never" :bodyStyle="{ padding: '5px 10px' }">
       <div class="menuContent">
-        <el-input v-model="projectNameDraft" class="workspaceNameInput" :style="{ '--workspaceName': JSON.stringify(projectNameDraft || ' ') }" size="small" :title="directory" :disabled="!workspaceStore.project" aria-label="项目名称"
+        <el-input v-model="projectNameDraft" class="workspaceNameInput" :style="{ '--workspaceName': JSON.stringify(projectNameDraft || ' ') }" size="small" :title="directory" :disabled="!workspaceStore.project" :aria-label="t('projectName')"
           @keydown.stop @keydown.enter="saveProjectName" @keydown.esc.prevent="projectNameDraft = workspaceName" @blur="saveProjectName" />
         <el-divider direction="vertical" />
         <el-popover v-model:visible="canvasListVisible" trigger="click" placement="bottom-start" :width="214" :showArrow="false" :disabled="!directory">
           <template #reference>
-            <el-button class="canvasTrigger" text :loading="busy" :disabled="busy || !directory" aria-label="切换画布" :aria-expanded="canvasListVisible">
+            <el-button class="canvasTrigger" text :loading="busy" :disabled="busy || !directory" :aria-label="t('switchCanvas')" :aria-expanded="canvasListVisible">
               <span>{{ activeCanvasName }}</span><icon-chevron-down :size="14" />
             </el-button>
           </template>
           <div class="canvasPicker" @keydown.esc="canvasListVisible = false">
             <div class="pickerHeader">
-              <span>画布</span>
-              <el-button class="iconButton" text :icon="IconPlus" :disabled="busy || editingId !== null" aria-label="新增画布" @click="handleAddCanvas" />
+              <span>{{ t("canvas") }}</span>
+              <el-button class="iconButton" text :icon="IconPlus" :disabled="busy || editingId !== null" :aria-label="t('newCanvas')" @click="handleAddCanvas" />
             </div>
             <el-scrollbar maxHeight="280px">
               <div v-for="canvas in canvases" :key="canvas.id" class="canvasItem">
-                <el-input v-if="editingId === canvas.id" ref="nameInputs" v-model="canvasName" class="nameEditor" size="small" :disabled="busy" :maxlength="120" :aria-label="newCanvasId === canvas.id ? '新画布名称' : '画布名称'" @keydown.stop @keydown.enter="saveCanvas" @blur="saveCanvas" />
+                <el-input v-if="editingId === canvas.id" ref="nameInputs" v-model="canvasName" class="nameEditor" size="small" :disabled="busy" :maxlength="120" :aria-label="newCanvasId === canvas.id ? t('newCanvasName') : t('canvasName')" @keydown.stop @keydown.enter="saveCanvas" @blur="saveCanvas" />
                 <template v-else>
                   <button class="canvasChoice" type="button" :disabled="busy || editingId !== null" :aria-pressed="activeCanvasId === canvas.id" :title="canvas.name" @click="handleSwitchCanvas(canvas.id)">{{ canvas.name }}</button>
                   <div class="itemAction">
                     <icon-check v-if="activeCanvasId === canvas.id" class="selectedIcon" :size="18" aria-hidden="true" />
-                    <el-button class="iconButton renameButton" text :icon="IconEdit" :disabled="busy || editingId !== null" :aria-label="`编辑 ${canvas.name}`" title="编辑" @click="editCanvas(canvas)" />
-                    <el-button class="iconButton deleteButton" text type="danger" :icon="IconTrash" :disabled="busy || editingId !== null || canvases.length <= 1" :aria-label="`删除 ${canvas.name}`" :title="canvases.length <= 1 ? '至少保留一个画布' : '删除画布'" @click="removeCanvas(canvas)" />
+                    <el-button class="iconButton renameButton" text :icon="IconEdit" :disabled="busy || editingId !== null" :aria-label="t('editCanvasLabel', { name: canvas.name })" :title="t('edit')" @click="editCanvas(canvas)" />
+                    <el-button class="iconButton deleteButton" text type="danger" :icon="IconTrash" :disabled="busy || editingId !== null || canvases.length <= 1" :aria-label="t('deleteEntry', { name: canvas.name })" :title="canvases.length <= 1 ? t('keepAtLeastOneCanvas') : t('deleteCanvas')" @click="removeCanvas(canvas)" />
                   </div>
                 </template>
               </div>
             </el-scrollbar>
-            <el-text v-if="renameError" type="danger" role="alert">{{ renameError }}</el-text>
+            <el-text v-if="renameError" type="danger" role="alert">{{ getErrorDisplay(renameError) }}</el-text>
           </div>
         </el-popover>
       </div>
@@ -39,6 +39,8 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "@/pages/i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import axios from "axios";
 import { computed, inject, nextTick, ref, shallowRef, watch, type ShallowRef } from "vue";
 import { Panel, useVueFlow, type FlowExportObject } from "@vue-flow/core";
@@ -55,7 +57,7 @@ const props = defineProps<{
   flushSave: (action?: () => Promise<void>) => Promise<void>;
 }>();
 const workspaceStore = useWorkspaceStore();
-const workspaceName = computed(() => workspaceStore.project?.name || "未命名工作区");
+const workspaceName = computed(() => workspaceStore.project?.name || t("untitledWorkspace"));
 const projectNameDraft = ref("");
 watch([() => workspaceStore.project?.directory, workspaceName], () => {
   projectNameDraft.value = workspaceName.value;
@@ -77,28 +79,28 @@ watch(canvases, () => {
   if (boundCanvas.value) activeCanvasId.value = canvases.value.includes(boundCanvas.value) ? boundCanvas.value.id : "";
 }, { flush: "sync" });
 const canvasListVisible = ref(false);
-const activeCanvasName = computed(() => canvases.value.find(canvas => canvas.id === activeCanvasId.value)?.name || "选择画布");
+const activeCanvasName = computed(() => canvases.value.find(canvas => canvas.id === activeCanvasId.value)?.name || t("chooseCanvas"));
 const busy = ref(false);
-const loadError = ref("");
+const loadError = shallowRef<Error>();
 const editingId = ref<string | null>(null);
 const newCanvasId = ref<string | null>(null);
 const nameInputs = ref<InputInstance[]>([]);
 const canvasName = ref("");
-const renameError = ref("");
+const renameError = shallowRef<Error>();
 const { toObject, setNodes, setEdges, setViewport } = useVueFlow();
 
 watch(() => props.directory, async (directory, _previous, onCleanup) => {
   let cancelled = false;
   onCleanup(() => { cancelled = true; });
   busy.value = true;
-  loadError.value = "";
+  loadError.value = undefined;
   boundCanvas.value = undefined;
   activeCanvasId.value = "";
   try {
     if (!props.initialCanvasId) canvases.value = [];
     newCanvasId.value = null;
     editingId.value = null;
-    renameError.value = "";
+    renameError.value = undefined;
     if (!directory) return;
     if (props.initialCanvasId) {
       await applyCanvas(props.initialCanvasId, directory);
@@ -122,8 +124,9 @@ watch(() => props.directory, async (directory, _previous, onCleanup) => {
     if (canvases.value[0]) await applyCanvas(canvases.value[0].id, directory);
   } catch (err) {
     if (!cancelled) {
-      loadError.value = errorMessage(err, "读取画布失败");
-      if (!props.initialCanvasId) ElMessage.error(loadError.value);
+      const message = axios.isAxiosError<{ message?: string }>(err) ? err.response?.data.message : undefined;
+      loadError.value = message ? new Error(message) : err instanceof Error ? err : createDisplayError("读取画布失败", () => t("couldNotLoadCanvases"));
+      if (!props.initialCanvasId) ElMessage.error(errorMessage(loadError.value, t("couldNotLoadCanvases")));
     }
   } finally {
     if (!cancelled) busy.value = false;
@@ -131,7 +134,7 @@ watch(() => props.directory, async (directory, _previous, onCleanup) => {
 }, { immediate: true });
 
 function errorMessage(err: unknown, fallback: string) {
-  return axios.isAxiosError<{ message?: string }>(err) ? err.response?.data.message || fallback : err instanceof Error ? err.message : fallback;
+  return axios.isAxiosError<{ message?: string }>(err) ? err.response?.data.message || fallback : err instanceof Error ? getErrorDisplay(err) : fallback;
 }
 
 function getCanvases() {
@@ -140,21 +143,21 @@ function getCanvases() {
 
 function getCanvasDirectory(signal?: AbortSignal) {
   signal?.throwIfAborted();
-  if (!props.directory) throw new Error("请先选择工作目录");
-  if (busy.value || editingId.value !== null) throw new Error("画布正在加载或编辑，请稍后重试");
+  if (!props.directory) throw createDisplayError("请先选择工作目录", () => t("chooseAWorkspaceFolderFirst"));
+  if (busy.value || editingId.value !== null) throw createDisplayError("画布正在加载或编辑，请稍后重试", () => t("theCanvasIsLoadingOr"));
   return props.directory;
 }
 
 function checkCanvasDirectory(directory: string, signal?: AbortSignal) {
   signal?.throwIfAborted();
-  if (props.directory !== directory) throw new Error("工作目录已切换，本次画布操作已停止");
+  if (props.directory !== directory) throw createDisplayError("工作目录已切换，本次画布操作已停止", () => t("theWorkspaceFolderChangedSo"));
 }
 
 async function applyCanvas(canvasId: string, directory: string, signal?: AbortSignal) {
   checkCanvasDirectory(directory, signal);
   const nextCanvas = canvases.value.find(canvas => canvas.id === canvasId);
   const currentCanvas = canvases.value.find(canvas => canvas.id === activeCanvasId.value);
-  if (!nextCanvas) throw new Error("画布不存在，请重新获取画布列表");
+  if (!nextCanvas) throw createDisplayError("画布不存在，请重新获取画布列表", () => t("canvasNotFoundRefreshThe"));
   if (nextCanvas === currentCanvas) return;
   if (currentCanvas && props.activateCanvas) {
     await props.activateCanvas(canvasId, signal);
@@ -165,7 +168,7 @@ async function applyCanvas(canvasId: string, directory: string, signal?: AbortSi
     const data = await useWorkspaceFiles(directory).readJson<Partial<NonNullable<Canvas["flow"]>> & { toonflowCanvas?: boolean } | null>(nextCanvas.id);
     checkCanvasDirectory(directory, signal);
     if (data?.toonflowCanvas !== true || !Array.isArray(data.nodes) || !Array.isArray(data.edges) || !data.viewport
-      || ![data.viewport.x, data.viewport.y, data.viewport.zoom].every(Number.isFinite) || data.viewport.zoom <= 0) throw new Error("画布文件格式无效");
+      || ![data.viewport.x, data.viewport.y, data.viewport.zoom].every(Number.isFinite) || data.viewport.zoom <= 0) throw createDisplayError("画布文件格式无效", () => t("invalidCanvasFileFormat"));
     // 旧画布可能保存了临时导出进度，重新打开时任务已不存在。
     for (const node of data.nodes) if (node.type === "remote-videoNode" && node.data) delete node.data.exportProgress;
     nextCanvas.flow = { nodes: data.nodes, edges: data.edges, viewport: data.viewport };
@@ -204,7 +207,7 @@ async function handleSwitchCanvas(canvasId: string) {
   try {
     await switchCanvas(canvasId);
   } catch (err) {
-    if (props.directory === directory) ElMessage.error(errorMessage(err, "切换画布失败"));
+    if (props.directory === directory) ElMessage.error(errorMessage(err, t("couldNotSwitchCanvas")));
   }
 }
 
@@ -215,29 +218,29 @@ async function removeCanvas(canvas: Canvas) {
   busy.value = true;
   canvasListVisible.value = false;
   try {
-    const confirmed = await ElMessageBox.confirm(`确定删除“${canvas.name}”？对应的 ${id} 文件及独占的节点素材也会被删除，其他画布共用的素材会保留。此操作不可撤销。`, "删除画布", {
-      type: "warning", confirmButtonText: "删除", cancelButtonText: "取消", closeOnClickModal: false,
+    const confirmed = await ElMessageBox.confirm(t("canvasDeleteConfirm", { name: canvas.name, id }), t("deleteCanvas"), {
+      type: "warning", confirmButtonText: t("delete"), cancelButtonText: t("cancel"), closeOnClickModal: false,
     }).then(() => true, () => false);
     if (!confirmed) return;
     checkCanvasDirectory(directory);
     const nextCanvas = canvases.value.find(item => item.id !== id);
-    if (!nextCanvas) throw new Error("至少保留一个画布");
+    if (!nextCanvas) throw createDisplayError("至少保留一个画布", () => t("keepAtLeastOneCanvas"));
     if (activeCanvasId.value === id) await applyCanvas(nextCanvas.id, directory);
     await props.flushSave(async () => {
       checkCanvasDirectory(directory);
-      if (canvas.id !== id || !canvases.value.includes(canvas)) throw new Error("画布已变更，请重新选择");
-      if (canvases.value.length <= 1) throw new Error("至少保留一个画布");
+      if (canvas.id !== id || !canvases.value.includes(canvas)) throw createDisplayError("画布已变更，请重新选择", () => t("theCanvasChangedSelectIt"));
+      if (canvases.value.length <= 1) throw createDisplayError("至少保留一个画布", () => t("keepAtLeastOneCanvas"));
       const files = useWorkspaceFiles(directory);
       const storedCanvases = await Promise.all((await listCanvases(directory)).map(async canvas => {
         const data = await files.readJson<{ toonflowCanvas?: boolean; nodes?: { id: string; data?: unknown }[] }>(canvas.id);
         if (data?.toonflowCanvas !== true || !Array.isArray(data.nodes) || data.nodes.some(node => !node || typeof node.id !== "string")) {
-          throw new Error(`无法确认 ${canvas.id} 的素材引用，已停止删除`);
+          throw createDisplayError(`无法确认 ${canvas.id} 的素材引用，已停止删除`, () => t("assetReferenceFailed", { id: canvas.id }));
         }
         return { id: canvas.id, nodes: [...data.nodes, ...getRetainedNodes(canvas.id)] };
       }));
       const removedCanvas = storedCanvases.find(canvas => canvas.id === id);
-      if (!removedCanvas) throw new Error("画布不存在，请重新获取画布列表");
-      if (storedCanvases.length <= 1) throw new Error("至少保留一个画布");
+      if (!removedCanvas) throw createDisplayError("画布不存在，请重新获取画布列表", () => t("canvasNotFoundRefreshThe"));
+      if (storedCanvases.length <= 1) throw createDisplayError("至少保留一个画布", () => t("keepAtLeastOneCanvas"));
       const assetDirectories = getCanvasAssetDirectories(removedCanvas.nodes, storedCanvases.filter(canvas => canvas.id !== id).flatMap(canvas => canvas.nodes));
       checkCanvasDirectory(directory);
       await files.remove(id);
@@ -249,11 +252,14 @@ async function removeCanvas(canvas: Canvas) {
         if (!axios.isAxiosError<{ data?: { code?: string } }>(error) || error.response?.data.data?.code !== "ENOENT") throw error;
       })));
       const failed = results.flatMap((result, index) => result.status === "rejected" ? [assetDirectories[index]] : []);
-      if (failed.length) throw new Error(`画布已删除，但 ${failed.length} 个素材目录清理失败：${failed.join("、")}`);
+      if (failed.length) throw createDisplayError(
+        `画布已删除，但 ${failed.length} 个素材目录清理失败：${failed.join("、")}`,
+        () => t("deletedCleanupFailed", { count: failed.length, folders: failed.join(", ") }),
+      );
     });
-    if (props.directory === directory) ElMessage.success("画布已删除");
+    if (props.directory === directory) ElMessage.success(t("canvasDeleted"));
   } catch (err) {
-    if (props.directory === directory) ElMessage.error(errorMessage(err, "删除画布失败"));
+    if (props.directory === directory) ElMessage.error(errorMessage(err, t("couldNotDeleteCanvas")));
   } finally {
     if (props.directory === directory) busy.value = false;
   }
@@ -314,7 +320,7 @@ async function handleAddCanvas() {
     busy.value = false;
     await editCanvas(canvas);
   } catch (err) {
-    if (props.directory === directory) ElMessage.error(errorMessage(err, "新增画布失败"));
+    if (props.directory === directory) ElMessage.error(errorMessage(err, t("couldNotAddCanvas")));
   } finally {
     if (props.directory === directory) busy.value = false;
   }
@@ -324,7 +330,7 @@ async function editCanvas(canvas: { id: string; name: string }) {
   if (busy.value || editingId.value !== null) return;
   editingId.value = canvas.id;
   canvasName.value = canvas.name;
-  renameError.value = "";
+  renameError.value = undefined;
   await nextTick();
   nameInputs.value[0]?.focus();
   nameInputs.value[0]?.select();
@@ -333,7 +339,7 @@ async function editCanvas(canvas: { id: string; name: string }) {
 async function finishEdit() {
   if (busy.value) return;
   editingId.value = null;
-  renameError.value = "";
+  renameError.value = undefined;
   const createdId = newCanvasId.value;
   newCanvasId.value = null;
   if (createdId) await handleSwitchCanvas(createdId);
@@ -343,7 +349,7 @@ function normalizeCanvasName(name: string) {
   name = name.trim();
   if (!name || name.length > 120 || /[<>:"/\\|?*\x00-\x1f]/.test(name) || /[. ]$/.test(name)
     || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name)) {
-    throw new Error("画布名称不是有效文件名");
+    throw createDisplayError("画布名称不是有效文件名", () => t("canvasNameIsNotA"));
   }
   return name;
 }
@@ -351,7 +357,7 @@ function normalizeCanvasName(name: string) {
 async function renameCanvasFile(id: string, name: string, directory: string, signal?: AbortSignal) {
   checkCanvasDirectory(directory, signal);
   const canvas = canvases.value.find(item => item.id === id);
-  if (!canvas) throw new Error("画布不存在，请重新获取画布列表");
+  if (!canvas) throw createDisplayError("画布不存在，请重新获取画布列表", () => t("canvasNotFoundRefreshThe"));
   name = normalizeCanvasName(name);
   if (name === canvas.name) return;
   await props.flushSave(async () => {
@@ -391,14 +397,15 @@ async function saveCanvas(event?: Event) {
     return;
   }
   busy.value = true;
-  renameError.value = "";
+  renameError.value = undefined;
   try {
     await renameCanvasFile(id, canvasName.value, directory);
     busy.value = false;
     await finishEdit();
   } catch (err) {
     if (props.directory === directory) {
-      renameError.value = errorMessage(err, "重命名画布失败");
+      const message = axios.isAxiosError<{ message?: string }>(err) ? err.response?.data.message : undefined;
+      renameError.value = message ? new Error(message) : err instanceof Error ? err : createDisplayError("重命名画布失败", () => t("couldNotRenameCanvas"));
       canvasListVisible.value = true;
     }
   } finally {

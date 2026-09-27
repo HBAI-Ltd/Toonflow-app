@@ -1,17 +1,17 @@
 <template>
-  <el-dialog v-model="visible" title="画布节点搜索" width="min(480px, calc(100vw - 32px))" alignCenter appendToBody @opened="searchInput?.focus()">
+  <el-dialog v-model="visible" :title="t('searchCanvasNodes2')" width="min(480px, calc(100vw - 32px))" alignCenter appendToBody @opened="searchInput?.focus()">
     <div class="nodeSearch">
       <el-input
         ref="searchInput"
         v-model="query"
         :prefixIcon="IconSearch"
-        placeholder="搜索节点名称或类型"
-        aria-label="搜索画布节点"
+        :placeholder="t('searchNodeNameOrType')"
+        :aria-label="t('searchCanvasNodes')"
         aria-controls="canvasSearchResults"
         :aria-activedescendant="results[activeIndex] ? `canvasSearchResult-${activeIndex}` : undefined"
         clearable
         @keydown="navigateResults" />
-      <div id="canvasSearchResults" ref="resultList" class="resultList" role="listbox" aria-label="画布节点">
+      <div id="canvasSearchResults" ref="resultList" class="resultList" role="listbox" :aria-label="t('canvasNodes')">
         <button
           v-for="(item, index) in results"
           :id="`canvasSearchResult-${index}`"
@@ -24,15 +24,16 @@
           @mouseenter="activeIndex = index"
           @click="selectNode(index)">
           <span class="nodeLabel">{{ item.label }}</span>
-          <span class="nodeType">{{ item.node.type === 'canvasGroup' ? '分组' : item.node.type?.replace(/^remote-/, '') }}</span>
+          <span class="nodeType">{{ item.node.type === 'canvasGroup' ? t('defaultGroupDisplay') : item.node.type?.replace(/^remote-/, '') }}</span>
         </button>
-        <p v-if="!results.length" class="empty">没有匹配的节点</p>
+        <p v-if="!results.length" class="empty">{{ t("noMatchingNodes") }}</p>
       </div>
     </div>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { t } from "@/pages/i18n";
 import { computed, nextTick, ref, watch } from "vue";
 import { useVueFlow } from "@vue-flow/core";
 import { IconSearch } from "@tabler/icons-vue";
@@ -48,7 +49,7 @@ const resultList = ref<HTMLElement>();
 const results = computed(() => {
   const keyword = query.value.trim().toLocaleLowerCase();
   return flow.getNodes.value.filter(node => !node.hidden).map(node => ({
-    node, label: String(node.data.label || node.type || "未命名节点"),
+    node, label: String(node.data.label || node.type || t("untitledNode")),
   })).filter(item => `${item.label} ${item.node.type} ${item.node.id}`.toLocaleLowerCase().includes(keyword));
 });
 watch(query, () => { activeIndex.value = 0; });

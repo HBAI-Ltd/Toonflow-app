@@ -1,4 +1,9 @@
 import { getCurrentScope, onScopeDispose } from "vue";
+import { createDisplayError, createTranslator } from "@toonflow/i18n";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
+
+const t = createTranslator({ zh, en });
 import { z } from "zod";
 import { useNodeId, useVueFlow } from "@vue-flow/core";
 import type { NodeToolInfo, NodeToolsContext } from "@toonflow/tools-scaffold/runtime";
@@ -26,13 +31,13 @@ function getRegistry(flow: ReturnType<typeof useVueFlow>) {
 
 export const nodeTools = {
   register<Schema extends z.ZodType>(definition: NodeToolDefinition<Schema>) {
-    if (!getCurrentScope()) throw new Error("请在节点 setup 中注册 nodeTools");
+    if (!getCurrentScope()) throw createDisplayError("请在节点 setup 中注册 nodeTools", () => t("registerToolsInSetup"));
     const nodeId = useNodeId();
-    if (!nodeId) throw new Error("当前组件不属于画布节点");
-    if (!/^[a-z][a-zA-Z0-9]{0,63}$/.test(definition.name)) throw new Error("节点函数名必须使用小驼峰，最多 64 个字符");
+    if (!nodeId) throw createDisplayError("当前组件不属于画布节点", () => t("componentNotCanvasNode"));
+    if (!/^[a-z][a-zA-Z0-9]{0,63}$/.test(definition.name)) throw createDisplayError("节点函数名必须使用小驼峰，最多 64 个字符", () => t("toolNameInvalid"));
     const parameters = z.toJSONSchema(definition.parameters, { io: "input", target: "draft-07" });
     if (!definition.description.trim() || parameters.type !== "object" || typeof definition.execute !== "function") {
-      throw new Error("节点函数需要描述、Zod 对象参数和 execute 方法");
+      throw createDisplayError("节点函数需要描述、Zod 对象参数和 execute 方法", () => t("toolDefinitionInvalid"));
     }
     const registry = getRegistry(useVueFlow());
     const name = `node:${definition.name}` as const;
@@ -70,8 +75,8 @@ export function useNodeToolsContext() {
         callSignal.throwIfAborted();
         const key = `${nodeId}:${name}`;
         const entry = entries.get(key);
-        if (!entry) throw new Error(`节点未注册函数 ${name}，请先通过 getCanvas 查询可用节点函数`);
-        if (registry.get(key) !== entry || !flow.findNode(nodeId)) throw new Error("节点函数已卸载或不属于本轮画布");
+        if (!entry) throw createDisplayError(`节点未注册函数 ${name}，请先通过 getCanvas 查询可用节点函数`, () => t("toolNotRegistered", { name }));
+        if (registry.get(key) !== entry || !flow.findNode(nodeId)) throw createDisplayError("节点函数已卸载或不属于本轮画布", () => t("toolUnavailable"));
         let cancel: () => void = () => {};
         try {
           const result = await Promise.race([

@@ -2,50 +2,50 @@
   <div class="tfAccount" :aria-busy="loading">
     <div v-if="apiKey" class="accountHeader">
       <div class="accountBalance">
-        <el-text size="small" type="info">账户余额</el-text>
+        <el-text size="small" type="info">{{ t("account.balance") }}</el-text>
         <el-skeleton v-if="loading && !balance" animated>
           <template #template><el-skeleton-item class="balancePlaceholder" variant="text" /></template>
         </el-skeleton>
         <strong v-else class="balanceNumber">{{ balance ? numberFormat.format(balance.balance) : "—" }}</strong>
       </div>
       <div class="accountActions">
-        <el-button text circle :icon="IconRefresh" :loading="loading" :disabled="!apiKey" aria-label="刷新余额" title="刷新余额" @click="refresh" />
-        <el-button size="small" :icon="IconCreditCard" :disabled="!apiKey" @click="openRecharge">充值</el-button>
+        <el-button text circle :icon="IconRefresh" :loading="loading" :disabled="!apiKey" :aria-label="t('account.refreshBalance')" :title="t('account.refreshBalance')" @click="refresh" />
+        <el-button size="small" :icon="IconCreditCard" :disabled="!apiKey" @click="openRecharge">{{ t("account.recharge") }}</el-button>
       </div>
     </div>
     <div v-if="!apiKey" class="accountSetup">
-      <el-text size="small" type="info">填写API Key开始使用官方供应商</el-text>
+      <el-text size="small" type="info">{{ t("account.apiKeyHint") }}</el-text>
       <div class="setupForm">
         <el-input
           v-model="draftKey"
           class="setupInput"
           type="password"
           showPassword
-          placeholder="粘贴 API Key"
+          :placeholder="t('account.apiKeyPlaceholder')"
           :disabled="saving"
           @keyup.enter="submitKey" />
-        <el-button type="primary" size="small" :loading="saving || fetchingModels" :disabled="!draftKey.trim()" @click="submitKey">保存</el-button>
+        <el-button type="primary" size="small" :loading="saving || fetchingModels" :disabled="!draftKey.trim()" @click="submitKey">{{ t("common.save") }}</el-button>
       </div>
-      <el-text v-if="setupError" size="small" type="danger">{{ setupError }}</el-text>
+      <el-text v-if="setupError" size="small" type="danger">{{ getErrorDisplay(setupError) }}</el-text>
       <el-button tag="a" href="https://api.toonflow.net/" target="_blank" rel="noopener noreferrer" text type="primary" :icon="IconExternalLink">
-        前往 TF-Router 官网 获取 API Key
+        {{ t("account.getApiKey") }}
       </el-button>
     </div>
     <div v-else-if="errorMessage" class="accountError" role="alert">
-      <el-text size="small" type="danger">{{ errorMessage }}</el-text>
-      <el-button text size="small" :disabled="loading" @click="refresh">重试</el-button>
+      <el-text size="small" type="danger">{{ getErrorDisplay(errorMessage) }}</el-text>
+      <el-button text size="small" :disabled="loading" @click="refresh">{{ t("common.retry") }}</el-button>
     </div>
     <div v-if="balance" class="accountDetails">
       <div class="accountMetric">
-        <el-text size="small" type="info">密钥余额</el-text>
-        <span>{{ balance.keyBalance === null ? "无限制" : numberFormat.format(balance.keyBalance) }}</span>
+        <el-text size="small" type="info">{{ t("account.keyBalance") }}</el-text>
+        <span>{{ balance.keyBalance === null ? t("account.unlimited") : numberFormat.format(balance.keyBalance) }}</span>
       </div>
       <div class="accountMetric">
-        <el-text size="small" type="info">累计消费</el-text>
+        <el-text size="small" type="info">{{ t("account.totalSpent") }}</el-text>
         <span>{{ numberFormat.format(balance.totalConsumption) }}</span>
       </div>
       <div class="accountMetric">
-        <el-text size="small" type="info">累计充值</el-text>
+        <el-text size="small" type="info">{{ t("account.totalRecharged") }}</el-text>
         <span>{{ numberFormat.format(balance.totalRecharge) }}</span>
       </div>
     </div>
@@ -54,11 +54,13 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "./i18n";
 import { computed, defineAsyncComponent, onBeforeUnmount, ref, shallowRef, watch, type Component } from "vue";
 import axios from "axios";
 import { IconCreditCard, IconExternalLink, IconRefresh } from "@tabler/icons-vue";
 import tf, { type TfBalance } from "@/lib/tf";
 import type { CustomProvider, CustomProviderModel } from "@/stores/settings";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 
 const props = withDefaults(defineProps<{
   apiKey: string;
@@ -76,10 +78,10 @@ const apiKey = computed(() =>
 );
 const balance = ref<TfBalance>();
 const loading = ref(false);
-const errorMessage = ref("");
+const errorMessage = shallowRef<Error>();
 const draftKey = ref("");
 const saving = ref(false);
-const setupError = ref("");
+const setupError = shallowRef<Error>();
 const fetchingModels = ref(false);
 const draftModels = shallowRef<CustomProviderModel[]>();
 const numberFormat = new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY", minimumFractionDigits: 2, maximumFractionDigits: 6 });
@@ -97,12 +99,12 @@ async function submitKey() {
   const key = draftKey.value.trim();
   if (!key || saving.value || fetchingModels.value) return;
   saving.value = true;
-  setupError.value = "";
+  setupError.value = undefined;
   try {
     await props.saveApiKey(key, draftModels.value);
     draftKey.value = "";
   } catch (error) {
-    setupError.value = error instanceof Error ? error.message : "保存失败，请重试";
+    setupError.value = error instanceof Error ? error : createDisplayError("保存失败，请重试", () => t("common.saveFailedRetry"));
   } finally {
     saving.value = false;
   }
@@ -113,7 +115,7 @@ watch(
   ([key, visible, apiUrl, protocol], _previous, onCleanup) => {
     draftModels.value = undefined;
     fetchingModels.value = false;
-    setupError.value = "";
+    setupError.value = undefined;
     if (!visible || !apiUrl || !protocol || !key.trim()) return;
     const request = new AbortController();
     fetchingModels.value = true;
@@ -121,13 +123,13 @@ watch(
       try {
         const { data } = await axios.post("/api/providers/models", { apiUrl, protocol, apiKey: key.trim() }, { signal: request.signal, timeout: 35000 });
         if (request.signal.aborted) return;
-        if (data.code !== 200 || !Array.isArray(data.data)) throw new Error(data.message || "获取模型列表失败");
-        if (!data.data.length) throw new Error("未获取到可用模型，请检查 API Key 后重试");
+        if (data.code !== 200 || !Array.isArray(data.data)) throw data.message ? new Error(data.message) : createDisplayError("获取模型列表失败", () => t("models.fetchFailed"));
+        if (!data.data.length) throw createDisplayError("未获取到可用模型，请检查 API Key 后重试", () => t("models.noneAvailable"));
         draftModels.value = data.data;
       } catch (error) {
-        if (!request.signal.aborted) setupError.value = axios.isAxiosError(error)
-          ? error.response?.data?.message || "获取模型列表失败，请检查 API Key 后重试"
-          : error instanceof Error ? error.message : "获取模型列表失败";
+        if (!request.signal.aborted) setupError.value = axios.isAxiosError<{ message?: string }>(error)
+          ? error.response?.data?.message ? new Error(error.response.data.message) : createDisplayError("获取模型列表失败，请检查 API Key 后重试", () => t("models.fetchFailedCheckKey"))
+          : error instanceof Error ? error : createDisplayError("获取模型列表失败", () => t("models.fetchFailed"));
       } finally {
         if (!request.signal.aborted) fetchingModels.value = false;
       }
@@ -140,7 +142,7 @@ watch(
 async function refresh() {
   controller?.abort();
   loading.value = false;
-  errorMessage.value = "";
+  errorMessage.value = undefined;
   if (!apiKey.value || !props.visible) return;
   const request = new AbortController();
   controller = request;
@@ -150,11 +152,9 @@ async function refresh() {
     if (!request.signal.aborted) balance.value = result;
   } catch (error) {
     if (!request.signal.aborted) {
-      errorMessage.value = axios.isAxiosError<{ message?: string }>(error)
-        ? error.response?.data?.message || error.message
-        : error instanceof Error
-        ? error.message
-        : "余额查询失败，请重试";
+      errorMessage.value = axios.isAxiosError<{ message?: string }>(error) && error.response?.data?.message
+        ? new Error(error.response.data.message)
+        : error instanceof Error ? error : createDisplayError("余额查询失败，请重试", () => t("account.balanceFailed"));
     }
   } finally {
     if (!request.signal.aborted) loading.value = false;
@@ -167,7 +167,7 @@ watch(
     rechargeVisible.value = false;
     balance.value = undefined;
     draftKey.value = "";
-    setupError.value = "";
+    setupError.value = undefined;
     void refresh();
   },
   { immediate: true }

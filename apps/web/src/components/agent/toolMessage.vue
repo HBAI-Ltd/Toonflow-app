@@ -1,23 +1,23 @@
 <template>
   <component v-if="renderer" :is="renderer" :tool="tool" :directory="directory" @copy="emit('copy', $event)" />
-  <el-text v-if="rendererError" type="danger">工具界面加载失败，请停止后重试：{{ rendererError }}</el-text>
+  <el-text v-if="rendererError" type="danger">{{ t("toolInterfaceLoadFailed", { error: rendererError }) }}</el-text>
   <chat-reasoning v-model:collapsed="collapsed" class="messageReasoning toolCall" expandIconPlacement="left">
     <template #header>
       <span class="toolHeader" :data-status="tool.status">
         <icon-tool :size="14" />
-        <span class="toolName">{{ renderer ? "操作工具" : tool.name || "工具调用" }}</span>
-        <span class="toolState">{{ tool.name === 'subAgent' && tool.status === 'success' ? '调用已返回' : toolStatusLabels[tool.status] }}</span>
+        <span class="toolName">{{ renderer ? t("toolAction") : tool.name || t("toolCall") }}</span>
+        <span class="toolState">{{ tool.name === 'subAgent' && tool.status === 'success' ? t("subAgentCallReturned") : toolStatusLabel(tool.status) }}</span>
       </span>
     </template>
     <div v-if="!collapsed" class="toolDetails">
       <template v-for="(data, index) in [args, result]" :key="index">
         <template v-if="data">
           <span class="toolLabel">
-            {{ index === 0 ? "参数" : "结果" }}
-            <el-button v-if="!data.markdown" text size="small" :icon="IconCopy" :aria-label="index === 0 ? '复制工具参数' : '复制工具结果'" @click="emit('copy', data.content)" />
+            {{ index === 0 ? t("parameters") : t("result") }}
+            <el-button v-if="!data.markdown" text size="small" :icon="IconCopy" :aria-label="index === 0 ? t('copyToolParameters') : t('copyToolResult')" @click="emit('copy', data.content)" />
           </span>
           <messageMarkdown v-if="data.markdown" class="toolData" :class="{ toolError: index === 1 && tool.status === 'error' }" :content="data.markdown" :codeOptions="toolCodeOptions" />
-          <pre v-else class="toolData toolPlain" :class="{ toolError: index === 1 && tool.status === 'error' }" tabindex="0" :aria-label="index === 0 ? '工具参数' : '工具结果'">{{ data.content }}</pre>
+          <pre v-else class="toolData toolPlain" :class="{ toolError: index === 1 && tool.status === 'error' }" tabindex="0" :aria-label="index === 0 ? t('toolParameters') : t('toolResult')">{{ data.content }}</pre>
         </template>
       </template>
     </div>
@@ -27,39 +27,47 @@
 <script setup lang="ts">
 import { computed, onErrorCaptured, ref, shallowRef, watch, type Component } from "vue";
 import { loadToolComponent } from "@toonflow/tools-scaffold/client";
+import { createDisplayError, createTranslator, getErrorDisplay } from "@toonflow/i18n";
 import { IconCopy, IconTool } from "@tabler/icons-vue";
 import chatReasoning from "@tdesign-vue-next/chat/es/chat-reasoning";
 import type { AgentToolCall } from "@toonflow/server/agent/types";
 import messageMarkdown from "@/components/messageMarkdown.vue";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
 
+const t = createTranslator({ zh, en });
 const { tool, directory } = defineProps<{ tool: AgentToolCall; directory?: string }>();
 const emit = defineEmits<{ copy: [content: string] }>();
 const renderer = shallowRef<Component>();
-const rendererError = ref("");
+const rendererFailure = shallowRef<unknown>();
+const rendererError = computed(() => rendererFailure.value === undefined ? "" : getErrorDisplay(rendererFailure.value));
 watch(() => [tool.name, tool.question?.callId] as const, async ([name], _previous, onCleanup) => {
   let active = true;
   onCleanup(() => { active = false; });
   renderer.value = undefined;
-  rendererError.value = "";
+  rendererFailure.value = undefined;
   if (name === "subAgent") return;
   try {
     const component = await loadToolComponent(name);
     if (active) {
       renderer.value = component;
-      if (!component && tool.status === "running" && tool.question?.callId) rendererError.value = "该工具未提供可用的交互组件";
+      if (!component && tool.status === "running" && tool.question?.callId) {
+        rendererFailure.value = createDisplayError("该工具未提供可用的交互组件", () => t("toolInteractiveComponentMissing"));
+      }
     }
   } catch (error) {
-    if (active) rendererError.value = error instanceof Error ? error.message : String(error);
+    if (active) rendererFailure.value = error;
   }
 }, { immediate: true });
 onErrorCaptured(error => {
   if (!renderer.value) return;
   renderer.value = undefined;
-  rendererError.value = error.message;
+  rendererFailure.value = error;
   return false;
 });
 const collapsed = ref(true);
-const toolStatusLabels = { running: "调用中…", success: "已完成", error: "调用失败", interrupted: "已中断" };
+const toolStatusKeys = { running: "toolStatusRunning", success: "toolStatusSuccess", error: "toolStatusError", interrupted: "toolStatusInterrupted" };
+const toolStatusLabel = (status: keyof typeof toolStatusKeys) => t(toolStatusKeys[status]);
 const toolCodeOptions = { maxHeight: 240, lineNumbers: false };
 const args = computed(() => formatToolData(tool.args));
 const result = computed(() => formatToolData(tool.result));

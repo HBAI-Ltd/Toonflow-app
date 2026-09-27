@@ -1,5 +1,7 @@
 import axios from "axios";
 import { toValue, type MaybeRefOrGetter } from "vue";
+import { t } from "@/lib/i18n";
+import { createDisplayError } from "@toonflow/i18n";
 import { useWorkspaceStore } from "@/stores/workspace";
 
 type WorkspaceEntry = { name: string; path: string; type: "file" | "directory" };
@@ -24,7 +26,7 @@ export default function useWorkspaceFiles(directory?: MaybeRefOrGetter<string | 
   const workspace = directory === undefined ? useWorkspaceStore() : undefined;
   function getDirectory() {
     const path = directory === undefined ? workspace?.project?.directory : toValue(directory);
-    if (!path) throw new Error("请先选择工作目录");
+    if (!path) throw createDisplayError("请先选择工作目录", () => t("workspaceFiles.selectDirectory"));
     return path;
   }
 
@@ -67,7 +69,7 @@ export default function useWorkspaceFiles(directory?: MaybeRefOrGetter<string | 
   }
 
   async function readText(path: string, maxBytes?: number) {
-    if (maxBytes !== undefined && (!Number.isSafeInteger(maxBytes) || maxBytes < 1)) throw new Error("读取字节数必须为正整数");
+    if (maxBytes !== undefined && (!Number.isSafeInteger(maxBytes) || maxBytes < 1)) throw createDisplayError("读取字节数必须为正整数", () => t("workspaceFiles.invalidReadByteCount"));
     try {
       const { data } = await client.get<string>("/read", {
         params: { directory: getDirectory(), path }, responseType: "text", transformResponse: [],

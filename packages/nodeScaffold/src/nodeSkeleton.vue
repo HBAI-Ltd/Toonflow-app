@@ -12,12 +12,12 @@
       @command="handleCommand">
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item v-if="assetOutputs.length && saveNodeToAssets" command="saveAsset" :icon="IconFolderPlus">保存到素材库</el-dropdown-item>
-          <el-dropdown-item :divided="!!(assetOutputs.length && saveNodeToAssets)" command="copy" :icon="IconCopy">复制节点</el-dropdown-item>
-          <el-dropdown-item command="duplicate" :icon="IconCopyPlus">创建副本</el-dropdown-item>
-          <el-dropdown-item command="delete" :icon="IconTrash">删除节点</el-dropdown-item>
+          <el-dropdown-item v-if="assetOutputs.length && saveNodeToAssets" command="saveAsset" :icon="IconFolderPlus">{{ t("saveToAssetLibrary") }}</el-dropdown-item>
+          <el-dropdown-item :divided="!!(assetOutputs.length && saveNodeToAssets)" command="copy" :icon="IconCopy">{{ t("copyNode") }}</el-dropdown-item>
+          <el-dropdown-item command="duplicate" :icon="IconCopyPlus">{{ t("duplicateNode") }}</el-dropdown-item>
+          <el-dropdown-item command="delete" :icon="IconTrash">{{ t("deleteNode") }}</el-dropdown-item>
           <el-dropdown-item divided command="clipboard" :icon="IconCopy" :disabled="!copyNodeToClipboard || copyingToClipboard">
-            复制到剪贴板
+            {{ t("copyToClipboard") }}
           </el-dropdown-item>
         </el-dropdown-menu>
       </template>
@@ -37,8 +37,8 @@
             :icon="IconFolderPlus"
             :disabled="!assetOutputs.length || !saveNodeToAssets"
             text
-            title="添加到素材库"
-            aria-label="添加到素材库"
+            :title="t('addToAssetLibrary')"
+            :aria-label="t('addToAssetLibrary')"
             @click.stop="handleCommand('saveAsset')" />
           <slot name="topActions" />
           <el-button
@@ -50,16 +50,16 @@
             :loading="downloading"
             :aria-busy="downloading"
             text
-            :title="downloading ? '正在保存…' : '下载'"
-            aria-label="下载"
+            :title="downloading ? t('saving') : t('download')"
+            :aria-label="t('download')"
             @downloadstate="downloading = $event.detail"
             @click.stop />
           <el-button
             :icon="IconMaximize"
             :disabled="!downloadUrl"
             text
-            title="全屏"
-            aria-label="全屏"
+            :title="t('fullscreen')"
+            :aria-label="t('fullscreen')"
             @click.stop="emit('fullscreen')" />
         </el-card>
       </slot>
@@ -82,7 +82,7 @@
         ref="labelInput"
         v-model="labelDraft"
         class="labelInput nodrag nopan"
-        aria-label="节点名称"
+        :aria-label="t('nodeName')"
         @pointerdown.stop
         @mousedown.stop
         @dblclick.stop
@@ -94,10 +94,10 @@
         v-else
         class="labelText"
         tabindex="0"
-        :title="`${label}（双击编辑名称）`"
+        :title="t('renameHint', { label: displayLabel })"
         @dblclick.stop="editLabel"
         @keydown.enter.stop.prevent="editLabel">
-        {{ label }}
+        {{ displayLabel }}
       </span>
       <div class="nodeActions nodrag nopan" @pointerdown.stop @mousedown.stop @dblclick.stop>
         <el-button
@@ -105,10 +105,10 @@
           :loading="loading || reloading"
           :disabled="loading || !reloadRemoteNode"
           text
-          title="刷新节点"
-          aria-label="刷新节点"
+          :title="t('refreshNode')"
+          :aria-label="t('refreshNode')"
           @click.stop="reloadNode" />
-        <el-button :icon="IconX" text title="移除节点" aria-label="移除节点" @click.stop="deleteNode" :loading="deleting" />
+        <el-button :icon="IconX" text :title="t('removeNode')" :aria-label="t('removeNode')" @click.stop="deleteNode" :loading="deleting" />
       </div>
     </div>
     <div class="cardContainer">
@@ -118,9 +118,9 @@
         shadow="never"
         :bodyStyle="{ padding: '8px' }"
         :style="{ minHeight: `${cardHeight}px` }">
-        <div v-if="loading" class="loadingContent" role="status" aria-label="节点加载中">
+        <div v-if="loading" class="loadingContent" role="status" :aria-label="t('nodeLoading')">
           <icon-loader2 class="loadingIcon" :size="24" aria-hidden="true" />
-          <span>加载中...</span>
+          <span>{{ t("loading") }}</span>
         </div>
         <slot v-else-if="previewReady" />
       </el-card>
@@ -140,8 +140,8 @@
           :isValidConnection="validateConnection"
           :data-connection-status="getHandleStatus(item)"
           :style="{ top: `${((index + 1) / (group.items.length + 1)) * 100}%` }"
-          :title="`${item.label ?? item.id} · ${Array.isArray(item.dataType) ? item.dataType.join(' / ') : item.dataType}`"
-          :aria-label="`${item.label ?? item.id} · ${Array.isArray(item.dataType) ? item.dataType.join(' / ') : item.dataType}`"
+          :title="handleDescription(item)"
+          :aria-label="handleDescription(item)"
           @pointermove="moveHandle"
           @pointerleave="resetHandle"
           @pointercancel="resetHandle">
@@ -175,6 +175,11 @@ import { validateConnection } from "./connection";
 import { useNodeEvent } from "./nodeEvent";
 import type { NodeConnectionFeedback, NodeData, NodeHandle } from "./connection";
 import type { NodeOutput } from "./values";
+import { createTranslator, getErrorDisplay, getLocale } from "@toonflow/i18n";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
+
+const t = createTranslator({ zh, en });
 
 const topVisible = defineModel<boolean>("topVisible", { default: false });
 const bottomVisible = defineModel<boolean>("bottomVisible", { default: false });
@@ -207,6 +212,36 @@ const handleGroups = computed(() => [
 ]);
 const cardHeight = computed(() => Math.max(100, ...handleGroups.value.map((group) => (group.items.length + 1) * 44)));
 const { id: nodeId, node } = useNode();
+const builtinTitles: Record<string, { zh: string; en: string }> = {
+  "remote-textNode": { zh: "文本", en: "Text" },
+  "remote-imageNode": { zh: "图片", en: "Image" },
+  "remote-audioNode": { zh: "音频", en: "Audio" },
+  "remote-videoNode": { zh: "视频", en: "Video" },
+  "remote-imageGenerationNode": { zh: "图片生成", en: "Image Generation" },
+  "remote-videoGenerationNode": { zh: "视频生成", en: "Video Generation" },
+  "remote-director3dNode": { zh: "3D导演台", en: "3D Director" },
+};
+const displayLabel = computed(() => {
+  if (typeof node.data.label === "string" && node.data.label) return node.data.label;
+  const builtin = builtinTitles[node.type ?? ""];
+  return builtin ? (getLocale() === "en" ? builtin.en : builtin.zh) : props.label;
+});
+const knownHandleLabels: Record<string, Record<string, string>> = {
+  "remote-textNode": { in: "handleMediaTextInput", text: "handleTextOutput" },
+  "remote-imageNode": { image: "handleImageOutput" },
+  "remote-audioNode": { audio: "handleAudioOutput" },
+  "remote-videoNode": { video: "handleVideoOutput" },
+  "remote-imageGenerationNode": { in: "handleImageTextInput", image: "handleImageOutput" },
+  "remote-videoGenerationNode": { in: "handleAllMediaTextInput", video: "handleVideoOutput" },
+  "remote-director3dNode": { in: "handleDirectorInput" },
+};
+const dataTypeLabels: Record<string, string> = { STRING: "dataTypeString", IMAGE: "dataTypeImage", VIDEO: "dataTypeVideo", AUDIO: "dataTypeAudio" };
+function handleDescription(item: NodeHandle) {
+  const labelKey = knownHandleLabels[node.type ?? ""]?.[item.id];
+  const label = labelKey ? t(labelKey) : item.label ?? item.id;
+  const types = (Array.isArray(item.dataType) ? item.dataType : [item.dataType]).map(type => t(dataTypeLabels[type] ?? type)).join(" / ");
+  return `${label} · ${types}`;
+}
 const selectionConnection = inject<ShallowRef<NodeConnectionFeedback | undefined>>("selectionConnection");
 const nodeEvent = useNodeEvent();
 node.isValidTargetPos = (...args) => nodeEvent.emit("canConnect", ...args);
@@ -328,7 +363,7 @@ async function reloadNode() {
   try {
     await reloadRemoteNode(node.type);
   } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : "节点刷新失败");
+    ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("refreshFailed"));
   } finally {
     reloading.value = false;
   }
@@ -352,7 +387,7 @@ async function deleteNode() {
     removeNodes(nodeId);
   } catch (error) {
     const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
-    ElMessage.error(message || (error instanceof Error ? error.message : "节点删除失败"));
+    ElMessage.error(message || (error instanceof Error ? getErrorDisplay(error) : t("deleteFailed")));
   } finally {
     deleting.value = false;
   }
@@ -380,9 +415,9 @@ async function handleCommand(command: string) {
       const patch = await nodeEvent.emit("copy");
       const data = { ...node.data, ...patch };
       await copyNodeToClipboard({ type: node.type, data });
-      ElMessage.success("已复制，可在其他画布粘贴");
+      ElMessage.success(t("copiedToClipboard"));
     } catch (error) {
-      ElMessage.error(error instanceof Error ? error.message : "节点复制失败");
+      ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("copyFailed"));
     } finally {
       copyingToClipboard.value = false;
     }
@@ -394,7 +429,7 @@ async function handleCommand(command: string) {
       const patch = await nodeEvent.emit("copy");
       data = JSON.parse(JSON.stringify({ ...node.data, ...patch }));
     } catch (error) {
-      ElMessage.error(error instanceof Error ? error.message : "节点复制失败");
+      ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("copyFailed"));
       return;
     }
     if (findNode(nodeId) !== node) return;

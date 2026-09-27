@@ -10,17 +10,17 @@
     :bottomWidth="660"
     :style="{ width: previewUrl && videoWidth ? `${videoWidth + 18}px` : undefined }">
     <template #topActions>
-      <el-button :icon="IconTransfer" :loading="uploading" :disabled="generating || deleting" text title="替换视频" aria-label="替换视频" @click.stop="fileInput?.click()" />
-      <input ref="fileInput" type="file" accept="video/*" hidden aria-label="选择替换视频" :disabled="generating || deleting || uploading" @change="replaceOutput" />
+      <el-button :icon="IconTransfer" :loading="uploading" :disabled="generating || deleting" text :title="t('replaceVideo')" :aria-label="t('replaceVideo')" @click.stop="fileInput?.click()" />
+      <input ref="fileInput" type="file" accept="video/*" hidden :aria-label="t('chooseReplacementVideo')" :disabled="generating || deleting || uploading" @change="replaceOutput" />
     </template>
     <div v-loading="generating || uploading" class="videoContent nopan" :aria-busy="generating || uploading">
       <videoPlayer
         v-if="previewUrl"
         ref="player"
         :src="previewUrl"
-        label="生成视频"
+        :label="t('generatedVideo')"
         @loadedmetadata="resizeVideo" />
-      <div v-else class="videoEmpty" role="img" aria-label="暂无生成视频">
+      <div v-else class="videoEmpty" role="img" :aria-label="t('noGeneratedVideo')">
         <icon-camera-ai :size="48" stroke="1.25" aria-hidden="true" />
       </div>
     </div>
@@ -32,7 +32,7 @@
           @preview="setReferencePreview"
           @remove="removeReference" />
         <div v-if="frameMode" class="referenceHint">
-          {{ selectedMode === "startFrameOptional" ? "仅一张图片时作为尾帧；两张图片按顺序作为首帧、尾帧" : "图片引用按顺序作为首帧、尾帧" }}
+          {{ selectedMode === "startFrameOptional" ? t("optionalFrameHint") : t("frameHint") }}
         </div>
         <promptInput v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" />
         <div class="promptFooter">
@@ -42,11 +42,11 @@
             filterable
             :loading="modelsLoading"
             :disabled="generating || deleting"
-            placeholder="选择模型"
-            aria-label="生成模型"
-            noDataText="请先在设置中添加视频模型"
+            :placeholder="t('selectModel')"
+            :aria-label="t('generationModel')"
+            :noDataText="t('addVideoModelFirst')"
             placement="top-start"
-            @visible-change="(visible) => visible && loadModels().catch((error) => showError(error, '模型读取失败'))">
+            @visible-change="(visible) => visible && loadModels().catch((error) => showError(error, t('modelsLoadFailed')))">
             <template #prefix><icon-sparkles :size="17" /></template>
             <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
               <el-option
@@ -69,9 +69,9 @@
             class="sendButton"
             :icon="generating ? IconPlayerStop : IconArrowUp"
             :disabled="deleting || uploading || (!generating && (!generationPrompt || !selectedModel))"
-            :title="generating ? '停止生成' : '生成视频'"
-            :aria-label="generating ? '停止生成' : '生成视频'"
-            @click="generating ? generationController?.abort() : startGeneration().catch((error) => showError(error, '视频生成失败'))" />
+            :title="generating ? t('stopGeneration') : t('generateVideo')"
+            :aria-label="generating ? t('stopGeneration') : t('generateVideo')"
+            @click="generating ? generationController?.abort() : startGeneration().catch((error) => showError(error, t('videoGenerationFailed')))" />
         </div>
       </el-card>
     </template>
@@ -87,6 +87,11 @@ import promptInput from "@toonflow/nodes-scaffold/promptInput";
 import videoPlayer from "@toonflow/nodes-scaffold/videoPlayer";
 import referenceItem from "@toonflow/nodes-scaffold/referenceItem";
 import generationSettings from "./components/generationSettings.vue";
+import { createDisplayError, createTranslator, getErrorDisplay } from "@toonflow/i18n";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
+
+const t = createTranslator({ zh, en });
 
 defineOptions({
   inheritAttrs: false,
@@ -189,10 +194,10 @@ const generationPrompt = computed(() =>
 const outputFile = computed(() => outputs.value.video?.dataType === "VIDEO" ? outputs.value.video.value : undefined);
 const previewUrl = files.useFileUrl(
   outputFile,
-  (error) => showError(error, "视频读取失败")
+  (error) => showError(error, t("videoReadFailed"))
 );
 
-onMounted(() => loadModels().catch((error) => showError(error, "模型读取失败")));
+onMounted(() => loadModels().catch((error) => showError(error, t("modelsLoadFailed"))));
 onScopeDispose(() => {
   disposed = true;
   generationController?.abort();
@@ -203,8 +208,8 @@ async function replaceOutput(event: Event) {
   const file = input.files?.[0];
   input.value = "";
   if (!file || generating.value || deleting.value || uploading.value || disposed) return;
-  if (!file.type.startsWith("video/")) return void ElMessage.error("请选择视频文件");
-  if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error("视频不能为空且不能超过 100 MB");
+  if (!file.type.startsWith("video/")) return void ElMessage.error(t("chooseVideoFile"));
+  if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error(t("videoSize"));
   uploading.value = true;
   try {
     const workspace = files.getWorkspaceFiles();
@@ -216,7 +221,7 @@ async function replaceOutput(event: Event) {
     // ACT: 保留历史输出文件，避免破坏撤销记录和复制节点的引用。
     outputs.value.video = { dataType: "VIDEO", value: { url, mimeType: file.type } };
   } catch (error) {
-    showError(error, "视频替换失败");
+    showError(error, t("videoReplaceFailed"));
   } finally {
     uploading.value = false;
   }
@@ -242,14 +247,14 @@ function loadModels() {
 
 async function startGeneration() {
   const choice = selectedModel.value;
-  if (generating.value) throw new Error("视频正在生成，请等待完成");
-  if (uploading.value) throw new Error("视频正在替换，请等待完成");
-  if (deleting.value) throw new Error("节点正在删除");
-  if (!choice) throw new Error("请先选择视频模型");
-  if (!generationPrompt.value) throw new Error("请输入生成提示词");
-  if (refList.value.some(item => item.value === undefined)) throw new Error("引用节点暂无内容，请先补充引用内容");
+  if (generating.value) throw createDisplayError("视频正在生成，请等待完成", () => t("videoGenerating"));
+  if (uploading.value) throw createDisplayError("视频正在替换，请等待完成", () => t("videoReplacing"));
+  if (deleting.value) throw createDisplayError("节点正在删除", () => t("nodeDeleting"));
+  if (!choice) throw createDisplayError("请先选择视频模型", () => t("selectVideoModelFirst"));
+  if (!generationPrompt.value) throw createDisplayError("请输入生成提示词", () => t("enterGenerationPrompt"));
+  if (refList.value.some(item => item.value === undefined)) throw createDisplayError("引用节点暂无内容，请先补充引用内容", () => t("referenceNoContent"));
   const images = refList.value.flatMap((item) => item.dataType === "IMAGE" && item.value ? [{ path: item.value.url, mimeType: item.value.mimeType }] : []);
-  if (choice.mode?.length && !matchingModes.value.length) throw new Error("当前模型没有适合这些参考素材的生成模式，请更换模型或调整引用");
+  if (choice.mode?.length && !matchingModes.value.length) throw createDisplayError("当前模型没有适合这些参考素材的生成模式，请更换模型或调整引用", () => t("noCompatibleMode"));
   const workspace = files.getWorkspaceFiles();
   const controller = new AbortController();
   const input: Omit<NodeVideoRequest, "directory"> = {
@@ -278,10 +283,10 @@ async function startGeneration() {
     })
     .then(([result]) => {
       controller.signal.throwIfAborted();
-      if (!result) throw new Error("供应商未返回视频");
+      if (!result) throw createDisplayError("供应商未返回视频", () => t("providerNoVideo"));
       outputs.value.video = { dataType: "VIDEO", value: { url: result.path, mimeType: result.mimeType } };
     }))
-    .catch((error) => showError(error, "视频生成失败"))
+    .catch((error) => showError(error, t("videoGenerationFailed")))
     .finally(() => {
       generationController = undefined;
     });
@@ -289,10 +294,10 @@ async function startGeneration() {
 }
 
 nodeEvent.on("save", (reason) => {
-  if (reason === "reload" && (generating.value || uploading.value || deleting.value)) throw new Error("视频处理中，请完成后再刷新节点");
+  if (reason === "reload" && (generating.value || uploading.value || deleting.value)) throw createDisplayError("视频处理中，请完成后再刷新节点", () => t("videoBusyRefresh"));
 });
 nodeEvent.on("delete", async () => {
-  if (uploading.value) throw new Error("视频正在替换，请稍后删除节点");
+  if (uploading.value) throw createDisplayError("视频正在替换，请稍后删除节点", () => t("videoReplacingDelete"));
   deleting.value = true;
   generationController?.abort();
   try {
@@ -314,7 +319,7 @@ async function resizeVideo(event: Event) {
 function showError(error: unknown, fallback: string) {
   if (error instanceof Error && error.name === "AbortError") return;
   const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
-  ElMessage.error(message || (error instanceof Error ? error.message : fallback));
+  ElMessage.error(message || (error instanceof Error ? getErrorDisplay(error) : fallback));
 }
 
 function getConfig() {
@@ -360,21 +365,27 @@ nodeTools.register({
   }).refine((args) => (args.providerId === undefined) === (args.modelId === undefined), "providerId 与 modelId 必须同时提供"),
   async execute(args, { signal }) {
     signal?.throwIfAborted();
-    if (generating.value || deleting.value) throw new Error("节点正在生成或删除，请稍后修改配置");
+    if (generating.value || deleting.value) throw createDisplayError("节点正在生成或删除，请稍后修改配置", () => t("nodeBusyConfig"));
     await loadModels();
     signal?.throwIfAborted();
-    if (generating.value || deleting.value) throw new Error("节点正在生成或删除，请稍后修改配置");
+    if (generating.value || deleting.value) throw createDisplayError("节点正在生成或删除，请稍后修改配置", () => t("nodeBusyConfig"));
     const choice = args.modelId === undefined ? selectedModel.value
       : models.value.find((item) => item.providerId === args.providerId && item.modelId === args.modelId);
-    if (!choice) throw new Error("请选择 getConfig 返回的有效视频模型");
+    if (!choice) throw createDisplayError("请选择 getConfig 返回的有效视频模型", () => t("invalidVideoModel"));
     const durations = getDurations(choice);
-    if (args.duration !== undefined && !durations.includes(args.duration)) throw new Error(`当前模型不支持时长 ${args.duration}，可选：${durations.join("、")}`);
+    if (args.duration !== undefined && !durations.includes(args.duration)) {
+      const value = args.duration;
+      throw createDisplayError(`当前模型不支持时长 ${value}，可选：${durations.join("、")}`, () => t("unsupportedDuration", { value, options: durations.join(", ") }));
+    }
     const duration = args.duration ?? (durations.includes(data.value.duration!) ? data.value.duration : durations[0]);
     const resolutions = getResolutions(choice, duration);
-    if (args.resolution !== undefined && !resolutions.includes(args.resolution)) throw new Error(`当前时长不支持分辨率 ${args.resolution}，可选：${resolutions.join("、")}`);
+    if (args.resolution !== undefined && !resolutions.includes(args.resolution)) {
+      const value = args.resolution;
+      throw createDisplayError(`当前时长不支持分辨率 ${value}，可选：${resolutions.join("、")}`, () => t("unsupportedResolution", { value, options: resolutions.join(", ") }));
+    }
     const resolution = args.resolution ?? (resolutions.includes(data.value.resolution) ? data.value.resolution : resolutions[0] ?? "");
-    if (args.mode !== undefined && !getMatchingModes(choice).some((item) => JSON.stringify(item) === JSON.stringify(args.mode))) throw new Error("所选模式不受当前模型支持或不适用于当前引用，请根据模型能力及已连接素材选择");
-    if (args.generateAudio !== undefined && choice.audio !== "optional" && args.generateAudio !== (choice.audio === true)) throw new Error("当前模型不支持切换声音，请查看 getConfig 返回的 audio 能力");
+    if (args.mode !== undefined && !getMatchingModes(choice).some((item) => JSON.stringify(item) === JSON.stringify(args.mode))) throw createDisplayError("所选模式不受当前模型支持或不适用于当前引用，请根据模型能力及已连接素材选择", () => t("unsupportedMode"));
+    if (args.generateAudio !== undefined && choice.audio !== "optional" && args.generateAudio !== (choice.audio === true)) throw createDisplayError("当前模型不支持切换声音，请查看 getConfig 返回的 audio 能力", () => t("audioToggleUnsupported"));
     data.value.model = JSON.stringify([choice.providerId, choice.modelId]);
     data.value.duration = duration;
     data.value.resolution = resolution;
@@ -390,7 +401,7 @@ nodeTools.register({
   description: "修改此节点的视频生成提示词，支持 {{ref 1}} 等参考标记；只修改提示词，不启动生成",
   parameters: z.strictObject({ prompt: z.string() }),
   execute({ prompt: value }) {
-    if (deleting.value) throw new Error("节点正在删除，请稍后修改");
+    if (deleting.value) throw createDisplayError("节点正在删除，请稍后修改", () => t("nodeDeletingEdit"));
     data.value.prompt = value;
     data.value.promptModel = value.split("\n").map((text) => [{ type: "Write", text }]);
     return { prompt: value };

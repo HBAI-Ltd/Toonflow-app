@@ -1,6 +1,8 @@
 import { nextTick } from "vue";
 import type { useVueFlow } from "@vue-flow/core";
 import { graphlib, layout } from "@dagrejs/dagre";
+import { createDisplayError } from "@toonflow/i18n";
+import { t } from "@/pages/i18n";
 import { getSelectionTree } from "./selectionNodes";
 
 export async function arrangeCanvas(flow: ReturnType<typeof useVueFlow>, signal?: AbortSignal) {
@@ -15,13 +17,13 @@ export async function arrangeCanvas(flow: ReturnType<typeof useVueFlow>, signal?
   const snapshot = nodes.map((node) => ({ id: node.id, position: { ...node.position } }));
   if (!nodes.length) return { snapshot, viewport: { ...flow.viewport.value }, arrangedNodeIds: [] };
   for (const node of nodes) {
-    if (node.draggable === false) throw new Error(`节点 ${node.id} 不允许移动`);
+    if (node.draggable === false) throw createDisplayError(`节点 ${node.id} 不允许移动`, () => t("nodeIdCannotMove", { id: node.id }));
     const { width, height } = node.dimensions;
     if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
-      throw new Error(`节点 ${node.id} 尚未完成尺寸测量，请等待节点显示后重试`);
+      throw createDisplayError(`节点 ${node.id} 尚未完成尺寸测量，请等待节点显示后重试`, () => t("nodeNotMeasured", { id: node.id }));
     }
     if (!Number.isFinite(node.position.x) || !Number.isFinite(node.position.y)) {
-      throw new Error(`节点 ${node.id} 的位置无效`);
+      throw createDisplayError(`节点 ${node.id} 的位置无效`, () => t("nodeInvalidPosition", { id: node.id }));
     }
   }
 
@@ -74,7 +76,7 @@ export async function arrangeCanvas(flow: ReturnType<typeof useVueFlow>, signal?
     const result = group.ids.map(id => {
       const node = group.graph.node(id);
       const position = { x: origin.x + x + node.x - node.width / 2, y: origin.y + y + node.y - node.height / 2 };
-      if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) throw new Error(`节点 ${id} 的排列位置无效`);
+      if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) throw createDisplayError(`节点 ${id} 的排列位置无效`, () => t("nodeInvalidArrangedPosition", { id }));
       return { id, position };
     });
     x += group.width + groupGap;

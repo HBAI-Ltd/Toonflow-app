@@ -1,3 +1,5 @@
+import { t } from "@/pages/i18n";
+import { createDisplayError } from "@toonflow/i18n";
 import { computed, nextTick, onScopeDispose, ref, shallowRef, watch } from "vue";
 import { debounce } from "lodash-es";
 import { useVueFlow, type Node, type Edge } from "@vue-flow/core";
@@ -75,7 +77,7 @@ export function useCanvasHistory(flow: ReturnType<typeof useVueFlow>, binding: (
         if (currentRevision !== revision) return;
       }
       if (capture().key !== before.key || removedNodes.some(node => flow.findNode(node.id) !== node)) {
-        throw new Error("画布已发生变化，请重新撤销或重做");
+        throw createDisplayError("画布已发生变化，请重新撤销或重做", () => t("theCanvasChangedUndoOr"));
       }
       flow.setNodes(snapshot.nodes.map(saved => {
         const node = flow.findNode(saved.id);
@@ -126,7 +128,7 @@ export function useCanvasHistory(flow: ReturnType<typeof useVueFlow>, binding: (
   }
 
   async function batch(action: () => Promise<void>) {
-    if (!binding() || applying.value) throw new Error("画布尚未就绪");
+    if (!binding() || applying.value) throw createDisplayError("画布尚未就绪", () => t("canvasIsNotReady"));
     record.cancel();
     commit();
     const currentRevision = revision;

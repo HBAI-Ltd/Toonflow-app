@@ -180,6 +180,7 @@
         "@earendil-works/pi-ai": "0.85.1",
         "@tabler/icons-vue": "^3.46.0",
         "@toonflow/ffmpeg": "workspace:*",
+        "@toonflow/i18n": "workspace:*",
         "@vitejs/plugin-vue": "^6.0.8",
         "eventsource-parser": "3.1.1",
         "vite": "^8.2.2",
@@ -204,6 +205,7 @@
       "version": "2.0.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
+        "@toonflow/i18n": "workspace:*",
       },
       "devDependencies": {
         "@toonflow/nodes-scaffold": "workspace:*",
@@ -222,6 +224,7 @@
       "version": "2.0.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
+        "@toonflow/i18n": "workspace:*",
         "@tweenjs/tween.js": "25.0.0",
         "html2canvas-pro": "2.0.2",
         "three": "0.184.0",
@@ -246,6 +249,7 @@
       "version": "2.0.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
+        "@toonflow/i18n": "workspace:*",
       },
       "devDependencies": {
         "@toonflow/nodes-scaffold": "workspace:*",
@@ -264,6 +268,7 @@
       "version": "2.0.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
+        "@toonflow/i18n": "workspace:*",
       },
       "devDependencies": {
         "@toonflow/nodes-scaffold": "workspace:*",
@@ -282,6 +287,7 @@
       "version": "2.0.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
+        "@toonflow/i18n": "workspace:*",
       },
       "devDependencies": {
         "@toonflow/nodes-scaffold": "workspace:*",
@@ -300,6 +306,7 @@
       "version": "2.0.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
+        "@toonflow/i18n": "workspace:*",
       },
       "devDependencies": {
         "@toonflow/nodes-scaffold": "workspace:*",
@@ -318,6 +325,7 @@
       "version": "2.0.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
+        "@toonflow/i18n": "workspace:*",
       },
       "devDependencies": {
         "@toonflow/nodes-scaffold": "workspace:*",
@@ -369,6 +377,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@toonflow/ffmpeg": "workspace:*",
+        "@toonflow/i18n": "workspace:*",
         "@toonflow/providers": "workspace:*",
         "@vitejs/plugin-vue": "^6.0.8",
         "vite": "^8.2.2",
@@ -389,6 +398,7 @@
       "version": "2.0.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
+        "@toonflow/i18n": "workspace:*",
         "zod": "^4.6.2",
       },
       "devDependencies": {
@@ -408,6 +418,7 @@
       "version": "3.0.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
+        "@toonflow/i18n": "workspace:*",
         "zod": "^4.6.2",
       },
       "devDependencies": {

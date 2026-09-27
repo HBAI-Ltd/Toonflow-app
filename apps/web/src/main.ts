@@ -11,6 +11,7 @@ import "element-plus/es/components/result/style/css";
 
 import router from "@/router";
 import { registerDesktopProtocol } from "@/lib/desktopProtocol";
+import { t } from "@/lib/i18n";
 import { registerDesktopDownloads } from "@/lib/saveFile";
 import { registerAnonymousData } from "@/lib/anonymousData";
 import { loadSettings, settingsStorage, uiLocale } from "@/stores/settings";
@@ -29,12 +30,12 @@ async function notifyDesktopReady(failed = false) {
     headers: { "x-toonflow-desktop": "1", "Content-Type": "application/json" },
     body: JSON.stringify({ failed }),
   });
-  if (!response.ok) throw new Error((await response.json()).message || `通知桌面就绪失败（${response.status}）`);
+  if (!response.ok) throw new Error((await response.json()).message || t("startup.desktopReadyFailed", { status: response.status }));
 }
 
 // ACT: 已安装客户端的自动更新不经过 NSIS；启动时阻止缺少所需 API 的旧 WebView2 进入业务页面。
 (requiresWebView2Update
-  ? Promise.reject(new Error("当前 Microsoft Edge WebView2 Runtime 版本过旧。请以管理员身份运行微软最新版安装器；若仍提示已安装，请修复 WebView2 或联系管理员检查更新服务。更新完成后，请完全退出 Toonflow 再重新打开。"))
+  ? Promise.reject(new Error(t("startup.webView2Outdated")))
   : loadSettings()).then(async () => {
   app.use(createPinia().use(createPersistedState({ storage: settingsStorage })));
   app.onUnmount(bindLocale(uiLocale));
@@ -55,23 +56,30 @@ async function notifyDesktopReady(failed = false) {
   // ACT: 桌面启动后只静默检查一次；失败留待用户手动重试，不阻塞启动或自动下载。
   void checkDesktopUpdate(true).catch(() => {});
 }).catch(async (error) => {
-  console.error("页面初始化失败：", error);
+  const messages = {
+    initializationLog: t("startup.initializationLog"),
+    title: requiresWebView2Update ? t("startup.webView2Title") : t("startup.failedTitle"),
+    subTitle: error instanceof Error ? error.message : t("startup.loadFailed"),
+    action: requiresWebView2Update ? t("startup.updateWebView2") : t("startup.retry"),
+    errorPageLog: t("startup.errorPageLog"),
+  };
+  console.error(messages.initializationLog, error);
   if (isMounted) app.unmount();
   createApp({
     render: () => h(ElResult, {
       icon: "error",
-      title: requiresWebView2Update ? "需要更新 WebView2" : "启动失败",
-      subTitle: error instanceof Error ? error.message : "无法加载应用，请重试。",
+      title: messages.title,
+      subTitle: messages.subTitle,
     }, {
       extra: () => h(ElButton, {
         type: "primary",
         onClick: () => requiresWebView2Update
           ? window.open("https://developer.microsoft.com/microsoft-edge/webview2/#download", "_blank")
           : window.location.reload(),
-      }, () => requiresWebView2Update ? "前往微软官网更新" : "重试"),
+      }, () => messages.action),
     }),
   }).mount("#app");
   await nextTick();
   // ACT: 错误页也要结束启动动画，但不能消费尚未注册监听的安装请求。
-  await notifyDesktopReady(true).catch((error) => console.error("显示启动错误页失败：", error));
+  await notifyDesktopReady(true).catch((error) => console.error(messages.errorPageLog, error));
 });

@@ -1,0 +1,5 @@
+{
+  "canvasNotReady": "The canvas is not ready",
+  "focusNode": "Focus node: {label}",
+  "focusNodeFailed": "Failed to focus the node"
+}

@@ -10,8 +10,8 @@
     :bottomWidth="660"
     :style="{ width: previewUrl && imageWidth ? `${imageWidth + 18}px` : undefined }">
     <template #topActions>
-      <el-button :icon="IconTransfer" :loading="uploading" :disabled="generating || deleting" text title="替换图片" aria-label="替换图片" @click.stop="fileInput?.click()" />
-      <input ref="fileInput" type="file" accept="image/*" hidden aria-label="选择替换图片" :disabled="generating || deleting || uploading" @change="replaceOutput" />
+      <el-button :icon="IconTransfer" :loading="uploading" :disabled="generating || deleting" text :title="t('replaceImage')" :aria-label="t('replaceImage')" @click.stop="fileInput?.click()" />
+      <input ref="fileInput" type="file" accept="image/*" hidden :aria-label="t('chooseReplacementImage')" :disabled="generating || deleting || uploading" @change="replaceOutput" />
     </template>
     <div v-loading="generating || uploading" class="imageContent nopan" :aria-busy="generating || uploading">
       <img
@@ -19,10 +19,10 @@
         class="imagePreview"
         :src="previewUrl"
         draggable="false"
-        alt="生成图片"
+        :alt="t('generatedImage')"
         @load="resizeImage"
-        @error="ElMessage.error('无法预览该图片')" />
-      <div v-else class="imageEmpty" role="img" aria-label="暂无生成图片">
+        @error="ElMessage.error(t('imagePreviewFailed'))" />
+      <div v-else class="imageEmpty" role="img" :aria-label="t('noGeneratedImage')">
         <icon-photo-ai :size="48" stroke="1.25" aria-hidden="true" />
       </div>
     </div>
@@ -41,11 +41,11 @@
             filterable
             :loading="modelsLoading"
             :disabled="generating || deleting"
-            placeholder="选择模型"
-            aria-label="生成模型"
-            noDataText="请先在设置中添加图片模型"
+            :placeholder="t('selectModel')"
+            :aria-label="t('generationModel')"
+            :noDataText="t('addImageModelFirst')"
             placement="top-start"
-            @visible-change="(visible) => visible && loadModels().catch((error) => showError(error, '模型读取失败'))">
+            @visible-change="(visible) => visible && loadModels().catch((error) => showError(error, t('modelsLoadFailed')))">
             <template #prefix><icon-sparkles :size="17" /></template>
             <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
               <el-option
@@ -65,9 +65,9 @@
             class="sendButton"
             :icon="generating ? IconPlayerStop : IconArrowUp"
             :disabled="deleting || uploading || (!generating && (!generationPrompt || !selectedModel))"
-            :title="generating ? '停止生成' : '生成图片'"
-            :aria-label="generating ? '停止生成' : '生成图片'"
-            @click="generating ? generationController?.abort() : startGeneration().catch((error) => showError(error, '图片生成失败'))" />
+            :title="generating ? t('stopGeneration') : t('generateImage')"
+            :aria-label="generating ? t('stopGeneration') : t('generateImage')"
+            @click="generating ? generationController?.abort() : startGeneration().catch((error) => showError(error, t('imageGenerationFailed')))" />
         </div>
       </el-card>
     </template>
@@ -87,6 +87,11 @@ import { groupNodeModels, nodeSkeleton, nodeTools, useNode, useNodeGeneration, u
 import promptInput from "@toonflow/nodes-scaffold/promptInput";
 import referenceItem from "@toonflow/nodes-scaffold/referenceItem";
 import generationSettings from "./components/generationSettings.vue";
+import { createDisplayError, createTranslator, getErrorDisplay } from "@toonflow/i18n";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
+
+const t = createTranslator({ zh, en });
 
 defineOptions({
   inheritAttrs: false,
@@ -148,10 +153,10 @@ const generationPrompt = computed(() =>
 const outputFile = computed(() => outputs.value.image?.dataType === "IMAGE" ? outputs.value.image.value : undefined);
 const previewUrl = files.useFileUrl(
   outputFile,
-  (error) => showError(error, "图片读取失败")
+  (error) => showError(error, t("imageReadFailed"))
 );
 
-onMounted(() => loadModels().catch((error) => showError(error, "模型读取失败")));
+onMounted(() => loadModels().catch((error) => showError(error, t("modelsLoadFailed"))));
 onScopeDispose(() => {
   disposed = true;
   generationController?.abort();
@@ -162,8 +167,8 @@ async function replaceOutput(event: Event) {
   const file = input.files?.[0];
   input.value = "";
   if (!file || generating.value || deleting.value || uploading.value || disposed) return;
-  if (!file.type.startsWith("image/")) return void ElMessage.error("请选择图片文件");
-  if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error("图片不能为空且不能超过 100 MB");
+  if (!file.type.startsWith("image/")) return void ElMessage.error(t("chooseImageFile"));
+  if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error(t("imageSize"));
   uploading.value = true;
   try {
     const workspace = files.getWorkspaceFiles();
@@ -175,7 +180,7 @@ async function replaceOutput(event: Event) {
     // ACT: 保留历史输出文件，避免破坏撤销记录和复制节点的引用。
     outputs.value.image = { dataType: "IMAGE", value: { url, mimeType: file.type } };
   } catch (error) {
-    showError(error, "图片替换失败");
+    showError(error, t("imageReplaceFailed"));
   } finally {
     uploading.value = false;
   }
@@ -201,12 +206,12 @@ function loadModels() {
 
 async function startGeneration() {
   const choice = selectedModel.value;
-  if (generating.value) throw new Error("图片正在生成，请等待完成");
-  if (uploading.value) throw new Error("图片正在替换，请等待完成");
-  if (deleting.value) throw new Error("节点正在删除");
-  if (!choice) throw new Error("请先选择图片模型");
-  if (!generationPrompt.value) throw new Error("请输入生成提示词");
-  if (refList.value.some(item => item.value === undefined)) throw new Error("引用节点暂无内容，请先补充引用内容");
+  if (generating.value) throw createDisplayError("图片正在生成，请等待完成", () => t("imageGenerating"));
+  if (uploading.value) throw createDisplayError("图片正在替换，请等待完成", () => t("imageReplacing"));
+  if (deleting.value) throw createDisplayError("节点正在删除", () => t("nodeDeleting"));
+  if (!choice) throw createDisplayError("请先选择图片模型", () => t("selectImageModelFirst"));
+  if (!generationPrompt.value) throw createDisplayError("请输入生成提示词", () => t("enterGenerationPrompt"));
+  if (refList.value.some(item => item.value === undefined)) throw createDisplayError("引用节点暂无内容，请先补充引用内容", () => t("referenceNoContent"));
   const workspace = files.getWorkspaceFiles();
   const controller = new AbortController();
   const input = {
@@ -228,10 +233,10 @@ async function startGeneration() {
     })
     .then(([result]) => {
       controller.signal.throwIfAborted();
-      if (!result) throw new Error("供应商未返回图片");
+      if (!result) throw createDisplayError("供应商未返回图片", () => t("providerNoImage"));
       outputs.value.image = { dataType: "IMAGE", value: { url: result.path, mimeType: result.mimeType } };
     }))
-    .catch((error) => showError(error, "图片生成失败"))
+    .catch((error) => showError(error, t("imageGenerationFailed")))
     .finally(() => {
       generationController = undefined;
     });
@@ -239,10 +244,10 @@ async function startGeneration() {
 }
 
 nodeEvent.on("save", (reason) => {
-  if (reason === "reload" && (generating.value || uploading.value || deleting.value)) throw new Error("图片处理中，请完成后再刷新节点");
+  if (reason === "reload" && (generating.value || uploading.value || deleting.value)) throw createDisplayError("图片处理中，请完成后再刷新节点", () => t("imageBusyRefresh"));
 });
 nodeEvent.on("delete", async () => {
-  if (uploading.value) throw new Error("图片正在替换，请稍后删除节点");
+  if (uploading.value) throw createDisplayError("图片正在替换，请稍后删除节点", () => t("imageReplacingDelete"));
   deleting.value = true;
   generationController?.abort();
   try {
@@ -264,7 +269,7 @@ async function resizeImage(event: Event) {
 function showError(error: unknown, fallback: string) {
   if (error instanceof Error && error.name === "AbortError") return;
   const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
-  ElMessage.error(message || (error instanceof Error ? error.message : fallback));
+  ElMessage.error(message || (error instanceof Error ? getErrorDisplay(error) : fallback));
 }
 
 function getConfig() {
@@ -302,17 +307,23 @@ nodeTools.register({
   }).refine((args) => (args.providerId === undefined) === (args.modelId === undefined), "providerId 与 modelId 必须同时提供"),
   async execute(args, { signal }) {
     signal?.throwIfAborted();
-    if (generating.value || deleting.value) throw new Error("节点正在生成或删除，请稍后修改配置");
+    if (generating.value || deleting.value) throw createDisplayError("节点正在生成或删除，请稍后修改配置", () => t("nodeBusyConfig"));
     await loadModels();
     signal?.throwIfAborted();
-    if (generating.value || deleting.value) throw new Error("节点正在生成或删除，请稍后修改配置");
+    if (generating.value || deleting.value) throw createDisplayError("节点正在生成或删除，请稍后修改配置", () => t("nodeBusyConfig"));
     const choice = args.modelId === undefined ? selectedModel.value
       : models.value.find((item) => item.providerId === args.providerId && item.modelId === args.modelId);
-    if (!choice) throw new Error("请选择 getConfig 返回的有效图片模型");
+    if (!choice) throw createDisplayError("请选择 getConfig 返回的有效图片模型", () => t("invalidImageModel"));
     const sizes = choice.imageSizes?.length ? choice.imageSizes : ["2K"];
     const ratios = choice.imageRatios?.length ? choice.imageRatios : ["16:9"];
-    if (args.size !== undefined && !sizes.includes(args.size)) throw new Error(`当前模型不支持分辨率 ${args.size}，可选：${sizes.join("、")}`);
-    if (args.ratio !== undefined && !ratios.includes(args.ratio)) throw new Error(`当前模型不支持比例 ${args.ratio}，可选：${ratios.join("、")}`);
+    if (args.size !== undefined && !sizes.includes(args.size)) {
+      const value = args.size;
+      throw createDisplayError(`当前模型不支持分辨率 ${value}，可选：${sizes.join("、")}`, () => t("unsupportedResolution", { value, options: sizes.join(", ") }));
+    }
+    if (args.ratio !== undefined && !ratios.includes(args.ratio)) {
+      const value = args.ratio;
+      throw createDisplayError(`当前模型不支持比例 ${value}，可选：${ratios.join("、")}`, () => t("unsupportedRatio", { value, options: ratios.join(", ") }));
+    }
     data.value.model = JSON.stringify([choice.providerId, choice.modelId]);
     if (args.size !== undefined) data.value.size = args.size;
     if (args.ratio !== undefined) data.value.ratio = args.ratio;
@@ -325,7 +336,7 @@ nodeTools.register({
   description: "修改此节点的图片生成提示词，支持 {{ref 1}} 等参考标记；只修改提示词，不启动生成",
   parameters: z.strictObject({ prompt: z.string() }),
   execute({ prompt: value }) {
-    if (deleting.value) throw new Error("节点正在删除，请稍后修改");
+    if (deleting.value) throw createDisplayError("节点正在删除，请稍后修改", () => t("nodeDeletingEdit"));
     data.value.prompt = value;
     data.value.promptModel = value.split("\n").map((text) => [{ type: "Write", text }]);
     return { prompt: value };

@@ -1,0 +1,15 @@
+{
+  "replaceAudio": "Replace audio",
+  "nodeAudio": "Node audio",
+  "audioPreviewFailed": "Unable to preview this audio",
+  "chooseAudio": "Choose audio",
+  "uploadAudio": "Upload audio",
+  "audioReadFailed": "Failed to load audio",
+  "audioFullscreenFailed": "Unable to enter audio fullscreen",
+  "audioBusySave": "Audio is being processed. Wait for it to finish before switching or refreshing the node",
+  "audioUploadingDelete": "Audio is uploading. Wait before deleting the node",
+  "audioBusy": "Audio is being processed. Please try again later",
+  "audioSize": "The audio must not be empty or larger than 100 MB",
+  "chooseAudioFile": "Please choose an audio file",
+  "audioReplaceFailed": "Failed to replace audio"
+}

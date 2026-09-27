@@ -16,15 +16,24 @@ export type AgentMessage = {
   attachments?: AgentAttachment[];
   parts?: AgentMessagePart[];
   streaming?: boolean;
-  error?: string;
+  error?: string | Error;
   report?: { file: string; name: string };
 };
 
-export type AgentHistory = { file: string; name: string; modified: string; messageCount: number };
+export type AgentHistory = {
+  file: string;
+  name: string;
+  nameAutomatic: boolean;
+  nameDefault: boolean;
+  modified: string;
+  messageCount: number;
+};
 
 export type AgentConversation = {
   file: string;
   name: string;
+  nameAutomatic: boolean;
+  nameDefault: boolean;
   messages: AgentMessage[];
   providerId?: string;
   modelId?: string;

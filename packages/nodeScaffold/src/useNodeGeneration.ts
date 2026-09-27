@@ -1,12 +1,17 @@
-import { computed, ref, type Ref } from "vue";
+import { computed, ref, shallowRef, type Ref } from "vue";
+import { createDisplayError, createTranslator } from "@toonflow/i18n";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
+
+const t = createTranslator({ zh, en });
 import { nodeTools, z } from "./nodeTools";
 import type { NodeOutputs } from "./values";
 
 export function useNodeGeneration(outputs: Readonly<Ref<NodeOutputs>>, cancel: () => void) {
   const status = ref<"idle" | "running" | "succeeded" | "failed">("idle");
-  const error = ref("");
+  const error = shallowRef<Error>();
   const generating = computed(() => status.value === "running");
-  const getStatus = () => ({ status: status.value, outputs: outputs.value, ...(error.value ? { error: error.value } : {}) });
+  const getStatus = () => ({ status: status.value, outputs: outputs.value, ...(error.value ? { error: error.value.message } : {}) });
 
   nodeTools.register({
     name: "getGenerationStatus",
@@ -26,9 +31,9 @@ export function useNodeGeneration(outputs: Readonly<Ref<NodeOutputs>>, cancel: (
   });
 
   async function run<T>(task: () => Promise<T>): Promise<T> {
-    if (generating.value) throw new Error("节点正在生成，请等待完成");
+    if (generating.value) throw createDisplayError("节点正在生成，请等待完成", () => t("generationRunning"));
     status.value = "running";
-    error.value = "";
+    error.value = undefined;
     try {
       const result = await task();
       status.value = "succeeded";
@@ -36,8 +41,10 @@ export function useNodeGeneration(outputs: Readonly<Ref<NodeOutputs>>, cancel: (
     } catch (failure) {
       status.value = "failed";
       const message = (failure as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      error.value = failure instanceof Error && failure.name === "AbortError" ? "生成已取消"
-        : message || (failure instanceof Error ? failure.message : "生成失败");
+      error.value = failure instanceof Error && failure.name === "AbortError"
+        ? createDisplayError("生成已取消", () => t("generationCancelled"))
+        : message ? new Error(message)
+          : failure instanceof Error ? failure : createDisplayError("生成失败", () => t("generationFailed"));
       throw failure;
     }
   }

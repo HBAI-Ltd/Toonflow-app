@@ -1,0 +1,20 @@
+{
+  "answerAriaLabel": "Answer the question",
+  "answerPlaceholder": "Enter your answer",
+  "answerTooLong": "Your answer, including the selected option, cannot exceed 8,000 characters",
+  "customAnswerOption": "Write my own answer",
+  "defaultTitle": "Please confirm",
+  "errorDetails": "View error details",
+  "formUnavailable": "The form could not be generated. Ask the AI to revise it.",
+  "optionalAnswerPlaceholder": "You can also answer directly or add details",
+  "requiredField": "Please complete {field}",
+  "statusAnswered": "Answered",
+  "statusHistory": "Question history",
+  "statusInterrupted": "Stopped",
+  "statusNeedsRegeneration": "Needs revision",
+  "statusSkipped": "Skipped",
+  "statusWaiting": "Waiting for answer",
+  "submitAnswer": "Submit answer",
+  "submitFailed": "Failed to submit answer",
+  "skip": "Skip"
+}

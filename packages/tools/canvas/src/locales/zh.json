@@ -1,0 +1,5 @@
+{
+  "canvasNotReady": "画布尚未就绪",
+  "focusNode": "聚焦节点：{label}",
+  "focusNodeFailed": "聚焦节点失败"
+}

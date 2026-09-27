@@ -4,6 +4,7 @@ import { getObjectByThreeJsonId, type SceneRuntime } from "threejson/core";
 import { sceneSchema, updateSunShadow } from "./scene";
 import { cameraFramesSchema } from "./motion";
 import { mannequinJoints } from "./mannequin";
+import { createDisplayError, t } from "./i18n";
 
 const vector = sceneSchema.shape.objectList.element.shape.position;
 export const directorPlanSchema = z.strictObject({
@@ -45,17 +46,19 @@ export const directorPlanSchema = z.strictObject({
 });
 export type DirectorPlan = z.infer<typeof directorPlanSchema>;
 export type DirectorPlanItem = DirectorPlan & { id: string; instruction?: string };
-export type DirectorGeneration = { id: string; instruction: string; error?: string };
+export type DirectorGeneration = { id: string; instruction: string; error?: Error };
 
 export function prepareSceneAnimation(runtime: SceneRuntime, value: DirectorPlan) {
   const { name, duration, tracks: sourceTracks, cameraFrames } = value;
   const animation = directorPlanSchema.parse({ name, duration, tracks: sourceTracks, cameraFrames });
   const tracks = animation.tracks.flatMap(track => {
-    const root = getObjectByThreeJsonId(track.objectId, runtime.scene);
-    if (!root) throw new Error(`场景中找不到动画物体：${track.objectId}`);
-    if (track.joint && root.userData.objJson?.objType !== "mannequin") throw new Error(`只有人偶支持关节动画：${track.objectId}`);
-    const object = track.joint ? root.getObjectByName(track.joint) : root;
-    if (!object) throw new Error(`场景中找不到人偶关节：${track.joint}`);
+    const objectId = track.objectId;
+    const joint = track.joint;
+    const root = getObjectByThreeJsonId(objectId, runtime.scene);
+    if (!root) throw createDisplayError(`场景中找不到动画物体：${objectId}`, () => t("animationObjectMissing", { objectId }));
+    if (joint && root.userData.objJson?.objType !== "mannequin") throw createDisplayError(`只有人偶支持关节动画：${objectId}`, () => t("mannequinJointTrackOnly", { objectId }));
+    const object = joint ? root.getObjectByName(joint) : root;
+    if (!object) throw createDisplayError(`场景中找不到人偶关节：${joint}`, () => t("mannequinJointMissing", { joint: joint ?? "" }));
     const times = track.frames.map(frame => frame.time);
     return [
       new QuaternionKeyframeTrack(`${object.uuid}.quaternion`, times, track.frames.flatMap(frame => new Quaternion().setFromEuler(new Euler(frame.rotation.x, frame.rotation.y, frame.rotation.z)).toArray())),
@@ -74,7 +77,7 @@ export function prepareSceneAnimation(runtime: SceneRuntime, value: DirectorPlan
   action.play();
   return {
     setTime(time: number) {
-      if (!Number.isFinite(time)) throw new Error("场景动画时间无效");
+      if (!Number.isFinite(time)) throw createDisplayError("场景动画时间无效", () => t("invalidAnimationTime"));
       // LoopOnce 到终点会自动暂停；再次定位到任意时间前恢复采样。
       action.paused = false;
       mixer.setTime(Math.min(animation.duration, Math.max(0, time)));

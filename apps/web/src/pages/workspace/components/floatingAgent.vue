@@ -6,7 +6,7 @@
       class="floatingAgent"
       :class="{ docked, dragging: interaction?.mode === 'move' }"
       :style="panelStyle"
-      aria-label="AI 对话"
+      :aria-label="t('aiChat')"
       @pointerdown="startMenuMove"
       @pointermove="moveInteraction"
       @pointerup="stopInteraction"
@@ -31,8 +31,8 @@
           <el-button
             text
             circle
-            :aria-label="docked ? '切换为悬浮' : '停靠到右侧'"
-            :title="docked ? '切换为悬浮' : '停靠到右侧'"
+            :aria-label="docked ? t('floatPanel') : t('dockRight')"
+            :title="docked ? t('floatPanel') : t('dockRight')"
             @click="docked = !docked">
             <icon-app-window-bottom-right v-if="docked" :size="17" aria-hidden="true" />
             <icon-layout-sidebar-right v-else :size="17" aria-hidden="true" />
@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "@/pages/i18n";
 import { computed, onBeforeUnmount, reactive, ref, shallowRef, watch } from "vue";
 import { IconLayoutSidebarRight, IconAppWindowBottomRight } from "@tabler/icons-vue";
 import agent from "@/components/agent/index.vue";
@@ -63,12 +64,12 @@ const height = computed(() =>
 const resizeHandles = computed(
   () =>
     [
-      { edge: "left", label: "从左侧调整对话宽度" },
+      { edge: "left", label: t("resizeChatFromTheLeft") },
       ...(docked.value
         ? []
         : [
-            { edge: "right", label: "从右侧调整对话宽度" },
-            { edge: "bottom", label: "从下方调整对话高度" },
+            { edge: "right", label: t("resizeChatFromTheRight") },
+            { edge: "bottom", label: t("resizeChatFromTheBottom") },
           ]),
     ] as { edge: ResizeEdge; label: string }[]
 );

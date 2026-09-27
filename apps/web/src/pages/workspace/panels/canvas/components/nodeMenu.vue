@@ -27,39 +27,39 @@
       <el-dropdown-menu
         ref="menuList"
         class="nodeMenu"
-        :aria-label="menuLevel === 'selection' ? '选区操作' : menuLevel === 'actions' ? '操作菜单' : '添加节点'">
+        :aria-label="menuLevel === 'selection' ? t('selectionActions') : menuLevel === 'actions' ? t('actionsMenu') : t('addNode')">
         <template v-if="menuLevel === 'selection'">
           <el-dropdown-item command="duplicateSelection" :icon="IconCopyPlus" :disabled="selectionBusy || deleting || !selectedNodes.length">
-            创建副本
+            {{ t("duplicate") }}
           </el-dropdown-item>
           <el-dropdown-item
             command="deleteSelection"
             :icon="IconTrash"
             :disabled="selectionBusy || deleting || !selectedNodes.some((node) => node.deletable !== false)">
-            {{ deleting ? "删除中…" : `删除选中节点（${selectedNodes.length}）` }}
+            {{ deleting ? t("deleting") : t("deleteSelectedNodes", { count: selectedNodes.length }) }}
           </el-dropdown-item>
         </template>
         <template v-else-if="menuLevel === 'actions'">
-          <el-dropdown-item command="upload" :icon="IconUpload" :disabled="!uploadFiles">上传</el-dropdown-item>
+          <el-dropdown-item command="upload" :icon="IconUpload" :disabled="!uploadFiles">{{ t("upload") }}</el-dropdown-item>
           <el-dropdown-item command="nodes" :icon="IconPlus">
-            <span>添加节点</span>
+            <span>{{ t("addNode") }}</span>
             <icon-chevron-right class="nextIcon" :size="14" />
           </el-dropdown-item>
           <el-divider />
-          <el-dropdown-item command="undo" :icon="IconArrowBackUp" :disabled="!canUndo">撤销</el-dropdown-item>
-          <el-dropdown-item command="redo" :icon="IconArrowForwardUp" :disabled="!canRedo">重做</el-dropdown-item>
+          <el-dropdown-item command="undo" :icon="IconArrowBackUp" :disabled="!canUndo">{{ t("undo") }}</el-dropdown-item>
+          <el-dropdown-item command="redo" :icon="IconArrowForwardUp" :disabled="!canRedo">{{ t("redo") }}</el-dropdown-item>
           <el-divider />
           <el-dropdown-item command="paste" :icon="IconClipboard" :disabled="!pasteNode || pasting">
-            {{ pasting ? "粘贴中…" : "从剪切板粘贴" }}
+            {{ pasting ? t("pasting") : t("pasteFromClipboard") }}
           </el-dropdown-item>
         </template>
         <template v-else>
-          <el-dropdown-item v-if="!directNodes" command="actions" :icon="IconChevronLeft">返回操作菜单</el-dropdown-item>
-          <el-dropdown-item v-else disabled>添加节点</el-dropdown-item>
+          <el-dropdown-item v-if="!directNodes" command="actions" :icon="IconChevronLeft">{{ t("backToActions") }}</el-dropdown-item>
+          <el-dropdown-item v-else disabled>{{ t("addNode") }}</el-dropdown-item>
           <el-dropdown-item v-for="node in filteredNodes" :key="node.type" :command="node.type" :icon="node.icon">
-            {{ node.label }}
+            {{ node.displayLabel }}
           </el-dropdown-item>
-          <el-dropdown-item v-if="(pendingHandle || pendingGroup.length) && !filteredNodes.length" disabled>没有可连接的节点</el-dropdown-item>
+          <el-dropdown-item v-if="(pendingHandle || pendingGroup.length) && !filteredNodes.length" disabled>{{ t("noCompatibleNodes") }}</el-dropdown-item>
         </template>
       </el-dropdown-menu>
     </template>
@@ -67,6 +67,8 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "@/pages/i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, type Component } from "vue";
 import { useVueFlow, type ConnectingHandle, type GraphNode, type HandleType } from "@vue-flow/core";
 import { isTypeCompatible, useNodeEvent, validateConnection, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
@@ -89,7 +91,7 @@ import {
 } from "@tabler/icons-vue";
 
 const { remoteNodes = [], pasteNode, uploadFiles, canUndo = false, canRedo = false, selectionBusy = false, batchHistory } = defineProps<{
-  remoteNodes?: { type: string; label: string }[];
+  remoteNodes?: { type: string; label: string; displayLabel: string }[];
   pasteNode?: (position: { x: number; y: number }) => Promise<boolean>;
   uploadFiles?: (position: { x: number; y: number }) => void;
   canUndo?: boolean;
@@ -242,7 +244,7 @@ async function handleCommand(command: unknown) {
     try {
       await batchHistory(() => runCommand(command));
     } catch (error) {
-      ElMessage.error(error instanceof Error ? error.message : "画布操作失败");
+      ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("canvasOperationFailed"));
     }
     return;
   }
@@ -304,7 +306,7 @@ async function runCommand(command: unknown) {
       flow.removeSelectedElements();
       flow.addSelectedNodes(group);
       flow.nodesSelectionActive.value = true;
-      ElMessage.warning("该节点的接收规则不允许整组选中节点连接");
+      ElMessage.warning(t("thisNodeCannotAcceptConnections"));
     }
     return;
   }
@@ -331,7 +333,7 @@ async function runCommand(command: unknown) {
         validateConnection(item, { sourceNode, targetNode, nodes: flow.getNodes.value, edges: flow.getEdges.value })
     );
   if (connection) flow.addEdges(connection);
-  else ElMessage.warning("节点已创建，但没有兼容的端口可连接");
+  else ElMessage.warning(t("nodeCreatedButNoCompatible"));
   clearConnection();
   menu.value?.handleClose();
 }
@@ -344,19 +346,19 @@ async function deleteSelection(selection = selectedNodes.value) {
   try {
     for (const node of nodes) {
       if (node.deletable === false || flow.findNode(node.id) !== node) continue;
-      if (flow.getNodes.value.some(item => item.parentNode === node.id && !nodeIds.has(item.id))) throw new Error("分组中存在不可删除的节点");
-      if (flow.getConnectedEdges(node.id).some((edge) => edge.deletable === false)) throw new Error("节点存在不可删除的连接");
+      if (flow.getNodes.value.some(item => item.parentNode === node.id && !nodeIds.has(item.id))) throw createDisplayError("分组中存在不可删除的节点", () => t("theGroupContainsNodesThat"));
+      if (flow.getConnectedEdges(node.id).some((edge) => edge.deletable === false)) throw createDisplayError("节点存在不可删除的连接", () => t("theNodeHasConnectionsThat"));
     }
     for (const node of nodes) {
       if (node.deletable === false || flow.findNode(node.id) !== node) continue;
       await useNodeEvent(node.id, flow).emit("delete");
-      if (flow.getNodes.value.some(item => item.parentNode === node.id)) throw new Error("分组内容已变化，请重新删除");
+      if (flow.getNodes.value.some(item => item.parentNode === node.id)) throw createDisplayError("分组内容已变化，请重新删除", () => t("theGroupContentsChangedTry"));
       if (flow.findNode(node.id) === node) flow.removeNodes(node.id, true);
     }
     menu.value?.handleClose();
   } catch (error) {
     const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
-    ElMessage.error(message || (error instanceof Error ? error.message : "删除选中节点失败"));
+    ElMessage.error(message || (error instanceof Error ? getErrorDisplay(error) : t("couldNotDeleteSelectedNodes")));
   } finally {
     selectedNodes.value = selectedNodes.value.filter((node) => flow.findNode(node.id) === node);
     deleting.value = false;

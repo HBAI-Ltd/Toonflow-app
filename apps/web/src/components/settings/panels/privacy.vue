@@ -2,44 +2,46 @@
   <div class="privacy">
     <section class="settingSection" aria-labelledby="collectionTitle">
       <div class="settingHeader">
-        <h3 id="collectionTitle">匿名使用统计</h3>
+        <h3 id="collectionTitle">{{ t("privacy.analyticsTitle") }}</h3>
         <el-switch
           :modelValue="privacySettings.dataCollectionEnabled"
-          aria-label="匿名使用统计"
+          :aria-label="t('privacy.analyticsTitle')"
           @change="(value) => settings.privacy = { ...privacySettings, dataCollectionEnabled: value === true }" />
       </div>
-      <p class="description">帮助我们了解常用功能，改进使用体验。默认开启，可随时关闭。</p>
+      <p class="description">{{ t("privacy.analyticsDescription") }}</p>
     </section>
 
     <section class="settingSection" aria-labelledby="metricsTitle">
-      <h3 id="metricsTitle">统计内容</h3>
+      <h3 id="metricsTitle">{{ t("privacy.collectedDataTitle") }}</h3>
       <dl class="metricList">
         <div v-for="metric in metrics" :key="metric.label" class="metricItem">
           <dt>{{ metric.label }}</dt>
           <dd>{{ metric.description }}</dd>
         </div>
       </dl>
-      <p class="description">统计不包含提示词、对话、文件内容、项目名称、路径、账号或密钥。</p>
+      <p class="description">{{ t("privacy.exclusions") }}</p>
     </section>
 
     <section class="settingSection" aria-labelledby="anonymousIdTitle">
-      <h3 id="anonymousIdTitle">匿名 ID</h3>
-      <code class="anonymousId">{{ privacySettings.anonymousId || "开启后自动生成" }}</code>
+      <h3 id="anonymousIdTitle">{{ t("privacy.anonymousId") }}</h3>
+      <code class="anonymousId">{{ privacySettings.anonymousId || t("privacy.generatedWhenEnabled") }}</code>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
+import { t } from "../i18n";
+import { computed } from "vue";
 import { privacySettings, settings } from "@/stores/settings";
 
-const metrics = [
-  { label: "使用与回访", description: "随机匿名标识、访问次数与时间" },
-  { label: "使用活跃", description: "使用时长和交互次数，不含输入内容" },
-  { label: "运行环境", description: "软件版本、桌面或网页端、系统、浏览器和语言" },
-  { label: "功能使用", description: "引导、画布与文档的使用情况" },
-  { label: "使用规模", description: "项目、模型配置、节点与连线数量，以及节点类型" },
-  { label: "Agent 使用", description: "发送次数、完成情况和耗时" },
-];
+const metrics = computed(() => [
+  { label: t("privacy.metricVisits"), description: t("privacy.metricVisitsDescription") },
+  { label: t("privacy.metricActivity"), description: t("privacy.metricActivityDescription") },
+  { label: t("privacy.metricEnvironment"), description: t("privacy.metricEnvironmentDescription") },
+  { label: t("privacy.metricFeatures"), description: t("privacy.metricFeaturesDescription") },
+  { label: t("privacy.metricScale"), description: t("privacy.metricScaleDescription") },
+  { label: t("privacy.metricAgent"), description: t("privacy.metricAgentDescription") },
+]);
 </script>
 
 <style lang="scss" scoped>

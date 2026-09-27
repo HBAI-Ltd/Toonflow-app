@@ -1,4 +1,9 @@
 import { computed, type ComputedRef } from "vue";
+import { createDisplayError, createTranslator } from "@toonflow/i18n";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
+
+const t = createTranslator({ zh, en });
 import { useVueFlow } from "@vue-flow/core";
 import type { Connection, Node } from "@vue-flow/core";
 import { isTypeCompatible, type NodeData, type NodeHandle } from "./connection";
@@ -28,7 +33,9 @@ function readSourceValue(node: Node<NodeData>, handle: NodeHandle): NodeOutput |
   const output = outputs[handle.id];
   if (output === undefined || !Object.hasOwn(outputs, handle.id)) return;
   if (!isNodeOutput(output) || !isTypeCompatible(output.dataType, handle.dataType)) {
-    throw new Error(`节点 ${node.id} 的输出端口 ${handle.id} 值不符合类型声明`);
+    const nodeId = node.id;
+    const handleId = handle.id;
+    throw createDisplayError(`节点 ${nodeId} 的输出端口 ${handleId} 值不符合类型声明`, () => t("invalidHandleOutput", { nodeId, handleId }));
   }
   return output;
 }

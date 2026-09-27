@@ -5,16 +5,16 @@
         <div class="componentTitle">
           <h3><icon-movie :size="18" aria-hidden="true" />FFmpeg</h3>
           <el-tag :type="statusError ? 'danger' : busy || loading ? 'info' : ready ? 'success' : 'warning'" >
-            {{ statusError ? '检测失败' : busy ? phaseLabels[download.phase] : loading ? '检测中' : ready ? '已就绪' : '待配置' }}
+            {{ statusError ? t('ffmpeg.detectFailed') : busy ? phaseLabels[download.phase] : loading ? t('ffmpeg.detecting') : ready ? t('ffmpeg.ready') : t('ffmpeg.notConfigured') }}
           </el-tag>
         </div>
-        <el-button  :icon="IconRefresh" :loading="loading" :disabled="saving || submitting" @click="refreshStatus">重新检测</el-button>
+        <el-button  :icon="IconRefresh" :loading="loading" :disabled="saving || submitting" @click="refreshStatus">{{ t("ffmpeg.detectAgain") }}</el-button>
       </div>
-      <p class="introduction">Agent和部分节点插件、工具插件、供应商在处理音视频时可能需要 FFmpeg，按需安装即可。</p>
-      <el-alert v-if="statusError" :title="statusError" type="error" :closable="false" showIcon />
+      <p class="introduction">{{ t("ffmpeg.introduction") }}</p>
+      <el-alert v-if="statusError" :title="getErrorDisplay(statusError)" type="error" :closable="false" showIcon />
       <div class="downloadHeader">
-        <span>下载线路</span>
-        <el-text v-if="status" type="info" >{{ availableSourceCount }} 条可用线路</el-text>
+        <span>{{ t("ffmpeg.downloadSource") }}</span>
+        <el-text v-if="status" type="info" >{{ t("ffmpeg.availableSources", { count: availableSourceCount }) }}</el-text>
       </div>
       <div class="downloadActions">
         <el-select
@@ -22,8 +22,8 @@
           :disabled="!status || loading || saving || busy || submitting"
           
           filterable
-          placeholder="选择下载线路"
-          aria-label="FFmpeg 下载源"
+          :placeholder="t('ffmpeg.sourcePlaceholder')"
+          :aria-label="t('ffmpeg.sourceLabel')"
           @change="(source) => updateConfig({ source })">
           <el-option-group v-for="group in sourceGroups" :key="group.label" :label="group.label">
             <el-option v-for="source in group.sources" :key="source.id" class="sourceOption" :label="source.label" :value="source.id">
@@ -33,20 +33,20 @@
           </el-option-group>
         </el-select>
         <el-button  type="primary" :icon="IconDownload" :loading="submitting || busy" :disabled="!canDownload" @click="submitDownload('download')">
-          {{ busy ? phaseLabels[download.phase] : download.phase === 'error' ? '重试安装' : downloaded || download.phase === 'completed' ? '重新安装' : '下载并安装' }}
+          {{ busy ? phaseLabels[download.phase] : download.phase === 'error' ? t('ffmpeg.retryInstall') : downloaded || download.phase === 'completed' ? t('ffmpeg.reinstall') : t('ffmpeg.downloadAndInstall') }}
         </el-button>
-        <el-button v-if="busy && download.phase !== 'installing'"  :disabled="submitting" @click="submitDownload('cancel')">取消</el-button>
+        <el-button v-if="busy && download.phase !== 'installing'"  :disabled="submitting" @click="submitDownload('cancel')">{{ t("common.cancel") }}</el-button>
       </div>
       <div v-if="selectedSource" class="sourceHint">
-        <span>下载较慢时，可取消后切换线路。</span>
-        <el-link :href="selectedSource.homepage" target="_blank" rel="noopener noreferrer" :underline="false" type="primary">来源网站<icon-external-link :size="12" aria-hidden="true" /></el-link>
+        <span>{{ t("ffmpeg.switchSourceHint") }}</span>
+        <el-link :href="selectedSource.homepage" target="_blank" rel="noopener noreferrer" :underline="false" type="primary">{{ t("ffmpeg.sourceWebsite") }}<icon-external-link :size="12" aria-hidden="true" /></el-link>
       </div>
-      <p class="description">{{ ready ? '已检测到可用版本，无需重复安装。' : '下载后自动完成安装，无需手动解压或配置。' }}</p>
-      <el-alert v-if="status && !status.supported" title="当前平台暂不提供下载，请在高级设置中使用系统安装版。" type="warning" :closable="false" showIcon />
-      <el-alert v-if="config.mode === 'system'" title="当前仅使用系统安装版。如需使用下载的版本，请在高级设置中切换运行方式。" type="info" :closable="false" showIcon />
+      <p class="description">{{ t(ready ? 'ffmpeg.readyDescription' : 'ffmpeg.installDescription') }}</p>
+      <el-alert v-if="status && !status.supported" :title="t('ffmpeg.unsupportedPlatform')" type="warning" :closable="false" showIcon />
+      <el-alert v-if="config.mode === 'system'" :title="t('ffmpeg.systemOnlyHint')" type="info" :closable="false" showIcon />
       <div v-if="download.phase !== 'idle'" class="downloadProgress" aria-live="polite">
         <div class="progressHeader">
-          <span>{{ phaseLabels[download.phase] }}<template v-if="busy && download.file && download.phase !== 'installing'"> · 组件 {{ download.file === 'ffprobe' ? '2' : '1' }}/2</template></span>
+          <span>{{ phaseLabels[download.phase] }}<template v-if="busy && download.file && download.phase !== 'installing'"> · {{ t("ffmpeg.componentProgress", { current: download.file === 'ffprobe' ? 2 : 1 }) }}</template></span>
           <span v-if="download.received || download.total">{{ formatBytes(download.received) }}{{ download.total ? ` / ${formatBytes(download.total)}` : '' }}</span>
         </div>
         <el-progress
@@ -55,30 +55,30 @@
           :indeterminate="busy && !download.total"
           :status="download.phase === 'error' ? 'exception' : download.phase === 'completed' ? 'success' : undefined" />
       </div>
-      <el-alert v-if="operationError || download.error" :title="operationError || download.error" type="error" :closable="false" showIcon />
+      <el-alert v-if="operationError || download.error" :title="operationError ? getErrorDisplay(operationError) : download.error" type="error" :closable="false" showIcon />
     </el-card>
 
     <el-collapse class="advancedSettings">
-      <el-collapse-item title="高级设置" name="advanced">
+      <el-collapse-item :title="t('ffmpeg.advancedSettings')" name="advanced">
         <el-form labelPosition="top" >
-          <el-form-item label="运行方式">
-            <el-select :modelValue="config.mode" :disabled="loading || saving || busy || submitting" aria-label="FFmpeg 运行方式" @change="(mode) => updateConfig({ mode })">
-              <el-option label="自动选择" value="auto" />
-              <el-option label="使用下载版" value="download" />
-              <el-option label="使用系统安装版" value="system" />
+          <el-form-item :label="t('ffmpeg.runMode')">
+            <el-select :modelValue="config.mode" :disabled="loading || saving || busy || submitting" :aria-label="t('ffmpeg.runModeLabel')" @change="(mode) => updateConfig({ mode })">
+              <el-option :label="t('ffmpeg.modeAuto')" value="auto" />
+              <el-option :label="t('ffmpeg.modeDownloaded')" value="download" />
+              <el-option :label="t('ffmpeg.modeSystem')" value="system" />
             </el-select>
             <p class="description">{{ modeDescriptions[config.mode] }}</p>
           </el-form-item>
         </el-form>
         <template v-if="status">
-          <p class="description">运行环境：{{ status.platform }} / {{ status.arch }}</p>
-          <p class="description">下载版本：{{ status.version }} · {{ status.target }}</p>
-          <p class="description">保存在当前 Toonflow 服务的数据目录，下载后自动复用。</p>
+          <p class="description">{{ t("ffmpeg.environment", { platform: status.platform, arch: status.arch }) }}</p>
+          <p class="description">{{ t("ffmpeg.downloadVersion", { version: status.version, target: status.target }) }}</p>
+          <p class="description">{{ t("ffmpeg.storageHint") }}</p>
           <code class="toolPath">{{ status.directory }}</code>
           <div v-for="name in toolNames" :key="name" class="toolInfo">
             <strong>{{ name }}</strong>
             <el-tag :type="status.tools[name].version ? 'success' : 'info'"  effect="plain">
-              {{ status.tools[name].version ? (status.tools[name].origin === 'download' ? '下载版' : '系统安装版') : '不可用' }}
+              {{ status.tools[name].version ? t(status.tools[name].origin === 'download' ? 'ffmpeg.downloadedVersion' : 'ffmpeg.systemVersion') : t('common.unavailable') }}
             </el-tag>
             <p v-if="status.tools[name].version" class="description">{{ status.tools[name].version }}</p>
             <code v-if="status.tools[name].path" class="toolPath">{{ status.tools[name].path }}</code>
@@ -91,6 +91,8 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "../../i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
@@ -109,12 +111,12 @@ type FfmpegStatus = {
 const props = withDefaults(defineProps<{ visible?: boolean; downloadOnOpen?: boolean }>(), { visible: true, downloadOnOpen: false });
 const headers = { "x-toonflow-workspace": "1" };
 const toolNames = ["ffmpeg", "ffprobe"] as const;
-const modeDescriptions = {
-  auto: "优先使用已下载的版本；未下载时，从当前 Toonflow 服务的系统 PATH 查找。",
-  download: "仅使用此页面下载的版本。",
-  system: "仅从当前 Toonflow 服务的系统 PATH 查找 FFmpeg 与 ffprobe。",
-};
-const phaseLabels = { idle: "等待下载", downloading: "正在下载", verifying: "正在校验", installing: "正在安装", completed: "下载完成", error: "下载失败", cancelled: "已取消" };
+const modeDescriptions = computed(() => ({
+  auto: t("ffmpeg.modeAutoDescription"),
+  download: t("ffmpeg.modeDownloadedDescription"),
+  system: t("ffmpeg.modeSystemDescription"),
+}));
+const phaseLabels = computed(() => ({ idle: t("ffmpeg.phaseIdle"), downloading: t("ffmpeg.phaseDownloading"), verifying: t("ffmpeg.phaseVerifying"), installing: t("ffmpeg.phaseInstalling"), completed: t("ffmpeg.phaseCompleted"), error: t("ffmpeg.phaseError"), cancelled: t("ffmpeg.phaseCancelled") }));
 const config = computed<FfmpegConfig>(() => {
   const raw = settings.value.ffmpeg;
   const value = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Partial<FfmpegConfig> : {};
@@ -132,13 +134,13 @@ const availableSourceCount = computed(() => status.value?.sources.filter(source 
 const sourceGroups = computed(() => {
   const sources = status.value?.sources ?? [];
   return [
-    { label: "常用线路", sources: sources.filter(source => source.available && ["npmmirror", "github"].includes(source.id)) },
-    { label: "更多加速线路", sources: sources.filter(source => source.available && !["npmmirror", "github"].includes(source.id)) },
+    { label: t("ffmpeg.commonSources"), sources: sources.filter(source => source.available && ["npmmirror", "github"].includes(source.id)) },
+    { label: t("ffmpeg.moreSources"), sources: sources.filter(source => source.available && !["npmmirror", "github"].includes(source.id)) },
   ].filter(group => group.sources.length);
 });
 const download = ref<DownloadState>({ phase: "idle", received: 0 });
-const statusError = ref("");
-const operationError = ref("");
+const statusError = ref<Error>();
+const operationError = ref<Error>();
 const loading = ref(false);
 const saving = ref(false);
 const submitting = ref(false);
@@ -149,7 +151,9 @@ let timer: ReturnType<typeof setTimeout> | undefined;
 let readController = new AbortController();
 
 function errorMessage(error: unknown) {
-  return axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || error.message : error instanceof Error ? error.message : "操作失败";
+  return axios.isAxiosError<{ message?: string }>(error) && typeof error.response?.data?.message === "string"
+    ? new Error(error.response.data.message)
+    : error instanceof Error ? error : createDisplayError("操作失败", () => t("common.operationFailed"));
 }
 
 function formatBytes(bytes: number) {
@@ -169,12 +173,15 @@ function pollProgress() {
     try {
       const { data } = await axios.get<{ code: number; data: DownloadState; message?: string }>("/api/ffmpeg/progress", { headers, signal });
       if (signal.aborted) return;
-      if (data.code !== 200) throw new Error(data.message || "读取下载进度失败");
+      if (data.code !== 200) throw data.message ? new Error(data.message) : createDisplayError("读取下载进度失败", () => t("ffmpeg.progressLoadFailed"));
       download.value = data.data;
       if (busy.value) pollProgress();
       else await refreshStatus();
     } catch (error) {
-      if (!signal.aborted) operationError.value = `${errorMessage(error)}，请刷新查看下载状态。`;
+      if (!signal.aborted) {
+        const cause = errorMessage(error);
+        operationError.value = createDisplayError(`${cause.message}，请刷新查看下载状态。`, () => t("ffmpeg.progressRefreshFailed", { message: getErrorDisplay(cause) }));
+      }
     }
   }, 1000);
 }
@@ -184,12 +191,12 @@ async function refreshStatus() {
   readController = new AbortController();
   const signal = readController.signal;
   loading.value = true;
-  statusError.value = "";
-  operationError.value = "";
+  statusError.value = undefined;
+  operationError.value = undefined;
   try {
     const { data } = await axios.get<{ code: number; data: FfmpegStatus; message?: string }>("/api/ffmpeg/status", { headers, signal });
     if (signal.aborted) return;
-    if (data.code !== 200) throw new Error(data.message || "读取 FFmpeg 状态失败");
+    if (data.code !== 200) throw data.message ? new Error(data.message) : createDisplayError("读取 FFmpeg 状态失败", () => t("ffmpeg.statusLoadFailed"));
     status.value = data.data;
     download.value = data.data.download;
     pollProgress();
@@ -211,7 +218,7 @@ async function updateConfig(patch: Partial<FfmpegConfig>) {
     });
     return props.visible && !readController.signal.aborted ? await refreshStatus() : false;
   } catch (error) {
-    ElMessage.error(errorMessage(error));
+    ElMessage.error(getErrorDisplay(errorMessage(error)));
     return false;
   } finally {
     saving.value = false;
@@ -223,19 +230,19 @@ async function submitDownload(action: "download" | "cancel") {
   stopReading();
   readController = new AbortController();
   submitting.value = true;
-  operationError.value = "";
+  operationError.value = undefined;
   try {
     const { data } = await axios.post<{ code: number; data: DownloadState; message?: string }>(`/api/ffmpeg/${action}`, action === "download" ? { source: config.value.source } : {}, { headers });
-    if (data.code !== 200) throw new Error(data.message || "操作失败");
+    if (data.code !== 200) throw data.message ? new Error(data.message) : createDisplayError("操作失败", () => t("common.operationFailed"));
     download.value = data.data;
     if (props.visible && !readController.signal.aborted) {
       if (busy.value) pollProgress();
       else await refreshStatus();
     }
   } catch (error) {
-    const message = errorMessage(error);
+    const failure = errorMessage(error);
     if (props.visible && !readController.signal.aborted) await refreshStatus();
-    operationError.value = message;
+    operationError.value = failure;
   } finally {
     submitting.value = false;
   }

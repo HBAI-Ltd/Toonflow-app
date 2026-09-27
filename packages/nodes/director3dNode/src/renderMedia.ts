@@ -1,6 +1,7 @@
 import { createStage, disposeStage, type LightingSettings, type SceneDocument, type SceneSettings } from "./scene";
 import { applyCamera, prepareMotion, sampleMotion, type CameraAnchor } from "./motion";
 import { prepareSceneAnimation, type DirectorPlan } from "./sceneAnimation";
+import { createDisplayError, t } from "./i18n";
 
 export async function renderImage(scene: SceneDocument, anchor: CameraAnchor, aspect: number, time: number, signal: AbortSignal, plan?: DirectorPlan, lighting?: LightingSettings, settings?: SceneSettings) {
   signal.throwIfAborted();
@@ -12,7 +13,7 @@ export async function renderImage(scene: SceneDocument, anchor: CameraAnchor, as
     applyCamera(runtime.camera, anchor);
     runtime.renderer.render(runtime.scene, runtime.camera);
     const blob = await new Promise<Blob>((resolve, reject) => runtime.renderer.domElement.toBlob(
-      value => value ? resolve(value) : reject(new Error("关键帧渲染失败")), "image/png",
+      value => value ? resolve(value) : reject(createDisplayError("关键帧渲染失败", () => t("keyframeRenderFailed"))), "image/png",
     ));
     signal.throwIfAborted();
     return new File([blob], "关键帧.png", { type: "image/png" });
@@ -22,8 +23,8 @@ export async function renderImage(scene: SceneDocument, anchor: CameraAnchor, as
 export async function renderVideo(scene: SceneDocument, plan: DirectorPlan, aspect: number, signal: AbortSignal, onProgress: (value: number) => void, lighting?: LightingSettings, settings?: SceneSettings) {
   signal.throwIfAborted();
   const mimeType = typeof MediaRecorder !== "undefined" && ["video/mp4;codecs=avc1.420028", "video/mp4"].find(type => MediaRecorder.isTypeSupported(type));
-  if (!mimeType) throw new Error("当前浏览器不支持 MP4 导出，请更新浏览器或桌面 WebView2 运行时");
-  if (document.hidden) throw new Error("请在当前窗口保持可见时导出视频");
+  if (!mimeType) throw createDisplayError("当前浏览器不支持 MP4 导出，请更新浏览器或桌面 WebView2 运行时", () => t("mp4Unsupported"));
+  if (document.hidden) throw createDisplayError("请在当前窗口保持可见时导出视频", () => t("keepWindowVisible"));
   const runtime = await createStage(document.createElement("canvas"), scene, undefined, aspect, lighting, settings);
   let player: ReturnType<typeof prepareSceneAnimation> | undefined;
   let stream: MediaStream | undefined;
@@ -54,13 +55,13 @@ export async function renderVideo(scene: SceneDocument, plan: DirectorPlan, aspe
         else if (error) reject(error);
       };
       cancel = () => stop(signal.reason);
-      checkVisibility = () => { if (document.hidden) stop(new Error("窗口已隐藏，视频导出已停止，请保持窗口可见后重试")); };
+      checkVisibility = () => { if (document.hidden) stop(createDisplayError("窗口已隐藏，视频导出已停止，请保持窗口可见后重试", () => t("windowHiddenExportStopped"))); };
       recorder!.ondataavailable = event => {
         if (event.data.size) chunks.push(event.data);
         size += event.data.size;
-        if (size > 100 * 1024 * 1024) stop(new Error("导出视频超过 100 MB，请缩短动画时长"));
+        if (size > 100 * 1024 * 1024) stop(createDisplayError("导出视频超过 100 MB，请缩短动画时长", () => t("videoTooLarge")));
       };
-      recorder!.onerror = () => stop(new Error("MP4 编码失败，请重试"));
+      recorder!.onerror = () => stop(createDisplayError("MP4 编码失败，请重试", () => t("mp4EncodeFailed")));
       recorder!.onstop = () => failure ? reject(failure) : resolve();
       signal.addEventListener("abort", cancel, { once: true });
       document.addEventListener("visibilitychange", checkVisibility);
@@ -82,7 +83,7 @@ export async function renderVideo(scene: SceneDocument, plan: DirectorPlan, aspe
     });
     signal.throwIfAborted();
     const file = new File(chunks, `${plan.name}.mp4`, { type: "video/mp4" });
-    if (!file.size) throw new Error("未能生成视频内容");
+    if (!file.size) throw createDisplayError("未能生成视频内容", () => t("emptyVideo"));
     return file;
   } finally {
     window.clearTimeout(frame);

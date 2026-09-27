@@ -1,0 +1,15 @@
+{
+  "replaceVideo": "替换视频",
+  "videoExporting": "视频导出中",
+  "exportingVideo": "正在导出视频",
+  "chooseVideo": "选择视频",
+  "uploadVideo": "上传视频",
+  "videoReadFailed": "视频读取失败",
+  "videoBusySave": "视频处理中，请完成后再切换或刷新节点",
+  "videoExportingSave": "视频正在导出，请完成后再刷新节点",
+  "videoUploadingDelete": "视频上传中，请稍后删除节点",
+  "videoBusy": "视频处理中，请稍后重试",
+  "videoSize": "视频不能为空且不能超过 100 MB",
+  "chooseVideoFile": "请选择视频文件",
+  "videoReplaceFailed": "视频替换失败"
+}

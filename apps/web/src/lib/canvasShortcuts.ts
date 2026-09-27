@@ -1,3 +1,5 @@
+import { t } from "@/lib/i18n";
+
 const isMac = globalThis.navigator?.platform?.includes("Mac") ?? false;
 const primaryModifier = isMac ? "Meta" : "Ctrl";
 const modifiers = ["Ctrl", "Alt", "Shift", "Meta"];
@@ -32,37 +34,43 @@ export const canvasShortcutFields: {
   hold?: boolean;
   gesture?: "drag" | "wheel";
 }[] = [
-  { id: "group", label: "成组" },
-  { id: "mergeGroup", label: "合并分组" },
-  { id: "ungroup", label: "解组" },
-  { id: "addNode", label: "新建节点" },
-  { id: "copyOnDrag", label: "节点复制", hold: true, gesture: "drag" },
-  { id: "duplicateOnDrag", label: "创建副本", hold: true, gesture: "drag" },
-  { id: "zoomIn", label: "放大" },
-  { id: "zoomOut", label: "缩小" },
-  { id: "fitView", label: "适应画布" },
-  { id: "zoom", label: "鼠标滚轮", hold: true, gesture: "wheel" },
-  { id: "pan", label: "键盘与鼠标", hold: true },
-  { id: "moveTool", label: "移动" },
-  { id: "handTool", label: "抓手工具" },
-  { id: "arrange", label: "整理画布" },
-  { id: "undo", label: "撤销" },
-  { id: "redo", label: "重做" },
-  { id: "search", label: "画布节点搜索" },
-  { id: "delete", label: "删除" },
-  { id: "paste", label: "粘贴节点" },
+  { id: "group", get label() { return t("shortcut.group"); } },
+  { id: "mergeGroup", get label() { return t("shortcut.mergeGroup"); } },
+  { id: "ungroup", get label() { return t("shortcut.ungroup"); } },
+  { id: "addNode", get label() { return t("shortcut.addNode"); } },
+  { id: "copyOnDrag", get label() { return t("shortcut.copyOnDrag"); }, hold: true, gesture: "drag" },
+  { id: "duplicateOnDrag", get label() { return t("shortcut.duplicateOnDrag"); }, hold: true, gesture: "drag" },
+  { id: "zoomIn", get label() { return t("shortcut.zoomIn"); } },
+  { id: "zoomOut", get label() { return t("shortcut.zoomOut"); } },
+  { id: "fitView", get label() { return t("shortcut.fitView"); } },
+  { id: "zoom", get label() { return t("shortcut.zoom"); }, hold: true, gesture: "wheel" },
+  { id: "pan", get label() { return t("shortcut.pan"); }, hold: true },
+  { id: "moveTool", get label() { return t("shortcut.moveTool"); } },
+  { id: "handTool", get label() { return t("shortcut.handTool"); } },
+  { id: "arrange", get label() { return t("shortcut.arrange"); } },
+  { id: "undo", get label() { return t("shortcut.undo"); } },
+  { id: "redo", get label() { return t("shortcut.redo"); } },
+  { id: "search", get label() { return t("shortcut.search"); } },
+  { id: "delete", get label() { return t("shortcut.delete"); } },
+  { id: "paste", get label() { return t("shortcut.paste"); } },
 ];
 
 const keyLabels: Record<string, string> = {
   Ctrl: "Ctrl", Alt: "Alt", Shift: "Shift", Meta: isMac ? "⌘" : "Win",
-  Space: "Space", Escape: "Esc", Enter: "Enter", Tab: "Tab", Backspace: "⌫", Delete: "Delete",
   ArrowLeft: "←", ArrowRight: "→", ArrowUp: "↑", ArrowDown: "↓",
-  Home: "Home", End: "End", PageUp: "PageUp", PageDown: "PageDown", Insert: "Insert",
   Minus: "−", Equal: "+", BracketLeft: "[", BracketRight: "]", Backslash: "\\",
   Semicolon: ";", Quote: "'", Comma: ",", Period: ".", Slash: "/", Backquote: "`",
-  CapsLock: "CapsLock", NumLock: "NumLock", ScrollLock: "ScrollLock", Pause: "Pause", PrintScreen: "PrintScreen",
-  NumpadAdd: "小键盘 +", NumpadSubtract: "小键盘 -", NumpadMultiply: "小键盘 *", NumpadDivide: "小键盘 /",
-  NumpadDecimal: "小键盘 .", NumpadEnter: "小键盘 Enter", NumpadEqual: "小键盘 =",
+};
+const keyLabelKeys: Record<string, string> = {
+  Space: "shortcut.key.space", Escape: "shortcut.key.escape", Enter: "shortcut.key.enter", Tab: "shortcut.key.tab",
+  Backspace: "shortcut.key.backspace", Delete: "shortcut.key.delete",
+  Home: "shortcut.key.home", End: "shortcut.key.end", PageUp: "shortcut.key.pageUp", PageDown: "shortcut.key.pageDown", Insert: "shortcut.key.insert",
+  CapsLock: "shortcut.key.capsLock", NumLock: "shortcut.key.numLock", ScrollLock: "shortcut.key.scrollLock",
+  Pause: "shortcut.key.pause", PrintScreen: "shortcut.key.printScreen",
+};
+const numpadKeyLabels: Record<string, string> = {
+  NumpadAdd: "+", NumpadSubtract: "-", NumpadMultiply: "*", NumpadDivide: "/",
+  NumpadDecimal: ".", NumpadEnter: "Enter", NumpadEqual: "=",
 };
 
 export function normalizeShortcut(value: string): string | undefined {
@@ -76,7 +84,8 @@ function normalizeBinding(value: string): string | undefined {
   const parts = value.split("+").map(part => part.trim());
   if (new Set(parts).size !== parts.length) return;
   const keys = parts.filter(part => !modifiers.includes(part));
-  if (keys.length > 1 || keys.some(key => !Object.hasOwn(keyLabels, key) && !/^(?:Key[A-Z]|Digit\d|Numpad\d|F(?:[1-9]|1\d|2[0-4]))$/.test(key))) return;
+  if (keys.length > 1 || keys.some(key => !Object.hasOwn(keyLabels, key) && !Object.hasOwn(keyLabelKeys, key) && !Object.hasOwn(numpadKeyLabels, key)
+    && !/^(?:Key[A-Z]|Digit\d|Numpad\d|F(?:[1-9]|1\d|2[0-4]))$/.test(key))) return;
   return [...modifiers.filter(modifier => parts.includes(modifier)), ...keys].join("+");
 }
 
@@ -115,5 +124,7 @@ export function shortcutPressed(event: Pick<KeyboardEvent, "ctrlKey" | "altKey" 
 
 export function shortcutLabel(binding: string) {
   return getShortcutBindings(binding).map(value => value.split("+")
-    .map(part => keyLabels[part] ?? part.replace(/^(?:Key|Digit)/, "").replace(/^Numpad/, "小键盘 ")).join(" + ")).join(" / ");
+    .map(part => keyLabels[part] ?? (keyLabelKeys[part] ? t(keyLabelKeys[part])
+      : part.startsWith("Numpad") ? t("shortcut.key.numpad", { key: numpadKeyLabels[part] ?? part.slice(6) }) : part.replace(/^(?:Key|Digit)/, "")))
+    .join(" + ")).join(" / ");
 }

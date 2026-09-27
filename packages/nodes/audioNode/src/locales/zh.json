@@ -1,0 +1,15 @@
+{
+  "replaceAudio": "替换音频",
+  "nodeAudio": "节点音频",
+  "audioPreviewFailed": "无法预览该音频",
+  "chooseAudio": "选择音频",
+  "uploadAudio": "上传音频",
+  "audioReadFailed": "音频读取失败",
+  "audioFullscreenFailed": "无法进入音频全屏",
+  "audioBusySave": "音频处理中，请完成后再切换或刷新节点",
+  "audioUploadingDelete": "音频上传中，请稍后删除节点",
+  "audioBusy": "音频处理中，请稍后重试",
+  "audioSize": "音频不能为空且不能超过 100 MB",
+  "chooseAudioFile": "请选择音频文件",
+  "audioReplaceFailed": "音频替换失败"
+}

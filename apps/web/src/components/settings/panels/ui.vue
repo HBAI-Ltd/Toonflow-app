@@ -1,16 +1,24 @@
 <template>
   <div class="ui">
-    <p class="intro">让创作空间更合你的习惯，修改会自动保存。</p>
+    <p class="intro">{{ t("appearance.introduction") }}</p>
+
+    <section class="settingSection" aria-labelledby="languageTitle">
+      <h3 id="languageTitle">{{ t("appearance.interfaceLanguage") }}</h3>
+      <el-select v-model="uiLocale" :aria-label="t('appearance.interfaceLanguage')">
+        <el-option label="简体中文" value="zh" />
+        <el-option label="English" value="en" />
+      </el-select>
+    </section>
 
     <section class="settingSection" aria-labelledby="themeTitle">
       <h3 id="themeTitle">
         <icon-sun-moon :size="18" />
-        外观模式
+        {{ t("appearance.theme") }}
       </h3>
       <el-radio-group
         class="themeOptions"
         :modelValue="uiSettings.theme"
-        aria-label="外观模式"
+        :aria-label="t('appearance.theme')"
         @click="captureThemeClickPoint"
         @change="(value) => changeTheme(String(value))">
         <el-radio v-for="item in themes" :key="item.value" :value="item.value" border>
@@ -27,11 +35,11 @@
       <div class="settingHeader">
         <h3 id="colorTitle">
           <icon-palette :size="18" />
-          主题颜色
+          {{ t("appearance.accentColor") }}
         </h3>
         <span class="settingValue">{{ uiSettings.primaryColor.toUpperCase() }}</span>
       </div>
-      <p class="description">用于按钮、选中状态与创作背景。</p>
+      <p class="description">{{ t("appearance.accentColorDescription") }}</p>
       <div class="colorOptions">
         <el-button
           v-for="color in colors"
@@ -48,9 +56,9 @@
         <el-color-picker
           :modelValue="uiSettings.primaryColor"
           colorFormat="hex"
-          aria-label="自定义主题颜色"
+          :aria-label="t('appearance.customAccentColor')"
           @change="changeColor" />
-        <span class="description">自定义</span>
+        <span class="description">{{ t("appearance.custom") }}</span>
       </div>
     </section>
 
@@ -58,19 +66,19 @@
       <div class="settingHeader">
         <h3 id="fontTitle">
           <icon-text-size :size="18" />
-          字体大小
+          {{ t("appearance.fontSize") }}
         </h3>
         <span class="settingValue">{{ fontScale }}%</span>
       </div>
-      <p class="description">统一调整界面、聊天和节点中的文字大小。</p>
+      <p class="description">{{ t("appearance.fontSizeDescription") }}</p>
       <el-slider
         v-model="fontScale"
         class="settingSlider"
         :min="85"
         :max="125"
         :step="5"
-        :marks="{ 85: '较小', 100: '默认', 125: '较大' }"
-        aria-label="字体大小"
+        :marks="fontMarks"
+        :aria-label="t('appearance.fontSize')"
         @change="(value) => typeof value === 'number' && updateUiSettings({ fontScale: value })" />
     </section>
 
@@ -78,7 +86,7 @@
       <div class="settingHeader">
         <h3 id="radiusTitle">
           <icon-border-radius :size="18" />
-          界面圆角
+          {{ t("appearance.cornerRadius") }}
         </h3>
         <span class="settingValue">{{ radius }} px</span>
       </div>
@@ -88,28 +96,29 @@
         :min="0"
         :max="16"
         :step="2"
-        :marks="{ 0: '直角', 8: '默认', 16: '圆润' }"
-        aria-label="界面圆角"
+        :marks="radiusMarks"
+        :aria-label="t('appearance.cornerRadius')"
         @change="(value) => typeof value === 'number' && updateUiSettings({ radius: value })" />
     </section>
 
     <el-card class="appearancePreview" shadow="never">
       <div class="previewIcon"><icon-sparkles :size="20" /></div>
       <div class="previewText">
-        <strong>Toonflow 每一个灵感，都值得被看见</strong>
-        <p>这是当前颜色、字体与圆角的实际效果。</p>
+        <strong>{{ t("appearance.previewHeadline") }}</strong>
+        <p>{{ t("appearance.previewDescription") }}</p>
       </div>
-      <el-tag type="primary" effect="light">预览</el-tag>
+      <el-tag type="primary" effect="light">{{ t("common.preview") }}</el-tag>
     </el-card>
 
     <div class="settingsFooter">
-      <el-button :icon="IconRestore" @click="updateUiSettings({ ...defaultUiSettings, startupAnimation: uiSettings.startupAnimation })">恢复界面默认设置</el-button>
+      <el-button :icon="IconRestore" @click="updateUiSettings({ ...defaultUiSettings, startupAnimation: uiSettings.startupAnimation })">{{ t("appearance.restoreDefaults") }}</el-button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watchEffect } from "vue";
+import { t } from "../i18n";
+import { computed, nextTick, ref, watchEffect } from "vue";
 import {
   IconSun,
   IconMoon,
@@ -120,7 +129,7 @@ import {
   IconCheck,
   IconRestore,
 } from "@tabler/icons-vue";
-import { defaultUiSettings, uiSettings, updateUiSettings } from "@/stores/settings";
+import { defaultUiSettings, uiLocale, uiSettings, updateUiSettings } from "@/stores/settings";
 
 const fontScale = ref(uiSettings.value.fontScale);
 const radius = ref(uiSettings.value.radius);
@@ -129,19 +138,21 @@ watchEffect(() => {
   radius.value = uiSettings.value.radius;
 });
 
-const themes = [
-  { value: "light", label: "浅色", description: "明亮清晰", icon: IconSun },
-  { value: "dark", label: "深色", description: "沉浸创作", icon: IconMoon },
-  { value: "system", label: "跟随系统", description: "自动切换", icon: IconDeviceDesktop },
-];
-const colors = [
-  { value: "#409eff", label: "天空蓝" },
-  { value: "#6366f1", label: "鸢尾紫" },
-  { value: "#a855f7", label: "薰衣紫" },
-  { value: "#e34b83", label: "蔷薇粉" },
-  { value: "#e89524", label: "琥珀橙" },
-  { value: "#18a17c", label: "松石绿" },
-];
+const themes = computed(() => [
+  { value: "light", label: t("appearance.themeLight"), description: t("appearance.themeLightDescription"), icon: IconSun },
+  { value: "dark", label: t("appearance.themeDark"), description: t("appearance.themeDarkDescription"), icon: IconMoon },
+  { value: "system", label: t("appearance.themeSystem"), description: t("appearance.themeSystemDescription"), icon: IconDeviceDesktop },
+]);
+const colors = computed(() => [
+  { value: "#409eff", label: t("appearance.colorSkyBlue") },
+  { value: "#6366f1", label: t("appearance.colorIris") },
+  { value: "#a855f7", label: t("appearance.colorLavender") },
+  { value: "#e34b83", label: t("appearance.colorRose") },
+  { value: "#e89524", label: t("appearance.colorAmber") },
+  { value: "#18a17c", label: t("appearance.colorTeal") },
+]);
+const fontMarks = computed(() => ({ 85: t("appearance.sizeSmall"), 100: t("common.default"), 125: t("appearance.sizeLarge") }));
+const radiusMarks = computed(() => ({ 0: t("appearance.radiusSquare"), 8: t("common.default"), 16: t("appearance.radiusRounded") }));
 function changeColor(value: string | null) {
   if (value) updateUiSettings({ primaryColor: value });
 }

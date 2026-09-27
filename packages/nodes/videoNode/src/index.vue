@@ -13,28 +13,28 @@
         :loading="uploading"
         :disabled="exporting"
         text
-        title="替换视频"
-        aria-label="替换视频"
+        :title="t('replaceVideo')"
+        :aria-label="t('replaceVideo')"
         @click.stop="fileInput?.click()" />
     </template>
     <div class="videoContent nopan">
-      <div v-if="exporting" class="exportLoading" role="status" aria-label="视频导出中">
+      <div v-if="exporting" class="exportLoading" role="status" :aria-label="t('videoExporting')">
         <el-progress type="circle" :percentage="exportProgress" :width="64" :strokeWidth="3" />
-        <span>正在导出视频</span>
+        <span>{{ t("exportingVideo") }}</span>
       </div>
       <videoPlayer
         v-else-if="previewUrl"
         ref="player"
         :src="previewUrl"
         @loadedmetadata="resizeVideo" />
-      <input ref="fileInput" class="fileInput" type="file" accept="video/*" aria-label="选择视频" :disabled="uploading || exporting" @change="uploadVideo" />
+      <input ref="fileInput" class="fileInput" type="file" accept="video/*" :aria-label="t('chooseVideo')" :disabled="uploading || exporting" @change="uploadVideo" />
       <el-button
         v-if="!exporting && !outputs.video"
         class="uploadButton"
         text
         :loading="uploading"
-        title="上传视频"
-        aria-label="上传视频"
+        :title="t('uploadVideo')"
+        :aria-label="t('uploadVideo')"
         @dblclick.stop
         @click="fileInput?.click()">
         <icon-upload v-if="!uploading" :size="48" stroke="1.5" />
@@ -48,7 +48,12 @@ import { computed, nextTick, ref } from "vue";
 import { IconVideo, IconUpload, IconTransfer } from "@tabler/icons-vue";
 import { ElButton, ElMessage, ElProgress } from "element-plus";
 import { nodeSkeleton, nodeTools, useNode, z, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
+import { createDisplayError, createTranslator, getErrorDisplay } from "@toonflow/i18n";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
 import videoPlayer from "@toonflow/nodes-scaffold/videoPlayer";
+
+const t = createTranslator({ zh, en });
 
 defineOptions({
   inheritAttrs: false,
@@ -68,15 +73,15 @@ const videoWidth = ref(0);
 const outputFile = computed(() => outputs.value.video?.dataType === "VIDEO" ? outputs.value.video.value : undefined);
 const previewUrl = files.useFileUrl(
   outputFile,
-  (error) => showError(error, "视频读取失败")
+  (error) => showError(error, t("videoReadFailed"))
 );
 
 nodeEvent.on("save", (reason) => {
-  if (uploading.value) throw new Error("视频处理中，请完成后再切换或刷新节点");
-  if (reason === "reload" && exporting.value) throw new Error("视频正在导出，请完成后再刷新节点");
+  if (uploading.value) throw createDisplayError("视频处理中，请完成后再切换或刷新节点", () => t("videoBusySave"));
+  if (reason === "reload" && exporting.value) throw createDisplayError("视频正在导出，请完成后再刷新节点", () => t("videoExportingSave"));
 });
 nodeEvent.on("delete", () => {
-  if (uploading.value) throw new Error("视频上传中，请稍后删除节点");
+  if (uploading.value) throw createDisplayError("视频上传中，请稍后删除节点", () => t("videoUploadingDelete"));
   uploading.value = true;
   return files.removeNodeFiles().finally(() => {
     uploading.value = false;
@@ -92,12 +97,12 @@ nodeTools.register({
   }),
   async execute({ path, mimeType }, { signal }) {
     signal?.throwIfAborted();
-    if (uploading.value || exporting.value) throw new Error("视频处理中，请稍后重试");
+    if (uploading.value || exporting.value) throw createDisplayError("视频处理中，请稍后重试", () => t("videoBusy"));
     uploading.value = true;
     try {
       const content = await files.getWorkspaceFiles().read(path);
       signal?.throwIfAborted();
-      if (!content.byteLength || content.byteLength > 100 * 1024 * 1024) throw new Error("视频不能为空且不能超过 100 MB");
+      if (!content.byteLength || content.byteLength > 100 * 1024 * 1024) throw createDisplayError("视频不能为空且不能超过 100 MB", () => t("videoSize"));
       outputs.value.video = { dataType: "VIDEO", value: { url: path, mimeType } };
       return outputs.value.video;
     } finally {
@@ -119,15 +124,15 @@ async function uploadVideo(event: Event) {
   const file = input.files?.[0];
   input.value = "";
   if (!file || uploading.value || exporting.value) return;
-  if (!file.type.startsWith("video/")) return void ElMessage.error("请选择视频文件");
-  if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error("视频不能为空且不能超过 100 MB");
+  if (!file.type.startsWith("video/")) return void ElMessage.error(t("chooseVideoFile"));
+  if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error(t("videoSize"));
   uploading.value = true;
   try {
     const url = await files.uploadFile(file);
     // ACT: 复制节点可能仍引用旧视频，替换输出不删除共享文件。
     outputs.value.video = { dataType: "VIDEO", value: { url, mimeType: file.type } };
   } catch (error) {
-    showError(error, "视频替换失败");
+    showError(error, t("videoReplaceFailed"));
   } finally {
     uploading.value = false;
   }
@@ -135,7 +140,7 @@ async function uploadVideo(event: Event) {
 
 function showError(error: unknown, fallback: string) {
   const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
-  ElMessage.error(message || (error instanceof Error ? error.message : fallback));
+  ElMessage.error(message || (error instanceof Error ? getErrorDisplay(error) : fallback));
 }
 </script>
 

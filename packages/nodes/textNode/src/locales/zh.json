@@ -1,0 +1,20 @@
+{
+  "textContent": "文本内容",
+  "edit": "编辑",
+  "selectModel": "选择模型",
+  "generationModel": "生成模型",
+  "addModelFirst": "请先在设置中添加模型",
+  "generate": "生成",
+  "editText": "编辑文本",
+  "editTextContent": "编辑文本内容",
+  "textNotLoadedSave": "文本尚未加载，无法保存",
+  "textGeneratingRefresh": "文本正在生成，请完成后再刷新节点",
+  "nodeIdInvalid": "节点 ID 不能作为文件夹名称",
+  "textPathInvalid": "文本文件路径无效",
+  "textContentInvalid": "文本内容无效",
+  "textLoadFailed": "文本加载失败",
+  "textSaveFailed": "文本保存失败",
+  "textNotLoaded": "文本尚未加载",
+  "referenceNoContent": "引用节点暂无内容，请先补充引用内容",
+  "textGeneratingEdit": "文本生成中，请稍后修改"
+}

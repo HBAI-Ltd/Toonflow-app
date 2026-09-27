@@ -1,25 +1,25 @@
 <template>
   <el-popover trigger="click" placement="top-start" width="min(340px, calc(100vw - 24px))" :disabled="disabled" :showArrow="false" :popperStyle="{ padding: '14px' }">
     <template #reference>
-      <el-button class="settingsButton" text size="small" :disabled="disabled" aria-label="图片生成设置">
+      <el-button class="settingsButton" text size="small" :disabled="disabled" :aria-label="t('settings')">
         <span class="ratioShape" :style="ratioStyle(ratio)" aria-hidden="true" />
-        <span>{{ ratio }} · {{ size }} · 1张</span>
+        <span>{{ ratio }} · {{ size }} · {{ t("oneImage") }}</span>
         <icon-chevron-up :size="14" aria-hidden="true" />
       </el-button>
     </template>
     <div class="generationSettings nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.stop @wheel.stop>
-      <div class="sectionLabel">分辨率</div>
-      <el-radio-group v-model="size" class="sizeOptions" :disabled="disabled" aria-label="图片分辨率">
+      <div class="sectionLabel">{{ t("resolution") }}</div>
+      <el-radio-group v-model="size" class="sizeOptions" :disabled="disabled" :aria-label="t('imageResolution')">
         <el-radio-button v-for="item in sizes" :key="item" :value="item">{{ item }}</el-radio-button>
       </el-radio-group>
-      <div class="sectionLabel">比例</div>
-      <div class="ratioOptions" role="group" aria-label="图片比例">
+      <div class="sectionLabel">{{ t("aspectRatio") }}</div>
+      <div class="ratioOptions" role="group" :aria-label="t('imageAspectRatio')">
         <el-button
           v-for="item in ratios"
           :key="item"
           class="ratioButton"
           :disabled="disabled"
-          :aria-label="`比例 ${item}`"
+          :aria-label="t('aspectRatioOption', { ratio: item })"
           :aria-pressed="ratio === item"
           @click="ratio = item">
           <span class="ratioContent">
@@ -35,6 +35,11 @@
 <script setup lang="ts">
 import { ElButton, ElPopover, ElRadioGroup, ElRadioButton } from "element-plus";
 import { IconChevronUp } from "@tabler/icons-vue";
+import { createTranslator } from "@toonflow/i18n";
+import zh from "../locales/zh.json";
+import en from "../locales/en.json";
+
+const t = createTranslator({ zh, en });
 
 defineProps<{ sizes: string[]; ratios: string[]; disabled?: boolean }>();
 const size = defineModel<string>("size", { required: true });

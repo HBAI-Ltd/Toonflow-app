@@ -6,8 +6,8 @@
         :key="item.nodeId"
         type="button"
         class="nodeFocusChip"
-        :title="`聚焦节点：${item.label}`"
-        :aria-label="`聚焦节点：${item.label}`"
+        :title="t('focusNode', { label: item.label })"
+        :aria-label="t('focusNode', { label: item.label })"
         @click="focusNode(item.nodeId)">
         <icon-focus2 :size="14" aria-hidden="true" />
         <span class="nodeFocusName">{{ item.label }}</span>
@@ -23,6 +23,8 @@ import "element-plus/es/components/base/style/css";
 import "element-plus/es/components/message/style/css";
 import { IconFocus2 } from "@tabler/icons-vue";
 import type { ToolCall, CanvasContext } from "@toonflow/tools-scaffold/runtime";
+import { getErrorDisplay } from "@toonflow/i18n";
+import t from "./translation";
 
 const props = defineProps<{ tool: ToolCall; directory?: string }>();
 
@@ -81,14 +83,14 @@ async function focusNode(nodeId: string) {
   await nextTick();
   const canvas = getCanvas?.();
   if (!canvas) {
-    ElMessage.error("画布尚未就绪");
+    ElMessage.error(t("canvasNotReady"));
     return;
   }
   try {
     await canvas.call({ name: "fitCanvas", args: { nodeIds: [nodeId] } });
     await canvas.call({ name: "selectNodes", args: { nodeIds: [nodeId] } });
   } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : "聚焦节点失败");
+    ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("focusNodeFailed"));
   }
 }
 </script>

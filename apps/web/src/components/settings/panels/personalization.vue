@@ -2,10 +2,10 @@
   <div class="personalization">
     <section class="settingSection" aria-labelledby="instructionsTitle">
       <div class="settingInfo">
-        <h3 id="instructionsTitle">Toonflow 说明</h3>
-        <p class="description">为所有聊天提供额外说明和上下文。支持 Markdown，保存后下一次发送消息时生效。</p>
+        <h3 id="instructionsTitle">{{ t("personalization.instructions") }}</h3>
+        <p class="description">{{ t("personalization.instructionsDescription") }}</p>
       </div>
-      <el-alert v-if="document.error" :title="document.error" type="error" :closable="false" showIcon />
+      <el-alert v-if="document.error" :title="getErrorDisplay(document.error)" type="error" :closable="false" showIcon />
       <el-input
         v-model="document.content"
         type="textarea"
@@ -13,10 +13,10 @@
         :maxlength="maxLength"
         :disabled="!document.loaded || document.loading"
         resize="none"
-        aria-label="Toonflow 说明内容" />
+        :aria-label="t('personalization.instructions')" />
       <div class="editorFooter">
         <span class="editorStatus">
-          {{ document.loading ? "正在读取…" : isDirty(document) ? "有未保存的修改" : "" }}
+          {{ document.loading ? t("common.loading") : isDirty(document) ? t("common.unsavedChanges") : "" }}
           <span>{{ document.content.length }} / {{ maxLength }}</span>
         </span>
         <div class="editorActions">
@@ -24,18 +24,18 @@
             :icon="IconRefresh"
             :loading="document.loading"
             :disabled="document.saving"
-            aria-label="重新加载 Toonflow 说明"
+            :aria-label="t('personalization.reloadInstructions')"
             @click="reloadDocument(document, 'agents')">
-            {{ document.loaded ? "重新加载" : "重试" }}
+            {{ t(document.loaded ? "common.reload" : "common.retry") }}
           </el-button>
           <el-button
             type="primary"
             :icon="IconDeviceFloppy"
             :loading="document.saving"
             :disabled="!document.loaded || document.loading || document.conflict || !isDirty(document) || document.content.length > maxLength"
-            aria-label="保存 Toonflow 说明"
+            :aria-label="t('personalization.saveInstructions')"
             @click="saveDocument(document, 'agents')">
-            保存
+            {{ t("common.save") }}
           </el-button>
         </div>
       </div>
@@ -44,41 +44,41 @@
       <div class="memoryOptions">
         <div class="settingHeader">
           <div class="settingInfo">
-            <h4>启用本地记忆</h4>
-            <p class="description">记住你的偏好，在后续聊天中使用。关闭后仍保留已保存的内容。</p>
+            <h4>{{ t("personalization.enableMemory") }}</h4>
+            <p class="description">{{ t("personalization.enableMemoryDescription") }}</p>
           </div>
           <el-switch
             :modelValue="memoryEnabled"
             :loading="savingMemorySetting"
-            aria-label="启用本地记忆"
+            :aria-label="t('personalization.enableMemory')"
             @change="(value) => setMemoryEnabled(value === true)" />
         </div>
         <div class="settingHeader">
           <div class="settingInfo">
-            <h4>删除本地记忆</h4>
+            <h4>{{ t("personalization.deleteMemory") }}</h4>
           </div>
           <el-button
             :icon="IconTrash"
             :loading="memoryAction === 'delete'"
             :disabled="!!memoryAction || memoryDocument.loading || memoryDocument.saving"
-            aria-label="删除本地记忆"
+            :aria-label="t('personalization.deleteMemory')"
             @click="deleteMemory">
-            删除
+            {{ t("common.delete") }}
           </el-button>
         </div>
         <div class="settingHeader">
           <div class="settingInfo">
-            <h4>查看本地记忆</h4>
+            <h4>{{ t("personalization.viewMemory") }}</h4>
           </div>
-          <el-button :icon="IconEye" :loading="memoryAction === 'view'" :disabled="!!memoryAction || memoryDocument.loading || memoryDocument.saving" aria-label="查看本地记忆" @click="viewMemory">
-            查看
+          <el-button :icon="IconEye" :loading="memoryAction === 'view'" :disabled="!!memoryAction || memoryDocument.loading || memoryDocument.saving" :aria-label="t('personalization.viewMemory')" @click="viewMemory">
+            {{ t("common.view") }}
           </el-button>
         </div>
       </div>
     </section>
-    <el-dialog v-model="memoryVisible" title="Toonflow 记忆" width="min(760px, calc(100vw - 32px))" alignCenter appendToBody>
+    <el-dialog v-model="memoryVisible" :title="t('personalization.memoryTitle')" width="min(760px, calc(100vw - 32px))" alignCenter appendToBody>
       <div class="memoryContent">
-        <el-alert v-if="memoryDocument.error" :title="memoryDocument.error" type="error" :closable="false" showIcon />
+        <el-alert v-if="memoryDocument.error" :title="getErrorDisplay(memoryDocument.error)" type="error" :closable="false" showIcon />
         <el-input
           v-if="memoryEditing"
           v-model="memoryDocument.content"
@@ -87,23 +87,23 @@
           :maxlength="maxLength"
           :disabled="memoryDocument.loading"
           resize="none"
-          aria-label="本地记忆内容" />
+          :aria-label="t('personalization.localMemory')" />
         <messageMarkdown v-else-if="memoryDocument.content.trim()" :content="memoryDocument.content" />
-        <el-empty v-else description="暂无本地记忆" :imageSize="80" />
+        <el-empty v-else :description="t('personalization.noMemory')" :imageSize="80" />
       </div>
       <template #footer>
         <div class="memoryFooter">
           <span class="editorStatus">
-            {{ isDirty(memoryDocument) ? "有未保存的修改 · " : "" }}{{ memoryDocument.content.length }} / {{ maxLength }}
+            {{ isDirty(memoryDocument) ? `${t("common.unsavedChanges")} · ` : "" }}{{ memoryDocument.content.length }} / {{ maxLength }}
           </span>
           <div class="editorActions">
             <el-button
               :icon="IconRefresh"
               :loading="memoryDocument.loading"
               :disabled="memoryDocument.saving"
-              aria-label="重新加载本地记忆"
+              :aria-label="t('personalization.reloadMemory')"
               @click="reloadDocument(memoryDocument, 'memory')">
-              重新加载
+              {{ t("common.reload") }}
             </el-button>
             <el-button
               v-if="memoryEditing"
@@ -111,12 +111,12 @@
               :icon="IconDeviceFloppy"
               :loading="memoryDocument.saving"
               :disabled="memoryDocument.loading || memoryDocument.conflict || !isDirty(memoryDocument) || memoryDocument.content.length > maxLength"
-              aria-label="保存本地记忆"
+              :aria-label="t('personalization.saveMemory')"
               @click="saveMemory">
-              保存
+              {{ t("common.save") }}
             </el-button>
-            <el-button v-else type="primary" :icon="IconEdit" :disabled="memoryDocument.loading" aria-label="编辑本地记忆" @click="memoryEditing = true">
-              编辑
+            <el-button v-else type="primary" :icon="IconEdit" :disabled="memoryDocument.loading" :aria-label="t('personalization.editMemory')" @click="memoryEditing = true">
+              {{ t("common.edit") }}
             </el-button>
           </div>
         </div>
@@ -126,6 +126,8 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "../i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import { computed, onActivated, reactive, ref, watch } from "vue";
 import axios from "axios";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -140,7 +142,7 @@ type DocumentState = DocumentContent & {
   loading: boolean;
   saving: boolean;
   conflict: boolean;
-  error: string;
+  error?: Error;
 };
 type DocumentResponse = { code: number; data: DocumentContent; message?: string };
 
@@ -155,7 +157,7 @@ const document = reactive<DocumentState>({
   loading: false,
   saving: false,
   conflict: false,
-  error: "",
+  error: undefined,
 });
 const memoryEnabled = computed(() => {
   const value = settings.value.personalization;
@@ -166,29 +168,30 @@ const memoryAction = ref<"view" | "delete" | "">("");
 const memoryVisible = ref(false);
 const memoryEditing = ref(false);
 const memoryDocument = reactive<DocumentState>({
-  content: "", revision: "", savedContent: "", loaded: false, loading: false, saving: false, conflict: false, error: "",
+  content: "", revision: "", savedContent: "", loaded: false, loading: false, saving: false, conflict: false, error: undefined,
 });
 
 function isDirty(document: DocumentState) {
   return document.content !== document.savedContent;
 }
 
+function documentError(error: unknown) {
+  if (axios.isAxiosError<{ message?: string }>(error) && error.response?.data?.message) return new Error(error.response.data.message);
+  return error instanceof Error ? error : createDisplayError("操作失败，请重试", () => t("common.operationFailedRetry"));
+}
+
 function errorMessage(error: unknown) {
-  return axios.isAxiosError<{ message?: string }>(error)
-    ? error.response?.data?.message || error.message
-    : error instanceof Error
-    ? error.message
-    : "操作失败，请重试";
+  return getErrorDisplay(documentError(error));
 }
 
 async function loadDocument(document: DocumentState, name: "agents" | "memory", discardChanges = false) {
   if (document.loading || document.saving || (!discardChanges && isDirty(document))) return;
   const content = document.content;
   document.loading = true;
-  document.error = "";
+  document.error = undefined;
   try {
     const { data } = await axios.get<DocumentResponse>("/api/settings/personalization/get", { params: { document: name }, headers });
-    if (data.code !== 200) throw new Error(data.message || "读取失败，请重试");
+    if (data.code !== 200) throw data.message ? new Error(data.message) : createDisplayError("读取失败，请重试", () => t("personalization.loadFailed"));
     if (document.content !== content) return;
     document.content = data.data.content;
     document.savedContent = data.data.content;
@@ -196,7 +199,7 @@ async function loadDocument(document: DocumentState, name: "agents" | "memory", 
     document.loaded = true;
     document.conflict = false;
   } catch (error) {
-    document.error = errorMessage(error);
+    document.error = documentError(error);
   } finally {
     document.loading = false;
   }
@@ -205,9 +208,9 @@ async function loadDocument(document: DocumentState, name: "agents" | "memory", 
 async function reloadDocument(document: DocumentState, name: "agents" | "memory") {
   if (isDirty(document)) {
     try {
-      await ElMessageBox.confirm("重新加载将放弃当前文档未保存的修改，读取最新内容。", "重新加载", {
-        confirmButtonText: "放弃修改并加载",
-        cancelButtonText: "继续编辑",
+      await ElMessageBox.confirm(t("personalization.reloadDiscardPrompt"), t("common.reload"), {
+        confirmButtonText: t("personalization.discardAndLoad"),
+        cancelButtonText: t("personalization.continueEditing"),
         type: "warning",
       });
     } catch {
@@ -221,11 +224,11 @@ async function saveDocument(document: DocumentState, name: "agents" | "memory") 
   if (!document.loaded || document.loading || document.saving || document.conflict || !isDirty(document)) return;
   const content = document.content;
   if (content.length > maxLength) {
-    ElMessage.error(`内容不能超过 ${maxLength} 个字符`);
+    ElMessage.error(t("personalization.tooLong", { maxLength }));
     return;
   }
   document.saving = true;
-  document.error = "";
+  document.error = undefined;
   try {
     const { data } = await axios.put<DocumentResponse>(
       "/api/settings/personalization/save",
@@ -234,18 +237,20 @@ async function saveDocument(document: DocumentState, name: "agents" | "memory") 
     );
     if (data.code === 409) {
       document.conflict = true;
-      throw new Error("文件已被其他操作修改。当前草稿已保留，请先复制需要保留的内容，再重新加载最新版本。");
+      throw createDisplayError("文件已被其他操作修改。当前草稿已保留，请先复制需要保留的内容，再重新加载最新版本。", () => t("personalization.conflict"));
     }
-    if (data.code !== 200) throw new Error(data.message || "保存失败，请重试");
+    if (data.code !== 200) throw data.message ? new Error(data.message) : createDisplayError("保存失败，请重试", () => t("common.saveFailedRetry"));
     document.savedContent = data.data.content;
     document.revision = data.data.revision;
     if (document.content === content) document.content = data.data.content;
-    ElMessage.success(`${name === "agents" ? "Toonflow 说明" : "本地记忆"}已保存`);
+    ElMessage.success(t("personalization.saved", { name: name === "agents" ? t("personalization.instructions") : t("personalization.localMemory") }));
     return true;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 409) document.conflict = true;
-    document.error = document.conflict ? "文件已被其他操作修改。当前草稿已保留，请先复制需要保留的内容，再重新加载最新版本。" : errorMessage(error);
-    ElMessage.error(document.error);
+    document.error = document.conflict
+      ? createDisplayError("文件已被其他操作修改。当前草稿已保留，请先复制需要保留的内容，再重新加载最新版本。", () => t("personalization.conflict"))
+      : documentError(error);
+    ElMessage.error(getErrorDisplay(document.error));
   } finally {
     document.saving = false;
   }
@@ -268,7 +273,7 @@ async function setMemoryEnabled(memoryEnabled: boolean) {
 
 async function readMemory() {
   const { data } = await axios.get<DocumentResponse>("/api/settings/personalization/get", { params: { document: "memory" }, headers });
-  if (data.code !== 200) throw new Error(data.message || "读取本地记忆失败，请重试");
+  if (data.code !== 200) throw new Error(data.message || t("personalization.loadMemoryFailed"));
   return data.data;
 }
 
@@ -278,7 +283,7 @@ async function viewMemory() {
   try {
     await loadDocument(memoryDocument, "memory");
     if (memoryDocument.loaded) memoryVisible.value = true;
-    else ElMessage.error(memoryDocument.error);
+    else ElMessage.error(memoryDocument.error ? getErrorDisplay(memoryDocument.error) : t("personalization.loadFailed"));
   } catch (error) {
     ElMessage.error(errorMessage(error));
   } finally {
@@ -296,13 +301,13 @@ async function deleteMemory() {
   try {
     const memory = await readMemory();
     if (!memory.content && !isDirty(memoryDocument)) {
-      ElMessage.info("暂无本地记忆");
+      ElMessage.info(t("personalization.noMemory"));
       return;
     }
     try {
-      await ElMessageBox.confirm("将删除所有工作区共用的本地记忆及未保存的记忆修改，此操作无法撤销。Toonflow 说明会保留。", "删除本地记忆", {
-        confirmButtonText: "删除",
-        cancelButtonText: "取消",
+      await ElMessageBox.confirm(t("personalization.deleteMemoryPrompt"), t("personalization.deleteMemory"), {
+        confirmButtonText: t("common.delete"),
+        cancelButtonText: t("common.cancel"),
         type: "warning",
       });
     } catch {
@@ -313,14 +318,14 @@ async function deleteMemory() {
       { document: "memory", content: "", revision: memory.revision },
       { headers }
     );
-    if (data.code === 409) throw new Error("本地记忆已更新，未删除任何内容。请重新查看后重试。");
-    if (data.code !== 200) throw new Error(data.message || "删除本地记忆失败，请重试");
-    Object.assign(memoryDocument, data.data, { savedContent: data.data.content, loaded: true, conflict: false, error: "" });
+    if (data.code === 409) throw new Error(t("personalization.memoryChanged"));
+    if (data.code !== 200) throw new Error(data.message || t("personalization.deleteMemoryFailed"));
+    Object.assign(memoryDocument, data.data, { savedContent: data.data.content, loaded: true, conflict: false, error: undefined });
     memoryEditing.value = false;
-    ElMessage.success("本地记忆已删除");
+    ElMessage.success(t("personalization.memoryDeleted"));
   } catch (error) {
     ElMessage.error(
-      axios.isAxiosError(error) && error.response?.status === 409 ? "本地记忆已更新，未删除任何内容。请重新查看后重试。" : errorMessage(error)
+      axios.isAxiosError(error) && error.response?.status === 409 ? t("personalization.memoryChanged") : errorMessage(error)
     );
   } finally {
     memoryAction.value = "";

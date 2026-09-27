@@ -214,7 +214,7 @@ export async function renameAgentSession(cwd: string, path: string, name: string
     if (entries[0]?.type !== "session") throw Object.assign(new Error("会话文件无效"), { status: 400 });
     const history = SessionManager.open(path, dirname(path), cwd);
     history.appendSessionInfo(name);
-    return { name: history.getSessionName()! };
+    return { name: history.getSessionName()!, nameAutomatic: false, nameDefault: false };
   } finally {
     release();
   }
@@ -226,12 +226,17 @@ export async function listAgentSessions(cwd: string, directory: string) {
   return sessions
     .filter((item) => files.has(basename(item.path)) && !item.parentSessionPath)
     .sort((left, right) => right.modified.getTime() - left.modified.getTime())
-    .map((item) => ({
-      file: basename(item.path),
-      name: item.name || (item.messageCount ? item.firstMessage.trim().slice(0, 60) : "") || "新对话",
-      modified: item.modified,
-      messageCount: item.messageCount,
-    }));
+    .map((item) => {
+      const automaticName = item.messageCount ? item.firstMessage.trim().slice(0, 60) : "";
+      return {
+        file: basename(item.path),
+        name: item.name || automaticName || "新对话",
+        nameAutomatic: !item.name && Boolean(automaticName),
+        nameDefault: !item.name && !automaticName,
+        modified: item.modified,
+        messageCount: item.messageCount,
+      };
+    });
 }
 
 export async function getAgentSession(cwd: string, path: string) {
@@ -362,9 +367,13 @@ export async function getAgentSession(cwd: string, path: string) {
     const interrupted = agent.status === "running" && !active && !getActiveAgentSession(resolve(dirname(path), agent.file));
     subAgents.set(agent.file, interrupted ? { ...agent, status: "cancelled", result: "上次运行已中断" } : agent);
   }
+  const explicitName = history.getSessionName();
+  const automaticName = (firstUserMessage?.content.trim() || firstUserMessage?.attachments?.[0]?.name)?.slice(0, 60) || "";
   return {
     file: basename(path),
-    name: history.getSessionName() || (firstUserMessage?.content.trim() || firstUserMessage?.attachments?.[0]?.name)?.slice(0, 60) || "新对话",
+    name: explicitName || automaticName || "新对话",
+    nameAutomatic: !explicitName && Boolean(automaticName),
+    nameDefault: !explicitName && !automaticName,
     messages,
     stats: getAgentStats(history),
     contextUsage: configuredModel && model ? getAgentContext(history, getModelLimits(model.provider, configuredModel).contextWindow) : undefined,

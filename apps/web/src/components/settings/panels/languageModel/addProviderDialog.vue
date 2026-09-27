@@ -1,7 +1,7 @@
 <template>
-  <el-dialog v-model="visible" title="添加供应商" width="min(860px, 94vw)" alignCenter appendToBody destroyOnClose :closeOnClickModal="false" :closeOnPressEscape="!saving" :showClose="!saving" @closed="resetForm">
+  <el-dialog v-model="visible" :title="t('languageProviders.addTitle')" width="min(860px, 94vw)" alignCenter appendToBody destroyOnClose :closeOnClickModal="false" :closeOnPressEscape="!saving" :showClose="!saving" @closed="resetForm">
     <div class="providerPicker">
-      <aside class="providerSidebar" aria-label="选择厂商">
+      <aside class="providerSidebar" :aria-label="t('providers.select')">
         <button
           v-for="item in languageProviders"
           :key="item.id"
@@ -22,34 +22,36 @@
             <el-tag v-if="activeProvider.version" size="small" type="info" effect="plain">v{{ activeProvider.version }}</el-tag>
           </div>
           <messageMarkdown v-if="providerReadme" class="providerReadme" :content="providerReadme" />
-          <el-divider v-if="providerReadme" contentPosition="left">连接配置</el-divider>
+          <el-divider v-if="providerReadme" contentPosition="left">{{ t("providers.connection") }}</el-divider>
           <form-create v-model="formValues" v-model:api="formApi" :rule="providerRules" :option="formOptions" />
           <div class="modelHeader">
-            <el-text tag="strong">模型列表 <el-text type="info">{{ models.length }}</el-text></el-text>
-            <el-text v-if="fetching" type="info" size="small">正在获取…</el-text>
-            <el-button v-else-if="modelError" size="small" text :icon="IconRefresh" @click="modelRefresh++">重试</el-button>
+            <el-text tag="strong">{{ t("common.models") }} <el-text type="info">{{ models.length }}</el-text></el-text>
+            <el-text v-if="fetching" type="info" size="small">{{ t("models.fetching") }}</el-text>
+            <el-button v-else-if="modelError" size="small" text :icon="IconRefresh" @click="modelRefresh++">{{ t("common.retry") }}</el-button>
           </div>
-          <el-alert v-if="modelError" :title="modelError" type="error" :closable="false" showIcon />
-          <div v-else-if="models.length" class="modelList" :style="{ height: `${Math.min(280, models.length * 38 + 36)}px` }" aria-label="模型列表">
+          <el-alert v-if="modelError" :title="getErrorDisplay(modelError)" type="error" :closable="false" showIcon />
+          <div v-else-if="models.length" class="modelList" :style="{ height: `${Math.min(280, models.length * 38 + 36)}px` }" :aria-label="t('common.models')">
             <el-auto-resizer>
               <template #default="{ height, width }">
                 <el-table-v2 :columns="modelColumns" :data="models" :width="width" :height="height" :rowHeight="38" :headerHeight="36" rowKey="id" fixed />
               </template>
             </el-auto-resizer>
           </div>
-          <el-text v-else-if="!fetching" type="info" size="small">{{ formValues.apiKey ? '未获取到模型' : '填写 API Key 后自动获取模型列表' }}</el-text>
-          <el-alert v-if="formError" :title="formError" type="error" :closable="false" showIcon />
+          <el-text v-else-if="!fetching" type="info" size="small">{{ t(formValues.apiKey ? 'models.noneFound' : 'models.enterKeyToFetch') }}</el-text>
+          <el-alert v-if="formError" :title="getErrorDisplay(formError)" type="error" :closable="false" showIcon />
         </section>
       </el-scrollbar>
     </div>
     <template #footer>
-      <el-button :disabled="saving" @click="visible = false">取消</el-button>
-      <el-button type="primary" :loading="saving" :disabled="!activeProvider || fetching || !!modelError" @click="addProvider">确定添加供应商</el-button>
+      <el-button :disabled="saving" @click="visible = false">{{ t("common.cancel") }}</el-button>
+      <el-button type="primary" :loading="saving" :disabled="!activeProvider || fetching || !!modelError" @click="addProvider">{{ t("languageProviders.addTitle") }}</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { t } from "../../i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import { computed, ref, shallowRef, watch } from "vue";
 import axios from "axios";
 import { IconRefresh } from "@tabler/icons-vue";
@@ -67,16 +69,16 @@ const formApi = shallowRef<Api>();
 const formValues = ref<Record<string, unknown>>({});
 const models = shallowRef<CustomProviderModel[]>([]);
 const fetching = ref(false);
-const modelError = ref("");
+const modelError = shallowRef<Error>();
 const modelRefresh = ref(0);
-const modelColumns: Column[] = [
-  { key: "id", dataKey: "id", title: "模型 ID", width: 220, flexGrow: 1 },
-  { key: "label", dataKey: "label", title: "显示名称", width: 180, flexGrow: 1 },
-];
+const modelColumns = computed<Column[]>(() => [
+  { key: "id", dataKey: "id", title: t("models.id"), width: 220, flexGrow: 1 },
+  { key: "label", dataKey: "label", title: t("providers.displayName"), width: 180, flexGrow: 1 },
+]);
 const saving = ref(false);
-const formError = ref("");
+const formError = shallowRef<Error>();
 watch(selectedProvider, () => {
-  formError.value = "";
+  formError.value = undefined;
   formValues.value = {};
 }, { flush: "sync" });
 const activeProvider = computed(() => languageProviders.find(provider => provider.id === selectedProvider.value));
@@ -93,7 +95,7 @@ watch(
   [visible, activeProvider, () => formValues.value.apiKey, modelRefresh],
   ([isVisible, provider, key], _previous, onCleanup) => {
     models.value = [];
-    modelError.value = "";
+    modelError.value = undefined;
     fetching.value = false;
     if (!isVisible || !provider) return;
     if (provider.models.length) {
@@ -111,12 +113,14 @@ watch(
           apiUrl: provider.apiUrl, protocol: provider.protocol, apiKey,
         }, { signal: controller.signal, timeout: 35000 });
         if (controller.signal.aborted) return;
-        if (data.code !== 200 || !Array.isArray(data.data)) throw new Error(data.message || "获取模型列表失败");
+        if (data.code !== 200 || !Array.isArray(data.data)) throw data.message
+          ? new Error(data.message)
+          : createDisplayError("获取模型列表失败", () => t("models.fetchFailed"));
         models.value = data.data;
       } catch (error) {
         if (!controller.signal.aborted) modelError.value = axios.isAxiosError(error)
-          ? error.response?.data?.message || "获取模型列表失败，请检查 API Key 后重试"
-          : error instanceof Error ? error.message : "获取模型列表失败";
+          ? error.response?.data?.message ? new Error(error.response.data.message) : createDisplayError("获取模型列表失败，请检查 API Key 后重试", () => t("models.fetchFailedCheckKey"))
+          : error instanceof Error ? error : createDisplayError("获取模型列表失败", () => t("models.fetchFailed"));
       } finally {
         if (!controller.signal.aborted) fetching.value = false;
       }
@@ -131,19 +135,19 @@ watch(
 
 function resetForm() {
   selectedProvider.value = languageProviders[0]?.id ?? "";
-  formError.value = "";
+  formError.value = undefined;
   formApi.value = undefined;
   formValues.value = {};
 }
 
 async function addProvider() {
   if (saving.value || fetching.value || modelError.value || !activeProvider.value || !formApi.value) return;
-  formError.value = "";
+  formError.value = undefined;
   const provider = activeProvider.value;
   const values = formApi.value.formData();
   const apiKey = typeof values.apiKey === "string" ? values.apiKey.trim() : "";
   if (!apiKey) {
-    formError.value = "请填写 API Key";
+    formError.value = createDisplayError("请填写 API Key", () => t("providers.apiKeyRequired"));
     return;
   }
   saving.value = true;
@@ -158,15 +162,15 @@ async function addProvider() {
     };
     await saveSettings(settings => {
       const existing = settings.customProviders;
-      if (existing !== undefined && !Array.isArray(existing)) throw new Error("已保存的供应商配置格式不正确");
+      if (existing !== undefined && !Array.isArray(existing)) throw createDisplayError("已保存的供应商配置格式不正确", () => t("providers.savedSettingsInvalid"));
       if (existing?.some(item => typeof item?.id === "string" && item.id.toLowerCase() === provider.id.toLowerCase())) {
-        throw new Error("此供应商已添加，请在供应商列表中编辑");
+        throw createDisplayError("此供应商已添加，请在供应商列表中编辑", () => t("providers.alreadyAdded"));
       }
       return { customProviders: [...(existing ?? []), addedProvider] };
     });
     visible.value = false;
   } catch (error) {
-    formError.value = error instanceof Error ? error.message : "保存失败，请重试；当前填写的内容已保留";
+    formError.value = error instanceof Error ? error : createDisplayError("保存失败，请重试；当前填写的内容已保留", () => t("common.saveFailedPreserved"));
   } finally { saving.value = false; }
 }
 </script>

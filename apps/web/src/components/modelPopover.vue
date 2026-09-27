@@ -10,17 +10,17 @@
       popperClass="agentModelPopover"
       :popperStyle="{ padding: '20px', maxWidth: 'calc(100vw - 24px)' }">
       <template #reference>
-        <el-button class="modelButton" text :disabled="disabled" aria-label="模型与推理设置">
+        <el-button class="modelButton" text :disabled="disabled" :aria-label="t('modelAndReasoningSettings')">
           <modelIcon v-if="selectedModelChoice" :model="selectedModelChoice.modelId" :size="14" />
-          <span class="modelName">{{ selectedModelChoice?.label ?? "选择模型" }}</span>
+          <span class="modelName">{{ selectedModelChoice?.label ?? t("selectModel") }}</span>
           ·
           <span class="reasoningLabel">{{ reasoningLabel }}</span>
           <icon-chevron-down :size="12" />
         </el-button>
       </template>
       <el-form class="modelOptions" labelPosition="top">
-        <el-form-item label="模型">
-          <el-select v-model="selectedModel" filterable :disabled="disabled" :teleported="false" placeholder="选择模型" aria-label="选择模型" noDataText="请先在设置中添加模型">
+        <el-form-item :label="t('model')">
+          <el-select v-model="selectedModel" filterable :disabled="disabled" :teleported="false" :placeholder="t('selectModel')" :aria-label="t('selectModel')" :noDataText="t('addModelFirst')">
             <template #prefix><modelIcon v-if="selectedModelChoice" :model="selectedModelChoice.modelId" :size="18" /></template>
             <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
               <el-option v-for="model in provider.models" :key="model.id" :label="model.label" :value="JSON.stringify([provider.id, model.id])">
@@ -32,8 +32,8 @@
             </el-option-group>
           </el-select>
         </el-form-item>
-        <el-form-item label="推理等级">
-          <el-segmented v-model="reasoningEffort" :options="reasoningOptions" :disabled="disabled" block aria-label="推理等级" />
+        <el-form-item :label="t('reasoningLevel')">
+          <el-segmented v-model="reasoningEffort" :options="reasoningOptions" :disabled="disabled" block :aria-label="t('reasoningLevel')" />
         </el-form-item>
       </el-form>
     </el-popover>
@@ -44,21 +44,25 @@
 import { computed, ref, watch } from "vue";
 import { IconChevronDown } from "@tabler/icons-vue";
 import { modelIcon } from "@toonflow/model-icons";
+import { createTranslator } from "@toonflow/i18n";
 import { customProviders, modelChoices } from "@/stores/settings";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
 
+const t = createTranslator({ zh, en });
 const selectedModel = defineModel<string>({ default: "" });
 const reasoningEffort = defineModel<string>("reasoningEffort", { default: "" });
 const props = withDefaults(defineProps<{ active?: boolean; disabled?: boolean }>(), { active: true, disabled: false });
 const visible = ref(false);
-const reasoningOptions = [
-  { label: "默认", value: "" },
-  { label: "低", value: "low" },
-  { label: "中", value: "medium" },
-  { label: "高", value: "high" },
-];
+const reasoningOptions = computed(() => [
+  { label: t("reasoningDefault"), value: "" },
+  { label: t("reasoningLow"), value: "low" },
+  { label: t("reasoningMedium"), value: "medium" },
+  { label: t("reasoningHigh"), value: "high" },
+]);
 const modelGroups = computed(() => customProviders.value.toSorted((left, right) => Number(right.id === "tfRouter") - Number(left.id === "tfRouter")));
 const selectedModelChoice = computed(() => modelChoices.value.find(item => item.value === selectedModel.value));
-const reasoningLabel = computed(() => reasoningOptions.find(item => item.value === reasoningEffort.value)?.label ?? "默认");
+const reasoningLabel = computed(() => reasoningOptions.value.find(item => item.value === reasoningEffort.value)?.label ?? t("reasoningDefault"));
 watch(selectedModel, () => { reasoningEffort.value = ""; });
 watch(modelChoices, items => {
   if (!selectedModel.value) selectedModel.value = items[0]?.value ?? "";

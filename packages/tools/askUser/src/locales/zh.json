@@ -1,0 +1,20 @@
+{
+  "answerAriaLabel": "回答问题",
+  "answerPlaceholder": "输入你的回答",
+  "answerTooLong": "回答（含选项）不能超过 8000 字",
+  "customAnswerOption": "自行填写",
+  "defaultTitle": "请确认",
+  "errorDetails": "查看错误详情",
+  "formUnavailable": "表单暂时未生成，请 AI 重新整理。",
+  "optionalAnswerPlaceholder": "也可以直接回答或补充说明",
+  "requiredField": "请填写{field}",
+  "statusAnswered": "已回答",
+  "statusHistory": "提问记录",
+  "statusInterrupted": "已停止",
+  "statusNeedsRegeneration": "待重新生成",
+  "statusSkipped": "已跳过",
+  "statusWaiting": "等待回答",
+  "submitAnswer": "提交回答",
+  "submitFailed": "提交回答失败",
+  "skip": "跳过"
+}

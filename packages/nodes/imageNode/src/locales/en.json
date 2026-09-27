@@ -1,0 +1,14 @@
+{
+  "replaceImage": "Replace image",
+  "nodeImage": "Node image",
+  "imagePreviewFailed": "Unable to preview this image",
+  "chooseImage": "Choose image",
+  "uploadImage": "Upload image",
+  "imageReadFailed": "Failed to load image",
+  "imageBusySave": "Image is being processed. Wait for it to finish before switching or refreshing the node",
+  "imageUploadingDelete": "Image is uploading. Wait before deleting the node",
+  "imageBusy": "Image is being processed. Please try again later",
+  "imageSize": "The image must not be empty or larger than 100 MB",
+  "chooseImageFile": "Please choose an image file",
+  "imageReplaceFailed": "Failed to replace image"
+}

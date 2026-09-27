@@ -1,0 +1,8 @@
+{
+  "duplicateRendererName": "Duplicate tool renderer name: {toolName}",
+  "invalidRendererList": "The tool renderer list is invalid",
+  "invalidRendererUrl": "The tool renderer URL is invalid",
+  "missingComponent": "The tool package did not export a component for {toolName}",
+  "missingComponents": "The tool package did not export any UI: {rendererName}",
+  "scriptLoadFailed": "Failed to load the tool renderer script"
+}

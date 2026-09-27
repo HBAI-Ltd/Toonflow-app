@@ -1,0 +1,8 @@
+{
+  "duplicateRendererName": "工具界面名称重复：{toolName}",
+  "invalidRendererList": "工具界面列表无效",
+  "invalidRendererUrl": "工具界面地址无效",
+  "missingComponent": "工具包未导出 {toolName} 组件",
+  "missingComponents": "工具包未导出界面：{rendererName}",
+  "scriptLoadFailed": "工具界面脚本加载失败"
+}

@@ -37,20 +37,27 @@
 import { computed, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
+import { createTranslator } from "@toonflow/i18n";
 import { useWorkspaceStore } from "@/stores/workspace";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import type { AgentConversation, AgentHistory } from "./types";
 import type { AgentEvent, AgentSubAgent } from "@toonflow/server/agent/types";
 import agentMenu from "./menu.vue";
 import conversation from "./conversation.vue";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
 
+const t = createTranslator({ zh, en });
 const visible = defineModel<boolean>({ default: false });
-type OpenConversation = { key: number; name: string; file?: string; parentFile?: string; subAgents: AgentSubAgent[]; session: AgentConversation | null };
+type OpenConversation = {
+  key: number; name: string; nameAutomatic: boolean; nameDefault: boolean;
+  file?: string; parentFile?: string; subAgents: AgentSubAgent[]; session: AgentConversation | null;
+};
 // ACT: 会话实例保留到工作区关闭，让切换后的回复继续接收流式内容。
 const conversations = ref<OpenConversation[]>([]);
 const conversationKey = ref(0);
 const selectedConversation = computed(() => conversations.value.find(item => item.key === conversationKey.value));
-const name = computed(() => selectedConversation.value?.name || "新对话");
+const name = computed(() => selectedConversation.value?.nameDefault ? t("newConversation") : selectedConversation.value?.name || t("newConversation"));
 const sessionFile = computed(() => selectedConversation.value?.file);
 const workspaceStore = useWorkspaceStore();
 const history = ref<AgentHistory[]>([]);
@@ -69,7 +76,16 @@ function showConversation(session: AgentConversation | null, activate = true) {
     return existing;
   }
   const key = ++nextConversationKey;
-  const item = { key, name: session?.name || "新对话", file: session?.file, parentFile: session?.parentFile, subAgents: session?.subAgents ?? [], session };
+  const item = {
+    key,
+    name: session?.name || "",
+    nameAutomatic: session?.nameAutomatic ?? false,
+    nameDefault: session?.nameDefault ?? !session,
+    file: session?.file,
+    parentFile: session?.parentFile,
+    subAgents: session?.subAgents ?? [],
+    session,
+  };
   conversations.value.push(item);
   if (activate) conversationKey.value = key;
   return conversations.value[conversations.value.length - 1]!;
@@ -101,7 +117,7 @@ function receiveAgentEvent(event: AgentEvent) {
     if (current) Object.assign(current, event.agent);
     else parent.subAgents.push(event.agent);
     if (event.agent.status === "running" && !conversations.value.some(item => item.file === event.agent.file)) {
-      showConversation({ ...event.agent, parentFile: parent.file, messages: [], running: true }, false);
+      showConversation({ ...event.agent, nameAutomatic: false, nameDefault: false, parentFile: parent.file, messages: [], running: true }, false);
     }
     return;
   }
@@ -126,40 +142,48 @@ function backToParent() {
 }
 
 function updateConversationName(item: OpenConversation, prompt: string) {
-  if (item.name !== "新对话") return;
+  if (!item.nameDefault) return;
   item.name = prompt.slice(0, 80);
+  item.nameAutomatic = true;
+  item.nameDefault = false;
   const entry = history.value.find(entry => entry.file === item.file);
-  if (entry) entry.name = item.name;
+  if (entry) Object.assign(entry, { name: item.name, nameAutomatic: true, nameDefault: false });
 }
 
 function setSessionFile(item: OpenConversation, file: string) {
   item.file = file;
   if (item.parentFile) return;
   if (!history.value.some(entry => entry.file === file)) {
-    history.value.unshift({ file, name: item.name, modified: new Date().toISOString(), messageCount: 0 });
+    history.value.unshift({
+      file, name: item.name, nameAutomatic: item.nameAutomatic, nameDefault: item.nameDefault,
+      modified: new Date().toISOString(), messageCount: 0,
+    });
   }
 }
 
 async function newConversation() {
   if (loading.value || historyLoading.value) return;
   const directory = workspaceStore.project?.directory;
-  if (!directory) return ElMessage.warning("请先打开项目");
+  if (!directory) return ElMessage.warning(t("openProjectFirst"));
   const currentRequest = ++requestId;
   loading.value = true;
   try {
     const { data } = await axios.post<{ code: number; data: AgentConversation; message?: string }>("/api/agent/create", {
       directory,
     }, { headers: { "x-toonflow-workspace": "1" } });
-    if (data.code !== 200) throw new Error(data.message || "新建对话失败");
+    if (data.code !== 200) throw new Error(data.message || t("createConversationFailed"));
     if (currentRequest !== requestId) return;
     const session = data.data;
-    history.value.unshift({ file: session.file, name: session.name, modified: new Date().toISOString(), messageCount: 0 });
+    history.value.unshift({
+      file: session.file, name: session.name, nameAutomatic: session.nameAutomatic, nameDefault: session.nameDefault,
+      modified: new Date().toISOString(), messageCount: 0,
+    });
     showConversation(session);
     initialized.value = true;
   } catch (error) {
     if (currentRequest === requestId) ElMessage.error(axios.isAxiosError(error)
-      ? error.response?.data?.message || "新建对话失败"
-      : error instanceof Error ? error.message : "新建对话失败");
+      ? error.response?.data?.message || t("createConversationFailed")
+      : error instanceof Error ? error.message : t("createConversationFailed"));
   } finally {
     if (currentRequest === requestId) loading.value = false;
   }
@@ -169,7 +193,7 @@ async function readConversation(directory: string, file: string) {
   const { data } = await axios.get<{ code: number; data: AgentConversation; message?: string }>("/api/agent/get", {
     params: { directory, sessionFile: file }, headers: { "x-toonflow-workspace": "1" },
   });
-  if (data.code !== 200) throw new Error(data.message || "读取对话失败");
+  if (data.code !== 200) throw new Error(data.message || t("loadConversationFailed"));
   return data.data;
 }
 
@@ -183,7 +207,7 @@ async function loadHistory(openLatest = false) {
     const { data } = await axios.get<{ code: number; data: AgentHistory[]; message?: string }>("/api/agent/list", {
       params: { directory }, headers: { "x-toonflow-workspace": "1" },
     });
-    if (data.code !== 200) throw new Error(data.message || "读取历史对话失败");
+    if (data.code !== 200) throw new Error(data.message || t("loadHistoryFailed"));
     if (currentRequest !== requestId) return;
     history.value = data.data;
     // 首条回复结束前会话可能尚未落盘，仍允许从历史菜单切回。
@@ -195,7 +219,7 @@ async function loadHistory(openLatest = false) {
       initialized.value = true;
     }
   } catch (error) {
-    if (currentRequest === requestId) ElMessage.error(error instanceof Error ? error.message : "读取历史对话失败");
+    if (currentRequest === requestId) ElMessage.error(error instanceof Error ? error.message : t("loadHistoryFailed"));
   } finally {
     if (currentRequest === requestId) {
       historyLoading.value = false;
@@ -220,7 +244,7 @@ async function selectConversation(file: string) {
     showConversation(session);
     initialized.value = true;
   } catch (error) {
-    if (currentRequest === requestId) ElMessage.error(error instanceof Error ? error.message : "读取对话失败");
+    if (currentRequest === requestId) ElMessage.error(error instanceof Error ? error.message : t("loadConversationFailed"));
   } finally {
     if (currentRequest === requestId) loading.value = false;
   }
@@ -231,23 +255,24 @@ async function renameConversation(file: string, value: string) {
   const item = history.value.find(item => item.file === file);
   const nextName = value.trim();
   if (!directory || loading.value || historyLoading.value || (!item && file !== sessionFile.value)) return;
-  if (!nextName || nextName.length > 80) return ElMessage.warning("请输入 1–80 个字符的对话名称");
-  if (nextName === (file === sessionFile.value ? name.value : item?.name)) return;
+  if (!nextName || nextName.length > 80) return ElMessage.warning(t("conversationNameLength"));
+  const opened = conversations.value.find(item => item.file === file);
+  const current = opened ?? item;
+  if (nextName === current?.name && !current.nameDefault) return;
   const currentRequest = ++requestId;
   loading.value = true;
   try {
-    const { data } = await axios.patch<{ code: number; data: { name: string }; message?: string }>("/api/agent/rename", {
+    const { data } = await axios.patch<{ code: number; data: { name: string; nameAutomatic: boolean; nameDefault: boolean }; message?: string }>("/api/agent/rename", {
       directory, sessionFile: file, name: nextName,
     }, { headers: { "x-toonflow-workspace": "1" } });
-    if (data.code !== 200) throw new Error(data.message || "重命名对话失败");
+    if (data.code !== 200) throw new Error(data.message || t("renameConversationFailed"));
     if (currentRequest !== requestId) return;
-    if (item) item.name = data.data.name;
-    const opened = conversations.value.find(item => item.file === file);
-    if (opened) opened.name = data.data.name;
+    if (item) Object.assign(item, data.data);
+    if (opened) Object.assign(opened, data.data);
   } catch (error) {
     if (currentRequest === requestId) ElMessage.error(axios.isAxiosError(error)
-      ? error.response?.data?.message || "重命名对话失败"
-      : error instanceof Error ? error.message : "重命名对话失败");
+      ? error.response?.data?.message || t("renameConversationFailed")
+      : error instanceof Error ? error.message : t("renameConversationFailed"));
   } finally {
     if (currentRequest === requestId) loading.value = false;
   }
@@ -256,7 +281,7 @@ async function renameConversation(file: string, value: string) {
 async function removeConversation(file: string) {
   const directory = workspaceStore.project?.directory;
   if (!directory || loading.value || historyLoading.value || history.value.length <= 1 || !history.value.some(item => item.file === file)) return;
-  if (!/^[\w-]+\.jsonl$/.test(file)) return ElMessage.error("对话文件名无效");
+  if (!/^[\w-]+\.jsonl$/.test(file)) return ElMessage.error(t("invalidConversationFileName"));
   const currentRequest = ++requestId;
   loading.value = true;
   try {
@@ -270,8 +295,8 @@ async function removeConversation(file: string) {
     conversations.value = conversations.value.filter(item => item.file !== file);
   } catch (error) {
     if (currentRequest === requestId) ElMessage.error(axios.isAxiosError(error)
-      ? error.response?.data?.message || "移除历史对话失败"
-      : error instanceof Error ? error.message : "移除历史对话失败");
+      ? error.response?.data?.message || t("removeConversationFailed")
+      : error instanceof Error ? error.message : t("removeConversationFailed"));
   } finally {
     if (currentRequest === requestId) loading.value = false;
   }

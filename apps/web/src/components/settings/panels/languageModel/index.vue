@@ -9,7 +9,7 @@
           <div class="providerInfo">
             <div class="providerHeading">
               <el-text class="providerName" tag="strong">{{ item.label }}</el-text>
-              <el-tag v-if="isTfRouterProvider(item)" size="small">官方</el-tag>
+              <el-tag v-if="isTfRouterProvider(item)" size="small">{{ t("common.official") }}</el-tag>
             </div>
             <el-text class="providerId" size="small" type="info" :title="item.id">{{ item.id }}</el-text>
           </div>
@@ -18,21 +18,21 @@
         <div class="providerFooter">
           <div class="providerMeta">
             <el-tag v-if="getProviderVersion(item)" size="small" type="info" effect="plain">v{{ getProviderVersion(item) }}</el-tag>
-            <el-text size="small" type="info">{{ item.models.length }} 个模型</el-text>
+            <el-text size="small" type="info">{{ t("models.count", { count: item.models.length }) }}</el-text>
           </div>
           <el-space class="itemActions" wrap>
-            <el-button v-if="isTfRouterProvider(item) && item.apiKey?.trim() && !item.models.length" text :icon="IconRefresh" :loading="fetchingId === item.id" :disabled="!!deletingId || !!fetchingId" @click="fetchProviderModels(item)">获取模型</el-button>
-            <el-button text :icon="IconEdit" :disabled="!!deletingId" @click="openCustomProvider(item)">编辑</el-button>
-            <el-popconfirm title="确定删除此供应商及其模型？" confirmButtonText="删除" cancelButtonText="取消" @confirm="deleteProvider(item.id)">
-              <template #reference><el-button text type="danger" :icon="IconTrash" :loading="deletingId === item.id" :disabled="!!deletingId">删除</el-button></template>
+            <el-button v-if="isTfRouterProvider(item) && item.apiKey?.trim() && !item.models.length" text :icon="IconRefresh" :loading="fetchingId === item.id" :disabled="!!deletingId || !!fetchingId" @click="fetchProviderModels(item)">{{ t("models.fetch") }}</el-button>
+            <el-button text :icon="IconEdit" :disabled="!!deletingId" @click="openCustomProvider(item)">{{ t("common.edit") }}</el-button>
+            <el-popconfirm :title="t('providers.deleteConfirm')" :confirmButtonText="t('common.delete')" :cancelButtonText="t('common.cancel')" @confirm="deleteProvider(item.id)">
+              <template #reference><el-button text type="danger" :icon="IconTrash" :loading="deletingId === item.id" :disabled="!!deletingId">{{ t("common.delete") }}</el-button></template>
             </el-popconfirm>
           </el-space>
         </div>
       </el-card>
     </div>
     <div class="providerActions">
-      <el-button class="addButton" :icon="IconPlus" @click="openProvider">添加供应商</el-button>
-      <el-button class="addButton" :icon="IconSettings" @click="openCustomProvider()">添加自定义供应商</el-button>
+      <el-button class="addButton" :icon="IconPlus" @click="openProvider">{{ t("languageProviders.addTitle") }}</el-button>
+      <el-button class="addButton" :icon="IconSettings" @click="openCustomProvider()">{{ t("languageProviders.addCustomTitle") }}</el-button>
     </div>
     <component :is="addProviderDialog" v-model="providerDialogVisible" />
     <component :is="addCustomProviderDialog" v-model="customProviderDialogVisible" :provider="editingProvider" />
@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "../../i18n";
 import { computed, defineAsyncComponent, ref, shallowRef, type Component } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
@@ -82,16 +83,16 @@ async function deleteProvider(id: string) {
   try {
     await saveSettings(settings => {
       const current = settings.customProviders;
-      if (!Array.isArray(current)) throw new Error("配置格式错误");
+      if (!Array.isArray(current)) throw new Error(t("providers.savedSettingsInvalid"));
       return { customProviders: current.filter(item => item?.id !== id) };
     });
-  } catch { ElMessage.error("删除失败，请重试"); }
+  } catch { ElMessage.error(t("common.deleteFailedRetry")); }
   finally { deletingId.value = ""; }
 }
 
 async function saveProviderApiKey(id: string, key: string, fetchedModels?: CustomProviderModel[]) {
   const provider = customProviders.value.find(item => item.id === id);
-  if (!provider) throw new Error("供应商已不存在");
+  if (!provider) throw new Error(t("providers.noLongerExists"));
   const { apiUrl, protocol, apiKey } = provider;
   let models = isTfRouterProvider(provider) ? fetchedModels : provider.models;
   if (!models) {
@@ -99,22 +100,22 @@ async function saveProviderApiKey(id: string, key: string, fetchedModels?: Custo
       const { data } = await axios.post("/api/providers/models", {
         apiUrl, protocol, apiKey: key,
       }, { timeout: 35000 });
-      if (data.code !== 200 || !Array.isArray(data.data)) throw new Error(data.message || "获取模型列表失败");
-      if (!data.data.length) throw new Error("未获取到可用模型，请检查 API Key 后重试");
+      if (data.code !== 200 || !Array.isArray(data.data)) throw new Error(data.message || t("models.fetchFailed"));
+      if (!data.data.length) throw new Error(t("models.noneAvailable"));
       models = data.data;
     } catch (error) {
       throw new Error(axios.isAxiosError(error)
-        ? error.response?.data?.message || "获取模型列表失败，请检查 API Key 后重试"
-        : error instanceof Error ? error.message : "获取模型列表失败");
+        ? error.response?.data?.message || t("models.fetchFailedCheckKey")
+        : error instanceof Error ? error.message : t("models.fetchFailed"));
     }
   }
   await saveSettings(settings => {
     const current = settings.customProviders;
-    if (!Array.isArray(current)) throw new Error("配置格式错误");
+    if (!Array.isArray(current)) throw new Error(t("providers.savedSettingsInvalid"));
     const latest = current.find(item => item?.id === id);
-    if (!latest) throw new Error("供应商已不存在");
+    if (!latest) throw new Error(t("providers.noLongerExists"));
     if (latest.apiUrl !== apiUrl || latest.protocol !== protocol || latest.apiKey !== apiKey) {
-      throw new Error("供应商配置已变更，请重试");
+      throw new Error(t("providers.changedRetry"));
     }
     return { customProviders: current.map(item => item?.id === id ? { ...item, apiKey: key, models } : item) };
   });
@@ -124,7 +125,7 @@ async function fetchProviderModels(provider: CustomProvider) {
   if (fetchingId.value) return;
   fetchingId.value = provider.id;
   try { await saveProviderApiKey(provider.id, provider.apiKey); }
-  catch (error) { ElMessage.error(error instanceof Error ? error.message : "获取模型列表失败，请重试"); }
+  catch (error) { ElMessage.error(error instanceof Error ? error.message : t("models.fetchFailedRetry")); }
   finally { fetchingId.value = ""; }
 }
 </script>

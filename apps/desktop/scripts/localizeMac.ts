@@ -20,7 +20,7 @@ if (process.env.ELECTROBUN_OS === "macos") {
 
   for (const [key, value] of [
     ["CFBundleDevelopmentRegion", "<string>zh-Hans</string>"],
-    ["CFBundleLocalizations", "<array><string>zh-Hans</string></array>"],
+    ["CFBundleLocalizations", "<array><string>zh-Hans</string><string>en</string></array>"],
   ]) {
     const existing = new RegExp(`<key>${key}</key>\\s*<(string|array)>[\\s\\S]*?</\\1>`);
     if (existing.test(plist)) {
@@ -31,9 +31,11 @@ if (process.env.ELECTROBUN_OS === "macos") {
   }
   writeFileSync(plistPath, plist);
 
-  const resourceDir = join(bundlePath, "Contents", "Resources", "zh-Hans.lproj");
-  mkdirSync(resourceDir, { recursive: true });
-  writeFileSync(join(resourceDir, "InfoPlist.strings"),
-    `CFBundleName = ${JSON.stringify(bundleName)};\nCFBundleDisplayName = ${JSON.stringify(bundleName)};\n`);
-  console.log(`已设置 macOS 简体中文本地化：${bundlePath}`);
+  for (const locale of ["zh-Hans", "en"]) {
+    const resourceDir = join(bundlePath, "Contents", "Resources", `${locale}.lproj`);
+    mkdirSync(resourceDir, { recursive: true });
+    writeFileSync(join(resourceDir, "InfoPlist.strings"),
+      `CFBundleName = ${JSON.stringify(bundleName)};\nCFBundleDisplayName = ${JSON.stringify(bundleName)};\n`);
+  }
+  console.log(`已设置 macOS 简体中文和英文本地化：${bundlePath}`);
 }

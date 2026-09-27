@@ -1,7 +1,7 @@
 <template>
   <nodeSkeleton v-bind="nodeProps" style="width: 320px">
-    <button v-loading="modelLoading" type="button" class="directorContent nopan" :disabled="modelLoading" :title="modelError || undefined" aria-label="打开导演台" @dblclick.stop @click.stop="openEditor">
-      <img v-if="preview" class="scenePreview" :src="preview" alt="最后镜头" draggable="false" />
+    <button v-loading="modelLoading" type="button" class="directorContent nopan" :disabled="modelLoading" :title="modelError ? getErrorDisplay(modelError) : undefined" :aria-label="t('openDirectorStudio')" @dblclick.stop @click.stop="openEditor">
+      <img v-if="preview" class="scenePreview" :src="preview" :alt="t('finalShot')" draggable="false" />
       <div v-else class="emptyPreview">
         <icon-cube3d-sphere :size="38" stroke="1.2" />
       </div>
@@ -35,6 +35,7 @@ import { directorPrompt } from "./agentPrompt";
 import { anchorSchema, prepareMotion, sampleMotion, type CameraAnchor } from "./motion";
 import { directorPlanSchema, prepareSceneAnimation, type DirectorPlan, type DirectorGeneration } from "./sceneAnimation";
 import { renderImage, renderVideo } from "./renderMedia";
+import { createDisplayError, getErrorDisplay, t } from "./i18n";
 
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
 const modelDocumentSchema = z.strictObject({
@@ -56,7 +57,7 @@ const exportingVideo = ref(false);
 const exportingImage = ref("");
 const exportProgress = ref(0);
 const exportController = new AbortController();
-nodeEvent.on("delete", () => { if (exportingVideo.value || exportingImage.value) throw new Error("正在导出，请完成后再删除导演节点"); });
+nodeEvent.on("delete", () => { if (exportingVideo.value || exportingImage.value) throw createDisplayError("正在导出，请完成后再删除导演节点", () => t("exportingDeleteBlocked")); });
 const data = computed(() => node.data as typeof node.data & {
   modelPath?: string;
   modelSnapshot?: ModelDocument;
@@ -88,14 +89,14 @@ const selectedModel = computed(() => models.value.find(item => JSON.stringify([i
 const preview = ref("");
 let previewVersion = 0;
 const modelLoading = ref(true);
-const modelError = ref("");
+const modelError = shallowRef<Error>();
 const addingMannequin = ref(false);
 let modelSaving = Promise.resolve();
 let disposed = false;
-onBeforeUnmount(() => { disposed = true; exportController.abort(new Error("导演节点已关闭，导出已停止")); });
+onBeforeUnmount(() => { disposed = true; exportController.abort(createDisplayError("导演节点已关闭，导出已停止", () => t("directorClosedExportStopped"))); });
 
 function getModelPath() {
-  if (!node.id || /[\\/]/.test(node.id) || node.id === "." || node.id === "..") throw new Error("节点 ID 不能作为文件夹名称");
+  if (!node.id || /[\\/]/.test(node.id) || node.id === "." || node.id === "..") throw createDisplayError("节点 ID 不能作为文件夹名称", () => t("invalidNodeFolder"));
   return `assets/${node.id}/model.json`;
 }
 
@@ -112,12 +113,12 @@ async function writeModel(workspaceFiles: ReturnType<typeof files.getWorkspaceFi
 
 async function loadModel() {
   modelLoading.value = true;
-  modelError.value = "";
+  modelError.value = undefined;
   try {
     const { modelPath, modelSnapshot } = data.value;
     if (!modelPath && !modelSnapshot) return;
     const workspaceFiles = files.getWorkspaceFiles();
-    if (modelPath && modelPath !== getModelPath()) throw new Error("导演台模型文件路径无效");
+    if (modelPath && modelPath !== getModelPath()) throw createDisplayError("导演台模型文件路径无效", () => t("invalidModelPath"));
     const value = modelDocumentSchema.parse(modelSnapshot ?? await workspaceFiles.readJson(modelPath!));
     if (disposed) return;
     // 复制、跨画布粘贴时只传递一次快照，写入新节点目录成功后才移除快照。
@@ -130,8 +131,8 @@ async function loadModel() {
     modelDocument.value = value;
     if (!selectedPlan.value) data.value.selectedPlanId = value.plans[0]?.id;
   } catch (error) {
-    modelError.value = error instanceof Error ? error.message : "模型文件读取失败";
-    if (!disposed) ElMessage.error(`导演台加载失败：${modelError.value}`);
+    modelError.value = error instanceof Error ? error : createDisplayError("模型文件读取失败", () => t("modelFileReadFailed"));
+    if (!disposed) ElMessage.error(t("directorLoadFailed", { message: getErrorDisplay(modelError.value) }));
   } finally {
     modelLoading.value = false;
   }
@@ -172,7 +173,7 @@ async function addMannequin() {
     modelSaving = saving.catch(() => {});
     await saving;
   } catch (error) {
-    if (!disposed) ElMessage.error(error instanceof Error ? error.message : "人偶添加失败");
+    if (!disposed) ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("mannequinAddFailed"));
   } finally {
     addingMannequin.value = false;
   }
@@ -180,7 +181,8 @@ async function addMannequin() {
 
 nodeEvent.on("copy", async () => {
   await nodeEvent.emit("save");
-  if (modelError.value) throw new Error(`导演台模型未加载，无法复制：${modelError.value}`);
+  const failure = modelError.value;
+  if (failure) throw createDisplayError(`导演台模型未加载，无法复制：${failure.message}`, () => t("modelNotLoadedCopy", { message: getErrorDisplay(failure) }));
   return { modelPath: undefined, modelSnapshot: modelDocument.value };
 });
 
@@ -192,14 +194,14 @@ nodeEvent.on("save", async (reason) => {
     await pending;
   } while (pending !== modelSaving);
   if (reason === "reload" && (exportingVideo.value || exportingImage.value || tasks.value.some(task => !task.error))) {
-    throw new Error("导演台正在生成或导出，请完成后再刷新节点");
+    throw createDisplayError("导演台正在生成或导出，请完成后再刷新节点", () => t("busyReloadBlocked"));
   }
 });
 
 async function exportToCanvas(kind: "image" | "video", key: string, aspect: number, render: (signal: AbortSignal) => Promise<File>) {
   if (kind === "video" ? exportingVideo.value : exportingImage.value) return;
   const type = `remote-${kind}Node`;
-  if (!nodeTypes?.value?.[type]) return void ElMessage.error(`请先启用${kind === "image" ? "图片" : "视频"}节点插件`);
+  if (!nodeTypes?.value?.[type]) return void ElMessage.error(kind === "image" ? t("enableImagePlugin") : t("enableVideoPlugin"));
   if (kind === "video") { exportingVideo.value = true; exportProgress.value = 0; }
   else exportingImage.value = key;
   const id = crypto.randomUUID();
@@ -240,7 +242,7 @@ async function exportToCanvas(kind: "image" | "video", key: string, aspect: numb
     const path = await mediaFiles.uploadFile(id, file);
     exportController.signal.throwIfAborted();
     if (discarded) return;
-    if (findNode(node.id) !== node || !nodeTypes?.value?.[type]) throw new Error("画布节点已变化，请重新导出");
+    if (findNode(node.id) !== node || !nodeTypes?.value?.[type]) throw createDisplayError("画布节点已变化，请重新导出", () => t("canvasChanged"));
     exportNode ??= addExportNode(file.name.replace(/\.[^.]+$/, ""));
     // 更新已有输出对象，让已挂载的视频节点及连接它的节点同步收到结果。
     (exportNode.data.outputs ??= {})[kind] = {
@@ -248,9 +250,9 @@ async function exportToCanvas(kind: "image" | "video", key: string, aspect: numb
     };
     committed = true;
     if (kind === "video") exportProgress.value = 100;
-    ElMessage.success(`${kind === "image" ? "图片" : "视频"}已导出到画布`);
+    ElMessage.success(kind === "image" ? t("imageExported") : t("videoExported"));
   } catch (error) {
-    if (!disposed && !discarded) ElMessage.error(error instanceof Error ? error.message : "导出失败，请重试");
+    if (!disposed && !discarded) ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("exportFailed"));
     if (exportNode && findNode(id) === exportNode) removeNodes(id);
   } finally {
     stopWatching();
@@ -259,7 +261,7 @@ async function exportToCanvas(kind: "image" | "video", key: string, aspect: numb
       try { await workspaceFiles!.remove(`assets/${id}`, true); }
       catch (cleanupError) {
         const code = (cleanupError as { response?: { data?: { data?: { code?: string } } } })?.response?.data?.data?.code;
-        if (!disposed && code !== "ENOENT") ElMessage.error("导出中断，临时素材清理失败");
+        if (!disposed && code !== "ENOENT") ElMessage.error(t("temporaryCleanupFailed"));
       }
     }
     if (kind === "video") exportingVideo.value = false;
@@ -292,7 +294,7 @@ async function loadModels() {
     // ACT: 只给空配置选默认模型，保留暂时不可用的旧选择。
     if (!model.value) model.value = first ? JSON.stringify([first.providerId, first.modelId]) : "";
   } catch (error) {
-    if (!disposed) ElMessage.error(error instanceof Error ? error.message : "模型加载失败");
+    if (!disposed) ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("modelLoadFailed"));
   } finally {
     modelsLoading.value = false;
   }
@@ -325,7 +327,7 @@ watch([scene, selectedPlan, lighting, sceneSettings, modelLoading, previewReady]
     if (plan) planPreviews.set(plan, { scene: value, lighting: light, settings, image });
     if (!disposed && version === previewVersion) preview.value = image;
   } catch (error) {
-    if (!disposed && version === previewVersion) ElMessage.error(error instanceof Error ? error.message : "预览生成失败");
+    if (!disposed && version === previewVersion) ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("previewFailed"));
   }
 }, { immediate: true });
 
@@ -348,7 +350,7 @@ async function generate() {
   setPrompt("");
   try {
     const workspaceFiles = files.getWorkspaceFiles();
-    if (refList.value.some(item => item.value === undefined)) throw new Error("引用节点暂无内容，请先补充引用内容");
+    if (refList.value.some(item => item.value === undefined)) throw createDisplayError("引用节点暂无内容，请先补充引用内容", () => t("referenceContentMissing"));
     const mediaReferences = refList.value
       .filter(item => item.value !== undefined && (item.dataType === "STRING" || item.dataType === "IMAGE" || item.dataType === "VIDEO"))
       .map(item => item.dataType === "STRING" ? { dataType: item.dataType, value: item.value } : { dataType: item.dataType, value: { ...item.value } });
@@ -374,7 +376,7 @@ async function generate() {
       tools: draft.tools,
     });
     if (disposed) return;
-    if (!draft.edited) throw new Error("Agent 未修改方案，原方案未修改，请重试。");
+    if (!draft.edited) throw createDisplayError("Agent 未修改方案，原方案未修改，请重试。", () => t("agentNoChanges"));
     const result = draft.read();
     const nextScene = draft.sceneChanged ? result.scene : baseScene;
     const plan = { ...result.plan, id: task.id, instruction: requirement };
@@ -386,7 +388,7 @@ async function generate() {
     // 动画请求可以并行生成，同一模型文件顺序保存，写入成功后才替换当前场景。
     const saving = modelSaving.then(async () => {
       if (disposed) return;
-      if (scene.value !== baseScene) throw new Error("基础模型已被另一条指令更新，请基于当前模型重试。");
+      if (scene.value !== baseScene) throw createDisplayError("基础模型已被另一条指令更新，请基于当前模型重试。", () => t("baseSceneChanged"));
       const objects = new Map(nextScene.objectList.map(object => [object.threeJsonId, object]));
       const previousPlans = draft.sceneChanged
         ? plans.value.map(item => ({ ...item, tracks: item.tracks.filter(track => objects.has(track.objectId) && (!track.joint || objects.get(track.objectId)?.objType === "mannequin")) }))
@@ -403,7 +405,10 @@ async function generate() {
     await saving;
     tasks.value = tasks.value.filter(item => item.id !== task.id);
   } catch (error) {
-    if (!disposed) tasks.value = tasks.value.map(item => item.id === task.id ? { ...item, error: error instanceof Error ? error.message : "生成失败，请重试" } : item);
+    if (!disposed) tasks.value = tasks.value.map(item => item.id === task.id ? {
+      ...item,
+      error: error instanceof Error ? error : createDisplayError("生成失败，请重试", () => t("generationFailed")),
+    } : item);
   }
 }
 </script>

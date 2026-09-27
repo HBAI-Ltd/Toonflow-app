@@ -12,14 +12,16 @@
     @contextmenu.stop
     @keydown.stop>
     <div class="toolbarActions">
-      <el-button text :icon="IconCopyPlus" :disabled="busy || disabled" @click="operate('duplicate')">创建副本</el-button>
-      <el-button text :icon="IconBoxMultiple" :disabled="busy || disabled" @click="operate('group')">打组</el-button>
-      <el-button text :icon="IconDeselect" :disabled="busy || disabled || !hasGroup" @click="operate('ungroup')">解组</el-button>
+      <el-button text :icon="IconCopyPlus" :disabled="busy || disabled" @click="operate('duplicate')">{{ t("duplicate") }}</el-button>
+      <el-button text :icon="IconBoxMultiple" :disabled="busy || disabled" @click="operate('group')">{{ t("groupSelection") }}</el-button>
+      <el-button text :icon="IconDeselect" :disabled="busy || disabled || !hasGroup" @click="operate('ungroup')">{{ t("ungroupSelection") }}</el-button>
     </div>
   </el-card>
 </template>
 
 <script setup lang="ts">
+import { t } from "@/pages/i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import { computed, nextTick, ref } from "vue";
 import { getRectOfNodes, useVueFlow, type GraphNode, type Node, type XYPosition } from "@vue-flow/core";
 import { ElButton, ElCard, ElMessage } from "element-plus";
@@ -66,7 +68,7 @@ async function duplicateNodes(selection: GraphNode[], signal: AbortSignal, withE
     return copy;
   }));
   signal.throwIfAborted();
-  if (nodes.some(node => flow.findNode(node.id) !== node)) throw new Error("节点已变化，请重新创建副本");
+  if (nodes.some(node => flow.findNode(node.id) !== node)) throw createDisplayError("节点已变化，请重新创建副本", () => t("nodesChangedDuplicateThemAgain"));
   const edges = incomingEdges.filter(edge => ids.has(edge.source) || flow.findNode(edge.source)).map(edge => ({
     ...JSON.parse(JSON.stringify(edge)),
     id: crypto.randomUUID(),
@@ -137,7 +139,7 @@ function ungroupNodes(selection: GraphNode[]) {
 
 function mergeGroups(selection: GraphNode[]) {
   const groups = getSelectionRoots(selection.filter(node => node.type === "canvasGroup"), flow.getNodes.value);
-  if (groups.length < 2) throw new Error("请至少选择两个分组");
+  if (groups.length < 2) throw createDisplayError("请至少选择两个分组", () => t("selectAtLeastTwoGroups"));
   const first = groups[0]!;
   const groupIds = new Set(groups.map(node => node.id));
   const bounds = getRectOfNodes(groups);
@@ -217,7 +219,7 @@ function startDragCopy(selection: GraphNode[], withEdges: boolean) {
         finishGroupDrag(flow.getNodes.value, created);
       });
     } catch (error) {
-      if (!signal.aborted) ElMessage.error(error instanceof Error ? error.message : "拖动复制失败");
+      if (!signal.aborted) ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("couldNotDuplicateByDragging"));
     } finally {
       signal.removeEventListener("abort", finish);
       busy.value = false;
@@ -259,7 +261,7 @@ async function operate(command: "duplicate" | "group" | "ungroup" | "mergeGroup"
       await selectNodes(ids, signal);
     });
   } catch (error) {
-    if (!signal.aborted) ElMessage.error(error instanceof Error ? error.message : "选区操作失败");
+    if (!signal.aborted) ElMessage.error(error instanceof Error ? getErrorDisplay(error) : t("selectionOperationFailed"));
   } finally {
     busy.value = false;
   }

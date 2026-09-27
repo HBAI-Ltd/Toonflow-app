@@ -1,11 +1,12 @@
 <template>
   <el-dialog v-model="visible" title="FFmpeg" width="min(680px, calc(100vw - 32px))" alignCenter appendToBody destroyOnClose>
-    <el-alert class="installationHint" title="安装完成后，请重新发起刚才的操作。" type="info" :closable="false" showIcon />
+    <el-alert class="installationHint" :title="t('ffmpeg.retryOperationHint')" type="info" :closable="false" showIcon />
     <ffmpeg v-if="visible" :downloadOnOpen="true" />
   </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { t } from "./i18n";
 import { onBeforeUnmount, ref } from "vue";
 import { ElMessageBox } from "element-plus";
 import ffmpeg from "./panels/pluginMarket/ffmpeg.vue";
@@ -20,8 +21,8 @@ events.onmessage = async event => {
   if (data?.type !== "required" || pending || visible.value) return;
   pending = true;
   try {
-    await ElMessageBox.confirm("当前操作需要 FFmpeg，但尚未检测到可用版本。是否下载并安装？", "需要 FFmpeg", {
-      confirmButtonText: "下载并安装", cancelButtonText: "暂不下载", closeOnClickModal: false,
+    await ElMessageBox.confirm(t("ffmpeg.requiredPrompt"), t("ffmpeg.requiredTitle"), {
+      confirmButtonText: t("ffmpeg.downloadAndInstall"), cancelButtonText: t("ffmpeg.notNow"), closeOnClickModal: false,
     });
     if (events.readyState !== EventSource.CLOSED) visible.value = true;
   } catch {

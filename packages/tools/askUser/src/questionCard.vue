@@ -6,9 +6,9 @@
       <el-tag size="small" :type="answer && !skipped ? 'success' : 'info'">{{ statusText }}</el-tag>
     </div>
     <template v-if="tool.status === 'error'">
-      <p class="questionText">表单暂时未生成，请 AI 重新整理。</p>
+      <p class="questionText">{{ t("formUnavailable") }}</p>
       <details v-if="tool.result" class="errorDetails">
-        <summary>查看错误详情</summary>
+        <summary>{{ t("errorDetails") }}</summary>
         <pre class="errorText">{{ tool.result }}</pre>
       </details>
     </template>
@@ -18,7 +18,7 @@
       <template v-else>
         <el-radio-group v-if="options.length" v-model="selected" class="questionOptions" :disabled="submitting" :aria-label="question">
           <el-radio v-for="option in options" :key="option" :value="option" border>{{ option }}</el-radio>
-          <el-radio value="" border>自行填写</el-radio>
+          <el-radio value="" border>{{ t("customAnswerOption") }}</el-radio>
         </el-radio-group>
         <el-input
           v-model="text"
@@ -26,15 +26,15 @@
           :autosize="{ minRows: 2, maxRows: 6 }"
           :disabled="submitting"
           :maxlength="8000"
-          :placeholder="options.length ? '也可以直接回答或补充说明' : '输入你的回答'"
-          aria-label="回答问题" />
-        <el-text v-if="draftAnswer.length > 8000" type="danger">回答（含选项）不能超过 8000 字</el-text>
+          :placeholder="t(options.length ? 'optionalAnswerPlaceholder' : 'answerPlaceholder')"
+          :aria-label="t('answerAriaLabel')" />
+        <el-text v-if="draftAnswer.length > 8000" type="danger">{{ t("answerTooLong") }}</el-text>
       </template>
       <div class="questionActions">
         <el-button type="primary" :loading="submitting" :disabled="!directory || (formRules.length ? !formApi : !draftAnswer || draftAnswer.length > 8000)" @click="submitAnswer(false)">
-          提交回答
+          {{ t("submitAnswer") }}
         </el-button>
-        <el-button :disabled="!directory || submitting" @click="submitAnswer(true)">跳过</el-button>
+        <el-button :disabled="!directory || submitting" @click="submitAnswer(true)">{{ t("skip") }}</el-button>
       </div>
     </template>
     <p v-else-if="answer" class="answerText">{{ answer }}</p>
@@ -71,6 +71,7 @@ import "element-plus/es/components/radio/style/css";
 import "element-plus/es/components/radio-group/style/css";
 import { IconMessageQuestion } from "@tabler/icons-vue";
 import type { ToolCall } from "@toonflow/tools-scaffold/runtime";
+import t from "./translation";
 
 for (const component of [
   ElForm, ElFormItem, ElRow, ElCol, ElInput, ElInputNumber, ElSwitch,
@@ -80,7 +81,7 @@ for (const component of [
 
 <script setup lang="ts">
 const props = defineProps<{ tool: ToolCall; directory?: string }>();
-const title = computed(() => props.tool.question?.title || (typeof props.tool.args?.title === "string" ? props.tool.args.title.trim() : "") || "请确认");
+const title = computed(() => props.tool.question?.title || (typeof props.tool.args?.title === "string" ? props.tool.args.title.trim() : "") || t("defaultTitle"));
 const selected = ref("");
 const text = ref("");
 const submitting = ref(false);
@@ -104,7 +105,7 @@ const formRules = computed<Rule[]>(() => (props.tool.question?.fields ?? []).map
   validate: field.required ? [{
     required: true,
     type: field.type === "checkbox" ? "array" : field.type === "inputNumber" ? "number" : field.type === "switch" ? "boolean" : "string",
-    message: `请填写${field.title}`,
+    message: t("requiredField", { field: field.title }),
     ...(field.type === "checkbox" ? { min: 1 } : {}),
     ...(["input", "textarea"].includes(field.type) ? { whitespace: true } : {}),
   }] : [],
@@ -129,11 +130,11 @@ const answer = computed(() => {
 const waiting = computed(() => props.tool.status === "running" && !!props.tool.question?.callId && !answer.value);
 const draftAnswer = computed(() => [selected.value, text.value.trim()].filter(Boolean).join("\n"));
 const statusText = computed(() => {
-  if (props.tool.status === "error") return "待重新生成";
-  if (skipped.value) return "已跳过";
-  if (answer.value) return "已回答";
-  if (props.tool.status === "interrupted") return "已停止";
-  return waiting.value ? "等待回答" : "提问记录";
+  if (props.tool.status === "error") return t("statusNeedsRegeneration");
+  if (skipped.value) return t("statusSkipped");
+  if (answer.value) return t("statusAnswered");
+  if (props.tool.status === "interrupted") return t("statusInterrupted");
+  return t(waiting.value ? "statusWaiting" : "statusHistory");
 });
 
 async function submitAnswer(skip: boolean) {
@@ -149,12 +150,12 @@ async function submitAnswer(skip: boolean) {
       callId,
       ...(skip ? { skipped: true } : formRules.value.length ? { values: formApi.value!.formData() } : { answer: value }),
     }, { headers: { "x-toonflow-workspace": "1" } });
-    if (response.data.code !== 200) throw new Error(response.data.message || "提交回答失败");
+    if (response.data.code !== 200) throw new Error(response.data.message || t("submitFailed"));
     submittedAnswer.value = response.data.data.answer;
     submittedSkipped.value = response.data.data.skipped === true;
   } catch (error) {
     const message = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
-    ElMessage.error(message || (error instanceof Error ? error.message : "提交回答失败"));
+    ElMessage.error(message || (error instanceof Error ? error.message : t("submitFailed")));
   } finally {
     submitting.value = false;
   }

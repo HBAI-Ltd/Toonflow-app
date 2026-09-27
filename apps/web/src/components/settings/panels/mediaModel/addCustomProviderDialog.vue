@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="visible"
-    :title="mode === 'builtin' ? '添加媒体供应商' : '添加自定义媒体供应商'"
+    :title="t(mode === 'builtin' ? 'mediaProviders.addTitle' : 'mediaProviders.addCustomTitle')"
     :width="mode === 'builtin' ? 'min(860px, 94vw)' : 'min(760px, 94vw)'"
     alignCenter
     appendToBody
@@ -10,7 +10,7 @@
     :closeOnPressEscape="!saving"
     :showClose="!saving">
     <div v-if="mode === 'builtin'" class="providerPicker">
-      <aside class="providerSidebar" aria-label="选择厂商">
+      <aside class="providerSidebar" :aria-label="t('providers.select')">
         <button
           v-for="item in mediaProviders"
           :key="item.id"
@@ -31,24 +31,24 @@
             <el-tag v-if="activeProvider.version" size="small" type="info" effect="plain">v{{ activeProvider.version }}</el-tag>
           </div>
           <messageMarkdown v-if="providerReadme" class="providerReadme" :content="providerReadme" />
-          <el-divider v-if="providerReadme" contentPosition="left">连接配置</el-divider>
+          <el-divider v-if="providerReadme" contentPosition="left">{{ t("providers.connection") }}</el-divider>
           <form-create v-model:api="formApi" :rule="providerRules" :option="formOptions" />
           <div class="modelHeader">
-            <el-text tag="strong">模型列表 <el-text type="info">{{ models.length }}</el-text></el-text>
+            <el-text tag="strong">{{ t("common.models") }} <el-text type="info">{{ models.length }}</el-text></el-text>
           </div>
-          <el-table v-if="models.length" class="modelList" :data="models" rowKey="id" aria-label="模型列表">
-            <el-table-column prop="id" label="模型 ID" minWidth="220" showOverflowTooltip />
-            <el-table-column prop="label" label="显示名称" minWidth="180" showOverflowTooltip />
+          <el-table v-if="models.length" class="modelList" :data="models" rowKey="id" :aria-label="t('common.models')">
+            <el-table-column prop="id" :label="t('models.id')" minWidth="220" showOverflowTooltip />
+            <el-table-column prop="label" :label="t('providers.displayName')" minWidth="180" showOverflowTooltip />
           </el-table>
-          <el-alert v-if="formError" :title="formError" type="error" :closable="false" showIcon />
+          <el-alert v-if="formError" :title="getErrorDisplay(formError)" type="error" :closable="false" showIcon />
         </section>
       </el-scrollbar>
     </div>
     <el-scrollbar v-else maxHeight="65vh">
       <div class="dialogContent">
         <el-form labelPosition="top" :disabled="saving" @submit.prevent>
-          <el-form-item label="添加方式">
-            <el-segmented v-model="activeTab" :options="addMethods" block ariaLabel="添加方式">
+          <el-form-item :label="t('mediaProviders.addVia')">
+            <el-segmented v-model="activeTab" :options="addMethods" block :ariaLabel="t('mediaProviders.addVia')">
               <template #default="{ item }">
                 <span class="methodOption">
                   <component :is="item.icon" :size="16" aria-hidden="true" />
@@ -57,37 +57,39 @@
               </template>
             </el-segmented>
           </el-form-item>
-          <el-form-item v-if="activeTab === 'file'" label="供应商文件">
+          <el-form-item v-if="activeTab === 'file'" :label="t('mediaProviders.providerFile')">
             <div class="fileSource">
               <input ref="fileInput" type="file" accept=".ts" hidden :disabled="saving" @change="readSourceFile" />
-              <el-input :modelValue="fileName" :prefixIcon="IconFileCode" placeholder="尚未选择文件" readonly aria-label="已选择的供应商文件" />
-              <el-button :icon="IconFolderOpen" @click="fileInput?.click()">选择文件</el-button>
+              <el-input :modelValue="fileName" :prefixIcon="IconFileCode" :placeholder="t('common.noFileSelected')" readonly :aria-label="t('mediaProviders.selectedFile')" />
+              <el-button :icon="IconFolderOpen" @click="fileInput?.click()">{{ t("common.chooseFile") }}</el-button>
             </div>
-            <el-text class="fieldHint" type="info" size="small">支持 .ts 文件，最大 1 MB。</el-text>
+            <el-text class="fieldHint" type="info" size="small">{{ t("mediaProviders.fileSizeHint") }}</el-text>
           </el-form-item>
-          <el-form-item v-else label="供应商代码">
-            <el-input v-model="code" class="sourceInput" type="textarea" :rows="10" resize="none" aria-label="供应商代码" />
+          <el-form-item v-else :label="t('mediaProviders.providerCode')">
+            <el-input v-model="code" class="sourceInput" type="textarea" :rows="10" resize="none" :aria-label="t('mediaProviders.providerCode')" />
           </el-form-item>
         </el-form>
-        <el-alert class="providerTips" title="没有供应商文件？可以让 AI 帮你生成" type="info" :closable="false" showIcon>
-          <p>复制提示词发给其他 AI，按引导提供接口资料即可生成配置文件，随后在这里导入 .ts 文件或粘贴完整代码即可使用。</p>
-          <el-button size="small" :icon="IconCopy" @click="copyPrompt">一键复制提示词</el-button>
+        <el-alert class="providerTips" :title="t('mediaProviders.askAiTitle')" type="info" :closable="false" showIcon>
+          <p>{{ t("mediaProviders.aiPromptDescription") }}</p>
+          <el-button size="small" :icon="IconCopy" @click="copyPrompt">{{ t("mediaProviders.copyPrompt") }}</el-button>
           <details class="promptDetails" :open="promptExpanded" @toggle="promptExpanded = ($event.target as HTMLDetailsElement).open">
-            <summary>查看完整提示词</summary>
-            <el-input v-if="promptExpanded" :modelValue="providerPrompt" type="textarea" :rows="10" resize="none" readonly aria-label="供应商开发提示词" />
+            <summary>{{ t("mediaProviders.viewPrompt") }}</summary>
+            <el-input v-if="promptExpanded" :modelValue="providerPrompt" type="textarea" :rows="10" resize="none" readonly :aria-label="t('mediaProviders.developmentPrompt')" />
           </details>
         </el-alert>
-        <el-alert v-if="formError" class="formError" :title="formError" type="error" :closable="false" showIcon />
+        <el-alert v-if="formError" class="formError" :title="getErrorDisplay(formError)" type="error" :closable="false" showIcon />
       </div>
     </el-scrollbar>
     <template #footer>
-      <el-button :disabled="saving" @click="visible = false">取消</el-button>
-      <el-button type="primary" :loading="saving" :disabled="!source.trim()" @click="addProvider">确定添加供应商</el-button>
+      <el-button :disabled="saving" @click="visible = false">{{ t("common.cancel") }}</el-button>
+      <el-button type="primary" :loading="saving" :disabled="!source.trim()" @click="addProvider">{{ t("languageProviders.addTitle") }}</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { t } from "../../i18n";
+import { createDisplayError, getErrorDisplay } from "@toonflow/i18n";
 import axios from "axios";
 import { computed, ref, shallowRef, watch } from "vue";
 import formCreate, { type Api, type Options } from "../../formCreate";
@@ -116,17 +118,17 @@ const providerReadme = computed(() => {
   return provider && "readme" in provider && typeof provider.readme === "string" ? provider.readme : "";
 });
 const activeTab = ref<"file" | "code">("file");
-const addMethods = [
-  { label: "文件导入", value: "file", icon: IconFileCode },
-  { label: "粘贴代码", value: "code", icon: IconCode },
-];
+const addMethods = computed(() => [
+  { label: t("mediaProviders.importFile"), value: "file", icon: IconFileCode },
+  { label: t("mediaProviders.pasteCode"), value: "code", icon: IconCode },
+]);
 const promptExpanded = ref(false);
 const code = ref("");
 const fileSource = ref("");
 const fileName = ref("");
 const fileInput = ref<HTMLInputElement>();
 const saving = ref(false);
-const formError = ref("");
+const formError = shallowRef<Error>();
 const formApi = shallowRef<Api>();
 const addedProvider = shallowRef<MediaProvider>();
 const formOptions = computed<Options>(() => ({ form: { labelPosition: "top", disabled: saving.value }, submitBtn: false, resetBtn: false }));
@@ -134,7 +136,7 @@ const providerRules = computed(() => formCreate.copyRules(activeProvider.value?.
 const source = computed(() => mode === "builtin" ? providerSources[selectedProvider.value] ?? "" : activeTab.value === "file" ? fileSource.value : code.value);
 
 watch([activeTab, selectedProvider], () => {
-  formError.value = "";
+  formError.value = undefined;
   addedProvider.value = undefined;
 });
 
@@ -145,7 +147,8 @@ watch(visible, value => {
   promptExpanded.value = false;
   formApi.value = undefined;
   addedProvider.value = undefined;
-  code.value = fileSource.value = fileName.value = formError.value = "";
+  code.value = fileSource.value = fileName.value = "";
+  formError.value = undefined;
 });
 
 async function readSourceFile(event: Event) {
@@ -153,14 +156,14 @@ async function readSourceFile(event: Event) {
   const file = input.files?.[0];
   input.value = "";
   if (!file) return;
-  formError.value = "";
+  formError.value = undefined;
   try {
-    if (!/\.ts$/i.test(file.name) || file.size > 1024 * 1024) throw new Error("请选择不超过 1 MB 的 .ts 文件");
+    if (!/\.ts$/i.test(file.name) || file.size > 1024 * 1024) throw createDisplayError("请选择不超过 1 MB 的 .ts 文件", () => t("mediaProviders.invalidFile"));
     fileSource.value = await file.text();
     fileName.value = file.name;
   } catch (error) {
     fileSource.value = fileName.value = "";
-    formError.value = error instanceof Error ? error.message : "读取文件失败";
+    formError.value = error instanceof Error ? error : createDisplayError("读取文件失败", () => t("common.fileReadFailed"));
   }
 }
 
@@ -168,7 +171,7 @@ async function addProvider() {
   if (saving.value || !source.value.trim()) return;
   if (mode === "builtin" && !formApi.value) return;
   saving.value = true;
-  formError.value = "";
+  formError.value = undefined;
   try {
     let values: Record<string, unknown> | undefined;
     if (mode === "builtin") {
@@ -176,8 +179,8 @@ async function addProvider() {
       values = formApi.value!.formData();
       if ("apiKey" in values) {
         values.apiKey = typeof values.apiKey === "string" ? values.apiKey.trim() : "";
-        if (!values.apiKey) throw new Error("请填写 API Key");
-        if ((values.apiKey as string).length > 8192) throw new Error("API Key 过长");
+        if (!values.apiKey) throw createDisplayError("请填写 API Key", () => t("providers.apiKeyRequired"));
+        if ((values.apiKey as string).length > 8192) throw createDisplayError("API Key 过长", () => t("providers.apiKeyTooLong"));
       }
     }
     if (!addedProvider.value) {
@@ -188,20 +191,23 @@ async function addProvider() {
     }
     if (values) {
       const providerId = addedProvider.value.id;
-      // ACT: 安装成功但配置保存失败时保留安装结果，重试只保存配置。
+      // ACT: 安装成功但配置保存失败时保留安装结果，重试时只保存配置。
       await saveSettings(settings => {
         const configs = settings.mediaProviderConfigs as Record<string, Record<string, unknown>> | undefined;
-        if (configs !== undefined && (!configs || typeof configs !== "object" || Array.isArray(configs))) throw new Error("媒体供应商配置格式无效");
+        if (configs !== undefined && (!configs || typeof configs !== "object" || Array.isArray(configs))) throw createDisplayError("媒体供应商配置格式无效", () => t("mediaProviders.invalidSettings"));
         const current = configs?.[providerId];
-        if (current !== undefined && (!current || typeof current !== "object" || Array.isArray(current))) throw new Error("当前供应商配置格式无效");
+        if (current !== undefined && (!current || typeof current !== "object" || Array.isArray(current))) throw createDisplayError("当前供应商配置格式无效", () => t("mediaProviders.invalidCurrentSettings"));
         return { mediaProviderConfigs: { ...configs, [providerId]: { ...current, ...values } } };
       });
     }
     invalidateNodeModels("media");
     visible.value = false;
   } catch (error) {
-    const message = axios.isAxiosError(error) ? error.response?.data?.message || error.message : error instanceof Error ? error.message : "添加失败，请重试";
-    formError.value = addedProvider.value ? `供应商已添加，连接配置未保存：${message}。填写内容已保留，请重试。` : message;
+    const cause = axios.isAxiosError(error) ? new Error(error.response?.data?.message || error.message) : error instanceof Error ? error : createDisplayError("添加失败，请重试", () => t("mediaProviders.addFailed"));
+    const message = cause.message;
+    formError.value = addedProvider.value
+      ? createDisplayError(`供应商已添加，连接配置未保存：${message}。填写内容已保留，请重试。`, () => t("mediaProviders.connectionSaveFailed", { message: getErrorDisplay(cause) }))
+      : cause;
   } finally {
     saving.value = false;
   }
@@ -210,9 +216,9 @@ async function addProvider() {
 async function copyPrompt() {
   try {
     await writeClipboardText(providerPrompt);
-    ElMessage.success("提示词已复制，发给其他 AI 后跟着回答问题即可");
+    ElMessage.success(t("mediaProviders.promptCopied"));
   } catch {
-    ElMessage.error("复制失败，请展开「查看完整提示词」后手动复制");
+    ElMessage.error(t("mediaProviders.copyFailed"));
   }
 }
 </script>

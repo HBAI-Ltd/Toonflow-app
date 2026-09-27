@@ -12,8 +12,8 @@
         :icon="IconTransfer"
         :loading="uploading"
         text
-        title="替换图片"
-        aria-label="替换图片"
+        :title="t('replaceImage')"
+        :aria-label="t('replaceImage')"
         @click.stop="fileInput?.click()" />
     </template>
     <div class="imageContent nopan">
@@ -22,17 +22,17 @@
         class="imagePreview"
         :src="previewUrl"
         draggable="false"
-        alt="节点图片"
+        :alt="t('nodeImage')"
         @load="resizeImage"
-        @error="ElMessage.error('无法预览该图片')" />
-      <input ref="fileInput" class="fileInput" type="file" accept="image/*" aria-label="选择图片" :disabled="uploading" @change="uploadImage" />
+        @error="ElMessage.error(t('imagePreviewFailed'))" />
+      <input ref="fileInput" class="fileInput" type="file" accept="image/*" :aria-label="t('chooseImage')" :disabled="uploading" @change="uploadImage" />
       <el-button
         v-if="!outputFile"
         class="uploadButton"
         text
         :loading="uploading"
-        title="上传图片"
-        aria-label="上传图片"
+        :title="t('uploadImage')"
+        :aria-label="t('uploadImage')"
         @dblclick.stop
         @click="fileInput?.click()">
         <icon-upload v-if="!uploading" :size="48" stroke="1.5" />
@@ -51,6 +51,11 @@ import { computed, nextTick, ref } from "vue";
 import { IconPhoto, IconUpload, IconTransfer } from "@tabler/icons-vue";
 import { ElButton, ElImageViewer, ElMessage } from "element-plus";
 import { nodeSkeleton, nodeTools, useNode, z, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
+import { createDisplayError, createTranslator, getErrorDisplay } from "@toonflow/i18n";
+import zh from "./locales/zh.json";
+import en from "./locales/en.json";
+
+const t = createTranslator({ zh, en });
 
 defineOptions({
   inheritAttrs: false,
@@ -68,14 +73,14 @@ const imageWidth = ref(0);
 const outputFile = computed(() => outputs.value.image?.dataType === "IMAGE" ? outputs.value.image.value : undefined);
 const previewUrl = files.useFileUrl(
   outputFile,
-  (error) => showError(error, "图片读取失败")
+  (error) => showError(error, t("imageReadFailed"))
 );
 
 nodeEvent.on("save", () => {
-  if (uploading.value) throw new Error("图片处理中，请完成后再切换或刷新节点");
+  if (uploading.value) throw createDisplayError("图片处理中，请完成后再切换或刷新节点", () => t("imageBusySave"));
 });
 nodeEvent.on("delete", () => {
-  if (uploading.value) throw new Error("图片上传中，请稍后删除节点");
+  if (uploading.value) throw createDisplayError("图片上传中，请稍后删除节点", () => t("imageUploadingDelete"));
   uploading.value = true;
   return files.removeNodeFiles().finally(() => {
     uploading.value = false;
@@ -91,12 +96,12 @@ nodeTools.register({
   }),
   async execute({ path, mimeType }, { signal }) {
     signal?.throwIfAborted();
-    if (uploading.value) throw new Error("图片处理中，请稍后重试");
+    if (uploading.value) throw createDisplayError("图片处理中，请稍后重试", () => t("imageBusy"));
     uploading.value = true;
     try {
       const content = await files.getWorkspaceFiles().read(path);
       signal?.throwIfAborted();
-      if (!content.byteLength || content.byteLength > 100 * 1024 * 1024) throw new Error("图片不能为空且不能超过 100 MB");
+      if (!content.byteLength || content.byteLength > 100 * 1024 * 1024) throw createDisplayError("图片不能为空且不能超过 100 MB", () => t("imageSize"));
       outputs.value.image = { dataType: "IMAGE", value: { url: path, mimeType } };
       return outputs.value.image;
     } finally {
@@ -118,15 +123,15 @@ async function uploadImage(event: Event) {
   const file = input.files?.[0];
   input.value = "";
   if (!file || uploading.value) return;
-  if (!file.type.startsWith("image/")) return void ElMessage.error("请选择图片文件");
-  if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error("图片不能为空且不能超过 100 MB");
+  if (!file.type.startsWith("image/")) return void ElMessage.error(t("chooseImageFile"));
+  if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error(t("imageSize"));
   uploading.value = true;
   try {
     const url = await files.uploadFile(file);
     // ACT: 复制节点可能仍引用旧图片，替换输出不删除共享文件。
     outputs.value.image = { dataType: "IMAGE", value: { url, mimeType: file.type } };
   } catch (error) {
-    showError(error, "图片替换失败");
+    showError(error, t("imageReplaceFailed"));
   } finally {
     uploading.value = false;
   }
@@ -134,7 +139,7 @@ async function uploadImage(event: Event) {
 
 function showError(error: unknown, fallback: string) {
   const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
-  ElMessage.error(message || (error instanceof Error ? error.message : fallback));
+  ElMessage.error(message || (error instanceof Error ? getErrorDisplay(error) : fallback));
 }
 </script>
 

@@ -7,7 +7,12 @@
 import { computed, ref, watch } from "vue";
 import { ElImageViewer, useZIndex } from "element-plus";
 import xSender, { type AnyTagProps, type MentionItem } from "x-sender";
+import { createTranslator, getLocale } from "@toonflow/i18n";
+import zh from "../locales/zh.json";
+import en from "../locales/en.json";
 import "x-sender/lib/XSender.css";
+
+const t = createTranslator({ zh, en });
 
 const props = defineProps<{ references: (MentionItem & { value: string })[] }>();
 const model = defineModel<AnyTagProps[][]>({ required: true });
@@ -157,7 +162,7 @@ watch(() => props.references, async (options) => {
   const instance = sender;
   if (!instance) return;
   instance.bus.emit(xSender.EventSet.EVENT_COMMON_DIALOG_CLOSE);
-  instance.updateConfig({ mentionConfig: { dialogTitle: "选择参考", callEvery: false, options } });
+  instance.updateConfig({ mentionConfig: { dialogTitle: t("selectReferences"), callEvery: false, options } });
   // 等库将本帧的输入 DOM 写回模型后再更新参考，避免用旧文本重建输入框。
   await instance.nextTick();
   if (sender === instance) syncModel();
@@ -172,10 +177,10 @@ watch(senderElement, (element, _previous, onCleanup) => {
   const initialModel: AnyTagProps[][] = model.value.length ? model.value : text.value.split("\n").map(text => [{ type: "Write", text }]);
   const instance = new xSender(element, {
     autoFocus: false,
-    placeholder: "描述一下生成风格提示词，输入 @ 引用参考",
+    placeholder: t("promptPlaceholder"),
     chatStyle: { minHeight: "70px", maxHeight: "180px", fontSize: "14px", lineHeight: "1.6" },
     getPopupContainer: () => popup,
-    mentionConfig: { dialogTitle: "选择参考", callEvery: false, options: props.references },
+    mentionConfig: { dialogTitle: t("selectReferences"), callEvery: false, options: props.references },
     keyboardSendFun: () => false,
     keyboardWrapFun: event => event.key === "Enter" && !event.isComposing,
   });
@@ -212,9 +217,13 @@ watch(senderElement, (element, _previous, onCleanup) => {
     if (sender === instance && editor.isConnected) await insertNodes(nodes);
   };
   editor.setAttribute("role", "textbox");
-  editor.setAttribute("aria-label", "生成提示词");
+  editor.setAttribute("aria-label", t("generationPrompt"));
   editor.setAttribute("aria-multiline", "true");
   instance.bus.on("textPrompt", xSender.EventSet.EVENT_COMMON_CHANGE, () => syncModel());
+  const stopLocaleWatch = watch(() => getLocale(), () => {
+    instance.updateConfig({ placeholder: t("promptPlaceholder"), mentionConfig: { dialogTitle: t("selectReferences"), callEvery: false, options: props.references } });
+    editor.setAttribute("aria-label", t("generationPrompt"));
+  });
   syncModel(initialModel);
   // ACT: XSender 1.4.6 默认复制标签名称；复用库截取的选区模型，仅覆盖纯文本，保留富文本粘贴。
   const copyText = (event: ClipboardEvent) => {
@@ -240,6 +249,7 @@ watch(senderElement, (element, _previous, onCleanup) => {
   popup.addEventListener("click", selectReference, true);
   document.addEventListener("pointerdown", closeOutside, true);
   onCleanup(() => {
+    stopLocaleWatch();
     model.value = instance.getModel();
     releaseNodeFocus(instance);
     sender = undefined;
@@ -250,7 +260,7 @@ watch(senderElement, (element, _previous, onCleanup) => {
     // ACT: 1.4.6 的 destroy 会删除排队回调仍需用到的字段；先走公开清理事件，库修复后可直接 destroy。
     instance.bus.offKeyEvent("textPrompt");
     instance.bus.emit(xSender.EventSet.EVENT_COMMON_DIALOG_CLOSE);
-    instance.updateConfig({ mentionConfig: { dialogTitle: "选择参考", callEvery: false, options: [] } });
+    instance.updateConfig({ mentionConfig: { dialogTitle: t("selectReferences"), callEvery: false, options: [] } });
     instance.bus.emit(xSender.EventSet.EVENT_COMMON_DESTROY);
     popup.remove();
   });

@@ -7,7 +7,7 @@
     class="selectionHandle nodrag nopan"
     :style="handleStyle"
     type="button"
-    :aria-label="nodes !== undefined ? '连接分组节点' : '连接选中节点'"
+    :aria-label="nodes !== undefined ? t('connectGroupedNodes') : t('connectSelectedNodes')"
     @pointerdown.stop.prevent="startConnection"
     @pointermove="moveConnection"
     @pointerup.stop="finishConnection"
@@ -20,6 +20,7 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "@/pages/i18n";
 import { computed, inject, onBeforeUnmount, ref, shallowRef, watchEffect, type ShallowRef } from "vue";
 import { getBezierPath, getRectOfNodes, Position, useVueFlow, type GraphNode } from "@vue-flow/core";
 import { IconCircleDashed } from "@tabler/icons-vue";

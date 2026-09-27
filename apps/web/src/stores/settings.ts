@@ -4,6 +4,7 @@ import { ElMessage } from "element-plus";
 import type { UiLocale } from "@toonflow/i18n";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
 import { canvasShortcutFields, defaultCanvasShortcuts, getShortcutBindings, isShortcutAllowed, normalizeShortcut, type CanvasShortcuts } from "@/lib/canvasShortcuts";
+import { t } from "@/lib/i18n";
 import "element-plus/es/components/message/style/css";
 
 export const settings = ref<Record<string, unknown>>({});
@@ -11,6 +12,9 @@ export const settings = ref<Record<string, unknown>>({});
 let settingsReady = false;
 let saveQueue = Promise.resolve();
 let applyingSettings = false;
+export const settingsSaveFailed = ref(false);
+const pendingSaves = ref(0);
+export const settingsSaving = computed(() => pendingSaves.value > 0);
 
 export const settingsStorage = {
   getItem(key: string) {
@@ -105,7 +109,7 @@ export async function loadSettings() {
   const { data } = await axios.get("/api/settings/get", { headers: { "Cache-Control": "no-cache", "x-toonflow-workspace": "1" } });
   if (settingsReady) return;
   if (data.code !== 200 || !data.data || typeof data.data !== "object" || Array.isArray(data.data)) {
-    throw new Error("读取设置失败");
+    throw new Error(t("settings.loadFailed"));
   }
   settings.value = data.data;
   // 等初始化引发的监听执行完，再允许自动保存。
@@ -115,24 +119,29 @@ export async function loadSettings() {
 
 export function saveSettings(update?: (current: Record<string, unknown>) => Record<string, unknown> | undefined) {
   // ACT: 队列内读取最新配置再计算变更，确认成功后发布；仅协调当前页面的保存。
+  pendingSaves.value++;
   const saving = saveQueue.then(async () => {
     const patch = update?.(settings.value);
     if (update && !patch) return false;
     const { data } = await axios.put("/api/settings/save", { settings: { ...settings.value, ...patch } }, { headers: { "x-toonflow-workspace": "1" } });
-    if (data.code !== 200) throw new Error("保存设置失败");
+    if (data.code !== 200) throw new Error(t("settings.saveFailed"));
     if (patch && Object.hasOwn(patch, "customProviders")) invalidateNodeModels("language");
     if (patch) {
       applyingSettings = true;
       try { settings.value = { ...settings.value, ...patch }; }
       finally { applyingSettings = false; }
     }
+    settingsSaveFailed.value = false;
     return true;
-  });
+  }).catch(error => {
+    settingsSaveFailed.value = true;
+    throw error;
+  }).finally(() => { pendingSaves.value--; });
   saveQueue = saving.then(() => {}, () => {});
   return saving;
 }
 
 watch(settings, () => {
   if (!settingsReady || applyingSettings) return;
-  void saveSettings().catch(() => { ElMessage.error("设置保存失败，请稍后重试"); });
+  void saveSettings().catch(() => { ElMessage.error(t("settings.saveRetry")); });
 }, { deep: true, flush: "sync" });

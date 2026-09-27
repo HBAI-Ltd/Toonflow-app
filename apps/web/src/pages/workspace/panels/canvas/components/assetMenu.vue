@@ -5,25 +5,27 @@
         <el-dropdown-item command="move" :disabled="busy">
           <el-popover v-model:visible="moveVisible" trigger="hover" placement="right-start" :width="220" :offset="0" :showArrow="false" :showAfter="0" :hideAfter="150" appendTo=".assetActionMenu">
             <template #reference>
-              <span class="moveTrigger"><span class="moveLabel">移动到</span><icon-chevron-right :size="14" /></span>
+              <span class="moveTrigger"><span class="moveLabel">{{ t("moveTo") }}</span><icon-chevron-right :size="14" /></span>
             </template>
-            <div class="moveDestinations" role="menu" aria-label="移动到目录" @click.stop @keydown.stop>
-              <el-button text :icon="IconFolderPlus" :disabled="busy" role="menuitem" @click="createMoveFolder">新建文件夹</el-button>
+            <div class="moveDestinations" role="menu" :aria-label="t('moveToFolder')" @click.stop @keydown.stop>
+              <el-button text :icon="IconFolderPlus" :disabled="busy" role="menuitem" @click="createMoveFolder">{{ t("newFolder") }}</el-button>
               <el-scrollbar maxHeight="260px">
                 <el-button v-for="item in moveFolders" :key="item.path" text :icon="IconFolder" :disabled="busy || destinationDisabled(item.path)" role="menuitem" :title="item.label" @click="moveTo(item.path)">{{ item.label }}</el-button>
               </el-scrollbar>
             </div>
           </el-popover>
         </el-dropdown-item>
-        <el-dropdown-item v-if="activeEntry.type === 'file'" command="download" divided>下载</el-dropdown-item>
-        <el-dropdown-item command="rename" :disabled="busy">重命名</el-dropdown-item>
-        <el-dropdown-item class="deleteAction" command="delete" :disabled="busy || !!activeEntry.children?.length" :title="activeEntry.children?.length ? '请先删除文件夹内的素材' : undefined">删除</el-dropdown-item>
+        <el-dropdown-item v-if="activeEntry.type === 'file'" command="download" divided>{{ t("download") }}</el-dropdown-item>
+        <el-dropdown-item command="rename" :disabled="busy">{{ t("rename") }}</el-dropdown-item>
+        <el-dropdown-item class="deleteAction" command="delete" :disabled="busy || !!activeEntry.children?.length" :title="activeEntry.children?.length ? t('deleteFolderAssetsFirst') : undefined">{{ t("delete") }}</el-dropdown-item>
       </el-dropdown-menu>
     </template>
   </el-dropdown>
 </template>
 
 <script setup lang="ts">
+import { t } from "@/pages/i18n";
+import { getErrorDisplay } from "@toonflow/i18n";
 import { computed, nextTick, ref, shallowRef } from "vue";
 import axios from "axios";
 import saveFile from "@/lib/saveFile";
@@ -46,7 +48,7 @@ const moveFolders = computed(() => {
       ...flatten(item.children ?? []),
     ]);
   }
-  return [{ label: "素材库根目录", path: "." }, ...flatten(props.entries)];
+  return [{ label: t("assetLibraryRoot"), path: "." }, ...flatten(props.entries)];
 });
 
 function destinationDisabled(path: string) {
@@ -72,7 +74,7 @@ function closeMenu() {
 
 function showError(error: unknown) {
   if (error === "cancel" || error === "close") return;
-  ElMessage.error(axios.isAxiosError<{ message: string }>(error) ? error.response?.data.message || error.message : (error as Error).message);
+  ElMessage.error(axios.isAxiosError<{ message: string }>(error) ? error.response?.data.message || error.message : getErrorDisplay(error));
 }
 
 async function relocate(entry: AssetEntry, target: string) {
@@ -99,13 +101,13 @@ async function createMoveFolder() {
   const entry = activeEntry.value!;
   closeMenu();
   try {
-    const { value } = await ElMessageBox.prompt("新文件夹将创建在素材库根目录", "新建文件夹", {
+    const { value } = await ElMessageBox.prompt(t("theNewFolderWillBe"), t("newFolder"), {
       inputValue: "新建文件夹",
       inputPattern: /^[^\\/]+$/,
-      inputValidator: value => !!value?.trim() || "请输入文件夹名称",
-      inputErrorMessage: "名称不能包含斜杠",
-      confirmButtonText: "创建并移动",
-      cancelButtonText: "取消",
+      inputValidator: value => !!value?.trim() || t("enterAFolderName"),
+      inputErrorMessage: t("nameCannotContainSlashes"),
+      confirmButtonText: t("createAndMove"),
+      cancelButtonText: t("cancel"),
     });
     const name = value.trim();
     await axios.post("/api/assets/mkdir", { path: name });
@@ -129,18 +131,18 @@ async function handleCommand(command: string) {
       await saveFile(() => axios.get<Blob>("/api/assets/read", { params: { path: entry.path, download: true }, responseType: "blob" }).then(({ data }) => data), entry.name);
     }
     if (command === "rename") {
-      const { value } = await ElMessageBox.prompt("名称", "重命名", {
+      const { value } = await ElMessageBox.prompt(t("name"), t("rename"), {
         inputValue: entry.name,
         inputPattern: /^[^\\/]+$/,
-        inputValidator: value => !!value?.trim() || "请输入名称",
-        inputErrorMessage: "名称不能包含斜杠",
-        confirmButtonText: "保存",
-        cancelButtonText: "取消",
+        inputValidator: value => !!value?.trim() || t("enterAName"),
+        inputErrorMessage: t("nameCannotContainSlashes"),
+        confirmButtonText: t("save"),
+        cancelButtonText: t("cancel"),
       });
       await relocate(entry, parent === "." ? value.trim() : parent + "/" + value.trim());
     }
     if (command === "delete") {
-      await ElMessageBox.confirm("确定删除“" + entry.name + "”？", "删除素材", { type: "warning", confirmButtonText: "删除", cancelButtonText: "取消" });
+      await ElMessageBox.confirm(t("deleteAssetConfirm", { name: entry.name }), t("deleteAsset"), { type: "warning", confirmButtonText: t("delete"), cancelButtonText: t("cancel") });
       busy.value = true;
       try {
         await axios.delete("/api/assets/remove", { data: { path: entry.path } });
