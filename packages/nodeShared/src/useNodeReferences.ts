@@ -1,8 +1,8 @@
 import { computed, ref } from "vue";
 import { useNode, useVueFlow } from "@vue-flow/core";
-import type { NodeData } from "./connection";
-import { useNodeEvent } from "./nodeEvent";
-import type { NodeInputValue } from "./values";
+import type { NodeData } from "@toonflow/nodes-scaffold/connection";
+import { useNodeEvent } from "@toonflow/nodes-scaffold/nodeEvent";
+import type { NodeInputValue } from "@toonflow/nodes-scaffold/values";
 
 export function useNodeReferences(handleId = "in") {
   const { id, node } = useNode<NodeData & { referenceOrder?: Record<string, string[]> }>();

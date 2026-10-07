@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 import { VueDraggable } from "vue-draggable-plus";
-import type { NodeInputValue } from "../values";
+import type { NodeInputValue } from "@toonflow/nodes-scaffold/values";
 import referenceCard from "./referenceCard.vue";
 
 const items = defineModel<NodeInputValue[]>({ required: true });

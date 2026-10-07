@@ -1060,7 +1060,7 @@ const defaultEdgeOptions = markRaw({
   animated: false,
   class: ({ sourceNode, targetNode }: GraphEdge) => {
     if (!sourceNode.selected && !sourceNode.dragging && !targetNode.selected && !targetNode.dragging) return "";
-    return [generalSettings.value.canvasEdgeColorMode !== "none" && "edgeActive", generalSettings.value.canvasEdgeAnimationEnabled && "animated"].filter(Boolean).join(" ");
+    return ["edgeNodeActive", generalSettings.value.canvasEdgeColorMode !== "none" && "edgeActive", generalSettings.value.canvasEdgeAnimationEnabled && "animated"].filter(Boolean).join(" ");
   },
   focusable: false,
   selectable: false,
@@ -1087,10 +1087,10 @@ const defaultEdgeOptions = markRaw({
     cursor: grab;
   }
 
-  &.edgesHidden :deep(.vue-flow__edges) {
+  &.edgesHidden :deep(.vue-flow__edges:not(:has(.edgeNodeActive))) {
     display: none;
   }
-  &.edgesHidden :deep(.vue-flow__handle) {
+  &.edgesHidden :deep(.vue-flow__handle:not(.connectedNodeActive)) {
     display: none !important;
   }
 

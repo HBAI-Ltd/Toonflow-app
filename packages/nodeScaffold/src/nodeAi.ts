@@ -57,12 +57,6 @@ export type NodeAiTool = {
   execute(args: Record<string, unknown>, signal?: AbortSignal): unknown | Promise<unknown>;
 };
 
-export function groupNodeModels<T extends Pick<NodeAiModel, "providerId" | "providerLabel">>(models: readonly T[]) {
-  return [...Map.groupBy(models, item => item.providerId)].map(([id, items]) => ({
-    id, label: items[0]!.providerLabel, models: items,
-  })).sort((left, right) => Number(right.id === "tfRouter") - Number(left.id === "tfRouter"));
-}
-
 async function readResult<T>(response: Response): Promise<T> {
   const result = await response.json();
   if (!response.ok || result.code !== 200) throw new Error(result.message || `AI 请求失败（HTTP ${response.status}）`);

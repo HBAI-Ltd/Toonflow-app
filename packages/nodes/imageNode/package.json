@@ -3,6 +3,15 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./imageInpaint": "./src/imageInpaint.ts",
+    "./imagePanorama": "./src/components/imagePanorama.vue",
+    "./imageLighting": "./src/components/imageLighting.vue",
+    "./imageMultiAngle": "./src/components/imageMultiAngle.vue",
+    "./imageEditor": "./src/components/imageEditor.vue",
+    "./imageGridSplit": "./src/components/imageGridSplit.vue",
+    "./imageInpaintPrompt": "./src/components/imageInpaintPrompt.vue"
+  },
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch",
@@ -14,9 +23,12 @@
     "element-plus": "^2.14.5"
   },
   "dependencies": {
+    "three": "0.184.0",
     "@tabler/icons-vue": "^3.46.0"
   },
   "devDependencies": {
+    "@toonflow/node-shared": "workspace:*",
+    "@types/three": "0.184.0",
     "@toonflow/nodes-scaffold": "workspace:*",
     "typescript": "~6.0.3",
     "vite": "^8.2.2",

@@ -52,11 +52,13 @@
 import { computed, inject, onMounted, ref, watch } from "vue";
 import { ElAlert, ElButton, ElCard, ElSelect, ElDialog, ElOption, ElOptionGroup, ElMessage, ElMessageBox } from "element-plus";
 import { IconEdit, IconFileText, IconSparkles, IconArrowUp } from "@tabler/icons-vue";
-import { groupNodeModels, nodeSkeleton, nodeTools, useNode, useNodeReferences, z, type NodeAiModel, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
+import { nodeSkeleton, nodeTools, useNode, z, type NodeAiModel, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
+import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
+import { useNodeReferences } from "@toonflow/node-shared/useNodeReferences";
 import markdownEditor from "./markdownEditor.vue";
 import markdownPreview from "./markdownPreview.vue";
-import referenceItem from "@toonflow/nodes-scaffold/referenceItem";
-import promptInput from "@toonflow/nodes-scaffold/promptInput";
+import referenceItem from "@toonflow/node-shared/referenceItem";
+import promptInput from "@toonflow/node-shared/promptInput";
 import { useNodeDocumentState, type NodeDocumentContext } from "@toonflow/nodes-scaffold/nodeDocument";
 
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;

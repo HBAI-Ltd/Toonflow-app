@@ -1,6 +1,6 @@
 # 节点脚手架
 
-`@toonflow/nodes-scaffold` 提供共享 Vite 配置和节点骨架组件。每个 `packages/nodes/*` 目录是一个独立 Bun workspace，自行维护依赖、Vue 子组件和构建插件。
+`@toonflow/nodes-scaffold` 提供共享 Vite 配置、节点骨架与宿主接口。节点插件在 `packages/nodes/*` 中各自维护依赖、Vue 子组件和构建入口；跨插件共享源码位于 `packages/nodeShared`，作为独立包 `@toonflow/node-shared`，不单独构建节点。
 
 ```text
 packages/nodeScaffold/
@@ -12,6 +12,7 @@ packages/nodeScaffold/
   src/nodeInputs.ts        按目标节点、输入端口读取上游值
   src/nodeEvent.ts         统一注册节点输入、输出、删除和连接校验事件
   src/workspaceFiles.ts    使用宿主文件能力、上传节点文件
+packages/nodeShared/       跨插件共享组件与业务逻辑，独立包 @toonflow/node-shared
 packages/nodes/imageNode/
   package.json             当前节点自己的依赖
   vite.config.ts           引用共享配置
@@ -23,9 +24,9 @@ data/nodes/
   imageNode.umd.js          开发时同步，供 server 加载
 ```
 
-在 `src/components/` 中封装子组件、在其它目录放工具函数，正常 import 即可；它们不会单独生成节点入口。
+在节点自身的 `src/components/` 中封装子组件、在其它目录放工具函数，正常 import 即可；它们不会单独生成节点入口。
 
-节点运行时代码统一从 `@toonflow/nodes-scaffold/runtime` 导入组件、组合式函数、类型和工具。根入口 `@toonflow/nodes-scaffold` 仅供 Vite 配置导入 `createNodeConfig`，不要在浏览器组件中引用；旧的运行时子路径仍兼容。
+`packages/nodeScaffold` 仅提供通用节点基础能力、构建配置与宿主接口，运行时能力从 `@toonflow/nodes-scaffold/runtime` 导入。插件专属组件、交互、提示词、预设与业务逻辑放在所属插件中，通过其公开导出复用；跨插件共享组件与业务逻辑统一放在 `packages/nodeShared`，通过独立包 `@toonflow/node-shared` 的公开子路径导入，不混入脚手架。根入口 `@toonflow/nodes-scaffold` 仅供 Vite 配置导入 `createNodeConfig`，不要在浏览器组件中引用。
 
 ## 共享 Markdown 编辑依赖
 
@@ -51,21 +52,19 @@ Tiptap 统一使用具名导入，例如 `{ StarterKit }`、`{ Image }`、`{ Hig
 
 宿主先检查 UMD 是否引用 `toonflowTiptapHost`，仅在需要时动态加载共享依赖，后续复用同一个 ES 模块；普通图片、视频或纯文本插件不会因此预载 Tiptap。组件的挂载、销毁、隐藏状态、正文更新和文件保存仍由各包管理。使用共享依赖的产物需要配套宿主版本。
 
-## 共享提示词与参考列表
+## 插件侧业务复用
 
-多种节点共用的提示词输入与参考列表放在脚手架中，节点之间不互相依赖。按组件子路径导入，仅使用时才打包对应依赖：
+提示词输入、参考列表、生成历史、生成状态和错误解释放在 `packages/nodeShared`。调用节点声明 `@toonflow/node-shared` workspace 依赖并按子路径导入：
 
 ```ts
-import promptInput from "@toonflow/nodes-scaffold/promptInput";
-import referenceItem from "@toonflow/nodes-scaffold/referenceItem";
-import { useNodeReferences } from "@toonflow/nodes-scaffold/runtime";
+import promptInput from "@toonflow/node-shared/promptInput";
+import referenceItem from "@toonflow/node-shared/referenceItem";
+import { useNodeReferences } from "@toonflow/node-shared/useNodeReferences";
 
 const { refList, referenceMentions, setReferencePreview, removeReference } = useNodeReferences("in");
 ```
 
-`promptInput` 使用 `v-model` 保存富文本结构、`v-model:text` 读取纯文本，`references` 接收包含 `id`、`name`、`value` 和可选 `avatar` 的参考项。`referenceItem` 使用 `v-model` 绑定 `NodeInputValue[]`，通过 `preview` 返回预览地址、`remove` 通知节点断开对应连线。Vue、VueFlow 和 Element Plus 仍复用宿主实例。
-
-`useNodeReferences(handleId = "in")` 统一管理对应输入端口的参考顺序、预览和删除连线。将 `refList` 绑定到 `referenceItem`，`preview`、`remove` 分别绑定 `setReferencePreview`、`removeReference`，并把 `referenceMentions` 传给 `promptInput`。拖拽顺序按来源节点与端口 ID 保存到 `node.data.referenceOrder[handleId]`，上游输出与预览不重复保存；重载恢复相同顺序，已插入的引用通过稳定 ID 跟随原对象更新编号。
+图片编辑、宫格切分、局部重绘和打光从 `@toonflow/node-image` 的对应子路径导入；视频播放器从 `@toonflow/node-video/videoPlayer` 导入。共享源码随使用方节点打包，Vue、VueFlow 和 Element Plus 继续复用宿主实例。
 
 ## 节点骨架
 

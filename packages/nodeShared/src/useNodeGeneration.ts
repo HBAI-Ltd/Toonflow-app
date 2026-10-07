@@ -1,6 +1,6 @@
 import { computed, ref, type Ref } from "vue";
-import { nodeTools, z } from "./nodeTools";
-import type { NodeOutputs } from "./values";
+import { nodeTools, z } from "@toonflow/nodes-scaffold/nodeTools";
+import type { NodeOutputs } from "@toonflow/nodes-scaffold/values";
 
 export function useNodeGeneration(outputs: Readonly<Ref<NodeOutputs>>, cancel: () => void) {
   const status = ref<"idle" | "running" | "succeeded" | "failed">("idle");

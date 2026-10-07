@@ -1,11 +1,12 @@
 import { t, translateMessage } from "@toonflow/server/i18n";
+import type { updateSnapshot } from "@toonflow/server/desktop";
 import { execFile } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { copyFileSync, createWriteStream, existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, writeAtomicSync } from "@toonflow/file";
 import { file } from "@toonflow/file/bun";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { Readable } from "node:stream";
+import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { promisify } from "node:util";
 
@@ -44,6 +45,7 @@ export default function createWindowsUpdater(resourcesDirectory: string, lifecyc
   let pendingQuitApproval: unknown;
   let observedResult = "";
   let installError = "";
+  let updateProgress: updateSnapshot["updateProgress"];
   let state = { version: "", hash: "", error: "", updateAvailable: false, updateReady: false };
 
   function regularFile(path: string) {
@@ -153,6 +155,7 @@ export default function createWindowsUpdater(resourcesDirectory: string, lifecyc
   async function checkForUpdate() {
     if (busy) throw new Error(t`正在准备更新，请稍候`);
     busy = true;
+    updateProgress = undefined;
     const controller = new AbortController();
     try {
       const info = await getLocalInfo();
@@ -198,10 +201,22 @@ export default function createWindowsUpdater(resourcesDirectory: string, lifecyc
 
   async function download(fileName: string, path: string) {
     const signal = AbortSignal.timeout(15 * 60_000);
+    const progress: NonNullable<updateSnapshot["updateProgress"]> = { phase: "downloading", received: 0 };
+    updateProgress = progress;
     const response = await fetch(artifactUrl(fileName), { signal });
     if (!response.ok) throw new Error(t`下载更新失败：HTTP ${response.status}`);
     if (!response.body) throw new Error(t`下载更新失败：响应为空`);
-    await pipeline(Readable.from(response.body), createWriteStream(path, { flags: "wx", signal }), { signal });
+    const contentLength = response.headers.get("content-length");
+    const contentEncoding = response.headers.get("content-encoding");
+    const total = Number(contentLength);
+    if ((!contentEncoding || contentEncoding === "identity") && contentLength && /^\d+$/.test(contentLength) && Number.isSafeInteger(total) && total > 0) progress.total = total;
+    await pipeline(Readable.from(response.body), new Transform({
+      transform(chunk: Buffer, encoding, callback) {
+        progress.received += chunk.byteLength;
+        callback(null, chunk);
+      },
+    }), createWriteStream(path, { flags: "wx", signal }), { signal });
+    progress.phase = "preparing";
   }
 
   async function downloadUpdate() {
@@ -215,6 +230,7 @@ export default function createWindowsUpdater(resourcesDirectory: string, lifecyc
     if (state.updateReady) return;
     busy = true;
     state.error = "";
+    updateProgress = undefined;
     const temporaryFiles: string[] = [];
     const temporaryFile = (suffix: string) => { const path = join(extractionDirectory, `${randomUUID()}${suffix}`); temporaryFiles.push(path); return path; };
     try {
@@ -263,6 +279,7 @@ export default function createWindowsUpdater(resourcesDirectory: string, lifecyc
       throw error;
     } finally {
       busy = false;
+      updateProgress = undefined;
       for (const path of temporaryFiles) removeUpdateFile(path);
     }
   }
@@ -344,5 +361,5 @@ export default function createWindowsUpdater(resourcesDirectory: string, lifecyc
     }
   }
 
-  return { getLocalInfo, updateInfo: () => ({ ...state, installError }), checkForUpdate, downloadUpdate, applyUpdate };
+  return { getLocalInfo, updateInfo: () => ({ ...state, installError, updateProgress }), checkForUpdate, downloadUpdate, applyUpdate };
 }

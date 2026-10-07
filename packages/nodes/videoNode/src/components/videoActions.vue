@@ -81,7 +81,8 @@
 import { computed, inject, onBeforeUnmount, ref, watch } from "vue";
 import { useNode, useVueFlow, type Node } from "@vue-flow/core";
 import { ElButton, ElDialog, ElMessage, ElProgress } from "element-plus";
-import { useNodeFiles, useNodeFfmpeg, useNodeEvent, showNodeError, type WorkspaceFiles, type NodeMediaValue } from "@toonflow/nodes-scaffold/runtime";
+import { useNodeFiles, useNodeFfmpeg, useNodeEvent, type WorkspaceFiles, type NodeMediaValue } from "@toonflow/nodes-scaffold/runtime";
+import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { processVideo } from "../videoProcessing";
 
 const props = defineProps<{ file?: NodeMediaValue; src: string; disabled?: boolean }>();
@@ -242,21 +243,6 @@ function setBoundary(edge: "start" | "end", value: number) {
   if (duration.value >= 0.01 && edge === "end") end.value = Number(end.value.toFixed(2));
   seekPreview(edge === "start" ? start.value : end.value);
 }
-
-/* ACT: 打开截取弹窗后，在 DevTools 控制台运行以下自检，检查实际边界交互；结束后恢复全选。
-(async () => {
-  const handles = [...document.querySelectorAll(".videoActionPanel .trimHandle")];
-  if (handles.length !== 2 || handles.some(item => item.disabled)) throw new Error("请先打开已就绪的截取弹窗");
-  for (const [index, key] of [[0, "Home"], [1, "End"], [0, "End"], [1, "Home"], [0, "Home"], [1, "Home"], [1, "End"]]) {
-    handles[index].dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
-    await new Promise(requestAnimationFrame);
-    const [start, end] = handles.map(item => Number(item.getAttribute("aria-valuenow")));
-    console.assert(start >= 0 && start < end && end <= Number(handles[1].getAttribute("aria-valuemax")), "裁剪边界交叉或越界", { start, end });
-    const times = [...document.querySelectorAll(".videoActionPanel .timeInput")].map(item => item.valueAsNumber);
-    console.assert(times[0] === start && times[1] === end, "输入时间与轨道选区不同步");
-  }
-})();
-*/
 
 function beginDrag(event: PointerEvent, edge: "start" | "end") {
   const width = track.value?.getBoundingClientRect().width;

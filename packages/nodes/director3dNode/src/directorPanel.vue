@@ -49,7 +49,8 @@
 import { computed } from "vue";
 import { ElButton, ElOption, ElOptionGroup, ElSelect } from "element-plus";
 import { IconLoader2, IconSparkles, IconMovie, IconCheck, IconAlertCircle, IconArrowBackUp } from "@tabler/icons-vue";
-import { groupNodeModels, type NodeAiModel } from "@toonflow/nodes-scaffold/runtime";
+import type { NodeAiModel } from "@toonflow/nodes-scaffold/runtime";
+import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 
 import type { DirectorPlan, DirectorPlanItem, DirectorGeneration } from "./sceneAnimation";
 

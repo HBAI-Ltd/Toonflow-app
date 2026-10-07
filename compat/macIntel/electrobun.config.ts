@@ -4,8 +4,10 @@ import shared from "./generated/config.json";
 export default {
   app: shared.app,
   build: {
-    bun: { entrypoint: "generated/src/index.ts", minify: true },
+    // ACT: 与主桌面构建一致，保留 Photon 原包及其相邻 WASM。
+    bun: { entrypoint: "generated/src/index.ts", minify: true, external: ["@silvia-odwyer/photon-node"] },
     copy: {
+      "../../build/desktop/photon": "bun/node_modules/@silvia-odwyer/photon-node",
       "../../build/mcp": "mcp",
       "../../build/web": "views/mainview",
       "../../build/tools": "tools",

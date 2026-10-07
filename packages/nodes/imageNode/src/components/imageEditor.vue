@@ -57,16 +57,17 @@ import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { useNode, useVueFlow } from "@vue-flow/core";
 import { ElButton, ElMessage } from "element-plus";
 import { IconBrush, IconEraser, IconSquare, IconCircle, IconTypography, IconArrowBackUp, IconArrowForwardUp, IconTrash, IconCheck, IconX } from "@tabler/icons-vue";
-import { uploadNodeFile, useNodeFiles } from "../workspaceFiles";
-import { useNodeAi, type NodeImageRequest } from "../nodeAi";
-import { showNodeError } from "../showNodeError";
+import { uploadNodeFile, useNodeFiles } from "@toonflow/nodes-scaffold/runtime";
+import { showNodeError } from "@toonflow/node-shared/showNodeError";
+import { useImageVariationNode } from "../useImageVariationNode";
+import { buildInpaintPrompt, type InpaintDraftInput } from "../imageInpaint";
 
 const props = defineProps<{ src: string; alt: string; toolbarTarget?: HTMLElement; disabled?: boolean }>();
 const emit = defineEmits<{ load: [event: Event]; error: [event: Event] }>();
 const { node } = useNode();
 const { addNodes, addEdges, findNode, getNodes, nodeTypes } = useVueFlow();
 const files = useNodeFiles();
-const ai = useNodeAi();
+const createVariation = useImageVariationNode();
 const getCanvas = inject<(() => { id: string } | undefined) | undefined>("canvas", undefined);
 const batchHistory = inject<(action: () => Promise<void>) => Promise<void>>("batchCanvasHistory", action => action());
 const sourceImage = ref<HTMLImageElement>();
@@ -342,59 +343,55 @@ async function saveMark() {
   }
 }
 
-async function generate(input: Omit<NodeImageRequest, "directory" | "outputDirectory">, signal: AbortSignal) {
+async function createInpaint(input: InpaintDraftInput, signal: AbortSignal) {
   if (busy.value || mode.value !== "inpaint") throw new Error("请先进入局部重绘");
+  if (!input.prompt.trim()) throw new Error("请输入重绘提示词");
+  if (!nodeTypes?.value?.["remote-imageGenerationNode"]) throw new Error("请先启用图片生成节点插件");
   const layer = paintCanvas.value;
   if (!layer || !layer.getContext("2d")?.getImageData(0, 0, layer.width, layer.height).data.some((value, index) => index % 4 === 3 && value)) throw new Error("请先涂抹需要重绘的区域");
   const workspace = files.getWorkspaceFiles();
   const controller = operation = new AbortController();
   const requestSignal = AbortSignal.any([signal, controller.signal]);
-  const temporaryId = crypto.randomUUID();
+  const nodeId = crypto.randomUUID();
   busy.value = true;
-  let resultUrl = "";
-  let outputPath = "";
   let committed = false;
   let canvas: HTMLCanvasElement | undefined;
   try {
+    requestSignal.throwIfAborted();
     const drawing = createCanvas();
     canvas = drawing.canvas;
     const context = drawing.context;
     context.drawImage(sourceImage.value!, 0, 0);
-    const original = await uploadNodeFile(workspace, temporaryId, await toFile(canvas));
+    const original = await uploadNodeFile(workspace, nodeId, await toFile(canvas));
     requestSignal.throwIfAborted();
     context.globalAlpha = 0.55;
     context.drawImage(layer, 0, 0);
     context.globalAlpha = 1;
-    const guide = await uploadNodeFile(workspace, temporaryId, await toFile(canvas));
+    const guide = await uploadNodeFile(workspace, nodeId, await toFile(canvas));
     requestSignal.throwIfAborted();
-    const { directory } = await workspace.list();
-    // ACT: 供应商尚未统一支持原生 mask；使用涂色参考引导，再按本地蒙版合成，严格保留区域外像素。
-    const [result] = await ai.generateImage({ ...input, directory, outputDirectory: `assets/${temporaryId}`, images: [{ path: original, mimeType: "image/png" }, { path: guide, mimeType: "image/png" }, ...(input.images ?? [])], prompt: `对第一张原图进行局部重绘。第二张图的红色涂抹标出需要修改的区域，红色只是区域指示，不要把标记画进结果。保持原图构图、尺寸比例和区域外内容，只根据以下要求修改涂抹区域，返回完整图片：\n${input.prompt}` }, requestSignal);
+    const mask = await uploadNodeFile(workspace, nodeId, await toFile(layer));
     requestSignal.throwIfAborted();
-    if (!result) throw new Error("供应商未返回图片");
-    const generated = new Image();
-    resultUrl = URL.createObjectURL(new Blob([await workspace.read(result.path)], { type: result.mimeType }));
-    generated.src = resultUrl;
-    await generated.decode();
-    requestSignal.throwIfAborted();
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(generated, 0, 0, canvas.width, canvas.height);
-    context.globalCompositeOperation = "destination-in";
-    context.drawImage(layer, 0, 0);
-    context.globalCompositeOperation = "destination-over";
-    context.drawImage(sourceImage.value!, 0, 0);
-    outputPath = await uploadNodeFile(workspace, node.id, await toFile(canvas));
-    requestSignal.throwIfAborted();
-    if (findNode(node.id) !== node) throw new Error("原节点已移除");
-    await workspace.remove(`assets/${temporaryId}`, true).catch(error => showNodeError(error, "重绘临时文件清理失败"));
-    requestSignal.throwIfAborted();
+    // ACT: 编辑素材放入子目录，避免混入只扫描节点目录顶层的生成历史。
+    const directory = `assets/${nodeId}/inpaint`;
+    await workspace.mkdir(directory);
+    const paths = [original, guide, mask].map(path => `${directory}/${path.split("/").at(-1)}`);
+    for (const [index, path] of [original, guide, mask].entries()) {
+      requestSignal.throwIfAborted();
+      await workspace.rename(path, paths[index]!);
+    }
+    const result = await createVariation({
+      label: "局部重绘", nodeId, prompt: buildInpaintPrompt(input.prompt),
+      model: typeof node.data.model === "string" ? node.data.model : "",
+      size: typeof node.data.size === "string" ? node.data.size : "",
+      ratio: typeof node.data.ratio === "string" ? node.data.ratio : "16:9",
+      inpaint: { source: node.data.outputs?.image?.value?.url ?? "", original: paths[0]!, guide: paths[1]!, mask: paths[2]!, images: input.images ?? [] },
+    }, requestSignal);
     committed = true;
-    return { url: outputPath, mimeType: "image/png" };
+    cancel();
+    return result;
   } finally {
-    if (resultUrl) URL.revokeObjectURL(resultUrl);
     if (canvas) canvas.width = canvas.height = 0;
-    if (outputPath && !committed) await workspace.remove(outputPath).catch(error => showNodeError(error, "重绘临时文件清理失败"));
-    if (!committed) await workspace.remove(`assets/${temporaryId}`, true).catch(error => {
+    if (!committed) await workspace.remove(`assets/${nodeId}`, true).catch(error => {
       if (error?.response?.data?.data?.code !== "ENOENT") showNodeError(error, "重绘临时文件清理失败");
     });
     operation = undefined;
@@ -402,7 +399,7 @@ async function generate(input: Omit<NodeImageRequest, "directory" | "outputDirec
   }
 }
 
-defineExpose({ mode, busy, start, cancel, generate });
+defineExpose({ mode, busy, start, cancel, createInpaint });
 </script>
 
 <style scoped lang="scss">

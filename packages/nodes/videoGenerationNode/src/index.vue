@@ -99,12 +99,16 @@
 import { computed, nextTick, onMounted, onScopeDispose, ref, watch } from "vue";
 import { ElButton, ElCard, ElSelect, ElOption, ElOptionGroup, ElLoading, ElDropdown, ElDropdownMenu, ElDropdownItem } from "element-plus";
 import { IconCameraAi, IconSparkles, IconArrowUp, IconPlayerStop, IconTransfer, IconMusic, IconLayersSubtract, IconScissors, IconPhotoScan, IconPlayerSkipBack, IconPlayerSkipForward } from "@tabler/icons-vue";
-import { groupNodeModels, nodeSkeleton, nodeTools, showNodeError, useNode, useNodeGeneration, useNodeReferences, z, type NodeMediaModel, type NodeVideoRequest, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
-import promptInput from "@toonflow/nodes-scaffold/promptInput";
-import videoPlayer from "@toonflow/nodes-scaffold/videoPlayer";
+import { nodeSkeleton, nodeTools, useNode, z, type NodeMediaModel, type NodeVideoRequest, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
+import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
+import { showNodeError } from "@toonflow/node-shared/showNodeError";
+import { useNodeGeneration } from "@toonflow/node-shared/useNodeGeneration";
+import { useNodeReferences } from "@toonflow/node-shared/useNodeReferences";
+import promptInput from "@toonflow/node-shared/promptInput";
+import videoPlayer from "@toonflow/node-video/videoPlayer";
 import videoActions from "@toonflow/node-video/videoActions";
-import referenceItem from "@toonflow/nodes-scaffold/referenceItem";
-import mediaHistory from "@toonflow/nodes-scaffold/mediaHistory";
+import referenceItem from "@toonflow/node-shared/referenceItem";
+import mediaHistory from "@toonflow/node-shared/mediaHistory";
 import generationSettings from "./components/generationSettings.vue";
 
 defineOptions({

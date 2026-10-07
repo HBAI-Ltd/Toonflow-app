@@ -1,0 +1,34 @@
+{
+  "name": "@toonflow/node-shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./promptInput": "./src/components/promptInput.vue",
+    "./referenceItem": "./src/components/referenceItem.vue",
+    "./mediaHistory": "./src/components/mediaHistory.vue",
+    "./showNodeError": "./src/showNodeError.ts",
+    "./useNodeReferences": "./src/useNodeReferences.ts",
+    "./useNodeGeneration": "./src/useNodeGeneration.ts",
+    "./groupNodeModels": "./src/groupNodeModels.ts"
+  },
+  "scripts": {
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.42",
+    "@vue-flow/core": "^1.48.2",
+    "element-plus": "^2.14.5"
+  },
+  "dependencies": {
+    "@tabler/icons-vue": "^3.46.0",
+    "vue-draggable-plus": "^0.6.1",
+    "x-sender": "1.4.6"
+  },
+  "devDependencies": {
+    "@toonflow/nodes-scaffold": "workspace:*",
+    "typescript": "~6.0.3",
+    "vite": "^8.2.2",
+    "vue-tsc": "^3.3.11"
+  }
+}

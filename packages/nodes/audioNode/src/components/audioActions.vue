@@ -35,7 +35,8 @@ import { computed, inject, onBeforeUnmount, ref, watch } from "vue";
 import { useNode, useVueFlow } from "@vue-flow/core";
 import { ElButton, ElCard, ElDialog, ElInputNumber, ElMessage, ElSlider } from "element-plus";
 import { IconArrowUp, IconX } from "@tabler/icons-vue";
-import { showNodeError, useNodeFfmpeg, useNodeFiles, type NodeMediaValue, type WorkspaceFiles } from "@toonflow/nodes-scaffold/runtime";
+import { useNodeFfmpeg, useNodeFiles, type NodeMediaValue, type WorkspaceFiles } from "@toonflow/nodes-scaffold/runtime";
+import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { processAudio, type AudioSegment, type AudioProcessingOptions } from "../audioProcessing";
 import audioClipEditor from "./audioClipEditor.vue";
 

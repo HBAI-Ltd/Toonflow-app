@@ -46,8 +46,8 @@
 import { computed, ref, watch } from "vue";
 import { ElButton, ElImage } from "element-plus";
 import { IconX, IconFileText, IconPhoto, IconVideo, IconMusic, IconPlayerPlay } from "@tabler/icons-vue";
-import { useNodeFiles } from "../workspaceFiles";
-import type { NodeInputValue } from "../values";
+import { useNodeFiles } from "@toonflow/nodes-scaffold/workspaceFiles";
+import type { NodeInputValue } from "@toonflow/nodes-scaffold/values";
 
 const props = defineProps<{ item: NodeInputValue; index: number }>();
 const emit = defineEmits<{ remove: []; preview: [url: string] }>();

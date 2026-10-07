@@ -59,8 +59,8 @@
 import { computed, inject, onBeforeUnmount, ref, watch } from "vue";
 import { useNode, useVueFlow, type Node } from "@vue-flow/core";
 import { ElButton, ElInputNumber, ElMessage, ElPopover } from "element-plus";
-import { uploadNodeFile, useNodeFiles } from "../workspaceFiles";
-import { showNodeError } from "../showNodeError";
+import { uploadNodeFile, useNodeFiles } from "@toonflow/nodes-scaffold/runtime";
+import { showNodeError } from "@toonflow/node-shared/showNodeError";
 
 const props = defineProps<{ src: string; disabled?: boolean; active: boolean }>();
 const { node } = useNode();

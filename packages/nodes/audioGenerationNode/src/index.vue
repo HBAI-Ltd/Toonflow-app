@@ -60,11 +60,15 @@
 import { computed, onMounted, onScopeDispose, ref } from "vue";
 import { ElButton, ElCard, ElLoading, ElOption, ElOptionGroup, ElSelect } from "element-plus";
 import { IconArrowUp, IconGauge, IconMusicBolt, IconPlayerStop, IconScissors, IconTransfer } from "@tabler/icons-vue";
-import { getTargetValues, groupNodeModels, isTypeCompatible, nodeSkeleton, nodeTools, showNodeError, useNode, useNodeGeneration, useNodeReferences, z, type NodeAudioRequest, type NodeHandle, type NodeInputValue, type NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
+import { getTargetValues, isTypeCompatible, nodeSkeleton, nodeTools, useNode, z, type NodeAudioRequest, type NodeHandle, type NodeInputValue, type NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
+import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
+import { showNodeError } from "@toonflow/node-shared/showNodeError";
+import { useNodeGeneration } from "@toonflow/node-shared/useNodeGeneration";
+import { useNodeReferences } from "@toonflow/node-shared/useNodeReferences";
 import audioPlayer from "@toonflow/node-audio/audioPlayer";
 import audioActions from "@toonflow/node-audio/audioActions";
-import promptInput from "@toonflow/nodes-scaffold/promptInput";
-import referenceItem from "@toonflow/nodes-scaffold/referenceItem";
+import promptInput from "@toonflow/node-shared/promptInput";
+import referenceItem from "@toonflow/node-shared/referenceItem";
 import generationSettings from "./components/generationSettings.vue";
 import { formatOptions, languageOptions, sampleRateOptions } from "./audioSettings";
 

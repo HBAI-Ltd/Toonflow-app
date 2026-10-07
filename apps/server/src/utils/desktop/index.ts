@@ -70,6 +70,7 @@ interface DesktopState {
   applyingUpdate: boolean;
   updateHandoffComplete?: boolean;
   updateError: string;
+  updateProgress?: updateSnapshot["updateProgress"];
   checkedBaseUrl?: string;
   lastBaseUrl?: string;
 }
@@ -158,6 +159,7 @@ export async function getDesktopUpdate(req: Request): Promise<updateSnapshot> {
     updateReady: !installFailure && validUpdate && (update?.updateReady ?? false),
     updating: state.downloadingUpdate || state.applyingUpdate,
     canUpdate: typeof updater.downloadUpdate === "function" && typeof updater.applyUpdate === "function",
+    updateProgress: state.downloadingUpdate && validUpdate ? update?.updateProgress ?? state.updateProgress : undefined,
   };
 }
 
@@ -198,7 +200,23 @@ export async function downloadDesktopUpdate(req: Request): Promise<void> {
     throw Object.assign(new Error("请先检查并确认有可用更新。"), { status: 400 });
   state.downloadingUpdate = true;
   state.updateError = "";
+  state.updateProgress = { phase: "downloading", received: 0 };
   try {
+    updater.onStatusChange?.(entry => {
+      if (entry.status === "download-progress") {
+        const received = entry.details?.bytesDownloaded;
+        const total = entry.details?.totalBytes;
+        state.updateProgress = {
+          phase: "downloading",
+          received: typeof received === "number" && Number.isSafeInteger(received) && received >= 0 ? received : 0,
+          total: typeof total === "number" && Number.isSafeInteger(total) && total > 0 ? total : undefined,
+        };
+      } else if (["download-starting", "fetching-patch", "downloading-patch", "downloading-full-bundle"].includes(entry.status)) {
+        state.updateProgress = { phase: "downloading", received: 0 };
+      } else if (["applying-patch", "extracting-version", "patch-chain-complete", "decompressing", "download-complete"].includes(entry.status)) {
+        state.updateProgress = { ...state.updateProgress, phase: "preparing", received: state.updateProgress?.received ?? 0 };
+      }
+    });
     await withUpdateSource(updater, updateBaseUrl, () => updater.downloadUpdate!());
     const update = updater.updateInfo();
     if (update?.error || !update?.updateReady) throw new Error(update?.error || "更新包尚未准备完成，请重试。");
@@ -208,6 +226,8 @@ export async function downloadDesktopUpdate(req: Request): Promise<void> {
     throw error;
   } finally {
     state.downloadingUpdate = false;
+    state.updateProgress = undefined;
+    updater.onStatusChange?.(null);
   }
 }
 

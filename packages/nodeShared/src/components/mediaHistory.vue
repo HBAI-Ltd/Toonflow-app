@@ -41,8 +41,8 @@ import { computed, ref, watch } from "vue";
 import { useNode } from "@vue-flow/core";
 import { ElAlert, ElButton, ElDialog, ElEmpty, ElLoading, ElPagination } from "element-plus";
 import { IconHistory } from "@tabler/icons-vue";
-import { useNodeFiles } from "../workspaceFiles";
-import type { NodeMediaValue } from "../values";
+import { useNodeFiles } from "@toonflow/nodes-scaffold/workspaceFiles";
+import type { NodeMediaValue } from "@toonflow/nodes-scaffold/values";
 
 const props = defineProps<{ mediaType: "image" | "video"; current?: NodeMediaValue; disabled?: boolean }>();
 const emit = defineEmits<{ select: [value: NodeMediaValue] }>();

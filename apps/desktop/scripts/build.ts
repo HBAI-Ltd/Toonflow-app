@@ -1,6 +1,6 @@
 import { $ } from "bun";
-import { existsSync, mkdirSync } from "@toonflow/file";
-import { resolve } from "node:path";
+import { cpSync, existsSync, mkdirSync, realpathSync, rmSync } from "@toonflow/file";
+import { dirname, resolve } from "node:path";
 
 const projectDir = resolve(import.meta.dir, "../../..");
 const mode = process.argv[2];
@@ -52,6 +52,11 @@ for (const script of mode === "dev" ? ["dev:plugins"] : [
 }
 await $`${process.execPath} run --filter @toonflow/web build`.cwd(projectDir);
 await $`${process.execPath} run --filter @toonflow/mcp build`.cwd(projectDir);
+const agentDirectory = dirname(realpathSync(Bun.resolveSync("@earendil-works/pi-coding-agent", resolve(projectDir, "apps/server"))));
+const photonDirectory = dirname(Bun.resolveSync("@silvia-odwyer/photon-node", agentDirectory));
+const photonOutput = resolve(projectDir, "build/desktop/photon");
+rmSync(photonOutput, { recursive: true, force: true });
+cpSync(photonDirectory, photonOutput, { recursive: true });
 if (isIntelMac) {
   // ACT: 共用插件和 Web 构建；Intel Mac 仅将 SDK 适配交给独立的 1.18.1。
   await $`${process.execPath} ${resolve(projectDir, "compat/macIntel/build.ts")} ${mode === "package" ? "build" : mode}`.cwd(projectDir);

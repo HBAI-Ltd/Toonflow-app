@@ -6,8 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch",
-    "typecheck": "vue-tsc --noEmit",
-    "check": "bun scripts/checkAudioGeneration.ts"
+    "typecheck": "vue-tsc --noEmit"
   },
   "peerDependencies": {
     "vue": "^3.5.42",
@@ -18,6 +17,7 @@
     "@tabler/icons-vue": "^3.46.0"
   },
   "devDependencies": {
+    "@toonflow/node-shared": "workspace:*",
     "@toonflow/node-audio": "workspace:*",
     "@toonflow/nodes-scaffold": "workspace:*",
     "typescript": "~6.0.3",

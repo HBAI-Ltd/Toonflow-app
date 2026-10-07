@@ -151,6 +151,20 @@
             <p>{{ resultMessage }}</p>
           </div>
         </div>
+        <div
+          v-if="!updateError && !snapshot?.installFailure && (action === 'download' || updateProgress || (snapshot?.updateReady && !updateInProgress))"
+          class="updateProgress">
+          <div v-if="updateInProgress" class="progressHeader">
+            <span>{{ updateProgress?.phase === "preparing" ? "正在解压并校验更新包" : "下载进度" }}</span>
+            <span v-if="updateProgress && (updateProgress.received > 0 || updateProgress.total)">
+              {{ formatBytes(updateProgress.received) }}<template v-if="updateProgress.total"> / {{ formatBytes(updateProgress.total) }}</template>
+            </span>
+          </div>
+          <el-progress
+            v-if="updateProgress?.total || (!updateInProgress && snapshot?.updateReady)"
+            :percentage="updatePercentage"
+            :status="!updateInProgress && snapshot?.updateReady ? 'success' : undefined" />
+        </div>
         <div v-if="!checking && !updateError && snapshot?.updateAvailable" class="releaseInfo">
           <div class="versionComparison">
             <div class="versionItem">
@@ -176,7 +190,7 @@
         <el-button
           v-else-if="snapshot?.canUpdate && snapshot.updateAvailable"
           size="small"
-          type="primary"
+          :type="snapshot.updateReady ? 'danger' : 'primary'"
           :loading="working"
           @click="runUpdate(snapshot.updateReady ? 'apply' : 'download')">
           {{ snapshot.updateReady ? "重启并更新" : "下载更新" }}
@@ -228,6 +242,10 @@ const currentVersion = computed(() => snapshot.value?.version || import.meta.env
 const sourceSaving = ref(false);
 const checking = computed(() => desktopUpdateChecking.value);
 const working = computed(() => !!action.value);
+const updateInProgress = computed(() => working.value || !!snapshot.value?.updating);
+const updateProgress = computed(() => snapshot.value?.updateProgress);
+const updatePercentage = computed(() => !updateInProgress.value && snapshot.value?.updateReady ? 100
+  : updateProgress.value?.total ? Math.min(100, Math.floor(updateProgress.value.received / updateProgress.value.total * 100)) : 0);
 const resultVisible = ref(false);
 const activeSponsorId = ref<number>();
 const controller = new AbortController();
@@ -304,6 +322,10 @@ async function saveUpdateSource(source: string) {
 
 function getUpdateError(error: unknown) {
   return axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || error.message : String(error);
+}
+
+function formatBytes(bytes: number) {
+  return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${(bytes / 1024).toFixed(1)} KB`;
 }
 
 async function runUpdate(nextAction: "read" | "check" | "download" | "apply") {
@@ -643,6 +665,20 @@ async function runUpdate(nextAction: "read" | "check" | "download" | "apply") {
         line-height: 1.6;
         overflow-wrap: anywhere;
       }
+    }
+  }
+
+  .updateProgress {
+    margin-top: 20px;
+
+    .progressHeader {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--el-text-color-secondary);
+      font-size: 12px;
     }
   }
 

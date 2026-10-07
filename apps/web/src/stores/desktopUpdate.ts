@@ -16,7 +16,7 @@ export const hasDesktopUpdate = computed(() => desktopUpdateSnapshot.value?.chan
 
 watch(desktopUpdateKey, () => {
   if (desktopUpdateSnapshot.value) desktopUpdateSnapshot.value = {
-    ...desktopUpdateSnapshot.value, latestVersion: "", latestHash: "", error: "", updateAvailable: false, updateReady: false,
+    ...desktopUpdateSnapshot.value, latestVersion: "", latestHash: "", error: "", updateAvailable: false, updateReady: false, updateProgress: undefined,
   };
   desktopUpdateError.value = "";
 }, { flush: "sync" });
@@ -30,7 +30,7 @@ function getUpdateError(error: unknown) {
 
 function publishUpdate(snapshot: updateSnapshot, source: string) {
   desktopUpdateSnapshot.value = desktopUpdateKey.value === source ? snapshot : {
-    ...snapshot, latestVersion: "", latestHash: "", error: snapshot.installFailure?.message || "", updateAvailable: false, updateReady: false,
+    ...snapshot, latestVersion: "", latestHash: "", error: snapshot.installFailure?.message || "", updateAvailable: false, updateReady: false, updateProgress: undefined,
   };
   desktopUpdateError.value = desktopUpdateSnapshot.value.error;
   return snapshot;
@@ -54,6 +54,17 @@ async function readUpdate(source: string, signal: AbortSignal, attempts = 3, tim
     } catch (error) {
       if (signal.aborted || attempt >= attempts) throw error;
       await waitForUpdateRead(signal);
+    }
+  }
+}
+
+async function observeDownloadProgress(source: string, signal: AbortSignal) {
+  while (!signal.aborted) {
+    try {
+      await waitForUpdateRead(signal);
+      await readUpdate(source, signal, 1);
+    } catch {
+      // ACT: 下载请求负责最终结果；进度查询短暂失败只等下一次读取，不重发下载。
     }
   }
 }
@@ -97,11 +108,16 @@ export function runDesktopUpdate(nextAction: NonNullable<typeof desktopUpdateAct
     }
     let snapshot: updateSnapshot;
     if ((nextAction === "download" || nextAction === "apply") && desktopUpdateSnapshot.value)
-      desktopUpdateSnapshot.value = { ...desktopUpdateSnapshot.value, updating: true };
+      desktopUpdateSnapshot.value = { ...desktopUpdateSnapshot.value, updating: true, updateProgress: undefined };
+    const progressController = nextAction === "download" ? new AbortController() : undefined;
+    const progressTask = progressController && observeDownloadProgress(source, AbortSignal.any([controller.signal, progressController.signal]));
     try {
       const { data } = await axios.post<{ data: updateSnapshot }>(`/api/desktop/update/${nextAction}`, null, {
         headers: { "x-toonflow-desktop": "1" }, signal: controller.signal,
         timeout: nextAction === "check" ? 45000 : nextAction === "apply" ? 180000 : 0,
+      }).finally(async () => {
+        progressController?.abort();
+        await progressTask;
       });
       controller.signal.throwIfAborted();
       snapshot = publishUpdate(data.data, source);

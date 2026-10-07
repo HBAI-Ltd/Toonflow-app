@@ -138,6 +138,7 @@
           class="nodeHandle"
           :class="{
             connected: isHandleConnected(item),
+            connectedNodeActive: isHandleNodeActive(item),
             linking: localStartHandle?.id === item.id && localStartHandle.type === group.type,
           }"
           :type="group.type"
@@ -520,6 +521,17 @@ function resetHandle(event: PointerEvent) {
 
 function isHandleConnected(item: NodeHandle) {
   return connectedHandles.value.has(`${item.type}-${item.id}`);
+}
+
+function isHandleNodeActive(item: NodeHandle) {
+  const connections = connectionLookup.value.get(`${nodeId}-${item.type}-${item.id}`);
+  if (!connections?.size) return false;
+  if (node.selected || node.dragging) return true;
+  for (const connection of connections.values()) {
+    const otherNode = findNode(item.type === "source" ? connection.target : connection.source);
+    if (otherNode?.selected || otherNode?.dragging) return true;
+  }
+  return false;
 }
 
 function getHandleStatus(item: NodeHandle) {

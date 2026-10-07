@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { ElButton, ElNotification } from "element-plus";
-import { useNodeAi } from "../nodeAi";
+import { useNodeAi } from "@toonflow/nodes-scaffold/nodeAi";
 
 const props = defineProps<{ message: string; context: string; signal: AbortSignal }>();
 const ai = useNodeAi();

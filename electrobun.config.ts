@@ -11,8 +11,10 @@ export default {
   },
   build: {
     mainProcess: "bun",
-    bun: { entrypoint: "apps/desktop/src/index.ts", minify: true },
+    // ACT: Photon 按包所在目录读取 WASM，保留原包，避免内联后引用构建机路径。
+    bun: { entrypoint: "apps/desktop/src/index.ts", minify: true, external: ["@silvia-odwyer/photon-node"] },
     copy: {
+      "build/desktop/photon": "bun/node_modules/@silvia-odwyer/photon-node",
       ...(process.platform === "win32" ? {
         "build/desktop/protocol/protocolLauncher.exe": "protocolLauncher.exe",
         "build/desktop/protocol/saveFileDialog.exe": "saveFileDialog.exe",
