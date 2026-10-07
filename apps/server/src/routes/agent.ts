@@ -31,6 +31,8 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
   const cwd = await u.workspace.resolveWorkspace(req, directory);
   res.set({ "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-cache", "X-Accel-Buffering": "no" });
   res.flushHeaders();
+  // ACT: macOS WKWebView 约 60 秒收不到字节会断开。空行只保活，NDJSON 解析会跳过。
+  const heartbeat = setInterval(() => { if (!res.destroyed && !res.writableEnded) res.write("\n"); }, 20000);
   const send = (event: AgentEvent) => {
     if (event.type === "error") event = { ...event, message: translateMessage(event.message) };
     if (event.type === "session") options.sessionFile = event.file;
@@ -40,7 +42,7 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
   const bridge = canvas ? u.canvas.createCanvasContext(cwd, canvas as CanvasInfo, send) : undefined;
   const controller = new AbortController();
   const questions = u.question.createQuestionContext(cwd, send, () => controller.abort());
-  const close = () => { bridge?.dispose(); questions.dispose(); controller.abort(); };
+  const close = () => { clearInterval(heartbeat); bridge?.dispose(); questions.dispose(); controller.abort(); };
   res.once("close", close);
   try {
     await u.agent.run({ ...options, cwd, canvas: bridge?.context, question: questions.context, signal: controller.signal, onCancel: close }, send);
@@ -48,6 +50,7 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
   } catch (error) {
     send({ type: "error", message: error instanceof Error ? translateError(error) : translateMessage("Agent 运行失败") });
   } finally {
+    clearInterval(heartbeat);
     res.off("close", close);
     bridge?.dispose();
     questions.dispose();

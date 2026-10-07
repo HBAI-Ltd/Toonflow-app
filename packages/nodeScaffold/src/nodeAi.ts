@@ -123,6 +123,7 @@ async function requestModel(input: NodeAiRequest, context: Context, model: Model
         const { value, done } = await reader.read();
         signal.throwIfAborted();
         if (done) throw new Error("AI 数据流提前结束，请重试");
+        if (!value.data) continue;
         const event = JSON.parse(value.data);
         if (event.type === "error") throw new Error(event.message || "AI 生成失败");
         if (event.type === "text" || event.type === "reasoning") onEvent?.(event);

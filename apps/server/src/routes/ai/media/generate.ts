@@ -4,7 +4,7 @@ import { audioGenerationSchema, imageGenerationSchema, videoGenerationSchema } f
 import { validateFields } from "@/lib/middleware";
 import { success, error } from "@/lib/responseFormat";
 import u from "@/utils";
-import { translateMessage, validationOptions } from "@/lib/i18n";
+import { translateError, translateMessage, validationOptions } from "@/lib/i18n";
 
 export default Router().post("/", validateFields({
   directory: z.string().min(1).max(4096), mediaType: z.enum(["image", "video", "audio"]),
@@ -17,14 +17,21 @@ export default Router().post("/", validateFields({
   }
   const cwd = await u.workspace.resolveWorkspace(req, directory);
   const controller = new AbortController();
-  const close = () => controller.abort();
+  res.set({ "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-cache" });
+  res.flushHeaders();
+  // ACT: macOS WKWebView 约 60 秒收不到首字节会断开。前导空白仍是合法 JSON。
+  const heartbeat = setInterval(() => { if (!res.destroyed && !res.writableEnded) res.write("\n"); }, 20000);
+  const close = () => { clearInterval(heartbeat); controller.abort(); };
   res.once("close", close);
   req.once("aborted", close);
   req.socket.once("close", close);
   try {
     const files = await u.mediaGeneration.generateMedia(cwd, mediaType, parsed.data, controller.signal);
-    if (!res.destroyed) res.json(success(files));
+    if (!res.destroyed && !res.writableEnded) res.end(JSON.stringify(success(files)));
+  } catch (failure) {
+    if (!res.destroyed && !res.writableEnded) res.end(JSON.stringify(error(failure instanceof Error ? translateError(failure) : translateMessage("媒体生成失败"), null, 500)));
   } finally {
+    clearInterval(heartbeat);
     res.off("close", close);
     req.off("aborted", close);
     req.socket.off("close", close);

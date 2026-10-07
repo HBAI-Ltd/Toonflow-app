@@ -62,20 +62,23 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
   const input = inputSchema.parse(req.body, validationOptions());
   const configured = u.ai.getConfiguredModel(input.providerId, input.modelId);
   const controller = new AbortController();
-  const close = () => controller.abort();
+  let heartbeat: ReturnType<typeof setInterval> | undefined;
+  const close = () => { if (heartbeat) clearInterval(heartbeat); controller.abort(); };
   res.once("close", close);
   req.once("aborted", close);
   // ACT: 兼容不同运行时的关闭事件；Bun 1.3.14 的静默 SSE 仍可能不通知，不能保证立即停止上游。
   req.socket.once("close", close);
   try {
-    const directory = input.references?.some(item => item.dataType !== "STRING")
-      ? await u.workspace.resolveWorkspace(req, input.directory ?? "") : undefined;
-    const references = await u.ai.readAiReferences(directory, input.references ?? [], controller.signal);
-    const stream = u.ai.streamAi(configured, input.context, controller.signal, references);
     res.set({ "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache", "X-Accel-Buffering": "no" });
     res.flushHeaders();
+    // ACT: macOS WKWebView 约 60 秒收不到字节会断开。SSE 注释只保活，解析器不当成事件。
+    heartbeat = setInterval(() => { if (!res.destroyed && !res.writableEnded) res.write(": keepalive\n\n"); }, 20000);
     const send = (event: object) => { if (!res.destroyed) res.write(`data: ${JSON.stringify(event)}\n\n`); };
     try {
+      const directory = input.references?.some(item => item.dataType !== "STRING")
+        ? await u.workspace.resolveWorkspace(req, input.directory ?? "") : undefined;
+      const references = await u.ai.readAiReferences(directory, input.references ?? [], controller.signal);
+      const stream = u.ai.streamAi(configured, input.context, controller.signal, references);
       for await (const event of stream) {
         if (event.type === "text_delta" || event.type === "thinking_delta") {
           send({ type: event.type === "text_delta" ? "text" : "reasoning", delta: event.delta });
@@ -87,6 +90,7 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
     } catch (error) {
       send({ type: "error", message: error instanceof Error ? translateError(error) : translateMessage("模型请求失败") });
     } finally {
+      if (heartbeat) clearInterval(heartbeat);
       res.end();
     }
   } finally {
