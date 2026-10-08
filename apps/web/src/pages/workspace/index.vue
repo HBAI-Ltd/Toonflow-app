@@ -23,6 +23,7 @@
         :fileAction="performFileAction"
         :saveNode="saveDocumentNode" />
     </keep-alive>
+    <productionPanel v-if="activePanel === 'production'" :key="workspaceStore.project?.directory" class="productionPanel" />
     <workspaceMenu class="workspaceMenu" @openSettings="settingsVisible = true" />
     <el-segmented :modelValue="activePanel" class="panelSwitcher" :options="panelOptions" size="small" aria-label="切换面板" @change="switchPanel">
       <template #default="{ item }">
@@ -50,7 +51,7 @@
 import { computed, defineAsyncComponent, nextTick, onMounted, onScopeDispose, provide, ref, shallowRef, watch, type ComponentPublicInstance } from "vue";
 import { onBeforeRouteLeave } from "vue-router";
 import axios from "axios";
-import { IconLayoutDashboard, IconFileText } from "@tabler/icons-vue";
+import { IconLayoutDashboard, IconFileText, IconMovie } from "@tabler/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import settings from "@/components/settings/index.vue";
 import { useWorkspaceStore } from "@/stores/workspace";
@@ -62,13 +63,15 @@ import workspaceMenu from "./components/workspaceMenu.vue";
 import floatingAgent from "./components/floatingAgent.vue";
 
 const documentPanel = defineAsyncComponent(() => import("./panels/document/index.vue"));
+const productionPanel = defineAsyncComponent(() => import("./panels/production/index.vue"));
 
-const activePanel = ref<"canvas" | "document">("canvas");
+const activePanel = ref<"canvas" | "document" | "production">("canvas");
 onMounted(() => anonymousData.track("workspace.canvas"));
 const workspaceStore = useWorkspaceStore();
 const panelOptions = [
   { label: "画布", value: "canvas", icon: IconLayoutDashboard },
   { label: "文档", value: "document", icon: IconFileText },
+  { label: "生产", value: "production", icon: IconMovie },
 ];
 const agentVisible = ref(true);
 const agentWidth = ref(0);
@@ -109,7 +112,7 @@ registerWorkspaceControl({
     };
     checkDirectory();
     if (request.name === "switchPanel") {
-      if (request.args.panel !== "canvas" && request.args.panel !== "document") throw new Error("未知面板");
+      if (request.args.panel !== "canvas" && request.args.panel !== "document" && request.args.panel !== "production") throw new Error("未知面板");
       if (!(await switchPanel(request.args.panel))) throw new Error("面板切换失败，请检查文档是否保存成功");
       checkDirectory();
       return { panel: activePanel.value };
@@ -170,13 +173,13 @@ onBeforeRouteLeave(async () => {
 });
 
 async function switchPanel(value: string | number | boolean) {
-  if (value !== "canvas" && value !== "document") return false;
+  if (value !== "canvas" && value !== "document" && value !== "production") return false;
   try {
     if (activePanel.value === "document") await documentPanelRef.value?.flushSave();
     const changed = activePanel.value !== value;
     activePanel.value = value;
     await nextTick();
-    if (changed) anonymousData.track(value === "canvas" ? "workspace.canvas" : "workspace.document");
+    if (changed && value !== "production") anonymousData.track(value === "canvas" ? "workspace.canvas" : "workspace.document");
     return true;
   } catch (error) {
     ElMessage.error(error instanceof Error ? error.message : "文本保存失败");
