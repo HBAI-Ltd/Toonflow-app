@@ -183,6 +183,12 @@ interface ProviderUpdateInfo {
   notice: string;
 }
 
+interface ProviderHealth {
+  reachable: boolean;
+  models?: string[];
+  message?: string;
+}
+
 interface ProviderDefinition<TRules extends readonly ProviderFormRule[] = readonly ProviderFormRule[]> {
   id: string;
   label: string;
@@ -204,6 +210,7 @@ interface ProviderDefinition<TRules extends readonly ProviderFormRule[] = readon
   checkForUpdates?: (this: ProviderContext<ProviderConfig<TRules>>) => Promise<ProviderUpdateInfo>;
   /** 获取更新文件的完整源码；写入与应用由宿主负责。 */
   updateVendor?: (this: ProviderContext<ProviderConfig<TRules>>) => Promise<string>;
+  healthCheck?: (this: ProviderContext<ProviderConfig<TRules>>) => Promise<ProviderHealth>;
   /** 未实现的方法保持缺省，调用方据此判断能力是否可用。 */
   generateImage?: GenerateMedia<ImageRequest, ProviderConfig<TRules>>;
   generateVideo?: GenerateMedia<VideoRequest, ProviderConfig<TRules>>;

@@ -2,6 +2,7 @@ import * as assets from "@/utils/assets";
 import * as desktop from "@/utils/desktop";
 import * as providerDebug from "@/utils/media/debug";
 import * as mediaGeneration from "@/utils/media/generation";
+import * as mediaTasks from "@/utils/media/tasks";
 import * as mediaProvider from "@/utils/media/provider";
 import * as ffmpeg from "@/utils/ffmpeg";
 import * as pluginInstall from "@/utils/plugins/install";
@@ -22,12 +23,15 @@ import * as teams from "@/utils/teams";
 import * as a2aSettings from "@/agent/a2a/settings";
 import * as personalization from "@/utils/personalization";
 import * as mentionFiles from "@/agent/mentionFiles";
+import * as production from "@/utils/production/shots";
+import * as productionExport from "@/utils/production/export";
 
 export default {
   assets,
   desktop,
   providerDebug,
   mediaGeneration,
+  mediaTasks,
   mediaProvider,
   ffmpeg,
   pluginInstall,
@@ -49,4 +53,5 @@ export default {
   a2aSettings,
   personalization,
   mentionFiles,
+  production: { ...production, exportProduction: productionExport.exportProduction },
 };

@@ -134,6 +134,21 @@ export default {
     { id: "minimax_h3_ref2va_i8x.ckpt", label: "MiniMax H3 ref2va 8-bit (本地)", type: "video", mode: ["text", "startFrameOptional"], audio: "optional" },
     { id: "minimax_h3_fl2va_i8x.ckpt", label: "MiniMax H3 fl2va (本地)", type: "video", mode: ["text", "startFrameOptional"], audio: "optional" },
   ] satisfies ProviderModel[],
+  async healthCheck() {
+    const baseUrl = (this.config.baseUrl?.trim() || "http://127.0.0.1:7888").replace(/\/$/, "");
+    try {
+      const response = await this.tool.fetch(`${baseUrl}/sdapi/v1/sd-models`, { signal: AbortSignal.timeout(5000) });
+      if (!response.ok) return { reachable: true, message: `Draw Things 已连接，但模型列表接口返回 HTTP ${response.status}` };
+      const value = await response.json() as unknown;
+      const models = Array.isArray(value) ? value.flatMap(item => {
+        const data = object(item);
+        return typeof data.title === "string" ? [data.title] : typeof data.model_name === "string" ? [data.model_name] : [];
+      }) : [];
+      return { reachable: true, models };
+    } catch (error) {
+      return { reachable: false, message: `无法连接 Draw Things Local API：${error instanceof Error ? error.message : String(error)}` };
+    }
+  },
   async generateImage(request: ImageRequest): Promise<MediaAsset[]> {
     const model = request.model || defaultImageModel;
     const preset = getPreset(model, "image");
