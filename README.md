@@ -272,9 +272,22 @@ sudo spctl --master-disable
 
 更多操作说明请查看 [使用教程](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)。
 
+### 4.2 源码开发启动
+
+安装依赖后，在仓库根目录执行以下脚本。脚本会后台启动 Web 与 Server，日志写入 `logs/toonflow-dev.log`。
+
+```sh
+bun install --frozen-lockfile
+./scripts/start.sh
+./scripts/stop.sh
+./scripts/restart.sh
+```
+
+开发服务启动后访问 `http://127.0.0.1:3000`。
+
 ---
 
-### 4.2 Docker 安装
+### 4.3 Docker 安装
 
 先安装 Git、[Docker Engine](https://docs.docker.com/engine/install/) 和 Docker Compose；Windows / macOS 可使用 Docker Desktop 的 Linux 容器模式。仓库提供 [Dockerfile](./Dockerfile)、[Compose 配置](./compose.yaml) 和 [构建排除规则](./.dockerignore)，基于 Bun 1.3.14 构建，镜像内包含 FFmpeg。
 
@@ -318,7 +331,7 @@ docker compose start
 
 ---
 
-### 4.3 服务器安装
+### 4.4 服务器安装
 
 适用于直接在 Linux 服务器上运行 Web 与 Server。以下以 Ubuntu / Debian 为例，使用项目指定的 [Bun 1.3.14](https://bun.sh/docs/installation)。
 
@@ -354,7 +367,7 @@ bun run start:server
 
 ---
 
-### 4.4 访问与数据说明
+### 4.5 访问与数据说明
 
 - 当前服务使用固定端口 `3000`，业务页面与 API 没有独立登录鉴权。服务器安装时，请通过防火墙或安全组限制 `3000` 端口的访问来源；公网访问需配置带认证的反向代理。
 - 个人远程使用可在自己的电脑上执行 `ssh -N -L 3000:127.0.0.1:3000 用户名@服务器地址`，保持连接后打开 `http://127.0.0.1:3000`，无需将服务器的 `3000` 端口向公网开放。

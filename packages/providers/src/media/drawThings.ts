@@ -121,7 +121,7 @@ export default {
   id: "drawThings",
   label: "Draw Things Local",
   version,
-  readme: "本机 Draw Things Local API 图片与视频供应商。请先开启 Local API Server。模型列表可在媒体模型设置中切换；参数会按模型类型自动选择。",
+  readme: "本机 Draw Things Local API 图片与视频供应商。请先开启 Local API Server。模型列表会从本机 Draw Things Models 目录筛选已配置模型，也可在媒体模型设置中切换；参数会按模型类型自动选择。",
   rules,
   models: [
     { id: "z_image_turbo_1.0_i8x.ckpt", label: "Z Image Turbo (本地)", type: "image", mode: ["text", "singleImage"] },

@@ -1,6 +1,7 @@
 import { t, translateMessage, validationOptions } from "@/lib/i18n";
 import { createHash } from "node:crypto";
-import { lstat, mkdir, readFile, readdir, unlink } from "@toonflow/file";
+import { lstat, mkdir, readFile, readdir, unlink, type Dirent } from "@toonflow/file";
+import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { createContext, SourceTextModule } from "node:vm";
 import type { AudioConvertOptions, Provider, ProviderTools } from "@toonflow/providers";
@@ -25,6 +26,34 @@ export const mediaModelsSchema = z.array(z.object({
   label: z.string().min(1).max(200).refine(value => !!value.trim()),
   type: z.enum(["text", "image", "video", "audio"]),
 }).catchall(z.json())).max(2000).refine(models => new Set(models.map(model => model.id)).size === models.length, "模型 ID 不能重复");
+
+function drawThingsModelsDirectory() {
+  const configured = process.env.TOONFLOW_DRAW_THINGS_MODELS_DIR?.trim();
+  if (configured) return configured;
+  return process.platform === "darwin"
+    ? join(homedir(), "Library/Containers/com.liuliu.draw-things/Data/Documents/Models")
+    : undefined;
+}
+
+async function discoverDrawThingsModels(models: z.infer<typeof mediaModelsSchema>) {
+  const directory = drawThingsModelsDirectory();
+  if (!directory) return models;
+  let entries: Dirent[];
+  try {
+    entries = await readdir(directory, { withFileTypes: true }) as Dirent[];
+  } catch { return models; }
+  const installed = new Set(entries
+    .filter(entry => entry.isFile() && /\.(?:ckpt|safetensors)$/i.test(entry.name))
+    .map(entry => entry.name));
+  // ACT: 只同步 Provider 已配置参数的模型，避免把 LoRA、VAE 或未知主模型放进可生成下拉框。
+  const known = new Map(models.map(model => [model.id, model]));
+  return [...known.values()].filter(model => installed.has(model.id));
+}
+
+async function providerMetadata(fileName: string, source: string) {
+  const result = metadata(fileName, source);
+  return result.id === "drawThings" ? { ...result, models: await discoverDrawThingsModels(result.models) } : result;
+}
 
 function invalid(message: string, status = 400): never {
   throw Object.assign(new Error(message), { status });
@@ -213,7 +242,7 @@ export async function getMediaProvider(id: string) {
     if (error.code === "ENOENT") invalid("请先在媒体模型设置中添加供应商", 404);
     throw error;
   });
-  return { ...metadata(current.fileName, current.source), source: current.source };
+  return { ...(await providerMetadata(current.fileName, current.source)), source: current.source };
 }
 
 export async function listMediaProviders() {
@@ -225,7 +254,7 @@ export async function listMediaProviders() {
       let current = { fileName: file.name, id: file.name.slice(0, -3), source: "", revision: "" };
       try {
         current = await readProvider(path, file.name);
-        return metadata(current.fileName, current.source);
+        return providerMetadata(current.fileName, current.source);
       } catch (error) {
         // ACT: 元数据损坏不影响其他供应商；仍保留原文版本，允许用户明确删除。
         const { source, ...file } = current;

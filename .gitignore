@@ -16,6 +16,7 @@ test-results/
 /.cottontail-tmp/
 coverage/
 *.tsbuildinfo
+.toonflow-dev.pid
 *.log
 .DS_Store
 Thumbs.db
