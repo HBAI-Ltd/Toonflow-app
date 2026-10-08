@@ -35,6 +35,7 @@
           <form-create v-model:api="formApi" :rule="providerRules" :option="formOptions" />
           <div class="modelHeader">
             <el-text tag="strong">模型列表 <el-text type="info">{{ models.length }}</el-text></el-text>
+            <el-button v-if="selectedProvider === 'drawThings'" :icon="IconRefresh" :loading="refreshing" :disabled="saving" @click="refreshDrawThingsModels">刷新本地模型</el-button>
           </div>
           <el-table v-if="models.length" class="modelList" :data="models" rowKey="id" aria-label="模型列表">
             <el-table-column prop="id" label="模型 ID" minWidth="220" showOverflowTooltip />
@@ -91,7 +92,7 @@
 import axios from "axios";
 import { computed, ref, shallowRef, watch } from "vue";
 import formCreate, { type Api, type Options } from "../../formCreate";
-import { IconFileCode, IconCode, IconFolderOpen, IconCopy } from "@tabler/icons-vue";
+import { IconFileCode, IconCode, IconFolderOpen, IconCopy, IconRefresh } from "@tabler/icons-vue";
 import { ElMessage } from "element-plus";
 import { mediaProviders } from "@toonflow/providers";
 import { modelIcon } from "@toonflow/model-icons";
@@ -113,7 +114,8 @@ const emit = defineEmits<{ added: [provider: MediaProvider] }>();
 const providerSources: Record<string, string> = { tfRouter: tfRouterSource, apiMart: apiMartSource, metaso: metasoSource, drawThings: drawThingsSource };
 const selectedProvider = ref<string>(mediaProviders[0]?.id ?? "");
 const activeProvider = computed(() => mediaProviders.find(provider => provider.id === selectedProvider.value));
-const models = computed<MediaProvider["models"]>(() => activeProvider.value?.models ?? []);
+const refreshedModels = ref<MediaProvider["models"]>();
+const models = computed<MediaProvider["models"]>(() => refreshedModels.value ?? activeProvider.value?.models ?? []);
 const providerReadme = computed(() => {
   const provider = activeProvider.value;
   return provider && "readme" in provider && typeof provider.readme === "string" ? provider.readme : "";
@@ -129,6 +131,7 @@ const fileSource = ref("");
 const fileName = ref("");
 const fileInput = ref<HTMLInputElement>();
 const saving = ref(false);
+const refreshing = ref(false);
 const formError = ref("");
 const formApi = shallowRef<Api>();
 const addedProvider = shallowRef<MediaProvider>();
@@ -139,6 +142,7 @@ const source = computed(() => mode === "builtin" ? providerSources[selectedProvi
 watch([activeTab, selectedProvider], () => {
   formError.value = "";
   addedProvider.value = undefined;
+  refreshedModels.value = undefined;
 });
 
 watch(visible, value => {
@@ -148,8 +152,26 @@ watch(visible, value => {
   promptExpanded.value = false;
   formApi.value = undefined;
   addedProvider.value = undefined;
+  refreshedModels.value = undefined;
   code.value = fileSource.value = fileName.value = formError.value = "";
 });
+
+async function refreshDrawThingsModels() {
+  if (refreshing.value || selectedProvider.value !== "drawThings") return;
+  refreshing.value = true;
+  formError.value = "";
+  try {
+    const { data } = await axios.get<{ code: number; data: MediaProvider["models"]; message?: string }>("/api/providers/media/drawThings/models");
+    if (data.code !== 200 || !Array.isArray(data.data)) throw new Error(data.message || "读取 Draw Things 本地模型失败");
+    refreshedModels.value = data.data;
+    if (!data.data.length) ElMessage.warning("未找到已支持的本地模型，请确认模型已安装到 Draw Things Models 目录");
+    else ElMessage.success(`已刷新 ${data.data.length} 个本地模型`);
+  } catch (error) {
+    formError.value = axios.isAxiosError(error) ? error.response?.data?.message || "读取 Draw Things 本地模型失败" : error instanceof Error ? error.message : "读取 Draw Things 本地模型失败";
+  } finally {
+    refreshing.value = false;
+  }
+}
 
 async function readSourceFile(event: Event) {
   const input = event.target as HTMLInputElement;

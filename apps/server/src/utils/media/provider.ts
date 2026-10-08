@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 import { createContext, SourceTextModule } from "node:vm";
 import type { AudioConvertOptions, Provider, ProviderTools } from "@toonflow/providers";
 import tfRouter from "@toonflow/providers/media/tfRouter";
+import drawThings from "@toonflow/providers/media/drawThings";
 import { parse, parseExpression } from "@babel/parser";
 import { z } from "zod";
 import conf from "@/utils/conf";
@@ -48,6 +49,10 @@ async function discoverDrawThingsModels(models: z.infer<typeof mediaModelsSchema
   // ACT: 只同步 Provider 已配置参数的模型，避免把 LoRA、VAE 或未知主模型放进可生成下拉框。
   const known = new Map(models.map(model => [model.id, model]));
   return [...known.values()].filter(model => installed.has(model.id));
+}
+
+export async function listDrawThingsModels() {
+  return discoverDrawThingsModels(mediaModelsSchema.parse(drawThings.models));
 }
 
 async function providerMetadata(fileName: string, source: string) {
@@ -266,7 +271,7 @@ export async function listMediaProviders() {
 export async function addMediaProvider(source: string) {
   const { id } = parseProvider(source);
   const fileName = `${id}.ts`;
-  const result = metadata(fileName, source);
+  const result = await providerMetadata(fileName, source);
   const path = join((await directory(true))!, fileName);
   const release = lockWorkspaceFiles([path]);
   try { await writeWorkspaceFile(path, source, true); }
