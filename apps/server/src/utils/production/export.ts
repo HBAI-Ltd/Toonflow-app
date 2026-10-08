@@ -4,7 +4,7 @@ import { createWorkspaceFfmpeg } from "@/utils/ffmpeg";
 import { resolveWorkspacePath } from "@/utils/workspace/files";
 import { readProductionManifest, writeProductionManifest } from "@/utils/production/shots";
 
-export async function exportProduction(directory: string, outputPath: string, inputPaths: string[], signal?: AbortSignal) {
+export async function exportProduction(directory: string, outputPath: string, inputPaths: string[], signal?: AbortSignal, onProgress?: (value: number) => void) {
   if (!inputPaths.length) throw Object.assign(new Error("至少需要一个视频片段"), { status: 400 });
   if (inputPaths.some(path => !path || path.startsWith("/") || path.split(/[\\/]/).some(part => !part || part === "." || part === ".."))) throw Object.assign(new Error("视频路径必须是工作区内的相对路径"), { status: 400 });
   if (!outputPath || outputPath.startsWith("/") || outputPath.split(/[\\/]/).some(part => !part || part === "." || part === "..")) throw Object.assign(new Error("输出路径必须是工作区内的相对路径"), { status: 400 });
@@ -20,6 +20,10 @@ export async function exportProduction(directory: string, outputPath: string, in
     await new Promise<void>((resolve, reject) => {
       command.on("error", reject);
       command.on("end", () => resolve());
+      command.on("progress", (progress: { percent?: unknown }) => {
+        const percent = typeof progress?.percent === "number" && Number.isFinite(progress.percent) ? progress.percent : undefined;
+        if (percent !== undefined) onProgress?.(Math.min(99, Math.max(0, percent)));
+      });
       command.mergeToFile(outputPath, "mp4");
     });
     signal?.throwIfAborted();

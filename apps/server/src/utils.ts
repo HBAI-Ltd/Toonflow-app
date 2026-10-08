@@ -25,6 +25,7 @@ import * as personalization from "@/utils/personalization";
 import * as mentionFiles from "@/agent/mentionFiles";
 import * as production from "@/utils/production/shots";
 import * as productionExport from "@/utils/production/export";
+import * as exportTasks from "@/utils/production/exportTasks";
 
 export default {
   assets,
@@ -53,5 +54,5 @@ export default {
   a2aSettings,
   personalization,
   mentionFiles,
-  production: { ...production, exportProduction: productionExport.exportProduction },
+  production: { ...production, ...productionExport, ...exportTasks },
 };

@@ -10,6 +10,11 @@ export type ProductionShot = {
   title: string;
   prompt: string;
   status: ShotStatus;
+  providerId?: string;
+  modelId?: string;
+  mediaType?: "image" | "video" | "audio";
+  taskId?: string;
+  outputDirectory?: string;
   outputPath?: string;
   model?: string;
   duration?: number;
@@ -62,5 +67,18 @@ export function validateShot(value: unknown): ProductionShot {
   if (!Number.isInteger(shot.order) || shot.order! < 0 || !shotStatuses.includes(shot.status as ShotStatus)) throw Object.assign(new Error("镜头 order 或 status 无效"), { status: 400 });
   if (shot.outputPath !== undefined && (!shot.outputPath || shot.outputPath.startsWith("/") || shot.outputPath.split(/[\\/]/).some(part => !part || part === "." || part === ".."))) throw Object.assign(new Error("镜头输出路径必须是工作区内的相对路径"), { status: 400 });
   if (shot.duration !== undefined && (!Number.isFinite(shot.duration) || shot.duration <= 0)) throw Object.assign(new Error("镜头时长必须是正数"), { status: 400 });
-  return { id: shot.id, order: shot.order!, title: shot.title, prompt: shot.prompt, status: shot.status!, ...(typeof shot.outputPath === "string" ? { outputPath: shot.outputPath } : {}), ...(typeof shot.model === "string" ? { model: shot.model } : {}), ...(typeof shot.duration === "number" ? { duration: shot.duration } : {}) };
+  if (shot.providerId !== undefined && (typeof shot.providerId !== "string" || !/^[a-z][a-zA-Z0-9]{0,95}$/.test(shot.providerId))) throw Object.assign(new Error("镜头供应商 ID 无效"), { status: 400 });
+  if (shot.modelId !== undefined && (typeof shot.modelId !== "string" || !shot.modelId.trim())) throw Object.assign(new Error("镜头模型 ID 无效"), { status: 400 });
+  if (shot.outputDirectory !== undefined && (typeof shot.outputDirectory !== "string" || shot.outputDirectory.split(/[\\/]/).some(part => !part || part === "." || part === ".."))) throw Object.assign(new Error("镜头输出目录无效"), { status: 400 });
+  return {
+    id: shot.id, order: shot.order!, title: shot.title, prompt: shot.prompt, status: shot.status!,
+    ...(typeof shot.providerId === "string" ? { providerId: shot.providerId } : {}),
+    ...(typeof shot.modelId === "string" ? { modelId: shot.modelId } : {}),
+    ...(shot.mediaType ? { mediaType: shot.mediaType } : {}),
+    ...(typeof shot.taskId === "string" ? { taskId: shot.taskId } : {}),
+    ...(typeof shot.outputDirectory === "string" ? { outputDirectory: shot.outputDirectory } : {}),
+    ...(typeof shot.outputPath === "string" ? { outputPath: shot.outputPath } : {}),
+    ...(typeof shot.model === "string" ? { model: shot.model } : {}),
+    ...(typeof shot.duration === "number" ? { duration: shot.duration } : {}),
+  };
 }

@@ -96,6 +96,12 @@ export async function getMediaTask(directory: string, id: string) {
   return (await readTasks(directory)).find(task => task.id === id);
 }
 
+export async function getMediaTasks(directory: string, ids: string[]) {
+  const tasks = await listMediaTasks(directory);
+  const wanted = new Set(ids);
+  return tasks.filter(task => wanted.has(task.id));
+}
+
 export async function listMediaTasks(directory: string) {
   await ensureRecovered(directory);
   return (await readTasks(directory)).sort((left, right) => right.createdAt.localeCompare(left.createdAt));
