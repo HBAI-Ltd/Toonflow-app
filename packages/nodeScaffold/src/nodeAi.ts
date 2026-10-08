@@ -30,6 +30,7 @@ export type NodeImageRequest = {
 export type NodeImageResult = { path: string; mimeType: string; mediaType: "image" };
 export type NodeVideoRequest = Omit<MediaGenerationRequest, "size"> & { directory: string; outputDirectory: string };
 export type NodeVideoResult = { path: string; mimeType: string; mediaType: "video" };
+type NodeMediaTask = { id: string; status: "queued" | "running" | "completed" | "failed" | "cancelled"; result?: NodeVideoResult[]; error?: string };
 export type NodeAudioRequest = Pick<MediaGenerationRequest, "providerId" | "modelId" | "prompt" | "images" | "audios" | "voice" | "speed" | "volume" | "pitch" | "language" | "format" | "sampleRate"> & { directory: string; outputDirectory: string };
 export type NodeAudioResult = { path: string; mimeType: string; mediaType: "audio" };
 export type NodeAiRequest = {
@@ -181,6 +182,41 @@ export function useNodeAi() {
     return generateMedia("video", input, signal);
   }
 
+  async function generateVideoTask(input: NodeVideoRequest, signal?: AbortSignal) {
+    const callSignal = requestSignal(signal);
+    const task = await readResult<NodeMediaTask>(await fetch("/api/ai/media/task", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-toonflow-workspace": "1" },
+      body: JSON.stringify({ ...input, mediaType: "video" }),
+      signal: callSignal,
+    }));
+    let cancelled = false;
+    const cancel = () => {
+      cancelled = true;
+      void fetch("/api/ai/media/taskCancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-toonflow-workspace": "1" },
+        body: JSON.stringify({ directory: input.directory, id: task.id }),
+      }).catch(() => {});
+    };
+    callSignal.addEventListener("abort", cancel, { once: true });
+    try {
+      while (true) {
+        callSignal.throwIfAborted();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const query = new URLSearchParams({ directory: input.directory, id: task.id });
+        const status = await readResult<NodeMediaTask>(await fetch(`/api/ai/media/taskStatus?${query}`, { signal: callSignal }));
+        if (status.status === "completed") return status.result ?? [];
+        if (status.status === "failed" || status.status === "cancelled") throw new Error(status.error || "视频任务失败");
+      }
+    } catch (error) {
+      if (cancelled || callSignal.aborted) throw new DOMException("生成已取消", "AbortError");
+      throw error;
+    } finally {
+      callSignal.removeEventListener("abort", cancel);
+    }
+  }
+
   function generateAudio(input: NodeAudioRequest, signal?: AbortSignal) {
     return generateMedia("audio", input, signal);
   }
@@ -235,5 +271,5 @@ export function useNodeAi() {
     return { text, ...(reasoning ? { reasoning } : {}) };
   }
 
-  return { getModels, getMediaModels, generateImage, generateVideo, generateAudio, generate };
+  return { getModels, getMediaModels, generateImage, generateVideo, generateVideoTask, generateAudio, generate };
 }

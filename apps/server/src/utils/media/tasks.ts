@@ -2,7 +2,7 @@ import { mkdir, readFile, writeAtomic } from "@toonflow/file";
 import { join } from "node:path";
 import type { MediaGenerationRequest } from "@toonflow/tools-scaffold/runtime";
 import { generateMedia } from "@/utils/media/generation";
-import { resolveWorkspacePath } from "@/utils/workspace/files";
+import { lockWorkspaceFiles, resolveWorkspacePath } from "@/utils/workspace/files";
 
 export type MediaTaskStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
 export type MediaTask = {
@@ -18,6 +18,7 @@ export type MediaTask = {
 };
 
 const controllers = new Map<string, AbortController>();
+const recoveredDirectories = new Set<string>();
 
 async function taskFile(directory: string) {
   const target = await resolveWorkspacePath(directory, ".toonflow/mediaTasks.json", true);
@@ -41,57 +42,83 @@ async function writeTasks(directory: string, tasks: MediaTask[]) {
   await writeAtomic(path, JSON.stringify(tasks, null, 2));
 }
 
-async function updateTask(directory: string, id: string, update: Partial<MediaTask>) {
-  const tasks = await readTasks(directory);
-  const index = tasks.findIndex(task => task.id === id);
-  if (index < 0) return undefined;
-  tasks[index] = { ...tasks[index]!, ...update, updatedAt: new Date().toISOString() };
-  await writeTasks(directory, tasks);
-  return tasks[index];
+async function updateTask(directory: string, id: string, update: Partial<MediaTask>, expected?: MediaTaskStatus[]) {
+  return mutateTasks(directory, tasks => {
+    const index = tasks.findIndex(task => task.id === id);
+    if (index < 0) return undefined;
+    if (expected && !expected.includes(tasks[index]!.status)) return tasks[index];
+    tasks[index] = { ...tasks[index]!, ...update, updatedAt: new Date().toISOString() };
+    return tasks[index];
+  });
+}
+
+async function mutateTasks<T>(directory: string, mutate: (tasks: MediaTask[]) => T) {
+  const path = await taskFile(directory);
+  const release = lockWorkspaceFiles([path]);
+  try {
+    const tasks = await readTasks(directory);
+    const result = mutate(tasks);
+    await writeTasks(directory, tasks);
+    return result;
+  } finally { release(); }
 }
 
 async function runTask(task: MediaTask) {
   const controller = new AbortController();
   controllers.set(task.id, controller);
-  await updateTask(task.directory, task.id, { status: "running", error: undefined });
   try {
+    const started = await updateTask(task.directory, task.id, { status: "running", error: undefined }, ["queued"]);
+    if (!started || started.status !== "running") return;
     const result = await generateMedia(task.directory, task.mediaType, task.request, controller.signal);
-    await updateTask(task.directory, task.id, { status: "completed", result });
+    await updateTask(task.directory, task.id, { status: "completed", result }, ["running"]);
   } catch (error) {
     const cancelled = controller.signal.aborted;
     await updateTask(task.directory, task.id, {
       status: cancelled ? "cancelled" : "failed",
       error: error instanceof Error ? error.message : String(error),
-    });
+    }, ["running"]);
   } finally {
     controllers.delete(task.id);
   }
 }
 
 export async function createMediaTask(directory: string, mediaType: MediaTask["mediaType"], request: MediaGenerationRequest) {
-  await recoverMediaTasks(directory);
+  await ensureRecovered(directory);
   const now = new Date().toISOString();
   const task: MediaTask = { id: crypto.randomUUID(), directory, mediaType, request, status: "queued", createdAt: now, updatedAt: now };
-  const tasks = await readTasks(directory);
-  tasks.push(task);
-  await writeTasks(directory, tasks);
-  void runTask(task);
+  await mutateTasks(directory, tasks => { tasks.push(task); });
+  void runTask(task).catch(() => {});
   return task;
 }
 
 export async function getMediaTask(directory: string, id: string) {
+  await ensureRecovered(directory);
   return (await readTasks(directory)).find(task => task.id === id);
 }
 
+export async function listMediaTasks(directory: string) {
+  await ensureRecovered(directory);
+  return (await readTasks(directory)).sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+}
+
 export async function cancelMediaTask(directory: string, id: string) {
-  const task = await getMediaTask(directory, id);
-  if (!task) return undefined;
+  await ensureRecovered(directory);
+  const task = await mutateTasks(directory, tasks => {
+    const current = tasks.find(item => item.id === id);
+    if (!current) return undefined;
+    if (current.status === "queued" || current.status === "running") {
+      current.status = "cancelled";
+      current.error = "任务已取消";
+      current.updatedAt = new Date().toISOString();
+    }
+    return current;
+  });
   controllers.get(id)?.abort();
-  if (task.status === "queued") return updateTask(directory, id, { status: "cancelled", error: "任务已取消" });
-  return getMediaTask(directory, id);
+  return task;
 }
 
 export async function retryMediaTask(directory: string, id: string) {
+  await ensureRecovered(directory);
   const task = await getMediaTask(directory, id);
   if (!task || !["failed", "cancelled"].includes(task.status)) return task;
   const next = await updateTask(directory, id, { status: "queued", error: undefined, result: undefined });
@@ -100,15 +127,19 @@ export async function retryMediaTask(directory: string, id: string) {
 }
 
 export async function recoverMediaTasks(directory: string) {
-  const tasks = await readTasks(directory);
-  let changed = false;
-  for (const task of tasks) {
-    if (task.status === "queued" || task.status === "running") {
-      task.status = "failed";
-      task.error = "服务重启导致任务中断，请重试";
-      task.updatedAt = new Date().toISOString();
-      changed = true;
+  await mutateTasks(directory, tasks => {
+    for (const task of tasks) {
+      if (!controllers.has(task.id) && (task.status === "queued" || task.status === "running")) {
+        task.status = "failed";
+        task.error = "服务重启导致任务中断，请重试";
+        task.updatedAt = new Date().toISOString();
+      }
     }
-  }
-  if (changed) await writeTasks(directory, tasks);
+  });
+}
+
+async function ensureRecovered(directory: string) {
+  if (recoveredDirectories.has(directory)) return;
+  await recoverMediaTasks(directory);
+  recoveredDirectories.add(directory);
 }

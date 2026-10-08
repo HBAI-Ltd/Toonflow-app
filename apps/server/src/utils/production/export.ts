@@ -1,4 +1,4 @@
-import { mkdir } from "@toonflow/file";
+import { mkdir, unlink } from "@toonflow/file";
 import { dirname } from "node:path";
 import { createWorkspaceFfmpeg } from "@/utils/ffmpeg";
 import { resolveWorkspacePath } from "@/utils/workspace/files";
@@ -22,8 +22,12 @@ export async function exportProduction(directory: string, outputPath: string, in
       command.on("end", () => resolve());
       command.mergeToFile(outputPath, "mp4");
     });
+    signal?.throwIfAborted();
     const manifest = await readProductionManifest(directory);
     await writeProductionManifest(directory, { ...manifest, exportedPath: outputPath });
     return { outputPath };
+  } catch (error) {
+    await unlink(output.path).catch((cleanupError: NodeJS.ErrnoException) => { if (cleanupError.code !== "ENOENT") console.warn(`导出文件清理失败：${output.path}`, cleanupError); });
+    throw error;
   } finally { signal?.removeEventListener("abort", cancel); }
 }

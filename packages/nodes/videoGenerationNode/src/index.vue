@@ -294,7 +294,7 @@ async function startGeneration() {
     .list()
     .then(({ directory }) => {
       controller.signal.throwIfAborted();
-      return ai.generateVideo({ ...input, directory }, controller.signal);
+      return ai.generateVideoTask({ ...input, directory }, controller.signal);
     })
     .then(([result]) => {
       controller.signal.throwIfAborted();
