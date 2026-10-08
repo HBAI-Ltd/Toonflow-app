@@ -285,6 +285,16 @@ bun install --frozen-lockfile
 
 开发服务启动后访问 `http://127.0.0.1:3000`。
 
+在 macOS 或 Windows 本机打包桌面应用：
+
+```sh
+./scripts/package.sh
+# 或
+bun run package:local
+```
+
+产物会输出到 `build/desktop/artifacts/` 下对应平台目录。
+
 ---
 
 ### 4.3 Docker 安装

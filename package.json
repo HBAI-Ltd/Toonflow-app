@@ -43,6 +43,7 @@
     "build:desktop": "bun run --filter '@toonflow/desktop' build",
     "build:mcp": "bun run --filter '@toonflow/mcp' build",
     "build:teams": "NODE_ENV=production bun run --filter './packages/teams/*' build",
+    "package:local": "bash scripts/package.sh",
     "package:desktop": "bun run --filter '@toonflow/desktop' package",
     "release:desktop": "bun run apps/desktop/scripts/release.ts",
     "typecheck": "bun run --filter '@toonflow/*' typecheck",
