@@ -5,6 +5,7 @@ import { execFile } from "node:child_process";
 import { existsSync, writeAtomicSync } from "@toonflow/file";
 import { file } from "@toonflow/file/bun";
 import type { AddressInfo } from "node:net";
+import type { Server } from "node:http";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
 import { dlopen, ptr } from "bun:ffi";
@@ -73,6 +74,21 @@ async function restoreInstallRegistration(installDirectory: string) {
 async function start() {
   let splash: Awaited<ReturnType<typeof showNativeSplash>> | undefined;
   let isClosing = false;
+  let server: Server | undefined;
+  let closePromise: Promise<void> | undefined;
+
+  async function closeBackend() {
+    if (closePromise) return closePromise;
+    closePromise = (async () => {
+      const { closeMcpRuntime } = await import("@toonflow/server/mcp");
+      await closeMcpRuntime();
+      if (!server) return;
+      server.closeAllConnections();
+      if (server.listening) await new Promise<void>(resolve => server!.close(() => resolve()));
+      server = undefined;
+    })();
+    return closePromise;
+  }
 
   try {
     // Windows 的 data 与 app 同级；macOS 的 data 与 .app 同级，避免随程序更新被替换。
@@ -139,10 +155,13 @@ async function start() {
       // agentsRoot: resolve(PATHS.VIEWS_FOLDER, "../agents"),
       pluginRevision: hash,
     });
-    const server = app.listen(0, "127.0.0.1");
+    server = app.listen(0, "127.0.0.1");
 
     await once(server, "listening");
-    if (isClosing) return;
+    if (isClosing) {
+      await closeBackend();
+      return;
+    }
     const address = server.address() as AddressInfo;
     const { initializeMcpRuntime } = await import("@toonflow/server/mcp");
     await initializeMcpRuntime(app, `http://127.0.0.1:${address.port}`, resolve(PATHS.VIEWS_FOLDER, "../mcp/stdio.js"));
@@ -263,6 +282,12 @@ async function start() {
       pendingInstalls.length = 0;
       splash?.close();
       splash = undefined;
+      void closeBackend()
+        .then(() => Utils.quit())
+        .catch(error => {
+          console.error("关闭桌面服务失败：", error);
+          Utils.quit(1);
+        });
     });
     if (process.platform === "win32") {
       // ACT: 运行信息随应用目录清理；启动器通过 PID 忽略已退出进程留下的端口。

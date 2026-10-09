@@ -33,6 +33,21 @@ export function initializeMcpRuntime(app: Express, url: string, entry: string, c
   return reloadMcpRuntime();
 }
 
+export function closeMcpRuntime() {
+  reloadQueue = reloadQueue.catch(() => {}).then(async () => {
+    const current = runtime;
+    runtime = undefined;
+    if (!current?.server) {
+      removeRuntime(current?.file);
+      return;
+    }
+    current.server.closeAllConnections();
+    if (current.server.listening) await new Promise<void>(resolve => current.server!.close(() => resolve()));
+    removeRuntime(current.file);
+  });
+  return reloadQueue;
+}
+
 export function reloadMcpRuntime() {
   // ACT: 设置保存和跨进程 watch 共用串行重载，避免同时抢端口；不重启宿主服务。
   reloadQueue = reloadQueue.catch(() => {}).then(async () => {

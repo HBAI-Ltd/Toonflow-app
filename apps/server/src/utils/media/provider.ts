@@ -60,6 +60,19 @@ async function providerMetadata(fileName: string, source: string) {
   return result.id === "drawThings" ? { ...result, models: await discoverDrawThingsModels(result.models) } : result;
 }
 
+function migrateDrawThingsSource(source: string) {
+  const presetsStart = source.indexOf("const modelPresets");
+  const presetsEnd = source.indexOf("};", presetsStart);
+  const presets = presetsStart >= 0 && presetsEnd > presetsStart ? source.slice(presetsStart, presetsEnd) : "";
+  if (!presets.includes('"qwen_image_2.1_i8x.ckpt"') && source.includes('"krea_2_turbo_i8x.ckpt"')) {
+    const marker = '  "krea_2_turbo_i8x.ckpt": { type: "image", steps: 8, cfg: 1 },';
+    if (source.includes(marker)) {
+      return source.replace(marker, `${marker}\n  "qwen_image_2.1_i8x.ckpt": { type: "image", steps: 40, cfg: 1, parameters: { shift: 1 } },`);
+    }
+  }
+  return source;
+}
+
 function invalid(message: string, status = 400): never {
   throw Object.assign(new Error(message), { status });
 }
@@ -361,14 +374,16 @@ export async function deleteMediaProvider(fileName: string, revision: string) {
 
 export async function loadMediaProviderSource(source: string, config: Record<string, unknown> = {}, signal?: AbortSignal, fetchRequest = fetch, cwd?: string) {
   signal?.throwIfAborted();
-  const { id } = parseProvider(source);
+  const parsedSource = parseProvider(source);
+  const migratedSource = parsedSource.id === "drawThings" ? migrateDrawThingsSource(source) : source;
+  const { id } = parsedSource;
   // ACT: VM 只隔离可信供应商的全局上下文；不可信代码需要独立进程等更强隔离。
   const context = createContext({
     Buffer, URL, URLSearchParams, TextEncoder, TextDecoder, Blob,
     AbortController, AbortSignal, setTimeout, clearTimeout,
   }, { codeGeneration: { strings: false, wasm: false } });
   const rejectImport = () => { throw new Error("供应商不能导入模块，请使用 this.tool 中的宿主工具"); };
-  const module = new SourceTextModule(providerTranspiler.transformSync(source), {
+  const module = new SourceTextModule(providerTranspiler.transformSync(migratedSource), {
     context,
     identifier: `${id}.ts`,
     importModuleDynamically: rejectImport,

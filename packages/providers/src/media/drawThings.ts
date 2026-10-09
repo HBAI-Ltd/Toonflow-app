@@ -17,9 +17,16 @@ const rules = [
       placeholder: '{"seed": 123456, "negative_prompt": "low quality"}',
     },
   },
+  {
+    type: "inputNumber",
+    field: "requestTimeoutMinutes" as const,
+    title: "请求超时（分钟）",
+    value: 10,
+    props: { min: 1, max: 1440, step: 1, stepStrictly: true },
+  },
 ] as const;
 
-const version = "0.3.0";
+const version = "0.4.0";
 const defaultImageModel = "z_image_turbo_1.0_i8x.ckpt";
 const defaultVideoModel = "minimax_h3_ref2va_i6x.ckpt";
 
@@ -66,6 +73,10 @@ function extraParameters(value: unknown): Record<string, unknown> {
   }
 }
 
+function requestTimeoutMinutes(value: unknown) {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 1440 ? value : 10;
+}
+
 function asset(value: unknown, mediaType: "image" | "video", mimeType: string): MediaAsset | undefined {
   if (typeof value !== "string" || !value.trim()) return undefined;
   const result = value.trim();
@@ -99,7 +110,25 @@ function findAsset(value: unknown, mediaType: "image" | "video"): MediaAsset | u
   return undefined;
 }
 
-function dimensions(ratio: string | undefined) {
+const qwenImageDimensions: Record<string, [number, number]> = {
+  "4:3": [2400, 1792],
+  "3:4": [1792, 2400],
+  "3:2": [2528, 1696],
+  "2:3": [1696, 2528],
+};
+
+function dimensions(model: string, ratio: string | undefined, requestedSize?: string) {
+  if (model === "qwen_image_2.1_i8x.ckpt") {
+    const fallback = qwenImageDimensions[ratio ?? "4:3"] ?? qwenImageDimensions["4:3"];
+    const parsed = /^(\d+)x(\d+)$/i.exec(requestedSize ?? "");
+    if (parsed) {
+      const width = Number(parsed[1]);
+      const height = Number(parsed[2]);
+      const matchesRatio = Math.abs(width / height - fallback[0] / fallback[1]) < 0.01;
+      if (matchesRatio && width > 0 && height > 0 && width <= fallback[0] && height <= fallback[1]) return { width, height };
+    }
+    return { width: fallback[0], height: fallback[1] };
+  }
   if (ratio === "9:16") return { width: 512, height: 768 };
   if (ratio === "16:9") return { width: 768, height: 512 };
   return { width: 512, height: 512 };
@@ -118,7 +147,8 @@ function getPreset(model: string, type: "image" | "video") {
 }
 
 async function requestMedia(context: ProviderContext, baseUrl: string, path: string, body: Record<string, unknown>, mediaType: "image" | "video") {
-  const signal = AbortSignal.any([AbortSignal.timeout(30 * 60_000), ...(context.signal ? [context.signal] : [])]);
+  const timeout = requestTimeoutMinutes(context.config.requestTimeoutMinutes) * 60_000;
+  const signal = AbortSignal.any([AbortSignal.timeout(timeout), ...(context.signal ? [context.signal] : [])]);
   let response: Response;
   try {
     response = await context.tool.fetch(`${baseUrl}${path}`, {
@@ -128,6 +158,9 @@ async function requestMedia(context: ProviderContext, baseUrl: string, path: str
       signal,
     });
   } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw new Error(`Draw Things 请求超时（${timeout / 60_000} 分钟），请在媒体供应商配置中增加请求超时时间`);
+    }
     throw new Error(`无法连接 Draw Things Local API：${error instanceof Error ? error.message : String(error)}`);
   }
   if (!response.ok) throw new Error(`Draw Things ${mediaType === "image" ? "图片" : "视频"}请求失败：HTTP ${response.status}`);
@@ -145,13 +178,22 @@ export default {
   id: "drawThings",
   label: "Draw Things Local",
   version,
-  readme: "本机 Draw Things Local API 图片与视频供应商。请先开启 Local API Server。模型列表会从本机 Draw Things Models 目录筛选已配置模型，也可在媒体模型设置中切换；参数会按模型类型自动选择。额外请求参数填写 JSON 对象，例如 {\"seed\":123456}；这些参数会应用到该供应商的图片和视频请求。",
+  readme: "本机 Draw Things Local API 图片与视频供应商。请先开启 Local API Server。模型列表会从本机 Draw Things Models 目录筛选已配置模型，也可在媒体模型设置中切换；参数会按模型类型自动选择。额外请求参数填写 JSON 对象，例如 {\"seed\":123456}；这些参数会应用到该供应商的图片和视频请求。请求默认超时 10 分钟，可在编辑窗口调整，最长 24 小时。",
   rules,
   models: [
     { id: "z_image_turbo_1.0_i8x.ckpt", label: "Z Image Turbo (本地)", type: "image", mode: ["text", "singleImage"] },
     { id: "z_image_1.0_i8x.ckpt", label: "Z Image 1.0 (本地)", type: "image", mode: ["text", "singleImage"] },
     { id: "krea_2_turbo_i8x.ckpt", label: "Krea 2 Turbo (本地)", type: "image", mode: ["text", "singleImage"] },
-    { id: "qwen_image_2.1_i8x.ckpt", label: "Qwen Image 2.1 (本地)", type: "image", mode: ["text", "singleImage"] },
+    {
+      id: "qwen_image_2.1_i8x.ckpt", label: "Qwen Image 2.1 (本地)", type: "image", mode: ["text", "singleImage"],
+      imageSizes: [
+        "2400x1792", "1800x1344", "1200x896",
+        "1792x2400", "1344x1800", "896x1200",
+        "2528x1696", "1896x1272", "1264x848",
+        "1696x2528", "1272x1896", "848x1264",
+      ],
+      imageRatios: ["4:3", "3:4", "3:2", "2:3"],
+    },
     { id: "ideogram_4_i8x.ckpt", label: "Ideogram 4 (本地)", type: "image", mode: ["text", "singleImage"] },
     { id: "ideogram_4_fast_i8x.ckpt", label: "Ideogram 4 Fast (本地)", type: "image", mode: ["text", "singleImage"] },
     { id: "ideogram_4_instant_i8x.ckpt", label: "Ideogram 4 Instant (本地)", type: "image", mode: ["text", "singleImage"] },
@@ -177,7 +219,7 @@ export default {
   async generateImage(request: ImageRequest): Promise<MediaAsset[]> {
     const model = request.model || defaultImageModel;
     const preset = getPreset(model, "image");
-    const size = dimensions(request.ratio);
+    const size = dimensions(model, request.ratio, request.size);
     const body: Record<string, unknown> = {
       negative_prompt: "", steps: preset.steps, guidance_scale: preset.cfg,
       ...preset.parameters,
@@ -191,7 +233,7 @@ export default {
     const model = request.model || defaultVideoModel;
     const preset = getPreset(model, "video");
     if (request.lastFrame || request.videos?.length || request.audios?.length) throw new Error("Draw Things Local 当前不支持尾帧、视频或音频参考");
-    const size = dimensions(request.ratio);
+    const size = dimensions(model, request.ratio);
     const body: Record<string, unknown> = {
       negative_prompt: "", steps: preset.steps, cfg_scale: preset.cfg, num_frames: frameCount(request.duration, preset.fps ?? 24), fps: preset.fps ?? 24,
       ...extraParameters(this.config.extraParameters),
