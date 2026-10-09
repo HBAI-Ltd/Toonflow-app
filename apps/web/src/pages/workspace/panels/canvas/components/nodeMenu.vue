@@ -61,7 +61,7 @@
           <el-dropdown-item command="redo" :icon="IconArrowForwardUp" :disabled="!canRedo">重做</el-dropdown-item>
           <el-divider />
           <el-dropdown-item command="paste" :icon="IconClipboard" :disabled="!pasteNode || pasting">
-            {{ pasting ? "粘贴中…" : "粘贴节点或媒体" }}
+            {{ pasting ? "粘贴中…" : "粘贴节点、文本或媒体" }}
           </el-dropdown-item>
         </template>
         <template v-else>

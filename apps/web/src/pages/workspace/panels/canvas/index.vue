@@ -783,19 +783,23 @@ async function copySelectedNodes() {
 
 async function pasteNode(event: ClipboardEvent) {
   if (!canUseCanvasClipboard(event)) return;
-  const command = event.clipboardData?.getData("text/plain") ?? "";
-  if (nodeClipboardCommand.test(command)) {
+  const text = event.clipboardData?.getData("text/plain") ?? "";
+  if (nodeClipboardCommand.test(text)) {
     event.preventDefault();
-    await pasteNodeAtCenter(command);
+    await pasteNodeAtCenter(text);
     return;
   }
+  const canvasSignal = canvasController.signal;
   let files = getClipboardMediaFiles(event);
+  if (files.length || text.trim()) event.preventDefault();
   // ACT: 部分 WebView 不向 paste 事件暴露剪贴板文件，桌面端回退到原生剪贴板读取。
   if (!files.length && isDesktop) files = await readClipboardFiles().catch(() => []);
+  if (canvasSignal.aborted) return;
+  if (!files.length && text.trim()) files = [new File([text], "粘贴文本.txt", { type: "text/plain" })];
   if (!files.length) return;
   event.preventDefault();
   const position = pastePosition();
-  if (position) await importCanvasMedia(files, position);
+  if (position) await importCanvasContent(files, position);
 }
 
 function pastePosition() {
@@ -812,7 +816,7 @@ async function pasteNodeAtCenter(command?: string) {
   if (position) await pasteClipboardNode(position, command);
 }
 
-async function importCanvasMedia(files: File[], position: { x: number; y: number }) {
+async function importCanvasContent(files: File[], position: { x: number; y: number }) {
   const directory = project.value?.directory;
   if (!directory) return false;
   const canvasSignal = canvasController.signal;
@@ -820,7 +824,7 @@ async function importCanvasMedia(files: File[], position: { x: number; y: number
     await canvasHistory.batch(() => importCanvasFiles(files, position, { directory, availableNodes: availableNodes.value, signal: canvasSignal, flow }));
     return true;
   } catch (error) {
-    if (!canvasSignal.aborted) ElMessage.error(error instanceof Error ? error.message : "媒体导入失败");
+    if (!canvasSignal.aborted) ElMessage.error(error instanceof Error ? error.message : "剪贴板内容导入失败");
     return false;
   }
 }
@@ -830,7 +834,8 @@ async function pasteClipboardNode(position: { x: number; y: number }, command?: 
   const canvasSignal = canvasController.signal;
   try {
     const directory = project.value.directory;
-    const snapshot = await readClipboardNodes(command ?? (await readClipboardText()), directory);
+    const text = command ?? (await readClipboardText());
+    const snapshot = await readClipboardNodes(text, directory);
     if (canvasSignal.aborted) return false;
     if (snapshot) {
       if (snapshot.nodes.some(node => node.type !== "canvasGroup" && !availableNodes.value.some(item => item.type === node.type))) {
@@ -850,10 +855,14 @@ async function pasteClipboardNode(position: { x: number; y: number }, command?: 
       });
       return true;
     }
-    const files = await readClipboardFiles();
+    const files = await readClipboardFiles().catch((error): File[] => {
+      if (text.trim()) return [];
+      throw error;
+    });
     if (canvasSignal.aborted) return false;
-    if (!files.length) throw new Error("剪贴板中没有可粘贴的节点、图片、视频或音频");
-    return await importCanvasMedia(files, position);
+    if (!files.length && text.trim()) files.push(new File([text], "粘贴文本.txt", { type: "text/plain" }));
+    if (!files.length) throw new Error("剪贴板中没有可粘贴的节点、文本、图片、视频或音频");
+    return await importCanvasContent(files, position);
   } catch (error) {
     const pasteShortcut = generalSettings.value.canvasShortcuts.paste;
     const clipboardMessage = getShortcutBindings(pasteShortcut).some(binding => /^(Ctrl|Meta)\+KeyV$/.test(binding))
@@ -861,7 +870,7 @@ async function pasteClipboardNode(position: { x: number; y: number }, command?: 
       : "无法读取剪贴板，请允许浏览器访问剪贴板";
     if (!canvasSignal.aborted)
       ElMessage.error(
-        error instanceof DOMException && error.name === "NotAllowedError" ? clipboardMessage : error instanceof Error ? error.message : "节点或媒体粘贴失败"
+        error instanceof DOMException && error.name === "NotAllowedError" ? clipboardMessage : error instanceof Error ? error.message : "剪贴板内容粘贴失败"
       );
     return false;
   }
