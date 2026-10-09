@@ -32,6 +32,7 @@
 
 ## 使用与开发
 
+- [项目圣经](./projectBible.md)：迭代前必读的项目概要、架构、运行、数据边界和验证流程。
 - [使用教程](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)：日常操作与创作流程。
 - [开发与扩展指南](./development.md)：源码运行、插件扩展、桌面打包和更新发布。
 - [贡献指南](../CONTRIBUTING.md)与[开发规范](../AGENTS.md)：参与项目的约定。

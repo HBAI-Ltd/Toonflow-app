@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { basename, dirname, resolve } from "node:path";
 import { readFile, readdir } from "@toonflow/file";
-import { calculateContextTokens, estimateTokens, getLastAssistantUsage, parseSessionEntries, SessionManager } from "@earendil-works/pi-coding-agent";
+import { calculateContextTokens, estimateTokens, parseSessionEntries, SessionManager } from "@earendil-works/pi-coding-agent";
 import type { AgentSession, FileEntry, SessionEntry } from "@earendil-works/pi-coding-agent";
 import type { AgentEvent, AgentMention, AgentSubAgent, AgentToolCall } from "@/agent/runtime/types";
 import { agentMentionsSchema } from "@/agent/runtime/mentions";
@@ -451,22 +451,35 @@ export function getAgentStats(history: SessionManager) {
 
 function getAgentContext(history: SessionManager, contextWindow: number) {
   const branch = history.getBranch();
-  const compactionIndex = branch.findLastIndex((entry) => entry.type === "compaction");
-  const recent = branch.slice(compactionIndex + 1);
-  const usage = getLastAssistantUsage(recent);
   const messages = history.buildSessionContext().messages;
-  const usageIndex = messages.findLastIndex((message) => message.role === "assistant" && message.usage === usage);
-  const deletedAfterReply = branch.some(
-    (entry) =>
+  const compactionIndex = branch.findLastIndex((entry) => entry.type === "compaction");
+  let tokens: number | null;
+  if (compactionIndex >= 0) {
+    const hasPostCompactionUsage = branch.slice(compactionIndex + 1).some((entry) => {
+      if (entry.type !== "message" || entry.message.role !== "assistant") return false;
+      if (entry.message.stopReason === "aborted" || entry.message.stopReason === "error") return false;
+      return calculateContextTokens(entry.message.usage) > 0;
+    });
+    tokens = hasPostCompactionUsage ? estimateAgentContextTokens(messages, branch) : null;
+  } else {
+    tokens = estimateAgentContextTokens(messages, branch);
+  }
+  return { tokens, contextWindow, percent: tokens === null ? null : (tokens / contextWindow) * 100 };
+}
+
+function estimateAgentContextTokens(messages: ReturnType<SessionManager["buildSessionContext"]>["messages"], branch: SessionEntry[]) {
+  for (let index = messages.length - 1; index >= 0; index--) {
+    const message = messages[index];
+    if (message.role !== "assistant" || message.stopReason === "aborted" || message.stopReason === "error") continue;
+    const usage = message.usage;
+    if (!usage || calculateContextTokens(usage) <= 0) continue;
+    const deletedAfterReply = branch.some((entry) =>
       entry.type === "custom" &&
       (entry.customType === "toonflowDeletedUser" || entry.customType === "toonflowDeletedEntry") &&
-      Date.parse(entry.timestamp) >= (messages[usageIndex]?.timestamp ?? 0)
-  );
-  const tokens =
-    usage && usageIndex >= 0 && !deletedAfterReply
-      ? calculateContextTokens(usage) + messages.slice(usageIndex + 1).reduce((total, message) => total + estimateTokens(message), 0)
-      : compactionIndex >= 0 && !deletedAfterReply
-      ? null
-      : messages.reduce((total, message) => total + estimateTokens(message), 0);
-  return { tokens, contextWindow, percent: tokens === null ? null : (tokens / contextWindow) * 100 };
+      Date.parse(entry.timestamp) >= message.timestamp
+    );
+    if (deletedAfterReply) break;
+    return calculateContextTokens(usage) + messages.slice(index + 1).reduce((total, item) => total + estimateTokens(item), 0);
+  }
+  return messages.reduce((total, message) => total + estimateTokens(message), 0);
 }

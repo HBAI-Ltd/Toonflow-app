@@ -6,9 +6,20 @@ const rules = [
     value: "http://127.0.0.1:7888",
     props: { placeholder: "http://127.0.0.1:7888" },
   },
+  {
+    type: "input",
+    field: "extraParameters" as const,
+    title: "额外请求参数",
+    value: "",
+    props: {
+      type: "textarea",
+      rows: 5,
+      placeholder: '{"seed": 123456, "negative_prompt": "low quality"}',
+    },
+  },
 ] as const;
 
-const version = "0.2.0";
+const version = "0.3.0";
 const defaultImageModel = "z_image_turbo_1.0_i8x.ckpt";
 const defaultVideoModel = "minimax_h3_ref2va_i6x.ckpt";
 
@@ -16,6 +27,7 @@ type ModelPreset = {
   type: "image" | "video";
   steps: number;
   cfg: number;
+  parameters?: Record<string, unknown>;
   fps?: number;
   supportsAudio?: boolean;
 };
@@ -24,6 +36,7 @@ const modelPresets: Record<string, ModelPreset> = {
   "z_image_turbo_1.0_i8x.ckpt": { type: "image", steps: 8, cfg: 1 },
   "z_image_1.0_i8x.ckpt": { type: "image", steps: 28, cfg: 4 },
   "krea_2_turbo_i8x.ckpt": { type: "image", steps: 8, cfg: 1 },
+  "qwen_image_2.1_i8x.ckpt": { type: "image", steps: 40, cfg: 1, parameters: { shift: 1 } },
   "ideogram_4_i8x.ckpt": { type: "image", steps: 8, cfg: 1 },
   "ideogram_4_fast_i8x.ckpt": { type: "image", steps: 8, cfg: 1 },
   "ideogram_4_instant_i8x.ckpt": { type: "image", steps: 8, cfg: 1 },
@@ -40,6 +53,17 @@ function mediaUrl(input: MediaInput) {
 
 function object(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function extraParameters(value: unknown): Record<string, unknown> {
+  if (typeof value !== "string" || !value.trim()) return {};
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("必须是 JSON 对象");
+    return parsed as Record<string, unknown>;
+  } catch (error) {
+    throw new Error(`Draw Things 额外请求参数无效：${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 function asset(value: unknown, mediaType: "image" | "video", mimeType: string): MediaAsset | undefined {
@@ -121,12 +145,13 @@ export default {
   id: "drawThings",
   label: "Draw Things Local",
   version,
-  readme: "本机 Draw Things Local API 图片与视频供应商。请先开启 Local API Server。模型列表会从本机 Draw Things Models 目录筛选已配置模型，也可在媒体模型设置中切换；参数会按模型类型自动选择。",
+  readme: "本机 Draw Things Local API 图片与视频供应商。请先开启 Local API Server。模型列表会从本机 Draw Things Models 目录筛选已配置模型，也可在媒体模型设置中切换；参数会按模型类型自动选择。额外请求参数填写 JSON 对象，例如 {\"seed\":123456}；这些参数会应用到该供应商的图片和视频请求。",
   rules,
   models: [
     { id: "z_image_turbo_1.0_i8x.ckpt", label: "Z Image Turbo (本地)", type: "image", mode: ["text", "singleImage"] },
     { id: "z_image_1.0_i8x.ckpt", label: "Z Image 1.0 (本地)", type: "image", mode: ["text", "singleImage"] },
     { id: "krea_2_turbo_i8x.ckpt", label: "Krea 2 Turbo (本地)", type: "image", mode: ["text", "singleImage"] },
+    { id: "qwen_image_2.1_i8x.ckpt", label: "Qwen Image 2.1 (本地)", type: "image", mode: ["text", "singleImage"] },
     { id: "ideogram_4_i8x.ckpt", label: "Ideogram 4 (本地)", type: "image", mode: ["text", "singleImage"] },
     { id: "ideogram_4_fast_i8x.ckpt", label: "Ideogram 4 Fast (本地)", type: "image", mode: ["text", "singleImage"] },
     { id: "ideogram_4_instant_i8x.ckpt", label: "Ideogram 4 Instant (本地)", type: "image", mode: ["text", "singleImage"] },
@@ -153,7 +178,12 @@ export default {
     const model = request.model || defaultImageModel;
     const preset = getPreset(model, "image");
     const size = dimensions(request.ratio);
-    const body: Record<string, unknown> = { prompt: request.prompt, negative_prompt: "", model, width: size.width, height: size.height, steps: preset.steps, guidance_scale: preset.cfg, batch_size: 1 };
+    const body: Record<string, unknown> = {
+      negative_prompt: "", steps: preset.steps, guidance_scale: preset.cfg,
+      ...preset.parameters,
+      ...extraParameters(this.config.extraParameters),
+      prompt: request.prompt, model, width: size.width, height: size.height, batch_size: 1,
+    };
     if (request.images?.length) body.init_images = request.images.map(mediaUrl);
     return requestMedia(this, (this.config.baseUrl?.trim() || "http://127.0.0.1:7888").replace(/\/$/, ""), request.images?.length ? "/sdapi/v1/img2img" : "/sdapi/v1/txt2img", body, "image");
   },
@@ -162,7 +192,11 @@ export default {
     const preset = getPreset(model, "video");
     if (request.lastFrame || request.videos?.length || request.audios?.length) throw new Error("Draw Things Local 当前不支持尾帧、视频或音频参考");
     const size = dimensions(request.ratio);
-    const body: Record<string, unknown> = { prompt: request.prompt, negative_prompt: "", model, width: size.width, height: size.height, steps: preset.steps, cfg_scale: preset.cfg, batch_size: 1, num_frames: frameCount(request.duration, preset.fps ?? 24), fps: preset.fps ?? 24 };
+    const body: Record<string, unknown> = {
+      negative_prompt: "", steps: preset.steps, cfg_scale: preset.cfg, num_frames: frameCount(request.duration, preset.fps ?? 24), fps: preset.fps ?? 24,
+      ...extraParameters(this.config.extraParameters),
+      prompt: request.prompt, model, width: size.width, height: size.height, batch_size: 1,
+    };
     const firstFrame = request.firstFrame ?? request.images?.[0];
     if (firstFrame) body.init_images = [mediaUrl(firstFrame)];
     if (request.generateAudio !== undefined && preset.supportsAudio) body.generate_audio = request.generateAudio;

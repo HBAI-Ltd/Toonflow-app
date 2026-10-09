@@ -12,8 +12,20 @@
     <div class="providerEditor">
       <messageMarkdown v-if="provider?.readme" class="providerReadme" :content="provider.readme" />
       <el-form labelPosition="top" :disabled="saving">
-        <el-form-item label="API Key">
+        <el-form-item v-if="provider?.id !== 'drawThings'" label="API Key">
           <el-input v-model="apiKey" :prefixIcon="IconKey" type="password" dir="ltr" showPassword autocomplete="off" aria-label="媒体供应商 API Key" />
+        </el-form-item>
+        <el-form-item v-if="provider?.id === 'drawThings'" label="Draw Things 地址">
+          <el-input v-model="baseUrl" dir="ltr" placeholder="http://127.0.0.1:7888" aria-label="Draw Things 地址" />
+        </el-form-item>
+        <el-form-item v-if="provider?.id === 'drawThings'">
+          <template #label>
+            <span class="fieldLabel">额外请求参数</span>
+            <el-tooltip content="填写 JSON 对象，会合并到 Draw Things 的图片和视频请求中。例如 {&quot;seed&quot;:123456,&quot;negative_prompt&quot;:&quot;low quality&quot;}。prompt、model、width、height 和 batch_size 由 Toonflow 控制。" placement="top" :showArrow="false">
+              <icon-help class="fieldHelp" :size="16" aria-label="额外请求参数说明" />
+            </el-tooltip>
+          </template>
+          <el-input v-model="extraParameters" type="textarea" :rows="5" dir="ltr" placeholder='{&quot;seed&quot;: 123456}' aria-label="Draw Things 额外请求参数" />
         </el-form-item>
       </el-form>
       <div class="modelHeader">
@@ -62,7 +74,7 @@ import { translate } from "@toonflow/i18n/vue";
 
 import axios from "axios";
 import { defineAsyncComponent, ref, shallowRef, watch, type Component } from "vue";
-import { IconPlus, IconTrash, IconDeviceFloppy, IconEdit, IconKey } from "@tabler/icons-vue";
+import { IconPlus, IconTrash, IconDeviceFloppy, IconEdit, IconKey, IconHelp } from "@tabler/icons-vue";
 import { modelIcon } from "@toonflow/model-icons";
 import messageMarkdown from "@/components/messageMarkdown.vue";
 import type { MediaProvider, MediaProviderModel } from "./types";
@@ -78,6 +90,8 @@ const modelEditorVisible = ref(false);
 const editingModelIndex = ref<number>();
 const saving = ref(false);
 const apiKey = ref("");
+const baseUrl = ref("");
+const extraParameters = ref("");
 const revision = ref("");
 const formError = ref("");
 const modelTypes = { get image() { return translate("图片"); }, get video() { return translate("视频"); }, get audio() { return translate("音频"); }, get text() { return translate("文本"); } };
@@ -92,9 +106,13 @@ watch(visible, isVisible => {
   formError.value = "";
   modelEditorVisible.value = false;
   editingModelIndex.value = undefined;
-  const configs = settings.value.mediaProviderConfigs as Record<string, { apiKey?: unknown }> | undefined;
+  const configs = settings.value.mediaProviderConfigs as Record<string, { apiKey?: unknown; baseUrl?: unknown; extraParameters?: unknown }> | undefined;
   const configuredKey = provider && configs?.[provider.id]?.apiKey;
   apiKey.value = typeof configuredKey === "string" ? configuredKey : "";
+  const configuredBaseUrl = provider && configs?.[provider.id]?.baseUrl;
+  baseUrl.value = typeof configuredBaseUrl === "string" ? configuredBaseUrl : "http://127.0.0.1:7888";
+  const configuredExtraParameters = provider && configs?.[provider.id]?.extraParameters;
+  extraParameters.value = typeof configuredExtraParameters === "string" ? configuredExtraParameters : "";
   revision.value = provider?.revision ?? "";
   models.value = JSON.parse(JSON.stringify(provider?.models ?? []));
 }, { immediate: true });
@@ -137,6 +155,12 @@ async function saveModels() {
       return { ...item, id, label };
     });
     if (apiKey.value.length > 8192) throw new Error("API Key 过长");
+    if (providerId === "drawThings" && (!baseUrl.value.trim() || !/^https?:\/\//i.test(baseUrl.value.trim()))) throw new Error("Draw Things 地址必须是 HTTP/HTTPS 地址");
+    if (providerId === "drawThings" && extraParameters.value.trim()) {
+      const parsed = JSON.parse(extraParameters.value) as unknown;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Draw Things 额外请求参数必须是 JSON 对象");
+      if (extraParameters.value.length > 100000) throw new Error("Draw Things 额外请求参数过长");
+    }
     saving.value = true;
     const nextKey = apiKey.value.trim();
     const { data } = await axios.put<{ code: number; data: MediaProvider; message?: string }>("/api/providers/media/save", {
@@ -151,8 +175,10 @@ async function saveModels() {
       if (configs !== undefined && (!configs || typeof configs !== "object" || Array.isArray(configs))) throw new Error("媒体供应商配置格式无效");
       const current = configs?.[providerId];
       if (current !== undefined && (!current || typeof current !== "object" || Array.isArray(current))) throw new Error("当前供应商配置格式无效");
-      if (nextKey === (current?.apiKey ?? "")) return;
-      return { mediaProviderConfigs: { ...configs, [providerId]: { ...current, apiKey: nextKey } } };
+      const nextBaseUrl = providerId === "drawThings" ? baseUrl.value.trim().replace(/\/$/, "") : undefined;
+      const nextExtraParameters = providerId === "drawThings" ? extraParameters.value.trim() : undefined;
+      if (nextKey === (current?.apiKey ?? "") && (providerId !== "drawThings" || nextBaseUrl === (current?.baseUrl ?? "") && nextExtraParameters === (current?.extraParameters ?? ""))) return;
+      return { mediaProviderConfigs: { ...configs, [providerId]: { ...current, apiKey: nextKey, ...(providerId === "drawThings" ? { baseUrl: nextBaseUrl, extraParameters: nextExtraParameters } : {}) } } };
     });
     configSaved = true;
     const response = await axios.get<{ code: number; data: MediaProvider[]; message?: string }>("/api/providers/media/list");
@@ -180,6 +206,16 @@ async function saveModels() {
   overscroll-behavior: contain;
 
   .providerReadme { margin-bottom: 20px; }
+
+  .fieldLabel {
+    margin-right: 6px;
+  }
+
+  .fieldHelp {
+    vertical-align: -3px;
+    color: var(--el-text-color-secondary);
+    cursor: help;
+  }
 
   .modelHeader {
     display: flex;
