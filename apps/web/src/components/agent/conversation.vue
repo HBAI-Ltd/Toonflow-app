@@ -107,6 +107,7 @@
       <div class="senderActions">
         <modelPopover v-model="selectedModel" v-model:reasoningEffort="reasoningEffort" :active="active" :disabled="disabled" />
         <mentionMenu ref="mentionMenuRef" :directory="directory" :active="active" :disabled="locked || !directory" :query="mentionQuery" :editor="senderElement" :currentCanvasId="createCanvasContext?.()?.id" @open="captureMentionPosition" @select="insertMentions" @dismiss="mentionQuery = undefined" />
+        <commandMenu ref="commandMenuRef" :active="active" :disabled="locked" :query="commandQuery" :editor="senderElement" @select="selectCommand" @dismiss="commandQuery = undefined" />
         <skillMenu ref="skillMenuRef" :directory="directory" :active="active" :disabled="locked || !directory" :query="skillQuery" :editor="senderElement" @select="selectSkill" @dismiss="skillQuery = undefined" />
         <el-popover
           v-model:visible="contextMenuVisible"
@@ -162,6 +163,7 @@ import {
 import { ElMessage } from "element-plus";
 import logoUrl from "@toonflow/assets/logo.svg";
 import modelPopover from "@/components/modelPopover.vue";
+import commandMenu from "./commandMenu.vue";
 import skillMenu from "./skillMenu.vue";
 import mentionMenu from "./mentionMenu.vue";
 import mentionContent from "./mentionContent.vue";
@@ -266,6 +268,8 @@ let controller: AbortController | undefined;
 const senderElement = ref<HTMLElement>();
 const skillMenuRef = ref<InstanceType<typeof skillMenu>>();
 const skillQuery = ref<string>();
+const commandMenuRef = ref<InstanceType<typeof commandMenu>>();
+const commandQuery = ref<string>();
 const mentionMenuRef = ref<InstanceType<typeof mentionMenu>>();
 const mentionQuery = ref<string>();
 let mentionPosition: { node: ReturnType<xSender["getCurrentNode"]>; remove: number } | undefined;
@@ -354,6 +358,7 @@ function handleSenderKeydown(event: KeyboardEvent) {
     return;
   }
   if (mentionMenuRef.value?.handleKeydown(event)) return;
+  if (commandMenuRef.value?.handleKeydown(event)) return;
   skillMenuRef.value?.handleKeydown(event);
 }
 
@@ -401,6 +406,40 @@ async function selectSkill(name: string) {
   mentionMenuRef.value?.closeMenu();
   await instance.reset({ clearHistory: false, chatNode: model });
   if (sender === instance) instance.focus("last");
+}
+
+async function selectCommand(name: string) {
+  const instance = sender;
+  if (!instance || locked.value) return;
+  commandQuery.value = undefined;
+  if (name === "clear") {
+    try {
+      if (props.sessionFile && directory) {
+        const { data } = await axios.delete<{ code: number; data: AgentConversation; message?: string }>("/api/agent/message", {
+          data: { directory, sessionFile: props.sessionFile, clear: true },
+          headers: { "x-toonflow-workspace": "1" },
+        });
+        if (data.code !== 200) throw new Error(data.message || "清空对话失败");
+      }
+      messages.value = [];
+      stats.value = undefined;
+      contextUsage.value = undefined;
+      draftAttachments.value = [];
+      draftMentions.value = [];
+      await instance.reset({ clearHistory: false });
+      commandQuery.value = undefined;
+      if (sender === instance) instance.focus("last");
+    } catch (error) {
+      ElMessage.error(error instanceof Error ? error.message : "清空对话失败");
+    }
+    return;
+  }
+  await instance.reset({ clearHistory: false, chatNode: [[{ type: "Write", text: `/${name}` }]] });
+  commandQuery.value = undefined;
+  if (sender === instance) {
+    await sendMessage();
+    if (name === "compact") messages.value = messages.value.filter(message => message.content !== "/compact" || message.entryId);
+  }
 }
 
 async function fillPrompt(prompt: string) {
@@ -744,7 +783,10 @@ watch(senderElement, (element, _previous, onCleanup) => {
   if (!props.active || locked.value) instance.disable();
   instance.bus.on("agentConversation", xSender.EventSet.EVENT_COMMON_SEND, () => void submitMessage());
   instance.bus.on("agentConversation", xSender.EventSet.EVENT_COMMON_CHANGE, () => {
-    skillQuery.value = /^\/([^\s/]*)$/.exec(instance.getText())?.[1];
+    const text = instance.getText();
+    const command = /^\/([^\s/]*)$/.exec(text)?.[1];
+    commandQuery.value = command && !text.startsWith("/skill:") ? command : undefined;
+    skillQuery.value = /^\/skill:([^\s/]*)$/.exec(text)?.[1];
     const targets: typeof draftMentionTargets.value = [];
     for (const line of instance.chatEditor.NODES) for (const tag of line.children) {
       if (tag.type !== "Mention") continue;

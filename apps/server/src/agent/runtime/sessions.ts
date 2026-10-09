@@ -211,6 +211,18 @@ export async function deleteAgentMessage(cwd: string, path: string, options: { e
   }
 }
 
+export async function clearAgentSession(cwd: string, path: string) {
+  if (getActiveAgentSession(path)) throw Object.assign(new Error("对话正在运行，请等待回复完成"), { status: 409 });
+  const release = lockWorkspaceFiles([path]);
+  try {
+    const history = SessionManager.open(path, dirname(path), cwd);
+    await writeWorkspaceFile(path, `${JSON.stringify(history.getHeader())}\n`);
+    return await getAgentSession(cwd, path);
+  } finally {
+    release();
+  }
+}
+
 export async function createAgentConversation(cwd: string, child?: Omit<AgentSubAgent, "file" | "status">) {
   const { path: directory } = await resolveWorkspacePath(cwd, ".agent/sessions", true);
   const history = SessionManager.create(cwd, directory, child ? { parentSession: child.parentFile } : undefined);

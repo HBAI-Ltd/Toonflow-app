@@ -9,10 +9,12 @@ export default Router().delete("/", validateFields({
   sessionFile: z.string().regex(/^[\w-]+\.jsonl$/),
   entryIds: z.array(z.string().min(1).max(128)).min(1).max(1000).optional(),
   replyTo: z.string().min(1).max(128).optional(),
+  clear: z.boolean().optional(),
 }), async (req, res) => {
-  const { directory, sessionFile, entryIds, replyTo } = req.body as {
-    directory: string; sessionFile: string; entryIds?: string[]; replyTo?: string;
+  const { directory, sessionFile, entryIds, replyTo, clear } = req.body as {
+    directory: string; sessionFile: string; entryIds?: string[]; replyTo?: string; clear?: boolean;
   };
   const { directory: cwd, path } = await u.workspaceFile.resolveWorkspaceFile(req, directory, `.agent/sessions/${sessionFile}`);
-  res.set("Cache-Control", "no-store").json(success(await u.agent.deleteAgentMessage(cwd, path, { entryIds, replyTo })));
+  const data = clear ? await u.agent.clearAgentSession(cwd, path) : await u.agent.deleteAgentMessage(cwd, path, { entryIds, replyTo });
+  res.set("Cache-Control", "no-store").json(success(data));
 });
