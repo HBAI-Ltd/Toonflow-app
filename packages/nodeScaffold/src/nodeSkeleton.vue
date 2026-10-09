@@ -432,7 +432,7 @@ async function handleCommand(command: string) {
       const patch = await nodeEvent.emit("copy");
       const data = { ...node.data, ...patch };
       await copyNodeToClipboard({ type: node.type, data });
-      ElMessage.success("已复制，可在其他画布粘贴");
+      ElMessage.success("已复制到剪贴板");
     } catch (error) {
       ElMessage.error(error instanceof Error ? error.message : "节点复制失败");
     } finally {

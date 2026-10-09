@@ -37,6 +37,8 @@ export interface DesktopRuntime {
   openUrl(url: string): void;
   showItemInFolder(path: string): void;
   readClipboardText(): string | null;
+  readClipboardImage(): Uint8Array | null;
+  writeClipboardImage(image: Uint8Array): void;
   writeClipboardText(text: string): void;
   selectProviderFile(): Promise<string | null>;
   selectDirectory(): Promise<string | null>;

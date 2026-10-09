@@ -49,11 +49,14 @@ interface MediaRequest {
 
 /** 抽象层的媒体来源；供应商负责转换为平台需要的 URL、文件或字节。 */
 type MediaInput =
-  | { type: "url"; url: string; mimeType?: string }
-  | { type: "base64"; data: string; mimeType: string }
-  | { type: "binary"; data: Uint8Array; mimeType: string };
+  | { type: "url"; url: string; mimeType?: string; name?: string }
+  | { type: "base64"; data: string; mimeType: string; name?: string }
+  | { type: "binary"; data: Uint8Array; mimeType: string; name?: string };
 
 type MediaAsset = MediaInput & { mediaType: "image" | "video" | "audio" };
+
+type MediaImageInfo = { width: number; height: number; format: string };
+type MediaImageResizeOptions = { width?: number; height?: number; format?: "jpeg" | "png" | "webp"; quality?: number };
 
 interface AudioConvertOptions {
   format: "wav" | "mp3";
@@ -80,6 +83,11 @@ interface ProviderTools {
   errorMessage(value: unknown): string;
   hash: typeof Bun.hash;
   image: typeof Bun.Image;
+  /** 公共图片基础处理工具；供应商可在 processMedia 中按自身模型能力使用。 */
+  media: {
+    inspectImage(input: MediaInput): Promise<MediaImageInfo>;
+    resizeImage(input: MediaInput, options: MediaImageResizeOptions): Promise<MediaInput>;
+  };
   /**
    * 音频裁剪转码；仅接受 WAV 格式的内存字节并返回处理后的内存字节，不支持文件路径、URL 或其他压缩格式输入。
    */
@@ -211,4 +219,6 @@ interface ProviderDefinition<TRules extends readonly ProviderFormRule[] = readon
   generateImage?: GenerateMedia<ImageRequest, ProviderConfig<TRules>>;
   generateVideo?: GenerateMedia<VideoRequest, ProviderConfig<TRules>>;
   generateAudio?: GenerateMedia<AudioRequest, ProviderConfig<TRules>>;
+  /** 可选的供应商媒体预处理；未实现时保持原请求。 */
+  processMedia?: (this: ProviderContext<ProviderConfig<TRules>>, request: ImageRequest | VideoRequest | AudioRequest) => Promise<ImageRequest | VideoRequest | AudioRequest>;
 }

@@ -52,7 +52,7 @@ export const canvasShortcutFields: {
   { id: "search", label: "画布节点搜索" },
   { id: "delete", label: "删除" },
   { id: "copy", label: "复制到剪贴板" },
-  { id: "paste", label: "粘贴节点" },
+  { id: "paste", label: "粘贴节点或媒体" },
 ];
 
 const keyLabels: Record<string, string> = {
