@@ -1,4 +1,5 @@
 import { t, translateMessage, validationOptions } from "@/lib/i18n";
+
 import { createHash } from "node:crypto";
 import { lstat, mkdir, readFile, readdir, unlink } from "@toonflow/file";
 import { dirname, join } from "node:path";
@@ -64,6 +65,36 @@ function mediaErrorMessage(value: unknown, config: Record<string, unknown>, dept
     .slice(0, 4000);
 }
 
+function createMediaTools(fetcher: typeof fetch = fetch) {
+  async function bytes(input: MediaInput) {
+    if (input.type === "base64") return Buffer.from(input.data.replace(/^data:[^;]+;base64,/, ""), "base64");
+    if (input.type === "binary") return Buffer.from(input.data);
+    const response = await fetcher(input.url);
+    if (!response.ok) throw new Error(`读取图片失败：HTTP ${response.status}`);
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  return {
+    async inspectImage(input: MediaInput) {
+      const metadata = await new Bun.Image(await bytes(input)).metadata();
+      return { width: metadata.width, height: metadata.height, format: metadata.format };
+    },
+    async resizeImage(input: MediaInput, options: { width?: number; height?: number; format?: "jpeg" | "png" | "webp"; quality?: number }) {
+      if (!options.width && !options.height) throw new Error("图片缩放至少需要指定宽度或高度");
+      const source = await bytes(input);
+      const metadata = await new Bun.Image(source).metadata();
+      const width = Math.max(1, Math.round(options.width ?? metadata.width * (options.height! / metadata.height)));
+      const height = Math.max(1, Math.round(options.height ?? metadata.height * (options.width! / metadata.width)));
+      const image = new Bun.Image(source).resize(width, height, { fit: "fill" });
+      const format = options.format ?? (metadata.format === "jpeg" || metadata.format === "webp" ? metadata.format : "png");
+      const quality = Math.min(100, Math.max(1, Math.round(options.quality ?? 92)));
+      if (format === "jpeg") image.jpeg({ quality });
+      else if (format === "webp") image.webp({ quality });
+      else image.png();
+      return { type: "binary", data: new Uint8Array(await image.buffer()), mimeType: `image/${format === "jpeg" ? "jpeg" : format}`, name: input.name };
+    },
+  };
+}
 async function responseErrorMessage(response: Response, config: Record<string, unknown>) {
   if (!response.body || !/json|text|^$/i.test(response.headers.get("content-type") ?? "")) return "";
   const reader = response.clone().body!.getReader();
@@ -358,6 +389,7 @@ export async function loadMediaProviderSource(source: string, config: Record<str
       hash: Bun.hash,
       errorMessage: (value: unknown) => mediaErrorMessage(value, providerConfig),
       image: Bun.Image,
+      media: createMediaTools(fetchRequest),
       audio: { convert: (input: Uint8Array, options: AudioConvertOptions) => convertAudio(input, options, signal) },
       ffmpeg: async () => {
         if (!cwd) throw new Error("当前操作没有工作目录，无法使用 FFmpeg");
@@ -400,7 +432,11 @@ export async function loadMediaProviderSource(source: string, config: Record<str
           return response;
         } finally { pendingRequests--; }
       }, { preconnect: provider.tool.fetch.preconnect }) as typeof fetch };
-      try { return await generate.call({ ...provider, tool }, request); }
+      const context = { ...provider, tool };
+      try {
+        const prepared = definition.processMedia ? await definition.processMedia.call(context, request) : request;
+        return await generate.call(context, prepared);
+      }
       catch (error) {
         const info = error as { name?: unknown; message?: unknown } | null;
         if (signal?.aborted || info?.name === "AbortError") throw error;

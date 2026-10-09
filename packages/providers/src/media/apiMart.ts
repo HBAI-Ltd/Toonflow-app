@@ -200,6 +200,26 @@ export default {
     { id: "gemini-3-pro-image-preview", label: "Nano banana Pro", type: "image", mode: ["text", "singleImage", "multiReference"] },
     { id: "gemini-3.1-flash-image-preview", label: "Nano banana2", type: "image", mode: ["text", "singleImage", "multiReference"] },
   ] satisfies ProviderModel[],
+  async processMedia(request: ImageRequest | VideoRequest | AudioRequest) {
+    const adjust = async (input: MediaInput, label: string) => {
+      const info = await this.tool.media.inspectImage(input);
+      if (info.height >= 300 && info.height <= 6000) return input;
+      const height = Math.min(6000, Math.max(300, info.height));
+      const width = Math.max(1, Math.round(info.width * height / info.height));
+      return this.tool.media.resizeImage(input, {
+        width,
+        height,
+        format: info.format === "jpeg" ? "jpeg" : info.format === "webp" ? "webp" : "png",
+        quality: 92,
+      });
+    };
+    const media = request as ImageRequest & VideoRequest & AudioRequest;
+    const images = media.images ? await Promise.all(media.images.map((input, index) => adjust(input, `参考图 ${index + 1}`))) : undefined;
+    const mask = media.mask ? await adjust(media.mask, "蒙版") : undefined;
+    const firstFrame = media.firstFrame ? await adjust(media.firstFrame, "首帧") : undefined;
+    const lastFrame = media.lastFrame ? await adjust(media.lastFrame, "尾帧") : undefined;
+    return { ...request, ...(images ? { images } : {}), ...(mask ? { mask } : {}), ...(firstFrame ? { firstFrame } : {}), ...(lastFrame ? { lastFrame } : {}) };
+  },
   async generateImage(request: ImageRequest): Promise<MediaAsset[]> {
     const apiKey = this.config.apiKey?.trim();
     if (!apiKey) throw new Error("请填写 API Key");

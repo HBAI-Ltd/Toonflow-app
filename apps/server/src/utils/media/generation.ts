@@ -76,7 +76,7 @@ export async function readReference(cwd: string, reference: MediaReference, medi
   if (!bytes.length || bytes.length > maxMediaSize) invalid("参考媒体为空或超过 100 MB");
   const mimeType = detectMimeType(bytes, reference.mimeType);
   if (!mimeType.startsWith(`${mediaType}/`)) invalid(t`参考媒体类型须为 ${mediaType}`);
-  return { type: "base64", data: bytes.toString("base64"), mimeType };
+  return { type: "base64", data: bytes.toString("base64"), mimeType, name: reference.path };
 }
 
 async function downloadAsset(url: string, signal?: AbortSignal) {
