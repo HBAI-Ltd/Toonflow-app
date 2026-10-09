@@ -67,6 +67,7 @@
 
 <script setup lang="ts">
 import axios from "axios";
+import { translate } from "@toonflow/i18n/vue";
 import { ref, shallowRef, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { IconBrowser, IconDownload, IconFileCode, IconInfoCircle } from "@tabler/icons-vue";
@@ -125,7 +126,7 @@ const agentTools = ref<SingleAgentTool[]>([]);
 
 watch(visible, value => {
   if (!value) return;
-  msgList.value = [{ id: crypto.randomUUID(), role: "assistant", content: "请把你想接入的 API 平台名称或网址发给我，有接口文档链接也可以直接发送。" }];
+  msgList.value = [{ id: crypto.randomUUID(), role: "assistant", content: translate("请把你想接入的 API 平台名称或网址发给我，有接口文档链接也可以直接发送。") }];
   generatedSource.value = "";
   generatedProvider.value = undefined;
   activePane.value = "browser";
@@ -137,9 +138,9 @@ function canOperateBrowser(tools: ToolCall[], status: SingleAgentStatus, busy: b
 }
 
 function browserHint(tools: ToolCall[], status: SingleAgentStatus, busy: boolean) {
-  if (status === "paused") return "已暂停，可点击画面或放大后登录。操作完成后点击继续。";
-  if (status === "pausing" && !canOperateBrowser(tools, status, busy)) return "正在等待当前操作结束，暂停后即可人工操作。";
-  return canOperateBrowser(tools, status, busy) ? "可直接点击画面或放大操作，完成后在左侧继续对话。" : "助手正在浏览。需要登录或人工操作时，先点击暂停。";
+  if (status === "paused") return translate("已暂停，可点击画面或放大后登录。操作完成后点击继续。");
+  if (status === "pausing" && !canOperateBrowser(tools, status, busy)) return translate("正在等待当前操作结束，暂停后即可人工操作。");
+  return canOperateBrowser(tools, status, busy) ? translate("可直接点击画面或放大操作，完成后在左侧继续对话。") : translate("助手正在浏览。需要登录或人工操作时，先点击暂停。");
 }
 
 function useSource() {

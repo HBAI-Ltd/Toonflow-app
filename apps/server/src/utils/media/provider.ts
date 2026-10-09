@@ -70,7 +70,7 @@ function createMediaTools(fetcher: typeof fetch = fetch) {
     if (input.type === "base64") return Buffer.from(input.data.replace(/^data:[^;]+;base64,/, ""), "base64");
     if (input.type === "binary") return Buffer.from(input.data);
     const response = await fetcher(input.url);
-    if (!response.ok) throw new Error(`读取图片失败：HTTP ${response.status}`);
+    if (!response.ok) throw new Error(t`读取图片失败：HTTP ${response.status}`);
     return Buffer.from(await response.arrayBuffer());
   }
 

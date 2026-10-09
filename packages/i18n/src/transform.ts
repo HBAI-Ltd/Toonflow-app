@@ -7,12 +7,12 @@ import { escapeMessageText } from "./messageText.ts";
 
 const displayAttributes = new Set([
   "title", "label", "placeholder", "aria-label", "alt", "description", "content", "header", "message", "tip",
-  "empty-text", "loading-text", "error", "confirm-button-text", "cancel-button-text", "reset-button-text",
+  "empty-text", "no-data-text", "loading-text", "error", "confirm-button-text", "cancel-button-text", "reset-button-text",
   "submit-button-text", "inline-prompt", "active-text", "inactive-text", "text", "help", "tooltip", "element-loading-text", "marks",
 ]);
 const isDisplayAttribute = (name: string) => displayAttributes.has(name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`));
 const displayProperties = new Set([
-  "label", "title", "description", "groupLabel", "text", "tooltip", "placeholder", "emptyText", "loadingText",
+  "label", "title", "description", "groupLabel", "text", "tooltip", "placeholder", "emptyText", "noDataText", "loadingText",
   "confirmButtonText", "cancelButtonText", "resetButtonText", "submitButtonText", "activeText", "inactiveText", "message", "inputErrorMessage", "tip", "aria-label",
 ]);
 const displayName = /^(?:labels?|titles?|descriptions?|menus?|tabs?|options?|columns?|steps?|sections?|modes?|types?|colors?|levels?|rules?|fields?|buttons?|handles?|features?|shortcuts?|categories|category|groups?|actions?|formats?|sorts?|contacts?|corners?|toolbar)$/i;

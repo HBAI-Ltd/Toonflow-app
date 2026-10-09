@@ -29,7 +29,7 @@ async function scan(directory: string) {
       : [source];
     for (const script of scripts) {
       const ast = parse(script, { sourceType: "module", plugins: ["typescript"] });
-      const backend = /(?:apps[\\/]server|apps[\\/]desktop|packages[\\/](?:mcp|ffmpeg))/.test(path);
+      const backend = /(?:apps[\\/](?:server|desktop|mobile)|packages[\\/](?:mcp|ffmpeg))/.test(path);
       const visit = (node: Node, parents: Node[] = []) => {
         const owner = [...parents].reverse().find(parent => parent.type === "VariableDeclarator" || parent.type === "ObjectProperty");
         const name = owner?.type === "VariableDeclarator" && owner.id.type === "Identifier" ? owner.id.name
@@ -54,7 +54,7 @@ async function scan(directory: string) {
     }
   }
 }
-for (const path of ["apps/web/src", "apps/server/src", "apps/desktop/src", "packages/mcp/src", "packages/ffmpeg/src"]) await scan(resolve(root, path));
+for (const path of ["apps/web/src", "apps/server/src", "apps/desktop/src", "apps/mobile/src", "packages/mcp/src", "packages/ffmpeg/src"]) await scan(resolve(root, path));
 const messages = Object.fromEntries([...catalog].sort(([left], [right]) => left.localeCompare(right, "zh-CN")).map(([message]) => [message, message]));
 await mkdir(resolve(import.meta.dirname, "locales"), { recursive: true });
 await writeAtomic(resolve(import.meta.dirname, "locales/zhCn.json"), JSON.stringify(messages, null, 2) + "\n");

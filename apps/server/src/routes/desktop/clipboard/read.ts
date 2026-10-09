@@ -6,6 +6,7 @@ import { z } from "zod";
 import u from "@/utils";
 import { validateFields } from "@/lib/middleware";
 import { success } from "@/lib/responseFormat";
+import { t } from "@/lib/i18n";
 
 const mediaTypes: Record<string, string> = {
   ".avif": "image/avif", ".bmp": "image/bmp", ".gif": "image/gif", ".jpeg": "image/jpeg", ".jpg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml", ".webp": "image/webp",
@@ -30,9 +31,9 @@ function clipboardPaths(text: string) {
 async function readClipboardFile(path: string) {
   const info = await stat(path);
   if (!info.isFile()) return;
-  if (info.size > 100 * 1024 * 1024) throw new Error(`剪贴板文件“${basename(path)}”超过 100 MB`);
+  if (info.size > 100 * 1024 * 1024) throw new Error(t`剪贴板文件“${basename(path)}”超过 100 MB`);
   const mimeType = mediaTypes[extname(path).toLowerCase()];
-  if (!mimeType) throw new Error(`剪贴板文件“${basename(path)}”不是支持的图片、视频或音频`);
+  if (!mimeType) throw new Error(t`剪贴板文件“${basename(path)}”不是支持的图片、视频或音频`);
   const bytes = await readFile(path);
   return { name: basename(path), mimeType, data: bytes.toString("base64") };
 }

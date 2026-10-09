@@ -123,6 +123,7 @@
 
 <script setup lang="ts">
 import axios from "axios";
+import { msg, translate, type MessageDescriptor } from "@toonflow/i18n/vue";
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { QRCode } from "tdesign-vue-next";
@@ -146,14 +147,14 @@ const addressMode = ref<"lan" | "public">("lan");
 const selectedAddress = ref("");
 const pairing = ref<Pairing>();
 const formattedManualCode = computed(() => (pairing.value?.manualCode ?? "").replace(/(\d{4})(?=\d)/g, "$1 "));
-const pairingMessage = ref("");
+const pairingMessage = ref<string | MessageDescriptor>("");
 const pairedSuccessfully = ref(false);
 const pairingFinished = ref(false);
 const pairedDevice = computed(() => status.value?.devices.find(device => !pairingDeviceIds.has(device.id)));
 const pairingNotice = computed(() => {
-  if (!pairedSuccessfully.value) return pairingMessage.value;
-  if (pairedDevice.value?.online) return "设备已连接";
-  return pairedDevice.value?.lastSeen !== undefined ? "设备连接已断开" : "配对成功，等待设备连接";
+  if (!pairedSuccessfully.value) return translate(pairingMessage.value);
+  if (pairedDevice.value?.online) return translate("设备已连接");
+  return pairedDevice.value?.lastSeen !== undefined ? translate("设备连接已断开") : translate("配对成功，等待设备连接");
 });
 const error = ref("");
 const loading = ref(false);
@@ -215,13 +216,13 @@ async function loadStatus(resetForm = true, quiet = false) {
     const preserveForm = quiet || !resetForm && dirty.value;
     if (pairing.value && !data.data.pairingAvailable) {
       pairedSuccessfully.value = data.data.devices.some(device => !pairingDeviceIds.has(device.id));
-      pairingMessage.value = pairedSuccessfully.value ? "" : "二维码已更新，请重新生成。";
+      pairingMessage.value = pairedSuccessfully.value ? "" : msg`二维码已更新，请重新生成。`;
       pairingFinished.value = true;
       pairing.value = undefined;
     }
     if (pairedSuccessfully.value && !data.data.devices.some(device => !pairingDeviceIds.has(device.id))) {
       pairedSuccessfully.value = false;
-      pairingMessage.value = "设备授权已撤销，可重新生成二维码。";
+      pairingMessage.value = msg`设备授权已撤销，可重新生成二维码。`;
     }
     status.value = data.data;
     deviceHubEnabled.value = data.data.hubEnabled ?? data.data.enabled;

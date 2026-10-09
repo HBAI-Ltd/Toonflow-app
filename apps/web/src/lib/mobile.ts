@@ -1,5 +1,6 @@
 import { computed, ref } from "vue";
 import axios from "axios";
+import { t, translate } from "@toonflow/i18n/vue";
 
 export const isMobile = new URLSearchParams(window.location.search).get("mobile") === "1";
 export const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
@@ -12,17 +13,17 @@ export const mobileConnection = ref<MobileConnection>({ mode: isRemoteConnection
 export const deviceHubEnabled = ref(false);
 export const deviceConnectionSupported = ref(true);
 export function getDeviceVersionWarning(appVersion?: string, remoteAppVersion?: string) {
-  if (!appVersion || !remoteAppVersion) return `无法确认设备版本（本机：${appVersion || "未知"}，对方：${remoteAppVersion || "未知"}），建议双方升级到同一版本。`;
-  return appVersion === remoteAppVersion ? "" : `设备版本不一致（本机：${appVersion}，对方：${remoteAppVersion}），可能影响部分功能，建议双方升级到同一版本。`;
+  if (!appVersion || !remoteAppVersion) return t`无法确认设备版本（本机：${appVersion || translate("未知")}，对方：${remoteAppVersion || translate("未知")}），建议双方升级到同一版本。`;
+  return appVersion === remoteAppVersion ? "" : t`设备版本不一致（本机：${appVersion}，对方：${remoteAppVersion}），可能影响部分功能，建议双方升级到同一版本。`;
 }
 export const mobileConnectionVersionWarning = computed(() => mobileConnection.value.mode === "remote" && mobileConnection.value.online === true
   ? getDeviceVersionWarning(mobileConnection.value.appVersion, mobileConnection.value.remoteAppVersion) : "");
 export const mobileConnectionLabel = computed(() => {
-  if (mobileConnection.value.mode !== "remote") return deviceHubEnabled.value ? "设备互联 · 共享中" : "设备互联";
+  if (mobileConnection.value.mode !== "remote") return deviceHubEnabled.value ? translate("设备互联 · 共享中") : translate("设备互联");
   if (mobileConnection.value.online && mobileConnectionVersionWarning.value) {
-    return mobileConnection.value.appVersion && mobileConnection.value.remoteAppVersion ? "已连接设备 · 版本不一致" : "已连接设备 · 版本待确认";
+    return mobileConnection.value.appVersion && mobileConnection.value.remoteAppVersion ? translate("已连接设备 · 版本不一致") : translate("已连接设备 · 版本待确认");
   }
-  return mobileConnection.value.online === true ? "已连接设备" : mobileConnection.value.online === false ? "连接已断开" : "正在连接设备";
+  return mobileConnection.value.online === true ? translate("已连接设备") : mobileConnection.value.online === false ? translate("连接已断开") : translate("正在连接设备");
 });
 let connectionRequest: Promise<MobileConnection> | undefined;
 let connectionTimer: ReturnType<typeof setTimeout> | undefined;

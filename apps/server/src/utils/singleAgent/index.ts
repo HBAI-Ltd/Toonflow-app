@@ -1,4 +1,5 @@
 import { dirname, join } from "node:path";
+import { t } from "@/lib/i18n";
 import { createAgentSession, DefaultResourceLoader, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 import type { AgentSession, CreateAgentSessionOptions, ToolDefinition } from "@earendil-works/pi-coding-agent";
 import type { QuestionContext } from "@toonflow/tools-scaffold/runtime";
@@ -129,19 +130,19 @@ export async function create(options: {
       else {
         const pluginName = typeof reference === "string" ? reference : reference.plugin;
         const info = available.get(pluginName);
-        if (!info?.enabled) throw Object.assign(new Error(`工具插件 ${pluginName} 未安装或未启用`), { status: 400 });
+        if (!info?.enabled) throw Object.assign(new Error(t`工具插件 ${pluginName} 未安装或未启用`), { status: 400 });
         if (info.loadError) throw new Error(info.loadError);
         const { plugin, metadata } = await loadTool(pluginName);
         definitions = await plugin.createTools({ ...context, config: validateToolConfig(plugin, info.config) });
         const selected = typeof reference === "string" ? undefined : reference.names;
-        if (selected?.some(name => !definitions.some(tool => tool.name === name))) throw Object.assign(new Error(`插件 ${pluginName} 未提供所选工具`), { status: 400 });
+        if (selected?.some(name => !definitions.some(tool => tool.name === name))) throw Object.assign(new Error(t`插件 ${pluginName} 未提供所选工具`), { status: 400 });
         definitions = definitions.filter(tool => !selected || selected.includes(tool.name)).map(tool => ({
           ...tool, promptGuidelines: [...(metadata.prompt ? [metadata.prompt] : []), ...(tool.promptGuidelines ?? [])],
         }));
       }
       for (const tool of definitions) {
         if (!tool.name || typeof tool.execute !== "function") throw new Error("插件返回了无效的工具");
-        if (names.has(tool.name)) throw Object.assign(new Error(`工具名称重复：${tool.name}`), { status: 400 });
+        if (names.has(tool.name)) throw Object.assign(new Error(t`工具名称重复：${tool.name}`), { status: 400 });
         names.add(tool.name);
         session.tools.push(tool);
       }

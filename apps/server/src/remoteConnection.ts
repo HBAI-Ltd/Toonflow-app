@@ -5,6 +5,8 @@ import { request as httpsRequest } from "node:https";
 import { resolve } from "node:path";
 import { isIP } from "node:net";
 import { readFile, rm, writeAtomic } from "@toonflow/file";
+import { getLocale, languageRequest, translateError, translateMessage } from "./lib/i18n";
+import { isRtlLocale } from "@toonflow/i18n";
 
 type RemoteConnection = { url: string; name: string; deviceToken: string; appVersion?: string };
 
@@ -83,6 +85,7 @@ export async function createRemoteConnection(directory: string, options: {
     ? { mode: "remote", name: active.name, url: active.url, appVersion, remoteAppVersion, online: online === true ? Date.now() - lastSuccess < 15000 : online }
     : { mode: "local", appVersion };
   const router = express.Router();
+  router.use(languageRequest);
   async function saveConnection(value?: RemoteConnection) {
     const previous = savedText;
     const next = value ? JSON.stringify(value) : undefined;
@@ -119,7 +122,7 @@ export async function createRemoteConnection(directory: string, options: {
   router.use(express.json({ limit: "8kb" }));
   router.use((request, response, next) => {
     if (request.get("x-toonflow-workspace") !== "1") return void response.sendStatus(403);
-    if (changing) return void response.status(409).json({ message: "正在切换连接，请稍候" });
+    if (changing) return void response.status(409).json({ message: translateMessage("正在切换连接，请稍候") });
     next();
   });
   router.post("/connect", async (request, response) => {
@@ -141,14 +144,14 @@ export async function createRemoteConnection(directory: string, options: {
       options.validateTarget?.(pair.url);
     } catch (error) {
       const status = (error as { status?: number })?.status;
-      response.status(Number.isInteger(status) && status! >= 400 && status! <= 599 ? status! : 400).json({ message: error instanceof Error ? error.message : "二维码无效" });
+      response.status(Number.isInteger(status) && status! >= 400 && status! <= 599 ? status! : 400).json({ message: error instanceof Error ? translateError(error) : translateMessage("二维码无效") });
       return;
     }
     changing = true;
     try {
       const result = await fetch(`${pair.url}/api/mobileLink/pair`, {
         method: "POST", redirect: "error", signal: AbortSignal.timeout(15000),
-        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: pair.code, name: options.deviceName?.trim().slice(0, 100) || "Toonflow" }),
+        headers: { "Content-Type": "application/json", "Accept-Language": request.get("accept-language") ?? "" }, body: JSON.stringify({ code: pair.code, name: options.deviceName?.trim().slice(0, 100) || "Toonflow" }),
       });
       const body = await result.json() as { code?: number; message?: string; data?: RemoteConnection };
       if (!result.ok || body.code !== 200) throw Object.assign(new Error(body.message || "连接失败，请刷新二维码重试"), { status: result.ok ? 502 : result.status });
@@ -160,7 +163,7 @@ export async function createRemoteConnection(directory: string, options: {
     } catch (error) {
       // 不将请求对象或设备凭据写入日志/错误页。
       const status = (error as { status?: number })?.status;
-      response.status(Number.isInteger(status) && status! >= 400 && status! <= 599 ? status! : 502).json({ message: error instanceof Error ? error.message : "无法连接服务器" });
+      response.status(Number.isInteger(status) && status! >= 400 && status! <= 599 ? status! : 502).json({ message: error instanceof Error ? translateError(error) : translateMessage("无法连接服务器") });
     } finally {
       changing = false;
     }
@@ -242,7 +245,13 @@ function remoteProxy(connection: RemoteConnection): express.RequestHandler {
 }
 
 function showConnectionError(response: express.Response, message: string, page = true) {
+  message = translateMessage(message);
   if (!page) return void response.status(502).json({ message });
+  const locale = getLocale();
+  const title = Bun.escapeHTML(translateMessage("连接未完成"));
+  const retry = Bun.escapeHTML(translateMessage("重试"));
+  const disconnect = Bun.escapeHTML(translateMessage("断开并独立运行"));
+  const failure = Bun.escapeHTML(translateMessage("切换失败，请重试"));
   // 错误页来自本机，远端离线时仍可主动独立运行。返回200避免原生HTTP错误遮住恢复按钮。
-  response.status(200).type("html").send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Toonflow</title><style>body{font:16px system-ui;background:#fff;color:#303133;text-align:center;padding:8vh 24px}button{padding:12px 20px;margin:12px;border:1px solid #dcdfe6;border-radius:8px;background:#fff;color:#409eff;font:inherit}</style></head><body><h2>连接未完成</h2><p>${message}</p><button onclick="location.reload()">重试</button><button onclick="this.disabled=true;fetch('/api/connection/disconnect',{method:'POST',headers:{'x-toonflow-workspace':'1'}}).then(async r=>{if(!r.ok)throw Error();if((await r.json()).restart==='mobile')location.href='toonflow://restart'}).catch(()=>{this.disabled=false;alert('切换失败，请重试')})">断开并独立运行</button><script>if(new URLSearchParams(location.search).get("desktop")==="1")fetch("/api/desktop/ready",{method:"POST",headers:{"x-toonflow-desktop":"1","Content-Type":"application/json"},body:JSON.stringify({failed:true})}).catch(()=>{});</script></body></html>`);
+  response.status(200).type("html").send(`<!doctype html><html lang="${locale}" dir="${isRtlLocale(locale) ? "rtl" : "ltr"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Toonflow</title><style>body{font:16px system-ui;background:#fff;color:#303133;text-align:center;padding:8vh 24px}button{padding:12px 20px;margin:12px;border:1px solid #dcdfe6;border-radius:8px;background:#fff;color:#409eff;font:inherit}</style></head><body><h2>${title}</h2><p>${Bun.escapeHTML(message)}</p><button onclick="location.reload()">${retry}</button><button data-error="${failure}" onclick="this.disabled=true;fetch('/api/connection/disconnect',{method:'POST',headers:{'x-toonflow-workspace':'1','Accept-Language':'${locale}'}}).then(async r=>{if(!r.ok)throw Error();if((await r.json()).restart==='mobile')location.href='toonflow://restart'}).catch(()=>{this.disabled=false;alert(this.dataset.error)})">${disconnect}</button><script>if(new URLSearchParams(location.search).get("desktop")==="1")fetch("/api/desktop/ready",{method:"POST",headers:{"x-toonflow-desktop":"1","Content-Type":"application/json"},body:JSON.stringify({failed:true})}).catch(()=>{});</script></body></html>`);
 }

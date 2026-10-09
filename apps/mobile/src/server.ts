@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { mkdir, readFile, readdir, rm, writeAtomic } from "@toonflow/file";
 import { getMissingBrowserFeatures } from "@toonflow/web/browserCapabilities";
 import { createRemoteConnection } from "@toonflow/server/remoteConnection";
+import { languageRequest, translateError, translateMessage } from "@toonflow/server/i18n";
 import config from "../../../electrobun.config";
 
 const fromSource = import.meta.path.endsWith(".ts");
@@ -25,6 +26,7 @@ for (const entry of await readdir(exportDirectory, { withFileTypes: true })) {
 }
 
 app.disable("x-powered-by");
+app.use(languageRequest);
 app.use((request, response, next) => {
   if (`http://${request.get("host")}` !== origin || (request.get("origin") && request.get("origin") !== origin)) {
     response.sendStatus(403);
@@ -67,7 +69,7 @@ app.get("/api/mobile/runtime", (_request, response) => {
 });
 app.post("/api/mobile/exports", express.raw({ type: "application/octet-stream", limit: "100mb" }), async (request, response) => {
   if (!Buffer.isBuffer(request.body)) {
-    response.status(400).json({ message: "导出内容必须是文件数据" });
+    response.status(400).json({ message: translateMessage("导出内容必须是文件数据") });
     return;
   }
   const id = randomUUID();
@@ -114,7 +116,7 @@ if (connection.proxy) {
 app.use((error: Error & { status?: number }, _request: express.Request, response: express.Response, next: express.NextFunction) => {
   if (response.headersSent) return next(error);
   console.error(error);
-  response.status(error.status ?? 500).json({ message: error.message });
+  response.status(error.status ?? 500).json({ message: translateError(error) });
 });
 
 const server = app.listen(0, "127.0.0.1");
@@ -129,4 +131,3 @@ if (toonflow) {
 console.log(`TOONFLOW_MOBILE_URL=${origin}/?token=${token}`);
 server.on("error", error => { console.error(error); process.exit(1); });
 process.on("SIGTERM", () => { connection.stop(); server.close(() => process.exit(0)); });
-

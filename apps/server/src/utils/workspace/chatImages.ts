@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { t } from "@/lib/i18n";
 import { lookup } from "node:dns/promises";
 import { request, type ClientRequest, type IncomingMessage } from "node:http";
 import { request as requestSecure } from "node:https";
@@ -112,7 +113,7 @@ async function downloadImage(url: URL, signal: AbortSignal) {
     }
     if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 300) {
       response.destroy();
-      invalid(`下载图片失败（HTTP ${response.statusCode ?? 0}），链接可能失效或需要登录`, 502);
+      invalid(t`下载图片失败（HTTP ${response.statusCode ?? 0}），链接可能失效或需要登录`, 502);
     }
     if (Number(response.headers["content-length"]) > maxImageSize) { response.destroy(); invalid("聊天图片不能超过 20 MB", 413); }
     const chunks: Buffer[] = [];

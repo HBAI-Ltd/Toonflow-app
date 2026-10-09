@@ -592,7 +592,7 @@ function normalizeCanvasName(name: string, label = "画布") {
   name = name.trim();
   if (!name || name.length > 120 || /[<>:"/\\|?*\x00-\x1f]/.test(name) || /[. ]$/.test(name)
     || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name)) {
-    throw new Error(`${label}名称不是有效文件名`);
+    throw new Error(label === "文件夹" ? "文件夹名称不是有效文件名" : "画布名称不是有效文件名");
   }
   return name;
 }

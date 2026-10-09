@@ -7,6 +7,7 @@ import type { Server } from "node:http";
 import { createRemoteConnection } from "@toonflow/server/remoteConnection";
 import { getMobileLinkConfig, getMobileLinkStatus, startMobileLinkRuntime, stopMobileLinkRuntime, suspendMobileLinkRuntime } from "@toonflow/server/mobileLink";
 import { initializeMcpRuntime, stopMcpRuntime } from "@toonflow/server/mcp";
+import { languageRequest, translateError, translateMessage } from "@toonflow/server/i18n";
 
 export default async function createDesktopConnection(app: express.Express, directory: string, mcpEntry: string,
   onNavigate: (port: number, remote: boolean) => void, onError: (error: unknown) => void) {
@@ -56,6 +57,7 @@ export default async function createDesktopConnection(app: express.Express, dire
       await stopMcpRuntime();
     } else await startMobileLinkRuntime(app).catch(error => console.error("设备互联启动失败：", error));
     const gateway = express();
+    gateway.use(languageRequest);
     let origin = "";
     gateway.use((req, res, next) => {
       const localSocket = ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.socket.remoteAddress ?? "");
@@ -65,7 +67,7 @@ export default async function createDesktopConnection(app: express.Express, dire
         source !== undefined && source !== origin || referer !== undefined && !referer.startsWith(`${origin}/`)) {
         return void res.sendStatus(403);
       }
-      if (switching || closed) return void res.status(409).json({ message: "正在切换设备连接，请稍候" });
+      if (switching || closed) return void res.status(409).json({ message: translateMessage("正在切换设备连接，请稍候") });
       res.set("Cache-Control", "no-store");
       if (req.method === "GET" && req.path === "/") {
         const target = new URL(req.originalUrl, origin);
@@ -85,13 +87,13 @@ export default async function createDesktopConnection(app: express.Express, dire
       }
       const path = posix.normalize(decodeURIComponent(req.path).replaceAll("\\", "/")).toLowerCase();
       if (path === "/api/desktop" || path.startsWith("/api/desktop/")) {
-        return void res.status(403).json({ message: "请先断开设备连接，再管理本机功能" });
+        return void res.status(403).json({ message: translateMessage("请先断开设备连接，再管理本机功能") });
       }
       connection.proxy!(req, res, next);
     });
     gateway.use((error: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
       if (res.headersSent) return next(error);
-      res.status(500).json({ message: error instanceof Error ? error.message : "设备连接失败" });
+      res.status(500).json({ message: error instanceof Error ? translateError(error) : translateMessage("设备连接失败") });
     });
     const server = gateway.listen(0, "127.0.0.1");
     const sockets = new Set<Socket>();

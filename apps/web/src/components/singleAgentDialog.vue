@@ -65,6 +65,7 @@ export type SingleAgentDialogResult = SingleAgentResult & { messages: AgentMessa
 
 <script setup lang="ts">
 import axios from "axios";
+import { translate } from "@toonflow/i18n/vue";
 import { computed, nextTick, onBeforeUnmount, reactive, ref, useSlots, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { IconArrowUp, IconPlayerPause, IconPlayerPlay, IconPlayerStopFilled } from "@tabler/icons-vue";
@@ -122,7 +123,7 @@ function changeStatus(value: typeof status.value) {
 }
 
 function reportError(error: unknown) {
-  const message = axios.isAxiosError(error) ? error.response?.data?.message || error.message : error instanceof Error ? error.message : "对话执行失败";
+  const message = axios.isAxiosError(error) ? error.response?.data?.message || error.message : error instanceof Error ? error.message : translate("对话执行失败");
   const reason = new Error(message);
   formError.value = message;
   emit("error", reason);
@@ -235,7 +236,7 @@ async function send(content = draft.value) {
   } catch (error) {
     if (lifecycle !== owner || owner.signal.aborted) return;
     if (controller.signal.aborted) {
-      if (accepted) reply.error = "已停止";
+      if (accepted) reply.error = translate("已停止");
     } else {
       const reason = reportError(error);
       if (accepted) reply.error = reason.message;
