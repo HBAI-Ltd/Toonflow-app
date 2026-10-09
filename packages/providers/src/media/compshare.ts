@@ -284,12 +284,12 @@ async function parseJsonBody(response: { json(): Promise<unknown> }): Promise<Re
 async function requestJson(
   context: Context,
   url: string,
-  init: { method: string; headers: Record<string, string>; body?: string | Uint8Array; signal: AbortSignal },
+  init: { method: string; headers: Record<string, string>; body?: RequestInit["body"]; signal: AbortSignal },
 ): Promise<Record<string, unknown>> {
   const response = await context.tool.fetch(url, {
     method: init.method,
     headers: init.headers,
-    body: init.body as BodyInit | undefined,
+    body: init.body,
     signal: init.signal,
   });
   if (!response.ok) {
@@ -471,7 +471,7 @@ class MultipartBody {
     this.pushText("\r\n");
   }
 
-  finish(): Uint8Array {
+  finish(): Uint8Array<ArrayBuffer> {
     if (!this.finished) {
       this.pushText("--" + this.boundary + "--\r\n");
       this.finished = true;
@@ -830,7 +830,7 @@ async function generateGptImage(context: Context, request: ImageRequest, apiKey:
         Authorization: "Bearer " + apiKey,
         "Content-Type": "multipart/form-data; boundary=" + body.boundary,
       },
-      body: body.finish() as BodyInit,
+      body: body.finish(),
       signal,
     });
     if (!response.ok) {
@@ -1670,7 +1670,7 @@ async function generateH3Video(context: Context, request: VideoRequest, apiKey: 
 }
 
 export default {
-  id: "modelVerse",
+  id: "compshare",
   label: "优云智算",
   icon: "data:image/webp;base64,UklGRrIEAABXRUJQVlA4IKYEAACwHACdASqAAIAAPlEojkWjoqEUC4RUOAUEsZOACshg/IF9F9uuYENt15fvulv4nP+S/lfYO8xX7AetJ6L/QA/wHUO7xj+53oq3hpXLaX9PfNP8g2oN0ryI5xH8WBNYIxASaOpGWbHVhMRvffDAog2oVmCU+vla84NqXJGiLa51ZBlAnajgeDd5xodsqvUvGQfQhlnkJxos+18ksB+mszh7/L8eLkBBsP2HJaoWAYw8k1/nKoCh+S0qFY6+Iwg/Y09tMNh556MM9Z7/L7WQVU4ouPEscY/0ALZJhZ4tei+xRl6IertQnQqW/PgUJmcsAP79nJzusj9cFOfFWwhdNAIFr9+vv1hhKikDp6WFkU203jKYviAGyS+J4uQtQUMoW8aQAwghvdtOP93MJ6wasAcPa6A5QwIqRezhlJCfwV1ugcHA1WdIWulOwYn/y4MILLfa51Q6vXXxuYe/kZUMvkpa3aaHl4fsX6zrQSZY5qzPmpPpZ+1tFYDJP/y/rh6h9rK1aT/lQnX/FeSk4OO5/2WjXL0vWqVCWw1Kr29QxfQFaxM9noNALm8zW6Hk0JQLdUuBTtG7r7fPZV1fEybTq9WW9tzGReXxpYvi6RypTxLrAQC1O5d385YWaLWVFp1VSHAAutd0EIyGj4OMoQaOrneF0NVSX3krJiAITbJqXLe5ECt/lNYGoAt9Rybyej+YXQBIuEBn72/nnf90ztwvpSvMH/3MsfxF5o/WijNadedW1sY72FyVcOSmND6ZPVmgw/rEFPs1zAdfFhVX7JP9ffll0UknDyafjBdDMn7OGbiZ3DIsFJIqroxusWqEjizCrq4ds+TynGCPVQ/lp8//D6F8MmQ6R+aRn+f4yfTOj0RBeqfORZx4yM+7+bvIm7vRqJkPD7qLNL69IB32mrNe9o1T/gYHfcxMalvCUkLeWDDv5sQSUR3VMENHPlsSqaXOSC6AoVk9JYoTibLGc45B35u3an2nRXe9H8dQhNZ6MRpWhEmIEJ3oTVyCsTSfDTwm40dLormlbIJlROoyb011vm9l12kB0iROLxr96nk99vmiF8kY3QZcN2P/5SA3SqrncD3H5HTbvjzx5xvYmeb6F0EFpE/xI3/om1SiSR4O/bHOvkB15jaoIOzNmtX7PlAlYqspDgwRUyuH0nFepR/yx5JSOXmegKyiBuwz42YUmljSNrXasas6Wuz8y5egRWtvNi3HDtxURRkMCcDKIN5kUd7Zav0NT+rynTOSTN2SCmEm6At+NIP4qRCu9OXJAGw7+59ZNtDXK/IuwdWObWZo+b9wToBoypaMqyN/VKdnacmVMwzrEQK6mzqusSVDFExXBiHIdlyfiey59cQ5GLQD/lgnltTmEw6x8lj5YhnWhTUtQX8+96IShf4sDrtmtS5SA8uK+TNYjkTyvr0/7TulOe2n8Nd4JOyxp71t8k7Uwfo5bgpJR7UBgv2ZJgLU6t+zgOImh7hse1RE6ScNzhXpss0k5AMpMIqaz4wB36XHu3jPpLb1XyTv/CujPjDjUb2wOKJSerxrWjiZJekcLyy+MCaoWSUmF4kjKk6pNgDl0MkYdgeBTnCAAA==",
   version: "2.0.0",
@@ -1772,7 +1772,7 @@ export default {
         },
       ],
     },
-  ],
+  ] satisfies ProviderModel[],
   async generateImage(this: Context, request: ImageRequest): Promise<MediaAsset[]> {
     this.signal?.throwIfAborted();
     const model = typeof request.model === "string" ? request.model.trim() : "";
