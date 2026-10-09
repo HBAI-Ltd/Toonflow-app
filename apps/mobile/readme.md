@@ -52,36 +52,19 @@ bun apps/mobile/scripts/verify.ts
 
 `bun apps/mobile/scripts/verify.ts` 需在 Bun 1.4.2 或更新版本运行，与 APK 的运行时保持一致（1.3.14 存在消费请求体后丢失断连通知的问题）。它显式启动真实构建产物，在临时数据目录验证能力预检、正式页面、鉴权、内置资源、工作区边界、扫码配对、重启隔离、远程上传与 Range、POST 流式取消、离线恢复和手机导出。检查不连接模型供应商，不读取已有用户数据，也不自动绑定到构建；它不能代替 Android 相机、X5 下载及系统文件选择器的设备验收。
 
-输出：`build/mobile/toonflowMobile.apk`。包名为 `com.toonflow.mobile`，最低 Android 8 / API 26，目标 API 34。本地默认使用 `build/mobile/debug.keystore`，构建时复用以支持覆盖安装；删除密钥后生成的 APK 无法覆盖原签名安装。
+输出：`build/mobile/toonflowMobile.apk`。包名为 `com.toonflow.mobile`，最低 Android 8 / API 26，目标 API 34。本地和 CI 共用仓库内公开的默认签名 `native/defaultSigning.keystore`，别名为 `androiddebugkey`，密码均为 `android`。沿用此前本地默认签名，不再每次生成密钥，后续版本可直接覆盖安装并保留应用数据。
 
 版本默认沿用 `electrobun.config.ts` 的 `app.version`，可通过 `appVersion` 指定 `X.Y.Z`。Android `versionCode` 按 `X × 1000000 + Y × 1000 + Z` 生成，Y、Z 不超过 999，结果须在 1–2100000000 内；更新时使用更高版本号。
 
 ## GitHub Actions
 
-在 Actions 中选择 **Debug build → Run workflow**，将 `target` 设为 `androidArm64` 可单独构建 ARM64 APK，选择 `all` 会同时构建桌面与 Android。版本留空时使用所选标签或项目配置。Android 默认生成 debug 包，可在本次运行的 Artifacts 或 Summary 中下载。每次运行的 debug 签名不同，仅供临时验证；需要连续覆盖安装时，开启 `androidRelease` 并配置固定签名。
+在 Actions 中选择 **Debug build → Run workflow**，将 `target` 设为 `androidArm64` 可单独构建 ARM64 APK，选择 `all` 会同时构建桌面与 Android。版本留空时使用所选标签或项目配置。Android 默认生成 debug 包，可在本次运行的 Artifacts 或 Summary 中下载。开启 `androidRelease` 会关闭 `debuggable` 并去掉文件名中的 `-debug` 后缀，两种模式使用相同默认签名，无需配置 Android Secrets。
 
-现有 **Release Toonflow** 工作流在推送 `vX.Y.Z` 标签或手动发布时，会并行构建桌面与 Android，全部成功后将 `toonflow-X.Y.Z-android-arm64.apk` 附加到同一个 GitHub Release。Android APK 暂不上传到桌面更新托管接口。发布签名只允许构建当前工作流对应的提交；构建其他版本时，应先在 Run workflow 中选择对应分支或标签，再将 `ref` 留空。
+现有 **Release Toonflow** 工作流在推送 `vX.Y.Z` 标签或手动发布时，会并行构建桌面与 Android，全部成功后将 `toonflow-X.Y.Z-android-arm64.apk` 附加到同一个 GitHub Release。Android APK 暂不上传到桌面更新托管接口，应用内「前往 GitHub 更新」会打开最新发布页。
 
-发布前，在仓库 **Settings → Secrets and variables → Actions** 配置：
+CI 使用 Windows 2025 自带 JDK 17 和 Android SDK Manager，显式安装 Platform 34 / Build Tools 35.0.0，再分别执行依赖安装、mobile `setup` 与 `build`。默认签名文件直接来自源码，Android 构建不读取签名 Secrets。X5 的 `config.tbs` 仍需与最终包名及默认签名匹配。
 
-| Secret | 内容 |
-| --- | --- |
-| `ANDROID_KEYSTORE_BASE64` | 固定 keystore 文件的 Base64 |
-| `ANDROID_KEYSTORE_PASSWORD` | keystore 密码 |
-| `ANDROID_KEY_ALIAS` | 签名密钥别名 |
-| `ANDROID_KEY_PASSWORD` | 签名密钥密码 |
-
-Base64 可在本机生成后复制到 Secret，不要提交 keystore 或密码：
-
-```powershell
-[Convert]::ToBase64String([System.IO.File]::ReadAllBytes('D:\keys\toonflow.keystore')) | Set-Clipboard
-```
-
-请备份并持续使用同一签名密钥；更换签名无法覆盖已安装版本，X5 的 `config.tbs` 也需与最终包名及签名匹配。若要覆盖此前本地 debug APK，需沿用当时的签名，或者先导出项目再卸载旧包。
-
-CI 使用 Windows 2025 自带 JDK 17 和 Android SDK Manager，显式安装 Platform 34 / Build Tools 35.0.0，再分别执行依赖安装、mobile `setup` 与 `build`。发布构建缺少签名配置时直接失败，不回退到 debug key；发布 APK 关闭 `debuggable`。keystore 只在运行器临时目录使用，完成后清理，不加入缓存或构建产物。
-
-本地需要复现发布构建时，设置 `androidRelease=1`、`androidKeystore`（路径）、`androidKeyAlias`、`androidKeystorePassword` 和 `androidKeyPassword`，然后执行同一个 mobile `build` 命令。签名密码通过 apksigner 的环境变量接口传入。
+本地需要复现发布构建时，设置 `androidRelease=1`，然后执行同一个 mobile `build` 命令。
 
 ## 安装到 ARM64 设备
 

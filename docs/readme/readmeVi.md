@@ -182,7 +182,7 @@ Toonflow là nền tảng sáng tạo AI mã nguồn mở dành cho sản xuất
 
 | Khả năng | Mô tả |
 | --- | --- |
-| 🏠 **Triển khai trên hệ thống của bạn** | Lưu dự án và tư liệu trên thiết bị hoặc máy chủ của riêng bạn; hỗ trợ ứng dụng desktop, Docker và triển khai máy chủ. |
+| 🏠 **Triển khai trên hệ thống của bạn** | Lưu dự án và tư liệu trên thiết bị hoặc máy chủ của riêng bạn; hỗ trợ ứng dụng desktop, Android, Docker và triển khai máy chủ. |
 | 🖼️ **Canvas vô hạn** | Sắp xếp kịch bản, nhân vật, bối cảnh và các đoạn video trên cùng một canvas. |
 | 🔌 **MCP** | Kết nối công cụ và dịch vụ bên ngoài qua MCP. |
 | 🧩 **Chợ plugin** | Mở rộng các nút, công cụ và khả năng sáng tạo thông qua [chợ plugin](https://api.toonflow.net/console/plugIn). |
@@ -228,12 +228,15 @@ Các ngôn ngữ được hỗ trợ: 简体中文, 繁體中文, English, 日�
 
 ## 4. 🚀 Tải xuống và cài đặt
 
-### 4.1 Cài đặt ứng dụng desktop
+### 4.1 Cài đặt ứng dụng
 
 | Hệ điều hành | GitHub |
 | -------- | ------------------------------------------------------------ |
 | Windows | [Bản phát hành](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | macOS | [Bản phát hành](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Android ARM64 | [Tải APK](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+
+Ứng dụng Android chỉ hỗ trợ thiết bị ARM64. Tải và cài đặt `toonflow-VERSION-android-arm64.apk` từ trang phát hành. Ứng dụng tích hợp backend Bun cục bộ nên có thể chạy độc lập. Bạn cũng có thể dùng Kết nối thiết bị trên trang chủ để quét mã QR hoặc nhập thông tin kết nối tới máy tính hoặc backend từ xa đã bật chia sẻ, qua mạng nội bộ hoặc internet.
 
 Trình cài đặt Windows tự động kiểm tra và cài đặt WebView2. Nếu ứng dụng đóng đột ngột ngay khi mở sau khi cài đặt, hãy truy cập [trang tải WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) để cài đặt môi trường chạy theo cách thủ công.
 

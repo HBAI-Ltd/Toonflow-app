@@ -182,7 +182,7 @@ Toonflow 是面向短劇、動態漫畫與短影片製作的開源 AI 創作平�
 
 | 功能 | 說明 |
 | --- | --- |
-| 🏠 **本機部署** | 專案與素材儲存在自己的裝置或伺服器，支援桌面、Docker 與伺服器部署。 |
+| 🏠 **本機部署** | 專案與素材儲存在自己的裝置或伺服器，支援桌面、Android、Docker 與伺服器部署。 |
 | 🖼️ **無限畫布** | 在同一張畫布中組織劇本、角色、場景與影片片段。 |
 | 🔌 **MCP** | 透過 MCP 連接外部工具與服務。 |
 | 🧩 **外掛市集** | 透過[外掛市集](https://api.toonflow.net/console/plugIn)擴充節點、工具與創作功能。 |
@@ -228,12 +228,15 @@ Toonflow 是面向短劇、動態漫畫與短影片製作的開源 AI 創作平�
 
 ## 4. 🚀 下載與安裝
 
-### 4.1 桌面版安裝
+### 4.1 用戶端安裝
 
 | 作業系統 | GitHub |
 | --- | --- |
 | Windows | [發行版本](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | macOS | [發行版本](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Android ARM64 | [下載 APK](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+
+Android 版僅支援 ARM64 裝置，下載發行頁面的 `toonflow-版本號-android-arm64.apk` 安裝。手機內建本機 Bun 後端，可獨立執行；也可從首頁「裝置互聯」掃描 QR Code 或手動連接已開啟共享的電腦或遠端後端（支援區域網路與公開網路）。
 
 Windows 安裝程式會自動偵測並安裝 WebView2；如果安裝後開啟時閃退，請前往 [WebView2 下載頁面](https://developer.microsoft.com/microsoft-edge/webview2/) 手動安裝執行階段。
 

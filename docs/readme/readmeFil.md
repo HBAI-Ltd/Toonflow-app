@@ -182,7 +182,7 @@ Ang Toonflow ay isang open-source na AI platform para sa maiikling drama, animat
 
 | Kakayahan | Paglalarawan |
 | --- | --- |
-| 🏠 **Lokal na deployment** | Itago ang mga proyekto at asset sa sarili mong device o server. May mga opsyon para sa desktop, Docker, at server deployment. |
+| 🏠 **Lokal na deployment** | Itago ang mga proyekto at asset sa sarili mong device o server. May mga opsyon para sa desktop, Android, Docker, at server deployment. |
 | 🖼️ **Walang-hanggang canvas** | Ayusin ang mga iskrip, tauhan, tagpuan, at video clip sa iisang canvas. |
 | 🔌 **MCP** | Kumonekta sa mga panlabas na tool at serbisyo sa pamamagitan ng MCP. |
 | 🧩 **Pamilihan ng mga plugin** | Palawakin ang mga node, tool, at kakayahan sa paglikha gamit ang [Pamilihan ng mga Plugin](https://api.toonflow.net/console/plugIn). |
@@ -228,12 +228,15 @@ Mga sinusuportahang wika: 简体中文, 繁體中文, English, 日本語, Рус
 
 ## 4. 🚀 Pag-download at Pag-install
 
-### 4.1 Pag-install sa Desktop
+### 4.1 Pag-install ng App
 
 | Operating System | GitHub |
 | --- | --- |
 | Windows | [Mga Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | macOS | [Mga Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Android ARM64 | [I-download ang APK](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+
+ARM64 device lang ang sinusuportahan ng Android app. I-download at i-install ang `toonflow-VERSION-android-arm64.apk` mula sa release page. May kasama itong lokal na Bun backend at maaaring tumakbo nang hiwalay. Maaari ring gamitin ang Koneksyon ng device sa home page para mag-scan ng QR code o manu-manong kumonekta sa computer o backend na may sharing na naka-enable sa lokal na network o internet.
 
 Awtomatikong tinutukoy at ini-install ng Windows installer ang WebView2. Kung agad na nagsasara ang app pagkatapos ng pag-install, manu-manong i-download at i-install ang runtime mula sa [pahina ng pag-download ng WebView2](https://developer.microsoft.com/microsoft-edge/webview2/).
 

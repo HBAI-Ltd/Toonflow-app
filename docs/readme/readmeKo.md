@@ -182,7 +182,7 @@ Toonflow는 숏드라마, 모션 코믹스, 짧은 영상 제작을 위한 오�
 
 | 기능 | 설명 |
 | --- | --- |
-| 🏠 **로컬 배포** | 프로젝트와 자산을 자신의 기기나 서버에 저장하며 데스크톱, Docker, 서버 배포를 지원합니다. |
+| 🏠 **로컬 배포** | 프로젝트와 자산을 자신의 기기나 서버에 저장하며 데스크톱, Android, Docker, 서버 배포를 지원합니다. |
 | 🖼️ **무한 캔버스** | 하나의 캔버스에서 대본, 캐릭터, 장면, 영상 클립을 정리합니다. |
 | 🔌 **MCP** | MCP를 통해 외부 도구와 서비스에 연결합니다. |
 | 🧩 **플러그인 마켓** | [플러그인 마켓](https://api.toonflow.net/console/plugIn)에서 노드, 도구, 창작 기능을 확장합니다. |
@@ -228,12 +228,15 @@ Toonflow는 숏드라마, 모션 코믹스, 짧은 영상 제작을 위한 오�
 
 ## 4. 🚀 다운로드 및 설치
 
-### 4.1 데스크톱 설치
+### 4.1 앱 설치
 
 | 운영 체제 | GitHub |
 | --- | --- |
 | Windows | [릴리스](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | macOS | [릴리스](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Android ARM64 | [APK 다운로드](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+
+Android 앱은 ARM64 기기만 지원합니다. 릴리스 페이지에서 `toonflow-VERSION-android-arm64.apk`를 다운로드하여 설치하세요. 로컬 Bun 백엔드가 포함되어 독립적으로 실행할 수 있습니다. 홈 화면의 ‘기기 연결’에서 QR 코드를 스캔하거나 연결 정보를 직접 입력하여 공유가 켜진 컴퓨터나 원격 백엔드에 LAN 또는 인터넷을 통해 연결할 수 있습니다.
 
 Windows 설치 프로그램은 WebView2를 자동으로 감지하고 설치합니다. 설치 후 앱이 바로 종료되면 [WebView2 다운로드 페이지](https://developer.microsoft.com/microsoft-edge/webview2/)에서 런타임을 직접 다운로드하여 설치하세요.
 

@@ -182,7 +182,7 @@ Toonflow is an open-source AI creation platform for short dramas, animated comic
 
 | Capability | Description |
 | --- | --- |
-| 🏠 **Local deployment** | Keep projects and assets on your own device or server, with desktop, Docker, and server deployment options. |
+| 🏠 **Local deployment** | Keep projects and assets on your own device or server, with desktop, Android, Docker, and server deployment options. |
 | 🖼️ **Infinite canvas** | Organize scripts, characters, scenes, and video clips on the same canvas. |
 | 🔌 **MCP** | Connect external tools and services through MCP. |
 | 🧩 **Plugin marketplace** | Extend nodes, tools, and creative capabilities through the [Plugin Marketplace](https://api.toonflow.net/console/plugIn). |
@@ -228,12 +228,15 @@ Supported languages: 简体中文, 繁體中文, English, 日本語, Русск�
 
 ## 4. 🚀 Download and Install
 
-### 4.1 Desktop Installation
+### 4.1 Client Installation
 
 | Operating System | GitHub |
 | --- | --- |
 | Windows | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | macOS | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Android ARM64 | [Download APK](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+
+The Android app supports ARM64 devices only. Download and install `toonflow-VERSION-android-arm64.apk` from the release page. It includes a local Bun backend and can run independently, or use Device Link on the home page to scan a QR code or manually connect to a computer or remote backend with sharing enabled, over a local network or the internet.
 
 The Windows installer automatically detects and installs WebView2. If the app closes immediately after installation, download and install the runtime manually from the [WebView2 download page](https://developer.microsoft.com/microsoft-edge/webview2/).
 

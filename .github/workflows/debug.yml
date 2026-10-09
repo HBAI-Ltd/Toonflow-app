@@ -19,7 +19,7 @@ on:
         type: boolean
         default: false
       androidRelease:
-        description: Android 使用固定发布签名（需要 Android Secrets）
+        description: Android 发布模式（关闭调试，使用默认签名）
         type: boolean
         default: false
   workflow_call:
@@ -54,18 +54,6 @@ on:
         required: false
       MACOS_NOTARIZATION_KEY_BASE64:
         description: 对应 API 密钥的 P8 私钥文件 Base64
-        required: false
-      ANDROID_KEYSTORE_BASE64:
-        description: Android 发布 keystore 文件的 Base64
-        required: false
-      ANDROID_KEYSTORE_PASSWORD:
-        description: keystore 密码
-        required: false
-      ANDROID_KEY_ALIAS:
-        description: 签名密钥别名
-        required: false
-      ANDROID_KEY_PASSWORD:
-        description: 签名密钥密码
         required: false
     outputs:
       version:
@@ -141,10 +129,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           # ACT: 签名只使用触发工作流的代码，避免额外 ref 引入未审查的 PR 代码。
-          ref: ${{ (matrix.target == 'macArm64' || (matrix.target == 'androidArm64' && inputs.androidRelease)) && github.sha || needs.prepare.outputs.commit }}
+          ref: ${{ matrix.target == 'macArm64' && github.sha || needs.prepare.outputs.commit }}
           persist-credentials: false
       - name: 校验签名来源
-        if: matrix.target == 'macArm64' || (matrix.target == 'androidArm64' && inputs.androidRelease)
+        if: matrix.target == 'macArm64'
         env:
           buildCommit: ${{ needs.prepare.outputs.commit }}
         run: |
@@ -160,27 +148,6 @@ jobs:
           expectedPlatform: ${{ matrix.platform }}
           expectedArch: ${{ matrix.arch }}
         run: bun -e 'if (process.platform !== process.env.expectedPlatform || process.arch !== process.env.expectedArch) throw new Error("运行器系统或架构与目标不一致");'
-      - name: 准备 Android 发布签名
-        if: matrix.target == 'androidArm64' && inputs.androidRelease
-        shell: pwsh
-        env:
-          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          androidKeystorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          androidKeyAlias: ${{ secrets.ANDROID_KEY_ALIAS }}
-          androidKeyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          $signingFields = @{
-            ANDROID_KEYSTORE_BASE64 = $env:androidKeystoreBase64
-            ANDROID_KEYSTORE_PASSWORD = $env:androidKeystorePassword
-            ANDROID_KEY_ALIAS = $env:androidKeyAlias
-            ANDROID_KEY_PASSWORD = $env:androidKeyPassword
-          }
-          foreach ($entry in $signingFields.GetEnumerator()) {
-            if ([string]::IsNullOrWhiteSpace($entry.Value)) { throw "请配置 $($entry.Key) Secret" }
-          }
-          $keystorePath = Join-Path $env:RUNNER_TEMP 'toonflowAndroid.keystore'
-          [System.IO.File]::WriteAllBytes($keystorePath, [Convert]::FromBase64String($env:androidKeystoreBase64))
-          "androidKeystore=$keystorePath" >> $env:GITHUB_ENV
       - name: 准备 Android JDK 与 SDK
         if: matrix.target == 'androidArm64'
         shell: pwsh
@@ -232,16 +199,7 @@ jobs:
         shell: pwsh
         env:
           androidRelease: ${{ inputs.androidRelease && '1' || '0' }}
-          androidKeystorePassword: ${{ inputs.androidRelease && secrets.ANDROID_KEYSTORE_PASSWORD || '' }}
-          androidKeyAlias: ${{ inputs.androidRelease && secrets.ANDROID_KEY_ALIAS || '' }}
-          androidKeyPassword: ${{ inputs.androidRelease && secrets.ANDROID_KEY_PASSWORD || '' }}
         run: bun run --cwd apps/mobile build
-      - name: 清理 Android 发布签名
-        if: always() && matrix.target == 'androidArm64' && inputs.androidRelease
-        shell: pwsh
-        run: |
-          $keystorePath = Join-Path $env:RUNNER_TEMP 'toonflowAndroid.keystore'
-          if (Test-Path -LiteralPath $keystorePath) { Remove-Item -LiteralPath $keystorePath -Force }
       - name: 准备 ARM 签名与公证凭据
         if: matrix.target == 'macArm64'
         id: signing

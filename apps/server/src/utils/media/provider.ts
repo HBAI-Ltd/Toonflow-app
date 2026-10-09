@@ -65,7 +65,7 @@ function mediaErrorMessage(value: unknown, config: Record<string, unknown>, dept
     .slice(0, 4000);
 }
 
-function createMediaTools(fetcher: typeof fetch = fetch) {
+function createMediaTools(fetcher: typeof fetch = fetch): ProviderTools["media"] {
   async function bytes(input: MediaInput) {
     if (input.type === "base64") return Buffer.from(input.data.replace(/^data:[^;]+;base64,/, ""), "base64");
     if (input.type === "binary") return Buffer.from(input.data);
@@ -79,7 +79,7 @@ function createMediaTools(fetcher: typeof fetch = fetch) {
       const metadata = await new Bun.Image(await bytes(input)).metadata();
       return { width: metadata.width, height: metadata.height, format: metadata.format };
     },
-    async resizeImage(input: MediaInput, options: { width?: number; height?: number; format?: "jpeg" | "png" | "webp"; quality?: number }) {
+    async resizeImage(input, options) {
       if (!options.width && !options.height) throw new Error("图片缩放至少需要指定宽度或高度");
       const source = await bytes(input);
       const metadata = await new Bun.Image(source).metadata();
@@ -420,10 +420,13 @@ export async function loadMediaProviderSource(source: string, config: Record<str
       },
     } satisfies ProviderTools,
   };
-  for (const name of ["generateImage", "generateVideo", "generateAudio"] as const) {
-    const generate = definition[name];
+  for (const [name, generate] of [
+    ["generateImage", definition.generateImage],
+    ["generateVideo", definition.generateVideo],
+    ["generateAudio", definition.generateAudio],
+  ] as const) {
     if (!generate) continue;
-    Object.assign(provider, { [name]: async (request: ImageRequest & VideoRequest & AudioRequest) => {
+    Object.assign(provider, { [name]: async (request: ImageRequest | VideoRequest | AudioRequest) => {
       let failure: { status?: number; message: string } | undefined;
       let pendingRequests = 0;
       let overlappingRequests = false;
@@ -458,7 +461,10 @@ export async function loadMediaProviderSource(source: string, config: Record<str
       const context = { ...provider, tool };
       try {
         const prepared = definition.processMedia ? await definition.processMedia.call(context, request) : request;
-        return await generate.call(context, prepared);
+        // ACT: 预处理沿用原生成类型，在动态分发边界按对应方法收窄请求。
+        if (name === "generateImage") return await generate.call(context, prepared as ImageRequest);
+        if (name === "generateVideo") return await generate.call(context, prepared as VideoRequest);
+        return await generate.call(context, prepared as AudioRequest);
       }
       catch (error) {
         const info = error as { name?: unknown; message?: unknown } | null;

@@ -182,7 +182,7 @@ Toonflow; senaryoları, varlıkları ve video kliplerini tek bir sonsuz tuvalde 
 
 | Özellik | Açıklama |
 | --- | --- |
-| 🏠 **Yerel kurulum** | Masaüstü, Docker ve sunucu kurulumu seçenekleriyle projeleri ve varlıkları kendi cihazınızda veya sunucunuzda tutun. |
+| 🏠 **Yerel kurulum** | Masaüstü, Android, Docker ve sunucu kurulumu seçenekleriyle projeleri ve varlıkları kendi cihazınızda veya sunucunuzda tutun. |
 | 🖼️ **Sonsuz tuval** | Senaryoları, karakterleri, sahneleri ve video kliplerini aynı tuval üzerinde düzenleyin. |
 | 🔌 **MCP** | Harici araç ve hizmetleri MCP üzerinden bağlayın. |
 | 🧩 **Eklenti pazarı** | [Eklenti Pazarı](https://api.toonflow.net/console/plugIn) üzerinden düğümleri, araçları ve yaratıcı olanakları genişletin. |
@@ -228,12 +228,15 @@ Desteklenen diller: 简体中文, 繁體中文, English, 日本語, Русски
 
 ## 4. 🚀 İndirme ve Kurulum
 
-### 4.1 Masaüstü Kurulumu
+### 4.1 Uygulama Kurulumu
 
 | İşletim Sistemi | GitHub |
 | --- | --- |
 | Windows | [Sürümler](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | macOS | [Sürümler](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Android ARM64 | [APK indir](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+
+Android uygulaması yalnızca ARM64 cihazları destekler. Sürüm sayfasından `toonflow-VERSION-android-arm64.apk` dosyasını indirip yükleyin. Uygulama yerel bir Bun arka ucu içerir ve bağımsız çalışabilir. Ana sayfadaki Cihaz Bağlantısı ile QR kodunu tarayarak veya bağlantı bilgilerini elle girerek paylaşımı etkinleştirilmiş bir bilgisayara veya uzak arka uca yerel ağ ya da internet üzerinden bağlanabilirsiniz.
 
 Windows yükleyicisi WebView2’yi otomatik olarak algılar ve kurar. Uygulama kurulumdan hemen sonra kapanırsa çalışma zamanını [WebView2 indirme sayfasından](https://developer.microsoft.com/microsoft-edge/webview2/) indirip elle kurun.
 

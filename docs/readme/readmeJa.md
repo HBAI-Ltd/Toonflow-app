@@ -182,7 +182,7 @@ Toonflow はショートドラマ、モーションコミック、ショート�
 
 | 機能 | 説明 |
 | --- | --- |
-| 🏠 **ローカル環境で運用** | プロジェクトと素材を自分のデバイスやサーバーに保存。デスクトップ、Docker、サーバーへの導入に対応しています。 |
+| 🏠 **ローカル環境で運用** | プロジェクトと素材を自分のデバイスやサーバーに保存。デスクトップ、Android、Docker、サーバーへの導入に対応しています。 |
 | 🖼️ **無限キャンバス** | 同じキャンバス上で脚本、キャラクター、シーン、動画クリップを整理できます。 |
 | 🔌 **MCP** | MCP を通じて外部ツールやサービスに接続できます。 |
 | 🧩 **プラグインマーケット** | [プラグインマーケット](https://api.toonflow.net/console/plugIn)からノード、ツール、制作機能を追加できます。 |
@@ -228,12 +228,15 @@ Toonflow はショートドラマ、モーションコミック、ショート�
 
 ## 4. 🚀 ダウンロードとインストール
 
-### 4.1 デスクトップ版のインストール
+### 4.1 アプリのインストール
 
 | OS | GitHub |
 | --- | --- |
 | Windows | [リリース](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | macOS | [リリース](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Android ARM64 | [APK をダウンロード](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+
+Android 版は ARM64 デバイスのみ対応しています。リリースページから `toonflow-VERSION-android-arm64.apk` をダウンロードしてインストールしてください。ローカル Bun バックエンドを内蔵しており、単独で動作します。ホーム画面の「デバイス連携」から QR コードを読み取るか接続情報を手動入力して、共有が有効なパソコンや LAN・インターネット上のバックエンドにも接続できます。
 
 Windows のインストーラーは WebView2 を自動で検出し、必要に応じてインストールします。インストール後、起動直後に終了する場合は、[WebView2 ダウンロードページ](https://developer.microsoft.com/microsoft-edge/webview2/)からランタイムを手動でインストールしてください。
 

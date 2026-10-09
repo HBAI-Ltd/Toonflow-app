@@ -182,7 +182,7 @@ Toonflow adalah platform kreasi AI sumber terbuka untuk drama pendek, komik anim
 
 | Kemampuan | Deskripsi |
 | --- | --- |
-| 🏠 **Penerapan lokal** | Simpan proyek dan aset di perangkat atau server Anda sendiri, dengan pilihan penerapan desktop, Docker, dan server. |
+| 🏠 **Penerapan lokal** | Simpan proyek dan aset di perangkat atau server Anda sendiri, dengan pilihan penerapan desktop, Android, Docker, dan server. |
 | 🖼️ **Kanvas tanpa batas** | Tata naskah, karakter, adegan, dan klip video di kanvas yang sama. |
 | 🔌 **MCP** | Hubungkan alat dan layanan eksternal melalui MCP. |
 | 🧩 **Marketplace plugin** | Tambahkan node, alat, dan kemampuan kreatif melalui [Marketplace Plugin](https://api.toonflow.net/console/plugIn). |
@@ -228,12 +228,15 @@ Bahasa yang didukung: 简体中文, 繁體中文, English, 日本語, Русск
 
 ## 4. 🚀 Unduh dan Instal
 
-### 4.1 Instalasi Desktop
+### 4.1 Instalasi Aplikasi
 
 | Sistem Operasi | GitHub |
 | --- | --- |
 | Windows | [Rilis](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | macOS | [Rilis](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Android ARM64 | [Unduh APK](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+
+Aplikasi Android hanya mendukung perangkat ARM64. Unduh dan instal `toonflow-VERSION-android-arm64.apk` dari halaman rilis. Aplikasi menyertakan backend Bun lokal dan dapat berjalan mandiri. Anda juga dapat menggunakan Koneksi perangkat di halaman utama untuk memindai kode QR atau terhubung secara manual ke komputer atau backend yang telah mengaktifkan berbagi koneksi di jaringan lokal maupun internet.
 
 Penginstal Windows mendeteksi dan memasang WebView2 secara otomatis. Jika aplikasi langsung tertutup setelah instalasi, unduh dan pasang runtime secara manual dari [halaman unduhan WebView2](https://developer.microsoft.com/microsoft-edge/webview2/).
 

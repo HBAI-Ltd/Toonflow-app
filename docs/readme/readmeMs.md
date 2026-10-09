@@ -182,7 +182,7 @@ Toonflow ialah platform penciptaan AI sumber terbuka untuk drama pendek, komik a
 
 | Keupayaan | Penerangan |
 | --- | --- |
-| 🏠 **Pemasangan setempat** | Simpan projek dan aset pada peranti atau pelayan anda sendiri, dengan pilihan pemasangan desktop, Docker dan pelayan. |
+| 🏠 **Pemasangan setempat** | Simpan projek dan aset pada peranti atau pelayan anda sendiri, dengan pilihan pemasangan desktop, Android, Docker dan pelayan. |
 | 🖼️ **Kanvas tanpa had** | Susun skrip, watak, adegan dan klip video pada kanvas yang sama. |
 | 🔌 **MCP** | Hubungkan alat dan perkhidmatan luaran melalui MCP. |
 | 🧩 **Pasaran pemalam** | Tambah nod, alat dan keupayaan kreatif melalui [Pasaran Pemalam](https://api.toonflow.net/console/plugIn). |
@@ -228,12 +228,15 @@ Bahasa yang disokong: 简体中文, 繁體中文, English, 日本語, Русск
 
 ## 4. 🚀 Muat Turun dan Pemasangan
 
-### 4.1 Pemasangan Desktop
+### 4.1 Pemasangan Aplikasi
 
 | Sistem Pengendalian | GitHub |
 | --- | --- |
 | Windows | [Keluaran](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | macOS | [Keluaran](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Android ARM64 | [Muat turun APK](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+
+Aplikasi Android hanya menyokong peranti ARM64. Muat turun dan pasang `toonflow-VERSION-android-arm64.apk` daripada halaman keluaran. Aplikasi ini merangkumi backend Bun setempat dan boleh berjalan secara kendiri. Anda juga boleh menggunakan Sambungan peranti pada halaman utama untuk mengimbas kod QR atau menyambung secara manual ke komputer atau backend yang telah mengaktifkan perkongsian pada rangkaian setempat atau internet.
 
 Pemasang Windows mengesan dan memasang WebView2 secara automatik. Jika aplikasi terus tertutup selepas pemasangan, muat turun dan pasang persekitaran masa jalan secara manual daripada [halaman muat turun WebView2](https://developer.microsoft.com/microsoft-edge/webview2/).
 
