@@ -1,4 +1,3 @@
-import { mkdir } from "@toonflow/file";
 import { Router } from "express";
 import { z } from "zod";
 import u from "@/utils";
@@ -8,11 +7,6 @@ import { success } from "@/lib/responseFormat";
 const router = Router();
 
 export default router.post("/", validateFields({ path: z.string().min(1).max(4096) }), async (req, res) => {
-  const root = await u.assets.getAssetsDirectory();
-  const { directory, path } = await u.workspaceFile.resolveWorkspacePath(root, req.body.path);
-  u.workspaceFile.protectWorkspaceRoot(directory, path);
-  const release = u.workspaceFile.lockWorkspaceFiles([path]);
-  try { await mkdir(path); }
-  finally { release(); }
+  await u.assets.createAssetDirectory(req.body.path);
   res.json(success());
 });

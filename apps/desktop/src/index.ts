@@ -1,10 +1,8 @@
 import { setLocaleFallback, t, translateMessage } from "@toonflow/server/i18n";
 import { detectLocale, normalizeLocale } from "@toonflow/i18n";
-import { once } from "node:events";
 import { execFile } from "node:child_process";
 import { existsSync, writeAtomicSync } from "@toonflow/file";
 import { file } from "@toonflow/file/bun";
-import type { AddressInfo } from "node:net";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
 import { dlopen, ptr } from "bun:ffi";
@@ -72,6 +70,7 @@ async function restoreInstallRegistration(installDirectory: string) {
 
 async function start() {
   let splash: Awaited<ReturnType<typeof showNativeSplash>> | undefined;
+  let desktopConnection: Awaited<ReturnType<typeof import("./connection").default>> | undefined;
   let isClosing = false;
 
   try {
@@ -125,10 +124,12 @@ async function start() {
     }
     process.env.toonflowDesktop = "1";
     const { createApp } = await import("@toonflow/server/app");
-    const { hash } = await file(resolve(PATHS.RESOURCES_FOLDER, "version.json")).json();
+    const { closeBrowsers } = await import("@toonflow/server/browser");
+    const { hash, version } = await file(resolve(PATHS.RESOURCES_FOLDER, "version.json")).json();
     if (typeof hash !== "string" || !hash) throw new Error(t`应用构建标识缺失，无法同步内置插件`);
     const app = await createApp({
       webRoot: resolve(PATHS.VIEWS_FOLDER, "mainview"),
+      appVersion: typeof version === "string" ? version : "",
       dataDirectory,
       toolsRoot: resolve(PATHS.VIEWS_FOLDER, "../tools"),
       nodesRoot: resolve(PATHS.VIEWS_FOLDER, "../nodes"),
@@ -139,14 +140,17 @@ async function start() {
       // agentsRoot: resolve(PATHS.VIEWS_FOLDER, "../agents"),
       pluginRevision: hash,
     });
-    const server = app.listen(0, "127.0.0.1");
-
-    await once(server, "listening");
-    if (isClosing) return;
-    const address = server.address() as AddressInfo;
-    const { initializeMcpRuntime } = await import("@toonflow/server/mcp");
-    await initializeMcpRuntime(app, `http://127.0.0.1:${address.port}`, resolve(PATHS.VIEWS_FOLDER, "../mcp/stdio.js"));
-    console.log(`桌面服务：http://127.0.0.1:${address.port}`);
+    const { default: createDesktopConnection } = await import("./connection");
+    const connection = desktopConnection = await createDesktopConnection(app, dataDirectory, resolve(PATHS.VIEWS_FOLDER, "../mcp/stdio.js"), (port, remote) => {
+      deliverInstall = undefined;
+      saveRuntime(port);
+      mainWindow.webview.loadURL(`http://127.0.0.1:${port}/?desktop=1${remote ? "&remote=1" : ""}`);
+    }, error => {
+      console.error("设备连接切换失败：", error);
+      void Utils.showMessageBox({ type: "error", title: t`设备连接失败`, message: error instanceof Error ? error.message : String(error) });
+    });
+    if (isClosing) { await connection.close(); return; }
+    console.log(`桌面服务：http://127.0.0.1:${connection.port}`);
 
     const { workArea } = Screen.getPrimaryDisplay();
     // ACT: 宽高分别限制在屏幕可用区域内，预留标题栏和边距，不固定比例。
@@ -154,7 +158,7 @@ async function start() {
     const height = Math.min(960, workArea.height - 64);
     const mainWindow = new BrowserWindow({
       title: "Toonflow",
-      url: `http://127.0.0.1:${address.port}/?desktop=1`,
+      url: `http://127.0.0.1:${connection.port}/?desktop=1${connection.remote ? "&remote=1" : ""}`,
       hidden: Boolean(splash),
       frame: {
         width,
@@ -206,10 +210,17 @@ async function start() {
           // ACT: 安装器已完成注册；更新后的修复仅首次展示时执行，不阻塞主窗口。
           void restoreInstallRegistration(installDirectory);
         }
-        if (failed) {
+        if (failed && !connection.remote) {
           if (process.platform === "win32") confirmWindowsUpdateStartup(PATHS.RESOURCES_FOLDER, true);
           else await (Updater as DesktopRuntime["updater"]).confirmStartup?.(true);
           deliverInstall = undefined;
+          return;
+        }
+        if (connection.remote) {
+          // 远端离线不代表本机更新启动失败；安装协议等回到独立运行后再投递。
+          deliverInstall = undefined;
+          if (process.platform === "win32") confirmWindowsUpdateStartup(PATHS.RESOURCES_FOLDER);
+          else await (Updater as DesktopRuntime["updater"]).confirmStartup?.();
           return;
         }
         deliverInstall = request => {
@@ -258,17 +269,23 @@ async function start() {
       mainWindow.on("close", closeIcons);
     }
     mainWindow.on("close", () => {
+      void connection.close().catch(error => console.error("设备连接关闭失败：", error));
+      void closeBrowsers().catch(error => console.error("浏览器关闭失败：", error));
       isClosing = true;
       deliverInstall = undefined;
       pendingInstalls.length = 0;
       splash?.close();
       splash = undefined;
     });
-    if (process.platform === "win32") {
-      // ACT: 运行信息随应用目录清理；启动器通过 PID 忽略已退出进程留下的端口。
-      writeAtomicSync(resolve(PATHS.RESOURCES_FOLDER, "desktopRuntime.json"), JSON.stringify({ pid: process.pid, port: address.port }));
+    function saveRuntime(port: number) {
+      if (process.platform === "win32") {
+        // ACT: 切换连接也更新端口；启动器通过 PID 忽略已退出进程留下的记录。
+        writeAtomicSync(resolve(PATHS.RESOURCES_FOLDER, "desktopRuntime.json"), JSON.stringify({ pid: process.pid, port }));
+      }
     }
+    saveRuntime(connection.port);
   } catch (error) {
+    await desktopConnection?.close().catch(error => console.error("设备连接关闭失败：", error));
     splash?.close();
     console.error("桌面启动失败：", error);
     if (process.platform === "win32") {

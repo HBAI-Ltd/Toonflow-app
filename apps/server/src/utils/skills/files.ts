@@ -1,4 +1,4 @@
-import { loadSkillsFromDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
+import { loadSkillsFromDir } from "@earendil-works/pi-coding-agent";
 import { lstat, readdir, readFile, realpath, rm } from "@toonflow/file";
 import { basename, dirname, relative, resolve, sep } from "node:path";
 import conf from "@/utils/conf";
@@ -10,6 +10,18 @@ const orderFileName = ".toonflowOrder.json";
 
 export function directory() {
   return resolve(dirname(conf.path), "skills");
+}
+
+export function isEnabled(name: string) {
+  return !conf.get("disabledSkills", []).includes(name);
+}
+
+export async function setEnabled(name: string, enabled: boolean) {
+  await resolveSkill(name);
+  const disabledSkills = new Set(conf.get("disabledSkills", []));
+  if (enabled) disabledSkills.delete(name);
+  else disabledSkills.add(name);
+  conf.set("disabledSkills", [...disabledSkills]);
 }
 
 async function verifyRoot() {
@@ -67,12 +79,6 @@ async function resolveSkill(name: string) {
 
 export async function uninstall(name: string) {
   const { mainTarget, baseDir, isDirectorySkill } = await resolveSkill(name);
-  const { frontmatter } = parseFrontmatter(await readFile(mainTarget, "utf8"));
-  const metadata = frontmatter.metadata && typeof frontmatter.metadata === "object" && !Array.isArray(frontmatter.metadata)
-    ? frontmatter.metadata as Record<string, unknown> : {};
-  if (metadata.author === "Toonflow") {
-    throw Object.assign(new Error("内置技能不能卸载"), { status: 403 });
-  }
   if (isDirectorySkill) {
     const entries = await readdir(baseDir, { recursive: true, withFileTypes: true });
     if (entries.some(entry => entry.name.toLowerCase() === "skill.md" && resolve(entry.parentPath, entry.name) !== mainTarget)) {
@@ -81,6 +87,7 @@ export async function uninstall(name: string) {
   }
   // ACT: 非标准目录布局仅删除主文件，保留可能与其他技能共享的目录。
   await rm(isDirectorySkill ? baseDir : mainTarget, { recursive: isDirectorySkill });
+  conf.set("disabledSkills", conf.get("disabledSkills", []).filter(item => item !== name));
 }
 
 export async function locate(name: string, path?: string) {

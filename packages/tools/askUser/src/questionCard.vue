@@ -31,10 +31,10 @@
         <el-text v-if="draftAnswer.length > 8000" type="danger">回答（含选项）不能超过 8000 字</el-text>
       </template>
       <div class="questionActions">
-        <el-button type="primary" :loading="submitting" :disabled="!directory || (formRules.length ? !formApi : !draftAnswer || draftAnswer.length > 8000)" @click="submitAnswer(false)">
+        <el-button type="primary" :loading="submitting" :disabled="(!toolSessionId && !directory) || (formRules.length ? !formApi : !draftAnswer || draftAnswer.length > 8000)" @click="submitAnswer(false)">
           提交回答
         </el-button>
-        <el-button :disabled="!directory || submitting" @click="submitAnswer(true)">跳过</el-button>
+        <el-button :disabled="(!toolSessionId && !directory) || submitting" @click="submitAnswer(true)">跳过</el-button>
       </div>
     </template>
     <p v-else-if="answer" class="answerText">{{ answer }}</p>
@@ -79,7 +79,7 @@ for (const component of [
 </script>
 
 <script setup lang="ts">
-const props = defineProps<{ tool: ToolCall; directory?: string }>();
+const props = defineProps<{ tool: ToolCall; directory?: string; toolSessionId?: string }>();
 const title = computed(() => props.tool.question?.title || (typeof props.tool.args?.title === "string" ? props.tool.args.title.trim() : "") || "请确认");
 const selected = ref("");
 const text = ref("");
@@ -139,13 +139,13 @@ const statusText = computed(() => {
 async function submitAnswer(skip: boolean) {
   const callId = props.tool.question?.callId;
   const value = draftAnswer.value;
-  if (!waiting.value || submitting.value || !props.directory || !callId) return;
+  if (!waiting.value || submitting.value || (!props.toolSessionId && !props.directory) || !callId) return;
   if (!skip && !formRules.value.length && (!value || value.length > 8000)) return;
   submitting.value = true;
   try {
     if (!skip && formRules.value.length && !(await formApi.value?.validate().catch(() => false))) return;
-    const response = await axios.post("/api/agent/answer", {
-      directory: props.directory,
+    const response = await axios.post(props.toolSessionId ? "/api/singleAgent/answer" : "/api/agent/answer", {
+      ...(props.toolSessionId ? { sessionId: props.toolSessionId } : { directory: props.directory }),
       callId,
       ...(skip ? { skipped: true } : formRules.value.length ? { values: formApi.value!.formData() } : { answer: value }),
     }, { headers: { "x-toonflow-workspace": "1" } });

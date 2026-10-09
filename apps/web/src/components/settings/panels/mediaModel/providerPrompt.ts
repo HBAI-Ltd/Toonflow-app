@@ -80,7 +80,7 @@ ComfyUI 接入分支（仅在我的资料或回答涉及 ComfyUI 时使用）
 - 工作流需要外部素材时，先核实上传协议、返回的文件标识，以及目标输入节点接受的是标识、URL 还是其他格式。使用宿主传入的 URL/Base64/二进制完成转换与上传，不能把浏览器文件路径或 Toonflow 工作区路径直接塞给 ComfyUI。上传名称避免覆盖已有文件；需要 multipart 时，用宿主已有的 Blob、Buffer 或 Uint8Array 按文档构造请求体和边界，不假设存在 FormData、File、文件系统或额外依赖。
 - 确认用户需要哪一个最终输出；节点 id 与输出结构从工作流、节点文档及实际返回示例提取。不要把预览帧、中间图或任意第一个输出当作最终结果，不假设所有视频插件都返回同名的 videos、gifs 或 images 字段。依据文件实际内容与 MIME 返回正确媒体类型，不能把 GIF 标成 MP4。输出是文件名/子目录时按该服务取回协议下载，不能返回远端磁盘路径。
 - 宿主下载 url 结果不会自动携带供应商鉴权头。结果需要鉴权时，由适配器通过 this.tool.fetch 下载并返回 binary 或 base64；只有可直接访问的 HTTP(S) 地址才能返回 url。云端返回临时签名地址或跨域重定向时，按资料取回结果，不把 API Key 跟随到存储域名，也不把密钥拼入自造的下载地址。
-- 无鉴权的本地/自建服务使用 rules: []，方法不检查 apiKey，也不发送虚构鉴权头；导入后说明 API Key 留空即可。宿主只要发现 rules 中声明 apiKey 就会要求非空，因此不能声明一个「可选 apiKey」再让用户填假值。确实需要密钥时才按文档声明 apiKey 并使用 this.config.apiKey。当前 UI 不支持其他配置字段，涉及多份密钥、额外账号凭据或必须动态选择工作流时，先说明实际限制并确认可行目标，不私自将密钥嵌入文件。
+- 无鉴权的本地/自建服务使用 rules: []，方法不检查 apiKey，也不发送虚构鉴权头；导入后无需填写密钥。宿主只要发现 rules 中声明 apiKey 就会要求非空，因此不能声明一个「可选 apiKey」再让用户填假值。确实需要密钥时才按文档声明 apiKey 并使用 this.config.apiKey。涉及多份密钥、额外账号凭据或工作流选择时，在 rules 中声明相应字段，通过 this.config 的同名字段读取，不将密钥嵌入文件。
 - 交付前核实：已取得正确 API 工作流或托管平台所需定义；输入和最终输出映射有依据；目标环境已有对应模型与自定义节点；地址/鉴权、提交/查询/取回流程完整；符合 Toonflow 宿主能力。无法核实的运行环境明确说明，不能把导入成功当作工作流已运行。仍只交付一个可导入的供应商 .ts 文件；不把原始 workflow.json 当作 Toonflow 供应商，让用户再合并文件或另装 SDK。
 
 三、交付后仍需带我完成导入
@@ -97,13 +97,13 @@ ComfyUI 接入分支（仅在我的资料或回答涉及 ComfyUI 时使用）
 1. 输出一个完整、可导入的 TypeScript 文件，文件名为供应商 id 加 .ts。不要输出项目脚手架、Vue 组件或安装依赖的步骤。信息齐全后，给出文件名和一个完整的 TypeScript 代码块，不留 TODO、伪代码或省略的实现。
 2. 文件必须直接使用 export default { ... } 导出对象字面量，不能先赋给变量再导出，不能使用工厂函数、展开属性、计算属性或重复属性。
 3. id 使用小驼峰，仅含英文字母和数字，以小写字母开头，最多 96 个字符；不能使用 con、prn、aux、nul、com1～com9、lpt1～lpt9 等系统保留名。label 是非空显示名称，最多 200 个字符。
-4. id、label、version、readme、models 必须直接写成字面量，不能引用变量或调用函数。version 是适配文件自身的非空字符串版本，首次交付使用 "2.0.0"，后续修改时递增，不使用模型名称、模型版本或接口版本代替。models 内所有配置也必须是 JSON 字面量，不能使用展开、变量、undefined 或函数。模型 id 唯一；模型的 id 和 label 必须非空且不超过 200 个字符，最多 2000 个模型。
-5. rules 使用 form-create 的配置格式；需要密钥的服务包含 API Key 密码输入项，field 为 apiKey，value 为空字符串。已确认无鉴权的服务使用 rules: []，不添加 apiKey 项或强制检查。只声明厂商或工作流真实支持的 image、video、audio 模型及其能力，未实现的生成方法保持缺省，不虚构尺寸、比例、时长、分辨率、音色或参考素材数量。
+4. id、label、version、readme、models 以及可选的 icon 必须直接写成字面量，不能引用变量或调用函数。icon 为供应商 Logo 的图片 URL 或 Base64 Data URL（data:image/...;base64,...），优先使用内嵌 Base64。version 是适配文件自身的非空字符串版本，首次交付使用 "2.0.0"，后续修改时递增，不使用模型名称、模型版本或接口版本代替。models 内所有配置也必须是 JSON 字面量，不能使用展开、变量、undefined 或函数。模型 id 唯一；模型的 id 和 label 必须非空且不超过 200 个字符，最多 2000 个模型。
+5. rules 使用 form-create 的配置格式，直接写成 JSON 字面量数组，也可引用顶层 const 定义的 JSON 字面量数组；需要密钥的服务包含 API Key 密码输入项，field 为 apiKey，value 为空字符串，额外密钥分别声明独立的密码输入项。已确认无鉴权的服务使用 rules: []，不添加 apiKey 项或强制检查。只声明厂商或工作流真实支持的 image、video、audio 模型及其能力，未实现的生成方法保持缺省，不虚构尺寸、比例、时长、分辨率、音色或参考素材数量。
 6. 文件在服务端 Bun 环境执行，不依赖本项目目录。禁止 import、动态 import、require、第三方依赖、浏览器 DOM、直接文件系统访问和 process。请在文件内声明实际需要的 TypeScript 类型。下方完整类型约定仅用于说明协议，无需把未用到的声明全部复制到产物中。文件保持在 1 MB 以内。
 
 运行约定：
 - 生成方法使用普通 async 方法而非箭头函数，通过 this.config.apiKey 取得用户配置，通过 this.signal 取得取消信号，通过 this.tool.fetch 发起请求。不得硬编码真实密钥或把鉴权信息写入日志、错误消息和返回结果。
-- 当前媒体供应商编辑界面只提供 API Key 输入。公开的接口地址等由你按已确认资料写入适配器；如果平台还需要其他用户专属配置，先说明当前界面的限制并确认可行方案，不假设 rules 中添加字段就会在界面出现，也不要求我把额外密钥写进代码。
+- 媒体供应商编辑界面按 rules 渲染、校验并保存全部表单字段，生成时通过 this.config 的同名字段读取。公开的接口地址等按已确认资料写入适配器；用户专属配置由表单填写，必填和格式要求在对应规则的 validate 中声明，不要求用户把额外密钥写进代码。
 - 宿主还提供 this.tool.hash 和 this.tool.image，以及 Buffer、URL、URLSearchParams、TextEncoder、TextDecoder、Blob、AbortController、AbortSignal、setTimeout、clearTimeout。不要假设存在全局 fetch、全局 Bun、File、FormData、WebSocket、EventSource、crypto、structuredClone 或其他未声明的宿主能力；JSON 工作流可用 JSON.parse(JSON.stringify(...)) 复制。模块顶层仅放声明，不发起请求、启动计时器或进行耗时操作。
 - await this.tool.ffmpeg() 返回绑定当前工作区的原生 @renmu/fluent-ffmpeg 工厂，使用 ffmpeg(input).videoFilters(...).on("error", ...).on("end", ...).save(output) 等原生链式调用，ffprobe 使用原生回调。显式文件路径只能在当前工作区内；原始参数、滤镜和清单中的间接 I/O 不由宿主解析，不能用它们访问工作区外文件。输出可能覆盖已有文件，必须使用新的文件名；运行取消由调用方监听 this.signal 并调用 command.kill，准备期间已取消时不能再启动进程。没有工作目录的调试上下文不能使用。仅在确实需要时调用；未安装时抛出 code 为 FFMPEG_REQUIRED 的错误，宿主前端会询问下载。继续向上抛出此错误，不自行安装或自动重试完整生成请求，以免重复计费。不再提供字节转换或 JSON 计划接口。
 - 请求和轮询都必须响应取消；为长任务设置有限超时，并在等待时正确清理计时器与取消监听。检查 HTTP 状态、响应结构、任务失败状态和最终结果，抛出可理解的中文错误。不能只返回任务 ID，异步厂商需要在方法内部等待任务完成。

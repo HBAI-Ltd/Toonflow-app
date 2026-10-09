@@ -34,6 +34,7 @@
           <icon-login class="buttonIcon" />
           登录 TF-Router 自动配置
         </el-button>
+        <el-button class="mobileConnectButton" :type="deviceHubEnabled ? 'success' : undefined" :plain="deviceHubEnabled" :icon="deviceHubEnabled || mobileConnection.mode === 'remote' ? IconDeviceDesktop : IconQrcode" @click="mobileConnectVisible = true">{{ mobileConnectionLabel }}</el-button>
         <div class="secondaryActions">
           <el-button class="secondaryButton" round @click="view = 'custom'">
             <icon-key class="buttonIcon" />
@@ -55,6 +56,7 @@
         <span class="artName">Toonflow</span>
       </div>
     </div>
+    <mobileConnect v-model="mobileConnectVisible" />
   </main>
 </template>
 
@@ -63,7 +65,7 @@ import axios from "axios";
 import { defineAsyncComponent, onMounted, onBeforeUnmount, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { IconArrowLeft } from "@tabler/icons-vue";
+import { IconArrowLeft, IconQrcode, IconDeviceDesktop } from "@tabler/icons-vue";
 import tfRouter from "@toonflow/providers/language/tfRouter";
 import tfRouterSource from "@toonflow/providers/media/tfRouter?raw";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
@@ -74,8 +76,11 @@ import anonymousData from "@/lib/anonymousData";
 import logoSvg from "@toonflow/assets/logo.svg?raw";
 import bg from "./bg.vue";
 import languageSelect from "@/components/languageSelect.vue";
+import { deviceHubEnabled, mobileConnection, mobileConnectionLabel } from "@/lib/mobile";
 
 const languageModel = defineAsyncComponent(() => import("@/components/settings/panels/languageModel/index.vue"));
+const mobileConnect = defineAsyncComponent(() => import("@/components/mobileConnect.vue"));
+const mobileConnectVisible = ref(false);
 const view = ref<"welcome" | "login" | "custom">("welcome");
 const loginUrl = ref("https://api.toonflow.net/login?type=toonflow");
 const loginOrigin = new URL(loginUrl.value).origin;
@@ -165,6 +170,7 @@ async function configureProviders() {
         ...previous,
         id: previous?.id ?? tfRouter.id,
         label: previous?.label ?? tfRouter.label,
+        icon: previous?.icon ?? tfRouter.icon,
         apiUrl: tfRouter.apiUrl,
         protocol: tfRouter.protocol,
         apiKey,
@@ -338,6 +344,8 @@ onBeforeUnmount(() => {
           font-size: 13px;
         }
       }
+
+      .mobileConnectButton { width: 100%; margin: 12px 0 0; min-height: 42px; }
     }
 
     .pageFooter {

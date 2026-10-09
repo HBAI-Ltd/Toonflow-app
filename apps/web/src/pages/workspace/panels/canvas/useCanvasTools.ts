@@ -129,8 +129,10 @@ export function useCanvasTools(options: {
       }
       case "renameCanvas": {
         const { canvasId: targetId = canvasId, name } = canvasSchemas.renameCanvas.parse(request.args);
-        const renamedId = options.menu().getCanvases().find(canvas => canvas.id === targetId)?.name === name ? targetId : name + ".json";
-        await options.menu().renameCanvas(targetId, name, signal);
+        const nextName = name.trim();
+        const renamedId = options.menu().getCanvases().find(canvas => canvas.id === targetId)?.name === nextName
+          ? targetId : `${targetId.slice(0, targetId.lastIndexOf("/") + 1)}${nextName}.json`;
+        await options.menu().renameCanvas(targetId, nextName, signal);
         return targetId === canvasId ? renamedId : canvasId;
       }
       case "addNode": {

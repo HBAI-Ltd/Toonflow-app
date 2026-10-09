@@ -5,29 +5,32 @@
         <el-input v-model="projectNameDraft" class="workspaceNameInput" :style="{ '--workspaceName': JSON.stringify(projectNameDraft || ' ') }" size="small" :title="directory" :disabled="!workspaceStore.project" aria-label="项目名称"
           @keydown.stop @keydown.enter="saveProjectName" @keydown.esc.prevent="projectNameDraft = workspaceName" @blur="saveProjectName" />
         <el-divider direction="vertical" />
-        <el-popover v-model:visible="canvasListVisible" trigger="click" placement="bottom-start" :width="214" :showArrow="false" :disabled="!directory">
+        <el-popover v-model:visible="canvasListVisible" trigger="click" placement="bottom-start" :width="320" :showArrow="false" :disabled="!directory">
           <template #reference>
             <el-button class="canvasTrigger" text :loading="busy" :disabled="busy || !directory" aria-label="切换画布" :aria-expanded="canvasListVisible">
               <span>{{ activeCanvasName }}</span><icon-chevron-down :size="14" />
             </el-button>
           </template>
-          <div class="canvasPicker" @keydown.esc="canvasListVisible = false">
-            <div class="pickerHeader">
-              <span>画布</span>
-              <el-button class="iconButton" text :icon="IconPlus" :disabled="busy || editingId !== null" aria-label="新增画布" @click="handleAddCanvas" />
+          <div ref="canvasPicker" class="canvasPicker" @keydown.esc="canvasListVisible = false">
+            <div class="pickerToolbar">
+              <el-input v-model="searchQuery" :prefixIcon="IconSearch" placeholder="搜索画布" aria-label="搜索画布" clearable @keydown.esc.stop="searchQuery = ''" />
+              <el-button class="iconButton" text :icon="IconFolderPlus" :disabled="pickerBusy || editingId !== null || folderDraft !== null" title="新建文件夹" aria-label="新建画布文件夹" @click="startFolder" />
+              <el-button class="iconButton" text :icon="IconPlus" :disabled="pickerBusy || editingId !== null || folderDraft !== null" title="新增画布" aria-label="新增画布" @click="handleAddCanvas" />
             </div>
-            <el-scrollbar maxHeight="280px">
-              <div v-for="canvas in canvases" :key="canvas.id" class="canvasItem">
-                <el-input v-if="editingId === canvas.id" ref="nameInputs" v-model="canvasName" class="nameEditor" size="small" :disabled="busy" :maxlength="120" :aria-label="newCanvasId === canvas.id ? '新画布名称' : '画布名称'" @keydown.stop @keydown.enter="saveCanvas" @blur="saveCanvas" />
-                <template v-else>
-                  <button class="canvasChoice" type="button" :disabled="busy || editingId !== null" :aria-pressed="activeCanvasId === canvas.id" :title="canvas.name" @click="handleSwitchCanvas(canvas.id)">{{ canvas.name }}</button>
-                  <div class="itemAction">
-                    <icon-check v-if="activeCanvasId === canvas.id" class="selectedIcon" :size="18" aria-hidden="true" />
-                    <el-button class="iconButton renameButton" text :icon="IconEdit" :disabled="busy || editingId !== null" :aria-label="`编辑 ${canvas.name}`" title="编辑" @click="editCanvas(canvas)" />
-                    <el-button class="iconButton deleteButton" text type="danger" :icon="IconTrash" :disabled="busy || editingId !== null" :aria-label="`删除 ${canvas.name}`" title="删除画布" @click="removeCanvas(canvas)" />
+            <el-scrollbar v-loading="loadingTree" maxHeight="min(440px, calc(100dvh - 198px))">
+              <el-tree ref="canvasTree" class="canvasTree" :data="treeEntries" nodeKey="path" :props="{ label: 'name' }" :currentNodeKey="activeCanvasId" :filterNodeMethod="filterEntry" defaultExpandAll highlightCurrent emptyText="" @nodeClick="selectEntry">
+                <template #default="{ data }">
+                  <div class="canvasEntry" :title="data.path" @contextmenu="openItemMenu($event, data)">
+                    <icon-folder-filled v-if="data.type === 'directory'" class="folderIcon" :size="30" />
+                    <icon-artboard v-else class="canvasIcon" :size="26" />
+                    <el-input v-if="data.draft" ref="folderInput" v-model="folderDraft" class="nameEditor" size="small" aria-label="文件夹名称" :disabled="busy" :maxlength="120" @click.stop @keydown.stop @keydown.enter.prevent="saveFolder" @keydown.esc.prevent="cancelFolder" @blur="saveFolder" />
+                    <el-input v-else-if="editingId === data.path" ref="nameInput" v-model="canvasName" class="nameEditor" size="small" :disabled="busy" :maxlength="120" :aria-label="newCanvasId === data.path ? '新画布名称' : '画布名称'" @click.stop @keydown.stop @keydown.enter="saveCanvas" @keydown.esc.prevent="finishEdit" @blur="saveCanvas" />
+                    <span v-else class="entryName">{{ data.name }}</span>
+                    <icon-check v-if="activeCanvasId === data.path" class="selectedIcon" :size="16" aria-hidden="true" />
+                    <el-button v-if="!data.draft && editingId !== data.path" class="moreButton" text :icon="IconDots" :disabled="pickerBusy || editingId !== null || folderDraft !== null" :aria-label="'更多 ' + data.name" title="更多" @click.stop="openItemMenu($event, data)" />
                   </div>
                 </template>
-              </div>
+              </el-tree>
             </el-scrollbar>
             <el-text v-if="renameError" type="danger" role="alert">{{ renameError }}</el-text>
           </div>
@@ -36,6 +39,25 @@
     </el-card>
     <div class="menuExtension"><slot /></div>
   </panel>
+  <el-dropdown ref="itemMenu" trigger="contextmenu" virtualTriggering :virtualRef="menuAnchor" placement="bottom-start" :showArrow="false" :hideOnClick="false" :appendTo="canvasPicker" popperClass="canvasActionMenu" @command="handleItemCommand" @visibleChange="(opened: boolean) => { if (!opened) moveVisible = false; }">
+    <template #dropdown>
+      <el-dropdown-menu v-if="menuEntry">
+        <el-dropdown-item command="move" :disabled="pickerBusy">
+          <el-popover v-model:visible="moveVisible" trigger="hover" placement="right-start" :width="220" :offset="0" :showArrow="false" :showAfter="0" :hideAfter="150" :appendTo="canvasPicker">
+            <template #reference><span class="moveTrigger"><span class="moveLabel">移动到</span><icon-chevron-right :size="14" /></span></template>
+            <div class="moveDestinations" role="menu" aria-label="移动到目录" @click.stop @keydown.stop>
+              <el-button text :icon="IconFolderPlus" :disabled="pickerBusy" role="menuitem" @click="createMoveFolder">新建文件夹</el-button>
+              <el-scrollbar maxHeight="260px">
+                <el-button v-for="folder in moveFolders" :key="folder.path" text :icon="IconFolder" :disabled="pickerBusy || destinationDisabled(folder.path)" role="menuitem" :title="folder.label" @click="moveEntry(folder.path)">{{ folder.label }}</el-button>
+              </el-scrollbar>
+            </div>
+          </el-popover>
+        </el-dropdown-item>
+        <el-dropdown-item command="rename" :disabled="pickerBusy">重命名</el-dropdown-item>
+        <el-dropdown-item class="deleteAction" command="delete" :disabled="pickerBusy || (menuEntry.type === 'directory' && !menuEntry.empty)" :title="menuEntry.type === 'directory' && !menuEntry.empty ? '请先移出或删除文件夹内的内容' : undefined">删除</el-dropdown-item>
+      </el-dropdown-menu>
+    </template>
+  </el-dropdown>
 </template>
 
 <script setup lang="ts">
@@ -43,8 +65,8 @@ import axios from "axios";
 import { translate } from "@toonflow/i18n/vue";
 import { computed, inject, nextTick, ref, shallowRef, watch, type ShallowRef } from "vue";
 import { Panel, useVueFlow, type FlowExportObject } from "@vue-flow/core";
-import { ElMessage, ElMessageBox, type InputInstance } from "element-plus";
-import { IconEdit, IconCheck, IconChevronDown, IconPlus, IconTrash } from "@tabler/icons-vue";
+import { ElMessage, ElMessageBox, type DropdownInstance, type FilterNodeMethodFunction, type InputInstance, type TreeInstance } from "element-plus";
+import { IconArtboard, IconCheck, IconChevronDown, IconChevronRight, IconDots, IconFolder, IconFolderFilled, IconFolderPlus, IconPlus, IconSearch } from "@tabler/icons-vue";
 import { useWorkspaceStore } from "@/stores/workspace";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { getCanvasAssetDirectories, isCanvasFile } from "@/pages/workspace/canvasFile";
@@ -72,7 +94,7 @@ function saveProjectName(event: Event) {
 type Canvas = { id: string; name: string; flow?: Pick<FlowExportObject, "nodes" | "edges" | "viewport"> };
 const canvases = inject<ShallowRef<Canvas[]>>("canvasList", shallowRef<Canvas[]>([]));
 const getRetainedNodes = inject<(id: string) => { id: string; data?: unknown }[]>("canvasAssetNodes", () => []);
-const performFileAction = inject<(directory: string, action: "copy" | "rename" | "delete", path: string, target?: string) => Promise<void>>("performWorkspaceFileAction");
+const performFileAction = inject<(directory: string, action: "copy" | "rename" | "move" | "delete", path: string, target?: string, entryType?: "canvas" | "directory") => Promise<void>>("performWorkspaceFileAction");
 const boundCanvas = shallowRef<Canvas>();
 const activeCanvasId = defineModel<string>("canvasId", { default: "" });
 watch(canvases, () => {
@@ -84,16 +106,83 @@ const busy = ref(false);
 const loadError = ref("");
 const editingId = ref<string | null>(null);
 const newCanvasId = ref<string | null>(null);
-const nameInputs = ref<InputInstance[]>([]);
+const nameInput = ref<InputInstance>();
 const canvasName = ref("");
 const renameError = ref("");
 const { toObject, setNodes, setEdges, setViewport } = useVueFlow();
+type CanvasEntry = { path: string; name: string; type: "file" | "directory"; children?: CanvasEntry[]; empty?: boolean; draft?: boolean };
+const folders = shallowRef<CanvasEntry[]>([]);
+const canvasTree = ref<TreeInstance>();
+const canvasPicker = ref<HTMLElement>();
+const searchQuery = ref("");
+const loadingTree = ref(false);
+const pickerBusy = computed(() => busy.value || loadingTree.value);
+const folderDraft = ref<string | null>(null);
+const folderInput = ref<InputInstance>();
+const draftFolderPath = crypto.randomUUID();
+const itemMenu = ref<DropdownInstance>();
+const menuAnchor = shallowRef({ getBoundingClientRect: () => new DOMRect() });
+const menuEntry = shallowRef<CanvasEntry>();
+const moveVisible = ref(false);
+let treeRequest = 0;
+const treeEntries = computed(() => {
+  const entries: CanvasEntry[] = [];
+  const visibleCanvases = canvases.value.filter(canvas => !canvas.id.split("/").slice(0, -1).some(name => ["assets", ".agent"].includes(name.toLowerCase())));
+  const directories = new Map<string, CanvasEntry & { children: CanvasEntry[] }>();
+  for (const folder of folders.value) directories.set(folder.path, { ...folder, children: [] });
+  for (const canvas of visibleCanvases) {
+    const parts = canvas.id.split("/").slice(0, -1);
+    parts.forEach((name, index) => {
+      const path = parts.slice(0, index + 1).join("/");
+      if (!directories.has(path)) directories.set(path, { path, name, type: "directory", children: [], empty: false });
+    });
+  }
+  for (const entry of [...directories.values(), ...visibleCanvases.map(canvas => ({ path: canvas.id, name: canvas.name, type: "file" as const }))]
+    .sort((left, right) => Number(left.type !== "directory") - Number(right.type !== "directory") || left.name.localeCompare(right.name, "zh-CN", { numeric: true }))) {
+    (directories.get(parentPath(entry.path))?.children ?? entries).push(entry);
+  }
+  if (folderDraft.value !== null) entries.unshift({ path: draftFolderPath, name: folderDraft.value, type: "directory", draft: true });
+  return entries;
+});
+const moveFolders = computed(() => [{ path: "", label: translate("画布根目录") }, ...folders.value.map(folder => ({ path: folder.path, label: folder.path }))]);
+
+function parentPath(path: string) { return path.slice(0, path.lastIndexOf("/") + 1).replace(/\/$/, ""); }
+const filterEntry: FilterNodeMethodFunction = (query: string, entry) => !!entry.draft || String(entry.path).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
+watch([searchQuery, treeEntries], async () => { await nextTick(); canvasTree.value?.filter(searchQuery.value); });
+watch(canvasListVisible, opened => {
+  if (opened) refreshTree().catch(error => { renameError.value = errorMessage(error, "读取画布失败"); });
+  else { treeRequest++; loadingTree.value = false; itemMenu.value?.handleClose(); cancelFolder(); }
+});
+
+async function refreshTree() {
+  const directory = props.directory;
+  if (!directory) return;
+  const request = ++treeRequest;
+  loadingTree.value = true;
+  try {
+    const loaded = await listCanvasEntries(directory);
+    if (request !== treeRequest || directory !== props.directory) return;
+    // 共享画布列表由文件操作更新；目录扫描不能覆盖列表并卸载正在移动或生成的画布。
+    folders.value = loaded.folders;
+  } catch (error) {
+    if (request !== treeRequest || directory !== props.directory) return;
+    throw error;
+  } finally { if (request === treeRequest) loadingTree.value = false; }
+}
+
+function selectEntry(entry: CanvasEntry) {
+  if (entry.type === "file" && !pickerBusy.value && editingId.value === null && folderDraft.value === null) void handleSwitchCanvas(entry.path);
+}
 
 watch(() => props.directory, async (directory, _previous, onCleanup) => {
   let cancelled = false;
   onCleanup(() => { cancelled = true; });
   busy.value = true;
   loadError.value = "";
+  treeRequest++;
+  folders.value = [];
+  folderDraft.value = null;
+  searchQuery.value = "";
   boundCanvas.value = undefined;
   activeCanvasId.value = "";
   try {
@@ -107,7 +196,8 @@ watch(() => props.directory, async (directory, _previous, onCleanup) => {
       await applyCanvas(props.initialCanvasId, directory);
       return;
     }
-    let loaded = await listCanvases(directory);
+    let entries = await listCanvases(directory);
+    let loaded = entries.canvases;
     if (cancelled) return;
     if (!loaded.length) {
       try {
@@ -115,12 +205,14 @@ watch(() => props.directory, async (directory, _previous, onCleanup) => {
       } catch (err) {
         if (!axios.isAxiosError<{ data?: { code?: string } }>(err) || err.response?.status !== 409 || err.response.data.data?.code !== "EEXIST") throw err;
         // 同时打开工作区时，读取另一请求刚创建的默认画布，不覆盖同名文件。
-        const refreshed = await listCanvases(directory);
+        entries = await listCanvases(directory);
+        const refreshed = entries.canvases;
         // 画布1.json 若被其他 JSON 占用，则使用下一个空闲名称，保留原文件。
         loaded = refreshed.length ? refreshed : [await createCanvasFile(directory)];
       }
     }
     if (cancelled) return;
+    folders.value = entries.folders;
     canvases.value = loaded;
     if (canvases.value[0]) await applyCanvas(canvases.value[0].id, directory);
   } catch (err) {
@@ -249,7 +341,7 @@ async function removeCanvas(canvas: Canvas) {
     if (performFileAction) await performFileAction(directory, "delete", id);
     await props.flushSave(async () => {
       checkCanvasDirectory(directory);
-      const retainedNodes = (await Promise.all((await listCanvases(directory, true)).map(canvas => readNodes(canvas.id)))).flat();
+      const retainedNodes = (await Promise.all((await listCanvases(directory)).canvases.map(canvas => readNodes(canvas.id)))).flat();
       const assetDirectories = getCanvasAssetDirectories(removedNodes, retainedNodes);
       checkCanvasDirectory(directory);
       const results = await Promise.allSettled(assetDirectories.map(path => files.remove(path, true).catch(error => {
@@ -283,21 +375,33 @@ async function createCanvasFile(directory: string, name?: string, signal?: Abort
   }
 }
 
-async function listCanvases(directory: string, recursive = false): Promise<Canvas[]> {
+async function listCanvasEntries(directory: string) {
   const files = useWorkspaceFiles(directory);
   const { entries } = await files.list();
-  if (recursive) {
-    // 文件接口只返回普通文件和目录，不跟随符号链接；素材目录不参与画布扫描。
-    for (let index = 0; index < entries.length; index++) {
-      const entry = entries[index]!;
-      if (entry.type === "directory" && entry.name.toLowerCase() !== "assets") entries.push(...(await files.list(entry.path)).entries);
-    }
+  const folders: CanvasEntry[] = [];
+  // 文件接口只返回普通文件和目录，不跟随符号链接；素材和 Agent 目录不参与画布扫描。
+  for (let index = 0; index < entries.length; index++) {
+    checkCanvasDirectory(directory);
+    const entry = entries[index]!;
+    if (entry.type !== "directory" || ["assets", ".agent"].includes(entry.name.toLowerCase())) continue;
+    const children = await files.list(entry.path);
+    folders.push({ ...entry, empty: children.empty });
+    entries.push(...children.entries);
   }
+  return { entries, folders: folders.sort((left, right) => left.path.localeCompare(right.path, "zh-CN", { numeric: true })) };
+}
+
+async function listCanvases(directory: string): Promise<{ canvases: Canvas[]; folders: CanvasEntry[] }> {
+  const files = useWorkspaceFiles(directory);
+  const { entries, folders } = await listCanvasEntries(directory);
   const loaded = await Promise.all(entries.filter(entry => entry.type === "file" && /\.json$/i.test(entry.name)).map(async entry => {
     if (!(await isCanvasFile(files, entry.path))) return null;
     return { id: entry.path, name: entry.name.slice(0, -5) };
   }));
-  return loaded.filter(canvas => canvas !== null).sort((left, right) => left.name.localeCompare(right.name, "zh-CN", { numeric: true }));
+  return {
+    canvases: loaded.filter(canvas => canvas !== null).sort((left, right) => left.name.localeCompare(right.name, "zh-CN", { numeric: true })),
+    folders,
+  };
 }
 
 async function addCanvas(name?: string, signal?: AbortSignal): Promise<string> {
@@ -317,13 +421,14 @@ async function addCanvas(name?: string, signal?: AbortSignal): Promise<string> {
 }
 
 async function handleAddCanvas() {
-  if (busy.value || editingId.value !== null || !props.directory) return;
+  if (pickerBusy.value || editingId.value !== null || folderDraft.value !== null || !props.directory) return;
   const directory = props.directory;
   busy.value = true;
   try {
     const canvas = await createCanvasFile(directory);
     checkCanvasDirectory(directory);
     canvases.value = [...canvases.value, canvas];
+    searchQuery.value = "";
     newCanvasId.value = canvas.id;
     busy.value = false;
     await editCanvas(canvas);
@@ -340,8 +445,138 @@ async function editCanvas(canvas: { id: string; name: string }) {
   canvasName.value = canvas.name;
   renameError.value = "";
   await nextTick();
-  nameInputs.value[0]?.focus();
-  nameInputs.value[0]?.select();
+  nameInput.value?.focus();
+  nameInput.value?.select();
+}
+
+async function startFolder() {
+  if (pickerBusy.value || editingId.value !== null || folderDraft.value !== null) return;
+  searchQuery.value = "";
+  renameError.value = "";
+  folderDraft.value = "新建文件夹";
+  await nextTick();
+  folderInput.value?.focus();
+  folderInput.value?.select();
+}
+
+function cancelFolder() { if (!busy.value) folderDraft.value = null; }
+
+function normalizeFolderName(name: string) {
+  name = normalizeCanvasName(name, "文件夹");
+  if (name.toLowerCase() === "assets") throw new Error("assets 是节点素材目录，请使用其他文件夹名称");
+  if (name.toLowerCase() === ".agent") throw new Error(".agent 是 Agent 数据目录，请使用其他文件夹名称");
+  return name;
+}
+
+async function saveFolder(event?: Event) {
+  if (event instanceof KeyboardEvent && event.isComposing) return;
+  if (folderDraft.value === null || busy.value || !props.directory) return;
+  if (!folderDraft.value.trim()) { cancelFolder(); return; }
+  const directory = props.directory;
+  busy.value = true;
+  renameError.value = "";
+  try {
+    const name = normalizeFolderName(folderDraft.value);
+    await useWorkspaceFiles(directory).mkdir(name);
+    checkCanvasDirectory(directory);
+    folderDraft.value = null;
+    await refreshTree();
+  } catch (error) {
+    if (directory === props.directory) renameError.value = errorMessage(error, "创建文件夹失败");
+  } finally { if (directory === props.directory) busy.value = false; }
+}
+
+function openItemMenu(event: MouseEvent, entry: CanvasEntry) {
+  event.preventDefault();
+  if (pickerBusy.value || editingId.value !== null || folderDraft.value !== null || entry.draft) return;
+  itemMenu.value?.handleClose();
+  menuEntry.value = entry;
+  moveVisible.value = false;
+  const target = event.currentTarget as HTMLElement;
+  const rect = event.type === "contextmenu" ? new DOMRect(event.clientX, event.clientY, 0, 0) : target.getBoundingClientRect();
+  menuAnchor.value = { getBoundingClientRect: () => rect };
+  void nextTick(() => itemMenu.value?.handleOpen());
+}
+
+function destinationDisabled(path: string) {
+  const entry = menuEntry.value;
+  return !entry || path === parentPath(entry.path) || (entry.type === "directory" && (path === entry.path || path.startsWith(`${entry.path}/`)));
+}
+
+async function relocateEntry(entry: CanvasEntry, target: string, directory: string) {
+  checkCanvasDirectory(directory);
+  if (!performFileAction) throw new Error("工作区文件管理尚未就绪");
+  await performFileAction(directory, "move", entry.path, target, entry.type === "directory" ? "directory" : "canvas");
+  checkCanvasDirectory(directory);
+  await refreshTree();
+}
+
+async function moveEntry(path: string, createFolder = false) {
+  const entry = menuEntry.value;
+  const directory = props.directory;
+  if (!entry || !directory || pickerBusy.value || destinationDisabled(path)) return;
+  itemMenu.value?.handleClose();
+  busy.value = true;
+  renameError.value = "";
+  try {
+    if (createFolder) {
+      await useWorkspaceFiles(directory).mkdir(path);
+      checkCanvasDirectory(directory);
+    }
+    await relocateEntry(entry, `${path ? `${path}/` : ""}${entry.path.split("/").at(-1)}`, directory);
+  } catch (error) {
+    if (directory === props.directory) renameError.value = errorMessage(error, "移动失败");
+  } finally { if (directory === props.directory) busy.value = false; }
+}
+
+async function createMoveFolder() {
+  const directory = props.directory;
+  itemMenu.value?.handleClose();
+  try {
+    const { value } = await ElMessageBox.prompt("新文件夹将创建在画布根目录", "新建文件夹", {
+      inputValue: "新建文件夹", confirmButtonText: "创建并移动", cancelButtonText: "取消",
+      inputValidator: name => { try { normalizeFolderName(name); return true; } catch (error) { return (error as Error).message; } },
+    });
+    if (directory !== props.directory) return;
+    await moveEntry(normalizeFolderName(value), true);
+  } catch (error) { if (error !== "cancel" && error !== "close") ElMessage.error(errorMessage(error, "创建文件夹失败")); }
+}
+
+async function handleItemCommand(command: string) {
+  const entry = menuEntry.value;
+  const directory = props.directory;
+  if (!entry || !directory || pickerBusy.value) return;
+  if (command === "move") { moveVisible.value = true; return; }
+  itemMenu.value?.handleClose();
+  if (entry.type === "file") {
+    const canvas = canvases.value.find(canvas => canvas.id === entry.path);
+    if (canvas) {
+      if (command === "rename") await editCanvas(canvas);
+      else if (command === "delete") await removeCanvas(canvas);
+    }
+    return;
+  }
+  busy.value = true;
+  renameError.value = "";
+  try {
+    if (command === "rename") {
+      const { value } = await ElMessageBox.prompt("文件夹名称", "重命名", {
+        inputValue: entry.name, confirmButtonText: "保存", cancelButtonText: "取消",
+        inputValidator: name => { try { normalizeFolderName(name); return true; } catch (error) { return (error as Error).message; } },
+      });
+      const name = normalizeFolderName(value);
+      if (name !== entry.name) await relocateEntry(entry, `${parentPath(entry.path) ? `${parentPath(entry.path)}/` : ""}${name}`, directory);
+    } else if (command === "delete") {
+      await ElMessageBox.confirm(`确定删除文件夹“${entry.name}”？`, "删除文件夹", { type: "warning", confirmButtonText: "删除", cancelButtonText: "取消" });
+      checkCanvasDirectory(directory);
+      // 只删除真实空目录；隐藏文件和普通文档也应阻止删除，不能依据过滤后的画布树递归删除。
+      await useWorkspaceFiles(directory).remove(entry.path);
+      checkCanvasDirectory(directory);
+      await refreshTree();
+    }
+  } catch (error) {
+    if (directory === props.directory && error !== "cancel" && error !== "close") renameError.value = errorMessage(error, "文件夹操作失败");
+  } finally { if (directory === props.directory) busy.value = false; }
 }
 
 async function finishEdit() {
@@ -353,11 +588,11 @@ async function finishEdit() {
   if (createdId) await handleSwitchCanvas(createdId);
 }
 
-function normalizeCanvasName(name: string) {
+function normalizeCanvasName(name: string, label = "画布") {
   name = name.trim();
   if (!name || name.length > 120 || /[<>:"/\\|?*\x00-\x1f]/.test(name) || /[. ]$/.test(name)
     || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name)) {
-    throw new Error("画布名称不是有效文件名");
+    throw new Error(`${label}名称不是有效文件名`);
   }
   return name;
 }
@@ -451,70 +686,65 @@ defineExpose({ getCanvases, addCanvas, switchCanvas, renameCanvas, syncCanvasPat
 .canvasPicker {
   .iconButton { width: 28px; height: 28px; padding: 0; margin: 0; }
 
-  .pickerHeader {
+  .pickerToolbar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 4px 8px 8px;
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
+    gap: 4px;
+    margin-bottom: 8px;
+    .el-input { flex: 1; min-width: 0; }
+    .iconButton { flex-shrink: 0; }
   }
 
-  .canvasItem {
-    display: flex;
-    align-items: center;
-    border-radius: var(--el-border-radius-base);
+  .canvasTree {
+    background: transparent;
+    :deep(.el-tree-node__content) { height: 44px; border-radius: var(--el-border-radius-base); }
+    :deep(.el-tree-node__expand-icon) { padding: 6px; }
 
-    .nameEditor {
-      width: 100%;
-      padding: 2px 0;
-    }
-
-    &:hover, &:focus-within {
-      background: var(--el-fill-color);
-      .itemAction {
-        .renameButton, .deleteButton { opacity: 1; }
-        .selectedIcon { visibility: hidden; }
-      }
-    }
-
-    .canvasChoice {
+    .canvasEntry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       flex: 1;
       min-width: 0;
-      padding: 6px 8px;
-      border: 0;
-      background: transparent;
-      color: var(--el-text-color-primary);
-      font: inherit;
+      height: 100%;
+      padding-right: 4px;
+
+      .folderIcon { flex-shrink: 0; color: var(--el-text-color-secondary); }
+      .canvasIcon { flex-shrink: 0; width: 30px; color: var(--el-color-primary); }
+      .entryName { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+      .nameEditor { flex: 1; min-width: 0; }
+      .selectedIcon { flex-shrink: 0; color: var(--el-color-primary); }
+      .moreButton { width: 24px; height: 24px; padding: 0; margin: 0; flex-shrink: 0; opacity: 0; }
+
+      &:hover, &:focus-within { .moreButton { opacity: 1; } }
+      @media (hover: none) { .moreButton { opacity: 1; } }
+    }
+  }
+}
+
+.moveTrigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  .moveLabel { flex: 1; min-width: 132px; }
+}
+
+:global(.canvasActionMenu .deleteAction) { color: var(--el-color-danger); }
+
+.moveDestinations {
+  .el-button {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    margin: 0;
+    padding: 8px;
+    font-weight: normal;
+    :deep(> span) {
+      display: block;
       text-align: left;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      cursor: pointer;
-
-      &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: -2px; border-radius: inherit; }
-    }
-
-    .itemAction {
-      position: relative;
-      display: flex;
-      flex-shrink: 0;
-      width: 56px;
-      height: 28px;
-      margin-right: 2px;
-
-      .selectedIcon { position: absolute; top: 5px; left: 5px; pointer-events: none; }
-      .renameButton, .deleteButton { opacity: 0; }
-    }
-  }
-
-  @media (hover: none) {
-    .canvasItem .itemAction {
-      display: flex;
-      width: auto;
-      align-items: center;
-      .selectedIcon { position: static; visibility: visible; }
-      .renameButton, .deleteButton { opacity: 1; }
     }
   }
 }

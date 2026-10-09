@@ -146,7 +146,7 @@ Toonflow کے اوپن سورس منصوبے کی معاونت کرنے والے
       <sub>MiniMax H3 سے کم لاگت میں ویڈیو بنائیں: 768P پر صرف ¥0.09 فی سیکنڈ اور 2K پر ¥0.15 فی سیکنڈ، چینی یوآن (CNY) میں۔ اصل 2K، ہم آہنگ آڈیو اور ویڈیو، OpenAI کے ساتھ ہم آہنگ API، ‏ComfyUI اور لامحدود کینوس کی سہولت، اپنا GPU چلانے کی ضرورت کے بغیر۔ اضافی کریڈٹ اور خصوصی پیشکشوں کے لیے <a href="https://metaso.cn/minimax-h3/?s=toon">اس مخصوص لنک سے رجسٹر ہوں</a>۔ کاروباری رابطے کے لیے WeChat پر metasota12 سے بات کریں۔</sub>
     </td>
     <td width="50%" valign="top">
-      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.svg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
+      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
       <br />
       <sub>اس منصوبے کی اسپانسرشپ پر APIMart کا شکریہ! APIMart، AI سے تصاویر اور ویڈیوز بنانے کے لیے کم قیمت API پلیٹ فارم ہے۔ GPT-Image-2 کی قیمت $0.006 فی تصویر سے شروع ہوتی ہے، یعنی $1 میں 160 سے زیادہ تصاویر۔ تصاویر اور ویڈیوز کے لیے ایک ہی غیر ہم وقت API ہے: کام بھیجیں، اس کی ID حاصل کریں اور نتیجہ کال بیک کے ذریعے وصول کریں۔ ٹائم آؤٹ کے بغیر 10,000 تصاویر کے بیچ پراسیس کریں اور کوڈ بدلے بغیر ماڈل تبدیل کریں۔ صرف استعمال کے مطابق ادائیگی، کوئی ماہانہ فیس نہیں۔ شروع کرنے کے لیے <a href="https://go.apimart.ai/gh-toonflow-app">یہاں رجسٹر ہوں</a>۔</sub>
     </td>

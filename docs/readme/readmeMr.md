@@ -146,7 +146,7 @@ Toonflow ओपन-सोर्स प्रोजेक्टला समर�
       <sub>किफायतशीर MiniMax H3 व्हिडिओ निर्मिती: 768P साठी फक्त ¥0.09 प्रति सेकंद आणि 2K साठी ¥0.15 प्रति सेकंद (CNY). स्वतःची GPU यंत्रणा उभारण्याची गरज नाही; नेटिव्ह 2K, समकालिक ध्वनी व व्हिडिओ, OpenAI-सुसंगत API, ComfyUI आणि अनंत कॅनव्हास यांना समर्थन आहे. बोनस क्रेडिट आणि खास सवलती मिळवण्यासाठी <a href="https://metaso.cn/minimax-h3/?s=toon">या विशेष दुव्यावरून नोंदणी करा</a>. व्यावसायिक चौकशीसाठी WeChat वर metasota12 यांच्याशी संपर्क साधा.</sub>
     </td>
     <td width="50%" valign="top">
-<a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.svg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
+<a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
       <br />
       <sub>या प्रकल्पाला प्रायोजकत्व दिल्याबद्दल APIMart चे आभार! APIMart हे AI प्रतिमा व व्हिडिओ निर्मितीसाठी परवडणारे API व्यासपीठ आहे. GPT-Image-2 मध्ये प्रतिमेची किंमत $0.006 पासून सुरू होते; $1 मध्ये 160+ प्रतिमा मिळतात. प्रतिमा आणि व्हिडिओंसाठी एकच असिंक्रोनस API वापरला जातो: काम पाठवा, त्याचा ID मिळवा आणि callback द्वारे परिणाम घ्या. टाइमआउट न होता 10,000 प्रतिमांच्या तुकड्यांवर प्रक्रिया करा आणि कोड न बदलता मॉडेल बदला. मासिक शुल्क नाही; जितका वापर तितकेच पैसे. सुरुवात करण्यासाठी <a href="https://go.apimart.ai/gh-toonflow-app">येथे नोंदणी करा</a>.</sub>
     </td>

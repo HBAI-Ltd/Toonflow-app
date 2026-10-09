@@ -4,9 +4,13 @@
   "type": "module",
   "exports": {
     "./app": "./src/app.ts",
+    "./remoteConnection": "./src/remoteConnection.ts",
     "./desktop": "./src/types/desktop.ts",
     "./mcp": "./src/utils/mcp/runtime.ts",
+    "./mobileLink": "./src/utils/mobileLink/index.ts",
+    "./browser": "./src/utils/browser/index.ts",
     "./agent/types": "./src/agent/runtime/types.ts",
+    "./singleAgent/types": "./src/utils/singleAgent/types.ts",
     "./agent/mentionSources": "./src/agent/mentionSources.ts",
     "./i18n": "./src/lib/i18n.ts"
   },
@@ -27,7 +31,9 @@
     "@toonflow/mcp": "workspace:*",
     "@toonflow/providers": "workspace:*",
     "@toonflow/teams-scaffold": "workspace:*",
+    "@toonflow/tool-asset-operator": "workspace:*",
     "@toonflow/tool-canvas": "workspace:*",
+    "@toonflow/tool-browser": "workspace:*",
     "@toonflow/tool-media-generation": "workspace:*",
     "@toonflow/tools-scaffold": "workspace:*",
     "conf": "^15.1.0",

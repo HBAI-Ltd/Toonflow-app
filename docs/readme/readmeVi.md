@@ -146,7 +146,7 @@ Xin cảm ơn các đối tác sau đã hỗ trợ dự án mã nguồn mở Too
       <sub>Cung cấp dịch vụ tạo video MiniMax H3 với chi phí hợp lý: 768P chỉ 0.09 nhân dân tệ/giây, 2K chỉ 0.15 nhân dân tệ/giây; hỗ trợ 2K gốc, đồng bộ âm thanh và hình ảnh, API tương thích giao thức OpenAI, đồng thời hỗ trợ ComfyUI và canvas vô hạn mà không cần tự triển khai GPU. <a href="https://metaso.cn/minimax-h3/?s=toon">Đăng ký qua liên kết riêng</a> để nhận tín dụng tặng kèm và ưu đãi độc quyền. Liên hệ hợp tác kinh doanh qua WeChat: metasota12.</sub>
     </td>
     <td width="50%" valign="top">
-      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.svg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
+      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
       <br />
       <sub>Cảm ơn APIMart đã tài trợ cho dự án! Nền tảng API giá thấp chuyên tạo ảnh và video bằng AI, với GPT-Image-2 chỉ từ $0.006/ảnh, 1 đô la có thể tạo hơn 160 ảnh. Ảnh và video dùng chung một API bất đồng bộ: gửi tác vụ để nhận ID, nhận kết quả qua callback; xử lý 10.000 ảnh theo lô mà không hết thời gian chờ, đổi mô hình không cần sửa mã, thanh toán theo mức sử dụng và không có phí tháng. Đăng ký qua <a href="https://go.apimart.ai/gh-toonflow-app">liên kết này</a> để bắt đầu sử dụng.</sub>
     </td>

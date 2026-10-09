@@ -2,6 +2,7 @@ import axios from "axios";
 import { computed, ref, shallowRef, watch } from "vue";
 import type { updateSnapshot } from "@toonflow/server/desktop";
 import { settings } from "@/stores/settings";
+import { isRemoteConnection } from "@/lib/mobile";
 
 export const desktopUpdateCustomUrl = computed(() => typeof settings.value.desktopUpdateCustomUrl === "string" ? settings.value.desktopUpdateCustomUrl : "");
 export const desktopUpdateSource = computed(() => settings.value.desktopUpdateSource === "custom" && desktopUpdateCustomUrl.value ? "custom"
@@ -91,6 +92,7 @@ export function checkDesktopUpdate(readFirst = false) {
 }
 
 export function runDesktopUpdate(nextAction: NonNullable<typeof desktopUpdateAction.value>, readFirst = false) {
+  if (isRemoteConnection) return Promise.reject(new Error("连接其他设备时无法更新本机客户端，请断开并独立运行后重试。"));
   if (pendingUpdate) return pendingUpdate;
   // 上轮观察超时后只能重新读取，不能因客户端没有收到结果而再次提交安装。
   if (desktopUpdateSnapshot.value?.updating) nextAction = "read";

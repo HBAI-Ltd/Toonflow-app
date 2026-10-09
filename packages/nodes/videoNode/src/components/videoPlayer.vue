@@ -5,6 +5,7 @@
       class="videoPreview"
       :class="{ nodrag: fullscreen }"
       :src="src"
+      :poster="poster"
       :controls="fullscreen"
       playsinline
       preload="auto"
@@ -12,7 +13,7 @@
       :aria-label="label"
       @fullscreenchange="fullscreen = !!video?.matches(':fullscreen')"
       @loadedmetadata="readMetadata"
-      @loadeddata="ready = true"
+      @loadeddata="readPreview"
       @timeupdate="currentTime = video?.currentTime ?? 0"
       @play="playing = true"
       @pause="playing = false"
@@ -61,6 +62,7 @@ const emit = defineEmits<{ loadedmetadata: [event: Event] }>();
 const video = ref<HTMLVideoElement>();
 const fullscreen = ref(false);
 const ready = ref(false);
+const poster = ref("");
 const playing = ref(false);
 const muted = ref(false);
 const volume = ref(100);
@@ -79,6 +81,7 @@ watch(() => getCanvas?.()?.id, () => captureController?.abort(), { flush: "sync"
 watch(() => src, () => {
   captureController?.abort();
   ready.value = false;
+  poster.value = "";
   playing.value = false;
   currentTime.value = 0;
   duration.value = 0;
@@ -107,6 +110,26 @@ function readMetadata(event: Event) {
   const value = video.value?.duration ?? 0;
   duration.value = Number.isFinite(value) ? value : 0;
   emit("loadedmetadata", event);
+}
+
+function readPreview(event: Event) {
+  const source = event.currentTarget as HTMLVideoElement;
+  if (source.currentSrc !== src) return;
+  ready.value = true;
+  if (poster.value || !source.videoWidth || !source.videoHeight) return;
+  try {
+    const canvas = document.createElement("canvas");
+    // ACT: 复用已解码帧，封面最长边限制为 640px；更高清画面由视频播放提供。
+    const scale = Math.min(1, 640 / Math.max(source.videoWidth, source.videoHeight));
+    canvas.width = Math.max(1, Math.round(source.videoWidth * scale));
+    canvas.height = Math.max(1, Math.round(source.videoHeight * scale));
+    const context = canvas.getContext("2d");
+    if (!context) return;
+    context.drawImage(source, 0, 0, canvas.width, canvas.height);
+    poster.value = canvas.toDataURL("image/jpeg", 0.8);
+  } catch (error) {
+    console.warn("视频封面生成失败", error);
+  }
 }
 
 function mediaError() {

@@ -53,6 +53,7 @@ import tdesignAr from "tdesign-vue-next/es/locale/ar_KW";
 import { locale } from "@toonflow/i18n/vue";
 import type { updateSnapshot } from "@toonflow/server/desktop";
 import { chatLocale } from "@/lib/i18n";
+import { isMobile } from "@/lib/mobile";
 import { saveSettings, settings, uiSettings } from "@/stores/settings";
 import { desktopUpdateSnapshot, stopDesktopUpdateObservation } from "@/stores/desktopUpdate";
 import { useMcpControl } from "@/lib/mcpControl";
@@ -138,6 +139,12 @@ onBeforeUnmount(() => {
 
 const { currentZIndex } = useZIndex();
 watchEffect(() => document.documentElement.style.setProperty("--markdown-tooltip-z-index", String(currentZIndex.value + 1)));
+
+watchEffect(() => {
+  if (!isMobile) return;
+  // ACT: 使用 WebView 视口缩放，保持画布触摸坐标和弹出层在同一坐标系。
+  document.querySelector('meta[name="viewport"]')?.setAttribute("content", `width=device-width, initial-scale=${uiSettings.value.mobileScale / 100}`);
+});
 
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 const systemDark = ref(systemTheme.matches);

@@ -1,5 +1,5 @@
-name: Release desktop
-run-name: Release desktop ${{ github.event_name == 'push' && github.ref_name || (startsWith(inputs.version, 'v') && inputs.version || format('v{0}', inputs.version)) }}
+name: Release Toonflow
+run-name: Release Toonflow ${{ github.event_name == 'push' && github.ref_name || (startsWith(inputs.version, 'v') && inputs.version || format('v{0}', inputs.version)) }}
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: string
         required: true
       ref:
-        description: 留空使用当前选择的版本；ARM 签名要求与所选工作流版本为同一提交
+        description: 留空使用当前选择的版本；签名构建要求与所选工作流版本为同一提交
         type: string
   push:
     tags:
@@ -19,24 +19,29 @@ permissions:
   contents: read
 
 concurrency:
-  group: desktop-release
+  group: toonflow-release
   cancel-in-progress: false
 
 jobs:
   build:
-    name: 构建所有桌面版本
+    name: 构建所有平台版本
     uses: ./.github/workflows/debug.yml
     with:
       target: all
       ref: ${{ inputs.ref || github.sha }}
       version: ${{ inputs.version || github.ref_name }}
       generatePatch: true
+      androidRelease: true
     secrets:
       MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
       MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
       MACOS_NOTARIZATION_KEY_ID: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
       MACOS_NOTARIZATION_ISSUER_ID: ${{ secrets.MACOS_NOTARIZATION_ISSUER_ID }}
       MACOS_NOTARIZATION_KEY_BASE64: ${{ secrets.MACOS_NOTARIZATION_KEY_BASE64 }}
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
   release:
     name: 发布 GitHub Release
@@ -93,18 +98,20 @@ jobs:
           const windows = findInstaller("Windows", name => name === `toonflow-${version}-Setup.exe`);
           const macArm = findInstaller("macOS ARM64", name => name.endsWith(".dmg") && name.includes("arm64"));
           const macIntel = findInstaller("macOS x64", name => name.endsWith(".dmg") && name.includes("x64"));
+          const android = findInstaller("Android ARM64", name => name === `toonflow-${version}-android-arm64.apk`);
           const baseUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/releases/download/v${version}`;
           const download = name => `${baseUrl}/${encodeURIComponent(name)}`;
           writeFileSync("releaseBody.md", [
             "## 📦 下载指南",
             "",
-            "选择你的电脑对应的安装包，点击即可下载：",
+            "选择你的设备对应的安装包，点击即可下载：",
             "",
-            "| 你的电脑 | 下载 |",
+            "| 你的设备 | 下载 |",
             "| --- | --- |",
             `| 💻 Windows（64 位） | [⬇️ 下载 Windows 安装包](${download(windows)}) |`,
             `| 🍎 Mac（M 系列芯片） | [⬇️ 下载 M 系列 Mac 安装包](${download(macArm)}) |`,
             `| 🍎 Mac（Intel 芯片） | [⬇️ 下载 Intel Mac 安装包](${download(macIntel)}) |`,
+            `| 📱 Android（ARM64，Android 8 及以上） | [⬇️ 下载 Android APK](${download(android)}) |`,
             "",
             "> 💡 手动安装请选择上表中的链接。下方其他文件供软件自动更新使用。",
             "",
@@ -112,6 +119,7 @@ jobs:
             "",
             "- 💻 **Windows**：双击下载的安装包，按提示完成安装。",
             "- 🍎 **Mac**：打开下载的安装包，将 `toonflow.app` 拖入“应用程序”，再从“应用程序”打开。",
+            "- 📱 **Android**：在手机上打开 APK，按系统提示允许此来源安装应用。后续版本可直接覆盖安装。",
             "",
             "M 系列 Mac 安装包已完成 Developer ID 签名与 Apple 公证。首次打开时，macOS 仍可能提示确认打开从互联网下载的应用。",
             "",
@@ -130,3 +138,115 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: artifacts/*
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - name: 上传到更新托管网站
+        timeout-minutes: 60
+        env:
+          releaseVersion: ${{ needs.build.outputs.version }}
+          uploadKey: ${{ secrets.TFROUTER_UPLOAD_KEY }}
+          uploadPutUrl: ${{ secrets.TFROUTER_UPLOAD_PUT_URL }}
+          uploadGetPutUrl: ${{ secrets.TFROUTER_UPLOAD_GET_PUT_URL }}
+        run: |
+          bun -e '
+          import { readdirSync } from "node:fs";
+          import { extname, join } from "node:path";
+
+          const version = process.env.releaseVersion ?? "";
+          const authorizeCode = process.env.uploadKey ?? "";
+          const uploadPutUrl = process.env.uploadPutUrl ?? "";
+          const uploadGetPutUrl = process.env.uploadGetPutUrl ?? "";
+          for (const [name, value] of Object.entries({ TFROUTER_UPLOAD_KEY: authorizeCode, TFROUTER_UPLOAD_PUT_URL: uploadPutUrl, TFROUTER_UPLOAD_GET_PUT_URL: uploadGetPutUrl })) {
+            if (!value.trim()) throw new Error(`请配置 ${name} Secret`);
+          }
+          if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("发布版本号必须为 X.Y.Z");
+
+          function parseUrl(value: string, label: string) {
+            let url: URL;
+            try { url = new URL(value); } catch { throw new Error(`${label} 不是有效 URL`); }
+            if (url.protocol !== "https:" || url.username || url.password) throw new Error(`${label} 必须使用 HTTPS 且不能包含用户名或密码`);
+            return url;
+          }
+          parseUrl(uploadPutUrl, "上传接口地址");
+          parseUrl(uploadGetPutUrl, "签名接口地址");
+
+          // ACT: Android APK 随 GitHub Release 发布，现有更新托管接口仅登记桌面版本。
+          const names = readdirSync("artifacts", { withFileTypes: true }).filter(entry => entry.isFile()).map(entry => entry.name)
+            .filter(name => name !== `toonflow-${version}-android-arm64.apk`);
+          const targets = [{ platform: "win", arch: "x64" }, { platform: "macos", arch: "arm64" }, { platform: "macos", arch: "x64" }];
+          const plans = await Promise.all(targets.map(async target => {
+            const prefix = `stable-${target.platform}-${target.arch}-`;
+            const installers = names.filter(name => target.platform === "win"
+              ? name === `toonflow-${version}-Setup.exe`
+              : name.endsWith(".dmg") && name.includes(target.arch));
+            if (installers.length !== 1) throw new Error(`${prefix}安装包数量应为 1，实际为 ${installers.length}`);
+            const manifestName = `${prefix}update.json`;
+            if (!names.includes(manifestName)) throw new Error(`缺少更新清单：${manifestName}`);
+            const manifest = await Bun.file(join("artifacts", manifestName)).json();
+            if (manifest?.version !== version || manifest.platform !== target.platform || manifest.arch !== target.arch) {
+              throw new Error(`${manifestName} 的版本、平台或架构不匹配`);
+            }
+            // ACT: Intel Mac 保留旧清单协议，归档名与现有发布脚本一致。
+            const archiveName = manifest.artifact === undefined && target.platform === "macos" && target.arch === "x64"
+              ? `${prefix}toonflow.app.tar.zst` : manifest.artifact?.file;
+            if (typeof archiveName !== "string" || !archiveName.startsWith(prefix) || !archiveName.endsWith(".tar.zst") || !names.includes(archiveName)) {
+              throw new Error(`${manifestName} 引用的完整更新包不存在`);
+            }
+            const fileNames = [installers[0]!, archiveName, ...names.filter(name => name.startsWith(prefix) && name.endsWith(".patch")), manifestName];
+            for (const name of fileNames) {
+              if (!Bun.file(join("artifacts", name)).size) throw new Error(`构建产物为空：${name}`);
+            }
+            return { ...target, fileNames };
+          }));
+          const plannedNames = new Set(plans.flatMap(plan => plan.fileNames));
+          if (names.some(name => !plannedNames.has(name))) throw new Error("存在无法归属到发布平台的构建产物");
+
+          async function postJson(url: string, payload: Record<string, unknown>, label: string) {
+            const response = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ authorizeCode, version, ...payload }),
+              redirect: "error",
+              signal: AbortSignal.timeout(30000),
+            }).catch(() => { throw new Error(`${label}请求失败或超时`); });
+            if (!response.ok) throw new Error(`${label}失败（HTTP ${response.status}）`);
+            const result = await response.json().catch(() => { throw new Error(`${label}未返回有效 JSON`); });
+            if (result?.code !== 200) throw new Error(`${label}业务响应未成功（要求 code=200）`);
+            return result;
+          }
+
+          const platforms = [];
+          const uploadedPaths = new Set<string>();
+          for (const plan of plans) {
+            const uploadedFiles = [];
+            for (const fileName of plan.fileNames) {
+              const suffix = extname(fileName).slice(1);
+              const result = await postJson(uploadGetPutUrl, { suffix }, `获取 ${fileName} 上传签名`);
+              if (typeof result.data?.uploadUrl !== "string") throw new Error(`${fileName} 缺少 uploadUrl`);
+              const uploadUrl = result.data.uploadUrl;
+              console.log(`::add-mask::${uploadUrl.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A")}`);
+              const objectUrl = parseUrl(uploadUrl, `${fileName} 的 uploadUrl`);
+              const fileUrl = decodeURIComponent(objectUrl.pathname.slice(1));
+              if (!fileUrl || uploadedPaths.has(fileUrl)) throw new Error(`${fileName} 的上传对象路径为空或与其他文件重复`);
+              uploadedPaths.add(fileUrl);
+              const file = Bun.file(join("artifacts", fileName));
+              const response = await fetch(uploadUrl, {
+                method: "PUT",
+                headers: { "Content-Type": "application/octet-stream", "Content-Length": String(file.size) },
+                body: file,
+                redirect: "error",
+                signal: AbortSignal.timeout(20 * 60 * 1000),
+              }).catch(() => { throw new Error(`${fileName} 上传失败或超时`); });
+              if (!response.ok) throw new Error(`${fileName} 上传失败（HTTP ${response.status}）`);
+              await response.body?.cancel();
+              uploadedFiles.push({ fileUrl, fileName, fileSize: String(file.size) });
+              console.log(`已上传 ${fileName}（${file.size} 字节）`);
+            }
+            const [application, ...files] = uploadedFiles;
+            platforms.push({ platform: plan.platform, arch: plan.arch, applicationPath: application!.fileUrl, files });
+          }
+          // ACT: 所有文件上传成功后一次性登记；登记请求不自动重试，避免重复发布。
+          await postJson(uploadPutUrl, { platforms }, "登记更新版本");
+          console.log(`更新托管网站已发布 ${version}，共 ${platforms.length} 个平台版本`);
+          '

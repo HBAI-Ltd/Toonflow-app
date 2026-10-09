@@ -85,8 +85,8 @@ function setDocumentPanel(value: Element | ComponentPublicInstance | null) {
 provide("canvas", () => canvasPanelRef.value?.getCanvasContext());
 provide("mentionCanvas", () => canvasPanelRef.value?.mentionSource);
 provide("activateCanvasPanel", () => switchPanel("canvas"));
-provide("performWorkspaceFileAction", (directory: string, action: "copy" | "rename" | "delete", path: string, target?: string) =>
-  documentPanelRef.value ? documentPanelRef.value.performFileAction(directory, action, path, target) : performFileAction(directory, action, path, target));
+provide("performWorkspaceFileAction", (directory: string, action: "copy" | "rename" | "move" | "delete", path: string, target?: string, entryType: "canvas" | "directory" = "canvas") =>
+  documentPanelRef.value ? documentPanelRef.value.performFileAction(directory, action, path, target, entryType) : performFileAction(directory, action, path, target));
 
 const controlLifetime = new AbortController();
 onScopeDispose(() => controlLifetime.abort(new Error("工作区已关闭")));

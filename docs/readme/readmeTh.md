@@ -146,7 +146,7 @@
       <sub>บริการสร้างวิดีโอ MiniMax H3 ที่คุ้มค่า: 768P ราคาเพียง 0.09 หยวน/วินาที และ 2K เพียง 0.15 หยวน/วินาที รองรับความละเอียด 2K แบบเนทีฟและเสียงที่สอดคล้องกับภาพ API เข้ากันได้กับโปรโตคอล OpenAI พร้อมรองรับ ComfyUI และแคนวาสไม่จำกัด โดยไม่ต้องติดตั้ง GPU เอง <a href="https://metaso.cn/minimax-h3/?s=toon">ลงทะเบียนผ่านลิงก์พิเศษ</a>เพื่อรับเครดิตฟรีและข้อเสนอเฉพาะ สำหรับความร่วมมือทางธุรกิจ ติดต่อ WeChat: metasota12</sub>
     </td>
     <td width="50%" valign="top">
-      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.svg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
+      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
       <br />
       <sub>ขอขอบคุณ APIMart ที่สนับสนุนโครงการนี้! แพลตฟอร์ม API ราคาประหยัดที่เน้นการสร้างภาพและวิดีโอด้วย AI โดย GPT-Image-2 เริ่มต้นเพียง $0.006/ภาพ และ 1 ดอลลาร์สร้างภาพได้มากกว่า 160 ภาพ ใช้ API แบบอะซิงโครนัสชุดเดียวสำหรับภาพและวิดีโอ ส่งงานเพื่อรับ ID และรับผลลัพธ์ผ่าน callback ประมวลผลภาพเป็นชุด 10,000 ภาพโดยไม่หมดเวลารอ และเปลี่ยนโมเดลได้โดยไม่ต้องแก้โค้ด คิดค่าบริการตามการใช้งาน ไม่มีค่ารายเดือน เริ่มใช้งานได้ทันทีเมื่อลงทะเบียนผ่าน<a href="https://go.apimart.ai/gh-toonflow-app">ลิงก์นี้</a></sub>
     </td>

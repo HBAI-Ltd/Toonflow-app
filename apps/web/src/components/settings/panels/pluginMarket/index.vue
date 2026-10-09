@@ -160,40 +160,8 @@
                 @keydown.space.prevent="toggleCollection(plugin)" />
             </div>
           </div>
-          <div v-else-if="plugin.type === 'skill'" class="pluginFooter" @click.stop>
-            <div class="pluginActions">
-              <el-button
-                size="small"
-                :icon="IconShare"
-                :loading="exportingPlugins.has(plugin.key)"
-                :disabled="loading || pendingPlugins.has(plugin.key)"
-                :aria-label="`导出分享 ${plugin.displayName}`"
-                title="导出分享"
-                @click="exportPlugin(plugin)" />
-              <el-popconfirm
-                v-if="plugin.author !== 'Toonflow'"
-                :title="`确定卸载“${plugin.displayName}”及其附属文件吗？`"
-                width="280"
-                confirmButtonText="卸载"
-                cancelButtonText="取消"
-                confirmButtonType="danger"
-                hideIcon
-                @confirm="updatePlugin(plugin, 'uninstall')">
-                <template #reference>
-                  <el-button
-                    size="small"
-                    :loading="pendingPlugins.has(plugin.key)"
-                    :disabled="!canEditPlugin(plugin) || loading || pendingPlugins.has(plugin.key) || exportingPlugins.has(plugin.key)"
-                    :aria-label="`卸载 ${plugin.displayName}`">
-                    卸载
-                  </el-button>
-                </template>
-              </el-popconfirm>
-            </div>
-          </div>
-
-          <div v-else class="pluginFooter" :class="{ pluginControls: plugin.author !== 'Toonflow' || plugin.type === 'agent' || plugin.type === 'ext' }" @click.stop>
-            <label v-if="plugin.author !== 'Toonflow' || plugin.type === 'agent' || plugin.type === 'ext'" class="pluginToggle">
+          <div v-else class="pluginFooter pluginControls" @click.stop>
+            <label class="pluginToggle">
               <span>{{ plugin.enabled === false ? "已禁用" : "已启用" }}</span>
               <el-switch
                 :modelValue="plugin.enabled !== false"
@@ -203,10 +171,9 @@
                 :aria-label="`启用 ${plugin.displayName}`"
                 @change="updatePlugin(plugin, 'setEnabled', $event === true)" />
             </label>
-            <el-text v-else type="info" size="small">已安装</el-text>
             <div class="pluginActions">
               <el-button
-                v-if="plugin.type === 'node' || plugin.type === 'tool' || plugin.type === 'ext' || (plugin.type === 'agent' && plugin.kind === 'local')"
+                v-if="plugin.type === 'node' || plugin.type === 'skill' || plugin.type === 'tool' || plugin.type === 'ext' || (plugin.type === 'agent' && plugin.kind === 'local')"
                 size="small"
                 :icon="IconShare"
                 :loading="exportingPlugins.has(plugin.key)"
@@ -229,9 +196,9 @@
                 </el-button>
               </el-badge>
               <el-popconfirm
-                v-if="plugin.author !== 'Toonflow' || plugin.type === 'agent' || plugin.type === 'ext'"
-                :title="`确定卸载“${plugin.displayName}”吗？`"
-                width="240"
+                v-if="plugin.author !== 'Toonflow' || plugin.type === 'skill' || plugin.type === 'agent' || plugin.type === 'ext'"
+                :title="`确定卸载“${plugin.displayName}”${plugin.type === 'skill' ? '及其附属文件' : ''}吗？`"
+                width="280"
                 confirmButtonText="卸载"
                 cancelButtonText="取消"
                 confirmButtonType="danger"
@@ -607,7 +574,7 @@ async function saveMarketKey() {
       if (index < 0 && providers.some((item) => typeof item?.id === "string" && item.id.toLowerCase() === tfRouter.id.toLowerCase())) {
         throw new Error("存在同名的非官方 TF-router 供应商，请先在文本模型中修改其 ID");
       }
-      const { id, label, version, apiUrl, protocol, models } = tfRouter;
+      const { id, label, icon, version, apiUrl, protocol, models } = tfRouter;
       const configs = current.mediaProviderConfigs as Record<string, Record<string, unknown>> | undefined;
       if (configs !== undefined && (!configs || typeof configs !== "object" || Array.isArray(configs))) throw new Error("媒体供应商配置格式无效");
       const mediaConfig = configs?.tfRouter;
@@ -616,7 +583,7 @@ async function saveMarketKey() {
       return {
         customProviders:
           index < 0
-            ? [...providers, { id, label, version, apiUrl, protocol, models, apiKey: key }]
+            ? [...providers, { id, label, icon, version, apiUrl, protocol, models, apiKey: key }]
             : providers.map((item, position) => (position === index ? { ...item, apiKey: key } : item)),
         mediaProviderConfigs: { ...configs, tfRouter: { ...mediaConfig, apiKey: key } },
       };
@@ -654,7 +621,6 @@ async function copyCard(url: string) {
 function canEditPlugin(plugin: Plugin) {
   return (
     activeTab.value === "installed" &&
-    (plugin.author !== "Toonflow" || plugin.type === "agent" || plugin.type === "ext") &&
     (plugin.type === "node" || plugin.type === "skill" || (plugin.type === "ext" && plugin.canManage === true) || (plugin.type === "tool" && canManageTools.value) || (plugin.type === "agent" && canManageAgents.value))
   );
 }
@@ -779,7 +745,7 @@ async function updatePlugin(plugin: Plugin, action: "setEnabled" | "uninstall", 
     loading.value ||
     pendingPlugins.value.has(plugin.key) ||
     exportingPlugins.value.has(plugin.key) ||
-    (plugin.type === "skill" && action !== "uninstall")
+    (action === "uninstall" && plugin.author === "Toonflow" && (plugin.type === "node" || plugin.type === "tool"))
   )
     return;
   pendingPlugins.value.add(plugin.key);
@@ -1069,6 +1035,10 @@ async function updatePlugin(plugin: Plugin, action: "setEnabled" | "uninstall", 
         }
       }
       .pluginDescription {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        overflow: hidden;
         margin: 10px 0 0;
         font-size: 13px;
         line-height: 1.6;

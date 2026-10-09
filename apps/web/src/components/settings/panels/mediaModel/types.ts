@@ -9,9 +9,11 @@ export type MediaProvider = {
   fileName: string;
   id: string;
   label: string;
+  icon?: string;
   version?: string;
   readme?: string;
   modelsUrl?: string;
+  rules?: Record<string, unknown>[];
   models: MediaProviderModel[];
   revision: string;
   loadError?: string;

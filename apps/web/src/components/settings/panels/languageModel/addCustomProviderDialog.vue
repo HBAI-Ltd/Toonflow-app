@@ -187,8 +187,8 @@ watch(visible, (value) => {
   if (value) {
     resetForm();
     if (props.provider) {
-      const { models: providerModels, ...config } = props.provider;
-      Object.assign(form, config);
+      const { models: providerModels, id, label, apiUrl, protocol, apiKey } = props.provider;
+      Object.assign(form, { id, label, apiUrl, protocol, apiKey });
       models.value = providerModels.map((item) => ({ ...item, key: crypto.randomUUID() }));
     }
   } else {
@@ -303,7 +303,7 @@ async function addProvider() {
       }
       if (providerId && !existing?.some(item => item.id === providerId)) throw new Error("供应商已不存在");
       return { customProviders: providerId
-        ? existing!.map(item => item.id === providerId ? updatedProvider : item)
+        ? existing!.map(item => item.id === providerId ? { ...item, ...updatedProvider } : item)
         : [...(existing ?? []), updatedProvider] };
     });
     visible.value = false;

@@ -38,7 +38,7 @@
         </div>
         <el-button :icon="IconEdit" @click="systemPromptVisible = true">编辑提示词</el-button>
       </div>
-      <div class="developerRow">
+      <div v-if="!isRemoteConnection" class="developerRow">
         <div class="toolDescription">
           <h3>自定义更新源</h3>
           <p>填写更新清单和安装包所在的目录地址，保存后可在关于页选择。</p>
@@ -48,8 +48,8 @@
           <el-button type="primary" :loading="savingUpdateUrl" @click="saveCustomUpdateUrl">保存</el-button>
         </div>
       </div>
-      <el-text v-if="updateUrlError" type="danger" role="alert">{{ updateUrlError }}</el-text>
-      <div class="pluginInstaller">
+      <el-text v-if="!isRemoteConnection && updateUrlError" type="danger" role="alert">{{ updateUrlError }}</el-text>
+      <div v-if="!isRemoteConnection" class="pluginInstaller">
         <div class="installerHeader">
           <h3>手动安装插件</h3>
           <el-select v-model="installType" class="typeSelect" :disabled="!!installing" aria-label="安装插件类型">
@@ -130,6 +130,7 @@ import { saveSettings, settings } from "@/stores/settings";
 import { desktopUpdateSnapshot } from "@/stores/desktopUpdate";
 import type { updateSnapshot } from "@toonflow/server/desktop";
 import saveFile from "@/lib/saveFile";
+import { isRemoteConnection } from "@/lib/mobile";
 import { installPluginFile } from "../../installPluginFile";
 import { ElMessage } from "element-plus";
 import axios from "axios";
@@ -170,6 +171,7 @@ async function openUpdateBox() {
 }
 
 async function saveCustomUpdateUrl() {
+  if (isRemoteConnection) return;
   if (savingUpdateUrl.value) return;
   const url = customUpdateUrl.value.trim();
   updateUrlError.value = "";

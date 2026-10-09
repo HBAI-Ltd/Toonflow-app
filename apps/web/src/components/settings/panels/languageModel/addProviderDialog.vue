@@ -10,7 +10,7 @@
           :disabled="saving"
           :aria-pressed="selectedProvider === item.id"
           @click="selectedProvider = item.id">
-          <img v-if="item.id === 'tfRouter'" class="providerLogo" :src="logoUrl" alt="" />
+          <img v-if="item.icon" class="providerLogo" :class="{ monochrome: item.id === 'tfRouter' }" :src="item.icon" alt="" />
           <modelIcon v-else :model="item.id" :size="18" />
           <span>{{ item.label }}</span>
         </button>
@@ -56,7 +56,6 @@ import { IconRefresh } from "@tabler/icons-vue";
 import formCreate, { type Api, type Options } from "../../formCreate";
 import { languageProviders } from "@toonflow/providers";
 import { modelIcon } from "@toonflow/model-icons";
-import logoUrl from "@toonflow/assets/logo.svg";
 import messageMarkdown from "@/components/messageMarkdown.vue";
 import type { Column } from "element-plus";
 import { saveSettings, type CustomProviderModel } from "@/stores/settings";
@@ -153,6 +152,7 @@ async function addProvider() {
     const addedProvider = {
       id: provider.id,
       label: provider.label,
+      icon: provider.icon,
       apiKey,
       apiUrl: "apiUrl" in provider ? provider.apiUrl : "",
       protocol: "protocol" in provider ? provider.protocol : "",
@@ -219,8 +219,10 @@ async function addProvider() {
         height: 18px;
         object-fit: contain;
 
-        .dark & {
-          filter: invert(1);
+        &.monochrome {
+          .dark & {
+            filter: invert(1);
+          }
         }
       }
     }

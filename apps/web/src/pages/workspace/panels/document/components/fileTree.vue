@@ -61,7 +61,7 @@
           <template v-if="menuItem.type !== 'node'">
             <el-dropdown-item command="newFile" :disabled="busy">新建文件…</el-dropdown-item>
             <el-dropdown-item command="newFolder" :disabled="busy">新建文件夹…</el-dropdown-item>
-            <el-dropdown-item command="reveal" :disabled="busy">以资源管理器打开</el-dropdown-item>
+            <el-dropdown-item v-if="!isMobile && !isRemoteConnection" command="reveal" :disabled="busy">以资源管理器打开</el-dropdown-item>
             <el-dropdown-item command="copy" :disabled="busy || !menuItem.path" divided>复制</el-dropdown-item>
             <el-dropdown-item command="cut" :disabled="busy || !menuItem.path">剪切</el-dropdown-item>
             <el-dropdown-item command="paste" :disabled="busy || !clipboard?.items.length">粘贴</el-dropdown-item>
@@ -87,6 +87,7 @@ import { IconBox, IconChevronRight, IconFile, IconFilePlus, IconFileSearch, Icon
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { settingsStorage } from "@/stores/settings";
 import { writeClipboardText } from "@/lib/clipboard";
+import { isMobile, isRemoteConnection } from "@/lib/mobile";
 import { t } from "@toonflow/i18n/vue";
 import { isCanvasFile } from "@/pages/workspace/canvasFile";
 import { extensionCandidates, extensionIcon, listExtensions } from "../extensions";

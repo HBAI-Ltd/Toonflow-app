@@ -2,6 +2,24 @@
   <div class="ui">
     <p class="intro">让创作空间更合你的习惯，修改会自动保存。</p>
 
+    <section v-if="isMobile" class="settingSection" aria-labelledby="mobileScaleTitle">
+      <div class="settingHeader">
+        <h3 id="mobileScaleTitle">界面缩放</h3>
+        <span class="settingValue">{{ mobileScale }}%</span>
+      </div>
+      <p class="description">缩小后可显示更多内容，字体大小仍可单独调整。</p>
+      <el-slider
+        v-model="mobileScale"
+        class="settingSlider"
+        :min="50"
+        :max="100"
+        :step="5"
+        :marks="{ 50: '50%', 75: '75%（默认）', 100: '100%' }"
+        showStops
+        aria-label="界面缩放"
+        @change="value => typeof value === 'number' && updateUiSettings({ mobileScale: value })" />
+    </section>
+
     <section class="settingSection" aria-labelledby="languageTitle">
       <h3 id="languageTitle"><icon-language :size="18" />语言</h3>
       <p class="description">界面语言立即生效，默认跟随电脑语言。</p>
@@ -127,11 +145,14 @@ import {
   IconRestore,
 } from "@tabler/icons-vue";
 import { defaultUiSettings, uiSettings, updateUiSettings } from "@/stores/settings";
+import { isMobile } from "@/lib/mobile";
 import languageSelect from "@/components/languageSelect.vue";
 
+const mobileScale = ref(uiSettings.value.mobileScale);
 const fontScale = ref(uiSettings.value.fontScale);
 const radius = ref(uiSettings.value.radius);
 watchEffect(() => {
+  mobileScale.value = uiSettings.value.mobileScale;
   fontScale.value = uiSettings.value.fontScale;
   radius.value = uiSettings.value.radius;
 });

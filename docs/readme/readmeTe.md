@@ -146,7 +146,7 @@ Toonflow ఓపెన్ సోర్స్ ప్రాజెక్ట్‌క
       <sub>తక్కువ ఖర్చుతో MiniMax H3 వీడియో సృష్టి: 768P వద్ద సెకనుకు ¥0.09, 2K వద్ద సెకనుకు ¥0.15 (CNY) మాత్రమే. సొంత GPU ఏర్పాటు చేయాల్సిన అవసరం లేకుండా నేటివ్ 2K, సమకాలీకరించిన ఆడియో మరియు వీడియో, OpenAI-అనుకూల API, ComfyUI, అనంతమైన కాన్వాస్‌లను ఉపయోగించవచ్చు. బోనస్ క్రెడిట్‌లు, ప్రత్యేక ఆఫర్‌ల కోసం <a href="https://metaso.cn/minimax-h3/?s=toon">ఈ ప్రత్యేక లింక్ ద్వారా నమోదు చేసుకోండి</a>. వ్యాపార విషయాల కోసం WeChatలో metasota12ను సంప్రదించండి.</sub>
     </td>
     <td width="50%" valign="top">
-<a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.svg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
+<a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
       <br />
       <sub>ఈ ప్రాజెక్టును స్పాన్సర్ చేసిన APIMartకు ధన్యవాదాలు! AIతో చిత్రాలు, వీడియోలు సృష్టించడానికి APIMart తక్కువ ధరలో API సేవలను అందిస్తుంది. GPT-Image-2లో చిత్రం ధర $0.006 నుంచి ప్రారంభమవుతుంది; $1కు 160+ చిత్రాలు పొందవచ్చు. చిత్రాలు, వీడియోలకు ఒకే అసింక్రోనస్ API: పనిని సమర్పించి దాని ID పొందండి; callback ద్వారా ఫలితాలు అందుకోండి. టైమ్‌అవుట్‌లు లేకుండా 10,000 చిత్రాల బ్యాచ్‌లను ప్రాసెస్ చేయవచ్చు; కోడ్ మార్చకుండానే మోడల్‌లను మార్చవచ్చు. నెలవారీ రుసుము లేదు; ఉపయోగించిన మేరకే చెల్లించండి. ప్రారంభించడానికి <a href="https://go.apimart.ai/gh-toonflow-app">ఇక్కడ నమోదు చేసుకోండి</a>.</sub>
     </td>

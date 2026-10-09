@@ -1,4 +1,6 @@
 import * as assets from "@/utils/assets";
+import * as browser from "@/utils/browser";
+import * as singleAgent from "@/utils/singleAgent";
 import * as desktop from "@/utils/desktop";
 import * as providerDebug from "@/utils/media/debug";
 import * as mediaGeneration from "@/utils/media/generation";
@@ -15,9 +17,11 @@ import * as canvas from "@/agent/bridge/canvas";
 import * as question from "@/agent/bridge/question";
 import * as workspace from "@/utils/workspace";
 import * as workspaceFile from "@/utils/workspace/files";
+import * as chatImages from "@/utils/workspace/chatImages";
 import * as skillFile from "@/utils/skills/files";
 import * as mcpControl from "@/utils/mcp/control";
 import * as mcpRuntime from "@/utils/mcp/runtime";
+import * as mobileLink from "@/utils/mobileLink";
 import * as teams from "@/utils/teams";
 import * as a2aSettings from "@/agent/a2a/settings";
 import * as personalization from "@/utils/personalization";
@@ -25,6 +29,8 @@ import * as mentionFiles from "@/agent/mentionFiles";
 
 export default {
   assets,
+  browser,
+  singleAgent,
   desktop,
   providerDebug,
   mediaGeneration,
@@ -42,9 +48,11 @@ export default {
   question,
   workspace,
   workspaceFile,
+  chatImages,
   skillFile,
   mcpControl,
   mcpRuntime,
+  mobileLink,
   teams,
   a2aSettings,
   personalization,

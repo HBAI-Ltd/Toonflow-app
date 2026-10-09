@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "WebWorker"],
+    "paths": {
+      "@/*": ["../server/src/*"]
+    }
+  },
+  "include": ["src", "scripts"]
+}

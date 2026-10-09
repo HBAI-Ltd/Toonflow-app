@@ -3,11 +3,12 @@ import { once } from "node:events";
 import { existsSync, readFileSync, rmSync, writeAtomicSync } from "@toonflow/file";
 import { createServer, type Server } from "node:http";
 import { dirname, resolve } from "node:path";
+import type { Socket } from "node:net";
 import type { Express } from "express";
 import conf from "@/utils/conf";
 import { getMcpSettings } from "@/utils/mcp/control";
 
-let runtime: { app: Express; appOrigin: string; server?: Server; url?: string; port?: number; preferredPort?: number; file?: string; command: string; entry: string; error?: string } | undefined;
+let runtime: { app: Express; appOrigin: string; requestHeaders: Record<string, string>; server?: Server; sockets?: Set<Socket>; url?: string; port?: number; preferredPort?: number; file?: string; command: string; entry: string; error?: string } | undefined;
 let reloadQueue = Promise.resolve();
 
 function removeRuntime(file?: string) {
@@ -28,9 +29,27 @@ function saveRuntime(value = runtime) {
   } else removeRuntime(value.file);
 }
 
-export function initializeMcpRuntime(app: Express, url: string, entry: string, command = process.execPath) {
-  runtime = { app, appOrigin: new URL(url).origin, entry, command };
+export function initializeMcpRuntime(app: Express, url: string, entry: string, command = process.execPath, requestHeaders: Record<string, string> = {}) {
+  runtime = { app, appOrigin: new URL(url).origin, entry, command, requestHeaders: { ...requestHeaders } };
   return reloadMcpRuntime();
+}
+
+export function getAppRequestHeaders() {
+  return { ...runtime?.requestHeaders };
+}
+
+export function stopMcpRuntime() {
+  reloadQueue = reloadQueue.catch(() => {}).then(async () => {
+    const current = runtime;
+    runtime = undefined;
+    removeRuntime(current?.file);
+    if (!current?.server) return;
+    await new Promise<void>(resolve => {
+      current.server!.close(() => resolve());
+      for (const socket of current.sockets ?? []) socket.destroy();
+    });
+  });
+  return reloadQueue;
 }
 
 export function reloadMcpRuntime() {
@@ -48,6 +67,8 @@ export function reloadMcpRuntime() {
       }
       current.app(req, res);
     });
+    const sockets = new Set<Socket>();
+    server.on("connection", socket => { sockets.add(socket); socket.once("close", () => sockets.delete(socket)); });
     let file: string | undefined;
     try {
       // ACT: 单机多开最多尝试 32 个相邻端口；直接 listen，避免探测后端口被抢占。
@@ -66,12 +87,12 @@ export function reloadMcpRuntime() {
           throw error;
         }
         file = resolve(dirname(conf.path), `mcpRuntime${port}.json`);
-        const next = { ...current, server, preferredPort, port, url: `http://127.0.0.1:${port}/mcp`, file, error: undefined };
+        const next = { ...current, server, sockets, preferredPort, port, url: `http://127.0.0.1:${port}/mcp`, file, error: undefined };
         saveRuntime(next);
         runtime = next;
         server.unref();
         current.server?.close();
-        current.server?.closeAllConnections();
+        for (const socket of current.sockets ?? []) socket.destroy();
         removeRuntime(current.file);
         return;
       }

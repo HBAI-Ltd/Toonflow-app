@@ -2,12 +2,12 @@ import { open, opendir, readFile, stat } from "@toonflow/file";
 import { basename } from "node:path";
 import u from "@/utils";
 import { createCanvasMention, mentionAssetType, mentionNodeOutputs, mentionRecord, queryMentionNodes,
-  type MentionAsset, type MentionCanvasNode, type MentionQuery } from "./mentionSources";
+  type MentionCanvasNode, type MentionQuery } from "./mentionSources";
 import type { AgentMention } from "./runtime/types";
+export { queryAssets as queryMentionAssets } from "@/utils/assets";
 
 type StoredCanvas = { revision: string; nodes: MentionCanvasNode[]; byId: Map<string, MentionCanvasNode> };
 const canvasCache = new Map<string, { revision: string; bytes: number; value: Promise<StoredCanvas> }>();
-const assetSearches = new Map<string, { key: string; offset: number; touched: number; busy: boolean; iterator: AsyncGenerator<MentionAsset>; timer: ReturnType<typeof setTimeout> }>();
 
 async function readMentionText(directory: string, relativePath: string) {
   const { path } = await u.workspaceFile.resolveWorkspacePath(directory, relativePath);
@@ -48,20 +48,30 @@ async function readCanvas(directory: string, canvasId: string) {
 }
 
 export async function listMentionCanvases(directory: string, signal: AbortSignal) {
-  const entries = await opendir(directory);
   const canvases: { id: string; name: string }[] = [];
-  for await (const entry of entries) {
+  const folders = [""];
+  for (const folder of folders) {
     signal.throwIfAborted();
-    if (!entry.isFile() || !/\.json$/i.test(entry.name)) continue;
-    const { path } = await u.workspaceFile.resolveWorkspacePath(directory, entry.name);
-    const file = await open(path, "r");
-    try {
-      const header = Buffer.alloc(4096);
-      const { bytesRead } = await file.read(header, 0, header.length, 0);
-      if (/^\s*\{/.test(header.toString("utf8", 0, bytesRead)) && /"toonflowCanvas"\s*:\s*true\s*[,}]/.test(header.toString("utf8", 0, bytesRead))) {
-        canvases.push({ id: entry.name, name: entry.name.slice(0, -5) });
+    const resolved = await u.workspaceFile.resolveWorkspacePath(directory, folder);
+    const entries = await opendir(resolved.path);
+    for await (const entry of entries) {
+      signal.throwIfAborted();
+      const relativePath = folder ? `${folder}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        if (entry.name.toLowerCase() !== "assets") folders.push(relativePath);
+        continue;
       }
-    } finally { await file.close(); }
+      if (!entry.isFile() || !/\.json$/i.test(entry.name)) continue;
+      const { path } = await u.workspaceFile.resolveWorkspacePath(directory, relativePath);
+      const file = await open(path, "r");
+      try {
+        const header = Buffer.alloc(4096);
+        const { bytesRead } = await file.read(header, 0, header.length, 0);
+        if (/^\s*\{/.test(header.toString("utf8", 0, bytesRead)) && /"toonflowCanvas"\s*:\s*true\s*[,}]/.test(header.toString("utf8", 0, bytesRead))) {
+          canvases.push({ id: relativePath, name: relativePath.slice(0, -5) });
+        }
+      } finally { await file.close(); }
+    }
   }
   return canvases.sort((left, right) => left.name.localeCompare(right.name, "zh-CN", { numeric: true }));
 }
@@ -78,79 +88,6 @@ export async function storedMentionOutput(directory: string, canvasId: string, n
   const node = canvas.byId.get(nodeId);
   if (!node) throw Object.assign(new Error("节点已删除，请重新选择"), { status: 404 });
   return outputId === undefined ? mentionNodeOutputs(node) : createCanvasMention(node, canvasId, outputId, path => readMentionText(directory, path));
-}
-
-async function* walkAssets(directory: string, path: string, recursive: boolean, depth = 0): AsyncGenerator<MentionAsset> {
-  if (depth > 64) return;
-  const resolved = await u.workspaceFile.resolveWorkspacePath(directory, path);
-  const entries = await opendir(resolved.path);
-  for await (const entry of entries) {
-    if (!entry.isFile() && !entry.isDirectory()) continue;
-    const relativePath = path && path !== "." ? `${path}/${entry.name}` : entry.name;
-    yield { name: entry.name, path: relativePath, type: entry.isDirectory() ? "directory" : "file",
-      ...(entry.isFile() ? { dataType: mentionAssetType(entry.name)?.dataType } : {}) };
-    if (recursive && entry.isDirectory()) yield* walkAssets(directory, relativePath, true, depth + 1);
-  }
-}
-
-export async function queryMentionAssets(options: MentionQuery & { path?: string }) {
-  options.signal?.throwIfAborted();
-  const directory = await u.assets.getAssetsDirectory();
-  const path = options.path || ".";
-  await u.workspaceFile.resolveWorkspacePath(directory, path);
-  const query = options.query?.trim().toLocaleLowerCase() ?? "";
-  const key = JSON.stringify([directory, path, query]);
-  for (const [id, search] of assetSearches) if (Date.now() - search.touched > 60000) {
-    assetSearches.delete(id);
-    clearTimeout(search.timer);
-    void search.iterator.return(undefined).catch(() => {});
-  }
-  let id: string;
-  if (options.cursor) {
-    const cursor = options.cursor.split(":");
-    id = cursor[0]!;
-    const search = assetSearches.get(id);
-    if (!search || search.key !== key || String(search.offset) !== cursor[1]) throw Object.assign(new Error("分页已失效，请重新搜索"), { status: 409 });
-  } else {
-    id = crypto.randomUUID();
-    const iterator = walkAssets(directory, path, !!query);
-    const timer = setTimeout(() => { assetSearches.delete(id); void iterator.return(undefined).catch(() => {}); }, 60000);
-    timer.unref();
-    assetSearches.set(id, { key, offset: 0, touched: Date.now(), busy: false, iterator, timer });
-    // ACT: 素材搜索保留至多四个短期目录迭代器，避免每页重新递归遍历整个素材库。
-    while (assetSearches.size > 4) {
-      const oldest = assetSearches.keys().next().value!;
-      const removed = assetSearches.get(oldest)!;
-      assetSearches.delete(oldest);
-      clearTimeout(removed.timer);
-      void removed.iterator.return(undefined).catch(() => {});
-    }
-  }
-  const search = assetSearches.get(id)!;
-  if (search.busy) throw Object.assign(new Error("上一页仍在读取，请稍后重试"), { status: 409 });
-  search.busy = true;
-  const items: MentionAsset[] = [];
-  const limit = Math.max(1, Math.min(50, options.limit ?? 20));
-  let done = false;
-  try {
-    for (let scanned = 0; scanned < 2000 && items.length < limit; scanned++) {
-      options.signal?.throwIfAborted();
-      const next = await search.iterator.next();
-      if (next.done) { done = true; break; }
-      search.offset++;
-      const item = next.value;
-      if (!query || (item.type === "file" && `${item.name} ${item.path}`.toLocaleLowerCase().includes(query))) items.push(item);
-    }
-    search.touched = Date.now();
-    search.timer.refresh();
-    if (done) { assetSearches.delete(id); clearTimeout(search.timer); }
-    return { items, ...(!done ? { nextCursor: `${id}:${search.offset}` } : {}) };
-  } catch (error) {
-    assetSearches.delete(id);
-    clearTimeout(search.timer);
-    await search.iterator.return(undefined);
-    throw error;
-  } finally { search.busy = false; }
 }
 
 export async function selectMentionAsset(relativePath: string): Promise<AgentMention> {

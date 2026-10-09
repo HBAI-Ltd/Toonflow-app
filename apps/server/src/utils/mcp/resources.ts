@@ -11,6 +11,7 @@ export const skillResources: NonNullable<McpOptions["resources"]> = {
     const resources = [];
     for (const skill of skills) {
       signal.throwIfAborted();
+      if (!skillFile.isEnabled(skill.name)) continue;
       const { mainPath, files } = await skillFile.list(skill.name);
       for (const path of files) {
         const main = path === mainPath;
@@ -29,6 +30,7 @@ export const skillResources: NonNullable<McpOptions["resources"]> = {
     const match = /^toonflow:\/\/skills\/([^/]+)\/(.+)$/.exec(uri);
     if (!match) throw Object.assign(new Error("技能资源地址无效"), { status: 400 });
     const name = decodeURIComponent(match[1]!);
+    if (!skillFile.isEnabled(name)) throw Object.assign(new Error("技能已禁用"), { status: 404 });
     const path = match[2]!.split("/").map(decodeURIComponent).join("/");
     const { mainPath, files } = await skillFile.list(name);
     if (!files.includes(path)) throw Object.assign(new Error("技能资源不存在"), { status: 404 });

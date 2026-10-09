@@ -159,6 +159,10 @@ const buildTiles = computed(() => {
     padding: 0;
 
     .updateBody {
+      max-height: 60vh;
+      overflow: auto;
+      overscroll-behavior: contain;
+
       .artworkSection {
         padding: 0 26px;
 
@@ -182,9 +186,6 @@ const buildTiles = computed(() => {
 
         .releaseContent {
           min-height: 130px;
-          max-height: 32vh;
-          overflow: auto;
-          overscroll-behavior: contain;
           padding: 0 26px 16px;
           color: var(--el-text-color-regular);
           font-size: 13px;

@@ -146,7 +146,7 @@ Toonflow 오픈 소스 프로젝트를 지원해 주시는 다음 파트너 여�
       <sub>합리적인 비용의 MiniMax H3 영상 생성: 768P는 초당 단 ¥0.09, 2K는 초당 ¥0.15(CNY)입니다. 네이티브 2K, 영상·음성 동기화, OpenAI 호환 API, ComfyUI, 무한 캔버스를 지원하며 GPU를 직접 구축할 필요가 없습니다. <a href="https://metaso.cn/minimax-h3/?s=toon">전용 링크로 가입</a>하면 보너스 크레딧과 특별 혜택을 받을 수 있습니다. 비즈니스 문의는 WeChat의 metasota12로 연락해 주세요.</sub>
     </td>
     <td width="50%" valign="top">
-      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.svg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
+      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
       <br />
       <sub>프로젝트를 후원해 주신 APIMart에 감사드립니다! APIMart는 AI 이미지·영상 생성용 저렴한 API 플랫폼입니다. GPT-Image-2는 이미지당 $0.006부터 시작하여 $1로 160장 이상을 생성할 수 있습니다. 이미지와 영상에 하나의 비동기 API를 사용하며, 작업을 제출해 ID를 받은 뒤 콜백으로 결과를 받습니다. 이미지 10,000장을 일괄 처리해도 시간 초과가 없으며 코드 수정 없이 모델을 변경할 수 있습니다. 월정액 없이 사용한 만큼만 결제합니다. <a href="https://go.apimart.ai/gh-toonflow-app">여기에서 가입</a>하여 시작하세요.</sub>
     </td>

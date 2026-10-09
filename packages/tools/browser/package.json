@@ -1,0 +1,32 @@
+{
+  "name": "@toonflow/tool-browser",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./host": "./src/host.ts",
+    "./protocol": "./src/protocol.ts",
+    "./panel": "./src/browserPanel.vue",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "build": "bun build.ts",
+    "demo": "bun demo.ts",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@toonflow/file": "workspace:*",
+    "@tabler/icons-vue": "^3.46.0",
+    "puppeteer-core": "25.12.0",
+    "zod": "^4.6.2"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.42",
+    "element-plus": "^2.14.5"
+  },
+  "devDependencies": {
+    "@toonflow/tools-scaffold": "workspace:*",
+    "typescript": "~6.0.3",
+    "vue-tsc": "^3.3.11"
+  }
+}

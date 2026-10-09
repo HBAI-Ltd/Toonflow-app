@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import type { Request, Response } from "express";
 import { z } from "zod";
 import conf from "@/utils/conf";
+import { isMobileLinkRequest } from "@/utils/mobileLink";
 
 export const controlStateSchema = z.object({
   directory: z.string().max(4096).nullable(),
@@ -31,7 +32,7 @@ export function getMcpSettings() {
 
 function allowedHost(req: Request) {
   const local = process.env.toonflowDesktop === "1" || (process.env.NODE_ENV === "dev" && ["win32", "darwin"].includes(process.platform));
-  return !local || ["localhost", "127.0.0.1", "[::1]"].includes(req.hostname);
+  return isMobileLinkRequest(req) || !local || ["localhost", "127.0.0.1", "[::1]"].includes(req.hostname);
 }
 
 export function getAppOrigin(req: Request) {

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { isMobile, isRemoteConnection } from "./mobile";
 import { toValue, type MaybeRefOrGetter } from "vue";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { registerApiLanguage } from "@/lib/i18n";
@@ -39,6 +40,11 @@ export default function useWorkspaceFiles(directory?: MaybeRefOrGetter<string | 
   async function read(path: string) {
     const { data } = await client.get<ArrayBuffer>("/read", { params: { directory: getDirectory(), path }, responseType: "arraybuffer" });
     return data;
+  }
+
+  async function importImage(url: string) {
+    const { data } = await client.post<{ data: { path: string; mimeType: string } }>("/importImage", { directory: getDirectory(), url });
+    return data.data;
   }
 
   function acquireUrl(path: string, mimeType?: string) {
@@ -131,6 +137,8 @@ export default function useWorkspaceFiles(directory?: MaybeRefOrGetter<string | 
   }
 
   async function reveal(path: string) {
+    if (isRemoteConnection) throw new Error("远程项目文件无法在本机文件管理器中定位，请下载或导出后查看。");
+    if (isMobile) throw new Error("Android 暂不支持在文件管理器中定位项目文件，请使用下载或导出保存文件。");
     await client.post("/reveal", { directory: getDirectory(), path });
   }
 
@@ -145,5 +153,5 @@ export default function useWorkspaceFiles(directory?: MaybeRefOrGetter<string | 
   }
 
   // ACT: 当前目录逐次读取；跨 await 或防抖的操作传入目录字符串，固定本次目标。
-  return { list, read, acquireUrl, readText, readJson, readTextSnapshot, writeTextSnapshot, write, writeJson, rename, copy, reveal, remove, mkdir };
+  return { list, read, importImage, acquireUrl, readText, readJson, readTextSnapshot, writeTextSnapshot, write, writeJson, rename, copy, reveal, remove, mkdir };
 }

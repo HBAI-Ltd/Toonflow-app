@@ -38,13 +38,13 @@ async function refreshMediaModels(previousSettings: Record<string, unknown> | un
   const configs = previousSettings?.mediaProviderConfigs as Record<string, { apiKey?: unknown }> | undefined;
   if (!apiKey || (previousSettings && apiKey === normalizeApiKey(configs?.[tfRouterMedia.id]?.apiKey))) return;
   let provider: Awaited<ReturnType<typeof refreshMediaProviderModels>> | undefined;
-  // ACT: 同一供应商文件按类型串行保存，避免两个刷新读取相同版本后互相冲突。
-  for (const type of ["video", "audio"] as const) {
+  // ACT: 同一供应商文件按类型串行保存，避免多个刷新读取相同版本后互相冲突。
+  for (const type of ["video", "image", "audio"] as const) {
     if (getMediaProviderApiKey(tfRouterMedia.id) !== apiKey) break;
     try { provider = await refreshMediaProviderModels(`${tfRouterMedia.id}.ts`, undefined, type, apiKey); }
     catch (error) {
       if (getMediaProviderApiKey(tfRouterMedia.id) !== apiKey) break;
-      errors.push(`TF-Router ${type === "video" ? "视频" : "音频"}模型更新失败：${error instanceof Error ? error.message : "未知错误"}`);
+      errors.push(`TF-Router ${{ video: "视频", image: "图片", audio: "音频" }[type]}模型更新失败：${error instanceof Error ? error.message : "未知错误"}`);
     }
   }
   return provider;

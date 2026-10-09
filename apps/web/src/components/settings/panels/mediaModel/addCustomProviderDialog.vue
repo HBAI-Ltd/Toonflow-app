@@ -19,7 +19,7 @@
           :disabled="saving"
           :aria-pressed="selectedProvider === item.id"
           @click="selectedProvider = item.id">
-          <img v-if="item.id === 'tfRouter'" class="providerLogo" :src="logoUrl" alt="" />
+          <img v-if="item.icon" class="providerLogo" :class="{ monochrome: item.id === 'tfRouter' }" :src="item.icon" alt="" />
           <modelIcon v-else :model="item.id" :size="18" />
           <span>{{ item.label }}</span>
         </button>
@@ -44,10 +44,10 @@
         </section>
       </el-scrollbar>
     </div>
-    <el-scrollbar v-else maxHeight="65vh">
+    <el-scrollbar v-else maxHeight="min(65dvh, calc(100dvh - 160px))">
       <div class="dialogContent">
-        <el-form labelPosition="top" :disabled="saving" @submit.prevent>
-          <el-form-item label="添加方式">
+        <el-form class="importForm" labelPosition="top" :disabled="saving" @submit.prevent>
+          <el-form-item class="methodField" label="添加方式">
             <el-segmented v-model="activeTab" :options="addMethods" block ariaLabel="添加方式">
               <template #default="{ item }">
                 <span class="methodOption">
@@ -57,26 +57,33 @@
               </template>
             </el-segmented>
           </el-form-item>
-          <el-form-item v-if="activeTab === 'file'" label="供应商文件">
-            <div class="fileSource">
-              <input ref="fileInput" type="file" accept=".ts" hidden :disabled="saving" @change="readSourceFile" />
-              <el-input :modelValue="fileName" :prefixIcon="IconFileCode" placeholder="尚未选择文件" readonly aria-label="已选择的供应商文件" />
-              <el-button :icon="IconFolderOpen" @click="fileInput?.click()">选择文件</el-button>
+          <el-form-item v-if="activeTab === 'file'" class="sourceField" label="供应商文件">
+            <div class="fileImport">
+              <div class="fileSource">
+                <input ref="fileInput" type="file" accept=".ts" hidden :disabled="saving" @change="readSourceFile" />
+                <el-input :modelValue="fileName" :prefixIcon="IconFileCode" placeholder="尚未选择文件" readonly aria-label="已选择的供应商文件" />
+                <el-button :icon="IconFolderOpen" @click="fileInput?.click()">选择文件</el-button>
+              </div>
+              <el-text class="fieldHint" type="info" size="small">支持 .ts 文件，最大 1 MB。</el-text>
             </div>
-            <el-text class="fieldHint" type="info" size="small">支持 .ts 文件，最大 1 MB。</el-text>
           </el-form-item>
-          <el-form-item v-else label="供应商代码">
+          <el-form-item v-else class="sourceField" label="供应商代码">
             <el-input v-model="code" class="sourceInput" type="textarea" dir="ltr" :rows="10" resize="none" aria-label="供应商代码" />
           </el-form-item>
         </el-form>
-        <el-alert class="providerTips" title="没有供应商文件？可以让 AI 帮你生成" type="info" :closable="false" showIcon>
-          <p>复制提示词发给其他 AI，按引导提供接口资料即可生成配置文件，随后在这里导入 .ts 文件或粘贴完整代码即可使用。</p>
-          <el-button size="small" :icon="IconCopy" @click="copyPrompt">一键复制提示词</el-button>
+        <section class="providerTips" aria-label="使用 AI 生成供应商">
+          <h4>还没有供应商文件？</h4>
+          <p>让 AI 读取接口文档并生成代码，遇到登录可手动操作。</p>
+          <div class="assistantActions">
+            <el-button type="primary" :icon="IconSparkles" :loading="openingAgent" :disabled="!modelChoices.length || saving" @click="openAgent">AI 生成供应商</el-button>
+            <el-button :icon="IconCopy" @click="copyPrompt">复制提示词给其他 AI</el-button>
+          </div>
+          <el-text v-if="!modelChoices.length" class="fieldHint" type="info" size="small">请先在文本模型设置中配置模型。</el-text>
           <details class="promptDetails" :open="promptExpanded" @toggle="promptExpanded = ($event.target as HTMLDetailsElement).open">
             <summary>查看完整提示词</summary>
             <el-input v-if="promptExpanded" :modelValue="providerPrompt" type="textarea" :rows="10" resize="none" readonly aria-label="供应商开发提示词" />
           </details>
-        </el-alert>
+        </section>
         <el-alert v-if="formError" class="formError" :title="formError" type="error" :closable="false" showIcon />
       </div>
     </el-scrollbar>
@@ -85,17 +92,17 @@
       <el-button type="primary" :loading="saving" :disabled="!source.trim()" @click="addProvider">确定添加供应商</el-button>
     </template>
   </el-dialog>
+  <component v-if="providerAgentDialog" :is="providerAgentDialog" v-model="agentVisible" :askUserEnabled="askUserEnabled" @generated="useGeneratedSource" />
 </template>
 
 <script setup lang="ts">
 import axios from "axios";
-import { computed, ref, shallowRef, watch } from "vue";
+import { computed, defineAsyncComponent, onBeforeUnmount, ref, shallowRef, watch, type Component } from "vue";
 import formCreate, { type Api, type Options } from "../../formCreate";
-import { IconFileCode, IconCode, IconFolderOpen, IconCopy } from "@tabler/icons-vue";
+import { IconFileCode, IconCode, IconFolderOpen, IconCopy, IconSparkles } from "@tabler/icons-vue";
 import { ElMessage } from "element-plus";
 import { mediaProviders } from "@toonflow/providers";
 import { modelIcon } from "@toonflow/model-icons";
-import logoUrl from "@toonflow/assets/logo.svg";
 import messageMarkdown from "@/components/messageMarkdown.vue";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
 import tfRouterSource from "@toonflow/providers/media/tfRouter?raw";
@@ -103,7 +110,7 @@ import apiMartSource from "@toonflow/providers/media/apiMart?raw";
 import metasoSource from "@toonflow/providers/media/metaso?raw";
 import type { MediaProvider } from "./types";
 import { providerPrompt } from "./providerPrompt";
-import { saveSettings } from "@/stores/settings";
+import { modelChoices, saveSettings } from "@/stores/settings";
 import { writeClipboardText } from "@/lib/clipboard";
 
 const { mode = "custom" } = defineProps<{ mode?: "builtin" | "custom" }>();
@@ -128,6 +135,11 @@ const fileSource = ref("");
 const fileName = ref("");
 const fileInput = ref<HTMLInputElement>();
 const saving = ref(false);
+const openingAgent = ref(false);
+const agentVisible = ref(false);
+const askUserEnabled = ref(false);
+const providerAgentDialog = shallowRef<Component>();
+let agentOpening: AbortController | undefined;
 const formError = ref("");
 const formApi = shallowRef<Api>();
 const addedProvider = shallowRef<MediaProvider>();
@@ -141,7 +153,10 @@ watch([activeTab, selectedProvider], () => {
 });
 
 watch(visible, value => {
-  if (!value) return;
+  agentOpening?.abort();
+  agentOpening = undefined;
+  openingAgent.value = false;
+  if (!value) { agentVisible.value = false; return; }
   selectedProvider.value = mediaProviders[0]?.id ?? "";
   activeTab.value = "file";
   promptExpanded.value = false;
@@ -149,6 +164,36 @@ watch(visible, value => {
   addedProvider.value = undefined;
   code.value = fileSource.value = fileName.value = formError.value = "";
 });
+
+async function openAgent() {
+  if (openingAgent.value || saving.value || !modelChoices.value.length) return;
+  openingAgent.value = true;
+  formError.value = "";
+  const controller = new AbortController();
+  agentOpening = controller;
+  try {
+    const { data } = await axios.get<{ data: { tools: { name: string; enabled: boolean; loadError?: string }[] } }>("/api/tools/get", { signal: controller.signal });
+    if (controller.signal.aborted || !visible.value) return;
+    const browser = data.data.tools.find(tool => tool.name === "browser");
+    if (!browser?.enabled) throw new Error("请先在「工具市场」安装并启用网页浏览器工具");
+    if (browser.loadError) throw new Error(`浏览器工具加载失败：${browser.loadError}`);
+    askUserEnabled.value = data.data.tools.some(tool => tool.name === "askUser" && tool.enabled && !tool.loadError);
+    providerAgentDialog.value ??= defineAsyncComponent(() => import("./providerAgentDialog.vue"));
+    agentVisible.value = true;
+  } catch (error) {
+    if (controller.signal.aborted) return;
+    formError.value = axios.isAxiosError(error) ? error.response?.data?.message || error.message : error instanceof Error ? error.message : "打开生成助手失败";
+  } finally { if (agentOpening === controller) { agentOpening = undefined; openingAgent.value = false; } }
+}
+
+onBeforeUnmount(() => agentOpening?.abort());
+
+function useGeneratedSource(source: string) {
+  activeTab.value = "code";
+  code.value = source;
+  formError.value = "";
+  addedProvider.value = undefined;
+}
 
 async function readSourceFile(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -258,7 +303,9 @@ async function copyPrompt() {
         height: 18px;
         object-fit: contain;
 
-        .dark & { filter: invert(1); }
+        &.monochrome {
+          .dark & { filter: invert(1); }
+        }
       }
     }
   }
@@ -310,45 +357,81 @@ async function copyPrompt() {
 }
 
 .dialogContent {
-  padding: 4px;
+  padding: 8px 4px;
 
-  .methodOption {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 4px 0;
-  }
+  .importForm {
+    .methodField {
+      .methodOption {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 4px 0;
+      }
+    }
 
-  .fileSource {
-    display: flex;
-    width: 100%;
-    gap: 8px;
+    .sourceField {
+      margin-bottom: 0;
 
-    .el-input { min-width: 0; }
-    .el-button { flex-shrink: 0; }
-  }
+      .fileImport {
+        width: 100%;
 
-  .fieldHint {
-    margin-top: 6px;
-  }
+        .fileSource {
+          display: flex;
+          width: 100%;
+          gap: 8px;
 
-  .sourceInput :deep(.el-textarea__inner) {
-    height: min(28vh, 240px);
-    min-height: 140px;
+          .el-input { min-width: 0; }
+          .el-button { flex-shrink: 0; }
+        }
+
+        .fieldHint {
+          display: block;
+          margin-top: 6px;
+          line-height: 1.5;
+        }
+      }
+
+      .sourceInput :deep(.el-textarea__inner) {
+        height: min(28dvh, 240px);
+        min-height: 140px;
+        padding: 12px;
+        font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.7;
+      }
+    }
   }
 
   .providerTips {
-    align-items: flex-start;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--el-border-color-lighter);
 
-    :deep(.el-alert__content) {
-      flex: 1;
-      min-width: 0;
+    h4 {
+      margin: 0;
+      color: var(--el-text-color-primary);
     }
 
     p {
-      margin: 6px 0 12px;
+      margin: 8px 0 12px;
+      color: var(--el-text-color-secondary);
+      font-size: 13px;
       line-height: 1.6;
+    }
+
+    .assistantActions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .el-button { margin-left: 0; }
+    }
+
+    .fieldHint {
+      display: block;
+      margin-top: 8px;
+      line-height: 1.5;
     }
 
     .promptDetails {
@@ -357,16 +440,44 @@ async function copyPrompt() {
       summary {
         width: fit-content;
         color: var(--el-text-color-secondary);
+        font-size: 12px;
+        line-height: 20px;
         cursor: pointer;
+
         &:hover { color: var(--el-color-primary); }
+        &:focus-visible {
+          outline: 2px solid var(--el-color-primary);
+          outline-offset: 4px;
+          border-radius: var(--el-border-radius-small);
+        }
       }
 
-      .el-textarea { margin-top: 12px; }
+      .el-textarea {
+        margin-top: 12px;
+
+        :deep(.el-textarea__inner) {
+          padding: 12px;
+          font-size: 12px;
+          line-height: 1.7;
+        }
+      }
     }
   }
 
   .formError {
     margin-top: 16px;
+  }
+
+  @media (max-width: 560px) {
+    .importForm .sourceField .fileImport .fileSource {
+      flex-direction: column;
+
+      .el-button { align-self: flex-start; }
+    }
+
+    .providerTips .assistantActions {
+      .el-button { flex: 1 1 180px; }
+    }
   }
 }
 </style>

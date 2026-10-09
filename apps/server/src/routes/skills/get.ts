@@ -25,6 +25,7 @@ export default router.get("/", async (_req, res) => {
       description: skill.description,
       author: typeof metadata.author === "string" ? metadata.author : "",
       github,
+      enabled: u.skillFile.isEnabled(skill.name),
     };
   }));
   res.json(success(items.sort((left, right) => left.name.localeCompare(right.name))));

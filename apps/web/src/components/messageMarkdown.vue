@@ -14,6 +14,7 @@
       :cdnOptions="cdnOptions"
       :components="markdownOverlays"
       :nodeRenderers="nodeRenderers"
+      :postnormalize="resolveImageReferences"
       :parseMarkdownIntoBlocks="definitions ? keepChunk : undefined"
       :locale="markdownLocale" />
   </div>
@@ -21,9 +22,9 @@
 
 <script setup lang="ts">
 import { computed, h } from "vue";
-import { Markdown, parseMarkdownIntoBlocks } from "vue-stream-markdown";
-import { MarkdownAstParser } from "@markmend/ast";
-import type { CodeOptions, ImageNodeRendererProps, ShikiOptions } from "vue-stream-markdown";
+import { Markdown, COMPONENT_RENDERERS, parseMarkdownIntoBlocks } from "vue-stream-markdown";
+import { MarkdownAstParser, postnormalize, type DefinitionNode, type ParsedNode, type SyntaxTree } from "@markmend/ast";
+import type { CodeOptions, ImageNodeRendererProps, LinkNodeRendererProps, ShikiOptions } from "vue-stream-markdown";
 import "vue-stream-markdown/index.css";
 import "vue-stream-markdown/theme.css";
 import markdownOverlays from "./markdownOverlays";
@@ -32,7 +33,7 @@ import { markdownLocale } from "@/lib/i18n";
 
 const { content, streaming = false, codeOptions, directory } = defineProps<{ content: string; streaming?: boolean; codeOptions?: CodeOptions; directory?: string }>();
 const renderImage = (image: ImageNodeRendererProps) => h(markdownImage, { image, directory: directory! });
-const nodeRenderers = computed(() => directory ? { image: renderImage } : {});
+const nodeRenderers = computed(() => directory ? { image: renderImage, link: renderLink } : {});
 const shikiOptions: ShikiOptions = { theme: ["github-light", "github-dark"] };
 const cdnOptions = { shiki: false } as const;
 const keepChunk = (value: string) => [value];
@@ -41,6 +42,44 @@ const definitionParser = new MarkdownAstParser({ mode: "static" });
 const isDefinition = (block: string) => /^ {0,3}\[(?!\^)[^\]\n]+\]:/.test(block)
   && definitionParser.markdownToAst(block).children.every(node => node.type === "definition");
 const definitions = computed(() => blocks.value.length > 1 ? blocks.value.filter(isDefinition).join("\n\n") : "");
+
+function renderLink(link: LinkNodeRendererProps) {
+  const renderedLink = h(COMPONENT_RENDERERS.link, link);
+  let url: URL;
+  try { url = new URL(link.node.url.startsWith("//") ? `https:${link.node.url}` : link.node.url); }
+  catch { return renderedLink; }
+  // ACT: 只预览带图片后缀的纯文字链接；普通网页和已含缩略图的链接保持原样。
+  if (!/^https?:$/.test(url.protocol) || !/\.(?:png|jpe?g|webp|gif|avif|bmp)$/i.test(url.pathname)
+    || !link.node.children.every(node => node.type === "text")) return renderedLink;
+  return h("span", { class: "imageLink" }, [renderedLink, h("br"), renderImage({
+    ...link, nodeKey: `${link.nodeKey}:image`,
+    node: { type: "image", url: url.href, alt: "网络图片", loading: link.markdownParser.hasLoadingNode([link.node]) },
+  })]);
+}
+
+function resolveImageReferences(tree: SyntaxTree) {
+  const imageDefinitions = new Map<string, DefinitionNode>();
+  function collect(nodes: ParsedNode[]) {
+    for (const node of nodes) {
+      if (node.type === "definition" && !imageDefinitions.has(node.identifier)) imageDefinitions.set(node.identifier, node);
+      if ("children" in node) collect(node.children);
+    }
+  }
+  function resolve(nodes: ParsedNode[]) {
+    for (const [index, node] of nodes.entries()) {
+      if (node.type === "imageReference") {
+        const definition = imageDefinitions.get(node.identifier);
+        if (definition) nodes[index] = { type: "image", alt: node.alt, title: definition.title, url: definition.url, loading: node.loading || definition.loading };
+      }
+      if ("children" in node) resolve(node.children);
+    }
+  }
+  collect(tree.children);
+  tree = postnormalize(tree);
+  resolve(tree.children);
+  return tree;
+}
+
 const chunks = computed(() => {
   if (blocks.value.length < 2) return blocks.value;
   const groups: string[] = [];

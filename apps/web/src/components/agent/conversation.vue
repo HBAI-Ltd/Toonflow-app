@@ -31,10 +31,11 @@
             :ref="measureMessage"
             :data-index="row.index"
             :data-message-id="item.id"
+            :data-live-message="item.streaming || item.id === browserMessages.liveMessageId || undefined"
             class="messageRow"
             :style="{ transform: `translateY(${row.start}px)` }"
             :class="{ userMessage: item.role === 'user', editingMessage: editingId === item.id }">
-            <chat-item :role="item.role" :variant="item.role === 'user' ? 'base' : 'text'" :textLoading="!!item.streaming && !compacting && !item.parts?.some(part => part.type === 'tool' || part.content)" animation="moving">
+            <chat-item :role="item.role" :variant="item.role === 'user' ? 'base' : 'text'" :textLoading="!!item.streaming && !compacting && !item.parts?.some(part => part.type === 'tool' || part.content)" animation="moving" @vue:updated="measureMessage($event.el?.parentElement ?? null)">
               <template #content>
                 <div class="messageContent">
                   <div v-if="item.report" class="reportHeader"><icon-users-group :size="14" />{{ item.report.name }} 上报</div>
@@ -49,7 +50,7 @@
                       </template>
                       <messageMarkdown v-if="!(part.collapsed ?? true)" :content="part.content" :streaming="!!item.streaming" :directory="directory" />
                     </chat-reasoning>
-                    <toolMessage v-else-if="part.type === 'tool'" v-model:collapsed="part.collapsed" :tool="part.tool" :directory="directory" @copy="copyMessage" />
+                    <toolMessage v-else-if="part.type === 'tool' && !isBrowserTool(part.tool)" v-model:collapsed="part.collapsed" :tool="part.tool" :directory="directory" @copy="copyMessage" />
                     <messageMarkdown v-else-if="part.type === 'text' && part.content" :content="part.content" :streaming="!!item.streaming" :directory="directory" />
                   </template>
                   <attachmentList v-if="item.attachments?.length" :attachments="item.attachments" :directory="directory" />
@@ -71,6 +72,7 @@
                 <el-button v-if="!item.report" class="messageAction" text circle :loading="deletingId === item.id" :disabled="locked || remoteRunning" aria-label="删除消息" title="删除消息" @click="deleteMessage(item)"><icon-trash v-if="deletingId !== item.id" :size="14" /></el-button>
               </template>
             </div>
+            <browserPanel v-if="browserMessages.tools.has(item.id)" class="browserPreview" :tools="browserMessages.tools.get(item.id)!" :directory="directory" :active="active" :live="item.id === browserMessages.liveMessageId" />
           </div>
         </div>
       </div>
@@ -152,7 +154,7 @@
 <script setup lang="ts">
 import { locale, t, translate } from "@toonflow/i18n/vue";
 import { computed, inject, nextTick, reactive, ref, shallowRef, watch, type ComponentPublicInstance } from "vue";
-import { defaultRangeExtractor, observeElementRect, useVirtualizer } from "@tanstack/vue-virtual";
+import { defaultRangeExtractor, measureElement, observeElementRect, useVirtualizer } from "@tanstack/vue-virtual";
 import axios from "axios";
 import {
   IconArrowUp, IconArrowDown, IconAtom, IconCopy,
@@ -176,9 +178,11 @@ import anonymousData from "@/lib/anonymousData";
 import { modelChoices } from "@/stores/settings";
 import { useWorkspaceStore } from "@/stores/workspace";
 import type { AgentAttachment, AgentConversation, AgentMessage } from "./types";
-import type { AgentEvent, AgentMention } from "@toonflow/server/agent/types";
+import type { AgentEvent, AgentMention, AgentToolCall } from "@toonflow/server/agent/types";
 import { createConversationStream, readAgentEvents } from "./replyStream";
 import type { CanvasContext } from "@toonflow/tool-canvas/runtime";
+import browserPanel from "@toonflow/tool-browser/panel";
+import { isBrowserTool } from "@toonflow/tool-browser/client";
 import chatItem from "@tdesign-vue-next/chat/es/chat-item";
 import chatReasoning from "@tdesign-vue-next/chat/es/chat-reasoning";
 import messageMarkdown from "@/components/messageMarkdown.vue";
@@ -194,6 +198,33 @@ const directory = workspaceStore.project?.directory;
 const draftAttachments = ref<AgentAttachment[]>([]);
 const createCanvasContext = inject<(() => CanvasContext | undefined) | undefined>("canvas", undefined);
 const messages = ref<AgentMessage[]>((props.initialSession?.messages ?? []).map(message => ({ ...message })));
+const browserMessages = computed(() => {
+  const groups = new Map<string, { id: string; tools: AgentToolCall[] }>();
+  let turnId: string | undefined;
+  let liveMessageId: string | undefined;
+  for (const message of messages.value) {
+    if (message.role === "user") {
+      turnId = message.entryId ?? message.id;
+      liveMessageId = undefined;
+      continue;
+    }
+    if (message.replyTo && message.replyTo !== turnId) {
+      turnId = message.replyTo;
+      liveMessageId = undefined;
+    }
+    const tools = message.parts?.flatMap(part => part.type === "tool" && isBrowserTool(part.tool) ? [part.tool] : []);
+    if (!tools?.length) continue;
+    const replyId = turnId ?? message.id;
+    let group = groups.get(replyId);
+    if (!group) { group = { id: message.id, tools: [] }; groups.set(replyId, group); }
+    group.tools.push(...tools);
+    liveMessageId = group.id;
+  }
+  return { tools: new Map([...groups.values()].map(group => [group.id, group.tools])), liveMessageId };
+});
+// 同轮浏览器调用共用该轮首条浏览器消息底部的画面，原始工具记录仍完整保留。
+const displayedMessages = computed(() => messages.value.filter(message => browserMessages.value.tools.has(message.id) || message.role === "user" || message.error || message.report || message.attachments?.length ||
+  !message.parts?.length || message.parts.some(part => part.type !== "tool" || !isBrowserTool(part.tool))));
 const stream = createConversationStream(messages);
 const remoteRunning = ref(props.initialSession?.running ?? false);
 const stats = ref(props.initialSession?.stats);
@@ -212,8 +243,9 @@ const messageList = ref<HTMLDivElement>();
 const atLatestMessage = ref(true);
 let messageListInitialized = false;
 let messageScrollOffset = 0;
-const messageKeys = computed(() => messages.value.map(item => item.id));
-const retainedMessages = computed(() => messages.value.flatMap((item, index) => item.streaming || item.id === editingId.value ? [index] : []));
+const messageKeys = computed(() => displayedMessages.value.map(item => item.id));
+// ACT: 只常驻当前轮的实时画面，历史浏览器消息仍按需挂载，避免长对话累积连接和 DOM。
+const retainedMessages = computed(() => displayedMessages.value.flatMap((item, index) => item.streaming || item.id === editingId.value || item.id === browserMessages.value.liveMessageId ? [index] : []));
 const messageVirtualizer = useVirtualizer<HTMLDivElement, HTMLDivElement>(computed(() => {
   const keys = messageKeys.value;
   const retained = retainedMessages.value;
@@ -229,6 +261,8 @@ const messageVirtualizer = useVirtualizer<HTMLDivElement, HTMLDivElement>(comput
     scrollEndThreshold: 48,
     useAnimationFrameWithResizeObserver: true,
     useCachedMeasurements: !props.active,
+    // ACT: 实时行读取当前高度，避免延后执行的观察记录覆盖本轮同步测量；历史行仍使用缓存。
+    measureElement: (element, entry, instance) => props.active && element.dataset.liveMessage ? element.offsetHeight : measureElement(element, entry, instance),
     // ACT: v-show 隐藏时保留视口与行高，避免零尺寸清空正在输入的工具表单。
     observeElementRect: (instance, onChange) => observeElementRect(instance, rect => { if (rect.height) onChange(rect); }),
     rangeExtractor: range => [...new Set([...defaultRangeExtractor(range), ...retained])].sort((left, right) => left - right),
@@ -239,10 +273,27 @@ const messageVirtualizer = useVirtualizer<HTMLDivElement, HTMLDivElement>(comput
     },
   };
 }));
-const visibleMessages = computed(() => messageVirtualizer.value.getVirtualItems().map(row => ({ row, item: messages.value[row.index]! })));
+const visibleMessages = computed(() => messageVirtualizer.value.getVirtualItems().map(row => ({ row, item: displayedMessages.value[row.index]! })));
+let messageMeasurePending = false;
 
 function measureMessage(element: Element | ComponentPublicInstance | null) {
-  messageVirtualizer.value.measureElement(element instanceof HTMLDivElement ? element : null);
+  const instance = messageVirtualizer.value;
+  if (!(element instanceof HTMLDivElement) || !props.active || !atLatestMessage.value || !element.dataset.liveMessage) {
+    instance.measureElement(element instanceof HTMLDivElement ? element : null);
+    return;
+  }
+  const index = instance.indexFromElement(element);
+  const height = element.offsetHeight;
+  const changed = instance.itemSizeCache.get(instance.options.getItemKey(index)) !== height;
+  instance.measureElement(element);
+  // 自动滚动时库会跳过同步测量；在本次 DOM 提交内校正，避免画面随换行先下移再被拉回。
+  instance.resizeItem(index, height);
+  if (!changed || messageMeasurePending) return;
+  messageMeasurePending = true;
+  void nextTick(() => {
+    messageMeasurePending = false;
+    if (props.active && atLatestMessage.value) instance.scrollToEnd();
+  });
 }
 
 watch([() => props.active, messageList], async ([active, element]) => {
@@ -465,7 +516,8 @@ async function deleteMessage(item: AgentMessage) {
       stats.value = data.data.stats;
       contextUsage.value = data.data.contextUsage;
     }
-    messages.value = messages.value.filter(message => message.id !== item.id);
+    messages.value = messages.value.filter(message => message.id !== item.id &&
+      !(item.replyTo && message.role === "assistant" && !message.report && message.replyTo === item.replyTo));
   } catch (error) {
     const message = axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message : undefined;
     ElMessage.error(message || (error instanceof Error ? error.message : "删除消息失败"));
@@ -931,6 +983,8 @@ watch(() => !props.initialSession?.parentFile && !!workspaceStore.pendingAgentMe
           color: var(--el-text-color-secondary);
         }
       }
+
+      .browserPreview { margin-top: 6px; }
 
       &.userMessage .messageActions {
         justify-content: flex-end;

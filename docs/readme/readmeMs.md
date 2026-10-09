@@ -146,7 +146,7 @@ Terima kasih kepada rakan kongsi berikut kerana menyokong projek sumber terbuka 
       <sub>Penjanaan video MiniMax H3 pada kos berpatutan: hanya ¥0.09 sesaat pada 768P dan ¥0.15 sesaat pada 2K (CNY, yuan China). Menyokong resolusi 2K asli, audio dan video yang disegerakkan, API serasi OpenAI, ComfyUI serta kanvas tanpa had, tanpa perlu menyediakan GPU sendiri. <a href="https://metaso.cn/minimax-h3/?s=toon">Daftar melalui pautan khas ini</a> untuk menerima kredit bonus dan tawaran eksklusif. Untuk urusan perniagaan, hubungi metasota12 di WeChat.</sub>
     </td>
     <td width="50%" valign="top">
-      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.svg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
+      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
       <br />
       <sub>Terima kasih kepada APIMart kerana menaja projek ini! APIMart ialah platform API mampu milik untuk penjanaan imej dan video dengan AI. Harga GPT-Image-2 bermula pada $0.006 setiap imej, membolehkan lebih 160 imej dihasilkan dengan $1. Imej dan video menggunakan satu API tak segerak yang sama: hantar tugas, terima ID tugas tersebut dan dapatkan hasil melalui panggilan balik. Proses kelompok 10,000 imej tanpa tamat masa dan tukar model tanpa mengubah kod. Bayar mengikut penggunaan, tanpa yuran bulanan. <a href="https://go.apimart.ai/gh-toonflow-app">Daftar di sini</a> untuk bermula.</sub>
     </td>

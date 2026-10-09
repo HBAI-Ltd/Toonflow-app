@@ -5,13 +5,13 @@
       <div class="brandInfo">
         <h3>Toonflow</h3>
         <div class="brandMeta">
-          <span>v{{ currentVersion }}</span>
-          <el-tag v-if="snapshot?.channel" type="info" size="small" round>{{ snapshot.channel }}</el-tag>
+          <span v-if="currentVersion">v{{ currentVersion }}</span>
+          <el-tag v-if="clientBuild?.channel || snapshot?.channel" type="info" size="small" round>{{ clientBuild?.channel || snapshot?.channel }}</el-tag>
         </div>
       </div>
     </div>
 
-    <el-card class="infoCard updateCard" shadow="never">
+    <el-card v-if="isMobile || !isRemoteConnection" class="infoCard updateCard" shadow="never">
       <div class="cardHeader">
         <div class="updateCopy">
           <div class="cardLabel">
@@ -20,27 +20,32 @@
           </div>
         </div>
         <div class="updateActions">
-          <el-select :modelValue="updateSource" aria-label="更新源" size="small" :disabled="working || sourceSaving" @change="saveUpdateSource">
-            <template #prefix>
-              <icon-brand-github v-if="updateSource === 'github'" :size="14" aria-hidden="true" />
-              <icon-world v-else :size="14" aria-hidden="true" />
-            </template>
-            <el-option label="官方源" value="official" />
-            <el-option label="GitHub" value="github" />
-            <el-option v-if="customUpdateUrl" label="自定义源" value="custom" />
-          </el-select>
-          <el-badge isDot :hidden="!hasDesktopUpdate">
-            <el-button size="small" type="primary" plain :loading="checking" :disabled="sourceSaving" @click="openUpdate">
-              {{ snapshot?.installFailure ? "查看更新失败原因" : snapshot?.updateReady ? "更新已就绪" : snapshot?.updating || action === "download" ? "查看更新进度" : "检查更新" }}
-            </el-button>
-          </el-badge>
+          <el-button v-if="isMobile" tag="a" size="small" type="primary" plain :href="`${repositoryUrl}/releases/latest`" target="_blank" rel="noopener noreferrer">
+            前往 GitHub 更新
+          </el-button>
+          <template v-else>
+            <el-select :modelValue="updateSource" aria-label="更新源" size="small" :disabled="working || sourceSaving" @change="saveUpdateSource">
+              <template #prefix>
+                <icon-brand-github v-if="updateSource === 'github'" :size="14" aria-hidden="true" />
+                <icon-world v-else :size="14" aria-hidden="true" />
+              </template>
+              <el-option label="官方源" value="official" />
+              <el-option label="GitHub" value="github" />
+              <el-option v-if="customUpdateUrl" label="自定义源" value="custom" />
+            </el-select>
+            <el-badge isDot :hidden="!hasDesktopUpdate">
+              <el-button size="small" type="primary" plain :loading="checking" :disabled="sourceSaving" @click="openUpdate">
+                {{ snapshot?.installFailure ? "查看更新失败原因" : snapshot?.updateReady ? "更新已就绪" : snapshot?.updating || action === "download" ? "查看更新进度" : "检查更新" }}
+              </el-button>
+            </el-badge>
+          </template>
         </div>
       </div>
-      <div v-if="snapshot?.hash" class="buildInfo">
+      <div v-if="!isMobile && snapshot?.hash" class="buildInfo">
         <span>构建标识</span>
         <code>{{ snapshot.hash }}</code>
       </div>
-      <div v-if="snapshot?.installFailure" class="installFailureNotice" role="alert">
+      <div v-if="!isMobile && snapshot?.installFailure" class="installFailureNotice" role="alert">
         <strong>上次更新未成功</strong>
         <p>{{ snapshot.installFailure.message }}</p>
         <p>请前往 GitHub 最新发布页，选择适合当前系统的完整安装包，关闭客户端后重新安装。</p>
@@ -206,6 +211,7 @@ import { translate, t } from "@toonflow/i18n/vue";
 import { computed, defineAsyncComponent, onMounted, onBeforeUnmount, ref } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
+import { isMobile, isRemoteConnection } from "@/lib/mobile";
 import { QRCode } from "tdesign-vue-next";
 import {
   IconRefresh,
@@ -238,7 +244,9 @@ const messageMarkdown = defineAsyncComponent(() => import("@/components/messageM
 const repositoryUrl = "https://github.com/HBAI-Ltd/Toonflow-app";
 const communityUrl = "https://work.weixin.qq.com/u/vc36adcc89845edcbe?v=5.0.3.63936&bb=85b8d228e8";
 const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
-const currentVersion = computed(() => snapshot.value?.version || import.meta.env.appVersion);
+const clientBuild = ref<{ version: string; channel: string }>();
+const currentVersion = computed(() => isDesktop && isRemoteConnection
+  ? clientBuild.value?.version || "" : snapshot.value?.version || import.meta.env.appVersion);
 const sourceSaving = ref(false);
 const checking = computed(() => desktopUpdateChecking.value);
 const working = computed(() => !!action.value);
@@ -284,9 +292,14 @@ onMounted(async () => {
 onMounted(async () => {
   if (!isDesktop) return;
   try {
+    if (isRemoteConnection) {
+      const { data } = await axios.get<{ data: { version: string; channel: string } }>("/api/desktop/update", { signal: controller.signal, timeout: 10000 });
+      clientBuild.value = data.data;
+      return;
+    }
     await runDesktopUpdate("read");
   } catch {
-    // ACT: 状态读取失败仍显示构建版本；检查按钮会展示具体错误。
+    // ACT: 本机版本读取失败不阻塞关于页；远程页面的构建版本不冒充客户端版本。
   }
 });
 onBeforeUnmount(() => controller.abort());
@@ -308,6 +321,7 @@ function openUpdate() {
 }
 
 async function saveUpdateSource(source: string) {
+  if (isRemoteConnection) return;
   if (source === updateSource.value || sourceSaving.value || working.value) return;
   if (source !== "official" && source !== "github" && (source !== "custom" || !customUpdateUrl.value)) return;
   sourceSaving.value = true;
@@ -437,6 +451,10 @@ async function runUpdate(nextAction: "read" | "check" | "download" | "apply") {
           display: flex;
           align-items: center;
           gap: 8px;
+
+          a {
+            text-decoration: none;
+          }
 
           :deep(.el-select) {
             width: 120px;

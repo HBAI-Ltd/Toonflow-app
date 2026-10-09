@@ -8,14 +8,11 @@
     destroyOnClose
     :closeOnClickModal="false"
     :closeOnPressEscape="!saving"
-    :showClose="!saving">
+    :showClose="!saving"
+    @closed="formApi = undefined">
     <div class="providerEditor">
       <messageMarkdown v-if="provider?.readme" class="providerReadme" :content="provider.readme" />
-      <el-form labelPosition="top" :disabled="saving">
-        <el-form-item label="API Key">
-          <el-input v-model="apiKey" :prefixIcon="IconKey" type="password" dir="ltr" showPassword autocomplete="off" aria-label="媒体供应商 API Key" />
-        </el-form-item>
-      </el-form>
+      <form-create v-model="formValues" v-model:api="formApi" :rule="formRules" :option="formOptions" />
       <div class="modelHeader">
         <h4>模型配置 <el-text type="info">{{ models.length }}</el-text></h4>
         <el-button :icon="IconPlus" size="small" :disabled="saving" @click="editModel()">手动添加</el-button>
@@ -46,7 +43,7 @@
     <el-alert v-if="formError" class="formError" :title="formError" type="error" :closable="false" showIcon />
     <template #footer>
       <el-button :disabled="saving" @click="visible = false">取消</el-button>
-      <el-button type="primary" :icon="IconDeviceFloppy" :loading="saving" @click="saveModels">保存</el-button>
+      <el-button type="primary" :icon="IconDeviceFloppy" :loading="saving" :disabled="!formApi" @click="saveModels">保存</el-button>
     </template>
     <component
       :is="modelEditorDialog"
@@ -61,8 +58,9 @@
 import { translate } from "@toonflow/i18n/vue";
 
 import axios from "axios";
-import { defineAsyncComponent, ref, shallowRef, watch, type Component } from "vue";
-import { IconPlus, IconTrash, IconDeviceFloppy, IconEdit, IconKey } from "@tabler/icons-vue";
+import { computed, defineAsyncComponent, ref, shallowRef, toRaw, watch, type Component } from "vue";
+import { IconPlus, IconTrash, IconDeviceFloppy, IconEdit } from "@tabler/icons-vue";
+import formCreate, { type Api, type Options } from "../../formCreate";
 import { modelIcon } from "@toonflow/model-icons";
 import messageMarkdown from "@/components/messageMarkdown.vue";
 import type { MediaProvider, MediaProviderModel } from "./types";
@@ -77,7 +75,10 @@ const models = ref<MediaProviderModel[]>([]);
 const modelEditorVisible = ref(false);
 const editingModelIndex = ref<number>();
 const saving = ref(false);
-const apiKey = ref("");
+const formApi = shallowRef<Api>();
+const formRules = shallowRef<ReturnType<typeof formCreate.copyRules>>([]);
+const formValues = ref<Record<string, unknown>>({});
+const formOptions = computed<Options>(() => ({ form: { labelPosition: "top", disabled: saving.value }, appendValue: false, submitBtn: false, resetBtn: false }));
 const revision = ref("");
 const formError = ref("");
 const modelTypes = { get image() { return translate("图片"); }, get video() { return translate("视频"); }, get audio() { return translate("音频"); }, get text() { return translate("文本"); } };
@@ -92,9 +93,9 @@ watch(visible, isVisible => {
   formError.value = "";
   modelEditorVisible.value = false;
   editingModelIndex.value = undefined;
-  const configs = settings.value.mediaProviderConfigs as Record<string, { apiKey?: unknown }> | undefined;
-  const configuredKey = provider && configs?.[provider.id]?.apiKey;
-  apiKey.value = typeof configuredKey === "string" ? configuredKey : "";
+  const configs = settings.value.mediaProviderConfigs as Record<string, Record<string, unknown>> | undefined;
+  formRules.value = formCreate.copyRules(provider?.rules ?? []);
+  formValues.value = structuredClone(toRaw((provider && configs?.[provider.id]) ?? {}));
   revision.value = provider?.revision ?? "";
   models.value = JSON.parse(JSON.stringify(provider?.models ?? []));
 }, { immediate: true });
@@ -121,12 +122,19 @@ function confirmModel(model: MediaProviderModel) {
 }
 
 async function saveModels() {
-  if (saving.value || !provider) return;
+  if (saving.value || !provider || !formApi.value) return;
   const { id: providerId, fileName } = provider;
   formError.value = "";
   let modelsSaved = false;
   let configSaved = false;
+  saving.value = true;
   try {
+    if (!(await formApi.value.validate().then(() => true, () => false))) return;
+    const config = formApi.value.formData();
+    if ("apiKey" in config) {
+      config.apiKey = typeof config.apiKey === "string" ? config.apiKey.trim() : "";
+      if ((config.apiKey as string).length > 8192) throw new Error("API Key 过长");
+    }
     const ids = new Set<string>();
     const values = models.value.map((item, index) => {
       const id = item.id.trim();
@@ -136,9 +144,6 @@ async function saveModels() {
       ids.add(id);
       return { ...item, id, label };
     });
-    if (apiKey.value.length > 8192) throw new Error("API Key 过长");
-    saving.value = true;
-    const nextKey = apiKey.value.trim();
     const { data } = await axios.put<{ code: number; data: MediaProvider; message?: string }>("/api/providers/media/save", {
       fileName, revision: revision.value, models: values,
     });
@@ -151,8 +156,8 @@ async function saveModels() {
       if (configs !== undefined && (!configs || typeof configs !== "object" || Array.isArray(configs))) throw new Error("媒体供应商配置格式无效");
       const current = configs?.[providerId];
       if (current !== undefined && (!current || typeof current !== "object" || Array.isArray(current))) throw new Error("当前供应商配置格式无效");
-      if (nextKey === (current?.apiKey ?? "")) return;
-      return { mediaProviderConfigs: { ...configs, [providerId]: { ...current, apiKey: nextKey } } };
+      if (Object.entries(config).every(([field, value]) => JSON.stringify(value) === JSON.stringify(current?.[field]))) return;
+      return { mediaProviderConfigs: { ...configs, [providerId]: { ...current, ...config } } };
     });
     configSaved = true;
     const response = await axios.get<{ code: number; data: MediaProvider[]; message?: string }>("/api/providers/media/list");

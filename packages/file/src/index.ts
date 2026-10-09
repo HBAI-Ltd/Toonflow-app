@@ -159,7 +159,10 @@ export async function writeAtomic(path: string, content: string | Uint8Array, op
           console.warn(`临时文件关闭失败：${temporary}`, error);
         });
       }
-      if (options.exclusive) await promises.link(temporary, path);
+      if (options.exclusive) {
+        if (process.platform === "android") require("./android.ts").renameExclusive(temporary, path);
+        else await promises.link(temporary, path);
+      }
       else await stubborn.retry.rename(retryOptions)(temporary, path);
     } finally {
       if (created) await promises.unlink(temporary).catch((error: NodeJS.ErrnoException) => {
@@ -188,7 +191,10 @@ export function writeAtomicSync(path: string, content: string | Uint8Array, opti
           console.warn(`临时文件关闭失败：${temporary}`, error);
         }
       }
-      if (options.exclusive) native.linkSync(temporary, path);
+      if (options.exclusive) {
+        if (process.platform === "android") require("./android.ts").renameExclusive(temporary, path);
+        else native.linkSync(temporary, path);
+      }
       else stubborn.retry.renameSync(retryOptions)(temporary, path);
     } finally {
       try { if (created) native.unlinkSync(temporary); }

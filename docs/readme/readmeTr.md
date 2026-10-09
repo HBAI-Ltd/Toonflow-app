@@ -146,7 +146,7 @@ Toonflow açık kaynak projesini destekleyen aşağıdaki iş ortaklarına teşe
       <sub>Uygun maliyetli MiniMax H3 video üretimi: 768P için saniyede yalnızca ¥0.09, 2K için ¥0.15 (CNY, Çin yuanı). Kendi GPU altyapınızı kurmadan doğal 2K çözünürlük, eşzamanlı ses ve video, OpenAI uyumlu API, ComfyUI ve sonsuz tuval desteği sunar. Ek kredi ve özel fırsatlardan yararlanmak için <a href="https://metaso.cn/minimax-h3/?s=toon">bu özel bağlantı üzerinden kaydolun</a>. Ticari sorularınız için WeChat üzerinden metasota12 ile iletişime geçin.</sub>
     </td>
     <td width="50%" valign="top">
-      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.svg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
+      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
       <br />
       <sub>Bu projeye sponsor olan APIMart’a teşekkür ederiz! APIMart, yapay zekâyla görsel ve video üretimi için uygun fiyatlı bir API platformudur. GPT-Image-2 görsel başına $0.006’dan başlar; $1 ile 160’tan fazla görsel üretilebilir. Görseller ve videolar aynı asenkron API’yi kullanır: görevi gönderin, kimliğini alın ve sonuçları geri çağrı yoluyla edinin. 10,000 görsellik toplu işleri zaman aşımı olmadan işleyin, kodu değiştirmeden model değiştirin. Aylık ücret olmadan kullandıkça ödeyin. Başlamak için <a href="https://go.apimart.ai/gh-toonflow-app">buradan kaydolun</a>.</sub>
     </td>

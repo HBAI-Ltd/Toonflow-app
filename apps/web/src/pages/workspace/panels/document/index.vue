@@ -583,9 +583,9 @@ async function executeFileAction(action: FileAction, item: FileTreeItem, target?
   }
   saveLayout();
 }
-async function performFileAction(currentDirectory: string, action: "copy" | "rename" | "delete", path: string, target?: string) {
+async function performFileAction(currentDirectory: string, action: "copy" | "rename" | "move" | "delete", path: string, target?: string, entryType: "canvas" | "directory" = "canvas") {
   if (currentDirectory !== directory) throw new Error("工作目录已切换");
-  await executeFileAction(action, { key: path, path, name: path.split(/[\\/]/).at(-1)!, type: "canvas" }, target);
+  await executeFileAction(action, { key: path, path, name: path.split(/[\\/]/).at(-1)!, type: entryType }, target);
   refreshFileTree();
 }
 window.addEventListener("toonflow:ext-updated", refreshExtensions);

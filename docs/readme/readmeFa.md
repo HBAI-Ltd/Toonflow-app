@@ -146,7 +146,7 @@
       <sub>تولید مقرون‌به‌صرفهٔ ویدیو با MiniMax H3: فقط ¥0.09 برای هر ثانیه با وضوح 768P و ¥0.15 برای هر ثانیه با وضوح 2K، به یوان چین (CNY). پشتیبانی از 2K بومی، صدای همگام با تصویر، API سازگار با OpenAI، ‏ComfyUI و بوم‌های بی‌نهایت، بدون نیاز به راه‌اندازی GPU شخصی. با <a href="https://metaso.cn/minimax-h3/?s=toon">ثبت‌نام از این پیوند اختصاصی</a> اعتبار هدیه و پیشنهادهای ویژه دریافت کنید. برای امور تجاری در WeChat با metasota12 تماس بگیرید.</sub>
     </td>
     <td width="50%" valign="top">
-      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.svg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
+      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
       <br />
       <sub>از APIMart برای حمایت از این پروژه سپاسگزاریم! APIMart پلتفرمی با API اقتصادی برای تولید تصویر و ویدیو با هوش مصنوعی است. قیمت GPT-Image-2 از $0.006 برای هر تصویر شروع می‌شود؛ یعنی بیش از 160 تصویر با $1. تصویر و ویدیو از یک API ناهمگام مشترک استفاده می‌کنند: کار را ارسال کنید، شناسهٔ آن را بگیرید و نتیجه را از طریق فراخوان بازگشتی دریافت کنید. دسته‌های 10,000 تصویری را بدون پایان مهلت درخواست پردازش کنید و بدون تغییر کد، مدل را عوض کنید. پرداخت بر اساس مصرف و بدون هزینهٔ ماهانه است. برای شروع <a href="https://go.apimart.ai/gh-toonflow-app">اینجا ثبت‌نام کنید</a>.</sub>
     </td>

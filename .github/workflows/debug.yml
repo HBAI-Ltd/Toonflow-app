@@ -1,4 +1,4 @@
-name: Debug desktop build
+name: Debug build
 
 on:
   workflow_dispatch:
@@ -7,15 +7,19 @@ on:
         description: 构建平台
         type: choice
         default: windowsX64
-        options: [windowsX64, macArm64, macX64, all]
+        options: [windowsX64, macArm64, macX64, androidArm64, all]
       ref:
-        description: 代码分支、标签或提交；ARM 签名要求与所选工作流版本为同一提交
+        description: 代码分支、标签或提交；签名构建要求与所选工作流版本为同一提交
         type: string
       version:
         description: 包版本号（如 2.0.1），留空使用标签或项目配置
         type: string
       generatePatch:
         description: 基于上一版本生成增量更新，尚无基线时生成首版完整包
+        type: boolean
+        default: false
+      androidRelease:
+        description: Android 使用固定发布签名（需要 Android Secrets）
         type: boolean
         default: false
   workflow_call:
@@ -30,6 +34,9 @@ on:
         type: string
         default: ""
       generatePatch:
+        type: boolean
+        default: false
+      androidRelease:
         type: boolean
         default: false
     secrets:
@@ -47,6 +54,18 @@ on:
         required: false
       MACOS_NOTARIZATION_KEY_BASE64:
         description: 对应 API 密钥的 P8 私钥文件 Base64
+        required: false
+      ANDROID_KEYSTORE_BASE64:
+        description: Android 发布 keystore 文件的 Base64
+        required: false
+      ANDROID_KEYSTORE_PASSWORD:
+        description: keystore 密码
+        required: false
+      ANDROID_KEY_ALIAS:
+        description: 签名密钥别名
+        required: false
+      ANDROID_KEY_PASSWORD:
+        description: 签名密钥密码
         required: false
     outputs:
       version:
@@ -94,13 +113,14 @@ jobs:
             { target: "windowsX64", os: "windows-2025", platform: "win32", arch: "x64", releaseFolder: "build/desktop/releases" },
             { target: "macArm64", os: "macos-15", platform: "darwin", arch: "arm64", releaseFolder: "build/desktop/releases/macArm64" },
             { target: "macX64", os: "macos-15-intel", platform: "darwin", arch: "x64", releaseFolder: "build/desktop/releases/macX64" },
+            { target: "androidArm64", os: "windows-2025", platform: "win32", arch: "x64", releaseFolder: "build/mobile/releases" },
           ];
           const selected = process.env.buildTarget || "all";
           const include = targets.filter(item => selected === "all" || item.target === selected);
           if (!include.length) throw new Error(`不支持的构建平台：${selected}`);
           const refVersion = /^v\d+\.\d+\.\d+$/.test(process.env.buildRef ?? "") ? process.env.buildRef : "";
           const version = (process.env.buildVersion?.trim() || refVersion || config.app.version).replace(/^v/, "");
-          if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("版本号必须为 X.Y.Z，与 release:desktop 保持一致");
+          if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("版本号必须为 X.Y.Z");
           appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\nmatrix=${JSON.stringify({ include })}\n`);
           '
 
@@ -121,15 +141,15 @@ jobs:
       - uses: actions/checkout@v7
         with:
           # ACT: 签名只使用触发工作流的代码，避免额外 ref 引入未审查的 PR 代码。
-          ref: ${{ matrix.target == 'macArm64' && github.sha || needs.prepare.outputs.commit }}
+          ref: ${{ (matrix.target == 'macArm64' || (matrix.target == 'androidArm64' && inputs.androidRelease)) && github.sha || needs.prepare.outputs.commit }}
           persist-credentials: false
-      - name: 校验 ARM 签名来源
-        if: matrix.target == 'macArm64'
+      - name: 校验签名来源
+        if: matrix.target == 'macArm64' || (matrix.target == 'androidArm64' && inputs.androidRelease)
         env:
           buildCommit: ${{ needs.prepare.outputs.commit }}
         run: |
           if [[ "$(git rev-parse HEAD)" != "$buildCommit" ]]; then
-            echo '::error::ARM 签名不能构建其他提交。请选择对应的工作流分支或标签，并将 ref 留空。'
+            echo '::error::签名构建不能使用其他提交。请选择对应的工作流分支或标签，并将 ref 留空。'
             exit 1
           fi
       - uses: oven-sh/setup-bun@v2
@@ -140,6 +160,41 @@ jobs:
           expectedPlatform: ${{ matrix.platform }}
           expectedArch: ${{ matrix.arch }}
         run: bun -e 'if (process.platform !== process.env.expectedPlatform || process.arch !== process.env.expectedArch) throw new Error("运行器系统或架构与目标不一致");'
+      - name: 准备 Android 发布签名
+        if: matrix.target == 'androidArm64' && inputs.androidRelease
+        shell: pwsh
+        env:
+          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          androidKeystorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          androidKeyAlias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          androidKeyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          $signingFields = @{
+            ANDROID_KEYSTORE_BASE64 = $env:androidKeystoreBase64
+            ANDROID_KEYSTORE_PASSWORD = $env:androidKeystorePassword
+            ANDROID_KEY_ALIAS = $env:androidKeyAlias
+            ANDROID_KEY_PASSWORD = $env:androidKeyPassword
+          }
+          foreach ($entry in $signingFields.GetEnumerator()) {
+            if ([string]::IsNullOrWhiteSpace($entry.Value)) { throw "请配置 $($entry.Key) Secret" }
+          }
+          $keystorePath = Join-Path $env:RUNNER_TEMP 'toonflowAndroid.keystore'
+          [System.IO.File]::WriteAllBytes($keystorePath, [Convert]::FromBase64String($env:androidKeystoreBase64))
+          "androidKeystore=$keystorePath" >> $env:GITHUB_ENV
+      - name: 准备 Android JDK 与 SDK
+        if: matrix.target == 'androidArm64'
+        shell: pwsh
+        env:
+          ANDROID_BUILD_TOOLS: 35.0.0
+          ANDROID_PLATFORM: android-34
+        run: |
+          if (!(Test-Path -LiteralPath "$env:JAVA_HOME_17_X64/bin/javac.exe")) { throw '找不到运行器 JDK 17' }
+          "JAVA_HOME=$env:JAVA_HOME_17_X64" >> $env:GITHUB_ENV
+          $env:JAVA_HOME = $env:JAVA_HOME_17_X64
+          $sdkManager = Join-Path $env:ANDROID_HOME 'cmdline-tools/latest/bin/sdkmanager.bat'
+          if (!(Test-Path -LiteralPath $sdkManager)) { throw '找不到运行器 Android SDK Manager' }
+          & $sdkManager "platforms;$env:ANDROID_PLATFORM" "build-tools;$env:ANDROID_BUILD_TOOLS"
+          if ($LASTEXITCODE -ne 0) { throw 'Android SDK 安装失败' }
       - name: 安装依赖
         run: bun install --frozen-lockfile
       - name: 安装 Intel Mac 兼容 SDK
@@ -147,13 +202,13 @@ jobs:
         working-directory: compat/macIntel
         run: bun install --frozen-lockfile
       - name: 准备 Electrobun SDK
-        if: matrix.target != 'macX64'
+        if: matrix.target != 'macX64' && matrix.target != 'androidArm64'
         run: bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
       - name: 编译 macOS 原生启动库
         if: runner.os == 'macOS'
         run: bun packages/startup/scripts/buildMac.ts
       - name: 准备 NSIS
-        if: runner.os == 'Windows'
+        if: matrix.target == 'windowsX64'
         shell: pwsh
         run: |
           $nsisPath = 'C:/Program Files (x86)/NSIS/makensis.exe'
@@ -164,10 +219,29 @@ jobs:
           if (!(Test-Path -LiteralPath $nsisPath)) { throw '找不到 makensis.exe' }
           "NSIS_PATH=$nsisPath" >> $env:GITHUB_ENV
       - name: 构建 Windows 安装包及更新文件
-        if: runner.os == 'Windows'
+        if: matrix.target == 'windowsX64'
         # ACT: 使用原生环境，避免 Git Bash 的 GNU tar 将 Windows 盘符识别为远程主机。
         shell: pwsh
         run: bun run release:desktop "$env:appVersion" "$env:releaseMode"
+      - name: 下载 Android Bun 与 TBS SDK
+        if: matrix.target == 'androidArm64'
+        shell: pwsh
+        run: bun run --cwd apps/mobile setup
+      - name: 构建 Android APK
+        if: matrix.target == 'androidArm64'
+        shell: pwsh
+        env:
+          androidRelease: ${{ inputs.androidRelease && '1' || '0' }}
+          androidKeystorePassword: ${{ inputs.androidRelease && secrets.ANDROID_KEYSTORE_PASSWORD || '' }}
+          androidKeyAlias: ${{ inputs.androidRelease && secrets.ANDROID_KEY_ALIAS || '' }}
+          androidKeyPassword: ${{ inputs.androidRelease && secrets.ANDROID_KEY_PASSWORD || '' }}
+        run: bun run --cwd apps/mobile build
+      - name: 清理 Android 发布签名
+        if: always() && matrix.target == 'androidArm64' && inputs.androidRelease
+        shell: pwsh
+        run: |
+          $keystorePath = Join-Path $env:RUNNER_TEMP 'toonflowAndroid.keystore'
+          if (Test-Path -LiteralPath $keystorePath) { Remove-Item -LiteralPath $keystorePath -Force }
       - name: 准备 ARM 签名与公证凭据
         if: matrix.target == 'macArm64'
         id: signing
@@ -279,6 +353,21 @@ jobs:
             hdiutil detach "$mountDirectory"
             trap - EXIT
           done
+      - name: 命名 Android 安装包
+        if: matrix.target == 'androidArm64'
+        shell: pwsh
+        env:
+          releaseFolder: ${{ matrix.releaseFolder }}/${{ needs.prepare.outputs.version }}
+          debugSuffix: ${{ !inputs.androidRelease && '-debug' || '' }}
+        run: |
+          bun -e '
+          import { copyFile, mkdir } from "@toonflow/file";
+          import { join } from "node:path";
+          const directory = process.env.releaseFolder;
+          const apkName = `toonflow-${process.env.appVersion}-android-arm64${process.env.debugSuffix}.apk`;
+          await mkdir(directory, { recursive: true });
+          await copyFile("build/mobile/toonflowMobile.apk", join(directory, apkName));
+          '
       - name: 上传构建产物
         id: artifact
         uses: actions/upload-artifact@v7

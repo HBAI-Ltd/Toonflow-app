@@ -186,9 +186,15 @@ export interface ToolFiles {
   rename(path: string, target: string): Promise<void>;
   remove(path: string, recursive?: boolean): Promise<void>;
   copyFile(path: string, target: string, exclusive?: boolean): Promise<void>;
+  importImage(url: string): Promise<{ path: string; mimeType: string }>;
 }
 
 export interface ToolContext {
+  assets?: { execute: ToolDefinition["execute"] };
+  browser?: {
+    execute(sessionId: string, args: Record<string, unknown>, config: Record<string, unknown>, signal?: AbortSignal,
+      onUpdate?: Parameters<ToolDefinition["execute"]>[3]): ReturnType<ToolDefinition["execute"]>;
+  };
   ffmpeg(signal?: AbortSignal): Promise<FfmpegFactory>;
   media?: MediaContext;
   canvas?: CanvasContext;

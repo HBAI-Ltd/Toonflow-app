@@ -38,10 +38,10 @@
       :zoomOnPinch="active && !settingsVisible"
       :panOnScroll="active && !settingsVisible"
       :panOnScrollSpeed="1"
-      :panOnDrag="handMode ? true : [1]"
+      :panOnDrag="handMode || isMobile ? true : [1]"
       :panOnScrollMode="PanOnScrollMode.Free"
       :delete-key-code="null"
-      :selectionKeyCode="!handMode"
+      :selectionKeyCode="!handMode && !isMobile"
       :selectionMode="SelectionMode.Partial"
       :multi-selection-key-code="null"
       :zoomActivationKeyCode="zoomKeyPressed ? true : null"
@@ -119,6 +119,7 @@ import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, onScopeDispose
 import axios from "axios";
 import { debounce } from "lodash-es";
 import { ElMessage } from "element-plus";
+import { isMobile } from "@/lib/mobile";
 import { storeToRefs } from "pinia";
 import { IconUnlink } from "@tabler/icons-vue";
 import * as vueRuntime from "vue";
