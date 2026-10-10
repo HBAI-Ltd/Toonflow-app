@@ -34,14 +34,16 @@ internal static class protocolLauncher
                     if (sendUrl(args[0])) return 0;
 
                     // ACT: SDK launcher 不转发 URL 参数；启动后通过本机服务交给待确认队列。
-                    string launcher = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../bin/launcher.exe"));
+                    string bin = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../bin"));
+                    string launcher = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startupLauncher.exe");
+                    if (!File.Exists(launcher)) launcher = Path.Combine(bin, "launcher.exe");
                     if (!File.Exists(launcher)) throw new FileNotFoundException("未找到 Toonflow，请重新安装。");
                     Process.Start(new ProcessStartInfo(launcher)
                     {
-                        WorkingDirectory = Path.GetDirectoryName(launcher),
+                        WorkingDirectory = bin,
                         UseShellExecute = false,
                         CreateNoWindow = true,
-                        WindowStyle = ProcessWindowStyle.Hidden
+                        WindowStyle = ProcessWindowStyle.Normal
                     });
                     var timer = Stopwatch.StartNew();
                     while (timer.Elapsed < TimeSpan.FromSeconds(45))

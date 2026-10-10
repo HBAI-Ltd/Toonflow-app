@@ -38,7 +38,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent, shallowRef } from "vue";
 import { hasDesktopUpdate } from "@/stores/desktopUpdate";
-import { isMobile } from "@/lib/mobile";
+import { isMobile } from "@/lib/platform";
 import {
   IconPalette,
   IconSettings,

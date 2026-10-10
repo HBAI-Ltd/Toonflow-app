@@ -6,6 +6,7 @@ import { mkdir, readFile, readdir, rm, writeAtomic } from "@toonflow/file";
 import { getMissingBrowserFeatures } from "@toonflow/web/browserCapabilities";
 import { createRemoteConnection } from "@toonflow/server/remoteConnection";
 import { languageRequest, translateError, translateMessage } from "@toonflow/server/i18n";
+import { getRuntimePlatform, setRuntimeHost } from "@toonflow/server/platform";
 import config from "../../../electrobun.config";
 
 const fromSource = import.meta.path.endsWith(".ts");
@@ -17,6 +18,7 @@ const exportId = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 const app = express();
 let origin = "";
 
+setRuntimeHost("mobile");
 process.env.TOONFLOW_DATA_DIR = directory;
 await mkdir(exportDirectory, { recursive: true });
 const connection = await createRemoteConnection(directory, { deviceName: process.env.TOONFLOW_MOBILE_DEVICE_NAME || "Toonflow Android", appVersion: config.app.version });
@@ -38,8 +40,9 @@ app.use((request, response, next) => {
   // ACT: 一次启动凭据换同源 Cookie，覆盖 Axios、SSE、节点脚本和媒体请求，无须逐个修改前端接口。
   if (request.method === "GET" && request.path === "/" && request.query.token === token) {
     response.cookie("toonflowMobile", token, { httpOnly: true, sameSite: "strict", path: "/" });
-    response.redirect(request.query.probe === "1" ? "/?mobile=1&probe=1"
-      : `/?mobile=1${request.query.engine === "x5" ? "&engine=x5" : ""}${connection.remote ? "&remote=1" : ""}`);
+    const engine = request.query.engine === "gecko" ? "&engine=gecko" : "";
+    response.redirect(request.query.probe === "1" ? `/?mobile=1&probe=1${engine}`
+      : `/?mobile=1${engine}${connection.remote ? "&remote=1" : ""}`);
     return;
   }
   if (!(request.get("cookie") ?? "").split(";").some(value => value.trim() === `toonflowMobile=${token}`)) {
@@ -61,11 +64,13 @@ app.get("/", (request, response, next) => {
   }
   // ACT: 旧内核先执行独立小页面，避免 Vue 或依赖在能力检测前就抛错。
   // 旧内核无法解析检测函数时仍有 ES5 基线结果，让原生壳能够进入备用内核流程。
-  response.type("html").send(`<!doctype html><html><head><meta charset="utf-8"><title>Toonflow</title></head><body><script>window.toonflowBrowserProbe={missing:["Browser capability probe"],userAgent:navigator.userAgent};</script><script>window.toonflowBrowserProbe={missing:(${getMissingBrowserFeatures.toString()})(),userAgent:navigator.userAgent};</script></body></html>`);
+  const bridge = request.query.engine === "gecko"
+    ? `<meta name="toonflowBrowserProbe"><script>document.querySelector('meta[name="toonflowBrowserProbe"]').content=JSON.stringify(window.toonflowBrowserProbe);</script>` : "";
+  response.type("html").send(`<!doctype html><html><head><meta charset="utf-8"><title>Toonflow</title></head><body><script>window.toonflowBrowserProbe={missing:["Browser capability probe"],userAgent:navigator.userAgent};</script><script>window.toonflowBrowserProbe={missing:(${getMissingBrowserFeatures.toString()})(),userAgent:navigator.userAgent};</script>${bridge}</body></html>`);
 });
 
 app.get("/api/mobile/runtime", (_request, response) => {
-  response.json({ bun: Bun.version, platform: process.platform, arch: process.arch });
+  response.json({ bun: Bun.version, platform: process.platform, arch: process.arch, environment: getRuntimePlatform() });
 });
 app.post("/api/mobile/exports", express.raw({ type: "application/octet-stream", limit: "100mb" }), async (request, response) => {
   if (!Buffer.isBuffer(request.body)) {
@@ -126,7 +131,7 @@ if (!address || typeof address === "string") throw new Error("无法获取本地
 origin = `http://127.0.0.1:${address.port}`;
 if (toonflow) {
   const { initializeMcpRuntime } = await import("@toonflow/server/mcp");
-  await initializeMcpRuntime(toonflow, origin, resolve(resources, "mcp/stdio.js"), undefined, { Cookie: `toonflowMobile=${token}` });
+  await initializeMcpRuntime(toonflow, origin, resolve(resources, fromSource ? "mcp/stdio.js" : "stdio.js"), undefined, { Cookie: `toonflowMobile=${token}` });
 }
 console.log(`TOONFLOW_MOBILE_URL=${origin}/?token=${token}`);
 server.on("error", error => { console.error(error); process.exit(1); });

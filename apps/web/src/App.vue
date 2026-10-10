@@ -53,7 +53,7 @@ import tdesignAr from "tdesign-vue-next/es/locale/ar_KW";
 import { locale } from "@toonflow/i18n/vue";
 import type { updateSnapshot } from "@toonflow/server/desktop";
 import { chatLocale } from "@/lib/i18n";
-import { isMobile } from "@/lib/mobile";
+import { isMobile, isDesktop } from "@/lib/platform";
 import { saveSettings, settings, uiSettings } from "@/stores/settings";
 import { desktopUpdateSnapshot, stopDesktopUpdateObservation } from "@/stores/desktopUpdate";
 import { useMcpControl } from "@/lib/mcpControl";
@@ -75,7 +75,6 @@ const tdesignLocale = computed(() => ({ ...tdesignLocales[locale.value], chat: c
 const updateBoxVisible = ref(false);
 const updateBoxBuild = shallowRef<{ version: string; hash: string }>();
 const shownUpdateBuilds = new Set<string>();
-const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
 const installFailureVisible = ref(false);
 const installFailure = shallowRef<updateSnapshot["installFailure"]>();
 const shownInstallAttempts = new Set<string>();

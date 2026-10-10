@@ -304,9 +304,9 @@ export default function createWindowsUpdater(resourcesDirectory: string, lifecyc
       if (!approval) throw new Error(t`更新重启已取消`);
       installError = "";
       copyFileSync(join(resourcesDirectory, "app/updateHelper.exe"), helperPath);
-      // 等待外层 launcher 退出，避免它仍占用 app；普通 Bun 验证或无 launcher 时等待当前宿主。
-      const launcherPid = Number(process.env.ELECTROBUN_LAUNCHER_PID);
-      const parentPid = Number.isSafeInteger(launcherPid) && launcherPid > 0 && launcherPid <= 0x7fffffff ? launcherPid : process.pid;
+      // 等待最外层启动入口退出，确保兼容启动的监控进程也已释放 app 目录。
+      const parentPid = [process.env.TOONFLOW_STARTUP_PID, process.env.ELECTROBUN_LAUNCHER_PID]
+        .map(Number).find(pid => Number.isSafeInteger(pid) && pid > 0 && pid <= 0x7fffffff) ?? process.pid;
       writeAtomicSync(planPath, JSON.stringify({ schemaVersion: 1, transactionId, installDirectory, parentPid,
         identifier: localInfo.identifier, channel: localInfo.channel, ...prepared }), { exclusive: true });
       const handoffUtc = Date.now();

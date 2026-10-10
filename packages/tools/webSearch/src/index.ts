@@ -62,8 +62,9 @@ const plugin: ToolPlugin = {
               truncated: false,
             };
           } catch (error) {
-            requestSignal.throwIfAborted();
-            throw new Error("DuckDuckGo 搜索失败，请稍后重试或在工具配置中切换搜索服务", { cause: error });
+            signal?.throwIfAborted();
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`DuckDuckGo 搜索${timeout.aborted ? "超时" : "失败"}。可稍后重试，或前往「设置 → 插件市场 → 已安装 → 联网搜索 → 配置」，将搜索服务切换为 DeepSeek（填写官方 API Key）或 Tavily（填写 Tavily API Key）。\n原因：${message}`, { cause: error });
           } finally {
             requestSignal.removeEventListener("abort", onAbort);
           }

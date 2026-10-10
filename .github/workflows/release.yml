@@ -198,13 +198,16 @@ jobs:
           const plannedNames = new Set(plans.flatMap(plan => plan.fileNames));
           if (names.some(name => !plannedNames.has(name))) throw new Error("存在无法归属到发布平台的构建产物");
 
+          const uploadController = new AbortController();
+          process.once("SIGINT", () => uploadController.abort());
+          process.once("SIGTERM", () => uploadController.abort());
           async function postJson(url: string, payload: Record<string, unknown>, label: string) {
             const response = await fetch(url, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ authorizeCode, version, ...payload }),
               redirect: "error",
-              signal: AbortSignal.timeout(30000),
+              signal: AbortSignal.any([uploadController.signal, AbortSignal.timeout(30000)]),
             }).catch(() => { throw new Error(`${label}请求失败或超时`); });
             if (!response.ok) throw new Error(`${label}失败（HTTP ${response.status}）`);
             const result = await response.json().catch(() => { throw new Error(`${label}未返回有效 JSON`); });
@@ -212,13 +215,18 @@ jobs:
             return result;
           }
 
-          const platforms = [];
           const uploadedPaths = new Set<string>();
-          for (const plan of plans) {
+          // ACT: 最多三个平台并行，各平台内串行，避免大文件阻塞其他平台。
+          const platforms = await Promise.all(plans.map(async plan => {
             const uploadedFiles = [];
             for (const fileName of plan.fileNames) {
+              uploadController.signal.throwIfAborted();
+              const file = Bun.file(join("artifacts", fileName));
+              const signingStarted = performance.now();
+              console.log(`获取 ${fileName} 上传签名（${(file.size / 1024 / 1024).toFixed(2)} MiB）`);
               const suffix = extname(fileName).slice(1);
               const result = await postJson(uploadGetPutUrl, { suffix }, `获取 ${fileName} 上传签名`);
+              console.log(`${fileName} 获取签名耗时 ${((performance.now() - signingStarted) / 1000).toFixed(1)} 秒`);
               if (typeof result.data?.uploadUrl !== "string") throw new Error(`${fileName} 缺少 uploadUrl`);
               const uploadUrl = result.data.uploadUrl;
               console.log(`::add-mask::${uploadUrl.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A")}`);
@@ -226,22 +234,37 @@ jobs:
               const fileUrl = decodeURIComponent(objectUrl.pathname.slice(1));
               if (!fileUrl || uploadedPaths.has(fileUrl)) throw new Error(`${fileName} 的上传对象路径为空或与其他文件重复`);
               uploadedPaths.add(fileUrl);
-              const file = Bun.file(join("artifacts", fileName));
-              const response = await fetch(uploadUrl, {
-                method: "PUT",
-                headers: { "Content-Type": "application/octet-stream", "Content-Length": String(file.size) },
-                body: file,
-                redirect: "error",
-                signal: AbortSignal.timeout(20 * 60 * 1000),
-              }).catch(() => { throw new Error(`${fileName} 上传失败或超时`); });
-              if (!response.ok) throw new Error(`${fileName} 上传失败（HTTP ${response.status}）`);
-              await response.body?.cancel();
+              uploadController.signal.throwIfAborted();
+              console.log(`开始上传 ${fileName}`);
+              const started = performance.now();
+              const upload = Bun.spawn([
+                "curl", "--silent", "--fail", "--globoff",
+                "--upload-file", join("artifacts", fileName),
+                "--header", "Content-Type: application/octet-stream", "--header", "Expect:",
+                "--connect-timeout", "30", "--max-time", "1200",
+                "--speed-limit", "1024", "--speed-time", "60",
+                "--output", "/dev/null",
+                "--write-out", "%{http_code} %{speed_upload} %{time_total} %{time_connect} %{time_appconnect} %{time_starttransfer}",
+                uploadUrl,
+              ], { stdout: "pipe", stderr: "ignore", signal: uploadController.signal });
+              const progress = setInterval(() => console.log(`${fileName} 上传中，已等待 ${Math.round((performance.now() - started) / 1000)} 秒`), 30000);
+              try {
+                const exitCode = await upload.exited;
+                const [status, speed, seconds, connectSeconds, tlsSeconds, firstByteSeconds] = (await new Response(upload.stdout).text()).trim().split(/\s+/).map(Number);
+                console.log(`${fileName}：HTTP ${status}，耗时 ${seconds} 秒，平均 ${(speed / 1024).toFixed(1)} KiB/s，TCP ${connectSeconds} 秒，TLS ${tlsSeconds} 秒，首字节 ${firstByteSeconds} 秒`);
+                if (exitCode !== 0 || !(status >= 200 && status < 300)) {
+                  throw new Error(`${fileName} 上传失败（curl ${exitCode}，HTTP ${status}）${exitCode === 28 ? "：请求超时或连续 60 秒低于 1 KiB/s" : ""}`);
+                }
+              } finally { clearInterval(progress); }
               uploadedFiles.push({ fileUrl, fileName, fileSize: String(file.size) });
               console.log(`已上传 ${fileName}（${file.size} 字节）`);
             }
             const [application, ...files] = uploadedFiles;
-            platforms.push({ platform: plan.platform, arch: plan.arch, applicationPath: application!.fileUrl, files });
-          }
+            return { platform: plan.platform, arch: plan.arch, applicationPath: application!.fileUrl, files };
+          })).catch(error => {
+            uploadController.abort();
+            throw error;
+          });
           // ACT: 所有文件上传成功后一次性登记；登记请求不自动重试，避免重复发布。
           await postJson(uploadPutUrl, { platforms }, "登记更新版本");
           console.log(`更新托管网站已发布 ${version}，共 ${platforms.length} 个平台版本`);

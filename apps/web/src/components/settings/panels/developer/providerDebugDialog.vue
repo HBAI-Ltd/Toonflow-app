@@ -123,6 +123,7 @@ import { ElMessage } from "element-plus";
 import { IconFolderOpen, IconRefresh, IconPlus, IconX, IconVolume, IconDownload, IconPlayerPlay, IconPlayerStop } from "@tabler/icons-vue";
 import type { Provider } from "@toonflow/providers";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
+import { isDesktop } from "@/lib/platform";
 
 type DebugProvider = { id: string; label: string; rules: Rule[]; models: Provider["models"] };
 type DebugLog = { id: number; method: string; url: string; state: string; status?: number; duration?: number; request?: string; response?: string; error?: string };
@@ -171,7 +172,6 @@ const statusLabel = computed(() => ({
   "已停止": translate("已停止"),
 })[status.value]);
 const elapsed = ref(0);
-const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
 const desktopHeaders = { "x-toonflow-desktop": "1" };
 let controller: AbortController | undefined;
 

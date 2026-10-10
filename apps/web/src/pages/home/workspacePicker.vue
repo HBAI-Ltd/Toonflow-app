@@ -39,7 +39,7 @@ import { onBeforeUnmount, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { IconFolder, IconFolderPlus, IconFile, IconChevronDown, IconArrowLeft } from "@tabler/icons-vue";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
-import { isMobile, isRemoteMobile, isRemoteConnection } from "@/lib/mobile";
+import { isMobile, isDesktop, isRemoteMobile, isRemoteConnection } from "@/lib/platform";
 
 type WorkspaceEntry = { name: string; path: string; type: "file" | "directory" };
 type DirectoryListing = {
@@ -51,7 +51,6 @@ type DirectoryListing = {
 
 const selectedDirectory = defineModel<string>({ default: "" });
 const props = defineProps<{ disabled?: boolean; hideTrigger?: boolean }>();
-const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
 const dialogVisible = ref(false);
 const selecting = ref(false);
 const loading = ref(false);

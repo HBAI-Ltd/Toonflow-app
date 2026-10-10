@@ -6,6 +6,7 @@
     "./app": "./src/app.ts",
     "./remoteConnection": "./src/remoteConnection.ts",
     "./desktop": "./src/types/desktop.ts",
+    "./platform": "./src/lib/platform.ts",
     "./mcp": "./src/utils/mcp/runtime.ts",
     "./mobileLink": "./src/utils/mobileLink/index.ts",
     "./browser": "./src/utils/browser/index.ts",

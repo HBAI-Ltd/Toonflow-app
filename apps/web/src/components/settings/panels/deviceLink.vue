@@ -131,7 +131,8 @@ import { IconFolderPlus, IconQrcode, IconRefresh } from "@tabler/icons-vue";
 import { useWorkspaceStore } from "@/stores/workspace";
 import workspacePicker from "@/pages/home/workspacePicker.vue";
 import { writeClipboardText } from "@/lib/clipboard";
-import { changeDeviceConnection, deviceHubEnabled, getDeviceVersionWarning, isRemoteConnection, mobileConnection, mobileConnectionLabel, mobileConnectionVersionWarning } from "@/lib/mobile";
+import { changeDeviceConnection, deviceHubEnabled, getDeviceVersionWarning, mobileConnection, mobileConnectionLabel, mobileConnectionVersionWarning } from "@/lib/mobile";
+import { isRemoteConnection } from "@/lib/platform";
 
 type LinkStatus = { enabled: boolean; hubEnabled?: boolean; initialized: boolean; pairingAvailable: boolean; port: number; addresses: string[]; publicUrl: string; directories: string[]; appVersion?: string; devices: { id: string; name: string; online: boolean; lastSeen?: number; appVersion?: string }[] };
 type Pairing = { qrCode: string; manualCode: string; url: string };

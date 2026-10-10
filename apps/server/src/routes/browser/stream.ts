@@ -3,13 +3,14 @@ import { z } from "zod";
 import type { BrowserStreamEvent } from "@toonflow/tool-browser/protocol";
 import { validateFields } from "@/lib/middleware";
 import u from "@/utils";
+import { getRuntimePlatform } from "@/lib/platform";
 
 const inputSchema = z.object({ directory: z.string().min(1).max(4096).optional(), toolSessionId: z.uuid().optional(), sessionId: z.uuid() })
   .refine(input => !!input.directory !== !!input.toolSessionId, "请提供工作目录或临时对话身份，不能同时提供");
 
 export default Router().get("/", validateFields(inputSchema.shape, "query"), async (req, res) => {
   u.mcpControl.assertAppRequest(req);
-  if (!req.app.locals.desktop && process.env.NODE_ENV !== "dev") throw Object.assign(new Error("浏览器画面仅在桌面客户端中可用"), { status: 404 });
+  if (!req.app.locals.desktop && !getRuntimePlatform().development) throw Object.assign(new Error("浏览器画面仅在桌面客户端中可用"), { status: 404 });
   const input = inputSchema.parse(req.query);
   if (!input.toolSessionId) u.singleAgent.assertWorkspaceBrowserAccess(input.sessionId);
   const cwd = input.toolSessionId

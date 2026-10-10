@@ -2,19 +2,19 @@ package com.toonflow.mobile;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
-import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.DocumentsContract;
+import android.provider.OpenableColumns;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
@@ -22,7 +22,6 @@ import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
-import android.webkit.CookieManager;
 import android.webkit.MimeTypeMap;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
@@ -54,23 +53,27 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import org.json.JSONTokener;
-import com.tencent.smtt.sdk.QbSdk;
-import com.tencent.smtt.sdk.TbsCommonCode;
-import com.tencent.smtt.sdk.TbsDownloadConfig;
-import com.tencent.smtt.sdk.TbsDownloader;
-import com.tencent.smtt.sdk.TbsListener;
+import org.mozilla.geckoview.AllowOrDeny;
+import org.mozilla.geckoview.GeckoResult;
+import org.mozilla.geckoview.GeckoRuntime;
+import org.mozilla.geckoview.GeckoRuntimeSettings;
+import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.WebExtension;
+import org.mozilla.geckoview.WebRequestError;
 
 public class mobileActivity extends Activity {
   private static final Object payloadLock = new Object();
   private static final String uuidPattern = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
-  private static boolean x5InitializationStarted;
-  private static Boolean x5InitializationResult;
+  private static GeckoRuntime geckoRuntime;
   private final Handler mainHandler = new Handler(Looper.getMainLooper());
   private final Object processLock = new Object();
   private volatile boolean stopping;
@@ -78,7 +81,12 @@ public class mobileActivity extends Activity {
   private Process bunProcess;
   private FrameLayout root;
   private WebView webView;
-  private com.tencent.smtt.sdk.WebView x5WebView;
+  private GeckoView geckoView;
+  private GeckoSession geckoSession;
+  private WebExtension.Port geckoPort;
+  private String geckoUrl;
+  private boolean geckoCanGoBack;
+  private File uploadDirectory;
   private TextView statusView;
   private ProgressBar progressView;
   private ValueCallback<Uri[]> fileCallback;
@@ -90,12 +98,7 @@ public class mobileActivity extends Activity {
   private boolean failed;
   private String browserStage = "waiting";
   private String systemMissing = "";
-  private boolean x5Requested;
-  private boolean x5DownloadStarted;
-  private int downloadCode = Integer.MIN_VALUE;
-  private int installCode = Integer.MIN_VALUE;
-  private final Runnable browserTimeout = () -> showError("Browser startup timed out. Close and reopen Toonflow to retry.", null);
-  private final Runnable x5Timeout = () -> showError("X5 initialization timed out (180 seconds). " + x5Status() + " Close and reopen Toonflow to retry.", null);
+  private final Runnable browserTimeout = () -> showError("浏览器启动超时。请完全退出并重新打开 Toonflow。" + (systemMissing.isEmpty() ? "" : "\n系统 WebView 缺少：" + systemMissing), null);
   private final Runnable startupTimeout = () -> {
     synchronized (processLock) {
       if (stopping || failed || localOrigin != null || bunProcess == null || !bunProcess.isAlive()) return;
@@ -107,6 +110,7 @@ public class mobileActivity extends Activity {
   @Override
   public void onCreate(Bundle state) {
     super.onCreate(state);
+    uploadDirectory = new File(getCacheDir(), "browserUploads/" + UUID.randomUUID());
     if (Build.VERSION.SDK_INT >= 28) {
       WindowManager.LayoutParams attributes = getWindow().getAttributes();
       attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
@@ -117,68 +121,6 @@ public class mobileActivity extends Activity {
       view.setPadding(0, 0, 0, insets.getInsets(WindowInsets.Type.ime()).bottom);
       return new WindowInsets.Builder(insets).setInsets(WindowInsets.Type.ime(), android.graphics.Insets.NONE).build();
     });
-    webView = new WebView(this);
-    webView.getSettings().setJavaScriptEnabled(true);
-    webView.getSettings().setDomStorageEnabled(true);
-    webView.getSettings().setAllowFileAccess(false);
-    webView.getSettings().setAllowContentAccess(true);
-    webView.getSettings().setUseWideViewPort(true);
-    webView.getSettings().setLoadWithOverviewMode(true);
-    webView.getSettings().setSupportZoom(false);
-    // 新窗口在当前 WebView 发起导航，统一交由下面的外链处理。
-    webView.getSettings().setSupportMultipleWindows(false);
-    webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
-    webView.setWebChromeClient(new WebChromeClient() {
-      @Override
-      public void onPermissionRequest(PermissionRequest request) {
-        requestCamera(request, request.getOrigin(), request.getResources(), allowed -> {
-          if (allowed) request.grant(new String[] { PermissionRequest.RESOURCE_VIDEO_CAPTURE });
-          else request.deny();
-        });
-      }
-
-      @Override
-      public void onPermissionRequestCanceled(PermissionRequest request) { cancelCamera(request); }
-
-      @Override
-      public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
-        try {
-          chooseFile(params.createIntent(), callback);
-        } catch (Exception error) {
-          callback.onReceiveValue(null);
-          Toast.makeText(mobileActivity.this, "Unable to open the file picker.", Toast.LENGTH_LONG).show();
-        }
-        return true;
-      }
-    });
-    webView.setWebViewClient(new WebViewClient() {
-      @Override
-      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-        return navigate(request.getUrl(), request.isForMainFrame());
-      }
-
-      @Override
-      public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-        if (allowRequest(request.getUrl(), request.isForMainFrame())) return null;
-        return new WebResourceResponse("text/plain", "UTF-8", 403, "Forbidden", null, new ByteArrayInputStream(new byte[0]));
-      }
-
-      @Override
-      public void onPageFinished(WebView view, String url) {
-        if (x5WebView == null) pageFinished(url);
-      }
-
-      @Override
-      public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-        if (request.isForMainFrame() && x5WebView == null && !x5Requested) showError("Local page failed to load: " + error.getDescription(), null);
-      }
-
-      @Override
-      public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse response) {
-        if (request.isForMainFrame() && x5WebView == null && !x5Requested) showError("Local page returned HTTP " + response.getStatusCode() + ".", null);
-      }
-    });
-    root.addView(webView, new FrameLayout.LayoutParams(-1, -1));
     statusView = new TextView(this);
     statusView.setTextSize(16);
     statusView.setTextColor(Color.rgb(30, 41, 59));
@@ -193,7 +135,80 @@ public class mobileActivity extends Activity {
     int progressSize = (int) (32 * getResources().getDisplayMetrics().density);
     root.addView(progressView, new FrameLayout.LayoutParams(progressSize, progressSize, Gravity.CENTER));
     setContentView(root);
+    initializeSystemWebView();
     new Thread(this::startBun, "mobileBun").start();
+  }
+
+  private void initializeSystemWebView() {
+    try {
+      webView = new WebView(this);
+      webView.getSettings().setJavaScriptEnabled(true);
+      webView.getSettings().setDomStorageEnabled(true);
+      webView.getSettings().setAllowFileAccess(false);
+      webView.getSettings().setAllowContentAccess(true);
+      webView.getSettings().setUseWideViewPort(true);
+      webView.getSettings().setLoadWithOverviewMode(true);
+      webView.getSettings().setSupportZoom(false);
+      // 新窗口在当前 WebView 发起导航，统一交由下面的外链处理。
+      webView.getSettings().setSupportMultipleWindows(false);
+      webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+      webView.setWebChromeClient(new WebChromeClient() {
+        @Override
+        public void onPermissionRequest(PermissionRequest request) {
+          requestCamera(request, request.getOrigin(), request.getResources(), allowed -> {
+            if (allowed) request.grant(new String[] { PermissionRequest.RESOURCE_VIDEO_CAPTURE });
+            else request.deny();
+          });
+        }
+
+        @Override
+        public void onPermissionRequestCanceled(PermissionRequest request) { cancelCamera(request); }
+
+        @Override
+        public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+          try {
+            chooseFile(params.createIntent(), callback);
+          } catch (Exception error) {
+            callback.onReceiveValue(null);
+            Toast.makeText(mobileActivity.this, "Unable to open the file picker.", Toast.LENGTH_LONG).show();
+          }
+          return true;
+        }
+      });
+      webView.setWebViewClient(new WebViewClient() {
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+          return navigate(request.getUrl(), request.isForMainFrame());
+        }
+
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+          if (allowRequest(request.getUrl(), request.isForMainFrame())) return null;
+          return new WebResourceResponse("text/plain", "UTF-8", 403, "Forbidden", null, new ByteArrayInputStream(new byte[0]));
+        }
+
+        @Override
+        public void onPageFinished(WebView view, String url) {
+          if (geckoSession == null) pageFinished(url);
+        }
+
+        @Override
+        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+          if (request.isForMainFrame() && geckoSession == null) showError("Local page failed to load: " + error.getDescription(), null);
+        }
+
+        @Override
+        public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse response) {
+          if (request.isForMainFrame() && geckoSession == null) showError("Local page returned HTTP " + response.getStatusCode() + ".", null);
+        }
+      });
+      root.addView(webView, 0, new FrameLayout.LayoutParams(-1, -1));
+    } catch (RuntimeException | LinkageError error) {
+      systemMissing = "系统 WebView 无法初始化";
+      Log.w("ToonflowMobile", systemMissing, error);
+      if (webView != null) webView.destroy();
+      webView = null;
+    }
   }
 
   private void chooseFile(Intent intent, ValueCallback<Uri[]> callback) {
@@ -239,7 +254,7 @@ public class mobileActivity extends Activity {
   }
 
   private String browserUrl() {
-    return x5WebView == null ? webView.getUrl() : x5WebView.getUrl();
+    return geckoSession == null ? (webView == null ? null : webView.getUrl()) : geckoUrl;
   }
 
   private boolean isLocalPage() {
@@ -309,7 +324,6 @@ public class mobileActivity extends Activity {
     }
     finishCamera(false);
     mainHandler.removeCallbacks(browserTimeout);
-    mainHandler.removeCallbacks(x5Timeout);
     browserStage = "restarting";
     statusView.setVisibility(View.VISIBLE);
     progressView.setVisibility(View.VISIBLE);
@@ -329,16 +343,15 @@ public class mobileActivity extends Activity {
   }
 
   private void loadBrowserUrl(String url) {
-    if (x5WebView == null) webView.loadUrl(url);
-    else x5WebView.loadUrl(url);
-  }
-
-  private void evaluateBrowser(String script, ValueCallback<String> callback) {
-    if (x5WebView == null) webView.evaluateJavascript(script, callback);
-    else x5WebView.evaluateJavascript(script, callback == null ? null : callback::onReceiveValue);
+    if (geckoSession == null) webView.loadUrl(url);
+    else geckoSession.loadUri(url);
   }
 
   private void probeBrowser() {
+    if (webView == null) {
+      startGecko();
+      return;
+    }
     browserStage = "systemProbe";
     mainHandler.removeCallbacks(browserTimeout);
     mainHandler.postDelayed(browserTimeout, 30000);
@@ -352,43 +365,52 @@ public class mobileActivity extends Activity {
       if (!"/".equals(page.getPath()) || page.getQueryParameter("probe") != null || page.getQueryParameter("token") != null) return;
       browserStage = "ready";
       mainHandler.removeCallbacks(browserTimeout);
-      if (x5WebView == null) webView.clearHistory();
-      else x5WebView.clearHistory();
+      if (geckoSession == null) webView.clearHistory();
+      else geckoSession.purgeHistory();
       statusView.setVisibility(View.GONE);
       progressView.setVisibility(View.GONE);
       return;
     }
     if (!"systemProbe".equals(browserStage) || !"1".equals(page.getQueryParameter("probe")) || page.getQueryParameter("token") != null) return;
-    String stage = browserStage;
-    evaluateBrowser("JSON.stringify(window.toonflowBrowserProbe)", value -> {
-      if (stopping || failed || !stage.equals(browserStage)) return;
+    webView.evaluateJavascript("JSON.stringify(window.toonflowBrowserProbe)", value -> {
+      if (stopping || failed || !"systemProbe".equals(browserStage)) return;
       try {
         Object decoded = new JSONTokener(value == null ? "null" : value).nextValue();
         if (!(decoded instanceof String)) throw new IOException("Missing browser probe result.");
-        JSONObject result = new JSONObject((String) decoded);
-        JSONArray missing = result.getJSONArray("missing");
-        if (!(result.get("userAgent") instanceof String) || result.getString("userAgent").isEmpty()) throw new IOException("Invalid browser probe user agent.");
-        StringBuilder names = new StringBuilder();
-        for (int index = 0; index < missing.length(); index++) {
-          Object name = missing.get(index);
-          if (!(name instanceof String) || ((String) name).isEmpty()) throw new IOException("Invalid browser probe feature.");
-          if (names.length() > 0) names.append(", ");
-          names.append(name);
-        }
-        mainHandler.removeCallbacks(browserTimeout);
-        if (missing.length() == 0) {
-          browserStage = "page";
-          Log.i("ToonflowMobile", "System WebView capability check passed");
-          mainHandler.postDelayed(browserTimeout, 30000);
-          loadBrowserUrl("http://127.0.0.1:" + localOrigin.getPort() + "/?mobile=1");
-        } else {
-          systemMissing = names.toString();
-          startX5();
-        }
+        browserProbed(new JSONObject((String) decoded), false);
       } catch (Exception error) {
-        showError("Unable to verify browser capabilities: " + error.getMessage(), error);
+        systemMissing = "系统 WebView 无法完成能力检测";
+        Log.w("ToonflowMobile", systemMissing, error);
+        startGecko();
       }
     });
+  }
+
+  private void browserProbed(JSONObject result, boolean gecko) throws Exception {
+    if (stopping || failed || !(gecko ? "geckoProbe" : "systemProbe").equals(browserStage)) return;
+    JSONArray missing = result.getJSONArray("missing");
+    if (!(result.get("userAgent") instanceof String) || result.getString("userAgent").isEmpty()) throw new IOException("Invalid browser probe user agent.");
+    StringBuilder names = new StringBuilder();
+    for (int index = 0; index < missing.length(); index++) {
+      Object name = missing.get(index);
+      if (!(name instanceof String) || ((String) name).isEmpty()) throw new IOException("Invalid browser probe feature.");
+      if (names.length() > 0) names.append(", ");
+      names.append(name);
+    }
+    mainHandler.removeCallbacks(browserTimeout);
+    if (missing.length() > 0) {
+      if (gecko) showError("内置 GeckoView 缺少所需能力：" + names + "。请更新 Toonflow。\n系统 WebView 缺少：" + systemMissing, null);
+      else {
+        systemMissing = names.toString();
+        Log.w("ToonflowMobile", "System WebView missing: " + systemMissing);
+        startGecko();
+      }
+      return;
+    }
+    browserStage = "page";
+    Log.i("ToonflowMobile", (gecko ? "GeckoView" : "System WebView") + " capability check passed: " + result.getString("userAgent"));
+    mainHandler.postDelayed(browserTimeout, 30000);
+    loadBrowserUrl("http://127.0.0.1:" + localOrigin.getPort() + "/?mobile=1" + (gecko ? "&engine=gecko" : ""));
   }
 
   private void showProgress(String message) {
@@ -401,235 +423,151 @@ public class mobileActivity extends Activity {
     progressView.setVisibility(View.VISIBLE);
   }
 
-  private String x5Status() {
-    return "SDK download code: " + (downloadCode == Integer.MIN_VALUE ? "pending" : downloadCode)
-      + "; install code: " + (installCode == Integer.MIN_VALUE ? "pending" : installCode) + ".";
-  }
-
-  private void startX5() {
-    if (x5Requested || stopping || failed) return;
-    x5Requested = true;
-    browserStage = "x5Download";
-    webView.stopLoading();
-    webView.setVisibility(View.GONE);
-    showProgress("Preparing X5 browser core...");
-    ConnectivityManager connectivity = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-    if (connectivity == null || connectivity.isActiveNetworkMetered()) {
-      new AlertDialog.Builder(this).setTitle("Download browser core?")
-        .setMessage("The system browser is missing required features. Allow X5 to download its browser core using mobile data? Data charges may apply.")
-        .setPositiveButton("Allow mobile data", (dialog, which) -> initializeX5(true))
-        .setNegativeButton("Not now", (dialog, which) -> showError("X5 download was not allowed. Connect to Wi-Fi and reopen Toonflow to retry.", null))
-        .setOnCancelListener(dialog -> showError("X5 download was cancelled. Reopen Toonflow to retry.", null)).show();
-    } else initializeX5(false);
-  }
-
-  private void initializeX5(boolean mobileDataAllowed) {
-    if (stopping || failed) return;
-    mainHandler.postDelayed(x5Timeout, 180000);
+  private void startGecko() {
+    if (geckoSession != null || stopping || failed) return;
+    browserStage = "geckoProbe";
+    mainHandler.removeCallbacks(browserTimeout);
+    mainHandler.postDelayed(browserTimeout, 60000);
+    if (webView != null) {
+      webView.stopLoading();
+      webView.setVisibility(View.GONE);
+    }
+    showProgress("正在启用内置 GeckoView 浏览器内核…");
     try {
-      QbSdk.disableSensitiveApi();
-      com.tencent.smtt.sdk.TbsPrivacyAccess.AppList.setEnabled(false);
-      QbSdk.setDownloadWithoutWifi(mobileDataAllowed);
-      QbSdk.setTbsListener(new TbsListener() {
+      // ACT: Runtime 随进程复用；Activity 重建只替换 Session，保留应用内重启能力。
+      if (geckoRuntime == null) geckoRuntime = GeckoRuntime.create(getApplicationContext(), new GeckoRuntimeSettings.Builder()
+        .remoteDebuggingEnabled((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0).build());
+      geckoSession = new GeckoSession();
+      geckoSession.setNavigationDelegate(new GeckoSession.NavigationDelegate() {
         @Override
-        public void onDownloadFinish(int code) {
-          mainHandler.post(() -> {
-            if (stopping || failed || !"x5Download".equals(browserStage)) return;
-            downloadCode = code;
-            if (code != TbsCommonCode.DOWNLOAD_SUCCESS) {
-              showError("X5 download failed. " + x5Status() + " Force stop Toonflow and reopen it to retry.", null);
-            } else showProgress("Installing X5 browser core...");
+        public void onLocationChange(GeckoSession session, String url, List<GeckoSession.PermissionDelegate.ContentPermission> permissions, Boolean gesture) {
+          geckoUrl = url;
+          if (!isLocalOrigin(Uri.parse(url))) finishCamera(false);
+        }
+
+        @Override
+        public void onCanGoBack(GeckoSession session, boolean canGoBack) { geckoCanGoBack = canGoBack; }
+
+        @Override
+        public GeckoResult<AllowOrDeny> onLoadRequest(GeckoSession session, LoadRequest request) {
+          return GeckoResult.fromValue(navigate(Uri.parse(request.uri), true) ? AllowOrDeny.DENY : AllowOrDeny.ALLOW);
+        }
+
+        @Override
+        public GeckoResult<AllowOrDeny> onSubframeLoadRequest(GeckoSession session, LoadRequest request) {
+          return GeckoResult.fromValue(allowRequest(Uri.parse(request.uri), false) ? AllowOrDeny.ALLOW : AllowOrDeny.DENY);
+        }
+
+        @Override
+        public GeckoResult<GeckoSession> onNewSession(GeckoSession session, String url) {
+          if (!navigate(Uri.parse(url), true)) session.loadUri(url);
+          return null;
+        }
+
+        @Override
+        public GeckoResult<String> onLoadError(GeckoSession session, String url, WebRequestError error) {
+          if (isLocalOrigin(Uri.parse(url))) showError("GeckoView 加载本地页面失败：" + error, null);
+          return GeckoResult.fromValue(null);
+        }
+      });
+      geckoSession.setProgressDelegate(new GeckoSession.ProgressDelegate() {
+        @Override
+        public void onPageStop(GeckoSession session, boolean success) {
+          if (success) pageFinished(geckoUrl);
+        }
+      });
+      geckoSession.setContentDelegate(new GeckoSession.ContentDelegate() {
+        @Override
+        public void onCrash(GeckoSession session) { showError("GeckoView 渲染进程已崩溃。请完全退出并重新打开 Toonflow。", null); }
+
+        @Override
+        public void onKill(GeckoSession session) { showError("GeckoView 渲染进程被系统终止。请释放内存后重新打开 Toonflow。", null); }
+      });
+      geckoSession.setPermissionDelegate(new GeckoSession.PermissionDelegate() {
+        @Override
+        public void onAndroidPermissionsRequest(GeckoSession session, String[] permissions, Callback callback) {
+          for (String permission : permissions) if (!Manifest.permission.CAMERA.equals(permission)) {
+            callback.reject();
+            return;
+          }
+          requestCamera(callback, geckoUrl == null ? null : Uri.parse(geckoUrl), new String[] { PermissionRequest.RESOURCE_VIDEO_CAPTURE }, allowed -> {
+            if (allowed) callback.grant();
+            else callback.reject();
           });
         }
 
         @Override
-        public void onInstallFinish(int code) {
-          mainHandler.post(() -> {
-            if (stopping || failed || !"x5Download".equals(browserStage)) return;
-            installCode = code;
-            if (code == TbsCommonCode.INSTALL_FOR_PREINIT_CALLBACK || code == TbsListener.ErrorCode.INSTALL_FROM_UNZIP) return;
-            switch (code) {
-              case TbsCommonCode.INSTALL_SUCCESS:
-              case TbsListener.ErrorCode.COPY_INSTALL_SUCCESS:
-              case TbsListener.ErrorCode.INCRUPDATE_INSTALL_SUCCESS:
-              case TbsListener.ErrorCode.RENAME_SUCCESS:
-              case TbsListener.ErrorCode.INSTALL_SUCCESS_AND_RELEASE_LOCK:
-              case TbsListener.ErrorCode.DECOUPLE_INSTLL_SUCCESS:
-              case TbsListener.ErrorCode.DECOUPLE_INCURUPDATE_SUCCESS:
-              case TbsListener.ErrorCode.TPATCH_INSTALL_SUCCESS:
-              case TbsListener.ErrorCode.DECOUPLE_TPATCH_INSTALL_SUCCESS:
-                preInitializeX5();
-                break;
-              default:
-                showError("X5 installation failed. " + x5Status() + " Force stop Toonflow and reopen it to retry.", null);
-            }
-          });
-        }
-
-        @Override
-        public void onDownloadProgress(int progress) {
-          mainHandler.post(() -> {
-            if (!"x5Download".equals(browserStage)) return;
-            showProgress("Downloading X5 browser core: " + Math.max(0, Math.min(progress, 100)) + "%");
+        public void onMediaPermissionRequest(GeckoSession session, String url, MediaSource[] video, MediaSource[] audio, MediaCallback callback) {
+          MediaSource camera = null;
+          if (video != null) for (MediaSource source : video) if (source.source == MediaSource.SOURCE_CAMERA) { camera = source; break; }
+          if (camera == null || audio != null && audio.length > 0) {
+            callback.reject();
+            return;
+          }
+          MediaSource selected = camera;
+          requestCamera(callback, Uri.parse(url), new String[] { PermissionRequest.RESOURCE_VIDEO_CAPTURE }, allowed -> {
+            if (allowed) callback.grant(selected, null);
+            else callback.reject();
           });
         }
       });
-      if (QbSdk.getTbsVersion(getApplicationContext()) > 0) {
-        preInitializeX5();
-        return;
-      }
-      TbsDownloader.needDownload(getApplicationContext(), false, false, (needed, version) -> mainHandler.post(() -> {
-        if (stopping || failed || !"x5Download".equals(browserStage)) return;
-        if (!needed) {
-          if (QbSdk.getTbsVersion(getApplicationContext()) > 0) preInitializeX5();
-          else {
-            downloadCode = TbsDownloadConfig.getInstance(getApplicationContext()).getCurrentDownloadInterruptCode();
-            showError("X5 browser core is unavailable (requested version " + version + "). " + x5Status() + " Force stop Toonflow and reopen it to retry.", null);
-          }
-          return;
+      geckoSession.setPromptDelegate(new GeckoSession.PromptDelegate() {
+        @Override
+        public GeckoResult<PromptResponse> onFilePrompt(GeckoSession session, FilePrompt prompt) {
+          if (!isLocalPage() || prompt.type == FilePrompt.Type.FOLDER) return GeckoResult.fromValue(prompt.dismiss());
+          GeckoResult<PromptResponse> result = new GeckoResult<>();
+          Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
+          intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, prompt.type == FilePrompt.Type.MULTIPLE);
+          if (prompt.mimeTypes != null && prompt.mimeTypes.length > 0) intent.putExtra(Intent.EXTRA_MIME_TYPES, prompt.mimeTypes);
+          ValueCallback<Uri[]> callback = files -> confirmGeckoFiles(prompt, result, files);
+          prompt.setDelegate(new PromptInstanceDelegate() {
+            @Override
+            public void onPromptDismiss(BasePrompt dismissed) {
+              if (fileCallback == callback) fileCallback = null;
+              callback.onReceiveValue(null);
+            }
+          });
+          chooseFile(intent, callback);
+          return result;
         }
-        if (x5DownloadStarted) return;
-        x5DownloadStarted = true;
-        showProgress("Downloading X5 browser core...");
-        TbsDownloader.startDownload(getApplicationContext());
-      }));
-    } catch (Exception error) {
-      showError("Unable to initialize X5: " + error.getMessage() + ". " + x5Status(), error);
-    }
-  }
-
-  private void preInitializeX5() {
-    if (stopping || failed || !"x5Download".equals(browserStage)) return;
-    if (Boolean.TRUE.equals(x5InitializationResult) || QbSdk.isX5Core()) {
-      createX5View();
-      return;
-    }
-    // ACT: SDK 44286 preInit is process-once; a failed process must be restarted before retrying.
-    if (x5InitializationStarted) {
-      showError("X5 could not activate in this process. " + x5Status() + " Force stop Toonflow and reopen it to retry.", null);
-      return;
-    }
-    x5InitializationStarted = true;
-    showProgress("Initializing X5 browser core...");
-    try {
-      QbSdk.preInit(getApplicationContext(), new QbSdk.PreInitCallback() {
-        @Override
-        public void onCoreInitFinished() {}
-
-        @Override
-        public void onViewInitFinished(boolean isX5Core) {
-          mainHandler.post(() -> {
-            x5InitializationResult = isX5Core;
-            if (stopping || failed || !"x5Download".equals(browserStage)) return;
-            if (!isX5Core) {
-              Log.e("ToonflowMobile", "X5 initialization failed: " + QbSdk.getX5CoreLoadHelp(getApplicationContext()));
-              showError("X5 did not activate. The system browser is missing: " + systemMissing + ". " + x5Status() + " Force stop Toonflow and reopen it to retry.", null);
+      });
+      geckoView = new GeckoView(this);
+      root.addView(geckoView, 0, new FrameLayout.LayoutParams(-1, -1));
+      geckoSession.open(geckoRuntime);
+      geckoView.setSession(geckoSession);
+      geckoRuntime.getWebExtensionController().ensureBuiltIn("resource://android/assets/browserBridge/", "browserBridge@toonflow").accept(extension -> {
+        if (stopping || failed || isDestroyed()) return;
+        geckoSession.getWebExtensionController().setMessageDelegate(extension, new WebExtension.MessageDelegate() {
+          @Override
+          public void onConnect(WebExtension.Port port) {
+            WebExtension.MessageSender sender = port.sender;
+            if (stopping || failed || sender.session != geckoSession || !sender.isTopLevel()
+              || sender.environmentType != WebExtension.MessageSender.ENV_TYPE_CONTENT_SCRIPT || !isLocalOrigin(Uri.parse(sender.url))) {
+              port.disconnect();
               return;
             }
-            createX5View();
-          });
-        }
-      });
-    } catch (Exception error) {
-      x5InitializationResult = false;
-      showError("Unable to initialize X5: " + error.getMessage() + ". " + x5Status(), error);
-    }
-  }
+            geckoPort = port;
+            port.setDelegate(new WebExtension.PortDelegate() {
+              @Override
+              public void onPortMessage(Object message, WebExtension.Port source) {
+                if (stopping || failed || source != geckoPort || !(message instanceof JSONObject)) return;
+                JSONObject data = (JSONObject) message;
+                if (!"probe".equals(data.optString("type"))) return;
+                Uri page = Uri.parse(source.sender.url);
+                if (!"1".equals(page.getQueryParameter("probe")) || page.getQueryParameter("token") != null) return;
+                try { browserProbed(data.getJSONObject("result"), true); }
+                catch (Exception error) { showError("无法验证内置 GeckoView 的能力：" + error.getMessage(), error); }
+              }
 
-  private void createX5View() {
-    try {
-      com.tencent.smtt.sdk.WebView view = new com.tencent.smtt.sdk.WebView(this);
-      if (!view.getIsX5Core()) {
-        view.destroy();
-        showError("X5 did not activate. The system browser is missing: " + systemMissing + ". " + x5Status() + " Reopen Toonflow to retry.", null);
-        return;
-      }
-      x5WebView = view;
-      mainHandler.removeCallbacks(x5Timeout);
-      view.getSettings().setJavaScriptEnabled(true);
-      view.getSettings().setDomStorageEnabled(true);
-      view.getSettings().setAllowFileAccess(false);
-      view.getSettings().setAllowContentAccess(true);
-      view.getSettings().setUseWideViewPort(true);
-      view.getSettings().setLoadWithOverviewMode(true);
-      view.getSettings().setSupportZoom(false);
-      view.getSettings().setSupportMultipleWindows(false);
-      view.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
-      view.setWebChromeClient(new com.tencent.smtt.sdk.WebChromeClient() {
-        @Override
-        public void onPermissionRequest(com.tencent.smtt.export.external.interfaces.PermissionRequest request) {
-          requestCamera(request, request.getOrigin(), request.getResources(), allowed -> {
-            if (allowed) request.grant(new String[] { com.tencent.smtt.export.external.interfaces.PermissionRequest.RESOURCE_VIDEO_CAPTURE });
-            else request.deny();
-          });
-        }
-
-        @Override
-        public void onPermissionRequestCanceled(com.tencent.smtt.export.external.interfaces.PermissionRequest request) { cancelCamera(request); }
-
-        @Override
-        public boolean onShowFileChooser(com.tencent.smtt.sdk.WebView browser, com.tencent.smtt.sdk.ValueCallback<Uri[]> callback, FileChooserParams params) {
-          try {
-            chooseFile(params.createIntent(), callback::onReceiveValue);
-          } catch (Exception error) {
-            callback.onReceiveValue(null);
-            Toast.makeText(mobileActivity.this, "Unable to open the file picker.", Toast.LENGTH_LONG).show();
+              @Override
+              public void onDisconnect(WebExtension.Port source) { if (geckoPort == source) geckoPort = null; }
+            });
           }
-          return true;
-        }
-      });
-      view.setWebViewClient(new com.tencent.smtt.sdk.WebViewClient() {
-        @Override
-        public boolean shouldOverrideUrlLoading(com.tencent.smtt.sdk.WebView browser, com.tencent.smtt.export.external.interfaces.WebResourceRequest request) {
-          return navigate(request.getUrl(), request.isForMainFrame());
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(com.tencent.smtt.sdk.WebView browser, String url) {
-          return navigate(Uri.parse(url), true);
-        }
-
-        @Override
-        public com.tencent.smtt.export.external.interfaces.WebResourceResponse shouldInterceptRequest(com.tencent.smtt.sdk.WebView browser, com.tencent.smtt.export.external.interfaces.WebResourceRequest request) {
-          if (allowRequest(request.getUrl(), request.isForMainFrame())) return null;
-          return new com.tencent.smtt.export.external.interfaces.WebResourceResponse("text/plain", "UTF-8", 403, "Forbidden", null, new ByteArrayInputStream(new byte[0]));
-        }
-
-        @Override
-        public com.tencent.smtt.export.external.interfaces.WebResourceResponse shouldInterceptRequest(com.tencent.smtt.sdk.WebView browser, com.tencent.smtt.export.external.interfaces.WebResourceRequest request, Bundle extras) {
-          return shouldInterceptRequest(browser, request);
-        }
-
-        @Override
-        public com.tencent.smtt.export.external.interfaces.WebResourceResponse shouldInterceptRequest(com.tencent.smtt.sdk.WebView browser, String url) {
-          // ACT: The legacy callback has no frame information; modern callbacks enforce main-frame origin checks.
-          if (allowRequest(Uri.parse(url), false)) return null;
-          return new com.tencent.smtt.export.external.interfaces.WebResourceResponse("text/plain", "UTF-8", 403, "Forbidden", null, new ByteArrayInputStream(new byte[0]));
-        }
-
-        @Override
-        public void onPageFinished(com.tencent.smtt.sdk.WebView browser, String url) { pageFinished(url); }
-
-        @Override
-        public void onReceivedError(com.tencent.smtt.sdk.WebView browser, com.tencent.smtt.export.external.interfaces.WebResourceRequest request, com.tencent.smtt.export.external.interfaces.WebResourceError error) {
-          if (request.isForMainFrame()) showError("Local X5 page failed to load: " + error.getDescription(), null);
-        }
-
-        @Override
-        public void onReceivedHttpError(com.tencent.smtt.sdk.WebView browser, com.tencent.smtt.export.external.interfaces.WebResourceRequest request, com.tencent.smtt.export.external.interfaces.WebResourceResponse response) {
-          if (request.isForMainFrame()) showError("Local X5 page returned HTTP " + response.getStatusCode() + ".", null);
-        }
-      });
-      root.addView(view, 0, new FrameLayout.LayoutParams(-1, -1));
-      root.removeView(webView);
-      webView.destroy();
-      webView = null;
-      Log.i("ToonflowMobile", "X5 activated, core version " + QbSdk.getTbsVersion(getApplicationContext()));
-      browserStage = "page";
-      mainHandler.postDelayed(browserTimeout, 30000);
-      loadBrowserUrl(localOrigin.buildUpon().appendQueryParameter("engine", "x5").build().toString());
-    } catch (Exception error) {
-      showError("Unable to create X5 browser: " + error.getMessage() + ". " + x5Status(), error);
+        }, "toonflow");
+        loadBrowserUrl(localOrigin.buildUpon().appendQueryParameter("probe", "1").appendQueryParameter("engine", "gecko").build().toString());
+      }, error -> showError("无法初始化 GeckoView 原生通信：" + error.getMessage(), new IOException(error)));
+    } catch (RuntimeException | LinkageError error) {
+      showError("无法启用内置 GeckoView：" + error.getMessage() + "。请更新 Toonflow 或系统 WebView。\n系统 WebView 缺少：" + systemMissing, new IOException(error));
     }
   }
 
@@ -637,6 +575,51 @@ public class mobileActivity extends Activity {
     Uri origin = localOrigin;
     return origin != null && uri != null && "http".equals(uri.getScheme()) && "127.0.0.1".equals(uri.getHost())
       && uri.getUserInfo() == null && uri.getPort() == origin.getPort();
+  }
+
+  private void confirmGeckoFiles(GeckoSession.PromptDelegate.FilePrompt prompt, GeckoResult<GeckoSession.PromptDelegate.PromptResponse> result, Uri[] files) {
+    if (prompt.isComplete()) return;
+    if (files == null || files.length == 0 || prompt.type == GeckoSession.PromptDelegate.FilePrompt.Type.SINGLE && files.length != 1) {
+      result.complete(prompt.dismiss());
+      return;
+    }
+    // ACT: Gecko 需要实际文件路径；系统 content URI 先复制到专属缓存，关闭 Activity 后清理。
+    new Thread(() -> {
+      try {
+        Uri[] selected = new Uri[files.length];
+        for (int index = 0; index < files.length; index++) {
+          if (stopping) throw new IOException("文件读取已取消");
+          String name = "upload";
+          try (Cursor cursor = getContentResolver().query(files[index], new String[] { OpenableColumns.DISPLAY_NAME }, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst() && !cursor.isNull(0)) name = cursor.getString(0);
+          }
+          name = name.replaceAll("[\\\\/\\x00-\\x1f]", "_");
+          if (name.isEmpty() || ".".equals(name) || "..".equals(name)) name = "upload";
+          File directory = new File(uploadDirectory, UUID.randomUUID().toString());
+          if (!directory.mkdirs()) throw new IOException("无法创建文件缓存");
+          File file = new File(directory, name);
+          try (InputStream input = getContentResolver().openInputStream(files[index]); OutputStream output = new FileOutputStream(file)) {
+            if (input == null) throw new IOException("无法读取选中的文件");
+            copyStream(input, output);
+          }
+          selected[index] = Uri.fromFile(file);
+        }
+        mainHandler.post(() -> {
+          if (prompt.isComplete()) return;
+          result.complete(stopping || failed || !isLocalPage() ? prompt.dismiss() : prompt.confirm(this, selected));
+        });
+      } catch (IOException | RuntimeException error) {
+        Log.w("ToonflowMobile", "读取导入文件失败", error);
+        mainHandler.post(() -> {
+          if (prompt.isComplete()) return;
+          result.complete(prompt.dismiss());
+          if (!stopping) Toast.makeText(this, "无法读取选中的文件：" + error.getMessage(), Toast.LENGTH_LONG).show();
+        });
+      } finally {
+        if (stopping) try { removeProgramDirectory(uploadDirectory); }
+        catch (IOException error) { Log.w("ToonflowMobile", "清理文件缓存失败", error); }
+      }
+    }, "mobileImport").start();
   }
 
   private void startBun() {
@@ -723,6 +706,7 @@ public class mobileActivity extends Activity {
   }
 
   private File preparePayload() throws IOException {
+    removeProgramDirectory(new File(getCacheDir(), "browserUploads"));
     File directory = new File(getFilesDir(), "app");
     File nextDirectory = new File(getFilesDir(), "appNext");
     File previousDirectory = new File(getFilesDir(), "appPrevious");
@@ -825,7 +809,7 @@ public class mobileActivity extends Activity {
 
   private void finishSave(Uri request, Uri destination, String failure) {
     String url = request.getQueryParameter("url");
-    String cookie = x5WebView == null ? CookieManager.getInstance().getCookie(url) : com.tencent.smtt.sdk.CookieManager.getInstance().getCookie(url);
+    String cookie = "toonflowMobile=" + localOrigin.getQueryParameter("token");
     new Thread(() -> {
       boolean saved = false;
       String errorMessage = failure;
@@ -863,11 +847,17 @@ public class mobileActivity extends Activity {
     detail.put("requestId", requestId);
     detail.put("saved", saved);
     if (error != null) detail.put("error", error);
-    String script = "window.dispatchEvent(new CustomEvent('toonflow:mobile-save',{detail:" + new JSONObject(detail) + "}))";
     mainHandler.post(() -> {
-      if (stopping) return;
-      String currentUrl = browserUrl();
-      if (currentUrl != null && isLocalOrigin(Uri.parse(currentUrl))) evaluateBrowser(script, null);
+      if (!isLocalPage()) return;
+      if (geckoSession == null) {
+        webView.evaluateJavascript("window.dispatchEvent(new CustomEvent('toonflow:mobile-save',{detail:" + new JSONObject(detail) + "}))", null);
+      } else if (geckoPort != null) {
+        Map<String, Object> message = new HashMap<>();
+        message.put("type", "save");
+        message.put("detail", new JSONObject(detail));
+        try { geckoPort.postMessage(new JSONObject(message)); }
+        catch (RuntimeException sendError) { showError("无法返回文件保存结果：" + sendError.getMessage(), sendError); }
+      } else showError("GeckoView 原生通信已断开。请重新打开 Toonflow。", null);
     });
   }
 
@@ -875,8 +865,14 @@ public class mobileActivity extends Activity {
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
     if (requestCode == 1 && fileCallback != null) {
-      Uri[] files = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
-      if (files != null) for (Uri file : files) if (!"content".equals(file.getScheme())) {
+      Uri[] files = null;
+      if (resultCode == RESULT_OK && data != null) {
+        if (data.getClipData() != null) {
+          files = new Uri[data.getClipData().getItemCount()];
+          for (int index = 0; index < files.length; index++) files[index] = data.getClipData().getItemAt(index).getUri();
+        } else if (data.getData() != null) files = new Uri[] { data.getData() };
+      }
+      if (files != null) for (Uri file : files) if (file == null || !"content".equals(file.getScheme())) {
         files = null;
         Toast.makeText(this, "请选择系统文件选择器提供的文件", Toast.LENGTH_LONG).show();
         break;
@@ -895,12 +891,10 @@ public class mobileActivity extends Activity {
   private void showError(String message, Exception error) {
     mainHandler.removeCallbacks(startupTimeout);
     mainHandler.removeCallbacks(browserTimeout);
-    mainHandler.removeCallbacks(x5Timeout);
     mainHandler.post(() -> {
       if (isDestroyed() || failed) return;
       failed = true;
       browserStage = "error";
-      if (x5DownloadStarted) TbsDownloader.stopDownload();
       Log.e("ToonflowMobile", message, error);
       progressView.setVisibility(View.GONE);
       statusView.setGravity(Gravity.TOP | Gravity.START);
@@ -951,8 +945,8 @@ public class mobileActivity extends Activity {
 
   @Override
   public void onBackPressed() {
-    if (x5WebView != null && x5WebView.canGoBack()) x5WebView.goBack();
-    else if (x5WebView == null && webView != null && webView.canGoBack()) webView.goBack();
+    if (geckoSession != null && geckoCanGoBack) geckoSession.goBack();
+    else if (geckoSession == null && webView != null && webView.canGoBack()) webView.goBack();
     else finish();
   }
 
@@ -967,12 +961,15 @@ public class mobileActivity extends Activity {
     pendingSave = null;
     stopBun();
     mainHandler.removeCallbacksAndMessages(null);
-    if (x5Requested) {
-      if (x5DownloadStarted) TbsDownloader.stopDownload();
-      QbSdk.setTbsListener(null);
-    }
+    if (geckoPort != null) geckoPort.disconnect();
+    geckoPort = null;
     if (webView != null) webView.destroy();
-    if (x5WebView != null) x5WebView.destroy();
+    if (geckoView != null) geckoView.releaseSession();
+    if (geckoSession != null) geckoSession.close();
+    new Thread(() -> {
+      try { removeProgramDirectory(uploadDirectory); }
+      catch (IOException error) { Log.w("ToonflowMobile", "清理文件缓存失败", error); }
+    }, "mobileImportCleanup").start();
     super.onDestroy();
   }
 }

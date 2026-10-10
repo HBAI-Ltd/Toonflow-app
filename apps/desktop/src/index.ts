@@ -1,4 +1,5 @@
 import { setLocaleFallback, t, translateMessage } from "@toonflow/server/i18n";
+import { setRuntimeHost } from "@toonflow/server/platform";
 import { detectLocale, normalizeLocale } from "@toonflow/i18n";
 import { execFile } from "node:child_process";
 import { existsSync, writeAtomicSync } from "@toonflow/file";
@@ -122,7 +123,7 @@ async function start() {
       splash?.close();
       return;
     }
-    process.env.toonflowDesktop = "1";
+    setRuntimeHost("desktop");
     const { createApp } = await import("@toonflow/server/app");
     const { closeBrowsers } = await import("@toonflow/server/browser");
     const { hash, version } = await file(resolve(PATHS.RESOURCES_FOLDER, "version.json")).json();

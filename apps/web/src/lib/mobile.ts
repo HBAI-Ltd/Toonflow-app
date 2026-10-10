@@ -1,11 +1,7 @@
 import { computed, ref } from "vue";
 import axios from "axios";
 import { t, translate } from "@toonflow/i18n/vue";
-
-export const isMobile = new URLSearchParams(window.location.search).get("mobile") === "1";
-export const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
-export const isRemoteConnection = (isMobile || isDesktop) && new URLSearchParams(window.location.search).get("remote") === "1";
-export const isRemoteMobile = isMobile && isRemoteConnection;
+import { isMobile, isDesktop, isRemoteConnection } from "./platform";
 
 type MobileConnection = { mode: "local" | "remote"; name?: string; url?: string; online?: boolean | null; appVersion?: string; remoteAppVersion?: string };
 
@@ -72,7 +68,7 @@ export async function changeDeviceConnection(action: "connect" | "disconnect", b
     await refreshMobileConnection();
     if (deviceHubEnabled.value) throw new Error("请先在设置 → 设备互联中关闭“允许其他设备连接”");
   }
-  if (!deviceConnectionSupported.value) throw new Error("请使用 Toonflow 桌面端或 Android 客户端连接其他设备");
+  if (!deviceConnectionSupported.value) throw new Error("请使用 Toonflow 桌面端或移动客户端连接其他设备");
   const { data } = await axios.post<{ restart: "mobile" | "host"; message?: string }>(`/api/connection/${action}`, body ?? {}, { headers: { "x-toonflow-workspace": "1" } });
   if (data?.restart !== "mobile" && data?.restart !== "host") throw new Error(data?.message || "设备未返回有效的切换方式，请重试");
   if (data.restart === "mobile") window.location.href = "toonflow://restart";

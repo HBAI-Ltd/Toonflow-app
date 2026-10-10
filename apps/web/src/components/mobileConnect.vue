@@ -89,7 +89,8 @@ import axios from "axios";
 import jsQR from "jsqr";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { IconCamera, IconPhoto, IconQrcode, IconDeviceDesktop, IconKeyboard } from "@tabler/icons-vue";
-import { changeDeviceConnection, deviceConnectionSupported, deviceHubEnabled, getDeviceVersionWarning, isDesktop, mobileConnection, mobileConnectionLabel, mobileConnectionVersionWarning, refreshMobileConnection } from "@/lib/mobile";
+import { changeDeviceConnection, deviceConnectionSupported, deviceHubEnabled, getDeviceVersionWarning, mobileConnection, mobileConnectionLabel, mobileConnectionVersionWarning, refreshMobileConnection } from "@/lib/mobile";
+import { isDesktop } from "@/lib/platform";
 
 type Candidate = { name: string; url: string; qrCode: string; appVersion?: string };
 

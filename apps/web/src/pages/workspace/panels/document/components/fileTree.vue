@@ -87,7 +87,7 @@ import { IconBox, IconChevronRight, IconFile, IconFilePlus, IconFileSearch, Icon
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { settingsStorage } from "@/stores/settings";
 import { writeClipboardText } from "@/lib/clipboard";
-import { isMobile, isRemoteConnection } from "@/lib/mobile";
+import { isMobile, isRemoteConnection } from "@/lib/platform";
 import { t } from "@toonflow/i18n/vue";
 import { isCanvasFile } from "@/pages/workspace/canvasFile";
 import { extensionCandidates, extensionIcon, listExtensions } from "../extensions";

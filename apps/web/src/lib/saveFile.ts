@@ -1,14 +1,12 @@
 import axios from "axios";
 import { ElMessage } from "element-plus";
-import { isMobile } from "./mobile";
+import { isMobile, isDesktop } from "./platform";
 
 declare global {
   interface WindowEventMap {
     "toonflow:mobile-save": CustomEvent<{ requestId: string; saved: boolean; error?: string }>;
   }
 }
-
-const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
 
 export default async function saveFile(content: Blob | (() => Promise<Blob>), fileName: string): Promise<boolean> {
   if (isMobile) {

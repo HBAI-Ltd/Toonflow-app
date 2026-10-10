@@ -145,7 +145,7 @@ import {
   IconRestore,
 } from "@tabler/icons-vue";
 import { defaultUiSettings, uiSettings, updateUiSettings } from "@/stores/settings";
-import { isMobile } from "@/lib/mobile";
+import { isMobile } from "@/lib/platform";
 import languageSelect from "@/components/languageSelect.vue";
 
 const mobileScale = ref(uiSettings.value.mobileScale);

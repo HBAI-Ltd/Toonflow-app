@@ -119,7 +119,7 @@ import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, onScopeDispose
 import axios from "axios";
 import { debounce } from "lodash-es";
 import { ElMessage } from "element-plus";
-import { isMobile } from "@/lib/mobile";
+import { isMobile, isDesktop } from "@/lib/platform";
 import { storeToRefs } from "pinia";
 import { IconUnlink } from "@tabler/icons-vue";
 import * as vueRuntime from "vue";
@@ -214,7 +214,6 @@ const handMode = computed(() => props.active && !props.settingsVisible && (selec
 let pointerPosition: XYPosition | undefined;
 const pressedCodes = new Set<string>();
 let gestureScale: number | undefined;
-const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
 let copyingNodes = false;
 const showEdges = ref(true);
 const assetsVisible = ref(false);

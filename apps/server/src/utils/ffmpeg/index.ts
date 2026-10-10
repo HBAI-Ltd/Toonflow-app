@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { build, createFfmpeg, downloadSources, getToolStatus, installFfmpeg, target } from "@toonflow/ffmpeg";
 import type { DownloadState, FfmpegMode, SourceId } from "@toonflow/ffmpeg";
 import conf from "@/utils/conf";
+import { getRuntimePlatform } from "@/lib/platform";
 
 export { executeRemoteFfmpeg } from "@toonflow/ffmpeg";
 
@@ -45,7 +46,7 @@ export async function getStatus() {
   const source = downloadSources.find(item => item.id === value.source)?.id ?? "npmmirror";
   const tools = await getToolStatus(directory, mode, translateError);
   return {
-    platform: process.platform,
+    platform: getRuntimePlatform().os,
     arch: process.arch,
     target,
     supported: Boolean(build),

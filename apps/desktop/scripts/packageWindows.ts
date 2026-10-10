@@ -21,6 +21,9 @@ const csc = join(process.env.WINDIR!, "Microsoft.NET/Framework64/v4.0.30319/csc.
 const webViewDir = join(nsisDir, "webview2");
 const bootstrapper = join(webViewDir, "MicrosoftEdgeWebview2Setup.exe");
 const loader = join(webViewDir, "WebView2Loader.dll");
+const webViewSdkVersion = "1.0.4191.47";
+const webViewSdkDir = join(nsisDir, `webViewSdk${webViewSdkVersion}`);
+const webViewCore = join(webViewDir, "Microsoft.Web.WebView2.Core.dll");
 const runningChecker = join(nsisDir, "checkRunning.exe");
 const initializeInstallScript = join(nsisDir, "initializeInstall.js");
 
@@ -41,7 +44,27 @@ const electrobun = dependencies.objects.find(
 const hutchHome = process.env.HUTCH_HOME ?? join(homedir(), ".hutch");
 copyFileSync(join(hutchHome, electrobun.relativeRoot, "WebView2Loader.dll"), loader);
 
-await $`${csc} /nologo /target:exe /platform:x64 /optimize+ /out:${join(webViewDir, "checkWebView2.exe")} ${join(installerDir, "checkWebView2.cs")}`;
+// 实际启动检测使用微软 SDK 的 Core 程序集，避免手写 COM 接口；仅随安装器释放。
+const sdkCore = join(webViewSdkDir, "lib/net462/Microsoft.Web.WebView2.Core.dll");
+const sdkLicense = join(webViewSdkDir, "LICENSE.txt");
+const sdkNotice = join(webViewSdkDir, "NOTICE.txt");
+if (![sdkCore, sdkLicense, sdkNotice].every(existsSync)) {
+  mkdirSync(webViewSdkDir, { recursive: true });
+  const sdkArchive = join(webViewSdkDir, "webViewSdk.nupkg");
+  try {
+    await $`curl.exe --fail --location --max-time 120 --output ${sdkArchive} https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/${webViewSdkVersion}/microsoft.web.webview2.${webViewSdkVersion}.nupkg`;
+    await $`tar.exe -xf ${sdkArchive} -C ${webViewSdkDir} lib/net462/Microsoft.Web.WebView2.Core.dll LICENSE.txt NOTICE.txt`;
+  } catch (error) {
+    rmSync(sdkCore, { force: true });
+    throw error;
+  } finally {
+    rmSync(sdkArchive, { force: true });
+  }
+}
+copyFileSync(sdkCore, webViewCore);
+copyFileSync(sdkLicense, join(webViewDir, "webView2SdkLicense.txt"));
+copyFileSync(sdkNotice, join(webViewDir, "webView2SdkNotice.txt"));
+await $`${csc} /nologo /target:exe /platform:x64 /optimize+ /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:${webViewCore} /out:${join(webViewDir, "checkWebView2.exe")} ${join(installerDir, "checkWebView2.cs")}`;
 await $`${csc} /nologo /target:exe /platform:x64 /optimize+ /out:${runningChecker} ${join(installerDir, "checkRunning.cs")}`;
 const quotePowerShell = (value: string) => `'${value.replaceAll("'", "''")}'`;
 const temporary = existsSync(bootstrapper) ? null : `${bootstrapper}.tmp.exe`;
@@ -52,7 +75,7 @@ try {
   await $`powershell.exe -NoProfile -NonInteractive -Command ${`
 $ErrorActionPreference = 'Stop'
 Import-Module "$PSHOME/Modules/Microsoft.PowerShell.Security/Microsoft.PowerShell.Security.psd1"
-foreach ($file in @(${quotePowerShell(loader)}, ${quotePowerShell(temporary ?? bootstrapper)})) {
+foreach ($file in @(${quotePowerShell(loader)}, ${quotePowerShell(webViewCore)}, ${quotePowerShell(temporary ?? bootstrapper)})) {
   $signature = Get-AuthenticodeSignature -LiteralPath $file
   if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
     throw "Microsoft signature verification failed: $file"

@@ -48,6 +48,8 @@
   <img src="../images/logo.png" alt="Toonflow Logo" width="120" height="120" />
 </p>
 
+<h1 align="center">Toonflow | Open-Source AI Short Drama, Animated Comic and Video Creation</h1>
+
 <a href="https://git.io/typing-svg">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=600&lines=Toonflow;AI%20Short%20Drama%20Studio;Turn%20ideas%20into%20stories" />
@@ -101,9 +103,7 @@
   </a>
 </p>
 
-**An open-source AI platform for short dramas, animated comics, and video creation**
-
-> 🚀 **All-in-one short drama creation**：Write scripts, manage assets, and generate images and videos, with your entire creative workflow organized on an infinite canvas.
+Toonflow is an open-source AI creation tool for short dramas, animated comics and short videos. Write scripts and storyboards, manage character and scene references, and generate images and video clips on an infinite canvas. Deploy it locally, connect the model services you choose, and extend your creative workflow with AI agents, MCP and plugins.
 
 </div>
 
@@ -189,6 +189,29 @@ Toonflow is an open-source AI creation platform for short dramas, animated comic
 | 🤖 **Open Agent** | Open access to prompts, tools, and A2A to customize Agent behavior and collaborate with external Agents. |
 | 🔧 **Flexible model integration** | Configure third-party APIs or connect local ComfyUI instances and LLMs. |
 | 🌐 **Multilingual support** | Supports 21 interface languages. |
+
+### How to Create AI Short Dramas and Animated Comics with Toonflow
+
+1. **Write scripts and storyboards**: Develop your story, character descriptions and shot descriptions in text nodes, using a language model for assistance before reviewing and editing the results.
+2. **Prepare character and scene references**: Import reference images or use image generation nodes to create character, scene and storyboard images.
+3. **Generate video shots**: Connect text and image references, select a video model and generation mode, and generate individual clips.
+4. **Preview, organize and download**: Preview and arrange images and video clips on the infinite canvas, then download the assets for further production work.
+
+Supported references, video durations, resolutions and audio capabilities depend on the selected model and provider.
+
+### Frequently Asked Questions
+
+**Which stages of AI short drama and animated comic production does Toonflow support?**
+
+Text, image and video generation nodes support script and storyboard development, character and scene asset creation, video-shot generation, and asset preview and organization. Creators need to review and refine the results. Available generation features depend on the configured models.
+
+**Is Toonflow free? Do model calls cost money?**
+
+Toonflow is open source under the MIT License and can be self-hosted. Third-party model APIs may charge usage fees. Local models and ComfyUI require your own runtime environment and computing resources. The production costs shown in the example apply only to that project and are not a fixed price.
+
+**Can I connect my own models and ComfyUI workflows?**
+
+You can configure language and media model services and use custom provider adapters to connect existing ComfyUI workflows. The integration depends on the service API, model and workflow. See the [User Guide](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf) and [Developer Documentation](https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd) for guidance.
 
 <a id="languages"></a>
 

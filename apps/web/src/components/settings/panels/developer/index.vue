@@ -130,7 +130,7 @@ import { saveSettings, settings } from "@/stores/settings";
 import { desktopUpdateSnapshot } from "@/stores/desktopUpdate";
 import type { updateSnapshot } from "@toonflow/server/desktop";
 import saveFile from "@/lib/saveFile";
-import { isRemoteConnection } from "@/lib/mobile";
+import { isDesktop, isRemoteConnection } from "@/lib/platform";
 import { installPluginFile } from "../../installPluginFile";
 import { ElMessage } from "element-plus";
 import axios from "axios";
@@ -371,7 +371,6 @@ async function installPlugin(sourceType: "file" | "url", file?: File) {
   }
 }
 
-const isDesktop = new URLSearchParams(window.location.search).get("desktop") === "1";
 const opening = ref(false);
 const requestError = ref("");
 

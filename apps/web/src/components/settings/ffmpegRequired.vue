@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { isMobile, isRemoteMobile } from "@/lib/mobile";
+import { isMobile, isRemoteMobile } from "@/lib/platform";
 import ffmpeg from "./panels/pluginMarket/ffmpeg.vue";
 
 const visible = ref(false);
@@ -20,7 +20,7 @@ events.onmessage = async event => {
   catch { return; }
   if (data?.type !== "required" || pending || visible.value) return;
   if (isMobile && !isRemoteMobile) {
-    ElMessage.warning("未检测到可用 FFmpeg，当前 Android 版本暂不支持在应用内安装，这项音视频处理无法继续。");
+    ElMessage.warning("未检测到可用 FFmpeg，当前移动端版本暂不支持在应用内安装，这项音视频处理无法继续。");
     return;
   }
   pending = true;

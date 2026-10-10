@@ -1,10 +1,12 @@
 import { createBrowserRuntime } from "@toonflow/tool-browser/host";
 import type { ToolContext } from "@toonflow/tools-scaffold/runtime";
+import { getRuntimePlatform } from "@/lib/platform";
 
 export const browserRuntime = createBrowserRuntime();
 
 export function createBrowserContext(cwd: string): ToolContext["browser"] {
-  if (process.env.toonflowDesktop !== "1" && process.env.NODE_ENV !== "dev") return;
+  const platform = getRuntimePlatform();
+  if (!platform.desktop && !platform.development) return;
   return { execute: (sessionId, args, config, signal, onUpdate) => browserRuntime.execute(cwd, sessionId, args, config, signal, onUpdate) };
 }
 

@@ -4,6 +4,7 @@ import { browserInputSchema } from "@toonflow/tool-browser/protocol";
 import { validateFields } from "@/lib/middleware";
 import { success } from "@/lib/responseFormat";
 import u from "@/utils";
+import { getRuntimePlatform } from "@/lib/platform";
 
 const inputSchema = z.strictObject({
   directory: z.string().min(1).max(4096).optional(), toolSessionId: z.uuid().optional(),
@@ -12,7 +13,7 @@ const inputSchema = z.strictObject({
 
 export default Router().post("/", validateFields(inputSchema.shape), async (req, res) => {
   u.mcpControl.assertAppRequest(req);
-  if (!req.app.locals.desktop && process.env.NODE_ENV !== "dev") throw Object.assign(new Error("浏览器操作仅在桌面客户端中可用"), { status: 404 });
+  if (!req.app.locals.desktop && !getRuntimePlatform().development) throw Object.assign(new Error("浏览器操作仅在桌面客户端中可用"), { status: 404 });
   const input = inputSchema.parse(req.body);
   if (!input.toolSessionId) u.singleAgent.assertWorkspaceBrowserAccess(input.sessionId);
   const cwd = input.toolSessionId

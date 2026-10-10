@@ -10,6 +10,7 @@ export type { Dirent, Stats, PathLike, Dir, ReadStream, WriteStream } from "node
 export type { FileHandle } from "node:fs/promises";
 
 const retryOptions = { timeout: 5000, interval: 100 };
+const useExclusiveRename = process.platform === "android" || (process.platform === "linux" && process.env.TOONFLOW_PLATFORM === "ohos");
 
 // 元数据查询不持有长期句柄；保留标准 API 的重载和错误语义。
 export const access = promises.access;
@@ -160,7 +161,7 @@ export async function writeAtomic(path: string, content: string | Uint8Array, op
         });
       }
       if (options.exclusive) {
-        if (process.platform === "android") require("./android.ts").renameExclusive(temporary, path);
+        if (useExclusiveRename) require("./renameExclusive.ts").renameExclusive(temporary, path);
         else await promises.link(temporary, path);
       }
       else await stubborn.retry.rename(retryOptions)(temporary, path);
@@ -192,7 +193,7 @@ export function writeAtomicSync(path: string, content: string | Uint8Array, opti
         }
       }
       if (options.exclusive) {
-        if (process.platform === "android") require("./android.ts").renameExclusive(temporary, path);
+        if (useExclusiveRename) require("./renameExclusive.ts").renameExclusive(temporary, path);
         else native.linkSync(temporary, path);
       }
       else stubborn.retry.renameSync(retryOptions)(temporary, path);

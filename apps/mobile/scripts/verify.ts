@@ -5,14 +5,19 @@ import { runInNewContext } from "node:vm";
 import { createServer } from "node:http";
 import { once } from "node:events";
 import config from "../../../electrobun.config";
+import { getRuntimePlatform } from "@toonflow/server/platform";
 
-if (Bun.semver.order(Bun.version, "1.4.2") < 0) throw new Error("移动端验证需使用 Bun 1.4.2 或更新版本，与 APK 运行时保持一致；旧版本有请求体读完后丢失断连通知的问题。");
+// OHOS 的固定 1.4.0 分支包含断连回调修复；仍必须通过下方完整的流式取消与文件冲突断言。
+if (Bun.semver.order(Bun.version, "1.4.2") < 0 && !(getRuntimePlatform().os === "ohos" && Bun.version === "1.4.0")) {
+  throw new Error("移动端验证需使用 Bun 1.4.2 或固定的 OHOS 1.4.0；旧版 Bun 有请求体读完后丢失断连通知的问题。");
+}
 
 // ACT: 显式检查真实构建产物，不连接模型供应商，不读取已有用户数据。
 const buildRoot = resolve(import.meta.dirname, "../../../build/mobile");
+const payloadRoot = resolve(process.argv[2] ?? resolve(buildRoot, "staging/assets/payload"));
 await mkdir(buildRoot, { recursive: true });
 const directory = await mkdtemp(resolve(buildRoot, "verification"));
-const child = Bun.spawn([process.execPath, resolve(buildRoot, "staging/assets/payload/server.js")], {
+const child = Bun.spawn([process.execPath, resolve(payloadRoot, "server.js")], {
   env: { ...process.env, appVersion: undefined, TOONFLOW_MOBILE_DATA_DIR: directory, TMPDIR: directory },
   stdout: "pipe", stderr: "pipe",
 });
@@ -99,9 +104,9 @@ try {
   const request = (path: string, init: RequestInit = {}) => fetch(`${origin}${path}`, { ...init, headers: { ...headers, ...init.headers } });
   const probeSession = await fetch(`${startupUrl}&probe=1`, { redirect: "manual" });
   assert.equal(probeSession.headers.get("location"), "/?mobile=1&probe=1");
-  const x5Session = await fetch(`${startupUrl}&engine=x5`, { redirect: "manual" });
-  assert.equal(x5Session.headers.get("location"), "/?mobile=1&engine=x5");
-  assert.equal(x5Session.headers.get("set-cookie")?.split(";")[0], cookie, "X5 必须能够独立换取会话 Cookie");
+  const geckoSession = await fetch(`${startupUrl}&engine=gecko`, { redirect: "manual" });
+  assert.equal(geckoSession.headers.get("location"), "/?mobile=1&engine=gecko");
+  assert.equal(geckoSession.headers.get("set-cookie")?.split(";")[0], cookie, "GeckoView 必须能够独立换取会话 Cookie");
   const probeHtml = await (await request("/?mobile=1&probe=1")).text();
   assert.doesNotMatch(probeHtml, /id="app"|src=/, "预检不能加载业务页面");
   const probeScripts = [...probeHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]!);
@@ -121,6 +126,12 @@ try {
     return response.json();
   };
   assert.equal((await request("/api/settings/get", { headers: { Origin: "https://example.invalid" } })).status, 403);
+  const runtime = await json("/api/mobile/runtime");
+  assert.equal(runtime.platform, process.platform, "保留 Bun 实际系统诊断字段");
+  assert.equal(runtime.environment.mobile, true, "移动宿主标记必须在平台模块导入后生效");
+  assert.equal(runtime.environment.host, true);
+  assert.equal(runtime.environment.native, true);
+  assert.match(runtime.environment.id, /^.+-l[01]n1h1$/, "平台标识必须反映移动宿主能力");
   assert.match(await (await request("/?mobile=1")).text(), /id="app"/, "必须加载正式 Vue 页面");
   assert.equal((await json("/api/settings/get")).code, 200);
   for (const [path, key] of [["/api/nodes/get", "nodes"], ["/api/tools/get", "tools"], ["/api/providers/media/list", "providers"]]) {
@@ -160,7 +171,7 @@ try {
   assert.equal(manual.mode, "remote");
   child.kill();
   await child.exited;
-  remoteChild = Bun.spawn([process.execPath, resolve(buildRoot, "staging/assets/payload/server.js")], {
+  remoteChild = Bun.spawn([process.execPath, resolve(payloadRoot, "server.js")], {
     env: { ...process.env, appVersion: undefined, TOONFLOW_MOBILE_DATA_DIR: directory, TMPDIR: directory }, stdout: "pipe", stderr: "inherit",
   });
   let remoteStartup = "";
@@ -229,7 +240,7 @@ try {
   assert.equal((await (await remoteRequest("/api/connection/disconnect", { method: "POST" })).json()).mode, "local");
   assert.equal((await (await remoteRequest("/api/connection/connection")).json()).mode, "remote", "切回本机也必须等待原生重启隔离旧请求");
   passed = true;
-  console.log("通过：能力预检、真实页面、会话鉴权、内置资源、工作区边界、无时间限制扫码配对/重启隔离、本机版本固化/远端版本更新与缺失校验、在线/拒绝授权/断线状态、远程上传/Range/流与取消、离线恢复、本地导出。Android 原生交互仍需设备验证。");
+  console.log("通过：能力预检、真实页面、会话鉴权、内置资源、工作区边界、无时间限制扫码配对/重启隔离、本机版本固化/远端版本更新与缺失校验、在线/拒绝授权/断线状态、远程上传/Range/流与取消、离线恢复、本地导出。移动端原生交互仍需设备验证。");
 } finally {
   clearTimeout(timeout);
   child.kill();

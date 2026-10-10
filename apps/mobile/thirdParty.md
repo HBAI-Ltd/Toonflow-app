@@ -16,23 +16,16 @@ APK 内置官方 Android ARM64 Bun 1.4.2，位于 `lib/arm64-v8a/libbun.so`，�
 
 Bun 本体采用 MIT，静态链接的 JavaScriptCore/WebKit 等组件保留各自许可证；下方原文保留了上游组件清单、源码和重新链接说明。正式分发时须履行对应组件的许可与重新链接要求。
 
-## 腾讯 TBS SDK 44286
+## GeckoView 157.0.20261005135250
 
-当前验证包将 `com.tencent.tbs:tbssdk:44286` 的 Java SDK 编入 DEX，不内置 X5 内核。系统 WebView 能力不足时才进入 X5 流程，确认实际加载 X5 后直接进入页面，不重复检测网页能力。新版 X5 接入仍需替换为腾讯提供的新 SDK 和专用 `config.tbs`，见 README 中的接入状态说明。
+APK 内置 Mozilla 官方 `org.mozilla.geckoview:geckoview-arm64-v8a:157.0.20261005135250`，包含 Gecko 157.0.1 ARM64 内核，未修改上游 SDK 或原生二进制。系统 WebView 能力不足时启用 GeckoView，执行同样的能力预检，通过后加载本机页面；运行时无需下载内核。
 
-- 官方发布包：[Maven Central](https://repo.maven.apache.org/maven2/com/tencent/tbs/tbssdk/44286/tbssdk-44286.jar)
-- SDK JAR SHA256：`d70f1544400885a889d8901cbd4d82538a93c6213ef3103d8a75e72fc29a121f`
-- SDK 采用 [Tencent Binary License](https://github.com/TencentBrowsingService/TBS_SDK/blob/3988ed7fdec43f39fc8c2ba881e4064fe0b52024/LICENSE.txt)，原文保留如下；此 SDK 壳的许可不替代下载内核所附的第三方许可。
+- 官方发布包：[Mozilla Maven AAR](https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-arm64-v8a/157.0.20261005135250/geckoview-arm64-v8a-157.0.20261005135250.aar)
+- AAR SHA256：`ca83e82e11a15d0881b02206a67a9e0b7210a142fd0f281e8d018e4ae849d9b4`
+- 对应源码：[mozilla-release / 737ec77d798755890b062aab541a90d6c75afd19](https://hg.mozilla.org/releases/mozilla-release/rev/737ec77d798755890b062aab541a90d6c75afd19)，版本定位来自官方 [POM 的 SCM tag](https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview-arm64-v8a/157.0.20261005135250/geckoview-arm64-v8a-157.0.20261005135250.pom)。
+- 主许可证：[Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/)。Gecko 所含第三方组件保留各自许可证，官方许可页资源随内核打入 APK，对应 `about:license`；本项目不删改这些许可资源。
 
-It is permitted that distribution of this Android TBS SDK in binary form only is free on Maven Central and GitHub.
-Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
-
-Redistribution of the Android TBS SDK in binary form only on Maven Central and GitHub is permitted provided that the following conditions are met:
-1. Redistribution in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-2. Neither the name of THL A29 Limited nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+上述精确版本源码链接供接收者获取对应源码；分发时须保留 Mozilla 及内核第三方组件的许可、版权与源码获取说明。
 
 ## 打包方案参考
 

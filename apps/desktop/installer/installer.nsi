@@ -30,7 +30,7 @@ ShowInstDetails show
 !define MUI_DIRECTORYPAGE_TEXT_TOP "请选择 Toonflow 的安装目录。"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
-!define MUI_FINISHPAGE_RUN "$INSTDIR\app\bin\launcher.exe"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\app\Resources\app\startupLauncher.exe"
 !define MUI_FINISHPAGE_RUN_TEXT "立即打开 Toonflow"
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW showFinishPage
 !insertmacro MUI_PAGE_FINISH
@@ -178,6 +178,7 @@ tarReady:
   ${EndIf}
   StrCpy $installStep "检查应用启动文件"
   IfFileExists "$INSTDIR\app\bin\launcher.exe" 0 installFailed
+  IfFileExists "$INSTDIR\app\Resources\app\startupLauncher.exe" 0 installFailed
   StrCpy $installStep "设置应用启动目录"
   SetOutPath "$INSTDIR\app\bin"
   IfErrors installFailed
@@ -210,10 +211,10 @@ tarReady:
   WriteRegStr HKCU "Software\Classes\toonflow\DefaultIcon" "" '$\"$INSTDIR\app\Resources\app.ico$\",0'
   WriteRegStr HKCU "Software\Classes\toonflow\shell\open\command" "" '$\"$INSTDIR\app\Resources\app\protocolLauncher.exe$\" $\"%1$\"'
   IfErrors installFailed
-  CreateShortCut "$DESKTOP\${appName}.lnk" "$INSTDIR\app\bin\launcher.exe" "" "$INSTDIR\app\Resources\app.ico"
+  CreateShortCut "$DESKTOP\${appName}.lnk" "$INSTDIR\app\Resources\app\startupLauncher.exe" "" "$INSTDIR\app\Resources\app.ico"
   IfErrors 0 installDone
   ; ACT: 快捷方式不影响程序使用，失败时保留成功安装结果并告知手动启动路径。
-  MessageBox MB_OK|MB_ICONEXCLAMATION "Toonflow 已安装，但无法创建桌面快捷方式。可以从以下位置启动：$\r$\n$INSTDIR\app\bin\launcher.exe" /SD IDOK
+  MessageBox MB_OK|MB_ICONEXCLAMATION "Toonflow 已安装，但无法创建桌面快捷方式。可以从以下位置启动：$\r$\n$INSTDIR\app\Resources\app\startupLauncher.exe" /SD IDOK
   Goto installDone
 
 installFailed:

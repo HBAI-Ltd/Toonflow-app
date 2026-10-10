@@ -5,6 +5,7 @@ import type { Request } from "express";
 import conf from "@/utils/conf";
 import { getAppOrigin } from "@/utils/mcp/control";
 import { isWithin } from "@/utils/workspace/files";
+import { getRuntimePlatform } from "@/lib/platform";
 
 export type A2aSettings = {
   enabled: boolean;
@@ -40,8 +41,7 @@ export async function resolveA2aWorkspace(path = getA2aSettings().directory) {
     throw error;
   });
   if (!(await stat(directory)).isDirectory()) throw Object.assign(new Error("A2A 工作目录必须是文件夹"), { status: 400 });
-  const localWorkspace = ["win32", "darwin"].includes(process.platform) && (process.env.NODE_ENV === "dev" || process.env.toonflowDesktop === "1");
-  if (localWorkspace) return directory;
+  if (getRuntimePlatform().local) return directory;
   const root = await realpath(resolve(dirname(conf.path), "workspaces")).catch((error: NodeJS.ErrnoException) => {
     if (error.code === "ENOENT") return;
     throw error;
@@ -53,8 +53,7 @@ export async function resolveA2aWorkspace(path = getA2aSettings().directory) {
 export function authenticateA2a(req: Request) {
   const { enabled, token } = getA2aSettings();
   if (!enabled || token.length < 32) return;
-  const local = process.env.toonflowDesktop === "1" || (process.env.NODE_ENV === "dev" && ["win32", "darwin"].includes(process.platform));
-  if (local && !["localhost", "127.0.0.1", "[::1]"].includes(req.hostname)) return;
+  if (getRuntimePlatform().requiresLocalHost && !["localhost", "127.0.0.1", "[::1]"].includes(req.hostname)) return;
   if (req.get("origin")) {
     try { getAppOrigin(req); } catch { return; }
   }

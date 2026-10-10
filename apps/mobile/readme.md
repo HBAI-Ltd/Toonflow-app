@@ -1,8 +1,6 @@
 # Toonflow Android
 
-> X5 接入尚未完成：目前缺少腾讯控制台提供的新版动态 SDK（44382）及绑定 `com.toonflow.mobile` / APK 签名的 `config.tbs`。当前 44286 原生代码是待替换的接入草案，不能作为新版 X5 发布；下述 X5 流程说明的是目标行为。官方[公网接入文档](https://st.tencent-cloud.com/jax-static/tbs/PublicNetGuide0724.md)与[试用申请指引](https://st.tencent-cloud.com/jax-static/TBS-WebIndex/docs/1005/console_doc.md)说明了所需资料，ARM64 组件选择 `x5webview64`。
-
-Android WebView 加载同一 APK 内 Bun 启动的真实 Toonflow 前端和后端。页面复用 `apps/web`，后端通过 `@toonflow/server/app` 接入，内置节点、工具、扩展、供应商和技能沿用现有构建产物。
+优先使用系统 Android WebView；系统内核缺少所需能力时，切换到 APK 内置的 ARM64 GeckoView，无需联网下载备用内核。两种内核均加载同一 APK 内 Bun 启动的真实 Toonflow 前端和后端。页面复用 `apps/web`，后端通过 `@toonflow/server/app` 接入，内置节点、工具、扩展、供应商和技能沿用现有构建产物。
 
 ## 设备互联与手动连接
 
@@ -24,33 +22,37 @@ Android WebView 加载同一 APK 内 Bun 启动的真实 Toonflow 前端和后�
 
 手机端默认使用 75% 界面缩放，可在「设置 → 界面设置 → 界面缩放」通过滑块调整为 50%–100%，每档 5%。拖动时只显示所选比例，松手后生效并随应用设置保存。使用 WebView 视口缩放，画布和弹出层保持统一坐标，保留原有页面布局与设置侧栏。
 
-使用官方 **Bun 1.4.2 Android** 运行时，仅构建 `arm64-v8a`。打包参考社区 [minapk](https://github.com/jjtseng93/minapk) 的原生库目录启动方式；直接使用 Android SDK 构建，不依赖其终端环境。Bun 运行时随 APK 安装到原生库目录，JS、WASM 和页面复制到应用程序目录，设置与工作区保存在独立的数据目录。来源和许可证见 [thirdParty.md](thirdParty.md)。
+使用官方 **Bun 1.4.2 Android** 运行时，仅构建 `arm64-v8a`。打包参考社区 [minapk](https://github.com/jjtseng93/minapk) 的原生库目录启动方式；通过 Gradle 与 Android SDK 构建，不依赖其终端环境。Bun 运行时随 APK 安装到原生库目录，JS、WASM 和页面复制到应用程序目录，设置与工作区保存在独立的数据目录。来源和许可证见 [thirdParty.md](thirdParty.md)。
 
-启动时先用系统 WebView 加载独立的本地能力预检页面，通过后直接进入 Toonflow，不初始化或下载 X5。检测项与网页入口共用 `@toonflow/web/browserCapabilities`，避免旧内核在加载业务依赖时先白屏。
+启动时先用系统 WebView 加载独立的本地能力预检页面，通过后直接进入 Toonflow，不初始化 GeckoView。检测项与网页入口共用 `@toonflow/web/browserCapabilities`，检查 12 项 JavaScript 与 CSS 能力，避免旧内核在加载业务依赖时先白屏。
 
-只有系统 WebView 缺少所需能力时，才初始化腾讯 TBS SDK 并按需下载 X5。下载有进度与失败提示；非 Wi-Fi 网络先确认流量使用。已安装的 X5 可以复用，确认实际使用 X5 后直接进入 Toonflow，不对 X5 再做浏览器能力检测，不接受 SDK 静默回退到不满足要求的系统内核。X5 仅用于移动端；实际内核版本由腾讯服务下发，不添加旧内核 polyfill。安装了新版 Chrome 或另一份 WebView APK，不代表系统已切换到该版本。
+系统 WebView 缺少能力时，初始化 APK 内置的 `org.mozilla.geckoview:geckoview-arm64-v8a:157.0.20261005135250`，对 GeckoView 执行同样的 12 项预检，通过后进入 Toonflow。备用内核随 APK 更新，不依赖腾讯服务、`config.tbs` 或首次启动联网下载；本机页面和后端可在离线时启动，在线供应商仍需网络。GeckoView 初始化或预检失败时显示启动错误，不继续进入业务页面。不添加旧内核 polyfill；安装了新版 Chrome 或另一份 WebView APK，也不代表系统已切换到该版本。
 
 ## 构建
 
-当前脚本用于 Windows，需要 Bun、JDK 17 或更新版本、Android SDK Platform 34 和 Build Tools 35.0.0。在仓库根目录执行：
+当前脚本用于 Windows，需要 Bun、JDK 17 或更新版本，以及已接受许可的 Android SDK 目录。`setup` 自动安装 Platform 37.1 和 Build Tools 36.0.0。在仓库根目录执行：
 
 ```powershell
 # 本机已有的 SDK / JDK；其他机器按实际安装路径调整。
 $env:ANDROID_HOME = 'D:\SDK'
 $env:JAVA_HOME = 'D:\Android Studio\jbr'
 
+# 首次配置时，在同一 SDK 目录接受许可。
+& "$env:ANDROID_HOME\cmdline-tools\latest\bin\sdkmanager.bat" --licenses
+
 bun install
 bun run --cwd apps/mobile setup
 bun run --cwd apps/mobile typecheck
+$env:androidRelease = '1'
 bun run --cwd apps/mobile build
 bun apps/mobile/scripts/verify.ts
 ```
 
-`setup` 显式下载固定版本 ARM64 Android Bun 和腾讯 `com.tencent.tbs:tbssdk:44286` 接入 SDK，校验 SHA256 后分别缓存到 `build/mobile/runtime`、`build/mobile/tbs`；构建不下载依赖。TBS 接入 SDK 参与 Java / DEX 构建，完整 X5 内核不打进 APK。可通过 `ANDROID_BUILD_TOOLS` 和 `ANDROID_PLATFORM` 调整 SDK 版本。
+`setup` 显式下载固定版本 ARM64 Android Bun 和 Gradle 9.6.0，校验 SHA256 后分别缓存到 `build/mobile/runtime`、`build/mobile/gradle`；随后由 AGP 9.4.0 自动安装所需 SDK，并准备 GeckoView 及其构建依赖，Gradle 缓存位于 `build/mobile/gradleHome`。SDK 自动安装要求该目录已接受许可。`build` 使用 `--offline` 并禁止 SDK 下载；缺少 SDK 或缓存时先重新执行 `setup`。GeckoView 的 Java、资源与 ARM64 原生内核由 Android 构建工具合并进 APK。
 
-`build` 先调用根目录的 `build:server`，构建节点、工具、扩展、前端、后端及 MCP，再构建移动端启动入口。APK 的 payload 包含 `server.js`、`web`、`nodes`、`tools`、`ext`、`providers`、`skills`、`mcp` 和 Photon 的 JS/WASM 包；团队保持当前仓库未内置打包的状态。payload 内容生成 `revision.txt`，用于随构建更新内置插件。
+`build` 先调用根目录的 `build:server`，构建节点、工具、扩展、前端、后端及 MCP，再将移动端服务与 MCP stdio 入口一起构建，共享重复依赖。APK 的 payload 包含 `server.js`、`stdio.js`、共享代码块、`web`、`nodes`、`tools`、`ext`、`providers`、`skills` 和 Photon 的 JS/WASM 包；团队保持当前仓库未内置打包的状态。payload 内容生成 `revision.txt`，用于随构建更新内置插件。发行包启用 R8 代码优化与资源裁剪，保留 Gecko 官方消费者规则及完整 ARM64 内核。
 
-`bun apps/mobile/scripts/verify.ts` 需在 Bun 1.4.2 或更新版本运行，与 APK 的运行时保持一致（1.3.14 存在消费请求体后丢失断连通知的问题）。它显式启动真实构建产物，在临时数据目录验证能力预检、正式页面、鉴权、内置资源、工作区边界、扫码配对、重启隔离、远程上传与 Range、POST 流式取消、离线恢复和手机导出。检查不连接模型供应商，不读取已有用户数据，也不自动绑定到构建；它不能代替 Android 相机、X5 下载及系统文件选择器的设备验收。
+`bun apps/mobile/scripts/verify.ts` 需在 Bun 1.4.2 或更新版本运行，与 APK 的运行时保持一致（1.3.14 存在消费请求体后丢失断连通知的问题）。它显式启动真实构建产物，在临时数据目录验证能力预检、正式页面、鉴权、内置资源、工作区边界、扫码配对、重启隔离、远程上传与 Range、POST 流式取消、离线恢复和手机导出。检查不连接模型供应商，不读取已有用户数据，也不自动绑定到构建；它不能代替系统 WebView / GeckoView 切换、Android 相机及系统文件选择器的设备验收。
 
 输出：`build/mobile/toonflowMobile.apk`。包名为 `com.toonflow.mobile`，最低 Android 8 / API 26，目标 API 34。本地和 CI 共用仓库内公开的默认签名 `native/defaultSigning.keystore`，别名为 `androiddebugkey`，密码均为 `android`。沿用此前本地默认签名，不再每次生成密钥，后续版本可直接覆盖安装并保留应用数据。
 
@@ -58,11 +60,11 @@ bun apps/mobile/scripts/verify.ts
 
 ## GitHub Actions
 
-在 Actions 中选择 **Debug build → Run workflow**，将 `target` 设为 `androidArm64` 可单独构建 ARM64 APK，选择 `all` 会同时构建桌面与 Android。版本留空时使用所选标签或项目配置。Android 默认生成 debug 包，可在本次运行的 Artifacts 或 Summary 中下载。开启 `androidRelease` 会关闭 `debuggable` 并去掉文件名中的 `-debug` 后缀，两种模式使用相同默认签名，无需配置 Android Secrets。
+在 Actions 中选择 **Debug build → Run workflow**，将 `target` 设为 `androidArm64` 可单独构建 ARM64 APK，选择 `all` 会同时构建桌面与 Android。版本留空时使用所选标签或项目配置。Android 默认生成 debug 包，可在本次运行的 Artifacts 或 Summary 中下载。开启 `androidRelease` 会启用 R8 和资源裁剪、关闭 `debuggable` 并去掉文件名中的 `-debug` 后缀；发布和分发应使用此模式。两种模式使用相同默认签名，无需配置 Android Secrets。
 
 现有 **Release Toonflow** 工作流在推送 `vX.Y.Z` 标签或手动发布时，会并行构建桌面与 Android，全部成功后将 `toonflow-X.Y.Z-android-arm64.apk` 附加到同一个 GitHub Release。Android APK 暂不上传到桌面更新托管接口，应用内「前往 GitHub 更新」会打开最新发布页。
 
-CI 使用 Windows 2025 自带 JDK 17 和 Android SDK Manager，显式安装 Platform 34 / Build Tools 35.0.0，再分别执行依赖安装、mobile `setup` 与 `build`。默认签名文件直接来自源码，Android 构建不读取签名 Secrets。X5 的 `config.tbs` 仍需与最终包名及默认签名匹配。
+CI 使用 Windows 2025 自带 JDK 17 和已接受许可的 Android SDK 目录；依赖安装后，mobile `setup` 负责准备所需 SDK、GeckoView 与构建依赖，再执行离线 `build`。默认签名文件直接来自源码，Android 构建不读取签名 Secrets。
 
 本地需要复现发布构建时，设置 `androidRelease=1`，然后执行同一个 mobile `build` 命令。
 
@@ -100,5 +102,5 @@ $adb = Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
 - 在线模型和媒体供应商仍需要联网及有效配置；本地安装不等于离线运行云端模型。
 - FFmpeg 当前没有 Android 发行包，转码、抽帧等依赖 FFmpeg 的功能暂不可用；不能将 Linux 二进制直接用于 Android。
 - Activity 退出时停止 Bun；没有后台长任务或前台服务。
-- Bun Android 仍为实验性支持。MuMu 的验证不能代替 ARM64 真机验证；真实手机上的 WebView、内存、媒体编解码及后台行为仍需单独确认。
+- Bun Android 仍为实验性支持。MuMu 的验证不能代替 ARM64 真机验证；真实手机上的系统 WebView / GeckoView 切换、离线启动、相机、文件导入导出、内存、媒体编解码及后台行为仍需单独确认。
 - 支持 Windows 本地构建和 GitHub Actions APK 构建与签名，不包含应用商店上架流程。

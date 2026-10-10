@@ -1,0 +1,10 @@
+{
+  "name": "@toonflow/ohos",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "bun prepare.ts && bun build.ts setup",
+    "build": "bun build.ts",
+    "typecheck": "bun ../../node_modules/typescript/bin/tsc -p tsconfig.json"
+  }
+}

@@ -60,7 +60,8 @@
           <el-form-item v-if="activeTab === 'file'" class="sourceField" label="供应商文件">
             <div class="fileImport">
               <div class="fileSource">
-                <input ref="fileInput" type="file" accept=".ts" hidden :disabled="saving" @change="readSourceFile" />
+                <!-- ACT: Android 会把 .ts 识别为视频，选中后再校验扩展名和大小。 -->
+                <input ref="fileInput" type="file" :accept="isMobile ? undefined : '.ts'" hidden :disabled="saving" @change="readSourceFile" />
                 <el-input :modelValue="fileName" :prefixIcon="IconFileCode" placeholder="尚未选择文件" readonly aria-label="已选择的供应商文件" />
                 <el-button :icon="IconFolderOpen" @click="fileInput?.click()">选择文件</el-button>
               </div>
@@ -113,6 +114,7 @@ import type { MediaProvider } from "./types";
 import { providerPrompt } from "./providerPrompt";
 import { modelChoices, saveSettings } from "@/stores/settings";
 import { writeClipboardText } from "@/lib/clipboard";
+import { isMobile } from "@/lib/platform";
 
 const { mode = "custom" } = defineProps<{ mode?: "builtin" | "custom" }>();
 const visible = defineModel<boolean>({ default: false });

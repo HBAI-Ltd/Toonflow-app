@@ -2,7 +2,7 @@ import axios from "axios";
 import { computed, ref, shallowRef, watch } from "vue";
 import type { updateSnapshot } from "@toonflow/server/desktop";
 import { settings } from "@/stores/settings";
-import { isRemoteConnection } from "@/lib/mobile";
+import { isRemoteConnection } from "@/lib/platform";
 
 export const desktopUpdateCustomUrl = computed(() => typeof settings.value.desktopUpdateCustomUrl === "string" ? settings.value.desktopUpdateCustomUrl : "");
 export const desktopUpdateSource = computed(() => settings.value.desktopUpdateSource === "custom" && desktopUpdateCustomUrl.value ? "custom"

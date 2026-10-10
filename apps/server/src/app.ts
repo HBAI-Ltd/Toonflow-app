@@ -8,6 +8,7 @@ import type { Request, Response, NextFunction } from "express";
 import buildRoute from "@/core";
 import { errorFromCause } from "@/lib/responseFormat";
 import desktopRequest from "@/lib/desktop";
+import { getRuntimePlatform } from "@/lib/platform";
 import initializePlugins from "@/utils/plugins/initialize";
 import { languageRequest, resolveRequestLocale, runWithLocale, setLocaleFallback, translateError, translateMessage } from "@/lib/i18n";
 import { detectLocale, normalizeLocale } from "@toonflow/i18n";
@@ -72,7 +73,7 @@ export async function createApp({
   const app = express();
   app.locals.appVersion = appVersion;
 
-  if (process.env.NODE_ENV === "dev") {
+  if (getRuntimePlatform().development) {
     await buildRoute();
     app.use(logger("dev"));
   }

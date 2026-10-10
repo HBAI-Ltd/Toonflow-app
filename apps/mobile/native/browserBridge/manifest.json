@@ -1,0 +1,8 @@
+{
+  "manifest_version": 2,
+  "name": "Toonflow browser bridge",
+  "version": "1.0",
+  "browser_specific_settings": { "gecko": { "id": "browserBridge@toonflow" } },
+  "content_scripts": [{ "matches": ["http://127.0.0.1/*"], "js": ["content.js"], "run_at": "document_end" }],
+  "permissions": ["nativeMessaging", "nativeMessagingFromContent", "geckoViewAddons"]
+}

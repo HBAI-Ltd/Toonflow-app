@@ -88,7 +88,9 @@ internal static class updateHelper
             {
                 // 保持句柄，避免 PID 复用；仅等待当前安装的宿主，不终止其他进程。
                 IntPtr parentHandle = parent.Handle;
-                if (parent.HasExited || !inside(parent.MainModule.FileName, Path.Combine(root, "app", "bin")))
+                string parentPath = parent.MainModule.FileName;
+                if (parent.HasExited || (!inside(parentPath, Path.Combine(root, "app", "bin"))
+                    && !samePath(parentPath, Path.Combine(root, "app", "Resources", "app", "startupLauncher.exe"))))
                     throw new InvalidOperationException("父进程不属于当前 Toonflow 安装。");
                 using (var sha = SHA256.Create())
                     if (!String.Equals(BitConverter.ToString(sha.ComputeHash(archiveStream)).Replace("-", ""), expectedDigest, StringComparison.OrdinalIgnoreCase))
@@ -262,7 +264,10 @@ internal static class updateHelper
     private static void startApp(string root, string transaction, string version, string hash, out Process process)
     {
         process = null;
-        string launcher = Path.Combine(root, "app", "bin", "launcher.exe");
+        string bin = Path.Combine(root, "app", "bin");
+        string launcher = Path.Combine(root, "app", "Resources", "app", "startupLauncher.exe");
+        if (!File.Exists(launcher)) launcher = Path.Combine(bin, "launcher.exe");
+        ensurePlainPath(launcher);
         string startedPath = transaction == null ? null : Path.Combine(root, "self-extraction", "update-" + transaction + ".started.json");
         if (startedPath != null)
         {
@@ -271,10 +276,10 @@ internal static class updateHelper
         }
         var options = new ProcessStartInfo(launcher)
         {
-            WorkingDirectory = Path.GetDirectoryName(launcher),
+            WorkingDirectory = bin,
             UseShellExecute = false,
             CreateNoWindow = true,
-            WindowStyle = ProcessWindowStyle.Hidden
+            WindowStyle = ProcessWindowStyle.Normal
         };
         options.EnvironmentVariables.Remove("TOONFLOW_UPDATE_TRANSACTION");
         if (transaction != null) options.EnvironmentVariables["TOONFLOW_UPDATE_TRANSACTION"] = transaction;
@@ -311,7 +316,7 @@ internal static class updateHelper
 
     private static void stopApp(Process process)
     {
-        // ACT: 已退出的 launcher 由 SDK Job 清理子进程；残余占用交由有界 Move 失败保护备份，不按名称终止其他实例。
+        // ACT: 仅终止本次启动的进程树；已退出时的残余占用交由有界 Move 失败保护备份，不按名称终止其他实例。
         if (!process.HasExited)
         {
             string taskkill = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "System32", "taskkill.exe");

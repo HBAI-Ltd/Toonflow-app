@@ -1,17 +1,17 @@
 import axios from "axios";
+import { isDesktop } from "./platform";
 
-export const isDesktopClipboard = new URLSearchParams(window.location.search).get("desktop") === "1";
 const headers = { "x-toonflow-desktop": "1" };
 
 export async function readClipboardText(): Promise<string> {
-  if (!isDesktopClipboard) return navigator.clipboard.readText();
+  if (!isDesktop) return navigator.clipboard.readText();
   const { data } = await axios.post<{ code: number; data: { text: string }; message: string }>("/api/desktop/clipboard/read", {}, { headers });
   if (data.code !== 200) throw new Error(data.message || "读取剪贴板失败");
   return data.data.text;
 }
 
 export async function readClipboardImage(): Promise<Blob | null> {
-  if (isDesktopClipboard) {
+  if (isDesktop) {
     const { data } = await axios.post<{ code: number; data: { image: string | null }; message: string }>("/api/desktop/clipboard/read", { format: "image" }, { headers });
     if (data.code !== 200) throw new Error(data.message || "读取剪贴板图片失败");
     if (!data.data.image) return null;
@@ -33,7 +33,7 @@ function clipboardFile(type: string, base64: string, name: string) {
 }
 
 export async function readClipboardFiles(): Promise<File[]> {
-  if (isDesktopClipboard) {
+  if (isDesktop) {
     const { data } = await axios.post<{ code: number; data: { files: { name: string; mimeType: string; data: string }[] }; message: string }>(
       "/api/desktop/clipboard/read",
       { format: "files" },
@@ -78,7 +78,7 @@ async function imagePngBlob(image: Blob) {
   }
 }
 export async function writeClipboardImage(image: Blob): Promise<void> {
-  if (isDesktopClipboard) {
+  if (isDesktop) {
     const { data } = await axios.post<{ code: number; message: string }>("/api/desktop/clipboard/write", {
       format: "image",
       image: await blobBase64(image),
@@ -90,7 +90,7 @@ export async function writeClipboardImage(image: Blob): Promise<void> {
   await navigator.clipboard.write([new ClipboardItem({ "image/png": await imagePngBlob(image) })]);
 }
 export async function writeClipboardText(text: string): Promise<void> {
-  if (!isDesktopClipboard) return navigator.clipboard.writeText(text);
+  if (!isDesktop) return navigator.clipboard.writeText(text);
   const { data } = await axios.post<{ code: number; message: string }>("/api/desktop/clipboard/write", { text }, { headers });
   if (data.code !== 200) throw new Error(data.message || "写入剪贴板失败");
 }

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { isMobile, isRemoteConnection } from "./mobile";
+import { isMobile, isRemoteConnection } from "./platform";
 import { toValue, type MaybeRefOrGetter } from "vue";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { registerApiLanguage } from "@/lib/i18n";
@@ -138,7 +138,7 @@ export default function useWorkspaceFiles(directory?: MaybeRefOrGetter<string | 
 
   async function reveal(path: string) {
     if (isRemoteConnection) throw new Error("远程项目文件无法在本机文件管理器中定位，请下载或导出后查看。");
-    if (isMobile) throw new Error("Android 暂不支持在文件管理器中定位项目文件，请使用下载或导出保存文件。");
+    if (isMobile) throw new Error("移动端暂不支持在文件管理器中定位项目文件，请使用下载或导出保存文件。");
     await client.post("/reveal", { directory: getDirectory(), path });
   }
 

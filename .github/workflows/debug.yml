@@ -19,7 +19,7 @@ on:
         type: boolean
         default: false
       androidRelease:
-        description: Android 发布模式（关闭调试，使用默认签名）
+        description: Android 发布模式（R8 与资源裁剪，关闭调试，使用默认签名）
         type: boolean
         default: false
   workflow_call:
@@ -148,20 +148,14 @@ jobs:
           expectedPlatform: ${{ matrix.platform }}
           expectedArch: ${{ matrix.arch }}
         run: bun -e 'if (process.platform !== process.env.expectedPlatform || process.arch !== process.env.expectedArch) throw new Error("运行器系统或架构与目标不一致");'
-      - name: 准备 Android JDK 与 SDK
+      - name: 准备 Android JDK 与 SDK 目录
         if: matrix.target == 'androidArm64'
         shell: pwsh
-        env:
-          ANDROID_BUILD_TOOLS: 35.0.0
-          ANDROID_PLATFORM: android-34
         run: |
           if (!(Test-Path -LiteralPath "$env:JAVA_HOME_17_X64/bin/javac.exe")) { throw '找不到运行器 JDK 17' }
+          if (!$env:ANDROID_HOME -or !(Test-Path -LiteralPath $env:ANDROID_HOME -PathType Container)) { throw '找不到运行器 Android SDK 目录' }
           "JAVA_HOME=$env:JAVA_HOME_17_X64" >> $env:GITHUB_ENV
           $env:JAVA_HOME = $env:JAVA_HOME_17_X64
-          $sdkManager = Join-Path $env:ANDROID_HOME 'cmdline-tools/latest/bin/sdkmanager.bat'
-          if (!(Test-Path -LiteralPath $sdkManager)) { throw '找不到运行器 Android SDK Manager' }
-          & $sdkManager "platforms;$env:ANDROID_PLATFORM" "build-tools;$env:ANDROID_BUILD_TOOLS"
-          if ($LASTEXITCODE -ne 0) { throw 'Android SDK 安装失败' }
       - name: 安装依赖
         run: bun install --frozen-lockfile
       - name: 安装 Intel Mac 兼容 SDK
@@ -190,7 +184,7 @@ jobs:
         # ACT: 使用原生环境，避免 Git Bash 的 GNU tar 将 Windows 盘符识别为远程主机。
         shell: pwsh
         run: bun run release:desktop "$env:appVersion" "$env:releaseMode"
-      - name: 下载 Android Bun 与 TBS SDK
+      - name: 准备 Android Bun、GeckoView 与构建依赖
         if: matrix.target == 'androidArm64'
         shell: pwsh
         run: bun run --cwd apps/mobile setup

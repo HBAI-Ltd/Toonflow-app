@@ -3,6 +3,7 @@ import { realpath, stat } from "@toonflow/file";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import conf from "@/utils/conf";
 import { getMobileLinkConfig, isMobileLinkRequest } from "@/utils/mobileLink";
+import { getRuntimePlatform } from "@/lib/platform";
 
 export function isLocalWorkspaceRequest(req: Request) {
   if (isMobileLinkRequest(req)) return false;
@@ -21,8 +22,7 @@ export async function resolveWorkspace(req: Request, path: string) {
     throw err;
   });
   if (!(await stat(directory)).isDirectory()) throw Object.assign(new Error("工作目录不是文件夹，请重新选择"), { status: 404 });
-  const localWorkspace = ["win32", "darwin"].includes(process.platform) && (process.env.NODE_ENV === "dev" || process.env.toonflowDesktop === "1");
-  if (localWorkspace && isLocalWorkspaceRequest(req)) return directory;
+  if (getRuntimePlatform().local && isLocalWorkspaceRequest(req)) return directory;
 
   if (isMobileLinkRequest(req)) {
     for (const root of getMobileLinkConfig().directories) {

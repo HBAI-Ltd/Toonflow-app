@@ -6,12 +6,13 @@ import { z } from "zod";
 import u from "@/utils";
 import { validateFields } from "@/lib/middleware";
 import { success } from "@/lib/responseFormat";
+import { getRuntimePlatform } from "@/lib/platform";
 
 const router = Router();
 
 export default router.post("/", validateFields({ directory: z.string().min(1).max(4096), path: z.string().max(4096) }), async (req, res) => {
   const desktop = u.desktop.getDesktopRuntime(req);
-  const native = !!desktop || process.env.NODE_ENV === "dev" && ["win32", "darwin"].includes(process.platform);
+  const native = !!desktop || getRuntimePlatform().nativeDevelopment;
   if (!native || !u.workspace.isLocalWorkspaceRequest(req)) throw Object.assign(new Error("仅支持桌面客户端或本机开发页面打开文件所在位置"), { status: 403 });
   const { path } = await u.workspaceFile.resolveWorkspaceFile(req, req.body.directory, req.body.path);
   await stat(path);
