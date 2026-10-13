@@ -53,8 +53,11 @@ export async function writeAssetFile(path: string, content: string | Uint8Array,
   const release = lockWorkspaceFiles([target.path]);
   try {
     if (revision !== undefined) {
-      const current = createHash("sha256").update(await readAssetContents(target.path)).digest("hex");
-      if (current !== revision) throw Object.assign(new Error("素材已被修改，请重新读取后再更新"), { status: 409, code: "ESTALE" });
+      const current = await readAssetContents(target.path).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") throw Object.assign(new Error("素材文件已被删除或移动，未覆盖磁盘内容"), { status: 409, code: "ESTALE" });
+        throw error;
+      });
+      if (createHash("sha256").update(current).digest("hex") !== revision) throw Object.assign(new Error("素材已被修改，请重新读取后再更新"), { status: 409, code: "ESTALE" });
     }
     await writeWorkspaceFile(target.path, content, revision === undefined);
     return { path: relative(target.directory, target.path).split(sep).join("/"), revision: createHash("sha256").update(content).digest("hex") };
