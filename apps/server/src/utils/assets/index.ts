@@ -78,8 +78,9 @@ export async function moveAsset(path: string, target: string) {
       if (relative(source.path, destination.path) !== "" && isWithin(source.path, destination.path)) {
         throw new Error("不能把素材文件夹移动到自身的子目录");
       }
+      // ACT: source === destination 时只清理一次；renameWorkspaceFile 同名情况会直接返回，不会真的移动。
       await closeAssetSearches(source.path);
-      await closeAssetSearches(destination.path);
+      if (destination.path !== source.path) await closeAssetSearches(destination.path);
     }
     await renameWorkspaceFile(source.path, destination.path);
   } finally { release(); }
