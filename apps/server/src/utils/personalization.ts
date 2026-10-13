@@ -67,7 +67,7 @@ export async function saveDocument(document: PersonalizationDocument, content: s
       const current = result(await readContent(path));
       if (revision !== current.revision) throw Object.assign(new Error("文档已被其他操作更新，请重新加载后再保存，避免覆盖最新内容"), { status: 409 });
       await mkdir(dirname(path), { recursive: true });
-      await writeWorkspaceFile(await documentPath(document), content);
+      await writeWorkspaceFile(path, content);
       return result(content);
     } finally { release(); }
   } catch (err) { throw documentError("save", document, err); }
