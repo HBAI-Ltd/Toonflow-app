@@ -19,7 +19,7 @@ export default router.post("/", validateFields({ directory: z.string().min(1).ma
   if (desktop) desktop.showItemInFolder(path);
   else {
     const child = process.platform === "win32"
-      ? spawn(resolve(process.env.WINDIR ?? "C:\\Windows", "explorer.exe"), ["/select,", path], { windowsHide: true, stdio: "ignore" })
+      ? spawn(resolve(process.env.WINDIR ?? "C:\\Windows", "explorer.exe"), [`/select,${path}`], { windowsHide: true, stdio: "ignore" })
       : spawn("/usr/bin/open", ["-R", path], { stdio: "ignore" });
     await new Promise<void>((resolve, reject) => { child.once("error", reject); child.once("spawn", resolve); });
     child.unref();
