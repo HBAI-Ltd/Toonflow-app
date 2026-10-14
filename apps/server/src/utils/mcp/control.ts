@@ -88,7 +88,9 @@ export function connectControl(id: string, response: Response) {
   response.flushHeaders();
   connections.set(id, connection);
   response.write(`data: ${JSON.stringify({ type: "ready" })}\n\n`);
-  const heartbeat = setInterval(() => response.write(": keepalive\n\n"), 20000);
+  const heartbeat = setInterval(() => {
+    if (!response.destroyed && !response.writableEnded && !response.writableNeedDrain) response.write(": keepalive\n\n");
+  }, 20000);
   const socket = response.socket;
   const close = () => {
     clearInterval(heartbeat);
