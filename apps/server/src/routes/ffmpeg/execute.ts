@@ -58,7 +58,9 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
     }
     res.set({ "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no" });
     res.flushHeaders();
-    heartbeat = setInterval(() => { if (!res.destroyed) res.write(": keepalive\n\n"); }, 1000);
+    heartbeat = setInterval(() => {
+      if (!res.destroyed && !res.writableEnded && !res.writableNeedDrain) res.write(": keepalive\n\n");
+    }, 1000);
     await u.ffmpeg.executeRemoteFfmpeg(factory, input, event => {
       const failure = event.event === "error" ? event.args[0] as { message?: unknown; i18nMessage?: unknown } | undefined : undefined;
       if (failure && typeof failure.message === "string") {
