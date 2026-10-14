@@ -25,7 +25,9 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
     }, controller.signal, () => {
       res.set({ "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store, no-transform", "X-Accel-Buffering": "no" });
       res.flushHeaders();
-      heartbeat = setInterval(() => { if (!res.destroyed && !res.writableNeedDrain) res.write("\n"); }, 1000);
+      heartbeat = setInterval(() => {
+        if (!res.destroyed && !res.writableEnded && !res.writableNeedDrain) res.write("\n");
+      }, 1000);
     });
     if (!res.destroyed) res.end();
   } finally {
