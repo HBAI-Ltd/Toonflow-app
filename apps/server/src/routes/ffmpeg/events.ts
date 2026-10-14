@@ -10,7 +10,9 @@ export default Router().get("/", (req, res) => {
   const unsubscribe = u.ffmpeg.onRequired(() => {
     if (!res.destroyed) res.write('data: {"type":"required"}\n\n');
   });
-  const heartbeat = setInterval(() => res.write(": keepalive\n\n"), 20000);
+  const heartbeat = setInterval(() => {
+    if (!res.destroyed && !res.writableEnded && !res.writableNeedDrain) res.write(": keepalive\n\n");
+  }, 20000);
   const socket = req.socket;
   const close = () => {
     clearInterval(heartbeat);
