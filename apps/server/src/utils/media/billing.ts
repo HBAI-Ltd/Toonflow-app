@@ -177,7 +177,9 @@ export function connectBalanceEvents(ids: string | string[], response: Response)
     account.connections.add(response);
     response.write(`data: ${JSON.stringify(snapshot(account))}\n\n`);
   }
-  const heartbeat = setInterval(() => { if (!response.destroyed) response.write(": keepalive\n\n"); }, 20000);
+  const heartbeat = setInterval(() => {
+    if (!response.destroyed && !response.writableEnded && !response.writableNeedDrain) response.write(": keepalive\n\n");
+  }, 20000);
   const socket = response.socket;
   const close = () => {
     clearInterval(heartbeat);
