@@ -56,7 +56,11 @@ async function waitForQuery<T>(query: Promise<T>, signal?: AbortSignal): Promise
       abort = () => reject(signal.reason);
       if (signal.aborted) abort();
       else signal.addEventListener("abort", abort, { once: true });
-    })]);
+    })]).catch(error => {
+      // ACT: 取消时不丢弃 query 自身的 promise，让上游调用方按原 signal 处理；query 内部 reject 也不会变 unhandled。
+      void query.catch(() => undefined);
+      throw error;
+    });
   } finally {
     if (abort) signal.removeEventListener("abort", abort);
   }

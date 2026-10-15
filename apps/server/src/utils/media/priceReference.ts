@@ -38,7 +38,11 @@ async function waitForMetadata<T>(value: Promise<T>, signal?: AbortSignal): Prom
       abort = () => reject(signal.reason);
       if (signal.aborted) abort();
       else signal.addEventListener("abort", abort, { once: true });
-    })]);
+    })]).catch(error => {
+      // ACT: 取消时不丢弃 value 自身的 promise，让上游调用方按原 signal 处理；value 内部 reject 也不会变 unhandled。
+      void value.catch(() => undefined);
+      throw error;
+    });
   } finally { if (abort) signal.removeEventListener("abort", abort); }
 }
 
