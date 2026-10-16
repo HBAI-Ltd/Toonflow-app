@@ -15,11 +15,20 @@ internal static class checkWebView2
 {
     // ACT: URL.canParse 需要 Chromium 120；同时覆盖 Map.groupBy 和 Promise.withResolvers。
     private static readonly Version minimumVersion = new Version(120, 0, 0, 0);
+    // ACT: 微软会在 Beta/Dev/Canary 通道返回 "156.0.4314.23 beta" 这类带通道后缀的版本字符串，Version.TryParse 会失败。
+    private static readonly Regex versionPattern = new Regex(@"^\d+(?:\.\d+){1,3}", RegexOptions.Compiled);
     private static volatile string stage = "version";
     private static string runtimeVersion = "<none>";
     private static string userDataFolder = "<none>";
     private static string account = "<unknown>";
     private static bool elevated;
+
+    private static string normalizeVersion(string value)
+    {
+        if (String.IsNullOrEmpty(value)) return value;
+        Match match = versionPattern.Match(value.Trim());
+        return match.Success ? match.Value : value;
+    }
 
     [DllImport("WebView2Loader.dll", EntryPoint = "GetAvailableCoreWebView2BrowserVersionString",
         CharSet = CharSet.Unicode,
@@ -123,7 +132,7 @@ internal static class checkWebView2
             environment.BrowserProcessExited += delegate { browserExited.TrySetResult(true); };
             runtimeVersion = environment.BrowserVersionString;
             Version activeVersion;
-            if (!Version.TryParse(runtimeVersion, out activeVersion) || activeVersion < minimumVersion)
+            if (!Version.TryParse(normalizeVersion(runtimeVersion), out activeVersion) || activeVersion < minimumVersion)
                 throw new NotSupportedException("Created Runtime does not meet minimum version " + minimumVersion);
             stage = "profileIsolation";
             if (!String.Equals(Path.GetFullPath(environment.UserDataFolder).TrimEnd('\\'), userDataFolder, StringComparison.OrdinalIgnoreCase))
