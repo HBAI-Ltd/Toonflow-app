@@ -26,6 +26,12 @@ internal static class checkWebView2
         ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     private static extern int getAvailableVersion(string browserExecutableFolder, out IntPtr versionInfo);
 
+    // ACT: 使用 WebView2 官方比较规则，忽略 beta/dev/canary 通道后缀，解析失败仍拒绝。
+    [DllImport("WebView2Loader.dll", EntryPoint = "CompareBrowserVersions",
+        CharSet = CharSet.Unicode,
+        ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    private static extern int compareVersions(string version1, string version2, out int result);
+
     [STAThread]
     private static int Main(string[] args)
     {
@@ -88,14 +94,20 @@ internal static class checkWebView2
         {
             int result = getAvailableVersion(null, out versionInfo);
             runtimeVersion = versionInfo == IntPtr.Zero ? "<none>" : Marshal.PtrToStringUni(versionInfo);
-            Version installedVersion;
-            if (result < 0 || !Version.TryParse(runtimeVersion, out installedVersion)
-                || installedVersion <= new Version(0, 0, 0, 0))
+            int comparison = 0;
+            if (result >= 0) result = compareVersions(runtimeVersion, "0.0.0.0", out comparison);
+            if (result < 0 || comparison <= 0)
             {
                 log("Runtime unavailable; required>=" + minimumVersion, result);
                 return 1;
             }
-            if (installedVersion < minimumVersion)
+            result = compareVersions(runtimeVersion, minimumVersion.ToString(), out comparison);
+            if (result < 0)
+            {
+                log("Runtime version comparison failed; required>=" + minimumVersion, result);
+                return 1;
+            }
+            if (comparison < 0)
             {
                 log("Runtime outdated; required>=" + minimumVersion, 0);
                 return 3;
@@ -122,8 +134,10 @@ internal static class checkWebView2
             environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder);
             environment.BrowserProcessExited += delegate { browserExited.TrySetResult(true); };
             runtimeVersion = environment.BrowserVersionString;
-            Version activeVersion;
-            if (!Version.TryParse(runtimeVersion, out activeVersion) || activeVersion < minimumVersion)
+            int comparison;
+            int comparisonResult = compareVersions(runtimeVersion, minimumVersion.ToString(), out comparison);
+            if (comparisonResult < 0) Marshal.ThrowExceptionForHR(comparisonResult);
+            if (comparison < 0)
                 throw new NotSupportedException("Created Runtime does not meet minimum version " + minimumVersion);
             stage = "profileIsolation";
             if (!String.Equals(Path.GetFullPath(environment.UserDataFolder).TrimEnd('\\'), userDataFolder, StringComparison.OrdinalIgnoreCase))
