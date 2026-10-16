@@ -127,9 +127,10 @@ export function referenceContent(protocol: string, prompt: string, references: A
     content.push(textPart(`{{ref ${referenceOffset + index + 1}}}${item.dataType === "STRING" ? `\n${item.value}` : ""}`));
     if (item.dataType === "STRING") return;
     if (protocol === "openai-completions") {
-      content.push(item.dataType === "IMAGE"
-        ? { type: "image_url", image_url: { url: item.value } }
-        : { type: "video_url", video_url: { url: item.value } });
+      if (item.dataType === "IMAGE") content.push({ type: "image_url", image_url: { url: item.value } });
+      // ACT: openai-completions 协议中 DeepSeek 等供应商只接受 text/image_url/file；video_url
+      // 会被服务端 422 拒绝（issue #310）。此处降级为文本提示，保留引用编号供模型关联。
+      else content.push(textPart(`视频参考：${item.value}（当前接口不接受视频内容，已仅提供路径）`));
     } else if (protocol === "openai-responses") {
       const extension = item.value.slice(11, item.value.indexOf(";")).replace("quicktime", "mov");
       content.push(item.dataType === "IMAGE"
