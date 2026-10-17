@@ -233,7 +233,7 @@ void executeStart(napi_env, void *data) {
     }
     environment.push_back("TOONFLOW_MOBILE_DATA_DIR=" + state->dataDir);
     environment.push_back("TOONFLOW_PLATFORM=ohos");
-    environment.push_back("TOONFLOW_MOBILE_DEVICE_NAME=Toonflow HarmonyOS");
+    environment.push_back("TOONFLOW_MOBILE_DEVICE_NAME=FilmFraylo HarmonyOS");
     environment.push_back("TMPDIR=" + state->cacheDir);
     environment.push_back("HOME=" + state->dataDir.substr(0, state->dataDir.find_last_of('/')));
     environment.push_back("SHELL=/system/bin/sh");

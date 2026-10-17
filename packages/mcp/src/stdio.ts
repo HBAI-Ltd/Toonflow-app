@@ -40,7 +40,7 @@ async function main() {
   if (!(["http:", "https:"].includes(url.protocol)) || (url.protocol === "http:" && !local)) {
     throw new Error("远程 MCP 必须使用 HTTPS；本机连接允许 HTTP");
   }
-  if (values.runtime && !local) throw new Error("运行信息文件只允许指向本机 Toonflow");
+  if (values.runtime && !local) throw new Error("运行信息文件只允许指向本机 FilmFraylo");
   if (url.username || url.password) throw new Error("MCP URL 不允许包含账号或密码");
   const transport = new StreamableHTTPClientTransport(url, {
     requestInit: { headers: { Authorization: `Bearer ${token}`, "Accept-Language": locale } },

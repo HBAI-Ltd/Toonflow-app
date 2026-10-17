@@ -117,7 +117,7 @@ internal static class checkWebView2
         int result;
         try
         {
-            // ACT: 独立临时用户目录只验证内核启动，不代表 Toonflow 实际用户目录一定健康。
+            // ACT: 独立临时用户目录只验证内核启动，不代表 FilmFraylo 实际用户目录一定健康。
             stage = "environment";
             environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder);
             environment.BrowserProcessExited += delegate { browserExited.TrySetResult(true); };

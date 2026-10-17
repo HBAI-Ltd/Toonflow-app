@@ -1,0 +1,162 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>safillu 全部线上接口文档 · 2026-10-12</title><style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font:15px/1.8 system-ui,"Microsoft YaHei",sans-serif;color:#233247;background:#f4f6fa}header{background:#10283f;color:white;padding:42px max(24px,calc((100vw - 1120px)/2));}header h1{font-size:34px;margin:8px 0}header p{color:#bdd1e4;margin:0}.wrap{max-width:1480px;display:grid;grid-template-columns:245px minmax(0,1fr);margin:auto;gap:30px;padding:30px}nav{position:sticky;top:20px;align-self:start}nav a{display:block;padding:7px 12px;color:#32485f;text-decoration:none;border-radius:5px;font-size:14px}nav a:hover{background:#e0eaf5}main{background:white;padding:30px 42px;border-radius:10px;min-width:0}section{scroll-margin-top:20px;margin-bottom:44px}h2{font-size:24px;color:#174d73;border-bottom:1px solid #dae4ec;padding-bottom:12px}h3{font-size:18px;margin:26px 0 12px}.table{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #dce5ed;text-align:left;vertical-align:top;padding:10px 12px;overflow-wrap:anywhere}th{background:#edf3f8}code{font-family:Consolas,monospace;font-size:.9em;overflow-wrap:anywhere}pre{background:#11283e;color:#e7f0fa;padding:20px;border-radius:7px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;font-size:13px}a{color:#1769a0}.note{background:#edf6fe;border-left:4px solid #2682ba;padding:15px;margin:18px 0}img{width:100%;max-width:900px;border-radius:8px}audio{max-width:100%;width:500px}.downloads a{display:inline-block;margin:15px 16px 0 0;color:white;text-decoration:underline}@media(max-width:950px){.wrap{display:block;padding:14px}nav{position:static;display:flex;flex-wrap:wrap;margin-bottom:18px}nav a{font-size:12px}main{padding:20px}header{padding:26px}header h1{font-size:28px}}@media print{body{background:white}header{background:white;color:black;padding:0}header p{color:#444}nav,.downloads,audio{display:none}.wrap{display:block;padding:0}main{padding:0}pre{background:#f0f3f6;color:black}h2,h3{break-after:avoid}tr{break-inside:avoid}}</style></head><body><header><p>SAFILLU · API REFERENCE</p><h1>全部线上接口文档</h1><p>视频 · 音色设计 · BGM · 生图 | 2026-10-12 | new-api / QuantumNous</p><div class="downloads"><a href="openapi.json">OpenAPI</a><a href="requests.http">HTTP 示例</a><a href="client.py">Python 客户端</a></div></header><div class="wrap"><nav><a href="#start">01 · 服务、模型与鉴权</a><a href="#routes">02 · 完整路由索引</a><a href="#h3">03 · H3 推荐接口：Base64 与多模态</a><a href="#image">04 · Z-Image 文生图</a><a href="#voice">05 · 音色设计与语音生成</a><a href="#bgm">06 · BGM 纯音乐生成与音频查询</a><a href="#legacy">07 · H3 兼容入口与参数差异</a><a href="#tasks">08 · 状态、轮询与下载</a><a href="#billing">09 · 计费与边界</a><a href="#examples">10 · 可直接使用的示例与客户端</a><a href="#errors">11 · 错误处理与兼容限制</a><a href="#evidence">12 · 核对记录与真实成品</a></nav><main><section id="start"><h2>01 · 服务、模型与鉴权</h2><p>站点根地址：<strong>https://api.safillu.com</strong>。本手册覆盖当前线上对外 AI 调用接口、兼容协议和任务读取接口；后台账号、渠道、充值及管理员 API 不属于此接入手册。</p><p>核对日期：2026-10-12（Asia/Shanghai）。线上 5 个启用渠道提供以下 4 个模型。所有示例使用自己的站点 API Token。</p><div class="table"><table><thead><tr><th>用途</th><th>model</th><th>基础单价</th></tr></thead><tbody><tr><td>视频</td><td>MiniMax-H3</td><td>768P：$0.03/秒；1080P：$0.05/秒（新版参考模式）；2K：$0.07/秒</td></tr><tr><td>音色设计与语音</td><td>Qwen3-TTS-VoiceDesign</td><td>$0.05/次</td></tr><tr><td>纯音乐 BGM</td><td>YuE2-BGM</td><td>$0.05/次</td></tr><tr><td>文生图</td><td>Z-Image-Base</td><td>$0.02/张，1K/2K 同价</td></tr></tbody></table></div><pre><code>Authorization: Bearer &lt;SAFILLU_API_KEY&gt;
+Content-Type: application/json</code></pre><p>GET/HEAD 不需要请求体。创建、查询和鉴权下载使用同一账号的有效令牌，令牌的模型、分组、IP 等限制仍适用。把密钥放在环境变量中；本分发文档不嵌入有效密钥。</p><p><code>GET /v1/models</code> 返回当前令牌模型列表。列表中的 <code>supported_endpoint_types</code> 属于主机标签，不能据此推断每个模型都支持聊天、同步生图或语音协议。实际调用路径以本手册为准。</p><pre><code>curl &quot;https://api.safillu.com/v1/models&quot; -H &quot;Authorization: Bearer $SAFILLU_API_KEY&quot;</code></pre></section><section id="routes"><h2>02 · 完整路由索引</h2><div class="table"><table><thead><tr><th>方法</th><th>路径（相对站点根地址）</th><th>用途</th></tr></thead><tbody><tr><td>POST</td><td><code>/tfrouter-frames/v1/video/generateVideo</code></td><td>生成文生、首尾帧或混合参考视频</td></tr><tr><td>POST</td><td><code>/tfrouter-frames/v1/video/getVideoStatus</code></td><td>查询任务</td></tr><tr><td>POST</td><td><code>/runninghub-audio/v1/voice-design</code></td><td>音色设计与语音生成</td></tr><tr><td>POST</td><td><code>/runninghub-audio/v1/bgm</code></td><td>去人声 BGM 生成</td></tr><tr><td>GET</td><td><code>/runninghub-audio/v1/tasks/{task_id}</code></td><td>查询自己的音频任务</td></tr><tr><td>POST</td><td><code>/runninghub-image/v1/generations</code></td><td>异步生图</td></tr><tr><td>GET</td><td><code>/runninghub-image/v1/tasks/{task_id}</code></td><td>查询自己的生图任务</td></tr><tr><td>POST</td><td><code>/v1/video/generateVideo</code></td><td>H3 旧版 URL 生视频</td></tr><tr><td>POST</td><td><code>/v1/video/getVideoStatus</code></td><td>查询任务</td></tr><tr><td>POST</td><td><code>/v1/videos</code></td><td>H3 Video 协议创建</td></tr><tr><td>GET</td><td><code>/v1/videos/{task_id}</code></td><td>查询 Video 协议任务</td></tr><tr><td>GET</td><td><code>/v1/videos/{task_id}/content</code></td><td>获取 Video 协议视频内容</td></tr><tr><td>HEAD</td><td><code>/v1/videos/{task_id}/content</code></td><td>获取 Video 协议视频内容</td></tr><tr><td>POST</td><td><code>/v1/responses</code></td><td>H3 Responses 协议创建</td></tr><tr><td>GET</td><td><code>/v1/responses/{response_id}</code></td><td>查询 Responses 协议任务</td></tr><tr><td>GET</td><td><code>/v1/models</code></td><td>列出当前令牌可用模型</td></tr><tr><td>GET</td><td><code>/v1/models/{model}</code></td><td>单模型详情（当前自定义模型存在限制）</td></tr><tr><td>GET</td><td><code>/v1/tasks/{task_id}/artifacts</code></td><td>列出任务成品</td></tr><tr><td>GET</td><td><code>/v1/tasks/{task_id}/artifacts/{artifact_key}/content</code></td><td>下载任务成品</td></tr><tr><td>HEAD</td><td><code>/v1/tasks/{task_id}/artifacts/{artifact_key}/content</code></td><td>下载任务成品</td></tr><tr><td>POST</td><td><code>/v1/tasks/{key}</code></td><td>通用插件提交（兼容入口）</td></tr><tr><td>GET</td><td><code>/v1/tasks/{key}</code></td><td>通用任务状态</td></tr></tbody></table></div><p><code>/v1/tasks/{key}</code> 在 POST 时 key 是插件名，在 GET 时 key 是任务 ID。不同接口的任务 ID 和状态封装见第 8 节。当前没有为这四个模型配置聊天、向量、转录或 OpenAI 同步生图入口。</p></section><section id="h3"><h2>03 · H3 推荐接口：Base64 与多模态</h2><p><code>POST /tfrouter-frames/v1/video/generateVideo</code>。支持文生视频、首尾帧以及参考图片/音频/视频。插件版本 1.1.2。</p><div class="table"><table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>取值与说明</th></tr></thead><tbody><tr><td><code>model</code></td><td>string</td><td>是</td><td>MiniMax-H3</td></tr><tr><td><code>prompt</code></td><td>string</td><td>是</td><td>非空，最长12000个JavaScript UTF-16字符单元，首尾空白去除。</td></tr><tr><td><code>duration</code></td><td>integer</td><td>否</td><td>最小 4；最大 15；默认 5</td></tr><tr><td><code>resolution</code></td><td>string</td><td>否</td><td>默认 768p；参考模式支持768p/1080p/2k，首尾帧仅768p/2k；顶层与metadata同时出现时须一致。1080P的16:9输出按工作流对齐至1920×1088。所有2K请求自动使用plus实例。</td></tr><tr><td><code>metadata</code></td><td>object</td><td>否</td><td></td></tr></tbody></table></div><h3>metadata</h3><div class="table"><table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>取值与说明</th></tr></thead><tbody><tr><td><code>resolution</code></td><td>string</td><td>否</td><td>默认 768p；参考模式支持768p/1080p/2k，首尾帧仅768p/2k；顶层与metadata同时出现时须一致。1080P的16:9输出按工作流对齐至1920×1088。所有2K请求自动使用plus实例。</td></tr><tr><td><code>ratio</code></td><td>string</td><td>否</td><td>adaptive / 16:9 / 9:16 / 1:1 / 4:3 / 3:4 / 21:9；首尾帧默认adaptive；参考默认16:9且不接受adaptive。</td></tr><tr><td><code>seed</code></td><td>integer</td><td>否</td><td>最小 0；最大 9007199254740991</td></tr><tr><td><code>generate_audio</code></td><td>boolean</td><td>否</td><td>True；true或省略，不支持关闭音频。</td></tr><tr><td><code>references</code></td><td>array</td><td>否</td><td>最多 9；参考模式最多5张图片、3段独立音频、1个视频，各类上限独立且总数≤9；每类按照数组出现顺序映射。首尾帧必须恰好1个first_frame和1个last_frame，不可混入参考角色。省略或空数组为文生视频。</td></tr></tbody></table></div><p>提示词最多 12000 UTF-16 code units，非空。duration 必须为 JSON 整数 4～15，默认 5；resolution 大小写不敏感，默认 768P。顶层与 metadata.resolution 同时传入时必须一致。metadata 仅接受表中字段。</p><div class="table"><table><thead><tr><th>模式</th><th>分辨率</th><th>比例默认值</th><th>输入限制</th></tr></thead><tbody><tr><td>文生 / 参考</td><td>768P / 1080P / 2K</td><td>16:9；可选 9:16、1:1、4:3、3:4、21:9</td><td>最多 5 图 + 3 音频 + 1 视频，合计最多 9 个文件</td></tr><tr><td>首尾帧</td><td>768P / 2K</td><td>adaptive；也支持上述固定比例</td><td>恰好 1 个 first_frame 和 1 个 last_frame；不能混用参考角色</td></tr></tbody></table></div><p>2K 自动使用 plus，无需额外参数。generate_audio 只能为 true 或省略。参考视频仅使用画面；需要声音参考时另传 reference_audio。分辨率是工作流档位：参考模式 16:9 的预期成品为 1344×768、1920×1088、2048×1152；不是保证恰好 1080 像素高。</p><h3>素材结构</h3><div class="table"><table><thead><tr><th>role</th><th>type</th><th>载荷字段</th></tr></thead><tbody><tr><td>first_frame / last_frame / reference_image</td><td>image_url</td><td>image_url.url</td></tr><tr><td>reference_audio</td><td>audio_url</td><td>audio_url.url</td></tr><tr><td>reference_video</td><td>video_url</td><td>video_url.url</td></tr></tbody></table></div><pre><code>{
+  &quot;role&quot;: &quot;reference_image&quot;,
+  &quot;type&quot;: &quot;image_url&quot;,
+  &quot;image_url&quot;: {
+    &quot;url&quot;: &quot;data:image/png;base64,REPLACE_WITH_REAL_BASE64&quot;
+  }
+}</code></pre><p>所有媒体值是完整 Data URL。图片支持 image/png、image/jpeg、image/webp；音频支持 audio/mpeg、audio/wav、audio/x-wav、audio/flac；视频支持 video/mp4、video/quicktime、video/x-msvideo、video/x-matroska。每个文件解码后最多 30 MiB，合计最多 64 MiB；还受网关和反向代理请求体限制。不能传 HTTP URL、本地路径、裸 Base64 或 MIME 不匹配的文件。</p><h3>文生请求</h3><pre><code>{
+  &quot;model&quot;: &quot;MiniMax-H3&quot;,
+  &quot;prompt&quot;: &quot;日落时的海岸，镜头缓慢推进，海浪自然翻涌，无字幕&quot;,
+  &quot;duration&quot;: 5,
+  &quot;resolution&quot;: &quot;768p&quot;,
+  &quot;metadata&quot;: {
+    &quot;ratio&quot;: &quot;16:9&quot;,
+    &quot;seed&quot;: 42
+  }
+}</code></pre><h3>本地文件转请求</h3><p>附件 make_request.py 只生成请求 JSON，不调用服务。可重复 --image（最多 5）和 --audio（最多 3），--video 最多 1。</p><pre><code>python make_request.py --first first.png --last last.png --prompt &quot;自然过渡，无字幕&quot; --duration 5 --resolution 768p --ratio adaptive --output frames.json
+
+python make_request.py --image scene.png --audio music.mp3 --video motion.mp4 --prompt &quot;参考场景和运动生成连贯镜头&quot; --duration 5 --resolution 1080p --ratio 16:9 --output mixed.json</code></pre><h3>提交、查询及结果</h3><pre><code>{
+  &quot;data&quot;: &quot;task_example&quot;
+}</code></pre><pre><code>POST /tfrouter-frames/v1/video/getVideoStatus
+{&quot;taskICode&quot;:&quot;task_example&quot;}</code></pre><pre><code>{
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;data&quot;: {
+    &quot;data&quot;: &quot;https://cdn.example/video.mp4&quot;
+  }
+}</code></pre><p>排队/执行：<code>{"status":"pending","data":{}}</code>；失败：<code>{"status":"failed","data":{"failReason":"..."}}</code>。taskICode 必须是非空、无空白、最长 191 字符的任务 ID。成品可用站点鉴权下载接口，见第 8 节。</p></section><section id="image"><h2>04 · Z-Image 文生图</h2><p><code>POST /runninghub-image/v1/generations</code> · model=<code>Z-Image-Base</code> · $0.02/张。</p><div class="table"><table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>取值与说明</th></tr></thead><tbody><tr><td><code>model</code></td><td>string</td><td>是</td><td>固定 Z-Image-Base</td></tr><tr><td><code>prompt</code></td><td>string</td><td>是</td><td>最长 12000</td></tr><tr><td><code>negative_prompt</code></td><td>string</td><td>否</td><td>最长 12000；默认 </td></tr><tr><td><code>ratio</code></td><td>string</td><td>否</td><td>1:1 / 16:9 / 9:16 / 4:3 / 3:4 / 3:2 / 2:3 / 21:9；默认 1:1</td></tr><tr><td><code>resolution</code></td><td>string</td><td>否</td><td>1K / 2K；默认 1K；长边为 1024 或 2048 像素；短边按比例四舍五入到 16 的倍数</td></tr><tr><td><code>n</code></td><td>integer</td><td>否</td><td>最小 1；最大 4；默认 1</td></tr><tr><td><code>seed</code></td><td>integer</td><td>否</td><td>最小 0；最大 9007199254740991</td></tr></tbody></table></div><p>prompt 为非空字符串；正负提示词分别最多 12000 UTF-16 code units。resolution 不区分大小写。1K 长边 1024、2K 长边 2048；短边按比例四舍五入到 16 的倍数。例：1K 16:9 → 1024×576；2K 9:16 → 1152×2048。非空负面提示词使用 CFG=2，否则 CFG=1；负面提示词不保证绝对排除指定内容。</p><pre><code>{
+  &quot;model&quot;: &quot;Z-Image-Base&quot;,
+  &quot;prompt&quot;: &quot;海边灯塔，温暖夕阳，海浪，自然细节，电影摄影&quot;,
+  &quot;negative_prompt&quot;: &quot;文字，水印，模糊，低质量&quot;,
+  &quot;ratio&quot;: &quot;16:9&quot;,
+  &quot;resolution&quot;: &quot;1K&quot;,
+  &quot;n&quot;: 2,
+  &quot;seed&quot;: 42
+}</code></pre><pre><code>{
+  &quot;status&quot;: &quot;pending&quot;,
+  &quot;task_id&quot;: &quot;task_example&quot;
+}</code></pre><p>查询：<code>GET /runninghub-image/v1/tasks/{task_id}</code>。</p><pre><code>{
+  &quot;task_id&quot;: &quot;task_example&quot;,
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;image_count&quot;: 2,
+  &quot;data&quot;: [
+    {
+      &quot;url&quot;: &quot;https://cdn.example/1.png&quot;,
+      &quot;format&quot;: &quot;png&quot;
+    },
+    {
+      &quot;url&quot;: &quot;https://cdn.example/2.png&quot;,
+      &quot;format&quot;: &quot;png&quot;
+    }
+  ]
+}</code></pre><p>pending 继续查询；failed 时读取 error。提交按 n 预扣，成功后按有效成品张数结算。此插件不支持任意工作流/节点透传，也没有挂载 <code>/v1/images/generations</code>。下载 data[].url 时不附带本站密钥。</p></section><section id="voice"><h2>05 · 音色设计与语音生成</h2><p><code>POST /runninghub-audio/v1/voice-design</code> · model=<code>Qwen3-TTS-VoiceDesign</code> · $0.05/次。</p><div class="table"><table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>取值与说明</th></tr></thead><tbody><tr><td><code>model</code></td><td>string</td><td>是</td><td>固定 Qwen3-TTS-VoiceDesign</td></tr><tr><td><code>text</code></td><td>string</td><td>是</td><td>最长 4000；要朗读的文本；最长 4000 UTF-16 code units</td></tr><tr><td><code>voice_prompt</code></td><td>string</td><td>是</td><td>最长 4000；音色、语气、口音和风格描述；最长 4000 UTF-16 code units</td></tr><tr><td><code>speed</code></td><td>number</td><td>否</td><td>最小 0.5；最大 2；默认 0.9</td></tr><tr><td><code>seed</code></td><td>integer</td><td>否</td><td>最小 0；最大 9007199254740991；可选随机种子；省略时按任务 ID 生成。0 有效；相同种子不保证跨环境完全一致</td></tr></tbody></table></div><p>text 是要朗读的文本，voice_prompt 是音色/语言/情绪描述；两者均非空且最多 4000 UTF-16 code units。它直接生成语音，不返回可持久复用的 voice_id。当前不支持音频克隆上传或流式语音。工作流生成长度仍受模型的 2048 token 上限约束，长文本应按完整句子拆分。</p><pre><code>{
+  &quot;model&quot;: &quot;Qwen3-TTS-VoiceDesign&quot;,
+  &quot;text&quot;: &quot;你好，欢迎来到影幻。愿温暖的声音，陪你开启美好的一天。&quot;,
+  &quot;voice_prompt&quot;: &quot;温柔自然的成年女声，标准普通话，咬字清晰，语气亲切放松&quot;,
+  &quot;speed&quot;: 0.9,
+  &quot;seed&quot;: 42
+}</code></pre><p>提交返回 pending 和 task_id，查询/下载流程与下节 BGM 共用。</p></section><section id="bgm"><h2>06 · BGM 纯音乐生成与音频查询</h2><p><code>POST /runninghub-audio/v1/bgm</code> · model=<code>YuE2-BGM</code> · $0.05/次。</p><div class="table"><table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>取值与说明</th></tr></thead><tbody><tr><td><code>model</code></td><td>string</td><td>是</td><td>固定 YuE2-BGM</td></tr><tr><td><code>prompt</code></td><td>string</td><td>是</td><td>最长 4000；音乐风格描述，建议明确乐器、氛围和 no vocals</td></tr><tr><td><code>duration</code></td><td>integer</td><td>否</td><td>最小 1；最大 120；默认 10；请求的音乐最大时长，单位秒；不是实际成品时长保证</td></tr><tr><td><code>seed</code></td><td>integer</td><td>否</td><td>最小 0；最大 9007199254740991；可选随机种子；省略时按任务 ID 生成。0 有效；相同种子不保证跨环境完全一致</td></tr></tbody></table></div><p>prompt 非空且最多 4000 UTF-16 code units，建议描述乐器、速度、风格、氛围和 no vocals。duration 是请求的音乐最大时长，默认 10 秒，整数 1～120；最终时长以成品为准，不按秒收费。接口只返回去人声处理后的最终节点音频。</p><pre><code>{
+  &quot;model&quot;: &quot;YuE2-BGM&quot;,
+  &quot;prompt&quot;: &quot;Instrumental chill pop with warm electric piano, gentle drums and soft bass. Relaxed, bright and peaceful, no vocals.&quot;,
+  &quot;duration&quot;: 10,
+  &quot;seed&quot;: 42
+}</code></pre><h3>共用查询</h3><p><code>GET /runninghub-audio/v1/tasks/{task_id}</code></p><pre><code>{
+  &quot;task_id&quot;: &quot;task_example&quot;,
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;audio_url&quot;: &quot;https://cdn.example/audio.mp3&quot;,
+  &quot;format&quot;: &quot;mp3&quot;
+}</code></pre><p>pending 表示未完成；failed 带 error 字段。音色设计实测输出 MP3，BGM 实测 FLAC；客户端以 format 为准，可能值包含 mp3、wav、flac、ogg、m4a、aac。下载 audio_url 时不附带本站密钥。两个模型各自每次成功收费 $0.05；失败由主机执行退款流程。</p></section><section id="legacy"><h2>07 · H3 兼容入口与参数差异</h2><h3>7.1 旧版 tfRouter：HTTP(S) 素材</h3><p>提交 <code>POST /v1/video/generateVideo</code>，查询 <code>POST /v1/video/getVideoStatus</code>，提交/查询的响应封装与新版相同。插件 tfrouter-h3 1.0.0。请求字段同新版，但遵守下面差异。</p><div class="table"><table><thead><tr><th>能力</th><th>新版 /tfrouter-frames/v1</th><th>旧版 /v1/video</th></tr></thead><tbody><tr><td>媒体输入</td><td>完整 Base64 Data URL</td><td>HTTP(S) 文件直链，最长 16384 字符，不带账号密码</td></tr><tr><td>参考容量</td><td>5 图 + 3 音频 + 1 视频</td><td>2 图 + 1 音频 + 1 视频，最多 4 文件</td></tr><tr><td>首尾帧</td><td>必须一对</td><td>允许只有首帧；尾帧必须有首帧</td></tr><tr><td>分辨率</td><td>参考模式 768P / 1080P / 2K；首尾帧无 1080P</td><td>768P / 2K</td></tr><tr><td>adaptive</td><td>仅首尾帧模式可用</td><td>有图片或视频时可用且为默认；否则默认 16:9</td></tr></tbody></table></div><pre><code>{
+  &quot;model&quot;: &quot;MiniMax-H3&quot;,
+  &quot;prompt&quot;: &quot;保持人物外观，镜头缓慢推进&quot;,
+  &quot;duration&quot;: 5,
+  &quot;resolution&quot;: &quot;768p&quot;,
+  &quot;metadata&quot;: {
+    &quot;ratio&quot;: &quot;16:9&quot;,
+    &quot;references&quot;: [
+      {
+        &quot;role&quot;: &quot;reference_image&quot;,
+        &quot;type&quot;: &quot;image_url&quot;,
+        &quot;image_url&quot;: {
+          &quot;url&quot;: &quot;https://your-cdn.example/character.png&quot;
+        }
+      }
+    ]
+  }
+}</code></pre><p>duration 仍为整数 4～15，默认 5；seed 是 0～9007199254740991 的整数；generate_audio 为 true 或省略。首尾帧不能与 reference_* 混用。2K 自动 plus 仅在新版 Base64 插件中明确实现，不应推断旧入口拥有相同行为。</p><h3>7.2 Video 协议</h3><p><code>POST /v1/videos</code> 使用 hailuo 1.3.1 插件及当前 RunningHub 渠道，支持 768P/2K、4～15 秒、HTTP(S) 素材。参考上限为 2 图、1 音频、1 视频。</p><div class="table"><table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>取值与说明</th></tr></thead><tbody><tr><td><code>model</code></td><td>string</td><td>是</td><td>固定 MiniMax-H3</td></tr><tr><td><code>prompt</code></td><td>string</td><td>是</td><td></td></tr><tr><td><code>seconds</code></td><td>integer</td><td>否</td><td>最小 4；最大 15；默认 5</td></tr><tr><td><code>size</code></td><td>string</td><td>否</td><td>768P / 2K；默认 768P</td></tr><tr><td><code>input_reference</code></td><td>string</td><td>否</td><td>可选首帧 HTTP(S) 直链</td></tr><tr><td><code>metadata</code></td><td>object</td><td>否</td><td></td></tr></tbody></table></div><pre><code>{
+  &quot;model&quot;: &quot;MiniMax-H3&quot;,
+  &quot;prompt&quot;: &quot;日落海岸，海浪自然翻涌，无字幕&quot;,
+  &quot;seconds&quot;: 5,
+  &quot;size&quot;: &quot;768P&quot;,
+  &quot;metadata&quot;: {
+    &quot;ratio&quot;: &quot;16:9&quot;,
+    &quot;seed&quot;: 42
+  }
+}</code></pre><p>保存返回的 <code>id</code>，使用 <code>GET /v1/videos/{id}</code>；status 为 queued、in_progress、completed 或 failed。完成后 <code>GET /v1/videos/{id}/content</code> 下载，HEAD 可读取响应头。不要将新版 tfRouter 的任务 ID 用于此查询接口，实测会报 plugin does not claim openai_video。</p><p>首尾帧可使用 metadata.first_frame_image / last_frame_image；参考组合使用 metadata.content：</p><pre><code>{
+  &quot;metadata&quot;: {
+    &quot;content&quot;: [
+      {
+        &quot;type&quot;: &quot;text&quot;,
+        &quot;text&quot;: &quot;保持角色一致，生成自然运动&quot;
+      },
+      {
+        &quot;type&quot;: &quot;image_url&quot;,
+        &quot;role&quot;: &quot;reference_image&quot;,
+        &quot;image_url&quot;: {
+          &quot;url&quot;: &quot;https://your-cdn.example/character.png&quot;
+        }
+      },
+      {
+        &quot;type&quot;: &quot;audio_url&quot;,
+        &quot;role&quot;: &quot;reference_audio&quot;,
+        &quot;audio_url&quot;: {
+          &quot;url&quot;: &quot;https://your-cdn.example/voice.mp3&quot;
+        }
+      }
+    ]
+  }
+}</code></pre><p>完整 content 含 text 时使用其中的文本，否则使用 prompt。不要混用首尾帧与 reference_*。此部署驱动拒绝 Base64/文件占位符；本地文件使用第 3 节。metadata.callback_url 与 aigc_watermark 不受当前工作流支持。高级 RunningHub 字段 webhook_url、instance_type、use_personal_queue、retain_seconds 虽被透传，但不属于本手册验证过的客户接入参数。</p><h3>7.3 Responses 协议</h3><p><code>POST /v1/responses</code> 同样仅用于 MiniMax-H3 视频，媒体能力同 Video 协议。提示词改为 input，参数为 seconds、size、metadata。input 可为字符串，或消息数组中的 input_text / input_image。媒体必须使用可访问的 HTTP(S) 直链。</p><pre><code>{
+  &quot;model&quot;: &quot;MiniMax-H3&quot;,
+  &quot;input&quot;: &quot;日落海岸，海浪自然翻涌，无字幕&quot;,
+  &quot;seconds&quot;: 5,
+  &quot;size&quot;: &quot;768P&quot;,
+  &quot;metadata&quot;: {
+    &quot;ratio&quot;: &quot;16:9&quot;
+  },
+  &quot;background&quot;: true,
+  &quot;stream&quot;: false
+}</code></pre><p>推荐 background=true、stream=false，立即保存返回的 id（resp_ 前缀）及 metadata.task_id，然后 <code>GET /v1/responses/{response_id}</code>。不传 background 且 stream=false 为同步等待；stream=true 为 SSE，客户端处理 response.created、response.in_progress、response.output_text.delta、response.completed / response.failed 等事件。流式是任务进度和最终文字输出，不是逐帧视频传输。</p><pre><code>{
+  &quot;id&quot;: &quot;resp_example&quot;,
+  &quot;object&quot;: &quot;response&quot;,
+  &quot;status&quot;: &quot;queued&quot;,
+  &quot;background&quot;: true,
+  &quot;output&quot;: [],
+  &quot;metadata&quot;: {
+    &quot;task_id&quot;: &quot;task_example&quot;,
+    &quot;retrieval_path&quot;: &quot;/v1/responses/resp_example&quot;
+  }
+}</code></pre><p>成功时 status=completed，视频标签在 output[].content[] 的 output_text.text 内；其 src 指向站点成品接口。不要直接把其他插件的 task_ ID 改成 resp_ 来查询。同步连接超时或 SSE 断开不表示服务端任务取消；保存已收到的任务 ID，继续查询。</p><h3>7.4 通用插件提交</h3><p><code>POST /v1/tasks/{plugin_key}</code> 是保留的驱动入口，可使用 hailuo、tfrouter-h3、tfrouter-h3-frames、runninghub-audio、runninghub-image。除 hailuo 外，各插件的请求体同各自原生生成请求；hailuo 使用 <code>model/prompt/duration/resolution/metadata</code>，不是 Responses 的 input 或 Video 的 seconds。音频插件根据 model 选择语音或 BGM。生成仍计费。</p><pre><code>{
+  &quot;id&quot;: &quot;task_example&quot;,
+  &quot;task_id&quot;: &quot;task_example&quot;,
+  &quot;status&quot;: &quot;queued&quot;,
+  &quot;model&quot;: &quot;Z-Image-Base&quot;,
+  &quot;created_at&quot;: 1791770000
+}</code></pre><p>此入口跳过原生解码与响应渲染，建议新集成选用各模型的原生接口。通用提交后用第 8 节通用状态读取；音频/图片成品仍从各自原生查询获取。</p></section><section id="tasks"><h2>08 · 状态、轮询与下载</h2><div class="table"><table><thead><tr><th>入口</th><th>提交任务 ID</th><th>成功状态</th><th>失败信息</th></tr></thead><tbody><tr><td>H3 tfRouter 两套</td><td>data</td><td>success</td><td>data.failReason</td></tr><tr><td>图片 / 音频原生</td><td>task_id</td><td>success</td><td>error</td></tr><tr><td>Video</td><td>id</td><td>completed</td><td>error</td></tr><tr><td>Responses</td><td>id；另有 metadata.task_id</td><td>completed</td><td>error</td></tr><tr><td>通用任务 GET</td><td>task_id</td><td>SUCCESS</td><td>fail_reason</td></tr></tbody></table></div><p>建议每 5 秒查询一次，遇 429/临时 5xx 退避；客户端可设置 30 分钟等待预算。HTTP 200 只表示请求成功处理，必须检查业务状态。创建请求发生网络超时后不要自动重发：先检查已有任务，避免重复计费。没有承诺幂等键或取消接口。</p><h3>通用状态</h3><p><code>GET /v1/tasks/{task_id}</code> 适用于所有 task_ 任务。</p><pre><code>{
+  &quot;task_id&quot;: &quot;task_example&quot;,
+  &quot;platform&quot;: &quot;runninghub-image&quot;,
+  &quot;status&quot;: &quot;SUCCESS&quot;,
+  &quot;progress&quot;: &quot;100%&quot;,
+  &quot;fail_reason&quot;: &quot;&quot;,
+  &quot;created_at&quot;: 1791770000,
+  &quot;finished_at&quot;: 1791770060
+}</code></pre><h3>H3 成品</h3><p><code>GET /v1/tasks/{task_id}/artifacts</code> 返回 artifacts 列表；H3 当前键名为 video。直接使用如下固定站点地址下载：</p><pre><code>curl --fail-with-body &quot;https://api.safillu.com/v1/tasks/$TASK_ID/artifacts/video/content&quot; -H &quot;Authorization: Bearer $SAFILLU_API_KEY&quot; --output result.mp4</code></pre><p>同路径支持 HEAD。content 成功返回二进制，不是 JSON。该代理不提供永久归档；上游失效后可能无法再下载。</p><div class="note">线上现状：artifacts[].content_url 可能以 http://localhost:3000 开头。不要原样交给外部客户端；按上面固定域名和 task_id 构造下载地址并携带 Bearer。短期签名链接属于访问凭据，不要写进公开文档或日志。</div><h3>图片与音频</h3><p>目前没有注册 artifacts：图片读取 data[].url，音频读取 audio_url。直接下载这些上游链接，不把 safillu API Key 发送给上游域名。及时保存文件，URL 有效期没有永久保证。</p></section><section id="billing"><h2>09 · 计费与边界</h2><div class="table"><table><thead><tr><th>模型/模式</th><th>基础金额</th><th>示例（分组倍率 1）</th></tr></thead><tbody><tr><td>H3 768P</td><td>请求秒数 × 0.03 USD</td><td>5 秒 = $0.15</td></tr><tr><td>H3 1080P（新版参考）</td><td>请求秒数 × 0.05 USD</td><td>5 秒 = $0.25</td></tr><tr><td>H3 2K</td><td>请求秒数 × 0.07 USD</td><td>5 秒 = $0.35</td></tr><tr><td>音色设计</td><td>0.05 USD / 次</td><td>1 次 = $0.05</td></tr><tr><td>BGM</td><td>0.05 USD / 次</td><td>10 秒和其他合法 duration 都按次</td></tr><tr><td>Z-Image</td><td>0.02 USD × 实际有效图片数</td><td>2 张 = $0.04</td></tr></tbody></table></div><p>线上已核对模型与插件专属定价。站点分组倍率仍适用，以账户消费日志为准。提交会预扣，成功结算，失败由主机退款。H3 按请求 duration 计费；模型帧数对齐会导致成品略长，例如请求 5 秒的样本约 5.17 秒。BGM duration 是资源参数，不是计费秒数。</p><p>查询不触发新的生成任务。各路由不是相互重复收费的“步骤”，一次生成只选择一个提交入口，保存 ID 后查询和下载即可。</p></section><section id="examples"><h2>10 · 可直接使用的示例与客户端</h2><p>附件 <code>examples/</code> 有图片、语音、BGM、H3 文生、URL、Video、Responses 的请求文件；URL 例子的 your-cdn.example 必须替换成可用文件直链。<code>requests.http</code> 可在支持 HTTP 文件的编辑器中使用；<code>openapi.json</code> 可导入 Apifox/Postman。</p><p>Python 客户端仅用标准库，默认不会提交请求；只有执行 submit 才生成并计费。API Key 从 SAFILLU_API_KEY 环境变量读取；服务地址固定为本手册站点。客户端不自动重试提交，并用独占创建方式保存提交回执。</p><pre><code># Bash
+export SAFILLU_API_KEY=&quot;你的站点令牌&quot;
+python client.py submit image examples/image.json --receipt image-task.json
+python client.py wait image-task.json --output image-result.json
+python client.py download image-result.json --directory downloads
+
+# voice / bgm / h3 / h3-url / video / responses 也可作为 submit 的类型
+python client.py submit voice examples/voice.json --receipt voice-task.json</code></pre><pre><code># PowerShell
+$env:SAFILLU_API_KEY=&quot;你的站点令牌&quot;
+python client.py submit bgm examples/bgm.json --receipt bgm-task.json
+python client.py wait bgm-task.json --output bgm-result.json
+python client.py download bgm-result.json --directory downloads</code></pre><p>wait 达到等待上限后保留回执，可以再次 wait 同一文件。submit 失败不会自动创建新任务；receipt 文件已存在时拒绝提交。Responses 客户端要求 background=true 且 stream=false，便于统一轮询。</p></section><section id="errors"><h2>11 · 错误处理与兼容限制</h2><div class="table"><table><thead><tr><th>现象</th><th>处理</th></tr></thead><tbody><tr><td>400</td><td>检查 model、字段类型、范围、素材 MIME、模式组合和路由是否匹配</td></tr><tr><td>401 / 403</td><td>检查令牌有效性、模型/分组/IP 权限和任务所属账号</td></tr><tr><td>404</td><td>确认任务 ID、协议入口、账号；使用创建返回的 ID</td></tr><tr><td>413</td><td>缩小 Base64 素材或核对反代请求体限制</td></tr><tr><td>429 / 5xx</td><td>查询可退避；提交结果不明时先查任务，避免重复生成</td></tr><tr><td>HTTP 200 但 failed / error</td><td>按业务错误处理，不能只判断 HTTP 状态</td></tr><tr><td>GET /v1/models/MiniMax-H3 返回 model_not_found</td><td>当前单模型详情未正确覆盖自定义模型；使用 GET /v1/models</td></tr><tr><td>tfRouter 任务拿到 /v1/videos 查询报 500</td><td>任务插件未声明 openai_video；使用匹配的 tfRouter 查询或通用状态</td></tr><tr><td>音频/图片调用 /v1/audio/speech 或 /v1/images/generations</td><td>当前模型没有声明这些协议；用本文的原生路径</td></tr><tr><td>成品 URL 以 localhost 开头</td><td>使用固定 api.safillu.com 成品代理路径；见第 8 节</td></tr></tbody></table></div><p>错误封装会随路由和网关层不同：H3 原生常见 status=failed/data.failReason；音频/图片校验可能为 error 对象；任务终态 failed 的 error 是字符串。客户端保留 HTTP 状态、任务 ID 和经脱敏的错误文本。</p></section><section id="evidence"><h2>12 · 核对记录与真实成品</h2><p>本次读取线上启用渠道、插件源代码/版本、有效定价和 /v1/models；只进行读取与已有任务查询，没有为了写文档再次提交付费生成。OpenAPI 3.1 校验通过，7 份样例通过 schema 校验和线上插件源码的离线解码/构建检查；Python 客户端已查询四类历史任务并下载两张图片。电脑和手机视口检查通过。</p><div class="table"><table><thead><tr><th>能力</th><th>已有验证证据</th><th>范围</th></tr></thead><tbody><tr><td>Z-Image</td><td>两张 1024×576、一张 1152×2048；共 $0.06</td><td>1K/2K、横竖比例、n、负面词 CFG 映射和真实计费</td></tr><tr><td>音色设计</td><td>6.4 秒 MP3，24kHz 单声道；$0.05</td><td>真实生成、解码和消费日志</td></tr><tr><td>BGM</td><td>10 秒 FLAC，44.1kHz 双声道；$0.05</td><td>真实生成、解码和消费日志</td></tr><tr><td>H3</td><td>首尾帧与混合参考有成功历史成品</td><td>v1.1.2 扩展的 5 图+3 音频组合做过参数/结构校验，未逐组合付费生成</td></tr><tr><td>兼容入口</td><td>线上插件声明及源代码核对</td><td>本文不宣称 Video / Responses 的每种模式都重新跑过付费生成</td></tr></tbody></table></div><p><a href="snapshot.json">脱敏线上配置快照</a> · <a href="verification.json">核对与历史验收摘要</a></p><img src="example-image.png" alt="真实 Z-Image 生成的日落海岸灯塔"><p>音色设计样本：</p><audio controls src="example-voice.mp3"></audio><p>BGM 样本：</p><audio controls src="example-bgm.flac"></audio><p>文档依据当前部署编写。后续调整渠道、模型、插件或价格时应重新核对。new-api / QuantumNous。</p></section></main></div></body></html>

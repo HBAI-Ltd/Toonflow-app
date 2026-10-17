@@ -4,7 +4,7 @@ import runtime from "libtoonflowRuntime.so";
 
 export default class entryAbility extends UIAbility {
   onWindowStageCreate(windowStage: window.WindowStage): void {
-    windowStage.loadContent("pages/index").catch((error: Error) => console.error(`无法加载 Toonflow：${error.message}`));
+    windowStage.loadContent("pages/index").catch((error: Error) => console.error(`无法加载 FilmFraylo：${error.message}`));
     windowStage.getMainWindow().then((mainWindow: window.Window) => {
       mainWindow.setPreferredOrientation(window.Orientation.AUTO_ROTATION_LANDSCAPE)
         .catch((error: Error) => console.error(`无法设置横屏：${error.message}`));

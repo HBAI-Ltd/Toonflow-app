@@ -21,7 +21,7 @@ export default async function createDesktopConnection(app: express.Express, dire
 
   async function start() {
     const connection = await createRemoteConnection(directory, {
-      deviceName: `Toonflow ${hostname()}`,
+      deviceName: `FilmFraylo ${hostname()}`,
       appVersion: app.locals.appVersion,
       validateTarget(source) {
         const target = new URL(source);
@@ -82,7 +82,7 @@ export default async function createDesktopConnection(app: express.Express, dire
     gateway.use("/api/connection", connection.router);
     gateway.use((req, res, next) => {
       if (!connection.remote) return app(req, res, next);
-      if (req.method === "GET" && req.path === "/api/desktop/update" || req.method === "POST" && nativePosts.has(req.path)) {
+      if (req.method === "POST" && nativePosts.has(req.path)) {
         return app(req, res, next);
       }
       const path = posix.normalize(decodeURIComponent(req.path).replaceAll("\\", "/")).toLowerCase();

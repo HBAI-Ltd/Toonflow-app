@@ -4,8 +4,8 @@ await createToolConfig({
   name: "ffmpeg",
   displayName: "FFmpeg 媒体处理",
   description: "使用本机 FFmpeg 处理工作区音视频、图片，并通过 FFprobe 查询媒体信息。",
-  author: "Toonflow",
-  github: "https://github.com/HBAI-Ltd/Toonflow-app",
+  author: "FilmFraylo",
+  github: "",
   prompt: `处理前按需使用 ffprobe 查询实际媒体信息，再通过 ffmpeg 的 steps 顺序调用 fluent 方法，operation 选择执行或能力查询。
 FFmpeg 选项、滤镜和文件序列沿用原生语法；工具不重写输出位置，不设置固定处理超时。根据用户要求选择输出位置，除非用户要求覆盖，否则使用新文件名。
 定长音视频合成前先用 ffprobe 确认实际流信息，按用户要求及裁剪、变速后的时间轴确定每段和最终输出的有限正数时长 T（秒），不能猜测时长。为每个定长输出设置 duration(T) 或 outputOptions 的 -t T；这是媒体时长，不是处理超时。循环图片、循环音频和静音源也必须有明确的结束条件。

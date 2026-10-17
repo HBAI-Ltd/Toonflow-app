@@ -1,339 +1,234 @@
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=Toonflow&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=50" alt="Toonflow" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=FilmFraylo&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=50" alt="FilmFraylo" width="100%" />
 
 <p>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app">
+  <a href="https://github.com/zechau/filmfraylo-app">
     <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub" />
-  </a>
- | 
-  <a href="https://gitee.com/HBAI-Ltd/Toonflow-app">
-    <img src="https://img.shields.io/badge/Gitee-C71D23?style=flat-square&logo=gitee&logoColor=white" alt="Gitee" />
-  </a>
- | 
-  <a href="https://atomgit.com/HBAI-Ltd/Toonflow-app">
-    <img src="../images/atomgitLogo.svg" alt="AtomGit" height="20" />
   </a>
 </p>
 
 <p align="center">
-  <a href="../../README.md">简体中文</a> |
-  <a href="./readmeZhTw.md">繁體中文</a> |
-  <a href="./readmeEn.md">English</a> |
-  <a href="./readmeJa.md">日本語</a> |
-  <a href="./readmeRu.md">Русский</a> |
-  <a href="./readmeVi.md">Tiếng Việt</a> |
-  <a href="./readmeTh.md">ไทย</a>
+  <strong>简体中文</strong> |
+  <a href="./docs/readme/readmeZhTw.md">繁體中文</a> |
+  <a href="./docs/readme/readmeEn.md">English</a> |
+  <a href="./docs/readme/readmeJa.md">日本語</a> |
+  <a href="./docs/readme/readmeRu.md">Русский</a> |
+  <a href="./docs/readme/readmeVi.md">Tiếng Việt</a> |
+  <a href="./docs/readme/readmeTh.md">ไทย</a>
   <br />
-  <a href="./readmeKo.md">한국어</a> |
-  <a href="./readmeHi.md">हिन्दी</a> |
-  <a href="./readmeId.md">Bahasa Indonesia</a> |
-  <a href="./readmeMs.md">Bahasa Melayu</a> |
-  <a href="./readmeFil.md">Filipino</a> |
-  <a href="./readmeBn.md">বাংলা</a> |
-  <a href="./readmeUr.md">اردو</a>
+  <a href="./docs/readme/readmeKo.md">한국어</a> |
+  <a href="./docs/readme/readmeHi.md">हिन्दी</a> |
+  <a href="./docs/readme/readmeId.md">Bahasa Indonesia</a> |
+  <a href="./docs/readme/readmeMs.md">Bahasa Melayu</a> |
+  <a href="./docs/readme/readmeFil.md">Filipino</a> |
+  <a href="./docs/readme/readmeBn.md">বাংলা</a> |
+  <a href="./docs/readme/readmeUr.md">اردو</a>
   <br />
-  <a href="./readmeTa.md">தமிழ்</a> |
-  <strong>తెలుగు</strong> |
-  <a href="./readmeMr.md">मराठी</a> |
-  <a href="./readmePa.md">ਪੰਜਾਬੀ</a> |
-  <a href="./readmeAr.md">العربية</a> |
-  <a href="./readmeFa.md">فارسی</a> |
-  <a href="./readmeTr.md">Türkçe</a>
+  <a href="./docs/readme/readmeTa.md">தமிழ்</a> |
+  <a href="./docs/readme/readmeTe.md">తెలుగు</a> |
+  <a href="./docs/readme/readmeMr.md">मराठी</a> |
+  <a href="./docs/readme/readmePa.md">ਪੰਜਾਬੀ</a> |
+  <a href="./docs/readme/readmeAr.md">العربية</a> |
+  <a href="./docs/readme/readmeFa.md">فارسی</a> |
+  <a href="./docs/readme/readmeTr.md">Türkçe</a>
 </p>
 
-> 🌐 **21 ఇంటర్‌ఫేస్ భాషలు** · [మద్దతు ఉన్న భాషలను వీక్షించండి](#languages)
+> 🌐 **21 ఇంటర్‌ఫేస్ భాషలకు మద్దతు** · [మద్దతు ఉన్న భాషలను చూడండి](#languages)
 
 <div align="center">
 
 <p align="center">
-  <img src="../images/logo.png" alt="Toonflow లోగో" width="120" height="120" />
+  <img src="./docs/images/logo.png" alt="FilmFraylo లోగో" width="120" height="120" />
 </p>
+
+<h1 align="center">FilmFraylo · AI షార్ట్ డ్రామా, కామిక్ డ్రామా మరియు వీడియో సృష్టి ప్లాట్‌ఫామ్</h1>
 
 <a href="https://git.io/typing-svg">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=600&lines=Toonflow;AI%20Short%20Drama%20Studio;Turn%20ideas%20into%20stories" />
-    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=000000&center=true&vCenter=true&width=600&lines=Toonflow;AI%20Short%20Drama%20Studio;Turn%20ideas%20into%20stories" alt="Toonflow · AI షార్ట్ డ్రామా స్టూడియో · ఆలోచనలను కథలుగా మార్చండి" width="600" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=600&lines=FilmFraylo;AI%E7%9F%AD%E5%89%A7%E5%B7%A5%E5%8E%82;%E8%AE%A9%E7%81%B5%E6%84%9F%E6%88%90%E4%B8%BA%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E6%95%85%E4%BA%8B" />
+    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=000000&center=true&vCenter=true&width=600&lines=FilmFraylo;AI%E7%9F%AD%E5%89%A7%E5%B7%A5%E5%8E%82;%E8%AE%A9%E7%81%B5%E6%84%9F%E6%88%90%E4%B8%BA%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E6%95%85%E4%BA%8B" alt="FilmFraylo · AI షార్ట్ డ్రామా ఫ్యాక్టరీ · ఆలోచనలను కనిపించే కథలుగా మార్చండి" width="600" />
   </picture>
 </a>
 
 <p align="center">
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/stargazers">
-    <img src="https://img.shields.io/github/stars/HBAI-Ltd/Toonflow-app?style=for-the-badge&logo=github" alt="స్టార్స్ బ్యాడ్జ్" />
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT లైసెన్స్ బ్యాడ్జ్" />
   </a>
-  <a href="../../LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License బ్యాడ్జ్" />
-  </a>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">
-    <img src="https://img.shields.io/github/v/release/HBAI-Ltd/Toonflow-app?style=for-the-badge" alt="విడుదల" />
+  <a href="https://github.com/zechau/filmfraylo-app/releases">
+    <img src="https://img.shields.io/github/v/release/zechau/filmfraylo-app?style=for-the-badge" alt="విడుదల" />
   </a>
 </p>
 <p align="center">
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/network/members">
-    <img src="https://img.shields.io/github/forks/HBAI-Ltd/Toonflow-app?style=for-the-badge&logo=github&color=orange" alt="ఫోర్క్స్ బ్యాడ్జ్" />
-  </a>
-  <a href="https://atomgit.com/HBAI-Ltd/Toonflow-app">
-    <img src="https://img.shields.io/badge/AtomGit-G--Star%20No.540-FF6B35?style=for-the-badge&logo=git&logoColor=white" alt="AtomGit G-స్టార్ No.540" />
-  </a>
-  <a href="https://discord.gg/HEjKmpNpAZ">
-    <img src="https://img.shields.io/badge/Discord-Community-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
-  </a>
-</p>
-<p align="center">
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/issues">
-    <img src="https://img.shields.io/github/issues/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=F48D73" alt="సమస్యలు" />
-  </a>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/graphs/contributors">
-    <img src="https://img.shields.io/github/contributors/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=2088FF" alt="సహకారులు" />
-  </a>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/commits">
-    <img src="https://img.shields.io/github/last-commit/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=blueviolet" alt="చివరి కమిట్" />
-  </a>
-</p>
-<p align="center">
-<img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" /> 
-<img src="https://img.shields.io/badge/Bun-1.3.14-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.3.14" /> 
-<img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" /> 
+  <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" />&nbsp;
+  <img src="https://img.shields.io/badge/Bun-1.3.14-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.3.14" />&nbsp;
+  <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" />&nbsp;
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
 
-<p align="center">
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/daily?language=HTML" alt="HBAI-Ltd/Toonflow-app | Trendshift HTML Repository Of The Day" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/daily?language=Vue" alt="HBAI-Ltd/Toonflow-app | Trendshift Vue Repository Of The Day" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/daily?language=TypeScript" alt="HBAI-Ltd/Toonflow-app | Trendshift TypeScript Repository Of The Day" width="250" height="55" />
-  </a>
-</p>
-<p align="center">
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/weekly?language=Vue" alt="HBAI-Ltd/Toonflow-app | Trendshift Vue Repository Of The Week" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/weekly?language=HTML" alt="HBAI-Ltd/Toonflow-app | Trendshift HTML Repository Of The Week" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/weekly?language=TypeScript" alt="HBAI-Ltd/Toonflow-app | Trendshift TypeScript Repository Of The Week" width="250" height="55" />
-  </a>
-</p>
-<p align="center">
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/monthly?language=HTML" alt="HBAI-Ltd/Toonflow-app | Trendshift HTML Repository Of The Month" width="250" height="55" />
-  </a>
-</p>
-
-**లఘు నాటకాలు, యానిమేటెడ్ కామిక్స్, వీడియోల సృష్టికి ఓపెన్ సోర్స్ AI వేదిక**
-
-> 🚀 **లఘు నాటకాల సృష్టికి అవసరమైనవన్నీ ఒకే చోట**: స్క్రిప్ట్‌లు రాయండి, సృజనాత్మక వనరులను నిర్వహించండి, చిత్రాలు మరియు వీడియోలను సృష్టించండి. మీ మొత్తం పని క్రమాన్ని అనంతమైన కాన్వాస్‌పై అమర్చుకోండి.
+FilmFraylo అనేది షార్ట్ డ్రామాలు, కామిక్ డ్రామాలు మరియు షార్ట్ వీడియోల సృష్టికర్తల కోసం రూపొందించిన AI సృష్టి సాధనం. అనంత కాన్వాస్‌లో స్క్రిప్ట్‌లు మరియు స్టోరీబోర్డ్‌లను రాయండి, పాత్రలు మరియు సన్నివేశాల మెటీరియల్‌ను నిర్వహించండి, చిత్రాలు మరియు వీడియోలను సృష్టించండి. అధికారిక FilmFraylo మోడల్ ప్లాట్‌ఫామ్ యొక్క టెక్స్ట్, ఇమేజ్, వీడియో మరియు ఆడియో మోడళ్లు అంతర్నిర్మితంగా ఉన్నాయి; స్థానిక డిప్లాయ్‌మెంట్ మరియు పరికరాల అనుసంధానానికి మద్దతు ఉంది.
 
 </div>
 
-<div align="center">
-  <table>
-    <tr>
-      <td width="50%" align="center">
-        <a href="../images/gStar.png">
-          <img src="../images/gStar.png" alt="Toonflow AtomGit G-స్టార్ సర్టిఫికేట్ No.540" width="100%" />
-        </a>
-      </td>
-      <td width="50%" align="center">
-        <a href="../images/gvp.jpg">
-          <img src="../images/gvp.jpg" alt="Toonflow Gitee GVP సర్టిఫికేట్" width="100%" />
-        </a>
-      </td>
-    </tr>
-  </table>
-</div>
-
 <p align="center">
-<a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">డౌన్‌లోడ్</a> ·
-<a href="https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf">వినియోగదారు మార్గదర్శిని</a> ·
-<a href="https://api.toonflow.net/console/plugIn">ప్లగిన్ మార్కెట్‌ప్లేస్</a> ·
-<a href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd"> డెవలపర్ డాక్యుమెంటేషన్</a> ·
-<a href="https://api.toonflow.net/">అధికారిక మోడల్ వేదిక</a>
+  <a href="https://github.com/zechau/filmfraylo-app/releases">యాప్‌ను డౌన్‌లోడ్ చేయండి</a> ·
+  <a href="https://api.safillu.com/">అధికారిక మోడల్ ప్లాట్‌ఫామ్</a>
 </p>
 
 ---
 
-## 1. 💛 స్పాన్సర్లు మరియు మద్దతు
+## 1. 🌟 ముఖ్యాంశాలు
 
-Toonflow ఓపెన్ సోర్స్ ప్రాజెక్ట్‌కు మద్దతు ఇచ్చినందుకు క్రింది భాగస్వాములకు ధన్యవాదాలు.
-
-<table>
-  <tr>
-    <td width="50%" valign="top">
-<a href="https://metaso.cn/minimax-h3/?s=toon"><img src="../images/sponsors/metaso.svg" alt="Metaso" height="28" valign="middle" /> <strong>Metaso</strong></a>
-      <br />
-      <sub>తక్కువ ఖర్చుతో MiniMax H3 వీడియో సృష్టి: 768P వద్ద సెకనుకు ¥0.09, 2K వద్ద సెకనుకు ¥0.15 (CNY) మాత్రమే. సొంత GPU ఏర్పాటు చేయాల్సిన అవసరం లేకుండా నేటివ్ 2K, సమకాలీకరించిన ఆడియో మరియు వీడియో, OpenAI-అనుకూల API, ComfyUI, అనంతమైన కాన్వాస్‌లను ఉపయోగించవచ్చు. బోనస్ క్రెడిట్‌లు, ప్రత్యేక ఆఫర్‌ల కోసం <a href="https://metaso.cn/minimax-h3/?s=toon">ఈ ప్రత్యేక లింక్ ద్వారా నమోదు చేసుకోండి</a>. వ్యాపార విషయాల కోసం WeChatలో metasota12ను సంప్రదించండి.</sub>
-    </td>
-    <td width="50%" valign="top">
-<a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
-      <br />
-      <sub>ఈ ప్రాజెక్టును స్పాన్సర్ చేసిన APIMartకు ధన్యవాదాలు! AIతో చిత్రాలు, వీడియోలు సృష్టించడానికి APIMart తక్కువ ధరలో API సేవలను అందిస్తుంది. GPT-Image-2లో చిత్రం ధర $0.006 నుంచి ప్రారంభమవుతుంది; $1కు 160+ చిత్రాలు పొందవచ్చు. చిత్రాలు, వీడియోలకు ఒకే అసింక్రోనస్ API: పనిని సమర్పించి దాని ID పొందండి; callback ద్వారా ఫలితాలు అందుకోండి. టైమ్‌అవుట్‌లు లేకుండా 10,000 చిత్రాల బ్యాచ్‌లను ప్రాసెస్ చేయవచ్చు; కోడ్ మార్చకుండానే మోడల్‌లను మార్చవచ్చు. నెలవారీ రుసుము లేదు; ఉపయోగించిన మేరకే చెల్లించండి. ప్రారంభించడానికి <a href="https://go.apimart.ai/gh-toonflow-app">ఇక్కడ నమోదు చేసుకోండి</a>.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-<a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow"><img src="../images/sponsors/compShare.png" alt="CompShare" height="28" valign="middle" /> <strong>CompShare</strong></a>
-      <br />
-      <sub>CompShare తక్కువ ఖర్చుతో H3 వీడియో సృష్టిని అందిస్తుంది. టెక్స్ట్ నుంచి వీడియో, మొదటి మరియు చివరి ఫ్రేమ్ నియంత్రణ, సమగ్ర రిఫరెన్స్ మోడ్‌లు ఇందులో ఉన్నాయి. నేటివ్ 2Kలో గరిష్టంగా 30 సెకన్ల వీడియోలను సృష్టించవచ్చు; 768P ధర సెకనుకు CNY 0.08 మాత్రమే. API అనుసంధానం, సంస్థల కోసం ఒకేసారి పెద్ద సంఖ్యలో అభ్యర్థనలను ప్రాసెస్ చేసే సామర్థ్యం, స్వయంగా ఇన్‌వాయిస్ పొందే సదుపాయం ఉన్నాయి.</sub>
-<br /><br />
-      <sub>🎁 ప్లాట్‌ఫారమ్‌ను ఉచితంగా ప్రయత్నించడానికి CNY 5 క్రెడిట్‌లు పొందాలంటే <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">ఈ ప్రత్యేక లింక్ ద్వారా నమోదు చేసుకోండి</a>!</sub>
-    </td>
-<td width="50%" valign="top"></td>
-  </tr>
-</table>
-
-<details>
-<summary><strong>👉 స్పాన్సర్ అవ్వండి 👈</strong></summary>
-
-<p align="center">
-  <img src="../images/businessQr.png" alt="వ్యాపార విచారణల కోసం WeChat QR కోడ్" width="200" />
-</p>
-
-<p align="center"><sub>ఈ పరిచయం వ్యాపార విచారణల కోసం మాత్రమే మరియు సాంకేతిక మద్దతును అందించదు. వినియోగ ప్రశ్నల కోసం, దయచేసి సంఘం సమూహాలలో చేరండి. ఫీడ్‌బ్యాక్ ఫారమ్ ద్వారా ఫీచర్ అభ్యర్థనలు మరియు బగ్‌లను సమర్పించండి. మీ అవగాహనకు ధన్యవాదాలు.</sub></p>
-
-</details>
-
----
-
-## 2. 🌟 ముఖ్యాంశాలు
-
-Toonflow అనేది లఘు నాటకాలు, యానిమేటెడ్ కామిక్స్, చిన్న వీడియోల సృష్టికి ఓపెన్ సోర్స్ AI వేదిక. స్క్రిప్ట్‌లు, సృజనాత్మక వనరులు, వీడియో క్లిప్‌లను ఒకే అనంతమైన కాన్వాస్‌పై ఒకచోట చేర్చుతుంది.
+FilmFraylo స్క్రిప్ట్‌లు, ఆస్తులు మరియు వీడియో క్లిప్‌లను ఒకే అనంత కాన్వాస్‌లో ఒకచోట చేరుస్తుంది.
 
 | సామర్థ్యం | వివరణ |
 | --- | --- |
-| 🏠 **సొంత వ్యవస్థలో ఏర్పాటు** | మీ పరికరం లేదా సర్వర్‌లోనే ప్రాజెక్టులు, వనరులను ఉంచుకోండి. డెస్క్‌టాప్, Android, Docker, సర్వర్ ఇన్‌స్టాలేషన్ ఎంపికలు ఉన్నాయి. |
-| 🖼️ **అనంతమైన కాన్వాస్** | స్క్రిప్ట్‌లు, పాత్రలు, సన్నివేశాలు మరియు వీడియో క్లిప్‌లను ఒకే కాన్వాస్‌పై నిర్వహించండి. |
+| 🏠 **స్థానిక డిప్లాయ్‌మెంట్** | ప్రాజెక్టులు మరియు మెటీరియల్‌ను మీ స్వంత పరికరంలో లేదా సర్వర్‌లో ఉంచుకోండి; డెస్క్‌టాప్, Android, Docker మరియు సర్వర్ డిప్లాయ్‌మెంట్ ఎంపికలు ఉన్నాయి. |
+| 🖼️ **అనంత కాన్వాస్** | స్క్రిప్ట్‌లు, పాత్రలు, సన్నివేశాలు మరియు వీడియో క్లిప్‌లను ఒకే కాన్వాస్‌లో నిర్వహించండి. |
 | 🔌 **MCP** | MCP ద్వారా బాహ్య సాధనాలు మరియు సేవలను కనెక్ట్ చేయండి. |
-| 🧩 **ప్లగిన్ మార్కెట్‌ప్లేస్** | [ప్లగిన్ మార్కెట్‌ప్లేస్](https://api.toonflow.net/console/plugIn) ద్వారా నోడ్‌లు, సాధనాలు, సృజనాత్మక సదుపాయాలను జోడించండి. |
-| 🤖 **ఓపెన్ Agent వ్యవస్థ** | ప్రాంప్ట్‌లు, సాధనాలు, A2Aను ఉపయోగించి Agent ప్రవర్తనను అనుకూలీకరించండి; బయటి Agentలతో కలిసి పనిచేయండి. |
-| 🔧 **మోడల్‌లను సులభంగా అనుసంధానించండి** | ఇతర సంస్థల APIలను కాన్ఫిగర్ చేయండి లేదా మీ కంప్యూటర్‌లో నడుస్తున్న ComfyUI, LLMsను అనుసంధానించండి. |
+| 🤖 **ఓపెన్ Agent** | ప్రాంప్ట్‌లు, సాధనాలు మరియు A2A అందుబాటులో ఉన్నాయి; కస్టమ్ Agent ప్రవర్తన మరియు బాహ్య సహకారానికి మద్దతు ఉంది. |
+| 🧠 **అంతర్నిర్మిత మోడల్ సేవ** | అధికారిక FilmFraylo మోడల్ ప్లాట్‌ఫామ్ టెక్స్ట్, ఇమేజ్, వీడియో మరియు ఆడియో మోడళ్లను అందిస్తుంది; API Key కాన్ఫిగర్ చేసిన తర్వాత నేరుగా ఉపయోగించండి. |
 | 🌐 **బహుభాషా మద్దతు** | 21 ఇంటర్‌ఫేస్ భాషలకు మద్దతు ఇస్తుంది. |
+
+### FilmFraylo సహాయంతో AI షార్ట్ డ్రామాలు మరియు కామిక్ డ్రామాలను ఎలా తయారు చేయాలి
+
+1. **స్క్రిప్ట్‌లు మరియు స్టోరీబోర్డ్‌లు రాయడం**: టెక్స్ట్ నోడ్‌లలో కథను, పాత్రల సెట్టింగ్‌లను మరియు షాట్ వివరణలను సిద్ధం చేయండి; సృష్టికి సహాయంగా లాంగ్వేజ్ మోడల్‌ను ఉపయోగించి, ఆపై కంటెంట్‌ను సమీక్షించి సవరించండి.
+2. **పాత్రలు మరియు సన్నివేశాల మెటీరియల్ సిద్ధం చేయడం**: రెఫరెన్స్ చిత్రాలను దిగుమతి చేయండి, లేదా ఇమేజ్ జనరేషన్ నోడ్‌ల ద్వారా పాత్రలు, సన్నివేశాలు మరియు స్టోరీబోర్డ్ చిత్రాలను తయారు చేయండి.
+3. **వీడియో షాట్‌లను రూపొందించడం**: టెక్స్ట్ మరియు ఇమేజ్ రెఫరెన్స్‌లను కనెక్ట్ చేయండి, వీడియో మోడల్ మరియు జనరేషన్ మోడ్‌ను ఎంచుకోండి, షాట్ వారీగా వీడియో క్లిప్‌లను రూపొందించండి.
+4. **ప్రివ్యూ, నిర్వహణ మరియు డౌన్‌లోడ్**: అనంత కాన్వాస్‌లో చిత్రాలు మరియు వీడియో క్లిప్‌లను ప్రివ్యూ చేసి నిర్వహించండి; మెటీరియల్‌ను డౌన్‌లోడ్ చేసిన తర్వాత మీ సృష్టి అవసరాల ప్రకారం కొనసాగించండి.
+
+మద్దతు ఉన్న రెఫరెన్స్ మెటీరియల్, వీడియో నిడివి, రిజల్యూషన్ మరియు ఆడియో సామర్థ్యాలు ఎంచుకున్న మోడల్‌పై ఆధారపడి ఉంటాయి.
+
+### తరచుగా అడిగే ప్రశ్నలు
+
+**FilmFrayloని AI షార్ట్ డ్రామాలు మరియు కామిక్ డ్రామాల తయారీలో ఏయే దశల్లో ఉపయోగించవచ్చు?**
+
+FilmFraylo టెక్స్ట్, ఇమేజ్ మరియు వీడియో జనరేషన్ నోడ్‌లను అందిస్తుంది; వీటిని స్క్రిప్ట్ మరియు స్టోరీబోర్డ్ సృష్టి, పాత్రలు మరియు సన్నివేశాల మెటీరియల్ తయారీ, వీడియో షాట్ జనరేషన్, అలాగే మెటీరియల్ ప్రివ్యూ మరియు నిర్వహణ కోసం ఉపయోగించవచ్చు. సృష్టికర్తలు కంటెంట్‌ను సమీక్షించి సర్దుబాటు చేసుకోవాలి; నిర్దిష్ట జనరేషన్ సామర్థ్యాలు ఎంచుకున్న మోడల్‌పై ఆధారపడి ఉంటాయి.
+
+**FilmFraylo ఉచితమా? మోడల్ కాల్స్‌కు డబ్బు చెల్లించాలా?**
+
+FilmFraylo MIT ఓపెన్ సోర్స్ లైసెన్స్ కింద ఉంది, మీరే డిప్లాయ్ చేసుకోవచ్చు. మోడల్ కాల్స్ అధికారిక మోడల్ ప్లాట్‌ఫామ్‌లో వినియోగం ఆధారంగా బిల్ చేయబడతాయి; మొదట యాప్‌లో API Key కాన్ఫిగర్ చేయాలి. ఉదాహరణ పనిలోని తయారీ ఖర్చు ఆ కేసుకు మాత్రమే వర్తిస్తుంది; ఇది స్థిర ధర కాదు.
+
+**నా స్వంత మోడళ్లను కనెక్ట్ చేసుకోవచ్చా?**
+
+ప్రస్తుత వెర్షన్‌లో అధికారిక మోడల్ ప్లాట్‌ఫామ్ అంతర్నిర్మితంగా ఉంటుంది; మోడళ్లను అధికారిక FilmFraylo మోడల్ ప్లాట్‌ఫామ్ అందిస్తుంది. మూడవ పక్ష మోడళ్లు లేదా స్థానిక ComfyUI వర్క్‌ఫ్లోలను కనెక్ట్ చేయడానికి ఇంకా మద్దతు లేదు.
 
 <a id="languages"></a>
 
 ### బహుభాషా మద్దతు
 
-మద్దతు ఉన్న భాషలు: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe.
+మద్దతు ఉన్న భాషలు: 简体中文、繁體中文、English、日本語、Русский、Tiếng Việt、ไทย、한국어、हिन्दी、Bahasa Indonesia、Bahasa Melayu、Filipino、বাংলা、اردو、தமிழ்、తెలుగు、मराठी、ਪੰਜਾਬੀ、العربية、فارسی、Türkçe。
 
 ---
 
-## 3. 📸 స్క్రీన్‌షాట్‌లు
+## 2. 📸 స్క్రీన్‌షాట్‌లు
 
 <div align="center">
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow · ప్రాజెక్టు ముఖపేజీ మరియు ఆలోచనల సృష్టి" width="80%" /></a><br /><sub>ప్రాజెక్టు ముఖపేజీ మరియు ఆలోచనల సృష్టి</sub>
+<a href="./docs/images/screenshots/projectHome.png"><img src="./docs/images/screenshots/projectHome.png" alt="FilmFraylo ప్రాజెక్ట్ హోమ్ మరియు ఆలోచనల సృష్టి" width="80%" /></a><br /><sub>ప్రాజెక్ట్ హోమ్ మరియు ఆలోచనల సృష్టి</sub>
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow · మొదటి ప్రారంభం మరియు త్వరిత సెటప్" width="80%" /></a><br /><sub>మొదటి ప్రారంభం మరియు త్వరిత సెటప్</sub>
+<a href="./docs/images/screenshots/quickStart.png"><img src="./docs/images/screenshots/quickStart.png" alt="FilmFraylo మొదటి ప్రారంభం మరియు త్వరిత కాన్ఫిగరేషన్" width="80%" /></a><br /><sub>మొదటి ప్రారంభం మరియు త్వరిత కాన్ఫిగరేషన్</sub>
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow · సృజనాత్మక కాన్వాస్ · డార్క్ థీమ్" width="80%" /></a><br /><sub>సృజనాత్మక కాన్వాస్ · డార్క్ థీమ్</sub>
+<a href="./docs/images/screenshots/canvasDark.png"><img src="./docs/images/screenshots/canvasDark.png" alt="FilmFraylo డార్క్ థీమ్ కాన్వాస్ మరియు AI సహాయకుడు" width="80%" /></a><br /><sub>సృష్టి కాన్వాస్ · డార్క్ థీమ్</sub>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow · సృజనాత్మక కాన్వాస్ · లైట్ థీమ్" width="80%" /></a><br /><sub>సృజనాత్మక కాన్వాస్ · లైట్ థీమ్</sub>
+<a href="./docs/images/screenshots/canvasLight.png"><img src="./docs/images/screenshots/canvasLight.png" alt="FilmFraylo లైట్ థీమ్ కాన్వాస్ మరియు AI సహాయకుడు" width="80%" /></a><br /><sub>సృష్టి కాన్వాస్ · లైట్ థీమ్</sub>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow · పాత్రలు, సన్నివేశాలు మరియు వస్తువుల వనరులు" width="80%" /></a><br /><sub>పాత్రలు, సన్నివేశాలు మరియు వస్తువుల వనరులు</sub>
+<a href="./docs/images/screenshots/assetCanvas.png"><img src="./docs/images/screenshots/assetCanvas.png" alt="FilmFraylo పాత్రలు, సన్నివేశాలు మరియు ప్రాప్ ఆస్తుల కాన్వాస్" width="80%" /></a><br /><sub>పాత్రలు, సన్నివేశాలు మరియు ప్రాప్ ఆస్తులు</sub>
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow · 3D దర్శకుడి స్టూడియో మరియు షాట్ ముందస్తు వీక్షణ" width="80%" /></a><br /><sub>3D దర్శకుడి స్టూడియో మరియు షాట్ ముందస్తు వీక్షణ</sub>
+<a href="./docs/images/screenshots/directorStudio.png"><img src="./docs/images/screenshots/directorStudio.png" alt="FilmFraylo 3D డైరెక్టర్ స్టూడియో మరియు షాట్ ప్రివిజువలైజేషన్" width="80%" /></a><br /><sub>3D డైరెక్టర్ స్టూడియో మరియు షాట్ ప్రివిజువలైజేషన్</sub>
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow · పాత్రల మూడు కోణాల చిత్రాలు మరియు చిత్ర సృష్టి" width="80%" /></a><br /><sub>పాత్రల మూడు కోణాల చిత్రాలు మరియు చిత్ర సృష్టి</sub>
+<a href="./docs/images/screenshots/characterImageGeneration.png"><img src="./docs/images/screenshots/characterImageGeneration.png" alt="FilmFraylo పాత్రల త్రిముఖ చిత్రాలు మరియు ఇమేజ్ జనరేషన్" width="80%" /></a><br /><sub>పాత్రల త్రిముఖ చిత్రాలు మరియు ఇమేజ్ జనరేషన్</sub>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow · బహుళ రిఫరెన్స్ వనరులతో వీడియో సృష్టి" width="80%" /></a><br /><sub>బహుళ రిఫరెన్స్ వనరులతో వీడియో సృష్టి</sub>
+<a href="./docs/images/screenshots/videoGeneration.png"><img src="./docs/images/screenshots/videoGeneration.png" alt="FilmFraylo బహుళ రెఫరెన్స్ మెటీరియల్‌తో వీడియో జనరేషన్" width="80%" /></a><br /><sub>బహుళ రెఫరెన్స్ మెటీరియల్‌తో వీడియో జనరేషన్</sub>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow · నోడ్ మెనూ మరియు గ్రూప్ నిర్వహణ" width="80%" /></a><br /><sub>నోడ్ మెనూ మరియు గ్రూప్ నిర్వహణ</sub>
-
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow · ప్లగిన్ మార్కెట్‌ప్లేస్" width="80%" /></a><br /><sub>ప్లగిన్ మార్కెట్‌ప్లేస్</sub>
+<a href="./docs/images/screenshots/nodeMenu.png"><img src="./docs/images/screenshots/nodeMenu.png" alt="FilmFraylo నోడ్ మెనూ మరియు గ్రూపింగ్ ఆపరేషన్లు" width="80%" /></a><br /><sub>నోడ్ మెనూ మరియు గ్రూపింగ్ ఆపరేషన్లు</sub>
 
 </div>
 
 ---
 
-## 4. 🚀 డౌన్‌లోడ్ చేసి ఇన్‌స్టాల్ చేయండి
+## 3. 🚀 డౌన్‌లోడ్ మరియు ఇన్‌స్టాలేషన్
 
-### 4.1 యాప్ ఇన్‌స్టాలేషన్
+### 3.1 క్లయింట్ ఇన్‌స్టాలేషన్
 
-| ఆపరేటింగ్ సిస్టమ్ | GitHub |
-| --- | --- |
-| Windows | [విడుదల](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
-| macOS | [విడుదల](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
-| Android ARM64 | [APK డౌన్‌లోడ్](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+| ఆపరేటింగ్ సిస్టమ్ | GitHub                                                       |
+| -------- | ------------------------------------------------------------ |
+| Windows  | [Release](https://github.com/zechau/filmfraylo-app/releases) |
+| macOS    | [Release](https://github.com/zechau/filmfraylo-app/releases) |
+| Android ARM64 | [APK డౌన్‌లోడ్](https://github.com/zechau/filmfraylo-app/releases/latest) |
 
-Android యాప్ ARM64 పరికరాలకు మాత్రమే మద్దతు ఇస్తుంది. విడుదల పేజీ నుంచి `toonflow-VERSION-android-arm64.apk`ను డౌన్‌లోడ్ చేసి ఇన్‌స్టాల్ చేయండి. ఇందులో స్థానిక Bun బ్యాకెండ్ ఉంది కాబట్టి స్వతంత్రంగా నడుస్తుంది. హోమ్ పేజీలోని «పరికరాల అనుసంధానం» ద్వారా QR కోడ్ స్కాన్ చేసి లేదా కనెక్షన్ వివరాలను నమోదు చేసి స్థానిక నెట్‌వర్క్ లేదా ఇంటర్నెట్‌లో షేరింగ్ ప్రారంభించిన కంప్యూటర్ లేదా బ్యాకెండ్‌కు కనెక్ట్ కావచ్చు.
+Android వెర్షన్ ARM64 పరికరాలకు మాత్రమే మద్దతు ఇస్తుంది; రిలీజ్ పేజీలోని `filmfraylo-版本号-android-arm64.apk`ను డౌన్‌లోడ్ చేసి ఇన్‌స్టాల్ చేయండి. ఫోన్‌లో స్థానిక Bun బ్యాకెండ్ అంతర్నిర్మితంగా ఉంటుంది, స్వతంత్రంగా నడుస్తుంది; హోమ్ పేజీలోని "పరికరాల అనుసంధానం" నుంచి QR కోడ్ స్కాన్ చేయడం ద్వారా లేదా షేరింగ్ ప్రారంభించిన కంప్యూటర్ లేదా రిమోట్ బ్యాకెండ్‌కు మాన్యువల్‌గా కనెక్ట్ కావడం ద్వారా కూడా ఉపయోగించవచ్చు (LAN మరియు పబ్లిక్ నెట్‌వర్క్‌కు మద్దతు ఉంది).
 
-Windows ఇన్‌స్టాలర్ స్వయంచాలకంగా WebView2ని గుర్తించి, ఇన్‌స్టాల్ చేస్తుంది. ఇన్‌స్టాలేషన్ తర్వాత యాప్ వెంటనే మూసివేయబడితే, [WebView2 డౌన్‌లోడ్ పేజీ](https://developer.microsoft.com/microsoft-edge/webview2/) నుండి రన్‌టైమ్‌ను మాన్యువల్‌గా డౌన్‌లోడ్ చేసి, ఇన్‌స్టాల్ చేయండి.
+Windows ఇన్‌స్టాలర్ WebView2ను స్వయంచాలకంగా గుర్తించి ఇన్‌స్టాల్ చేస్తుంది; ఇన్‌స్టాల్ చేసిన తర్వాత యాప్ తెరిచిన వెంటనే మూసుకుపోతే, [WebView2 డౌన్‌లోడ్ పేజీ](https://developer.microsoft.com/microsoft-edge/webview2/) నుంచి రన్‌టైమ్‌ను మాన్యువల్‌గా ఇన్‌స్టాల్ చేయండి.
 
-macOS (Apple Silicon)లో Toonflowను Applications ఫోల్డర్‌లోకి లాగి, నేరుగా తెరవండి. ముందుగా Terminal ఆదేశాలు అమలు చేయాల్సిన అవసరం లేదు. macOS భద్రతా హెచ్చరిక చూపితే క్రింది దశలను వరుసగా అనుసరించండి.
+macOS (Apple Silicon)లో FilmFrayloను "Applications" ఫోల్డర్‌లోకి లాగి నేరుగా తెరవండి; ముందుగా టెర్మినల్ కమాండ్‌లు అమలు చేయాల్సిన అవసరం లేదు. సిస్టమ్ భద్రతా హెచ్చరిక కనిపిస్తే, క్రింది క్రమంలో పరిష్కరించండి.
 
 <details>
-<summary><strong>macOSలో Toonflowను ఇన్‌స్టాల్ చేయలేకపోయినా తెరవలేకపోయినా</strong></summary>
+<summary><strong>macOSలో FilmFrayloను ఇన్‌స్టాల్ చేయలేనప్పుడు లేదా తెరవలేనప్పుడు ఏం చేయాలి</strong></summary>
 
-**1. గోప్యత & భద్రతలో Toonflowని అనుమతించండి**
+**1. "గోప్యత & భద్రత"లో FilmFrayloను అనుమతించండి**
 
-డెవలపర్‌ని ధృవీకరించడం సాధ్యం కాదని లేదా Apple హానికరమైన సాఫ్ట్‌వేర్ కోసం యాప్‌ని తనిఖీ చేయలేదని మీకు హెచ్చరిక కనిపిస్తే, ముందుగా Toonflowని తెరవడానికి ప్రయత్నించండి. ఆపై సిస్టమ్ సెట్టింగ్‌లు → గోప్యత & భద్రతకు వెళ్లి, Toonflow బ్లాక్ చేయబడిందని తెలిపే సందేశాన్ని కనుగొని, ఏమైనప్పటికీ తెరువు క్లిక్ చేసి, ప్రాంప్ట్ చేసినట్లు నిర్ధారించండి. [Apple యొక్క అధికారిక సూచనలు](https://support.apple.com/zh-cn/102445) చూడండి.
+"డెవలపర్‌ను ధృవీకరించలేము" లేదా "Apple యాప్‌లో హానికరమైన సాఫ్ట్‌వేర్ ఉందో లేదో తనిఖీ చేయలేదు" అనే సందేశం కనిపిస్తే, మొదట FilmFrayloను తెరవడానికి ప్రయత్నించండి; ఆపై "సిస్టమ్ సెట్టింగ్‌లు → గోప్యత & భద్రత"కు వెళ్లి, FilmFraylo బ్లాక్ చేయబడినట్లు చూపే నోటీసును కనుగొని, "ఏమైనప్పటికీ తెరవండి"పై క్లిక్ చేసి, సూచనల ప్రకారం నిర్ధారించండి. వివరాలకు [Apple అధికారిక సూచనలు](https://support.apple.com/zh-cn/102445) చూడండి.
 
-**2. క్వారంటైన్ పరిమితులు ఇప్పటికీ తెరవకుండా నిరోధించినట్లయితే, క్వారంటైన్ లక్షణాన్ని తీసివేయడానికి ప్రయత్నించండి**
+**2. సిస్టమ్ క్వారంటైన్ పరిమితి వల్ల ఇప్పటికీ తెరవలేకపోతే, క్వారంటైన్ లక్షణాన్ని తీసివేయడానికి ప్రయత్నించండి**
 
-యాప్ అధికారిక విడుదల పేజీ నుండి వచ్చిందని మరియు అప్లికేషన్‌లలో ఉందని నిర్ధారించిన తర్వాత, కింది ఆదేశాన్ని టెర్మినల్‌లో అమలు చేసి, దాన్ని మళ్లీ తెరవడానికి ప్రయత్నించండి. యాప్ పేరు లేదా ఇన్‌స్టాలేషన్ స్థానం భిన్నంగా ఉంటే మార్గాన్ని సర్దుబాటు చేయండి.
+యాప్ అధికారిక రిలీజ్ పేజీ నుంచి వచ్చిందని, "Applications"లో ఉందని నిర్ధారించిన తర్వాత, టెర్మినల్‌లో క్రింది కమాండ్‌ను అమలు చేసి, మళ్లీ తెరవడానికి ప్రయత్నించండి. యాప్ పేరు లేదా ఇన్‌స్టాలేషన్ స్థానం భిన్నంగా ఉంటే పాత్‌ను సర్దుబాటు చేయండి.
 
 ```bash
-sudo xattr -rd com.apple.quarantine /Applications/toonflow.app
+sudo xattr -rd com.apple.quarantine /Applications/FilmFraylo.app
 ```
 
-**3. చివరి ప్రయత్నం: ఎక్కడి నుండైనా యాప్‌లను తాత్కాలికంగా అనుమతించండి**
+**3. చివరి మార్గం: ఏ మూలం నుంచైనా యాప్‌లను తాత్కాలికంగా అనుమతించడం**
 
-మొదటి రెండు పద్ధతుల్లో ఏదీ పని చేయకపోతే మరియు మీరు యాప్ మూలాన్ని విశ్వసిస్తే, అమలు చేయడానికి ప్రయత్నించండి:
+మొదటి రెండు పద్ధతులూ పని చేయకపోతే, యాప్ మూలం నమ్మదగినదని నిర్ధారించిన తర్వాత, టెర్మినల్‌లో ఇది అమలు చేయడానికి ప్రయత్నించండి:
 
 ```bash
 sudo spctl --master-disable
 ```
 
-ఆపై సిస్టమ్ సెట్టింగ్‌లు → గోప్యత & భద్రతను తెరవండి. భద్రత కింద, మీ సిస్టమ్ ఆ ఎంపికను అందిస్తే, “అప్లికేషన్‌లను డౌన్‌లోడ్ చేయడాన్ని అనుమతించు”ని “ఎక్కడైనా” సెట్ చేసి, ప్రాంప్ట్ చేసినట్లు నిర్ధారించండి. macOS సంస్కరణల్లో అందుబాటులో ఉన్న ఎంపికలు మరియు కమాండ్ మద్దతు మారవచ్చు.
+ఆపై "సిస్టమ్ సెట్టింగ్‌లు → గోప్యత & భద్రత" తెరిచి, "భద్రత" కింద "కింది మూలాల నుంచి డౌన్‌లోడ్ చేసిన యాప్‌లను అనుమతించు"ను "ఏ మూలమైనా"కు సెట్ చేయండి (మీ సిస్టమ్ ఆ ఎంపికను అందిస్తే), సూచనల ప్రకారం నిర్ధారించండి. macOS వెర్షన్‌లను బట్టి అందుబాటులో ఉండే ఎంపికలు మరియు కమాండ్ మద్దతు మారవచ్చు.
 
-ఇది అన్ని యాప్‌ల కోసం భద్రతా పరిమితులను సడలిస్తుంది. ఆ తర్వాత, "App Store మరియు గుర్తించబడిన డెవలపర్‌లకు" సెట్టింగ్‌ని పునరుద్ధరించాలని మేము సిఫార్సు చేస్తున్నాము.
+ఈ చర్య అన్ని యాప్‌లకూ భద్రతా పరిమితులను సడలిస్తుంది. పూర్తయిన తర్వాత, అనుమతించే మూలాన్ని "App Store మరియు గుర్తించిన డెవలపర్‌లు"కు తిరిగి మార్చాలని సిఫార్సు చేస్తున్నాము.
 
 </details>
 
-మరిన్ని సూచనల కోసం, [యూజర్ గైడ్](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf) చూడండి.
-
 ---
 
-### 4.2 Docker ఇన్‌స్టాలేషన్
+### 3.2 Docker ఇన్‌స్టాలేషన్
 
-ముందుగా Git, [Docker Engine](https://docs.docker.com/engine/install/), Docker Composeను ఇన్‌స్టాల్ చేయండి. Windows, macOSలో Docker Desktopను Linux container modeలో ఉపయోగించవచ్చు. రిపోజిటరీలో [Dockerfile](../../Dockerfile), [Compose కాన్ఫిగరేషన్](../../compose.yaml), [బిల్డ్ నుంచి మినహాయించే నియమాలు](../../.dockerignore) ఉన్నాయి. ఇమేజ్‌ను Bun 1.3.14తో నిర్మిస్తారు; ఇందులో FFmpeg కూడా ఉంటుంది.
+ముందుగా Git, [Docker Engine](https://docs.docker.com/engine/install/) మరియు Docker Composeను ఇన్‌స్టాల్ చేయండి; Windows / macOSలో Docker Desktop యొక్క Linux కంటైనర్ మోడ్‌ను ఉపయోగించవచ్చు. రిపోజిటరీలో [Dockerfile](./Dockerfile), [Compose కాన్ఫిగరేషన్](./compose.yaml) మరియు [బిల్డ్ మినహాయింపు నియమాలు](./.dockerignore) ఉన్నాయి; ఇది Bun 1.3.14 ఆధారంగా నిర్మించబడింది, ఇమేజ్‌లో FFmpeg ఉంటుంది.
 
 <details>
 <summary><strong>Docker ఇన్‌స్టాలేషన్ దశలను విస్తరించండి</strong></summary>
 
-మూలాన్ని క్లోన్ చేయండి మరియు రిపోజిటరీ రూట్‌లో కింది వాటిని అమలు చేయండి:
+సోర్స్‌ను క్లోన్ చేసిన తర్వాత, రిపోజిటరీ రూట్‌లో ఇవి అమలు చేయండి:
 
 ```sh
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
-cd Toonflow-app
+git clone https://github.com/zechau/filmfraylo-app.git
+cd filmfraylo-app
 docker compose up -d --build
 ```
 
-మొదటి బిల్డ్ డిపెండెన్సీలను ఇన్‌స్టాల్ చేస్తుంది మరియు బండిల్ చేసిన నోడ్‌లు, టూల్స్, Web మరియు Serverని నిర్మిస్తుంది. ప్రారంభించిన తర్వాత, `http://127.0.0.1:3000`ని తెరవండి. రిమోట్ హోస్ట్ కోసం, దిగువ “యాక్సెస్ మరియు డేటా” క్రింద వివరించిన విధంగా SSH సొరంగం ఉపయోగించండి. మొదటి స్టార్టప్ బండిల్ చేసిన ప్లగిన్‌లను ప్రారంభిస్తుంది మరియు `myProject` వర్కింగ్ డైరెక్టరీని అందిస్తుంది.
+మొదటి బిల్డ్ డిపెండెన్సీలను ఇన్‌స్టాల్ చేసి, అంతర్నిర్మిత నోడ్‌లు, టూల్స్, Web మరియు Serverను కంపైల్ చేస్తుంది. ప్రారంభించిన తర్వాత `http://127.0.0.1:3000`ను సందర్శించండి; రిమోట్ హోస్ట్ కోసం, క్రింది "యాక్సెస్ మరియు డేటా వివరణ"లో వివరించిన విధంగా SSH టన్నెల్ ద్వారా యాక్సెస్ చేయండి. మొదటి స్టార్టప్‌లో అంతర్నిర్మిత ప్లగిన్‌లు ప్రారంభమవుతాయి, `myProject` వర్కింగ్ డైరెక్టరీ అందుబాటులో ఉంటుంది.
 
-సెట్టింగ్‌లు, ప్లగిన్‌లు, ప్రాజెక్టు ఫైల్‌లు `toonflowData` అనే Docker volumeలో నిల్వ ఉంటాయి. కంటైనర్‌లో ఇది `/app/data/` వద్ద మౌంట్ అవుతుంది. అసలు volume పేరు ముందు Compose ప్రాజెక్టు పేరు చేరుతుంది. కంటైనర్‌ను ఆపినా, మళ్లీ నిర్మించినా డేటా అలాగే ఉంటుంది. **`docker compose down -v` ఉపయోగించవద్దు: ఈ ఆదేశం డేటా volumeను తొలగిస్తుంది.**
-
-```sh
-docker compose logs -f toonflow  # View logs
-docker compose stop             # Stop the service
-docker compose start            # Start it again
-docker compose down             # Remove containers, retaining the data volume
-```
-
-ప్రాజెక్ట్ డైరెక్టరీని జోడించడానికి, "Server వర్కింగ్ డైరెక్టరీని ఎంచుకోండి" డైలాగ్‌లో "కొత్త ఫోల్డర్" క్లిక్ చేయండి. డైలాగ్ ఫైల్‌లు మరియు ఫోల్డర్‌ల పేరు మార్చడానికి మరియు తొలగించడానికి కూడా మద్దతు ఇస్తుంది. ప్రత్యామ్నాయంగా, సేవ నడుస్తున్నప్పుడు కమాండ్ లైన్ నుండి డైరెక్టరీని సృష్టించండి:
+సెట్టింగ్‌లు, ప్లగిన్‌లు మరియు ప్రాజెక్ట్ ఫైళ్లు Docker నేమ్‌డ్ వాల్యూమ్ `filmfrayloData`లో నిల్వ చేయబడతాయి; ఇది కంటైనర్‌లో `/app/data/` వద్ద మౌంట్ అవుతుంది. వాల్యూమ్ యొక్క అసలు పేరులో Compose ప్రాజెక్ట్ ప్రిఫిక్స్ ఉంటుంది; కంటైనర్‌ను ఆపినా, తిరిగి నిర్మించినా డేటా భద్రంగా ఉంటుంది. **`docker compose down -v` ఉపయోగించవద్దు; ఆ కమాండ్ డేటా వాల్యూమ్‌ను తొలగిస్తుంది.**
 
 ```sh
-docker compose exec toonflow mkdir -p /app/data/workspaces/newProject
+docker compose logs -f filmfraylo  # లాగ్‌లను చూడండి
+docker compose stop                # సేవను ఆపండి
+docker compose start               # మళ్లీ ప్రారంభించండి
+docker compose down                # కంటైనర్లను తొలగించండి, డేటా వాల్యూమ్ ఉంచండి
 ```
 
-బ్యాకప్ కోసం, ముందుగా సేవను ఆపివేసి, డేటాను కాపీ చేసి, ఆపై దాన్ని పునఃప్రారంభించండి:
+ప్రాజెక్ట్ డైరెక్టరీని జోడించాలంటే, పేజీలోని "సర్వర్ వర్కింగ్ డైరెక్టరీని ఎంచుకోండి" డైలాగ్‌లో "కొత్త ఫోల్డర్" క్లిక్ చేయండి. డైలాగ్ ఫైళ్లు మరియు ఫోల్డర్ల పేర్లు మార్చడం, తొలగించడం కూడా సపోర్ట్ చేస్తుంది. సేవ నడుస్తున్నప్పుడు కమాండ్ లైన్ నుంచి కూడా సృష్టించవచ్చు:
+
+```sh
+docker compose exec filmfraylo mkdir -p /app/data/workspaces/newProject
+```
+
+బ్యాకప్ కోసం ముందుగా సేవను ఆపండి, డేటాను కాపీ చేసిన తర్వాత మళ్లీ ప్రారంభించండి:
 
 ```sh
 docker compose stop
-docker compose cp toonflow:/app/data ./toonflowBackup
+docker compose cp filmfraylo:/app/data ./filmfrayloBackup
 docker compose start
 ```
 
@@ -341,12 +236,12 @@ docker compose start
 
 ---
 
-### 4.3 Server ఇన్‌స్టాలేషన్
+### 3.3 సర్వర్ ఇన్‌స్టాలేషన్
 
-Web మరియు Server నేరుగా Linux సర్వర్‌లో అమలు చేయడానికి ఈ ఎంపికను ఉపయోగించండి. దిగువ ఉదాహరణ Ubuntu / Debian మరియు ప్రాజెక్ట్ యొక్క పేర్కొన్న సంస్కరణను ఉపయోగిస్తుంది, [Bun 1.3.14](https://bun.sh/docs/installation).
+Linux సర్వర్‌లో Web మరియు Serverను నేరుగా నడపడానికి ఈ ఎంపిక ఉపయోగపడుతుంది. క్రింది ఉదాహరణ Ubuntu / Debianను ఉపయోగిస్తుంది, ప్రాజెక్ట్ నిర్దేశించిన [Bun 1.3.14](https://bun.sh/docs/installation)తో.
 
 <details>
-<summary><strong> సర్వర్ ఇన్‌స్టాలేషన్ దశలను విస్తరించండి</strong></summary>
+<summary><strong>సర్వర్ ఇన్‌స్టాలేషన్ దశలను విస్తరించండి</strong></summary>
 
 రన్‌టైమ్ వాతావరణాన్ని ఇన్‌స్టాల్ చేయండి:
 
@@ -358,192 +253,54 @@ export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```
 
-మూలాన్ని క్లోన్ చేసి, సేవను ప్రారంభించండి:
+సోర్స్‌ను క్లోన్ చేసి, సేవను ప్రారంభించండి:
 
 ```sh
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
-cd Toonflow-app
+git clone https://github.com/zechau/filmfraylo-app.git
+cd filmfraylo-app
 bun install --frozen-lockfile
 
-# Build bundled nodes, tools, Web, and Server
+# అంతర్నిర్మిత నోడ్‌లు, టూల్స్, Web మరియు Serverను బిల్డ్ చేయండి
 bun run build:server
 mkdir -p data/workspaces/myProject
 bun run start:server
 ```
 
-“服务启动成功” (సేవ విజయవంతంగా ప్రారంభమైంది) కనిపించిన తర్వాత సర్వర్‌లోనే `http://127.0.0.1:3000` తెరవండి. పై ఆదేశం foregroundలో నడుస్తుంది; ఆపడానికి `Ctrl+C` నొక్కండి. కంప్యూటర్ ప్రారంభమైనప్పుడు సేవను స్వయంగా నడపడం, ప్రాసెస్ నిర్వహణ కోసం [Bun systemd ఏర్పాటు మార్గదర్శిని](https://bun.sh/guides/ecosystem/systemd) చూడండి. పని డైరెక్టరీగా రిపోజిటరీ డైరెక్టరీని ఇవ్వండి. ప్రారంభ ఆదేశంలో ముందుగా Bun పూర్తి పాత్, దాని తర్వాత `run start:server` ఉండాలి. ఆ డైరెక్టరీలో చదవడానికి, రాయడానికి అనుమతి ఉన్న వినియోగదారుగా నడపండి.
+"服务启动成功" (సేవ విజయవంతంగా ప్రారంభమైంది) అని కనిపించిన తర్వాత, సర్వర్ లోకల్‌గా `http://127.0.0.1:3000`ను సందర్శించండి. పై కమాండ్‌లు ఫోర్‌గ్రౌండ్‌లో నడుస్తాయి; ఆపడానికి `Ctrl+C` నొక్కండి. బూట్‌లో స్వయంచాలక ప్రారంభం మరియు ప్రాసెస్ పర్యవేక్షణ కోసం, [Bun యొక్క systemd డిప్లాయ్‌మెంట్ గైడ్](https://bun.sh/guides/ecosystem/systemd) చూడండి: వర్కింగ్ డైరెక్టరీని రిపోజిటరీ డైరెక్టరీగా, స్టార్ట్ కమాండ్‌ను Bun యొక్క పూర్తి పాత్‌తో పాటు `run start:server`గా సెట్ చేసి, ఆ డైరెక్టరీకి చదవడం/రాయడం అనుమతి ఉన్న వినియోగదారుగా నడపండి.
 
 </details>
 
 ---
 
-### 4.4 యాక్సెస్ మరియు డేటా
+### 3.4 యాక్సెస్ మరియు డేటా వివరణ
 
-- సేవ ప్రస్తుతం స్థిర పోర్ట్ `3000`ని ఉపయోగిస్తోంది. వెబ్ ఇంటర్‌ఫేస్ మరియు APIకి ప్రత్యేక లాగిన్ ప్రమాణీకరణ లేదు. సర్వర్ ఇన్‌స్టాలేషన్‌ల కోసం, ఫైర్‌వాల్ లేదా సెక్యూరిటీ గ్రూప్ ద్వారా పోర్ట్ `3000`కి యాక్సెస్‌ని పరిమితం చేయండి. పబ్లిక్ యాక్సెస్‌కి ప్రామాణీకరణతో కూడిన రివర్స్ ప్రాక్సీ అవసరం.
-- వ్యక్తిగత రిమోట్ యాక్సెస్ కోసం, మీ స్వంత కంప్యూటర్‌లో `ssh -N -L 3000:127.0.0.1:3000 username@server-address`ని అమలు చేయండి. కనెక్షన్‌ని తెరిచి ఉంచండి, ఆపై `http://127.0.0.1:3000`ని సందర్శించండి. మీరు సర్వర్ యొక్క పోర్ట్ `3000`ని పబ్లిక్ ఇంటర్నెట్‌కు బహిర్గతం చేయవలసిన అవసరం లేదు.
-- డైరెక్ట్ ఇన్‌స్టాలేషన్‌తో, సెట్టింగ్‌లు, ప్లగిన్‌లు మరియు వర్క్‌స్పేస్‌లు డిఫాల్ట్‌గా రిపోజిటరీ `data/` డైరెక్టరీలో నిల్వ చేయబడతాయి. Dockerతో, అవి డేటా వాల్యూమ్ లోపల `/app/data/` వద్ద నిల్వ చేయబడతాయి. మైగ్రేట్ చేసేటప్పుడు లేదా బ్యాకప్ చేస్తున్నప్పుడు మొత్తం డైరెక్టరీని భద్రపరచండి. పేజీని తెరిచిన తర్వాత, సర్వర్ వర్క్‌స్పేస్‌లో `myProject`ని ఎంచుకోండి. అదనపు ప్రాజెక్ట్‌ల కోసం సంబంధిత `workspaces/` డైరెక్టరీ క్రింద ఉప డైరెక్టరీలను సృష్టించండి.
-- రెండు ఇన్‌స్టాలేషన్ పద్ధతులలో సిస్టమ్ FFmpeg ఉన్నాయి. మీరు ఇప్పటికీ ఇంటర్‌ఫేస్‌లో మోడల్ సేవల కోసం API కీలను కాన్ఫిగర్ చేయాలి.
-
----
-
-### 4.5 క్లౌడ్ విస్తరణ
-
-మా భాగస్వామి [AI Galaxy (智星云)](https://www.ai-galaxy.com/) అధికారిక అనుమతి పొందిన వాణిజ్య Toonflow ఇమేజ్‌ను అందిస్తుంది. అందులో ఉపయోగించడానికి సిద్ధమైన వాతావరణం ఉంటుంది. దశల కోసం [చిత్రాలతో కూడిన ఇమేజ్ ఏర్పాటు మార్గదర్శిని](https://mp.weixin.qq.com/s/lq9X1ovQ1_TKeXMOLgicKg?scene=1) చూడండి.
+- సేవ ప్రస్తుతం స్థిర పోర్ట్ `3000`ను ఉపయోగిస్తుంది; బిజినెస్ పేజీలు మరియు APIకి ప్రత్యేక లాగిన్ ప్రమాణీకరణ లేదు. సర్వర్ ఇన్‌స్టాలేషన్‌లలో, ఫైర్‌వాల్ లేదా సెక్యూరిటీ గ్రూప్ ద్వారా పోర్ట్ `3000`కి యాక్సెస్ మూలాలను పరిమితం చేయండి; పబ్లిక్ నెట్‌వర్క్ యాక్సెస్‌కు ప్రమాణీకరణ ఉన్న రివర్స్ ప్రాక్సీ అవసరం.
+- వ్యక్తిగత రిమోట్ వినియోగం కోసం, మీ కంప్యూటర్‌లో `ssh -N -L 3000:127.0.0.1:3000 username@server-address` అమలు చేయండి; కనెక్షన్ తెరిచి ఉంచి, `http://127.0.0.1:3000`ను సందర్శించండి. సర్వర్ యొక్క పోర్ట్ `3000`ను పబ్లిక్ ఇంటర్నెట్‌కు బహిర్గతం చేయాల్సిన అవసరం లేదు.
+- నేరుగా ఇన్‌స్టాల్ చేసినప్పుడు, సెట్టింగ్‌లు, ప్లగిన్‌లు మరియు వర్క్‌స్పేస్‌లు డిఫాల్ట్‌గా రిపోజిటరీలోని `data/`లో నిల్వ చేయబడతాయి; Docker ఇన్‌స్టాలేషన్‌లో అవి డేటా వాల్యూమ్ లోపల `/app/data/` వద్ద నిల్వ చేయబడతాయి. మైగ్రేట్ చేసేటప్పుడు లేదా బ్యాకప్ చేసేటప్పుడు వాటిని పూర్తిగా భద్రపరచండి. పేజీ తెరిచిన తర్వాత, సర్వర్ వర్క్‌స్పేస్‌లోని `myProject`ను ఎంచుకోండి; మరిన్ని ప్రాజెక్టుల కోసం సంబంధిత `workspaces/` కింద సబ్‌డైరెక్టరీలను సృష్టించండి.
+- రెండు ఇన్‌స్టాలేషన్ పద్ధతుల్లోనూ సిస్టమ్ FFmpeg ఉంటుంది. మోడల్ సేవ కోసం API Key ఇప్పటికీ పేజీలోనే కాన్ఫిగర్ చేయాలి.
 
 ---
 
-## 5. 🎬 నమూనా సృష్టి
-
-https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
-
-### ఉత్పత్తి వివరాలు
-
-| అంశం | అసలు రిపోజిటరీలో రికార్డ్ చేయబడింది |
-| --- | --- |
-| ఉత్పత్తి సమయం మరియు చివరి పొడవు | దాదాపు 2 నిమిషాల వీడియో కోసం దాదాపు 2 గంటల పని. |
-| వీడియో మోడల్ | Seedance 2.0 |
-| చిత్ర నమూనా | GPT Image 2 |
-| భాషా నమూనా | Claude Opus 4.6 |
-| మోడల్ API ఖర్చులు | దాదాపు ¥130 CNY (చైనీస్ యువాన్): భాష కోసం దాదాపు ¥10, వీడియో కోసం ¥120 మరియు చిత్రాల కోసం ¥1 కంటే తక్కువ. |
-
-ఇవి ఈ నమూనాకు నమోదైన ఖర్చులు మాత్రమే; అవగాహన కోసం ఇచ్చాం. నిజమైన ఖర్చు మోడల్ సేవ, ఎన్నిసార్లు సృష్టిస్తున్నారు, ఉపయోగించే పరామితులపై ఆధారపడుతుంది. నమూనా వీడియో కుదించిన 480p వెర్షన్.
-
----
-
-## 6. 🚀 TF-Router అధికారిక మోడల్ గేట్‌వే
+## 4. 🎬 అధికారిక మోడల్ ప్లాట్‌ఫామ్
 
 <p align="center">
-  <a href="https://api.toonflow.net/">
-    <img src="https://img.shields.io/badge/TF--Router_Official%20Model%20Gateway-181717?style=for-the-badge&logoColor=white" alt="TF-Router" />
+  <a href="https://api.safillu.com/">
+    <img src="https://img.shields.io/badge/FilmFraylo_Model_Platform-181717?style=for-the-badge&logoColor=white" alt="FilmFraylo మోడల్ ప్లాట్‌ఫామ్" />
   </a>
 </p>
 
-TF-Router అనేది Toonflow స్వయంగా నిర్వహించే అధికారిక మోడల్ గేట్‌వే. దీన్ని ఉపయోగించవచ్చు. పూర్తి సోర్స్ కోడ్ ఓపెన్ సోర్స్‌గా అందుబాటులో ఉంది; మీరే హోస్ట్ చేసుకోవచ్చు, కోడ్‌ను పరిశీలించవచ్చు: [HBAI-Ltd/TF-Router](https://github.com/HBAI-Ltd/TF-Router).
-
-<details>
-<summary><strong>Toonflow కమ్యూనిటీకి ఒక లేఖ (ప్రచురణ: 2026-06-08)</strong></summary>
-
-> ### Toonflow కమ్యూనిటీకి ఒక లేఖ
-> 130 రోజులు.
-> పెద్ద వ్యవధి కాకపోయినా, కొన్ని విషయాలు మాకు స్పష్టంగా అర్థమయ్యేందుకు సరిపోయింది.
-> మొదటి కోడ్‌ను కమిట్ చేసినప్పటి నుంచి నేటి వరకు 130 రోజులు గడిచాయి. 20 వెర్షన్లు విడుదల చేశాం, 800+ కమిట్‌లు చేశాం; 640,810 అక్షరాలతో మొత్తం 213,765 లైన్ల కోడ్ రాశాం.
-> రెండుసార్లు కొత్తగా రాసిన కోడ్, ఒక ప్రొవైడర్ వ్యవస్థ, మేము గర్వించే పని విధానం.
-> సరిపోతుందని మేము అనుకున్నాము.
-> కానీ సరిపోలేదు.
-> కొంతమంది వ్యక్తులు Toonflowకి తమ స్వంత మాడ్యూల్‌ని జోడించాలనుకుంటున్నారని మాకు చెప్పారు, కానీ దాన్ని ఎలా మార్చాలో అర్థం చేసుకోవడానికి గంటల కొద్దీ గడిపారు.
-> కొంతమంది మాకు సంఘం చాలా చిన్నదని మరియు వారు సమస్యలలో చిక్కుకున్నప్పుడు వారికి సహాయం దొరకలేదని చెప్పారు.
-> కొందరు తమ ప్రాజెక్ట్‌లను ఉపయోగించుకోకుండా వాణిజ్య నిబంధనలు అడ్డుగా ఉన్నాయని మాకు చెప్పారు.
-> మేము మీ మాట విన్నాము.
-> ఈ 130 రోజులలో బృంద సభ్యులు చాట్ గ్రూపుల్లో వంతులవారీగా ఉండి, ప్రతి ప్రశ్నకూ 7×24 సమాధానమిచ్చారు. స్పాన్సర్లు లేకుండా, సబ్సిడీలు లేకుండా సిబ్బంది ఖర్చులన్నీ మేమే భరించాం.
-> మన దగ్గర చాలా డబ్బు ఉన్నందున కాదు.
-> అయితే ఇది చేయడం విలువైనదని మేము నమ్ముతున్నాము.
-> కాబట్టి మేము మూడవ రీరైట్ చేపట్టాలని నిర్ణయించుకున్నాము.
-> ప్రతి Toonflow రీరైట్ ఎక్కువ ఓపెన్‌నెస్ మరియు ఓపెన్ సోర్స్ వైపు వెళ్లింది.
-> ఈసారి, మేము ప్రతిదీ తెరవడానికి ఎంచుకున్నాము.
->
-> 1. MIT License
-> మేము Apache-2.0ని MIT Licenseతో భర్తీ చేయాలని మరియు తిరిగి వ్రాయడం పూర్తయిన తర్వాత అన్ని అదనపు వాణిజ్య నిబంధనలను తీసివేయాలని నిర్ణయించుకున్నాము.
-> ఇది వాణిజ్యపరమైన పరిమితులు లేకుండా పూర్తిగా తెరవబడుతుంది.
-> మీరు దీన్ని దేనికైనా ఉపయోగించవచ్చు.
->
-> 2. పూర్తిగా ఫ్లెక్సిబుల్ ప్లగిన్ సిస్టమ్
-> మేము మొత్తం ప్లగ్ఇన్ నిర్మాణాన్ని పునఃరూపకల్పన చేస్తాము.
-> స్టోరీబోర్డ్‌లు, పనోరమాలు, టైమ్‌లైన్‌లు, చిన్న గేమ్‌లు కూడా.
-> మీరు ఊహించగలిగితే, మీరు జోడించవచ్చు.
-> తాత్కాలిక చిట్కాలతో కాదు; రూపకల్పనలోనే ఆ సదుపాయం ఉంటుంది.
->
-> 3. Drizzle ORM + బహుళ డేటాబేస్ మద్దతు
-> మేము Drizzle ORMకి అప్‌గ్రేడ్ చేస్తాము.
-> స్థానిక నిల్వ, PostgreSQL, లేదా MySQL: మీకు కావలసినదాన్ని ఎంచుకోండి.
-> కస్టమ్ డెవలప్‌మెంట్ ఇకపై పీడకలగా ఉండదు.
->
-> 4. ఎండ్-టు-ఎండ్ Monorepo వర్క్‌ఫ్లో
-> ప్లగిన్ డెవలప్‌మెంట్, SDK ఇంటిగ్రేషన్ మరియు విడుదలలు అన్నీ కనెక్ట్ చేయబడ్డాయి.
-> ఒక వ్యక్తి కూడా నిర్వహించగలిగేంత సరళంగా సహకారం అందించే ప్రక్రియను మార్చాలనుకుంటున్నాం.
->
-> 5. కొత్త మాడ్యూల్స్
-> అనంతమైన కాన్వాస్ — స్పేస్ కంటే ఎక్కువ: స్వేచ్ఛ.
-> ప్రేరణ మోడ్ — సృష్టికర్తల కోసం రూపొందించబడింది.
-> Plugin Hub — గొప్ప ప్లగిన్‌లను కనుగొనడంలో సహాయం చేస్తుంది.
-> Skill Hub — అనుభవాన్ని పంచుకునేలా చేయడం.
-> Provider Hub — ఇక్కడ పర్యావరణ వ్యవస్థ ప్రారంభమవుతుంది.
-> పూర్తి Docker అనుసంధానం — వ్యవస్థను ఏర్పాటు చేయడం అందరికీ సులభం కావాలి.
->
-> ఇప్పుడు, ఇన్నాళ్లూ మాట్లాడటానికి సంకోచించిన ఒక విషయం.
-> తిరిగి వ్రాయడానికి సమయం పడుతుంది. ఆ సమయంలో, సర్వర్లు రన్ అవుతూనే ఉంటాయి, డొమైన్‌లు పునరుద్ధరించబడాలి, బృందం ఆలస్యంగా పని చేస్తుంది మరియు కాఫీ మరింత ఖరీదైనది.
-> మాకు పెట్టుబడి నిధులు లేవు, ప్రకటనలు లేవు మరియు దాచిన వాణిజ్య ప్రణాళికలు లేవు.
-> కానీ ప్రారంభించిన పనిని పూర్తి చేయాలంటే ఈ ప్రాజెక్టును కొనసాగించగలగాలి.
-> అందుకే మేము అధికారిక Toonflow మోడల్ గేట్‌వే అయిన TF-Routerని ప్రారంభించాము.
-> నిజాయితీగా, మేము ఈ ప్లాట్‌ఫారమ్‌పై చాలా కాలం సంకోచించాము.
-> నిజానికి ఈ గేట్‌వే నిర్మించాలని మేము అనుకోలేదు. దాని కారణంగా Toonflow “డబ్బు సంపాదించడమే లక్ష్యంగా పెట్టుకుంది” అని ఎవరూ అనుకోకూడదనుకున్నాం.
-> మేము చాలా కాలం పాటు ఆ భారాన్ని మోశాము.
-> కానీ చాలా మంది వినియోగదారులు Seedance 2.0కి ఆమోదించబడిన యాక్సెస్‌ను పొందలేకపోయారు మరియు దానిని ఉపయోగించడానికి మార్గం ఉందా అని మమ్మల్ని అడుగుతూనే ఉన్నారు.
-> చాలా ఆలోచించిన తర్వాత, చివరకు మనమే నిర్మించుకోవాలని నిర్ణయించుకున్నాము మరియు Volcengineతో వార్షిక Seedance ఫ్రేమ్‌వర్క్ ఒప్పందంపై సంతకం చేసాము.
-> **ప్లాట్‌ఫారమ్ ప్రచార కాలంలో Seedance 2.0ను కొనుగోలు ధరకే అందించాలని కూడా నిర్ణయించాం—ఒక్క పైసా అదనపు లాభం తీసుకోకుండా.**
-> ప్రమోషన్ ముగిసిన తర్వాత, మేము చాలా తక్కువ సేవా రుసుమును వసూలు చేస్తాము. ప్రస్తుతానికి, మీకు యాక్సెస్ ఇవ్వడమే మా ప్రాధాన్యత.
-> మరీ ముఖ్యంగా, మొత్తం TF-Router సోర్స్ కోడ్ ఓపెన్ సోర్స్‌గా విడుదల చేయబడింది: 【<a href="https://github.com/HBAI-Ltd/TF-Router" target="_blank">సోర్స్ కోడ్</a>】.
-> మమ్మల్ని నమ్మకపోయినా పర్వాలేదు. కోడ్ చదవండి, మీరే ఏర్పాటు చేసుకోండి, మీరే నిర్వహించండి.
-> అక్కడే మనం నిలబడతాం.
-> మీరు దీన్ని ప్రయత్నించాలని ఎంచుకుంటే, ఈ పనిని కొనసాగించడానికి మేము ప్రస్తుతం ఉన్న ఏకైక మార్గంలో మీరు మీ నమ్మకాన్ని ఉంచుతున్నారు.
-> మీరు చేయకపోతే, అది కూడా మంచిది. Toonflowని ఉపయోగించడం కొనసాగించండి, మమ్మల్ని విమర్శిస్తూ ఉండండి మరియు ఫీచర్ల కోసం అడుగుతూ ఉండండి.
-> మేము ఇక్కడ ఉన్నాము.
-> చివరిగా ఒక్క విషయం, హృదయం నుండి:
-> మేము సృజనాత్మక సాధనాలు ప్రతి ఒక్కరికీ చెందాలని విశ్వసించే సాధారణ వ్యక్తుల సమూహం మాత్రమే.
-> Toonflow ఎప్పుడూ మా ఉత్పత్తి మాత్రమే కాదు.
-> ఇది మనందరం కలిసి రాస్తున్న కథ.
-> మూడవసారి కొత్తగా రాయడం ముగింపు కాదు.
-> ఇక్కడే మేము మళ్లీ మొదలుపెడతాం.
-> దీన్ని ఉపయోగించిన, విమర్శించిన లేదా సూచనలు అందించిన ప్రతి ఒక్కరికీ ధన్యవాదాలు.
-> ఇంత దూరం రావడానికి కారణం మీరే.
-> ధన్యవాదాలు.
-
-</details>
+FilmFraylo యొక్క అంతర్నిర్మిత మోడల్ సేవను అధికారిక FilmFraylo మోడల్ ప్లాట్‌ఫామ్ అందిస్తుంది; ఇది టెక్స్ట్, ఇమేజ్, వీడియో మరియు ఆడియో మోడళ్లను కవర్ చేస్తుంది. యాప్‌లో కాన్ఫిగరేషన్ పూర్తయిన తర్వాత సృష్టి ప్రారంభించండి; మోడల్ కాల్స్ ప్లాట్‌ఫామ్ ప్రకారం బిల్ చేయబడతాయి.
 
 ---
 
-## 7. 👨‍👩‍👧‍👦 WeChat సంఘం
+## 5. 📜 ఓపెన్ సోర్స్ లైసెన్స్
 
-సమూహ ఆహ్వాన సహాయకుడిని సంప్రదించడానికి QR కోడ్‌ని స్కాన్ చేయండి:
-
-<img src="../images/qr.png" alt="Toonflow సంఘం QR కోడ్" height="400"/>
-
-మీరు Discordలో చేరడానికి చిహ్నాన్ని కూడా క్లిక్ చేయవచ్చు:
-
-[![మా Discord](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/67d00cf7266d2c75571aebde_Example.svg)](https://discord.gg/HEjKmpNpAZ)లో చేరండి
-
-లేదా ఆహ్వాన లింక్‌ని ఉపయోగించండి: [https://discord.gg/HEjKmpNpAZ](https://discord.gg/HEjKmpNpAZ)
-
----
-
-## 8. 💌 మమ్మల్ని సంప్రదించండి
-
-📧 ఇమెయిల్: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow咨询)
-
----
-
-## 9. 📜 ఓపెన్ సోర్స్ లైసెన్స్
-
-Toonflow [MIT License](../../LICENSE) కింద లైసెన్స్ పొందింది. థర్డ్-పార్టీ డిపెండెన్సీలు మరియు ఆస్తులు వాటి సంబంధిత లైసెన్స్‌లు మరియు కాపీరైట్ నోటీసులకు లోబడి ఉంటాయి.
-
-[![Toonflow స్టార్ హిస్టరీ](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-app&type=Date)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app&Date)
-
-> **నాన్-రెట్రోయాక్టివిటీ నిబంధన**: AGPL-3.0 కింద v1.0.8కి ముందు వెర్షన్‌లను ఉపయోగించిన వినియోగదారులు AGPL-3.0కి లోబడి ఉంటారు. v1.0.8 నుండి v1.1.8 సంస్కరణలు Apache-2.0 మరియు దాని అదనపు ఒప్పందానికి లోబడి ఉంటాయి. ఈ వినియోగదారులు ఈ లైసెన్స్ మార్పుకు కట్టుబడి ఉండరు.
-
----
-
-## 10. 🙏 కృతజ్ఞతలు
-
-- **భాగస్వాములు**: 算能云, Tencent Hunyuan 3D, మరియు AI Galaxy (智星云).
-- **ప్రాజెక్టు సహకారులు**: కోడ్ రాసిన, డాక్యుమెంటేషన్ మెరుగుపరిచిన, ప్లగిన్‌లు పంచుకున్న, సమస్యల పరిష్కారానికి సహాయపడిన ప్రతి ఒక్కరికీ ధన్యవాదాలు.
-- **కమ్యూనిటీ వినియోగదారులు**: అభిప్రాయాన్ని అందించడం, సృజనాత్మక పనిని భాగస్వామ్యం చేయడం మరియు ప్రాజెక్ట్‌కు మద్దతు ఇవ్వడం కొనసాగించే ప్రతి ఒక్కరికీ ధన్యవాదాలు.
-
-仰起脸笑的像满月: అభివృద్ధి కోసం Codex 20x కంప్యూటింగ్ వనరులను అందించారు.
-Xi'an Zhongxing Digital Intelligence Technology Co., Ltd. (西安中星数字智能科技有限公司): Apple సర్టిఫికెట్‌తో యాప్ సంతకానికి సహకరించింది.
+FilmFraylo [MIT లైసెన్స్](./LICENSE) కింద లైసెన్స్ పొందింది. మూడవ పక్ష డిపెండెన్సీలు మరియు మెటీరియల్ వాటి స్వంత లైసెన్స్‌లు మరియు కాపీరైట్ నోటీసులను అనుసరిస్తాయి.
 
 <div align="center">
 
-కాపీరైట్ © 2026 北京爱阿科技有限公司
+Copyright © 2026 FilmFraylo
 
 </div>
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=90&section=footer" alt="Toonflow ఫుటరు" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=90&section=footer" alt="FilmFraylo ఫుటర్" width="100%" />

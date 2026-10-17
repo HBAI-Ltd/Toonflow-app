@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
-import { readFile } from "@toonflow/file";
+import { readFile, unlink } from "@toonflow/file";
 import type { Request, Response, NextFunction } from "express";
 import buildRoute from "@/core";
 import { errorFromCause } from "@/lib/responseFormat";
@@ -13,7 +13,8 @@ import initializePlugins from "@/utils/plugins/initialize";
 import { languageRequest, resolveRequestLocale, runWithLocale, setLocaleFallback, translateError, translateMessage } from "@/lib/i18n";
 import { detectLocale, normalizeLocale } from "@toonflow/i18n";
 
-const autoInstallProviders = ["tfRouter.ts", "apiMart.ts", "metaso.ts", "compshare.ts"];
+const autoInstallProviders = ["tfRouter.ts"];
+const legacyMediaProviders = ["apiMart.ts", "metaso.ts", "compshare.ts"];
 
 export async function createApp({
   webRoot,
@@ -66,6 +67,12 @@ export async function createApp({
       providerRevision = hash.digest("hex");
     }
     await initializePlugins(resolve(dataDirectory, "providers"), sourceDirectory, autoInstallProviders, providerRevision);
+    // ACT: 清理已下线的内置媒体供应商文件，避免旧安装残留可选条目。
+    for (const name of legacyMediaProviders) {
+      await unlink(resolve(dataDirectory, "providers", name)).catch((error: NodeJS.ErrnoException) => {
+        if (error.code !== "ENOENT") throw error;
+      });
+    }
   }
   // ACT: 技能和团队只补首次安装，保留用户修改。
   if (dataDirectory && skillsRoot) await initializePlugins(resolve(dataDirectory, "skills"), skillsRoot);

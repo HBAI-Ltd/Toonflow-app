@@ -94,7 +94,7 @@ if (isMac) {
   const installers = readdirSync(artifactDir).filter((name) => name.endsWith(".dmg"));
   if (installers.length !== 1) throw new Error("Mac 发布必须包含且仅包含一个 DMG 安装包。");
   names.push(installers[0]!);
-} else names.push(`toonflow-${version}-Setup.exe`);
+} else names.push(`filmfraylo-${version}-Setup.exe`);
 if (previousHash) names.push(`${prefix}-${previousHash}.patch`);
 for (const name of names) {
   if (!existsSync(join(artifactDir, name))) throw new Error(`构建产物缺失，未创建发布快照：${name}`);

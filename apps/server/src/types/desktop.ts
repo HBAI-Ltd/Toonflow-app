@@ -1,15 +1,6 @@
 export type PluginInstallType = "node" | "tool" | "skill" | "provider" | "agent" | "ext";
 export type PluginInstallRequest = { type: PluginInstallType; url: string; fileName: string };
 
-export type desktopUpdateAttempt = {
-  attemptId: string;
-  runtimeId: string;
-  channel: string;
-  targetVersion: string;
-  targetHash: string;
-  failure?: string;
-};
-
 export type updateSnapshot = {
   version: string;
   channel: string;

@@ -30,7 +30,7 @@ const plugin: ToolPlugin = {
       parameters,
       async execute(_id, args, signal, onUpdate, executionContext) {
         const request = browserActionSchema.parse(args);
-        if (!context.browser) throw new Error("当前宿主不支持浏览器工具，请升级 Toonflow 桌面客户端");
+        if (!context.browser) throw new Error("当前宿主不支持浏览器工具，请升级 FilmFraylo 桌面客户端");
         const sessionId = executionContext.sessionManager?.getSessionId();
         if (!sessionId) throw new Error("浏览器工具需要在 Agent 对话中使用");
         return context.browser.execute(sessionId, request, config, signal, onUpdate);

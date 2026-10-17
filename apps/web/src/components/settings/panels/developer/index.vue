@@ -19,13 +19,6 @@
       </div>
       <div class="developerRow">
         <div class="toolDescription">
-          <h3>更新说明</h3>
-          <p>打开当前版本的更新说明弹窗。</p>
-        </div>
-        <el-button :icon="IconFileText" :loading="openingUpdateBox" @click="openUpdateBox">查看更新说明</el-button>
-      </div>
-      <div class="developerRow">
-        <div class="toolDescription">
           <h3>供应商开发工具</h3>
           <p>授权读取本地供应商文件，调试生成接口与媒体结果。</p>
         </div>
@@ -38,17 +31,6 @@
         </div>
         <el-button :icon="IconEdit" @click="systemPromptVisible = true">编辑提示词</el-button>
       </div>
-      <div v-if="!isRemoteConnection" class="developerRow">
-        <div class="toolDescription">
-          <h3>自定义更新源</h3>
-          <p>填写更新清单和安装包所在的目录地址，保存后可在关于页选择。</p>
-        </div>
-        <div class="updateSourceEditor">
-          <el-input v-model="customUpdateUrl" placeholder="https://example.com/desktopUpdates" aria-label="自定义更新源目录地址" clearable :disabled="savingUpdateUrl" @keyup.enter="saveCustomUpdateUrl" />
-          <el-button type="primary" :loading="savingUpdateUrl" @click="saveCustomUpdateUrl">保存</el-button>
-        </div>
-      </div>
-      <el-text v-if="!isRemoteConnection && updateUrlError" type="danger" role="alert">{{ updateUrlError }}</el-text>
       <div v-if="!isRemoteConnection" class="pluginInstaller">
         <div class="installerHeader">
           <h3>手动安装插件</h3>
@@ -58,7 +40,7 @@
           </el-select>
         </div>
         <div class="toolDescription">
-          <p>{{ selectedInstaller.description }}支持本地文件或文件直链，安装后可在插件市场查看。</p>
+          <p>{{ selectedInstaller.description }}支持本地文件或文件直链，安装后可在应用内使用。</p>
         </div>
         <el-checkbox v-model="forceInstall" :disabled="!!installing">强制安装（允许覆盖同版本或降级）</el-checkbox>
         <input ref="fileInput" class="fileInput" type="file" :accept="selectedInstaller.accept" @change="installFile" />
@@ -110,7 +92,6 @@
     </div>
     <providerDebugDialog v-if="providerDebugVisible" v-model="providerDebugVisible" />
     <systemPromptDialog v-if="systemPromptVisible" v-model="systemPromptVisible" />
-    <updateBox v-if="updateBoxVisible" v-model="updateBoxVisible" :version="updateBoxBuild.version" :buildCode="updateBoxBuild.hash || translate('未提供')" />
     <div v-if="developerLocked" class="developerConfirm">
       <icon-code :size="28" aria-hidden="true" />
       <h3>确认进入开发者选项</h3>
@@ -126,15 +107,12 @@ import { computed, defineAsyncComponent, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useDeveloperStore } from "@/stores/developer";
 import { useHelloStore } from "@/stores/hello";
-import { saveSettings, settings } from "@/stores/settings";
-import { desktopUpdateSnapshot } from "@/stores/desktopUpdate";
-import type { updateSnapshot } from "@toonflow/server/desktop";
 import saveFile from "@/lib/saveFile";
 import { isDesktop, isRemoteConnection } from "@/lib/platform";
 import { installPluginFile } from "../../installPluginFile";
 import { ElMessage } from "element-plus";
 import axios from "axios";
-import { IconCode, IconTerminal2, IconFileUpload, IconFileText, IconDownload, IconRefresh, IconEdit, IconTrash } from "@tabler/icons-vue";
+import { IconCode, IconTerminal2, IconFileUpload, IconDownload, IconRefresh, IconEdit, IconTrash } from "@tabler/icons-vue";
 
 const developerStore = useDeveloperStore();
 const hello = useHelloStore();
@@ -144,57 +122,7 @@ const providerDebugDialog = defineAsyncComponent(() => import("./providerDebugDi
 const providerDebugVisible = ref(false);
 const systemPromptDialog = defineAsyncComponent(() => import("./systemPromptDialog.vue"));
 const systemPromptVisible = ref(false);
-const updateBox = defineAsyncComponent(() => import("@/components/updateBox.vue"));
-const updateBoxVisible = ref(false);
-const openingUpdateBox = ref(false);
-const updateBoxBuild = ref({ version: import.meta.env.appVersion ?? "", hash: import.meta.env.DEV ? "dev" : "" });
 const developerLocked = computed(() => !developerStore.developerConfirmed);
-const customUpdateUrl = ref(typeof settings.value.desktopUpdateCustomUrl === "string" ? settings.value.desktopUpdateCustomUrl : "");
-const savingUpdateUrl = ref(false);
-const updateUrlError = ref("");
-
-async function openUpdateBox() {
-  if (openingUpdateBox.value) return;
-  openingUpdateBox.value = true;
-  try {
-    if (isDesktop) {
-      const snapshot = desktopUpdateSnapshot.value ?? (await axios.get<{ data: updateSnapshot }>("/api/desktop/update", { timeout: 10000 })).data.data;
-      if (!snapshot?.version || !snapshot.hash) throw new Error("未能读取当前版本和构建代码，请重试。");
-      updateBoxBuild.value = { version: snapshot.version, hash: snapshot.hash };
-    }
-    updateBoxVisible.value = true;
-  } catch (error) {
-    ElMessage.error(axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || error.message : error instanceof Error ? error.message : "读取版本信息失败");
-  } finally {
-    openingUpdateBox.value = false;
-  }
-}
-
-async function saveCustomUpdateUrl() {
-  if (isRemoteConnection) return;
-  if (savingUpdateUrl.value) return;
-  const url = customUpdateUrl.value.trim();
-  updateUrlError.value = "";
-  try {
-    if (url && !URL.canParse(url)) throw new Error("请输入有效的 HTTP(S) 目录地址");
-    if (url) {
-      const parsed = new URL(url);
-      if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password || parsed.search || parsed.hash || url.length > 2048)
-        throw new Error("请输入不含账号、查询参数或锚点的 HTTP(S) 目录地址");
-    }
-    savingUpdateUrl.value = true;
-    await saveSettings(current => ({
-      desktopUpdateCustomUrl: url,
-      ...(url || current.desktopUpdateSource !== "custom" ? {} : { desktopUpdateSource: "official" }),
-    }));
-    customUpdateUrl.value = url;
-    ElMessage.success("自定义更新源已保存");
-  } catch (error) {
-    updateUrlError.value = axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || error.message : error instanceof Error ? error.message : "保存更新源失败";
-  } finally {
-    savingUpdateUrl.value = false;
-  }
-}
 
 async function resetHello() {
   if (storageBusy.value) return;
@@ -445,16 +373,6 @@ async function openDevTools() {
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 16px;
-
-      .updateSourceEditor {
-        display: flex;
-        flex: 1;
-        flex-wrap: wrap;
-        gap: 8px;
-        min-width: min(100%, 280px);
-
-        .el-input { flex: 1; min-width: 200px; }
-      }
     }
 
     .storageManager {

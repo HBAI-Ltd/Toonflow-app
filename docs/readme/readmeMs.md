@@ -1,91 +1,60 @@
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=Toonflow&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=50" alt="Toonflow" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=FilmFraylo&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=50" alt="FilmFraylo" width="100%" />
 
 <p>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app">
+  <a href="https://github.com/zechau/filmfraylo-app">
     <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub" />
-  </a>
-  &nbsp;|&nbsp;
-  <a href="https://gitee.com/HBAI-Ltd/Toonflow-app">
-    <img src="https://img.shields.io/badge/Gitee-C71D23?style=flat-square&logo=gitee&logoColor=white" alt="Gitee" />
-  </a>
-  &nbsp;|&nbsp;
-  <a href="https://atomgit.com/HBAI-Ltd/Toonflow-app">
-    <img src="../images/atomgitLogo.svg" alt="AtomGit" height="20" />
   </a>
 </p>
 
 <p align="center">
-  <a href="../../README.md">简体中文</a> |
-  <a href="./readmeZhTw.md">繁體中文</a> |
-  <a href="./readmeEn.md">English</a> |
-  <a href="./readmeJa.md">日本語</a> |
-  <a href="./readmeRu.md">Русский</a> |
-  <a href="./readmeVi.md">Tiếng Việt</a> |
-  <a href="./readmeTh.md">ไทย</a>
+  <strong>简体中文</strong> |
+  <a href="./docs/readme/readmeZhTw.md">繁體中文</a> |
+  <a href="./docs/readme/readmeEn.md">English</a> |
+  <a href="./docs/readme/readmeJa.md">日本語</a> |
+  <a href="./docs/readme/readmeRu.md">Русский</a> |
+  <a href="./docs/readme/readmeVi.md">Tiếng Việt</a> |
+  <a href="./docs/readme/readmeTh.md">ไทย</a>
   <br />
-  <a href="./readmeKo.md">한국어</a> |
-  <a href="./readmeHi.md">हिन्दी</a> |
-  <a href="./readmeId.md">Bahasa Indonesia</a> |
-  <strong>Bahasa Melayu</strong> |
-  <a href="./readmeFil.md">Filipino</a> |
-  <a href="./readmeBn.md">বাংলা</a> |
-  <a href="./readmeUr.md">اردو</a>
+  <a href="./docs/readme/readmeKo.md">한국어</a> |
+  <a href="./docs/readme/readmeHi.md">हिन्दी</a> |
+  <a href="./docs/readme/readmeId.md">Bahasa Indonesia</a> |
+  <a href="./docs/readme/readmeMs.md">Bahasa Melayu</a> |
+  <a href="./docs/readme/readmeFil.md">Filipino</a> |
+  <a href="./docs/readme/readmeBn.md">বাংলা</a> |
+  <a href="./docs/readme/readmeUr.md">اردو</a>
   <br />
-  <a href="./readmeTa.md">தமிழ்</a> |
-  <a href="./readmeTe.md">తెలుగు</a> |
-  <a href="./readmeMr.md">मराठी</a> |
-  <a href="./readmePa.md">ਪੰਜਾਬੀ</a> |
-  <a href="./readmeAr.md">العربية</a> |
-  <a href="./readmeFa.md">فارسی</a> |
-  <a href="./readmeTr.md">Türkçe</a>
+  <a href="./docs/readme/readmeTa.md">தமிழ்</a> |
+  <a href="./docs/readme/readmeTe.md">తెలుగు</a> |
+  <a href="./docs/readme/readmeMr.md">मराठी</a> |
+  <a href="./docs/readme/readmePa.md">ਪੰਜਾਬੀ</a> |
+  <a href="./docs/readme/readmeAr.md">العربية</a> |
+  <a href="./docs/readme/readmeFa.md">فارسی</a> |
+  <a href="./docs/readme/readmeTr.md">Türkçe</a>
 </p>
 
-> 🌐 **21 bahasa antara muka** · [Lihat bahasa yang disokong](#languages)
+> 🌐 **Menyokong 21 bahasa antara muka** · [Lihat bahasa yang disokong](#languages)
 
 <div align="center">
 
 <p align="center">
-  <img src="../images/logo.png" alt="Logo Toonflow" width="120" height="120" />
+  <img src="./docs/images/logo.png" alt="FilmFraylo Logo" width="120" height="120" />
 </p>
+
+<h1 align="center">FilmFraylo · Platform penciptaan AI untuk drama pendek, drama komik dan video</h1>
 
 <a href="https://git.io/typing-svg">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=600&lines=Toonflow;AI%20Short%20Drama%20Studio;Turn%20ideas%20into%20stories" />
-    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=000000&center=true&vCenter=true&width=600&lines=Toonflow;AI%20Short%20Drama%20Studio;Turn%20ideas%20into%20stories" alt="Toonflow · Studio Drama Pendek AI · Jadikan idea sebagai cerita" width="600" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=600&lines=FilmFraylo;AI%E7%9F%AD%E5%89%A7%E5%B7%A5%E5%8E%82;%E8%AE%A9%E7%81%B5%E6%84%9F%E6%88%90%E4%B8%BA%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E6%95%85%E4%BA%8B" />
+    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=000000&center=true&vCenter=true&width=600&lines=FilmFraylo;AI%E7%9F%AD%E5%89%A7%E5%B7%A5%E5%8E%82;%E8%AE%A9%E7%81%B5%E6%84%9F%E6%88%90%E4%B8%BA%E7%9C%8B%E5%BE%97%E8%A7%81%E7%9A%84%E6%95%85%E4%BA%8B" alt="FilmFraylo · Studio drama pendek AI · Ubah idea menjadi cerita yang boleh dilihat" width="600" />
   </picture>
 </a>
 
 <p align="center">
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/stargazers">
-    <img src="https://img.shields.io/github/stars/HBAI-Ltd/Toonflow-app?style=for-the-badge&logo=github" alt="Lencana Bintang" />
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License Badge" />
   </a>
-  <a href="../../LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="Lencana MIT License" />
-  </a>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">
-    <img src="https://img.shields.io/github/v/release/HBAI-Ltd/Toonflow-app?style=for-the-badge" alt="Keluaran" />
-  </a>
-</p>
-<p align="center">
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/network/members">
-    <img src="https://img.shields.io/github/forks/HBAI-Ltd/Toonflow-app?style=for-the-badge&logo=github&color=orange" alt="Lencana Cabang" />
-  </a>
-  <a href="https://atomgit.com/HBAI-Ltd/Toonflow-app">
-    <img src="https://img.shields.io/badge/AtomGit-G--Star%20No.540-FF6B35?style=for-the-badge&logo=git&logoColor=white" alt="AtomGit G-Star No.540" />
-  </a>
-  <a href="https://discord.gg/HEjKmpNpAZ">
-    <img src="https://img.shields.io/badge/Discord-Community-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
-  </a>
-</p>
-<p align="center">
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/issues">
-    <img src="https://img.shields.io/github/issues/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=F48D73" alt="Isu" />
-  </a>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/graphs/contributors">
-    <img src="https://img.shields.io/github/contributors/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=2088FF" alt="Penyumbang" />
-  </a>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/commits">
-    <img src="https://img.shields.io/github/last-commit/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=blueviolet" alt="Komit Terkini" />
+  <a href="https://github.com/zechau/filmfraylo-app/releases">
+    <img src="https://img.shields.io/github/v/release/zechau/filmfraylo-app?style=for-the-badge" alt="Release" />
   </a>
 </p>
 <p align="center">
@@ -95,245 +64,171 @@
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
 
-<p align="center">
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/daily?language=HTML" alt="HBAI-Ltd/Toonflow-app | Trendshift HTML Repository Of The Day" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/daily?language=Vue" alt="HBAI-Ltd/Toonflow-app | Trendshift Vue Repository Of The Day" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/daily?language=TypeScript" alt="HBAI-Ltd/Toonflow-app | Trendshift TypeScript Repository Of The Day" width="250" height="55" />
-  </a>
-</p>
-<p align="center">
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/weekly?language=Vue" alt="HBAI-Ltd/Toonflow-app | Trendshift Vue Repository Of The Week" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/weekly?language=HTML" alt="HBAI-Ltd/Toonflow-app | Trendshift HTML Repository Of The Week" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/weekly?language=TypeScript" alt="HBAI-Ltd/Toonflow-app | Trendshift TypeScript Repository Of The Week" width="250" height="55" />
-  </a>
-</p>
-<p align="center">
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/monthly?language=HTML" alt="HBAI-Ltd/Toonflow-app | Trendshift HTML Repository Of The Month" width="250" height="55" />
-  </a>
-</p>
-
-**Platform AI sumber terbuka untuk menghasilkan drama pendek, komik animasi dan video**
-
-> 🚀 **Penghasilan drama pendek dalam satu tempat**: Tulis skrip, urus aset serta jana imej dan video, dengan seluruh aliran kerja kreatif anda tersusun pada kanvas tanpa had.
+FilmFraylo ialah alat penciptaan AI untuk pencipta drama pendek, drama komik dan video pendek. Tulis skrip dan papan cerita, urus aset watak dan latar, serta jana imej dan video pada kanvas tanpa had. Dilengkapi model teks, imej, video dan audio daripada platform model rasmi FilmFraylo, dengan sokongan penggelaran setempat dan Sambungan Peranti.
 
 </div>
 
-<div align="center">
-  <table>
-    <tr>
-      <td width="50%" align="center">
-        <a href="../images/gStar.png">
-          <img src="../images/gStar.png" alt="Sijil AtomGit G-Star No.540 Toonflow" width="100%" />
-        </a>
-      </td>
-      <td width="50%" align="center">
-        <a href="../images/gvp.jpg">
-          <img src="../images/gvp.jpg" alt="Sijil Gitee GVP Toonflow" width="100%" />
-        </a>
-      </td>
-    </tr>
-  </table>
-</div>
-
 <p align="center">
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">Muat Turun</a> ·
-  <a href="https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf">Panduan Pengguna</a> ·
-  <a href="https://api.toonflow.net/console/plugIn">Pasaran Pemalam</a> ·
-  <a href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd">Dokumentasi Pembangun</a> ·
-  <a href="https://api.toonflow.net/">Platform Model Rasmi</a>
+  <a href="https://github.com/zechau/filmfraylo-app/releases">Muat turun aplikasi</a> ·
+  <a href="https://api.safillu.com/">Platform model rasmi</a>
 </p>
 
 ---
 
-## 1. 💛 Penaja dan Sokongan
+## 1. 🌟 Keistimewaan
 
-Terima kasih kepada rakan kongsi berikut kerana menyokong projek sumber terbuka Toonflow.
-
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://metaso.cn/minimax-h3/?s=toon"><img src="../images/sponsors/metaso.svg" alt="Metaso" height="28" valign="middle" /> <strong>Metaso</strong></a>
-      <br />
-      <sub>Penjanaan video MiniMax H3 pada kos berpatutan: hanya ¥0.09 sesaat pada 768P dan ¥0.15 sesaat pada 2K (CNY, yuan China). Menyokong resolusi 2K asli, audio dan video yang disegerakkan, API serasi OpenAI, ComfyUI serta kanvas tanpa had, tanpa perlu menyediakan GPU sendiri. <a href="https://metaso.cn/minimax-h3/?s=toon">Daftar melalui pautan khas ini</a> untuk menerima kredit bonus dan tawaran eksklusif. Untuk urusan perniagaan, hubungi metasota12 di WeChat.</sub>
-    </td>
-    <td width="50%" valign="top">
-      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
-      <br />
-      <sub>Terima kasih kepada APIMart kerana menaja projek ini! APIMart ialah platform API mampu milik untuk penjanaan imej dan video dengan AI. Harga GPT-Image-2 bermula pada $0.006 setiap imej, membolehkan lebih 160 imej dihasilkan dengan $1. Imej dan video menggunakan satu API tak segerak yang sama: hantar tugas, terima ID tugas tersebut dan dapatkan hasil melalui panggilan balik. Proses kelompok 10,000 imej tanpa tamat masa dan tukar model tanpa mengubah kod. Bayar mengikut penggunaan, tanpa yuran bulanan. <a href="https://go.apimart.ai/gh-toonflow-app">Daftar di sini</a> untuk bermula.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow"><img src="../images/sponsors/compShare.png" alt="CompShare" height="28" valign="middle" /> <strong>CompShare</strong></a>
-      <br />
-      <sub>CompShare menawarkan penjanaan video H3 pada kos berpatutan, termasuk teks kepada video, kawalan bingkai pertama dan terakhir serta mod rujukan serba lengkap. Jana video sehingga 30 saat dalam resolusi 2K asli, dengan harga 768P hanya CNY 0.08 sesaat. Menyokong akses API, permintaan serentak berskala tinggi untuk perusahaan dan pengeluaran invois layan diri.</sub>
-      <br /><br />
-      <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">Daftar melalui pautan khas ini</a> untuk menerima kredit percubaan platform percuma bernilai CNY 5!</sub>
-    </td>
-    <td width="50%" valign="top"></td>
-  </tr>
-</table>
-
-<details>
-<summary><strong>👉 Jadi Penaja 👈</strong></summary>
-
-<p align="center">
-  <img src="../images/businessQr.png" alt="Kod QR WeChat untuk urusan perniagaan" width="200" />
-</p>
-
-<p align="center"><sub>Saluran hubungan ini hanya untuk urusan perniagaan dan tidak menyediakan sokongan teknikal. Untuk pertanyaan penggunaan, sila sertai kumpulan komuniti. Hantar permintaan ciri dan laporan pepijat melalui borang maklum balas. Terima kasih atas pemahaman anda.</sub></p>
-
-</details>
-
----
-
-## 2. 🌟 Ciri Utama
-
-Toonflow ialah platform penciptaan AI sumber terbuka untuk drama pendek, komik animasi dan video pendek, yang menghimpunkan skrip, aset dan klip video pada satu kanvas tanpa had.
+FilmFraylo menggabungkan skrip, aset dan klip video dalam satu kanvas tanpa had.
 
 | Keupayaan | Penerangan |
 | --- | --- |
-| 🏠 **Pemasangan setempat** | Simpan projek dan aset pada peranti atau pelayan anda sendiri, dengan pilihan pemasangan desktop, Android, Docker dan pelayan. |
-| 🖼️ **Kanvas tanpa had** | Susun skrip, watak, adegan dan klip video pada kanvas yang sama. |
-| 🔌 **MCP** | Hubungkan alat dan perkhidmatan luaran melalui MCP. |
-| 🧩 **Pasaran pemalam** | Tambah nod, alat dan keupayaan kreatif melalui [Pasaran Pemalam](https://api.toonflow.net/console/plugIn). |
-| 🤖 **Agent terbuka** | Akses terbuka kepada arahan AI, alat dan A2A untuk menyesuaikan tingkah laku Agent serta bekerjasama dengan Agent luaran. |
-| 🔧 **Penyepaduan model yang fleksibel** | Konfigurasikan API pihak ketiga atau hubungkan ComfyUI dan model bahasa besar yang dijalankan secara setempat. |
+| 🏠 **Penggelaran setempat** | Projek dan aset disimpan pada peranti atau pelayan anda sendiri; menyokong penggelaran desktop, Android, Docker dan pelayan. |
+| 🖼️ **Kanvas tanpa had** | Susun skrip, watak, latar dan klip video dalam satu kanvas. |
+| 🔌 **MCP** | Sambungkan alat dan perkhidmatan luar melalui MCP. |
+| 🤖 **Agent terbuka** | Prompt, alat dan A2A terbuka; menyokong penyesuaian tingkah laku Agent dan kerjasama luar. |
+| 🧠 **Perkhidmatan model terbina dalam** | Platform model rasmi FilmFraylo menyediakan model teks, imej, video dan audio; tetapkan API Key dan terus guna. |
 | 🌐 **Sokongan berbilang bahasa** | Menyokong 21 bahasa antara muka. |
+
+### Cara menghasilkan drama pendek dan drama komik AI dengan FilmFraylo
+
+1. **Menulis skrip dan papan cerita**: Susun cerita, tetapan watak dan penerangan syot dalam nod teks; gunakan model bahasa untuk membantu penciptaan, kemudian semak dan ubah kandungan.
+2. **Menyediakan aset watak dan latar**: Import imej rujukan, atau hasilkan watak, latar dan imej papan cerita melalui nod penjanaan imej.
+3. **Menjana syot video**: Sambungkan teks dan rujukan imej, pilih model video dan mod penjanaan, kemudian jana klip video mengikut syot.
+4. **Pratonton, susun dan muat turun**: Pratonton dan susun imej serta klip video pada kanvas tanpa had; muat turun aset untuk diproses selanjutnya mengikut keperluan.
+
+Aset rujukan, durasi video, resolusi dan keupayaan audio yang disokong bergantung pada model yang dipilih.
+
+### Soalan lazim
+
+**Pada peringkat manakah FilmFraylo boleh digunakan dalam penghasilan drama pendek dan drama komik AI?**
+
+FilmFraylo menyediakan nod penjanaan teks, imej dan video untuk penulisan skrip dan papan cerita, penghasilan aset watak dan latar, penjanaan syot video, serta pratonton dan penyusunan aset. Pencipta perlu menyemak dan menyesuaikan kandungan; keupayaan penjanaan bergantung pada model yang dipilih.
+
+**Adakah FilmFraylo percuma? Adakah panggilan model dikenakan bayaran?**
+
+FilmFraylo menggunakan lesen sumber terbuka MIT dan boleh digelar sendiri. Panggilan model dibilkan mengikut penggunaan oleh platform model rasmi dan memerlukan tetapan API Key dalam aplikasi terlebih dahulu; kos penghasilan dalam contoh karya hanya untuk kes itu sahaja, bukan harga tetap.
+
+**Bolehkah saya menyambungkan model sendiri?**
+
+Versi semasa sudah menyertakan platform model rasmi, dengan model daripada platform model rasmi FilmFraylo; model pihak ketiga atau aliran kerja ComfyUI setempat belum disokong.
 
 <a id="languages"></a>
 
 ### Sokongan berbilang bahasa
 
-Bahasa yang disokong: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe.
+Bahasa yang disokong: 简体中文、繁體中文、English、日本語、Русский、Tiếng Việt、ไทย、한국어、हिन्दी、Bahasa Indonesia、Bahasa Melayu、Filipino、বাংলা、اردو、தமிழ்、తెలుగు、मराठी、ਪੰਜਾਬੀ、العربية、فارسی、Türkçe。
 
 ---
 
-## 3. 📸 Tangkapan Skrin
+## 2. 📸 Tangkapan skrin
 
 <div align="center">
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow · Halaman utama projek dan penciptaan idea" width="80%" /></a><br /><sub>Halaman utama projek dan penciptaan idea</sub>
+<a href="./docs/images/screenshots/projectHome.png"><img src="./docs/images/screenshots/projectHome.png" alt="FilmFraylo laman utama projek dan penciptaan daripada idea" width="80%" /></a><br /><sub>Laman utama projek dan penciptaan daripada idea</sub>
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow · Pelancaran pertama dan persediaan pantas" width="80%" /></a><br /><sub>Pelancaran pertama dan persediaan pantas</sub>
+<a href="./docs/images/screenshots/quickStart.png"><img src="./docs/images/screenshots/quickStart.png" alt="FilmFraylo pelancaran pertama dan tetapan pantas" width="80%" /></a><br /><sub>Pelancaran pertama dan tetapan pantas</sub>
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow · Kanvas kreatif · Tema gelap" width="80%" /></a><br /><sub>Kanvas kreatif · Tema gelap</sub>
+<a href="./docs/images/screenshots/canvasDark.png"><img src="./docs/images/screenshots/canvasDark.png" alt="FilmFraylo kanvas tema gelap dan pembantu AI" width="80%" /></a><br /><sub>Kanvas penciptaan · Tema gelap</sub>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow · Kanvas kreatif · Tema cerah" width="80%" /></a><br /><sub>Kanvas kreatif · Tema cerah</sub>
+<a href="./docs/images/screenshots/canvasLight.png"><img src="./docs/images/screenshots/canvasLight.png" alt="FilmFraylo kanvas tema cerah dan pembantu AI" width="80%" /></a><br /><sub>Kanvas penciptaan · Tema cerah</sub>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow · Aset watak, adegan dan prop" width="80%" /></a><br /><sub>Aset watak, adegan dan prop</sub>
+<a href="./docs/images/screenshots/assetCanvas.png"><img src="./docs/images/screenshots/assetCanvas.png" alt="FilmFraylo kanvas aset watak, latar dan prop" width="80%" /></a><br /><sub>Watak, latar dan prop</sub>
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow · Studio pengarah 3D dan prapenggambaran syot" width="80%" /></a><br /><sub>Studio pengarah 3D dan prapenggambaran syot</sub>
+<a href="./docs/images/screenshots/directorStudio.png"><img src="./docs/images/screenshots/directorStudio.png" alt="FilmFraylo studio pengarah 3D dan pratonton syot" width="80%" /></a><br /><sub>Studio pengarah 3D dan pratonton syot</sub>
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow · Helaian watak tiga pandangan dan penjanaan imej" width="80%" /></a><br /><sub>Helaian watak tiga pandangan dan penjanaan imej</sub>
+<a href="./docs/images/screenshots/characterImageGeneration.png"><img src="./docs/images/screenshots/characterImageGeneration.png" alt="FilmFraylo pandangan tiga sisi watak dan penjanaan imej" width="80%" /></a><br /><sub>Pandangan tiga sisi watak dan penjanaan imej</sub>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow · Penjanaan video dengan pelbagai aset rujukan" width="80%" /></a><br /><sub>Penjanaan video dengan pelbagai aset rujukan</sub>
+<a href="./docs/images/screenshots/videoGeneration.png"><img src="./docs/images/screenshots/videoGeneration.png" alt="FilmFraylo penjanaan video dengan pelbagai aset rujukan" width="80%" /></a><br /><sub>Penjanaan video dengan pelbagai aset rujukan</sub>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow · Menu nod dan operasi pengelompokan" width="80%" /></a><br /><sub>Menu nod dan operasi pengelompokan</sub>
-
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow · Pasaran Pemalam" width="80%" /></a><br /><sub>Pasaran Pemalam</sub>
+<a href="./docs/images/screenshots/nodeMenu.png"><img src="./docs/images/screenshots/nodeMenu.png" alt="FilmFraylo menu nod dan operasi pengelompokan" width="80%" /></a><br /><sub>Menu nod dan operasi pengelompokan</sub>
 
 </div>
 
 ---
 
-## 4. 🚀 Muat Turun dan Pemasangan
+## 3. 🚀 Muat turun dan pemasangan
 
-### 4.1 Pemasangan Aplikasi
+### 3.1 Pemasangan aplikasi
 
-| Sistem Pengendalian | GitHub |
-| --- | --- |
-| Windows | [Keluaran](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
-| macOS | [Keluaran](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
-| Android ARM64 | [Muat turun APK](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+| Sistem pengendalian | GitHub                                                       |
+| -------- | ------------------------------------------------------------ |
+| Windows  | [Release](https://github.com/zechau/filmfraylo-app/releases) |
+| macOS    | [Release](https://github.com/zechau/filmfraylo-app/releases) |
+| Android ARM64 | [Muat turun APK](https://github.com/zechau/filmfraylo-app/releases/latest) |
 
-Aplikasi Android hanya menyokong peranti ARM64. Muat turun dan pasang `toonflow-VERSION-android-arm64.apk` daripada halaman keluaran. Aplikasi ini merangkumi backend Bun setempat dan boleh berjalan secara kendiri. Anda juga boleh menggunakan Sambungan peranti pada halaman utama untuk mengimbas kod QR atau menyambung secara manual ke komputer atau backend yang telah mengaktifkan perkongsian pada rangkaian setempat atau internet.
+Versi Android hanya menyokong peranti ARM64; muat turun dan pasang `filmfraylo-版本号-android-arm64.apk` daripada halaman keluaran. Telefon dilengkapi backend Bun setempat dan boleh berjalan sendiri; anda juga boleh mengimbas kod QR atau menyambung secara manual daripada “Sambungan Peranti” di laman utama ke komputer atau backend jarak jauh yang telah membuka perkongsian (menyokong rangkaian setempat dan internet).
 
-Pemasang Windows mengesan dan memasang WebView2 secara automatik. Jika aplikasi terus tertutup selepas pemasangan, muat turun dan pasang persekitaran masa jalan secara manual daripada [halaman muat turun WebView2](https://developer.microsoft.com/microsoft-edge/webview2/).
+Pemasang Windows akan mengesan dan memasang WebView2 secara automatik; jika selepas dipasang aplikasi terbuka lalu terus tertutup, pergi ke [halaman muat turun WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) untuk memasang runtime secara manual.
 
-Pada macOS (Apple Silicon), seret Toonflow ke folder Applications dan bukanya terus. Anda tidak perlu menjalankan arahan terminal terlebih dahulu. Jika macOS memaparkan amaran keselamatan, ikuti langkah di bawah mengikut urutan.
+Pada macOS (Apple Silicon), seret FilmFraylo ke “Aplikasi” dan buka terus; tidak perlu menjalankan arahan Terminal terlebih dahulu. Jika muncul amaran keselamatan sistem, ikut langkah berikut mengikut urutan.
 
 <details>
-<summary><strong>Jika Toonflow tidak dapat dipasang atau dibuka pada macOS</strong></summary>
+<summary><strong>Cara menangani macOS yang tidak boleh memasang atau membuka FilmFraylo</strong></summary>
 
-**1. Benarkan Toonflow dalam Privasi & Keselamatan**
+**1. Benarkan FilmFraylo dalam “Privasi & Keselamatan”**
 
-Jika anda melihat amaran bahawa pembangun tidak dapat disahkan atau Apple tidak dapat memeriksa aplikasi untuk perisian hasad, cuba buka Toonflow terlebih dahulu. Kemudian pergi ke Tetapan Sistem → Privasi & Keselamatan, cari mesej bahawa Toonflow telah disekat, klik Buka Juga dan sahkan apabila diminta. Rujuk [arahan rasmi Apple](https://support.apple.com/zh-cn/102445).
+Jika muncul mesej “Pembangun tidak dapat disahkan” atau “Apple tidak dapat menyemak sama ada aplikasi mengandungi perisian berniat jahat”, cuba buka FilmFraylo dahulu, kemudian pergi ke “Tetapan Sistem → Privasi & Keselamatan”, cari pemberitahuan bahawa FilmFraylo disekat, klik “Buka Juga” dan sahkan mengikut arahan. Lihat [penjelasan rasmi Apple](https://support.apple.com/zh-cn/102445).
 
-**2. Jika sekatan kuarantin masih menghalang aplikasi dibuka, cuba buang atribut kuarantin**
+**2. Jika masih tidak boleh dibuka kerana had kuarantin sistem, cuba buang atribut kuarantin**
 
-Selepas memastikan aplikasi diperoleh daripada halaman keluaran rasmi dan berada dalam Applications, jalankan arahan berikut dalam Terminal dan cuba buka semula. Laraskan laluan jika nama aplikasi atau lokasi pemasangan berbeza.
+Pastikan aplikasi berasal dari halaman keluaran rasmi dan telah diletakkan dalam “Aplikasi”, kemudian jalankan arahan berikut dalam Terminal dan buka semula aplikasi. Jika nama aplikasi atau lokasi pemasangan berbeza, laraskan laluannya.
 
 ```bash
-sudo xattr -rd com.apple.quarantine /Applications/toonflow.app
+sudo xattr -rd com.apple.quarantine /Applications/FilmFraylo.app
 ```
 
-**3. Pilihan terakhir: benarkan aplikasi daripada mana-mana sumber buat sementara waktu**
+**3. Jalan terakhir: benarkan aplikasi dari mana-mana sahaja sementara**
 
-Jika kedua-dua kaedah pertama tidak berkesan dan anda mempercayai sumber aplikasi, cuba jalankan:
+Jika kedua-dua cara di atas tidak berkesan dan sumber aplikasi disahkan boleh dipercayai, cuba jalankan dalam Terminal:
 
 ```bash
 sudo spctl --master-disable
 ```
 
-Kemudian buka Tetapan Sistem → Privasi & Keselamatan. Di bahagian Keselamatan, tetapkan “Benarkan aplikasi yang dimuat turun daripada” kepada “Mana-mana Sumber” jika sistem anda menyediakan pilihan tersebut, dan sahkan apabila diminta. Pilihan yang tersedia dan sokongan arahan mungkin berbeza mengikut versi macOS.
+Kemudian buka “Tetapan Sistem → Privasi & Keselamatan”, dalam bahagian “Keselamatan”, tetapkan “Benarkan aplikasi dimuat turun dari” kepada “Di Mana-mana” (jika sistem menyediakan pilihan ini) dan sahkan mengikut arahan. Pilihan dan sokongan arahan mungkin berbeza antara versi macOS.
 
-Tindakan ini melonggarkan sekatan keselamatan untuk semua aplikasi. Selepas selesai, kami mengesyorkan agar tetapan dikembalikan kepada “App Store dan pembangun yang dikenal pasti”.
+Tindakan ini melonggarkan had keselamatan untuk semua aplikasi. Selepas selesai, sebaiknya pulihkan sumber yang dibenarkan kepada “App Store dan pembangun yang diperakui”.
 
 </details>
 
-Untuk arahan lanjut, rujuk [Panduan Pengguna](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf).
-
 ---
 
-### 4.2 Pemasangan Docker
+### 3.2 Pemasangan dengan Docker
 
-Pasang Git, [Docker Engine](https://docs.docker.com/engine/install/) dan Docker Compose terlebih dahulu. Pada Windows dan macOS, anda boleh menggunakan Docker Desktop dalam mod kontena Linux. Repositori ini menyediakan [Dockerfile](../../Dockerfile), [konfigurasi Compose](../../compose.yaml) dan [senarai pengecualian binaan](../../.dockerignore). Imej dibina dengan Bun 1.3.14 dan merangkumi FFmpeg.
+Pasang Git, [Docker Engine](https://docs.docker.com/engine/install/) dan Docker Compose terlebih dahulu; pada Windows / macOS boleh guna mod kontena Linux Docker Desktop. Repositori menyediakan [Dockerfile](./Dockerfile), [konfigurasi Compose](./compose.yaml) dan [peraturan pengecualian binaan](./.dockerignore), dibina atas Bun 1.3.14 dengan FFmpeg dalam imej.
 
 <details>
-<summary><strong>Paparkan langkah pemasangan Docker</strong></summary>
+<summary><strong>Kembangkan langkah pemasangan Docker</strong></summary>
 
-Klon kod sumber dan jalankan arahan berikut dalam direktori akar repositori:
+Selepas mengklon kod sumber, jalankan di akar repositori:
 
 ```sh
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
-cd Toonflow-app
+git clone https://github.com/zechau/filmfraylo-app.git
+cd filmfraylo-app
 docker compose up -d --build
 ```
 
-Binaan pertama memasang kebergantungan dan membina nod, alat, Web serta Server yang disertakan. Selepas perkhidmatan bermula, buka `http://127.0.0.1:3000`. Untuk hos jauh, gunakan terowong SSH seperti yang diterangkan dalam “Akses dan Data” di bawah. Permulaan pertama menyediakan pemalam yang disertakan dan direktori kerja `myProject`.
+Binaan pertama akan memasang kebergantungan dan mengkompil nod, alat, Web dan Server terbina dalam. Selepas dijalankan, akses `http://127.0.0.1:3000`; untuk pelayan jauh, rujuk bahagian “Akses dan data” di bawah untuk masuk melalui terowong SSH. Pelancaran pertama akan memulakan plugin terbina dalam dan menyediakan direktori kerja `myProject`.
 
-Tetapan, pemalam dan fail projek disimpan dalam volum bernama Docker `toonflowData`, yang dilekapkan pada `/app/data/` di dalam kontena. Nama sebenar volum merangkumi awalan projek Compose. Data anda kekal apabila kontena dihentikan atau dibina semula. **Jangan gunakan `docker compose down -v`: arahan ini memadamkan volum data.**
-
-```sh
-docker compose logs -f toonflow  # View logs
-docker compose stop             # Stop the service
-docker compose start            # Start it again
-docker compose down             # Remove containers, retaining the data volume
-```
-
-Untuk menambah direktori projek, klik “Folder Baharu” dalam dialog “Pilih Direktori Kerja Pelayan”. Dialog ini turut menyokong penamaan semula dan pemadaman fail serta folder. Sebagai alternatif, cipta direktori melalui baris arahan semasa perkhidmatan sedang berjalan:
+Konfigurasi, plugin dan fail projek disimpan dalam volum bernama `filmfrayloData` dan dipasang pada `/app/data/` dalam kontena. Nama volum sebenar mempunyai awalan projek Compose; menghentikan atau membina semula kontena akan mengekalkan data, **jangan gunakan `docker compose down -v` kerana arahan itu menghapuskan volum data**.
 
 ```sh
-docker compose exec toonflow mkdir -p /app/data/workspaces/newProject
+docker compose logs -f filmfraylo  # Lihat log
+docker compose stop                # Hentikan perkhidmatan
+docker compose start               # Mulakan semula
+docker compose down                # Hapuskan kontena, kekalkan volum data
 ```
 
-Untuk membuat sandaran, hentikan perkhidmatan dahulu, salin data dan kemudian mulakan semula perkhidmatan:
+Untuk menambah direktori projek, klik “Folder Baharu” dalam dialog “Pilih Direktori Kerja Pelayan” pada halaman. Dialog ini juga menyokong penamaan semula dan penghapusan fail serta folder. Anda juga boleh menciptanya melalui baris arahan semasa perkhidmatan berjalan:
+
+```sh
+docker compose exec filmfraylo mkdir -p /app/data/workspaces/newProject
+```
+
+Semasa membuat sandaran, hentikan perkhidmatan dahulu, kemudian mula semula selepas salinan selesai:
 
 ```sh
 docker compose stop
-docker compose cp toonflow:/app/data ./toonflowBackup
+docker compose cp filmfraylo:/app/data ./filmfrayloBackup
 docker compose start
 ```
 
@@ -341,14 +236,14 @@ docker compose start
 
 ---
 
-### 4.3 Pemasangan Pelayan
+### 3.3 Pemasangan pada pelayan
 
-Gunakan pilihan ini untuk menjalankan Web dan Server terus pada pelayan Linux. Contoh di bawah menggunakan Ubuntu / Debian serta versi yang ditetapkan oleh projek, [Bun 1.3.14](https://bun.sh/docs/installation).
+Sesuai untuk menjalankan Web dan Server terus pada pelayan Linux. Contoh di bawah menggunakan Ubuntu / Debian dengan [Bun 1.3.14](https://bun.sh/docs/installation) seperti yang ditetapkan projek.
 
 <details>
-<summary><strong>Paparkan langkah pemasangan pelayan</strong></summary>
+<summary><strong>Kembangkan langkah pemasangan pelayan</strong></summary>
 
-Pasang persekitaran masa jalan:
+Pasang persekitaran runtime:
 
 ```sh
 sudo apt-get update
@@ -358,192 +253,54 @@ export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```
 
-Klon kod sumber dan mulakan perkhidmatan:
+Klon kod sumber dan mulakan:
 
 ```sh
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
-cd Toonflow-app
+git clone https://github.com/zechau/filmfraylo-app.git
+cd filmfraylo-app
 bun install --frozen-lockfile
 
-# Build bundled nodes, tools, Web, and Server
+# Kompil nod, alat, Web dan Server terbina dalam
 bun run build:server
 mkdir -p data/workspaces/myProject
 bun run start:server
 ```
 
-Apabila anda melihat “服务启动成功” (perkhidmatan berjaya dimulakan), buka `http://127.0.0.1:3000` pada pelayan itu sendiri. Arahan di atas berjalan di latar depan; tekan `Ctrl+C` untuk menghentikannya. Untuk permulaan automatik ketika but dan pengurusan proses, rujuk [panduan penggunaan systemd oleh Bun](https://bun.sh/guides/ecosystem/systemd). Tetapkan direktori kerja kepada direktori repositori, dan arahan mula kepada laluan mutlak Bun diikuti oleh `run start:server`. Jalankannya sebagai pengguna yang mempunyai kebenaran membaca dan menulis dalam direktori tersebut.
+Apabila muncul “perkhidmatan berjaya dimulakan”, anda boleh akses `http://127.0.0.1:3000` pada pelayan itu sendiri. Arahan di atas berjalan di latar hadapan; tekan `Ctrl+C` untuk berhenti. Untuk mula automatik semasa but dan pengurusan proses, rujuk [panduan penggelaran systemd Bun](https://bun.sh/guides/ecosystem/systemd); tetapkan direktori kerja kepada direktori repositori, arahan mula kepada laluan mutlak Bun diikuti `run start:server`, dan jalankan sebagai pengguna yang mempunyai akses baca tulis pada direktori itu.
 
 </details>
 
 ---
 
-### 4.4 Akses dan Data
+### 3.4 Akses dan data
 
-- Perkhidmatan ini kini menggunakan port tetap `3000`. Antara muka web dan API tidak mempunyai pengesahan log masuk yang berasingan. Untuk pemasangan pelayan, hadkan akses ke port `3000` melalui tembok api atau kumpulan keselamatan. Akses awam memerlukan proksi songsang dengan pengesahan.
-- Untuk akses jauh peribadi, jalankan `ssh -N -L 3000:127.0.0.1:3000 username@server-address` pada komputer anda sendiri. Kekalkan sambungan, kemudian lawati `http://127.0.0.1:3000`. Anda tidak perlu membuka port `3000` pelayan kepada internet awam.
-- Dalam pemasangan terus, tetapan, pemalam dan ruang kerja disimpan secara lalai dalam direktori `data/` repositori. Dengan Docker, semuanya disimpan pada `/app/data/` di dalam volum data. Kekalkan seluruh direktori semasa pemindahan atau sandaran. Selepas membuka halaman, pilih `myProject` dalam ruang kerja pelayan. Cipta subdirektori di bawah direktori `workspaces/` yang berkenaan untuk projek tambahan.
-- Kedua-dua kaedah pemasangan merangkumi FFmpeg sistem. Anda masih perlu mengkonfigurasikan kunci API bagi perkhidmatan model dalam antara muka.
-
----
-
-### 4.5 Pemasangan di Awan
-
-Rakan kongsi kami [AI Galaxy (智星云)](https://www.ai-galaxy.com/) menyediakan imej komersial Toonflow yang mendapat kebenaran rasmi, lengkap dengan persekitaran sedia guna. Untuk arahan, rujuk [panduan bergambar pemasangan imej](https://mp.weixin.qq.com/s/lq9X1ovQ1_TKeXMOLgicKg?scene=1).
+- Perkhidmatan semasa menggunakan port tetap `3000`; halaman perniagaan dan API tiada pengesahan log masuk berasingan. Semasa pemasangan pelayan, hadkan sumber akses port `3000` melalui firewall atau kumpulan keselamatan; akses dari internet memerlukan proksi terbalik dengan pengesahan.
+- Untuk penggunaan jauh peribadi, jalankan `ssh -N -L 3000:127.0.0.1:3000 username@server-address` pada komputer anda, biarkan sambungan terbuka kemudian buka `http://127.0.0.1:3000`; port `3000` pelayan tidak perlu dibuka kepada internet.
+- Dalam pemasangan terus, konfigurasi, plugin dan ruang kerja secara lalai disimpan dalam `data/` repositori; dalam pemasangan Docker, ia disimpan dalam `/app/data/` volum data. Simpan semuanya dengan lengkap semasa pemindahan atau sandaran. Selepas masuk halaman, pilih `myProject` dalam ruang kerja pelayan; buat subdirektori baharu dalam `workspaces/` untuk projek tambahan.
+- Kedua-dua cara pemasangan menyertakan FFmpeg sistem. API Key perkhidmatan model masih perlu ditetapkan dalam halaman.
 
 ---
 
-## 5. 🎬 Contoh Karya
-
-https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
-
-### Butiran Penghasilan
-
-| Perkara | Catatan dalam repositori asal |
-| --- | --- |
-| Masa penghasilan dan durasi akhir | Kira-kira 2 jam kerja untuk video berdurasi lebih kurang 2 minit. |
-| Model video | Seedance 2.0 |
-| Model imej | GPT Image 2 |
-| Model bahasa | Claude Opus 4.6 |
-| Kos API model | Kira-kira ¥130 CNY (yuan China): lebih kurang ¥10 untuk bahasa, ¥120 untuk video dan kurang daripada ¥1 untuk imej. |
-
-Kos ini ialah angka yang direkodkan untuk contoh ini dan diberikan sebagai rujukan sahaja. Kos sebenar bergantung pada perkhidmatan model, bilangan penjanaan dan parameter. Video demonstrasi ialah versi termampat pada 480p.
-
----
-
-## 6. 🚀 TF-Router, Gerbang Model Rasmi
+## 4. 🎬 Platform model rasmi
 
 <p align="center">
-  <a href="https://api.toonflow.net/">
-    <img src="https://img.shields.io/badge/TF--Router_Official%20Model%20Gateway-181717?style=for-the-badge&logoColor=white" alt="TF-Router" />
+  <a href="https://api.safillu.com/">
+    <img src="https://img.shields.io/badge/FilmFraylo_Model_Platform-181717?style=for-the-badge&logoColor=white" alt="FilmFraylo Model Platform" />
   </a>
 </p>
 
-TF-Router ialah gerbang model rasmi Toonflow yang kami kendalikan sendiri. Anda dialu-alukan untuk menggunakannya. Seluruh kod sumbernya bersifat sumber terbuka dan boleh dihoskan sendiri serta diaudit: [HBAI-Ltd/TF-Router](https://github.com/HBAI-Ltd/TF-Router).
-
-<details>
-<summary><strong>Surat kepada Komuniti Toonflow (diterbitkan pada 2026-06-08)</strong></summary>
-
-> ### Surat kepada Komuniti Toonflow
-> 130 hari.
-> Tidak lama, tetapi cukup untuk kami melihat beberapa perkara dengan jelas.
-> Dari baris kod pertama yang kami komitkan hingga hari ini, 130 hari telah berlalu. Kami telah menerbitkan 20 versi, membuat lebih 800 komit dan menulis 213,765 baris kod yang mengandungi 640,810 aksara.
-> Dua penulisan semula, satu sistem penyedia dan aliran kerja yang kami banggakan.
-> Kami sangka itu sudah mencukupi.
-> Tetapi rupanya tidak.
-> Ada yang memberitahu kami bahawa mereka mahu menambah modul sendiri pada Toonflow, tetapi masih tidak memahami cara mengubah kodnya walaupun sudah mencuba selama berjam-jam.
-> Ada yang berkata komunitinya terlalu kecil dan mereka tidak dapat mencari bantuan apabila menghadapi masalah.
-> Ada juga yang berkata syarat komersial menghalang mereka daripada menggunakan projek mereka secara nyata.
-> Kami mendengar suara anda.
-> Sepanjang 130 hari ini, ahli pasukan kami bergilir-gilir berada dalam kumpulan sembang, menjawab setiap soalan 7×24. Tiada penaja, tiada subsidi; kami menanggung sendiri semua kos tenaga kerja.
-> Bukan kerana kami mempunyai banyak wang.
-> Tetapi kerana kami percaya usaha ini berbaloi.
-> Jadi, kami memutuskan untuk melakukan penulisan semula kali ketiga.
-> Setiap penulisan semula Toonflow membawa kami ke arah keterbukaan dan sumber terbuka yang lebih luas.
-> Kali ini, kami memilih untuk membuka semuanya.
->
-> 1. MIT License
-> Kami memutuskan untuk menggantikan Apache-2.0 dengan MIT License dan menghapuskan semua syarat komersial tambahan apabila penulisan semula selesai.
-> Semuanya akan terbuka sepenuhnya, tanpa sekatan komersial.
-> Anda boleh menggunakannya untuk apa-apa tujuan.
->
-> 2. Sistem Pemalam yang Fleksibel Sepenuhnya
-> Kami akan mereka bentuk semula seluruh seni bina pemalam.
-> Papan cerita, panorama, garis masa, malah permainan mini.
-> Jika anda boleh membayangkannya, anda boleh menambahnya.
-> Bukan melalui jalan pintas, tetapi dengan sokongan reka bentuk itu sendiri.
->
-> 3. Drizzle ORM dan Sokongan Pelbagai Pangkalan Data
-> Kami akan beralih kepada Drizzle ORM.
-> Storan setempat, PostgreSQL atau MySQL; pilih yang anda perlukan.
-> Pembangunan tersuai tidak lagi menjadi mimpi ngeri.
->
-> 4. Aliran Kerja Monorepo dari Awal hingga Akhir
-> Pembangunan pemalam, penyepaduan SDK dan penerbitan keluaran, semuanya saling terhubung.
-> Agar sumbangan menjadi cukup mudah untuk diuruskan oleh seorang individu.
->
-> 5. Modul Baharu
-> Kanvas Tanpa Had: bukan sekadar ruang, tetapi kebebasan.
-> Mod Inspirasi: dibina untuk pencipta.
-> Hab Pemalam: membantu pemalam yang hebat ditemukan.
-> Hab Kemahiran: menjadikan pengalaman boleh dikongsi.
-> Hab Penyedia: tempat ekosistem bermula.
-> Penyepaduan Docker sepenuhnya: memudahkan pemasangan untuk semua.
->
-> Sekarang, tentang sesuatu yang selama ini kami berat hati untuk bincangkan.
-> Penulisan semula mengambil masa. Sepanjang tempoh itu, pelayan terus berjalan, domain perlu diperbaharui, pasukan bekerja hingga larut malam dan kopi semakin mahal.
-> Kami tiada dana pelaburan, tiada iklan dan tiada rancangan komersial tersembunyi.
-> Tetapi kami perlu terus bertahan untuk menyiapkan apa yang telah dimulakan.
-> Itulah sebabnya kami melancarkan TF-Router, gerbang model rasmi Toonflow.
-> Sejujurnya, kami lama teragak-agak tentang platform ini.
-> Ia bukan sesuatu yang kami mahu bina. Kami tidak mahu sebuah gerbang membuatkan orang berasa bahawa Toonflow sudah mula “mengaut keuntungan”.
-> Beban itu kami pikul untuk sekian lama.
-> Tetapi ramai pengguna tidak mendapat kelulusan akses ke Seedance 2.0 dan terus bertanya sama ada ada cara untuk menggunakannya.
-> Setelah berfikir panjang, akhirnya kami memutuskan untuk membina platform sendiri dan menandatangani perjanjian rangka kerja tahunan Seedance dengan Volcengine.
-> **Kami juga memutuskan untuk menawarkan Seedance 2.0 pada harga kos sepanjang tempoh promosi platform, tanpa mengenakan tokokan walau satu sen pun.**
-> Selepas promosi tamat, kami akan mengenakan yuran perkhidmatan yang sangat kecil. Buat masa ini, keutamaan kami ialah memberikan anda akses.
-> Lebih penting lagi, seluruh kod sumber TF-Router telah diterbitkan sebagai sumber terbuka: 【<a href="https://github.com/HBAI-Ltd/TF-Router" target="_blank">Kod Sumber</a>】.
-> Tidak mempercayai kami? Tidak mengapa. Baca kodnya, pasang sendiri dan jalankan sendiri.
-> Itulah pendirian kami.
-> Jika anda memilih untuk mencubanya, anda meletakkan kepercayaan pada satu-satunya cara yang kami ada sekarang untuk meneruskan usaha ini.
-> Jika tidak, itu juga tidak mengapa. Teruskan menggunakan Toonflow, teruskan mengkritik kami dan teruskan meminta ciri baharu.
-> Kami ada di sini.
-> Satu perkara terakhir, dari hati:
-> Kami hanyalah sekumpulan orang biasa yang percaya bahawa alat kreatif sepatutnya menjadi milik semua.
-> Toonflow tidak pernah menjadi produk kami semata-mata.
-> Ia ialah kisah yang kita tulis bersama.
-> Penulisan semula kali ketiga bukan garisan penamat.
-> Inilah tempat kami bermula semula.
-> Terima kasih kepada setiap orang yang pernah menggunakannya, mengkritiknya atau memberikan cadangan.
-> Andalah sebab ia mampu sampai sejauh ini.
-> Terima kasih.
-
-</details>
+Perkhidmatan model terbina dalam FilmFraylo disediakan oleh platform model rasmi FilmFraylo, merangkumi model teks, imej, video dan audio. Selepas konfigurasi dalam aplikasi selesai, anda boleh mula berkarya; panggilan model dibilkan mengikut platform.
 
 ---
 
-## 7. 👨‍👩‍👧‍👦 Komuniti WeChat
+## 5. 📜 Lesen sumber terbuka
 
-Imbas kod QR untuk menghubungi pembantu jemputan kumpulan:
-
-<img src="../images/qr.png" alt="Kod QR komuniti Toonflow" height="400"/>
-
-Anda juga boleh mengklik ikon untuk menyertai Discord:
-
-[![Sertai Discord kami](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/67d00cf7266d2c75571aebde_Example.svg)](https://discord.gg/HEjKmpNpAZ)
-
-Atau gunakan pautan jemputan: [https://discord.gg/HEjKmpNpAZ](https://discord.gg/HEjKmpNpAZ)
-
----
-
-## 8. 💌 Hubungi Kami
-
-📧 E-mel: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow咨询)
-
----
-
-## 9. 📜 Lesen Sumber Terbuka
-
-Toonflow dilesenkan di bawah [MIT License](../../LICENSE). Kebergantungan dan aset pihak ketiga kekal tertakluk pada lesen serta notis hak cipta masing-masing.
-
-[![Sejarah Bintang Toonflow](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-app&type=Date)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app&Date)
-
-> **Klausa tiada kuat kuasa kebelakangan**: Pengguna yang menggunakan versi sebelum v1.0.8 di bawah AGPL-3.0 kekal tertakluk pada AGPL-3.0. Versi v1.0.8 hingga v1.1.8 kekal tertakluk pada Apache-2.0 dan perjanjian tambahannya. Perubahan lesen ini tidak terpakai kepada pengguna tersebut.
-
----
-
-## 10. 🙏 Penghargaan
-
-- **Rakan kongsi**: 算能云, Tencent Hunyuan 3D dan AI Galaxy (智星云).
-- **Penyumbang projek**: Terima kasih kepada semua yang menyumbang kod, menambah baik dokumentasi, berkongsi pemalam dan membantu menyelesaikan masalah.
-- **Pengguna komuniti**: Terima kasih kepada semua yang terus memberikan maklum balas, berkongsi karya kreatif dan menyokong projek ini.
-
-仰起脸笑的像满月: menyumbangkan sumber pengkomputeran pembangunan Codex 20x.
-Xi'an Zhongxing Digital Intelligence Technology Co., Ltd. (西安中星数字智能科技有限公司): menyumbangkan kemudahan tandatangan menggunakan sijil Apple.
+FilmFraylo menggunakan [lesen MIT](./LICENSE). Kebergantungan dan aset pihak ketiga mengikut lesen serta notis hak cipta masing-masing.
 
 <div align="center">
 
-Hak Cipta © 2026 北京爱阿科技有限公司
+Copyright © 2026 FilmFraylo
 
 </div>
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=90&section=footer" alt="Pengaki Toonflow" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=90&section=footer" alt="Pengaki FilmFraylo" width="100%" />

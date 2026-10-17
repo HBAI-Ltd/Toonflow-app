@@ -21,7 +21,7 @@ let origin = "";
 setRuntimeHost("mobile");
 process.env.TOONFLOW_DATA_DIR = directory;
 await mkdir(exportDirectory, { recursive: true });
-const connection = await createRemoteConnection(directory, { deviceName: process.env.TOONFLOW_MOBILE_DEVICE_NAME || "Toonflow Android", appVersion: config.app.version });
+const connection = await createRemoteConnection(directory, { deviceName: process.env.TOONFLOW_MOBILE_DEVICE_NAME || "FilmFraylo Android", appVersion: config.app.version });
 // ACT: 临时导出不属于项目数据；应用被系统终止后，下次启动清理未完成的导出。
 for (const entry of await readdir(exportDirectory, { withFileTypes: true })) {
   if (entry.isFile() && exportId.test(entry.name)) await rm(resolve(exportDirectory, entry.name));
@@ -66,7 +66,7 @@ app.get("/", (request, response, next) => {
   // 旧内核无法解析检测函数时仍有 ES5 基线结果，让原生壳能够进入备用内核流程。
   const bridge = request.query.engine === "gecko"
     ? `<meta name="toonflowBrowserProbe"><script>document.querySelector('meta[name="toonflowBrowserProbe"]').content=JSON.stringify(window.toonflowBrowserProbe);</script>` : "";
-  response.type("html").send(`<!doctype html><html><head><meta charset="utf-8"><title>Toonflow</title></head><body><script>window.toonflowBrowserProbe={missing:["Browser capability probe"],userAgent:navigator.userAgent};</script><script>window.toonflowBrowserProbe={missing:(${getMissingBrowserFeatures.toString()})(),userAgent:navigator.userAgent};</script>${bridge}</body></html>`);
+  response.type("html").send(`<!doctype html><html><head><meta charset="utf-8"><title>FilmFraylo</title></head><body><script>window.toonflowBrowserProbe={missing:["Browser capability probe"],userAgent:navigator.userAgent};</script><script>window.toonflowBrowserProbe={missing:(${getMissingBrowserFeatures.toString()})(),userAgent:navigator.userAgent};</script>${bridge}</body></html>`);
 });
 
 app.get("/api/mobile/runtime", (_request, response) => {

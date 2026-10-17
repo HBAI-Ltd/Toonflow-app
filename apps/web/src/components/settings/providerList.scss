@@ -57,6 +57,24 @@
         }
       }
 
+      .keyForm {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+
+        .el-input {
+          flex: 1;
+          min-width: 200px;
+        }
+      }
+
+      .keyError {
+        display: block;
+        margin-top: 8px;
+        overflow-wrap: anywhere;
+      }
+
       .providerFooter {
         display: flex;
         flex-wrap: wrap;

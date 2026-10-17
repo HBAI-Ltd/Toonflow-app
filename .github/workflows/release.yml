@@ -1,5 +1,5 @@
-name: Release Toonflow
-run-name: Release Toonflow ${{ github.event_name == 'push' && github.ref_name || (startsWith(inputs.version, 'v') && inputs.version || format('v{0}', inputs.version)) }}
+name: Release FilmFraylo
+run-name: Release FilmFraylo ${{ github.event_name == 'push' && github.ref_name || (startsWith(inputs.version, 'v') && inputs.version || format('v{0}', inputs.version)) }}
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: toonflow-release
+  group: filmfraylo-release
   cancel-in-progress: false
 
 jobs:
@@ -74,7 +74,7 @@ jobs:
       - name: 下载各平台产物
         uses: actions/download-artifact@v8
         with:
-          pattern: toonflow-${{ needs.build.outputs.version }}-*
+          pattern: filmfraylo-${{ needs.build.outputs.version }}-*
           path: artifacts
           merge-multiple: true
       - name: 生成下载说明
@@ -91,10 +91,10 @@ jobs:
             if (names.length !== 1) throw new Error(`${label} 安装包数量应为 1，实际为 ${names.length}`);
             return names[0];
           };
-          const windows = findInstaller("Windows", name => name === `toonflow-${version}-Setup.exe`);
+          const windows = findInstaller("Windows", name => name === `filmfraylo-${version}-Setup.exe`);
           const macArm = findInstaller("macOS ARM64", name => name.endsWith(".dmg") && name.includes("arm64"));
           const macIntel = findInstaller("macOS x64", name => name.endsWith(".dmg") && name.includes("x64"));
-          const android = findInstaller("Android ARM64", name => name === `toonflow-${version}-android-arm64.apk`);
+          const android = findInstaller("Android ARM64", name => name === `filmfraylo-${version}-android-arm64.apk`);
           const baseUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/releases/download/v${version}`;
           const download = name => `${baseUrl}/${encodeURIComponent(name)}`;
           writeFileSync("releaseBody.md", [
@@ -114,7 +114,7 @@ jobs:
             "## 🚀 安装说明",
             "",
             "- 💻 **Windows**：双击下载的安装包，按提示完成安装。",
-            "- 🍎 **Mac**：打开下载的安装包，将 `toonflow.app` 拖入“应用程序”，再从“应用程序”打开。",
+            "- 🍎 **Mac**：打开下载的安装包，将 `FilmFraylo.app` 拖入“应用程序”，再从“应用程序”打开。",
             "- 📱 **Android**：在手机上打开 APK，按系统提示允许此来源安装应用。后续版本可直接覆盖安装。",
             "",
             "M 系列 Mac 安装包已完成 Developer ID 签名与 Apple 公证。首次打开时，macOS 仍可能提示确认打开从互联网下载的应用。",
@@ -128,7 +128,7 @@ jobs:
         with:
           tag_name: v${{ needs.build.outputs.version }}
           target_commitish: ${{ needs.build.outputs.commit }}
-          name: Toonflow ${{ needs.build.outputs.version }}
+          name: FilmFraylo ${{ needs.build.outputs.version }}
           make_latest: true
           body_path: releaseBody.md
           generate_release_notes: true
@@ -169,12 +169,12 @@ jobs:
 
           // ACT: Android APK 随 GitHub Release 发布，现有更新托管接口仅登记桌面版本。
           const names = readdirSync("artifacts", { withFileTypes: true }).filter(entry => entry.isFile()).map(entry => entry.name)
-            .filter(name => name !== `toonflow-${version}-android-arm64.apk`);
+            .filter(name => name !== `filmfraylo-${version}-android-arm64.apk`);
           const targets = [{ platform: "win", arch: "x64" }, { platform: "macos", arch: "arm64" }, { platform: "macos", arch: "x64" }];
           const plans = await Promise.all(targets.map(async target => {
             const prefix = `stable-${target.platform}-${target.arch}-`;
             const installers = names.filter(name => target.platform === "win"
-              ? name === `toonflow-${version}-Setup.exe`
+              ? name === `filmfraylo-${version}-Setup.exe`
               : name.endsWith(".dmg") && name.includes(target.arch));
             if (installers.length !== 1) throw new Error(`${prefix}安装包数量应为 1，实际为 ${installers.length}`);
             const manifestName = `${prefix}update.json`;
@@ -185,7 +185,7 @@ jobs:
             }
             // ACT: Intel Mac 保留旧清单协议，归档名与现有发布脚本一致。
             const archiveName = manifest.artifact === undefined && target.platform === "macos" && target.arch === "x64"
-              ? `${prefix}toonflow.app.tar.zst` : manifest.artifact?.file;
+              ? `${prefix}FilmFraylo.app.tar.zst` : manifest.artifact?.file;
             if (typeof archiveName !== "string" || !archiveName.startsWith(prefix) || !archiveName.endsWith(".tar.zst") || !names.includes(archiveName)) {
               throw new Error(`${manifestName} 引用的完整更新包不存在`);
             }

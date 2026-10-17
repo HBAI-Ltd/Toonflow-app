@@ -1,6 +1,6 @@
-# Toonflow Android
+# FilmFraylo Android
 
-优先使用系统 Android WebView；系统内核缺少所需能力时，切换到 APK 内置的 ARM64 GeckoView，无需联网下载备用内核。两种内核均加载同一 APK 内 Bun 启动的真实 Toonflow 前端和后端。页面复用 `apps/web`，后端通过 `@toonflow/server/app` 接入，内置节点、工具、扩展、供应商和技能沿用现有构建产物。
+优先使用系统 Android WebView；系统内核缺少所需能力时，切换到 APK 内置的 ARM64 GeckoView，无需联网下载备用内核。两种内核均加载同一 APK 内 Bun 启动的真实 FilmFraylo 前端和后端。页面复用 `apps/web`，后端通过 `@toonflow/server/app` 接入，内置节点、工具、扩展、供应商和技能沿用现有构建产物。
 
 ## 设备互联与手动连接
 
@@ -24,9 +24,9 @@
 
 使用官方 **Bun 1.4.2 Android** 运行时，仅构建 `arm64-v8a`。打包参考社区 [minapk](https://github.com/jjtseng93/minapk) 的原生库目录启动方式；通过 Gradle 与 Android SDK 构建，不依赖其终端环境。Bun 运行时随 APK 安装到原生库目录，JS、WASM 和页面复制到应用程序目录，设置与工作区保存在独立的数据目录。来源和许可证见 [thirdParty.md](thirdParty.md)。
 
-启动时先用系统 WebView 加载独立的本地能力预检页面，通过后直接进入 Toonflow，不初始化 GeckoView。检测项与网页入口共用 `@toonflow/web/browserCapabilities`，检查 12 项 JavaScript 与 CSS 能力，避免旧内核在加载业务依赖时先白屏。
+启动时先用系统 WebView 加载独立的本地能力预检页面，通过后直接进入 FilmFraylo，不初始化 GeckoView。检测项与网页入口共用 `@toonflow/web/browserCapabilities`，检查 12 项 JavaScript 与 CSS 能力，避免旧内核在加载业务依赖时先白屏。
 
-系统 WebView 缺少能力时，初始化 APK 内置的 `org.mozilla.geckoview:geckoview-arm64-v8a:157.0.20261005135250`，对 GeckoView 执行同样的 12 项预检，通过后进入 Toonflow。备用内核随 APK 更新，不依赖腾讯服务、`config.tbs` 或首次启动联网下载；本机页面和后端可在离线时启动，在线供应商仍需网络。GeckoView 初始化或预检失败时显示启动错误，不继续进入业务页面。不添加旧内核 polyfill；安装了新版 Chrome 或另一份 WebView APK，也不代表系统已切换到该版本。
+系统 WebView 缺少能力时，初始化 APK 内置的 `org.mozilla.geckoview:geckoview-arm64-v8a:157.0.20261005135250`，对 GeckoView 执行同样的 12 项预检，通过后进入 FilmFraylo。备用内核随 APK 更新，不依赖腾讯服务、`config.tbs` 或首次启动联网下载；本机页面和后端可在离线时启动，在线供应商仍需网络。GeckoView 初始化或预检失败时显示启动错误，不继续进入业务页面。不添加旧内核 polyfill；安装了新版 Chrome 或另一份 WebView APK，也不代表系统已切换到该版本。
 
 ## 构建
 
@@ -51,7 +51,7 @@ bun run --cwd apps/mobile build
 
 `build` 先调用根目录的 `build:server`，构建节点、工具、扩展、前端、后端及 MCP，再将移动端服务与 MCP stdio 入口一起构建，共享重复依赖。APK 的 payload 包含 `server.js`、`stdio.js`、共享代码块、`web`、`nodes`、`tools`、`ext`、`providers`、`skills` 和 Photon 的 JS/WASM 包；团队保持当前仓库未内置打包的状态。payload 内容生成 `revision.txt`，用于随构建更新内置插件。发行包启用 R8 代码优化与资源裁剪，保留 Gecko 官方消费者规则及完整 ARM64 内核。
 
-输出：`build/mobile/toonflowMobile.apk`。包名为 `com.toonflow.mobile`，最低 Android 8 / API 26，目标 API 34。本地和 CI 共用仓库内公开的默认签名 `native/defaultSigning.keystore`，别名为 `androiddebugkey`，密码均为 `android`。沿用此前本地默认签名，不再每次生成密钥，后续版本可直接覆盖安装并保留应用数据。
+输出：`build/mobile/filmfrayloMobile.apk`。包名为 `com.filmfraylo.mobile`，最低 Android 8 / API 26，目标 API 34。本地和 CI 共用仓库内公开的默认签名 `native/defaultSigning.keystore`，别名为 `androiddebugkey`，密码均为 `android`。沿用此前本地默认签名，不再每次生成密钥，后续版本可直接覆盖安装并保留应用数据。
 
 版本默认沿用 `electrobun.config.ts` 的 `app.version`，可通过 `appVersion` 指定 `X.Y.Z`。Android `versionCode` 按 `X × 1000000 + Y × 1000 + Z` 生成，Y、Z 不超过 999，结果须在 1–2100000000 内；更新时使用更高版本号。
 
@@ -59,7 +59,7 @@ bun run --cwd apps/mobile build
 
 在 Actions 中选择 **Debug build → Run workflow**，将 `target` 设为 `androidArm64` 可单独构建 ARM64 APK，选择 `all` 会同时构建桌面与 Android。版本留空时使用所选标签或项目配置。Android 默认生成 debug 包，可在本次运行的 Artifacts 或 Summary 中下载。开启 `androidRelease` 会启用 R8 和资源裁剪、关闭 `debuggable` 并去掉文件名中的 `-debug` 后缀；发布和分发应使用此模式。两种模式使用相同默认签名，无需配置 Android Secrets。
 
-现有 **Release Toonflow** 工作流在推送 `vX.Y.Z` 标签或手动发布时，会并行构建桌面与 Android，全部成功后将 `toonflow-X.Y.Z-android-arm64.apk` 附加到同一个 GitHub Release。Android APK 暂不上传到桌面更新托管接口，应用内「前往 GitHub 更新」会打开最新发布页。
+现有 **Release FilmFraylo** 工作流在推送 `vX.Y.Z` 标签或手动发布时，会并行构建桌面与 Android，全部成功后将 `filmfraylo-X.Y.Z-android-arm64.apk` 附加到同一个 GitHub Release。Android APK 暂不上传到桌面更新托管接口。
 
 CI 使用 Windows 2025 自带 JDK 17 和已接受许可的 Android SDK 目录；依赖安装后，mobile `setup` 负责准备所需 SDK、GeckoView 与构建依赖，再执行离线 `build`。默认签名文件直接来自源码，Android 构建不读取签名 Secrets。
 
@@ -70,17 +70,17 @@ CI 使用 Windows 2025 自带 JDK 17 和已接受许可的 Android SDK 目录；
 ```powershell
 $adb = Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
 & $adb devices -l
-& $adb -s <设备序列号> install --no-incremental -r build/mobile/toonflowMobile.apk
-& $adb -s <设备序列号> shell am start -W -n com.toonflow.mobile/.mobileActivity
+& $adb -s <设备序列号> install --no-incremental -r build/mobile/filmfrayloMobile.apk
+& $adb -s <设备序列号> shell am start -W -n com.filmfraylo.mobile/.mobileActivity
 ```
 
 设备序列号以 `adb devices` 输出为准；仅支持运行 ARM64 原生库的设备，不再提供 x86_64 APK。
 
-打开后进入 Toonflow 首页。创建或打开项目后，可检查工作区文件、画布、节点、Agent 和设置是否正常加载；编辑并保存后退出应用，再次打开应保留内容。覆盖安装保留应用数据，卸载会清除。
+打开后进入 FilmFraylo 首页。创建或打开项目后，可检查工作区文件、画布、节点、Agent 和设置是否正常加载；编辑并保存后退出应用，再次打开应保留内容。覆盖安装保留应用数据，卸载会清除。
 
 ## 手机工作区与文件
 
-项目使用应用私有目录，文件接口仍复用 Toonflow 的工作区路径校验与原子保存。通过 Android 系统文件选择器导入文件，通过系统保存对话框导出文件；系统选择器返回的 `content://` 地址不作为后端普通文件路径使用。
+项目使用应用私有目录，文件接口仍复用 FilmFraylo 的工作区路径校验与原子保存。通过 Android 系统文件选择器导入文件，通过系统保存对话框导出文件；系统选择器返回的 `content://` 地址不作为后端普通文件路径使用。
 
 保存对话框默认请求打开内部存储的 `Download` 目录，用户仍可选择其他位置；系统不支持该初始目录时会使用自身默认位置。本机 MuMu 的「下载」快捷入口存在写入授权异常，测试时请使用「内部存储 → Download」。该位置已完成导出并核对文件一致。
 
@@ -88,14 +88,14 @@ $adb = Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
 
 ```powershell
 & $adb -s <设备序列号> logcat -s ToonflowMobile AndroidRuntime
-& $adb -s <设备序列号> shell am force-stop com.toonflow.mobile
+& $adb -s <设备序列号> shell am force-stop com.filmfraylo.mobile
 ```
 
 本机开发先执行 `bun run build:server` 准备真实前端和插件，再运行 `bun run --cwd apps/mobile dev`，打开终端打印的完整 URL。开发数据单独保存在 `build/mobile/data`。
 
 ## 当前范围
 
-- 复用真实 Toonflow 前后端与插件；Bun 仅监听本机随机端口，应用会话鉴权覆盖页面、接口和流式请求。
+- 复用真实 FilmFraylo 前后端与插件；Bun 仅监听本机随机端口，应用会话鉴权覆盖页面、接口和流式请求。
 - 在线模型和媒体供应商仍需要联网及有效配置；本地安装不等于离线运行云端模型。
 - FFmpeg 当前没有 Android 发行包，转码、抽帧等依赖 FFmpeg 的功能暂不可用；不能将 Linux 二进制直接用于 Android。
 - Activity 退出时停止 Bun；没有后台长任务或前台服务。

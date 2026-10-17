@@ -92,7 +92,7 @@ export function createMcpRouter(options: McpOptions) {
   router.use((request, response) => (options.runInRequest ?? ((_request, operation) => operation()))(request, async () => {
     try {
       if (!await options.authorize(request)) {
-        response.setHeader("WWW-Authenticate", 'Bearer realm="Toonflow"');
+        response.setHeader("WWW-Authenticate", 'Bearer realm="FilmFraylo"');
         response.status(401).json({ jsonrpc: "2.0", id: null, error: { code: -32001, message: translateMessage("MCP 未开启或访问凭证无效") } });
         return;
       }

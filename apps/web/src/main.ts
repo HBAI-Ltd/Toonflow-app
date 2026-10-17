@@ -14,9 +14,7 @@ import { registerDownloads } from "@/lib/saveFile";
 import { isMobile, isDesktop, isRemoteConnection } from "@/lib/platform";
 import "@/lib/mobile";
 import { getMissingBrowserFeatures } from "@/lib/browserCapabilities";
-import { registerAnonymousData } from "@/lib/anonymousData";
 import { loadSettings, settingsStorage } from "@/stores/settings";
-import { checkDesktopUpdate } from "@/stores/desktopUpdate";
 import { registerLanguage } from "@/lib/i18n";
 import { locale, translate } from "@toonflow/i18n/vue";
 
@@ -39,14 +37,13 @@ async function notifyDesktopReady(failed = false) {
 
 // ACT: 已安装客户端的自动更新不经过 NSIS；启动时阻止缺少所需 API 的旧 WebView2 进入业务页面。
 (requiresWebView2Update
-  ? Promise.reject(new Error("当前 Microsoft Edge WebView2 Runtime 版本过旧。请以管理员身份运行微软最新版安装器；若仍提示已安装，请修复 WebView2 或联系管理员检查更新服务。更新完成后，请完全退出 Toonflow 再重新打开。"))
+  ? Promise.reject(new Error("当前 Microsoft Edge WebView2 Runtime 版本过旧。请以管理员身份运行微软最新版安装器；若仍提示已安装，请修复 WebView2 或联系管理员检查更新服务。更新完成后，请完全退出 FilmFraylo 再重新打开。"))
   : requiresMobileWebViewUpdate
-  ? Promise.reject(new Error("当前移动端浏览器内核缺少 Toonflow 所需能力。请更新 Toonflow 和系统浏览器内核；部分系统需要通过系统更新升级。更新完成后，请完全退出并重新打开 Toonflow。"))
+  ? Promise.reject(new Error("当前移动端浏览器内核缺少 FilmFraylo 所需能力。请更新 FilmFraylo 和系统浏览器内核；部分系统需要通过系统更新升级。更新完成后，请完全退出并重新打开 FilmFraylo。"))
   : loadSettings()).then(async () => {
   app.use(createPinia().use(createPersistedState({ storage: settingsStorage })));
   app.use(router);
   await router.isReady();
-  app.onUnmount(registerAnonymousData());
   app.mount("#app");
   isMounted = true;
   app.onUnmount(registerDownloads());
@@ -58,8 +55,6 @@ async function notifyDesktopReady(failed = false) {
     await new Promise<void>((resolve) => window.addEventListener("load", () => resolve(), { once: true }));
   }
   await notifyDesktopReady();
-  // ACT: 桌面启动后只静默检查一次；失败留待用户手动重试，不阻塞启动或自动下载。
-  if (!isRemoteConnection) void checkDesktopUpdate(true).catch(() => {});
 }).catch(async (error) => {
   console.error("页面初始化失败：", error);
   if (isMounted) app.unmount();

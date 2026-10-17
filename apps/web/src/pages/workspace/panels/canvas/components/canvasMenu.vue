@@ -39,25 +39,6 @@
     </el-card>
     <div class="menuExtension"><slot /></div>
   </panel>
-  <panel class="balanceMenuPanel" position="top-right">
-    <div class="balanceList" tabindex="0" aria-label="供应商余额">
-      <el-card v-for="item in providerBalances" :key="item.id" class="balanceCard" shadow="never" :bodyStyle="{ padding: '3px 6px' }">
-        <el-popover v-if="item.id === 'tfRouter'" :visible="balanceVisible" @update:visible="value => { if (!rechargeVisible) balanceVisible = value; }" trigger="click" placement="bottom-end" :width="360" :showArrow="false">
-          <template #reference>
-            <el-button class="balanceTrigger" text :aria-busy="item.loading" :title="item.error || 'TF-Router 剩余可用余额'" aria-label="TF-Router 余额与充值">
-              <span class="providerLabel">{{ item.label }}</span>
-              <span>{{ item.balance ? `${balanceFormat.format(Math.min(item.balance.balance, item.balance.keyBalance ?? Infinity))} ${item.balance.unit}` : '—' }}</span>
-            </el-button>
-          </template>
-          <tfAccount v-if="balanceVisible" :apiKey="tfBalanceApiKey" :visible="balanceVisible" :saveApiKey="saveTfMediaApiKey" @rechargeVisibleChange="rechargeVisible = $event" />
-        </el-popover>
-        <el-button v-else class="balanceTrigger" text :loading="item.loading" :title="item.error || `点击刷新 ${item.label} 余额`" :aria-label="`刷新 ${item.label} 余额`" @click="refreshProviderBalance(item.id)">
-          <span class="providerLabel">{{ item.label }}</span>
-          <span>{{ item.balance ? `${balanceFormat.format(Math.min(item.balance.balance, item.balance.keyBalance ?? Infinity))} ${item.balance.unit}` : '—' }}</span>
-        </el-button>
-      </el-card>
-    </div>
-  </panel>
   <el-dropdown ref="itemMenu" trigger="contextmenu" virtualTriggering :virtualRef="menuAnchor" placement="bottom-start" :showArrow="false" :hideOnClick="false" :appendTo="canvasPicker" popperClass="canvasActionMenu" @command="handleItemCommand" @visibleChange="(opened: boolean) => { if (!opened) moveVisible = false; }">
     <template #dropdown>
       <el-dropdown-menu v-if="menuEntry">
@@ -81,7 +62,7 @@
 
 <script setup lang="ts">
 import axios from "axios";
-import { locale, translate } from "@toonflow/i18n/vue";
+import { translate } from "@toonflow/i18n/vue";
 import { computed, inject, nextTick, onBeforeUnmount, ref, shallowRef, watch, type ShallowRef } from "vue";
 import { Panel, useVueFlow, type FlowExportObject } from "@vue-flow/core";
 import { ElMessage, ElMessageBox, type DropdownInstance, type FilterNodeMethodFunction, type InputInstance, type LoadFunction, type TreeInstance } from "element-plus";
@@ -89,8 +70,6 @@ import { IconVector, IconCheck, IconChevronDown, IconChevronUp, IconChevronRight
 import { useWorkspaceStore } from "@/stores/workspace";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { getCanvasAssetDirectories, isCanvasFile } from "@/pages/workspace/canvasFile";
-import tfAccount from "@/components/settings/tfAccount.vue";
-import { providerBalances, tfBalanceApiKey, saveTfMediaApiKey, refreshProviderBalance } from "@/lib/providerBilling";
 
 const props = defineProps<{
   directory?: string;
@@ -99,9 +78,6 @@ const props = defineProps<{
   flushSave: (action?: () => Promise<void>) => Promise<void>;
 }>();
 const workspaceStore = useWorkspaceStore();
-const balanceVisible = ref(false);
-const rechargeVisible = ref(false);
-const balanceFormat = computed(() => new Intl.NumberFormat(locale.value, { maximumFractionDigits: 6 }));
 const workspaceName = computed(() => workspaceStore.project?.name || "未命名工作区");
 const projectNameDraft = ref("");
 watch([() => workspaceStore.project?.directory, workspaceName], () => {
@@ -817,37 +793,6 @@ defineExpose({ getCanvases, peekCanvases, initialized, addCanvas, switchCanvas, 
   align-items: center;
   gap: 12px;
   max-width: calc(50% - 90px);
-}
-
-.balanceMenuPanel.vue-flow__panel {
-  max-width: calc(50% - 90px);
-
-  .balanceList {
-    display: flex;
-    gap: 8px;
-    max-width: 520px;
-    overflow-x: auto;
-    scrollbar-width: thin;
-
-    .balanceCard {
-      flex-shrink: 0;
-      font-variant-numeric: tabular-nums;
-      .providerLabel { color: var(--el-text-color-secondary); font-size: 12px; }
-      .balanceTrigger {
-        height: 32px;
-        padding: 0 4px;
-        font-size: 13px;
-        :deep(> span) { display: flex; align-items: center; gap: 6px; }
-      }
-    }
-  }
-}
-
-@container canvasWorkspace (max-width: 1040px) {
-  .balanceMenuPanel.vue-flow__panel {
-    top: 56px;
-    max-width: calc(100% - 30px);
-  }
 }
 
 .canvasPicker {

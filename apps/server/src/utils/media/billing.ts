@@ -32,9 +32,7 @@ const prices = new Map<string, { expires: number; value: Promise<ProviderPrice |
 const accountSecret = randomBytes(32);
 
 function accountId(provider: RuntimeProvider) {
-  const config = { ...provider.config };
-  if (provider.id === "tfRouter" && typeof config.apiKey === "string") config.apiKey = config.apiKey.trim().replace(/^Bearer(?:\s+|$)/i, "").trim();
-  const data = JSON.stringify({ id: provider.id, config }, (_key, value) => value && typeof value === "object" && !Array.isArray(value)
+  const data = JSON.stringify({ id: provider.id, config: provider.config }, (_key, value) => value && typeof value === "object" && !Array.isArray(value)
     ? Object.fromEntries(Object.entries(value).sort(([left], [right]) => left.localeCompare(right))) : value);
   return createHmac("sha256", accountSecret).update(data).digest("hex");
 }
@@ -112,11 +110,7 @@ function getAccount(provider: RuntimeProvider) {
 }
 
 export async function getProviderBalance(providerId: string, apiKey?: string): Promise<BalanceSnapshot> {
-  const source = await getMediaProvider(providerId).then(info => info.source).catch((error: { status?: number }) => {
-    if (providerId !== "tfRouter" || error.status !== 404) throw error;
-    // ACT: 仅配置文本 TF-Router 的账户也可查余额；缺省查询方法由加载器补齐，不安装媒体文件。
-    return 'export default { id: "tfRouter", label: "TF-router", rules: [], models: [] };';
-  });
+  const source = await getMediaProvider(providerId).then(info => info.source);
   const configs = conf.get("settings", {}).mediaProviderConfigs as Record<string, Record<string, unknown>> | undefined;
   const provider = await loadMediaProviderSource(source, { ...configs?.[providerId], ...(apiKey === undefined ? {} : { apiKey }) });
   const account = getAccount(provider);

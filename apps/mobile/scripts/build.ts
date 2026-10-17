@@ -93,7 +93,7 @@ const bridgeResult = await Bun.build({
 if (!bridgeResult.success) throw new AggregateError(bridgeResult.logs, "构建移动端浏览器桥接失败");
 await copyFile(join(projectRoot, "apps/web/node_modules/jsqr/LICENSE"), join(staging, "assets/jsqrLicense.txt"));
 
-const apk = join(buildRoot, "toonflowMobile.apk");
+const apk = join(buildRoot, "filmfrayloMobile.apk");
 const resources = join(staging, "res");
 const manifest = join(staging, "manifest.xml");
 const manifestSource = await readFile(join(mobileRoot, "native/manifest.xml"), "utf8");
@@ -109,6 +109,6 @@ await run([
   release ? "assembleRelease" : "assembleDebug",
 ], join(mobileRoot, "native"));
 const variant = release ? "release" : "debug";
-await copyFile(join(buildRoot, "native/outputs/apk", variant, `toonflowMobile-${variant}.apk`), apk);
+await copyFile(join(buildRoot, "native/outputs/apk", variant, `filmfrayloMobile-${variant}.apk`), apk);
 await run([java, "-jar", signer, "verify", "--verbose", apk]);
 console.log(`APK 已生成：${apk}`);

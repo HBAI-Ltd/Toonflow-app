@@ -4,8 +4,8 @@ await createToolConfig({
   name: "mediaGeneration",
   displayName: "媒体生成",
   description: "查询已配置的媒体模型，生成图片、视频或音频并保存到工作区。",
-  author: "Toonflow",
-  github: "https://github.com/HBAI-Ltd/Toonflow-app",
+  author: "FilmFraylo",
+  github: "",
   prompt: `生成前使用可用的 listMediaModels 查询模型，providerId、modelId、模式、画幅、分辨率、时长和音频能力以返回值为准，不根据模型名称猜测。
 参考图片、视频、音频及首尾帧使用已存在的工作区相对路径，并确认所选模型支持相应输入。附件消息只提供文件信息，不表示模型已经看过图片或播放过视频。
 本轮具备画布节点工具且用户要求在节点内制作时，优先使用该节点已经注册的生成函数，让结果保留在对应节点；独立素材制作使用本轮可用的媒体生成工具。

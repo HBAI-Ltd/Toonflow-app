@@ -118,7 +118,7 @@ export async function installNode(fileName: string, source: string, force = fals
     invalid("节点文件实际是 HTML 网页，不是节点脚本，请重新上传构建生成的 .umd.js 文件");
   }
   // ACT: 仅静态检查脚手架约定和语法，确认安装后由画布加载执行。
-  if (!source.includes("toonflowNodeHost")) invalid("文件不是兼容的 Toonflow 节点，请使用节点脚手架构建生成的 .umd.js 文件");
+  if (!source.includes("toonflowNodeHost")) invalid("文件不是兼容的 FilmFraylo 节点，请使用节点脚手架构建生成的 .umd.js 文件");
   if (!source.includes(`toonflowNodes.${name}`)) invalid(t`文件名与节点导出名不一致：${fileName} 需要导出 toonflowNodes.${name}，请按实际节点名修改文件名`);
   try { new Bun.Transpiler({ loader: "js" }).scan(source); }
   catch { invalid("节点脚本语法无效，请重新构建并上传完整的 .umd.js 文件"); }
@@ -143,7 +143,7 @@ export async function installExt(fileName: string, source: string, force = false
   const name = fileName.slice(0, -7);
   const metadata = parseExt(source, name);
   if (!source.includes("toonflowExtHost") || !new RegExp(`toonflowExts\\s*\\[\\s*["']${name}["']\\s*\\]`).test(source)) {
-    invalid("文件不是兼容的 Toonflow 文件扩展，请使用扩展脚手架构建并保留原文件名");
+    invalid("文件不是兼容的 FilmFraylo 文件扩展，请使用扩展脚手架构建并保留原文件名");
   }
   try { new Bun.Transpiler({ loader: "js" }).scan(source); }
   catch { invalid("文件扩展脚本语法无效，请重新构建完整的 .umd.js 文件"); }

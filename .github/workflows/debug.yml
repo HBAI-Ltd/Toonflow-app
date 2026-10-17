@@ -302,7 +302,7 @@ jobs:
           await write(join(process.env.inspectionDirectory, "app.tar"), Bun.zstdDecompressSync(await file(join(directory, archives[0])).arrayBuffer()));
           '
           tar -xf "$inspectionDirectory/app.tar" -C "$inspectionDirectory"
-          app="$inspectionDirectory/toonflow.app"
+          app="$inspectionDirectory/FilmFraylo.app"
           test -s "$app/Contents/Resources/AppIcon.icns"
           test -s "$app/Contents/Resources/app/bun/index.js"
           test -x "$app/Contents/MacOS/bun"
@@ -314,8 +314,8 @@ jobs:
             verifyMacArtifact "$dmg"
             hdiutil attach "$dmg" -readonly -nobrowse -mountpoint "$mountDirectory"
             trap 'hdiutil detach "$mountDirectory"' EXIT
-            test -x "$mountDirectory/toonflow.app/Contents/MacOS/launcher"
-            verifyMacArtifact "$mountDirectory/toonflow.app"
+            test -x "$mountDirectory/FilmFraylo.app/Contents/MacOS/launcher"
+            verifyMacArtifact "$mountDirectory/FilmFraylo.app"
             hdiutil detach "$mountDirectory"
             trap - EXIT
           done
@@ -330,15 +330,15 @@ jobs:
           import { copyFile, mkdir } from "@toonflow/file";
           import { join } from "node:path";
           const directory = process.env.releaseFolder;
-          const apkName = `toonflow-${process.env.appVersion}-android-arm64${process.env.debugSuffix}.apk`;
+          const apkName = `filmfraylo-${process.env.appVersion}-android-arm64${process.env.debugSuffix}.apk`;
           await mkdir(directory, { recursive: true });
-          await copyFile("build/mobile/toonflowMobile.apk", join(directory, apkName));
+          await copyFile("build/mobile/filmfrayloMobile.apk", join(directory, apkName));
           '
       - name: 上传构建产物
         id: artifact
         uses: actions/upload-artifact@v7
         with:
-          name: toonflow-${{ needs.prepare.outputs.version }}-${{ matrix.target }}
+          name: filmfraylo-${{ needs.prepare.outputs.version }}-${{ matrix.target }}
           path: ${{ matrix.releaseFolder }}/${{ needs.prepare.outputs.version }}/
           if-no-files-found: error
           compression-level: 0
@@ -348,4 +348,4 @@ jobs:
           artifactUrl: ${{ steps.artifact.outputs.artifact-url }}
           artifactTarget: ${{ matrix.target }}
         run: |
-          printf '[下载 Toonflow %s · %s](%s)\n' "$appVersion" "$artifactTarget" "$artifactUrl" >> "$GITHUB_STEP_SUMMARY"
+          printf '[下载 FilmFraylo %s · %s](%s)\n' "$appVersion" "$artifactTarget" "$artifactUrl" >> "$GITHUB_STEP_SUMMARY"

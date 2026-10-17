@@ -1,12 +1,12 @@
 # 开发与扩展指南
 
-[返回 Toonflow 首页](../README.md) · [文档目录](./readme.md) · [贡献指南](../CONTRIBUTING.md) · [开发规范](../AGENTS.md)
+[返回 FilmFraylo 首页](../README.md) · [文档目录](./readme.md) · [贡献指南](../CONTRIBUTING.md) · [开发规范](../AGENTS.md)
 
 本文收录插件开发、源码运行、桌面打包和更新发布的详细说明。首次参与开发，可先阅读贡献指南。
 
 ## 🧩 插件与模型扩展
 
-通过“设置 → 插件市场”发现和管理节点、工具与技能；市场顶部可以直接打开 [网页版市场](https://api.toonflow.net/console/plugIn) 和 [开发者文档](https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd)。市场需要 TF-Router API Key，未配置时会提示填写。
+节点、工具、技能与提供方随应用分发；外部插件可通过桌面端的 `toonflow://install` 协议链接唤起安装，也可在“设置 → 开发者选项”中手动安装（见下）。
 
 | 扩展类型 | 用途 | 开发入口 |
 | --- | --- | --- |
@@ -17,9 +17,9 @@
 
 节点与工具的配置表单统一使用 `@form-create/element-ui` 的规则；有必填项未填写时，配置按钮会显示红点。工具只接收自身配置，宿主不向工具直接传递完整应用设置。
 
-媒体接口包含图片、视频和音频的扩展类型，实际能力由各提供方实现；当前内置 TF-Router 媒体适配提供图片与视频生成。技能既可以全局安装，也可以放在当前工作区的 `skill/` 目录，同名时优先使用工作区版本。
+媒体接口包含图片、视频和音频的扩展类型，实际能力由各提供方实现；当前内置影幻平台适配提供图片、视频与音频生成。技能既可以全局安装，也可以放在当前工作区的 `skill/` 目录，同名时优先使用工作区版本。
 
-需要从外部 Coding 工具操作 Toonflow 时，在“设置 → MCP”开启服务并复制客户端配置，支持 HTTP 与 stdio 连接。画布和节点等界面操作需要保持 Toonflow 窗口或网页打开，详见 [MCP 接入说明](../packages/mcp/README.md)。
+需要从外部 Coding 工具操作 FilmFraylo 时，在“设置 → MCP”开启服务并复制客户端配置，支持 HTTP 与 stdio 连接。画布和节点等界面操作需要保持 FilmFraylo 窗口或网页打开，详见 [MCP 接入说明](../packages/mcp/README.md)。
 
 <details>
 <summary><strong>通过网页唤起桌面安装插件</strong></summary>
@@ -68,8 +68,8 @@ Windows 安装器负责注册协议；macOS 需要将应用放入 `/Applications
 先安装 Git 和项目指定版本的 [Bun](https://bun.sh/)，然后执行：
 
 ```sh
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
-cd Toonflow-app
+git clone https://github.com/zechau/filmfraylo-app.git
+cd filmfraylo-app
 bun install
 
 # 首次开发或修改插件后，构建节点和工具并同步到 data/
@@ -140,7 +140,7 @@ bun run build:desktop
 bun run package:desktop
 ```
 
-安装包输出到 `build/desktop/artifacts/toonflow-<版本>-Setup.exe`。
+安装包输出到 `build/desktop/artifacts/filmfraylo-<版本>-Setup.exe`。
 
 **macOS**
 
@@ -166,7 +166,7 @@ bun run package:desktop
 本机默认生成未做 Developer ID 签名与公证的测试包；GitHub Actions 的 ARM 包会按下方配置自动签名并公证，Intel 仍不重签。对于自己构建且确认来源的测试应用，若被隔离属性拦截，可仅移除该应用的隔离属性，路径按实际位置调整：
 
 ```sh
-xattr -dr com.apple.quarantine "/Applications/toonflow.app"
+xattr -dr com.apple.quarantine "/Applications/FilmFraylo.app"
 ```
 
 **类型检查与 SDK**
@@ -212,13 +212,13 @@ git push --no-follow-tags origin refs/tags/v2.0.0:refs/tags/v2.0.0
 
 | 平台 | 安装包 | 更新文件 |
 | --- | --- | --- |
-| Windows x64 | `toonflow-<版本号>-Setup.exe` | `stable-win-x64-*` |
+| Windows x64 | `filmfraylo-<版本号>-Setup.exe` | `stable-win-x64-*` |
 | macOS Intel | DMG | `stable-macos-x64-*` |
 | macOS Apple Silicon | DMG | `stable-macos-arm64-*` |
 
 各平台包含完整更新包 `.tar.zst`、更新清单 `*-update.json`，以及**GitHub 最新发布版 → 当前版本**的 `<平台前缀>-<旧 hash>.patch`。首次发布找不到该平台清单（HTTP 404）时只生成安装包和完整更新包；其他网络错误、无效清单或缺失 patch 会中止构建。版本号必须高于更新源中的上一版。
 
-构建固定使用 GitHub Releases 的 `releases/latest/download` 读取上一版清单及完整包，用于生成补丁。GitHub Actions 使用当前工作流仓库（`GITHUB_SERVER_URL` / `GITHUB_REPOSITORY`），本机构建默认使用 `HBAI-Ltd/Toonflow-app`。此地址写入 SDK 的构建配置，不受客户端设置影响；客户端运行时在“设置 → 关于”选择更新源，默认使用官方源 `https://api.toonflow.net/version/desktopUpdates`，也可切换到 GitHub Releases。开发者选项可保存一个自定义更新文件目录地址，保存后会出现在“关于”的更新源下拉框。工作流会上传文件到 GitHub Release，官方更新服务的文件仍需按下方命令单独同步。
+构建固定使用 GitHub Releases 的 `releases/latest/download` 读取上一版清单及完整包，用于生成补丁。GitHub Actions 使用当前工作流仓库（`GITHUB_SERVER_URL` / `GITHUB_REPOSITORY`），本机构建默认使用 `zechau/filmfraylo-app`。工作流会上传文件到 GitHub Release；更新托管服务的文件仍按下方命令单独同步。
 
 [Debug 工作流](../.github/workflows/debug.yml) 可单独选择平台或全部平台，产物保留 7 天，不创建 Release。默认只打完整包，勾选 `generatePatch` 可验证增量构建。CI 构建和归档检查不等于已验证真实安装、GUI 启动或 macOS Gatekeeper。
 

@@ -1,4 +1,4 @@
-# Toonflow OHOS
+# FilmFraylo OHOS
 
 独立鸿蒙兼容构建，复用 `apps/mobile/src/server.ts`、完整网页与内置插件。ArkTS UIAbility/ArkWeb 加载应用内 Bun 在随机 localhost 端口提供的页面；C++ NAPI 只负责启动和回收 Bun。不会启动电脑上的服务来冒充本机后端。
 
@@ -19,7 +19,7 @@ bun run --cwd compat/ohos build
 
 `setup` 下载并校验 Bun，然后用 DevEco 自带 OHPM 链接项目自己的 NAPI 类型声明。`build` 复用 `build:server` 构建前后端及插件，然后生成标准 Hvigor 工程、编译原生桥和 ArkTS、打包 HAP。SDK 强制要求的 `build-profile.json5`、`CMakeLists.txt` 等文件只生成到 `build/ohos/project`。构建不会隐式运行 `setup`。
 
-默认产物为 `build/ohos/toonflow-2.0.0-ohos-arm64-v8a-unsigned.hap`，文件名随项目版本变化。程序资源在 `build/ohos/payload`；可用 DevEco Studio 打开 `build/ohos/project` 调试和配置签名。
+默认产物为 `build/ohos/filmfraylo-2.0.0-ohos-arm64-v8a-unsigned.hap`，文件名随项目版本变化。程序资源在 `build/ohos/payload`；可用 DevEco Studio 打开 `build/ohos/project` 调试和配置签名。
 
 可选环境变量：
 
@@ -45,8 +45,8 @@ $hdc = Join-Path $env:DEVECO_HOME 'sdk\default\openharmony\toolchains\hdc.exe'
 & $hdc tconn 127.0.0.1:5557
 & $hdc list targets
 & $hdc -t 127.0.0.1:5557 shell param get const.product.cpu.abilist
-& $hdc -t 127.0.0.1:5557 install -r (Resolve-Path build/ohos/toonflow-2.0.0-ohos-arm64-v8a-signed.hap).Path
-& $hdc -t 127.0.0.1:5557 shell aa start -b com.toonflow.mobile -a entryAbility
+& $hdc -t 127.0.0.1:5557 install -r (Resolve-Path build/ohos/filmfraylo-2.0.0-ohos-arm64-v8a-signed.hap).Path
+& $hdc -t 127.0.0.1:5557 shell aa start -b com.filmfraylo.mobile -a entryAbility
 & $hdc -t 127.0.0.1:5557 shell hilog -T ToonflowRuntime
 ```
 

@@ -51,7 +51,7 @@ export function assertMobileLinkControl(req: Request) {
   const localHost = ["localhost", "127.0.0.1", "[::1]"].includes(req.hostname);
   if (isMobileLinkRequest(req) || !localSocket || !localHost || !sameOrigin ||
     (req.get("x-toonflow-mobile-link") !== "1" && req.get("x-toonflow-workspace") !== "1")) {
-    throw Object.assign(new Error("只允许本机 Toonflow 页面管理设备互联"), { status: 403 });
+    throw Object.assign(new Error("只允许本机 FilmFraylo 页面管理设备互联"), { status: 403 });
   }
   if (!getRuntime(req.app).supported) throw Object.assign(new Error("当前运行环境不支持共享后端"), { status: 403 });
 }

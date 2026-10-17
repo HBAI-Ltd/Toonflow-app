@@ -51,7 +51,7 @@ await createTeamConfig(import.meta.url, {
 
 ## A2A
 
-在 Toonflow 的「设置 → 插件市场 → Agent」中安装 `.agent.zip`，可以启用、禁用、导出、卸载或编辑成员说明、技能、知识与 `team.json`。团队安装在 `data/agents/<name>`；更新发现本地修改时会要求明确覆盖，开发构建也不会默认覆盖它们。团队资料工具允许成员在清单授予的范围内读写文本，不能借此修改工具代码或扩大成员授权。
+团队包以 `.agent.zip` 安装到 `data/agents/<name>` 后，可以启用、禁用、导出、卸载或编辑成员说明、技能、知识与 `team.json`。团队安装在 `data/agents/<name>`；更新发现本地修改时会要求明确覆盖，开发构建也不会默认覆盖它们。团队资料工具允许成员在清单授予的范围内读写文本，不能借此修改工具代码或扩大成员授权。
 
 主 Agent 使用现有 `subAgent` 工具调用团队，例如：
 

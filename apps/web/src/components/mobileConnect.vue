@@ -15,12 +15,12 @@
       </section>
       <section v-else-if="!deviceConnectionSupported" class="connectionInfo" aria-label="设备互联说明">
         <icon-device-desktop :size="40" aria-hidden="true" />
-        <p class="description">请使用 Toonflow 桌面端或 Android 客户端连接其他设备。<br />本机共享可在“设置 → 设备互联”中管理。</p>
+        <p class="description">请使用 FilmFraylo 桌面端或 Android 客户端连接其他设备。<br />本机共享可在“设置 → 设备互联”中管理。</p>
       </section>
       <section v-else-if="view === 'current'" class="connectionInfo" aria-label="当前连接">
         <icon-device-desktop :size="40" aria-hidden="true" />
         <el-tag :type="mobileConnection.online === true ? mobileConnectionVersionWarning ? 'warning' : 'success' : mobileConnection.online === false ? 'danger' : 'info'">{{ mobileConnectionLabel }}</el-tag>
-        <h3>{{ mobileConnection.name || 'Toonflow' }}</h3>
+        <h3>{{ mobileConnection.name || 'FilmFraylo' }}</h3>
         <code>{{ mobileConnection.url }}</code>
         <p class="description">{{ mobileConnection.online === true ? '正在使用这个设备的项目与配置。' : mobileConnection.online === false ? '暂时无法连接这个设备，请检查对方是否运行以及网络连接。' : '正在确认这个设备是否可以连接…' }}</p>
         <el-alert v-if="mobileConnectionVersionWarning" :title="mobileConnectionVersionWarning" type="warning" :closable="false" showIcon />
@@ -148,11 +148,11 @@ function decodeImage(source: CanvasImageSource, width: number, height: number) {
 
 function recognize(qrCode: string) {
   try {
-    if (qrCode.length > 4096) throw new Error("请扫描 Toonflow 的设备互联二维码");
+    if (qrCode.length > 4096) throw new Error("请扫描 FilmFraylo 的设备互联二维码");
     const value = JSON.parse(qrCode);
     if (!value || value.type !== "toonflowMobile" || value.version !== 1 || typeof value.name !== "string" || !value.name.trim()
       || typeof value.url !== "string" || typeof value.code !== "string" || !/^[\w-]{32,256}$/.test(value.code)) {
-      throw new Error("请扫描 Toonflow 的设备互联二维码");
+      throw new Error("请扫描 FilmFraylo 的设备互联二维码");
     }
     const url = normalizeConnectionUrl(value.url);
     stopCamera();
@@ -161,7 +161,7 @@ function recognize(qrCode: string) {
     view.value = "confirm";
     return true;
   } catch (cause) {
-    error.value = cause instanceof SyntaxError ? "请扫描 Toonflow 的设备互联二维码" : errorMessage(cause);
+    error.value = cause instanceof SyntaxError ? "请扫描 FilmFraylo 的设备互联二维码" : errorMessage(cause);
     return false;
   }
 }

@@ -1,4 +1,4 @@
-# Toonflow 文档目录
+# FilmFraylo 文档目录
 
 [返回项目首页](../README.md)
 
@@ -32,7 +32,6 @@
 
 ## 使用与开发
 
-- [使用教程](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)：日常操作与创作流程。
 - [开发与扩展指南](./development.md)：源码运行、插件扩展、桌面打包和更新发布。
 - [Android 说明](../apps/mobile/readme.md)：ARM64 APK、本地运行、设备互联与构建。
 - [贡献指南](../CONTRIBUTING.md)与[开发规范](../AGENTS.md)：参与项目的约定。

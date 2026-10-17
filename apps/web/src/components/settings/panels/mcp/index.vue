@@ -5,7 +5,7 @@
         <h3 id="mcpEnabledTitle">开启 MCP</h3>
         <el-switch :modelValue="mcpSettings.enabled" :loading="saving" aria-label="开启 MCP" @change="(value) => setEnabled(value === true)" />
       </div>
-      <p class="description">允许外部 Coding 工具和 Agent 操作 Toonflow。开启后，将客户端配置添加到对应工具中。</p>
+      <p class="description">允许外部 Coding 工具和 Agent 操作 FilmFraylo。开启后，将客户端配置添加到对应工具中。</p>
     </section>
 
     <section class="settingSection" aria-labelledby="mcpConnectionTitle">
@@ -26,7 +26,7 @@
           </li>
         </ul>
       </template>
-      <p class="description">画布与节点操作需要 Toonflow 界面保持打开。</p>
+      <p class="description">画布与节点操作需要 FilmFraylo 界面保持打开。</p>
     </section>
 
     <section class="settingSection" aria-labelledby="mcpEndpointTitle">
@@ -49,8 +49,8 @@
     </section>
 
     <section class="settingSection" aria-labelledby="mcpSkillTitle">
-      <h3 id="mcpSkillTitle">Toonflow Skill</h3>
-      <p class="description">教外部 Agent 组合使用 Toonflow 工具。将 SKILL.md 安装到对应 Coding 工具的技能目录。</p>
+      <h3 id="mcpSkillTitle">FilmFraylo Skill</h3>
+      <p class="description">教外部 Agent 组合使用 FilmFraylo 工具。将 SKILL.md 安装到对应 Coding 工具的技能目录。</p>
       <div class="actions">
         <el-button :icon="IconFileText" :loading="skillAction === 'view'" :disabled="!!skillAction" @click="handleSkill('view')">查看 Skill</el-button>
         <el-button :icon="IconCopy" :loading="skillAction === 'copy'" :disabled="!!skillAction" @click="handleSkill('copy')">复制</el-button>
@@ -58,7 +58,7 @@
       </div>
     </section>
 
-    <el-dialog v-model="skillVisible" title="Toonflow Skill" width="min(760px, calc(100vw - 32px))" alignCenter appendToBody>
+    <el-dialog v-model="skillVisible" title="FilmFraylo Skill" width="min(760px, calc(100vw - 32px))" alignCenter appendToBody>
       <div class="skillContent"><messageMarkdown :content="skillContent" /></div>
     </el-dialog>
     <el-dialog v-model="copyVisible" :title="`复制 ${copyTitle}`" width="min(680px, calc(100vw - 32px))" alignCenter appendToBody @opened="copyInput?.select()">

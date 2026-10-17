@@ -5,14 +5,14 @@ plugins {
 layout.buildDirectory.set(file("../../../build/mobile/native"))
 
 android {
-  namespace = "com.toonflow.mobile"
+  namespace = "com.filmfraylo.mobile"
   compileSdk {
     version = release(37) { minorApiLevel = 1 }
   }
   buildToolsVersion = "36.0.0"
 
   defaultConfig {
-    applicationId = "com.toonflow.mobile"
+    applicationId = "com.filmfraylo.mobile"
     minSdk = 26
     targetSdk = 34
     versionCode = providers.gradleProperty("mobileVersionCode").orElse("1").get().toInt()

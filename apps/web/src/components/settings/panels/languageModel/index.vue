@@ -1,132 +1,95 @@
 <template>
   <div class="providerList">
     <div class="itemList">
-      <el-card v-for="item in sortedProviders" :key="item.id" class="providerItem" shadow="never">
+      <el-card class="providerItem" shadow="never">
         <div class="providerHeader">
-          <div v-if="item.icon || isTfRouterProvider(item)" class="providerMark" aria-hidden="true">
-            <img class="providerLogo" :class="{ monochrome: isTfRouterProvider(item) }" :src="item.icon || logoUrl" alt="" />
+          <div class="providerMark" aria-hidden="true">
+            <img class="providerLogo monochrome" :src="logoUrl" alt="" />
           </div>
           <div class="providerInfo">
             <div class="providerHeading">
-              <el-text class="providerName" tag="strong">{{ item.label }}</el-text>
-              <el-tag v-if="isTfRouterProvider(item)" size="small">官方</el-tag>
+              <el-text class="providerName" tag="strong">{{ tfRouter.label }}</el-text>
             </div>
-            <el-text class="providerId" size="small" type="info" :title="item.id">{{ item.id }}</el-text>
+            <el-text class="providerId" size="small" type="info">v{{ tfRouter.version }}</el-text>
           </div>
         </div>
-        <tfAccount v-if="isTfRouterProvider(item)" :apiKey="typeof item.apiKey === 'string' ? item.apiKey : ''" :visible="visible" :saveApiKey="(key) => saveProviderApiKey(item.id, key)" />
+        <div class="keyForm">
+          <el-input
+            v-model="draftKey"
+            dir="ltr"
+            type="password"
+            showPassword
+            placeholder="粘贴影幻 API Key"
+            aria-label="影幻 API Key"
+            :disabled="saving || refreshing"
+            @keyup.enter="saveKey" />
+          <el-button type="primary" :loading="saving" :disabled="!draftKey.trim() || saving || refreshing" @click="saveKey">保存</el-button>
+          <el-button :icon="IconRefresh" :loading="refreshing" :disabled="saving || refreshing" @click="refreshModels">更新模型</el-button>
+        </div>
+        <el-text v-if="error" class="keyError" size="small" type="danger" role="alert">{{ error }}</el-text>
         <div class="providerFooter">
           <div class="providerMeta">
-            <el-tag v-if="getProviderVersion(item)" size="small" type="info" effect="plain">v{{ getProviderVersion(item) }}</el-tag>
-            <el-text size="small" type="info">{{ item.models.length }} 个模型</el-text>
+            <el-text size="small" type="info">{{ modelCount }} 个模型</el-text>
           </div>
-          <el-space class="itemActions" wrap>
-            <el-button v-if="isTfRouterProvider(item) && item.apiKey?.trim() && !item.models.length" text :icon="IconRefresh" :loading="fetchingId === item.id" :disabled="!!deletingId || !!fetchingId" @click="fetchProviderModels(item)">获取模型</el-button>
-            <el-button text :icon="IconEdit" :disabled="!!deletingId" @click="openCustomProvider(item)">编辑</el-button>
-            <el-popconfirm title="确定删除此供应商及其模型？" confirmButtonText="删除" cancelButtonText="取消" @confirm="deleteProvider(item.id)">
-              <template #reference><el-button text type="danger" :icon="IconTrash" :loading="deletingId === item.id" :disabled="!!deletingId">删除</el-button></template>
-            </el-popconfirm>
-          </el-space>
+          <el-text size="small" type="info">模型可在影幻平台的渠道设置中管理，保存 Key 或点击更新模型后自动同步。</el-text>
         </div>
       </el-card>
     </div>
-    <div class="providerActions">
-      <el-button class="addButton" :icon="IconPlus" @click="openProvider">添加供应商</el-button>
-      <el-button class="addButton" :icon="IconSettings" @click="openCustomProvider()">添加自定义供应商</el-button>
-    </div>
-    <component :is="addProviderDialog" v-model="providerDialogVisible" />
-    <component :is="addCustomProviderDialog" v-model="customProviderDialogVisible" :provider="editingProvider" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, shallowRef, type Component } from "vue";
-import axios from "axios";
+import { computed, ref } from "vue";
 import { ElMessage } from "element-plus";
-import { customProviders, saveSettings, type CustomProvider } from "@/stores/settings";
-import { IconPlus, IconSettings, IconEdit, IconTrash, IconRefresh } from "@tabler/icons-vue";
-import { languageProviders } from "@toonflow/providers";
+import { IconRefresh } from "@tabler/icons-vue";
+import tfRouter from "@toonflow/providers/language/tfRouter";
 import logoUrl from "@toonflow/assets/logo.svg";
-import tfAccount from "../../tfAccount.vue";
-import { isTfRouterProvider } from "@/lib/tf";
+import { customProviders, saveSettings, type CustomProvider } from "@/stores/settings";
+import { fetchProviderModels, getProviderApiKey, saveProviderApiKey } from "@/lib/providerKey";
 
-const { visible = true } = defineProps<{ visible?: boolean }>();
-const addProviderDialog = shallowRef<Component>();
-const addCustomProviderDialog = shallowRef<Component>();
-const providerDialogVisible = ref(false);
-const customProviderDialogVisible = ref(false);
-const editingProvider = ref<CustomProvider>();
-const deletingId = ref("");
-const fetchingId = ref("");
-const sortedProviders = computed(() => [...customProviders.value].sort((a, b) => Number(isTfRouterProvider(b)) - Number(isTfRouterProvider(a))));
+const draftKey = ref(getProviderApiKey());
+const saving = ref(false);
+const refreshing = ref(false);
+const error = ref("");
+const modelCount = computed(() => customProviders.value
+  .find(item => item.id.toLowerCase() === tfRouter.id.toLowerCase())?.models.length ?? 0);
 
-function getProviderVersion(provider: CustomProvider) {
-  const version = languageProviders.find(item => item.id.toLowerCase() === provider.id.toLowerCase())?.version ?? provider.version;
-  return typeof version === "string" ? version.trim() : "";
-}
-
-function openProvider() {
-  addProviderDialog.value ??= defineAsyncComponent(() => import("./addProviderDialog.vue"));
-  providerDialogVisible.value = true;
-}
-
-function openCustomProvider(provider?: CustomProvider) {
-  addCustomProviderDialog.value ??= defineAsyncComponent(() => import("./addCustomProviderDialog.vue"));
-  editingProvider.value = provider;
-  customProviderDialogVisible.value = true;
-}
-
-async function deleteProvider(id: string) {
-  if (deletingId.value) return;
-  deletingId.value = id;
+async function saveKey() {
+  const key = draftKey.value.trim();
+  if (!key || saving.value || refreshing.value) return;
+  saving.value = true;
+  error.value = "";
   try {
-    await saveSettings(settings => {
-      const current = settings.customProviders;
-      if (!Array.isArray(current)) throw new Error("配置格式错误");
-      return { customProviders: current.filter(item => item?.id !== id) };
-    });
-  } catch { ElMessage.error("删除失败，请重试"); }
-  finally { deletingId.value = ""; }
-}
-
-async function saveProviderApiKey(id: string, key: string) {
-  const provider = customProviders.value.find(item => item.id === id);
-  if (!provider) throw new Error("供应商已不存在");
-  const { apiUrl, protocol, apiKey } = provider;
-  await saveSettings(settings => {
-    const current = settings.customProviders;
-    if (!Array.isArray(current)) throw new Error("配置格式错误");
-    const latest = current.find(item => item?.id === id);
-    if (!latest) throw new Error("供应商已不存在");
-    if (latest.apiUrl !== apiUrl || latest.protocol !== protocol || latest.apiKey !== apiKey) {
-      throw new Error("供应商配置已变更，请重试");
-    }
-    return { customProviders: current.map(item => item?.id === id ? { ...item, apiKey: key } : item) };
-  });
-}
-
-async function fetchProviderModels(provider: CustomProvider) {
-  if (fetchingId.value) return;
-  const { id, apiUrl, protocol, apiKey } = provider;
-  fetchingId.value = id;
-  try {
-    const { data } = await axios.post("/api/providers/models", { apiUrl, protocol, apiKey }, { timeout: 35000 });
-    if (data.code !== 200 || !Array.isArray(data.data)) throw new Error(data.message || "获取模型列表失败");
-    if (!data.data.length) throw new Error("未获取到可用模型，请检查 API Key 后重试");
-    await saveSettings(settings => {
-      const current = settings.customProviders;
-      if (!Array.isArray(current)) throw new Error("配置格式错误");
-      const latest = current.find(item => item?.id === id);
-      if (!latest) throw new Error("供应商已不存在");
-      if (latest.apiUrl !== apiUrl || latest.protocol !== protocol || latest.apiKey !== apiKey) {
-        throw new Error("供应商配置已变更，请重试");
-      }
-      return { customProviders: current.map(item => item?.id === id ? { ...item, models: data.data } : item) };
-    });
-  } catch (error) {
-    ElMessage.error(axios.isAxiosError(error) ? error.response?.data?.message || "获取模型列表失败，请重试" : error instanceof Error ? error.message : "获取模型列表失败，请重试");
+    await saveProviderApiKey(key);
+    draftKey.value = key;
+    ElMessage.success("API Key 已保存");
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : "保存失败，请重试";
+  } finally {
+    saving.value = false;
   }
-  finally { fetchingId.value = ""; }
+}
+
+async function refreshModels() {
+  const key = getProviderApiKey();
+  if (!key || saving.value || refreshing.value) return;
+  refreshing.value = true;
+  error.value = "";
+  try {
+    const models = await fetchProviderModels(key);
+    if (!models.length) throw new Error("未获取到文本模型，请先在影幻平台添加对话模型");
+    await saveSettings(current => {
+      const providers = Array.isArray(current.customProviders) ? current.customProviders as CustomProvider[] : [];
+      const index = providers.findIndex(item => typeof item?.id === "string" && item.id.toLowerCase() === tfRouter.id.toLowerCase());
+      if (index < 0) throw new Error("请先保存 API Key");
+      return { customProviders: providers.map((item, position) => position === index ? { ...item, models } : item) };
+    });
+    ElMessage.success("模型列表已更新");
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : "获取模型列表失败，请重试";
+  } finally {
+    refreshing.value = false;
+  }
 }
 </script>
 

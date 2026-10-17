@@ -130,10 +130,10 @@ export async function createRemoteConnection(directory: string, options: {
     try {
       if (request.body?.qrCode !== undefined) {
         const text = request.body.qrCode;
-        if (typeof text !== "string" || text.length > 4096) throw new Error("请扫描 Toonflow 的互联二维码");
+        if (typeof text !== "string" || text.length > 4096) throw new Error("请扫描 FilmFraylo 的互联二维码");
         const value = JSON.parse(text);
         if (value.type !== "toonflowMobile" || value.version !== 1 || typeof value.code !== "string" || !/^[\w-]{32,256}$/.test(value.code)) {
-          throw new Error("请扫描 Toonflow 的互联二维码");
+          throw new Error("请扫描 FilmFraylo 的互联二维码");
         }
         pair = { url: serverUrl(value.url), code: value.code };
       } else {
@@ -151,7 +151,7 @@ export async function createRemoteConnection(directory: string, options: {
     try {
       const result = await fetch(`${pair.url}/api/mobileLink/pair`, {
         method: "POST", redirect: "error", signal: AbortSignal.timeout(15000),
-        headers: { "Content-Type": "application/json", "Accept-Language": request.get("accept-language") ?? "" }, body: JSON.stringify({ code: pair.code, name: options.deviceName?.trim().slice(0, 100) || "Toonflow" }),
+        headers: { "Content-Type": "application/json", "Accept-Language": request.get("accept-language") ?? "" }, body: JSON.stringify({ code: pair.code, name: options.deviceName?.trim().slice(0, 100) || "FilmFraylo" }),
       });
       const body = await result.json() as { code?: number; message?: string; data?: RemoteConnection };
       if (!result.ok || body.code !== 200) throw Object.assign(new Error(body.message || "连接失败，请刷新二维码重试"), { status: result.ok ? 502 : result.status });
@@ -253,5 +253,5 @@ function showConnectionError(response: express.Response, message: string, page =
   const disconnect = Bun.escapeHTML(translateMessage("断开并独立运行"));
   const failure = Bun.escapeHTML(translateMessage("切换失败，请重试"));
   // 错误页来自本机，远端离线时仍可主动独立运行。返回200避免原生HTTP错误遮住恢复按钮。
-  response.status(200).type("html").send(`<!doctype html><html lang="${locale}" dir="${isRtlLocale(locale) ? "rtl" : "ltr"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Toonflow</title><style>body{font:16px system-ui;background:#fff;color:#303133;text-align:center;padding:8vh 24px}button{padding:12px 20px;margin:12px;border:1px solid #dcdfe6;border-radius:8px;background:#fff;color:#409eff;font:inherit}</style></head><body><h2>${title}</h2><p>${Bun.escapeHTML(message)}</p><button onclick="location.reload()">${retry}</button><button data-error="${failure}" onclick="this.disabled=true;fetch('/api/connection/disconnect',{method:'POST',headers:{'x-toonflow-workspace':'1','Accept-Language':'${locale}'}}).then(async r=>{if(!r.ok)throw Error();if((await r.json()).restart==='mobile')location.href='toonflow://restart'}).catch(()=>{this.disabled=false;alert(this.dataset.error)})">${disconnect}</button><script>if(new URLSearchParams(location.search).get("desktop")==="1")fetch("/api/desktop/ready",{method:"POST",headers:{"x-toonflow-desktop":"1","Content-Type":"application/json"},body:JSON.stringify({failed:true})}).catch(()=>{});</script></body></html>`);
+  response.status(200).type("html").send(`<!doctype html><html lang="${locale}" dir="${isRtlLocale(locale) ? "rtl" : "ltr"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FilmFraylo</title><style>body{font:16px system-ui;background:#fff;color:#303133;text-align:center;padding:8vh 24px}button{padding:12px 20px;margin:12px;border:1px solid #dcdfe6;border-radius:8px;background:#fff;color:#409eff;font:inherit}</style></head><body><h2>${title}</h2><p>${Bun.escapeHTML(message)}</p><button onclick="location.reload()">${retry}</button><button data-error="${failure}" onclick="this.disabled=true;fetch('/api/connection/disconnect',{method:'POST',headers:{'x-toonflow-workspace':'1','Accept-Language':'${locale}'}}).then(async r=>{if(!r.ok)throw Error();if((await r.json()).restart==='mobile')location.href='toonflow://restart'}).catch(()=>{this.disabled=false;alert(this.dataset.error)})">${disconnect}</button><script>if(new URLSearchParams(location.search).get("desktop")==="1")fetch("/api/desktop/ready",{method:"POST",headers:{"x-toonflow-desktop":"1","Content-Type":"application/json"},body:JSON.stringify({failed:true})}).catch(()=>{});</script></body></html>`);
 }

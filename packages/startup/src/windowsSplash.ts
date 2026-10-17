@@ -24,7 +24,7 @@ export function showWindowsSplash(assetDir: string, onClose: () => void) {
   });
   const native = user32.symbols;
   const dialogClass = Buffer.from("#32770\0", "utf16le");
-  const windowTitle = Buffer.from("Toonflow 启动中\0", "utf16le");
+  const windowTitle = Buffer.from("FilmFraylo 启动中\0", "utf16le");
   // ACT: 固定主显示器上的 Windows x64 原生动画窗口；不创建第二个 WebView。
   // WS_EX_LAYERED | WS_EX_APPWINDOW + WS_POPUP | WS_SYSMENU：透明无边框，任务栏保留关闭入口。
   const window = native.CreateWindowExW(0xc0000, ptr(dialogClass), ptr(windowTitle), 0x80080000, 0, 0, 400, 160, 0, 0, 0, null);

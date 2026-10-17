@@ -2,7 +2,7 @@
   <div v-loading="loading" class="deviceLink">
     <section v-if="isRemoteConnection" class="remoteConnection" aria-label="当前连接设备">
       <el-tag :type="mobileConnection.online === true ? mobileConnectionVersionWarning ? 'warning' : 'success' : mobileConnection.online === false ? 'danger' : 'info'">{{ mobileConnectionLabel }}</el-tag>
-      <h3>{{ mobileConnection.name || 'Toonflow' }}</h3>
+      <h3>{{ mobileConnection.name || 'FilmFraylo' }}</h3>
       <code>{{ mobileConnection.url }}</code>
       <p class="description">当前使用这个设备的项目与配置。断开后恢复独立运行，才可以允许其他设备连接。</p>
       <el-alert v-if="mobileConnectionVersionWarning" :title="mobileConnectionVersionWarning" type="warning" :closable="false" showIcon />
@@ -14,7 +14,7 @@
       <div class="sectionHeader">
         <div class="settingInfo">
           <h3 id="deviceLinkTitle">允许其他设备连接</h3>
-          <p class="description">其他电脑、安卓设备可使用这里的项目与配置。连接时请保持 Toonflow 运行。</p>
+          <p class="description">其他电脑、安卓设备可使用这里的项目与配置。连接时请保持 FilmFraylo 运行。</p>
         </div>
         <el-switch :modelValue="form.enabled" :disabled="busy || !status" aria-label="允许其他设备连接" @change="value => saveConfig(value === true)" />
       </div>
@@ -89,7 +89,7 @@
                 <el-option v-for="address in status?.addresses ?? []" :key="address" :label="address" :value="address" />
               </el-select>
               <code v-else class="connectionAddress">{{ selectedAddress || '未找到可用地址' }}</code>
-              <p class="description">无法连接时可尝试其他地址，并检查电脑防火墙是否允许 Toonflow 联网。</p>
+              <p class="description">无法连接时可尝试其他地址，并检查电脑防火墙是否允许 FilmFraylo 联网。</p>
             </el-form-item>
             <el-form-item v-if="addressMode === 'public'" label="公网 HTTPS 地址">
               <el-input v-model="form.publicUrl" placeholder="https://toonflow.example.com" aria-label="公网 HTTPS 地址" />
@@ -316,7 +316,7 @@ async function revokeDevice(id: string) {
   revoking.value = true;
   error.value = "";
   try {
-    await ElMessageBox.confirm("撤销后，这个设备将无法继续访问当前 Toonflow。", "撤销设备授权", { confirmButtonText: "撤销授权", cancelButtonText: "取消", type: "warning" });
+    await ElMessageBox.confirm("撤销后，这个设备将无法继续访问当前 FilmFraylo。", "撤销设备授权", { confirmButtonText: "撤销授权", cancelButtonText: "取消", type: "warning" });
     const { data } = await axios.post<ApiResponse<unknown>>("/api/mobileLink/revoke", { id }, { headers });
     if (data.code !== 200) throw new Error(data.message || "撤销授权失败");
     await loadStatus(false);

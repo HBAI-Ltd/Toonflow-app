@@ -146,7 +146,7 @@ export async function runAppOperation(name: string, parameters: Record<string, u
   if (!operation) throw new Error(t`未知应用操作：${name}`);
   const args = operation.parameters.parse(parameters, validationOptions()) as Record<string, unknown>;
   const origin = getMcpRuntime().appOrigin;
-  if (!origin) throw new Error("Toonflow 服务尚未就绪");
+  if (!origin) throw new Error("FilmFraylo 服务尚未就绪");
   const url = new URL(operation.path, origin);
   const headers: Record<string, string> = { ...getAppRequestHeaders(), "x-toonflow-workspace": "1", Origin: origin, Referer: `${origin}/`, "Accept-Language": getLocale() };
   let body: string | ArrayBuffer | undefined;

@@ -30,14 +30,14 @@ internal static class protocolLauncher
                 {
                     try { locked = mutex.WaitOne(TimeSpan.FromSeconds(60)); }
                     catch (AbandonedMutexException) { locked = true; }
-                    if (!locked) throw new InvalidOperationException("Toonflow 正在启动，请稍后重试。");
+                    if (!locked) throw new InvalidOperationException("FilmFraylo 正在启动，请稍后重试。");
                     if (sendUrl(args[0])) return 0;
 
                     // ACT: SDK launcher 不转发 URL 参数；启动后通过本机服务交给待确认队列。
                     string bin = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../bin"));
                     string launcher = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startupLauncher.exe");
                     if (!File.Exists(launcher)) launcher = Path.Combine(bin, "launcher.exe");
-                    if (!File.Exists(launcher)) throw new FileNotFoundException("未找到 Toonflow，请重新安装。");
+                    if (!File.Exists(launcher)) throw new FileNotFoundException("未找到 FilmFraylo，请重新安装。");
                     Process.Start(new ProcessStartInfo(launcher)
                     {
                         WorkingDirectory = bin,
@@ -51,7 +51,7 @@ internal static class protocolLauncher
                         Thread.Sleep(250);
                         if (sendUrl(args[0])) return 0;
                     }
-                    throw new InvalidOperationException("Toonflow 启动超时，请打开应用后重新点击安装链接。");
+                    throw new InvalidOperationException("FilmFraylo 启动超时，请打开应用后重新点击安装链接。");
                 }
                 finally
                 {
@@ -61,7 +61,7 @@ internal static class protocolLauncher
         }
         catch (Exception error)
         {
-            MessageBox.Show(error.Message, "Toonflow", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(error.Message, "FilmFraylo", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 1;
         }
     }
@@ -107,12 +107,12 @@ internal static class protocolLauncher
                 string bodyText = reader.ReadToEnd();
                 Dictionary<string, object> result;
                 try { result = serializer.Deserialize<Dictionary<string, object>>(bodyText); }
-                catch (Exception) { throw new InvalidOperationException("Toonflow 返回的响应格式异常，应为 JSON 安装确认结果，请更新应用后重试。"); }
+                catch (Exception) { throw new InvalidOperationException("FilmFraylo 返回的响应格式异常，应为 JSON 安装确认结果，请更新应用后重试。"); }
                 object code;
                 if (result == null || !result.TryGetValue("code", out code) || !(code is int))
-                    throw new InvalidOperationException("Toonflow 返回的响应格式异常，缺少有效的 code 字段，请更新应用后重试。");
+                    throw new InvalidOperationException("FilmFraylo 返回的响应格式异常，缺少有效的 code 字段，请更新应用后重试。");
                 if (response.StatusCode != HttpStatusCode.OK || !Equals(code, 200))
-                    throw new InvalidOperationException(responseMessage(result, "Toonflow 未接受安装请求，请更新应用后重试。"));
+                    throw new InvalidOperationException(responseMessage(result, "FilmFraylo 未接受安装请求，请更新应用后重试。"));
                 return true;
             }
         }
@@ -135,12 +135,12 @@ internal static class protocolLauncher
                     }
                     // ACT: 非 JSON 或读取失败时保留 HTTP 状态，不把整页错误 HTML 弹给用户。
                     catch (Exception) { }
-                    throw new InvalidOperationException("Toonflow 拒绝安装请求（HTTP " + (int)response.StatusCode + "）：" + message);
+                    throw new InvalidOperationException("FilmFraylo 拒绝安装请求（HTTP " + (int)response.StatusCode + "）：" + message);
                 }
             }
             if (error.Status == WebExceptionStatus.Timeout)
-                throw new InvalidOperationException("提交安装请求超时，请等待 Toonflow 响应后重试。");
-            throw new InvalidOperationException("无法提交安装请求（" + error.Status + "），请确认 Toonflow 正常运行。");
+                throw new InvalidOperationException("提交安装请求超时，请等待 FilmFraylo 响应后重试。");
+            throw new InvalidOperationException("无法提交安装请求（" + error.Status + "），请确认 FilmFraylo 正常运行。");
         }
     }
 

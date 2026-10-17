@@ -78,15 +78,6 @@ export function updateGeneralSettings(patch: Omit<Partial<typeof generalSettings
   settings.value = { ...settings.value, general: { ...(current && typeof current === "object" && !Array.isArray(current) ? current : {}), ...patch } };
 }
 
-export const privacySettings = computed(() => {
-  const raw = settings.value.privacy;
-  const privacy = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
-  return {
-    dataCollectionEnabled: privacy.dataCollectionEnabled !== false,
-    anonymousId: typeof privacy.anonymousId === "string" ? privacy.anonymousId : "",
-  };
-});
-
 export type CustomProviderModel = { id: string; label: string; contextWindow?: number; maxOutputTokens?: number };
 export type CustomProvider = { id: string; label: string; icon?: string; version?: string; apiUrl: string; apiKey: string; protocol: string; models: CustomProviderModel[] };
 export const customProviders = computed<CustomProvider[]>(() => Array.isArray(settings.value.customProviders)

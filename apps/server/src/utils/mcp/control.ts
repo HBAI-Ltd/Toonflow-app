@@ -37,7 +37,7 @@ function allowedHost(req: Request) {
 
 export function getAppOrigin(req: Request) {
   const source = req.get("origin") ?? req.get("referer");
-  if (!source || !allowedHost(req)) throw Object.assign(new Error("只允许 Toonflow 页面访问控制连接"), { status: 403 });
+  if (!source || !allowedHost(req)) throw Object.assign(new Error("只允许 FilmFraylo 页面访问控制连接"), { status: 403 });
   let url: URL;
   try { url = new URL(source); }
   catch { throw Object.assign(new Error("页面来源无效"), { status: 403 }); }
@@ -58,7 +58,7 @@ export function authorizeMcp(req: Request) {
 
 export function assertAppRequest(req: Request) {
   getAppOrigin(req);
-  if (req.get("x-toonflow-workspace") !== "1") throw Object.assign(new Error("只允许 Toonflow 页面访问控制连接"), { status: 403 });
+  if (req.get("x-toonflow-workspace") !== "1") throw Object.assign(new Error("只允许 FilmFraylo 页面访问控制连接"), { status: 403 });
 }
 
 export function assertControlRequest(req: Request) {
@@ -73,11 +73,11 @@ export function listConnections() {
 export function getConnection(id?: string, directory?: string) {
   if (id) {
     const connection = connections.get(id);
-    if (!connection) throw new Error("Toonflow 页面已断开，请重新调用 getAppState");
+    if (!connection) throw new Error("FilmFraylo 页面已断开，请重新调用 getAppState");
     return connection;
   }
   const matches = [...connections.values()].filter(item => !directory || item.state.directory === directory);
-  if (matches.length > 1) throw new Error("存在多个 Toonflow 页面，请用 target.connectionId 指定操作目标");
+  if (matches.length > 1) throw new Error("存在多个 FilmFraylo 页面，请用 target.connectionId 指定操作目标");
   return matches[0];
 }
 
@@ -95,7 +95,7 @@ export function connectControl(id: string, response: Response) {
     response.off("close", close);
     socket?.off("close", close);
     if (connections.get(id) === connection) connections.delete(id);
-    connection.pending?.finish({ error: "Toonflow 页面已断开，操作已取消" });
+    connection.pending?.finish({ error: "FilmFraylo 页面已断开，操作已取消" });
   };
   response.once("close", close);
   socket?.once("close", close);

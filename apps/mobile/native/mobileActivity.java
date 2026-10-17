@@ -1,4 +1,4 @@
-package com.toonflow.mobile;
+package com.filmfraylo.mobile;
 
 import android.Manifest;
 import android.app.Activity;
@@ -98,7 +98,7 @@ public class mobileActivity extends Activity {
   private boolean failed;
   private String browserStage = "waiting";
   private String systemMissing = "";
-  private final Runnable browserTimeout = () -> showError("浏览器启动超时。请完全退出并重新打开 Toonflow。" + (systemMissing.isEmpty() ? "" : "\n系统 WebView 缺少：" + systemMissing), null);
+  private final Runnable browserTimeout = () -> showError("浏览器启动超时。请完全退出并重新打开 FilmFraylo。" + (systemMissing.isEmpty() ? "" : "\n系统 WebView 缺少：" + systemMissing), null);
   private final Runnable startupTimeout = () -> {
     synchronized (processLock) {
       if (stopping || failed || localOrigin != null || bunProcess == null || !bunProcess.isAlive()) return;
@@ -131,7 +131,7 @@ public class mobileActivity extends Activity {
     root.addView(statusView, new FrameLayout.LayoutParams(-1, -1));
     progressView = new ProgressBar(this);
     progressView.setIndeterminateTintList(ColorStateList.valueOf(Color.rgb(64, 158, 255)));
-    progressView.setContentDescription("Loading Toonflow");
+    progressView.setContentDescription("Loading FilmFraylo");
     int progressSize = (int) (32 * getResources().getDisplayMetrics().density);
     root.addView(progressView, new FrameLayout.LayoutParams(progressSize, progressSize, Gravity.CENTER));
     setContentView(root);
@@ -335,9 +335,9 @@ public class mobileActivity extends Activity {
         });
       } catch (InterruptedException error) {
         Thread.currentThread().interrupt();
-        showError("Unable to restart Toonflow: interrupted while stopping Bun.", error);
+        showError("Unable to restart FilmFraylo: interrupted while stopping Bun.", error);
       } catch (IOException error) {
-        showError("Unable to restart Toonflow: " + error.getMessage(), error);
+        showError("Unable to restart FilmFraylo: " + error.getMessage(), error);
       }
     }, "mobileRestart").start();
   }
@@ -399,7 +399,7 @@ public class mobileActivity extends Activity {
     }
     mainHandler.removeCallbacks(browserTimeout);
     if (missing.length() > 0) {
-      if (gecko) showError("内置 GeckoView 缺少所需能力：" + names + "。请更新 Toonflow。\n系统 WebView 缺少：" + systemMissing, null);
+      if (gecko) showError("内置 GeckoView 缺少所需能力：" + names + "。请更新 FilmFraylo。\n系统 WebView 缺少：" + systemMissing, null);
       else {
         systemMissing = names.toString();
         Log.w("ToonflowMobile", "System WebView missing: " + systemMissing);
@@ -478,10 +478,10 @@ public class mobileActivity extends Activity {
       });
       geckoSession.setContentDelegate(new GeckoSession.ContentDelegate() {
         @Override
-        public void onCrash(GeckoSession session) { showError("GeckoView 渲染进程已崩溃。请完全退出并重新打开 Toonflow。", null); }
+        public void onCrash(GeckoSession session) { showError("GeckoView 渲染进程已崩溃。请完全退出并重新打开 FilmFraylo。", null); }
 
         @Override
-        public void onKill(GeckoSession session) { showError("GeckoView 渲染进程被系统终止。请释放内存后重新打开 Toonflow。", null); }
+        public void onKill(GeckoSession session) { showError("GeckoView 渲染进程被系统终止。请释放内存后重新打开 FilmFraylo。", null); }
       });
       geckoSession.setPermissionDelegate(new GeckoSession.PermissionDelegate() {
         @Override
@@ -567,7 +567,7 @@ public class mobileActivity extends Activity {
         loadBrowserUrl(localOrigin.buildUpon().appendQueryParameter("probe", "1").appendQueryParameter("engine", "gecko").build().toString());
       }, error -> showError("无法初始化 GeckoView 原生通信：" + error.getMessage(), new IOException(error)));
     } catch (RuntimeException | LinkageError error) {
-      showError("无法启用内置 GeckoView：" + error.getMessage() + "。请更新 Toonflow 或系统 WebView。\n系统 WebView 缺少：" + systemMissing, new IOException(error));
+      showError("无法启用内置 GeckoView：" + error.getMessage() + "。请更新 FilmFraylo 或系统 WebView。\n系统 WebView 缺少：" + systemMissing, new IOException(error));
     }
   }
 
@@ -857,7 +857,7 @@ public class mobileActivity extends Activity {
         message.put("detail", new JSONObject(detail));
         try { geckoPort.postMessage(new JSONObject(message)); }
         catch (RuntimeException sendError) { showError("无法返回文件保存结果：" + sendError.getMessage(), sendError); }
-      } else showError("GeckoView 原生通信已断开。请重新打开 Toonflow。", null);
+      } else showError("GeckoView 原生通信已断开。请重新打开 FilmFraylo。", null);
     });
   }
 

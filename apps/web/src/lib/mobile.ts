@@ -68,7 +68,7 @@ export async function changeDeviceConnection(action: "connect" | "disconnect", b
     await refreshMobileConnection();
     if (deviceHubEnabled.value) throw new Error("请先在设置 → 设备互联中关闭“允许其他设备连接”");
   }
-  if (!deviceConnectionSupported.value) throw new Error("请使用 Toonflow 桌面端或移动客户端连接其他设备");
+  if (!deviceConnectionSupported.value) throw new Error("请使用 FilmFraylo 桌面端或移动客户端连接其他设备");
   const { data } = await axios.post<{ restart: "mobile" | "host"; message?: string }>(`/api/connection/${action}`, body ?? {}, { headers: { "x-toonflow-workspace": "1" } });
   if (data?.restart !== "mobile" && data?.restart !== "host") throw new Error(data?.message || "设备未返回有效的切换方式，请重试");
   if (data.restart === "mobile") window.location.href = "toonflow://restart";

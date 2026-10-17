@@ -2,9 +2,10 @@ import tfRouter from "@toonflow/providers/language/tfRouter";
 import tfRouterMedia from "@toonflow/providers/media/tfRouter";
 import conf from "@/utils/conf";
 import { fetchProviderModels } from "@/utils/ai/models";
-import { getMediaProviderApiKey, refreshMediaProviderModels } from "@/utils/media/provider";
 
 let initialization: Promise<void> | undefined;
+
+const mediaModelIds = new Set(tfRouterMedia.models.map(model => model.id.toLowerCase()));
 
 function normalizeApiKey(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/^Bearer(?:\s+|$)/i, "").trim() : "";
@@ -21,7 +22,9 @@ async function refreshLanguageModels(previousSettings?: Record<string, unknown>)
   const provider = getLanguageProvider(conf.get("settings", {}));
   const apiKey = normalizeApiKey(provider?.apiKey);
   if (!apiKey || (previousSettings && apiKey === normalizeApiKey(getLanguageProvider(previousSettings)?.apiKey))) return;
-  const models = await fetchProviderModels({ apiUrl: provider.apiUrl, protocol: provider.protocol, apiKey });
+  // ACT: 平台同时返回媒体模型，文本链路仅保留用户自己添加的对话模型。
+  const models = (await fetchProviderModels({ apiUrl: provider.apiUrl, protocol: provider.protocol, apiKey }))
+    .filter(model => !mediaModelIds.has(model.id.toLowerCase()));
   if (!models.length) throw new Error("未获取到文本模型，保留原有列表");
   const current = conf.get("settings.customProviders");
   if (!Array.isArray(current)) return;
@@ -33,34 +36,14 @@ async function refreshLanguageModels(previousSettings?: Record<string, unknown>)
   return providers;
 }
 
-async function refreshMediaModels(previousSettings: Record<string, unknown> | undefined, errors: string[]) {
-  const apiKey = getMediaProviderApiKey(tfRouterMedia.id);
-  const configs = previousSettings?.mediaProviderConfigs as Record<string, { apiKey?: unknown }> | undefined;
-  if (!apiKey || (previousSettings && apiKey === normalizeApiKey(configs?.[tfRouterMedia.id]?.apiKey))) return;
-  let provider: Awaited<ReturnType<typeof refreshMediaProviderModels>> | undefined;
-  // ACT: 同一供应商文件按类型串行保存，避免多个刷新读取相同版本后互相冲突。
-  for (const type of ["video", "image", "audio"] as const) {
-    if (getMediaProviderApiKey(tfRouterMedia.id) !== apiKey) break;
-    try { provider = await refreshMediaProviderModels(`${tfRouterMedia.id}.ts`, undefined, type, apiKey); }
-    catch (error) {
-      if (getMediaProviderApiKey(tfRouterMedia.id) !== apiKey) break;
-      errors.push(`TF-Router ${{ video: "视频", image: "图片", audio: "音频" }[type]}模型更新失败：${error instanceof Error ? error.message : "未知错误"}`);
-    }
-  }
-  return provider;
-}
-
 export async function refreshProviderModels(previousSettings?: Record<string, unknown>) {
-  const errors: string[] = [];
-  const [language, media] = await Promise.allSettled([refreshLanguageModels(previousSettings), refreshMediaModels(previousSettings, errors)]);
-  for (const [result, label] of [[language, "文本"], [media, "媒体"]] as const) {
-    if (result.status === "rejected") errors.push(`TF-Router ${label}模型更新失败：${result.reason instanceof Error ? result.reason.message : "未知错误"}`);
+  try {
+    const customProviders = await refreshLanguageModels(previousSettings);
+    return customProviders ? { customProviders } : {};
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "未知错误";
+    return { modelRefreshErrors: [`影幻文本模型更新失败：${message}`] };
   }
-  return {
-    ...(language.status === "fulfilled" && language.value ? { customProviders: conf.get("settings.customProviders") as typeof language.value } : {}),
-    ...(media.status === "fulfilled" && media.value ? { mediaProvider: media.value } : {}),
-    ...(errors.length ? { modelRefreshErrors: errors } : {}),
-  };
 }
 
 export default function initializeProviderModels() {

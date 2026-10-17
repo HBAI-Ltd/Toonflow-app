@@ -14,4 +14,4 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "toonflowMobile"
+rootProject.name = "filmfrayloMobile"

@@ -3,26 +3,15 @@
     <bg class="pageBackground" />
     <el-header class="pageHeader">
       <div class="headerActions">
-        <el-badge isDot :hidden="!hasDesktopUpdate">
-          <el-button round size="large" :icon="IconSettings" :aria-label="hasDesktopUpdate ? '设置，有新版本可用' : '设置'" @click="settingsVisible = true">设置</el-button>
-        </el-badge>
+        <el-button round size="large" :icon="IconSettings" aria-label="设置" @click="settingsVisible = true">设置</el-button>
         <el-button round size="large" :type="deviceHubEnabled ? 'success' : undefined" :plain="deviceHubEnabled" :icon="deviceHubEnabled || mobileConnection.mode === 'remote' ? IconDeviceDesktop : IconQrcode" @click="mobileConnectVisible = true">{{ mobileConnectionLabel }}</el-button>
-      </div>
-      <div class="githubAction">
-        <span class="arrowHint starHint">
-          点个 Star 支持一下
-          <svg viewBox="0 0 84 44" fill="none" aria-hidden="true">
-            <path d="M4 29C18 40 44 38 44 18C44 1 21 3 24 19C27 37 57 32 77 16M65 17L77 16L73 28" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </span>
-        <el-button round size="large" :icon="IconBrandGithub" tag="a" href="https://github.com/HBAI-Ltd/Toonflow-app" target="_blank" rel="noopener noreferrer">GitHub</el-button>
       </div>
     </el-header>
     <el-main class="pageContent">
       <section class="creationPanel" aria-label="创建项目">
         <div class="brand">
-          <el-image class="brandLogo" :src="logoUrl" fit="contain" alt="Toonflow" />
-          <h1>Toonflow</h1>
+          <el-image class="brandLogo" :src="logoUrl" fit="contain" alt="FilmFraylo" />
+          <h1>FilmFraylo</h1>
         </div>
         <div class="promptArea">
           <span class="arrowHint inspirationHint">
@@ -102,7 +91,7 @@ import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox, type InputInstance } from "element-plus";
 import { getReadableFileMimeType, readableFileAccept } from "@toonflow/server/documentFormats";
 import {
-  IconSettings, IconBrandGithub, IconQrcode, IconDeviceDesktop,
+  IconSettings, IconQrcode, IconDeviceDesktop,
   IconArrowUp, IconLayoutGrid,
   IconList, IconSortDescending,
   IconSortAscending, IconFolder, IconEdit,
@@ -114,7 +103,6 @@ import { createPastedTextFile, readTextAttachment } from "@/components/agent/tex
 import type { AgentAttachment } from "@/components/agent/types";
 import logoUrl from "@toonflow/assets/logo.svg";
 import { useWorkspaceStore, type Project } from "@/stores/workspace";
-import { hasDesktopUpdate } from "@/stores/desktopUpdate";
 import { deviceHubEnabled, mobileConnection, mobileConnectionLabel } from "@/lib/mobile";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import settings from "@/components/settings/index.vue";
@@ -428,27 +416,6 @@ async function createProject(fromPrompt = true) {
     a {
       text-decoration: none;
     }
-
-    .githubAction {
-      position: relative;
-
-      .starHint {
-        top: 0;
-        inset-inline-end: calc(100% + 12px);
-        height: 100%;
-
-        &:dir(rtl) svg { transform: scaleX(-1); }
-
-        @media (max-width: 560px) {
-          top: calc(100% + 6px);
-          inset-inline-end: 0;
-          height: auto;
-
-          svg { transform: rotate(-45deg); }
-          &:dir(rtl) svg { transform: scaleX(-1) rotate(-45deg); }
-        }
-      }
-    }
   }
 
   .pageContent {
@@ -468,10 +435,6 @@ async function createProject(fromPrompt = true) {
         .brandLogo {
           width: 48px;
           height: 48px;
-
-          .dark & {
-            filter: invert(1);
-          }
         }
 
         h1 {
