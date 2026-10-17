@@ -1,6 +1,6 @@
 <template>
   <div class="audioPlayer" @keydown.stop>
-    <audio ref="audio" :src="src" preload="auto" :aria-label="label" @loadedmetadata="readMetadata" @durationchange="readDuration" @timeupdate="readTime" @play="startProgress(); emit('play')" @pause="stopProgress" @ended="stopProgress" @volumechange="readVolume" @error="mediaError" />
+    <audio ref="audio" :src="src" preload="auto" :aria-label="label || '节点音频'" @loadedmetadata="readMetadata" @durationchange="readDuration" @timeupdate="readTime" @play="startProgress(); emit('play')" @pause="stopProgress" @ended="stopProgress" @volumechange="readVolume" @error="mediaError" />
     <div class="waveformPanel" :class="{ unavailable: !duration || failed }">
       <div class="waveformTrack">
         <slot name="track" :duration="duration" :currentTime="currentTime" :peaks="peaks">
@@ -46,7 +46,7 @@ import { ElButton, ElMessage } from "element-plus";
 import { IconPlayerPlay, IconPlayerPause, IconVolume, IconVolumeOff } from "@tabler/icons-vue";
 import { getWaveformPeaks } from "../audioWaveform";
 
-const { src, label = "节点音频" } = defineProps<{ src: string; label?: string }>();
+const { src, label } = defineProps<{ src: string; label?: string }>();
 const emit = defineEmits<{ loadedmetadata: [event: Event]; play: [] }>();
 const audio = ref<HTMLAudioElement>();
 const peaks = shallowRef<number[]>([]);

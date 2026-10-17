@@ -7,11 +7,11 @@
           type="button"
           class="menuButton"
           role="menuitem"
-          :title="item.label"
+          :title="item.alias ? item.label : nodeDisplayName(item.type, item.label)"
           @mouseenter="focusItem($event, item)"
           @click="emit('select', item.type)">
           <component :is="nodeByType.get(item.type)?.icon ?? IconBox" class="menuIcon" :size="14" />
-          <span class="menuLabel">{{ item.label }}</span>
+          <span class="menuLabel">{{ item.alias ? item.label : nodeDisplayName(item.type, item.label) }}</span>
         </button>
         <el-popover
           v-else
@@ -38,11 +38,11 @@
               role="menuitem"
               aria-haspopup="menu"
               :aria-expanded="openGroupId === item.id"
-              :title="item.label"
+              :title="item.alias ? item.label : nodeDisplayName(item.type, item.label)"
               @mouseenter="focusItem($event, item)"
               @click="openGroup(item.id)">
               <component :is="openGroupId === item.id ? IconFolderOpen : IconFolder" class="menuIcon" :size="14" aria-hidden="true" />
-              <span class="menuLabel">{{ item.label }}</span>
+              <span class="menuLabel">{{ item.alias ? item.label : nodeDisplayName(item.type, item.label) }}</span>
               <icon-chevron-right class="nextIcon" :size="14" />
             </button>
           </template>
@@ -69,6 +69,7 @@
 </template>
 
 <script setup lang="ts">
+import { nodeDisplayName } from "@/lib/i18n";
 import { computed, nextTick, onMounted, ref, shallowRef, type Component, type ComponentPublicInstance } from "vue";
 import { IconBox, IconChevronRight, IconFolder, IconFolderOpen, IconUpload } from "@tabler/icons-vue";
 import type { NodeMenuItem } from "@toonflow/server/nodeMenu";

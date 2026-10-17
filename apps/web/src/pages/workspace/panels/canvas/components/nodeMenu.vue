@@ -93,6 +93,7 @@ import { ElMessage } from "element-plus";
 import type { DropdownInstance } from "element-plus";
 import selectionHandle from "./selectionHandle.vue";
 import nodeMenuItems from "./nodeMenuItems.vue";
+import { nodeDisplayName } from "@/lib/i18n";
 import { generalSettings } from "@/stores/settings";
 import { filterNodeMenu, resolveNodeMenu } from "@toonflow/server/nodeMenu";
 import { getSelectionConnections } from "../selectionConnections";
@@ -339,7 +340,7 @@ async function runCommand(command: unknown) {
   if (handle && flow.findNode(handle.node.id) !== handle.node) return;
   if (group.some(source => flow.findNode(source.id) !== source)) return;
   const id = crypto.randomUUID();
-  addNodes({ id, type: node.type, position: { ...nodePosition }, data: { label: node.label } });
+  addNodes({ id, type: node.type, position: { ...nodePosition }, data: { label: nodeDisplayName(node.type, node.label) } });
   if (!handle && !group.length) {
     flow.removeSelectedElements();
     flow.nodesSelectionActive.value = false;

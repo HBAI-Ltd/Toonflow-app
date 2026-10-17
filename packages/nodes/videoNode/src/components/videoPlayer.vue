@@ -10,7 +10,7 @@
       playsinline
       preload="auto"
       draggable="false"
-      :aria-label="label"
+      :aria-label="label || '节点视频'"
       @fullscreenchange="fullscreen = !!video?.matches(':fullscreen')"
       @loadedmetadata="readMetadata"
       @loadeddata="readPreview"
@@ -57,7 +57,7 @@ import { ElButton, ElDropdown, ElDropdownMenu, ElDropdownItem, ElMessage, ElPopo
 import { IconPlayerPlay, IconPlayerPause, IconVolume, IconVolumeOff, IconPhotoScan, IconPlayerSkipBack, IconPlayerSkipForward } from "@tabler/icons-vue";
 import { useNodeFiles } from "@toonflow/nodes-scaffold/runtime";
 
-const { src, label = "节点视频" } = defineProps<{ src: string; label?: string }>();
+const { src, label } = defineProps<{ src: string; label?: string }>();
 const emit = defineEmits<{ loadedmetadata: [event: Event] }>();
 const video = ref<HTMLVideoElement>();
 const fullscreen = ref(false);

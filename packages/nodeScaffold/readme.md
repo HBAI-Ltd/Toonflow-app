@@ -495,3 +495,7 @@ const apiKey = computed(() => String(config.value.apiKey ?? ""));
 - 其它依赖随各节点独立打包；不同节点可以使用不同 UI 框架和第三方库版本，同一个库也可能重复出现在不同 UMD 中。
 - 其它 UI 库的组件优先局部 import，所需 CSS 也在节点源码中 import。Vite 的 UMD 模式配合 `cssCodeSplit: true` 将 CSS 注入同一个 JS。需要 provider 的组件库，在节点根组件内包裹它自己的 provider。
 - 独立子包提供依赖管理边界，不提供页面样式隔离；全局 CSS、reset 或依赖 `app.use()` 全局安装的库需要单独适配。节点自有样式优先使用 `<style scoped>`。
+
+### Interface language
+
+Built-in node UI is transformed by `@toonflow/i18n/vite` at build time. The shared build config externalizes `@toonflow/i18n/vue` to the host's `toonflowNodeHost.i18n`, alongside Vue and Element Plus. Rebuild and distribute host and node bundles together. Explicit dynamic UI messages can import `translate`, `t` or `msg` from `@toonflow/i18n/vue`; evaluate translations during rendering or in a computed value to follow language changes. Do not translate saved node data, model prompts, port IDs, user text or provider payloads.

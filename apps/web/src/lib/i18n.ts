@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance } from "axios";
 import { computed, watch } from "vue";
 import { detectLocale, isRtlLocale } from "@toonflow/i18n";
-import { locale, setLocale, translate } from "@toonflow/i18n/vue";
+import { locale, setLocale, translate, msg } from "@toonflow/i18n/vue";
 import { uiSettings } from "@/stores/settings";
 import type { LocaleConfig } from "vue-stream-markdown";
 import "dayjs/locale/zh-cn";
@@ -82,3 +82,15 @@ export const chatLocale = computed(() => ({
   confirmClearHistory: translate("确定要清空所有的消息吗？"), loadingText: translate("思考中..."), loadingEndText: translate("已深度思考"),
   uploadImageText: translate("上传图片"), uploadAttachmentText: translate("上传附件"), shareTipText: translate("分享"),
 }));
+
+// Translate built-in metadata only; custom plugin names and user aliases remain verbatim.
+const nodeNames = {
+  "remote-textNode": msg`文本`, "remote-imageNode": msg`图片`, "remote-videoNode": msg`视频`,
+  "remote-audioNode": msg`音频`, "remote-audioGenerationNode": msg`音频生成`,
+  "remote-imageGenerationNode": msg`图片生成`, "remote-videoGenerationNode": msg`视频生成`,
+  "remote-director3dNode": msg`3D导演台`,
+};
+export function nodeDisplayName(type: string | undefined, label: string): string {
+  const message = type && Object.hasOwn(nodeNames, type) ? nodeNames[type as keyof typeof nodeNames] : undefined;
+  return message?.id === label ? translate(message) : label;
+}

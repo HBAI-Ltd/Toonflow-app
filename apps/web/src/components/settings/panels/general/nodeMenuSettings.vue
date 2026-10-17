@@ -19,12 +19,12 @@
           :key="column.id"
           class="menuCard"
           :class="{ dropAtEnd: dropTarget?.parentId === column.id && dropTarget?.mode === 'end' }"
-          :aria-label="`${levelNames[column.depth - 1]}菜单`"
+          :aria-label="levelNames[column.depth - 1]"
           :data-menu-id="column.id || 'root'"
           @dragover="previewDrop($event, column)"
           @drop="dropItem($event, column)">
           <header class="cardHeader">
-            <span class="cardLevel">{{ levelNames[column.depth - 1] }}菜单</span>
+            <span class="cardLevel">{{ levelNames[column.depth - 1] }}</span>
             <h4 :title="column.label">{{ column.label }}</h4>
           </header>
           <div class="menuList">
@@ -47,9 +47,9 @@
               @dragend="endDrag"
               @dragover.stop="previewDrop($event, column, item)"
               @drop.stop="dropItem($event, column, item)">
-              <button class="itemSelect" type="button" :aria-label="`选择${item.label}`" :aria-pressed="selectedId === item.id" @click="selectItem(item)">
+              <button class="itemSelect" type="button" :aria-label="`选择${displayLabel(item)}`" :aria-pressed="selectedId === item.id" @click="selectItem(item)">
                 <component :is="item.children ? openGroups.includes(item.id) ? IconFolderOpen : IconFolder : nodeIcons[item.type ?? ''] ?? IconBox" class="itemIcon" :size="18" aria-hidden="true" />
-                <span class="itemLabel" :title="item.label">{{ item.label }}</span>
+                <span class="itemLabel" :title="displayLabel(item)">{{ displayLabel(item) }}</span>
                 <span v-if="item.type && disabledTypes.has(item.type)" class="itemStatus" title="已停用">停用</span>
               </button>
               <div class="rowActions" @dragstart.stop.prevent>
@@ -65,7 +65,7 @@
                   @update:visible="visible => setEditingVisible(item.id, visible)"
                   @afterEnter="focusName">
                   <template #reference>
-                    <button class="rowAction" type="button" :aria-label="`编辑${item.label}`" title="编辑" @click.stop>
+                    <button class="rowAction" type="button" :aria-label="`编辑${displayLabel(item)}`" title="编辑" @click.stop>
                       <icon-edit :size="14" aria-hidden="true" />
                     </button>
                   </template>
@@ -78,7 +78,7 @@
                         v-model="itemName"
                         maxlength="40"
                         size="small"
-                        :placeholder="originalName"
+                        :placeholder="nodeDisplayName(editing.item.type, originalName)"
                         :aria-label="editing.item.children ? '分组名称' : '节点别名'"
                         @blur="renameItem"
                         @keydown.enter.prevent="renameItem" />
@@ -89,7 +89,7 @@
                   class="rowAction visibilityButton"
                   :class="{ isHidden: item.hidden }"
                   type="button"
-                  :aria-label="`${item.hidden ? '显示' : '隐藏'}${item.label}`"
+                  :aria-label="`${item.hidden ? '显示' : '隐藏'} ${displayLabel(item)}`"
                   :title="item.hidden ? '显示' : '隐藏'"
                   :aria-pressed="!item.hidden"
                   @click.stop="setVisible(item, item.hidden)"
@@ -97,20 +97,20 @@
                   <icon-eye-off v-if="item.hidden" :size="14" aria-hidden="true" />
                   <icon-eye v-else :size="14" aria-hidden="true" />
                 </button>
-                <button v-if="item.children" class="rowAction deleteButton" type="button" :aria-label="`移除${item.label}菜单`" title="移除菜单，保留子项" @click.stop="removeGroup(item.id)">
+                <button v-if="item.children" class="rowAction deleteButton" type="button" :aria-label="`移除${displayLabel(item)}菜单`" title="移除菜单，保留子项" @click.stop="removeGroup(item.id)">
                   <icon-folder-minus :size="14" aria-hidden="true" />
                 </button>
               </div>
               <icon-chevron-right v-if="item.children" class="submenuArrow" :size="14" aria-hidden="true" />
             </div>
-            <div v-if="!column.items.length" class="emptyDrop" :aria-label="`${levelNames[column.depth - 1]}菜单空白投放区`">
+            <div v-if="!column.items.length" class="emptyDrop" :aria-label="`${levelNames[column.depth - 1]}空白投放区`">
               <icon-drag-drop :size="22" aria-hidden="true" />
               <span>拖入节点{{ column.depth < 3 ? "或子菜单" : "" }}</span>
             </div>
           </div>
           <button v-if="column.depth < 3" class="newGroupButton" type="button" @click="addGroup(column.id)">
             <icon-plus :size="15" aria-hidden="true" />
-            新建{{ levelNames[column.depth] }}菜单
+            新建{{ levelNames[column.depth] }}
           </button>
         </section>
       </div>
@@ -119,6 +119,8 @@
 </template>
 
 <script setup lang="ts">
+import { translate } from "@toonflow/i18n/vue";
+import { nodeDisplayName } from "@/lib/i18n";
 import axios from "axios";
 import { computed, onBeforeUnmount, onMounted, ref, watch, type Component } from "vue";
 import { ElMessage, type InputInstance } from "element-plus";
@@ -129,7 +131,7 @@ import { generalSettings, updateGeneralSettings } from "@/stores/settings";
 type MenuEntry = { item: NodeMenuItem; parentId: string; depth: number; siblings: NodeMenuItem[]; index: number; path: string[] };
 type MenuColumn = { id: string; depth: number; label: string; items: NodeMenuItem[] };
 type DropTarget = { parentId: string; index: number; itemId?: string; mode: "before" | "after" | "inside" | "end" };
-const levelNames = ["一级", "二级", "三级"];
+const levelNames = computed(() => [translate("一级菜单"), translate("二级菜单"), translate("三级菜单")]);
 const nodeIcons: Record<string, Component> = {
   "remote-textNode": IconFileText,
   "remote-imageNode": IconPhoto,
@@ -183,6 +185,10 @@ const menuColumns = computed(() => {
   return columns;
 });
 watch(editing, entry => { itemName.value = entry?.item.type ? entry.item.alias ?? "" : entry?.item.label ?? ""; });
+
+function displayLabel(item: NodeMenuItem): string {
+  return item.alias ? item.label : nodeDisplayName(item.type, item.label);
+}
 
 function itemHeight(item: NodeMenuItem): number {
   return item.children ? 1 + Math.max(1, ...item.children.map(itemHeight)) : 1;
@@ -292,8 +298,8 @@ function addGroup(parentId: string) {
   const parent = menuEntries.value.find(entry => entry.item.id === parentId);
   if (parentId && (!parent?.item.children || parent.depth >= 2)) return;
   const labels = new Set(menuEntries.value.filter(entry => entry.item.children).map(entry => entry.item.label));
-  let label = "新分组";
-  for (let index = 2; labels.has(label); index++) label = `新分组 ${index}`;
+  let label = translate("新分组");
+  for (let index = 2; labels.has(label); index++) label = `${translate("新分组")} ${index}`;
   const group = { id: `group:${crypto.randomUUID()}`, label, hidden: false, children: [] };
   (parent?.item.children ?? menuItems.value).push(group);
   selectItem(group);
