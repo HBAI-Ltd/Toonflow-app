@@ -147,8 +147,8 @@
           :isValidConnection="validateConnection"
           :data-connection-status="getHandleStatus(item)"
           :style="{ top: `${((index + 1) / (group.items.length + 1)) * 100}%` }"
-          :title="`${item.label ?? item.id} · ${Array.isArray(item.dataType) ? item.dataType.join(' / ') : item.dataType}`"
-          :aria-label="`${item.label ?? item.id} · ${Array.isArray(item.dataType) ? item.dataType.join(' / ') : item.dataType}`"
+          :title="`${translate(item.label ?? item.id)} · ${Array.isArray(item.dataType) ? item.dataType.join(' / ') : item.dataType}`"
+          :aria-label="`${translate(item.label ?? item.id)} · ${Array.isArray(item.dataType) ? item.dataType.join(' / ') : item.dataType}`"
           @pointermove="moveHandle"
           @pointerleave="resetHandle"
           @pointercancel="resetHandle">
@@ -161,6 +161,7 @@
 </template>
 
 <script setup lang="ts">
+import { translate } from "@toonflow/i18n/vue";
 import { computed, inject, nextTick, onScopeDispose, ref, shallowRef, watch, watchEffect, type Component, type ShallowRef } from "vue";
 import { Handle, Position, getTransformForBounds, pointToRendererPoint, useNode, useVueFlow, wheelDelta } from "@vue-flow/core";
 import {

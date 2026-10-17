@@ -68,9 +68,6 @@
   "填入提示：{0}": [
     "apps/web/src/components/agent/conversation.vue"
   ],
-  "点击填入提示，也可以直接输入，或粘贴图片、视频。": [
-    "apps/web/src/components/agent/conversation.vue"
-  ],
   "{0} 上报": [
     "apps/web/src/components/agent/conversation.vue"
   ],
@@ -79,7 +76,8 @@
     "apps/web/src/components/singleAgentDialog.vue"
   ],
   "{0} 秒": [
-    "apps/web/src/components/agent/conversation.vue"
+    "apps/web/src/components/agent/conversation.vue",
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
   ],
   "取消": [
     "apps/web/src/components/agent/conversation.vue",
@@ -112,7 +110,10 @@
     "apps/web/src/pages/workspace/panels/document/components/extView.vue",
     "apps/web/src/pages/workspace/panels/document/components/fileTree.vue",
     "apps/web/src/pages/workspace/panels/document/components/openWithDialog.vue",
-    "apps/web/src/pages/workspace/panels/document/components/workspaceSearch.vue"
+    "apps/web/src/pages/workspace/panels/document/components/workspaceSearch.vue",
+    "packages/nodes/videoNode/src/components/videoActions.vue",
+    "packages/nodes/audioNode/src/components/audioActions.vue",
+    "packages/nodes/textNode/src/index.vue"
   ],
   "正在下方编辑": [
     "apps/web/src/components/agent/conversation.vue"
@@ -160,7 +161,8 @@
     "apps/web/src/components/agent/conversation.vue"
   ],
   "输出": [
-    "apps/web/src/components/agent/conversation.vue"
+    "apps/web/src/components/agent/conversation.vue",
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
   ],
   "缓存命中": [
     "apps/web/src/components/agent/conversation.vue"
@@ -170,7 +172,10 @@
   ],
   "停止生成": [
     "apps/web/src/components/agent/conversation.vue",
-    "apps/web/src/components/singleAgentDialog.vue"
+    "apps/web/src/components/singleAgentDialog.vue",
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
   ],
   "重发消息": [
     "apps/web/src/components/agent/conversation.vue"
@@ -260,15 +265,14 @@
   "无法添加文本附件": [
     "apps/web/src/components/agent/conversation.vue"
   ],
-  "只支持图片、视频和纯文本文件": [
-    "apps/web/src/components/agent/conversation.vue"
-  ],
   "附件不能为空且不能超过 100 MB": [
-    "apps/web/src/components/agent/conversation.vue"
+    "apps/web/src/components/agent/conversation.vue",
+    "apps/web/src/pages/home/index.vue"
   ],
   "文本附件不能超过 400000 字节": [
     "apps/web/src/components/agent/conversation.vue",
-    "apps/web/src/components/agent/textAttachments.ts"
+    "apps/web/src/components/agent/textAttachments.ts",
+    "apps/web/src/pages/home/index.vue"
   ],
   "每条消息最多添加 20 个附件": [
     "apps/web/src/components/agent/conversation.vue",
@@ -353,7 +357,8 @@
     "apps/web/src/components/settings/tfRechargeDialog.vue",
     "apps/web/src/main.ts",
     "apps/web/src/pages/workspace/panels/document/components/extView.vue",
-    "apps/server/src/remoteConnection.ts"
+    "apps/server/src/remoteConnection.ts",
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
   ],
   "不支持": [
     "apps/web/src/components/agent/mentionMenu.vue"
@@ -390,7 +395,9 @@
   "文本": [
     "apps/web/src/components/agent/mentionMenu.vue",
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
-    "apps/server/src/utils/ai/initialize.ts"
+    "apps/server/src/utils/ai/initialize.ts",
+    "apps/web/src/lib/i18n.ts",
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
   ],
   "整数": [
     "apps/web/src/components/agent/mentionMenu.vue"
@@ -406,7 +413,10 @@
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
     "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
     "apps/server/src/utils/ai/initialize.ts",
-    "apps/server/src/utils/media/generation.ts"
+    "apps/server/src/utils/media/generation.ts",
+    "apps/web/src/lib/i18n.ts",
+    "packages/nodeShared/src/components/mediaHistory.vue",
+    "packages/nodes/director3dNode/src/index.vue"
   ],
   "遮罩": [
     "apps/web/src/components/agent/mentionMenu.vue"
@@ -416,14 +426,18 @@
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
     "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
     "apps/server/src/utils/ai/initialize.ts",
-    "apps/server/src/utils/media/generation.ts"
+    "apps/server/src/utils/media/generation.ts",
+    "apps/web/src/lib/i18n.ts",
+    "packages/nodeShared/src/components/mediaHistory.vue",
+    "packages/nodes/director3dNode/src/index.vue"
   ],
   "音频": [
     "apps/web/src/components/agent/mentionMenu.vue",
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
     "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
     "apps/server/src/utils/ai/initialize.ts",
-    "apps/server/src/utils/media/generation.ts"
+    "apps/server/src/utils/media/generation.ts",
+    "apps/web/src/lib/i18n.ts"
   ],
   "文件": [
     "apps/web/src/components/agent/mentionMenu.vue",
@@ -555,7 +569,9 @@
     "apps/web/src/components/settings/panels/pluginMarket/skillEditorDialog.vue",
     "apps/web/src/components/settings/tfRechargeDialog.vue",
     "apps/web/src/pages/workspace/panels/document/components/editorTab.vue",
-    "apps/web/src/pages/workspace/panels/document/components/workspaceSearch.vue"
+    "apps/web/src/pages/workspace/panels/document/components/workspaceSearch.vue",
+    "packages/nodeShared/src/components/mediaHistory.vue",
+    "packages/nodes/audioNode/src/components/audioActions.vue"
   ],
   "准备中": [
     "apps/web/src/components/agent/menu.vue"
@@ -610,7 +626,8 @@
     "apps/web/src/pages/workspace/panels/canvas/components/assetMenu.vue",
     "apps/web/src/pages/workspace/panels/canvas/components/canvasMenu.vue",
     "apps/web/src/pages/workspace/panels/document/components/extView.vue",
-    "apps/web/src/pages/workspace/panels/document/components/fileTree.vue"
+    "apps/web/src/pages/workspace/panels/document/components/fileTree.vue",
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
   ],
   "请求失败（{0}）": [
     "apps/web/src/components/agent/replyStream.ts"
@@ -864,7 +881,12 @@
   ],
   "选择模型": [
     "apps/web/src/components/modelPopover.vue",
-    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue"
+    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue",
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue",
+    "packages/nodes/textNode/src/index.vue",
+    "packages/nodes/director3dNode/src/directorPanel.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
   ],
   "模型": [
     "apps/web/src/components/modelPopover.vue",
@@ -872,7 +894,8 @@
     "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue"
   ],
   "请先在设置中添加模型": [
-    "apps/web/src/components/modelPopover.vue"
+    "apps/web/src/components/modelPopover.vue",
+    "packages/nodes/textNode/src/index.vue"
   ],
   "推理等级": [
     "apps/web/src/components/modelPopover.vue"
@@ -893,9 +916,6 @@
   "安装完成后，请重新发起刚才的操作。": [
     "apps/web/src/components/settings/ffmpegRequired.vue"
   ],
-  "未检测到可用 FFmpeg，当前 Android 版本暂不支持在应用内安装，这项音视频处理无法继续。": [
-    "apps/web/src/components/settings/ffmpegRequired.vue"
-  ],
   "当前操作需要 FFmpeg，但尚未检测到可用版本。是否下载并安装？": [
     "apps/web/src/components/settings/ffmpegRequired.vue"
   ],
@@ -912,7 +932,8 @@
   "设置": [
     "apps/web/src/components/settings/index.vue",
     "apps/web/src/pages/home/index.vue",
-    "apps/web/src/pages/workspace/components/workspaceMenu.vue"
+    "apps/web/src/pages/workspace/components/workspaceMenu.vue",
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
   ],
   "设置分类": [
     "apps/web/src/components/settings/index.vue"
@@ -1024,7 +1045,7 @@
   ],
   "Toonflow 是为爱发电的开源项目。欢迎文明交流、友善反馈；回复可能需要一些时间，请避免责问或命令式沟通，感谢你的理解与尊重。": [
     "apps/web/src/components/settings/panels/about.vue",
-    "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
+    "apps/web/src/pages/workspace/index.vue"
   ],
   "赞助商": [
     "apps/web/src/components/settings/panels/about.vue"
@@ -1396,10 +1417,13 @@
     "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue"
   ],
   "比例": [
-    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue"
+    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue",
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue",
+    "packages/nodes/imageGenerationNode/src/components/generationSettings.vue"
   ],
   "画面比例": [
-    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue"
+    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue",
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
   ],
   "尺寸": [
     "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue"
@@ -1409,20 +1433,27 @@
   ],
   "分辨率": [
     "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue",
-    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
+    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue",
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue",
+    "packages/nodes/imageGenerationNode/src/components/generationSettings.vue"
   ],
   "视频分辨率": [
-    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue"
+    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue",
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
   ],
   "时长（秒）": [
     "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue",
     "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
   ],
   "视频时长": [
-    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue"
+    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue",
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
   ],
   "生成音频": [
-    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue"
+    "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue",
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
   ],
   "音色": [
     "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue"
@@ -1509,7 +1540,8 @@
   ],
   "请输入提示词": [
     "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue",
-    "apps/server/src/utils/media/debug.ts"
+    "apps/server/src/utils/media/debug.ts",
+    "packages/nodeScaffold/src/nodeAi.ts"
   ],
   "请检查供应商配置": [
     "apps/web/src/components/settings/panels/developer/providerDebugDialog.vue"
@@ -1534,7 +1566,8 @@
   ],
   "恢复默认": [
     "apps/web/src/components/settings/panels/developer/systemPromptDialog.vue",
-    "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
+    "apps/web/src/components/settings/panels/general/canvasShortcuts.vue",
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
   ],
   "读取系统提示词失败": [
     "apps/web/src/components/settings/panels/developer/systemPromptDialog.vue"
@@ -1626,7 +1659,10 @@
     "apps/web/src/components/settings/panels/deviceLink.vue",
     "apps/web/src/lib/canvasShortcuts.ts",
     "apps/web/src/pages/workspace/panels/canvas/components/nodeMenu.vue",
-    "apps/desktop/src/index.ts"
+    "apps/desktop/src/index.ts",
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue",
+    "packages/nodes/textNode/src/markdownEditor.vue",
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
   ],
   "等待设备连接": [
     "apps/web/src/components/settings/panels/deviceLink.vue"
@@ -1738,19 +1774,7 @@
   "手动填写": [
     "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
   ],
-  "点击键帽录制，Esc 退出；右侧 × 取消绑定。": [
-    "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
-  ],
-  "使用按键代号，如 Ctrl+KeyG / Alt+KeyG；回车或移开焦点保存，留空取消绑定。": [
-    "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
-  ],
   "按住并拖动节点": [
-    "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
-  ],
-  "按住并滚动": [
-    "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
-  ],
-  "按住并拖动画布": [
     "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
   ],
   "{0}快捷键": [
@@ -1762,16 +1786,7 @@
   "双指捏合": [
     "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
   ],
-  "触摸板平移": [
-    "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
-  ],
-  "双指滑动": [
-    "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
-  ],
   "鼠标平移": [
-    "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
-  ],
-  "滚轮 / 中键拖动": [
     "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
   ],
   "启动动画": [
@@ -2022,7 +2037,9 @@
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
     "apps/web/src/components/settings/panels/personalization.vue",
     "apps/web/src/components/settings/panels/pluginMarket/index.vue",
-    "apps/desktop/src/index.ts"
+    "apps/desktop/src/index.ts",
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue",
+    "packages/nodes/textNode/src/index.vue"
   ],
   "确定删除此供应商及其模型？": [
     "apps/web/src/components/settings/panels/languageModel/index.vue",
@@ -2238,7 +2255,8 @@
   ],
   "单图参考": [
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
-    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
+    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
   ],
   "多图参考": [
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
@@ -2246,15 +2264,18 @@
   ],
   "首尾帧必填": [
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
-    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
+    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
   ],
   "尾帧可选": [
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
-    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
+    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
   ],
   "首帧可选": [
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
-    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
+    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
   ],
   "图片参考": [
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
@@ -2274,7 +2295,8 @@
   ],
   "文生视频": [
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue",
-    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
+    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
   ],
   "请填写第 {0} 个模型的 ID 和显示名称": [
     "apps/web/src/components/settings/panels/mediaModel/editProviderDialog.vue"
@@ -2299,7 +2321,8 @@
     "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
   ],
   "读取媒体供应商失败": [
-    "apps/web/src/components/settings/panels/mediaModel/index.vue"
+    "apps/web/src/components/settings/panels/mediaModel/index.vue",
+    "apps/web/src/lib/providerBilling.ts"
   ],
   "获取模型失败": [
     "apps/web/src/components/settings/panels/mediaModel/index.vue"
@@ -2326,13 +2349,16 @@
     "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
   ],
   "视频生成模式": [
-    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
+    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
   ],
   "{0}数量": [
     "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
   ],
   "音频输出": [
-    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
+    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/audioNode/src/index.vue"
   ],
   "可选音频": [
     "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
@@ -2371,7 +2397,8 @@
     "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
   ],
   "混合参考": [
-    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
+    "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue",
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
   ],
   "请填写显示名称和模型 ID": [
     "apps/web/src/components/settings/panels/mediaModel/modelEditorDialog.vue"
@@ -2796,9 +2823,6 @@
   "下载后自动完成安装，无需手动解压或配置。": [
     "apps/web/src/components/settings/panels/pluginMarket/ffmpeg.vue"
   ],
-  "Android 暂不提供 FFmpeg 下载，未配置 FFmpeg 时无法执行依赖它的音视频处理。": [
-    "apps/web/src/components/settings/panels/pluginMarket/ffmpeg.vue"
-  ],
   "当前平台暂不提供下载，请在高级设置中使用系统安装版。": [
     "apps/web/src/components/settings/panels/pluginMarket/ffmpeg.vue"
   ],
@@ -3085,7 +3109,9 @@
     "apps/web/src/components/settings/panels/pluginMarket/index.vue"
   ],
   "{0}失败": [
-    "apps/web/src/components/settings/panels/pluginMarket/index.vue"
+    "apps/web/src/components/settings/panels/pluginMarket/index.vue",
+    "packages/nodes/videoNode/src/components/videoActions.vue",
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue"
   ],
   "插件已卸载": [
     "apps/web/src/components/settings/panels/pluginMarket/index.vue"
@@ -3251,7 +3277,8 @@
     "apps/web/src/components/settings/panels/ui.vue"
   ],
   "自定义": [
-    "apps/web/src/components/settings/panels/ui.vue"
+    "apps/web/src/components/settings/panels/ui.vue",
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
   ],
   "字体大小": [
     "apps/web/src/components/settings/panels/ui.vue"
@@ -3351,7 +3378,8 @@
     "apps/web/src/components/settings/tfAccount.vue"
   ],
   "余额查询失败，请重试": [
-    "apps/web/src/components/settings/tfAccount.vue"
+    "apps/web/src/components/settings/tfAccount.vue",
+    "apps/web/src/lib/providerBilling.ts"
   ],
   "TF-Router 充值": [
     "apps/web/src/components/settings/tfRechargeDialog.vue"
@@ -3432,7 +3460,9 @@
     "apps/web/src/components/singleAgentDialog.vue"
   ],
   "暂停": [
-    "apps/web/src/components/singleAgentDialog.vue"
+    "apps/web/src/components/singleAgentDialog.vue",
+    "packages/nodes/videoNode/src/components/videoPlayer.vue",
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
   ],
   "继续": [
     "apps/web/src/components/singleAgentDialog.vue"
@@ -3499,7 +3529,8 @@
   "创建副本": [
     "apps/web/src/lib/canvasShortcuts.ts",
     "apps/web/src/pages/workspace/panels/canvas/components/nodeMenu.vue",
-    "apps/web/src/pages/workspace/panels/canvas/components/selectionToolbar.vue"
+    "apps/web/src/pages/workspace/panels/canvas/components/selectionToolbar.vue",
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
   ],
   "放大": [
     "apps/web/src/lib/canvasShortcuts.ts",
@@ -3512,12 +3543,6 @@
     "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
   ],
   "适应画布": [
-    "apps/web/src/lib/canvasShortcuts.ts"
-  ],
-  "鼠标滚轮": [
-    "apps/web/src/lib/canvasShortcuts.ts"
-  ],
-  "键盘与鼠标": [
     "apps/web/src/lib/canvasShortcuts.ts"
   ],
   "移动": [
@@ -3533,14 +3558,16 @@
   "重做": [
     "apps/web/src/lib/canvasShortcuts.ts",
     "apps/web/src/pages/workspace/panels/canvas/components/nodeMenu.vue",
-    "apps/desktop/src/index.ts"
+    "apps/desktop/src/index.ts",
+    "packages/nodes/textNode/src/markdownEditor.vue"
   ],
   "画布节点搜索": [
     "apps/web/src/lib/canvasShortcuts.ts",
     "apps/web/src/pages/workspace/panels/canvas/components/nodeSearch.vue"
   ],
   "复制到剪贴板": [
-    "apps/web/src/lib/canvasShortcuts.ts"
+    "apps/web/src/lib/canvasShortcuts.ts",
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
   ],
   "小键盘 +": [
     "apps/web/src/lib/canvasShortcuts.ts"
@@ -3579,7 +3606,8 @@
     "apps/web/src/lib/clipboard.ts"
   ],
   "图片读取失败": [
-    "apps/web/src/lib/clipboard.ts"
+    "apps/web/src/lib/clipboard.ts",
+    "packages/nodes/imageGenerationNode/src/index.vue"
   ],
   "当前环境无法处理图片": [
     "apps/web/src/lib/clipboard.ts"
@@ -3645,7 +3673,8 @@
   ],
   "下载": [
     "apps/web/src/lib/i18n.ts",
-    "apps/web/src/pages/workspace/panels/canvas/components/assetMenu.vue"
+    "apps/web/src/pages/workspace/panels/canvas/components/assetMenu.vue",
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
   ],
   "最小化": [
     "apps/web/src/lib/i18n.ts"
@@ -3676,7 +3705,9 @@
     "apps/web/src/pages/hello/index.vue"
   ],
   "确认": [
-    "apps/web/src/lib/i18n.ts"
+    "apps/web/src/lib/i18n.ts",
+    "packages/nodes/imageNode/src/components/imageInpaintPrompt.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
   ],
   "错误": [
     "apps/web/src/lib/i18n.ts"
@@ -3748,7 +3779,8 @@
     "apps/web/src/lib/i18n.ts"
   ],
   "上传图片": [
-    "apps/web/src/lib/i18n.ts"
+    "apps/web/src/lib/i18n.ts",
+    "packages/nodes/imageNode/src/index.vue"
   ],
   "上传附件": [
     "apps/web/src/lib/i18n.ts"
@@ -3830,9 +3862,6 @@
     "apps/web/src/lib/mobile.ts",
     "apps/desktop/src/connection.ts"
   ],
-  "请使用 Toonflow 桌面端或 Android 客户端连接其他设备": [
-    "apps/web/src/lib/mobile.ts"
-  ],
   "设备未返回有效的切换方式，请重试": [
     "apps/web/src/lib/mobile.ts"
   ],
@@ -3852,9 +3881,6 @@
     "apps/web/src/lib/tf.ts"
   ],
   "TF-Router 响应格式不正确": [
-    "apps/web/src/lib/tf.ts"
-  ],
-  "余额响应格式不正确": [
     "apps/web/src/lib/tf.ts"
   ],
   "赞助商响应格式不正确": [
@@ -3897,15 +3923,13 @@
     "apps/web/src/lib/workspaceFiles.ts",
     "apps/web/src/pages/workspace/panels/canvas/canvasHost.vue",
     "apps/web/src/pages/workspace/panels/canvas/components/canvasMenu.vue",
-    "apps/web/src/pages/workspace/panels/canvas/index.vue"
+    "apps/web/src/pages/workspace/panels/canvas/index.vue",
+    "packages/nodeShared/src/components/mediaPrice.vue"
   ],
   "读取字节数必须为正整数": [
     "apps/web/src/lib/workspaceFiles.ts"
   ],
   "远程项目文件无法在本机文件管理器中定位，请下载或导出后查看。": [
-    "apps/web/src/lib/workspaceFiles.ts"
-  ],
-  "Android 暂不支持在文件管理器中定位项目文件，请使用下载或导出保存文件。": [
     "apps/web/src/lib/workspaceFiles.ts"
   ],
   "通知桌面就绪失败（{0}）": [
@@ -3914,13 +3938,7 @@
   "当前 Microsoft Edge WebView2 Runtime 版本过旧。请以管理员身份运行微软最新版安装器；若仍提示已安装，请修复 WebView2 或联系管理员检查更新服务。更新完成后，请完全退出 Toonflow 再重新打开。": [
     "apps/web/src/main.ts"
   ],
-  "系统当前使用的 Android System WebView 缺少 Toonflow 所需能力。请更新系统实际使用的 Android System WebView；部分厂商系统需要通过系统更新升级。更新完成后，请完全退出并重新打开 Toonflow。": [
-    "apps/web/src/main.ts"
-  ],
   "切回本机失败，请重试": [
-    "apps/web/src/main.ts"
-  ],
-  "需要更新 Android System WebView": [
     "apps/web/src/main.ts"
   ],
   "无法加载应用，请重试。": [
@@ -4100,9 +4118,6 @@
   "从一句话开始，搭建你的创作工作流…": [
     "apps/web/src/pages/home/index.vue"
   ],
-  "添加文本附件失败，请重试": [
-    "apps/web/src/pages/home/index.vue"
-  ],
   "取回文本失败，请重试": [
     "apps/web/src/pages/home/index.vue"
   ],
@@ -4258,12 +4273,14 @@
     "apps/web/src/pages/workspace/index.vue"
   ],
   "文本保存失败": [
-    "apps/web/src/pages/workspace/index.vue"
+    "apps/web/src/pages/workspace/index.vue",
+    "packages/nodes/textNode/src/index.vue"
   ],
   "画布尚未就绪": [
     "apps/web/src/pages/workspace/index.vue",
     "apps/web/src/pages/workspace/panels/canvas/canvasHost.vue",
-    "apps/web/src/pages/workspace/panels/canvas/useCanvasHistory.ts"
+    "apps/web/src/pages/workspace/panels/canvas/useCanvasHistory.ts",
+    "apps/web/src/pages/workspace/panels/document/components/fileTree.vue"
   ],
   "节点 {0} 不允许移动": [
     "apps/web/src/pages/workspace/panels/canvas/arrangeCanvas.ts",
@@ -4413,7 +4430,8 @@
     "apps/web/src/pages/workspace/panels/canvas/components/assetLibrary.vue"
   ],
   "保存到素材库": [
-    "apps/web/src/pages/workspace/panels/canvas/components/assetLibrary.vue"
+    "apps/web/src/pages/workspace/panels/canvas/components/assetLibrary.vue",
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
   ],
   "素材名称": [
     "apps/web/src/pages/workspace/panels/canvas/components/assetLibrary.vue"
@@ -4518,28 +4536,28 @@
     "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
   ],
   "帮助": [
-    "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
+    "apps/web/src/pages/workspace/index.vue"
   ],
   "使用教程": [
-    "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
+    "apps/web/src/pages/workspace/index.vue"
   ],
   "Toonflow 需求/BUG反馈表": [
-    "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
+    "apps/web/src/pages/workspace/index.vue"
   ],
   "汇报 BUG": [
-    "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
+    "apps/web/src/pages/workspace/index.vue"
   ],
   "加入交流群": [
-    "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
+    "apps/web/src/pages/workspace/index.vue"
   ],
   "商务合作": [
-    "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
+    "apps/web/src/pages/workspace/index.vue"
   ],
   "{0}二维码": [
-    "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
+    "apps/web/src/pages/workspace/index.vue"
   ],
   "此联系方式仅用于商务合作接洽，不提供问题答疑。使用问题欢迎在交流群交流，需求与 BUG 可通过反馈表提交。感谢理解。": [
-    "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
+    "apps/web/src/pages/workspace/index.vue"
   ],
   "整理画布失败": [
     "apps/web/src/pages/workspace/panels/canvas/components/canvasControls.vue"
@@ -4653,14 +4671,16 @@
     "apps/web/src/pages/workspace/panels/canvas/components/canvasMenu.vue"
   ],
   "分组名称": [
-    "apps/web/src/pages/workspace/panels/canvas/components/groupNode.vue"
+    "apps/web/src/pages/workspace/panels/canvas/components/groupNode.vue",
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
   ],
   "分组": [
     "apps/web/src/pages/workspace/panels/canvas/components/groupNode.vue",
     "apps/web/src/pages/workspace/panels/canvas/components/nodeSearch.vue"
   ],
   "{0}（双击编辑名称）": [
-    "apps/web/src/pages/workspace/panels/canvas/components/groupNode.vue"
+    "apps/web/src/pages/workspace/panels/canvas/components/groupNode.vue",
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
   ],
   "调整分组{0}": [
     "apps/web/src/pages/workspace/panels/canvas/components/groupNode.vue"
@@ -4690,7 +4710,9 @@
     "apps/web/src/pages/workspace/panels/canvas/components/nodeMenu.vue"
   ],
   "添加节点": [
-    "apps/web/src/pages/workspace/panels/canvas/components/nodeMenu.vue"
+    "apps/web/src/pages/workspace/panels/canvas/components/nodeMenu.vue",
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue",
+    "apps/web/src/pages/workspace/index.vue"
   ],
   "删除中…": [
     "apps/web/src/pages/workspace/panels/canvas/components/nodeMenu.vue"
@@ -4714,7 +4736,8 @@
     "apps/web/src/pages/workspace/panels/canvas/components/selectionToolbar.vue"
   ],
   "上传": [
-    "apps/web/src/pages/workspace/panels/canvas/components/nodeMenu.vue"
+    "apps/web/src/pages/workspace/panels/canvas/components/nodeMenu.vue",
+    "apps/web/src/pages/workspace/panels/canvas/components/nodeMenuItems.vue"
   ],
   "粘贴中…": [
     "apps/web/src/pages/workspace/panels/canvas/components/nodeMenu.vue"
@@ -4756,7 +4779,8 @@
     "apps/web/src/pages/workspace/panels/canvas/components/remoteNode.vue"
   ],
   "移除节点": [
-    "apps/web/src/pages/workspace/panels/canvas/components/remoteNode.vue"
+    "apps/web/src/pages/workspace/panels/canvas/components/remoteNode.vue",
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
   ],
   "远程节点未加载，请确认插件已安装并启用": [
     "apps/web/src/pages/workspace/panels/canvas/components/remoteNode.vue"
@@ -4798,7 +4822,8 @@
     "apps/web/src/pages/workspace/panels/canvas/index.vue"
   ],
   "节点已删除，请刷新文件树": [
-    "apps/web/src/pages/workspace/panels/canvas/index.vue"
+    "apps/web/src/pages/workspace/panels/canvas/index.vue",
+    "apps/web/src/pages/workspace/panels/canvas/canvasHost.vue"
   ],
   "画布已切换，请重新打开节点": [
     "apps/web/src/pages/workspace/panels/canvas/index.vue"
@@ -4848,7 +4873,8 @@
     "apps/web/src/pages/workspace/panels/canvas/index.vue"
   ],
   "节点复制失败": [
-    "apps/web/src/pages/workspace/panels/canvas/index.vue"
+    "apps/web/src/pages/workspace/panels/canvas/index.vue",
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
   ],
   "剪贴板内容导入失败": [
     "apps/web/src/pages/workspace/panels/canvas/index.vue"
@@ -4863,7 +4889,8 @@
     "apps/web/src/pages/workspace/panels/canvas/index.vue"
   ],
   "节点删除失败": [
-    "apps/web/src/pages/workspace/panels/canvas/index.vue"
+    "apps/web/src/pages/workspace/panels/canvas/index.vue",
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
   ],
   "画布已关闭": [
     "apps/web/src/pages/workspace/panels/canvas/index.vue"
@@ -4873,7 +4900,8 @@
     "apps/web/src/pages/workspace/panels/canvas/nodeClipboard.ts"
   ],
   "节点列表格式错误": [
-    "apps/web/src/pages/workspace/panels/canvas/index.vue"
+    "apps/web/src/pages/workspace/panels/canvas/index.vue",
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
   ],
   "{0}已安装，但当前节点无法刷新。请等待任务结束后，点击节点右上角的刷新按钮。": [
     "apps/web/src/pages/workspace/panels/canvas/index.vue"
@@ -5116,7 +5144,8 @@
     "apps/web/src/pages/workspace/panels/document/components/fileTree.vue"
   ],
   "删除节点": [
-    "apps/web/src/pages/workspace/panels/document/components/fileTree.vue"
+    "apps/web/src/pages/workspace/panels/document/components/fileTree.vue",
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
   ],
   "删除文件": [
     "apps/web/src/pages/workspace/panels/document/components/fileTree.vue"
@@ -5544,10 +5573,12 @@
     "apps/server/src/agent/mentionFiles.ts"
   ],
   "文本输出": [
-    "apps/server/src/agent/mentionSources.ts"
+    "apps/server/src/agent/mentionSources.ts",
+    "packages/nodes/textNode/src/index.vue"
   ],
   "文本内容": [
-    "apps/server/src/agent/mentionSources.ts"
+    "apps/server/src/agent/mentionSources.ts",
+    "packages/nodes/textNode/src/index.vue"
   ],
   "分页已失效，请重新搜索": [
     "apps/server/src/agent/mentionSources.ts",
@@ -5572,9 +5603,6 @@
     "apps/server/src/agent/runtime/index.ts"
   ],
   "文本附件最多支持 100000 个字符，请缩小内容后重试": [
-    "apps/server/src/agent/runtime/index.ts"
-  ],
-  "文本附件必须是 UTF-8 纯文本": [
     "apps/server/src/agent/runtime/index.ts"
   ],
   "重发需要指定原对话": [
@@ -5886,7 +5914,8 @@
   "参数错误": [
     "apps/server/src/lib/middleware.ts",
     "apps/server/src/lib/responseFormat.ts",
-    "apps/server/src/routes/ai/media/generate.ts"
+    "apps/server/src/routes/ai/media/generate.ts",
+    "apps/server/src/routes/ai/media/price.ts"
   ],
   "找不到这个文件或文件夹，可能已被移动、删除，或者位置选错了。": [
     "apps/server/src/lib/responseFormat.ts"
@@ -6024,7 +6053,8 @@
   ],
   "工具名称不能重复": [
     "apps/server/src/routes/ai/generate.ts",
-    "apps/server/src/routes/singleAgent/create.ts"
+    "apps/server/src/routes/singleAgent/create.ts",
+    "packages/nodeScaffold/src/nodeAi.ts"
   ],
   "模型上下文不能超过 8 MB": [
     "apps/server/src/routes/ai/generate.ts"
@@ -6335,10 +6365,8 @@
     "apps/server/src/utils/ai/index.ts"
   ],
   "所选模型不存在，请重新选择": [
-    "apps/server/src/utils/ai/index.ts"
-  ],
-  "媒体参考需要工作目录": [
-    "apps/server/src/utils/ai/index.ts"
+    "apps/server/src/utils/ai/index.ts",
+    "packages/nodeScaffold/src/nodeAi.ts"
   ],
   "未获取到文本模型，保留原有列表": [
     "apps/server/src/utils/ai/initialize.ts"
@@ -6825,7 +6853,9 @@
     "apps/server/src/utils/media/generation.ts"
   ],
   "请输入生成提示词": [
-    "apps/server/src/utils/media/generation.ts"
+    "apps/server/src/utils/media/generation.ts",
+    "packages/nodes/videoGenerationNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
   ],
   "所选媒体模型不存在或类型不匹配，请重新选择": [
     "apps/server/src/utils/media/generation.ts"
@@ -7426,7 +7456,8 @@
   ],
   "文件路径无效": [
     "apps/server/src/utils/skills/files.ts",
-    "apps/server/src/utils/workspace/files.ts"
+    "apps/server/src/utils/workspace/files.ts",
+    "packages/nodes/textNode/src/markdownContent.ts"
   ],
   "技能文件超出目录范围": [
     "apps/server/src/utils/skills/files.ts"
@@ -8070,5 +8101,2515 @@
   ],
   "追加选择只绑定修饰键，例如 Ctrl 或 Meta。": [
     "apps/web/src/components/settings/panels/general/canvasShortcuts.vue"
+  ],
+  "当前移动端浏览器内核缺少 Toonflow 所需能力。请更新 Toonflow 和系统浏览器内核；部分系统需要通过系统更新升级。更新完成后，请完全退出并重新打开 Toonflow。": [
+    "apps/web/src/main.ts"
+  ],
+  "需要更新系统浏览器内核": [
+    "apps/web/src/main.ts"
+  ],
+  "节点菜单管理": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "像右键菜单一样整理节点。拖动调整顺序或移入子菜单，点击眼睛隐藏，修改后自动保存。": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "正在读取节点列表…": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "节点菜单编辑器": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "选择{0}": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "已停用": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "停用": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "编辑{0}": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "编辑菜单": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "编辑节点": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "菜单名称": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "节点别名（留空恢复原名）": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "节点别名": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "显示": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "隐藏": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "移除{0}菜单": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "移除菜单，保留子项": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "{0}空白投放区": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "或子菜单": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "拖入节点{0}": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "新建{0}": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "一级菜单": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "二级菜单": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "三级菜单": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "新分组": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "分组名称不能为空": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "节点列表读取失败，请重试。已保存的菜单配置仍会保留。": [
+    "apps/web/src/components/settings/panels/general/nodeMenuSettings.vue"
+  ],
+  "移动端暂不提供 FFmpeg 下载，未配置 FFmpeg 时无法执行依赖它的音视频处理。": [
+    "apps/web/src/components/settings/panels/pluginMarket/ffmpeg.vue"
+  ],
+  "未检测到可用 FFmpeg，当前移动端版本暂不支持在应用内安装，这项音视频处理无法继续。": [
+    "apps/web/src/components/settings/ffmpegRequired.vue"
+  ],
+  "点击填入提示，也可以直接输入，或添加图片、视频和文档。": [
+    "apps/web/src/components/agent/conversation.vue"
+  ],
+  "松开添加附件": [
+    "apps/web/src/components/agent/conversation.vue",
+    "apps/web/src/pages/home/index.vue"
+  ],
+  "图片、视频、文档或代码文件": [
+    "apps/web/src/components/agent/conversation.vue",
+    "apps/web/src/pages/home/index.vue"
+  ],
+  "添加附件": [
+    "apps/web/src/components/agent/conversation.vue",
+    "apps/web/src/pages/home/index.vue"
+  ],
+  "只支持图片、视频和受支持的文本或文档文件": [
+    "apps/web/src/components/agent/conversation.vue",
+    "apps/web/src/pages/home/index.vue"
+  ],
+  "移动端暂不支持在文件管理器中定位项目文件，请使用下载或导出保存文件。": [
+    "apps/web/src/lib/workspaceFiles.ts"
+  ],
+  "音频生成": [
+    "apps/web/src/lib/i18n.ts",
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasEmpty.vue"
+  ],
+  "图片生成": [
+    "apps/web/src/lib/i18n.ts",
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasEmpty.vue"
+  ],
+  "视频生成": [
+    "apps/web/src/lib/i18n.ts",
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasEmpty.vue"
+  ],
+  "3D导演台": [
+    "apps/web/src/lib/i18n.ts"
+  ],
+  "请使用 Toonflow 桌面端或移动客户端连接其他设备": [
+    "apps/web/src/lib/mobile.ts"
+  ],
+  "添加附件失败，请重试": [
+    "apps/web/src/pages/home/index.vue"
+  ],
+  "画布工具": [
+    "apps/web/src/pages/workspace/index.vue"
+  ],
+  "移动工具，点击切换为抓手": [
+    "apps/web/src/pages/workspace/index.vue"
+  ],
+  "抓手工具，点击切换为移动": [
+    "apps/web/src/pages/workspace/index.vue"
+  ],
+  "切换抓手/移动工具": [
+    "apps/web/src/pages/workspace/index.vue"
+  ],
+  "工作目录已切换，请重新选择节点": [
+    "apps/web/src/pages/workspace/index.vue"
+  ],
+  "在画布上聚焦": [
+    "apps/web/src/pages/workspace/panels/document/components/fileTree.vue"
+  ],
+  "供应商余额": [
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasMenu.vue"
+  ],
+  "TF-Router 剩余可用余额": [
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasMenu.vue"
+  ],
+  "TF-Router 余额与充值": [
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasMenu.vue"
+  ],
+  "点击刷新 {0} 余额": [
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasMenu.vue"
+  ],
+  "刷新 {0} 余额": [
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasMenu.vue"
+  ],
+  "读取文件夹失败": [
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasMenu.vue"
+  ],
+  "搜索画布失败": [
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasMenu.vue"
+  ],
+  "读取移动目录失败": [
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasMenu.vue"
+  ],
+  "没有可显示的节点": [
+    "apps/web/src/pages/workspace/panels/canvas/components/nodeMenu.vue"
+  ],
+  "双击画布 自由生成节点": [
+    "apps/web/src/pages/workspace/panels/canvas/components/canvasEmpty.vue"
+  ],
+  "请先选择画布": [
+    "apps/web/src/pages/workspace/panels/canvas/useCanvasTools.ts"
+  ],
+  "节点已隐藏，无法在画布上聚焦": [
+    "apps/web/src/pages/workspace/panels/canvas/canvasHost.vue"
+  ],
+  "节点尚未完成尺寸测量，请稍后重试": [
+    "apps/web/src/pages/workspace/panels/canvas/canvasHost.vue"
+  ],
+  "文件参考需要工作目录": [
+    "apps/server/src/utils/ai/index.ts"
+  ],
+  "不支持此参考文件格式": [
+    "apps/server/src/utils/ai/index.ts"
+  ],
+  "参考文档须为不超过 100 MB 的文件": [
+    "apps/server/src/utils/ai/index.ts"
+  ],
+  "模型请求超过附件或请求体字节预算，请减少附件或上下文后重试": [
+    "apps/server/src/utils/ai/index.ts"
+  ],
+  "输入图片超过供应商的请求限制": [
+    "apps/server/src/utils/ai/files.ts"
+  ],
+  "这里只提供文件路径": [
+    "apps/server/src/utils/ai/files.ts"
+  ],
+  "本次未发送视频内容": [
+    "apps/server/src/utils/ai/files.ts"
+  ],
+  "DeepSeek 文件上传返回了无效的文件 ID 或过期时间": [
+    "apps/server/src/utils/ai/files.ts"
+  ],
+  "DeepSeek 文件上传再次返回了已失效的文件 ID": [
+    "apps/server/src/utils/ai/files.ts"
+  ],
+  "图片附件的 Base64 数据无效": [
+    "apps/server/src/utils/ai/files.ts"
+  ],
+  "文件不能超过 100 MB": [
+    "apps/server/src/utils/documents.ts"
+  ],
+  "文档不能为空": [
+    "apps/server/src/utils/documents.ts"
+  ],
+  "文档中未提取到可读文本": [
+    "apps/server/src/utils/documents.ts"
+  ],
+  "文档已加密，请先解除密码保护后重试": [
+    "apps/server/src/utils/documents.ts"
+  ],
+  "文档内容损坏或无法解析": [
+    "apps/server/src/utils/documents.ts"
+  ],
+  "文档超过解析器的安全资源限制": [
+    "apps/server/src/utils/documents.ts"
+  ],
+  "文档缺少必要内容，无法完整解析": [
+    "apps/server/src/utils/documents.ts"
+  ],
+  "不支持此文档的实际格式": [
+    "apps/server/src/utils/documents.ts"
+  ],
+  "参考媒体须为不超过 100 MB 的非空文件": [
+    "apps/server/src/utils/media/priceReference.ts"
+  ],
+  "参考媒体已变化，请重试估价": [
+    "apps/server/src/utils/media/priceReference.ts"
+  ],
+  "参考媒体需要工作目录": [
+    "apps/server/src/utils/media/generation.ts"
+  ],
+  "读取参考媒体信息超时，请稍后重试": [
+    "apps/server/src/utils/media/generation.ts"
+  ],
+  "以实际扣费为准": [
+    "apps/server/src/utils/media/billing.ts"
+  ],
+  "余额查询失败": [
+    "apps/server/src/utils/media/billing.ts"
+  ],
+  "价格查询失败": [
+    "apps/server/src/utils/media/billing.ts",
+    "packages/nodeShared/src/components/mediaPrice.vue"
+  ],
+  "余额账户已失效，请刷新余额": [
+    "apps/server/src/utils/media/billing.ts"
+  ],
+  "图片请求预算必须为正安全整数": [
+    "apps/server/src/agent/runtime/requests.ts"
+  ],
+  "历史图片附件记录无效": [
+    "apps/server/src/agent/runtime/requests.ts"
+  ],
+  "历史图片卸载记录无效": [
+    "apps/server/src/agent/runtime/requests.ts"
+  ],
+  "图片附件引用无效": [
+    "apps/server/src/agent/runtime/requests.ts",
+    "apps/server/src/agent/runtime/imageAttachments.ts"
+  ],
+  "图片上下文已调整，重新构建请求": [
+    "apps/server/src/agent/runtime/requests.ts"
+  ],
+  "onPayload 注入的图片必须提供稳定的 toonflowImageId，每次重新观察图片时使用新 ID": [
+    "apps/server/src/agent/runtime/requests.ts"
+  ],
+  "请求超过本地字节限制": [
+    "apps/server/src/agent/runtime/requests.ts"
+  ],
+  "图片附件须为有效的 base64 内容": [
+    "apps/server/src/agent/runtime/imageAttachments.ts"
+  ],
+  "图片附件所属工作区目录无效": [
+    "apps/server/src/agent/runtime/imageAttachments.ts"
+  ],
+  "图片附件缓存与原图不匹配": [
+    "apps/server/src/agent/runtime/imageAttachments.ts"
+  ],
+  "图片附件无法解码或生成发送版本，原图已保留但未创建图片引用": [
+    "apps/server/src/agent/runtime/imageAttachments.ts"
+  ],
+  "不支持此附件格式": [
+    "apps/server/src/agent/runtime/sessions.ts"
+  ],
+  "文件不是受支持的 UTF-8 或带 BOM 的 UTF-16 文本，请先转换编码后重试": [
+    "apps/server/src/lib/documentFormats.ts"
+  ],
+  "更新助手启动错误日志保存失败：": [
+    "apps/desktop/src/update/windowsUpdater.ts"
+  ],
+  "节点 ID 不能作为文件夹名称": [
+    "packages/nodeScaffold/src/workspaceFiles.ts",
+    "packages/nodes/textNode/src/index.vue",
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "当前画布未提供工作区文件能力": [
+    "packages/nodeScaffold/src/workspaceFiles.ts"
+  ],
+  "复制节点": [
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
+  ],
+  "添加到素材库": [
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
+  ],
+  "正在保存…": [
+    "packages/nodeScaffold/src/nodeSkeleton.vue",
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "全屏": [
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
+  ],
+  "节点名称": [
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
+  ],
+  "刷新节点": [
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
+  ],
+  "节点加载中": [
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
+  ],
+  "加载中...": [
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
+  ],
+  "节点视图尚未就绪": [
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
+  ],
+  "节点刷新失败": [
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
+  ],
+  "已复制到剪贴板": [
+    "packages/nodeScaffold/src/nodeSkeleton.vue"
+  ],
+  "当前画布未提供工作区目录": [
+    "packages/nodeScaffold/src/nodeFfmpeg.ts"
+  ],
+  "请在节点组件中使用 useNodeEvent()，或传入节点 ID": [
+    "packages/nodeScaffold/src/nodeEvent.ts"
+  ],
+  "未知节点事件：{0}": [
+    "packages/nodeScaffold/src/nodeEvent.ts"
+  ],
+  "节点已切换，请重新复制": [
+    "packages/nodeScaffold/src/nodeEvent.ts"
+  ],
+  "节点已切换，请重新操作": [
+    "packages/nodeScaffold/src/nodeEvent.ts"
+  ],
+  "节点 {0} 的输出端口 {1} 值不符合类型声明": [
+    "packages/nodeScaffold/src/nodeInputs.ts"
+  ],
+  "AI 请求失败（HTTP {0}）": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "AI 未返回 SSE 数据流": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "AI 数据流提前结束，请重试": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "AI 生成失败": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "AI 返回消息不完整，请确认服务端已更新": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "AI 返回了未完成的任务": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "AI 请求失败": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "价格响应格式不正确": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "工具参数必须是对象": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "AI 未返回结果": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "模型输出达到上限，请精简任务后重试": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "AI 已达到 40 轮调用上限，请缩小任务后重试": [
+    "packages/nodeScaffold/src/nodeAi.ts"
+  ],
+  "请在节点 setup 中注册 nodeTools": [
+    "packages/nodeScaffold/src/nodeTools.ts"
+  ],
+  "当前组件不属于画布节点": [
+    "packages/nodeScaffold/src/nodeTools.ts"
+  ],
+  "节点函数名必须使用小驼峰，最多 64 个字符": [
+    "packages/nodeScaffold/src/nodeTools.ts"
+  ],
+  "节点函数需要描述、Zod 对象参数和 execute 方法": [
+    "packages/nodeScaffold/src/nodeTools.ts"
+  ],
+  "节点未注册函数 {0}，请先通过 getNodeTools 查询可用节点函数": [
+    "packages/nodeScaffold/src/nodeTools.ts"
+  ],
+  "节点函数已卸载或不属于本轮画布": [
+    "packages/nodeScaffold/src/nodeTools.ts"
+  ],
+  "正在估价…": [
+    "packages/nodeShared/src/components/mediaPrice.vue"
+  ],
+  "无法计算价格": [
+    "packages/nodeShared/src/components/mediaPrice.vue"
+  ],
+  "当前供应商尚未提供预估价格，无法提前计算费用。你仍可发起生成，实际费用以供应商结算为准。": [
+    "packages/nodeShared/src/components/mediaPrice.vue"
+  ],
+  "正在查询预估价格": [
+    "packages/nodeShared/src/components/mediaPrice.vue"
+  ],
+  "价格查询失败：{0}。请检查供应商配置或稍后重试。": [
+    "packages/nodeShared/src/components/mediaPrice.vue"
+  ],
+  "当前模型或参数组合暂无预估价格。你仍可发起生成，实际费用以供应商结算为准。": [
+    "packages/nodeShared/src/components/mediaPrice.vue"
+  ],
+  "历史记录": [
+    "packages/nodeShared/src/components/mediaHistory.vue"
+  ],
+  "{0}历史记录": [
+    "packages/nodeShared/src/components/mediaHistory.vue"
+  ],
+  "暂无历史记录": [
+    "packages/nodeShared/src/components/mediaHistory.vue"
+  ],
+  "历史文件": [
+    "packages/nodeShared/src/components/mediaHistory.vue"
+  ],
+  "当前结果": [
+    "packages/nodeShared/src/components/mediaHistory.vue"
+  ],
+  "历史图片预览": [
+    "packages/nodeShared/src/components/mediaHistory.vue"
+  ],
+  "历史视频预览": [
+    "packages/nodeShared/src/components/mediaHistory.vue"
+  ],
+  "设为当前结果": [
+    "packages/nodeShared/src/components/mediaHistory.vue"
+  ],
+  "历史文件读取失败，文件可能已被移动或删除": [
+    "packages/nodeShared/src/components/mediaHistory.vue"
+  ],
+  "历史记录读取失败": [
+    "packages/nodeShared/src/components/mediaHistory.vue"
+  ],
+  "输入引用": [
+    "packages/nodeShared/src/components/referenceItem.vue"
+  ],
+  "错误详情": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "用于解释错误的文本模型": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "请选择能正常使用的文本模型": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "正在准备解释…": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "重试 AI 解释": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "AI 解释": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "AI 解释请求失败": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "上方“错误详情”保留的是原始错误。这里显示的是解释服务的报错，请检查解释用的文本模型，或换一个模型后重试。": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "由 {0} 解释，原因是推测，供排查参考。": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "解释错误需要一个可用的文本模型。请先在设置 → 文本模型中添加，再重试 AI 解释。": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "模型没有返回解释，请重试。": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "解释模型（{0}）调用失败": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "解释模型准备失败": [
+    "packages/nodeShared/src/components/nodeError.vue"
+  ],
+  "展开编辑提示词": [
+    "packages/nodeShared/src/components/promptInput.vue"
+  ],
+  "生成提示词": [
+    "packages/nodeShared/src/components/promptInput.vue"
+  ],
+  "描述一下生成风格提示词，输入 @ 引用参考": [
+    "packages/nodeShared/src/components/promptInput.vue"
+  ],
+  "预览引用 {0}": [
+    "packages/nodeShared/src/components/referenceCard.vue"
+  ],
+  "删除引用 {0}": [
+    "packages/nodeShared/src/components/referenceCard.vue"
+  ],
+  "删除引用": [
+    "packages/nodeShared/src/components/referenceCard.vue"
+  ],
+  "读取引用文件失败": [
+    "packages/nodeShared/src/components/referenceCard.vue"
+  ],
+  "无法预览该视频": [
+    "packages/nodeShared/src/components/referenceCard.vue",
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "无法预览该图片": [
+    "packages/nodeShared/src/components/referenceCard.vue"
+  ],
+  "节点正在生成，请等待完成": [
+    "packages/nodeShared/src/useNodeGeneration.ts"
+  ],
+  "生成已取消": [
+    "packages/nodeShared/src/useNodeGeneration.ts"
+  ],
+  "生成失败": [
+    "packages/nodeShared/src/useNodeGeneration.ts"
+  ],
+  "提取音轨": [
+    "packages/nodes/videoNode/src/index.vue",
+    "packages/nodes/videoNode/src/components/videoActions.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "分离音视频": [
+    "packages/nodes/videoNode/src/index.vue",
+    "packages/nodes/videoNode/src/components/videoActions.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "截取片段": [
+    "packages/nodes/videoNode/src/index.vue",
+    "packages/nodes/videoNode/src/components/videoActions.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "替换视频": [
+    "packages/nodes/videoNode/src/index.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "截取视频帧": [
+    "packages/nodes/videoNode/src/index.vue",
+    "packages/nodes/videoNode/src/components/videoPlayer.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "截取当前帧": [
+    "packages/nodes/videoNode/src/index.vue",
+    "packages/nodes/videoNode/src/components/videoPlayer.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "截取首帧": [
+    "packages/nodes/videoNode/src/index.vue",
+    "packages/nodes/videoNode/src/components/videoPlayer.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "截取尾帧": [
+    "packages/nodes/videoNode/src/index.vue",
+    "packages/nodes/videoNode/src/components/videoPlayer.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "视频导出中": [
+    "packages/nodes/videoNode/src/index.vue"
+  ],
+  "正在导出视频": [
+    "packages/nodes/videoNode/src/index.vue"
+  ],
+  "选择视频": [
+    "packages/nodes/videoNode/src/index.vue"
+  ],
+  "上传视频": [
+    "packages/nodes/videoNode/src/index.vue"
+  ],
+  "视频处理中，请完成后再切换或刷新节点": [
+    "packages/nodes/videoNode/src/index.vue"
+  ],
+  "视频正在导出，请完成后再刷新节点": [
+    "packages/nodes/videoNode/src/index.vue"
+  ],
+  "视频上传中，请稍后删除节点": [
+    "packages/nodes/videoNode/src/index.vue"
+  ],
+  "视频处理中，请稍后重试": [
+    "packages/nodes/videoNode/src/index.vue"
+  ],
+  "视频不能为空且不能超过 100 MB": [
+    "packages/nodes/videoNode/src/index.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "请选择视频文件": [
+    "packages/nodes/videoNode/src/index.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "视频输出": [
+    "packages/nodes/videoNode/src/index.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "视频处理必须使用工作区相对路径": [
+    "packages/nodes/videoNode/src/videoProcessing.ts"
+  ],
+  "未知的视频处理操作": [
+    "packages/nodes/videoNode/src/videoProcessing.ts"
+  ],
+  "缺少音轨输出路径": [
+    "packages/nodes/videoNode/src/videoProcessing.ts"
+  ],
+  "缺少视频输出路径": [
+    "packages/nodes/videoNode/src/videoProcessing.ts"
+  ],
+  "输出文件不能覆盖原视频或彼此覆盖": [
+    "packages/nodes/videoNode/src/videoProcessing.ts"
+  ],
+  "文件不包含视频画面": [
+    "packages/nodes/videoNode/src/videoProcessing.ts"
+  ],
+  "无法读取有效的视频时长": [
+    "packages/nodes/videoNode/src/videoProcessing.ts"
+  ],
+  "该视频没有音轨": [
+    "packages/nodes/videoNode/src/videoProcessing.ts"
+  ],
+  "截取范围须满足 0 ≤ 开始时间 < 结束时间 ≤ 视频时长": [
+    "packages/nodes/videoNode/src/videoProcessing.ts"
+  ],
+  "生成的媒体文件无效": [
+    "packages/nodes/videoNode/src/videoProcessing.ts"
+  ],
+  "截取片段预览": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "拖动左右边界，选择保留的片段": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "原视频 {0}": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "片段开始边界": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "片段结束边界": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "开始时间": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "片段开始时间": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "秒": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "结束时间": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "片段结束时间": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "时长 {0} 秒": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "截取后生成新视频节点，原视频会保留。": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "请选择有效的起止时间。": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "提取音轨并生成音频节点，保留原视频。": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "生成静音视频和音频两个节点，保留原视频。": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "正在取消并清理文件…": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "正在处理视频…": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "取消处理": [
+    "packages/nodes/videoNode/src/components/videoActions.vue",
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "视频处理中，请完成或取消后再刷新节点": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "请先启用所需的视频或音频节点插件": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "画布节点已变化，请重新处理": [
+    "packages/nodes/videoNode/src/components/videoActions.vue",
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "{0}完成，已生成 {1} 个节点": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "部分临时媒体文件清理失败": [
+    "packages/nodes/videoNode/src/components/videoActions.vue"
+  ],
+  "节点视频": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "暂停视频": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "播放视频": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "播放": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue",
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "视频播放进度": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "取消静音": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue",
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "静音视频": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "音量 · 点击切换静音": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "视频音量": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "无法进入视频全屏": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "视频播放失败": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "视频帧读取超时": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "无法读取视频帧": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "请先启用图片节点插件": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue",
+    "packages/nodes/imageNode/src/usePanoramaCapture.ts",
+    "packages/nodes/imageNode/src/components/imageEditor.vue",
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "视频帧尚未就绪": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "截图生成失败": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "画布节点已变化，请重新截帧": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "已截取为图片节点": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "截帧失败": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "截帧中断，临时图片清理失败": [
+    "packages/nodes/videoNode/src/components/videoPlayer.vue"
+  ],
+  "截取音频": [
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "截取": [
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "音频变速": [
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "变速": [
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/audioNode/src/index.vue",
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "替换音频": [
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "选择替换音频": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "暂无生成音频": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "描述您想要的音频效果或输入待朗读文本": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "音频生成模型": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "请先在设置中添加音频模型": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "音频读取失败": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "模型读取失败": [
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue",
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "音频正在处理或节点已关闭，请稍后重试": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "请先选择音频模型": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "请输入生成提示词或待朗读文本": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "图片和音频不能同时引用，且合计最多引用一个；文本数量不限": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "引用节点暂无内容，请先补充引用内容": [
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/videoGenerationNode/src/index.vue",
+    "packages/nodes/textNode/src/index.vue",
+    "packages/nodes/director3dNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请重新选择有效的语种、采样率和输出格式": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "供应商未返回音频": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "音频生成失败": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "请选择音频文件": [
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "音频替换失败": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "音频不能为空且不能超过 100 MB": [
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "音频处理中，请完成或取消后再刷新节点": [
+    "packages/nodes/audioGenerationNode/src/index.vue",
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "音频正在替换，请稍后删除节点": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "音频正在处理或节点已关闭，请稍后修改配置": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "请选择 getConfig 返回的有效音频模型": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "请选择 getConfig 返回的有效语种": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "请选择 getConfig 返回的有效采样率": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "请选择 getConfig 返回的有效输出格式": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "节点正在删除或已关闭，请稍后修改": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "图片或音频限1个，文本不限": [
+    "packages/nodes/audioGenerationNode/src/index.vue"
+  ],
+  "音频生成设置": [
+    "packages/nodes/audioGenerationNode/src/components/generationSettings.vue"
+  ],
+  "音频参数": [
+    "packages/nodes/audioGenerationNode/src/components/generationSettings.vue"
+  ],
+  "语种": [
+    "packages/nodes/audioGenerationNode/src/components/generationSettings.vue"
+  ],
+  "音频语种": [
+    "packages/nodes/audioGenerationNode/src/components/generationSettings.vue"
+  ],
+  "采样率": [
+    "packages/nodes/audioGenerationNode/src/components/generationSettings.vue"
+  ],
+  "音频采样率": [
+    "packages/nodes/audioGenerationNode/src/components/generationSettings.vue"
+  ],
+  "输出格式": [
+    "packages/nodes/audioGenerationNode/src/components/generationSettings.vue"
+  ],
+  "音频输出格式": [
+    "packages/nodes/audioGenerationNode/src/components/generationSettings.vue"
+  ],
+  "中文": [
+    "packages/nodes/audioGenerationNode/src/audioSettings.ts"
+  ],
+  "英文": [
+    "packages/nodes/audioGenerationNode/src/audioSettings.ts"
+  ],
+  "选择音频": [
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "上传音频": [
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "音频处理中，请完成后再切换或刷新节点": [
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "音频上传中，请稍后删除节点": [
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "音频处理中，请稍后重试": [
+    "packages/nodes/audioNode/src/index.vue"
+  ],
+  "波形条数必须为正整数": [
+    "packages/nodes/audioNode/src/audioWaveform.ts"
+  ],
+  "音频处理必须使用工作区相对路径": [
+    "packages/nodes/audioNode/src/audioProcessing.ts"
+  ],
+  "音频处理路径不能为空": [
+    "packages/nodes/audioNode/src/audioProcessing.ts"
+  ],
+  "输出文件不能覆盖原音频": [
+    "packages/nodes/audioNode/src/audioProcessing.ts"
+  ],
+  "未知的音频处理操作": [
+    "packages/nodes/audioNode/src/audioProcessing.ts"
+  ],
+  "音频速度须在 0.1 至 4 倍之间": [
+    "packages/nodes/audioNode/src/audioProcessing.ts"
+  ],
+  "文件不包含音轨": [
+    "packages/nodes/audioNode/src/audioProcessing.ts"
+  ],
+  "无法读取有效的音频时长": [
+    "packages/nodes/audioNode/src/audioProcessing.ts"
+  ],
+  "每个片段须满足 0 ≤ 开始时间 < 结束时间 ≤ 音频时长": [
+    "packages/nodes/audioNode/src/audioProcessing.ts"
+  ],
+  "生成的音频文件无效": [
+    "packages/nodes/audioNode/src/audioProcessing.ts"
+  ],
+  "节点音频": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "无法播放音频": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "正在读取波形…": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "当前音频无法显示波形": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "音频播放进度": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "暂停音频": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "播放音频": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "静音音频": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "静音": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "音频音量": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "无法读取音频": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "音频播放失败": [
+    "packages/nodes/audioNode/src/components/audioPlayer.vue"
+  ],
+  "音频剪辑预览": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "音频剪辑轨道": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "片段 {0}，时长 {1} 秒": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "片段 {0}": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "剪辑游标": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "撤销（Ctrl+Z）": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "恢复（Ctrl+Y）": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "恢复": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue",
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "分割": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "与前一片段粘合": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "与后一片段粘合": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "粘合": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "删除选中片段": [
+    "packages/nodes/audioNode/src/components/audioClipEditor.vue"
+  ],
+  "关闭变速": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "取消变速处理": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "音频变速滑块": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "音频变速倍数": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "生成变速音频": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "正在取消并清理…": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "正在生成变速音频…": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "取消截取处理": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "关闭音频截取": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "截取与拼接": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "正在导出音频…": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "导出音频": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "请先启用音频节点插件": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "已在右侧生成新的音频节点": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "音频处理失败": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "临时音频清理失败": [
+    "packages/nodes/audioNode/src/components/audioActions.vue"
+  ],
+  "选择替换视频": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "生成视频": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "暂无生成视频": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "仅一张图片时作为尾帧；两张图片按顺序作为首帧、尾帧": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "图片引用按顺序作为首帧、尾帧": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "生成模型": [
+    "packages/nodes/videoGenerationNode/src/index.vue",
+    "packages/nodes/textNode/src/index.vue",
+    "packages/nodes/director3dNode/src/directorPanel.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请先在设置中添加视频模型": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "视频读取失败": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "视频替换失败": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "视频正在生成，请等待完成": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "视频正在替换，请等待完成": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "节点正在删除": [
+    "packages/nodes/videoGenerationNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请先选择视频模型": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "当前模型没有适合这些参考素材的生成模式，请更换模型或调整引用": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "供应商未返回视频": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "视频生成失败": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "视频处理中，请完成后再刷新节点": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "视频正在替换，请稍后删除节点": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "节点正在生成或删除，请稍后修改配置": [
+    "packages/nodes/videoGenerationNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请选择 getConfig 返回的有效视频模型": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "当前模型不支持时长 {0}，可选：{1}": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "当前时长不支持分辨率 {0}，可选：{1}": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "所选模式不受当前模型支持或不适用于当前引用，请根据模型能力及已连接素材选择": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "当前模型不支持切换声音，请查看 getConfig 返回的 audio 能力": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "节点正在删除，请稍后修改": [
+    "packages/nodes/videoGenerationNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "图片、视频、音频、文本输入": [
+    "packages/nodes/videoGenerationNode/src/index.vue"
+  ],
+  "视频生成设置": [
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
+  ],
+  "生成模式": [
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
+  ],
+  "时长": [
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
+  ],
+  "{0}秒": [
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
+  ],
+  "通用比例": [
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
+  ],
+  "视频比例": [
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue"
+  ],
+  "比例 {0}": [
+    "packages/nodes/videoGenerationNode/src/components/generationSettings.vue",
+    "packages/nodes/imageGenerationNode/src/components/generationSettings.vue"
+  ],
+  "查看并复制当前正文": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "重新读取磁盘": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "生成": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "编辑文本": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "编辑文本内容": [
+    "packages/nodes/textNode/src/index.vue",
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "文本尚未加载，无法保存": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "文本正在生成，请完成后再刷新节点": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "文本文件路径无效": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "文本内容无效": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "文本文件已被其他编辑器修改，请重新加载节点": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "重新读取将用磁盘内容替换当前正文。未保存的修改会被放弃，请先复制需要保留的内容。": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "重新读取文本": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "重新读取": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "文本尚未加载": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "文本生成中，请稍后修改": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "视频、图片、文本、文件输入": [
+    "packages/nodes/textNode/src/index.vue"
+  ],
+  "Markdown 编辑工具": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "标题": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "加粗": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "斜体": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "列表": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "复制正文": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "富文本": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "原文": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "编辑 Markdown 原文": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "富文本会规范化 Markdown；保留原始 HTML 写法请使用原文。": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "编辑器加载失败，可切换原文继续编辑": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "正文更新失败": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "复制失败，请在原文中选择并复制": [
+    "packages/nodes/textNode/src/markdownEditor.vue"
+  ],
+  "文件路径必须位于工作区内": [
+    "packages/nodes/textNode/src/markdownContent.ts"
+  ],
+  "文件路径超出工作区": [
+    "packages/nodes/textNode/src/markdownContent.ts"
+  ],
+  "当前宿主无法读取文档图片": [
+    "packages/nodes/textNode/src/markdownContent.ts"
+  ],
+  "Markdown 预览失败": [
+    "packages/nodes/textNode/src/markdownPreview.vue"
+  ],
+  "请从文件树打开工作区内的链接": [
+    "packages/nodes/textNode/src/markdownPreview.vue"
+  ],
+  "无法打开链接": [
+    "packages/nodes/textNode/src/markdownPreview.vue"
+  ],
+  "全景图": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "局部重绘": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageNode/src/components/imageEditor.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "打光": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageNode/src/components/imageLighting.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "多角度": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "宫格切分": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "替换图片": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "标记": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageNode/src/components/imageEditor.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "节点图片": [
+    "packages/nodes/imageNode/src/index.vue"
+  ],
+  "选择图片": [
+    "packages/nodes/imageNode/src/index.vue"
+  ],
+  "图片处理中，请完成后再切换或刷新节点": [
+    "packages/nodes/imageNode/src/index.vue"
+  ],
+  "图片处理中，请稍后删除节点": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "图片处理中，请稍后重试": [
+    "packages/nodes/imageNode/src/index.vue"
+  ],
+  "图片不能为空且不能超过 100 MB": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请先进入局部重绘": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageNode/src/components/imageEditor.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请选择图片文件": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "来源图片": [
+    "packages/nodes/imageNode/src/index.vue"
+  ],
+  "图片输出": [
+    "packages/nodes/imageNode/src/index.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "截图内容无效，请重新截图": [
+    "packages/nodes/imageNode/src/usePanoramaCapture.ts"
+  ],
+  "原图片节点已变化，请重新打开全景预览": [
+    "packages/nodes/imageNode/src/usePanoramaCapture.ts"
+  ],
+  "当前画布不支持分组": [
+    "packages/nodes/imageNode/src/usePanoramaCapture.ts"
+  ],
+  "画布节点已变化，请重新截图": [
+    "packages/nodes/imageNode/src/usePanoramaCapture.ts"
+  ],
+  "已创建 {0} 张截图并成组连线": [
+    "packages/nodes/imageNode/src/usePanoramaCapture.ts"
+  ],
+  "已创建截图并连接原节点": [
+    "packages/nodes/imageNode/src/usePanoramaCapture.ts"
+  ],
+  "全景截图保存失败": [
+    "packages/nodes/imageNode/src/usePanoramaCapture.ts"
+  ],
+  "全景截图中断，临时图片清理失败": [
+    "packages/nodes/imageNode/src/usePanoramaCapture.ts"
+  ],
+  "局部重绘素材无效，请重新创建重绘节点": [
+    "packages/nodes/imageNode/src/imageInpaint.ts"
+  ],
+  "局部重绘原图、引导图与蒙版尺寸不一致，请重新创建重绘节点": [
+    "packages/nodes/imageNode/src/imageInpaint.ts"
+  ],
+  "无法创建绘画画布": [
+    "packages/nodes/imageNode/src/imageInpaint.ts",
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "局部重绘蒙版为空，请重新涂抹区域": [
+    "packages/nodes/imageNode/src/imageInpaint.ts"
+  ],
+  "供应商未返回图片": [
+    "packages/nodes/imageNode/src/imageInpaint.ts",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "图片编码失败": [
+    "packages/nodes/imageNode/src/imageInpaint.ts",
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "重绘节点已移除": [
+    "packages/nodes/imageNode/src/imageInpaint.ts"
+  ],
+  "重绘临时文件清理失败": [
+    "packages/nodes/imageNode/src/imageInpaint.ts",
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "请先启用图片生成节点插件": [
+    "packages/nodes/imageNode/src/useImageVariationNode.ts",
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "原节点已变化，请重新操作": [
+    "packages/nodes/imageNode/src/useImageVariationNode.ts"
+  ],
+  "相机，水平环绕 {0} 度，垂直俯仰 {1} 度，距离 {2}；方向键调整角度，Shift 微调，加减键调整距离": [
+    "packages/nodes/imageNode/src/components/imageMultiAngleStage.vue"
+  ],
+  "拖动调整相机角度；方向键调整，Shift 微调，加减键调整距离": [
+    "packages/nodes/imageNode/src/components/imageMultiAngleStage.vue"
+  ],
+  "相机": [
+    "packages/nodes/imageNode/src/components/imageMultiAngleStage.vue"
+  ],
+  "正在载入参考图…": [
+    "packages/nodes/imageNode/src/components/imageMultiAngleStage.vue"
+  ],
+  "参考图加载失败": [
+    "packages/nodes/imageNode/src/components/imageMultiAngleStage.vue",
+    "packages/nodes/imageNode/src/components/imageLightingStage.vue"
+  ],
+  "拖动相机改变角度 · 拖动空白旋转总览": [
+    "packages/nodes/imageNode/src/components/imageMultiAngleStage.vue"
+  ],
+  "仅显示原图平面透视 · 拖动相机图标调整机位": [
+    "packages/nodes/imageNode/src/components/imageMultiAngleStage.vue"
+  ],
+  "3D 预览不可用，请使用角度控件调整相机": [
+    "packages/nodes/imageNode/src/components/imageMultiAngleStage.vue"
+  ],
+  "生成720°全景图": [
+    "packages/nodes/imageNode/src/components/imagePanorama.vue"
+  ],
+  "生成360°环绕图": [
+    "packages/nodes/imageNode/src/components/imagePanorama.vue"
+  ],
+  "预览720°全景图": [
+    "packages/nodes/imageNode/src/components/imagePanorama.vue"
+  ],
+  "预览360°环绕图": [
+    "packages/nodes/imageNode/src/components/imagePanorama.vue"
+  ],
+  "720°全景图": [
+    "packages/nodes/imageNode/src/components/imagePanorama.vue",
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "360°环绕图": [
+    "packages/nodes/imageNode/src/components/imagePanorama.vue",
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "预览{0}": [
+    "packages/nodes/imageNode/src/components/imagePanorama.vue"
+  ],
+  "预览与校正": [
+    "packages/nodes/imageNode/src/components/imagePanorama.vue"
+  ],
+  "全景节点创建失败": [
+    "packages/nodes/imageNode/src/components/imagePanorama.vue"
+  ],
+  "{0}，水平方位 {1} 度，俯仰 {2} 度；方向键调整，Shift 微调": [
+    "packages/nodes/imageNode/src/components/imageLightingStage.vue"
+  ],
+  "拖动调整光位；方向键调整，Shift 微调": [
+    "packages/nodes/imageNode/src/components/imageLightingStage.vue"
+  ],
+  "拖动光球调整光位 · 拖动空白旋转视角": [
+    "packages/nodes/imageNode/src/components/imageLightingStage.vue"
+  ],
+  "3D 预览不可用，请使用角度控件调整光位": [
+    "packages/nodes/imageNode/src/components/imageLightingStage.vue"
+  ],
+  "选择图片模型": [
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue"
+  ],
+  "{0}模型": [
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue"
+  ],
+  "请先在设置中添加图片模型": [
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "{0}输出设置": [
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue"
+  ],
+  "{0}分辨率": [
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue"
+  ],
+  "{0}比例": [
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue"
+  ],
+  "生成图片": [
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "新节点或原图连接已变化，请在新节点中检查后生成": [
+    "packages/nodes/imageNode/src/components/imageVariationGenerator.vue"
+  ],
+  "重绘节点创建失败": [
+    "packages/nodes/imageNode/src/components/imageInpaintPrompt.vue"
+  ],
+  "涂抹需要重绘的区域": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "图片标记画布": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "标记文本": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "输入文本": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "取消标记": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "取消局部重绘": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "画笔": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "矩形": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "圆形": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "橡皮擦": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "画笔颜色": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "字号": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "粗细": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "文本字号": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "画笔粗细": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "清空标记": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "图片尚未加载完成": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "画布节点已变化，请重新保存": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "标记保存失败": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "标记临时文件清理失败": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "请输入重绘提示词": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue",
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请先涂抹需要重绘的区域": [
+    "packages/nodes/imageNode/src/components/imageEditor.vue"
+  ],
+  "保留原图": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "常用宫格": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "{0} 宫格": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "行数": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "切分行数": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "列数": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "切分列数": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "宫格切分预览": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "共 {0} 张图片": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "请设置有效行列数": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "从左到右，逐行切分": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "正在切分 {0} / {1}": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "切分为图片节点": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "图片尺寸小于切分行列数": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "无法创建图片画布": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "图片切分失败": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "画布节点已变化，请重新切分": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "已切分为 {0} 个图片节点": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "宫格切分失败": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "切分中断，部分临时图片清理失败": [
+    "packages/nodes/imageNode/src/components/imageGridSplit.vue"
+  ],
+  "图片多角度": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "重置": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "关闭多角度": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "常用视角": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "预览模式": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "空间总览": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "参考平面": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "水平环绕": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "水平环绕数值": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "相机水平环绕": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "垂直俯仰": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "垂直俯仰数值": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "相机垂直俯仰": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "拍摄距离": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "拍摄距离数值": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "相机拍摄距离": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "镜头": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "镜头类型": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "标准": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "广角": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "相对原图 · {0}° / {1}° · {2}": [
+    "packages/nodes/imageNode/src/components/imageMultiAngle.vue"
+  ],
+  "图片打光": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "调整光线，保留画面": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "关闭打光": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "{0}方向": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "编辑光源": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "主光源": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "轮廓光源": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "水平角": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "{0}水平角": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "俯仰角": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "{0}俯仰角": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "光照强度": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "{0}亮度": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "光线色彩": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "{0}颜色": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "白光": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "还原": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "启用轮廓光": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "轮廓光": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "光影预设": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "智能模式": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "描述你想要的光影、氛围或局部细节…": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "智能打光描述": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "主光": [
+    "packages/nodes/imageNode/src/components/imageLighting.vue"
+  ],
+  "原图对比": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "已启用 {0} 项校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "当前视角": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "返回校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "对比原图": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "参考线": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "{0}预览，拖动或方向键旋转，滚轮或加减键缩放，Home 重置": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "当前设备无法显示全景预览，请重新打开后重试": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "正在加载全景图…": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "拖动旋转 · 滚轮缩放 · 16:9 取景": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "水平 {0}°": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "· 俯仰 {0}°": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "视野": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "全景视野": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "重置视角": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "全景校正设置": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "画面校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "全部重置": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "按需开启，可叠加使用": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "镜头畸变": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "启用镜头畸变校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "修正画面向外鼓起或向内凹陷": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "镜头畸变类型": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "桶形校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "枕形校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "校正强度": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "镜头畸变校正强度": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "透视与水平": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "启用透视与水平校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "调整建筑倾斜与画面歪斜": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "水平透视": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "水平透视校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "垂直透视": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "垂直透视校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "水平旋转": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "水平旋转校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "环绕拉伸": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "启用环绕拉伸校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "修正环绕图中物体的宽窄与高矮": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "水平拉伸": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "环绕水平拉伸": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "垂直拉伸": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "环绕垂直拉伸": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "中心方向": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "环绕拉伸中心方向": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "地平线": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "启用地平线校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "调整地平线高低与环绕起伏": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "高度偏移": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "地平线高度偏移": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "起伏修正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "地平线起伏修正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "起伏方向": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "地平线起伏方向": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "起伏次数": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "地平线起伏次数": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "{0} 次": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "首尾接缝": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "启用首尾接缝校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "缓和首尾色差，建议小幅调整": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "融合范围": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "首尾接缝融合范围": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "截图": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "截图方式": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "当前视角单张": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "四宫格": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "12 宫格": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "宫格输出方式": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "拼成一张": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "分散单图并成组": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "正在截图…": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "截图并添加节点": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "截取当前视角": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "每隔 90° 截取水平视角，排列为 2 × 2": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "上方、水平、下方各 4 个方向，排列为 4 × 3": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "每隔 30° 截取一张，排列为 4 × 3": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "截图仍使用校正结果": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "截图包含已启用的校正": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "{0} · 每张 1280 × 720 · {1}": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "没有可预览的图片": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "图片尺寸无效，无法预览全景图": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "全景图加载失败，请检查图片后重新打开": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "无法创建截图画布": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "图形上下文已中断，请重新打开预览后再截图": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "截图编码失败，请重试": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "图片已更新，请重新截图": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "截图失败，请重试": [
+    "packages/nodes/imageNode/src/components/imagePanoramaPreview.vue"
+  ],
+  "打开导演台": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "最后镜头": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "正在导出，请完成后再删除导演节点": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "导演节点已关闭，导出已停止": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "导演台模型文件路径无效": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "模型文件读取失败": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "导演台加载失败：{0}": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "人偶添加失败": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "导演台模型未加载，无法复制：{0}": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "导演台正在生成或导出，请完成后再刷新节点": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "请先启用{0}节点插件": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "画布节点已变化，请重新导出": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "{0}已导出到画布": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "导出失败，请重试": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "导出中断，临时素材清理失败": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "模型加载失败": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "预览生成失败": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "Agent 未修改方案，原方案未修改，请重试。": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "基础模型已被另一条指令更新，请基于当前模型重试。": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "文本、图片、视频输入": [
+    "packages/nodes/director3dNode/src/index.vue"
+  ],
+  "动画": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "方案": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "动画列表": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "{0} 秒 · {1} 条模型动画": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "输入提示词": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "此旧方案未保存输入提示词": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "后台生成中…": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "重新编辑指令": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "描述模型动作和运镜要求": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "使用 {0} 个关键帧生成运镜": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "参考：{0}": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "模型动画与运镜同步生成": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "生成动画": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "生成方案": [
+    "packages/nodes/director3dNode/src/directorPanel.vue"
+  ],
+  "运镜时间无效": [
+    "packages/nodes/director3dNode/src/motion.ts"
+  ],
+  "生成场景与方案": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "描述场景模型、人物动作和镜头要求，再点击“生成方案”。画布上如果有链接的文本、图片和视频，可以通过 @ 引用。": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "查看与切换方案": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "生成的方案会出现在这里。点击方案从头预览对应动画，并查看生成时的输入提示词；也可以继续输入要求生成新方案。多个方案共用基础场景和模型。": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "第一人称取景": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "点击三维画面后，用鼠标调整朝向。WASD 移动，空格上升，Shift 下降，滚轮调焦；左键或 Esc 退出取景。": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "记录关键帧": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "取景时按右键，或点击“添加关键帧”记录当前镜头。这里的关键帧可以拖动排序、点击回看或删除。再次生成方案时，AI 会参考这些取景及其顺序设计运镜。点击导出按钮可以导出关键帧图片。": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "播放与画面设置": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "用播放按钮和进度条检查动画；在这里调整画面比例、网格、天空与光照，让预演画面更符合你的想法。": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "导出到画布": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "选中方案后，点击这里导出视频节点。关键帧缩略图上的导出按钮可以生成图片节点。视频导出期间请保持窗口可见，完成后回到画布查看结果。": [
+    "packages/nodes/director3dNode/src/directorTour.vue"
+  ],
+  "镜头截图失败": [
+    "packages/nodes/director3dNode/src/scene.ts"
+  ],
+  "场景中找不到动画物体：{0}": [
+    "packages/nodes/director3dNode/src/sceneAnimation.ts"
+  ],
+  "只有人偶支持关节动画：{0}": [
+    "packages/nodes/director3dNode/src/sceneAnimation.ts"
+  ],
+  "场景中找不到人偶关节：{0}": [
+    "packages/nodes/director3dNode/src/sceneAnimation.ts"
+  ],
+  "场景动画时间无效": [
+    "packages/nodes/director3dNode/src/sceneAnimation.ts"
+  ],
+  "3D 导演台": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "场景与镜头": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "导演台场景": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "播放中": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "点击画布取景": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "正在载入场景": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "场景设置": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "网格": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "显示网格": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "天空盒": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "显示天空盒": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "添加人偶": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "暂停影片": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "播放影片": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "影片播放进度": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "光照设置": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "光照": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "全局光照": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "无阴影": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "全局光照强度": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "太阳光": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "有阴影": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "颜色": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "太阳光颜色": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "强度": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "太阳光强度": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "添加关键帧": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "导出视频节点": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "导出视频 {0}%": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "WASD 移动 · 空格上升 · Shift 下降 · 滚轮调焦 · 右键记录 · 左键 / Esc 退出取景": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "关键帧": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "拖动调整顺序": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "查看关键帧 {0}": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "删除关键帧 {0}": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "导出画布": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "导出关键帧 {0} 到画布": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "场景载入失败": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "无法进入第一人称取景": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "最多记录 100 个关键帧": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "动画载入失败": [
+    "packages/nodes/director3dNode/src/sceneEditor.vue"
+  ],
+  "关键帧渲染失败": [
+    "packages/nodes/director3dNode/src/renderMedia.ts"
+  ],
+  "当前浏览器不支持 MP4 导出，请更新浏览器或桌面 WebView2 运行时": [
+    "packages/nodes/director3dNode/src/renderMedia.ts"
+  ],
+  "请在当前窗口保持可见时导出视频": [
+    "packages/nodes/director3dNode/src/renderMedia.ts"
+  ],
+  "窗口已隐藏，视频导出已停止，请保持窗口可见后重试": [
+    "packages/nodes/director3dNode/src/renderMedia.ts"
+  ],
+  "导出视频超过 100 MB，请缩短动画时长": [
+    "packages/nodes/director3dNode/src/renderMedia.ts"
+  ],
+  "MP4 编码失败，请重试": [
+    "packages/nodes/director3dNode/src/renderMedia.ts"
+  ],
+  "未能生成视频内容": [
+    "packages/nodes/director3dNode/src/renderMedia.ts"
+  ],
+  "草稿或工具参数超过 500 KB，请精简场景或关键帧": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "路径不存在：{0}": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "joint 只能与 plan 的 objectId 一同使用": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "物体": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "轨道": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "找不到{0}：{1}{2}": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "{0} 必须提供 value": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "整个 scene 或 plan 只允许 replace；请用相对路径添加或删除字段": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "路径不是对象或数组：{0}": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "数组位置不存在：{0}": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "已存在，请使用 replace": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "不存在": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "字段{0}：{1}": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "tracks 引用了不存在的物体：{0}，删除物体时需同时删除其轨道": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "只有人偶支持关节轨道：{0} / {1}": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "schema 不支持 objectId、joint 或 planId": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "历史方案不存在，请从摘要中选择有效 planId": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "planId 仅用于只读 history": [
+    "packages/nodes/director3dNode/src/agentTools.ts"
+  ],
+  "拖动调整水平方位": [
+    "packages/nodes/director3dNode/src/lightDirection.vue"
+  ],
+  "拖动调整光线高度": [
+    "packages/nodes/director3dNode/src/lightDirection.vue"
+  ],
+  "高度": [
+    "packages/nodes/director3dNode/src/lightDirection.vue"
+  ],
+  "光线高度": [
+    "packages/nodes/director3dNode/src/lightDirection.vue"
+  ],
+  "水平方位 · {0}": [
+    "packages/nodes/director3dNode/src/lightDirection.vue"
+  ],
+  "水平方位": [
+    "packages/nodes/director3dNode/src/lightDirection.vue"
+  ],
+  "选择替换图片": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "局部重绘标注图": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "红色标注为重绘区域": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "暂无生成图片": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "查看重绘标注": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "重绘标注读取失败": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "图片替换失败": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "图片正在生成，请等待完成": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请先关闭全景图，再启动图片生成": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "图片正在替换，请等待完成": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请先退出打光，再启动图片生成": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请先退出多角度，再启动图片生成": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请先完成图片标记": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请先确认局部重绘，再到子节点生成": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请先选择图片模型": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "图片生成失败": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "图片处理中，请完成后再刷新节点": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "请选择 getConfig 返回的有效图片模型": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "当前模型不支持分辨率 {0}，可选：{1}": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "当前模型不支持比例 {0}，可选：{1}": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "图片、文本输入": [
+    "packages/nodes/imageGenerationNode/src/index.vue"
+  ],
+  "图片生成设置": [
+    "packages/nodes/imageGenerationNode/src/components/generationSettings.vue"
+  ],
+  "{0} · {1} · 1张": [
+    "packages/nodes/imageGenerationNode/src/components/generationSettings.vue"
+  ],
+  "图片分辨率": [
+    "packages/nodes/imageGenerationNode/src/components/generationSettings.vue"
+  ],
+  "图片比例": [
+    "packages/nodes/imageGenerationNode/src/components/generationSettings.vue"
   ]
 }

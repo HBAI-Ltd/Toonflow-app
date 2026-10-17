@@ -286,6 +286,13 @@ function analyze(source: string, id: string) {
   return { output, messages, changed: replacements.length > 0 };
 }
 
+// Only built-in browser UI participates; providers, tools and model prompts stay untouched.
+export function isUiSource(path: string): boolean {
+  return /\/apps\/web\/src\//.test(path)
+    || /\/packages\/(?:nodeScaffold|nodeShared)\/src\//.test(path)
+    || /\/packages\/nodes\/[^/]+\/src\//.test(path);
+}
+
 export function collectMessages(source: string, id: string): string[] {
   if (!/\.(?:vue|[cm]?[jt]sx?)$/.test(id) || /(?:providerPrompt|[?]|\.d\.ts$)/i.test(id)) return [];
   return [...analyze(source, id).messages];

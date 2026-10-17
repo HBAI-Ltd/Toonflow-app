@@ -3,7 +3,7 @@ import { resolve, relative } from "node:path";
 import { parse } from "@babel/parser";
 import type { Node } from "@babel/types";
 import { parse as parseSfc } from "@vue/compiler-sfc";
-import { collectMessages } from "./transform";
+import { collectMessages, isUiSource } from "./transform";
 import { escapeMessageText } from "./index";
 
 const root = resolve(import.meta.dirname, "../../..");
@@ -21,7 +21,7 @@ async function scan(directory: string) {
     if (item.isDirectory()) { if (!["node_modules", "installer", "locales", "dist"].includes(item.name)) await scan(path); continue; }
     if (!/\.(ts|vue)$/.test(item.name) || /(?:\.d\.ts|providerPrompt|systemPrompt)\./i.test(item.name) || /packages[\\/]ffmpeg[\\/]src[\\/]browser\.ts$/.test(path)) continue;
     const source = await readFile(path, "utf8");
-    if (/apps[\\/]web/.test(path)) {
+    if (isUiSource(path.replaceAll("\\", "/"))) {
       for (const message of collectMessages(source, path)) add(message, path);
     }
     const scripts = item.name.endsWith(".vue")
@@ -39,6 +39,12 @@ async function scan(directory: string) {
           add(node.quasi.quasis.map((part, index) => (node.quasi.expressions.length ? escapeMessageText(part.value.cooked ?? part.value.raw) : part.value.cooked ?? part.value.raw) + (index < node.quasi.expressions.length ? `{${index}}` : "")).join(""), path);
         }
         if (node.type === "CallExpression" && node.callee.type === "Identifier" && ["translate", "translateMessage"].includes(node.callee.name) && node.arguments[0]?.type === "StringLiteral") add(node.arguments[0].value, path);
+        // Port captions are stored as metadata; collect them without rewriting their values.
+        if (isUiSource(path.replaceAll("\\", "/")) && node.type === "StringLiteral") {
+          const parent = parents.at(-1);
+          if (parent?.type === "ObjectProperty" && parent.key.type === "Identifier" && parent.key.name === "label"
+            && parents.some(item => item.type === "ObjectProperty" && item.key.type === "Identifier" && item.key.name === "handles")) add(node.value, path);
+        }
         // ACT: 服务端这里只提取候选字典，不改业务字符串；真正翻译仅发生于明确的系统文案出口。
         if (!protectedMessage && backend && node.type === "StringLiteral" && node.value.length < 1200 && !node.value.includes("```")) {
           const parent = parents.at(-1);
@@ -54,7 +60,7 @@ async function scan(directory: string) {
     }
   }
 }
-for (const path of ["apps/web/src", "apps/server/src", "apps/desktop/src", "apps/mobile/src", "packages/mcp/src", "packages/ffmpeg/src"]) await scan(resolve(root, path));
+for (const path of ["apps/web/src", "apps/server/src", "apps/desktop/src", "apps/mobile/src", "packages/mcp/src", "packages/ffmpeg/src", "packages/nodeScaffold/src", "packages/nodeShared/src", "packages/nodes"]) await scan(resolve(root, path));
 const messages = Object.fromEntries([...catalog].sort(([left], [right]) => left.localeCompare(right, "zh-CN")).map(([message]) => [message, message]));
 await mkdir(resolve(import.meta.dirname, "locales"), { recursive: true });
 await writeAtomic(resolve(import.meta.dirname, "locales/zhCn.json"), JSON.stringify(messages, null, 2) + "\n");

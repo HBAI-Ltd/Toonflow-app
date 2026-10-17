@@ -1,5 +1,5 @@
 import type { Plugin } from "vite";
-import { transformSource } from "./transform.ts";
+import { isUiSource, transformSource } from "./transform.ts";
 
 export function i18nPlugin(): Plugin {
   return {
@@ -7,7 +7,7 @@ export function i18nPlugin(): Plugin {
     enforce: "pre",
     transform(source, id) {
       const path = id.replaceAll("\\", "/");
-      if (!/\/apps\/web\/src\//.test(path)) return;
+      if (!isUiSource(path)) return;
       return transformSource(source, path);
     },
   };

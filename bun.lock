@@ -352,6 +352,7 @@
         "@tabler/icons-vue": "^3.46.0",
         "@toonflow/ffmpeg": "workspace:*",
         "@toonflow/file": "workspace:*",
+        "@toonflow/i18n": "workspace:*",
         "@vitejs/plugin-vue": "^6.0.8",
         "eventsource-parser": "3.1.1",
         "vite": "^8.2.2",

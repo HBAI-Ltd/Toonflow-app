@@ -14,7 +14,7 @@ Web 设置和首次引导复用 `languageSelect.vue`：设置页直接展示语�
 
 Element Plus 使用 `src/elementPlus/` 中的 21 份完整语言 JSON，通过 `@toonflow/i18n/elementPlus` 接入全局 ConfigProvider；分页、日期、上传、筛选及无障碍提示随语言即时更新，不再因官方语言包缺失而回退英语。日期格式和星期名称使用 Web 已注册的 Day.js 语言包；菲律宾语映射为 `tl-ph`，Gurmukhi 旁遮普语映射为 `pa-in`。TDesign 缺少的语言仍使用英语基底，聊天控件由应用字典补齐；Zod 的 `fil/te/mr/pa` 通用校验提示仍回退英语。
 
-Web 静态文本和明确的展示属性由 `@toonflow/i18n/vite` 在 Vue 编译前转换，业务源码继续写中文。转换仅作用于 `apps/web/src`；编译器只处理已知显示位置，不遍历 DOM，不调用在线翻译，不关闭 Vue 静态优化，也不通过重新挂载页面切换语言。
+Web 静态文本和明确的展示属性由 `@toonflow/i18n/vite` 在 Vue 编译前转换，业务源码继续写中文。转换作用于 `apps/web/src`、`packages/nodes/*/src`、`packages/nodeScaffold/src` 和 `packages/nodeShared/src`；编译器只处理已知显示位置，不遍历 DOM，不调用在线翻译，不关闭 Vue 静态优化，也不通过重新挂载页面切换语言。
 
 动态文案可以使用原生 JavaScript 标签模板，无需 Babel 宏：
 
@@ -38,7 +38,9 @@ const countLabel = computed(() => t`已选择 ${selectedCount.value} 个节点`)
 
 语言来源按每个请求的 `Accept-Language`（含 q 权重）隔离；无支持的请求语言时使用保存的应用语言或系统语言。Zod 使用一次注册、按请求读取的语言分派器。SSE、MCP 和 FFmpeg 仅处理已识别的系统错误，模型正文、工具成功结果、供应商未知错误、用户内容和日志详情保持原样。
 
-供应商、tools、nodes 子包和节点脚手架不接入多语言，也不参与文案抽取。插件名称和插件自身文案使用原值；Web 中的插件管理菜单、安装操作和配置校验提示仍属于应用界面。节点构建和宿主之间不提供语言运行时接口。
+Built-in canvas nodes and their shared UI now use the same reactive language runtime as Web. Node UMD bundles externalize `@toonflow/i18n/vue` to `window.toonflowNodeHost.i18n`; rebuild the host and nodes together. Dictionaries are loaded once by the host, not duplicated in each node. Existing node bundles remain compatible with the new host.
+
+Russian translations cover the newly extracted built-in node controls, media editors, generation panels and node-menu settings. Other locales retain their existing translations and source-language fallback for new messages. Provider packages, tools, extension packages, model prompts and user content remain outside automatic translation. Built-in menu names are translated only at display boundaries; custom names and aliases are preserved.
 
 ## 更新文案
 
@@ -56,6 +58,6 @@ Element Plus JSON 独立于应用文案抽取维护，基于 2.14.5 的完整 14
 
 未支持的显示代码应在显示边界显式调用 `translate/t`，不要扩大规则到任意 `message`、`label` 或所有中文字符串。`data`、`inputs`、`outputs` 等用户数据不属于自动翻译范围。已有 `[aria-label="中文"]` 逻辑定位应改为稳定的 `data-*` 标识。
 
-字典随应用打包，运行时不依赖翻译服务。当前 20 份译文字典已完成 AI 辅助的全量逐条语义校对，并对术语、否定条件、操作对象、数字和模板参数进行复核；这不等同于各语言母语人员的出版级审校。供应商、tools、nodes 子包、第三方网站与安装器不在本次翻译范围。
+字典随应用打包，运行时不依赖翻译服务。当前 20 份译文字典已完成 AI 辅助的全量逐条语义校对，并对术语、否定条件、操作对象、数字和模板参数进行复核；这不等同于各语言母语人员的出版级审校。供应商、tools、扩展子包、第三方网站与安装器不在本次翻译范围。
 
 本次验证过程见 [回归记录](./regression.md)。
