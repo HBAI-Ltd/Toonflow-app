@@ -16,6 +16,8 @@ interface ProviderModel {
   label: string;
   type: ModelType;
   think?: boolean;
+  contextWindow?: number;
+  reasoningEfforts?: false | Partial<Record<"off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max", string | null>>;
   mode?: (ImageMode | VideoMode)[];
   associationSkills?: string;
   audio?: "optional" | boolean;

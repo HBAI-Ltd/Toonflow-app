@@ -11,6 +11,7 @@
     "./types": "./types.d.ts",
     "./language/tfRouter": "./src/language/tfRouter.ts",
     "./language/deepSeek": "./src/language/deepSeek.ts",
+    "./language/minimax": "./src/language/minimax.ts",
     "./media/tfRouter": "./src/media/tfRouter.ts",
     "./media/apiMart": "./src/media/apiMart.ts",
     "./media/metaso": "./src/media/metaso.ts",
