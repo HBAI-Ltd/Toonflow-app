@@ -287,7 +287,10 @@ const createCanvasContext = useCanvasTools({
   resolveCanvasContext: id => props.resolveCanvasContext?.(id),
 });
 function getCanvasContext() {
-  return canvasId.value || canvasMenuRef.value?.initialized ? createCanvasContext(canvasId.value, canvasController.signal, workspaceController.signal) : undefined;
+  // 未打开画布时必须返回 undefined；画布菜单就绪不等于有激活画布，
+  // 否则对话请求会携带空 id 的 canvas 被服务端校验拒绝。
+  return canvasId.value && (canvasId.value || canvasMenuRef.value?.initialized)
+    ? createCanvasContext(canvasId.value, canvasController.signal, workspaceController.signal) : undefined;
 }
 const canvasReady = computed(() => !!canvasId.value && !nodeListLoading.value && nodeLoads.size === 0);
 provide("canvas", getCanvasContext);
