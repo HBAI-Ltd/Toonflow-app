@@ -39,7 +39,8 @@ export default router.post("/", validateFields({
     }
   }
 
-  const requestedList = all ? (await readdir(root, { withFileTypes: true })).map(entry => entry.name) : paths!;
+  // ACT: 全量导出只包含普通文件和目录，与素材列表一致；符号链接等特殊条目跳过，避免路径校验中断整体导出
+  const requestedList = all ? (await readdir(root, { withFileTypes: true })).filter(entry => entry.isFile() || entry.isDirectory()).map(entry => entry.name) : paths!;
   for (const requested of requestedList) {
     const { path } = await u.workspaceFile.resolveWorkspacePath(root, requested);
     if ((await lstat(path)).isDirectory()) await addDirectory(path, basename(path) + "/");
@@ -50,5 +51,7 @@ export default router.post("/", validateFields({
   const bytes = await new Promise<Uint8Array>((resolve, reject) => {
     zip(entries, { level: 0 }, (err, data) => err ? reject(err) : resolve(data));
   });
+  // ACT: 保存链路按最终 ZIP 大小限制，封装开销（文件头/中央目录）在这里统一校验，口径与保存接口一致
+  if (bytes.byteLength > maxBytes) throw Object.assign(new Error("打包后的 ZIP 超过 500 MB 上限，请减少导出的素材"), { status: 413 });
   res.set("Cache-Control", "no-store").attachment("assets.zip").send(Buffer.from(bytes));
 });

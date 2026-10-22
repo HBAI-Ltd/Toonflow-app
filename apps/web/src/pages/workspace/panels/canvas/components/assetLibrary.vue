@@ -162,10 +162,12 @@ function openItemMenu(event: MouseEvent, entry: AssetEntry) {
 const exporting = ref(false);
 async function exportAssets() {
   exporting.value = true;
+  // ACT: 操作开始时固定目录与请求参数，避免保存确认期间切换目录导致内容错配
+  const currentFolder = folder.value;
   try {
-    const all = folder.value === ".";
-    const fileName = all ? "全部素材.zip" : `${folder.value.split("/").at(-1)}.zip`;
-    await saveFile(() => axios.post<Blob>("/api/assets/archive", all ? { all: true } : { paths: [folder.value] }, { responseType: "blob" }).then(({ data }) => data), fileName);
+    const all = currentFolder === ".";
+    const fileName = all ? "全部素材.zip" : `${currentFolder.split("/").at(-1)}.zip`;
+    await saveFile(() => axios.post<Blob>("/api/assets/archive", all ? { all: true } : { paths: [currentFolder] }, { responseType: "blob" }).then(({ data }) => data), fileName);
   } catch (error) {
     showError(error);
   } finally {

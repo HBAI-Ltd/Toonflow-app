@@ -28,7 +28,6 @@ import route25 from "./routes/ai/media/price";
 import route26 from "./routes/ai/media/tasks/cancel";
 import route27 from "./routes/ai/media/tasks/status";
 import route28 from "./routes/ai/models";
-import route139 from "./routes/assets/archive";
 import route29 from "./routes/assets/list";
 import route30 from "./routes/assets/mkdir";
 import route31 from "./routes/assets/read";
@@ -169,7 +168,6 @@ export default (app: Express) => {
   app.use("/api/ai/media/tasks/cancel", route26);
   app.use("/api/ai/media/tasks/status", route27);
   app.use("/api/ai/models", route28);
-  app.use("/api/assets/archive", route139);
   app.use("/api/assets/list", route29);
   app.use("/api/assets/mkdir", route30);
   app.use("/api/assets/read", route31);
