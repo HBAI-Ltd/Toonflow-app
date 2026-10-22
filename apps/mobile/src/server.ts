@@ -72,7 +72,7 @@ app.get("/", (request, response, next) => {
 app.get("/api/mobile/runtime", (_request, response) => {
   response.json({ bun: Bun.version, platform: process.platform, arch: process.arch, environment: getRuntimePlatform() });
 });
-app.post("/api/mobile/exports", express.raw({ type: "application/octet-stream", limit: "100mb" }), async (request, response) => {
+app.post("/api/mobile/exports", express.raw({ type: "application/octet-stream", limit: "500mb" }), async (request, response) => {
   if (!Buffer.isBuffer(request.body)) {
     response.status(400).json({ message: translateMessage("导出内容必须是文件数据") });
     return;
@@ -80,7 +80,7 @@ app.post("/api/mobile/exports", express.raw({ type: "application/octet-stream", 
   const id = randomUUID();
   const path = resolve(exportDirectory, id);
   await writeAtomic(path, request.body, { mode: 0o600 });
-  // ACT: 复用现有文件接口的 100 MB 上限；更大导出需改为流式暂存。
+  // ACT: 与素材归档接口的 500 MB 上限保持一致；更大导出需改为流式暂存。
   setTimeout(() => { void rm(path, { force: true }).catch(console.error); }, 30 * 60 * 1000).unref();
   response.json({ url: `/api/mobile/exports/${id}` });
 });

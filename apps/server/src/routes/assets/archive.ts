@@ -11,9 +11,14 @@ const maxBytes = 500 * 1024 * 1024;
 const maxPaths = 200;
 
 export default router.post("/", validateFields({
-  paths: z.array(z.string().min(1).max(4096)).min(1).max(maxPaths),
+  paths: z.array(z.string().min(1).max(4096)).min(1).max(maxPaths).optional(),
+  all: z.boolean().optional(),
 }), async (req, res) => {
   const root = await u.assets.getAssetsDirectory();
+  // ACT: 全量导出由服务端枚举根目录，避免前端逐项提交超过 maxPaths 上限
+  const { paths, all } = req.body as { paths?: string[]; all?: boolean };
+  if (all && paths?.length) throw Object.assign(new Error("all 与 paths 只能选择一种导出方式"), { status: 400 });
+  if (!all && !paths?.length) throw Object.assign(new Error("请提供要导出的素材"), { status: 400 });
   const entries: Record<string, Uint8Array> = {};
   let totalBytes = 0;
 
@@ -34,7 +39,8 @@ export default router.post("/", validateFields({
     }
   }
 
-  for (const requested of (req.body as { paths: string[] }).paths) {
+  const requestedList = all ? (await readdir(root, { withFileTypes: true })).map(entry => entry.name) : paths!;
+  for (const requested of requestedList) {
     const { path } = await u.workspaceFile.resolveWorkspacePath(root, requested);
     if ((await lstat(path)).isDirectory()) await addDirectory(path, basename(path) + "/");
     else await addFile(path, basename(path));

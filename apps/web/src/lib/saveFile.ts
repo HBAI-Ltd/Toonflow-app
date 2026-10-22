@@ -8,9 +8,25 @@ declare global {
   }
 }
 
+async function resolveContent(content: Blob | (() => Promise<Blob>)): Promise<Blob> {
+  if (typeof content !== "function") return content;
+  try {
+    return await content();
+  } catch (error) {
+    // ACT: responseType 为 blob 时错误响应也是 Blob，需解析出具体错误信息（如空目录、大小超限）
+    if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
+      let parsed: unknown;
+      try { parsed = JSON.parse(await error.response.data.text()); } catch { /* 非 JSON 时保留原始错误 */ }
+      const message = (parsed as { message?: unknown } | undefined)?.message;
+      if (typeof message === "string" && message) throw new Error(message);
+    }
+    throw error;
+  }
+}
+
 export default async function saveFile(content: Blob | (() => Promise<Blob>), fileName: string): Promise<boolean> {
   if (isMobile) {
-    const blob = typeof content === "function" ? await content() : content;
+    const blob = await resolveContent(content);
     const { data } = await axios.post<{ url: string }>("/api/mobile/exports", blob, {
       params: { fileName }, headers: { "Content-Type": "application/octet-stream" },
     });
@@ -42,7 +58,7 @@ export default async function saveFile(content: Blob | (() => Promise<Blob>), fi
     if (selectData.code !== 200) throw new Error(selectData.message || "选择保存位置失败");
     const token = selectData.data?.token;
     if (!token) return false;
-    const blob = typeof content === "function" ? await content() : content;
+    const blob = await resolveContent(content);
     const { data } = await axios.post<{ code: number; data: { saved: boolean }; message?: string }>("/api/desktop/saveFile", blob, {
       params: { token },
       headers: { "Content-Type": "application/octet-stream", "x-toonflow-desktop": "1" },
@@ -50,7 +66,7 @@ export default async function saveFile(content: Blob | (() => Promise<Blob>), fi
     if (data.code !== 200 || typeof data.data?.saved !== "boolean") throw new Error(data.message || "保存文件失败");
     return data.data.saved;
   }
-  const blob = typeof content === "function" ? await content() : content;
+  const blob = await resolveContent(content);
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

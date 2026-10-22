@@ -163,9 +163,9 @@ const exporting = ref(false);
 async function exportAssets() {
   exporting.value = true;
   try {
-    const paths = folder.value === "." ? entries.value.filter(entry => !entry.draft).map(entry => entry.path) : [folder.value];
-    const fileName = folder.value === "." ? "全部素材.zip" : `${folder.value.split("/").at(-1)}.zip`;
-    await saveFile(() => axios.post<Blob>("/api/assets/archive", { paths }, { responseType: "blob" }).then(({ data }) => data), fileName);
+    const all = folder.value === ".";
+    const fileName = all ? "全部素材.zip" : `${folder.value.split("/").at(-1)}.zip`;
+    await saveFile(() => axios.post<Blob>("/api/assets/archive", all ? { all: true } : { paths: [folder.value] }, { responseType: "blob" }).then(({ data }) => data), fileName);
   } catch (error) {
     showError(error);
   } finally {
