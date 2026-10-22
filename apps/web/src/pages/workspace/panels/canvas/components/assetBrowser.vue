@@ -39,6 +39,7 @@
           <div class="headerActions">
             <el-input v-model="searchQuery" class="searchInput" :prefixIcon="IconSearch" :placeholder="folder === '.' ? '搜索全部素材' : '搜索当前文件夹'" aria-label="搜索素材" clearable @keydown.esc.stop="searchQuery = ''" />
             <el-button class="createButton" :icon="IconFolderPlus" :disabled="newFolderParent !== undefined || loading" @click="emit('startFolder')">新建文件夹</el-button>
+            <el-button class="exportButton" :icon="IconDownload" :loading="exporting" :disabled="!scopeEntries.length || loading || exporting" @click="emit('export')">导出</el-button>
           </div>
         </div>
         <div class="filterRow" role="group" aria-label="素材类型">
@@ -90,7 +91,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
 import type { InputInstance } from "element-plus";
-import { IconChevronRight, IconDots, IconFile, IconFolder, IconFolderOpen, IconFolderPlus, IconLayoutGrid, IconMusic, IconPhoto, IconPlayerPlay, IconSearch, IconVideo } from "@tabler/icons-vue";
+import { IconChevronRight, IconDots, IconFile, IconFolder, IconFolderOpen, IconFolderPlus, IconLayoutGrid, IconMusic, IconPhoto, IconPlayerPlay, IconSearch, IconVideo , IconDownload} from "@tabler/icons-vue";
 import { mentionAssetType } from "@toonflow/server/agent/mentionSources";
 import mentionThumbnail from "@/components/agent/mentionThumbnail.vue";
 
@@ -103,6 +104,7 @@ const props = defineProps<{
   loading?: boolean;
   newFolderParent?: string;
   folderSaving?: boolean;
+  exporting?: boolean;
   mediaKind: (entry: AssetEntry) => MediaKind | undefined;
   assetUrl: (path: string) => string;
 }>();
@@ -114,6 +116,7 @@ const emit = defineEmits<{
   saveFolder: [];
   cancelFolder: [];
   preview: [entry: AssetEntry];
+  export: [];
   menu: [event: MouseEvent, entry: AssetEntry];
   drag: [event: DragEvent, entry: AssetEntry];
 }>();

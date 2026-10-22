@@ -15,7 +15,7 @@
             </div>
           </el-popover>
         </el-dropdown-item>
-        <el-dropdown-item v-if="activeEntry.type === 'file'" command="download" divided>下载</el-dropdown-item>
+        <el-dropdown-item command="download" divided>下载</el-dropdown-item>
         <el-dropdown-item command="rename" :disabled="busy">重命名</el-dropdown-item>
         <el-dropdown-item class="deleteAction" command="delete" :disabled="busy || !!activeEntry.children?.length" :title="activeEntry.children?.length ? '请先删除文件夹内的素材' : undefined">删除</el-dropdown-item>
       </el-dropdown-menu>
@@ -127,7 +127,16 @@ async function handleCommand(command: string) {
   closeMenu();
   try {
     if (command === "download") {
-      await saveFile(() => axios.get<Blob>("/api/assets/read", { params: { path: entry.path, download: true }, responseType: "blob" }).then(({ data }) => data), entry.name);
+      busy.value = true;
+      try {
+        if (entry.type === "directory") {
+          await saveFile(() => axios.post<Blob>("/api/assets/archive", { paths: [entry.path] }, { responseType: "blob" }).then(({ data }) => data), `${entry.name}.zip`);
+        } else {
+          await saveFile(() => axios.get<Blob>("/api/assets/read", { params: { path: entry.path, download: true }, responseType: "blob" }).then(({ data }) => data), entry.name);
+        }
+      } finally {
+        busy.value = false;
+      }
     }
     if (command === "rename") {
       const { value } = await ElMessageBox.prompt("名称", "重命名", {

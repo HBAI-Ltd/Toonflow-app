@@ -1,5 +1,5 @@
 <template>
-  <assetBrowser v-if="visible && expanded" v-model:folder="folder" v-model:searchQuery="searchQuery" v-model:newFolderName="newFolderName" :entries="entries" :loading="loading" :newFolderParent="newFolderParent" :folderSaving="folderSaving" :mediaKind="mediaKind" :assetUrl="assetUrl" @startFolder="startFolder" @saveFolder="saveFolder" @cancelFolder="cancelFolder" @preview="openPreview" @menu="openItemMenu" @drag="startAssetDrag" />
+  <assetBrowser v-if="visible && expanded" v-model:folder="folder" v-model:searchQuery="searchQuery" v-model:newFolderName="newFolderName" :entries="entries" :loading="loading" :newFolderParent="newFolderParent" :folderSaving="folderSaving" :exporting="exporting" :mediaKind="mediaKind" :assetUrl="assetUrl" @startFolder="startFolder" @saveFolder="saveFolder" @cancelFolder="cancelFolder" @preview="openPreview" @export="exportAssets" @menu="openItemMenu" @drag="startAssetDrag" />
   <el-card v-else-if="visible" class="assetLibrary" shadow="never" :bodyStyle="{ padding: '8px' }" role="region" aria-label="素材库" @dblclick.stop>
     <div class="libraryToolbar">
       <el-input v-model="searchQuery" class="searchInput" :prefixIcon="IconSearch" placeholder="搜索素材" aria-label="搜索素材" clearable @keydown.esc.stop="searchQuery = ''" />
@@ -101,6 +101,7 @@ import type { NodeOutput } from "@toonflow/nodes-scaffold/values";
 import { mentionAssetType } from "@toonflow/server/agent/mentionSources";
 import mentionThumbnail from "@/components/agent/mentionThumbnail.vue";
 import { startAssetDrag } from "../canvasDrop";
+import saveFile from "@/lib/saveFile";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import assetMenu from "./assetMenu.vue";
 import assetBrowser from "./assetBrowser.vue";
@@ -156,6 +157,20 @@ function openItemMenu(event: MouseEvent, entry: AssetEntry) {
   event.preventDefault();
   event.stopPropagation();
   assetMenuRef.value?.openMenu(event, entry);
+}
+
+const exporting = ref(false);
+async function exportAssets() {
+  exporting.value = true;
+  try {
+    const paths = folder.value === "." ? entries.value.filter(entry => !entry.draft).map(entry => entry.path) : [folder.value];
+    const fileName = folder.value === "." ? "全部素材.zip" : `${folder.value.split("/").at(-1)}.zip`;
+    await saveFile(() => axios.post<Blob>("/api/assets/archive", { paths }, { responseType: "blob" }).then(({ data }) => data), fileName);
+  } catch (error) {
+    showError(error);
+  } finally {
+    exporting.value = false;
+  }
 }
 
 async function refreshAssets(path?: string, target?: string) {
