@@ -32,7 +32,7 @@ async function accessClipboard(entry?: ClipboardEntry) {
   }
 }
 
-export function copyNodeToClipboard(node: Pick<Node, "type" | "data">, directory: string) {
+export function copyNodeToClipboard(node: Pick<Node, "type" | "data" | "style">, directory: string) {
   return copyNodesToClipboard([{ ...node, id: crypto.randomUUID(), position: { x: 0, y: 0 } }], [], directory);
 }
 

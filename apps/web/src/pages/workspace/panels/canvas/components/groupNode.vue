@@ -39,6 +39,7 @@
 import { inject, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { useVueFlow, type GraphNode, type NodeProps } from "@vue-flow/core";
 import { ElMessage } from "element-plus";
+import { fitGroupBounds } from "../selectionNodes";
 
 const props = withDefaults(defineProps<NodeProps & { readOnly?: boolean }>(), { readOnly: false });
 const flow = useVueFlow();
@@ -155,6 +156,29 @@ watch(
     children.forEach(node => { node.expandParent = false; });
   },
   { immediate: true },
+);
+
+// ACT: 子节点被右下角拖柄缩放后（dimensions 变化，非拖动 position 变化），父分组框及祖先分组框重新贴合。
+watch(
+  () => {
+    if (props.readOnly) return "";
+    return flow.getNodes.value
+      .filter(node => node.parentNode === props.id)
+      .map(node => `${node.dimensions.width}x${node.dimensions.height}`)
+      .join(";");
+  },
+  () => {
+    if (props.readOnly) return;
+    const affected = new Set<GraphNode>();
+    let current: GraphNode | undefined = flow.findNode(props.id);
+    const visited = new Set<string>();
+    while (current && !visited.has(current.id)) {
+      visited.add(current.id);
+      if (current.type === "canvasGroup") affected.add(current);
+      current = current.parentNode ? flow.findNode(current.parentNode) : undefined;
+    }
+    if (affected.size) fitGroupBounds(flow.getNodes.value, affected);
+  },
 );
 </script>
 
