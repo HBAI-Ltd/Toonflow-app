@@ -9,12 +9,17 @@ const relativePath = z.string().min(1).max(2048).refine(
 const imageReference = z.strictObject({ path: relativePath, mimeType: z.string().regex(/^image\/[a-z0-9.+-]+$/i) });
 const videoReference = z.strictObject({ path: relativePath, mimeType: z.string().regex(/^video\/[a-z0-9.+-]+$/i) });
 const audioReference = z.strictObject({ path: relativePath, mimeType: z.string().regex(/^audio\/[a-z0-9.+-]+$/i) });
+const mediaInputReference = z.strictObject({ path: relativePath, mimeType: z.string().regex(/^(?:image|video|audio)\/[a-z0-9.+-]+$/i) });
 const sharedFields = {
   providerId: z.string().regex(/^[a-z][a-zA-Z0-9]{0,95}$/),
   modelId: z.string().trim().min(1).max(256),
-  prompt: z.string().trim().min(1).max(100000),
+  prompt: z.string().trim().max(100000).optional(),
   outputDirectory: relativePath.optional(),
   images: z.array(imageReference).max(64).optional(),
+  inputs: z.record(z.string().regex(/^[a-z][a-zA-Z0-9]{0,63}$/), z.array(mediaInputReference).max(64))
+    .refine(value => Object.keys(value).length <= 64, "命名素材输入角色不能超过 64 个").optional(),
+  other: z.record(z.string().regex(/^[a-z][a-zA-Z0-9]{0,63}$/), z.json())
+    .refine(value => Object.keys(value).length <= 64, "模型专属参数不能超过 64 个").optional(),
   ratio: z.string().regex(/^[1-9]\d{0,3}:[1-9]\d{0,3}$/).optional(),
 };
 const referenceMode = z.templateLiteral([z.enum(["image", "video", "audio"]), "Reference:", z.number()])
@@ -45,6 +50,8 @@ export const audioGenerationSchema = z.strictObject({
   prompt: sharedFields.prompt,
   outputDirectory: sharedFields.outputDirectory,
   images: sharedFields.images,
+  inputs: sharedFields.inputs,
+  other: sharedFields.other,
   audios: z.array(audioReference).max(64).optional(),
   voice: z.string().trim().min(1).max(256).optional(),
   speed: z.number().finite().positive().optional(),

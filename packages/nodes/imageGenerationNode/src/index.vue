@@ -53,6 +53,13 @@
           @remove="removeReference" />
         <promptInput v-if="editor?.mode === 'inpaint'" v-model="data.inpaintPromptModel" v-model:text="data.inpaintPrompt" :references="referenceMentions" expandable />
         <promptInput v-else v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" expandable />
+        <dreamApiOptions
+          v-if="editor?.mode !== 'inpaint' && selectedModel?.generation"
+          v-model:inputs="operationInputs"
+          v-model:values="operationValues"
+          :model="selectedModel"
+          :disabled="generating || deleting || uploading"
+          @upload="uploadOperationInputs" />
         <div class="promptFooter">
           <el-select
             v-if="editor?.mode !== 'inpaint'"
@@ -76,7 +83,7 @@
             </el-option-group>
           </el-select>
           <generationSettings
-            v-if="editor?.mode !== 'inpaint'"
+            v-if="editor?.mode !== 'inpaint' && !selectedModel?.generation"
             v-model:size="data.size"
             v-model:ratio="data.ratio"
             :sizes="sizeOptions"
@@ -88,7 +95,7 @@
             <el-button
               class="sendButton"
               :icon="generating ? IconPlayerStop : IconArrowUp"
-              :disabled="deleting || uploading || (!generating && (editor?.busy || !generationPrompt || !selectedModel))"
+              :disabled="deleting || uploading || (!generating && (editor?.busy || !promptReady || !selectedModel))"
               :title="generating ? '停止生成' : '生成图片'"
               :aria-label="generating ? '停止生成' : '生成图片'"
               @click="generating ? generationController?.abort() : startGeneration().catch((error) => showNodeError(error, '图片生成失败'))" />
@@ -113,7 +120,7 @@
 import { computed, nextTick, onMounted, onScopeDispose, ref, watch } from "vue";
 import { ElButton, ElCard, ElSelect, ElOption, ElOptionGroup, ElLoading, ElImageViewer } from "element-plus";
 import { IconCheck, IconPhotoAi, IconSparkles, IconArrowUp, IconPlayerStop, IconTransfer, IconLayoutGrid, IconBrush, IconPencil, IconSun, IconCameraRotate, IconPanoramaHorizontal, IconChevronDown } from "@tabler/icons-vue";
-import { nodeSkeleton, nodeTools, useNode, z, type NodeMediaModel, type NodeImageRequest, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
+import { nodeSkeleton, nodeTools, uploadNodeFile, useNode, z, type NodeMediaModel, type NodeImageRequest, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { useNodeGeneration } from "@toonflow/node-shared/useNodeGeneration";
@@ -122,6 +129,8 @@ import promptInput from "@toonflow/node-shared/promptInput";
 import referenceItem from "@toonflow/node-shared/referenceItem";
 import mediaHistory from "@toonflow/node-shared/mediaHistory";
 import mediaPrice from "@toonflow/node-shared/mediaPrice";
+import dreamApiOptions from "@toonflow/node-shared/dreamApiOptions";
+import { getDreamApiOptions, matchesAcceptedMimeType, validateDreamApiGeneration, type DreamApiMediaReference } from "@toonflow/node-shared/dreamApiOptionsRuntime";
 import imageGridSplit from "@toonflow/node-image/imageGridSplit";
 import imageEditor from "@toonflow/node-image/imageEditor";
 import { buildInpaintRequest, useImageInpaint, type ImageInpaint } from "@toonflow/node-image/imageInpaint";
@@ -143,7 +152,7 @@ const { id, node, nodeProps, nodeEvent, outputs, files, ai, updateNodeInternals 
   label: "图片生成",
 });
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
-const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; inpaintPrompt: string; inpaintPromptModel: PromptModel; model: string; size: string; ratio: string; inpaint?: ImageInpaint });
+const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; inpaintPrompt: string; inpaintPromptModel: PromptModel; model: string; size: string; ratio: string; inpaint?: ImageInpaint; generationInputs?: Record<string, DreamApiMediaReference[]>; generationOther?: Record<string, unknown> });
 data.value.prompt ??= "";
 data.value.promptModel ??= [];
 data.value.inpaintPrompt ??= "";
@@ -151,6 +160,8 @@ data.value.inpaintPromptModel ??= [];
 data.value.model ??= "";
 data.value.size ??= "";
 data.value.ratio ??= "16:9";
+data.value.generationInputs ??= {};
+data.value.generationOther ??= {};
 const { refList, referenceMentions, setReferencePreview, removeReference } = useNodeReferences();
 const models = ref<NodeMediaModel[]>([]);
 const modelsLoading = ref(false);
@@ -178,6 +189,8 @@ const { generating } = generationState;
 let generation: Promise<void> | undefined;
 let modelsRequest: Promise<void> | undefined;
 const selectedModel = computed(() => models.value.find((item) => JSON.stringify([item.providerId, item.modelId]) === data.value.model));
+const operationInputs = computed({ get: () => data.value.generationInputs ?? {}, set: value => { data.value.generationInputs = value; } });
+const operationValues = computed({ get: () => data.value.generationOther ?? {}, set: value => { data.value.generationOther = value; } });
 const sizeOptions = computed(() => (selectedModel.value?.imageSizes?.length ? selectedModel.value.imageSizes : ["2K"]));
 const ratioOptions = computed(() => (selectedModel.value?.imageRatios?.length ? selectedModel.value.imageRatios : ["16:9"]));
 watch(
@@ -201,6 +214,7 @@ const generationPrompt = computed(() =>
     .filter(Boolean)
     .join("\n\n")
 );
+const promptReady = computed(() => selectedModel.value?.generation?.promptRequired === false || !!generationPrompt.value);
 const generationInput = computed<Omit<NodeImageRequest, "directory"> | undefined>(() => {
   const choice = selectedModel.value;
   if (!choice) return;
@@ -214,6 +228,7 @@ const generationInput = computed<Omit<NodeImageRequest, "directory"> | undefined
     ratio: data.value.ratio,
     outputDirectory: `assets/${id}`,
     images: references.flatMap(item => item.dataType === "IMAGE" && item.value ? [{ path: item.value.url, mimeType: item.value.mimeType }] : []),
+    ...getDreamApiOptions(choice, operationInputs.value, operationValues.value),
   };
   if (inpaint) {
     let imageIndex = 3 + (inpaint.images?.length ?? 0);
@@ -285,6 +300,38 @@ async function replaceOutput(event: Event) {
   }
 }
 
+async function uploadOperationInputs(roleId: string, selectedFiles: File[]) {
+  const role = selectedModel.value?.generation?.inputs?.find(item => item.id === roleId);
+  if (!role || !selectedFiles.length || uploading.value || generating.value || deleting.value || disposed) return;
+  const current = operationInputs.value[roleId] ?? [];
+  const maximum = role.maxItems ?? 64;
+  if (current.length + selectedFiles.length > maximum) return void showNodeError(`“${role.label}”最多接受 ${maximum} 个文件`, "素材输入失败");
+  if (selectedFiles.some(file => !file.type.toLowerCase().startsWith(`${role.mediaType}/`) || !matchesAcceptedMimeType(file.type, role.accept))) return void showNodeError(`“${role.label}”的文件格式不受支持`, "素材输入失败");
+  if (selectedFiles.some(file => !file.size || file.size > 100 * 1024 * 1024)) return void showNodeError("素材不能为空且不能超过 100 MB", "素材输入失败");
+  uploading.value = true;
+  let workspace: ReturnType<typeof files.getWorkspaceFiles> | undefined;
+  const created: string[] = [];
+  try {
+    workspace = files.getWorkspaceFiles();
+    const additions: DreamApiMediaReference[] = [];
+    for (const file of selectedFiles) {
+      const path = await uploadNodeFile(workspace, id, file);
+      created.push(path);
+      additions.push({ path, mimeType: file.type });
+    }
+    if (disposed) {
+      await Promise.all(created.map(path => workspace!.remove(path)));
+      return;
+    }
+    operationInputs.value = { ...operationInputs.value, [roleId]: [...current, ...additions] };
+  } catch (error) {
+    if (workspace && created.length) await Promise.all(created.map(path => workspace!.remove(path).catch(() => undefined)));
+    showNodeError(error, "素材输入失败");
+  } finally {
+    uploading.value = false;
+  }
+}
+
 function loadModels() {
   if (modelsRequest) return modelsRequest;
   modelsLoading.value = true;
@@ -317,6 +364,7 @@ async function confirmInpaint() {
 }
 
 async function startGeneration() {
+  const choice = selectedModel.value;
   const input = generationInput.value;
   if (generating.value) throw new Error("图片正在生成，请等待完成");
   if (panorama.value?.visible) throw new Error("请先关闭全景图，再启动图片生成");
@@ -326,10 +374,11 @@ async function startGeneration() {
   if (multiAngleVisible.value) throw new Error("请先退出多角度，再启动图片生成");
   if (editor.value?.busy || editor.value?.mode === "mark") throw new Error("请先完成图片标记");
   if (editor.value?.mode === "inpaint") throw new Error("请先确认局部重绘，再到子节点生成");
-  if (!generationPrompt.value) throw new Error("请输入生成提示词");
   const references = refList.value.filter(item => !data.value.inpaint || item.dataType !== "IMAGE" || item.value?.url !== data.value.inpaint.source);
   if (references.some(item => item.value === undefined)) throw new Error("引用节点暂无内容，请先补充引用内容");
-  if (!input) throw new Error("请先选择图片模型");
+  if (!choice || !input) throw new Error("请先选择图片模型");
+  if (choice.generation?.promptRequired !== false && !generationPrompt.value) throw new Error("请输入生成提示词");
+  validateDreamApiGeneration(choice, generationPrompt.value, input);
   const workspace = files.getWorkspaceFiles();
   const controller = new AbortController();
   const inpaintData = data.value.inpaint;

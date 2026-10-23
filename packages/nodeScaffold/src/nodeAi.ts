@@ -24,6 +24,8 @@ export type NodeImageRequest = {
   prompt: string;
   outputDirectory: string;
   images?: { path: string; mimeType: string }[];
+  inputs?: Record<string, { path: string; mimeType: string }[]>;
+  other?: Record<string, unknown>;
   ratio?: string;
   size?: string;
 };
@@ -32,7 +34,7 @@ export type NodeVideoRequest = Omit<MediaGenerationRequest, "size"> & { director
 export type NodeVideoResult = { path: string; mimeType: string; mediaType: "video" };
 export type NodeMediaPriceRequest = (NodeImageRequest & { mediaType: "image" }) | (NodeVideoRequest & { mediaType: "video" }) | (NodeAudioRequest & { mediaType: "audio" });
 export type NodeMediaPrice = { price: string; tips: string };
-export type NodeAudioRequest = Pick<MediaGenerationRequest, "providerId" | "modelId" | "prompt" | "images" | "audios" | "voice" | "speed" | "volume" | "pitch" | "language" | "format" | "sampleRate"> & { directory: string; outputDirectory: string };
+export type NodeAudioRequest = Pick<MediaGenerationRequest, "providerId" | "modelId" | "prompt" | "images" | "audios" | "inputs" | "other" | "voice" | "speed" | "volume" | "pitch" | "language" | "format" | "sampleRate"> & { directory: string; outputDirectory: string };
 export type NodeAudioResult = { path: string; mimeType: string; mediaType: "audio" };
 export type NodeAiRequest = {
   providerId: string;

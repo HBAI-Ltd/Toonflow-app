@@ -79,8 +79,8 @@ function requestFile(url: URL, signal: AbortSignal, accept: string) {
   });
 }
 
-export async function downloadPublicFile(value: string, options: { signal: AbortSignal; maxBytes: number; label: string; httpsOnly?: boolean; accept?: string }) {
-  const { signal, maxBytes, label, httpsOnly = false, accept = "*/*" } = options;
+export async function downloadPublicFile(value: string, options: { signal: AbortSignal; maxBytes: number; label: string; httpsOnly?: boolean; accept?: string; onContentType?: (value: string | undefined) => void }) {
+  const { signal, maxBytes, label, httpsOnly = false, accept = "*/*", onContentType } = options;
   let url = remoteAddress(value, httpsOnly);
   for (let redirects = 0; redirects <= 5; redirects++) {
     signal.throwIfAborted();
@@ -96,6 +96,8 @@ export async function downloadPublicFile(value: string, options: { signal: Abort
       response.destroy();
       invalid(t`下载${label}失败（HTTP ${response.statusCode ?? 0}），链接可能失效或需要登录`, 502);
     }
+    const contentType = response.headers["content-type"];
+    onContentType?.(typeof contentType === "string" ? contentType : contentType?.[0]);
     const tooLarge = () => invalid(t`${label}不能超过 ${maxBytes / 1024 / 1024} MB`, 413);
     if (Number(response.headers["content-length"]) > maxBytes) { response.destroy(); tooLarge(); }
     const chunks: Buffer[] = [];

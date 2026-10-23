@@ -26,6 +26,13 @@
       <el-card v-else class="promptCard" shadow="never" :bodyStyle="{ padding: '14px 16px 12px' }">
         <referenceItem v-if="refList.length" v-model="refList" @preview="setReferencePreview" @remove="removeReference" />
         <promptInput v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" placeholder="描述您想要的音频效果或输入待朗读文本" expandable />
+        <dreamApiOptions
+          v-if="selectedModel?.generation"
+          v-model:inputs="operationInputs"
+          v-model:values="operationValues"
+          :model="selectedModel"
+          :disabled="busy"
+          @upload="uploadOperationInputs" />
         <div class="promptFooter">
           <el-select
             v-model="data.model"
@@ -43,13 +50,13 @@
               <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="JSON.stringify([item.providerId, item.modelId])" />
             </el-option-group>
           </el-select>
-          <generationSettings v-model:language="data.language" v-model:sampleRate="data.sampleRate" v-model:format="data.format" :disabled="busy || !selectedModel" />
+          <generationSettings v-if="!selectedModel?.generation" v-model:language="data.language" v-model:sampleRate="data.sampleRate" v-model:format="data.format" :disabled="busy || !selectedModel" />
           <div class="generationActions">
             <mediaPrice v-if="generationInput" :input="{ ...generationInput, mediaType: 'audio' }" :supported="selectedModel?.supportsPrice === true" />
             <el-button
               class="sendButton"
               :icon="generating ? IconPlayerStop : IconArrowUp"
-              :disabled="deleting || uploading || transcribing || actions?.processing || (!generating && (!generationPrompt || !selectedModel))"
+              :disabled="deleting || uploading || transcribing || actions?.processing || (!generating && (!promptReady || !selectedModel))"
               :title="generating ? '停止生成' : '生成音频'"
               :aria-label="generating ? '停止生成' : '生成音频'"
               @click="generating ? generationController?.abort() : startGeneration().catch(error => showNodeError(error, '音频生成失败'))" />
@@ -65,7 +72,7 @@
 import { computed, onMounted, onScopeDispose, ref, watch } from "vue";
 import { ElButton, ElCard, ElLoading, ElOption, ElOptionGroup, ElSelect } from "element-plus";
 import { IconArrowUp, IconGauge, IconMusicBolt, IconPlayerStop, IconScissors, IconTransfer, IconTextRecognition } from "@tabler/icons-vue";
-import { getTargetValues, isTypeCompatible, nodeSkeleton, nodeTools, useNode, z, type NodeAudioRequest, type NodeHandle, type NodeInputValue, type NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
+import { getTargetValues, isTypeCompatible, nodeSkeleton, nodeTools, uploadNodeFile, useNode, z, type NodeAudioRequest, type NodeHandle, type NodeInputValue, type NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { useNodeGeneration } from "@toonflow/node-shared/useNodeGeneration";
@@ -76,6 +83,8 @@ import audioActions from "@toonflow/node-audio/audioActions";
 import promptInput from "@toonflow/node-shared/promptInput";
 import referenceItem from "@toonflow/node-shared/referenceItem";
 import mediaPrice from "@toonflow/node-shared/mediaPrice";
+import dreamApiOptions from "@toonflow/node-shared/dreamApiOptions";
+import { getDreamApiOptions, matchesAcceptedMimeType, validateDreamApiGeneration, type DreamApiMediaReference } from "@toonflow/node-shared/dreamApiOptionsRuntime";
 import generationSettings from "./components/generationSettings.vue";
 import { formatOptions, languageOptions, sampleRateOptions } from "./audioSettings";
 
@@ -90,13 +99,15 @@ defineOptions({
 const vLoading = ElLoading.directive;
 const { id, node, nodeProps, nodeEvent, outputs, files, ai, updateNodeInternals } = useNode({ label: "音频生成" });
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
-const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; language: string; sampleRate: number; format: string });
+const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; language: string; sampleRate: number; format: string; generationInputs?: Record<string, DreamApiMediaReference[]>; generationOther?: Record<string, unknown> });
 data.value.prompt ??= "";
 data.value.promptModel ??= [];
 data.value.model ??= "";
 data.value.language ??= "zh-CN";
 data.value.sampleRate ??= 24000;
 data.value.format ??= "wav";
+data.value.generationInputs ??= {};
+data.value.generationOther ??= {};
 const { refList, referenceMentions, setReferencePreview, removeReference } = useNodeReferences();
 const models = ref<NodeMediaModel[]>([]);
 const modelsLoading = ref(false);
@@ -118,9 +129,12 @@ const { generating } = generationState;
 const busy = computed(() => generating.value || uploading.value || deleting.value || transcribing.value || !!actions.value?.processing);
 watch(busy, value => { if (!value && modelsRefreshPending) void refreshProviderModels(); });
 const selectedModel = computed(() => models.value.find(item => JSON.stringify([item.providerId, item.modelId]) === data.value.model));
+const operationInputs = computed({ get: () => data.value.generationInputs ?? {}, set: value => { data.value.generationInputs = value; } });
+const operationValues = computed({ get: () => data.value.generationOther ?? {}, set: value => { data.value.generationOther = value; } });
 const modelGroups = computed(() => groupNodeModels(models.value));
 const generationPrompt = computed(() => [data.value.prompt.trim(), ...refList.value.flatMap((item, index) =>
   item.dataType === "STRING" && item.value?.trim() ? [`参考 ${index + 1}：\n${item.value.trim()}`] : [])].filter(Boolean).join("\n\n"));
+const promptReady = computed(() => selectedModel.value?.generation?.promptRequired === false || !!generationPrompt.value);
 const generationInput = computed<Omit<NodeAudioRequest, "directory"> | undefined>(() => {
   const choice = selectedModel.value;
   if (!choice) return;
@@ -134,6 +148,7 @@ const generationInput = computed<Omit<NodeAudioRequest, "directory"> | undefined
     outputDirectory: `assets/${id}`,
     images: refList.value.flatMap(item => item.dataType === "IMAGE" && item.value ? [{ path: item.value.url, mimeType: item.value.mimeType }] : []),
     audios: refList.value.flatMap(item => item.dataType === "AUDIO" && item.value ? [{ path: item.value.url, mimeType: item.value.mimeType }] : []),
+    ...getDreamApiOptions(choice, operationInputs.value, operationValues.value),
   };
 });
 const previewUrl = files.useFileUrl(outputFile, error => showNodeError(error, "音频读取失败"));
@@ -197,14 +212,50 @@ function loadModels() {
   return modelsRequest;
 }
 
+async function uploadOperationInputs(roleId: string, selectedFiles: File[]) {
+  const role = selectedModel.value?.generation?.inputs?.find(item => item.id === roleId);
+  if (!role || !selectedFiles.length || busy.value || disposed) return;
+  const current = operationInputs.value[roleId] ?? [];
+  const maximum = role.maxItems ?? 64;
+  if (current.length + selectedFiles.length > maximum) return void showNodeError(`“${role.label}”最多接受 ${maximum} 个文件`, "素材输入失败");
+  if (selectedFiles.some(file => !file.type.toLowerCase().startsWith(`${role.mediaType}/`) || !matchesAcceptedMimeType(file.type, role.accept))) return void showNodeError(`“${role.label}”的文件格式不受支持`, "素材输入失败");
+  if (selectedFiles.some(file => !file.size || file.size > 100 * 1024 * 1024)) return void showNodeError("素材不能为空且不能超过 100 MB", "素材输入失败");
+  uploading.value = true;
+  let workspace: ReturnType<typeof files.getWorkspaceFiles> | undefined;
+  const created: string[] = [];
+  try {
+    workspace = files.getWorkspaceFiles();
+    const additions: DreamApiMediaReference[] = [];
+    for (const file of selectedFiles) {
+      const path = await uploadNodeFile(workspace, id, file);
+      created.push(path);
+      additions.push({ path, mimeType: file.type });
+    }
+    if (disposed) {
+      await Promise.all(created.map(path => workspace!.remove(path)));
+      return;
+    }
+    operationInputs.value = { ...operationInputs.value, [roleId]: [...current, ...additions] };
+  } catch (error) {
+    if (workspace && created.length) await Promise.all(created.map(path => workspace!.remove(path).catch(() => undefined)));
+    showNodeError(error, "素材输入失败");
+  } finally {
+    uploading.value = false;
+  }
+}
+
 async function startGeneration() {
   if (busy.value || disposed) throw new Error("音频正在处理或节点已关闭，请稍后重试");
   const input = generationInput.value;
   if (!input) throw new Error("请先选择音频模型");
-  if (!generationPrompt.value) throw new Error("请输入生成提示词或待朗读文本");
+  const choice = selectedModel.value;
+  if (!choice) throw new Error("请先选择音频模型");
+  if (choice.generation?.promptRequired !== false && !generationPrompt.value) throw new Error("请输入生成提示词或待朗读文本");
   if (!referencesAllowed(refList.value)) throw new Error("图片和音频不能同时引用，且合计最多引用一个；文本数量不限");
   if (refList.value.some(item => item.value === undefined)) throw new Error("引用节点暂无内容，请先补充引用内容");
   if (!languageOptions.some(item => item.value === data.value.language) || !sampleRateOptions.includes(data.value.sampleRate) || !formatOptions.includes(data.value.format)) throw new Error("请重新选择有效的语种、采样率和输出格式");
+  if (!input) throw new Error("请先选择音频模型");
+  validateDreamApiGeneration(choice, generationPrompt.value, input);
   const workspace = files.getWorkspaceFiles();
   const controller = new AbortController();
   generationController = controller;

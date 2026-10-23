@@ -89,8 +89,16 @@ export async function readClipboardNodes(command: string, directory: string) {
     }
     path.forEach(id => checked.add(id));
   }
-  const hasWorkspaceFile = nodes.some(node => Object.values(node.data.outputs ?? {}).some(output => isNodeOutput(output)
-    && typeof output.value === "object" && !/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(output.value.url)));
+  const hasWorkspaceFile = nodes.some(node => {
+    const hasOutputFile = Object.values(node.data.outputs ?? {}).some(output => isNodeOutput(output)
+      && typeof output.value === "object" && !/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(output.value.url));
+    const generationInputs = node.data.generationInputs;
+    const hasGenerationInputFile = generationInputs && typeof generationInputs === "object" && !Array.isArray(generationInputs)
+      && Object.values(generationInputs).some(inputs => Array.isArray(inputs) && inputs.some(input => input && typeof input === "object"
+        && "path" in input && typeof input.path === "string" && !!input.path
+        && !/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(input.path)));
+    return hasOutputFile || hasGenerationInputFile;
+  });
   if (hasWorkspaceFile && entry.directory !== directory) {
     throw new Error(entry.directory ? "此节点引用工作区文件，不能跨项目粘贴" : "节点剪贴数据缺少工作目录，请重新复制");
   }

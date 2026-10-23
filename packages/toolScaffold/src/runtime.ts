@@ -90,6 +90,33 @@ export interface MediaModel {
   durationResolutionMap?: { duration: number[]; resolution: string[] }[];
   audio?: boolean | "optional";
   voices?: { title: string; voice: string }[];
+  generation?: {
+    promptRequired?: boolean;
+    promptMaxLength?: number;
+    inputs?: {
+      id: string;
+      label: string;
+      mediaType: "image" | "video" | "audio";
+      fallback?: "images" | "videos" | "audios" | "firstFrame" | "lastFrame";
+      fallbackIndex?: number;
+      required?: boolean;
+      minItems?: number;
+      maxItems?: number;
+      accept?: string[];
+    }[];
+    parameters?: {
+      id: string;
+      label: string;
+      type: "string" | "number" | "boolean";
+      required?: boolean;
+      allowCustom?: boolean;
+      options?: (string | number)[];
+      min?: number;
+      max?: number;
+      step?: number;
+      defaultValue?: string | number | boolean;
+    }[];
+  };
 }
 
 export interface MediaReference {
@@ -100,8 +127,10 @@ export interface MediaReference {
 export interface MediaGenerationRequest {
   providerId: string;
   modelId: string;
-  prompt: string;
+  prompt?: string;
   outputDirectory?: string;
+  inputs?: Record<string, MediaReference[]>;
+  other?: Record<string, unknown>;
   images?: MediaReference[];
   videos?: MediaReference[];
   audios?: MediaReference[];

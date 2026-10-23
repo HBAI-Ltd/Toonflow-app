@@ -52,6 +52,13 @@
           {{ selectedMode === "startFrameOptional" ? "仅一张图片时作为尾帧；两张图片按顺序作为首帧、尾帧" : "图片引用按顺序作为首帧、尾帧" }}
         </div>
         <promptInput v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" expandable />
+        <dreamApiOptions
+          v-if="selectedModel?.generation"
+          v-model:inputs="operationInputs"
+          v-model:values="operationValues"
+          :model="selectedModel"
+          :disabled="generating || deleting || uploading"
+          @upload="uploadOperationInputs" />
         <div class="promptFooter">
           <el-select
             v-model="data.model"
@@ -74,6 +81,7 @@
             </el-option-group>
           </el-select>
           <generationSettings
+            v-if="!selectedModel?.generation || selectedModel?.mode?.length"
             v-model:duration="data.duration"
             v-model:resolution="data.resolution"
             v-model:ratio="data.ratio"
@@ -81,13 +89,14 @@
             v-model:generateAudio="data.generateAudio"
             :ratios="ratioOptions"
             :model="selectedModel"
+            :mode-only="!!selectedModel?.generation"
             :disabled="generating || deleting || !selectedModel" />
           <div class="generationActions">
             <mediaPrice v-if="generationInput" :input="{ ...generationInput, mediaType: 'video' }" :supported="selectedModel?.supportsPrice === true" />
             <el-button
               class="sendButton"
               :icon="generating ? IconPlayerStop : IconArrowUp"
-              :disabled="deleting || uploading || (!generating && (!generationPrompt || !selectedModel))"
+              :disabled="deleting || uploading || (!generating && (!promptReady || !selectedModel))"
               :title="generating ? '停止生成' : '生成视频'"
               :aria-label="generating ? '停止生成' : '生成视频'"
               @click="generating ? generationController?.abort() : startGeneration().catch((error) => showNodeError(error, '视频生成失败'))" />
@@ -103,7 +112,7 @@
 import { computed, nextTick, onMounted, onScopeDispose, ref, watch } from "vue";
 import { ElButton, ElCard, ElSelect, ElOption, ElOptionGroup, ElLoading, ElDropdown, ElDropdownMenu, ElDropdownItem } from "element-plus";
 import { IconCameraAi, IconSparkles, IconArrowUp, IconPlayerStop, IconTransfer, IconMusic, IconLayersSubtract, IconScissors, IconMovie, IconPhotoScan, IconPlayerSkipBack, IconPlayerSkipForward } from "@tabler/icons-vue";
-import { nodeSkeleton, nodeTools, useNode, z, type NodeMediaModel, type NodeVideoRequest, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
+import { nodeSkeleton, nodeTools, uploadNodeFile, useNode, z, type NodeMediaModel, type NodeVideoRequest, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { useNodeGeneration } from "@toonflow/node-shared/useNodeGeneration";
@@ -114,6 +123,8 @@ import videoActions from "@toonflow/node-video/videoActions";
 import referenceItem from "@toonflow/node-shared/referenceItem";
 import mediaHistory from "@toonflow/node-shared/mediaHistory";
 import mediaPrice from "@toonflow/node-shared/mediaPrice";
+import dreamApiOptions from "@toonflow/node-shared/dreamApiOptions";
+import { getDreamApiOptions, matchesAcceptedMimeType, validateDreamApiGeneration, type DreamApiMediaReference } from "@toonflow/node-shared/dreamApiOptionsRuntime";
 import generationSettings from "./components/generationSettings.vue";
 
 defineOptions({
@@ -122,6 +133,7 @@ defineOptions({
   handles: [
     { id: "in", type: "target", dataType: ["IMAGE", "VIDEO", "AUDIO", "STRING"], label: "图片、视频、音频、文本输入" },
     { id: "video", type: "source", dataType: "VIDEO", label: "视频输出" },
+    { id: "alpha", type: "source", dataType: "VIDEO", label: "Alpha 抠像视频" },
   ] satisfies NodeHandle[],
 });
 const vLoading = ElLoading.directive;
@@ -129,7 +141,7 @@ const { id, node, nodeProps, nodeEvent, outputs, files, ai, updateNodeInternals 
   label: "视频生成",
 });
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
-const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean });
+const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean; generationInputs?: Record<string, DreamApiMediaReference[]>; generationOther?: Record<string, unknown> });
 data.value.prompt ??= "";
 data.value.promptModel ??= [];
 data.value.model ??= "";
@@ -137,6 +149,8 @@ data.value.resolution ??= "";
 data.value.mode ??= "";
 data.value.generateAudio ??= true;
 data.value.ratio ??= "9:16";
+data.value.generationInputs ??= {};
+data.value.generationOther ??= {};
 const { refList, referenceMentions, setReferencePreview, removeReference } = useNodeReferences();
 const models = ref<NodeMediaModel[]>([]);
 const modelsLoading = ref(false);
@@ -155,6 +169,8 @@ let modelsRequest: Promise<void> | undefined;
 // ACT: 供应商未声明视频比例范围，沿用界面的通用比例，具体支持范围由供应商校验。
 const ratioOptions = ["16:9", "9:16", "1:1", "4:3", "3:4"];
 const selectedModel = computed(() => models.value.find((item) => JSON.stringify([item.providerId, item.modelId]) === data.value.model));
+const operationInputs = computed({ get: () => data.value.generationInputs ?? {}, set: value => { data.value.generationInputs = value; } });
+const operationValues = computed({ get: () => data.value.generationOther ?? {}, set: value => { data.value.generationOther = value; } });
 const selectedMode = computed(() => selectedModel.value?.mode?.find((item) => JSON.stringify(item) === data.value.mode) as NodeVideoRequest["mode"]);
 const frameMode = computed(() => ["startEndRequired", "endFrameOptional", "startFrameOptional"].includes(String(selectedMode.value)));
 const mediaCounts = computed(() => ({
@@ -215,6 +231,7 @@ const generationPrompt = computed(() =>
     .filter(Boolean)
     .join("\n\n")
 );
+const promptReady = computed(() => selectedModel.value?.generation?.promptRequired === false || !!generationPrompt.value);
 const generationInput = computed<Omit<NodeVideoRequest, "directory"> | undefined>(() => {
   const choice = selectedModel.value;
   if (!choice) return;
@@ -223,7 +240,7 @@ const generationInput = computed<Omit<NodeVideoRequest, "directory"> | undefined
     providerId: choice.providerId,
     modelId: choice.modelId,
     prompt: generationPrompt.value,
-    mode: selectedMode.value,
+    mode: choice.generation ? undefined : selectedMode.value,
     duration: data.value.duration,
     resolution: data.value.resolution || undefined,
     ratio: data.value.ratio,
@@ -234,6 +251,7 @@ const generationInput = computed<Omit<NodeVideoRequest, "directory"> | undefined
     lastFrame: frameMode.value ? images[selectedMode.value === "startFrameOptional" && images.length === 1 ? 0 : 1] : undefined,
     videos: refList.value.flatMap(item => item.dataType === "VIDEO" && item.value ? [{ path: item.value.url, mimeType: item.value.mimeType }] : []),
     audios: refList.value.flatMap(item => item.dataType === "AUDIO" && item.value ? [{ path: item.value.url, mimeType: item.value.mimeType }] : []),
+    ...getDreamApiOptions(choice, operationInputs.value, operationValues.value),
   };
 });
 const outputFile = computed(() => outputs.value.video?.dataType === "VIDEO" ? outputs.value.video.value : undefined);
@@ -281,8 +299,41 @@ async function replaceOutput(event: Event) {
     }
     // ACT: 保留历史输出文件，避免破坏撤销记录和复制节点的引用。
     outputs.value.video = { dataType: "VIDEO", value: { url, mimeType: file.type } };
+    outputs.value.alpha = undefined;
   } catch (error) {
     showNodeError(error, "视频替换失败");
+  } finally {
+    uploading.value = false;
+  }
+}
+
+async function uploadOperationInputs(roleId: string, selectedFiles: File[]) {
+  const role = selectedModel.value?.generation?.inputs?.find(item => item.id === roleId);
+  if (!role || !selectedFiles.length || uploading.value || generating.value || deleting.value || disposed) return;
+  const current = operationInputs.value[roleId] ?? [];
+  const maximum = role.maxItems ?? 64;
+  if (current.length + selectedFiles.length > maximum) return void showNodeError(`“${role.label}”最多接受 ${maximum} 个文件`, "素材输入失败");
+  if (selectedFiles.some(file => !file.type.toLowerCase().startsWith(`${role.mediaType}/`) || !matchesAcceptedMimeType(file.type, role.accept))) return void showNodeError(`“${role.label}”的文件格式不受支持`, "素材输入失败");
+  if (selectedFiles.some(file => !file.size || file.size > 100 * 1024 * 1024)) return void showNodeError("素材不能为空且不能超过 100 MB", "素材输入失败");
+  uploading.value = true;
+  let workspace: ReturnType<typeof files.getWorkspaceFiles> | undefined;
+  const created: string[] = [];
+  try {
+    workspace = files.getWorkspaceFiles();
+    const additions: DreamApiMediaReference[] = [];
+    for (const file of selectedFiles) {
+      const path = await uploadNodeFile(workspace, id, file);
+      created.push(path);
+      additions.push({ path, mimeType: file.type });
+    }
+    if (disposed) {
+      await Promise.all(created.map(path => workspace!.remove(path)));
+      return;
+    }
+    operationInputs.value = { ...operationInputs.value, [roleId]: [...current, ...additions] };
+  } catch (error) {
+    if (workspace && created.length) await Promise.all(created.map(path => workspace!.remove(path).catch(() => undefined)));
+    showNodeError(error, "素材输入失败");
   } finally {
     uploading.value = false;
   }
@@ -313,9 +364,10 @@ async function startGeneration() {
   if (uploading.value) throw new Error("视频正在替换，请等待完成");
   if (deleting.value) throw new Error("节点正在删除");
   if (!choice || !input) throw new Error("请先选择视频模型");
-  if (!generationPrompt.value) throw new Error("请输入生成提示词");
   if (refList.value.some(item => item.value === undefined)) throw new Error("引用节点暂无内容，请先补充引用内容");
-  if (choice.mode?.length && !matchingModes.value.length) throw new Error("当前模型没有适合这些参考素材的生成模式，请更换模型或调整引用");
+  if (choice.generation?.promptRequired !== false && !generationPrompt.value) throw new Error("请输入生成提示词");
+  if (!choice.generation && choice.mode?.length && !matchingModes.value.length) throw new Error("当前模型没有适合这些参考素材的生成模式，请更换模型或调整引用");
+  validateDreamApiGeneration(choice, generationPrompt.value, input);
   const workspace = files.getWorkspaceFiles();
   const controller = new AbortController();
   generationController = controller;
@@ -326,10 +378,14 @@ async function startGeneration() {
       controller.signal.throwIfAborted();
       return ai.generateVideo({ ...input, directory }, controller.signal);
     })
-    .then(([result]) => {
+    .then((results) => {
+      const [result, alpha] = results;
       controller.signal.throwIfAborted();
       if (!result) throw new Error("供应商未返回视频");
       outputs.value.video = { dataType: "VIDEO", value: { url: result.path, mimeType: result.mimeType } };
+      outputs.value.alpha = choice.providerId === "dreamApi" && choice.modelId === "videoMatting" && alpha
+        ? { dataType: "VIDEO", value: { url: alpha.path, mimeType: alpha.mimeType } }
+        : undefined;
     }))
     .catch((error) => showNodeError(error, "视频生成失败"))
     .finally(() => {

@@ -2,8 +2,8 @@
   <el-popover v-model:visible="settingsVisible" trigger="click" placement="top-start" width="min(340px, calc(100vw - 24px))" :disabled="disabled" :showArrow="false" :popperStyle="{ padding: '14px' }">
     <template #reference>
       <el-button class="settingsButton" text size="small" :disabled="disabled" :aria-expanded="settingsVisible" aria-label="视频生成设置">
-        <span class="ratioShape" :style="ratioStyle(ratio)" aria-hidden="true" />
-        <span>{{ [ratio, resolution, duration ? `${duration}秒` : ''].filter(Boolean).join(' · ') }}</span>
+        <span v-if="!modeOnly" class="ratioShape" :style="ratioStyle(ratio)" aria-hidden="true" />
+        <span>{{ modeOnly ? (selectedModeLabel || '生成模式') : [ratio, resolution, duration ? `${duration}秒` : ''].filter(Boolean).join(' · ') }}</span>
         <component :is="settingsVisible ? IconChevronDown : IconChevronUp" :size="14" aria-hidden="true" />
       </el-button>
     </template>
@@ -12,7 +12,7 @@
       <el-select v-if="modes.length" v-model="mode" :disabled="disabled" :teleported="false" aria-label="视频生成模式">
         <el-option v-for="item in modes" :key="item.value" :value="item.value" :label="item.label" />
       </el-select>
-      <div v-if="durations.length || resolutions.length" class="outputOptions">
+      <div v-if="!modeOnly && (durations.length || resolutions.length)" class="outputOptions">
         <div v-if="durations.length" class="outputField">
           <div class="sectionLabel">时长</div>
           <el-select v-model="duration" :disabled="disabled" :teleported="false" aria-label="视频时长">
@@ -26,6 +26,7 @@
           </el-select>
         </div>
       </div>
+      <template v-if="!modeOnly">
       <div class="sectionLabel">通用比例</div>
       <div class="ratioOptions" role="group" aria-label="视频比例">
         <el-button v-for="item in ratios" :key="item" class="ratioButton" :disabled="disabled" :aria-label="`比例 ${item}`" :aria-pressed="ratio === item" @click="ratio = item">
@@ -39,6 +40,7 @@
         <span class="sectionLabel">生成音频</span>
         <el-switch v-model="generateAudio" :disabled="disabled" aria-label="生成音频" />
       </div>
+      </template>
     </div>
   </el-popover>
 </template>
@@ -49,7 +51,7 @@ import { ElButton, ElPopover, ElSelect, ElOption, ElSwitch } from "element-plus"
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-vue";
 import type { NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
 
-const props = defineProps<{ model?: NodeMediaModel; disabled?: boolean; ratios: string[] }>();
+const props = defineProps<{ model?: NodeMediaModel; disabled?: boolean; ratios: string[]; modeOnly?: boolean }>();
 const settingsVisible = ref(false);
 const duration = defineModel<number | undefined>("duration", { required: true });
 const resolution = defineModel<string>("resolution", { required: true });
@@ -63,6 +65,7 @@ const modes = computed(() => (props.model?.mode ?? []).map(item => ({
   value: JSON.stringify(item),
   label: Array.isArray(item) ? "混合参考" : modeLabels[item] ?? item,
 })));
+const selectedModeLabel = computed(() => modes.value.find(item => item.value === mode.value)?.label);
 const mappings = computed(() => props.model?.durationResolutionMap ?? []);
 const durations = computed(() => [...new Set(mappings.value.flatMap(item => item.duration))].sort((a, b) => a - b));
 const resolutions = computed(() => resolutionsFor(duration.value));

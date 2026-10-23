@@ -11,6 +11,38 @@ type VideoMode =
   | "text"
   | (`${"video" | "image" | "audio"}Reference:${number}`)[];
 
+interface ProviderMediaInputDefinition {
+  id: string;
+  label: string;
+  mediaType: "image" | "video" | "audio";
+  fallback?: "images" | "videos" | "audios" | "firstFrame" | "lastFrame";
+  fallbackIndex?: number;
+  required?: boolean;
+  minItems?: number;
+  maxItems?: number;
+  accept?: string[];
+}
+
+interface ProviderMediaParameterDefinition {
+  id: string;
+  label: string;
+  type: "string" | "number" | "boolean";
+  required?: boolean;
+  allowCustom?: boolean;
+  options?: (string | number)[];
+  min?: number;
+  max?: number;
+  step?: number;
+  defaultValue?: string | number | boolean;
+}
+
+interface ProviderModelGeneration {
+  promptRequired?: boolean;
+  promptMaxLength?: number;
+  inputs?: ProviderMediaInputDefinition[];
+  parameters?: ProviderMediaParameterDefinition[];
+}
+
 interface ProviderModel {
   id: string;
   label: string;
@@ -23,6 +55,7 @@ interface ProviderModel {
   imageRatios?: string[];
   durationResolutionMap?: { duration: number[]; resolution: string[] }[];
   voices?: { title: string; voice: string }[];
+  generation?: ProviderModelGeneration;
 }
 
 interface ProviderFormRule {
@@ -45,6 +78,8 @@ interface MediaRequest {
   model: string;
   /** 仅放供应商专属参数；公共字段的映射与支持范围由供应商校验。 */
   other?: Record<string, unknown>;
+  /** 按模型声明的输入角色提供素材；路径读取与媒体类型检查由宿主完成。 */
+  inputs?: Record<string, MediaInput[]>;
 }
 
 /** 抽象层的媒体来源；供应商负责转换为平台需要的 URL、文件或字节。 */

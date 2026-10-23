@@ -14,6 +14,7 @@
     "./media/tfRouter": "./src/media/tfRouter.ts",
     "./media/apiMart": "./src/media/apiMart.ts",
     "./media/metaso": "./src/media/metaso.ts",
-    "./media/compshare": "./src/media/compshare.ts"
+    "./media/compshare": "./src/media/compshare.ts",
+    "./media/dreamApi": "./src/media/dreamApi.ts"
   }
 }
