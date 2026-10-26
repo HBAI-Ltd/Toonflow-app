@@ -35,4 +35,5 @@ export type AgentConversation = {
   parentFile?: string;
   subAgents?: AgentSubAgent[];
   running?: boolean;
+  runId?: string;
 };

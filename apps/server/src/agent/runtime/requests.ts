@@ -12,7 +12,7 @@ function contentHash(value: unknown) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
 
-export function configureAgentRequests(session: AgentSession, limits?: { maxRequestImageBytes?: number; maxRequestBytes?: number }) {
+export function configureAgentRequests(session: AgentSession, limits?: { maxRequestImageBytes?: number; maxRequestBytes?: number }, runSignal?: AbortSignal) {
   for (const value of Object.values(limits ?? {})) {
     if (value !== undefined && (!Number.isSafeInteger(value) || value <= 0)) throw new Error("图片请求预算必须为正安全整数");
   }
@@ -21,7 +21,9 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
   const afterToolCall = session.agent.afterToolCall;
   let toolFailure: { error: unknown } | undefined;
   session.agent.afterToolCall = async (call, signal) => {
+    if (runSignal) signal = signal ? AbortSignal.any([runSignal, signal]) : runSignal;
     try {
+      signal?.throwIfAborted();
       const observationId = randomUUID();
       const content: (TextContent | ImageContent)[] = [];
       for (const [index, part] of call.result.content.entries()) {
@@ -46,6 +48,9 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
     void (async () => {
       let partial: AssistantMessage | undefined;
       try {
+        // prompt 预处理可能晚于 abort 完成；以本轮信号约束实际请求，并按流协议返回 aborted。
+        if (runSignal) options = { ...options, signal: options?.signal ? AbortSignal.any([runSignal, options.signal]) : runSignal };
+        options?.signal?.throwIfAborted();
         if (toolFailure) { const { error } = toolFailure; toolFailure = undefined; throw error; }
         const providers = conf.get("settings", {}).customProviders;
         const provider = Array.isArray(providers) ? providers.find(item => item?.id === model.provider) : undefined;

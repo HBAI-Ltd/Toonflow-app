@@ -38,6 +38,7 @@ type AgentOptions = {
   modelId: string;
   thinkingLevel?: ThinkingLevel;
   sessionFile?: string;
+  runId?: string;
   resendFrom?: string;
   canvas?: CanvasContext;
   question?: QuestionContext;
@@ -55,6 +56,7 @@ export async function run(
     modelId,
     thinkingLevel,
     sessionFile,
+    runId,
     resendFrom,
     canvas,
     question,
@@ -102,6 +104,7 @@ export async function run(
     return;
   }
   const { provider, runtime, effectiveThinkingLevel } = await createAgentModel(providerId, modelId, thinkingLevel);
+  signal?.throwIfAborted();
   if (sessionPath) {
     const file = await stat(sessionPath).catch((error: NodeJS.ErrnoException) => {
       if (error.code === "ENOENT") throw Object.assign(new Error("会话不存在，请重新打开对话"), { status: 404 });
@@ -113,7 +116,8 @@ export async function run(
   const newHistory = sessionPath ? undefined : SessionManager.create(cwd, sessionsDir);
   const release = lockWorkspaceFiles([sessionPath ?? newHistory!.getSessionFile()!]);
   const controller = new AbortController();
-  signal = signal ? AbortSignal.any([signal, controller.signal]) : controller.signal;
+  const runSignal = signal ? AbortSignal.any([signal, controller.signal]) : controller.signal;
+  signal = runSignal;
   const finished = Promise.withResolvers<void>();
   let unregister = () => {};
   let mentionFiles: string[] = [];
@@ -134,12 +138,13 @@ export async function run(
       publish(event);
     };
     const active: ActiveAgentSession = {
-      history, send, tools: liveTools,
+      history, send, tools: liveTools, runId,
       entryOffset: history.getEntries().length,
       abort: () => { controller.abort(); onCancel?.(); return finished.promise; },
     };
     unregister = registerAgentSession(history.getSessionFile()!, active);
     const tools = await createAgentTools(cwd, canvas, question);
+    runSignal.throwIfAborted();
     if (isMemoryEnabled()) {
       const memoryTool = createMemoryTool();
       if (tools.some(tool => tool.name === memoryTool.name)) throw new Error("工具名称 memory 已被内置全局记忆工具占用");
@@ -158,6 +163,7 @@ export async function run(
     const resources = await createAgentResources(cwd, tools, undefined, child
       ? `## 子 Agent 职责\n你正在执行委派任务：${JSON.stringify({ name: child.name, task: child.task })}。遵守当前工作区规则与授权，用户可以进入此子会话补充要求。重要进展与最终结论使用 report 上报父 Agent。`
       : "");
+    runSignal.throwIfAborted();
     const resendEntry = resendFrom ? history.getBranch().find((item) => item.id === resendFrom) : undefined;
     if (resendFrom && (resendEntry?.type !== "message" || resendEntry.message.role !== "user")) {
       throw Object.assign(new Error("重发消息不在当前对话中，请重新打开对话"), { status: 400 });
@@ -180,9 +186,16 @@ export async function run(
       thinkingLevel: effectiveThinkingLevel,
       sessionManager: history,
       tools: tools.map((tool) => tool.name),
-      customTools: tools,
+      customTools: tools.map(tool => ({
+        ...tool,
+        async execute(...args: Parameters<typeof tool.execute>) {
+          args[2] = args[2] ? AbortSignal.any([runSignal, args[2]]) : runSignal;
+          args[2].throwIfAborted();
+          return tool.execute(...args);
+        },
+      })),
     });
-    configureAgentRequests(session);
+    configureAgentRequests(session, undefined, runSignal);
     active.session = session;
 
     const streamFunction = session.agent.streamFunction;
@@ -203,7 +216,9 @@ export async function run(
     const mediaContents = new Map<string, ReturnType<typeof readAiReferences>>();
     const onPayload = session.agent.onPayload;
     session.agent.onPayload = async (payload, requestModel) => {
+      runSignal.throwIfAborted();
       const body = (await onPayload?.(payload, requestModel) ?? payload) as Record<string, unknown>;
+      runSignal.throwIfAborted();
       sendUserMessage();
       const imageReferences = new Map(history.getBranch().flatMap(entry => {
         const reference = entry.type === "custom" && entry.customType === "toonflowImageAttachment"
@@ -412,7 +427,10 @@ export async function run(
           )}`.trim()
         : mentionPrompt(prompt, mentions);
       // SDK 仅以空格分隔技能名；兼容换行输入与追加的附件说明。
-      await session.prompt(content.replace(/^(\/skill:\S+)\s+/, "$1 "));
+      await session.prompt(content.replace(/^(\/skill:\S+)\s+/, "$1 "), {
+        // SDK 0.85.1 在启动 core 前同步调用此 hook，防止初始化期间停止后重新启动。
+        preflightResult(ok) { if (ok) runSignal.throwIfAborted(); },
+      });
       if (compactionError) throw new Error(compactionError);
       if (modelError) throw Object.assign(new Error(modelError), limited ? { code: "AGENT_LENGTH" } : {});
     } catch (error) {
@@ -459,4 +477,5 @@ export async function run(
 }
 
 export * from "@/agent/runtime/sessions";
+export * from "@/agent/runtime/runs";
 export { agentMentionsSchema } from "@/agent/runtime/mentions";

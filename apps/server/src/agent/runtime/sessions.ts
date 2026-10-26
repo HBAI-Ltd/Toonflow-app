@@ -26,6 +26,7 @@ export const agentAttachmentsSchema = z
 export type ActiveAgentSession = {
   history: SessionManager; session?: AgentSession; send: (event: AgentEvent) => void;
   entryOffset: number; tools: Map<string, AgentToolCall>;
+  runId?: string;
   abort(): Promise<void>;
 };
 type SessionMessage = {
@@ -401,6 +402,7 @@ export async function getAgentSession(cwd: string, path: string) {
     parentFile: getParentSessionFile(history),
     subAgents: [...subAgents.values()],
     running: Boolean(active),
+    runId: active?.runId,
   };
 }
 

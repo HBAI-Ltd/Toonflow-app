@@ -45,7 +45,7 @@
       <skillMenu ref="skillMenuRef" :directory="directory" :active="active" :disabled="locked || !directory" :query="skillQuery" :editor="senderElement" @select="selectSkill" @dismiss="skillQuery = undefined" />
       <el-button class="voiceButton" :class="{ voiceActive }" text circle :disabled="!voiceSupported || (!voiceActive && locked)" :aria-label="voiceButtonLabel" :aria-pressed="voiceActive" :title="voiceButtonLabel" @click="voiceActive ? cancelVoiceInput() : startVoiceInput()"><icon-microphone :size="18" /></el-button>
       <contextUsagePopover v-model:visible="contextMenuVisible" :usage="contextUsage" :stats="stats" :contextWindow="contextWindow" :disabled="voiceActive" />
-      <el-button class="sendButton" type="primary" circle :disabled="!busy && locked" :aria-label="busy ? '停止生成' : editingId ? '重发消息' : '发送消息'" :title="busy ? '停止生成' : editingId ? '重发消息' : '发送消息'" @click="busy ? emit('stop') : emit('submit')">
+      <el-button class="sendButton" type="primary" circle :disabled="stopping || (!busy && locked)" :loading="stopping" :aria-label="stopping ? '正在停止' : busy ? '停止生成' : editingId ? '重发消息' : '发送消息'" :title="stopping ? '正在停止' : busy ? '停止生成' : editingId ? '重发消息' : '发送消息'" @click="busy ? emit('stop') : emit('submit')">
         <icon-player-stop-filled v-if="busy" :size="14" />
         <icon-arrow-up v-else :size="16" />
       </el-button>
@@ -75,7 +75,7 @@ import useVoiceInput from "./useVoiceInput";
 import xSender, { type AnyTagProps } from "x-sender";
 import "x-sender/lib/XSender.css";
 
-const props = defineProps<{ active: boolean; disabled: boolean; busy: boolean; remoteRunning: boolean; deletingId?: string; directory?: string; contextUsage?: AgentContext; stats?: AgentStats; contextWindow: number }>();
+const props = defineProps<{ active: boolean; disabled: boolean; busy: boolean; stopping?: boolean; remoteRunning: boolean; deletingId?: string; directory?: string; contextUsage?: AgentContext; stats?: AgentStats; contextWindow: number }>();
 const emit = defineEmits<{ submit: []; stop: [] }>();
 const selectedModel = defineModel<string>("selectedModel", { required: true });
 const reasoningEffort = defineModel<string>("reasoningEffort", { required: true });
@@ -104,7 +104,7 @@ const senderHeight = ref(44);
 const senderMaxHeight = ref(Math.max(44, window.innerHeight / 2));
 let senderResize: { pointerId: number; y: number; height: number } | undefined;
 const contextMenuVisible = ref(false);
-const locked = computed(() => props.disabled || props.busy || props.deletingId !== undefined || restoringAttachment.value || voiceActive.value);
+const locked = computed(() => props.disabled || props.busy || props.stopping || props.deletingId !== undefined || restoringAttachment.value || voiceActive.value);
 const { voiceSupported, voiceState, voiceText, voiceActive, voiceButtonLabel, voiceLevel, armVoiceInput, startVoiceInput, clearVoicePress, cancelVoiceInput } = useVoiceInput({
   getSender: () => sender,
   active: () => props.active,

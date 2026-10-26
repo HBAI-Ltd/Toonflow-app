@@ -33,7 +33,6 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
   const cwd = await u.workspace.resolveWorkspace(req, directory);
   getAgentModelConfiguration(options.providerId, options.modelId, options.thinkingLevel);
   res.set({ "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no" });
-  res.flushHeaders();
   const send = (event: AgentEvent) => {
     if (event.type === "error") event = { ...event, message: translateMessage(event.message) };
     if (event.type === "session") options.sessionFile = event.file;
@@ -47,15 +46,21 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
     if (!res.destroyed && !res.writableEnded && !res.writableNeedDrain) res.write("\n");
   }, 20000);
   const close = () => { clearInterval(heartbeat); bridge?.dispose(); questions.dispose(); controller.abort(); };
+  const agentRun = u.agent.registerAgentRun(cwd, close);
   res.once("close", close);
   req.once("aborted", close);
   req.socket.once("close", close);
   try {
-    await u.agent.run({ ...options, cwd, canvas: bridge?.context, question: questions.context, signal: controller.signal, onCancel: close }, send);
+    // 在初始化模型或会话前确认取消通道，新对话还没有 sessionFile 时也能停止。
+    res.set("X-Toonflow-Agent-Run", agentRun.id);
+    res.flushHeaders();
+    res.write("\n"); // 让转发代理也立即发送握手头，不等待模型首条事件。
+    await u.agent.run({ ...options, cwd, runId: agentRun.id, canvas: bridge?.context, question: questions.context, signal: controller.signal, onCancel: close }, send);
     send({ type: "done" });
   } catch (error) {
     send({ type: "error", message: error instanceof Error ? translateError(error) : translateMessage("Agent 运行失败") });
   } finally {
+    agentRun.finish();
     clearInterval(heartbeat);
     res.off("close", close);
     req.off("aborted", close);
