@@ -362,7 +362,8 @@ export async function renameAgentSession(cwd: string, path: string, name: string
 
 export async function listAgentSessions(cwd: string, directory: string) {
   const files = new Set((await readdir(directory, { withFileTypes: true })).filter((item) => item.isFile()).map((item) => item.name));
-  const sessions = await SessionManager.list(cwd, directory);
+  // 克隆项目会保留原始 .agent 会话，header.cwd 仍指向源项目；以当前工作区目录中的文件为准列出历史。
+  const sessions = await SessionManager.listAll(directory);
   return Promise.all(sessions
     .filter((item) => files.has(basename(item.path)) && !item.parentSessionPath)
     .sort((left, right) => right.modified.getTime() - left.modified.getTime())
