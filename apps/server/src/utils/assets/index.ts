@@ -47,13 +47,22 @@ export async function readAssetFile(path: string, signal?: AbortSignal) {
   } finally { release(); }
 }
 
+async function readAssetRevision(path: string) {
+  const content = await readAssetContents(path).catch((error: NodeJS.ErrnoException) => {
+    if (error.code !== "ENOENT") throw error;
+    // 素材在读取后被删除或移动同样属于版本冲突，按工作区写入接口的约定返回 409 ESTALE。
+    throw Object.assign(new Error("素材文件已被删除或移动，未覆盖磁盘内容"), { status: 409, code: "ESTALE" });
+  });
+  return createHash("sha256").update(content).digest("hex");
+}
+
 export async function writeAssetFile(path: string, content: string | Uint8Array, revision?: string) {
   if (Buffer.byteLength(content) > maxAssetBytes) throw new Error("素材文件不能超过 100 MB");
   const target = await resolveAssetPath(path);
   const release = lockWorkspaceFiles([target.path]);
   try {
     if (revision !== undefined) {
-      const current = createHash("sha256").update(await readAssetContents(target.path)).digest("hex");
+      const current = await readAssetRevision(target.path);
       if (current !== revision) throw Object.assign(new Error("素材已被修改，请重新读取后再更新"), { status: 409, code: "ESTALE" });
     }
     await writeWorkspaceFile(target.path, content, revision === undefined);
