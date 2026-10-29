@@ -47,18 +47,26 @@ export async function readAssetFile(path: string, signal?: AbortSignal) {
   } finally { release(); }
 }
 
+function assetStaleConflict() {
+  return Object.assign(new Error("素材文件已被删除或移动，未覆盖磁盘内容"), { status: 409, code: "ESTALE" });
+}
+
 async function readAssetRevision(path: string) {
   const content = await readAssetContents(path).catch((error: NodeJS.ErrnoException) => {
     if (error.code !== "ENOENT") throw error;
     // 素材在读取后被删除或移动同样属于版本冲突，按工作区写入接口的约定返回 409 ESTALE。
-    throw Object.assign(new Error("素材文件已被删除或移动，未覆盖磁盘内容"), { status: 409, code: "ESTALE" });
+    throw assetStaleConflict();
   });
   return createHash("sha256").update(content).digest("hex");
 }
 
 export async function writeAssetFile(path: string, content: string | Uint8Array, revision?: string) {
   if (Buffer.byteLength(content) > maxAssetBytes) throw new Error("素材文件不能超过 100 MB");
-  const target = await resolveAssetPath(path);
+  // 素材目录被整体移动后，路径解析会在读取内容前因父目录缺失抛出 ENOENT；带 revision 更新时同样按版本冲突处理。
+  const target = await resolveAssetPath(path).catch((error: NodeJS.ErrnoException) => {
+    if (revision === undefined || error.code !== "ENOENT") throw error;
+    throw assetStaleConflict();
+  });
   const release = lockWorkspaceFiles([target.path]);
   try {
     if (revision !== undefined) {
