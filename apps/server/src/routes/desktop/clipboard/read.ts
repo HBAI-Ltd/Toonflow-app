@@ -1,4 +1,4 @@
-import { readFile, stat } from "node:fs/promises";
+import { readFile, stat } from "@toonflow/file";
 import { basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Router } from "express";
@@ -38,12 +38,36 @@ async function readClipboardFile(path: string) {
   return { name: basename(path), mimeType, data: bytes.toString("base64") };
 }
 
+async function clipboardImageBase64(image: Uint8Array | null) {
+  if (!image) return null;
+  let bytes = Buffer.from(image);
+  // Windows SDK 返回无文件头的 DIB，先补齐 BMP 文件头，再复用图片解码器转为 PNG。
+  if (bytes.length >= 4 && [40, 52, 56, 108, 124].includes(bytes.readUInt32LE(0))) {
+    const headerSize = bytes.readUInt32LE(0);
+    if (bytes.length < headerSize) throw new Error("剪贴板图片数据不完整");
+    const bitCount = bytes.readUInt16LE(14);
+    if (![1, 4, 8, 16, 24, 32].includes(bitCount)) throw new Error("剪贴板图片位深不受支持");
+    const compression = bytes.readUInt32LE(16);
+    const colorCount = bytes.readUInt32LE(32) || (bitCount <= 8 ? 2 ** bitCount : 0);
+    const maskSize = headerSize === 40 ? (compression === 3 ? 12 : compression === 6 ? 16 : 0) : 0;
+    const pixelOffset = 14 + headerSize + colorCount * 4 + maskSize;
+    if (pixelOffset >= bytes.length + 14) throw new Error("剪贴板图片数据不完整");
+    const header = Buffer.alloc(14);
+    header.write("BM");
+    header.writeUInt32LE(bytes.length + 14, 2);
+    header.writeUInt32LE(pixelOffset, 10);
+    bytes = Buffer.concat([header, bytes]);
+  }
+  const png = await new Bun.Image(bytes).png().buffer();
+  return png.toString("base64");
+}
+
 // ACT: 读取也使用 POST，复用 desktopRequest 的同源校验。
 export default Router().post("/", validateFields({ format: z.enum(["image", "files"]).optional() }), async (req, res) => {
   const desktop = u.desktop.getDesktopRuntime(req);
   if (req.body.format === "image") {
-    const image = desktop.readClipboardImage();
-    res.json(success({ image: image ? Buffer.from(image).toString("base64") : null }));
+    const image = await clipboardImageBase64(desktop.readClipboardImage());
+    res.json(success({ image }));
     return;
   }
   if (req.body.format === "files") {
@@ -54,8 +78,8 @@ export default Router().post("/", validateFields({ format: z.enum(["image", "fil
       if (file) files.push(file);
     }
     if (!files.length) {
-      const image = desktop.readClipboardImage();
-      if (image) files.push({ name: "clipboard-image.png", mimeType: "image/png", data: Buffer.from(image).toString("base64") });
+      const image = await clipboardImageBase64(desktop.readClipboardImage());
+      if (image) files.push({ name: "clipboard-image.png", mimeType: "image/png", data: image });
     }
     res.json(success({ files }));
     return;

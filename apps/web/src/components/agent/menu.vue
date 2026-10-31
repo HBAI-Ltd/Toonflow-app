@@ -75,22 +75,20 @@
           </div>
         </div>
       </el-popover>
-      <el-button text circle :loading="configLoading" :icon="IconAdjustmentsHorizontal" aria-label="媒体生成控制" title="媒体生成控制" @click="openMediaConfig" />
+      <el-button text circle :icon="IconAdjustmentsHorizontal" aria-label="节点工具控制" title="节点工具控制" @click="configVisible = true" />
       <slot name="actions" />
       <el-button text circle aria-label="关闭对话" title="关闭" @click="emit('close')"><icon-x :size="16" /></el-button>
     </div>
   </header>
-  <pluginConfigDialog v-if="mediaTool" v-model="configVisible" :plugin="mediaTool" :canManage="canManageTools" />
+  <nodeToolsDialog v-model="configVisible" />
 </template>
 
 <script setup lang="ts">
-import axios from "axios";
-import { nextTick, ref, shallowRef, watch } from "vue";
-import { ElMessage, ElMessageBox, type InputInstance } from "element-plus";
+import { nextTick, ref, watch } from "vue";
+import { ElMessageBox, type InputInstance } from "element-plus";
 import type { AgentHistory } from "./types";
 import type { AgentSubAgent } from "@toonflow/server/agent/types";
-import pluginConfigDialog from "@/components/settings/panels/pluginMarket/pluginConfigDialog.vue";
-import type { Plugin } from "@/components/settings/panels/pluginMarket/types";
+import nodeToolsDialog from "./nodeToolsDialog.vue";
 import {
   IconMessagePlus, IconHistory,
   IconX, IconPencil, IconTrash,
@@ -113,9 +111,6 @@ const editingName = ref(false);
 const nameDraft = ref("");
 const nameInput = ref<InputInstance>();
 const configVisible = ref(false);
-const configLoading = ref(false);
-const canManageTools = ref(false);
-const mediaTool = shallowRef<Plugin>();
 const subAgentStatusLabels: Record<string, string> = {
   pending: "准备中", running: "执行中", completed: "已完成", error: "失败",
   limited: "达到限制", cancelled: "已取消", inputRequired: "等待补充", unknown: "状态待确认",
@@ -126,25 +121,6 @@ watch(() => [props.sessionFile, props.parentFile], () => {
   historyVisible.value = false;
   subAgentsVisible.value = false;
 });
-
-async function openMediaConfig() {
-  if (configLoading.value) return;
-  configLoading.value = true;
-  try {
-    const { data } = await axios.get<{ code: number; data: { tools: (Plugin & { loadError?: string })[]; canManage: boolean }; message?: string }>("/api/tools/get", {
-      headers: { "Cache-Control": "no-cache", "x-toonflow-workspace": "1" },
-    });
-    if (data.code !== 200) throw new Error(data.message || "读取工具配置失败");
-    const tool = data.data.tools.find(tool => tool.name === "mediaGeneration");
-    if (!tool) throw new Error("请先安装媒体生成工具");
-    if (tool.loadError) throw new Error(tool.loadError);
-    mediaTool.value = { ...tool, key: `tool:${tool.name}`, type: "tool" };
-    canManageTools.value = data.data.canManage;
-    configVisible.value = true;
-  } catch (error) {
-    ElMessage.error(axios.isAxiosError(error) ? error.response?.data?.message || "读取工具配置失败" : error instanceof Error ? error.message : "读取工具配置失败");
-  } finally { configLoading.value = false; }
-}
 
 function selectConversation(file: string) {
   historyVisible.value = false;

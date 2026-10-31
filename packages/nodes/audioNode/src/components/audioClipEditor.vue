@@ -1,6 +1,6 @@
 <template>
   <div class="audioClipEditor nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.capture="handleKeydown" @keydown.stop>
-    <audioPlayer ref="player" :src="src" label="音频剪辑预览" :inert="disabled || !segments.length" @loadedmetadata="readDuration" @play="startPlayback">
+    <audioPlayer ref="player" v-model:pcmOptions="pcmOptions" :src="src" :mimeType="mimeType" label="音频剪辑预览" :inert="disabled" @loadedmetadata="readDuration" @play="startPlayback">
       <template #track="{ peaks }">
         <div class="timeline">
           <div class="timeRuler" @click="seekTimeline">
@@ -35,10 +35,12 @@ import { ElButton } from "element-plus";
 import { IconArrowBackUp, IconArrowForwardUp, IconLink, IconScissors, IconTrash } from "@tabler/icons-vue";
 import type { AudioSegment } from "../audioProcessing";
 import audioPlayer from "./audioPlayer.vue";
+import type { PcmOptions } from "@toonflow/node-shared/pcmPreview";
 
 type EditState = { groups: AudioSegment[][]; selectedIndex: number; playhead: number };
-const props = defineProps<{ src: string; disabled?: boolean }>();
+const props = defineProps<{ src: string; mimeType?: string; disabled?: boolean }>();
 const segments = defineModel<AudioSegment[]>({ required: true });
+const pcmOptions = defineModel<Partial<PcmOptions>>("pcmOptions", { default: () => ({}) });
 const player = ref<InstanceType<typeof audioPlayer>>();
 const duration = ref(0);
 const selectedIndex = ref(0);
@@ -64,7 +66,7 @@ const clips = computed(() => {
 });
 const totalDuration = computed(() => clips.value.reduce((total, clip) => total + clip.length, 0));
 const timelineDuration = computed(() => totalDuration.value || duration.value || 1);
-const valid = computed(() => duration.value > 0 && groups.value.length > 0 && groups.value.flat().every(segment => Number.isFinite(segment.start) && Number.isFinite(segment.end) && segment.start >= 0 && segment.end > segment.start && segment.end <= duration.value));
+const valid = computed(() => !!player.value?.duration && !player.value.failed && duration.value > 0 && groups.value.length > 0 && groups.value.flat().every(segment => Number.isFinite(segment.start) && Number.isFinite(segment.end) && segment.start >= 0 && segment.end > segment.start && segment.end <= duration.value));
 const canSplit = computed(() => {
   const clip = clips.value[selectedIndex.value];
   return clip && playhead.value - clip.offset >= 0.01 && clip.offset + clip.length - playhead.value >= 0.01;
@@ -73,7 +75,7 @@ const canMerge = computed(() => !!activeSegment.value && groups.value.length > 1
 let playbackClipIndex = 0;
 let playbackPartIndex = 0;
 
-watch(() => props.src, () => {
+watch([() => props.src, () => pcmOptions.value.sampleRate, () => pcmOptions.value.channels, () => pcmOptions.value.format], () => {
   duration.value = 0;
   undoStack.value = redoStack.value = [];
   applyState({ groups: [], selectedIndex: 0, playhead: 0 });

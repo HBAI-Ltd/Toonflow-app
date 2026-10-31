@@ -117,11 +117,11 @@ import nodeSkeleton from "@toonflow/nodes-scaffold/nodeSkeleton";
 import videoPlayer from "@toonflow/node-video/videoPlayer";
 import markdownPreview from "@toonflow/node-text/markdownPreview";
 import groupNode from "@/pages/workspace/panels/canvas/components/groupNode.vue";
-import type { TfExploreProcess } from "@/lib/tf";
+import type { ExploreProcess } from "@toonflow/server/channel";
 import "@vue-flow/core/dist/style.css";
 import "@vue-flow/core/dist/theme-default.css";
 
-const props = defineProps<{ process: TfExploreProcess; busy?: boolean; title?: string }>();
+const props = defineProps<{ process: ExploreProcess; busy?: boolean; title?: string }>();
 const visible = defineModel<boolean>({ default: false });
 const previewId = `exploreProcess-${crypto.randomUUID()}`;
 const canvasId = ref("");

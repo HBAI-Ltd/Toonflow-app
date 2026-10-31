@@ -6,12 +6,12 @@
       <label>采样格式<el-select v-model="format" size="small"><el-option v-for="option in pcmFormats" :key="option.value" :label="option.label" :value="option.value" /></el-select></label>
       <p>PCM 不包含格式信息，请按文件实际参数设置。多声道数据按交错排列读取。</p>
     </form>
-    <div class="mediaPreview" :aria-busy="loading">
-      <span v-if="loading" class="mediaStatus" role="status">正在读取…</span>
+    <div class="mediaPreview" :aria-busy="loading || preparing">
+      <span v-if="loading || preparing" class="mediaStatus" role="status">{{ preparing ? '正在生成兼容预览…' : '正在读取…' }}</span>
       <div v-else-if="error" class="mediaError" role="alert">{{ error }}</div>
       <template v-else-if="mediaUrl">
         <p v-if="!isVideo" class="audioLabel">{{ context.resource.label }}</p>
-        <component :is="isVideo ? 'video' : 'audio'" :key="mediaUrl" ref="player" :src="mediaUrl" controls playsinline preload="metadata" :aria-label="context.resource.label" @error="showPlaybackError" />
+        <component :is="isVideo ? 'video' : 'audio'" :key="mediaUrl" ref="player" :src="mediaUrl" controls playsinline preload="auto" :aria-label="context.resource.label" @loadeddata="handleLoaded" @error="handleError" />
       </template>
     </div>
   </section>
@@ -21,7 +21,8 @@
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { ElInputNumber, ElOption, ElSelect } from "element-plus";
 import type { ExtContext } from "@toonflow/ext-scaffold/runtime";
-import { pcmToWav, type PcmFormat } from "./pcmPreview";
+import { pcmFormats, pcmToWav, type PcmFormat } from "@toonflow/node-shared/pcmPreview";
+import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
 
 const props = defineProps<{ context: ExtContext }>();
 const suffix = computed(() => props.context.resource.path.split(".").at(-1)?.toLowerCase());
@@ -31,34 +32,19 @@ const player = ref<HTMLMediaElement>();
 const fileUrl = ref("");
 const pcmUrl = ref("");
 const pcmData = shallowRef<ArrayBuffer>();
-const mediaUrl = computed(() => isPcm.value ? pcmUrl.value : fileUrl.value);
+const { src: mediaUrl, preparing, error: playbackError, handleError, handleLoaded } = useMediaPreview(() => isPcm.value ? pcmUrl.value : fileUrl.value, () => isVideo.value ? "video" : "audio");
 const loading = ref(false);
 const readError = ref("");
-const playbackError = ref("");
 const pcmError = ref("");
 const error = computed(() => readError.value || pcmError.value || playbackError.value);
 const sampleRate = ref(24000);
 const channels = ref(1);
 const format = ref<PcmFormat>("s16le");
-const pcmFormats: { value: PcmFormat; label: string }[] = [
-  { value: "u8", label: "8 位无符号" },
-  { value: "s16le", label: "16 位整数（小端）" },
-  { value: "s24le", label: "24 位整数（小端）" },
-  { value: "s32le", label: "32 位整数（小端）" },
-  { value: "f32le", label: "32 位浮点（小端）" },
-  { value: "s16be", label: "16 位整数（大端）" },
-  { value: "s24be", label: "24 位整数（大端）" },
-  { value: "s32be", label: "32 位整数（大端）" },
-  { value: "f32be", label: "32 位浮点（大端）" },
-];
 
 function stopPlayback() {
   player.value?.pause();
   player.value?.removeAttribute("src");
   player.value?.load();
-}
-function showPlaybackError() {
-  playbackError.value = `无法播放：${props.context.resource.label}。文件可能损坏，或当前客户端不支持其编码。`;
 }
 
 watch(() => props.context.active, active => { if (!active) player.value?.pause(); });

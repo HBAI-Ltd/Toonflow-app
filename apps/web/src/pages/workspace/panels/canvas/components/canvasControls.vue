@@ -70,7 +70,7 @@
           </el-button>
         </el-tooltip>
         <el-tooltip :showArrow="false" content="适应视图" placement="top" :hideAfter="0" :enterable="false" :triggerKeys="[]">
-          <el-button class="toolButton" text aria-label="适应视图" @click="fitView()">
+          <el-button class="toolButton" text aria-label="适应视图" @click="fitView({ duration: 250 })">
             <icon-focus-centered :size="18" />
           </el-button>
         </el-tooltip>
@@ -105,7 +105,7 @@
                 </el-input-number>
                 <el-button class="zoomAction" text @click="zoomIn()">放大</el-button>
                 <el-button class="zoomAction" text @click="zoomOut()">缩小</el-button>
-                <el-button class="zoomAction" text @click="fitView()">适合屏幕</el-button>
+                <el-button class="zoomAction" text @click="fitView({ duration: 250 })">适合屏幕</el-button>
               </div>
             </el-popover>
           </span>

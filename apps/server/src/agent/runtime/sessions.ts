@@ -7,7 +7,7 @@ import type { UserMessage } from "@earendil-works/pi-ai";
 import type { AgentEvent, AgentMention, AgentMessageDelivery, AgentPeerMessage, AgentQueue, AgentQueuedMessage, AgentSubAgent, AgentToolCall } from "@/agent/runtime/types";
 import { agentMentionsSchema } from "@/agent/runtime/mentions";
 import conf from "@/utils/conf";
-import { providerSchema, getModelLimits } from "@/utils/ai";
+import { providerSchema, getModelLimits, getConfiguredProviders } from "@/utils/ai";
 import { lockWorkspaceFiles, resolveWorkspacePath, writeWorkspaceFile } from "@/utils/workspace/files";
 import { getReadableFileMimeType } from "@/lib/documentFormats";
 import { thinkingLevels } from "@/lib/modelReasoning";
@@ -331,6 +331,73 @@ export async function deleteAgentMessage(cwd: string, path: string, options: { e
   }
 }
 
+export async function branchAgentConversation(cwd: string, path: string, options: { entryId?: string; replyTo?: string }) {
+  if (Boolean(options.entryId) === Boolean(options.replyTo)) {
+    throw Object.assign(new Error("请选择要创建分支的消息"), { status: 400 });
+  }
+  const release = lockWorkspaceFiles([path]);
+  try {
+    const content = await readFile(path, "utf8");
+    const entries = parseSessionEntries(content);
+    if (entries[0]?.type !== "session" || entries.length !== content.split("\n").filter(line => line.trim()).length) {
+      throw Object.assign(new Error("会话文件损坏，无法创建分支"), { status: 400 });
+    }
+    const entrySchema = z.object({ type: z.string(), id: z.string().min(1), parentId: z.string().nullable(), timestamp: z.string() });
+    const knownIds = new Set<string>();
+    for (const entry of entries.slice(1)) {
+      const parsed = entrySchema.safeParse(entry);
+      if (!parsed.success || parsed.data.type === "session" || knownIds.has(parsed.data.id)
+        || (parsed.data.parentId !== null && !knownIds.has(parsed.data.parentId))) {
+        throw Object.assign(new Error("会话记录结构无效，无法创建分支"), { status: 400 });
+      }
+      knownIds.add(parsed.data.id);
+    }
+    const history = SessionManager.inMemory(cwd, undefined, entries);
+    const branch = history.getBranch();
+    const index = branch.findIndex(entry => options.replyTo ? getAgentTaskId(entry) === options.replyTo : entry.id === options.entryId);
+    const selected = branch[index];
+    if (!selected || (options.entryId && (selected.type !== "message" || !["user", "assistant"].includes(selected.message.role)))) {
+      throw Object.assign(new Error("消息不在当前对话中，请重新打开对话"), { status: 400 });
+    }
+    const nextMessage = branch.findIndex((entry, position) => position > index && (Boolean(getAgentTaskId(entry))
+      || (options.entryId && entry.type === "custom_message" && ["subAgentReport", "agentMessage"].includes(entry.customType))));
+    const end = options.entryId && selected.type === "message" && selected.message.role === "user"
+      ? index + 1 : nextMessage < 0 ? branch.length : nextMessage;
+    if (options.replyTo && !branch.slice(index + 1, end).some(entry => entry.type === "message" && entry.message.role === "assistant")) {
+      throw Object.assign(new Error("回复尚未保存，请重新打开对话后再创建分支"), { status: 400 });
+    }
+    const retained = branch.slice(0, end);
+    const userIds = new Set(retained.filter(entry => entry.type === "message" && entry.message.role === "user").map(entry => entry.id));
+    // 用户原文、附件和引用在消息之后落盘；只补齐已保留消息的元数据，不带入后续回复或摘要。
+    retained.push(...branch.slice(end).filter(entry => entry.type === "custom"
+      && ["toonflowAttachments", "toonflowUserMessage"].includes(entry.customType)
+      && userIds.has((entry.data as { messageId?: string } | undefined)?.messageId ?? "")));
+    const copied: SessionEntry[] = [];
+    const replacements = new Map<string, string>();
+    const skippedIds: string[] = [];
+    for (const entry of retained) {
+      // 分支是独立会话；历史消息保留，但不能继承原会话的子任务所有权。
+      if (entry.type === "custom" && ["toonflowSubAgentInfo", "toonflowSubAgent"].includes(entry.customType)) {
+        skippedIds.push(entry.id);
+        continue;
+      }
+      for (const id of skippedIds) replacements.set(id, entry.id);
+      skippedIds.length = 0;
+      copied.push({ ...entry, parentId: copied.at(-1)?.id ?? null,
+        ...(entry.type === "compaction" ? { firstKeptEntryId: replacements.get(entry.firstKeptEntryId) ?? entry.firstKeptEntryId } : {}) });
+    }
+    const source = await getAgentSession(cwd, path);
+    const target = SessionManager.create(cwd, dirname(path));
+    const snapshot = SessionManager.inMemory(cwd, undefined, [target.getHeader()!, ...copied]);
+    snapshot.appendSessionInfo(`${source.name.slice(0, 75)} · 分支`);
+    const targetPath = target.getSessionFile()!;
+    await writeWorkspaceFile(targetPath, [snapshot.getHeader(), ...snapshot.getEntries()].map(entry => JSON.stringify(entry)).join("\n") + "\n", true);
+    return await getAgentSession(cwd, targetPath);
+  } finally {
+    release();
+  }
+}
+
 export async function createAgentConversation(cwd: string, child?: Omit<AgentSubAgent, "file" | "status">) {
   const { path: directory } = await resolveWorkspacePath(cwd, ".agent/sessions", true);
   const history = SessionManager.create(cwd, directory, child ? { parentSession: child.parentFile } : undefined);
@@ -525,8 +592,7 @@ export async function getAgentSession(cwd: string, path: string) {
     lastReply?.type === "message" && lastReply.message.role === "assistant"
       ? { provider: lastReply.message.provider, modelId: lastReply.message.model }
       : context.model;
-  const providers = conf.get("settings", {}).customProviders;
-  const provider = providerSchema.safeParse(Array.isArray(providers) ? providers.find((item) => item?.id === model?.provider) : undefined);
+  const provider = providerSchema.safeParse(getConfiguredProviders().find((item) => item?.id === model?.provider));
   const configuredModel = provider.success ? provider.data.models.find((item) => item.id === model?.modelId) : undefined;
   const subAgents = new Map<string, AgentSubAgent>();
   for (const entry of history.getEntries()) {

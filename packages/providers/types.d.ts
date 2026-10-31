@@ -37,9 +37,15 @@ type ProviderConfig<TRules extends readonly ProviderFormRule[]> = {
   [TRule in TRules[number] as TRule["field"]]: TRule["value"];
 };
 
+type ProviderTaskValue = null | boolean | number | string | ProviderTaskValue[] | { [key: string]: ProviderTaskValue };
+/** 可持久化的恢复数据；不得包含密钥、请求凭据、二进制或运行时对象。 */
+type ProviderTaskData = { [key: string]: ProviderTaskValue };
+
 interface ProviderContext<TConfig = Record<string, unknown>> {
   config: TConfig;
   signal?: AbortSignal;
+  /** 异步任务接单后立即等待保存；旧宿主缺省此能力，使用可选链调用。 */
+  saveTaskData?: (data: ProviderTaskData) => Promise<void>;
   /** 宿主直接注入工具，供应商无需 import；FFmpeg 为按需安装的插件能力。 */
   tool: ProviderTools;
 }
@@ -181,7 +187,7 @@ type AudioRequest = MediaRequest & {
 
 /**
  * 三种生成函数统一返回最终媒体数组，不能返回任务 ID 或原始平台响应。
- * ACT: 本层只约定完整结果；供应商内部处理轮询/流读取，失败时抛出异常。
+ * ACT: 保留聚合结果兼容旧调用；异步供应商可通过 saveTaskData 与 resumeTask 增加恢复能力。
  */
 type GenerateMedia<TRequest, TConfig = Record<string, unknown>> = (
   this: ProviderContext<TConfig>,
@@ -206,7 +212,7 @@ interface ProviderDefinition<TRules extends readonly ProviderFormRule[] = readon
    * 媒体模型列表 GET 地址，使用配置的 apiKey 作为 Bearer 凭据，返回 { data: 模型数组 }。
    * 模型须含 id，type 可由 URL 的 type 参数或同名已有模型补全。
    * 可选 modelInfo 对象提供模型能力（如 mode、audio、durationResolutionMap、imageSizes、imageRatios），获取时合并至模型顶层。
-   * 提供此字段后可手动获取；TF-Router 手动获取图片、视频、音频，并在有 key 的程序启动时自动更新。
+   * 提供此字段后可手动获取模型列表。
    */
   modelsUrl?: string;
   protocol?: "openai-completions" | "openai-responses" | "anthropic-messages";
@@ -230,6 +236,8 @@ interface ProviderDefinition<TRules extends readonly ProviderFormRule[] = readon
   generateImage?: GenerateMedia<ImageRequest, ProviderConfig<TRules>>;
   generateVideo?: GenerateMedia<VideoRequest, ProviderConfig<TRules>>;
   generateAudio?: GenerateMedia<AudioRequest, ProviderConfig<TRules>>;
+  /** 恢复原任务的等待，结果顺序与原 generate 保持一致；不重复提交已接单阶段。明确失败终态可抛出 code 为 MEDIA_TASK_FAILED 的错误。 */
+  resumeTask?: (this: ProviderContext<ProviderConfig<TRules>>, data: ProviderTaskData) => Promise<MediaAsset[]>;
   /** 可选的供应商媒体预处理；未实现时保持原请求。 */
   processMedia?: (this: ProviderContext<ProviderConfig<TRules>>, request: ImageRequest | VideoRequest | AudioRequest) => Promise<ImageRequest | VideoRequest | AudioRequest>;
 }

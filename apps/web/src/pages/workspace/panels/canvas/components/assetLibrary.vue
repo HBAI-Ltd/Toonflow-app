@@ -1,8 +1,9 @@
 <template>
-  <assetBrowser v-if="visible && expanded" v-model:folder="folder" v-model:searchQuery="searchQuery" v-model:newFolderName="newFolderName" :entries="entries" :loading="loading" :newFolderParent="newFolderParent" :folderSaving="folderSaving" :mediaKind="mediaKind" :assetUrl="assetUrl" :canSelect="canSelect" :selecting="selecting" @select="emit('select', $event)" @startFolder="startFolder" @saveFolder="saveFolder" @cancelFolder="cancelFolder" @preview="openPreview" @menu="openItemMenu" @drag="startAssetDrag" />
+  <assetBrowser v-if="visible && expanded" v-model:folder="folder" v-model:searchQuery="searchQuery" v-model:newFolderName="newFolderName" :entries="entries" :loading="loading" :uploading="uploading" :newFolderParent="newFolderParent" :folderSaving="folderSaving" :mediaKind="mediaKind" :assetUrl="assetUrl" :canSelect="canSelect" :selecting="selecting" @select="emit('select', $event)" @upload="fileInput?.click()" @startFolder="startFolder" @saveFolder="saveFolder" @cancelFolder="cancelFolder" @preview="openPreview" @menu="openItemMenu" @drag="startAssetDrag" />
   <el-card v-else-if="visible" class="assetLibrary" shadow="never" :bodyStyle="{ padding: '8px' }" role="region" aria-label="素材库" @dblclick.stop>
     <div class="libraryToolbar">
       <el-input v-model="searchQuery" class="searchInput" :prefixIcon="IconSearch" placeholder="搜索素材" aria-label="搜索素材" clearable @keydown.esc.stop="searchQuery = ''" />
+      <el-button class="toolbarButton" text :icon="IconUpload" title="本地上传" aria-label="本地上传" :loading="uploading" :disabled="loading || newFolderParent !== undefined" @click="fileInput?.click()" />
       <el-button class="toolbarButton" text :icon="IconFolderPlus" title="新建文件夹" aria-label="新建文件夹" :disabled="newFolderParent !== undefined" @click="startFolder" />
       <el-button class="toolbarButton" text :icon="IconX" title="关闭素材库" aria-label="关闭素材库" @click="visible = false" />
     </div>
@@ -11,9 +12,7 @@
         <template #default="{ data, node }">
           <div class="assetEntry" :title="data.name" :draggable="data.type === 'file'" @dragstart.stop="startAssetDrag($event, data)" @dblclick.stop="openPreview(data)" @contextmenu="openItemMenu($event, data)">
             <span v-if="data.type === 'directory'" class="fileIcon"><component :is="node.expanded && !node.isLeaf ? IconFolderOpen : IconFolder" :size="18" aria-hidden="true" /></span>
-            <el-image v-else-if="mediaKind(data) === 'image'" class="assetThumbnail" :src="assetUrl(data.path)" fit="cover" loading="lazy" draggable="false" @click.stop="openPreview(data)">
-              <template #error><icon-photo :size="18" /></template>
-            </el-image>
+            <mentionThumbnail v-else-if="mediaKind(data) === 'image'" class="assetThumbnail" :thumbnail="{ url: data.path, mimeType: getMediaMimeType({ name: data.path, type: '' }) }" globalAsset @click.stop="openPreview(data)"><icon-photo :size="18" /></mentionThumbnail>
             <mentionThumbnail v-else-if="mediaKind(data) === 'video'" class="assetThumbnail" :thumbnail="{ url: data.path, mimeType: mentionAssetType(data.path).mimeType }" globalAsset @click.stop="openPreview(data)"><icon-video :size="18" /></mentionThumbnail>
             <span v-else class="fileIcon">
               <icon-music v-if="mediaKind(data) === 'audio'" :size="18" />
@@ -33,25 +32,29 @@
         <el-button text :icon="IconX" aria-label="关闭音频预览" @click="previewAsset = undefined" />
       </div>
       <el-alert v-if="previewError" :title="previewError" type="error" :closable="false" showIcon />
-      <audio v-else :key="previewAsset.url" :src="previewAsset.url" :aria-label="previewAsset.name" controls preload="metadata" @error="previewError = translate('音频无法播放，文件可能已损坏或当前浏览器不支持其编码。')" />
+      <audio v-else :src="mediaSrc" :aria-label="previewAsset.name" controls preload="auto" @loadeddata="handleLoaded" @error="handleError" />
+      <p v-if="preparing" role="status">正在生成兼容预览…</p>
     </div>
   </el-card>
 
+  <input ref="fileInput" type="file" multiple hidden aria-label="选择本地素材" :disabled="uploading" @change="uploadFiles" />
   <assetMenu v-if="visible" ref="assetMenuRef" :entries="entries" @changed="refreshAssets" />
 
-  <el-image-viewer v-if="previewAsset?.kind === 'image'" :urlList="[previewAsset.url]" teleported @close="previewAsset = undefined" />
+  <el-image-viewer v-if="previewAsset?.kind === 'image'" :urlList="[mediaSrc]" teleported @error="handleError" @close="previewAsset = undefined" />
 
   <el-dialog :modelValue="previewAsset?.kind === 'video'" :title="previewAsset?.name" width="min(800px, calc(100vw - 32px))" alignCenter appendToBody destroyOnClose @update:modelValue="previewAsset = undefined">
     <div v-if="previewAsset?.kind === 'video'" class="assetPreview">
       <el-alert v-if="previewError" :title="previewError" type="error" :closable="false" showIcon />
-      <video v-else :key="previewAsset.url" class="previewVideo" :src="previewAsset.url" :aria-label="previewAsset.name" controls playsinline preload="metadata" @error="previewError = translate('视频无法播放，文件可能已损坏或当前浏览器不支持其编码。')" />
+      <video v-else class="previewVideo" :src="mediaSrc" :aria-label="previewAsset.name" controls playsinline preload="auto" @loadeddata="handleLoaded" @error="handleError" />
+      <p v-if="preparing" role="status">正在生成兼容预览…</p>
     </div>
   </el-dialog>
 
   <el-dialog v-if="expanded" :modelValue="previewAsset?.kind === 'audio'" :title="previewAsset?.name" width="min(560px, calc(100vw - 32px))" alignCenter appendToBody destroyOnClose @update:modelValue="previewAsset = undefined">
     <div v-if="previewAsset?.kind === 'audio'" class="assetPreview">
       <el-alert v-if="previewError" :title="previewError" type="error" :closable="false" showIcon />
-      <audio v-else :key="previewAsset.url" class="previewAudio" :src="previewAsset.url" :aria-label="previewAsset.name" controls preload="metadata" @error="previewError = translate('音频无法播放，文件可能已损坏或当前浏览器不支持其编码。')" />
+      <audio v-else class="previewAudio" :src="mediaSrc" :aria-label="previewAsset.name" controls preload="auto" @loadeddata="handleLoaded" @error="handleError" />
+      <p v-if="preparing" role="status">正在生成兼容预览…</p>
     </div>
   </el-dialog>
 
@@ -95,9 +98,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import axios from "axios";
-import { translate } from "@toonflow/i18n/vue";
+import { t } from "@toonflow/i18n/vue";
 import { ElMessage, ElTree, type InputInstance, type TreeNodeData } from "element-plus";
-import { IconChevronRight, IconDots, IconEye, IconFile, IconFolder, IconFolderOpen, IconFolderPlus, IconMusic, IconPhoto, IconSearch, IconVideo, IconX } from "@tabler/icons-vue";
+import { IconChevronRight, IconDots, IconEye, IconFile, IconFolder, IconFolderOpen, IconFolderPlus, IconMusic, IconPhoto, IconSearch, IconUpload, IconVideo, IconX } from "@tabler/icons-vue";
 import type { NodeOutput } from "@toonflow/nodes-scaffold/values";
 import { mentionAssetType } from "@toonflow/server/agent/mentionSources";
 import mentionThumbnail from "@/components/agent/mentionThumbnail.vue";
@@ -105,6 +108,8 @@ import { startAssetDrag } from "../canvasDrop";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import assetMenu from "./assetMenu.vue";
 import assetBrowser from "./assetBrowser.vue";
+import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
+import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
 
 type AssetEntry = { name: string; path: string; type: "file" | "directory"; children?: AssetEntry[]; draft?: boolean };
 type AssetOutput = { label: string; output: NodeOutput };
@@ -116,6 +121,8 @@ const saveVisible = ref(false);
 const saving = ref(false);
 const entries = ref<AssetEntry[]>([]);
 const loading = ref(false);
+const uploading = ref(false);
+const fileInput = ref<HTMLInputElement>();
 const folder = ref(".");
 const assetName = ref("");
 const assetNameInput = ref<InputInstance>();
@@ -131,7 +138,8 @@ const newFolderName = ref("");
 const folderSaving = ref(false);
 const assetMenuRef = ref<InstanceType<typeof assetMenu>>();
 const previewAsset = ref<{ name: string; url: string; kind: "image" | "audio" | "video" }>();
-const previewError = ref("");
+const { src: mediaSrc, preparing, error: previewError, handleError, handleLoaded } = useMediaPreview(() => previewAsset.value?.url, () => previewAsset.value?.kind ?? "image");
+watch(previewError, error => { if (error && previewAsset.value?.kind === "image") ElMessage.error(error); });
 let loadRequest = 0;
 onBeforeUnmount(() => { loadRequest++; });
 
@@ -141,9 +149,10 @@ function assetUrl(path: string) {
 
 function mediaKind(entry: AssetEntry) {
   if (entry.type !== "file" || entry.draft) return;
-  if (/\.(avif|apng|bmp|gif|ico|jpe?g|png|svg|webp)$/i.test(entry.name)) return "image";
-  if (/\.(mp3|wav|ogg|opus|flac|m4a|aac)$/i.test(entry.name)) return "audio";
-  if (/\.(mp4|m4v|webm|mov|mkv|avi|ogv)$/i.test(entry.name)) return "video";
+  const mimeType = getMediaMimeType({ name: entry.name, type: "" });
+  if (mimeType === "audio/pcm") return;
+  const kind = mimeType.split("/")[0];
+  if (kind === "image" || kind === "video" || kind === "audio") return kind;
 }
 
 function openPreview(entry: AssetEntry) {
@@ -245,8 +254,37 @@ async function loadEntries() {
   }
 }
 
-function showError(error: unknown) {
-  ElMessage.error(axios.isAxiosError<{ message: string }>(error) ? error.response?.data.message || error.message : (error as Error).message);
+function showError(error: unknown, name?: string) {
+  const message = axios.isAxiosError<{ message: string }>(error) ? error.response?.data.message || error.message : (error as Error).message;
+  ElMessage.error(name ? `${name}：${message}` : message);
+}
+
+async function uploadFiles(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const files = Array.from(input.files ?? []);
+  input.value = "";
+  if (!files.length || uploading.value) return;
+  const directory = folder.value;
+  let uploaded = 0;
+  uploading.value = true;
+  try {
+    for (const file of files) {
+      try {
+        if (file.size > 100 * 1024 * 1024) throw new Error("素材文件不能超过 100 MB");
+        const path = directory === "." ? file.name : `${directory}/${file.name}`;
+        await axios.put("/api/assets/save", file, { params: { path }, headers: { "Content-Type": "application/octet-stream" } });
+        uploaded++;
+      } catch (error) {
+        showError(error, file.name);
+      }
+    }
+    if (uploaded) {
+      ElMessage.success(t`已上传 ${uploaded} 个素材`);
+      await refreshAssets();
+    }
+  } finally {
+    uploading.value = false;
+  }
 }
 
 watch(visible, opened => {

@@ -433,98 +433,7 @@ These costs are the recorded figures for this example and are provided for refer
 
 ---
 
-## 6. 🚀 TF-Router Official Model Gateway
-
-<p align="center">
-  <a href="https://api.toonflow.net/">
-    <img src="https://img.shields.io/badge/TF--Router_Official%20Model%20Gateway-181717?style=for-the-badge&logoColor=white" alt="TF-Router" />
-  </a>
-</p>
-
-TF-Router is Toonflow's official, self-operated model gateway. You are welcome to use it. Its entire source code is open source and available for self-hosting and auditing: [HBAI-Ltd/TF-Router](https://github.com/HBAI-Ltd/TF-Router).
-
-<details>
-<summary><strong>A Letter to the Toonflow Community (published 2026-06-08)</strong></summary>
-
-> ### A Letter to the Toonflow Community
-> 130 days.
-> Not long, but long enough for us to see some things clearly.
-> From our first line of committed code to today, 130 days have passed. We have released 20 versions, made 800+ commits, and written 213,765 lines of code containing 640,810 characters.
-> Two rewrites, a provider system, and a workflow we are proud of.
-> We thought that would be enough.
-> But it was not.
-> Some people told us they wanted to add their own module to Toonflow, but still could not figure out how to change it after hours of trying.
-> Some told us the community was too small and they could not find help when they ran into problems.
-> Some told us the commercial terms prevented them from putting their projects into use.
-> We heard you.
-> Over these 130 days, our team members have taken turns staying in the chat groups, answering every question 7×24. No sponsors, no subsidies: we have paid all the labor costs ourselves.
-> Not because we have a lot of money.
-> But because we believe this is worth doing.
-> So we have decided to undertake a third rewrite.
-> Every Toonflow rewrite has moved toward greater openness and open source.
-> This time, we have chosen to open everything up.
->
-> 1. MIT License
-> We have decided to replace Apache-2.0 with the MIT License and remove all additional commercial terms once the rewrite is complete.
-> It will be fully open, with no commercial restrictions.
-> You can use it for anything.
->
-> 2. A Fully Flexible Plugin System
-> We will redesign the entire plugin architecture.
-> Storyboards, panoramas, timelines, even mini-games.
-> If you can imagine it, you can add it.
-> Not through hacks, but by design.
->
-> 3. Drizzle ORM + Multiple Database Support
-> We will upgrade to Drizzle ORM.
-> Local storage, PostgreSQL, or MySQL: choose what you need.
-> Custom development will no longer be a nightmare.
->
-> 4. An End-to-End Monorepo Workflow
-> Plugin development, SDK integration, and releases, all connected.
-> Making contribution simple enough for one person to manage.
->
-> 5. New Modules
-> Infinite Canvas — more than space: freedom.
-> Inspiration Mode — built for creators.
-> Plugin Hub — helping great plugins get discovered.
-> Skill Hub — making experience shareable.
-> Provider Hub — where the ecosystem begins.
-> Complete Docker integration — making deployment accessible.
->
-> Now, something we have been reluctant to talk about.
-> Rewrites take time. During that time, the servers keep running, domains need renewing, the team works late, and coffee gets more expensive.
-> We have no investment funding, no advertising, and no hidden commercial plans.
-> But we need to stay afloat to finish what we have started.
-> That is why we launched TF-Router, the official Toonflow model gateway.
-> Honestly, we hesitated over this platform for a long time.
-> It was not something we wanted to build. We did not want a gateway to make people feel that Toonflow had started “cashing in.”
-> We carried that burden for a long time.
-> But many users could not get approved access to Seedance 2.0 and kept asking us whether there was a way to use it.
-> After much thought, we finally decided to build one ourselves and signed an annual Seedance framework agreement with Volcengine.
-> **We also decided to offer Seedance 2.0 at cost during the platform's promotional period, without earning a single cent in markup.**
-> After the promotion ends, we will charge a very small service fee. For now, our priority is to give you access.
-> More importantly, the entire TF-Router source code has been released as open source: 【<a href="https://github.com/HBAI-Ltd/TF-Router" target="_blank">Source Code</a>】.
-> Do not trust us? That is fine. Read the code, deploy it yourself, and run it yourself.
-> That is where we stand.
-> If you choose to try it, you are placing your trust in the only way we currently have to keep this work going.
-> If you do not, that is fine too. Keep using Toonflow, keep criticizing us, and keep asking for features.
-> We are here.
-> One last thing, from the heart:
-> We are just a group of ordinary people who believe that creative tools should belong to everyone.
-> Toonflow has never been just our product.
-> It is the story we are writing together.
-> The third rewrite is not the finish line.
-> It is where we start again.
-> Thank you to everyone who has used it, criticized it, or offered suggestions.
-> You are the reason it has made it this far.
-> Thank you.
-
-</details>
-
----
-
-## 7. 👨‍👩‍👧‍👦 WeChat Community
+## 6. 👨‍👩‍👧‍👦 WeChat Community
 
 Scan the QR code to contact the group invitation assistant:
 
@@ -538,13 +447,13 @@ Or use the invitation link: [https://discord.gg/HEjKmpNpAZ](https://discord.gg/H
 
 ---
 
-## 8. 💌 Contact Us
+## 7. 💌 Contact Us
 
 📧 Email: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow咨询)
 
 ---
 
-## 9. 📜 Open-Source License
+## 8. 📜 Open-Source License
 
 Toonflow is licensed under the [MIT License](../../LICENSE). Third-party dependencies and assets remain subject to their respective licenses and copyright notices.
 
@@ -554,7 +463,7 @@ Toonflow is licensed under the [MIT License](../../LICENSE). Third-party depende
 
 ---
 
-## 10. 🙏 Acknowledgments
+## 9. 🙏 Acknowledgments
 
 - **Partners**: 算能云, Tencent Hunyuan 3D, and AI Galaxy (智星云).
 - **Project contributors**: Thank you to everyone who has contributed code, improved documentation, shared plugins, and helped troubleshoot issues.

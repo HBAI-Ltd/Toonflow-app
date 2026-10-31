@@ -410,98 +410,7 @@ Bu maliyetler bu örnek için kaydedilen tutarlardır ve yalnızca fikir vermek 
 
 ---
 
-## 6. 🚀 TF-Router Resmî Model Ağ Geçidi
-
-<p align="center">
-  <a href="https://api.toonflow.net/">
-    <img src="https://img.shields.io/badge/TF--Router_Official%20Model%20Gateway-181717?style=for-the-badge&logoColor=white" alt="TF-Router" />
-  </a>
-</p>
-
-TF-Router, Toonflow’un bizzat işlettiğimiz resmî model ağ geçididir. Kullanmanızı memnuniyetle karşılarız. Kaynak kodunun tamamı açıktır; kendiniz barındırabilir ve denetleyebilirsiniz: [HBAI-Ltd/TF-Router](https://github.com/HBAI-Ltd/TF-Router).
-
-<details>
-<summary><strong>Toonflow Topluluğuna Bir Mektup (yayımlanma: 2026-06-08)</strong></summary>
-
-> ### Toonflow Topluluğuna Bir Mektup
-> 130 gün.
-> Uzun bir süre değil, ama bazı şeyleri açıkça görmemize yetecek kadar uzun.
-> İlk kod satırımızı depoya gönderdiğimiz günden bugüne 130 gün geçti. 20 sürüm yayımladık, 800’den fazla commit yaptık ve 640,810 karakter içeren 213,765 satır kod yazdık.
-> İki yeniden yazım, bir sağlayıcı sistemi ve gurur duyduğumuz bir iş akışı.
-> Bunların yeterli olacağını düşünmüştük.
-> Ama olmadı.
-> Bazıları Toonflow’a kendi modülünü eklemek istediğini, ancak saatlerce uğraştıktan sonra bile kodu nasıl değiştireceğini anlayamadığını söyledi.
-> Bazıları topluluğun çok küçük olduğunu ve sorun yaşadığında yardım bulamadığını söyledi.
-> Bazıları da ticari koşullar yüzünden projelerini kullanıma alamadığını anlattı.
-> Sizi duyduk.
-> Bu 130 gün boyunca ekip üyelerimiz sohbet gruplarında nöbetleşe yer alarak her soruyu 7×24 yanıtladı. Sponsor yok, destek ödeneği yok; tüm emek maliyetini kendimiz karşıladık.
-> Çok paramız olduğundan değil.
-> Bu işi yapmaya değer bulduğumuzdan.
-> Bu yüzden üçüncü bir yeniden yazıma karar verdik.
-> Toonflow’un her yeniden yazımı daha fazla açıklığa ve açık kaynağa doğru ilerledi.
-> Bu kez her şeyi açmayı seçtik.
->
-> 1. MIT License
-> Yeniden yazım tamamlandığında Apache-2.0 yerine MIT License’a geçmeye ve ek ticari koşulların tümünü kaldırmaya karar verdik.
-> Ticari kısıtlama olmadan tamamen açık olacak.
-> Her amaçla kullanabileceksiniz.
->
-> 2. Tamamen Esnek Bir Eklenti Sistemi
-> Eklenti mimarisinin tamamını yeniden tasarlayacağız.
-> Hikâye panoları, panoramalar, zaman çizelgeleri, hatta küçük oyunlar.
-> Hayal edebiliyorsanız ekleyebileceksiniz.
-> Geçici çözümlerle değil, tasarımın sunduğu olanaklarla.
->
-> 3. Drizzle ORM ve Birden Çok Veritabanı Desteği
-> Drizzle ORM’ye geçeceğiz.
-> Yerel depolama, PostgreSQL veya MySQL; ihtiyacınız olanı seçin.
-> Özel geliştirme artık bir kâbus olmayacak.
->
-> 4. Uçtan Uca Monorepo İş Akışı
-> Eklenti geliştirme, SDK entegrasyonu ve sürüm yayımlama birbiriyle bağlantılı olacak.
-> Katkıda bulunmak, tek kişinin yönetebileceği kadar kolaylaşacak.
->
-> 5. Yeni Modüller
-> Sonsuz Tuval: yalnızca alan değil, özgürlük.
-> İlham Modu: yaratıcılar için tasarlandı.
-> Eklenti Merkezi: iyi eklentilerin keşfedilmesine yardımcı olacak.
-> Beceri Merkezi: deneyimi paylaşılabilir kılacak.
-> Sağlayıcı Merkezi: ekosistemin başladığı yer.
-> Tam Docker entegrasyonu: kurulumu herkes için erişilebilir kılacak.
->
-> Şimdi, konuşmaktan uzun süredir çekindiğimiz bir konu var.
-> Yeniden yazım zaman alıyor. Bu sırada sunucular çalışmaya devam ediyor, alan adlarının yenilenmesi gerekiyor, ekip gecelere kadar çalışıyor ve kahve pahalanıyor.
-> Yatırımımız, reklamımız veya gizli ticari planlarımız yok.
-> Ama başladığımız işi bitirmek için ayakta kalmamız gerekiyor.
-> Bu nedenle Toonflow’un resmî model ağ geçidi TF-Router’ı hayata geçirdik.
-> Açıkçası bu platform konusunda uzun süre tereddüt ettik.
-> Yapmak istediğimiz bir şey değildi. Bir ağ geçidi yüzünden insanların Toonflow’un artık “işi paraya döktüğünü” düşünmesini istemedik.
-> Bu yükü uzun süre taşıdık.
-> Fakat birçok kullanıcı Seedance 2.0 için onaylı erişim alamıyor, bize sürekli onu kullanmanın bir yolu olup olmadığını soruyordu.
-> Uzun süre düşündükten sonra sonunda kendimiz bir platform kurmaya karar verdik ve Volcengine ile yıllık bir Seedance çerçeve anlaşması imzaladık.
-> **Ayrıca platformun tanıtım döneminde Seedance 2.0’ı maliyetine, üzerine tek kuruş kâr koymadan sunmaya karar verdik.**
-> Tanıtım dönemi bitince çok küçük bir hizmet bedeli alacağız. Şimdilik önceliğimiz size erişim sağlamak.
-> Daha da önemlisi, TF-Router’ın kaynak kodunun tamamı açık kaynak olarak yayımlandı: 【<a href="https://github.com/HBAI-Ltd/TF-Router" target="_blank">Kaynak Kod</a>】.
-> Bize güvenmiyor musunuz? Sorun değil. Kodu okuyun, kendiniz kurun ve kendiniz çalıştırın.
-> Duruşumuz bu.
-> Denemeyi seçerseniz, şu anda bu işi sürdürebilmek için sahip olduğumuz tek yola güveninizi vermiş olacaksınız.
-> Seçmezseniz de sorun yok. Toonflow’u kullanmaya, bizi eleştirmeye ve özellik istemeye devam edin.
-> Buradayız.
-> Son olarak içten bir söz:
-> Biz, yaratıcı araçların herkese ait olması gerektiğine inanan sıradan bir grup insanız.
-> Toonflow hiçbir zaman yalnızca bizim ürünümüz olmadı.
-> Birlikte yazdığımız hikâye oldu.
-> Üçüncü yeniden yazım bitiş çizgisi değil.
-> Yeniden başladığımız nokta.
-> Kullanan, eleştiren veya öneri sunan herkese teşekkür ederiz.
-> Bu noktaya gelmesinin nedeni sizsiniz.
-> Teşekkürler.
-
-</details>
-
----
-
-## 7. 👨‍👩‍👧‍👦 WeChat Topluluğu
+## 6. 👨‍👩‍👧‍👦 WeChat Topluluğu
 
 Gruba davet asistanıyla iletişime geçmek için QR kodunu tarayın:
 
@@ -515,13 +424,13 @@ Veya davet bağlantısını kullanın: [https://discord.gg/HEjKmpNpAZ](https://d
 
 ---
 
-## 8. 💌 Bize Ulaşın
+## 7. 💌 Bize Ulaşın
 
 📧 E-posta: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow咨询)
 
 ---
 
-## 9. 📜 Açık Kaynak Lisansı
+## 8. 📜 Açık Kaynak Lisansı
 
 Toonflow, [MIT License](../../LICENSE) kapsamında lisanslanmıştır. Üçüncü taraf bağımlılıklar ve varlıklar kendi lisanslarına ve telif hakkı bildirimlerine tabi olmaya devam eder.
 
@@ -531,7 +440,7 @@ Toonflow, [MIT License](../../LICENSE) kapsamında lisanslanmıştır. Üçünc�
 
 ---
 
-## 10. 🙏 Teşekkürler
+## 9. 🙏 Teşekkürler
 
 - **İş ortakları**: 算能云, Tencent Hunyuan 3D ve AI Galaxy (智星云).
 - **Projeye katkıda bulunanlar**: Kod yazan, belgeleri iyileştiren, eklenti paylaşan ve sorunları çözmeye yardımcı olan herkese teşekkür ederiz.

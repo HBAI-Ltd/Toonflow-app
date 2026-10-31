@@ -1,21 +1,19 @@
 <template>
   <div v-if="loaded" class="providerList">
     <div class="itemList">
-      <el-card v-for="item in sortedProviders" :key="item.fileName" class="providerItem" shadow="never">
+      <el-card v-for="item in visibleProviders" :key="item.fileName" class="providerItem" shadow="never">
         <div class="providerHeader">
-          <div v-if="item.icon || item.id.toLowerCase() === 'tfrouter'" class="providerMark" aria-hidden="true">
-            <img class="providerLogo" :class="{ monochrome: item.id.toLowerCase() === 'tfrouter' }" :src="item.icon || logoUrl" alt="" />
+          <div v-if="item.icon" class="providerMark" aria-hidden="true">
+            <img class="providerLogo" :src="item.icon" alt="" />
           </div>
           <div class="providerInfo">
             <div class="providerHeading">
               <el-text class="providerName" tag="strong">{{ item.label }}</el-text>
-              <el-tag v-if="item.id.toLowerCase() === 'tfrouter'" size="small">官方</el-tag>
             </div>
             <el-text class="providerId" size="small" type="info" :title="item.fileName">{{ item.fileName }}</el-text>
           </div>
         </div>
         <el-alert v-if="item.loadError" :title="item.loadError" type="error" :closable="false" showIcon />
-        <tfAccount v-if="item.id.toLowerCase() === 'tfrouter'" :apiKey="getProviderApiKey(item.id)" :visible="visible" :saveApiKey="(key) => saveProviderApiKey(item.id, key)" />
         <div class="providerFooter">
           <div class="providerMeta">
             <el-tag v-if="item.version" size="small" type="info" effect="plain">v{{ item.version }}</el-tag>
@@ -24,6 +22,7 @@
           <el-space class="itemActions" wrap>
             <el-button v-if="item.modelsUrl" text :icon="IconDownload" :loading="fetchingFile === item.fileName" :disabled="!!fetchingFile || !!deletingFile || !!item.loadError || !item.revision" @click="fetchModels(item)">获取模型</el-button>
             <el-button text :icon="IconEdit" :disabled="!!fetchingFile || !!deletingFile || !!item.loadError" @click="editProvider(item)">编辑模型</el-button>
+            <el-button text :icon="IconCode" :disabled="!!fetchingFile || !!deletingFile || !item.revision" @click="editProviderCode(item)">编辑代码</el-button>
             <el-popconfirm title="确定删除此供应商及其模型？" confirmButtonText="删除" cancelButtonText="取消" @confirm="deleteProvider(item)">
               <template #reference><el-button text type="danger" :icon="IconTrash" :loading="deletingFile === item.fileName" :disabled="!!fetchingFile || !!deletingFile || !item.revision">删除</el-button></template>
             </el-popconfirm>
@@ -35,7 +34,7 @@
       <el-button class="addButton" :icon="IconPlus" @click="openAdd('builtin')">添加供应商</el-button>
       <el-button class="addButton" :icon="IconSettings" @click="openAdd('custom')">添加自定义供应商</el-button>
     </div>
-    <component :is="mediaProviderDialog" v-model="providerDialogVisible" :mode="addMode" @added="saveProviderItem" />
+    <component :is="mediaProviderDialog" v-model="providerDialogVisible" :mode="addMode" :provider="editingSourceProvider" @added="saveProviderItem" @saved="saveProviderItem" />
     <component :is="editProviderDialog" v-model="editorVisible" :provider="editingProvider" @saved="saveProviderItem" />
   </div>
 </template>
@@ -45,42 +44,25 @@ import { translate } from "@toonflow/i18n/vue";
 import axios from "axios";
 import { computed, defineAsyncComponent, onMounted, onBeforeUnmount, ref, shallowRef, type Component } from "vue";
 import { ElMessage } from "element-plus";
-import { IconPlus, IconSettings, IconEdit, IconTrash, IconDownload } from "@tabler/icons-vue";
-import logoUrl from "@toonflow/assets/logo.svg";
+import { IconPlus, IconSettings, IconEdit, IconTrash, IconDownload, IconCode } from "@tabler/icons-vue";
 import type { MediaProvider } from "./types";
-import { settings, saveSettings } from "@/stores/settings";
+import { saveSettings } from "@/stores/settings";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
-import tfAccount from "../../tfAccount.vue";
 
-const { visible = true } = defineProps<{ visible?: boolean }>();
+defineProps<{ visible?: boolean }>();
 const mediaProviderDialog = shallowRef<Component>();
 const editProviderDialog = shallowRef<Component>();
 const providers = ref<MediaProvider[]>([]);
-const sortedProviders = computed(() => [...providers.value].sort((a, b) => Number(b.id.toLowerCase() === "tfrouter") - Number(a.id.toLowerCase() === "tfrouter")));
+const visibleProviders = computed(() => providers.value.filter(item => item.id !== "toonflow"));
 const loaded = ref(false);
 const providerDialogVisible = ref(false);
 const editorVisible = ref(false);
 const addMode = ref<"builtin" | "custom">("builtin");
 const editingProvider = ref<MediaProvider>();
+const editingSourceProvider = ref<MediaProvider>();
 const deletingFile = ref("");
 const fetchingFile = ref("");
 let loadRequest = 0;
-
-function getProviderApiKey(id: string) {
-  const configs = settings.value.mediaProviderConfigs as Record<string, { apiKey?: unknown }> | undefined;
-  const apiKey = configs?.[id]?.apiKey;
-  return typeof apiKey === "string" ? apiKey : "";
-}
-
-async function saveProviderApiKey(id: string, key: string) {
-  await saveSettings(settings => {
-    const configs = settings.mediaProviderConfigs;
-    const current = configs && typeof configs === "object" && !Array.isArray(configs) ? configs as Record<string, unknown> : {};
-    const existing = current[id];
-    const config = existing && typeof existing === "object" && !Array.isArray(existing) ? existing as Record<string, unknown> : {};
-    return { mediaProviderConfigs: { ...current, [id]: { ...config, apiKey: key } } };
-  });
-}
 
 function refreshInstalled(event: WindowEventMap["toonflow:plugin-installed"]) {
   if (event.detail.type === "provider") void loadProviders();
@@ -108,8 +90,15 @@ async function loadProviders() {
 
 function openAdd(mode: "builtin" | "custom") {
   mediaProviderDialog.value ??= defineAsyncComponent(() => import("./addCustomProviderDialog.vue"));
+  editingSourceProvider.value = undefined;
   addMode.value = mode;
   providerDialogVisible.value = true;
+}
+
+function editProviderCode(provider: MediaProvider) {
+  if (fetchingFile.value || deletingFile.value || !provider.revision) return;
+  openAdd("custom");
+  editingSourceProvider.value = provider;
 }
 
 function editProvider(provider: MediaProvider) {

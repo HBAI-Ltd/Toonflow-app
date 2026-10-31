@@ -7,6 +7,18 @@ ManifestDPIAware true
 SetFont "Microsoft YaHei UI" 9
 
 !define appName "Toonflow"
+VIProductVersion "${appVersion}.0"
+VIFileVersion "${appVersion}.0"
+VIAddVersionKey /LANG=2052 "ProductName" "${appName}"
+VIAddVersionKey /LANG=2052 "CompanyName" "HBAI-Ltd"
+VIAddVersionKey /LANG=2052 "FileDescription" "Toonflow 安装程序"
+VIAddVersionKey /LANG=2052 "FileVersion" "${appVersion}.0"
+VIAddVersionKey /LANG=2052 "ProductVersion" "${appVersion}"
+VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) HBAI-Ltd"
+; ACT: 编译时签署内嵌卸载器；不运行安装包来提取卸载器，签名失败即停止。
+!ifdef windowsSignCommand
+  !uninstfinalize '${windowsSignCommand} "%1"' = 0
+!endif
 !define uninstallKey "Software\Microsoft\Windows\CurrentVersion\Uninstall\${appIdentifier}.stable"
 Var removeUserData
 Var removeUserDataCheckbox
@@ -139,7 +151,7 @@ installApp:
   File "/oname=$PLUGINSDIR\updateHelper.exe" "${updateHelper}"
   IfErrors installFailed
   DetailPrint "正在检查解压工具，缺失时将从 7-Zip 官方下载。"
-  nsExec::ExecToStack /TIMEOUT=720000 '"$PLUGINSDIR\updateHelper.exe" --ensure-archive-tool "$INSTDIR" --quiet'
+  nsExec::ExecToStack /TIMEOUT=720000 '"$PLUGINSDIR\updateHelper.exe" --ensure-archive-tool "$INSTDIR" --quiet --utf16'
   Pop $0
   Pop $1
   ${If} $0 != 0
@@ -176,7 +188,7 @@ installApp:
     RMDir /r "$INSTDIR\app\Resources\app\providers"
   IfErrors installFailed
   ; ACT: 仅打包一份 tar，释放应用后保留原文件作为增量更新基线。
-  nsExec::ExecToStack '"$PLUGINSDIR\updateHelper.exe" --extract-install "$INSTDIR" "$INSTDIR\self-extraction\${appHash}.tar" --quiet'
+  nsExec::ExecToStack '"$PLUGINSDIR\updateHelper.exe" --extract-install "$INSTDIR" "$INSTDIR\self-extraction\${appHash}.tar" --quiet --utf16'
   Pop $0
   Pop $1
   ${If} $0 != 0

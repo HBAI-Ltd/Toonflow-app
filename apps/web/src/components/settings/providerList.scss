@@ -20,12 +20,6 @@
             width: 24px;
             height: 24px;
             object-fit: contain;
-
-            &.monochrome {
-              .dark & {
-                filter: invert(1);
-              }
-            }
           }
         }
 

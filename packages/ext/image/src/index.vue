@@ -7,9 +7,10 @@
       <el-button text size="small" :disabled="!imageUrl" @click="fit = false; zoom = 1">原始大小</el-button>
       <el-button text size="small" :disabled="!imageUrl" :aria-pressed="fit" @click="fit = true">适应窗口</el-button>
     </header>
-    <div ref="viewport" class="imagePreview" :aria-busy="loading" @wheel="onWheel">
-      <img v-if="imageUrl" :src="imageUrl" :alt="context.resource.label" :style="naturalWidth ? { width: `${naturalWidth * scale}px`, height: `${naturalHeight * scale}px` } : undefined" @load="imageLoaded" @error="showImageError" />
-      <div v-if="error" class="imageError" role="alert">{{ error }}</div>
+    <div ref="viewport" class="imagePreview" :aria-busy="loading || preparingPreview" @wheel="onWheel">
+      <img v-if="previewSrc && !previewError" :src="previewSrc" :alt="context.resource.label" :style="naturalWidth ? { width: `${naturalWidth * scale}px`, height: `${naturalHeight * scale}px` } : undefined" @load="imageLoaded" @error="handleError" />
+      <div v-if="preparingPreview" class="imageStatus" role="status">正在生成兼容预览…</div>
+      <div v-else-if="error || previewError" class="imageError" role="alert">{{ error || previewError }}</div>
     </div>
   </section>
 </template>
@@ -18,10 +19,12 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { ElButton } from "element-plus";
 import type { ExtContext } from "@toonflow/ext-scaffold/runtime";
+import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
 
 const props = defineProps<{ context: ExtContext }>();
 const viewport = ref<HTMLElement>();
 const imageUrl = ref("");
+const { src: previewSrc, preparing: preparingPreview, error: previewError, handleError, handleLoaded } = useMediaPreview(imageUrl, "image");
 const error = ref("");
 const loading = ref(false);
 const fit = ref(props.context.config.fitToWindow !== false);
@@ -38,16 +41,13 @@ onBeforeUnmount(() => observer.disconnect());
 
 function imageLoaded(event: Event) {
   const image = event.target as HTMLImageElement;
+  if (image.currentSrc !== previewSrc.value) return;
+  handleLoaded(event);
   naturalWidth.value = image.naturalWidth;
   naturalHeight.value = image.naturalHeight;
 }
 function changeZoom(factor: number) { zoom.value = Math.max(0.1, Math.min(8, scale.value * factor)); fit.value = false; }
 function onWheel(event: WheelEvent) { if (event.ctrlKey || event.metaKey) { event.preventDefault(); changeZoom(event.deltaY < 0 ? 1.1 : 1 / 1.1); } }
-
-function showImageError() {
-  imageUrl.value = "";
-  error.value = `无法预览图片：${props.context.resource.label}`;
-}
 
 watch(() => [props.context.resource.directory, props.context.resource.path], async (_resource, _previous, onCleanup) => {
   let cancelled = false;
@@ -83,6 +83,7 @@ watch(() => [props.context.resource.directory, props.context.resource.path], asy
   .imagePreview {
     box-sizing: border-box; display: flex; flex: 1; min-height: 0; padding: 24px; overflow: auto;
     img { display: block; flex-shrink: 0; margin: auto; max-width: none; object-fit: contain; }
+    .imageStatus { margin: auto; color: var(--el-text-color-secondary); font-size: 14px; }
     .imageError { margin: auto; color: var(--el-color-danger); font-size: 14px; }
   }
 }

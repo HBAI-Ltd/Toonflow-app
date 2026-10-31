@@ -9,7 +9,7 @@ import { t } from "@/lib/i18n";
 
 const require = createRequire(import.meta.url);
 
-export async function installTeam(fileName: string, bytes: Uint8Array, force = false) {
+export async function installTeam(fileName: string, bytes: Uint8Array, force = false, marketVersion?: string) {
   if (!/^[a-z][a-zA-Z0-9]*\.agent\.zip$/.test(fileName) || fileName.length > 128) {
     throw Object.assign(new Error("请选择小驼峰命名的 .agent.zip 团队包"), { status: 400 });
   }
@@ -49,7 +49,7 @@ export async function installTeam(fileName: string, bytes: Uint8Array, force = f
         }
         let version: unknown;
         try { version = JSON.parse(decodeText(previous.files.get("team.json")!)).version; } catch { /* 版本缺失由共用升级检查提示。 */ }
-        requireNewerVersion(version, manifest.version, t`团队“${name}”`);
+        requireNewerVersion(version, marketVersion ?? manifest.version, t`团队“${name}”`);
       }
       temporary = await mkdtemp(resolve(root, ".agentInstall"));
       const staged = resolve(temporary, "new");

@@ -7,7 +7,7 @@ import type { AgentImageReference } from "@/agent/runtime/imageAttachments";
 import { getAgentTaskId } from "@/agent/runtime/sessions";
 import { getRequestFiles, type RequestFile } from "@/utils/ai/requestFiles";
 import { createFileTransport, FileRequestLimitError } from "@/utils/ai/files";
-import conf from "@/utils/conf";
+import { getConfiguredProviders } from "@/utils/ai";
 import { t } from "@/lib/i18n";
 
 function contentHash(value: unknown) {
@@ -84,10 +84,12 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
       try {
         options?.signal?.throwIfAborted();
         if (toolFailure) { const { error } = toolFailure; toolFailure = undefined; throw error; }
-        const providers = conf.get("settings", {}).customProviders;
-        const provider = Array.isArray(providers) ? providers.find(item => item?.id === model.provider) : undefined;
+        const provider = getConfiguredProviders().find(item => item?.id === model.provider);
         const auth = await session.modelRuntime.getAuth(model, { apiKey: options?.apiKey, env: options?.env, signal: options?.signal });
         const apiKey = options?.apiKey ?? auth?.auth.apiKey;
+        if (model.provider.toLowerCase() === "toonflow" && (!provider || provider.apiKey !== apiKey)) {
+          throw new Error("Toonflow 账号已变更，请重新发起请求");
+        }
         const files = createFileTransport({
           apiUrl: auth?.auth.baseUrl ?? model.baseUrl,
           apiKey: apiKey ?? "",

@@ -114,7 +114,7 @@ export function decodeText(bytes: Uint8Array) {
   catch { return invalid("插件文本内容不是有效的 UTF-8 编码，请检查文件编码后重新上传"); }
 }
 
-export async function installNode(fileName: string, source: string, force = false) {
+export async function installNode(fileName: string, source: string, force = false, marketVersion?: string) {
   if (!/^[a-z][a-zA-Z0-9]*\.umd\.js$/.test(fileName)) invalid("文件名需为小驼峰格式，例如 imageNode.umd.js");
   if (!source.trim()) invalid("节点文件内容为空，请重新上传节点脚本");
   if (Buffer.byteLength(source, "utf8") > maxBytes) invalid("节点文件不能超过 20 MB", 413);
@@ -135,14 +135,14 @@ export async function installNode(fileName: string, source: string, force = fals
   try {
     const current = await lstat(path).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
     if (current && !current.isFile()) invalid("现有节点必须是普通文件", 403);
-    if (current && !force) requireNewerVersion(current.size <= maxBytes ? nodeVersion(await readFile(path, "utf8")) : undefined, nodeVersion(source), t`节点“${name}”`);
+    if (current && !force) requireNewerVersion(current.size <= maxBytes ? nodeVersion(await readFile(path, "utf8")) : undefined, marketVersion ?? nodeVersion(source), t`节点“${name}”`);
     await writeWorkspaceFile(path, source, !current);
     recordInstalledAt("node", name);
   } finally { release(); }
   return { name };
 }
 
-export async function installExt(fileName: string, source: string, force = false) {
+export async function installExt(fileName: string, source: string, force = false, marketVersion?: string) {
   if (!/^ext-[a-z][a-zA-Z0-9]*\.umd\.js$/.test(fileName)) invalid("文件名需为 ext-小驼峰格式，例如 ext-image.umd.js");
   if (!source.trim()) invalid("文件扩展内容为空，请重新上传扩展脚本");
   if (Buffer.byteLength(source, "utf8") > maxBytes) invalid("文件扩展不能超过 20 MB", 413);
@@ -164,7 +164,7 @@ export async function installExt(fileName: string, source: string, force = false
       let version: string | undefined;
       try { if (current.size <= maxBytes) version = parseExt(await readFile(path, "utf8"), name).version; }
       catch { /* 损坏的已安装版本只能由明确的强制安装覆盖。 */ }
-      requireNewerVersion(version, metadata.version, t`文件扩展“${name}”`);
+      requireNewerVersion(version, marketVersion ?? metadata.version, t`文件扩展“${name}”`);
     }
     await writeWorkspaceFile(path, source, !current);
     await unlink(resolve(extDirectory, `${name}.removed`)).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
@@ -173,7 +173,7 @@ export async function installExt(fileName: string, source: string, force = false
   return { name };
 }
 
-export async function installTool(fileName: string, source: string, force = false) {
+export async function installTool(fileName: string, source: string, force = false, marketVersion?: string) {
   if (!/^[a-z][a-zA-Z0-9]*\.tool\.js$/.test(fileName)) invalid("工具文件名无效，请选择小驼峰命名的 .tool.js 文件");
   if (!source.trim()) invalid("工具文件内容为空，请重新上传工具脚本");
   if (Buffer.byteLength(source, "utf8") > maxBytes) invalid("工具文件不能超过 20 MB", 413);
@@ -195,7 +195,7 @@ export async function installTool(fileName: string, source: string, force = fals
         const previous = await readFile(path, "utf8");
         try { version = parseTool(previous, name).metadata.version; } catch { /* 损坏元数据没有可比较的版本。 */ }
       }
-      requireNewerVersion(version, metadata.version, t`工具“${name}”`);
+      requireNewerVersion(version, marketVersion ?? metadata.version, t`工具“${name}”`);
     }
     await writeWorkspaceFile(path, source, !current);
     // ACT: Bun 按文件路径缓存模块，URL query 不会使已加载的工具失效。
@@ -356,7 +356,7 @@ async function skillArchive(bytes: Uint8Array) {
   return result;
 }
 
-export async function installSkill(fileName: string, bytes: Uint8Array, force = false) {
+export async function installSkill(fileName: string, bytes: Uint8Array, force = false, marketVersion?: string) {
   if (!fileName || fileName.length > 128 || /[\\/]/.test(fileName) || !/\.(md|zip|tar|tar\.gz|tgz)$/i.test(fileName)) invalid("请选择 .zip、.md、.tar、.tar.gz 或 .tgz 技能文件");
   skillPath(fileName);
   if (!bytes.byteLength) invalid("技能文件不能为空");
@@ -399,7 +399,7 @@ export async function installSkill(fileName: string, bytes: Uint8Array, force = 
           const previous = await readFile(join(target, "SKILL.md"), "utf8");
           try { version = (parseFrontmatter(previous).frontmatter.metadata as Record<string, unknown> | undefined)?.version; } catch { /* 损坏元数据没有可比较的版本。 */ }
         }
-        requireNewerVersion(version, (frontmatter.metadata as Record<string, unknown> | undefined)?.version, t`技能“${name}”`);
+        requireNewerVersion(version, marketVersion ?? (frontmatter.metadata as Record<string, unknown> | undefined)?.version, t`技能“${name}”`);
       }
     }
     temporary = await mkdtemp(join(root, ".skillInstall"));
@@ -436,7 +436,7 @@ export async function installSkill(fileName: string, bytes: Uint8Array, force = 
   }
 }
 
-export async function installRemotePlugin(type: PluginInstallType, url: string, fileName?: string, force = false) {
+export async function installRemotePlugin(type: PluginInstallType, url: string, fileName?: string, force = false, marketVersion?: string) {
   const address = remoteAddress(url);
   if (fileName === undefined) {
     try { fileName = decodeURIComponent(address.pathname.split("/").at(-1) ?? ""); }
@@ -449,11 +449,12 @@ export async function installRemotePlugin(type: PluginInstallType, url: string, 
   if (fileName.length > 128 || /[\\/]/.test(fileName)) invalid("插件文件名无效，不能包含目录路径或超过 128 字符");
   if (!patterns[type].test(fileName)) invalid(t`下载文件名“${fileName.slice(0, 128)}”不符合 ${type} 类型规范，文件名示例：${examples[type]}；改名后请重新生成下载链接`);
   const bytes = await download(url, type === "provider" ? 2 * 1024 * 1024 : maxBytes, { node: "节点", ext: "文件扩展", tool: "工具", skill: "技能", provider: "供应商", agent: "团队" }[type]);
-  if (type === "agent") return (await import("@/utils/teams/install")).installTeam(fileName, bytes, force);
-  if (type === "skill") return installSkill(fileName, bytes, force);
+  // ACT: 市场更新以卡片版本比较已安装文件的内部版本；其他入口沿用待安装文件版本。
+  if (type === "agent") return (await import("@/utils/teams/install")).installTeam(fileName, bytes, force, marketVersion);
+  if (type === "skill") return installSkill(fileName, bytes, force, marketVersion);
   const source = decodeText(bytes);
-  if (type === "node") return installNode(fileName, source, force);
-  if (type === "ext") return installExt(fileName, source, force);
-  if (type === "tool") return installTool(fileName, source, force);
+  if (type === "node") return installNode(fileName, source, force, marketVersion);
+  if (type === "ext") return installExt(fileName, source, force, marketVersion);
+  if (type === "tool") return installTool(fileName, source, force, marketVersion);
   return { name: (await addMediaProvider(source)).id };
 }

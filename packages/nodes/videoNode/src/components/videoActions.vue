@@ -13,7 +13,8 @@
     :style="{ maxWidth: 'calc(100vw - 24px)', maxHeight: 'calc(94vh - 12px)', overflow: 'auto' }">
     <div class="videoActionPanel nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.stop>
       <template v-if="action === 'trim'">
-        <video ref="preview" class="clipPreview" :src="src" controls playsinline preload="metadata" aria-label="截取片段预览" @loadedmetadata="readDuration" @timeupdate="readTime" @play="playSelection" @error="duration = 0" />
+        <p v-if="preparingPreview || previewError" class="actionHint" role="status">{{ preparingPreview ? '正在生成兼容预览…' : previewError }}</p>
+        <video ref="preview" class="clipPreview" :src="playbackSrc" controls playsinline preload="auto" aria-label="截取片段预览" @loadeddata="readDuration" @timeupdate="readTime" @play="playSelection" @error="duration = 0; handleError($event)" />
         <div class="clipTimeline" :class="{ unavailable: processing || !duration }">
           <div class="timelineHeader">
             <span>拖动左右边界，选择保留的片段</span>
@@ -84,6 +85,7 @@ import { ElButton, ElDialog, ElMessage, ElProgress } from "element-plus";
 import { useNodeFiles, useNodeFfmpeg, useNodeEvent, type WorkspaceFiles, type NodeMediaValue } from "@toonflow/nodes-scaffold/runtime";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { processVideo } from "../videoProcessing";
+import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
 
 const props = defineProps<{ file?: NodeMediaValue; src: string; disabled?: boolean }>();
 const { node } = useNode();
@@ -96,6 +98,7 @@ const batchHistory = inject<(action: () => Promise<void>) => Promise<void>>("bat
 const actionLabels = { extractAudio: "提取音轨", separate: "分离音视频", trim: "截取片段" };
 const action = ref<keyof typeof actionLabels>("trim");
 const visible = ref(false);
+const { src: playbackSrc, preparing: preparingPreview, error: previewError, handleError, handleLoaded } = useMediaPreview(() => visible.value && action.value === "trim" ? props.src : "", "video");
 const processing = ref(false);
 const creatingAnalysis = ref(false);
 const cancelling = ref(false);
@@ -137,6 +140,7 @@ watch(() => props.src, reset, { flush: "sync" });
 watch(() => props.disabled, disabled => { if (disabled) reset(); }, { flush: "sync" });
 watch(() => getCanvas?.()?.id, reset, { flush: "sync" });
 watch(visible, value => { if (!value) clearPreview(); });
+watch(playbackSrc, () => { clearPreview(); duration.value = 0; frames.value = []; });
 onBeforeUnmount(() => { cancel(); clearPreview(); });
 nodeEvent.on("save", reason => {
   if (reason === "reload" && processing.value) throw new Error("视频处理中，请完成或取消后再刷新节点");
@@ -206,6 +210,7 @@ async function createFrameAnalysis() {
 defineExpose({ open, processing, createFrameAnalysis, creatingAnalysis });
 
 function readDuration(event: Event) {
+  if (!handleLoaded(event)) return;
   const value = (event.currentTarget as HTMLVideoElement).duration;
   duration.value = Number.isFinite(value) && value > 0 ? value : 0;
   end.value = clipLimit.value;
@@ -257,7 +262,7 @@ function loadThumbnails() {
   source.onerror = stopThumbnails;
   source.muted = true;
   source.preload = "auto";
-  source.src = props.src;
+  source.src = playbackSrc.value;
   thumbnailTimer = window.setTimeout(stopThumbnails, 15000);
   source.load();
 }

@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { z } from "zod";
-import { audioGenerationSchema, imageGenerationSchema, videoGenerationSchema } from "@toonflow/tool-media-generation/runtime";
 import { validateFields } from "@/lib/middleware";
 import { success, error } from "@/lib/responseFormat";
 import { translateMessage, validationOptions } from "@/lib/i18n";
@@ -11,7 +10,7 @@ export default Router().post("/", validateFields({
 }), async (req, res) => {
   u.mcpControl.assertAppRequest(req);
   const { directory, mediaType, ...request } = req.body;
-  const schema = (mediaType === "image" ? imageGenerationSchema : mediaType === "video" ? videoGenerationSchema : audioGenerationSchema).extend({ prompt: z.string().trim().max(100000) });
+  const schema = (mediaType === "image" ? u.mediaSchemas.imageGenerationSchema : mediaType === "video" ? u.mediaSchemas.videoGenerationSchema : u.mediaSchemas.audioGenerationSchema).extend({ prompt: z.string().trim().max(100000) });
   const parsed = schema.safeParse(request, validationOptions());
   if (!parsed.success) {
     res.status(400).json(error("参数错误", parsed.error.issues.map(issue => ({ ...issue, message: translateMessage(issue.message) })), 400));

@@ -66,6 +66,7 @@ import { ElButton, ElMessage, ElProgress, ElDropdown, ElDropdownMenu, ElDropdown
 import { nodeSkeleton, nodeTools, useNode, z, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
 import videoPlayer from "./components/videoPlayer.vue";
 import videoActions from "./components/videoActions.vue";
+import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
 
 defineOptions({
   inheritAttrs: false,
@@ -137,13 +138,14 @@ async function uploadVideo(event: Event) {
   const file = input.files?.[0];
   input.value = "";
   if (!file || uploading.value || exporting.value) return;
-  if (!file.type.startsWith("video/")) return void ElMessage.error("请选择视频文件");
+  const mimeType = getMediaMimeType(file);
+  if (!mimeType.startsWith("video/")) return void ElMessage.error("请选择视频文件");
   if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error("视频不能为空且不能超过 100 MB");
   uploading.value = true;
   try {
     const url = await files.uploadFile(file);
     // ACT: 复制节点可能仍引用旧视频，替换输出不删除共享文件。
-    outputs.value.video = { dataType: "VIDEO", value: { url, mimeType: file.type } };
+    outputs.value.video = { dataType: "VIDEO", value: { url, mimeType } };
   } catch (error) {
     showError(error, "视频替换失败");
   } finally {

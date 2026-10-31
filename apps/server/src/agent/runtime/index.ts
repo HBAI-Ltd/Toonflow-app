@@ -194,7 +194,7 @@ export async function run(
       } finally { active.waitingForAgent = undefined; }
     });
     for (const tool of teamTools) {
-      if (tools.some(existing => existing.name === tool.name)) throw new Error(`工具名称 ${tool.name} 已被内置团队通讯工具占用`);
+      if (tools.some(existing => existing.name === tool.name)) throw new Error(t`工具名称 ${tool.name} 已被内置团队通讯工具占用`);
       tools.push(tool);
     }
     tools.push(await createSubAgentTool({

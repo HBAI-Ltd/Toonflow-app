@@ -1,7 +1,7 @@
 import type { AgentMention } from "./runtime/types";
 import { getDocumentMimeType, getTextMimeType } from "../lib/documentFormats";
 
-export type MentionNode = { id: string; name: string; outputCount: number; available: boolean; dataType?: string; thumbnail?: { url: string; mimeType: string } };
+export type MentionNode = { id: string; name: string; outputCount: number; hasOutput: boolean; dataType?: string; thumbnail?: { url: string; mimeType: string } };
 export type MentionOutput = { id: string; name: string; dataType: string; preview: string; available: boolean; thumbnail?: { url: string; mimeType: string } };
 export type MentionAsset = { path: string; name: string; type: "file" | "directory"; dataType?: string; preview?: string };
 export type MentionPage<T> = { items: T[]; nextCursor?: string };
@@ -12,7 +12,7 @@ export type MentionCanvasSource = {
   canvases(signal?: AbortSignal): Promise<{ id: string; name: string }[]>;
   nodes(canvasId: string, options: MentionQuery): Promise<MentionPage<MentionNode>> | undefined;
   outputs(canvasId: string, nodeId: string): MentionOutput[] | undefined;
-  selectCanvas(canvasId: string, nodeId: string, outputId: string): Promise<AgentMention> | undefined;
+  selectCanvas(canvasId: string, nodeId: string, outputId?: string): Promise<AgentMention> | undefined;
 };
 
 export function mentionRecord(value: unknown): value is Record<string, unknown> {
@@ -70,7 +70,7 @@ export function mentionNodeOutputs(node: MentionCanvasNode): MentionOutput[] {
   if (!names.size && node.type === "remote-textNode" && (data.textPath || data.textSnapshot)) names.set("text", { name: "文本输出", dataType: "STRING" });
   return [...names].map(([id, item]) => {
     const output = mentionOutputValue(node, id);
-    const available = !!output && (output.textPath !== undefined || (typeof output.value === "string" ? !!output.value.length : output.value !== undefined));
+    const available = !!output && (output.textPath !== undefined || (typeof output.value === "string" ? !!output.value.trim() : output.value !== undefined));
     const preview = output?.textPath ? "文本内容" : mentionRecord(output?.value) ? String(output.value.url).slice(-160).split(/[\\/]/).pop() ?? ""
       : output?.value === undefined ? "暂无输出" : String(output.value).slice(0, 160);
     const media = output?.value;
@@ -104,23 +104,26 @@ export async function queryMentionNodes(nodes: readonly MentionCanvasNode[], rev
     const available = outputs.find(output => output.available);
     const media = outputs.find(output => output.thumbnail);
     const thumbnail = media?.thumbnail;
-    items.push({ id: node.id, name, outputCount: outputs.length, available: !!available,
+    items.push({ id: node.id, name, outputCount: outputs.length, hasOutput: !!available,
       dataType: (media ?? available ?? outputs[0])?.dataType, ...(thumbnail ? { thumbnail } : {}) });
   }
   return { items, ...(offset < nodes.length ? { nextCursor: JSON.stringify([revision, query, offset]) } : {}) };
 }
 
-export async function createCanvasMention(node: MentionCanvasNode, canvasId: string, outputId: string, readText: (path: string) => Promise<string>): Promise<AgentMention> {
+export async function createCanvasMention(node: MentionCanvasNode, canvasId: string, outputId: string | undefined, readText: (path: string) => Promise<string>): Promise<AgentMention> {
+  const canvasName = canvasId.replace(/\.json$/i, "").slice(0, 255);
+  const nodeName = mentionNodeName(node);
+  const source = { kind: "canvas" as const, canvasId, canvasName, nodeId: node.id, nodeName };
+  const mention = { id: crypto.randomUUID(), label: nodeName, source, dataType: "NODE", value: null };
+  if (outputId === undefined) return mention;
   const output = mentionNodeOutputs(node).find(output => output.id === outputId);
   const selected = mentionOutputValue(node, outputId);
   if (!output?.available || !selected) throw new Error("这个输出暂无内容，请重新选择");
   const value = selected.textPath === undefined ? selected.value : await readText(selected.textPath);
   if (typeof value === "string" && value.length > 100000) throw new Error("文本引用最多支持 100000 个字符，请缩小内容后重试");
-  if (typeof value === "string" && !value.trim()) throw new Error("这个输出暂无内容，请重新选择");
-  const canvasName = canvasId.replace(/\.json$/i, "").slice(0, 255);
-  const nodeName = mentionNodeName(node);
-  return { id: crypto.randomUUID(), label: `${nodeName} · ${output.name}`.slice(0, 500), source: { kind: "canvas", canvasId, canvasName, nodeId: node.id,
-    nodeName, outputId, outputName: output.name }, dataType: selected.dataType, value };
+  if (typeof value === "string" && !value.trim()) return mention;
+  return { ...mention, label: `${nodeName} · ${output.name}`.slice(0, 500), source: { ...source, outputId, outputName: output.name },
+    dataType: selected.dataType, value };
 }
 
 export function mentionAssetType(path: string) {

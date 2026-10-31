@@ -15,7 +15,28 @@ const rules = [
   },
 ] as const;
 
-const version = "2.0.1";
+const version = "2.0.2";
+
+type MediaTaskData = {
+  kind: "media";
+  mediaType: "image" | "video";
+  taskId: string;
+  model: string;
+  region: string;
+  deadline: number;
+};
+
+type ReviewTaskData = {
+  kind: "review";
+  mediaType: "video";
+  taskId: string;
+  model: string;
+  region: string;
+  deadline: number;
+  body: ProviderTaskData;
+  imageUrls: string[];
+  reviewedUrls: string[];
+};
 
 function object(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("APIMart 响应格式错误");
@@ -106,8 +127,9 @@ async function uploadImage(context: ProviderContext, apiKey: string, baseUrl: st
 }
 
 /** Seedance 私有素材需先提交审核，通过后才能作为参考素材使用。 */
-async function reviewSeedanceAsset(context: ProviderContext, apiKey: string, baseUrl: string, url: string, signal: AbortSignal): Promise<string> {
+async function reviewSeedanceAsset(context: ProviderContext, apiKey: string, baseUrl: string, url: string, signal: AbortSignal, data: ReviewTaskData): Promise<string> {
   if (url.startsWith("asset://")) return url;
+  await context.saveTaskData?.({ ...data, kind: "submitting", taskId: "" });
   const submitResponse = await context.tool.fetch(`${baseUrl}/seedance2/private-avatar`, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -123,9 +145,13 @@ async function reviewSeedanceAsset(context: ProviderContext, apiKey: string, bas
   const submitResult = object(await submitResponse.json());
   const taskId = object(submitResult.data).id;
   if (!taskId) throw new Error("Seedance资产提交未返回任务ID");
+  await context.saveTaskData?.({ ...data, taskId: String(taskId) });
+  return pollSeedanceAsset(context, apiKey, baseUrl, String(taskId), signal);
+}
 
+async function pollSeedanceAsset(context: ProviderContext, apiKey: string, baseUrl: string, taskId: string, signal: AbortSignal): Promise<string> {
   while (true) {
-    const queryResponse = await context.tool.fetch(`${baseUrl}/tasks/${taskId}`, {
+    const queryResponse = await context.tool.fetch(`${baseUrl}/tasks/${encodeURIComponent(taskId)}`, {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       signal,
     });
@@ -133,7 +159,7 @@ async function reviewSeedanceAsset(context: ProviderContext, apiKey: string, bas
     const queryData = object(await queryResponse.json());
     const taskData = object(queryData.data);
     const status = taskData.status;
-    if (status === "failed") throw new Error(context.tool.errorMessage(taskData) || "素材审核失败");
+    if (status === "failed") throw Object.assign(new Error(context.tool.errorMessage(taskData) || "素材审核失败"), { code: "MEDIA_TASK_FAILED" });
     if (status === "completed") {
       const result = object(taskData.result ?? {});
       const usableAssets = Array.isArray(result.usable_assets) ? result.usable_assets : [{ asset_url: result.asset_url }];
@@ -149,7 +175,7 @@ async function reviewSeedanceAsset(context: ProviderContext, apiKey: string, bas
 
 async function pollTaskResult<T>(context: ProviderContext, baseUrl: string, apiKey: string, taskId: string, signal: AbortSignal, extract: (data: Record<string, unknown>) => T): Promise<T> {
   while (true) {
-    const response = await context.tool.fetch(`${baseUrl}/tasks/${taskId}`, {
+    const response = await context.tool.fetch(`${baseUrl}/tasks/${encodeURIComponent(taskId)}`, {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       signal,
     });
@@ -160,10 +186,52 @@ async function pollTaskResult<T>(context: ProviderContext, baseUrl: string, apiK
     if (status === "completed" || status === "success") return extract(data);
     if (status === "failed" || status === "failure") {
       const error = (data.error as { message?: unknown } | undefined)?.message;
-      throw new Error(context.tool.errorMessage?.(result) || (typeof error === "string" ? error : "生成失败"));
+      throw Object.assign(new Error(context.tool.errorMessage?.(result) || (typeof error === "string" ? error : "生成失败")), { code: "MEDIA_TASK_FAILED" });
     }
     await wait(signal, 3000);
   }
+}
+
+async function waitForMedia(context: ProviderContext, apiKey: string, data: MediaTaskData, signal: AbortSignal): Promise<MediaAsset[]> {
+  const url = await pollTaskResult(context, getBaseUrl(data.region), apiKey, data.taskId, signal, (taskData) => {
+    const result = object(taskData.result ?? {});
+    const items = result[data.mediaType === "image" ? "images" : "videos"];
+    const item = Array.isArray(items) ? object(items[0]) : undefined;
+    const url = item && Array.isArray(item.url) ? item.url[0] : undefined;
+    if (typeof url !== "string" || !url) throw new Error("未返回生成结果");
+    return url;
+  });
+  return [{ mediaType: data.mediaType, type: "url", url }];
+}
+
+async function submitVideo(context: ProviderContext, apiKey: string, body: ProviderTaskData, data: Omit<MediaTaskData, "taskId">, signal: AbortSignal): Promise<MediaAsset[]> {
+  // ACT: 后续阶段提交前记录不确定状态；响应丢失时不能重新提交收费任务。
+  await context.saveTaskData?.({ ...data, kind: "submitting" });
+  const response = await context.tool.fetch(`${getBaseUrl(data.region)}/videos/generations`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!response.ok) throw new Error(`请求失败：HTTP ${response.status}`);
+  const result = object(await response.json());
+  const taskId = Array.isArray(result.data) ? object(result.data[0]).task_id : undefined;
+  if (!taskId) throw new Error("未返回任务ID");
+  const task = { ...data, taskId: String(taskId) };
+  await context.saveTaskData?.(task);
+  return waitForMedia(context, apiKey, task, signal);
+}
+
+async function finishVideoReviews(context: ProviderContext, apiKey: string, data: ReviewTaskData, signal: AbortSignal): Promise<MediaAsset[]> {
+  const reviewedUrls = [...data.reviewedUrls];
+  const baseUrl = getBaseUrl(data.region);
+  if (data.taskId) reviewedUrls.push(await pollSeedanceAsset(context, apiKey, baseUrl, data.taskId, signal));
+  while (reviewedUrls.length < data.imageUrls.length) {
+    const url = data.imageUrls[reviewedUrls.length]!;
+    reviewedUrls.push(await reviewSeedanceAsset(context, apiKey, baseUrl, url, signal, { ...data, taskId: "", reviewedUrls: [...reviewedUrls] }));
+  }
+  const body = { ...data.body, image_with_roles: reviewedUrls.map((url) => ({ role: "reference_image", url })) };
+  return submitVideo(context, apiKey, body, { kind: "media", mediaType: "video", model: data.model, region: data.region, deadline: data.deadline }, signal);
 }
 
 export default {
@@ -179,7 +247,7 @@ export default {
   models: [
     {
       id: "seedance-2.5",
-      label: "Seedance-2.5 (支持真人)",
+      label: "Seedance-2.5",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
       audio: "optional",
@@ -189,7 +257,7 @@ export default {
     },
     {
       id: "seedance-2.0",
-      label: "Seedance-2.0 (支持真人)",
+      label: "Seedance-2.0",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
       audio: "optional",
@@ -197,7 +265,7 @@ export default {
     },
     {
       id: "seedance-2.0-fast",
-      label: "Seedance 2.0 fast (支持真人)",
+      label: "Seedance 2.0 fast",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
       audio: "optional",
@@ -205,7 +273,7 @@ export default {
     },
     {
       id: "seedance-2.0-mini",
-      label: "Seedance 2.0 mini (支持真人)",
+      label: "Seedance 2.0 mini",
       type: "video",
       mode: ["text", "startFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
       audio: "optional",
@@ -263,6 +331,7 @@ export default {
     const baseUrl = getBaseUrl(this.config.isOverseas);
     const lowerName = request.model.toLowerCase();
     // ACT: 单次生成最多等待 10 分钟。
+    const deadline = Date.now() + 10 * 60_000;
     const signal = AbortSignal.any([AbortSignal.timeout(10 * 60_000), ...(this.signal ? [this.signal] : [])]);
 
     const imageUrls: string[] = [];
@@ -292,15 +361,9 @@ export default {
     const data = object(await response.json());
     const taskId = Array.isArray(data.data) ? object(data.data[0]).task_id : undefined;
     if (!taskId) throw new Error("未返回任务ID");
-
-    const url = await pollTaskResult(this, baseUrl, apiKey, String(taskId), signal, (taskData) => {
-      const result = object(taskData.result ?? {});
-      const image = Array.isArray(result.images) ? object(result.images[0]) : undefined;
-      const url = image && Array.isArray(image.url) ? image.url[0] : undefined;
-      if (typeof url !== "string" || !url) throw new Error("未返回生成结果");
-      return url;
-    });
-    return [{ mediaType: "image", type: "url", url }];
+    const task: MediaTaskData = { kind: "media", mediaType: "image", taskId: String(taskId), model: request.model, region: String(this.config.isOverseas) === "2" ? "2" : "1", deadline };
+    await this.saveTaskData?.(task);
+    return waitForMedia(this, apiKey, task, signal);
   },
   async generateVideo(request: ReferencedVideoRequest): Promise<MediaAsset[]> {
     const apiKey = this.config.apiKey?.trim();
@@ -314,6 +377,7 @@ export default {
       throw new Error(`单次最多提交20个素材，当前提交了${request.images!.length}个`);
     }
     // ACT: 单次生成最多等待 30 分钟。
+    const deadline = Date.now() + 30 * 60_000;
     const signal = AbortSignal.any([AbortSignal.timeout(30 * 60_000), ...(this.signal ? [this.signal] : [])]);
 
     const imageUrls: string[] = [];
@@ -351,10 +415,7 @@ export default {
       if (typeof request.generateAudio === "boolean") body.generate_audio = request.generateAudio;
       if (Array.isArray(mode)) {
         if (imageUrls.length) {
-          // ACT: 批量审核响应没有原素材标识；逐项审核保留图片编号，任一失败即停止。
-          const reviewedUrls: string[] = [];
-          for (const url of imageUrls) reviewedUrls.push(await reviewSeedanceAsset(this, apiKey, baseUrl, url, signal));
-          body.image_with_roles = reviewedUrls.map((url) => ({ role: "reference_image", url }));
+          body.image_with_roles = imageUrls.map((url) => ({ role: "reference_image", url }));
         }
         if (videoUrls.length) body.video_urls = videoUrls;
         if (audioUrls.length) body.audio_urls = audioUrls;
@@ -375,25 +436,32 @@ export default {
       }
     }
 
-    const response = await this.tool.fetch(`${baseUrl}/videos/generations`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal,
-    });
-    if (!response.ok) throw new Error(`请求失败：HTTP ${response.status}`);
-    const data = object(await response.json());
-    const taskId = Array.isArray(data.data) ? object(data.data[0]).task_id : undefined;
-    if (!taskId) throw new Error("未返回任务ID");
-
-    const url = await pollTaskResult(this, baseUrl, apiKey, String(taskId), signal, (taskData) => {
-      const result = object(taskData.result ?? {});
-      const video = Array.isArray(result.videos) ? object(result.videos[0]) : undefined;
-      const url = video && Array.isArray(video.url) ? video.url[0] : undefined;
-      if (typeof url !== "string" || !url) throw new Error("未返回生成结果");
-      return url;
-    });
-    return [{ mediaType: "video", type: "url", url }];
+    const region = String(this.config.isOverseas) === "2" ? "2" : "1";
+    const task: Omit<MediaTaskData, "taskId"> = { kind: "media", mediaType: "video", model: request.model, region, deadline };
+    const savedBody = JSON.parse(JSON.stringify(body)) as ProviderTaskData;
+    if (Array.isArray(mode) && (lowerName.includes("doubao") || lowerName.includes("seedance")) && imageUrls.length) {
+      return finishVideoReviews(this, apiKey, { ...task, kind: "review", mediaType: "video", taskId: "", body: savedBody, imageUrls, reviewedUrls: [] }, signal);
+    }
+    return submitVideo(this, apiKey, savedBody, task, signal);
+  },
+  async resumeTask(data: ProviderTaskData): Promise<MediaAsset[]> {
+    if (data.kind === "submitting") throw new Error("上次提交结果未知，不能自动重新提交，请先在供应商平台确认任务");
+    if ((data.kind !== "media" && data.kind !== "review") || (data.mediaType !== "image" && data.mediaType !== "video")
+      || typeof data.taskId !== "string" || !data.taskId || typeof data.model !== "string" || !data.model
+      || (data.region !== "1" && data.region !== "2") || typeof data.deadline !== "number" || !Number.isFinite(data.deadline)) {
+      throw new Error("APIMart 任务恢复数据无效");
+    }
+    const apiKey = this.config.apiKey?.trim();
+    if (!apiKey) throw new Error("请填写 API Key");
+    const signal = AbortSignal.any([AbortSignal.timeout((data.mediaType === "image" ? 10 : 30) * 60_000), ...(this.signal ? [this.signal] : [])]);
+    if (data.kind === "media") return waitForMedia(this, apiKey, data as MediaTaskData, signal);
+    if (data.mediaType !== "video" || !data.body || typeof data.body !== "object" || Array.isArray(data.body)
+      || data.body.model !== data.model || !Array.isArray(data.imageUrls) || !data.imageUrls.length || !data.imageUrls.every(url => typeof url === "string" && !!url)
+      || !Array.isArray(data.reviewedUrls) || !data.reviewedUrls.every(url => typeof url === "string" && url.startsWith("asset://"))
+      || data.reviewedUrls.length >= data.imageUrls.length) {
+      throw new Error("APIMart 素材审核恢复数据无效");
+    }
+    return finishVideoReviews(this, apiKey, data as ReviewTaskData, signal);
   },
   async updateVendor(): Promise<string> {
     const apiKey = this.config.apiKey?.trim();

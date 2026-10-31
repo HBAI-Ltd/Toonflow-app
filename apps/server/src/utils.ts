@@ -4,9 +4,11 @@ import * as singleAgent from "@/utils/singleAgent";
 import * as desktop from "@/utils/desktop";
 import * as providerDebug from "@/utils/media/debug";
 import * as mediaGeneration from "@/utils/media/generation";
+import * as mediaSchemas from "@/utils/media/schemas";
 import * as mediaTasks from "@/utils/media/tasks";
 import * as mediaProvider from "@/utils/media/provider";
 import * as mediaBilling from "@/utils/media/billing";
+import * as mediaPreview from "@/utils/media/preview";
 import * as ffmpeg from "@/utils/ffmpeg";
 import * as pluginInstall from "@/utils/plugins/install";
 import conf, { cleanNodeMenuSettings, removeLegacySettings } from "@/utils/conf";
@@ -32,6 +34,7 @@ import * as a2aSettings from "@/agent/a2a/settings";
 import * as personalization from "@/utils/personalization";
 import * as mentionFiles from "@/agent/mentionFiles";
 import * as network from "@/utils/network";
+import * as channel from "@/utils/channel";
 
 export default {
   assets,
@@ -40,9 +43,11 @@ export default {
   desktop,
   providerDebug,
   mediaGeneration,
+  mediaSchemas,
   mediaTasks,
   mediaProvider,
   mediaBilling,
+  mediaPreview,
   ffmpeg,
   pluginInstall,
   conf,
@@ -70,4 +75,5 @@ export default {
   personalization,
   mentionFiles,
   network,
+  channel,
 };

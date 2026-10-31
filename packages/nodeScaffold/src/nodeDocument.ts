@@ -3,6 +3,16 @@ import { useNodeId } from "@vue-flow/core";
 
 export type NodeDocumentState = { dirty: boolean; error: string; deleted: boolean };
 
+export type NodePersistenceContext = {
+  directory: string;
+  canvasPath: string;
+  save(signal?: AbortSignal): Promise<void>;
+};
+
+export function useNodePersistence() {
+  return inject<(() => NodePersistenceContext | undefined) | undefined>("nodePersistence", undefined);
+}
+
 export type NodeDocumentContext = {
   targets: Map<string, HTMLElement>;
   mounts: Map<string, (target: HTMLElement) => () => void>;

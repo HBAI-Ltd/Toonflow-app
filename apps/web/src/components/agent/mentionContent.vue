@@ -3,12 +3,12 @@
   <el-dialog v-model="previewVisible" :title="selected?.label || '提及内容'" width="min(720px, 90vw)" alignCenter appendToBody destroyOnClose>
     <div v-if="selected" class="mentionPreview">
       <p class="mentionSource">{{ sourceLabel(selected) }}</p>
-      <p v-if="loading || error" :role="error ? 'alert' : 'status'">{{ loading ? '正在读取…' : error }}</p>
-      <img v-else-if="previewUrl && ['IMAGE', 'MASK'].includes(selected.dataType)" :src="previewUrl" :alt="selected.label" @error="error = translate('无法预览该图片')" />
-      <video v-else-if="previewUrl && selected.dataType === 'VIDEO'" :src="previewUrl" controls playsinline preload="metadata" @error="error = translate('无法预览该视频')" />
-      <audio v-else-if="previewUrl && selected.dataType === 'AUDIO'" :src="previewUrl" controls preload="metadata" @error="error = translate('无法预览该音频')" />
+      <p v-if="loading || preparingPreview || error || previewError" :role="error || previewError ? 'alert' : 'status'">{{ loading ? '正在读取…' : preparingPreview ? '正在生成兼容预览…' : error || previewError }}</p>
+      <img v-else-if="mediaSrc && ['IMAGE', 'MASK'].includes(selected.dataType)" :src="mediaSrc" :alt="selected.label" @load="handleLoaded" @error="handleError" />
+      <video v-else-if="mediaSrc && selected.dataType === 'VIDEO'" :src="mediaSrc" controls playsinline preload="auto" @loadeddata="handleLoaded" @error="handleError" />
+      <audio v-else-if="mediaSrc && selected.dataType === 'AUDIO'" :src="mediaSrc" controls preload="auto" @loadeddata="handleLoaded" @error="handleError" />
       <p v-else-if="selected.dataType === 'FILE'" class="fileName"><icon-file :size="20" />{{ selected.label }}</p>
-      <template v-else>
+      <template v-else-if="selected.dataType !== 'NODE'">
         <pre>{{ textValue.slice(0, 12000) }}</pre>
         <p v-if="textValue.length > 12000">…（预览已截取，发送保留完整内容）</p>
       </template>
@@ -19,11 +19,12 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { t, translate } from "@toonflow/i18n/vue";
+import { t } from "@toonflow/i18n/vue";
 import axios from "axios";
 import { IconAt, IconFile } from "@tabler/icons-vue";
 import type { AgentMention } from "@toonflow/server/agent/types";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
+import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
 import { mentionName, mentionParts, mentionThumbnailProps } from "./mentionText";
 import mentionThumbnail from "./mentionThumbnail.vue";
 
@@ -34,6 +35,7 @@ const previewVisible = ref(false);
 const selectedId = ref("");
 const selected = computed(() => props.mentions?.find(mention => mention.id === selectedId.value));
 const previewUrl = ref("");
+const { src: mediaSrc, preparing: preparingPreview, error: previewError, handleError, handleLoaded } = useMediaPreview(previewUrl, () => selected.value?.dataType === "VIDEO" ? "video" : selected.value?.dataType === "AUDIO" ? "audio" : "image");
 const loading = ref(false);
 const error = ref("");
 const textValue = computed(() => {
@@ -43,7 +45,7 @@ const textValue = computed(() => {
 
 function sourceLabel(mention: AgentMention) {
   return mention.source.kind === "asset" ? t`全局素材 / ${mention.source.path}`
-    : `${mention.source.canvasName} / ${mention.source.nodeName} / ${mention.source.outputName}（${mention.source.nodeId}）`;
+    : `${[mention.source.canvasName, mention.source.nodeName, mention.source.outputName].filter(Boolean).join(" / ")}（${mention.source.nodeId}）`;
 }
 
 function preview(id: string) {

@@ -93,9 +93,14 @@ export const nodeTools = {
       nodeId, name, description: definition.description.trim(),
       parameters,
       async execute(args, context) {
-        const parsed = await definition.parameters.parseAsync(args);
+        const parsed = await definition.parameters.safeParseAsync(args);
+        if (!parsed.success) {
+          throw new Error(`节点函数 ${name} 参数校验失败，未执行。请按以下 parameters 修正 args；需要其他操作时，用 getNodeTools 查询此节点的函数后分别调用，不要原样重试。${JSON.stringify({
+            nodeId, name, description: entry.description, parameters, issues: parsed.error.issues,
+          })}`);
+        }
         context.signal?.throwIfAborted();
-        return definition.execute(parsed, context);
+        return definition.execute(parsed.data, context);
       },
     };
     registry.set(key, entry);

@@ -70,6 +70,7 @@
         v-if="active && !settingsVisible && project?.directory && canvasReady && !flow.getNodes.value.length"
         :availableNodes="availableNodes"
         @create="createEmptyNode" />
+      <canvasViewportHint v-if="active && !settingsVisible && project?.directory && canvasReady" :key="canvasId" />
       <canvasMenu ref="canvasMenuRef" v-model:canvasId="canvasId" :directory="project?.directory" :initialCanvasId="initialCanvasId" :activateCanvas="activateCanvas" :flushSave="flushCanvases ?? flushCanvasSave">
         <assetLibrary ref="assetLibraryRef" v-model="assetsVisible" :directory="project?.directory" />
       </canvasMenu>
@@ -142,6 +143,7 @@ import * as vueRuntime from "vue";
 import * as vueFlowRuntime from "@vue-flow/core";
 import * as elementPlusRuntime from "element-plus";
 import * as threeRuntime from "three";
+import * as modelIcons from "@toonflow/model-icons";
 import { runAgentLoop } from "@earendil-works/pi-agent-core";
 import { createAssistantMessageEventStream } from "@earendil-works/pi-ai";
 import "element-plus/dist/index.css";
@@ -173,11 +175,12 @@ import remoteNode from "./components/remoteNode.vue";
 import canvasMenu from "./components/canvasMenu.vue";
 import canvasControls from "./components/canvasControls.vue";
 import canvasEmpty from "./components/canvasEmpty.vue";
+import canvasViewportHint from "./components/canvasViewportHint.vue";
 import assetLibrary from "./components/assetLibrary.vue";
 import groupNode from "./components/groupNode.vue";
 import selectionToolbar from "./components/selectionToolbar.vue";
 import nodeSearch from "./components/nodeSearch.vue";
-import { finishGroupDrag, getSelectionTree } from "./selectionNodes";
+import { finishGroupDrag, fitGroupBounds, getSelectionTree } from "./selectionNodes";
 import type { NodeOutput } from "@toonflow/nodes-scaffold/values";
 import { validateConnection, type NodeConnectionFeedback, type NodeHandle } from "@toonflow/nodes-scaffold/connection";
 import { useNodeEvent } from "@toonflow/nodes-scaffold/nodeEvent";
@@ -392,6 +395,29 @@ function getCanvasContext() {
 }
 const canvasReady = computed(() => !!canvasId.value && !nodeListLoading.value && nodeLoads.size === 0);
 provide("canvas", getCanvasContext);
+provide("nodePersistence", () => {
+  const directory = project.value?.directory;
+  const canvasPath = canvasId.value;
+  if (!directory || !canvasPath) return;
+  return {
+    directory,
+    canvasPath,
+    async save(signal?: AbortSignal) {
+      signal?.throwIfAborted();
+      if (project.value?.directory !== directory || canvasId.value !== canvasPath) throw new Error("画布已切换，无法保存节点任务");
+      let abort = () => {};
+      try {
+        const saving = flushCanvasSave();
+        await (signal ? Promise.race([saving, new Promise<never>((_resolve, reject) => {
+          abort = () => reject(signal.reason);
+          signal.addEventListener("abort", abort, { once: true });
+        })]) : saving);
+      } finally { signal?.removeEventListener("abort", abort); }
+      signal?.throwIfAborted();
+      if (project.value?.directory !== directory || canvasId.value !== canvasPath) throw new Error("画布已切换，无法确认节点任务保存结果");
+    },
+  };
+});
 defineExpose({ canvasId, canvasReady, getCanvasContext, addNodeAtPointer, readDocumentNode, saveDocumentNode, mountDocumentNode, observeDocumentNode, prepareCanvasDelete, flushSave: flushCanvasSave, cancelSave: cancelCanvasSave,
   openNodeSearch: () => nodeSearchRef.value?.open(),
   getCanvases: (signal?: AbortSignal) => {
@@ -745,10 +771,42 @@ watch(
             { flush: "post" }
           )
         : () => {};
+      let stopDimensions = () => {};
+      if (isNode(element)) {
+        const parents = computed(() => {
+          const result: GraphNode[] = [];
+          const visited = new Set([element.id]);
+          let parent = findNode(element.parentNode);
+          while (parent && !visited.has(parent.id)) {
+            visited.add(parent.id);
+            result.push(parent);
+            parent = findNode(parent.parentNode);
+          }
+          return result;
+        });
+        let dimensionsChanged = false;
+        stopDimensions = watch(
+          [
+            () => element.dimensions.width,
+            () => element.dimensions.height,
+            () => [element, ...parents.value].some(node => node.dragging || node.resizing),
+          ],
+          ([width, height, interacting], [previousWidth, previousHeight]) => {
+            dimensionsChanged ||= width !== previousWidth || height !== previousHeight;
+            if (!dimensionsChanged || interacting) return;
+            dimensionsChanged = false;
+            // ACT: 尺寸变化延后到拖动、缩放结束贴合，只调整祖先分组，不改变节点归属。
+            const groups = new Set(parents.value.filter(node => node.type === "canvasGroup"));
+            if (groups.size) fitGroupBounds(flow.getNodes.value, groups);
+          },
+          { flush: "post" },
+        );
+      }
       elementSaveWatchers.set(element, () => {
         stopFields();
         stopData();
         stopName();
+        stopDimensions();
       });
     }
     scheduleCanvasChange();
@@ -1168,10 +1226,10 @@ onBeforeUnmount(() => {
 });
 
 const nodeWindow = window as typeof window & {
-  toonflowNodeHost?: { vue: typeof vueRuntime; vueFlow: typeof vueFlowRuntime; elementPlus: typeof elementPlusRuntime; three: typeof threeRuntime; ai: { runAgentLoop: typeof runAgentLoop; createAssistantMessageEventStream: typeof createAssistantMessageEventStream } };
+  toonflowNodeHost?: { vue: typeof vueRuntime; vueFlow: typeof vueFlowRuntime; elementPlus: typeof elementPlusRuntime; three: typeof threeRuntime; modelIcons: typeof modelIcons; ai: { runAgentLoop: typeof runAgentLoop; createAssistantMessageEventStream: typeof createAssistantMessageEventStream } };
   toonflowNodes?: NodeTypesObject;
 };
-nodeWindow.toonflowNodeHost = { vue: vueRuntime, vueFlow: vueFlowRuntime, elementPlus: elementPlusRuntime, three: threeRuntime, ai: { runAgentLoop, createAssistantMessageEventStream } };
+nodeWindow.toonflowNodeHost = { vue: vueRuntime, vueFlow: vueFlowRuntime, elementPlus: elementPlusRuntime, three: threeRuntime, modelIcons, ai: { runAgentLoop, createAssistantMessageEventStream } };
 provide("nodeConfig", (nodeType: string) => nodeConfigs.value[nodeType] ?? {});
 provide("workspaceFiles", () => {
   const directory = project.value?.directory;

@@ -30,8 +30,13 @@ internal static class updateHelper
     [STAThread]
     private static int Main(string[] args)
     {
-        Console.SetOut(new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true });
-        Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
+        // ACT: nsExec 只识别 UTF-16/系统编码；桌面宿主继续读取 UTF-8。
+        bool installerOutput = args.Length > 0 && args[args.Length - 1] == "--utf16";
+        if (installerOutput) Array.Resize(ref args, args.Length - 1);
+        Encoding outputEncoding = installerOutput ? (Encoding)new UnicodeEncoding(false, false) : new UTF8Encoding(false);
+        Console.SetOut(new StreamWriter(Console.OpenStandardOutput(), outputEncoding) { AutoFlush = true });
+        Console.SetError(new StreamWriter(Console.OpenStandardError(), outputEncoding) { AutoFlush = true });
+        if (installerOutput) Console.Write("\uFEFF");
         if (args.Length > 0 && (args[0] == "--ensure-archive-tool" || args[0] == "--read-archive-info" || args[0] == "--extract-install"))
             return archiveCommand(args);
         string root = null, transaction = null, version = null, hash = null, planPath = null;

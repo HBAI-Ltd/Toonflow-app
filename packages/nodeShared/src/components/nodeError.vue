@@ -6,8 +6,11 @@
       <template v-if="models.length">
         <div class="errorLabel">用于解释错误的文本模型</div>
         <el-select v-model="modelValue" filterable size="small" :disabled="explaining" placeholder="请选择能正常使用的文本模型" aria-label="用于解释错误的文本模型">
+          <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
           <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
-            <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="JSON.stringify([item.providerId, item.modelId])" />
+            <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="JSON.stringify([item.providerId, item.modelId])">
+              <modelLabel :label="item.label" :providerId="item.providerId" :modelId="item.modelId" />
+            </el-option>
           </el-option-group>
         </el-select>
       </template>
@@ -19,7 +22,7 @@
       <div class="errorLabel">{{ explanationError ? "AI 解释请求失败" : "AI 解释" }}</div>
       <div class="explanationText" tabindex="0">{{ explanationError || explanation }}</div>
       <div v-if="explanationError" class="explanationHint">上方“错误详情”保留的是原始错误。这里显示的是解释服务的报错，请检查解释用的文本模型，或换一个模型后重试。</div>
-      <div v-if="explanation && !explanationError" class="explanationHint">由 {{ modelLabel }} 解释，原因是推测，供排查参考。</div>
+      <div v-if="explanation && !explanationError" class="explanationHint">由 {{ explanationModelLabel }} 解释，原因是推测，供排查参考。</div>
     </div>
   </div>
 </template>
@@ -29,13 +32,14 @@ import { computed, ref, watch } from "vue";
 import { ElButton, ElNotification, ElSelect, ElOption, ElOptionGroup } from "element-plus";
 import { useNodeAi, type NodeAiModel } from "@toonflow/nodes-scaffold/nodeAi";
 import { groupNodeModels } from "../groupNodeModels";
+import modelLabel from "./modelLabel.vue";
 
 const props = defineProps<{ message: string; context: string; signal: AbortSignal }>();
 const ai = useNodeAi();
 const explaining = ref(false);
 const explanation = ref("");
 const explanationError = ref("");
-const modelLabel = ref("");
+const explanationModelLabel = ref("");
 const models = ref<NodeAiModel[]>([]);
 const modelValue = ref("");
 const selectedModel = computed(() => models.value.find(item => JSON.stringify([item.providerId, item.modelId]) === modelValue.value));
@@ -47,7 +51,7 @@ async function explainError() {
   if (explaining.value || props.signal.aborted) return;
   explaining.value = true;
   explanationError.value = "";
-  modelLabel.value = "";
+  explanationModelLabel.value = "";
   const signal = AbortSignal.any([props.signal, AbortSignal.timeout(60000)]);
   try {
     models.value = await ai.getModels(signal);
@@ -58,7 +62,7 @@ async function explainError() {
       modelValue.value = "";
       return;
     }
-    modelLabel.value = `${model.providerLabel} / ${model.label}`;
+    explanationModelLabel.value = `${model.providerLabel} / ${model.label}`;
     const result = await ai.generate({
       providerId: model.providerId,
       modelId: model.modelId,
@@ -80,7 +84,7 @@ async function explainError() {
   } catch (error) {
     if (!props.signal.aborted) {
       const detail = signal.aborted ? "请求超时，请稍后重试。" : error instanceof Error ? error.message : "服务暂时不可用，请稍后重试。";
-      explanationError.value = `${modelLabel.value ? `解释模型（${modelLabel.value}）调用失败` : "解释模型准备失败"}：${detail}`;
+      explanationError.value = `${explanationModelLabel.value ? `解释模型（${explanationModelLabel.value}）调用失败` : "解释模型准备失败"}：${detail}`;
     }
   } finally {
     explaining.value = false;

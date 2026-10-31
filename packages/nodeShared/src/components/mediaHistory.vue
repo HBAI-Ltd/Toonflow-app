@@ -20,10 +20,10 @@
               <span v-if="item.url === current?.url.replaceAll('\\', '/')" class="currentLabel">当前结果</span>
             </button>
           </div>
-          <div class="historyPreview" v-loading="!!selected && !previewReady && !previewError">
+          <div class="historyPreview" v-loading="!!selected && !previewReady && !previewError" :aria-busy="preparingPreview">
             <el-alert v-if="previewError" :title="previewError" type="error" :closable="false" />
-            <img v-else-if="previewUrl && mediaType === 'image'" :src="previewUrl" alt="历史图片预览" @load="previewReady = true" @error="previewError = '无法预览该图片'" />
-            <video v-else-if="previewUrl" :src="previewUrl" controls playsinline preload="auto" aria-label="历史视频预览" @loadeddata="previewReady = true" @error="previewError = '无法预览该视频'" />
+            <img v-else-if="mediaSrc && mediaType === 'image'" :src="mediaSrc" alt="历史图片预览" @load="readPreview" @error="previewFailed" />
+            <video v-else-if="mediaSrc" :src="mediaSrc" controls playsinline preload="auto" aria-label="历史视频预览" @loadeddata="readPreview" @error="previewFailed" />
           </div>
         </div>
         <el-pagination v-model:currentPage="page" :pageSize="pageSize" :total="items.length" layout="prev, pager, next" hideOnSinglePage />
@@ -43,6 +43,8 @@ import { ElAlert, ElButton, ElDialog, ElEmpty, ElLoading, ElPagination } from "e
 import { IconHistory } from "@tabler/icons-vue";
 import { useNodeFiles } from "@toonflow/nodes-scaffold/workspaceFiles";
 import type { NodeMediaValue } from "@toonflow/nodes-scaffold/values";
+import { useMediaPreview } from "../mediaPreview";
+import { getMediaMimeType } from "../mediaTypes";
 
 const props = defineProps<{ mediaType: "image" | "video"; current?: NodeMediaValue; disabled?: boolean }>();
 const emit = defineEmits<{ select: [value: NodeMediaValue] }>();
@@ -52,23 +54,20 @@ const files = useNodeFiles();
 const visible = ref(false);
 const loading = ref(false);
 const loadError = ref("");
-const previewError = ref("");
+const previewReadError = ref("");
 const previewReady = ref(false);
 const items = ref<NodeMediaValue[]>([]);
 const selected = ref<NodeMediaValue>();
 const page = ref(1);
 const pageSize = 20;
 const pageItems = computed(() => items.value.slice((page.value - 1) * pageSize, page.value * pageSize));
-const mimeTypes: Record<string, string> = {
-  png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", gif: "image/gif",
-  avif: "image/avif", apng: "image/apng", bmp: "image/bmp", svg: "image/svg+xml", ico: "image/x-icon", tif: "image/tiff", tiff: "image/tiff",
-  mp4: "video/mp4", m4v: "video/mp4", webm: "video/webm", mov: "video/quicktime", mkv: "video/x-matroska", avi: "video/x-msvideo", ogv: "video/ogg",
-};
 const previewFile = computed(() => visible.value ? selected.value : undefined);
-watch(previewFile, () => { previewError.value = ""; }, { flush: "sync" });
+watch(previewFile, () => { previewReadError.value = ""; }, { flush: "sync" });
 // ACT: 目录列表仅保存路径，每页显示 20 条，只读取选中文件；海量目录需服务端分页时再扩展 list。
-const previewUrl = files.useFileUrl(previewFile, () => { previewError.value = "历史文件读取失败，文件可能已被移动或删除"; });
-watch([previewFile, previewUrl], () => { previewReady.value = false; }, { flush: "sync" });
+const previewUrl = files.useFileUrl(previewFile, () => { previewReadError.value = "历史文件读取失败，文件可能已被移动或删除"; });
+const { src: mediaSrc, preparing: preparingPreview, error: mediaError, handleError, handleLoaded } = useMediaPreview(previewUrl, () => props.mediaType);
+const previewError = computed(() => previewReadError.value || mediaError.value);
+watch([previewFile, mediaSrc], () => { previewReady.value = false; }, { flush: "sync" });
 
 watch(() => props.disabled, disabled => { if (disabled) visible.value = false; });
 watch(visible, async (open, _previous, onCleanup) => {
@@ -88,7 +87,7 @@ watch(visible, async (open, _previous, onCleanup) => {
     if (cancelled) return;
     const results = new Map<string, NodeMediaValue>();
     for (const entry of entries) {
-      const mimeType = mimeTypes[entry.name.split(".").at(-1)?.toLowerCase() ?? ""];
+      const mimeType = getMediaMimeType({ name: entry.name, type: "" });
       if (entry.type === "file" && mimeType?.startsWith(`${props.mediaType}/`)) {
         const url = entry.path.replaceAll("\\", "/");
         results.set(url, { url, mimeType });
@@ -109,6 +108,15 @@ watch(visible, async (open, _previous, onCleanup) => {
     if (!cancelled) loading.value = false;
   }
 });
+
+function readPreview(event: Event) {
+  previewReady.value = handleLoaded(event);
+}
+
+function previewFailed(event: Event) {
+  previewReady.value = false;
+  handleError(event);
+}
 
 function selectOutput() {
   if (props.disabled || loading.value || !selected.value || !previewUrl.value || !previewReady.value || previewError.value) return;

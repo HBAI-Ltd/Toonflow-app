@@ -62,10 +62,13 @@
         </template>
         <p v-else class="localHint">本地检测分镜、提取关键帧与原音轨，结果直接生成到画布。</p>
         <div class="promptFooter">
-          <el-select v-if="settings.aiEnabled" v-model="settings.aiModel" class="modelSelect" :loading="modelsLoading" :disabled="busy" filterable placeholder="选择语言模型" aria-label="拉片语言模型" noDataText="请先在设置中添加模型" placement="top-start" @visible-change="visible => visible && loadModels()">
-            <template #prefix><icon-sparkles :size="17" /></template>
+          <el-select v-if="settings.aiEnabled" :modelValue="selectedModel ? settings.aiModel : ''" class="modelSelect" :loading="modelsLoading" :disabled="busy" filterable placeholder="选择语言模型" aria-label="拉片语言模型" noDataText="请先在设置中添加模型" placement="top-start" @update:modelValue="settings.aiModel = $event" @visible-change="visible => visible && loadModels()">
+            <template v-if="!selectedModel" #prefix><icon-sparkles :size="17" /></template>
+            <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
             <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
-              <el-option v-for="item in provider.models" :key="item.modelId" :value="JSON.stringify([item.providerId, item.modelId])" :label="item.label" />
+              <el-option v-for="item in provider.models" :key="item.modelId" :value="JSON.stringify([item.providerId, item.modelId])" :label="item.label">
+                <modelLabel :label="item.label" :providerId="item.providerId" :modelId="item.modelId" />
+              </el-option>
             </el-option-group>
           </el-select>
           <span v-else class="localLabel"><icon-scissors :size="17" />本地分析</span>
@@ -100,6 +103,7 @@ import analysisReport from "./analysisReport.vue";
 import videoPlayer from "@toonflow/node-video/videoPlayer";
 import promptInput from "@toonflow/node-shared/promptInput";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
+import modelLabel from "@toonflow/node-shared/modelLabel";
 
 defineOptions({
   inheritAttrs: false,
@@ -241,7 +245,8 @@ async function loadModels() {
     const available = await ai.getModels();
     if (!disposed) {
       models.value = available;
-      if (!settings.aiModel && available[0]) settings.aiModel = JSON.stringify([available[0].providerId, available[0].modelId]);
+      const first = modelGroups.value[0]?.models[0];
+      if (!settings.aiModel && first) settings.aiModel = JSON.stringify([first.providerId, first.modelId]);
     }
   } catch (error) {
     if (!disposed) modelError.value = readError(error, "模型列表加载失败");

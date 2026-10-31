@@ -25,9 +25,12 @@
       :ref="instance => setConversationRef(item, instance)"
       :active="visible && item.key === conversationKey"
       :initialSession="item.session"
+      :initialModel="item.initialModel"
       :sessionFile="item.file"
       :disabled="loading || !initialized"
+      :branchingId="branchingId"
       @session="setSessionFile(item, $event)"
+      @branch="newConversation({ file: item.file, message: $event })"
       @event="receiveAgentEvent"
       @sent="updateConversationName(item, $event)" />
   </section>
@@ -41,13 +44,13 @@ import { ElMessage } from "element-plus";
 import { useWorkspaceStore } from "@/stores/workspace";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { stopAgent } from "@/lib/agentControl";
-import type { AgentConversation, AgentHistory } from "./types";
+import type { AgentConversation, AgentHistory, AgentMessage } from "./types";
 import type { AgentEvent, AgentSubAgent } from "@toonflow/server/agent/types";
 import agentMenu from "./menu.vue";
 import conversation from "./conversation.vue";
 
 const visible = defineModel<boolean>({ default: false });
-type OpenConversation = { key: number; name: string; file?: string; parentFile?: string; runId?: string; retiredRunIds: Set<string>; subAgents: AgentSubAgent[]; session: AgentConversation | null };
+type OpenConversation = { key: number; name: string; file?: string; parentFile?: string; runId?: string; retiredRunIds: Set<string>; subAgents: AgentSubAgent[]; session: AgentConversation | null; initialModel?: string };
 // ACT: 会话实例保留到工作区关闭，让切换后的回复继续接收流式内容。
 const conversations = ref<OpenConversation[]>([]);
 const conversationKey = ref(0);
@@ -62,6 +65,7 @@ const workspaceStore = useWorkspaceStore();
 let projectDirectory = workspaceStore.project?.directory;
 const history = ref<AgentHistory[]>([]);
 const loading = ref(false);
+const branchingId = ref<string>();
 const historyLoading = ref(false);
 const initialized = ref(false);
 let requestId = 0;
@@ -179,28 +183,36 @@ function setConversationRun(item: OpenConversation, runId: string) {
   item.runId = runId;
 }
 
-async function newConversation() {
+async function newConversation(source?: { file?: string; message: AgentMessage }) {
   if (loading.value || historyLoading.value) return;
   const directory = workspaceStore.project?.directory;
   if (!directory) return ElMessage.warning("请先打开项目");
+  if (source && (!source.file || !(source.message.entryId || source.message.replyTo))) return ElMessage.warning("消息尚未保存，请稍后创建分支");
+  const initialModel = conversationRefs.get(conversationKey.value)?.getSelectedModel();
   const currentRequest = ++requestId;
+  const errorMessage = source ? "创建对话分支失败" : "新建对话失败";
+  branchingId.value = source?.message.id;
   loading.value = true;
   try {
-    const { data } = await axios.post<{ code: number; data: AgentConversation; message?: string }>("/api/agent/create", {
+    const { data } = await axios.post<{ code: number; data: AgentConversation; message?: string }>(source ? "/api/agent/branch" : "/api/agent/create", {
       directory,
+      ...(source ? { sessionFile: source.file, ...(source.message.entryId ? { entryId: source.message.entryId } : { replyTo: source.message.replyTo }) } : {}),
     }, { headers: { "x-toonflow-workspace": "1" } });
-    if (data.code !== 200) throw new Error(data.message || "新建对话失败");
+    if (data.code !== 200) throw new Error(data.message || errorMessage);
     if (currentRequest !== requestId) return;
     const session = data.data;
-    history.value.unshift({ file: session.file, name: session.name, modified: new Date().toISOString(), messageCount: 0 });
-    showConversation(session);
+    history.value.unshift({ file: session.file, name: session.name, modified: new Date().toISOString(), messageCount: session.messages.length });
+    showConversation(session).initialModel = initialModel;
     initialized.value = true;
   } catch (error) {
     if (currentRequest === requestId) ElMessage.error(axios.isAxiosError(error)
-      ? error.response?.data?.message || "新建对话失败"
-      : error instanceof Error ? error.message : "新建对话失败");
+      ? error.response?.data?.message || errorMessage
+      : error instanceof Error ? error.message : errorMessage);
   } finally {
-    if (currentRequest === requestId) loading.value = false;
+    if (currentRequest === requestId) {
+      loading.value = false;
+      branchingId.value = undefined;
+    }
   }
 }
 
@@ -341,6 +353,7 @@ watch(() => workspaceStore.project?.directory, directory => {
   pendingEvents.clear();
   initialized.value = false;
   loading.value = false;
+  branchingId.value = undefined;
   historyLoading.value = false;
   showConversation(null);
   if (visible.value && directory) void loadHistory(true);

@@ -18,7 +18,7 @@
       <input ref="fileInput" type="file" accept="audio/*" hidden aria-label="选择替换音频" :disabled="busy" @change="replaceOutput" />
     </template>
     <div v-loading="generating || uploading" class="audioContent nopan" :aria-busy="generating || uploading">
-      <audioPlayer v-if="previewUrl" ref="player" class="audioPreview" :src="previewUrl" @loadedmetadata="updateNodeInternals" />
+      <audioPlayer v-if="previewUrl" ref="player" v-model:pcmOptions="pcmOptions" class="audioPreview" :src="previewUrl" :mimeType="outputFile?.mimeType" @loadedmetadata="updateNodeInternals" />
       <div v-else class="audioEmpty" role="img" aria-label="暂无生成音频"><icon-music-bolt :size="48" stroke="1.25" aria-hidden="true" /></div>
     </div>
     <template #bottom>
@@ -28,7 +28,7 @@
         <promptInput v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" placeholder="描述您想要的音频效果或输入待朗读文本" expandable />
         <div class="promptFooter">
           <el-select
-            v-model="data.model"
+            :modelValue="selectedModel ? data.model : ''"
             class="modelSelect"
             filterable
             :loading="modelsLoading"
@@ -37,28 +37,33 @@
             aria-label="音频生成模型"
             noDataText="请先在设置中添加音频模型"
             placement="top-start"
+            @update:modelValue="data.model = $event"
             @visible-change="visible => visible && loadModels().catch(error => showNodeError(error, '模型读取失败'))">
-            <template #prefix><icon-music-bolt :size="17" /></template>
+            <template v-if="!selectedModel" #prefix><icon-music-bolt :size="17" /></template>
+            <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
             <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
-              <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="JSON.stringify([item.providerId, item.modelId])" />
+              <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="JSON.stringify([item.providerId, item.modelId])">
+                <modelLabel :label="item.label" :providerId="item.providerId" :modelId="item.modelId" />
+              </el-option>
             </el-option-group>
           </el-select>
           <generationSettings v-model:language="data.language" v-model:sampleRate="data.sampleRate" v-model:format="data.format" v-model:other="data.other" :model="selectedModel" :disabled="busy || !selectedModel" />
           <div class="generationActions">
             <mediaPrice v-if="generationInput" :input="{ ...generationInput, mediaType: 'audio' }" :supported="selectedModel?.supportsPrice === true" />
+            <el-button v-if="pendingRecovery" class="sendButton" :icon="IconPlayerStop" :loading="cancelling" :disabled="deleting || uploading || transcribing || actions?.processing" title="放弃任务" aria-label="放弃任务" @click="generationState.cancel().catch(error => showNodeError(error, '停止生成失败'))" />
             <el-button
               class="sendButton"
               :icon="generating ? IconPlayerStop : IconArrowUp"
-              :disabled="deleting || uploading || transcribing || actions?.processing || (!generating && (!generationPrompt || !selectedModel))"
-              :title="generating ? '停止生成' : '生成音频'"
-              :aria-label="generating ? '停止生成' : '生成音频'"
-              @click="generating ? generationController?.abort() : startGeneration().catch(error => showNodeError(error, '音频生成失败'))" />
+              :disabled="cancelling || deleting || uploading || transcribing || actions?.processing || (!generating && !pendingRecovery && (!generationPrompt || !selectedModel))"
+              :title="generating ? '停止生成' : pendingRecovery ? '复查任务' : '生成音频'"
+              :aria-label="generating ? '停止生成' : pendingRecovery ? '复查任务' : '生成音频'"
+              @click="generating ? generationState.cancel().catch(error => showNodeError(error, '停止生成失败')) : startGeneration().catch(error => showNodeError(error, '音频生成失败'))" />
           </div>
         </div>
       </el-card>
     </template>
   </nodeSkeleton>
-  <audioActions ref="actions" :file="outputFile" :src="previewUrl" :target="speedTarget" :disabled="generating || deleting || uploading || transcribing" @pause="player?.pause()" />
+  <audioActions ref="actions" v-model:pcmOptions="pcmOptions" :file="outputFile" :src="previewUrl" :target="speedTarget" :disabled="generating || deleting || uploading || transcribing" @pause="player?.pause()" />
 </template>
 
 <script setup lang="ts">
@@ -67,9 +72,12 @@ import { ElButton, ElCard, ElLoading, ElOption, ElOptionGroup, ElSelect } from "
 import { IconArrowUp, IconGauge, IconMusicBolt, IconPlayerStop, IconScissors, IconTransfer, IconTextRecognition } from "@tabler/icons-vue";
 import { getTargetValues, isTypeCompatible, nodeSkeleton, nodeTools, useNode, z, type NodeAudioRequest, type NodeHandle, type NodeInputValue, type NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
+import modelLabel from "@toonflow/node-shared/modelLabel";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { useNodeGeneration } from "@toonflow/node-shared/useNodeGeneration";
 import { useAudioTranscription } from "@toonflow/node-shared/useAudioTranscription";
+import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
+import type { PcmOptions } from "@toonflow/node-shared/pcmPreview";
 import { useNodeReferences } from "@toonflow/node-shared/useNodeReferences";
 import { useModelForm } from "@toonflow/node-shared/useModelForm";
 import audioPlayer from "@toonflow/node-audio/audioPlayer";
@@ -109,14 +117,16 @@ const player = ref<InstanceType<typeof audioPlayer>>();
 const actions = ref<InstanceType<typeof audioActions>>();
 const speedTarget = ref<HTMLElement>();
 const outputFile = computed(() => outputs.value.audio?.dataType === "AUDIO" ? outputs.value.audio.value : undefined);
+const pcmOptions = ref<Partial<PcmOptions>>({});
+watch(() => outputFile.value?.url, () => { pcmOptions.value = {}; }, { flush: "sync" });
 const { processing: transcribing, transcribe, cancel: cancelTranscription, cancelAndWait: cancelTranscriptionAndWait } = useAudioTranscription(outputFile);
 let disposed = false;
 let generationController: AbortController | undefined;
 let generation: Promise<void> | undefined;
 let modelsRequest: Promise<void> | undefined;
 let modelsRefreshPending = false;
-const generationState = useNodeGeneration(outputs, () => generationController?.abort());
-const { generating } = generationState;
+const generationState = useNodeGeneration(outputs, () => generationController?.abort(), { ai });
+const { generating, pendingRecovery, cancelling } = generationState;
 const busy = computed(() => generating.value || uploading.value || deleting.value || transcribing.value || !!actions.value?.processing);
 watch(busy, value => { if (!value && modelsRefreshPending) void refreshProviderModels(); });
 const selectedModel = computed(() => models.value.find(item => JSON.stringify([item.providerId, item.modelId]) === data.value.model));
@@ -191,7 +201,7 @@ function loadModels() {
     models.value = items.filter(item => item.type === "audio");
     // ACT: 仅空配置选择默认模型，临时不可用的模型保持原选择，避免静默换供应商。
     if (!data.value.model) {
-      const first = models.value[0];
+      const first = modelGroups.value[0]?.models[0];
       data.value.model = first ? JSON.stringify([first.providerId, first.modelId]) : "";
     }
   }).finally(() => {
@@ -202,7 +212,12 @@ function loadModels() {
 }
 
 async function startGeneration() {
+  if (cancelling.value) throw new Error("任务正在取消，请稍后重试");
   if (busy.value || disposed) throw new Error("音频正在处理或节点已关闭，请稍后重试");
+  if (pendingRecovery.value) {
+    generation = generationState.resume().catch(error => showNodeError(error, "音频任务复查失败"));
+    return { status: "generating" };
+  }
   const input = generationInput.value;
   if (!input) throw new Error("请先选择音频模型");
   if (!generationPrompt.value) throw new Error("请输入生成提示词或待朗读文本");
@@ -215,7 +230,7 @@ async function startGeneration() {
   generation = generationState.run(async () => {
     const { directory } = await workspace.list();
     controller.signal.throwIfAborted();
-    const [result] = await ai.generateAudio({ ...input, directory }, controller.signal);
+    const [result] = await generationState.generate("audio", { ...input, directory }, controller.signal);
     controller.signal.throwIfAborted();
     if (!result) throw new Error("供应商未返回音频");
     outputs.value.audio = { dataType: "AUDIO", value: { url: result.path, mimeType: result.mimeType } };
@@ -230,7 +245,8 @@ async function replaceOutput(event: Event) {
   const file = input.files?.[0];
   input.value = "";
   if (!file || busy.value || disposed) return;
-  if (!file.type.startsWith("audio/")) return void showNodeError("请选择音频文件", "音频替换失败");
+  const mimeType = getMediaMimeType(file);
+  if (!mimeType.startsWith("audio/")) return void showNodeError("请选择音频文件", "音频替换失败");
   if (!file.size || file.size > 100 * 1024 * 1024) return void showNodeError("音频不能为空且不能超过 100 MB", "音频替换失败");
   uploading.value = true;
   try {
@@ -241,7 +257,7 @@ async function replaceOutput(event: Event) {
       return;
     }
     // ACT: 替换不删除旧音频，保留复制节点与撤销记录的文件引用。
-    outputs.value.audio = { dataType: "AUDIO", value: { url, mimeType: file.type } };
+    outputs.value.audio = { dataType: "AUDIO", value: { url, mimeType } };
   } catch (error) {
     showNodeError(error, "音频替换失败");
   } finally {
@@ -255,8 +271,8 @@ nodeEvent.on("save", reason => {
 nodeEvent.on("delete", async () => {
   if (uploading.value) throw new Error("音频正在替换，请稍后删除节点");
   deleting.value = true;
-  generationController?.abort();
   try {
+    await generationState.cancel(false);
     await Promise.all([generation, actions.value?.cancelAndWait(), cancelTranscriptionAndWait()]);
     await files.removeNodeFiles();
   } finally {
@@ -316,7 +332,7 @@ nodeTools.register({
 });
 nodeTools.register({
   name: "setPrompt",
-  description: "修改此节点的音频生成提示词或待朗读文本，支持 {{ref 1}} 等参考标记；只修改文本，不启动生成",
+  description: "修改此节点的音频生成提示词或待朗读文本，仅接收 prompt，支持 {{ref 1}} 等参考标记；语种 language、采样率 sampleRate、格式 format 等配置须先用 node:getConfig 查询能力，再单独调用 node:setConfig；不启动生成",
   parameters: z.strictObject({ prompt: z.string() }),
   execute({ prompt }) {
     if (deleting.value || disposed) throw new Error("节点正在删除或已关闭，请稍后修改");
@@ -362,7 +378,7 @@ nodeTools.register({
     gap: 12px;
 
     .modelSelect {
-      width: 190px;
+      width: 280px;
       min-width: 0;
       &:deep(.el-select__wrapper) { gap: 6px; padding: 0; box-shadow: none; background: transparent; }
     }

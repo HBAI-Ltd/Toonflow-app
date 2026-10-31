@@ -105,10 +105,13 @@ ComfyUI 接入分支（仅在我的资料或回答涉及 ComfyUI 时使用）
 - 生成方法使用普通 async 方法而非箭头函数，通过 this.config.apiKey 取得用户配置，通过 this.signal 取得取消信号，通过 this.tool.fetch 发起请求。不得硬编码真实密钥或把鉴权信息写入日志、错误消息和返回结果。
 - 媒体供应商编辑界面按 rules 渲染、校验并保存全部表单字段，生成时通过 this.config 的同名字段读取。公开的接口地址等按已确认资料写入适配器；用户专属配置由表单填写，必填和格式要求在对应规则的 validate 中声明，不要求用户把额外密钥写进代码。
 - models 中每个模型可声明独立的 rules，使用 form-create JSON 字面量规则；图片、视频、音频节点会在设置弹层底部显示该表单，并将填写值传入 request.other，同样用于估价。field 为参数名，value 为默认值；仅声明实际支持的厂商专属参数，供应商仍须校验参数的合法性。
-- 宿主还提供 this.tool.hash 和 this.tool.image，以及 Buffer、URL、URLSearchParams、TextEncoder、TextDecoder、Blob、AbortController、AbortSignal、setTimeout、clearTimeout。不要假设存在全局 fetch、全局 Bun、File、FormData、WebSocket、EventSource、crypto、structuredClone 或其他未声明的宿主能力；JSON 工作流可用 JSON.parse(JSON.stringify(...)) 复制。模块顶层仅放声明，不发起请求、启动计时器或进行耗时操作。
+- 宿主还提供 this.tool.hash 和 this.tool.image，以及 Buffer、atob、btoa、URL、URLSearchParams、TextEncoder、TextDecoder、Blob、AbortController、AbortSignal、setTimeout、clearTimeout。不要假设存在全局 fetch、全局 Bun、File、FormData、WebSocket、EventSource、crypto、structuredClone 或其他未声明的宿主能力；JSON 工作流可用 JSON.parse(JSON.stringify(...)) 复制。模块顶层仅放声明，不发起请求、启动计时器或进行耗时操作。
 - await this.tool.ffmpeg() 返回绑定当前工作区的原生 @renmu/fluent-ffmpeg 工厂，使用 ffmpeg(input).videoFilters(...).on("error", ...).on("end", ...).save(output) 等原生链式调用，ffprobe 使用原生回调。显式文件路径只能在当前工作区内；原始参数、滤镜和清单中的间接 I/O 不由宿主解析，不能用它们访问工作区外文件。输出可能覆盖已有文件，必须使用新的文件名；运行取消由调用方监听 this.signal 并调用 command.kill，准备期间已取消时不能再启动进程。没有工作目录的调试上下文不能使用。仅在确实需要时调用；未安装时抛出 code 为 FFMPEG_REQUIRED 的错误，宿主前端会询问下载。继续向上抛出此错误，不自行安装或自动重试完整生成请求，以免重复计费。不再提供字节转换或 JSON 计划接口。
 - 请求和轮询都必须响应取消；为长任务设置有限超时，并在等待时正确清理计时器与取消监听。检查 HTTP 状态、响应结构、任务失败状态和最终结果，抛出可理解的中文错误。不能只返回任务 ID，异步厂商需要在方法内部等待任务完成。
 - generateImage、generateVideo、generateAudio 均返回 Promise<MediaAsset[]>，数组中是最终图片、视频或音频。mediaType 与实际结果一致；type 为 url 时返回 HTTP(S) 地址，为 base64 时返回纯 Base64 数据和正确 MIME，为 binary 时返回 Uint8Array 和正确 MIME。
+- 支持异步查询的供应商可选实现 resumeTask(data): Promise<MediaAsset[]>。在 generateImage、generateVideo、generateAudio 收到远端任务 ID 后，立即 await this.saveTaskData?.(data)，再继续原有轮询；旧生成方法的参数和返回类型保持不变，可选链兼容尚未支持保存任务的旧宿主。同步供应商无需实现这两个能力。
+- data 使用 ProviderTaskData 的 JSON 对象，只保存恢复所需的任务 ID、阶段、模型、地区等非鉴权字段，不保存 API Key、token、请求头、二进制、函数或 AbortSignal。resumeTask 必须验证 data 结构，通过 this.config 重新取得凭据，仅查询原任务并返回最终媒体，不得重新上传或重新提交同一任务。多阶段流程在每次接单后保存新的 data；继续提交下一阶段前先保存明确的提交中状态，响应丢失时恢复应报提交状态未知，不能自动重提。
+- 供应商明确返回失败、取消、过期等不可恢复终态时，使用 Object.assign(new Error(中文原因), { code: "MEDIA_TASK_FAILED" })；网络中断、查询超时、鉴权暂不可用和未知状态不得标记成远端失败。恢复可重新限定本次等待时长，本地等待超时不代表原任务已失效。
 - 对照模型声明映射公共请求字段。参考素材可能是 URL、Base64 或二进制，由适配器按厂商协议转换；需要上传素材时，也应在适配器内完成。明确校验无法支持的字段，不要悄悄丢掉参考图、首尾帧、参考视频或音频。request.other 只用于厂商专属参数，不允许覆盖鉴权信息或绕过公共字段校验。
 - 没有明确要求时，不添加检查更新、自动升级或其他与模型生成无关的行为。
 

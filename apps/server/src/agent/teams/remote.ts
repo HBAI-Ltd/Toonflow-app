@@ -76,7 +76,7 @@ export async function runRemoteTeam(options: {
     );
     if (truncated) {
       if (result.status === "completed") result.status = "limited";
-      result.result += "\n[远端结果过长，已截断；可使用 taskId 查询完整产物]";
+      result.result += "\n[远端结果过长，已截断；当前工具不支持补读完整结果，请通过远端服务核对，不要为读取结果重复提交任务]";
     }
     return true;
   }

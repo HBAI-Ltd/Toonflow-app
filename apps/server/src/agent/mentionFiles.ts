@@ -86,11 +86,11 @@ export async function queryStoredMentionNodes(directory: string, canvasId: strin
   return queryMentionNodes(canvas.nodes, `${canvasId}:${canvas.revision}`, options);
 }
 
-export async function storedMentionOutput(directory: string, canvasId: string, nodeId: string, outputId?: string) {
+export async function storedMentionOutput(directory: string, canvasId: string, nodeId: string, outputId?: string | null) {
   const canvas = await readCanvas(directory, canvasId);
   const node = canvas.byId.get(nodeId);
   if (!node) throw Object.assign(new Error("节点已删除，请重新选择"), { status: 404 });
-  return outputId === undefined ? mentionNodeOutputs(node) : createCanvasMention(node, canvasId, outputId, path => readMentionText(directory, path));
+  return outputId === undefined ? mentionNodeOutputs(node) : createCanvasMention(node, canvasId, outputId ?? undefined, path => readMentionText(directory, path));
 }
 
 export async function selectMentionAsset(relativePath: string): Promise<AgentMention> {

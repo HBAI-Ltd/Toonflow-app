@@ -9,6 +9,8 @@ export type DocumentNode = { canvasPath: string; nodeId: string; label: string; 
 export type DocumentNodeOptions = { canvasPath?: string; includeGroups?: boolean; signal?: AbortSignal; onError?: (path: string, error: unknown) => void };
 
 export function remapNodeReferences(node: Pick<Node, "data">, ids: ReadonlyMap<string, string>) {
+  // 复制产生新节点，不能继承原节点的供应商任务身份。
+  if (node.data) delete node.data.mediaTask;
   const remapReference = (value: string) => {
     try {
       const reference = JSON.parse(decodeURIComponent(value));

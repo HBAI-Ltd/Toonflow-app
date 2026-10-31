@@ -1,8 +1,11 @@
 <template>
   <footer class="variationFooter">
-    <el-select v-model="settings.model" class="modelSelect" filterable :loading="modelsLoading" :disabled="busy" placeholder="选择图片模型" :aria-label="`${label}模型`" noDataText="请先在设置中添加图片模型" placement="top-start" @visible-change="visible => visible && refreshModels()">
+    <el-select :modelValue="selectedModel ? settings.model : ''" class="modelSelect" filterable :loading="modelsLoading" :disabled="busy" placeholder="选择图片模型" :aria-label="`${label}模型`" noDataText="请先在设置中添加图片模型" placement="top-start" @update:modelValue="settings.model = $event" @visible-change="visible => visible && refreshModels()">
+      <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
       <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
-        <el-option v-for="model in provider.models" :key="model.modelId" :label="model.label" :value="JSON.stringify([model.providerId, model.modelId])" />
+        <el-option v-for="model in provider.models" :key="model.modelId" :label="model.label" :value="JSON.stringify([model.providerId, model.modelId])">
+          <modelLabel :label="model.label" :providerId="model.providerId" :modelId="model.modelId" />
+        </el-option>
       </el-option-group>
     </el-select>
     <el-popover trigger="click" placement="top" :width="220" :disabled="busy || !selectedModel" :showArrow="false">
@@ -23,6 +26,7 @@ import { ElButton, ElOption, ElOptionGroup, ElPopover, ElSelect } from "element-
 import { IconSparkles } from "@tabler/icons-vue";
 import { useNodeAi, useNodeToolsContext, type NodeMediaModel, type NodeMediaValue } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
+import modelLabel from "@toonflow/node-shared/modelLabel";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { useImageVariationNode } from "../useImageVariationNode";
 
@@ -88,7 +92,7 @@ async function refreshModels() {
     }
     models.value = result.filter(item => item.type === "image");
     if (!props.settings.model) {
-      const choice = models.value[0];
+      const choice = modelGroups.value[0]?.models[0];
       props.settings.model = choice ? JSON.stringify([choice.providerId, choice.modelId]) : "";
     }
   } catch (error) { if (!disposed) showNodeError(error, "模型读取失败"); }

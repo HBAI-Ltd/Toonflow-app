@@ -1,7 +1,8 @@
 import type { BrowserFfmpegCommand, BrowserFfmpegFactory, FfprobeData } from "@toonflow/ffmpeg/browser";
+import { getPcmOptions, type PcmOptions } from "@toonflow/node-shared/pcmPreview";
 
 export type AudioSegment = { start: number; end: number };
-export type AudioProcessingOptions = { outputPath: string } & (
+export type AudioProcessingOptions = { outputPath: string; pcm?: PcmOptions } & (
   { action: "speed"; speed: number } | { action: "clip"; segments: AudioSegment[] }
 );
 
@@ -14,13 +15,13 @@ function normalizePath(path: string) {
   return normalized;
 }
 
-function probeAudio(ffmpeg: BrowserFfmpegFactory, path: string, signal?: AbortSignal) {
+function probeAudio(ffmpeg: BrowserFfmpegFactory, path: string, signal?: AbortSignal, inputOptions: string[] = []) {
   signal?.throwIfAborted();
   const command = ffmpeg(path);
   const cancel = () => command.kill();
   signal?.addEventListener("abort", cancel, { once: true });
   return new Promise<FfprobeData>((resolve, reject) => {
-    command.ffprobe((error, data) => {
+    command.ffprobe({ options: inputOptions }, (error, data) => {
       if (signal?.aborted) reject(signal.reason);
       else if (error) reject(error);
       else resolve(data);
@@ -48,7 +49,9 @@ export async function processAudio(ffmpeg: BrowserFfmpegFactory, source: string,
   if (options.action === "speed" && (!Number.isFinite(options.speed) || options.speed < 0.1 || options.speed > 4)) {
     throw new Error("音频速度须在 0.1 至 4 倍之间");
   }
-  const media = await probeAudio(ffmpeg, source, signal);
+  if (options.pcm && !getPcmOptions(options.pcm)) throw new Error("PCM 采样率、声道数或采样格式无效");
+  const inputOptions = options.pcm ? ["-f", options.pcm.format, "-sample_rate", String(options.pcm.sampleRate), "-channels", String(options.pcm.channels)] : [];
+  const media = await probeAudio(ffmpeg, source, signal, inputOptions);
   const audio = media.streams.find(stream => stream.codec_type === "audio");
   if (!audio) throw new Error("文件不包含音轨");
   const duration = Math.max(...[audio.duration, media.format.duration].map(Number).filter(value => Number.isFinite(value) && value > 0));
@@ -61,6 +64,7 @@ export async function processAudio(ffmpeg: BrowserFfmpegFactory, source: string,
 
   const command = ffmpeg(source).output(options.outputPath).noVideo().audioCodec("aac").audioBitrate(192).format("ipod")
     .outputOptions("-movflags", "+faststart");
+  if (inputOptions.length) command.inputOptions(inputOptions);
   if (options.action === "speed") {
     let tempo = options.speed;
     const filters: string[] = [];

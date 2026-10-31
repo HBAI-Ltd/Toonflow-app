@@ -8,7 +8,7 @@ const modelSchema = z.object({
   outputTokenLimit: z.number().int().positive().optional(),
 });
 
-export async function fetchProviderModels({ apiUrl, protocol, apiKey }: { apiUrl: string; protocol: string; apiKey: string }) {
+export async function fetchProviderModels({ apiUrl, protocol, apiKey, signal }: { apiUrl: string; protocol: string; apiKey: string; signal?: AbortSignal }) {
   const url = new URL(apiUrl);
   if (url.pathname === "/") url.pathname = "/v1";
   url.pathname = `${url.pathname.replace(/\/+$/, "")}/models`;
@@ -21,9 +21,10 @@ export async function fetchProviderModels({ apiUrl, protocol, apiKey }: { apiUrl
 
   const models = new Map<string, { id: string; label: string; contextWindow?: number; maxOutputTokens?: number }>();
   const cursors = new Set<string>();
-  const signal = AbortSignal.timeout(30000);
+  const timeoutSignal = AbortSignal.timeout(30000);
+  const requestSignal = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
   while (true) {
-    const response = await fetch(url, { headers, signal, redirect: "error" });
+    const response = await fetch(url, { headers, signal: requestSignal, redirect: "error" });
     if (!response.ok) throw new Error(t`模型列表获取失败（HTTP ${response.status}），请检查 API 地址、连接协议和密钥是否正确。`);
     const result = z.object({
       data: z.array(modelSchema),

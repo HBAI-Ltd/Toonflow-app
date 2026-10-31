@@ -9,6 +9,6 @@ export default Router().post("/", validateFields({
 }), async (req, res) => {
   const { directory, taskIds } = req.body;
   const cwd = await u.workspace.resolveWorkspace(req, directory);
-  u.mediaTasks.cancel(cwd, taskIds);
+  await u.mediaTasks.cancel(cwd, taskIds);
   res.json(success());
 });

@@ -32,12 +32,15 @@
     <footer class="chatFooter">
       <div class="inputContent"><slot name="input" /></div>
       <div class="inputActions">
-        <el-select v-model="model" class="modelSelect" size="small" :loading="modelsLoading" filterable placeholder="选择模型" aria-label="生成模型" @visibleChange="$event && emit('loadModels')">
+        <el-select :modelValue="selectedModel ? model : ''" class="modelSelect" size="small" :loading="modelsLoading" filterable placeholder="选择模型" aria-label="生成模型" @update:modelValue="model = $event" @visibleChange="$event && emit('loadModels')">
+          <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
           <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
-            <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="JSON.stringify([item.providerId, item.modelId])" />
+            <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="JSON.stringify([item.providerId, item.modelId])">
+              <modelLabel :label="item.label" :providerId="item.providerId" :modelId="item.modelId" />
+            </el-option>
           </el-option-group>
         </el-select>
-        <el-button class="sendButton" type="primary" round :disabled="initializing || !prompt.trim() || !model" aria-label="生成动画" @click="sendInstruction">
+        <el-button class="sendButton" type="primary" round :disabled="initializing || !prompt.trim() || !selectedModel" aria-label="生成动画" @click="sendInstruction">
           <icon-sparkles :size="14" /><span>生成方案</span>
         </el-button>
       </div>
@@ -51,6 +54,7 @@ import { ElButton, ElOption, ElOptionGroup, ElSelect } from "element-plus";
 import { IconLoader2, IconSparkles, IconMovie, IconCheck, IconAlertCircle, IconArrowBackUp } from "@tabler/icons-vue";
 import type { NodeAiModel } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
+import modelLabel from "@toonflow/node-shared/modelLabel";
 
 import type { DirectorPlan, DirectorPlanItem, DirectorGeneration } from "./sceneAnimation";
 
@@ -58,9 +62,10 @@ const props = defineProps<{ result?: DirectorPlan; referenceCount: number; initi
 const emit = defineEmits<{ editInstruction: [value: string]; selectPlan: [id: string]; send: []; loadModels: [] }>();
 const prompt = defineModel<string>("prompt", { default: "" });
 const model = defineModel<string>("model", { default: "" });
+const selectedModel = computed(() => props.models.find(item => JSON.stringify([item.providerId, item.modelId]) === model.value));
 const modelGroups = computed(() => groupNodeModels(props.models));
 function sendInstruction() {
-  if (props.initializing || !prompt.value.trim() || !model.value) return;
+  if (props.initializing || !prompt.value.trim() || !selectedModel.value) return;
   emit("send");
 }
 

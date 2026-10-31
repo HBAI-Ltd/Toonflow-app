@@ -410,98 +410,7 @@ Biaya ini adalah angka yang dicatat untuk contoh tersebut dan hanya diberikan se
 
 ---
 
-## 6. 🚀 TF-Router, Gateway Model Resmi
-
-<p align="center">
-  <a href="https://api.toonflow.net/">
-    <img src="https://img.shields.io/badge/TF--Router_Official%20Model%20Gateway-181717?style=for-the-badge&logoColor=white" alt="TF-Router" />
-  </a>
-</p>
-
-TF-Router adalah gateway model resmi Toonflow yang kami kelola sendiri. Silakan mencobanya. Seluruh kode sumbernya terbuka dan tersedia untuk dihosting sendiri maupun diaudit: [HBAI-Ltd/TF-Router](https://github.com/HBAI-Ltd/TF-Router).
-
-<details>
-<summary><strong>Surat untuk Komunitas Toonflow (diterbitkan 2026-06-08)</strong></summary>
-
-> ### Surat untuk Komunitas Toonflow
-> 130 hari.
-> Tidak lama, tetapi cukup untuk membuat kami melihat beberapa hal dengan jelas.
-> Sejak baris kode pertama yang kami commit hingga hari ini, 130 hari telah berlalu. Kami telah merilis 20 versi, membuat lebih dari 800 commit, dan menulis 213.765 baris kode yang berisi 640.810 karakter.
-> Dua kali penulisan ulang, sebuah sistem penyedia, dan alur kerja yang kami banggakan.
-> Kami pikir itu sudah cukup.
-> Ternyata belum.
-> Ada yang mengatakan ingin menambahkan modul mereka sendiri ke Toonflow, tetapi tetap tidak memahami cara mengubah kodenya meskipun sudah mencoba selama berjam-jam.
-> Ada yang mengatakan komunitasnya terlalu kecil dan mereka sulit mendapat bantuan ketika menghadapi masalah.
-> Ada yang mengatakan ketentuan komersial menghalangi mereka untuk menggunakan proyeknya secara nyata.
-> Kami mendengarkan Anda.
-> Selama 130 hari ini, anggota tim kami bergantian hadir di grup obrolan, menjawab setiap pertanyaan 24 jam sehari, 7 hari seminggu. Tanpa sponsor, tanpa subsidi: seluruh biaya tenaga kerja kami tanggung sendiri.
-> Bukan karena kami punya banyak uang.
-> Tetapi karena kami yakin hal ini layak dikerjakan.
-> Karena itu, kami memutuskan untuk melakukan penulisan ulang yang ketiga.
-> Setiap penulisan ulang Toonflow membawa kami menuju keterbukaan dan sumber terbuka yang lebih luas.
-> Kali ini, kami memilih untuk membuka semuanya.
->
-> 1. MIT License
-> Kami memutuskan untuk mengganti Apache-2.0 dengan MIT License dan menghapus semua ketentuan komersial tambahan setelah penulisan ulang selesai.
-> Semuanya akan terbuka sepenuhnya, tanpa pembatasan komersial.
-> Anda boleh menggunakannya untuk apa saja.
->
-> 2. Sistem Plugin yang Sepenuhnya Fleksibel
-> Kami akan merancang ulang seluruh arsitektur plugin.
-> Papan cerita, panorama, lini masa, bahkan gim mini.
-> Jika bisa Anda bayangkan, Anda bisa menambahkannya.
-> Bukan dengan cara mengakali sistem, melainkan karena memang dirancang untuk itu.
->
-> 3. Drizzle ORM + Dukungan Banyak Basis Data
-> Kami akan beralih ke Drizzle ORM.
-> Penyimpanan lokal, PostgreSQL, atau MySQL: pilih sesuai kebutuhan.
-> Pengembangan khusus tidak lagi menjadi mimpi buruk.
->
-> 4. Alur Kerja Monorepo dari Awal hingga Akhir
-> Pengembangan plugin, integrasi SDK, dan rilis, semuanya terhubung.
-> Membuat kontribusi cukup sederhana untuk dikelola satu orang.
->
-> 5. Modul Baru
-> Kanvas Tanpa Batas — bukan sekadar ruang, melainkan kebebasan.
-> Mode Inspirasi — dibuat untuk para kreator.
-> Pusat Plugin — membantu plugin berkualitas ditemukan.
-> Pusat Keterampilan — agar pengalaman bisa dibagikan.
-> Pusat Penyedia — tempat ekosistem bermula.
-> Integrasi Docker yang lengkap — agar penerapan mudah diakses.
->
-> Sekarang, ada hal yang selama ini enggan kami bicarakan.
-> Penulisan ulang membutuhkan waktu. Selama itu, server tetap berjalan, domain perlu diperpanjang, tim bekerja hingga larut, dan harga kopi terus naik.
-> Kami tidak memiliki pendanaan investasi, iklan, maupun rencana komersial tersembunyi.
-> Namun, kami perlu bertahan untuk menyelesaikan apa yang sudah kami mulai.
-> Itulah alasan kami meluncurkan TF-Router, gateway model resmi Toonflow.
-> Sejujurnya, kami lama ragu tentang platform ini.
-> Ini bukan sesuatu yang ingin kami bangun. Kami tidak ingin keberadaan gateway membuat orang merasa Toonflow mulai “mencari keuntungan semata”.
-> Beban pikiran itu kami bawa cukup lama.
-> Namun, banyak pengguna tidak bisa mendapatkan persetujuan akses ke Seedance 2.0 dan terus bertanya apakah ada cara untuk menggunakannya.
-> Setelah mempertimbangkannya dengan matang, akhirnya kami memutuskan untuk membangunnya sendiri dan menandatangani perjanjian kerangka kerja tahunan Seedance dengan Volcengine.
-> **Kami juga memutuskan untuk menawarkan Seedance 2.0 dengan harga pokok selama masa promosi platform, tanpa mengambil keuntungan sedikit pun dari selisih harga.**
-> Setelah promosi berakhir, kami akan mengenakan biaya layanan yang sangat kecil. Untuk saat ini, prioritas kami adalah menyediakan akses bagi Anda.
-> Lebih penting lagi, seluruh kode sumber TF-Router telah dirilis sebagai sumber terbuka: 【<a href="https://github.com/HBAI-Ltd/TF-Router" target="_blank">Kode Sumber</a>】.
-> Tidak percaya kepada kami? Tidak masalah. Baca kodenya, terapkan sendiri, dan jalankan sendiri.
-> Itulah sikap kami.
-> Jika Anda memilih untuk mencobanya, Anda sedang menaruh kepercayaan pada satu-satunya cara yang saat ini kami miliki untuk melanjutkan pekerjaan ini.
-> Jika tidak, itu pun tidak masalah. Terus gunakan Toonflow, terus kritik kami, dan terus ajukan fitur.
-> Kami tetap di sini.
-> Satu hal terakhir, dari hati:
-> Kami hanyalah sekelompok orang biasa yang percaya bahwa alat kreatif seharusnya menjadi milik semua orang.
-> Toonflow tidak pernah sekadar menjadi produk kami.
-> Ini adalah kisah yang kita tulis bersama.
-> Penulisan ulang ketiga bukanlah garis akhir.
-> Inilah awal baru bagi kami.
-> Terima kasih kepada semua orang yang pernah menggunakannya, mengkritiknya, atau memberikan saran.
-> Berkat Anda, proyek ini bisa sampai sejauh ini.
-> Terima kasih.
-
-</details>
-
----
-
-## 7. 👨‍👩‍👧‍👦 Komunitas WeChat
+## 6. 👨‍👩‍👧‍👦 Komunitas WeChat
 
 Pindai kode QR untuk menghubungi asisten undangan grup:
 
@@ -515,13 +424,13 @@ Atau gunakan tautan undangan: [https://discord.gg/HEjKmpNpAZ](https://discord.gg
 
 ---
 
-## 8. 💌 Hubungi Kami
+## 7. 💌 Hubungi Kami
 
 📧 Email: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow咨询)
 
 ---
 
-## 9. 📜 Lisensi Sumber Terbuka
+## 8. 📜 Lisensi Sumber Terbuka
 
 Toonflow dilisensikan di bawah [MIT License](../../LICENSE). Dependensi dan aset pihak ketiga tetap tunduk pada lisensi serta pemberitahuan hak cipta masing-masing.
 
@@ -531,7 +440,7 @@ Toonflow dilisensikan di bawah [MIT License](../../LICENSE). Dependensi dan aset
 
 ---
 
-## 10. 🙏 Ucapan Terima Kasih
+## 9. 🙏 Ucapan Terima Kasih
 
 - **Mitra**: 算能云, Tencent Hunyuan 3D, dan AI Galaxy (智星云).
 - **Kontributor proyek**: Terima kasih kepada semua yang menyumbangkan kode, memperbaiki dokumentasi, membagikan plugin, dan membantu menyelesaikan masalah.

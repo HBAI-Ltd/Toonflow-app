@@ -71,6 +71,7 @@ type VideoRequest = {
 type Context = {
   config: { apiKey?: string; minimaxApiKey?: string };
   signal?: AbortSignal;
+  saveTaskData?: (data: ProviderTaskData) => Promise<void>;
   tool: {
     fetch: typeof fetch;
     errorMessage(value: unknown): string;
@@ -1204,9 +1205,12 @@ function referencePrompt(request: VideoRequest, labels: Partial<VideoReferenceLa
     const reference = request.referenceOrder?.[Number(number) - 1];
     if (!reference) throw new Error(`引用标记 ${marker} 缺少素材映射，请更新视频节点或提供 referenceOrder`);
     if (reference.type === "text") return `参考 ${Number(number)}`;
-    const label = "index" in reference
-      ? Number.isSafeInteger(reference.index) && reference.index >= 0 ? labels[reference.type]?.[reference.index] : undefined
-      : labels[reference.type];
+    const label =
+      "index" in reference
+        ? Number.isSafeInteger(reference.index) && reference.index >= 0
+          ? labels[reference.type]?.[reference.index]
+          : undefined
+        : labels[reference.type];
     if (!label) throw new Error(`当前模型或模式不支持引用标记 ${marker} 对应的素材，请调整提示词或生成模式`);
     return label;
   });
@@ -1496,13 +1500,13 @@ async function waitForTask(context: Context, handle: TaskHandle, totalTimeout: n
     }
     if (status === "Failure") {
       const reason = output && typeof output.error_message === "string" ? output.error_message : "接口未说明原因";
-      throw new Error("生成失败：" + reason);
+      throw Object.assign(new Error("生成失败：" + reason), { code: "MEDIA_TASK_FAILED" });
     }
     if (status === "Expired") {
-      throw new Error("任务已过期，请重新发起");
+      throw Object.assign(new Error("任务已过期，请重新发起"), { code: "MEDIA_TASK_FAILED" });
     }
     if (status === "Cancelled" || status === "Canceled") {
-      throw new Error("任务已被取消");
+      throw Object.assign(new Error("任务已被取消"), { code: "MEDIA_TASK_FAILED" });
     }
     // 除上述终态外都按「还在处理中」继续轮询（例如平台新增的 moderating 之类状态），
     // 避免因为状态名不认识就提前报错；真正的失败仍由 Failure/Expired 分支处理。
@@ -1522,6 +1526,7 @@ async function waitForTask(context: Context, handle: TaskHandle, totalTimeout: n
 
 async function runVideoTask(context: Context, request: VideoRequest, apiKey: string, skeleton: VideoSkeleton): Promise<MediaAsset[]> {
   const handle = await submitTask(context, { model: request.model, input: skeleton.input, parameters: skeleton.parameters }, apiKey);
+  await context.saveTaskData?.({ kind: "modelVerseVideo", taskId: handle.taskId, model: request.model, deadline: Date.now() + VIDEO_TOTAL_TIMEOUT });
   const urls = await waitForTask(context, handle, VIDEO_TOTAL_TIMEOUT);
   return urls.map((url) => ({ mediaType: "video" as MediaType, type: "url" as const, url, mimeType: "" }));
 }
@@ -1655,6 +1660,11 @@ async function generateH3Video(context: Context, request: VideoRequest, apiKey: 
   if (!taskId) {
     throw new Error("提交 MiniMax H3 任务失败：接口未返回任务编号");
   }
+  await context.saveTaskData?.({ kind: "h3Video", taskId, model: request.model, deadline: Date.now() + H3_TOTAL_TIMEOUT });
+  return waitForH3Video(context, taskId, apiKey);
+}
+
+async function waitForH3Video(context: Context, taskId: string, apiKey: string): Promise<MediaAsset[]> {
   const deadline = Date.now() + H3_TOTAL_TIMEOUT;
   while (true) {
     if (context.signal?.aborted) {
@@ -1695,15 +1705,15 @@ async function generateH3Video(context: Context, request: VideoRequest, apiKey: 
     if (status === "failed") {
       const failed = task && task.error && typeof task.error === "object" ? (task.error as Record<string, unknown>) : undefined;
       const reason = failed && typeof failed.message === "string" ? failed.message : "接口未说明原因";
-      throw new Error("MiniMax H3 生成失败：" + reason);
+      throw Object.assign(new Error("MiniMax H3 生成失败：" + reason), { code: "MEDIA_TASK_FAILED" });
     }
     if (status === "cancelled") {
-      throw new Error("MiniMax H3 任务已被取消");
+      throw Object.assign(new Error("MiniMax H3 任务已被取消"), { code: "MEDIA_TASK_FAILED" });
     }
     if (status === "blocked") {
       const blocked = task && task.error && typeof task.error === "object" ? (task.error as Record<string, unknown>) : undefined;
       const reason = blocked && typeof blocked.message === "string" ? blocked.message : "内容未通过审核";
-      throw new Error("MiniMax H3 任务被审核拦截：" + reason);
+      throw Object.assign(new Error("MiniMax H3 任务被审核拦截：" + reason), { code: "MEDIA_TASK_FAILED" });
     }
     // 其余状态（queued、running、moderating 等，含平台后续新增的排队/审核阶段）继续轮询，
     // 直到成功、失败、被拦截，或到达总等待上限。
@@ -1712,9 +1722,9 @@ async function generateH3Video(context: Context, request: VideoRequest, apiKey: 
 
 export default {
   id: "compshare",
-  label: "优云智算",
+  label: "优云智算（支持30秒）",
   icon: "data:image/webp;base64,UklGRrIEAABXRUJQVlA4IKYEAACwHACdASqAAIAAPlEojkWjoqEUC4RUOAUEsZOACshg/IF9F9uuYENt15fvulv4nP+S/lfYO8xX7AetJ6L/QA/wHUO7xj+53oq3hpXLaX9PfNP8g2oN0ryI5xH8WBNYIxASaOpGWbHVhMRvffDAog2oVmCU+vla84NqXJGiLa51ZBlAnajgeDd5xodsqvUvGQfQhlnkJxos+18ksB+mszh7/L8eLkBBsP2HJaoWAYw8k1/nKoCh+S0qFY6+Iwg/Y09tMNh556MM9Z7/L7WQVU4ouPEscY/0ALZJhZ4tei+xRl6IertQnQqW/PgUJmcsAP79nJzusj9cFOfFWwhdNAIFr9+vv1hhKikDp6WFkU203jKYviAGyS+J4uQtQUMoW8aQAwghvdtOP93MJ6wasAcPa6A5QwIqRezhlJCfwV1ugcHA1WdIWulOwYn/y4MILLfa51Q6vXXxuYe/kZUMvkpa3aaHl4fsX6zrQSZY5qzPmpPpZ+1tFYDJP/y/rh6h9rK1aT/lQnX/FeSk4OO5/2WjXL0vWqVCWw1Kr29QxfQFaxM9noNALm8zW6Hk0JQLdUuBTtG7r7fPZV1fEybTq9WW9tzGReXxpYvi6RypTxLrAQC1O5d385YWaLWVFp1VSHAAutd0EIyGj4OMoQaOrneF0NVSX3krJiAITbJqXLe5ECt/lNYGoAt9Rybyej+YXQBIuEBn72/nnf90ztwvpSvMH/3MsfxF5o/WijNadedW1sY72FyVcOSmND6ZPVmgw/rEFPs1zAdfFhVX7JP9ffll0UknDyafjBdDMn7OGbiZ3DIsFJIqroxusWqEjizCrq4ds+TynGCPVQ/lp8//D6F8MmQ6R+aRn+f4yfTOj0RBeqfORZx4yM+7+bvIm7vRqJkPD7qLNL69IB32mrNe9o1T/gYHfcxMalvCUkLeWDDv5sQSUR3VMENHPlsSqaXOSC6AoVk9JYoTibLGc45B35u3an2nRXe9H8dQhNZ6MRpWhEmIEJ3oTVyCsTSfDTwm40dLormlbIJlROoyb011vm9l12kB0iROLxr96nk99vmiF8kY3QZcN2P/5SA3SqrncD3H5HTbvjzx5xvYmeb6F0EFpE/xI3/om1SiSR4O/bHOvkB15jaoIOzNmtX7PlAlYqspDgwRUyuH0nFepR/yx5JSOXmegKyiBuwz42YUmljSNrXasas6Wuz8y5egRWtvNi3HDtxURRkMCcDKIN5kUd7Zav0NT+rynTOSTN2SCmEm6At+NIP4qRCu9OXJAGw7+59ZNtDXK/IuwdWObWZo+b9wToBoypaMqyN/VKdnacmVMwzrEQK6mzqusSVDFExXBiHIdlyfiey59cQ5GLQD/lgnltTmEw6x8lj5YhnWhTUtQX8+96IShf4sDrtmtS5SA8uK+TNYjkTyvr0/7TulOe2n8Nd4JOyxp71t8k7Uwfo5bgpJR7UBgv2ZJgLU6t+zgOImh7hse1RE6ScNzhXpss0k5AMpMIqaz4wB36XHu3jPpLb1XyTv/CujPjDjUb2wOKJSerxrWjiZJekcLyy+MCaoWSUmF4kjKk6pNgDl0MkYdgeBTnCAAA==",
-  version: "2.0.1",
+  version: "2.0.2",
   readme:
     "优云智算\n\n**优云智算 API Key**：图片与视频模型用，获取地址 https://console.compshare.cn/light-gpu/api-keys\n**MiniMax API Key**：只有 `MiniMax-H3` 用，获取地址 https://www.compshare.cn/video-studio",
   rules: [
@@ -1734,6 +1744,20 @@ export default {
     },
   ],
   models: [
+    {
+      id: "MiniMax-H3",
+      label: "MiniMax H3（文/图/参考素材生视频 · 视频工作台）",
+      type: "video",
+      mode: ["text", "singleImage", "endFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
+      audio: "optional",
+      imageRatios: ["adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"],
+      durationResolutionMap: [
+        {
+          duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+          resolution: ["480P", "768P", "1080P", "2K", "4K"],
+        },
+      ],
+    },
     {
       id: "doubao-seedream-5-0-pro-260628",
       label: "doubao-seedream 5.0 Pro（文生图 / 多参考图）",
@@ -1799,20 +1823,6 @@ export default {
       imageRatios: ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "adaptive"],
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["480p", "720p", "1080p"] }],
     },
-    {
-      id: "MiniMax-H3",
-      label: "MiniMax H3（文/图/参考素材生视频 · 视频工作台）",
-      type: "video",
-      mode: ["text", "singleImage", "endFrameOptional", ["imageReference:9", "videoReference:3", "audioReference:3"]],
-      audio: "optional",
-      imageRatios: ["adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"],
-      durationResolutionMap: [
-        {
-          duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
-          resolution: ["480P", "768P", "1080P", "2K", "4K"],
-        },
-      ],
-    },
   ] satisfies ProviderModel[],
   async generateImage(this: Context, request: ImageRequest): Promise<MediaAsset[]> {
     this.signal?.throwIfAborted();
@@ -1876,5 +1886,14 @@ export default {
     } catch (error) {
       throw friendlyError(error);
     }
+  },
+  async resumeTask(this: Context, data: ProviderTaskData): Promise<MediaAsset[]> {
+    if ((data.kind !== "modelVerseVideo" && data.kind !== "h3Video") || typeof data.taskId !== "string" || !data.taskId
+      || typeof data.model !== "string" || !data.model || typeof data.deadline !== "number" || !Number.isFinite(data.deadline)) {
+      throw new Error("视频任务恢复数据无效");
+    }
+    if (data.kind === "h3Video") return waitForH3Video(this, data.taskId, requireH3Key(this));
+    const urls = await waitForTask(this, { taskId: data.taskId, apiKey: requireModelVerseKey(this) }, VIDEO_TOTAL_TIMEOUT);
+    return urls.map((url) => ({ mediaType: "video", type: "url", url, mimeType: "" }));
   },
 };

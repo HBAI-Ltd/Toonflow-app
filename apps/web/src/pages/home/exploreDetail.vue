@@ -1,7 +1,7 @@
 <template>
   <el-dialog :modelValue="true" class="exploreDetailDialog" :title="detail?.title || '作品详情'" width="min(1200px, 94vw)" alignCenter appendToBody destroyOnClose :closeOnClickModal="!cloning" :closeOnPressEscape="!cloning" :showClose="false" @update:modelValue="!$event && emit('close')">
     <div class="projectDetail">
-      <div class="videoStage">
+      <div class="videoStage" :class="{ videoReady: detail?.videoUrl && !videoFailed }">
         <div class="viewerNavigation">
           <button class="returnButton" type="button" :disabled="cloning" @click="emit('close')"><icon-arrow-left :size="17" aria-hidden="true" /><span>返回探索</span></button>
           <button class="closeButton" type="button" :disabled="cloning" aria-label="关闭作品详情" @click="emit('close')"><icon-x :size="18" aria-hidden="true" /></button>
@@ -15,7 +15,7 @@
           <span>视频加载失败，请重试</span>
           <el-button @click="videoFailed = false">重试</el-button>
         </div>
-        <videoPlayer v-else-if="detail?.videoUrl" :key="detail.videoUrl" class="detailPlayer" :src="detail.videoUrl" :label="detail.title" autoplay muted :active="!processVisible" @error="videoFailed = true" />
+        <videoPlayer v-else-if="detail?.videoUrl" :key="detail.videoUrl" class="detailPlayer" :src="detail.videoUrl" :label="detail.title" autoplay :active="!processVisible" @error="videoFailed = true" />
         <div v-else-if="detail" class="detailLoading" role="status">该作品暂未提供可播放的视频</div>
       </div>
       <div v-if="detail" class="detailContent">
@@ -28,12 +28,6 @@
           </div>
           <div class="projectActions">
             <div class="socialActions">
-              <el-button text :icon="IconHeart" :type="detail.liked ? 'primary' : 'default'" :aria-pressed="detail.liked" :loading="reactionPending === 'like'" :disabled="!!reactionPending" @click="setReaction('like')">
-                {{ detail.liked ? '已点赞' : '点赞' }} {{ detail.likeCount }}
-              </el-button>
-              <el-button text :icon="IconBookmark" :type="detail.collected ? 'primary' : 'default'" :aria-pressed="detail.collected" :loading="reactionPending === 'collection'" :disabled="!!reactionPending" @click="setReaction('collection')">
-                {{ detail.collected ? '已收藏' : '收藏' }} {{ detail.collectionCount }}
-              </el-button>
               <el-button text :icon="IconShare" :loading="sharing" @click="shareProject">分享</el-button>
             </div>
             <el-button class="processButton" type="primary" :icon="IconTopologyStar3" :loading="processLoading" @click="showProcess">查看制作过程</el-button>
@@ -60,8 +54,9 @@ import axios from "axios";
 import { t, translate } from "@toonflow/i18n/vue";
 import { onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { ElMessage } from "element-plus";
-import { IconArrowLeft, IconHeart, IconBookmark, IconShare, IconTopologyStar3, IconCopy, IconX } from "@tabler/icons-vue";
-import tf, { type TfExploreDetail, type TfExploreProcess, type TfExploreProject } from "@/lib/tf";
+import { IconArrowLeft, IconShare, IconTopologyStar3, IconCopy, IconX } from "@tabler/icons-vue";
+import type { ExploreDetail, ExploreProcess } from "@toonflow/server/channel";
+import http from "@/lib/http";
 import { writeClipboardText } from "@/lib/clipboard";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { useWorkspaceStore } from "@/stores/workspace";
@@ -70,16 +65,15 @@ import exploreProcess from "./exploreProcess.vue";
 import workspacePicker from "./workspacePicker.vue";
 
 const props = defineProps<{ projectId: string }>();
-const emit = defineEmits<{ close: []; updated: [project: TfExploreProject] }>();
+const emit = defineEmits<{ close: [] }>();
 const workspace = useWorkspaceStore();
 const directoryPicker = ref<InstanceType<typeof workspacePicker>>();
 const videoFailed = ref(false);
-const detail = shallowRef<TfExploreDetail>();
-const process = shallowRef<TfExploreProcess>();
+const detail = shallowRef<ExploreDetail>();
+const process = shallowRef<ExploreProcess>();
 const loading = ref(false);
 const loadError = ref("");
 const actionError = ref("");
-const reactionPending = ref<"like" | "collection">();
 const sharing = ref(false);
 const processLoading = ref(false);
 const processVisible = ref(false);
@@ -99,39 +93,19 @@ async function loadDetail() {
   detail.value = undefined;
   process.value = undefined;
   processVisible.value = false;
-  reactionPending.value = undefined;
   processLoading.value = false;
   actionError.value = "";
   loadError.value = "";
   videoFailed.value = false;
   loading.value = true;
   try {
-    const project = await tf.getExploreProject(props.projectId, { signal });
+    const project = await http<ExploreDetail>({ method: "POST", url: "/api/channel/community/getExploreProject", data: { projectId: props.projectId }, signal });
     if (signal.aborted) return;
     detail.value = project;
-    emit("updated", project);
   } catch (error) {
     if (!signal.aborted) loadError.value = errorMessage(error, "加载作品详情失败");
   } finally {
     if (!signal.aborted) loading.value = false;
-  }
-}
-
-async function setReaction(action: "like" | "collection") {
-  const project = detail.value;
-  if (!project || reactionPending.value) return;
-  const { signal } = controller;
-  reactionPending.value = action;
-  actionError.value = "";
-  try {
-    const reaction = await tf.setExploreReaction(project.id, action, !(action === "like" ? project.liked : project.collected), { signal });
-    if (signal.aborted) return;
-    detail.value = { ...project, ...reaction };
-    emit("updated", detail.value);
-  } catch (error) {
-    if (!signal.aborted) actionError.value = errorMessage(error, "更新作品互动失败");
-  } finally {
-    if (!signal.aborted) reactionPending.value = undefined;
   }
 }
 
@@ -156,7 +130,7 @@ async function showProcess() {
   processLoading.value = true;
   actionError.value = "";
   try {
-    const result = await tf.getExploreProcess(detail.value.id, { signal });
+    const result = await http<ExploreProcess>({ method: "POST", url: "/api/channel/community/getExploreProcess", data: { projectId: detail.value.id }, signal });
     if (signal.aborted) return;
     process.value = result;
     processVisible.value = true;
@@ -178,7 +152,7 @@ async function cloneProject() {
     const parentDirectory = await directoryPicker.value?.chooseDirectory();
     if (!parentDirectory || signal.aborted) return;
     cloneStatus.value = translate("正在下载项目…");
-    const { downloadUrl } = await tf.getExploreDownload(project.id, { signal });
+    const { downloadUrl } = await http<{ downloadUrl: string }>({ method: "POST", url: "/api/channel/community/getExploreDownload", data: { projectId: project.id }, signal });
     signal.throwIfAborted();
     const { directory } = await useWorkspaceFiles(parentDirectory).cloneProject({ url: downloadUrl, name: project.title }, signal);
     cloneStatus.value = t`已下载到 ${directory}`;
@@ -206,7 +180,20 @@ onBeforeUnmount(() => controller.abort());
     height: min(64dvh, 675px);
     min-height: 240px;
     overflow: hidden;
-    background: #090b10;
+    background: var(--el-bg-color);
+
+    &.videoReady {
+      background: #090b10;
+
+      .viewerNavigation button {
+        border-color: rgb(255 255 255 / 16%);
+        background: rgb(15 23 42 / 48%);
+        color: white;
+        backdrop-filter: blur(12px);
+
+        &:hover:not(:disabled) { background: rgb(15 23 42 / 76%); }
+      }
+    }
 
     .detailPlayer { width: 100%; height: 100%; }
 
@@ -224,16 +211,15 @@ onBeforeUnmount(() => controller.abort());
         align-items: center;
         justify-content: center;
         height: 38px;
-        border: 1px solid rgb(255 255 255 / 16%);
-        background: rgb(15 23 42 / 48%);
-        color: white;
+        border: 1px solid var(--el-border-color);
+        background: var(--el-bg-color-overlay);
+        color: var(--el-text-color-primary);
         font: inherit;
         font-size: 13px;
-        backdrop-filter: blur(12px);
         pointer-events: auto;
         cursor: pointer;
 
-        &:hover:not(:disabled) { background: rgb(15 23 42 / 76%); }
+        &:hover:not(:disabled) { background: var(--el-fill-color); }
         &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 3px; }
         &:disabled { opacity: 0.5; cursor: wait; }
       }
@@ -249,7 +235,9 @@ onBeforeUnmount(() => controller.abort());
       justify-content: center;
       gap: 16px;
       padding: 64px 28px;
-      color: rgb(255 255 255 / 72%);
+      color: var(--el-text-color-secondary);
+      font-size: 14px;
+      line-height: 1.6;
       text-align: center;
     }
   }

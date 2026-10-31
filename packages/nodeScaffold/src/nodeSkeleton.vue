@@ -402,9 +402,7 @@ async function focusNode(event: MouseEvent) {
   const flowElement = vueFlowRef.value;
   if (!flowElement || !element.isConnected) return;
   const flowRect = flowElement.getBoundingClientRect();
-  const agentWidth = Math.max(0, parseFloat(getComputedStyle(flowElement).getPropertyValue("--agentWidth")) || 0);
-  const availableWidth = flowRect.width - agentWidth;
-  if (availableWidth <= 0 || flowRect.height <= 0) return;
+  if (flowRect.width <= 0 || flowRect.height <= 0) return;
   const rects = [element, ...element.querySelectorAll<HTMLElement>(":scope > .floatingSlot")]
     .filter((item) => item.getClientRects().length)
     .map((item) => item.getBoundingClientRect());
@@ -417,7 +415,7 @@ async function focusNode(event: MouseEvent) {
       width: (Math.max(...rects.map((rect) => rect.right)) - left) / viewport.value.zoom,
       height: (Math.max(...rects.map((rect) => rect.bottom)) - top) / viewport.value.zoom,
     },
-    availableWidth, flowRect.height, minZoom.value, maxZoom.value, 0.2
+    flowRect.width, flowRect.height, minZoom.value, maxZoom.value, 0.2
   );
   await setViewport(targetViewport, { duration: 300 });
 }

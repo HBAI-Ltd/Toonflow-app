@@ -6,7 +6,9 @@ import { validateFields } from "@/lib/middleware";
 export default Router().post("/", validateFields({
   ...u.providerDebug.providerDebugSchema,
   request: z.record(z.string(), z.json()),
+  models: u.mediaProvider.mediaModelsSchema.optional(),
 }), async (req, res) => {
+  u.mcpControl.assertAppRequest(req);
   res.set({ "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store, no-transform", "X-Accel-Buffering": "no" });
   res.flushHeaders();
   const controller = new AbortController();
@@ -19,7 +21,7 @@ export default Router().post("/", validateFields({
   req.socket.once("close", close);
   const send = (event: Record<string, unknown>) => { if (!res.destroyed) res.write(`${JSON.stringify(event)}\n`); };
   try {
-    await u.providerDebug.runProviderSource(req.body.source, req.body.config ?? {}, req.body.request, AbortSignal.any([controller.signal, AbortSignal.timeout(30 * 60_000)]), send);
+    await u.providerDebug.runProviderSource(req.body.source, req.body.config ?? {}, req.body.request, AbortSignal.any([controller.signal, AbortSignal.timeout(30 * 60_000)]), send, req.body.models);
     send({ type: "done" });
   } finally {
     clearInterval(heartbeat);

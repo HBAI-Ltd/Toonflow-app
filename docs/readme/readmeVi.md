@@ -410,98 +410,7 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
 ---
 
-## 6. 🚀 TF-Router — Nền tảng trung chuyển chính thức
-
-<p align="center">
-  <a href="https://api.toonflow.net/">
-    <img src="https://img.shields.io/badge/TF--Router_Official%20API%20Gateway-181717?style=for-the-badge&logoColor=white" alt="TF-Router" />
-  </a>
-</p>
-
-TF-Router là nền tảng trung chuyển mô hình chính thức do Toonflow tự vận hành. Chúng tôi chào đón bạn sử dụng. Toàn bộ mã nguồn nền tảng đã được mở, có thể tự triển khai và kiểm tra: [HBAI-Ltd/TF-Router](https://github.com/HBAI-Ltd/TF-Router).
-
-<details>
-<summary><strong>Thư gửi cộng đồng Toonflow (đăng ngày 2026-06-08)</strong></summary>
-
-> ### Thư gửi cộng đồng Toonflow
-> 130 ngày.
-> Không dài, nhưng đủ để chúng tôi nhìn rõ một số điều.
-> Từ lần gửi dòng mã đầu tiên đến hôm nay, chúng tôi đã đi qua 130 ngày, phát hành 20 phiên bản, thực hiện hơn 800 commits, viết 213,765 dòng mã với 640,810 ký tự.
-> Hai lần tái cấu trúc, một hệ thống nhà cung cấp và một quy trình làm việc mà chúng tôi tự hào.
-> Chúng tôi từng nghĩ như vậy đã đủ.
-> Nhưng vẫn chưa đủ.
-> Có người nói với chúng tôi rằng họ muốn thêm mô-đun riêng vào Toonflow, nhưng sửa mã mãi vẫn không hiểu.
-> Có người nói cộng đồng quá nhỏ, khi gặp vấn đề không biết tìm ai.
-> Có người nói các điều khoản thương mại khiến dự án của họ không thể triển khai thực tế.
-> Chúng tôi đã lắng nghe.
-> Trong 130 ngày này, các thành viên thay phiên túc trực trong nhóm, trả lời từng câu hỏi suốt 7×24 giờ. Không có tài trợ, không có trợ cấp; toàn bộ chi phí nhân lực đều do chúng tôi tự bỏ tiền túi.
-> Không phải vì chúng tôi có nhiều tiền.
-> Mà vì chúng tôi tin việc này đáng làm.
-> Vì vậy, chúng tôi quyết định tái cấu trúc lần thứ ba.
-> Mỗi lần tái cấu trúc Toonflow đều hướng tới mã nguồn mở và sự cởi mở nhiều hơn.
-> Lần này, chúng tôi chọn: mở hoàn toàn.
-> 　
-> 1. MIT License
-> Sau khi hoàn tất tái cấu trúc, chúng tôi quyết định đổi giấy phép từ Apache-2.0 sang MIT License và loại bỏ toàn bộ điều khoản thương mại bổ sung.
-> Dự án sẽ hoàn toàn mở, không có bất kỳ hạn chế thương mại nào.
-> Bạn có thể dùng nó để làm bất cứ điều gì.
-> 　
-> 2. Hệ thống plugin hoàn toàn tự do
-> Chúng tôi sẽ thiết kế lại toàn bộ kiến trúc plugin.
-> Storyboard, ảnh toàn cảnh, dòng thời gian, thậm chí cả trò chơi nhỏ.
-> Chỉ cần bạn nghĩ ra, đều có thể đưa vào.
-> Đó không phải là cách sửa tạm, mà là chủ đích thiết kế.
-> 　
-> 3. Drizzle ORM + hỗ trợ nhiều cơ sở dữ liệu
-> Nâng cấp lên Drizzle ORM.
-> Chọn cơ sở dữ liệu cục bộ, PostgreSQL hoặc MySQL theo nhu cầu.
-> Phát triển tùy biến sẽ không còn là ác mộng.
-> 　
-> 4. Monorepo kết nối toàn bộ quy trình
-> Phát triển plugin, tích hợp SDK, phát hành và triển khai — tất cả trong một quy trình xuyên suốt.
-> Giúp việc đóng góp đủ đơn giản để một người cũng có thể thực hiện.
-> 　
-> 5. Các mô-đun mới
-> Canvas vô hạn — không chỉ rộng lớn, mà còn tự do
-> Chế độ ý tưởng — dành riêng cho người sáng tạo
-> Plugin Hub — giúp những plugin tốt được biết đến
-> Skill Hub — để kinh nghiệm được truyền lại
-> Provider Hub — hệ sinh thái bắt đầu từ đây
-> Tích hợp Docker hoàn chỉnh — triển khai không còn là rào cản
-> 　
-> Tiếp theo, chúng tôi muốn nói về một việc mà lâu nay vẫn ngại đề cập.
-> Tái cấu trúc cần thời gian. Trong khoảng thời gian đó, máy chủ vẫn chạy, tên miền vẫn cần gia hạn, cả đội vẫn thức khuya, và cà phê vẫn tăng giá.
-> Chúng tôi không có vốn đầu tư, không quảng cáo và không có kế hoạch kinh doanh ngầm nào.
-> Nhưng chúng tôi cần tồn tại thì mới có thể tiếp tục hoàn thành việc này.
-> Vì vậy, chúng tôi đã ra mắt TF-Router, “nền tảng trung chuyển chính thức của Toonflow”.
-> Thành thật mà nói, chúng tôi đã do dự về nền tảng này rất lâu.
-> Đây không phải nền tảng chúng tôi muốn làm. Chúng tôi không muốn chỉ vì một dịch vụ trung chuyển mà mọi người nghĩ Toonflow bắt đầu chạy theo kiếm tiền.
-> Chúng tôi đã mang nỗi băn khoăn đó rất lâu.
-> Nhưng nhiều người dùng không có quyền truy cập theo danh sách cho phép nên không dùng được Seedance 2.0, và liên tục hỏi chúng tôi có cách nào không.
-> Chúng tôi suy nghĩ rất lâu, cuối cùng không còn cách khác nên quyết định tự xây dựng, đồng thời trực tiếp ký hợp đồng khung hằng năm về Seedance với Volcengine.
-> **Đồng thời, chúng tôi quyết định cung cấp Seedance 2.0 đúng giá vốn trong thời gian khuyến mại của nền tảng, không kiếm một đồng chênh lệch.**
-> Sau khi chương trình kết thúc, chúng tôi sẽ thu một khoản phí dịch vụ rất nhỏ như bình thường — nhưng lúc này, ưu tiên để mọi người dùng được trước đã.
-> Quan trọng hơn, toàn bộ mã nguồn TF-Router đã được mở và đóng gói【<a href="https://github.com/HBAI-Ltd/TF-Router" target="_blank">địa chỉ mã nguồn mở</a>】.
-> Bạn không tin chúng tôi? Không sao, bạn có thể tự xem mã, tự triển khai và tự vận hành.
-> Đó là quan điểm của chúng tôi.
-> Nếu bạn sẵn lòng dùng thử, đó là một lá phiếu tín nhiệm dành cho cách duy nhất hiện giúp chúng tôi duy trì hoạt động.
-> Nếu không muốn, cũng không sao. Hãy tiếp tục dùng Toonflow, tiếp tục phê bình và tiếp tục đề xuất tính năng.
-> Chúng tôi vẫn ở đây.
-> Cuối cùng, xin nói một điều thật lòng.
-> Chúng tôi chỉ là một nhóm người bình thường tin rằng “công cụ sáng tạo nên thuộc về tất cả mọi người”.
-> Toonflow chưa bao giờ là sản phẩm chỉ của riêng chúng tôi.
-> Đó là câu chuyện chúng ta cùng viết.
-> Lần tái cấu trúc thứ ba không phải điểm kết thúc.
-> Mà là nơi chúng tôi bắt đầu lại.
-> Cảm ơn từng người đã sử dụng, phê bình và đưa ra góp ý.
-> Chính các bạn là lý do giúp dự án đi đến hôm nay.
-> Cảm ơn các bạn.
-
-</details>
-
----
-
-## 7. 👨‍👩‍👧‍👦 Nhóm cộng đồng WeChat
+## 6. 👨‍👩‍👧‍👦 Nhóm cộng đồng WeChat
 
 Trợ lý hỗ trợ tham gia nhóm:
 
@@ -515,13 +424,13 @@ Hoặc nhấp vào liên kết mời: [https://discord.gg/HEjKmpNpAZ](https://di
 
 ---
 
-## 8. 💌 Liên hệ
+## 7. 💌 Liên hệ
 
 📧 Email: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow咨询)
 
 ---
 
-## 9. 📜 Giấy phép mã nguồn mở
+## 8. 📜 Giấy phép mã nguồn mở
 
 Toonflow sử dụng [giấy phép MIT](../../LICENSE). Các gói phụ thuộc và tư liệu bên thứ ba tuân theo giấy phép và thông báo bản quyền tương ứng.
 
@@ -531,7 +440,7 @@ Toonflow sử dụng [giấy phép MIT](../../LICENSE). Các gói phụ thuộc 
 
 ---
 
-## 10. 🙏 Lời cảm ơn
+## 9. 🙏 Lời cảm ơn
 
 - **Đối tác**: 算能云 (SuanNeng Cloud), Tencent Hunyuan 3D và AI-Galaxy (智星云).
 - **Người đóng góp cho dự án**: Cảm ơn tất cả những người tham gia phát triển mã, cải thiện tài liệu, chia sẻ plugin và điều tra vấn đề.

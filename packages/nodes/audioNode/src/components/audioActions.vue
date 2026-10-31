@@ -19,7 +19,7 @@
         <span>截取与拼接</span>
       </div>
     </template>
-    <audioClipEditor v-if="mode === 'clip'" ref="clipEditor" v-model="segments" :src="src" :disabled="processing" />
+    <audioClipEditor v-if="mode === 'clip'" ref="clipEditor" v-model="segments" v-model:pcmOptions="pcmOptions" :src="src" :mimeType="file?.mimeType" :disabled="processing" />
     <template #footer>
       <div class="clipFooter">
         <span v-if="processing" class="processingStatus" role="status">{{ cancelling ? '正在取消并清理…' : '正在导出音频…' }}</span>
@@ -39,8 +39,10 @@ import { useNodeFfmpeg, useNodeFiles, type NodeMediaValue, type WorkspaceFiles }
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { processAudio, type AudioSegment, type AudioProcessingOptions } from "../audioProcessing";
 import audioClipEditor from "./audioClipEditor.vue";
+import { getPcmOptions, isPcmMimeType, type PcmOptions } from "@toonflow/node-shared/pcmPreview";
 
 const props = defineProps<{ file?: NodeMediaValue; src: string; disabled?: boolean; target?: HTMLElement }>();
+const pcmOptions = defineModel<Partial<PcmOptions>>("pcmOptions", { default: () => ({}) });
 const emit = defineEmits<{ pause: [] }>();
 const { node } = useNode();
 const { addNodes, findNode, getNodes, nodeTypes } = useVueFlow();
@@ -102,12 +104,15 @@ function run() {
 
 async function process() {
   if (!nodeTypes?.value?.["remote-audioNode"]) return void ElMessage.error("请先启用音频节点插件");
+  const rawPcm = isPcmMimeType(props.file?.mimeType);
+  const pcm = rawPcm ? getPcmOptions(pcmOptions.value) : undefined;
+  if (rawPcm && !pcm) return void ElMessage.error("请先在音频预览中填写有效的 PCM 采样率、声道数和采样格式");
   const source = props.file!.url;
   const id = crypto.randomUUID();
   const outputPath = `assets/${id}/audio.m4a`;
   const options: AudioProcessingOptions = mode.value === "speed"
-    ? { action: "speed", outputPath, speed: speed.value }
-    : { action: "clip", outputPath, segments: segments.value.map(segment => ({ ...segment })) };
+    ? { action: "speed", outputPath, speed: speed.value, pcm }
+    : { action: "clip", outputPath, segments: segments.value.map(segment => ({ ...segment })), pcm };
   const label = options.action === "speed" ? `${options.speed.toFixed(2)}×` : "拼接";
   const current = controller = new AbortController();
   processing.value = true;

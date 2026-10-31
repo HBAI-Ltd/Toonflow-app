@@ -410,98 +410,7 @@ Ang mga halagang ito ay naitala para sa halimbawang ito at ibinibigay bilang san
 
 ---
 
-## 6. 🚀 Opisyal na Gateway ng Modelo na TF-Router
-
-<p align="center">
-  <a href="https://api.toonflow.net/">
-    <img src="https://img.shields.io/badge/TF--Router_Official%20Model%20Gateway-181717?style=for-the-badge&logoColor=white" alt="TF-Router" />
-  </a>
-</p>
-
-Ang TF-Router ay ang opisyal na gateway ng modelo na sariling pinapatakbo ng Toonflow. Maaari mo itong gamitin. Open source ang buong source code nito at maaaring i-host at suriin nang sarili: [HBAI-Ltd/TF-Router](https://github.com/HBAI-Ltd/TF-Router).
-
-<details>
-<summary><strong>Liham sa Komunidad ng Toonflow (inilathala noong 2026-06-08)</strong></summary>
-
-> ### Liham sa Komunidad ng Toonflow
-> 130 araw.
-> Hindi mahaba, ngunit sapat upang malinaw naming maunawaan ang ilang bagay.
-> Mula sa una naming na-commit na linya ng code hanggang ngayon, 130 araw na ang lumipas. Nakapaglabas kami ng 20 bersyon, nakagawa ng mahigit 800 commit, at nakasulat ng 213,765 linya ng code na may 640,810 character.
-> Dalawang muling pagsulat, isang sistema ng mga provider, at isang daloy ng trabaho na ipinagmamalaki namin.
-> Akala namin ay sapat na iyon.
-> Ngunit hindi pala.
-> May nagsabing nais nilang magdagdag ng sariling module sa Toonflow, ngunit kahit ilang oras na silang sumubok, hindi pa rin nila maintindihan kung paano babaguhin ang code.
-> May nagsabing napakaliit ng komunidad at wala silang mahanapang tulong kapag may problema.
-> May nagsabing hinahadlangan ng mga komersyal na kondisyon ang aktuwal na paggamit ng kanilang mga proyekto.
-> Narinig namin kayo.
-> Sa loob ng 130 araw na ito, nagpalitan ang mga miyembro ng aming pangkat sa mga chat group upang sagutin ang bawat tanong, 7×24. Walang sponsor at walang subsidiya: kami mismo ang nagbayad ng lahat ng gastos sa paggawa.
-> Hindi dahil marami kaming pera.
-> Kundi dahil naniniwala kaming karapat-dapat itong gawin.
-> Kaya napagpasyahan naming muling isulat ang proyekto sa ikatlong pagkakataon.
-> Sa bawat muling pagsulat ng Toonflow, mas lumalawak ang pagiging bukas at open source nito.
-> Sa pagkakataong ito, pinili naming buksan ang lahat.
->
-> 1. Lisensyang MIT
-> Napagpasyahan naming palitan ang Apache-2.0 ng Lisensyang MIT at alisin ang lahat ng karagdagang komersyal na kondisyon kapag natapos ang muling pagsulat.
-> Ganap itong magiging bukas, nang walang komersyal na paghihigpit.
-> Maaari ninyo itong gamitin para sa anumang layunin.
->
-> 2. Isang Ganap na Naaangkop na Sistema ng Plugin
-> Muli naming ididisenyo ang buong arkitektura ng plugin.
-> Mga storyboard, panorama, timeline, at maging maliliit na laro.
-> Kung maiisip ninyo, maaari ninyo itong idagdag.
-> Bahagi ito ng disenyo mismo, hindi ng mga pansamantalang paraan.
->
-> 3. Drizzle ORM + Suporta sa Maraming Database
-> Lilipat kami sa Drizzle ORM.
-> Lokal na storage, PostgreSQL, o MySQL: piliin kung ano ang kailangan ninyo.
-> Hindi na magiging bangungot ang pagbuo ng mga pasadyang pagbabago.
->
-> 4. Isang Kumpletong Daloy ng Trabaho sa Monorepo
-> Magkakaugnay ang pagbuo ng plugin, pagsasama ng SDK, at paglabas ng mga bersyon.
-> Gagawing sapat na simple ang pag-aambag upang kayanin kahit ng isang tao.
->
-> 5. Mga Bagong Module
-> Walang-hanggang Canvas — higit sa espasyo, kalayaan.
-> Inspiration Mode — ginawa para sa mga tagalikha.
-> Plugin Hub — tumutulong upang matuklasan ang mahuhusay na plugin.
-> Skill Hub — ginagawang naibabahagi ang karanasan.
-> Provider Hub — dito nagsisimula ang ecosystem.
-> Kumpletong pagsasama ng Docker — pinadadali ang deployment.
->
-> Ngayon, tungkol naman sa isang bagay na matagal naming iniiwasang talakayin.
-> Kailangan ng panahon ang muling pagsulat. Habang ginagawa ito, patuloy ang mga server, kailangang i-renew ang mga domain, nagpupuyat ang pangkat, at tumataas ang presyo ng kape.
-> Wala kaming pondong mula sa mga investor, patalastas, o nakatagong komersyal na plano.
-> Ngunit kailangan naming magpatuloy upang matapos ang nasimulan namin.
-> Kaya inilunsad namin ang TF-Router, ang opisyal na gateway ng modelo ng Toonflow.
-> Sa totoo lang, matagal kaming nag-alinlangan tungkol sa platform na ito.
-> Hindi ito isang bagay na nais naming buuin noon. Ayaw naming isipin ng mga tao na nagsimulang “pagkakitaan” ng Toonflow ang mga gumagamit dahil sa isang gateway.
-> Matagal naming dinala ang alalahaning iyon.
-> Ngunit maraming gumagamit ang hindi makakuha ng aprubadong access sa Seedance 2.0 at paulit-ulit na nagtatanong kung may paraan upang magamit ito.
-> Matapos ang masusing pag-iisip, nagpasya kaming gumawa ng sarili at lumagda sa isang taunang kasunduang balangkas para sa Seedance sa Volcengine.
-> **Napagpasyahan din naming ialok ang Seedance 2.0 sa mismong halaga ng gastos sa panahon ng promosyon ng platform, nang walang kahit isang sentimong patong.**
-> Pagkatapos ng promosyon, maniningil kami ng napakaliit na bayad sa serbisyo. Sa ngayon, ang prayoridad namin ay mabigyan kayo ng access.
-> Higit pa rito, inilabas na bilang open source ang buong source code ng TF-Router: 【<a href="https://github.com/HBAI-Ltd/TF-Router" target="_blank">Source Code</a>】.
-> Hindi ninyo kami pinagkakatiwalaan? Ayos lang. Basahin ang code, i-deploy ito, at patakbuhin nang sarili.
-> Iyan ang aming paninindigan.
-> Kung susubukan ninyo ito, nagtitiwala kayo sa tanging paraan namin sa ngayon upang maipagpatuloy ang gawaing ito.
-> Kung hindi, ayos lang din. Patuloy na gamitin ang Toonflow, punahin kami, at magmungkahi ng mga feature.
-> Narito kami.
-> Isang huling bagay, mula sa puso:
-> Isa lamang kaming pangkat ng mga ordinaryong taong naniniwalang dapat para sa lahat ang mga tool sa paglikha.
-> Ang Toonflow ay hindi kailanman naging produkto lamang namin.
-> Ito ang kuwentong sama-sama nating isinusulat.
-> Hindi ang ikatlong muling pagsulat ang dulo.
-> Dito kami muling magsisimula.
-> Salamat sa lahat ng gumamit nito, pumuna, o nagbigay ng mungkahi.
-> Dahil sa inyo, umabot ito nang ganito kalayo.
-> Maraming salamat.
-
-</details>
-
----
-
-## 7. 👨‍👩‍👧‍👦 Komunidad sa WeChat
+## 6. 👨‍👩‍👧‍👦 Komunidad sa WeChat
 
 I-scan ang QR code upang kontakin ang assistant para sa imbitasyon sa grupo:
 
@@ -515,13 +424,13 @@ O gamitin ang link ng imbitasyon: [https://discord.gg/HEjKmpNpAZ](https://discor
 
 ---
 
-## 8. 💌 Makipag-ugnayan sa Amin
+## 7. 💌 Makipag-ugnayan sa Amin
 
 📧 Email: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Toonflow咨询)
 
 ---
 
-## 9. 📜 Lisensya ng Open Source
+## 8. 📜 Lisensya ng Open Source
 
 Ang Toonflow ay nasa ilalim ng [Lisensyang MIT](../../LICENSE). Nananatiling sakop ng kani-kanilang lisensya at abiso sa copyright ang mga third-party dependency at asset.
 
@@ -531,7 +440,7 @@ Ang Toonflow ay nasa ilalim ng [Lisensyang MIT](../../LICENSE). Nananatiling sak
 
 ---
 
-## 10. 🙏 Pasasalamat
+## 9. 🙏 Pasasalamat
 
 - **Mga katuwang**: 算能云, Tencent Hunyuan 3D, at AI Galaxy (智星云).
 - **Mga nag-aambag sa proyekto**: Salamat sa lahat ng nag-ambag ng code, nagpaunlad ng dokumentasyon, nagbahagi ng mga plugin, at tumulong sa paglutas ng mga problema.

@@ -1,6 +1,7 @@
 <template>
   <div class="home" :class="{ sidebarCollapsed }" :inert="creating || opening || workspaceStore.projectLoadingVisible">
     <bg class="pageBackground" :scrollTop="backgroundScrollTop" />
+    <homeAdvertisementCarousel class="topPromotion" :advertisements="advertisements.banners" placement="banner" :mode="advertisements.bannerMode" :interval="advertisements.bannerInterval" @activate="activateAdvertisement" />
     <aside id="homeSidebar" class="homeSidebar" aria-label="首页侧栏">
       <div class="sidebarHeader">
         <div class="sidebarBrand">
@@ -24,6 +25,7 @@
         </button>
       </nav>
       <div class="sidebarFooter">
+        <homeAdvertisementCarousel class="sidebarPromotion" :advertisements="advertisements.sidebar" @activate="activateAdvertisement" />
         <button class="sidebarItem deviceButton" :class="{ connected: deviceHubEnabled || mobileConnection.online === true }" type="button" :aria-label="mobileConnectionLabel" :title="mobileConnectionLabel" @click="mobileConnectVisible = true">
           <span class="sidebarIcon">
             <component :is="deviceHubEnabled || mobileConnection.mode === 'remote' ? IconDeviceDesktop : IconQrcode" :size="18" aria-hidden="true" />
@@ -83,7 +85,7 @@
           <section class="projectList" data-home-section="projects" aria-labelledby="projectListTitle">
             <h2 id="projectListTitle">项目</h2>
             <div class="projectItems">
-              <el-card class="projectCard" shadow="never" :bodyStyle="{ padding: '0', height: '100%' }">
+              <el-card class="projectLaunchCard" shadow="never" :bodyStyle="{ padding: '0', height: '100%' }">
                 <button class="projectLaunch" type="button" :disabled="creating || opening || relocationPicker?.selecting" :aria-busy="creating || relocationPicker?.selecting" title="选择空文件夹新建，或打开已有项目" @click="createProject(false)">
                   <span class="launchIcon">
                     <icon-loader-2 v-if="creating || relocationPicker?.selecting" class="isLoading" :size="24" aria-hidden="true" />
@@ -95,20 +97,13 @@
                   </span>
                 </button>
               </el-card>
-              <el-card v-for="project in sortedProjects" :key="project.directory" class="projectCard" shadow="never" :bodyStyle="{ padding: '0', height: '100%' }">
-                <button class="projectEntry" type="button" :disabled="creating || opening" :title="project.directory" :aria-label="`打开项目 ${project.name}`" @click="openProject(project)">
-                  <projectCover :directory="project.directory" />
-                  <span class="projectInfo">
-                    <span class="projectName" :title="project.name">{{ project.name }}</span>
-                    <span class="projectTime">最近打开 {{ new Date(project.lastOpenedAt).toLocaleString(locale, { hour12: false }) }}</span>
-                  </span>
-                </button>
-                <div class="projectActions" :class="{ exporting: exportingDirectory === project.directory }">
+              <projectCard v-for="project in sortedProjects" :key="project.directory" :project="project" :disabled="creating || opening" :actionsVisible="exportingDirectory === project.directory" @select="openProject(project)">
+                <template #actions>
                   <el-button circle :icon="IconFileZip" :loading="exportingDirectory === project.directory" :disabled="creating || opening || !!exportingDirectory" :aria-label="`打包导出项目 ${project.name}`" title="打包导出 ZIP" @click="exportProject(project)" />
                   <el-button circle :icon="IconEdit" :disabled="creating || opening || exportingDirectory === project.directory" :aria-label="`重命名项目 ${project.name}`" title="重命名" @click="renameProject(project)" />
                   <el-button circle plain type="danger" :icon="IconTrash" :disabled="creating || opening || exportingDirectory === project.directory" :aria-label="`移除项目 ${project.name}`" title="从列表移除，不删除文件" @click="workspaceStore.removeProject(project.directory)" />
-                </div>
-              </el-card>
+                </template>
+              </projectCard>
             </div>
           </section>
           <div data-home-section="explore"><explore :scrollElement="pageScroll?.wrapRef" /></div>
@@ -116,7 +111,7 @@
       </div>
     </el-scrollbar>
     <assetLibraryDialog v-model="assetsVisible" />
-    <settings v-model="settingsVisible" />
+    <settings ref="settingsDialog" v-model="settingsVisible" />
     <mobileConnect v-model="mobileConnectVisible" />
     <workspacePicker ref="relocationPicker" hideTrigger />
   </div>
@@ -140,21 +135,26 @@ import modelPopover from "@/components/modelPopover.vue";
 import attachmentList from "@/components/agent/attachmentList.vue";
 import { createPastedTextFile, readTextAttachment } from "@/components/agent/textAttachments";
 import type { AgentAttachment } from "@/components/agent/types";
+import type { HomeAdvertisement, HomeAdvertisements } from "@toonflow/server/channel";
 import logoUrl from "@toonflow/assets/logo.svg";
 import { useWorkspaceStore, type Project } from "@/stores/workspace";
 import { hasDesktopUpdate } from "@/stores/desktopUpdate";
 import { deviceHubEnabled, mobileConnection, mobileConnectionLabel } from "@/lib/mobile";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import saveFile from "@/lib/saveFile";
+import http from "@/lib/http";
 import { waitForControlValue } from "@/lib/mcpControl";
 import settings from "@/components/settings/index.vue";
 import assetLibraryDialog from "./assetLibraryDialog.vue";
 import bg from "./bg.vue";
 import explore from "./explore.vue";
-import projectCover from "./projectCover.vue";
+import projectCard from "./projectCard.vue";
 import workspacePicker from "./workspacePicker.vue";
+import homeAdvertisementCarousel from "./homeAdvertisementCarousel.vue";
 
 const settingsVisible = ref(false);
+const settingsDialog = ref<InstanceType<typeof settings>>();
+const advertisements = ref<HomeAdvertisements>({ banner: null, banners: [], bannerMode: "carousel", bannerInterval: 5, sidebar: [] });
 const assetsVisible = ref(false);
 const mobileConnectVisible = ref(false);
 const sidebarCollapsed = ref(false);
@@ -199,6 +199,7 @@ const placeholderPhrases = [
 const promptPlaceholder = ref(translate(placeholderPhrases[0]!));
 
 onMounted(() => {
+  void loadAdvertisements();
   window.addEventListener("dragend", clearAttachmentDrag, true);
   window.addEventListener("drop", clearAttachmentDrag, true);
   window.addEventListener("blur", clearAttachmentDrag);
@@ -258,6 +259,110 @@ watch([creating, opening], ([creating, opening]) => {
 const selectedModel = ref("");
 const reasoningEffort = ref("");
 const sortedProjects = computed(() => [...projectList.value].sort((left, right) => right.lastOpenedAt - left.lastOpenedAt));
+
+async function loadAdvertisements() {
+  // ACT: 默认读取后台配置；开发环境显式指定预览模式时才使用临时预览。
+  const preview = router.currentRoute.value.query.advertisementPreview;
+  if (import.meta.env.DEV && typeof preview === "string" && ["text", "image", "web", "carousel", "stack"].includes(preview)) {
+    const now = Date.now();
+    const previewSlides: { title: string; subtitle: string; color: string; actionType: HomeAdvertisement["actionType"]; actionTarget: string }[] = [
+      { title: "探索创作灵感", subtitle: "从一个想法，开始你的下一个作品", color: "#273442", actionType: preview === "web" ? "web" : "path", actionTarget: preview === "web" ? "https://github.com/HBAI-Ltd/Toonflow-app" : "/home?section=explore" },
+      { title: "搭建你的工作流", subtitle: "前往插件市场，发现更多创作工具", color: "#2c303b", actionType: "settings", actionTarget: "pluginMarket" },
+      { title: "一起创造更多", subtitle: "在 GitHub 了解 Toonflow 的新进展", color: "#243734", actionType: "web", actionTarget: "https://github.com/HBAI-Ltd/Toonflow-app" },
+    ];
+    const sidebar = previewSlides.map((slide, index): HomeAdvertisement => ({
+      title: slide.title,
+      content: "",
+      imageUrl: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+        <defs><linearGradient id="background" x2="1" y2="1"><stop stop-color="${slide.color}"/><stop offset="1" stop-color="#13202f"/></linearGradient></defs>
+        <rect width="640" height="360" fill="url(#background)"/>
+        <circle cx="562" cy="60" r="150" fill="#409eff" opacity=".15"/>
+        <path d="M330 235H400V160H485" fill="none" stroke="#6db5ff" stroke-width="4"/>
+        <rect x="280" y="205" width="100" height="64" rx="12" fill="#337ecc"/>
+        <rect x="450" y="125" width="110" height="70" rx="12" fill="#409eff"/>
+        <circle cx="330" cy="237" r="12" fill="#fff" opacity=".85"/>
+        <path d="m495 146 25 14-25 14z" fill="#fff"/>
+        <g fill="#fff" font-family="Arial, Microsoft YaHei, sans-serif">
+          <text x="40" y="58" font-size="17" letter-spacing="3" opacity=".7">TOONFLOW · PREVIEW</text>
+          <text x="40" y="136" font-size="38" font-weight="bold">${slide.title}</text>
+          <text x="40" y="177" font-size="19" opacity=".7">${slide.subtitle}</text>
+          <text x="40" y="303" font-size="16" opacity=".6">侧栏轮播预览 · ${index + 1} / 3</text>
+        </g>
+      </svg>`)}`,
+      buttonText: "",
+      actionType: slide.actionType,
+      actionTarget: slide.actionTarget,
+      endsAt: null,
+      updatedAt: now,
+    }));
+    const bannerImage = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="40" viewBox="0 0 1000 40">
+        <rect width="1000" height="40" rx="4" fill="#23262b"/>
+        <g fill="#d8dce3" font-family="Arial, Microsoft YaHei, sans-serif">
+          <text x="12" y="25" font-size="14" font-weight="500">创作灵感，从这里开始</text>
+          <text x="178" y="25" font-size="12" opacity=".65">探索更多工具，开始你的下一个作品</text>
+        </g>
+      </svg>`)}`;
+    const banner: HomeAdvertisement = {
+      title: "创作灵感，从这里开始",
+      content: "探索 **节点与技能**，开始你的下一个作品。\n[创作灵感](/home?section=explore) · [插件市场](settings:pluginMarket) · [项目主页](https://github.com/HBAI-Ltd/Toonflow-app)",
+      imageUrl: preview === "image" ? bannerImage : "",
+      buttonText: "发现工具",
+      actionType: "settings",
+      actionTarget: "pluginMarket",
+      endsAt: now + 2 * 86400000 + 3 * 3600000,
+      updatedAt: now,
+      appearance: { mode: preview === "image" ? "image" : "text", backgroundColor: "", backgroundEndColor: "", textColor: "", buttonColor: "", buttonTextColor: "" },
+    };
+    const banners = preview === "carousel" || preview === "stack"
+      ? previewSlides.map((slide, index): HomeAdvertisement => ({ ...banner, title: slide.title, content: index === 0 ? banner.content : slide.subtitle, buttonText: "立即查看", actionType: slide.actionType, actionTarget: slide.actionTarget }))
+      : [banner];
+    advertisements.value = {
+      banner: banners[0] ?? null,
+      banners,
+      bannerMode: preview === "stack" ? "stack" : "carousel",
+      bannerInterval: 5,
+      sidebar,
+    };
+    return;
+  }
+  try {
+    const result = await http<HomeAdvertisements>({ method: "GET", url: "/api/channel/community/getAdvertisements", signal: pageLifetime.signal });
+    if (!pageLifetime.signal.aborted) advertisements.value = result;
+  } catch (error) {
+    if (!pageLifetime.signal.aborted) console.warn("加载首页广告失败", error);
+  }
+}
+
+async function activateAdvertisement(advertisement: HomeAdvertisement) {
+  if (advertisement.actionType === "settings") {
+    if (!settingsDialog.value?.openPanel(advertisement.actionTarget)) ElMessage.warning("当前设备不支持该设置项");
+    return;
+  }
+  if (advertisement.actionType !== "path") return;
+  const target = advertisement.actionTarget;
+  if (!target.startsWith("/") || target.startsWith("//") || /[\\\u0000-\u0020]/.test(target)) return;
+  const resolved = router.resolve(target);
+  if (!resolved.matched.length) {
+    ElMessage.warning("当前版本不支持该页面");
+    return;
+  }
+  if (resolved.matched.some(route => ["/workspace", "/canvas"].includes(route.path)) && !workspaceStore.project?.directory) {
+    ElMessage.info("请先打开一个项目");
+    return;
+  }
+  try {
+    await router.push(target);
+    if (resolved.matched.some(route => route.path === "/home")) {
+      await nextTick();
+      const section = typeof resolved.query.section === "string" ? resolved.query.section : resolved.hash.slice(1);
+      scrollToSection(homeSections.some(item => item.id === section) ? section : "home");
+    }
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : "无法打开页面");
+  }
+}
 
 function scrollToSection(section: string) {
   const wrap = pageScroll.value?.wrapRef;
@@ -483,11 +588,18 @@ async function createProject(fromPrompt = true) {
   --sidebarMotion: 220ms;
   --sidebarFade: 140ms;
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--sidebarWidth) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100dvh;
   overflow: hidden;
   color: var(--el-text-color-primary);
   background: color-mix(in srgb, var(--el-bg-color) 96%, var(--el-text-color-primary));
+  transition: grid-template-columns var(--sidebarMotion) ease;
+
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+
+  .topPromotion { grid-column: 1 / -1; grid-row: 1; z-index: 1; }
 
   .pageBackground {
     position: absolute;
@@ -503,6 +615,7 @@ async function createProject(fromPrompt = true) {
     --sidebarWidth: 72px;
 
     .homeSidebar {
+      .sidebarPromotion { display: none; }
       .sidebarHeader {
         .sidebarBrand {
           gap: 0;
@@ -530,6 +643,10 @@ async function createProject(fromPrompt = true) {
   }
 
   .homeSidebar {
+    position: relative;
+    grid-column: 1;
+    grid-row: 2;
+    min-height: 0;
     display: flex;
     flex: 0 0 var(--sidebarWidth);
     flex-direction: column;
@@ -671,6 +788,8 @@ async function createProject(fromPrompt = true) {
   }
 
   .pageScroll {
+    grid-column: 2;
+    grid-row: 2;
     position: relative;
     flex: 1;
     min-width: 0;
@@ -680,7 +799,7 @@ async function createProject(fromPrompt = true) {
 
     .pageBody {
       position: relative;
-      min-height: 100dvh;
+      min-height: 100%;
 
       .pageContent {
         padding: 24px clamp(20px, 4vw, 56px) 56px;
@@ -881,7 +1000,7 @@ async function createProject(fromPrompt = true) {
             grid-auto-rows: 1fr;
             gap: 20px;
 
-            .projectCard {
+            .projectLaunchCard {
               position: relative;
               border-radius: calc(var(--ui-radius) * 2.5);
               border-color: var(--el-border-color-lighter);
@@ -892,30 +1011,26 @@ async function createProject(fromPrompt = true) {
                 border-color: var(--el-color-primary-light-5);
               }
 
-              .projectLaunch, .projectEntry {
-                width: 100%;
-                height: 100%;
-                min-height: 240px;
-                border: 0;
-                border-radius: calc(var(--ui-radius) * 2.5);
-                background: transparent;
-                color: inherit;
-                font: inherit;
-                cursor: pointer;
-
-                &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: -2px; }
-                &:disabled { cursor: wait; opacity: 0.6; }
-              }
-
               .projectLaunch {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
                 gap: 12px;
+                width: 100%;
+                height: 100%;
+                min-height: 240px;
                 padding: 20px;
+                border: 0;
+                border-radius: calc(var(--ui-radius) * 2.5);
+                background: transparent;
+                color: inherit;
+                font: inherit;
                 text-align: center;
+                cursor: pointer;
 
+                &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: -2px; }
+                &:disabled { cursor: wait; opacity: 0.6; }
                 .launchIcon {
                   display: grid;
                   place-items: center;
@@ -941,65 +1056,6 @@ async function createProject(fromPrompt = true) {
                   .launchDescription { color: var(--el-text-color-regular); font-size: 13px; line-height: 1.6; }
                 }
               }
-
-              .projectEntry {
-                display: flex;
-                flex-direction: column;
-                padding: 0;
-                text-align: start;
-
-                .projectInfo {
-                  display: flex;
-                  flex-direction: column;
-                  gap: 6px;
-                  width: 100%;
-                  min-width: 0;
-                  margin-top: auto;
-                  padding: 12px 16px;
-                  border-top: 1px solid var(--el-border-color-lighter);
-                  background: transparent;
-
-                  .projectName {
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                    font-size: 14px;
-                    font-weight: 600;
-                    line-height: 1.5;
-                  }
-
-                  .projectTime { font-size: 12px; line-height: 1.6; color: var(--el-text-color-secondary); }
-                }
-              }
-
-              .projectActions {
-                position: absolute;
-                top: 12px;
-                right: 12px;
-                display: flex;
-                gap: 4px;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.2s;
-
-                .el-button {
-                  width: 32px;
-                  height: 32px;
-                  margin: 0;
-                  padding: 0;
-                  box-shadow: var(--el-box-shadow-lighter);
-                }
-              }
-
-              &:hover .projectActions, &:focus-within .projectActions, .projectActions.exporting { opacity: 1; pointer-events: auto; }
-
-              @media (hover: none), (any-pointer: coarse) {
-                .projectActions { opacity: 1; pointer-events: auto; }
-              }
-
-              @media (prefers-reduced-motion: reduce) {
-                .projectActions { transition: none; }
-              }
             }
           }
         }
@@ -1011,6 +1067,7 @@ async function createProject(fromPrompt = true) {
     --sidebarWidth: 72px;
 
     .homeSidebar {
+      .sidebarPromotion { display: none; }
       .sidebarHeader {
         .sidebarBrand {
           gap: 0;

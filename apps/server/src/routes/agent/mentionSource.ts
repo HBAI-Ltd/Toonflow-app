@@ -31,8 +31,8 @@ export default router.get("/", validateFields(shape, "query"), async (req, res) 
       if (!args.canvasId) throw Object.assign(new Error("请选择画布"), { status: 400 });
       if (args.operation === "nodes") result = await u.mentionFiles.queryStoredMentionNodes(directory, args.canvasId, options);
       else {
-        if (!args.nodeId || (args.operation === "selectCanvas" && !args.outputId)) throw Object.assign(new Error("请选择节点输出"), { status: 400 });
-        result = await u.mentionFiles.storedMentionOutput(directory, args.canvasId, args.nodeId, args.operation === "selectCanvas" ? args.outputId : undefined);
+        if (!args.nodeId) throw Object.assign(new Error("请选择节点"), { status: 400 });
+        result = await u.mentionFiles.storedMentionOutput(directory, args.canvasId, args.nodeId, args.operation === "selectCanvas" ? args.outputId ?? null : undefined);
       }
     }
     controller.signal.throwIfAborted();

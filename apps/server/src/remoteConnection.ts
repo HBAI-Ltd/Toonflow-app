@@ -222,8 +222,9 @@ function remoteProxy(connection: RemoteConnection): express.RequestHandler {
       result.on("error", () => response.destroy());
       result.pipe(response);
     });
-    // ACT: 项目 ZIP 完成打包后才发送响应头，最多等待 10 分钟。
-    const headerTimeoutMs = request.method === "GET" && request.path === "/api/workspaces/files/export" ? 10 * 60 * 1000 : 20000;
+    // ACT: 项目打包、媒体转码完成后才发送响应头，最多等待 10 分钟，包含上传和排队。
+    const headerTimeoutMs = (request.method === "GET" && request.path === "/api/workspaces/files/export"
+      || request.method === "POST" && request.path === "/api/media/preview") ? 10 * 60 * 1000 : 20000;
     const headerTimeout = setTimeout(() => upstream.destroy(new Error("连接服务器超时")), headerTimeoutMs);
     headerTimeout.unref();
     upstream.on("error", () => {

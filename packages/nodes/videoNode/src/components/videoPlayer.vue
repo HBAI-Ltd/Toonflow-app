@@ -1,10 +1,10 @@
 <template>
-  <div class="videoPlayer">
+  <div class="videoPlayer" :aria-busy="preparingPreview">
     <video
       ref="video"
       class="videoPreview"
       :class="{ nodrag: fullscreen }"
-      :src="src"
+      :src="playbackSrc"
       :poster="poster"
       :controls="fullscreen"
       playsinline
@@ -20,6 +20,9 @@
       @ended="playing = false"
       @volumechange="readVolume"
       @error="mediaError" />
+    <div v-if="preparingPreview || previewError" class="previewStatus" role="status">
+      {{ preparingPreview ? "正在生成兼容预览…" : previewError }}
+    </div>
     <div v-show="!fullscreen" class="playerControls nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.stop>
       <el-button class="playerButton playButton" text circle :icon="playing ? IconPlayerPause : IconPlayerPlay" :disabled="!ready" :aria-label="playing ? '暂停视频' : '播放视频'" :title="playing ? '暂停' : '播放'" @click="togglePlayback" />
       <span class="currentTime">{{ formatTime(currentTime) }}</span>
@@ -57,6 +60,7 @@ import { useNode, useVueFlow } from "@vue-flow/core";
 import { ElButton, ElDropdown, ElDropdownMenu, ElDropdownItem, ElMessage, ElPopover, ElSlider } from "element-plus";
 import { IconPlayerPlay, IconPlayerPause, IconVolume, IconVolumeOff, IconPhotoScan, IconPlayerSkipBack, IconPlayerSkipForward, IconMaximize } from "@tabler/icons-vue";
 import { useNodeFiles } from "@toonflow/nodes-scaffold/workspaceFiles";
+import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
 
 const { src, label = "节点视频", readOnly = false } = defineProps<{ src: string; label?: string; readOnly?: boolean }>();
 const emit = defineEmits<{ loadedmetadata: [event: Event] }>();
@@ -72,6 +76,7 @@ const currentTime = ref(0);
 const duration = ref(0);
 const capturing = ref(false);
 const captureMenuVisible = ref(false);
+const { src: playbackSrc, preparing: preparingPreview, error: previewError, handleError, handleLoaded } = useMediaPreview(() => src, "video");
 // ACT: 只读预览挂载时不连接节点和工作区；从只读切换到编辑模式时重新挂载播放器。
 const node = readOnly ? undefined : useNode().node;
 const flow = readOnly ? undefined : useVueFlow();
@@ -81,7 +86,7 @@ let captureController: AbortController | undefined;
 
 watch(() => getCanvas?.()?.id, () => captureController?.abort(), { flush: "sync" });
 watch(() => readOnly, value => { if (value) captureController?.abort(); }, { flush: "sync" });
-watch(() => src, () => {
+watch(playbackSrc, () => {
   captureController?.abort();
   ready.value = false;
   poster.value = "";
@@ -92,7 +97,7 @@ watch(() => src, () => {
 onBeforeUnmount(() => captureController?.abort());
 
 async function enterFullscreen() {
-  if (!video.value) return;
+  if (!video.value || !ready.value) return;
   fullscreen.value = true;
   try {
     await video.value.requestFullscreen();
@@ -102,7 +107,7 @@ async function enterFullscreen() {
   }
 }
 
-defineExpose({ enterFullscreen, ready, capturing, captureFrame });
+defineExpose({ enterFullscreen, ready, capturing, captureFrame, previewSrc: playbackSrc });
 
 function formatTime(value: number) {
   const seconds = Math.floor(Number.isFinite(value) ? Math.max(0, value) : 0);
@@ -117,9 +122,10 @@ function readMetadata(event: Event) {
 
 function readPreview(event: Event) {
   const source = event.currentTarget as HTMLVideoElement;
-  if (source.currentSrc !== src) return;
+  if (!handleLoaded(event)) { ready.value = false; source.pause(); return; }
   ready.value = true;
-  if (poster.value || !source.videoWidth || !source.videoHeight) return;
+  previewError.value = "";
+  if (poster.value) return;
   try {
     const canvas = document.createElement("canvas");
     // ACT: 复用已解码帧，封面最长边限制为 640px；更高清画面由视频播放提供。
@@ -135,10 +141,12 @@ function readPreview(event: Event) {
   }
 }
 
-function mediaError() {
+function mediaError(event: Event) {
+  if (video.value?.currentSrc !== playbackSrc.value) return;
   ready.value = false;
   playing.value = false;
-  ElMessage.error("无法预览该视频");
+  if ([3, 4].includes(video.value?.error?.code ?? 0)) handleError(event);
+  else previewError.value = "无法预览该视频";
 }
 
 async function togglePlayback() {
@@ -197,7 +205,7 @@ function loadFrame(source: HTMLVideoElement, time: number, signal: AbortSignal) 
     source.onseeked = () => finish();
     source.onerror = () => finish(new Error("无法读取视频帧"));
     signal.addEventListener("abort", abort, { once: true });
-    source.src = src;
+    source.src = playbackSrc.value;
     source.load();
     if (signal.aborted) abort();
   });
@@ -279,6 +287,18 @@ async function captureFrame(command: "current" | "first" | "last") {
   cursor: grab;
 
   &:active { cursor: grabbing; }
+  .previewStatus {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: var(--el-fill-color-darker);
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    text-align: center;
+    overflow: auto;
+  }
   .videoPreview {
     display: block;
     width: 100%;

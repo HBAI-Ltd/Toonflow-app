@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { loadMediaProviderSource } from "@/utils/media/provider";
+import { loadMediaProviderSource, replaceMediaProviderModels } from "@/utils/media/provider";
 import { t, translateError } from "@/lib/i18n";
 
 export const providerDebugSchema = {
@@ -23,21 +23,41 @@ export async function runProviderSource(
   request: Record<string, unknown>,
   signal: AbortSignal,
   send: (event: Record<string, unknown>) => void,
+  models?: Parameters<typeof replaceMediaProviderModels>[1],
 ) {
   const startedAt = performance.now();
-  const secretFields = /api.?key|secret|token|password|authorization|cookie/i;
-  const secrets = Object.entries(config).filter(([key, value]) => secretFields.test(key) && typeof value === "string" && value)
-    .map(([, value]) => value as string);
-  function redact(value: unknown) {
-    let text = typeof value === "string" ? value : JSON.stringify(value, (key, item) => {
-      if (secretFields.test(key)) return "••••••";
-      if (typeof item === "string" && item.length > 4000) return t`[${item.length} 个字符]`;
-      return item;
-    }, 2) ?? "";
-    for (const secret of secrets) text = text.replaceAll(secret, "••••••");
-    return text.replace(/(Bearer\s+)[^\s"'<>]+/gi, "$1••••••")
-      .replace(/([?&](?:api.?key|token|secret|password|signature)=)[^&\s"']*/gi, "$1••••••")
+  const secretFields = /api.?key|secret|token|password|authorization|cookie|credential|private.?key|access.?key|signature/i;
+  const secrets = new Set<string>();
+  function collectSecrets(value: unknown, sensitive = false, seen = new WeakSet<object>()) {
+    if (typeof value === "string") {
+      if (sensitive && value) secrets.add(value);
+      return;
+    }
+    if (!value || typeof value !== "object" || seen.has(value)) return;
+    seen.add(value);
+    for (const [key, item] of Object.entries(value)) collectSecrets(item, sensitive || secretFields.test(key), seen);
+  }
+  collectSecrets(config);
+  function redactText(text: string) {
+    const values = [...new Set([...secrets].flatMap(secret => {
+      const token = secret.trim().replace(/^(?:Bearer|Basic)\s+/i, "");
+      return [secret, token, JSON.stringify(secret).slice(1, -1), JSON.stringify(token).slice(1, -1), encodeURIComponent(secret.toWellFormed()), encodeURIComponent(token.toWellFormed())];
+    }).filter(Boolean))].sort((left, right) => right.length - left.length);
+    for (const value of values) text = text.replaceAll(value, "••••••");
+    return text.replace(/(?<![\w\\.-])(["']?)([\w\\.-]+)\1(?=\s*[:=])/g, (_match, quote: string, key: string) => `${quote}${key.replace(/\\u([\da-f]{4})/gi, (_escape, code: string) => String.fromCharCode(parseInt(code, 16)))}${quote}`)
+      .replace(/(?<![\w.-])([\w.-]*(?:api[_.-]?key|secret|token|password|authorization|cookie|credential|private[_.-]?key|access[_.-]?key|signature)[\w.-]*["']?\s*[:=]\s*)(?:"(?:\\[\s\S]|[^"\\])*(?:"|\\?$)|'(?:\\[\s\S]|[^'\\])*(?:'|\\?$)|[^\r\n"',}&<>]+)/gi, "$1\"••••••\"")
+      .replace(/((?:Bearer|Basic)\s+)[^\s"'<>]+/gi, "$1••••••")
+      .replace(/(https?:\/\/)[^/\s@]+@/gi, "$1••••••@")
+      .replace(/([?&][^=&#\s]+)=[^&#\s"'<>]*/g, "$1=••••••")
       .slice(0, 16000);
+  }
+  function redact(value: unknown) {
+    if (typeof value === "string") return redactText(value);
+    return (JSON.stringify(value, (key, item) => {
+      if (secretFields.test(key)) return "••••••";
+      if (typeof item !== "string") return item;
+      return item.length > 4000 ? t`[${item.length} 个字符]` : redactText(item);
+    }, 2) ?? "").slice(0, 16000);
   }
   function bodyText(body: unknown) {
     if (typeof body !== "string") return body ? t`[二进制或表单请求体]` : "";
@@ -47,19 +67,22 @@ export async function runProviderSource(
   }
   let requestId = 0;
   const fetchRequest = Object.assign(async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+    signal.throwIfAborted();
     const request = input instanceof Request ? new Request(input, init) : new Request(String(input), init);
+    const requestSignal = AbortSignal.any([signal, request.signal]);
     const id = ++requestId;
-    if (id > 200) return fetch(input, init);
+    if (id > 200) return fetch(request, { signal: requestSignal });
     const start = performance.now();
     const log = { id, method: request.method, url: redact(request.url), request: [redact(Object.fromEntries(request.headers)), bodyText(init?.body)].filter(Boolean).join("\n") };
-    // ACT: 日志最多展示 200 次请求和 16 KB 响应正文，避免轮询和媒体数据撑满调试界面。
+    // ACT: 日志最多展示 200 次请求，响应正文最多读取 16 KB / 3 秒，避免日志阻塞业务响应。
     const report = (data: Record<string, unknown>) => { send({ type: "log", log: { ...log, ...data } }); };
     report({ state: "running" });
     try {
-      const response = await fetch(input, init);
+      const response = await fetch(request, { signal: requestSignal });
       let body = "";
       if (/json|text\/plain/i.test(response.headers.get("content-type") ?? "") && response.body) {
         const reader = response.clone().body!.getReader();
+        const timer = setTimeout(() => { void reader.cancel().catch(() => {}); }, 3000);
         const decoder = new TextDecoder();
         try {
           let size = 0;
@@ -71,7 +94,8 @@ export async function runProviderSource(
           }
           body += decoder.decode();
           if (size >= 16000) body += t`\n…响应已截断`;
-        } finally { void reader.cancel().catch(() => {}); }
+        } catch { requestSignal.throwIfAborted(); }
+        finally { clearTimeout(timer); void reader.cancel().catch(() => {}); }
       }
       report({ state: response.ok ? "success" : "error", status: response.status, duration: Math.round(performance.now() - start), response: bodyText(body) });
       return response;
@@ -82,8 +106,8 @@ export async function runProviderSource(
   }, { preconnect: fetch.preconnect }) as typeof fetch;
 
   try {
-    const provider = await loadMediaProviderSource(source, config, signal, fetchRequest);
-    for (const [key, value] of Object.entries(provider.config)) if (secretFields.test(key) && typeof value === "string" && value && !secrets.includes(value)) secrets.push(value);
+    const provider = await loadMediaProviderSource(models === undefined ? source : replaceMediaProviderModels(source, models), config, signal, fetchRequest);
+    collectSecrets(provider.config);
     const model = provider.models.find(model => model.id === request.model);
     if (!model) throw new Error("模型已变更，请重新选择模型");
     const method = model.type === "image" ? provider.generateImage : model.type === "video" ? provider.generateVideo : model.type === "audio" ? provider.generateAudio : undefined;

@@ -4,12 +4,16 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./mediaPreview": "./src/mediaPreview.ts",
+    "./mediaTypes": "./src/mediaTypes.ts",
+    "./pcmPreview": "./src/pcmPreview.ts",
     "./promptInput": "./src/components/promptInput.vue",
     "./promptText": "./src/promptText.ts",
     "./referenceItem": "./src/components/referenceItem.vue",
     "./mediaHistory": "./src/components/mediaHistory.vue",
     "./mediaPrice": "./src/components/mediaPrice.vue",
     "./modelForm": "./src/components/modelForm.vue",
+    "./modelLabel": "./src/components/modelLabel.vue",
     "./showNodeError": "./src/showNodeError.ts",
     "./useNodeReferences": "./src/useNodeReferences.ts",
     "./useNodeGeneration": "./src/useNodeGeneration.ts",
@@ -28,6 +32,7 @@
   "dependencies": {
     "@form-create/element-ui": "^3",
     "@tabler/icons-vue": "^3.46.0",
+    "@toonflow/model-icons": "workspace:*",
     "vue-draggable-plus": "^0.6.1",
     "x-sender": "1.4.6"
   },

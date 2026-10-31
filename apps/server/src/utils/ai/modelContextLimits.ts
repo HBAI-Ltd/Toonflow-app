@@ -1,9 +1,6 @@
 // ACT: 完整 ID 优先，其次匹配规范化名称和有限别名；两项上限均优先于用户配置和 Pi 内置模型目录。
 // 单位为 token；原有条目于 2026-09-20 核对，新增条目于 2026-10-26 核对官方标准 API 上限。
 const modelContextLimits: { id: string | RegExp; contextWindow: number; maxTokens: number }[] = [
-  // TF-Router
-  { id: "deepseek-v4.1-flash", contextWindow: 1048576, maxTokens: 393216 },
-  { id: /(?:^|-)deepseek-?v-?4-1-?flash-[0-9]+$/, contextWindow: 1048576, maxTokens: 393216 },
   // DeepSeek：旧的 deepseek-chat / deepseek-reasoner 已停用，不覆盖中转站的同名模型。
   // https://api-docs.deepseek.com/quick_start/pricing/
   // https://api-docs.deepseek.com/api/create-chat-completion/

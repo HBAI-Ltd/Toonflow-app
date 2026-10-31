@@ -3,6 +3,7 @@ import { listMediaModels, generateMedia } from "@/utils/media/generation";
 import { createWorkspaceFfmpeg, executeWorkspaceFfmpeg } from "@/utils/ffmpeg";
 import { createBrowserContext } from "@/utils/browser";
 import { createSandboxContext } from "@toonflow/tool-sandbox/host";
+import { canvasSchemas, isNodeToolAllowed, nodeToolPermissionsSchema } from "@toonflow/tool-canvas/runtime";
 import { getRuntimePlatform } from "@/lib/platform";
 import { importImage } from "@/utils/workspace/chatImages";
 import { basename, dirname, join, relative, resolve } from "node:path";
@@ -22,6 +23,24 @@ import { readDocument } from "@/utils/documents";
 import { createMcpAgentTools } from "@/utils/mcp/servers";
 
 export function createAgentToolContext(cwd: string, config: Record<string, unknown> = {}, canvas?: CanvasContext, question?: QuestionContext, workspaceAvailable = true): ToolContext {
+  const sourceCanvas = canvas;
+  if (sourceCanvas) {
+    canvas = {
+      get id() { return sourceCanvas.id; },
+      get tools() { return sourceCanvas.tools; },
+      getNodeLabel: sourceCanvas.getNodeLabel?.bind(sourceCanvas),
+      call(request, signal) {
+        if (request.name === "nodeTools") {
+          const { name } = canvasSchemas.nodeTools.parse(request.args);
+          const permissions = nodeToolPermissionsSchema.parse(conf.get("settings", {}).agentNodeTools ?? {});
+          if (!isNodeToolAllowed(name, permissions)) {
+            throw new Error(t`Agent 已禁用节点函数 ${name}，请在顶部节点工具控制中开启后再调用`);
+          }
+        }
+        return sourceCanvas.call(request, signal);
+      },
+    };
+  }
   const skillsDirectory = join(dirname(conf.path), "skills");
   const requireWorkspace = () => { if (!workspaceAvailable) throw new Error("此对话未提供工作目录，无法使用文件或媒体操作"); };
   const resolvePath = async (path: string, readOnly = false) => {

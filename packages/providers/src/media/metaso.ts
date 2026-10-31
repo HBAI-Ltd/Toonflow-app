@@ -15,7 +15,7 @@ const rules = [
   },
 ] as const;
 
-const version = "2.0.1";
+const version = "2.0.2";
 
 type ReferencedVideoRequest = VideoRequest & {
   referenceOrder?: ({ type: "image" | "video" | "audio"; index: number } | { type: "firstFrame" | "lastFrame" | "text" })[];
@@ -66,7 +66,7 @@ function wait(signal: AbortSignal, ms: number) {
 
 async function pollVideo(context: ProviderContext, baseUrl: string, apiKey: string, taskId: string, signal: AbortSignal): Promise<string> {
   while (true) {
-    const response = await context.tool.fetch(`${baseUrl}/v2/query/video_generation/${taskId}`, {
+    const response = await context.tool.fetch(`${baseUrl}/v2/query/video_generation/${encodeURIComponent(taskId)}`, {
       headers: { Authorization: `Bearer ${apiKey}` },
       signal,
     });
@@ -78,7 +78,7 @@ async function pollVideo(context: ProviderContext, baseUrl: string, apiKey: stri
       if (!url) throw new Error("视频生成成功但未返回视频地址");
       return url;
     }
-    if (status === "failed") throw new Error(context.tool.errorMessage?.(data) || "视频生成失败");
+    if (status === "failed") throw Object.assign(new Error(context.tool.errorMessage?.(data) || "视频生成失败"), { code: "MEDIA_TASK_FAILED" });
     await wait(signal, 5000);
   }
 }
@@ -129,6 +129,7 @@ export default {
     }
 
     // ACT: 单次生成最多等待 10 分钟。
+    const deadline = Date.now() + 10 * 60_000;
     const signal = AbortSignal.any([AbortSignal.timeout(10 * 60_000), ...(this.signal ? [this.signal] : [])]);
     const submitResponse = await this.tool.fetch(`${baseUrl}/v2/video_generation`, {
       method: "POST",
@@ -139,9 +140,23 @@ export default {
     if (!submitResponse.ok) throw new Error(`提交任务失败：HTTP ${submitResponse.status}`);
     const submitData = await submitResponse.json() as { task_id?: string };
     const taskId = submitData?.task_id;
-    if (!taskId) throw new Error("提交任务未返回任务 ID");
+    if (typeof taskId !== "string" || !taskId) throw new Error("提交任务未返回任务 ID");
+    await this.saveTaskData?.({ kind: "video", taskId, model: request.model, baseUrlHash: String(this.tool.hash(baseUrl)), deadline });
 
     const videoUrl = await pollVideo(this, baseUrl, apiKey, taskId, signal);
     return [{ mediaType: "video", type: "url", url: videoUrl }];
+  },
+  async resumeTask(data: ProviderTaskData): Promise<MediaAsset[]> {
+    const baseUrl = (this.config.baseUrl?.trim() || "https://metaso.cn/api/minimax").replace(/\/$/, "");
+    if (data.kind !== "video" || typeof data.taskId !== "string" || !data.taskId || typeof data.model !== "string"
+      || data.baseUrlHash !== String(this.tool.hash(baseUrl)) || typeof data.deadline !== "number" || !Number.isFinite(data.deadline)) {
+      throw new Error("视频任务恢复数据无效或请求地址已变更");
+    }
+    const apiKey = this.config.apiKey?.trim();
+    if (!apiKey) throw new Error("请填写 API Key");
+    // ACT: 重启后仍查询原任务；每次恢复重新限定等待时长，不把本地超时当成远端失败。
+    const signal = AbortSignal.any([AbortSignal.timeout(10 * 60_000), ...(this.signal ? [this.signal] : [])]);
+    const url = await pollVideo(this, baseUrl, apiKey, data.taskId, signal);
+    return [{ mediaType: "video", type: "url", url }];
   },
 } satisfies ProviderDefinition<typeof rules>;

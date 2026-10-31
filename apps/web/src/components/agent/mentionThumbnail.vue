@@ -1,7 +1,9 @@
 <template>
-  <span ref="element" class="mentionThumbnail" aria-hidden="true">
-    <video v-if="previewUrl && !failed && thumbnail?.mimeType.startsWith('video/')" :src="previewUrl" preload="metadata" muted playsinline @error="failed = true" />
-    <img v-else-if="previewUrl && !failed" :src="previewUrl" alt="" draggable="false" @error="failed = true" />
+  <span ref="element" class="mentionThumbnail" aria-hidden="true" :aria-busy="preparingPreview" :title="preparingPreview ? '正在生成兼容预览…' : previewError || undefined">
+    <template v-if="mediaSrc && !failed && !preparingPreview && !previewError">
+      <video v-if="thumbnail?.mimeType.startsWith('video/')" :src="mediaSrc" preload="auto" muted playsinline @loadeddata="handleLoaded" @error="handleError" />
+      <img v-else :src="mediaSrc" alt="" draggable="false" @load="handleLoaded" @error="handleError" />
+    </template>
     <slot v-else />
   </span>
 </template>
@@ -9,11 +11,13 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
+import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
 
 const props = defineProps<{ thumbnail?: { url: string; mimeType: string }; directory?: string; globalAsset?: boolean }>();
 const element = ref<HTMLElement>();
 const inView = ref(false);
 const previewUrl = ref("");
+const { src: mediaSrc, preparing: preparingPreview, error: previewError, handleError, handleLoaded } = useMediaPreview(previewUrl, () => props.thumbnail?.mimeType.startsWith("video/") ? "video" : "image");
 const failed = ref(false);
 let observer: IntersectionObserver | undefined;
 

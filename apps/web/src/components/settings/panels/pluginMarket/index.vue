@@ -1,57 +1,75 @@
 <template>
   <div class="pluginMarket">
     <div class="marketToolbar">
-      <nav class="marketNav" aria-label="插件列表">
-        <button class="navButton" type="button" :aria-pressed="isMarketTab" @click="activeTab = 'discover'">发现插件</button>
-        <button class="navButton" type="button" :aria-pressed="activeTab === 'installed'" @click="activeTab = 'installed'">已安装</button>
-        <button class="navButton" type="button" :aria-pressed="activeTab === 'mcp'" @click="activeTab = 'mcp'">MCP</button>
-        <button class="navButton" type="button" :aria-pressed="activeTab === 'ffmpeg'" @click="activeTab = 'ffmpeg'">FFmpeg</button>
-      </nav>
-      <div class="marketActions">
-        <el-button tag="a" href="https://api.toonflow.net/console/plugIn" target="_blank" rel="noopener noreferrer" size="small" text :icon="IconExternalLink">
-          网页版市场
-        </el-button>
-        <el-button tag="a" href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd" target="_blank" rel="noopener noreferrer" size="small" text :icon="IconBook">
-          开发者文档
-        </el-button>
-        <template v-if="activeTab === 'installed'">
-          <el-button v-if="selectedType === 'ext' || selectedType === 'all'" size="small" :icon="IconSettings" @click="associationsVisible = true">默认打开方式</el-button>
-          <el-button size="small" type="primary" :icon="IconUpload" :loading="installing" aria-label="安装本地插件" @click="pluginFileInput?.click()">
-            安装插件
+      <div class="marketHeader">
+        <nav class="marketNav" aria-label="插件列表">
+          <button class="navButton" type="button" :aria-pressed="isMarketTab" @click="activeTab = 'discover'">发现插件</button>
+          <button class="navButton" type="button" :aria-pressed="activeTab === 'installed'" @click="activeTab = 'installed'">已安装</button>
+          <button class="navButton" type="button" :aria-pressed="activeTab === 'mcp'" @click="activeTab = 'mcp'">MCP</button>
+          <button class="navButton" type="button" :aria-pressed="activeTab === 'ffmpeg'" @click="activeTab = 'ffmpeg'">FFmpeg</button>
+        </nav>
+        <div class="marketLinks">
+          <el-button tag="a" href="https://api.toonflow.net/console/plugIn" target="_blank" rel="noopener noreferrer" size="small" text :icon="IconExternalLink">
+            网页版市场
           </el-button>
-          <input ref="pluginFileInput" type="file" :accept="agentMarketEnabled ? '.umd.js,.tool.js,.agent.zip,.zip,.md,.tar,.tar.gz,.tgz' : '.umd.js,.tool.js,.zip,.md,.tar,.tar.gz,.tgz'" hidden @change="installFile" />
-          <template v-if="agentMarketEnabled && selectedType === 'agent'">
-            <el-button size="small" :icon="IconLink" :disabled="loading || !canManageAgents" @click="agentConnectVisible = true">连接远程 Agent</el-button>
-            <el-button size="small" :icon="IconSettings" :disabled="loading || !canManageAgents" @click="a2aSettingsVisible = true">A2A 服务</el-button>
-          </template>
-        </template>
-      </div>
-      <div v-if="isMarketTab || activeTab === 'installed'" class="typeFilters" role="group" aria-label="插件类型">
-        <button class="filterButton" type="button" :aria-pressed="selectedType === 'all'" @click="selectedType = 'all'">
-          全部
-          <span v-if="activeTab === 'installed' && installedCounts.all !== undefined" class="filterCount">{{ installedCounts.all }}</span>
-        </button>
-        <button
-          v-for="(category, type) in pluginTypes"
-          :key="type"
-          class="filterButton"
-          type="button"
-          :disabled="type === 'agent' && !agentMarketEnabled"
-          :title="type === 'agent' && !agentMarketEnabled ? '测试阶段，暂未开放' : undefined"
-          :aria-pressed="selectedType === type"
-          @click="selectedType = type">
-          {{ category.label }}
-          <span v-if="activeTab === 'installed' && installedCounts[type] !== undefined" class="filterCount">{{ installedCounts[type] }}</span>
-        </button>
-        <div class="personalFilters" role="group" aria-label="我的插件">
-          <button class="filterButton" type="button" :aria-pressed="selectedType === 'collection'" @click="selectedType = 'collection'">收藏</button>
-          <button class="filterButton" type="button" :aria-pressed="selectedType === 'my'" @click="selectedType = 'my'">我的</button>
+          <el-button tag="a" href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd" target="_blank" rel="noopener noreferrer" size="small" text :icon="IconBook">
+            开发者文档
+          </el-button>
         </div>
       </div>
-      <form v-if="isMarketTab || activeTab === 'installed'" class="marketSearch" role="search" @submit.prevent="applySearch">
-        <el-input v-model="searchQuery" size="small" placeholder="搜索插件" aria-label="搜索插件" clearable @clear="applySearch" />
-        <el-button size="small" type="primary" nativeType="submit">搜索</el-button>
-      </form>
+      <div v-if="isMarketTab || activeTab === 'installed'" class="marketControls">
+        <form class="marketSearch" role="search" @submit.prevent="applySearch">
+          <el-input v-model="searchQuery" size="small" placeholder="搜索插件" aria-label="搜索插件" clearable @clear="applySearch" />
+          <el-button size="small" nativeType="submit">搜索</el-button>
+        </form>
+        <div class="marketActions">
+          <el-button
+            size="small"
+            type="primary"
+            plain
+            :icon="IconCloudUpload"
+            :disabled="!accountToken"
+            :title="accountToken ? '上传插件到市场' : '请先在账号与余额中登录'"
+            @click="openUpload()">上传插件</el-button>
+          <template v-if="activeTab === 'installed'">
+            <el-button size="small" type="primary" :icon="IconUpload" :loading="installing" aria-label="安装本地插件" @click="pluginFileInput?.click()">
+              安装插件
+            </el-button>
+            <input ref="pluginFileInput" type="file" :accept="agentMarketEnabled ? '.umd.js,.tool.js,.agent.zip,.zip,.md,.tar,.tar.gz,.tgz' : '.umd.js,.tool.js,.zip,.md,.tar,.tar.gz,.tgz'" hidden @change="installFile" />
+            <template v-if="agentMarketEnabled && selectedType === 'agent'">
+              <el-button size="small" :icon="IconLink" :disabled="loading || !canManageAgents" @click="agentConnectVisible = true">连接远程 Agent</el-button>
+              <el-button size="small" :icon="IconSettings" :disabled="loading || !canManageAgents" @click="a2aSettingsVisible = true">A2A 服务</el-button>
+            </template>
+          </template>
+        </div>
+      </div>
+      <div v-if="isMarketTab || activeTab === 'installed'" class="marketFilters">
+        <div class="typeFilters" role="group" aria-label="插件类型">
+          <button class="filterButton" type="button" :aria-pressed="selectedType === 'all'" @click="selectedType = 'all'">
+            全部
+            <span v-if="activeTab === 'installed' && installedCounts.all !== undefined" class="filterCount">{{ installedCounts.all }}</span>
+          </button>
+          <button
+            v-for="(category, type) in pluginTypes"
+            :key="type"
+            class="filterButton"
+            type="button"
+            :disabled="type === 'agent' && !agentMarketEnabled"
+            :title="type === 'agent' && !agentMarketEnabled ? '测试阶段，暂未开放' : undefined"
+            :aria-pressed="selectedType === type"
+            @click="selectedType = type">
+            {{ category.label }}
+            <span v-if="activeTab === 'installed' && installedCounts[type] !== undefined" class="filterCount">{{ installedCounts[type] }}</span>
+          </button>
+        </div>
+        <div class="filterOptions">
+          <div class="personalFilters" role="group" aria-label="我的插件">
+            <button class="filterButton" type="button" :aria-pressed="selectedType === 'collection'" @click="selectedType = 'collection'">收藏</button>
+            <button class="filterButton" type="button" :aria-pressed="selectedType === 'my'" @click="selectedType = 'my'">我的</button>
+          </div>
+          <el-checkbox v-if="activeTab === 'installed'" v-model="hideBuiltin" class="builtinFilter" size="small">隐藏内置插件</el-checkbox>
+        </div>
+      </div>
     </div>
 
     <ffmpeg v-if="activeTab === 'ffmpeg'" :visible />
@@ -59,24 +77,12 @@
     <template v-else>
       <template v-if="activeTab === 'installed'">
         <el-alert v-for="message in visibleLoadErrors" :key="message" class="loadError" :title="message" type="error" :closable="false" showIcon />
+        <el-alert v-if="pluginExistenceError" class="loadError" :title="pluginExistenceError" type="warning" :closable="false" showIcon>
+          <el-button size="small" @click="pluginExistenceRefreshKey++">重新检查</el-button>
+        </el-alert>
+        <p v-if="checkingPluginExistence" class="listStatus" role="status">正在检查插件是否已在市场中…</p>
       </template>
-      <el-card v-else-if="marketNeedsKey" class="marketKey" shadow="never">
-        <el-text size="small">{{ marketError }}</el-text>
-        <form class="keyForm" @submit.prevent="saveMarketKey">
-          <el-input
-            v-model="draftKey"
-            type="password"
-            showPassword
-            autocomplete="off"
-            :maxlength="8192"
-            placeholder="填写 TF-Router API Key"
-            aria-label="TF-Router API Key"
-            :disabled="savingKey" />
-          <el-button type="primary" nativeType="submit" :loading="savingKey" :disabled="!draftKey.trim()">保存并继续</el-button>
-        </form>
-        <el-text v-if="keyError" type="danger" size="small" role="alert">{{ keyError }}</el-text>
-        <el-link href="https://api.toonflow.net/" target="_blank" rel="noopener noreferrer" type="primary">前往 TF-Router 获取 API Key</el-link>
-      </el-card>
+      <el-alert v-else-if="!accountToken" class="loadError" title="请先在账号与余额中登录 Toonflow 账号，再浏览和收藏插件。" type="info" :closable="false" showIcon />
       <el-alert v-else-if="marketError" class="loadError" :title="marketError" type="error" :closable="false" showIcon>
         <el-button size="small" @click="marketRefreshKey++">重试</el-button>
       </el-alert>
@@ -98,6 +104,7 @@
           @click="openPlugin(plugin)"
           @keydown.enter.self.prevent="openPlugin(plugin)"
           @keydown.space.self.prevent="openPlugin(plugin)">
+          <img v-if="plugin.type === 'node' && plugin.coverUrl" class="pluginCover" :src="plugin.coverUrl" :alt="`${plugin.displayName} 节点截图`" loading="lazy" referrerpolicy="no-referrer" />
           <div class="pluginHeader">
             <div class="pluginHeading">
               <h3 class="pluginName">
@@ -118,20 +125,43 @@
               <span class="pluginId" :title="plugin.name">{{ plugin.name }}</span>
             </div>
             <div class="pluginTags">
+              <el-tag v-if="plugin.demoVideoUrl" type="info" size="small" effect="plain">效果演示</el-tag>
               <el-tag v-if="plugin.builtin || installedByKey.get(`${plugin.type}:${plugin.name}`)?.builtin" type="info" size="small" effect="plain">内置</el-tag>
+              <el-tag
+                v-for="(tag, index) in plugin.tags"
+                :key="index"
+                class="pluginLabel"
+                type="info"
+                size="small"
+                effect="plain"
+                :style="getPluginTagStyle(tag.color)">{{ tag.text }}</el-tag>
               <el-tag :type="pluginTypes[plugin.type].tagType" size="small">{{ pluginTypes[plugin.type].label }}</el-tag>
             </div>
           </div>
           <p v-if="plugin.description" class="pluginDescription">{{ plugin.description }}</p>
+          <div v-if="isMarketTab && selectedType === 'my'" class="reviewStatus" :class="{ rejected: plugin.state === 2 }">
+            <el-tag :type="plugin.state === 1 ? 'success' : plugin.state === 2 ? 'danger' : 'warning'" size="small" effect="plain">
+              {{ plugin.state === 1 ? '已发布' : plugin.state === 2 ? '审核未通过' : '待审核' }}
+            </el-tag>
+            <p v-if="plugin.state === 2 && plugin.rejectReason" class="reviewReason"><span>审核意见</span>{{ plugin.rejectReason }}</p>
+          </div>
           <el-text v-if="plugin.loadError" type="danger" size="small">{{ plugin.loadError }}</el-text>
           <div v-if="plugin.author || plugin.version" class="pluginMeta">
             <span v-if="plugin.author" class="pluginAuthor">{{ plugin.author }}</span>
             <span v-if="plugin.version" class="pluginVersion" type="info" size="small" effect="plain">v{{ plugin.version }}</span>
           </div>
           <div v-if="isMarketTab" class="pluginFooter" @click.stop>
+            <el-button size="small" :aria-label="`查看 ${plugin.displayName} 的详情`" @click="openPlugin(plugin)">查看详情</el-button>
+            <el-button
+              v-if="selectedType === 'my'"
+              size="small"
+              type="primary"
+              :disabled="plugin.state === 0 || loading || deletingPlugins.has(plugin.key) || collectingPlugins.has(plugin.key) || pendingPlugins.has(plugin.key)"
+              :aria-label="`${plugin.state === 1 ? '更新版本' : plugin.state === 2 ? '修改后重新提交' : '等待审核'} ${plugin.displayName}`"
+              @click="openResubmit(plugin)">{{ plugin.state === 1 ? '更新版本' : plugin.state === 2 ? '修改后重新提交' : '等待审核' }}</el-button>
             <el-text v-if="installLabel(plugin) === '已安装'" type="info" size="small">已安装</el-text>
             <el-popconfirm
-              v-else-if="pluginTypes[plugin.type].path"
+              v-else-if="pluginTypes[plugin.type].path && plugin.url && plugin.fileName"
               :title="`${translate(installLabel(plugin))}${pluginTypes[plugin.type].label}“${plugin.displayName}”（${plugin.fileName}）？`"
               width="280"
               :confirmButtonText="translate(installLabel(plugin))"
@@ -142,27 +172,46 @@
                   size="small"
                   type="primary"
                   :loading="pendingPlugins.has(plugin.key)"
-                  :disabled="loading || pendingPlugins.has(plugin.key)"
+                  :disabled="loading || pendingPlugins.has(plugin.key) || deletingPlugins.has(plugin.key)"
                   :aria-label="`${translate(installLabel(plugin))} ${plugin.displayName}`">
                   {{ translate(installLabel(plugin)) }}
                 </el-button>
               </template>
             </el-popconfirm>
             <el-text v-else type="info" size="small">{{ plugin.type === 'agent' && !agentMarketEnabled ? '测试阶段，暂未开放' : '暂不支持安装' }}</el-text>
-            <div class="pluginActions">
+            <div v-if="plugin.state === 1 || selectedType === 'my'" class="pluginActions">
               <component
+                v-if="plugin.state === 1"
                 :is="plugin.isCollected ? IconStarFilled : IconStar"
                 class="collectionIcon"
                 :size="18"
                 role="button"
                 tabindex="0"
-                :aria-disabled="collectingPlugins.has(plugin.key)"
+                :aria-disabled="collectingPlugins.has(plugin.key) || deletingPlugins.has(plugin.key)"
                 :aria-pressed="plugin.isCollected === true"
                 :aria-label="`${plugin.isCollected ? '取消收藏' : '添加收藏'} ${plugin.displayName}`"
                 :title="plugin.isCollected ? '取消收藏' : '添加收藏'"
                 @click="toggleCollection(plugin)"
                 @keydown.enter.prevent="toggleCollection(plugin)"
                 @keydown.space.prevent="toggleCollection(plugin)" />
+              <el-popconfirm
+                v-if="selectedType === 'my'"
+                :title="`确定从市场删除“${plugin.displayName}”吗？`"
+                width="280"
+                confirmButtonText="删除"
+                cancelButtonText="取消"
+                confirmButtonType="danger"
+                @confirm="deletePlugin(plugin)">
+                <template #reference>
+                  <el-button
+                    size="small"
+                    type="danger"
+                    plain
+                    :loading="deletingPlugins.has(plugin.key)"
+                    :disabled="deletingPlugins.has(plugin.key) || collectingPlugins.has(plugin.key) || pendingPlugins.has(plugin.key)"
+                    :aria-label="`从市场删除 ${plugin.displayName}`">删除</el-button>
+                </template>
+              </el-popconfirm>
             </div>
           </div>
           <div v-else class="pluginFooter pluginControls" @click.stop>
@@ -177,6 +226,14 @@
                 @change="updatePlugin(plugin, 'setEnabled', $event === true)" />
             </label>
             <div class="pluginActions">
+              <el-button
+                v-if="uploadablePluginKeys.has(plugin.key)"
+                size="small"
+                :icon="IconCloudUpload"
+                :disabled="loading || pendingPlugins.has(plugin.key) || exportingPlugins.has(plugin.key)"
+                :aria-label="`上传 ${plugin.displayName} 到市场`"
+                title="上传到市场"
+                @click="openUpload(plugin)">上传</el-button>
               <el-button
                 v-if="plugin.type === 'node' || plugin.type === 'skill' || plugin.type === 'tool' || plugin.type === 'ext' || (plugin.type === 'agent' && plugin.kind === 'local')"
                 size="small"
@@ -224,11 +281,11 @@
         </el-card>
       </div>
       <p v-if="activeTab === 'installed' ? loading : marketLoading" class="listStatus" role="status">正在加载插件…</p>
-      <p v-else-if="!visiblePlugins.length && (isMarketTab ? !marketError : !visibleLoadErrors.length)" class="listStatus">
-        {{ activeTab === "installed" ? "暂无符合条件的已安装插件" : selectedType === "collection" ? "暂无符合条件的收藏插件" : selectedType === "my" ? "暂无符合条件的已发布插件" : "未找到相关插件" }}
+      <p v-else-if="!visiblePlugins.length && (isMarketTab ? accountToken && !marketError : !visibleLoadErrors.length)" class="listStatus">
+        {{ activeTab === "installed" ? "暂无符合条件的已安装插件" : selectedType === "collection" ? "暂无符合条件的收藏插件" : selectedType === "my" ? "暂无符合条件的已上传插件" : "未找到相关插件" }}
       </p>
       <el-pagination
-        v-if="isMarketTab && !marketError"
+        v-if="isMarketTab && accountToken && !marketError"
         v-model:currentPage="marketPage"
         class="marketPagination"
         :pageSize="marketPageSize"
@@ -238,7 +295,13 @@
         layout="total, prev, pager, next"
         size="small" />
       <pluginConfigDialog v-if="selectedConfigPlugin" v-model="configVisible" :plugin="selectedConfigPlugin" :canManage="canConfigurePlugin(selectedConfigPlugin)" />
-      <extensionAssociationsDialog v-model="associationsVisible" />
+      <uploadPluginDialog
+        v-if="uploadVisible"
+        :plugin="selectedUploadPlugin"
+        :marketPlugin="selectedMarketPlugin"
+        :token="accountToken"
+        @uploaded="onPluginUploaded"
+        @closed="uploadVisible = false; selectedUploadPlugin = undefined; selectedMarketPlugin = undefined" />
       <agentEditorDialog v-if="selectedAgent" :key="selectedAgent.key" :agent="selectedAgent" :canManage="canManageAgents" @saved="refreshInstalled" @closed="selectedAgent = undefined" />
       <agentConnectDialog v-if="agentConnectVisible" @saved="refreshInstalled" @closed="agentConnectVisible = false" />
       <a2aSettingsDialog v-if="a2aSettingsVisible" @saved="refreshInstalled" @closed="a2aSettingsVisible = false" />
@@ -255,9 +318,41 @@
         width="min(800px, calc(100vw - 32px))"
         alignCenter
         appendToBody
-        destroyOnClose>
-        <div class="pluginContent" tabindex="0" aria-label="插件说明">
-          <messageMarkdown :content="selectedPlugin.readme ?? ''" />
+        destroyOnClose
+        @closed="selectedPlugin = undefined">
+        <div class="pluginContent" tabindex="0" aria-label="插件详情">
+          <div v-if="selectedPlugin.id !== undefined" class="detailMeta">
+            <el-tag :type="pluginTypes[selectedPlugin.type].tagType" size="small">{{ pluginTypes[selectedPlugin.type].label }}</el-tag>
+            <span>{{ selectedPlugin.name }}</span>
+            <span v-if="selectedPlugin.version">v{{ selectedPlugin.version }}</span>
+            <span v-if="selectedPlugin.author">{{ selectedPlugin.author }}</span>
+          </div>
+          <div v-if="selectedPlugin.tags?.length" class="detailLabels" aria-label="插件标签">
+            <el-tag
+              v-for="(tag, index) in selectedPlugin.tags"
+              :key="index"
+              type="info"
+              size="small"
+              effect="plain"
+              :style="getPluginTagStyle(tag.color)">{{ tag.text }}</el-tag>
+          </div>
+          <p v-if="selectedPlugin.description && selectedPlugin.id !== undefined" class="detailDescription">{{ selectedPlugin.description }}</p>
+          <img v-if="selectedPlugin.coverUrl" class="detailCover" :src="selectedPlugin.coverUrl" :alt="`${selectedPlugin.displayName} 插件封面`" referrerpolicy="no-referrer" />
+          <section v-if="selectedPlugin.demoVideoUrl" class="detailDemo" aria-label="效果演示">
+            <h3>效果演示</h3>
+            <el-alert v-if="demoVideoFailed" title="演示视频加载失败，请重试" type="error" :closable="false" showIcon>
+              <el-button size="small" @click="demoVideoFailed = false">重试</el-button>
+            </el-alert>
+            <videoPlayer
+              v-else
+              :key="selectedPlugin.demoVideoUrl"
+              class="demoPlayer"
+              :src="selectedPlugin.demoVideoUrl"
+              :label="`${selectedPlugin.displayName} 效果演示`"
+              :active="detailsVisible && visible"
+              @error="demoVideoFailed = true" />
+          </section>
+          <messageMarkdown v-if="selectedPlugin.readme" :content="selectedPlugin.readme" />
         </div>
       </el-dialog>
     </template>
@@ -269,16 +364,16 @@ import { translate } from "@toonflow/i18n/vue";
 import axios from "axios";
 import parse from "semver/functions/parse";
 import { computed, defineAsyncComponent, markRaw, onMounted, onBeforeUnmount, ref, watch } from "vue";
-import { IconBox, IconBook, IconTool, IconFileText, IconExternalLink, IconSparkles2, IconUpload, IconShare, IconStar, IconStarFilled, IconLink, IconSettings, IconCopy } from "@tabler/icons-vue";
+import { IconBox, IconBook, IconTool, IconFileText, IconExternalLink, IconSparkles2, IconUpload, IconCloudUpload, IconShare, IconStar, IconStarFilled, IconLink, IconSettings, IconCopy } from "@tabler/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import tf, { getTfApiKey, isTfRouterProvider } from "@/lib/tf";
-import { saveSettings } from "@/stores/settings";
-import tfRouter from "@toonflow/providers/language/tfRouter";
-import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
+import { settings } from "@/stores/settings";
+import http from "@/lib/http";
+import videoPlayer from "@/components/videoPlayer.vue";
+import type { Plugin as MarketPlugin, PluginExistence } from "@toonflow/server/channel";
 import saveFile from "@/lib/saveFile";
 import { writeClipboardText } from "@/lib/clipboard";
 import pluginConfigDialog from "./pluginConfigDialog.vue";
-import extensionAssociationsDialog from "./extensionAssociationsDialog.vue";
+import uploadPluginDialog from "./uploadPluginDialog.vue";
 import skillEditorDialog from "./skillEditorDialog.vue";
 import ffmpeg from "./ffmpeg.vue";
 import mcpServers from "./mcpServers.vue";
@@ -289,7 +384,6 @@ import type { Plugin, PluginType } from "./types";
 import { installPluginFile } from "../../installPluginFile";
 
 const { visible = true } = defineProps<{ visible?: boolean }>();
-const associationsVisible = ref(false);
 // ACT: Agent 插件市场仍在测试，暂时关闭入口。
 const agentMarketEnabled = false;
 const pluginTypes = {
@@ -321,16 +415,12 @@ const selectedType = computed({
   },
 });
 const installedPlugins = ref<Plugin[]>([]);
+const hideBuiltin = ref(false);
+const filteredInstalledPlugins = computed(() => installedPlugins.value.filter(plugin => !hideBuiltin.value || !plugin.builtin));
 const installedByKey = computed(() => new Map(installedPlugins.value.map((plugin) => [plugin.key, plugin])));
 const marketPlugins = ref<Plugin[]>([]);
 const marketLoading = ref(false);
 const marketError = ref("");
-const apiKey = computed(getTfApiKey);
-const marketNeedsKey = ref(false);
-const draftKey = ref("");
-const savingKey = ref(false);
-const keyError = ref("");
-let keyController: AbortController | undefined;
 const marketRefreshKey = ref(0);
 const loading = ref(false);
 const loadErrors = ref<Partial<Record<PluginType, string>>>({});
@@ -341,7 +431,23 @@ const agentConnectVisible = ref(false);
 const a2aSettingsVisible = ref(false);
 const pendingPlugins = ref(new Set<string>());
 const collectingPlugins = ref(new Set<string>());
+const deletingPlugins = ref(new Set<string>());
+let marketMutationController = new AbortController();
 const exportingPlugins = ref(new Set<string>());
+const selectedUploadPlugin = ref<Plugin>();
+const selectedMarketPlugin = ref<Plugin>();
+const uploadVisible = ref(false);
+const accountToken = computed(() => {
+  const account = settings.value.toonflowAccount as { token?: unknown } | null | undefined;
+  return typeof account?.token === "string" ? account.token.trim() : "";
+});
+const localUploadCandidates = computed(() => installedPlugins.value.filter(canUploadLocalPlugin));
+const pluginExistence = ref(new Map<string, boolean>());
+const checkingPluginExistence = ref(false);
+const pluginExistenceError = ref("");
+const pluginExistenceRefreshKey = ref(0);
+const uploadablePluginKeys = computed(() => new Set(localUploadCandidates.value
+  .filter(plugin => pluginExistence.value.get(plugin.key) === false).map(plugin => plugin.key)));
 const pluginFileInput = ref<HTMLInputElement>();
 const installing = ref(false);
 const refreshKey = ref(0);
@@ -350,27 +456,43 @@ const refreshInstalled = () => {
 };
 onMounted(() => window.addEventListener("toonflow:plugin-installed", refreshInstalled));
 onBeforeUnmount(() => window.removeEventListener("toonflow:plugin-installed", refreshInstalled));
-onBeforeUnmount(() => keyController?.abort());
+onBeforeUnmount(() => marketMutationController.abort());
 watch(
-  () => [visible, activeTab.value],
-  () => keyController?.abort()
+  () => [visible, activeTab.value, accountToken.value],
+  () => {
+    marketMutationController.abort();
+    marketMutationController = new AbortController();
+    collectingPlugins.value.clear();
+    deletingPlugins.value.clear();
+    uploadVisible.value = false;
+    selectedUploadPlugin.value = undefined;
+    selectedMarketPlugin.value = undefined;
+    detailsVisible.value = false;
+  },
+  { flush: "sync" }
 );
 const selectedConfigPlugin = ref<Plugin>();
 const configVisible = ref(false);
 const selectedPlugin = ref<Plugin>();
 const selectedSkill = ref<Plugin>();
 const detailsVisible = ref(false);
+const demoVideoFailed = ref(false);
 const messageMarkdown = defineAsyncComponent(() => import("@/components/messageMarkdown.vue"));
 const requestHeaders = { "x-toonflow-workspace": "1" };
+
+function getPluginTagStyle(color: string) {
+  const backgroundColor = /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(color) ? color : "#0052D9";
+  return { backgroundColor, borderColor: backgroundColor, color: "#FFFFFF" };
+}
 
 const searchQuery = ref("");
 const appliedQuery = ref("");
 const installedCounts = computed(() => {
   const counts: Partial<Record<PluginType | "all", number>> = {};
   if (loading.value) return counts;
-  if (!Object.keys(loadErrors.value).length) counts.all = installedPlugins.value.length;
+  if (!Object.keys(loadErrors.value).length) counts.all = filteredInstalledPlugins.value.length;
   for (const type of Object.keys(pluginTypes) as PluginType[]) {
-    if (!loadErrors.value[type]) counts[type] = installedPlugins.value.filter((plugin) => plugin.type === type).length;
+    if (!loadErrors.value[type]) counts[type] = filteredInstalledPlugins.value.filter((plugin) => plugin.type === type).length;
   }
   return counts;
 });
@@ -381,7 +503,7 @@ const visibleLoadErrors = computed(() =>
 );
 const visiblePlugins = computed(() => {
   if (isMarketTab.value) return marketPlugins.value;
-  return installedPlugins.value.filter(
+  return filteredInstalledPlugins.value.filter(
     (plugin) =>
       (selectedType.value === "all" || plugin.type === selectedType.value) &&
       [plugin.name, plugin.displayName, plugin.author, plugin.description].some((value) =>
@@ -389,8 +511,40 @@ const visiblePlugins = computed(() => {
       )
   );
 });
+function canUploadLocalPlugin(plugin: Plugin) {
+  return !!accountToken.value && !plugin.builtin && !plugin.loadError && canManageTools.value
+    && (plugin.type !== "ext" || plugin.canManage === true)
+    && (plugin.type !== "agent" || (agentMarketEnabled && plugin.kind === "local" && canManageAgents.value));
+}
+
+function openUpload(plugin?: Plugin) {
+  if (!visible || !accountToken.value || (!isMarketTab.value && activeTab.value !== "installed")) return;
+  if (plugin && (!installedPlugins.value.includes(plugin) || !uploadablePluginKeys.value.has(plugin.key))) return;
+  selectedUploadPlugin.value = plugin;
+  selectedMarketPlugin.value = undefined;
+  uploadVisible.value = true;
+}
+
+function openResubmit(plugin: Plugin) {
+  if (!visible || !isMarketTab.value || selectedType.value !== "my" || !accountToken.value
+    || plugin.id === undefined || !marketPlugins.value.includes(plugin) || (plugin.state !== 1 && plugin.state !== 2)
+    || loading.value || deletingPlugins.value.has(plugin.key) || collectingPlugins.value.has(plugin.key) || pendingPlugins.value.has(plugin.key)) return;
+  const localPlugin = installedByKey.value.get(`${plugin.type}:${plugin.name}`);
+  selectedUploadPlugin.value = localPlugin && canUploadLocalPlugin(localPlugin) ? localPlugin : undefined;
+  selectedMarketPlugin.value = plugin;
+  uploadVisible.value = true;
+}
+
+function onPluginUploaded() {
+  marketRefreshKey.value++;
+  pluginExistenceRefreshKey.value++;
+  searchQuery.value = "";
+  appliedQuery.value = "";
+  selectedType.value = "my";
+}
 
 function canViewPlugin(plugin: Plugin) {
+  if (isMarketTab.value) return true;
   return activeTab.value === "installed" && (plugin.type === "skill" || (plugin.type === "agent" && plugin.kind === "local" && canManageAgents.value))
     ? !loading.value && !pendingPlugins.value.has(plugin.key)
     : !!plugin.readme?.trim();
@@ -406,6 +560,7 @@ function openPlugin(plugin: Plugin) {
     selectedSkill.value = plugin;
     return;
   }
+  demoVideoFailed.value = false;
   selectedPlugin.value = plugin;
   detailsVisible.value = true;
 }
@@ -426,55 +581,32 @@ function hasMissingConfig(plugin: Plugin) {
   });
 }
 
-watch(activeTab, () => { marketPage.value = 1; });
+watch([activeTab, accountToken], () => { marketPage.value = 1; });
 
 watch(
-  () => [visible, activeTab.value, selectedTypes.value.discover, marketPage.value, appliedQuery.value, marketRefreshKey.value, apiKey.value],
+  () => [visible, activeTab.value, selectedTypes.value.discover, marketPage.value, appliedQuery.value, marketRefreshKey.value, accountToken.value],
   async (_value, _previous, onCleanup) => {
-    if (!visible || !isMarketTab.value) return;
+    marketLoading.value = false;
+    marketError.value = "";
+    marketPlugins.value = [];
+    marketTotal.value = 0;
+    const token = accountToken.value;
+    if (!visible || !isMarketTab.value || !token) return;
     const controller = new AbortController();
     onCleanup(() => controller.abort());
     marketLoading.value = true;
-    marketError.value = "";
-    marketPlugins.value = [];
-    marketNeedsKey.value = !apiKey.value;
-    if (marketNeedsKey.value) {
-      marketTotal.value = 0;
-      marketError.value = "填写 TF-Router API Key 后即可浏览插件市场";
-      marketLoading.value = false;
-      return;
-    }
     try {
-      const pageData = await tf.getPlugIn(
-        {
+      const pageData = await http<{ list: MarketPlugin[]; total: number }>({
+        method: "POST", url: "/api/channel/plugin/getPlugins",
+        data: {
           page: marketPage.value,
           limit: marketPageSize,
           type: selectedTypes.value.discover,
           ...(appliedQuery.value ? { searchKeyword: appliedQuery.value } : {}),
         },
-        { signal: controller.signal }
-      );
-      if (controller.signal.aborted) return;
-      if (
-        !pageData ||
-        !Number.isSafeInteger(pageData.total) ||
-        pageData.total < 0 ||
-        !Array.isArray(pageData.list) ||
-        pageData.list.some(
-          (item) =>
-            !item ||
-            !Number.isSafeInteger(item.id) ||
-            !Object.hasOwn(pluginTypes, item.type) ||
-            typeof item.identifier !== "string" ||
-            !item.identifier.trim() ||
-            typeof item.name !== "string" ||
-            typeof item.link !== "string" ||
-            !item.link.trim() ||
-            typeof item.fileName !== "string" ||
-            !item.fileName.trim()
-        )
-      )
-        throw new Error("插件市场列表格式错误");
+        signal: controller.signal, headers: { Authorization: `Bearer ${token}` },
+      });
+      if (controller.signal.aborted || accountToken.value !== token) return;
       marketTotal.value = pageData.total;
       const lastPage = Math.max(1, Math.ceil(pageData.total / marketPageSize));
       if (marketPage.value > lastPage) {
@@ -485,25 +617,27 @@ watch(
         key: `market:${item.id}`,
         id: item.id,
         isCollected: item.isCollected,
-        type: item.type as PluginType,
+        state: item.state,
+        rejectReason: item.rejectReason,
+        tags: item.tags,
+        demoVideoUrl: item.demoVideoUrl,
+        coverUrl: item.coverUrl,
+        type: item.type,
         name: item.identifier.trim(),
         displayName: item.name.trim() || item.identifier.trim(),
         author: typeof item.supplier === "string" ? item.supplier : "",
         description: typeof item.desc === "string" ? item.desc : "",
         url: item.link,
-        fileName: item.fileName.trim(),
+        fileName: item.fileName?.trim(),
         version: item.version,
       }));
     } catch (error) {
-      if (!controller.signal.aborted) {
+      if (!controller.signal.aborted && accountToken.value === token) {
         marketTotal.value = 0;
         marketError.value = errorMessage(error, "加载插件市场失败，请重试");
-        marketNeedsKey.value =
-          marketError.value.includes("用户信息错误") || (axios.isAxiosError(error) && [401, 403].includes(error.response?.status ?? 0));
-        if (marketNeedsKey.value) marketError.value = "TF-Router 用户信息错误，请重新填写 API Key";
       }
     } finally {
-      if (!controller.signal.aborted) marketLoading.value = false;
+      if (!controller.signal.aborted && accountToken.value === token) marketLoading.value = false;
     }
   },
   { immediate: true }
@@ -554,56 +688,36 @@ watch(
   { immediate: true }
 );
 
-async function saveMarketKey() {
-  const key = draftKey.value
-    .trim()
-    .replace(/^Bearer(?:\s+|$)/i, "")
-    .trim();
-  if (savingKey.value) return;
-  if (!key) {
-    keyError.value = "请输入有效的 TF-Router API Key";
-    return;
-  }
-  const previousKey = apiKey.value;
-  const controller = new AbortController();
-  keyController = controller;
-  savingKey.value = true;
-  keyError.value = "";
-  try {
-    await tf.getPlugIn({ page: 1, limit: 1, type: "all" }, { apiKey: key, signal: controller.signal });
-    if (controller.signal.aborted) return;
-    await saveSettings((current) => {
-      if (controller.signal.aborted) return;
-      const providers = current.customProviders ?? [];
-      if (!Array.isArray(providers)) throw new Error("文本模型配置格式无效");
-      const index = providers.findIndex((item) => typeof item?.id === "string" && isTfRouterProvider(item));
-      if (index < 0 && providers.some((item) => typeof item?.id === "string" && item.id.toLowerCase() === tfRouter.id.toLowerCase())) {
-        throw new Error("存在同名的非官方 TF-router 供应商，请先在文本模型中修改其 ID");
+watch(
+  () => [visible, activeTab.value, accountToken.value, loading.value, localUploadCandidates.value, pluginExistenceRefreshKey.value],
+  async (_value, _previous, onCleanup) => {
+    pluginExistence.value = new Map();
+    pluginExistenceError.value = "";
+    checkingPluginExistence.value = false;
+    const token = accountToken.value;
+    if (!visible || activeTab.value !== "installed" || loading.value || !token || !localUploadCandidates.value.length) return;
+    const controller = new AbortController();
+    onCleanup(() => controller.abort());
+    const plugins = localUploadCandidates.value.map(plugin => ({ type: plugin.type, identifier: plugin.name }));
+    checkingPluginExistence.value = true;
+    try {
+      // ACT: 整批只请求一次；未接入或失败时保持未知，不查询市场分页兜底。
+      const results = await http<PluginExistence[]>({
+        method: "POST", url: "/api/channel/plugin/getPluginExistence", data: { plugins },
+        signal: controller.signal, headers: { Authorization: `Bearer ${token}` },
+      });
+      if (controller.signal.aborted || accountToken.value !== token) return;
+      pluginExistence.value = new Map(results.map(item => [`${item.type}:${item.identifier}`, item.exists]));
+    } catch (error) {
+      if (!controller.signal.aborted && accountToken.value === token) {
+        pluginExistenceError.value = errorMessage(error, "检查插件市场状态失败，请重试");
       }
-      const { id, label, icon, version, apiUrl, protocol, models } = tfRouter;
-      const configs = current.mediaProviderConfigs as Record<string, Record<string, unknown>> | undefined;
-      if (configs !== undefined && (!configs || typeof configs !== "object" || Array.isArray(configs))) throw new Error("媒体供应商配置格式无效");
-      const mediaConfig = configs?.tfRouter;
-      if (mediaConfig !== undefined && (!mediaConfig || typeof mediaConfig !== "object" || Array.isArray(mediaConfig)))
-        throw new Error("TF-router 媒体配置格式无效");
-      return {
-        customProviders:
-          index < 0
-            ? [...providers, { id, label, icon, version, apiUrl, protocol, models, apiKey: key }]
-            : providers.map((item, position) => (position === index ? { ...item, apiKey: key } : item)),
-        mediaProviderConfigs: { ...configs, tfRouter: { ...mediaConfig, apiKey: key } },
-      };
-    });
-    if (controller.signal.aborted) return;
-    invalidateNodeModels("media");
-    draftKey.value = "";
-    if (apiKey.value === previousKey) marketRefreshKey.value++;
-  } catch (error) {
-    if (!controller.signal.aborted) keyError.value = errorMessage(error, "验证或保存失败，请重试");
-  } finally {
-    savingKey.value = false;
-  }
-}
+    } finally {
+      if (!controller.signal.aborted) checkingPluginExistence.value = false;
+    }
+  },
+  { immediate: true }
+);
 
 function applySearch() {
   appliedQuery.value = searchQuery.value.trim();
@@ -611,6 +725,7 @@ function applySearch() {
 }
 
 function errorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && "status" in error && error.status === 401) return translate("账号登录已失效，请到账号与余额重新登录");
   if (axios.isAxiosError(error)) return typeof error.response?.data?.message === "string" ? error.response.data.message : fallback;
   return error instanceof Error ? error.message : fallback;
 }
@@ -644,31 +759,58 @@ function installLabel(plugin: Plugin) {
 }
 
 async function toggleCollection(plugin: Plugin) {
-  if (plugin.id === undefined || collectingPlugins.value.has(plugin.key)) return;
-  const key = apiKey.value;
+  const token = accountToken.value;
+  if (!visible || !isMarketTab.value || !token || plugin.id === undefined || plugin.state !== 1 || collectingPlugins.value.has(plugin.key) || deletingPlugins.value.has(plugin.key)) return;
+  const controller = marketMutationController;
   collectingPlugins.value.add(plugin.key);
   try {
-    const { collected } = await tf.toggleCollection(plugin.id, { apiKey: key });
-    if (apiKey.value !== key) return;
+    const { collected } = await http<{ collected: boolean }>({
+      method: "POST", url: "/api/channel/plugin/toggleCollection", data: { pluginId: plugin.id },
+      signal: controller.signal, headers: { Authorization: `Bearer ${token}` },
+    });
+    if (controller.signal.aborted || accountToken.value !== token) return;
     const current = marketPlugins.value.find(item => item.id === plugin.id);
     if (current) current.isCollected = collected;
     if (selectedType.value === "collection" || marketLoading.value) marketRefreshKey.value++;
     ElMessage.success(collected ? "收藏成功" : "已取消收藏");
   } catch (error) {
-    if (apiKey.value === key) ElMessage.error(errorMessage(error, "修改收藏失败，请重试"));
+    if (!controller.signal.aborted && accountToken.value === token) ElMessage.error(errorMessage(error, "修改收藏失败，请重试"));
   } finally {
-    collectingPlugins.value.delete(plugin.key);
+    if (marketMutationController === controller) collectingPlugins.value.delete(plugin.key);
+  }
+}
+
+async function deletePlugin(plugin: Plugin) {
+  const token = accountToken.value;
+  if (!visible || !isMarketTab.value || selectedType.value !== "my" || !token || plugin.id === undefined
+    || !marketPlugins.value.includes(plugin) || deletingPlugins.value.has(plugin.key)
+    || collectingPlugins.value.has(plugin.key) || pendingPlugins.value.has(plugin.key)) return;
+  const controller = marketMutationController;
+  deletingPlugins.value.add(plugin.key);
+  try {
+    const message = await http<string>({
+      method: "POST", url: "/api/channel/plugin/deletePlugin", data: { id: plugin.id },
+      signal: controller.signal, headers: { Authorization: `Bearer ${token}` },
+    });
+    if (controller.signal.aborted || accountToken.value !== token) return;
+    marketRefreshKey.value++;
+    pluginExistenceRefreshKey.value++;
+    ElMessage.success(message || "插件已从市场删除");
+  } catch (error) {
+    if (!controller.signal.aborted && accountToken.value === token) ElMessage.error(errorMessage(error, "删除插件失败，请重试"));
+  } finally {
+    if (marketMutationController === controller) deletingPlugins.value.delete(plugin.key);
   }
 }
 
 async function installMarketPlugin(plugin: Plugin) {
   const path = pluginTypes[plugin.type].path;
-  if (!path || !plugin.url || !plugin.fileName || loading.value || pendingPlugins.value.has(plugin.key)) return;
+  if (!path || !plugin.url || !plugin.fileName || loading.value || pendingPlugins.value.has(plugin.key) || deletingPlugins.value.has(plugin.key)) return;
   const action = installLabel(plugin);
   if (action === "已安装") return;
   pendingPlugins.value.add(plugin.key);
   try {
-    const { data } = await axios.post(`/api/${path}/install`, { url: plugin.url, fileName: plugin.fileName }, { headers: requestHeaders });
+    const { data } = await axios.post(`/api/${path}/install`, { url: plugin.url, fileName: plugin.fileName, version: plugin.version }, { headers: requestHeaders });
     if (data.code !== 200) throw new Error(data.message || "安装插件失败");
     window.dispatchEvent(new CustomEvent("toonflow:plugin-installed", { detail: { type: plugin.type, name: data.data.name } }));
     if (plugin.type === "ext") window.dispatchEvent(new CustomEvent("toonflow:ext-updated", { detail: { name: data.data.name } }));
@@ -790,98 +932,130 @@ async function updatePlugin(plugin: Plugin, action: "setEnabled" | "uninstall", 
 
 <style lang="scss" scoped>
 .pluginMarket {
-  .marketKey {
-    margin-bottom: 12px;
-
-    :deep(.el-card__body) {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .keyForm {
-      display: flex;
-      width: 100%;
-      gap: 8px;
-    }
-  }
-
   .marketToolbar {
     position: sticky;
     top: 0;
     z-index: 1;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding-bottom: 12px;
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 20px;
     background: var(--el-bg-color);
 
-    .marketNav {
+    .el-button { margin-left: 0; }
+
+    .marketHeader {
       display: flex;
+      align-items: center;
+      justify-content: space-between;
       flex-wrap: wrap;
-      gap: 8px 20px;
+      gap: 12px 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--el-border-color-lighter);
 
-      .navButton {
-        position: relative;
+      .marketNav {
         display: flex;
-        align-items: center;
-        gap: 6px;
-        min-height: 30px;
-        padding: 0 0 6px;
-        border: 0;
-        background: transparent;
-        color: var(--el-text-color-secondary);
-        font: inherit;
-        cursor: pointer;
+        flex-wrap: wrap;
+        gap: 8px 24px;
 
-        &[aria-pressed="true"] {
-          color: var(--el-text-color-primary);
-          font-weight: 600;
-          &::after {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            height: 2px;
-            border-radius: 2px;
-            background: currentColor;
-            content: "";
+        .navButton {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          min-height: 30px;
+          padding: 0 0 6px;
+          border: 0;
+          background: transparent;
+          color: var(--el-text-color-secondary);
+          font: inherit;
+          cursor: pointer;
+
+          &[aria-pressed="true"] {
+            color: var(--el-text-color-primary);
+            font-weight: 600;
+            &::after {
+              position: absolute;
+              right: 0;
+              bottom: 0;
+              left: 0;
+              height: 2px;
+              border-radius: 2px;
+              background: currentColor;
+              content: "";
+            }
+          }
+          &:hover {
+            color: var(--el-text-color-primary);
+          }
+          &:focus-visible {
+            outline: 2px solid var(--el-color-primary);
+            outline-offset: 3px;
           }
         }
-        &:hover {
-          color: var(--el-text-color-primary);
-        }
-        &:focus-visible {
-          outline: 2px solid var(--el-color-primary);
-          outline-offset: 3px;
-        }
+      }
+
+      .marketLinks {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-left: auto;
       }
     }
 
-    .marketActions {
+    .marketControls {
       display: flex;
       align-items: center;
-      justify-content: flex-end;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-left: auto;
+      gap: 12px 24px;
 
-      .el-button { margin-left: 0; }
+      .marketSearch {
+        display: flex;
+        flex: 1 1 220px;
+        min-width: 0;
+        max-width: 400px;
+        gap: 8px;
+
+        .el-input { flex: 1; min-width: 0; }
+      }
+
+      .marketActions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        max-width: 100%;
+        gap: 8px;
+        margin-left: auto;
+      }
     }
 
-    .typeFilters {
+    .marketFilters {
       display: flex;
-      flex-basis: 100%;
+      align-items: center;
+      justify-content: space-between;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 12px 24px;
 
-      .personalFilters {
+      .typeFilters {
         display: flex;
+        flex-wrap: wrap;
         gap: 6px;
+      }
+
+      .filterOptions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
         margin-left: auto;
+
+        .personalFilters {
+          display: flex;
+          gap: 6px;
+        }
+
+        .builtinFilter { margin: 0; }
       }
 
       .filterButton {
@@ -922,13 +1096,6 @@ async function updatePlugin(plugin: Plugin, action: "setEnabled" | "uninstall", 
         }
       }
     }
-
-    .marketSearch {
-      display: flex;
-      flex-basis: 100%;
-      min-width: 0;
-      gap: 8px;
-    }
   }
 
   .loadError {
@@ -938,11 +1105,21 @@ async function updatePlugin(plugin: Plugin, action: "setEnabled" | "uninstall", 
   .pluginList {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
-    gap: 10px;
+    gap: 16px;
     padding-bottom: 4px;
 
     .pluginCard {
       min-width: 0;
+
+      .pluginCover {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        margin-bottom: 12px;
+        object-fit: contain;
+        background: var(--el-fill-color-light);
+        border-radius: var(--el-border-radius-base);
+      }
 
       &.viewable {
         cursor: pointer;
@@ -974,6 +1151,14 @@ async function updatePlugin(plugin: Plugin, action: "setEnabled" | "uninstall", 
           gap: 4px;
           flex-shrink: 0;
           max-width: 50%;
+
+          .pluginLabel {
+            max-width: 100%;
+            height: auto;
+            min-height: 20px;
+            white-space: normal;
+            overflow-wrap: anywhere;
+          }
         }
 
         .pluginHeading {
@@ -1055,6 +1240,36 @@ async function updatePlugin(plugin: Plugin, action: "setEnabled" | "uninstall", 
         line-height: 1.6;
         color: var(--el-text-color-regular);
         overflow-wrap: anywhere;
+      }
+
+      .reviewStatus {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 12px;
+        text-align: left;
+
+        &.rejected {
+          padding: 10px;
+          border-radius: 6px;
+          background: var(--el-color-danger-light-9);
+        }
+
+        .reviewReason {
+          margin: 0;
+          font-size: 12px;
+          line-height: 1.6;
+          color: var(--el-text-color-regular);
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+
+          span {
+            display: block;
+            margin-bottom: 2px;
+            color: var(--el-color-danger);
+          }
+        }
       }
 
       .pluginFooter {
@@ -1141,5 +1356,59 @@ async function updatePlugin(plugin: Plugin, action: "setEnabled" | "uninstall", 
   padding: 0 4px;
   font-size: 14px;
   line-height: 1.7;
+
+  .detailMeta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin-bottom: 16px;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+  }
+
+  .detailLabels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+
+    .el-tag {
+      max-width: 100%;
+      height: auto;
+      min-height: 20px;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .detailDescription {
+    margin: 0 0 16px;
+    white-space: pre-wrap;
+  }
+
+  .detailCover {
+    display: block;
+    width: 100%;
+    max-height: 50vh;
+    margin-bottom: 16px;
+    border-radius: var(--el-border-radius-base);
+    object-fit: contain;
+  }
+
+  .detailDemo {
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0 0 12px;
+      font-size: 14px;
+    }
+
+    .demoPlayer {
+      height: auto;
+      border-radius: var(--el-border-radius-base);
+      overflow: hidden;
+    }
+  }
 }
 </style>

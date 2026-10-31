@@ -158,7 +158,6 @@ import {
 } from "@tabler/icons-vue";
 import { saveSettings, type CustomProvider, type CustomProviderModel } from "@/stores/settings";
 import { languageProviders } from "@toonflow/providers";
-import { isTfRouterProvider } from "@/lib/tf";
 import { thinkingLevels, type ThinkingLevel, type ReasoningEfforts } from "@toonflow/server/modelReasoning";
 
 const props = defineProps<{ provider?: CustomProvider }>();
@@ -262,14 +261,6 @@ async function fetchModels() {
     );
     if (controller.signal.aborted) return;
     if (data.code !== 200 || !Array.isArray(data.data)) throw new Error(data.message || "获取模型列表失败");
-    if (isTfRouterProvider(form)) {
-      if (!data.data.length) throw new Error("未获取到可用模型，请检查 API Key 后重试");
-      models.value = data.data.map((item: CustomProviderModel) => {
-        const existing = models.value.find(model => model.id === item.id);
-        return { ...item, ...(existing?.reasoningEfforts === undefined ? {} : { reasoningEfforts: existing.reasoningEfforts }), key: crypto.randomUUID() };
-      });
-      return;
-    }
     fetchedModels.value = data.data;
     selectedIds.value = new Set();
     modelSearch.value = "";
@@ -334,6 +325,10 @@ async function addProvider() {
   if (fetching.value) return;
   formError.value = "";
   if (saving.value || !(await providerForm.value?.validate().catch(() => false))) return;
+  if (form.id.toLowerCase() === "toonflow") {
+    formError.value = "toonflow 为账号供应商保留 ID，请使用其他 ID";
+    return;
+  }
   const providerId = props.provider?.id;
   const ids = models.value.map((item) => item.id.trim());
   if (ids.some((id) => !id) || new Set(ids).size !== ids.length) {

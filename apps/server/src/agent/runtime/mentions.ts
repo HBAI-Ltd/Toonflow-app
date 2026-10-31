@@ -38,7 +38,7 @@ export const agentMentionsSchema = z.array(z.strictObject({
     z.strictObject({
       kind: z.literal("canvas"), canvasId: z.string().min(1).max(4096), canvasName: z.string().min(1).max(255),
       nodeId: z.string().min(1).max(256), nodeName: z.string().min(1).max(255),
-      outputId: z.string().min(1).max(256), outputName: z.string().min(1).max(255),
+      outputId: z.string().min(1).max(256).optional(), outputName: z.string().min(1).max(255).optional(),
     }),
     z.strictObject({ kind: z.literal("asset"), path: z.string().min(1).max(4096) }),
   ]),
@@ -46,8 +46,14 @@ export const agentMentionsSchema = z.array(z.strictObject({
   value: z.unknown().refine(isBoundedValue, "引用内容须为深度不超过 32、长度不超过 100000 的 JSON 值"),
 }).superRefine((mention, context) => {
   const { dataType, value } = mention;
+  if (mention.source.kind === "canvas" && (dataType === "NODE"
+    ? mention.source.outputId !== undefined || mention.source.outputName !== undefined
+    : !mention.source.outputId || !mention.source.outputName)) {
+    context.addIssue({ code: "custom", message: "节点引用不能包含输出，输出引用须指定完整的输出信息", path: ["source"] });
+  }
   const media = mediaTypes.has(dataType) ? mediaValueSchema.safeParse(value) : undefined;
   const valid = media ? media.success && (dataType === "FILE" || media.data.mimeType.startsWith(`${dataType === "MASK" ? "image" : dataType.toLowerCase()}/`))
+    : dataType === "NODE" ? mention.source.kind === "canvas" && value === null
     : dataType === "STRING" ? typeof value === "string"
     : dataType === "INT" ? Number.isSafeInteger(value)
     : dataType === "FLOAT" ? typeof value === "number" && Number.isFinite(value)

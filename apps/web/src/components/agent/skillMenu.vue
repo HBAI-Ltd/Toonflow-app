@@ -2,12 +2,18 @@
   <div v-click-outside:[editor]="closeMenu" class="skillMenu" @keydown.capture="handleKeydown">
     <el-button class="skillButton" text circle :disabled="disabled" :aria-expanded="visible" :aria-controls="listId" aria-label="选择技能" title="选择技能" @click="visible ? closeMenu() : buttonVisible = true"><icon-book :size="16" /></el-button>
     <el-card v-if="visible" class="skillPopup" shadow="always" :bodyStyle="{ padding: '6px' }">
-      <el-scrollbar maxHeight="260px">
-        <div :id="listId" role="listbox" aria-label="技能指令" :aria-busy="loading">
+      <el-scrollbar maxHeight="min(320px, 50dvh)">
+        <div :id="listId" class="skillList" role="listbox" aria-label="技能指令" :aria-busy="loading">
           <div v-if="loading || loadError || !filteredSkills.length" class="skillStatus" role="status">{{ loading ? "正在加载技能…" : loadError || (skills.length ? "没有匹配的技能" : "暂无可用技能") }}</div>
           <button v-for="(skill, index) in filteredSkills" v-else :id="`${listId}-${index}`" :key="skill.name" class="skillItem" :class="{ active: index === activeIndex }" type="button" role="option" :aria-selected="index === activeIndex" @mouseenter="activeIndex = index" @mousedown.prevent @click="selectSkill(skill.name)">
-            <span class="skillName"><icon-book :size="15" />/skill:{{ skill.name }}</span>
-            <span class="skillDescription">{{ skill.description }}</span>
+            <icon-book class="skillIcon" :size="18" aria-hidden="true" />
+            <span class="skillContent">
+              <span class="skillHeader">
+                <span class="skillName">{{ skill.displayName }}</span>
+                <code class="skillIdentifier">/skill:{{ skill.name }}</code>
+              </span>
+              <span class="skillDescription" :title="skill.description">{{ skill.description }}</span>
+            </span>
           </button>
         </div>
       </el-scrollbar>
@@ -26,13 +32,13 @@ const emit = defineEmits<{ select: [name: string]; dismiss: [] }>();
 const listId = useId();
 const buttonVisible = ref(false);
 const visible = computed(() => props.active && !props.disabled && (buttonVisible.value || props.query !== undefined));
-const skills = ref<{ name: string; description: string }[]>([]);
+const skills = ref<{ name: string; displayName: string; description: string }[]>([]);
 const loading = ref(false);
 const loadError = ref("");
 const activeIndex = ref(0);
 const filteredSkills = computed(() => {
   const query = (props.query ?? "").toLowerCase();
-  return skills.value.filter(skill => `skill:${skill.name} ${skill.description}`.toLowerCase().includes(query));
+  return skills.value.filter(skill => `skill:${skill.name} ${skill.displayName} ${skill.description}`.toLowerCase().includes(query));
 });
 
 function closeMenu() {
@@ -113,39 +119,92 @@ defineExpose({ handleKeydown });
     bottom: calc(100% + 8px);
     left: 0;
 
-    .skillStatus {
-      padding: 12px;
-      color: var(--el-text-color-secondary);
-    }
-
-    .skillItem {
-      display: flex;
-      flex-direction: column;
+    .skillList {
+      display: grid;
       gap: 4px;
-      width: 100%;
-      padding: 8px;
-      border: none;
-      border-radius: var(--el-border-radius-base);
-      background: transparent;
-      color: var(--el-text-color-primary);
-      font: inherit;
-      text-align: left;
-      overflow-wrap: anywhere;
-      cursor: pointer;
 
-      &.active, &:focus-visible {
-        background: var(--el-fill-color-light);
-      }
-
-      .skillName {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .skillDescription {
+      .skillStatus {
+        padding: 20px 12px;
         color: var(--el-text-color-secondary);
         font-size: 12px;
+        line-height: 1.6;
+        text-align: center;
+      }
+
+      .skillItem {
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        align-items: start;
+        gap: 10px;
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: var(--el-border-radius-base);
+        background: transparent;
+        color: var(--el-text-color-primary);
+        font: inherit;
+        text-align: left;
+        overflow-wrap: anywhere;
+        cursor: pointer;
+
+        &:hover {
+          background: var(--el-fill-color-light);
+        }
+
+        &.active {
+          background: var(--el-color-primary-light-9);
+
+          .skillIcon { color: var(--el-color-primary); }
+        }
+
+        &:focus-visible {
+          outline: 2px solid var(--el-color-primary);
+          outline-offset: -2px;
+        }
+
+        .skillIcon {
+          margin-top: 2px;
+          color: var(--el-text-color-secondary);
+        }
+
+        .skillContent {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          min-width: 0;
+
+          .skillHeader {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px 12px;
+            line-height: 1.5;
+
+            .skillName {
+              min-width: 0;
+              font-size: 13px;
+              font-weight: 600;
+            }
+
+            .skillIdentifier {
+              min-width: 0;
+              margin-left: auto;
+              color: var(--el-text-color-secondary);
+              font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+              font-size: 11px;
+            }
+          }
+
+          .skillDescription {
+            display: -webkit-box;
+            overflow: hidden;
+            color: var(--el-text-color-secondary);
+            font-size: 12px;
+            line-height: 1.6;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+          }
+        }
       }
     }
   }

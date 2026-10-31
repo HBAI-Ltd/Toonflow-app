@@ -28,6 +28,7 @@
               </div>
             </div>
             <div class="actionButtons">
+              <el-button text size="small" :icon="IconPlayerPlay" :loading="loadingTestModel === index" :disabled="saving || loadingTestModel !== undefined || item.type === 'text'" :title="item.type === 'text' ? '此处支持图片、视频和音频模型测试' : undefined" :aria-label="`测试模型 ${item.label}`" @click="testModel(index)">测试</el-button>
               <el-button text size="small" :icon="IconEdit" :disabled="saving" :aria-label="`编辑模型 ${item.label}`" @click="editModel(index)">编辑</el-button>
               <el-button text size="small" type="danger" :icon="IconTrash" :disabled="saving" :aria-label="`删除模型 ${item.label}`" @click="models.splice(index, 1)">删除</el-button>
             </div>
@@ -52,20 +53,26 @@
       :models="models"
       @confirmed="confirmModel" />
   </el-dialog>
+  <el-dialog v-model="testVisible" :title="`测试媒体模型：${testProvider?.label ?? ''}`" width="min(1120px, calc(100vw - 32px))" alignCenter appendToBody destroyOnClose :closeOnClickModal="false">
+    <div class="modelTestBody">
+      <providerTestPanel v-if="testVisible && testProvider" :source="testSource" :provider="testProvider" :config="testConfig" :modelId="testModelId" :models="testProvider.models" />
+    </div>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { translate } from "@toonflow/i18n/vue";
 
 import axios from "axios";
-import { computed, defineAsyncComponent, ref, shallowRef, toRaw, watch, type Component } from "vue";
-import { IconPlus, IconTrash, IconDeviceFloppy, IconEdit } from "@tabler/icons-vue";
+import { computed, defineAsyncComponent, onBeforeUnmount, ref, shallowRef, toRaw, watch, type Component } from "vue";
+import { IconPlus, IconTrash, IconDeviceFloppy, IconEdit, IconPlayerPlay } from "@tabler/icons-vue";
 import formCreate, { type Api, type Options } from "../../formCreate";
 import { modelIcon } from "@toonflow/model-icons";
 import messageMarkdown from "@/components/messageMarkdown.vue";
 import type { MediaProvider, MediaProviderModel } from "./types";
 import { settings, saveSettings } from "@/stores/settings";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
+import providerTestPanel from "./providerTestPanel.vue";
 
 const { provider } = defineProps<{ provider?: MediaProvider }>();
 const modelEditorDialog = shallowRef<Component>();
@@ -81,6 +88,13 @@ const formValues = ref<Record<string, unknown>>({});
 const formOptions = computed<Options>(() => ({ form: { labelPosition: "top", disabled: saving.value }, appendValue: false, submitBtn: false, resetBtn: false }));
 const revision = ref("");
 const formError = ref("");
+const testVisible = ref(false);
+const loadingTestModel = ref<number>();
+const testModelId = ref("");
+const testProvider = shallowRef<MediaProvider>();
+const testSource = ref("");
+const testConfig = ref<Record<string, unknown>>({});
+let testLoading: AbortController | undefined;
 const modelTypes = { get image() { return translate("图片"); }, get video() { return translate("视频"); }, get audio() { return translate("音频"); }, get text() { return translate("文本"); } };
 const modeLabels: Record<string, string> = {
   singleImage: "单图参考", multiReference: "多图参考", startEndRequired: "首尾帧必填",
@@ -89,6 +103,10 @@ const modeLabels: Record<string, string> = {
 };
 
 watch(visible, isVisible => {
+  testLoading?.abort();
+  testLoading = undefined;
+  loadingTestModel.value = undefined;
+  testVisible.value = false;
   if (!isVisible) return;
   formError.value = "";
   modelEditorVisible.value = false;
@@ -99,6 +117,37 @@ watch(visible, isVisible => {
   revision.value = provider?.revision ?? "";
   models.value = JSON.parse(JSON.stringify(provider?.models ?? []));
 }, { immediate: true });
+onBeforeUnmount(() => testLoading?.abort());
+
+async function testModel(index: number) {
+  const model = models.value[index];
+  if (saving.value || loadingTestModel.value !== undefined || !provider || !model || model.type === "text") return;
+  const controller = new AbortController();
+  testLoading = controller;
+  loadingTestModel.value = index;
+  formError.value = "";
+  try {
+    const currentProvider = { ...provider, models: JSON.parse(JSON.stringify(models.value)) as MediaProviderModel[] };
+    const currentRevision = revision.value;
+    const config = structuredClone(toRaw(formApi.value?.formData() ?? formValues.value));
+    const modelId = model.id;
+    const { data } = await axios.get<{ code: number; data: { source: string; revision: string }; message?: string }>("/api/providers/media/source", {
+      params: { fileName: currentProvider.fileName }, headers: { "x-toonflow-workspace": "1" }, signal: controller.signal,
+    });
+    if (controller.signal.aborted) return;
+    if (data.code !== 200 || !data.data) throw new Error(data.message || "读取供应商代码失败");
+    if (data.data.revision !== currentRevision) throw new Error("供应商代码已更新，请重新打开编辑窗口后测试");
+    testSource.value = data.data.source;
+    testProvider.value = currentProvider;
+    testConfig.value = config;
+    testModelId.value = modelId;
+    testVisible.value = true;
+  } catch (error) {
+    if (!controller.signal.aborted) formError.value = axios.isAxiosError(error) ? error.response?.data?.message || error.message : error instanceof Error ? error.message : "读取供应商代码失败";
+  } finally {
+    if (testLoading === controller) { testLoading = undefined; loadingTestModel.value = undefined; }
+  }
+}
 
 function modelTags(model: MediaProviderModel) {
   const modes = Array.isArray(model.mode) ? model.mode.flat().filter((mode): mode is string => typeof mode === "string") : [];
@@ -245,4 +294,5 @@ async function saveModels() {
 }
 
 .formError { margin-top: 16px; }
+.modelTestBody { height: min(660px, calc(100dvh - 160px)); min-height: 0; }
 </style>

@@ -1,6 +1,13 @@
 <template>
-  <div class="audioPlayer" @keydown.stop>
-    <audio ref="audio" :src="src" preload="auto" :aria-label="label" @loadedmetadata="readMetadata" @durationchange="readDuration" @timeupdate="readTime" @play="startProgress(); emit('play')" @pause="stopProgress" @ended="stopProgress" @volumechange="readVolume" @error="mediaError" />
+  <div class="audioPlayer" :aria-busy="preparing || pcmLoading" @keydown.stop>
+    <audio ref="audio" :src="playbackSrc || undefined" preload="auto" :aria-label="label" @loadedmetadata="readMetadata" @loadeddata="readPreview" @durationchange="readDuration" @timeupdate="readTime" @play="startProgress(); emit('play')" @pause="stopProgress" @ended="stopProgress" @volumechange="readVolume" @error="mediaError" />
+    <div v-if="isPcm" class="pcmSettings nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop>
+      <label>采样率（Hz）<el-input-number :modelValue="pcmOptions.sampleRate" :min="1" :max="384000" :controls="false" size="small" placeholder="填写采样率" @update:modelValue="pcmOptions = { ...pcmOptions, sampleRate: $event ?? undefined }" /></label>
+      <label>声道<el-input-number :modelValue="pcmOptions.channels" :min="1" :max="32" :controls="false" size="small" placeholder="填写声道数" @update:modelValue="pcmOptions = { ...pcmOptions, channels: $event ?? undefined }" /></label>
+      <label class="pcmFormat">采样格式<el-select :modelValue="pcmOptions.format" size="small" placeholder="选择采样格式" @update:modelValue="pcmOptions = { ...pcmOptions, format: $event }"><el-option v-for="option in pcmFormats" :key="option.value" :label="option.label" :value="option.value" /></el-select></label>
+      <p>裸 PCM 不含格式信息，请按来源填写以上参数后预览。原文件保持不变。</p>
+    </div>
+    <p v-if="statusMessage" class="audioStatus" :role="failed ? 'alert' : 'status'">{{ statusMessage }}</p>
     <div class="waveformPanel" :class="{ unavailable: !duration || failed }">
       <div class="waveformTrack">
         <slot name="track" :duration="duration" :currentTime="currentTime" :peaks="peaks">
@@ -9,7 +16,7 @@
               <rect v-for="(peak, index) in peaks" :key="index" :x="index * 4 + 1" :y="50 - Math.max(2, peak * 78) / 2" width="2" :height="Math.max(2, peak * 78)" rx="1" />
             </svg>
           </template>
-          <span v-else class="waveformStatus">{{ failed ? '无法播放音频' : waveformLoading ? '正在读取波形…' : '当前音频无法显示波形' }}</span>
+          <span v-else-if="!statusMessage" class="waveformStatus">{{ waveformLoading ? '正在读取波形…' : '当前音频无法显示波形' }}</span>
           <span v-if="duration && !failed" class="playhead" :style="{ left: `${progress}%` }" aria-hidden="true" />
           <input
             class="seekInput nodrag nopan nowheel"
@@ -42,12 +49,21 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from "vue";
-import { ElButton, ElMessage } from "element-plus";
+import { ElButton, ElInputNumber, ElMessage, ElOption, ElSelect } from "element-plus";
 import { IconPlayerPlay, IconPlayerPause, IconVolume, IconVolumeOff } from "@tabler/icons-vue";
+import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
+import { getPcmOptions, isPcmMimeType, pcmFormats, pcmToWav, type PcmOptions } from "@toonflow/node-shared/pcmPreview";
 import { getWaveformPeaks } from "../audioWaveform";
 
-const { src, label = "节点音频" } = defineProps<{ src: string; label?: string }>();
+const { src, mimeType, label = "节点音频" } = defineProps<{ src: string; mimeType?: string; label?: string }>();
+const pcmOptions = defineModel<Partial<PcmOptions>>("pcmOptions", { default: () => ({}) });
 const emit = defineEmits<{ loadedmetadata: [event: Event]; play: [] }>();
+const isPcm = computed(() => isPcmMimeType(mimeType));
+const pcmUrl = ref("");
+const pcmError = ref("");
+const pcmLoading = ref(false);
+const mediaPreview = useMediaPreview(() => isPcm.value ? pcmUrl.value : src, "audio");
+const { src: playbackSrc, preparing, error: previewError } = mediaPreview;
 const audio = ref<HTMLAudioElement>();
 const peaks = shallowRef<number[]>([]);
 const waveformLoading = ref(false);
@@ -57,11 +73,38 @@ const playing = ref(false);
 const failed = ref(false);
 const volume = ref(100);
 const muted = ref(false);
+const statusMessage = computed(() => pcmError.value || previewError.value || (preparing.value || pcmLoading.value ? "正在生成兼容预览…" : ""));
 const progress = computed(() => duration.value ? Math.min(100, Math.max(0, currentTime.value / duration.value * 100)) : 0);
 let animationFrame = 0;
 let disposed = false;
 
-watch(() => src, async (value, _previous, onCleanup) => {
+// ACT: 裸 PCM 没有可靠元数据，仅使用用户本次会话明确填写的参数，不猜测声道、位深或端序。
+watch([() => src, isPcm, () => pcmOptions.value.sampleRate, () => pcmOptions.value.channels, () => pcmOptions.value.format], async ([value, rawPcm], _previous, onCleanup) => {
+  const controller = new AbortController();
+  let url = "";
+  onCleanup(() => { controller.abort(); if (url) URL.revokeObjectURL(url); });
+  pcmUrl.value = "";
+  pcmError.value = "";
+  pcmLoading.value = false;
+  if (!rawPcm || !value) return;
+  const options = getPcmOptions(pcmOptions.value);
+  if (!options) { pcmError.value = "请填写有效的采样率、声道数和采样格式，才能预览裸 PCM"; return; }
+  pcmLoading.value = true;
+  try {
+    const response = await fetch(value, { signal: controller.signal });
+    if (!response.ok) throw new Error("无法读取 PCM 音频");
+    const content = await response.arrayBuffer();
+    controller.signal.throwIfAborted();
+    url = URL.createObjectURL(pcmToWav(content, options));
+    pcmUrl.value = url;
+  } catch (error) {
+    if (!controller.signal.aborted) pcmError.value = error instanceof Error ? error.message : "PCM 预览失败";
+  } finally {
+    if (!controller.signal.aborted) pcmLoading.value = false;
+  }
+}, { immediate: true, flush: "sync" });
+
+watch(playbackSrc, async (value, _previous, onCleanup) => {
   const controller = new AbortController();
   onCleanup(() => controller.abort());
   audio.value?.pause();
@@ -69,7 +112,8 @@ watch(() => src, async (value, _previous, onCleanup) => {
   currentTime.value = duration.value = 0;
   failed.value = false;
   peaks.value = [];
-  waveformLoading.value = true;
+  waveformLoading.value = !!value;
+  if (!value) return;
   try {
     const response = await fetch(value, { signal: controller.signal });
     if (!response.ok) throw new Error("无法读取音频");
@@ -85,7 +129,7 @@ watch(() => src, async (value, _previous, onCleanup) => {
   } finally {
     if (!controller.signal.aborted) waveformLoading.value = false;
   }
-}, { immediate: true });
+}, { immediate: true, flush: "sync" });
 
 onBeforeUnmount(() => {
   disposed = true;
@@ -104,8 +148,18 @@ function readDuration() {
 }
 
 function readMetadata(event: Event) {
+  if (!isCurrent(event)) return;
   readDuration();
   emit("loadedmetadata", event);
+}
+
+function isCurrent(event: Event) {
+  const target = event.currentTarget as HTMLAudioElement;
+  return !!playbackSrc.value && target.currentSrc === playbackSrc.value;
+}
+
+function readPreview(event: Event) {
+  if (isCurrent(event) && mediaPreview.handleLoaded(event)) failed.value = false;
 }
 
 function readTime() {
@@ -154,7 +208,7 @@ function pause() {
   audio.value?.pause();
 }
 
-defineExpose({ duration, currentTime, playing, seekTo, pause });
+defineExpose({ duration, currentTime, playing, failed, seekTo, pause });
 
 function readVolume() {
   volume.value = Math.round((audio.value?.volume ?? 1) * 100);
@@ -175,9 +229,11 @@ function toggleMute() {
   audio.value.muted = !(muted.value || !volume.value);
 }
 
-function mediaError() {
+function mediaError(event: Event) {
+  if (!isCurrent(event)) return;
   failed.value = true;
   stopProgress();
+  mediaPreview.handleError(event);
 }
 </script>
 
@@ -188,6 +244,24 @@ function mediaError() {
   color: var(--el-text-color-primary);
 
   audio { display: none; }
+  .pcmSettings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 12px;
+    label {
+      display: flex;
+      flex: 1 1 120px;
+      flex-direction: column;
+      gap: 4px;
+      color: var(--el-text-color-secondary);
+      font-size: 12px;
+      .el-input-number, .el-select { width: 100%; }
+      &.pcmFormat { flex-basis: 100%; }
+    }
+    p { flex-basis: 100%; margin: 0; color: var(--el-text-color-secondary); font-size: 12px; }
+  }
+  .audioStatus { margin: 0 0 10px; color: var(--el-text-color-secondary); font-size: 12px; overflow-wrap: anywhere; }
   .waveformPanel {
     padding: 10px 14px;
     border-radius: var(--el-border-radius-base);

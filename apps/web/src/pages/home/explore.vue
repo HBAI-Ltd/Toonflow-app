@@ -4,7 +4,7 @@
       <h2 id="exploreTitle">探索</h2>
       <div class="toolbarActions">
         <el-input v-model="search" class="searchInput" :prefixIcon="IconSearch" placeholder="搜索项目" aria-label="搜索云端项目" clearable />
-        <el-button :icon="IconPlus" disabled>发布作品</el-button>
+        <el-button :icon="IconPlus" aria-haspopup="dialog" :aria-expanded="publishVisible" @click="publishVisible = true">发布作品</el-button>
       </div>
     </div>
     <div class="categoryFilters" role="group" aria-label="项目分类">
@@ -22,8 +22,7 @@
               <strong class="projectTitle">{{ item.title }}</strong>
             </span>
             <span class="cardStats">
-              <span :class="{ active: item.liked }" :aria-label="`${item.likeCount} 次点赞`"><icon-heart :size="14" aria-hidden="true" />{{ item.likeCount }}</span>
-              <span :class="{ active: item.collected }" :aria-label="`${item.collectionCount} 次收藏`"><icon-star :size="14" aria-hidden="true" />{{ item.collectionCount }}</span>
+              <span :aria-label="`${item.likeCount} 次点赞`"><icon-heart :size="14" aria-hidden="true" />{{ item.likeCount }}</span>
             </span>
           </span>
         </button>
@@ -37,25 +36,28 @@
       </template>
       <span v-else>正在加载作品…</span>
     </div>
-    <exploreDetail v-if="selectedProjectId" :projectId="selectedProjectId" @close="selectedProjectId = ''" @updated="updateProject" />
+    <exploreDetail v-if="selectedProjectId" :projectId="selectedProjectId" @close="selectedProjectId = ''" />
+    <publishWorkDialog v-if="publishVisible" @closed="publishVisible = false" />
   </section>
 </template>
 
 <script setup lang="ts">
-import axios from "axios";
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useVirtualizer } from "@tanstack/vue-virtual";
-import { IconHeart, IconPlus, IconSearch, IconStar } from "@tabler/icons-vue";
-import tf, { type TfExploreCategory, type TfExploreProject } from "@/lib/tf";
+import { IconHeart, IconPlus, IconSearch } from "@tabler/icons-vue";
+import type { ExploreCategory, ExplorePage, ExploreProject } from "@toonflow/server/channel";
+import http from "@/lib/http";
 import exploreDetail from "./exploreDetail.vue";
+import publishWorkDialog from "./publishWorkDialog.vue";
 
 const props = defineProps<{ scrollElement?: HTMLElement }>();
 const exploreElement = ref<HTMLElement>();
 const gridElement = ref<HTMLElement>();
-const categories = ref<TfExploreCategory[]>([]);
-const projects = ref<TfExploreProject[]>([]);
+const categories = ref<ExploreCategory[]>([]);
+const projects = ref<ExploreProject[]>([]);
 const selectedCategory = ref("");
 const selectedProjectId = ref("");
+const publishVisible = ref(false);
 const search = ref("");
 const loading = ref(false);
 const loadError = ref("");
@@ -99,7 +101,10 @@ async function loadMore() {
   loadError.value = "";
   unavailable.value = false;
   try {
-    const result = await tf.getExploreProjects({ cursor, limit: 24, categoryId: selectedCategory.value || undefined, searchKeyword: search.value.trim() || undefined }, { signal: controller.signal });
+    const result = await http<ExplorePage>({
+      method: "POST", url: "/api/channel/community/getExploreProjects", signal: controller.signal,
+      data: { cursor, limit: 24, categoryId: selectedCategory.value || undefined, searchKeyword: search.value.trim() || undefined },
+    });
     if (controller.signal.aborted) return;
     if (result.nextCursor !== null && (result.nextCursor === cursor || loadedCursors.has(result.nextCursor))) throw new Error("云端分页游标重复，请重试");
     const newItems = [...new Map(result.list.map(item => [item.id, item])).values()].filter(item => !loadedIds.has(item.id));
@@ -112,8 +117,8 @@ async function loadMore() {
     hasMore = result.nextCursor !== null;
   } catch (error) {
     if (controller.signal.aborted) return;
-    unavailable.value = axios.isAxiosError(error) && error.response?.status === 404;
-    if (!unavailable.value) loadError.value = axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || "加载作品失败，请重试" : error instanceof Error ? error.message : "加载作品失败，请重试";
+    unavailable.value = error instanceof Error && "status" in error && error.status === 404;
+    if (!unavailable.value) loadError.value = error instanceof Error ? error.message : "加载作品失败，请重试";
   } finally {
     if (!controller.signal.aborted) {
       loading.value = false;
@@ -121,11 +126,6 @@ async function loadMore() {
       scheduleLayout();
     }
   }
-}
-
-function updateProject(project: TfExploreProject) {
-  const index = projects.value.findIndex(item => item.id === project.id);
-  if (index !== -1) projects.value[index] = project;
 }
 
 function scheduleLayout() {
@@ -334,7 +334,6 @@ onUnmounted(() => {
               align-items: center;
               gap: 4px;
 
-              &.active { color: #ffd67c; }
             }
           }
         }

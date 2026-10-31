@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { basename } from "node:path";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import components from "unplugin-vue-components/vite";
@@ -9,7 +10,7 @@ import { i18nPlugin } from "@toonflow/i18n/vite";
 
 const serverOrigin = `http://127.0.0.1:${process.env.TOONFLOW_SERVER_PORT || 3000}`;
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   css: { postcss: postcssConfig },
   define: {
     "import.meta.env.appVersion": JSON.stringify(desktopConfig.app.version),
@@ -40,11 +41,23 @@ export default defineConfig({
     emptyOutDir: true,
   },
   plugins: [
+    {
+      name: "externalDependencySourcemaps",
+      apply: "serve",
+      enforce: "post",
+      transform(code, id) {
+        if (this.environment.mode !== "dev" || this.environment.config.consumer !== "client"
+          || !this.environment.depsOptimizer?.isOptimizedDepFile(id)) return;
+        // ACT: Vite 8 的大型内联映射会卡死 Edge DevTools；复用现有 .map 路由，上游修复后移除。
+        return { code: `${code}\n//# sourceMappingURL=${basename(id.split("?")[0])}.map`, map: { mappings: "" } };
+      },
+    },
     i18nPlugin(),
     vue(),
     components({
       globsExclude: ["src/components/settings/panels/**/*Dialog.vue"],
-      dts: "src/types/components.d.ts",
+      // ACT: 声明由开发服务生成，避免 dev 与 build 并行抢写同一源码文件。
+      dts: command === "serve" ? "src/types/components.d.ts" : false,
       resolvers: [
         ElementPlusResolver(),
         (name) => {
@@ -53,4 +66,4 @@ export default defineConfig({
       ],
     }),
   ],
-});
+}));

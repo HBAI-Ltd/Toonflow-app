@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { z } from "zod";
-import { audioGenerationSchema, imageGenerationSchema, videoGenerationSchema } from "@toonflow/tool-media-generation/runtime";
 import { validateFields } from "@/lib/middleware";
 import { success, error, errorFromCause } from "@/lib/responseFormat";
 import u from "@/utils";
@@ -8,9 +7,10 @@ import { translateMessage, validationOptions } from "@/lib/i18n";
 
 export default Router().post("/", validateFields({
   directory: z.string().min(1).max(4096), mediaType: z.enum(["image", "video", "audio"]), taskId: z.uuid().optional(),
+  nodeId: z.string().min(1).max(256).optional(), canvasPath: z.string().min(1).max(4096).optional(),
 }), async (req, res) => {
-  const { directory, mediaType, taskId, ...request } = req.body;
-  const parsed = (mediaType === "image" ? imageGenerationSchema : mediaType === "video" ? videoGenerationSchema : audioGenerationSchema).safeParse(request, validationOptions());
+  const { directory, mediaType, taskId, nodeId, canvasPath, ...request } = req.body;
+  const parsed = (mediaType === "image" ? u.mediaSchemas.imageGenerationSchema : mediaType === "video" ? u.mediaSchemas.videoGenerationSchema : u.mediaSchemas.audioGenerationSchema).safeParse(request, validationOptions());
   if (!parsed.success) {
     res.status(400).json(error("参数错误", parsed.error.issues.map(issue => ({ ...issue, message: translateMessage(issue.message) })), 400));
     return;
@@ -18,7 +18,7 @@ export default Router().post("/", validateFields({
   const cwd = await u.workspace.resolveWorkspace(req, directory);
   if (taskId) {
     if (req.aborted || res.destroyed) return;
-    u.mediaTasks.start(cwd, taskId, mediaType, parsed.data);
+    await u.mediaTasks.start(cwd, taskId, mediaType, parsed.data, { nodeId, canvasPath });
     res.set("Cache-Control", "no-store").json(success({ taskId }));
     return;
   }

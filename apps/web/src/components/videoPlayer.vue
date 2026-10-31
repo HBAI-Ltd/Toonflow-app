@@ -1,11 +1,15 @@
 <template>
-  <div ref="container" class="videoPlayer" role="region" tabindex="0" :aria-label="playerLabel" @keydown.self="handleKeydown" @focusin="player && (player.controls.show = true)" />
+  <div class="videoPlayer" role="region" tabindex="0" :aria-label="playerLabel" :aria-busy="preparing" @keydown.self="handleKeydown" @focusin="player && (player.controls.show = true)">
+    <div ref="container" class="playerSurface" />
+    <div v-if="preparing || previewError" class="previewStatus" role="status">{{ preparing ? '正在生成兼容预览…' : previewError }}</div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import Artplayer from "artplayer";
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { locale, msg, translate } from "@toonflow/i18n/vue";
+import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
 
 const props = withDefaults(defineProps<{
   src: string;
@@ -17,6 +21,8 @@ const props = withDefaults(defineProps<{
   loop?: boolean;
 }>(), { label: "", poster: "", autoplay: false, muted: false, active: true, loop: false });
 const emit = defineEmits<{ error: [error: unknown] }>();
+const { src: playbackSrc, preparing, error: previewError, handleError, handleLoaded } = useMediaPreview(() => props.src, "video");
+watch(previewError, error => { if (error) emit("error", new Error(error)); });
 const container = ref<HTMLDivElement>();
 const playerLabel = computed(() => props.label || translate("视频播放器"));
 const playerMessages = {
@@ -62,7 +68,7 @@ function destroyPlayer() {
   current.destroy();
 }
 
-watch([container, () => props.src, locale], ([element, src, language], previous, onCleanup) => {
+watch([container, playbackSrc, locale], ([element, src, language], previous, onCleanup) => {
   const savedPlayback = previous?.[1] === src ? playback : undefined;
   let restored = !savedPlayback;
   onCleanup(() => {
@@ -86,7 +92,7 @@ watch([container, () => props.src, locale], ([element, src, language], previous,
       playbackRate: true,
       fullscreen: true,
       hotkey: false,
-      moreVideoAttr: { preload: "metadata" },
+      moreVideoAttr: { preload: "auto" },
     });
     current.video.setAttribute("aria-label", playerLabel.value);
     // ACT: Artplayer 的菜单文本只在初始化时生成；切换语言重建播放器并保留播放状态。
@@ -105,7 +111,8 @@ watch([container, () => props.src, locale], ([element, src, language], previous,
     };
     current.on("ready", pauseInactive);
     current.on("video:play", pauseInactive);
-    current.on("video:error", error => { if (player === current) emit("error", error); });
+    current.on("video:loadeddata", event => { if (player === current && !handleLoaded(event)) current.pause(); });
+    current.on("video:error", () => { if (player === current) handleError(); });
   } catch (error) {
     destroyPlayer();
     emit("error", error);
@@ -132,5 +139,17 @@ defineExpose({ pause });
   aspect-ratio: 16 / 9;
   min-width: 0;
   min-height: 0;
+  .playerSurface { width: 100%; height: 100%; }
+  .previewStatus {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: var(--el-fill-color-darker);
+    color: var(--el-text-color-secondary);
+    overflow: auto;
+    text-align: center;
+  }
 }
 </style>

@@ -1,28 +1,29 @@
 <template>
-  <div class="referenceItem" role="group" :title="title" :aria-label="title" @keydown.enter.self.stop.prevent="imageRef?.showPreview()" @keydown.space.self.stop.prevent="imageRef?.showPreview()">
+  <div class="referenceItem" role="group" :title="title" :aria-label="title" :aria-busy="preparingPreview" @keydown.enter.self.stop.prevent="imageRef?.showPreview()" @keydown.space.self.stop.prevent="imageRef?.showPreview()">
     <el-image
-      v-if="item.dataType === 'IMAGE' && previewUrl && !previewError"
+      v-if="item.dataType === 'IMAGE' && mediaSrc && !preparingPreview && !previewError"
       ref="imageRef"
       class="preview"
-      :src="previewUrl"
-      :previewSrcList="[previewUrl]"
+      :src="mediaSrc"
+      :previewSrcList="[mediaSrc]"
       previewTeleported
       fit="cover"
       :alt="`预览引用 ${index}`"
       draggable="false"
       @click.stop
-      @error="mediaError" />
+      @load="handleLoaded"
+      @error="handleError" />
     <video
-      v-else-if="item.dataType === 'VIDEO' && previewUrl && !previewError"
+      v-else-if="item.dataType === 'VIDEO' && mediaSrc && !preparingPreview && !previewError"
       class="preview"
-      :src="previewUrl"
+      :src="mediaSrc"
       preload="auto"
       muted
       playsinline
       aria-hidden="true"
       @loadedmetadata="readDuration"
       @loadeddata="readVideoPreview"
-      @error="mediaError" />
+      @error="handleError" />
     <component v-else :is="itemIcon" class="typeIcon" :size="21" aria-hidden="true" />
     <el-button
       class="removeButton nodrag nopan"
@@ -35,7 +36,7 @@
       @dblclick.stop
       @click.stop="emit('remove')" />
     <span class="indexBadge" aria-hidden="true">{{ index }}</span>
-    <div v-if="item.dataType === 'VIDEO' && previewUrl && !previewError" class="videoInfo" aria-hidden="true">
+    <div v-if="item.dataType === 'VIDEO' && mediaSrc && !preparingPreview && !previewError" class="videoInfo" aria-hidden="true">
       <icon-player-play :size="12" />
       <span v-if="duration">{{ duration }}</span>
     </div>
@@ -43,46 +44,53 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { useVueFlow } from "@vue-flow/core";
 import { ElButton, ElImage } from "element-plus";
 import { IconX, IconFileText, IconPhoto, IconVideo, IconMusic, IconPlayerPlay } from "@tabler/icons-vue";
 import { useNodeFiles } from "@toonflow/nodes-scaffold/workspaceFiles";
+import type { NodeData } from "@toonflow/nodes-scaffold/connection";
 import type { NodeInputValue } from "@toonflow/nodes-scaffold/values";
+import { useMediaPreview } from "../mediaPreview";
 
 const props = defineProps<{ item: NodeInputValue; index: number }>();
 const emit = defineEmits<{ remove: []; preview: [url: string] }>();
+const { findNode } = useVueFlow();
 const imageRef = ref<InstanceType<typeof ElImage>>();
-const previewError = ref("");
+const previewReadError = ref("");
 const duration = ref("");
 const videoThumbnail = ref("");
 const media = computed(() => props.item.value !== undefined && (props.item.dataType === "IMAGE" || props.item.dataType === "VIDEO") ? { ...props.item.value } : undefined);
 const itemIcon = computed(() => props.item.dataType === "IMAGE" ? IconPhoto : props.item.dataType === "VIDEO" ? IconVideo : props.item.dataType === "AUDIO" ? IconMusic : IconFileText);
 const title = computed(() => {
+  const sourceName = props.item.dataType === "IMAGE" || props.item.dataType === "VIDEO" || props.item.dataType === "AUDIO"
+    ? findNode<NodeData>(props.item.source)?.data.label?.trim() : "";
   const content = props.item.value === undefined ? "暂无内容" : props.item.dataType === "STRING" ? props.item.value : props.item.dataType === "FILE" ? props.item.value.url.split(/[\\/]/).pop() || "文件" : props.item.dataType === "VIDEO" ? "视频" : props.item.dataType === "AUDIO" ? "音频" : "图片";
-  return `引用 ${props.index}：${content}${previewError.value ? `（${previewError.value}）` : ""}`;
+  const status = previewError.value || (preparingPreview.value ? "正在生成兼容预览…" : "");
+  return `引用 ${props.index}：${sourceName ? `${sourceName}（${content}）` : content}${status ? `（${status}）` : ""}`;
 });
 
 watch(media, () => {
-  previewError.value = "";
+  previewReadError.value = "";
   duration.value = "";
   videoThumbnail.value = "";
 });
 const { useFileUrl } = useNodeFiles();
 const previewUrl = useFileUrl(media, error => {
-  previewError.value = error instanceof Error ? error.message : "读取引用文件失败";
+  previewReadError.value = error instanceof Error ? error.message : "读取引用文件失败";
 });
+const { src: mediaSrc, preparing: preparingPreview, error: mediaError, handleError, handleLoaded } = useMediaPreview(previewUrl, () => props.item.dataType === "VIDEO" ? "video" : "image");
+const previewError = computed(() => previewReadError.value || mediaError.value);
+watch(mediaSrc, () => { duration.value = ""; videoThumbnail.value = ""; }, { flush: "sync" });
 
-watch([previewUrl, previewError, videoThumbnail], ([url, error, thumbnail]) => {
-  emit("preview", error ? "" : props.item.dataType === "VIDEO" ? thumbnail : url);
+watch([mediaSrc, previewError, preparingPreview, videoThumbnail], ([url, error, preparing, thumbnail]) => {
+  emit("preview", error || preparing ? "" : props.item.dataType === "VIDEO" ? thumbnail : url);
 }, { immediate: true });
-
-function mediaError() {
-  previewError.value = props.item.dataType === "VIDEO" ? "无法预览该视频" : "无法预览该图片";
-}
+onBeforeUnmount(() => emit("preview", ""));
 
 function readVideoPreview(event: Event) {
   const video = event.currentTarget as HTMLVideoElement;
-  if (video.currentSrc !== previewUrl.value || !video.videoWidth || !video.videoHeight) return;
+  if (!handleLoaded(event)) { videoThumbnail.value = ""; return; }
   const canvas = document.createElement("canvas");
   const scale = 96 / Math.max(video.videoWidth, video.videoHeight);
   canvas.width = Math.max(1, Math.round(video.videoWidth * scale));

@@ -108,7 +108,7 @@
 - `packages/tools/canvas/src/runtime.ts`：画布、节点、连线工具参数。
 - `apps/web/src/pages/workspace/panels/canvas/useCanvasTools.ts`、`canvasHost.vue`、`components/canvasMenu.vue`：本轮上下文、画布切换与文件树操作协调。
 - `packages/tools/workspace/src/index.ts`：内置工作区文件工具范围。
-- `packages/tools/mediaGeneration/src/index.ts`：生成节点创建前可用的只读模型能力查询。
+- `packages/nodes/videoGenerationNode/src/index.vue`：通过节点 `getConfig` 查询当前模型能力。
 - `packages/nodes/textNode/src/index.vue`、`imageNode/src/index.vue`、`imageGenerationNode/src/index.vue`、`videoGenerationNode/src/index.vue`：节点公开函数和输出。
 - `apps/server/src/agent/assets.ts`、`apps/server/src/utils/assets/index.ts`：全局资产导入与工作区路径。
 - `apps/server/src/agent/skills/index.ts`、`apps/server/src/utils/skills/files.ts`：技能读取、新建及编辑契约。

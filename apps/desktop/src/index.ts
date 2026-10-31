@@ -168,6 +168,14 @@ async function start() {
       // ACT: Windows SDK 未接管普通新窗口请求，在创建 WebView 弹窗前交给宿主。
       preload: `
         (() => {
+          // 开发者工具仅通过设置调用宿主 API 打开，屏蔽 WebView 的默认入口。
+          window.addEventListener("keydown", event => {
+            if (event.key === "F12" || ["KeyI", "KeyJ", "KeyC"].includes(event.code)
+              && (event.ctrlKey && event.shiftKey || event.metaKey && event.altKey)) {
+              event.preventDefault();
+            }
+          }, true);
+          window.addEventListener("contextmenu", event => event.preventDefault(), true);
           function openExternal(url) {
             const target = new URL(url, document.baseURI);
             if (!["http:", "https:"].includes(target.protocol)) return false;

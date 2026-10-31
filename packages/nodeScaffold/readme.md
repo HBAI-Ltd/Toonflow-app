@@ -191,6 +191,10 @@ await ai.generate({
 - `ai.generateImage(input, signal?)`：非流式生成并落盘，返回 `{ path, mimeType, mediaType: "image" }[]`。`input` 包含工作区绝对路径 `directory`、`providerId`、`modelId`、`prompt`、工作区相对目录 `outputDirectory`；可传 `images: { path, mimeType }[]`、`ratio`、`size`。图片参考只传工作区相对路径，由后端读取。
 - `ai.generateVideo(input, signal?)`：视频生成并落盘，返回 `{ path, mimeType, mediaType: "video" }[]`。基础字段同图片生成；使用 `duration`、`resolution`、`ratio`、`generateAudio`、`mode` 配置视频，可传 `images`、`videos`、`audios` 和 `firstFrame`、`lastFrame`，素材均为工作区内 `{ path, mimeType }` 引用。
 
+三个媒体 `generate*` 方法保留原返回值，并接受可选第三参数 `{ taskId, nodeId, canvasPath, onStatus }`。`ai.resumeMedia(directory, taskId, signal?, options?)` 只复查已有任务；`ai.cancelMedia(directory, taskId)` 显式取消服务端任务。传入已持久化 `taskId` 时，节点卸载和查询断线仅停止本地等待；旧的两参调用保留卸载或显式 abort 时取消任务的行为。
+
+生成节点复用 `@toonflow/node-shared/useNodeGeneration`，在 `node.data.mediaTask` 保存任务身份和非敏感恢复数据，先通过宿主保存画布再提交；重开画布只查询已有 ID，完成后保存输出。宿主的 `useNodePersistence()` 位于 `@toonflow/nodes-scaffold/nodeDocument`，返回的上下文绑定当前目录和画布，`save()` 可等待保存完成。供应商未提供可恢复任务凭据时，服务进程中断后的同步生成不能自动重做；恢复失败保留原输出。
+
 `directory` 在生成前通过 `files.getWorkspaceFiles().list()` 取得快照，`outputDirectory` 使用 `assets/${id}`。结果可直接赋给 `outputs.value.image = { dataType: "IMAGE", value: { url: result.path, mimeType: result.mimeType } }`；使用 `files.useFileUrl` 预览。图片生成节点会合并文本参考、传入图片参考，成功后替换输出，失败或停止时保留上次图片；删除节点前取消请求。当前画布为支持撤销而保留节点素材，不随节点删除物理文件。
 
 ### Agent 节点函数
@@ -222,7 +226,7 @@ nodeTools.register({
 { "nodeId": "具体节点 ID", "name": "node:setText", "args": { "text": "新内容" } }
 ```
 
-`parameters` 使用 Zod 对象 schema，`z` 由脚手架统一导出，节点无需单独安装 Zod。`execute` 的参数类型自动推导，注册时转为输入类型的 Draft 7 JSON Schema 供 Agent 和服务端使用。前端执行前调用原始 schema 的 `parseAsync`，保留默认值、转换和异步 `refine`，参数不合法时不会执行回调。不能转换为 JSON Schema 的输入类型会在注册时直接报错。
+`parameters` 使用 Zod 对象 schema，`z` 由脚手架统一导出，节点无需单独安装 Zod。`execute` 的参数类型自动推导，注册时转为输入类型的 Draft 7 JSON Schema 供 Agent 和服务端使用。前端执行前调用原始 schema 的 `safeParseAsync`，保留默认值、转换和异步 `refine`；参数不合法时不会执行回调，错误会附带当前函数描述、参数 schema 和修正指引。不能转换为 JSON Schema 的输入类型会在注册时直接报错。
 
 回调支持同步或异步，返回值须可 JSON 序列化；没有返回值时传回 `null`，抛错会作为工具执行错误返回 Agent。
 

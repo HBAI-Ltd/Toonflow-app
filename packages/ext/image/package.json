@@ -12,6 +12,7 @@
   "peerDependencies": { "vue": "^3.5.42", "element-plus": "^2.14.5" },
   "dependencies": { "@toonflow/ext-scaffold": "workspace:*" },
   "devDependencies": {
+    "@toonflow/node-shared": "workspace:*",
     "typescript": "~6.0.3",
     "vite": "^8.2.2",
     "vue-tsc": "^3.3.11"

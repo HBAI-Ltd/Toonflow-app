@@ -1,9 +1,11 @@
 import { $ } from "bun";
-import { cpSync, existsSync, mkdirSync, realpathSync, rmSync } from "@toonflow/file";
+import { cpSync, existsSync, mkdirSync, realpathSync, rmSync, writeAtomicSync } from "@toonflow/file";
 import { dirname, resolve } from "node:path";
 import copyDocumentPackages from "../../server/scripts/copyDocumentPackages";
 import copySandboxPackages from "../../server/scripts/copySandboxPackages";
 import prepareMacDmg from "./macDmg";
+import signWindows from "./signWindows";
+import desktopConfig from "../../../electrobun.config";
 
 const projectDir = resolve(import.meta.dir, "../../..");
 const mode = process.argv[2];
@@ -54,11 +56,32 @@ if (!isMac) {
   if (!startupBuild.success) throw new AggregateError(startupBuild.logs, "启动动画线程构建失败。");
   const protocolDir = resolve(projectDir, "build/desktop/protocol");
   const csc = resolve(process.env.WINDIR!, "Microsoft.NET/Framework64/v4.0.30319/csc.exe");
+  const version = desktopConfig.app.version;
+  if (!/^\d+\.\d+\.\d+$/.test(version) || version.split(".").some(part => Number(part) > 65534)) {
+    throw new Error("Windows 版本号必须为 X.Y.Z，每段不超过 65534。");
+  }
   mkdirSync(protocolDir, { recursive: true });
-  await $`${csc} /nologo /target:winexe /platform:x64 /optimize+ /reference:System.Windows.Forms.dll /out:${resolve(protocolDir, "startupLauncher.exe")} ${resolve(projectDir, "apps/desktop/native/startupLauncher.cs")}`;
-  await $`${csc} /nologo /target:winexe /platform:x64 /optimize+ /reference:System.Windows.Forms.dll /reference:System.Web.Extensions.dll /out:${resolve(protocolDir, "protocolLauncher.exe")} ${resolve(projectDir, "apps/desktop/native/protocolLauncher.cs")}`;
-  await $`${csc} /nologo /target:winexe /platform:x64 /optimize+ /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /out:${resolve(protocolDir, "saveFileDialog.exe")} ${resolve(projectDir, "apps/desktop/native/saveFileDialog.cs")}`;
-  await $`${csc} /nologo /target:winexe /platform:x64 /optimize+ /reference:System.Web.Extensions.dll /reference:System.Windows.Forms.dll /reference:Microsoft.CSharp.dll /out:${resolve(protocolDir, "updateHelper.exe")} ${resolve(projectDir, "apps/desktop/native/updateHelper.cs")}`;
+  const assemblyInfo = resolve(protocolDir, "assemblyInfo.cs");
+  writeAtomicSync(assemblyInfo, [
+    "using System.Reflection;",
+    '[assembly: AssemblyTitle("Toonflow")]',
+    '[assembly: AssemblyProduct("Toonflow")]',
+    '[assembly: AssemblyCompany("HBAI-Ltd")]',
+    '[assembly: AssemblyDescription("Toonflow desktop component")]',
+    '[assembly: AssemblyCopyright("Copyright (c) HBAI-Ltd")]',
+    `[assembly: AssemblyVersion("${version}.0")]`,
+    `[assembly: AssemblyFileVersion("${version}.0")]`,
+    `[assembly: AssemblyInformationalVersion("${version}")]`,
+    "",
+  ].join("\n"));
+  await $`${csc} /nologo /target:winexe /platform:x64 /optimize+ /reference:System.Windows.Forms.dll /out:${resolve(protocolDir, "startupLauncher.exe")} ${assemblyInfo} ${resolve(projectDir, "apps/desktop/native/startupLauncher.cs")}`;
+  await $`${csc} /nologo /target:winexe /platform:x64 /optimize+ /reference:System.Windows.Forms.dll /reference:System.Web.Extensions.dll /out:${resolve(protocolDir, "protocolLauncher.exe")} ${assemblyInfo} ${resolve(projectDir, "apps/desktop/native/protocolLauncher.cs")}`;
+  await $`${csc} /nologo /target:winexe /platform:x64 /optimize+ /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /out:${resolve(protocolDir, "saveFileDialog.exe")} ${assemblyInfo} ${resolve(projectDir, "apps/desktop/native/saveFileDialog.cs")}`;
+  await $`${csc} /nologo /target:winexe /platform:x64 /optimize+ /reference:System.Web.Extensions.dll /reference:System.Windows.Forms.dll /reference:Microsoft.CSharp.dll /out:${resolve(protocolDir, "updateHelper.exe")} ${assemblyInfo} ${resolve(projectDir, "apps/desktop/native/updateHelper.cs")}`;
+  // ACT: 在 SDK 生成归档、Hash 和增量补丁前签名，避免签名后破坏更新基线。
+  if (mode !== "dev") {
+    await signWindows(["startupLauncher.exe", "protocolLauncher.exe", "saveFileDialog.exe", "updateHelper.exe"].map(name => resolve(protocolDir, name)));
+  }
 }
 // ACT: 团队暂不打包；恢复时也在 package.json 的 dev:plugins 中加回 --filter './packages/teams/*'。
 for (const script of mode === "dev" ? ["dev:plugins"] : [

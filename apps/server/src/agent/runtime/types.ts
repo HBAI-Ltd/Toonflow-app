@@ -7,7 +7,7 @@ export type AgentMention = {
   id: string;
   label: string;
   source:
-    | { kind: "canvas"; canvasId: string; canvasName: string; nodeId: string; nodeName: string; outputId: string; outputName: string }
+    | { kind: "canvas"; canvasId: string; canvasName: string; nodeId: string; nodeName: string; outputId?: string; outputName?: string }
     | { kind: "asset"; path: string };
   dataType: string;
   value: unknown;

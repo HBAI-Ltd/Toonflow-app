@@ -29,6 +29,8 @@
         ref="player"
         class="audioPreview"
         :src="previewUrl"
+        :mimeType="outputFile?.mimeType"
+        v-model:pcmOptions="pcmOptions"
         @loadedmetadata="updateNodeInternals" />
       <input ref="fileInput" class="fileInput" type="file" accept="audio/*" aria-label="选择音频" :disabled="uploading || transcribing || actions?.processing" @change="uploadAudio" />
       <el-button
@@ -44,15 +46,17 @@
     </div>
     <template v-if="actions?.mode === 'speed'" #bottom><div ref="speedTarget" /></template>
   </nodeSkeleton>
-  <audioActions ref="actions" :file="outputFile" :src="previewUrl" :target="speedTarget" :disabled="uploading || transcribing" @pause="player?.pause()" />
+  <audioActions ref="actions" v-model:pcmOptions="pcmOptions" :file="outputFile" :src="previewUrl" :target="speedTarget" :disabled="uploading || transcribing" @pause="player?.pause()" />
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { IconMusic, IconUpload, IconTransfer, IconScissors, IconGauge, IconTextRecognition, IconPlayerStop } from "@tabler/icons-vue";
 import { ElButton, ElMessage } from "element-plus";
 import { nodeSkeleton, nodeTools, useNode, z, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
 import { useAudioTranscription } from "@toonflow/node-shared/useAudioTranscription";
+import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
+import type { PcmOptions } from "@toonflow/node-shared/pcmPreview";
 import audioPlayer from "./components/audioPlayer.vue";
 import audioActions from "./components/audioActions.vue";
 
@@ -71,6 +75,8 @@ const actions = ref<InstanceType<typeof audioActions>>();
 const speedTarget = ref<HTMLElement>();
 
 const outputFile = computed(() => outputs.value.audio?.dataType === "AUDIO" ? outputs.value.audio.value : undefined);
+const pcmOptions = ref<Partial<PcmOptions>>({});
+watch(() => outputFile.value?.url, () => { pcmOptions.value = {}; }, { flush: "sync" });
 const { processing: transcribing, transcribe, cancel: cancelTranscription, cancelAndWait: cancelTranscriptionAndWait } = useAudioTranscription(outputFile);
 const previewUrl = files.useFileUrl(
   outputFile,
@@ -120,13 +126,14 @@ async function uploadAudio(event: Event) {
   const file = input.files?.[0];
   input.value = "";
   if (!file || uploading.value || transcribing.value || actions.value?.processing) return;
-  if (!file.type.startsWith("audio/")) return void ElMessage.error("请选择音频文件");
+  const mimeType = getMediaMimeType(file);
+  if (!mimeType.startsWith("audio/")) return void ElMessage.error("请选择音频文件");
   if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error("音频不能为空且不能超过 100 MB");
   uploading.value = true;
   try {
     const url = await files.uploadFile(file);
     // ACT: 复制节点可能仍引用旧音频，替换输出不删除共享文件。
-    outputs.value.audio = { dataType: "AUDIO", value: { url, mimeType: file.type } };
+    outputs.value.audio = { dataType: "AUDIO", value: { url, mimeType } };
   } catch (error) {
     showError(error, "音频替换失败");
   } finally {

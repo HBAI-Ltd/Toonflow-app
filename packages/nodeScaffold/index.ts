@@ -109,7 +109,7 @@ export function createNodeConfig(config: NodeConfig, configUrl: string) {
         fileName: () => fileName,
       },
       rolldownOptions: {
-        external: ["vue", "@vue/runtime-core", "@vue/runtime-dom", "@vue-flow/core", "element-plus", "three", "@earendil-works/pi-agent-core", "@earendil-works/pi-ai", ...Object.keys(tiptapGlobals)],
+        external: ["vue", "@vue/runtime-core", "@vue/runtime-dom", "@vue-flow/core", "element-plus", "three", "@toonflow/model-icons", "@earendil-works/pi-agent-core", "@earendil-works/pi-ai", ...Object.keys(tiptapGlobals)],
         output: {
           exports: "default",
           globals: {
@@ -120,6 +120,7 @@ export function createNodeConfig(config: NodeConfig, configUrl: string) {
             "@vue-flow/core": "toonflowNodeHost.vueFlow",
             "element-plus": "toonflowNodeHost.elementPlus",
             three: "toonflowNodeHost.three",
+            "@toonflow/model-icons": "toonflowNodeHost.modelIcons",
             "@earendil-works/pi-agent-core": "toonflowNodeHost.ai",
             "@earendil-works/pi-ai": "toonflowNodeHost.ai",
           },

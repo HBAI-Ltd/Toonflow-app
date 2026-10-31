@@ -1,11 +1,12 @@
 import { nextTick, watch, type Ref } from "vue";
 import { useVueFlow, type XYPosition } from "@vue-flow/core";
 import { useNodeEvent, useNodeToolsContext, validateConnection } from "@toonflow/nodes-scaffold/runtime";
-import { canvasSchemas, type CanvasContext, type CanvasToolCall } from "@toonflow/tool-canvas/runtime";
+import { canvasSchemas, isNodeToolAllowed, type CanvasContext, type CanvasToolCall } from "@toonflow/tool-canvas/runtime";
 import { asrRequestSchema } from "@toonflow/tools-scaffold/runtime";
 import { isBrowserAudioAsrSupported, transcribeBrowserAudio } from "@toonflow/asr";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { useWorkspaceStore } from "@/stores/workspace";
+import { agentNodeToolPermissions } from "@/stores/settings";
 import { arrangeCanvas } from "./arrangeCanvas";
 import { canvasEdgeSummary, canvasNodeSummary, createCanvasQueries, isCanvasRead } from "./canvasQueries";
 
@@ -41,6 +42,7 @@ export function useCanvasTools(options: {
     canvases: signal => options.menu().getCanvases(signal),
     nodeTypes: () => options.availableNodes.value,
     nodeTools: getNodeTools,
+    nodeToolPermissions: () => agentNodeToolPermissions.value,
   });
 
   function findNode(nodeId: string) {
@@ -279,6 +281,7 @@ export function useCanvasTools(options: {
       }
       case "nodeTools": {
         const args = canvasSchemas.nodeTools.parse(request.args);
+        if (!isNodeToolAllowed(args.name, agentNodeToolPermissions.value)) throw new Error(`Agent 已禁止调用节点函数 ${args.name}，请在顶部节点工具控制中调整权限`);
         return getNodeTools().call(args, signal);
       }
       default: throw new Error(`未知画布操作：${request.name}`);

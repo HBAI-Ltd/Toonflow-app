@@ -6,7 +6,7 @@
 
 ## 🧩 插件与模型扩展
 
-通过“设置 → 插件市场”发现和管理节点、工具与技能；市场顶部可以直接打开 [网页版市场](https://api.toonflow.net/console/plugIn) 和 [开发者文档](https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd)。市场需要 TF-Router API Key，未配置时会提示填写。
+通过“设置 → 插件市场”发现和管理节点、工具与技能；市场顶部可以直接打开 [网页版市场](https://api.toonflow.net/console/plugIn) 和 [开发者文档](https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd)。市场使用“账号与余额”中登录的 Toonflow 账号。
 
 | 扩展类型 | 用途 | 开发入口 |
 | --- | --- | --- |
@@ -17,7 +17,7 @@
 
 节点与工具的配置表单统一使用 `@form-create/element-ui` 的规则；有必填项未填写时，配置按钮会显示红点。工具只接收自身配置，宿主不向工具直接传递完整应用设置。
 
-媒体接口包含图片、视频和音频的扩展类型，实际能力由各提供方实现；当前内置 TF-Router 媒体适配提供图片与视频生成。技能既可以全局安装，也可以放在当前工作区的 `skill/` 目录，同名时优先使用工作区版本。
+媒体接口包含图片、视频和音频的扩展类型，实际能力由各提供方实现。技能既可以全局安装，也可以放在当前工作区的 `skill/` 目录，同名时优先使用工作区版本。
 
 需要从外部 Coding 工具操作 Toonflow 时，在“设置 → MCP”开启服务并复制客户端配置，支持 HTTP 与 stdio 连接。画布和节点等界面操作需要保持 Toonflow 窗口或网页打开，详见 [MCP 接入说明](../packages/mcp/README.md)。
 
@@ -103,6 +103,22 @@ bun run dev
 | `bun run --cwd packages/i18n extract` | 手动抽取中文源文案和来源索引，不生成其他语言的译文。 |
 
 构建与类型检查分别执行。新增、移动或删除业务接口后，在 `apps/server` 执行 `bun run routes` 生成路由。
+
+### 云端渠道
+
+账号、插件市场、余额统计、探索、首页广告和供应商 TS 的调用链为：页面直接请求本地 `/api/channel/*` → 后端 `Channel` 接口 → `Toonflow` 实现。前端只保留通用 HTTP 工具，不维护渠道抽象。外网地址、响应转换和供应商 TS 临时实现统一放在 `apps/server/src/utils/channel/toonflow.ts`，前后端共享的纯类型通过 `@toonflow/server/channel` 导出。
+
+首页广告请求 `GET /api/channel/community/getAdvertisements`，经渠道转发至正式接口 `POST https://api.toonflow.net/web/toonflow/home/getAdvertisements`（`/web` 是部署代理前缀）。配置入口位于 API 管理后台侧栏“首页广告设置”（`/homeAdvertisement`），读取和保存分别使用管理员服务的 `POST /homeAdvertisement/getSettings`、`POST /homeAdvertisement/saveSettings`，图片通过 `POST /homeAdvertisement/getUploadSignature` 获取直传签名。客户端渠道仅公开读取广告，不转发管理员写入接口。服务端过滤停用和到期广告，返回 `banners`、`bannerMode`（`carousel` 轮换或 `stack` 叠加）、`bannerInterval`（2–60 秒，默认 5）及 `sidebar`；旧 `banner` 字段保留首条可见横幅。旧接口缺少 `banners` 时客户端兼容单条配置，明确的空数组不回退。首次部署按 API 管理员服务的迁移文档初始化广告表；构建不会自动执行数据库迁移。
+
+顶部最多配置 10 条横幅，沿用现有广告表的 `banner.items` JSON 保存 `{ items, mode, interval }`，并镜像首条到旧字段；已有单横幅配置自动兼容，无需增加数据库字段。文字横幅最低 44px，正文支持行内 Markdown、回车换行和自动折行，高度随内容撑开；轮换跟随当前条目高度，叠加按顺序显示，每条可独立关闭。后台保存配置后刷新 Toonflow 首页即可读取；正常使用不要添加 `advertisementPreview` 参数。
+
+本地 API 联调可直接请求管理服务 `62487` 和主服务 `62477`；主 API 设置 `ENABLE_BACKGROUND_JOBS=false`，关闭定时任务及视频、图片回调消费。Toonflow 广告读取统一使用正式地址，已移除临时本地接口覆盖，避免开发配置遮蔽线上已保存的广告。
+
+开发环境仍可通过 `/#/home?advertisementPreview=text`、`image`、`web`、`carousel` 或 `stack` 显式查看临时示例；普通首页与生产构建均使用真实接口，接口失败时不回退到示例。
+
+后端环境变量 `TOONFLOW_CHANNEL` 选择渠道，默认 `toonflow`。新增渠道时，实现 `utils/channel/types.ts` 中的 `Channel`，在 `utils/channel/index.ts` 注册实例，然后设置对应的渠道名称并重启后端；前端和业务路由无需修改。未注册的渠道会明确报错，不会回退到其他渠道。
+
+鉴权请求使用服务端设置中保存的账号 Token，并核对前端携带的账号快照；渠道实例不保存可变 Token。供应商 TS 接口暂时返回空模型配置，真实接口就绪后替换 `Toonflow.getProviderSource`。
 
 ### 多语言维护
 
@@ -221,6 +237,24 @@ git push --no-follow-tags origin refs/tags/v2.0.0:refs/tags/v2.0.0
 构建固定使用 GitHub Releases 的 `releases/latest/download` 读取上一版清单及完整包，用于生成补丁。GitHub Actions 使用当前工作流仓库（`GITHUB_SERVER_URL` / `GITHUB_REPOSITORY`），本机构建默认使用 `HBAI-Ltd/Toonflow-app`。此地址写入 SDK 的构建配置，不受客户端设置影响；客户端运行时在“设置 → 关于”选择更新源，默认使用官方源 `https://api.toonflow.net/version/desktopUpdates`，也可切换到 GitHub Releases。开发者选项可保存一个自定义更新文件目录地址，保存后会出现在“关于”的更新源下拉框。工作流会上传文件到 GitHub Release，官方更新服务的文件仍需按下方命令单独同步。
 
 [Debug 工作流](../.github/workflows/debug.yml) 可单独选择平台或全部平台，产物保留 7 天，不创建 Release。默认只打完整包，勾选 `generatePatch` 可验证增量构建。CI 构建和归档检查不等于已验证真实安装、GUI 启动或 macOS Gatekeeper。
+
+**Windows 代码签名**
+
+Windows 安装器和自有辅助 EXE 会写入产品、发布者与当前构建版本信息。默认没有签名证书，构建会明确提示产物未签名；版本信息不能代替数字签名，也不代表已通过 Defender 检测。
+
+在有代码签名证书及匹配私钥的 Windows 构建机上，将证书安装到当前用户的 `My` 证书库，安装 Windows SDK 的 SignTool，并在执行现有打包命令前设置：
+
+```powershell
+$env:windowsSigningThumbprint = '证书的40位十六进制指纹'
+$env:windowsSignToolPath = 'C:\Program Files (x86)\Windows Kits\10\bin\实际SDK版本\x64\signtool.exe'
+bun run package:desktop
+```
+
+SignTool 已在 PATH 时可省略 `windowsSignToolPath`；指定路径时必须使用绝对路径，避免不同构建阶段的工作目录影响工具选择。未设置 `windowsSigningThumbprint` 才会跳过签名，显式空字符串、空白或无效指纹均报错。签名采用 SHA-256 与 RFC 3161 时间戳，默认使用 `http://timestamp.digicert.com`，可通过 `windowsSigningTimestampUrl` 指定证书服务商的时间戳地址。私钥保留在证书库或提供商的硬件中，不向脚本传递证书密码。
+
+四个自有启动、协议、保存与更新辅助程序在 SDK 生成更新归档、Hash 和补丁前完成签名；安装检测程序、NSIS 内嵌卸载器和最终安装包也会签名并验证。NSIS 打包使用归档中的更新助手，并校验归档内四个辅助程序的版本；启用签名时还校验其签名、证书指纹和时间戳，不能用未签名旧归档只重签外壳。第三方文件保留其原有签名。配置了证书指纹后，证书、时间戳或签名验证失败均中止打包，不回退为未签名产物；最终 EXE 在暂存目录完成签名后才替换产物，失败不覆盖已有安装包。当前 GitHub 托管 Windows 运行器尚未配置证书，仍输出未签名包；启用 CI 签名需要先提供可用的签名身份。
+
+签名接入与编译通过不等于误报已解除。Defender 已检测的原始文件需结合保护历史记录复核，必要时通过 [Microsoft Security Intelligence](https://www.microsoft.com/en-us/wdsi/filesubmission) 以软件开发者身份提交分析。
 
 **ARM 自动签名与公证：首次配置**
 

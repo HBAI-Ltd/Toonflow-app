@@ -40,7 +40,7 @@
 | 配置与模型能力 | `node:getConfig`、`node:setConfig`；变更后再次核对配置 |
 | 发起并追踪生成 | 图片 `node:generateImage`、视频 `node:generateVideo`，状态 `node:getGenerationStatus`；只在该节点实际提供时调用 |
 
-原生文本函数参数为 `{ text: "完整正文" }`，提示词函数为 `{ prompt: "专用提示词" }`。`node:setText` 回执不含文件路径；需定位正文文件时再读实际 `data.textPath`。可用的 `listMediaModels({})` 可在创建生成节点前查询模型能力；生成时仍须核对目标节点的实际配置。配置中的 `providerId/modelId` 成对设置，`mode`、时长和分辨率使用实时回执支持的值，不自己拼模式名称。
+原生文本函数参数为 `{ text: "完整正文" }`，提示词函数为 `{ prompt: "专用提示词" }`。`node:setText` 回执不含文件路径；需定位正文文件时再读实际 `data.textPath`。通过已有生成节点的 `node:getConfig` 查询模型能力；生成时仍须核对目标节点的实际配置。配置中的 `providerId/modelId` 成对设置，`mode`、时长和分辨率使用实时回执支持的值，不自己拼模式名称。
 
 确认写入结果后按需 `fitCanvas({ nodeIds })`。局部流程仅摆放本批节点，不自动整理用户整个画布；`arrangeCanvas` 是整图整理，不接受局部节点范围。
 

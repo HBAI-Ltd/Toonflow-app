@@ -5,14 +5,19 @@ import { validateFields } from "@/lib/middleware";
 import { success } from "@/lib/responseFormat";
 import { maxSystemPromptLength } from "@/agent/runtime/prompt";
 import { t } from "@/lib/i18n";
-import { providerSchema } from "@/utils/ai";
+import { accountProviderSchema, providerSchema } from "@/utils/ai";
+import { nodeToolPermissionsSchema } from "@toonflow/tool-canvas/runtime";
 
 const router = Router();
 let saveQueue = Promise.resolve();
 
 export default router.put("/", validateFields({ settings: z.record(z.string(), z.json()).and(z.object({
   agentSystemPrompt: z.string().max(maxSystemPromptLength, { error: () => t`系统提示词不能超过 ${maxSystemPromptLength} 个字符` }).optional(),
-  customProviders: z.array(providerSchema.extend({ id: z.string().min(1), label: z.string() })).optional(),
+  agentNodeTools: nodeToolPermissionsSchema.optional(),
+  customProviders: z.array(providerSchema.extend({
+    id: z.string().min(1).refine(value => value.toLowerCase() !== "toonflow", "toonflow 为账号供应商保留 ID"), label: z.string(),
+  })).optional(),
+  toonflowProvider: accountProviderSchema.nullable().optional(),
   network: u.network.networkSchema.optional(),
   desktopAutoUpdate: z.boolean().optional(),
   desktopUpdateSource: z.enum(["official", "github", "custom"]).optional(),
@@ -29,12 +34,16 @@ export default router.put("/", validateFields({ settings: z.record(z.string(), z
     u.removeLegacySettings(settings);
     u.cleanNodeMenuSettings(settings);
     const previousSettings = u.conf.get("settings", {});
+    const previousAccount = previousSettings.toonflowAccount as { token?: unknown } | null | undefined;
+    const nextAccount = settings.toonflowAccount as { token?: unknown } | null | undefined;
+    if (!nextAccount?.token || nextAccount.token !== previousAccount?.token) settings.toonflowProvider = null;
     const network = settings.network !== undefined || previousSettings.network !== undefined
       ? await u.network.prepareNetwork(settings.network) : undefined;
     if (network) u.network.configureNetwork(network, undefined, () => u.conf.set("settings", settings));
     else u.conf.set("settings", settings);
-    const [models] = await Promise.all([u.ai.refreshProviderModels(previousSettings), u.mcpRuntime.reloadMcpRuntime()]);
-    return { ...models, aiModels: u.ai.listAiModels(), nodeMenu: u.conf.get("settings.general.nodeMenu") ?? null };
+    await u.mcpRuntime.reloadMcpRuntime();
+    return { customProviders: settings.customProviders ?? [], mediaProviderConfigs: settings.mediaProviderConfigs ?? {}, toonflowProvider: settings.toonflowProvider ?? null,
+      aiModels: u.ai.listAiModels(), nodeMenu: u.conf.get("settings.general.nodeMenu") ?? null };
   });
   saveQueue = saving.then(() => {}, () => {});
   res.json(success(await saving, "设置已保存"));

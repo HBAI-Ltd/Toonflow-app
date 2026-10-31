@@ -53,7 +53,7 @@ export function useMentionSources(getDirectory: () => string | undefined) {
     assets({ signal, ...options }: MentionQuery & { path?: string } = {}) {
       return request<MentionPage<MentionAsset>>("assets", options, signal);
     },
-    async selectCanvas({ canvasId, nodeId, outputId, signal }: { canvasId: string; nodeId: string; outputId: string; signal?: AbortSignal }) {
+    async selectCanvas({ canvasId, nodeId, outputId, signal }: { canvasId: string; nodeId: string; outputId?: string; signal?: AbortSignal }) {
       signal?.throwIfAborted();
       const directory = getDirectory();
       const selected = await (getCanvasSource?.()?.selectCanvas(canvasId, nodeId, outputId)

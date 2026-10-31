@@ -11,27 +11,31 @@
       v-else-if="attachment.mimeType.startsWith('image/')"
       ref="imageRef"
       class="thumbnailImage"
-      :src="thumbnailUrl"
-      :previewSrcList="thumbnailUrl ? [thumbnailUrl] : []"
+      :src="mediaSrc"
+      :previewSrcList="mediaSrc && !preparingPreview && !previewError ? [mediaSrc] : []"
       previewTeleported
       fit="cover"
       :alt="attachment.name"
-      :title="attachment.name"
+      :title="previewError || (preparingPreview ? '正在生成兼容预览…' : attachment.name)"
+      :aria-busy="preparingPreview"
       tabindex="0"
       role="button"
       :aria-label="`预览 ${attachment.name}`"
       @keydown.enter.prevent="imageRef?.showPreview()"
-      @keydown.space.prevent="imageRef?.showPreview()">
+      @keydown.space.prevent="imageRef?.showPreview()"
+      @load="handleLoaded"
+      @error="handleError">
       <template #error><icon-photo :size="20" /></template>
     </el-image>
-    <button v-else-if="attachment.mimeType.startsWith('video/')" class="thumbnailButton" type="button" :title="attachment.name" :aria-label="`预览 ${attachment.name}`" :disabled="!thumbnailUrl" @click="videoPreviewVisible = true">
-      <video v-if="thumbnailUrl" :src="thumbnailUrl" preload="metadata" muted playsinline aria-hidden="true" />
+    <button v-else-if="attachment.mimeType.startsWith('video/')" class="thumbnailButton" type="button" :title="previewError || (preparingPreview ? '正在生成兼容预览…' : attachment.name)" :aria-label="`预览 ${attachment.name}`" :aria-busy="preparingPreview" :disabled="!thumbnailUrl" @click="videoPreviewVisible = true">
+      <video v-if="mediaSrc && !preparingPreview && !previewError" :src="mediaSrc" preload="auto" muted playsinline aria-hidden="true" @loadeddata="handleLoaded" @error="handleError" />
       <icon-video class="videoIcon" :size="16" />
     </button>
     <div v-else class="fileAttachmentCard" :title="attachment.name"><icon-file-text :size="18" /><span>{{ attachment.name }}</span></div>
     <el-button v-if="removable" class="removeAttachment" circle :disabled="disabled" :aria-label="`移除 ${attachment.name}`" title="移除附件" @click="emit('remove')"><icon-x :size="10" /></el-button>
     <el-dialog v-model="videoPreviewVisible" :title="attachment.name" width="min(800px, 90vw)" alignCenter appendToBody destroyOnClose>
-      <video v-if="videoPreviewVisible" class="videoPreview" :src="thumbnailUrl" controls playsinline preload="metadata" />
+      <p v-if="preparingPreview || previewError" :role="previewError ? 'alert' : 'status'">{{ preparingPreview ? '正在生成兼容预览…' : previewError }}</p>
+      <video v-else-if="videoPreviewVisible && mediaSrc" class="videoPreview" :src="mediaSrc" controls playsinline preload="auto" @loadeddata="handleLoaded" @error="handleError" />
     </el-dialog>
     <el-dialog v-model="textPreviewVisible" :title="attachment.name" width="min(720px, 90vw)" alignCenter appendToBody destroyOnClose>
       <p v-if="textLoading || textError" :role="textError ? 'alert' : 'status'">{{ textLoading ? '正在读取…' : textError }}</p>
@@ -45,6 +49,7 @@ import { computed, ref, watch } from "vue";
 import type { ImageInstance } from "element-plus";
 import { IconFileText, IconPhoto, IconVideo, IconX } from "@tabler/icons-vue";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
+import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
 import type { AgentAttachment } from "./types";
 import { readTextAttachment } from "./textAttachments";
 
@@ -59,6 +64,7 @@ const textError = ref("");
 const imageRef = ref<ImageInstance>();
 const videoPreviewVisible = ref(false);
 const thumbnailUrl = ref("");
+const { src: mediaSrc, preparing: preparingPreview, error: previewError, handleError, handleLoaded } = useMediaPreview(thumbnailUrl, () => props.attachment.mimeType.startsWith("video/") ? "video" : "image");
 
 watch(() => [props.directory, props.attachment.file, props.attachment.path, props.attachment.mimeType] as const, async ([directory, file, path, mimeType], _previous, onCleanup) => {
   videoPreviewVisible.value = false;

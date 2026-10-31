@@ -1,6 +1,7 @@
 import { useNode, useVueFlow } from "@vue-flow/core";
 import { uploadNodeFile, useNodeAi, useNodeFiles, type NodeImageRequest, type NodeImageResult } from "@toonflow/nodes-scaffold/runtime";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
+import { createMediaPreview } from "@toonflow/node-shared/mediaPreview";
 
 export type ImageInpaint = { source: string; original: string; guide: string; mask: string; images: NonNullable<NodeImageRequest["images"]> };
 export type InpaintDraftInput = { prompt: string; images?: NodeImageRequest["images"] };
@@ -19,20 +20,20 @@ export function buildInpaintRequest<T extends Pick<NodeImageRequest, "prompt" | 
   };
 }
 
-export function useImageInpaint() {
+export function useImageInpaint(generate?: (input: NodeImageRequest, signal: AbortSignal, recoveryData: { input: NodeImageRequest; inpaint: ImageInpaint }) => Promise<NodeImageResult[]>) {
   const { id, node } = useNode();
   const { findNode } = useVueFlow();
   const files = useNodeFiles();
   const ai = useNodeAi();
 
-  return async function generateInpaint(input: NodeImageRequest, inpaint: ImageInpaint, signal: AbortSignal): Promise<NodeImageResult[]> {
+  return async function generateInpaint(input: NodeImageRequest, inpaint: ImageInpaint, signal: AbortSignal, recovered?: NodeImageResult[]): Promise<NodeImageResult[]> {
     signal.throwIfAborted();
     if (!inpaint || ![inpaint.original, inpaint.guide, inpaint.mask].every(path => typeof path === "string" && path.trim())
       || !Array.isArray(inpaint.images) || inpaint.images.some(image => !image || typeof image.path !== "string" || !image.path.trim() || typeof image.mimeType !== "string" || !image.mimeType.startsWith("image/"))) {
       throw new Error("局部重绘素材无效，请重新创建重绘节点");
     }
     const workspace = files.getWorkspaceFiles();
-    const temporaryId = crypto.randomUUID();
+    const temporaryId = recovered?.[0]?.path.match(/^assets\/([^/]+)\/[^/]+$/)?.[1] ?? crypto.randomUUID();
     const canvas = document.createElement("canvas");
     const urls: string[] = [];
     let outputPath = "";
@@ -46,7 +47,16 @@ export function useImageInpaint() {
       const url = URL.createObjectURL(new Blob([content], { type: mimeType }));
       urls.push(url);
       image.src = url;
-      await image.decode();
+      try {
+        await image.decode();
+      } catch {
+        const blob = await createMediaPreview(url, "image", signal);
+        signal.throwIfAborted();
+        const previewUrl = URL.createObjectURL(blob);
+        urls.push(previewUrl);
+        image.src = previewUrl;
+        await image.decode();
+      }
       signal.throwIfAborted();
       return image;
     }
@@ -68,11 +78,12 @@ export function useImageInpaint() {
       signal.throwIfAborted();
       requested = true;
       // ACT: 供应商尚未统一支持原生 mask；使用涂色参考引导，再按本地蒙版合成，严格保留区域外像素。
-      const [result] = await ai.generateImage(buildInpaintRequest({
+      const request = buildInpaintRequest({
         ...input,
         directory,
-        outputDirectory: `assets/${temporaryId}`,
-      }, inpaint), signal);
+        outputDirectory: generate ? `assets/${id}/generation` : `assets/${temporaryId}`,
+      }, inpaint);
+      const [result] = recovered ?? await (generate ? generate(request, signal, { input, inpaint }) : ai.generateImage(request, signal));
       signal.throwIfAborted();
       if (!result) throw new Error("供应商未返回图片");
       const generated = await readImage(result.path, result.mimeType);
@@ -87,7 +98,8 @@ export function useImageInpaint() {
       outputPath = await uploadNodeFile(workspace, id, new File([blob], "image.png", { type: "image/png" }));
       signal.throwIfAborted();
       if (findNode(id) !== node) throw new Error("重绘节点已移除");
-      await workspace.remove(`assets/${temporaryId}`, true).catch(error => {
+      // ACT: 可恢复任务原图保留在节点的 generation 子目录，关闭后仍可合成，并随节点素材统一清理。
+      if (!generate) await workspace.remove(`assets/${temporaryId}`, true).catch(error => {
         if (error?.response?.data?.data?.code !== "ENOENT") showNodeError(error, "重绘临时文件清理失败");
       });
       requested = false;
@@ -98,7 +110,7 @@ export function useImageInpaint() {
       urls.forEach(url => URL.revokeObjectURL(url));
       canvas.width = canvas.height = 0;
       if (outputPath && !committed) await workspace.remove(outputPath).catch(error => showNodeError(error, "重绘临时文件清理失败"));
-      if (requested) await workspace.remove(`assets/${temporaryId}`, true).catch(error => {
+      if (requested && !generate) await workspace.remove(`assets/${temporaryId}`, true).catch(error => {
         if (error?.response?.data?.data?.code !== "ENOENT") showNodeError(error, "重绘临时文件清理失败");
       });
     }
