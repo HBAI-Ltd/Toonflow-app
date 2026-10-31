@@ -172,7 +172,7 @@ type AccountData = {
   contact?: string;
 };
 
-const props = defineProps<{ visible?: boolean }>();
+const props = withDefaults(defineProps<{ visible?: boolean }>(), { visible: true });
 const emit = defineEmits<{ loggedIn: [] }>();
 const account = computed<AccountData | null>(() => {
   const saved = settings.value.toonflowAccount as Partial<Login> | null | undefined;
