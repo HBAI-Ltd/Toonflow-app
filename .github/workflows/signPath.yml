@@ -52,12 +52,21 @@ jobs:
           if (!(Test-Path -LiteralPath $nsisPath)) { throw '找不到 makensis.exe' }
       - name: 构建 Windows 安装包
         run: bun run package:desktop
+      # ACT: 原始文件按文件名登记；批次名避免重跑时与上次上传的产物冲突。
+      - name: 标记测试签名批次
+        run: |
+          bun -e '
+          import { constants, copyFileSync } from "@toonflow/file";
+          import config from "./electrobun.config.ts";
+          const source = `build/desktop/artifacts/toonflow-${config.app.version}-Setup.exe`;
+          copyFileSync(source, source.replace("-Setup.exe", `-test${process.env.GITHUB_RUN_ATTEMPT}-Setup.exe`), constants.COPYFILE_EXCL);
+          '
       # ACT: 本阶段仅签安装包外层，验证 GitHub 到 SignPath 的链路；内部 PE 签名留待正式接入。
       - name: 上传未签名安装包
         id: unsignedArtifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          path: build/desktop/artifacts/toonflow-*-Setup.exe
+          path: build/desktop/artifacts/toonflow-*-test${{ github.run_attempt }}-Setup.exe
           archive: false
           if-no-files-found: error
           retention-days: 7
@@ -90,7 +99,7 @@ jobs:
         id: signedArtifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: toonflow-windows-x64-test-signed
+          name: toonflow-windows-x64-test-signed-${{ github.run_attempt }}
           path: build/desktop/signPath/*.exe
           if-no-files-found: error
           compression-level: 0
