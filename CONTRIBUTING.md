@@ -180,7 +180,7 @@ bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
 | `bun run --cwd apps/server build` | 构建 Server、MCP，并输出技能与提供方文件；不代替路由生成。 |
 | `bun run build` | 构建工具、Web、Server、MCP，并输出技能与提供方；**不包含节点、桌面构建或类型检查**。 |
 | `bun run build:desktop` | 构建当前平台桌面应用及随包资源，包含节点、工具、Web 与 MCP 构建。 |
-| `bun run package:desktop` | 重新构建并制作 Windows NSIS、macOS PKG 或 Linux DEB 安装包，需满足对应平台的打包要求。 |
+| `bun run package:desktop` | 重新构建并制作 Windows NSIS、macOS DMG 或 Linux DEB 安装包，需满足对应平台的打包要求。 |
 
 需要验证构建后的 Web 与独立 Server 时，首次仍先执行 `bun run dev:plugins`，再执行 `bun run build`、`bun run start:server`，访问 `http://localhost:3000`。独立 Server 不负责初始化节点；不能只复制 `build/` 就视作完整安装，也不要与开发 Server 同时占用 `3000`。
 

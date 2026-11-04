@@ -63,9 +63,9 @@ if (!initial) {
     throw new Error(`新版本 ${version} 必须高于服务器版本 ${previous.version}。`);
   }
   if (isMac && process.arch === "x64" && previous.schemaVersion === undefined) {
-    // ACT: 旧 Intel 客户端不能应用新版包结构；只生成完整 PKG，用户手动安装一次后使用统一更新器。
+    // ACT: 旧 Intel 客户端不能应用新版包结构；只生成完整 DMG，用户手动安装一次后使用统一更新器。
     initial = true;
-    console.log(`旧 Intel 版本 ${previous.version} 需通过完整 PKG 手动升级至 ${version}，本次不生成补丁。`);
+    console.log(`旧 Intel 版本 ${previous.version} 需通过完整 DMG 手动升级至 ${version}，本次不生成补丁。`);
   } else {
     if (previous.schemaVersion !== 1 || previous.identifier !== desktopConfig.app.identifier || previous.channel !== "stable") {
       throw new Error("更新清单的协议、应用标识或通道不一致。");
@@ -91,7 +91,7 @@ if (manifest.version !== version) {
   throw new Error("本次构建的更新 JSON 与请求版本不一致。");
 }
 const names: string[] = [manifest.artifact.file];
-if (isMac) names.push(`toonflow-${version}-macos-${process.arch}.pkg`);
+if (isMac) names.push(`toonflow-${version}-macos-${process.arch}.dmg`);
 else if (platform === "linux") names.push(`toonflow-${version}-linux-${process.arch}.deb`);
 else names.push(`toonflow-${version}${process.arch === "arm64" ? "-win-arm64" : ""}-Setup.exe`);
 if (previousHash) names.push(`${prefix}-${previousHash}.patch`);

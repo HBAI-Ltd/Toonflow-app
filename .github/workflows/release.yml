@@ -93,8 +93,8 @@ jobs:
           };
           const windows = findInstaller("Windows x64", name => name === `toonflow-${version}-Setup.exe`);
           const windowsArm = findInstaller("Windows ARM64", name => name === `toonflow-${version}-win-arm64-Setup.exe`);
-          const macArm = findInstaller("macOS ARM64", name => name === `toonflow-${version}-macos-arm64.pkg`);
-          const macIntel = findInstaller("macOS x64", name => name === `toonflow-${version}-macos-x64.pkg`);
+          const macArm = findInstaller("macOS ARM64", name => name === `toonflow-${version}-macos-arm64.dmg`);
+          const macIntel = findInstaller("macOS x64", name => name === `toonflow-${version}-macos-x64.dmg`);
           const linux = findInstaller("Linux x64", name => name === `toonflow-${version}-linux-x64.deb`);
           const linuxArm = findInstaller("Linux ARM64", name => name === `toonflow-${version}-linux-arm64.deb`);
           const android = findInstaller("Android ARM64", name => name === `toonflow-${version}-android-arm64.apk`);
@@ -120,12 +120,12 @@ jobs:
             "## 🚀 安装说明",
             "",
             "- 💻 **Windows**：双击下载的安装包，按提示完成安装。ARM64 需要 .NET Framework 4.8.1，较新的 Windows 11 已内置。",
-            "- 🍎 **Mac（macOS 14 及以上）**：双击下载的 `.pkg` 安装包，点击“继续”并按向导完成安装，再从“应用程序”打开 Toonflow。",
+            "- 🍎 **Mac（macOS 14 及以上）**：打开下载的 `.dmg` 镜像，将 `toonflow.app` 拖入“应用程序”，复制完成后再从“应用程序”打开。",
             "- 🐧 **Linux（Debian / Ubuntu）**：选择对应架构的 DEB，在下载目录执行 `sudo apt install ./toonflow-版本号-linux-架构.deb`，安装后从应用菜单打开。",
             "- 📱 **Android**：在手机上打开 APK，按系统提示允许此来源安装应用。后续版本可直接覆盖安装。",
             "",
-            "两种 Mac 应用均使用 Developer ID Application 签名，PKG 安装包使用 Developer ID Installer 签名，并完成 Apple 公证。首次打开时，macOS 仍可能提示确认打开从互联网下载的应用。",
-            "旧版 Intel Mac 客户端首次迁移到统一 SDK 版本时，请下载完整 PKG 覆盖安装；旧版增量更新不能直接迁移。安装前请退出应用并备份原数据目录。",
+            "两种 Mac 应用与 DMG 镜像均使用 Developer ID Application 签名，并完成 Apple 公证。首次打开时，macOS 仍可能提示确认打开从互联网下载的应用。",
+            "旧版 Intel Mac 客户端首次迁移到统一 SDK 版本时，请下载完整 DMG 覆盖安装；旧版增量更新不能直接迁移。安装前请退出应用并备份原数据目录。",
             "",
             "---",
             "",
@@ -191,7 +191,7 @@ jobs:
             const installers = names.filter(name => target.platform === "win"
               ? name === (target.arch === "x64" ? `toonflow-${version}-Setup.exe` : `toonflow-${version}-win-arm64-Setup.exe`)
               : target.platform === "linux" ? name === `toonflow-${version}-linux-${target.arch}.deb`
-              : name === `toonflow-${version}-macos-${target.arch}.pkg`);
+              : name === `toonflow-${version}-macos-${target.arch}.dmg`);
             if (installers.length !== 1) throw new Error(`${prefix}安装包数量应为 1，实际为 ${installers.length}`);
             const manifestName = `${prefix}update.json`;
             if (!names.includes(manifestName)) throw new Error(`缺少更新清单：${manifestName}`);

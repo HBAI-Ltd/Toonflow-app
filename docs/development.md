@@ -97,7 +97,7 @@ bun run dev
 | `bun run build:tools` | 构建默认工具到 `build/tools/`，不写入 `data/tools/`；不包含可选的插件开发套件。 |
 | `bun run start:server` | 运行 `build/server/` 中已构建的服务。 |
 | `bun run build:desktop` | 构建当前平台的桌面应用及随包资源。 |
-| `bun run package:desktop` | 生成当前平台的 Windows NSIS 安装包或 macOS PKG。 |
+| `bun run package:desktop` | 生成当前平台的 Windows NSIS 安装包或 macOS DMG。 |
 | `bun run release:desktop <版本号> --auto` | 生成当前平台安装包、完整更新包，并在存在上一版时生成 patch。 |
 | `bun run typecheck` | 单独执行各工作区的类型检查。 |
 | `bun run --cwd packages/i18n extract` | 手动抽取中文源文案和来源索引，不生成其他语言的译文。 |
@@ -184,11 +184,13 @@ bun run build:desktop
 bun run package:desktop
 ```
 
-启动库脚本会下载固定版本的 ThorVG 源码并校验摘要。安装包为 `toonflow-<版本>-macos-<架构>.pkg`，产物分别位于 `build/desktop/artifacts/macArm64/` 和 `build/desktop/artifacts/macX64/`。双击 PKG 后点击“继续”，按系统安装向导完成安装，再从“应用程序”打开 Toonflow。
+启动库脚本会下载固定版本的 ThorVG 源码并校验摘要。安装包为 `toonflow-<版本>-macos-<架构>.dmg`，产物分别位于 `build/desktop/artifacts/macArm64/` 和 `build/desktop/artifacts/macX64/`。打开 DMG 后将 `toonflow.app` 拖入“应用程序”，再从“应用程序”打开 Toonflow。
 
-macOS 默认仍内置 Bun。仓库保留 `TOONFLOW_EXTERNAL_RUNTIME=1` 的精简安装包试验入口：PKG 在安装应用前，以当前已登录桌面用户的身份打开“必要运行时下载”，校验成功后才继续安装，缓存位于该用户的 Application Support；取消或失败不会覆盖原应用。已有有效缓存时直接复用，首次启动仅作校验与缺失后的恢复。安装阶段需要已登录的桌面会话；macOS 15 的组件脚本时限设为 60 分钟，macOS 14 使用系统默认的 10 分钟时限，超时退出助手，重新安装可续传。SDK 的完整更新归档保持不变。此入口默认关闭，外置 Bun 的可执行路径会改变系统识别的主 Bundle，仅修正 SDK 资源路径和工作目录不能保证麦克风权限、协议链接与应用身份正常。需要在 Intel、Apple Silicon Mac 上解决并验证这些行为，再考虑正式启用。启用签名时，试验构建会在打包前重新签名，并对 PKG 公证，不在用户启动时修改已签名的 `.app`。
+原 PKG 打包实现已备份到 `apps/desktop/scripts/packageMacPkg.ts`，当前打包入口使用 DMG。以后恢复 PKG 时，除应用签名所需的 Developer ID Application 证书及私钥，还需要 Developer ID Installer 证书及匹配私钥。
 
-本机默认生成未做 Developer ID 签名与公证的开发包；GitHub Actions 的两种 Mac 包都会按下方配置自动签名并公证。旧版 Intel 客户端首次迁移到统一 SDK 版本时，须下载完整 PKG 覆盖安装，不能通过旧版增量更新直接迁移；安装前退出应用并备份原数据目录。对于自己构建且确认来源的开发应用，若被隔离属性拦截，可仅移除该应用的隔离属性，路径按实际位置调整：
+macOS 默认内置 Bun，当前 DMG 打包不支持外置运行时试验，显式设置 `TOONFLOW_EXTERNAL_RUNTIME=1` 会中止打包。原 PKG 的精简安装与运行时下载逻辑随 `packageMacPkg.ts` 保留，但该备份不是当前构建或发布入口，恢复使用需要另行接入。外置 Bun 的可执行路径会改变系统识别的主 Bundle，仅修正 SDK 资源路径和工作目录不能保证麦克风权限、协议链接与应用身份正常；需要在 Intel、Apple Silicon Mac 上解决并验证这些行为，再考虑正式启用。
+
+本机默认生成未做 Developer ID 签名与公证的开发包；GitHub Actions 的两种 Mac 包都会按下方配置自动签名并公证。旧版 Intel 客户端首次迁移到统一 SDK 版本时，须下载完整 DMG 覆盖安装，不能通过旧版增量更新直接迁移；安装前退出应用并备份原数据目录。对于自己构建且确认来源的开发应用，若被隔离属性拦截，可仅移除该应用的隔离属性，路径按实际位置调整：
 
 ```sh
 xattr -dr com.apple.quarantine "/Applications/toonflow.app"
@@ -245,8 +247,8 @@ git push --no-follow-tags origin refs/tags/v2.0.0:refs/tags/v2.0.0
 | --- | --- | --- |
 | Windows x64 | `toonflow-<版本号>-Setup.exe` | `stable-win-x64-*` |
 | Windows ARM64 | `toonflow-<版本号>-win-arm64-Setup.exe` | `stable-win-arm64-*` |
-| macOS Intel | `toonflow-<版本号>-macos-x64.pkg` | `stable-macos-x64-*` |
-| macOS Apple Silicon | `toonflow-<版本号>-macos-arm64.pkg` | `stable-macos-arm64-*` |
+| macOS Intel | `toonflow-<版本号>-macos-x64.dmg` | `stable-macos-x64-*` |
+| macOS Apple Silicon | `toonflow-<版本号>-macos-arm64.dmg` | `stable-macos-arm64-*` |
 | Linux x64 | `toonflow-<版本号>-linux-x64.deb` | `stable-linux-x64-*` |
 | Linux ARM64 | `toonflow-<版本号>-linux-arm64.deb` | `stable-linux-arm64-*` |
 | Android ARM64 | `toonflow-<版本号>-android-arm64.apk` | APK 随 Release 发布，不使用桌面更新清单 |
@@ -281,7 +283,7 @@ SignTool 已在 PATH 时可省略 `windowsSignToolPath`；指定路径时必须�
 
 | Secret | 内容 |
 | --- | --- |
-| `MACOS_CERTIFICATE_BASE64` | 同一个 `.p12` 文件，包含各一个有效的 **Developer ID Application**、**Developer ID Installer** 证书及各自匹配的私钥，编码为 Base64。 |
+| `MACOS_CERTIFICATE_BASE64` | `.p12` 文件，包含唯一有效的 **Developer ID Application** 证书及匹配的私钥，编码为 Base64。 |
 | `MACOS_CERTIFICATE_PASSWORD` | 导出该 `.p12` 时设置的非空密码。 |
 | `MACOS_NOTARIZATION_KEY_ID` | App Store Connect 团队 API 密钥的 Key ID。 |
 | `MACOS_NOTARIZATION_ISSUER_ID` | 该团队 API 密钥的完整 Issuer ID，不是 Team ID。 |
@@ -301,17 +303,17 @@ SignTool 已在 PATH 时可省略 `windowsSignToolPath`；指定路径时必须�
 
 粘贴保存后可执行 `Set-Clipboard -Value ''` 清空剪贴板。密码直接填写到 `MACOS_CERTIFICATE_PASSWORD`，不写进命令、源码或聊天记录。Base64 只是编码，不是加密；P12、P8、Base64、密码均不得提交到公开仓库或上传为构建产物。
 
-公证使用 App Store Connect **团队 API 密钥**，Key ID、Issuer ID 与 P8 必须对应同一把有权限的密钥。应用与 PKG 复用这把公证密钥，更换签名 P12 不要求同时更换仍有效且有权限的公证 API 密钥。这种认证方式不需要 Apple ID 密码或 Team ID；P12 及其密码用于应用和安装包签名。
+公证使用 App Store Connect **团队 API 密钥**，Key ID、Issuer ID 与 P8 必须对应同一把有权限的密钥。应用与 DMG 复用这把公证密钥，更换签名 P12 不要求同时更换仍有效且有权限的公证 API 密钥。这种认证方式不需要 Apple ID 密码或 Team ID；P12 及其密码用于应用和 DMG 签名。
 
-配置后，Debug 与 Release 的两种 Mac 构建都会自动导入临时钥匙串，使用 Developer ID Application 签署应用及其原生代码，使用 Developer ID Installer 签署 PKG，并对应用与安装包分别提交 Apple 公证、等待通过、附加并验证公证票据。完整更新归档在应用公证后生成；上传前会验证更新归档中应用的签名和公证票据，并核对是否使用本次导入的 Developer ID Application 证书；PKG 会校验安装器签名、公证票据与系统安装评估。
+配置后，Debug 与 Release 的两种 Mac 构建都会自动导入临时钥匙串，使用 Developer ID Application 签署应用、原生代码与 DMG，并对应用与 DMG 分别提交 Apple 公证、等待通过、附加并验证公证票据。完整更新归档在应用公证后生成；上传前会验证更新归档中应用的签名和公证票据，并核对是否使用本次导入的 Developer ID Application 证书；DMG 会校验签名与公证票据，并挂载检查其中的应用。
 
-缺少 Secret、没有各自唯一有效的 Developer ID Application 和 Developer ID Installer 身份、Apple 拒绝公证或验收失败都会中止构建，不回退为未签名或未公证包。临时 P12 在导入步骤结束后删除；P8 与钥匙串在构建成功、失败或取消后的清理步骤中删除，均放在运行器临时目录。证书 Base64、密码和 P8 Base64 只注入凭据准备步骤，公证 API 标识只额外传给 Mac 构建步骤。公证等待计入工作流现有的 90 分钟超时，超时不会发布。
+缺少 Secret、没有唯一有效的 Developer ID Application 身份、Apple 拒绝公证或验收失败都会中止构建，不回退为未签名或未公证包。临时 P12 在导入步骤结束后删除；P8 与钥匙串在构建成功、失败或取消后的清理步骤中删除，均放在运行器临时目录。证书 Base64、密码和 P8 Base64 只注入凭据准备步骤，公证 API 标识只额外传给 Mac 构建步骤。公证等待计入工作流现有的 90 分钟超时，超时不会发布。
 
 公开仓库只从可信的手动操作或 `v*` 标签触发签名，不接入 `pull_request` / `pull_request_target`。请用 GitHub Rulesets 保护发布分支及 `v*` 标签，并限制仓库写权限；签名构建会执行所选提交的代码，有权修改发布代码或工作流的人也处于 Secrets 的信任边界内。证书导入方式参见 [GitHub 官方说明](https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms/sign-xcode-applications)。
 
 两种 Mac 的 CI 构建强制同时签名与公证，本机构建默认不启用。公证无需上架 App Store，首次打开仍可能出现确认打开互联网下载应用的提示。CI 验收不代替实际 Mac 上从浏览器下载、安装、启动及升级的验证，参见 [Apple 安全打开应用说明](https://support.apple.com/en-us/102445)。
 
-若凭据准备步骤提示未找到唯一有效的签名身份，查看该步骤后续输出的证书类别、有效期和系统诊断。应用需要 `Developer ID Application`，PKG 需要 `Developer ID Installer`，两者不能互相替代；`Apple Development`、`Apple Distribution` 也不能替代这两种身份。若类别正确，仍需检查是否含匹配私钥、是否过期，以及证书信任链；成功导入 P12 不等于存在有效的签名身份。诊断不会打印私钥、密码或证书姓名。
+若凭据准备步骤提示未找到唯一有效的签名身份，查看该步骤后续输出的证书类别、有效期和系统诊断。应用与 DMG 需要 `Developer ID Application`，`Developer ID Installer`、`Apple Development`、`Apple Distribution` 不能替代该身份。若类别正确，仍需检查是否含匹配私钥、是否过期，以及证书信任链；成功导入 P12 不等于存在有效的签名身份。诊断不会打印私钥、密码或证书姓名。
 
 **本机打包与独立更新服务**
 
