@@ -90,8 +90,10 @@ jobs:
           if (!$signature.SignerCertificate -or $signature.SignerCertificate.Thumbprint -ne '3C9837E1C5EB015CA15D32DDD317BB936D446870') {
             throw '安装包签名与 Toonflow 的 SignPath 测试证书不一致。'
           }
-          # ACT: 测试证书自签名，允许系统不信任；不允许签名缺失、内容损坏或其他验证错误。
-          if ($signature.Status -notin @('Valid', 'NotTrusted')) {
+          # ACT: PowerShell 将 CERT_E_UNTRUSTEDROOT 映射为 UnknownError；仅容许固定测试证书的这一链错误。
+          $untrustedRootMessage = [System.ComponentModel.Win32Exception]::new(-2146762487).Message
+          $untrustedTestRoot = $signature.Status -eq 'UnknownError' -and $signature.StatusMessage -ceq $untrustedRootMessage
+          if ($signature.Status -ne 'Valid' -and !$untrustedTestRoot) {
             throw "安装包签名验证失败：$($signature.Status)；$($signature.StatusMessage)"
           }
           Write-Output "测试签名证书：$($signature.SignerCertificate.Subject)；系统信任状态：$($signature.Status)"
