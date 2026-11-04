@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import { cpSync, existsSync, mkdirSync, realpathSync, rmSync, writeAtomicSync } from "@toonflow/file";
+import { cpSync, existsSync, mkdirSync, readdirSync, realpathSync, rmSync, writeAtomicSync } from "@toonflow/file";
 import { dirname, resolve } from "node:path";
 import copyDocumentPackages from "../../server/scripts/copyDocumentPackages";
 import copySandboxPackages from "../../server/scripts/copySandboxPackages";
@@ -102,16 +102,23 @@ if (isWindows) {
 // ACT: 开发套件随插件内置，清理旧版宿主 SDK 缓存，不改动已安装的用户工具。
 rmSync(resolve(projectDir, "build/desktop/pluginSdk"), { recursive: true, force: true });
 // ACT: 团队暂不打包；恢复时也在 package.json 的 dev:plugins 中加回 --filter './packages/teams/*'。
-for (const script of mode === "dev" ? ["dev:plugins"] : [
-  "build:tools",
-  "build:nodes",
-  "build:ext",
-  // "build:teams",
-]) {
-  await $`${process.execPath} run ${script}`.cwd(projectDir);
+if (mode === "dev") {
+  await $`${process.execPath} run dev:plugins`.cwd(projectDir);
+} else {
+  // ACT: Bun 1.4.3 的 --filter 在 Linux 误读小驼峰工作区；修复前按实际目录构建。
+  for (const group of ["tools", "nodes", "ext"]) {
+    const groupDirectory = resolve(projectDir, "packages", group);
+    rmSync(resolve(projectDir, "build", group), { recursive: true, force: true });
+    for (const entry of readdirSync(groupDirectory, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      await $`${process.execPath} run build`
+        .cwd(resolve(groupDirectory, entry.name))
+        .env({ ...process.env, NODE_ENV: "production" });
+    }
+  }
 }
-await $`${process.execPath} run --filter @toonflow/web build`.cwd(projectDir);
-await $`${process.execPath} run --filter @toonflow/mcp build`.cwd(projectDir);
+await $`${process.execPath} run build`.cwd(resolve(projectDir, "apps/web"));
+await $`${process.execPath} run build`.cwd(resolve(projectDir, "packages/mcp"));
 const agentDirectory = dirname(realpathSync(Bun.resolveSync("@earendil-works/pi-coding-agent", resolve(projectDir, "apps/server"))));
 const photonDirectory = dirname(Bun.resolveSync("@silvia-odwyer/photon-node", agentDirectory));
 const photonOutput = resolve(projectDir, "build/desktop/photon");
