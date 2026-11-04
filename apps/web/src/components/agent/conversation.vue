@@ -67,12 +67,13 @@ import axios from "axios";
 import { IconCornerDownRight, IconListDetails, IconLoader2, IconPencil, IconTrash } from "@tabler/icons-vue";
 import { ElMessage } from "element-plus";
 import { getReadableFileExtension, getReadableFileMimeType } from "@toonflow/server/documentFormats";
+import { useNodeModelSelection } from "@toonflow/nodes-scaffold/nodeAi";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { onAgentStopped, stopAgent } from "@/lib/agentControl";
 import { writeClipboardText } from "@/lib/clipboard";
 import { showNotification } from "@/lib/notification";
 import anonymousData from "@/lib/anonymousData";
-import { modelChoices } from "@/stores/settings";
+import { modelChoices, refreshModelChoices } from "@/stores/settings";
 import { useWorkspaceStore } from "@/stores/workspace";
 import type { AgentAttachment, AgentConversation, AgentMessage } from "./types";
 import type { AgentEvent, AgentQueue, AgentQueuedMessage } from "@toonflow/server/agent/types";
@@ -120,7 +121,7 @@ const pendingMessage = props.initialSession?.parentFile ? undefined : workspaceS
 const selectedModel = ref(pendingMessage?.model ?? (props.initialSession?.providerId && props.initialSession.modelId
   ? JSON.stringify([props.initialSession.providerId, props.initialSession.modelId]) : props.initialModel ?? ""));
 const reasoningEffort = ref(pendingMessage?.reasoningEffort ?? props.initialSession?.thinkingLevel ?? "");
-const selectedModelChoice = computed(() => modelChoices.value.find(item => item.value === selectedModel.value));
+const selectedModelChoice = useNodeModelSelection(modelChoices, selectedModel);
 const contextWindow = computed(() => contextUsage.value?.contextWindow ?? selectedModelChoice.value?.contextWindow ?? 262144);
 function showSteeringMessage(message: AgentQueuedMessage) {
   if (messages.value.some(item => item.role === "user" && (item.queueId === message.id || item.id === message.id))) return;
@@ -229,11 +230,14 @@ async function sendQueuedMessage(streamingBehavior: "steer" | "followUp") {
   pendingRunIds.add(requestRunId);
   let accepted = false;
   try {
+    await refreshModelChoices(true, requestController.signal);
+    const currentModel = selectedModelChoice.value;
+    if (!currentModel) throw new Error("请先选择模型");
     const response = await fetch("/api/agent", {
       method: "POST",
       headers: { "Accept-Language": locale.value, "Content-Type": "application/json", "x-toonflow-workspace": "1" },
       body: JSON.stringify({ prompt, directory, sessionFile, runId: requestRunId, expectedRunId,
-        providerId: model.providerId, modelId: model.modelId, thinkingLevel: reasoningEffort.value || undefined, streamingBehavior }),
+        providerId: currentModel.providerId, modelId: currentModel.modelId, thinkingLevel: reasoningEffort.value || undefined, streamingBehavior }),
       signal: requestController.signal,
     });
     // 队列快照由原回复流发送；这个短请求只确认接收，不能结束或覆盖正在生成的回复。
@@ -522,12 +526,15 @@ async function sendMessage(source?: AgentMessage) {
     if (!source) await instance.clearDraft();
     requestController.signal.throwIfAborted();
     await uploadAttachments(attachments, directory, requestController.signal);
+    await refreshModelChoices(true, requestController.signal);
+    const currentModel = selectedModelChoice.value;
+    if (!currentModel) throw new Error("请先选择模型");
     if (!isSuperseded()) remoteRunning.value = true;
     pendingRunIds.add(requestRunId);
     const response = await fetch("/api/agent", {
       method: "POST",
       headers: { "Accept-Language": locale.value, "Content-Type": "application/json", "x-toonflow-workspace": "1" },
-      body: JSON.stringify({ prompt, mentions, attachments: attachments.map(({ name, path, mimeType }) => ({ name, path, mimeType })), directory, runId: requestRunId, providerId: model.providerId, modelId: model.modelId, thinkingLevel: reasoningEffort.value || undefined, sessionFile: props.sessionFile, resendFrom, canvas: canvasContext ? { id: canvasContext.id, tools: canvasContext.tools } : undefined }),
+      body: JSON.stringify({ prompt, mentions, attachments: attachments.map(({ name, path, mimeType }) => ({ name, path, mimeType })), directory, runId: requestRunId, providerId: currentModel.providerId, modelId: currentModel.modelId, thinkingLevel: reasoningEffort.value || undefined, sessionFile: props.sessionFile, resendFrom, canvas: canvasContext ? { id: canvasContext.id, tools: canvasContext.tools } : undefined }),
       signal: requestController.signal,
     });
     connected = response.ok;
@@ -564,7 +571,17 @@ async function sendMessage(source?: AgentMessage) {
             .catch(error => console.warn("系统通知发送失败", error));
         }
       }
-      if (toolEvent.type === "tool" && toolEvent.tool.status !== "running") pendingQuestions.delete(`${scope}${toolEvent.tool.id}`);
+      if (toolEvent.type === "tool" && toolEvent.tool.status !== "running") {
+        pendingQuestions.delete(`${scope}${toolEvent.tool.id}`);
+        if (toolEvent.tool.name === "installMarketPlugin" && toolEvent.tool.status === "success" && toolEvent.tool.result) {
+          const result = JSON.parse(toolEvent.tool.result);
+          if (result.installed === true) {
+            const { type, name } = result;
+            window.dispatchEvent(new CustomEvent("toonflow:plugin-installed", { detail: { type, name } }));
+            if (type === "ext") window.dispatchEvent(new CustomEvent("toonflow:ext-updated", { detail: { name } }));
+          }
+        }
+      }
       if (toolEvent.type === "canvasCall") {
         if (handledCanvasCalls.has(toolEvent.callId)) throw new Error("收到重复的画布调用");
         handledCanvasCalls.add(toolEvent.callId);

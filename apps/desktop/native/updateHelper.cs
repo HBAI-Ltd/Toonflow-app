@@ -461,6 +461,7 @@ internal static class updateHelper
         }
         catch (FileNotFoundException) { }
         catch (DirectoryNotFoundException) { }
+        // ACT: 优先使用系统原生 tar；缺失时 ARM64 沿用 Windows 11 的 x64 仿真运行已校验的 7-Zip。
         string directory = Path.Combine(root, "runtime", "sevenZip");
         string tool = Path.Combine(directory, "sevenZip.exe");
         if (archiveToolReady(directory)) return tool;

@@ -24,7 +24,7 @@
       },
       "devDependencies": {
         "@types/express": "^5.0.6",
-        "electrobun": "2.0.1",
+        "electrobun": "2.0.5",
       },
     },
     "apps/mobile": {
@@ -52,6 +52,11 @@
         "@toonflow/file": "workspace:*",
         "@toonflow/i18n": "workspace:*",
         "@toonflow/mcp": "workspace:*",
+        "@toonflow/multi-tenant-auth": "workspace:*",
+        "@toonflow/multi-tenant-billing": "workspace:*",
+        "@toonflow/multi-tenant-gateway": "workspace:*",
+        "@toonflow/multi-tenant-models": "workspace:*",
+        "@toonflow/multi-tenant-source-mapping": "workspace:*",
         "@toonflow/providers": "workspace:*",
         "@toonflow/teams-scaffold": "workspace:*",
         "@toonflow/tool-asset-operator": "workspace:*",
@@ -116,10 +121,13 @@
         "@toonflow/ext-scaffold": "workspace:*",
         "@toonflow/i18n": "workspace:*",
         "@toonflow/model-icons": "workspace:*",
+        "@toonflow/multi-tenant-admin-web": "workspace:*",
+        "@toonflow/multi-tenant-user-web": "workspace:*",
         "@toonflow/node-shared": "workspace:*",
         "@toonflow/node-text": "workspace:*",
         "@toonflow/node-video": "workspace:*",
         "@toonflow/nodes-scaffold": "workspace:*",
+        "@toonflow/provider-web": "workspace:*",
         "@toonflow/providers": "workspace:*",
         "@toonflow/server": "workspace:*",
         "@toonflow/tool-browser": "workspace:*",
@@ -354,6 +362,96 @@
         "@lobehub/icons-static-svg": "^1.95.0",
       },
       "peerDependencies": {
+        "vue": "^3.5.42",
+      },
+    },
+    "packages/multiTenant/adminWeb": {
+      "name": "@toonflow/multi-tenant-admin-web",
+      "version": "0.0.0",
+      "dependencies": {
+        "@toonflow/i18n": "workspace:*",
+        "@toonflow/multi-tenant-billing": "workspace:*",
+        "@toonflow/multi-tenant-models": "workspace:*",
+        "@toonflow/multi-tenant-source-mapping": "workspace:*",
+        "@toonflow/provider-web": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "~6.0.3",
+        "vue-tsc": "^3.3.11",
+      },
+      "peerDependencies": {
+        "@tabler/icons-vue": "^3.46.0",
+        "element-plus": "^2.14.5",
+        "vue": "^3.5.42",
+        "vue-router": "^5.3.1",
+      },
+    },
+    "packages/multiTenant/auth": {
+      "name": "@toonflow/multi-tenant-auth",
+      "version": "0.0.0",
+      "dependencies": {
+        "@toonflow/multi-tenant-db": "workspace:*",
+        "zod": "^4.6.2",
+      },
+    },
+    "packages/multiTenant/billing": {
+      "name": "@toonflow/multi-tenant-billing",
+      "version": "0.0.0",
+      "dependencies": {
+        "@toonflow/multi-tenant-db": "workspace:*",
+        "@toonflow/multi-tenant-models": "workspace:*",
+        "zod": "^4.6.2",
+      },
+    },
+    "packages/multiTenant/db": {
+      "name": "@toonflow/multi-tenant-db",
+      "version": "0.0.0",
+      "dependencies": {
+        "@toonflow/file": "workspace:*",
+        "drizzle-orm": "^0.45.4",
+        "mysql2": "^3.24.6",
+        "zod": "^4.6.2",
+      },
+    },
+    "packages/multiTenant/gateway": {
+      "name": "@toonflow/multi-tenant-gateway",
+      "version": "0.0.0",
+      "dependencies": {
+        "@toonflow/multi-tenant-billing": "workspace:*",
+        "@toonflow/multi-tenant-models": "workspace:*",
+        "zod": "^4.6.2",
+      },
+    },
+    "packages/multiTenant/models": {
+      "name": "@toonflow/multi-tenant-models",
+      "version": "0.0.0",
+      "dependencies": {
+        "@toonflow/file": "workspace:*",
+        "@toonflow/multi-tenant-db": "workspace:*",
+        "zod": "^4.6.2",
+      },
+    },
+    "packages/multiTenant/sourceMapping": {
+      "name": "@toonflow/multi-tenant-source-mapping",
+      "version": "0.0.0",
+      "dependencies": {
+        "@toonflow/multi-tenant-db": "workspace:*",
+        "zod": "^4.6.2",
+      },
+    },
+    "packages/multiTenant/userWeb": {
+      "name": "@toonflow/multi-tenant-user-web",
+      "version": "0.0.0",
+      "dependencies": {
+        "@toonflow/i18n": "workspace:*",
+        "@toonflow/multi-tenant-billing": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "~6.0.3",
+        "vue-tsc": "^3.3.11",
+      },
+      "peerDependencies": {
+        "element-plus": "^2.14.5",
         "vue": "^3.5.42",
       },
     },
@@ -607,6 +705,24 @@
         "vue": "^3.5.42",
       },
     },
+    "packages/providerWeb": {
+      "name": "@toonflow/provider-web",
+      "version": "0.0.0",
+      "dependencies": {
+        "@toonflow/i18n": "workspace:*",
+        "@toonflow/providers": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "~6.0.3",
+        "vue-tsc": "^3.3.11",
+      },
+      "peerDependencies": {
+        "@form-create/element-ui": "^3",
+        "@tabler/icons-vue": "^3.46.0",
+        "element-plus": "^2.14.5",
+        "vue": "^3.5.42",
+      },
+    },
     "packages/providers": {
       "name": "@toonflow/providers",
       "version": "2.0.0",
@@ -740,6 +856,27 @@
       },
       "devDependencies": {
         "@toonflow/tools-scaffold": "workspace:*",
+      },
+    },
+    "packages/tools/pluginDeveloper": {
+      "name": "@toonflow/tool-plugin-developer",
+      "version": "1.3.0",
+      "dependencies": {
+        "@toonflow/file": "workspace:*",
+        "fflate": "0.8.3",
+        "zod": "4.6.2",
+      },
+      "devDependencies": {
+        "@toonflow/node-shared": "workspace:*",
+        "@toonflow/nodes-scaffold": "workspace:*",
+        "@toonflow/tools-scaffold": "workspace:*",
+        "@types/bun": "1.4.2",
+        "@types/postcss-pxtorem": "6.1.0",
+        "postcss-pxtorem": "6.1.0",
+        "sass": "1.104.0",
+        "typescript": "6.0.3",
+        "vite": "8.2.2",
+        "vue": "3.5.42",
       },
     },
     "packages/tools/sandbox": {
@@ -1411,6 +1548,22 @@
 
     "@toonflow/model-icons": ["@toonflow/model-icons@workspace:packages/modelIcons"],
 
+    "@toonflow/multi-tenant-admin-web": ["@toonflow/multi-tenant-admin-web@workspace:packages/multiTenant/adminWeb"],
+
+    "@toonflow/multi-tenant-auth": ["@toonflow/multi-tenant-auth@workspace:packages/multiTenant/auth"],
+
+    "@toonflow/multi-tenant-billing": ["@toonflow/multi-tenant-billing@workspace:packages/multiTenant/billing"],
+
+    "@toonflow/multi-tenant-db": ["@toonflow/multi-tenant-db@workspace:packages/multiTenant/db"],
+
+    "@toonflow/multi-tenant-gateway": ["@toonflow/multi-tenant-gateway@workspace:packages/multiTenant/gateway"],
+
+    "@toonflow/multi-tenant-models": ["@toonflow/multi-tenant-models@workspace:packages/multiTenant/models"],
+
+    "@toonflow/multi-tenant-source-mapping": ["@toonflow/multi-tenant-source-mapping@workspace:packages/multiTenant/sourceMapping"],
+
+    "@toonflow/multi-tenant-user-web": ["@toonflow/multi-tenant-user-web@workspace:packages/multiTenant/userWeb"],
+
     "@toonflow/node-audio": ["@toonflow/node-audio@workspace:packages/nodes/audioNode"],
 
     "@toonflow/node-audio-generation": ["@toonflow/node-audio-generation@workspace:packages/nodes/audioGenerationNode"],
@@ -1433,6 +1586,8 @@
 
     "@toonflow/nodes-scaffold": ["@toonflow/nodes-scaffold@workspace:packages/nodeScaffold"],
 
+    "@toonflow/provider-web": ["@toonflow/provider-web@workspace:packages/providerWeb"],
+
     "@toonflow/providers": ["@toonflow/providers@workspace:packages/providers"],
 
     "@toonflow/server": ["@toonflow/server@workspace:apps/server"],
@@ -1452,6 +1607,8 @@
     "@toonflow/tool-canvas": ["@toonflow/tool-canvas@workspace:packages/tools/canvas"],
 
     "@toonflow/tool-ffmpeg": ["@toonflow/tool-ffmpeg@workspace:packages/tools/ffmpeg"],
+
+    "@toonflow/tool-plugin-developer": ["@toonflow/tool-plugin-developer@workspace:packages/tools/pluginDeveloper"],
 
     "@toonflow/tool-sandbox": ["@toonflow/tool-sandbox@workspace:packages/tools/sandbox"],
 
@@ -1733,6 +1890,8 @@
 
     "atomically": ["atomically@2.1.1", "https://registry.npmmirror.com/atomically/-/atomically-2.1.1.tgz", { "dependencies": { "stubborn-fs": "^2.0.0", "when-exit": "^2.1.4" } }, "sha512-P4w9o2dqARji6P7MHprklbfiArZAWvo07yW7qs3pdljb3BWr12FIB7W+p0zJiuiVsUpRO0iZn1kFFcpPegg0tQ=="],
 
+    "aws-ssl-profiles": ["aws-ssl-profiles@1.1.2", "", {}, "sha512-NZKeq9AfyQvEeNlN0zSYAaWrmBffJh3IELMZfRpJVWgrpEbtEpnjvzqBPf+mxoI287JohRDoa+/nsfqqiZmF6g=="],
+
     "axios": ["axios@1.20.0", "http://registry.npm.taobao.org/axios/-/axios-1.20.0.tgz", { "dependencies": { "follow-redirects": "^1.16.0", "form-data": "^4.0.6", "https-proxy-agent": "^5.0.1", "proxy-from-env": "^2.1.0" } }, "sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg=="],
 
     "balanced-match": ["balanced-match@4.0.4", "https://registry.npmmirror.com/balanced-match/-/balanced-match-4.0.4.tgz", {}, "sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA=="],
@@ -1965,6 +2124,8 @@
 
     "dot-prop": ["dot-prop@10.2.0", "https://registry.npmmirror.com/dot-prop/-/dot-prop-10.2.0.tgz", { "dependencies": { "type-fest": "^5.0.0" } }, "sha512-BTJ9aZYL3vCfZlZOBLy9v8TUqWGQ0pzFnygKwFZt5udj6viBoFIBviKPUoZLDCPn1FoXffv6McQFDenrm5Krfw=="],
 
+    "drizzle-orm": ["drizzle-orm@0.45.4", "", { "peerDependencies": { "@aws-sdk/client-rds-data": ">=3", "@cloudflare/workers-types": ">=4", "@electric-sql/pglite": ">=0.2.0", "@libsql/client": ">=0.10.0", "@libsql/client-wasm": ">=0.10.0", "@neondatabase/serverless": ">=0.10.0", "@netlify/db": ">=0.4.0", "@op-engineering/op-sqlite": ">=2", "@opentelemetry/api": "^1.4.1", "@planetscale/database": ">=1.13", "@prisma/client": "*", "@tidbcloud/serverless": "*", "@types/better-sqlite3": "*", "@types/pg": "*", "@types/sql.js": "*", "@upstash/redis": ">=1.34.7", "@vercel/postgres": ">=0.8.0", "@xata.io/client": "*", "better-sqlite3": ">=7", "bun-types": "*", "expo-sqlite": ">=14.0.0", "gel": ">=2", "knex": "*", "kysely": "*", "mysql2": ">=2", "pg": ">=8", "postgres": ">=3", "prisma": "*", "sql.js": ">=1", "sqlite3": ">=5" }, "optionalPeers": ["@aws-sdk/client-rds-data", "@cloudflare/workers-types", "@electric-sql/pglite", "@libsql/client", "@libsql/client-wasm", "@neondatabase/serverless", "@netlify/db", "@op-engineering/op-sqlite", "@opentelemetry/api", "@planetscale/database", "@prisma/client", "@tidbcloud/serverless", "@types/better-sqlite3", "@types/pg", "@types/sql.js", "@upstash/redis", "@vercel/postgres", "@xata.io/client", "better-sqlite3", "bun-types", "expo-sqlite", "gel", "knex", "kysely", "mysql2", "pg", "postgres", "prisma", "sql.js", "sqlite3"] }, "sha512-NiM1YZpJ2UxyeE67DpDDZ+Tsw4YLX3trSlkNT7Tm9eKoUNb1LvaAaQzXgYQsWs+AQ9TUmmwMmBOCXuqqxUWKKQ=="],
+
     "duck-duck-scrape": ["duck-duck-scrape@2.2.7", "https://registry.npmmirror.com/duck-duck-scrape/-/duck-duck-scrape-2.2.7.tgz", { "dependencies": { "html-entities": "^2.3.3", "needle": "^3.2.0" } }, "sha512-BEcglwnfx5puJl90KQfX+Q2q5vCguqyMpZcSRPBWk8OY55qWwV93+E+7DbIkrGDW4qkqPfUvtOUdi0lXz6lEMQ=="],
 
     "dunder-proto": ["dunder-proto@1.0.1", "https://registry.npmmirror.com/dunder-proto/-/dunder-proto-1.0.1.tgz", { "dependencies": { "call-bind-apply-helpers": "^1.0.1", "es-errors": "^1.3.0", "gopd": "^1.2.0" } }, "sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A=="],
@@ -1975,7 +2136,7 @@
 
     "ee-first": ["ee-first@1.1.1", "https://registry.npmmirror.com/ee-first/-/ee-first-1.1.1.tgz", {}, "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="],
 
-    "electrobun": ["electrobun@2.0.1", "https://registry.npmmirror.com/electrobun/-/electrobun-2.0.1.tgz", { "bin": { "electrobun": "bin/electrobun.cjs" } }, "sha512-1+OjJ0tMemjVrUEsh/AhmxnqUNpyCfJslCbcWOvkogFJuNVMmTlWMzyZem/Ts/7lg8f7ULWu8uuQBsKeGQsu7A=="],
+    "electrobun": ["electrobun@2.0.5", "", { "bin": { "electrobun": "bin/electrobun.cjs" } }, "sha512-/4Vp0p6LgdD7bySSblnoqM0rtcQT5uYsGeqZPhsOESeSxMGeiKsfQkBjNwMnjFI5z4StJKXfs386ay2mpif1BA=="],
 
     "element-plus": ["element-plus@2.14.5", "https://registry.npmmirror.com/element-plus/-/element-plus-2.14.5.tgz", { "dependencies": { "@ctrl/tinycolor": "^4.2.0", "@element-plus/icons-vue": "^2.3.2", "@floating-ui/dom": "^1.8.0", "@popperjs/core": "npm:@sxzz/popperjs-es@^2.11.8", "@types/lodash": "^4.17.24", "@types/lodash-es": "^4.17.12", "@vueuse/core": "14.4.0", "async-validator": "^4.2.5", "dayjs": "^1.11.20", "lodash": "^4.18.1", "lodash-es": "^4.18.1", "lodash-unified": "^1.0.3", "memoize-one": "^6.0.0", "normalize-wheel-es": "^1.2.0", "vue-component-type-helpers": "^3.3.9" }, "peerDependencies": { "vue": "^3.3.7" } }, "sha512-bghYy/S+qg87enHPXELirhEdDqsVAUGcGpbGIeG8dz0kwpIkGz7gYsifulBshXX74iRtHib85XWQj0uSH2A1Yg=="],
 
@@ -2085,6 +2246,8 @@
 
     "gcp-metadata": ["gcp-metadata@8.1.2", "https://registry.npmmirror.com/gcp-metadata/-/gcp-metadata-8.1.2.tgz", { "dependencies": { "gaxios": "^7.0.0", "google-logging-utils": "^1.0.0", "json-bigint": "^1.0.0" } }, "sha512-zV/5HKTfCeKWnxG0Dmrw51hEWFGfcF2xiXqcA3+J90WDuP0SvoiSO5ORvcBsifmx/FoIjgQN3oNOGaQ5PhLFkg=="],
 
+    "generate-function": ["generate-function@2.3.1", "", { "dependencies": { "is-property": "^1.0.2" } }, "sha512-eeB5GfMNeevm/GRYq20ShmsaGcmI81kIX2K9XQx5miC8KdHaC6Jm0qQ8ZNeGOi7wYB8OsdxKs+Y2oVuTFuVwKQ=="],
+
     "get-caller-file": ["get-caller-file@2.0.5", "https://registry.npmmirror.com/get-caller-file/-/get-caller-file-2.0.5.tgz", {}, "sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg=="],
 
     "get-east-asian-width": ["get-east-asian-width@1.6.0", "https://registry.npmmirror.com/get-east-asian-width/-/get-east-asian-width-1.6.0.tgz", {}, "sha512-QRbvDIbx6YklUe6RxeTeleMR0yv3cYH6PsPZHcnVn7xv7zO1BHN8r0XETu8n6Ye3Q+ahtSarc3WgtNWmehIBfA=="],
@@ -2181,6 +2344,8 @@
 
     "is-promise": ["is-promise@4.0.0", "https://registry.npmmirror.com/is-promise/-/is-promise-4.0.0.tgz", {}, "sha512-hvpoI6korhJMnej285dSg6nu1+e6uxs7zG3BYAm5byqDsgJNWwxzM6z6iZiAgQR4TJ30JmBTOwqZUw3WlyH3AQ=="],
 
+    "is-property": ["is-property@1.0.2", "", {}, "sha512-Ks/IoX00TtClbGQr4TWXemAnktAQvYB7HzcCxDGqEZU6oCmb2INHuOoKxbtR+HFkmYWBKv/dOZtGRiAjDhj92g=="],
+
     "is-unsafe": ["is-unsafe@2.0.2", "https://registry.npmmirror.com/is-unsafe/-/is-unsafe-2.0.2.tgz", {}, "sha512-HgbIHPBH0KHHCcjLfGsCvhtPTVxjaAZlXjwdz7/GQC40SjSe4sfQsar8J5VFo8JOSbarkpV0OLG95bbaNd9aAQ=="],
 
     "isexe": ["isexe@2.0.0", "https://registry.npmmirror.com/isexe/-/isexe-2.0.0.tgz", {}, "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw=="],
@@ -2256,6 +2421,8 @@
     "longest-streak": ["longest-streak@3.1.0", "https://registry.npmmirror.com/longest-streak/-/longest-streak-3.1.0.tgz", {}, "sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g=="],
 
     "lru-cache": ["lru-cache@11.5.2", "https://registry.npmmirror.com/lru-cache/-/lru-cache-11.5.2.tgz", {}, "sha512-4pfM1Ff0x50o0tQwb5ucw/RzNyD0/YJME6IVcStalZuMWxdt3sR3huStTtxz4PUmvZfRguvDejasvQ2kifR11g=="],
+
+    "lru.min": ["lru.min@1.1.5", "", {}, "sha512-5J9ysMYUpYIg9RF2vJpy9SinEmSviFSe0GyPpCQ4L5QSkLAgeLXlTAOu2ZwWUU5m+0SBl6gUU1R1ZQB3aKypfA=="],
 
     "magic-string": ["magic-string@0.30.21", "https://registry.npmmirror.com/magic-string/-/magic-string-0.30.21.tgz", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.5" } }, "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ=="],
 
@@ -2402,6 +2569,10 @@
     "ms": ["ms@2.1.3", "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
 
     "muggle-string": ["muggle-string@0.4.1", "https://registry.npmmirror.com/muggle-string/-/muggle-string-0.4.1.tgz", {}, "sha512-VNTrAak/KhO2i8dqqnqnAHOa3cYBwXEZe9h+D5h/1ZqFSTEFHdM65lR7RoIqq3tBBYavsOXV84NoHXZ0AkPyqQ=="],
+
+    "mysql2": ["mysql2@3.24.6", "", { "dependencies": { "aws-ssl-profiles": "^1.1.2", "generate-function": "^2.3.1", "iconv-lite": "^0.7.3", "long": "^5.3.2", "lru.min": "^1.1.4", "named-placeholders": "^1.1.6", "sql-escaper": "^1.5.1" }, "peerDependencies": { "@types/node": ">= 8" } }, "sha512-enu73KhbAua2L3dIxjc6qg6ZJ7H3pt1BImZASWNWY5xSsmJ1ZuUPULTDGXgmJbI61vb+nJAG19IZclIq19UidQ=="],
+
+    "named-placeholders": ["named-placeholders@1.1.6", "", { "dependencies": { "lru.min": "^1.1.0" } }, "sha512-Tz09sEL2EEuv5fFowm419c1+a/jSMiBjI9gHxVLrVdbUkkNUUfjsVYs9pVZu5oCon/kmRh9TfLEObFtkVxmY0w=="],
 
     "nanoid": ["nanoid@3.3.18", "https://registry.npmmirror.com/nanoid/-/nanoid-3.3.18.tgz", { "bin": { "nanoid": "bin/nanoid.cjs" } }, "sha512-DTg4MJbGMWkfi6VZFdNt2/caMbQy4Ou+Op/hJQvGEWcnVfoA1QA+xzRKAzw9jD6+GVOOeYr/mIcuDSdug6F6+w=="],
 
@@ -2661,6 +2832,8 @@
 
     "sprintf-js": ["sprintf-js@1.1.3", "https://registry.npmmirror.com/sprintf-js/-/sprintf-js-1.1.3.tgz", {}, "sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA=="],
 
+    "sql-escaper": ["sql-escaper@1.5.2", "", {}, "sha512-6CKD38c31SENivxOADeMNLdukOnUxUcflKtzVWzace7Riv1v7cAEym5Cx9Q7gYZ3ezIJI7ZpqecQq8cqNeSSFg=="],
+
     "sql.js": ["sql.js@1.15.1", "https://registry.npmmirror.com/sql.js/-/sql.js-1.15.1.tgz", {}, "sha512-i0M/6s+lcl67Flm/1m8/AeVU5caDramlILXU/udUwpTQym2qKMSe2sJiXB5d5WXFB272aj4B2v1JbtQ93ID3Pg=="],
 
     "standardwebhooks": ["standardwebhooks@1.1.1", "https://registry.npmmirror.com/standardwebhooks/-/standardwebhooks-1.1.1.tgz", { "dependencies": { "@stablelib/base64": "^1.0.0", "fast-sha256": "^1.3.0" } }, "sha512-bCbX9ZEyFkWPsRz7Bl3NuQUJohmwGSev/yhr7vhaGPlc4AfIrspIRa6cPTBuI1ItmrTDJ4d/S2hCsfe4+vQGnQ=="],
@@ -2919,6 +3092,10 @@
 
     "@toonflow/i18n/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
+    "@toonflow/multi-tenant-admin-web/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
+
+    "@toonflow/multi-tenant-user-web/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
+
     "@toonflow/node-audio/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@toonflow/node-audio-generation/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
@@ -2941,11 +3118,15 @@
 
     "@toonflow/nodes-scaffold/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
+    "@toonflow/provider-web/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
+
     "@toonflow/tool-ask-user/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@toonflow/tool-browser/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@toonflow/tool-canvas/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
+
+    "@toonflow/tool-plugin-developer/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@toonflow/web/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 

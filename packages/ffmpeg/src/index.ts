@@ -29,7 +29,9 @@ export type DownloadState = {
 // OHOS Bun 目前报告 linux，宿主显式标识平台，避免下载不能运行的 Linux FFmpeg。
 const platform = process.platform === "linux" && process.env.TOONFLOW_PLATFORM === "ohos" ? "ohos" : process.platform;
 export const target = `${platform}-${process.arch}`;
-export const build = Object.hasOwn(builds, target) ? builds[target as keyof typeof builds] : undefined;
+// ACT: 上游尚无 Windows ARM64 包，复用 Windows 11 的 x64 仿真；有已校验原生包后再切换。
+const downloadTarget = platform === "win32" && process.arch === "arm64" ? "win32-x64" : target;
+export const build = Object.hasOwn(builds, downloadTarget) ? builds[downloadTarget as keyof typeof builds] : undefined;
 const toolNames = ["ffmpeg", "ffprobe"] as const;
 
 function executableName(name: string) {

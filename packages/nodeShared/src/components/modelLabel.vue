@@ -1,6 +1,6 @@
 <template>
   <span class="modelLabel">
-    <modelIcon v-if="modelId" :model="modelId" aria-hidden="true" />
+    <modelIcon v-if="modelId && modelIcon" :model="modelId" aria-hidden="true" />
     <span class="labelText">{{ label }}</span>
     <el-tag v-if="providerId?.toLowerCase() === 'toonflow'" class="officialTag" type="info" size="small" effect="plain">官方</el-tag>
   </span>
@@ -8,9 +8,11 @@
 
 <script setup lang="ts">
 import { ElTag } from "element-plus";
-import { modelIcon } from "@toonflow/model-icons";
+import * as modelIcons from "@toonflow/model-icons";
 
 defineProps<{ label: string; providerId?: string; modelId?: string }>();
+// ACT: 旧宿主缺少图标模块时保留文字标签，不让装饰图标阻断节点运行。
+const modelIcon = modelIcons?.modelIcon;
 </script>
 
 <style scoped lang="scss">

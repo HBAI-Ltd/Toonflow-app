@@ -25,10 +25,10 @@
           <el-select :modelValue="selectedModelChoice ? selectedModel : ''" filterable :disabled="disabled" :teleported="false" placeholder="选择模型" aria-label="选择模型" noDataText="请先在设置中添加模型" @update:modelValue="selectedModel = $event" @change="reasoningEffort = ''">
             <template #prefix><modelIcon v-if="selectedModelChoice" :model="selectedModelChoice.modelId" :size="18" /></template>
             <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModelChoice?.providerId" /></template>
-            <el-option-group v-for="provider in customProviders" :key="provider.id" :label="provider.label">
-              <el-option v-for="model in provider.models" :key="model.id" :label="model.label" :value="JSON.stringify([provider.id, model.id])">
+            <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
+              <el-option v-for="model in provider.models" :key="model.value" :label="model.label" :value="model.value">
                 <div class="modelOption">
-                  <modelIcon :model="model.id" :size="16" />
+                  <modelIcon :model="model.modelId" :size="16" />
                   <modelLabel class="modelOptionLabel" :label="model.label" :providerId="provider.id" />
                 </div>
               </el-option>
@@ -55,9 +55,10 @@
 import { computed, ref, useId, watch } from "vue";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-vue";
 import { modelIcon } from "@toonflow/model-icons";
+import { useNodeModelSelection } from "@toonflow/nodes-scaffold/nodeAi";
 import modelLabel from "@toonflow/node-shared/modelLabel";
 import type { ThinkingLevel } from "@toonflow/server/modelReasoning";
-import { customProviders, modelChoices } from "@/stores/settings";
+import { modelChoices, refreshModelChoices } from "@/stores/settings";
 
 const selectedModel = defineModel<string>({ default: "" });
 const reasoningEffort = defineModel<string>("reasoningEffort", { default: "" });
@@ -65,7 +66,16 @@ const props = withDefaults(defineProps<{ active?: boolean; disabled?: boolean }>
 const visible = ref(false);
 const reasoningId = useId();
 const reasoningLabels: Record<ThinkingLevel, string> = { off: "关闭", minimal: "最小", low: "低", medium: "中", high: "高", xhigh: "极高", max: "最高" };
-const selectedModelChoice = computed(() => modelChoices.value.find(item => item.value === selectedModel.value));
+const selectedModelChoice = useNodeModelSelection(modelChoices, selectedModel);
+const modelGroups = computed(() => {
+  const groups = new Map<string, { id: string; label: string; models: Array<(typeof modelChoices.value)[number]> }>();
+  for (const model of modelChoices.value) {
+    const group = groups.get(model.providerId);
+    if (group) group.models.push(model);
+    else groups.set(model.providerId, { id: model.providerId, label: model.providerLabel, models: [model] });
+  }
+  return [...groups.values()];
+});
 const reasoningLevels = computed(() => selectedModelChoice.value?.reasoningLevels ?? []);
 const reasoningOptions = computed(() => [{ label: "默认", value: "" }, ...reasoningLevels.value.map(value => ({ label: reasoningLabels[value], value }))]);
 const reasoningColumns = computed(() => Math.min(4, reasoningOptions.value.length > 4 ? Math.ceil(reasoningOptions.value.length / 2) : reasoningOptions.value.length));
@@ -77,6 +87,7 @@ watch([() => selectedModelChoice.value?.reasoningLevels, reasoningEffort], ([lev
   if (levels && effort && !levels.includes(effort as ThinkingLevel)) reasoningEffort.value = "";
 }, { immediate: true, flush: "post" });
 watch(() => !props.active || props.disabled, close => { if (close) visible.value = false; });
+watch(visible, value => { if (value) void refreshModelChoices().catch(() => {}); });
 </script>
 
 <style lang="scss">

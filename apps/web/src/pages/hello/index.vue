@@ -1,8 +1,8 @@
 <template>
-  <main class="hello" :class="{ configuring: view !== 'welcome' }">
+  <main class="hello" :class="{ configuring: !multiTenantEnabled && view !== 'welcome' }">
     <div class="pageLanguage"><languageSelect popover /></div>
     <section class="welcomePanel" aria-labelledby="welcomeTitle">
-      <div v-if="view !== 'welcome'" class="providerContent">
+      <div v-if="!multiTenantEnabled && view !== 'welcome'" class="providerContent">
         <header class="providerHeader">
           <el-button text :icon="IconArrowLeft" :disabled="saving" @click="view = 'welcome'">返回</el-button>
           <h1 id="welcomeTitle">配置第三方模型</h1>
@@ -24,11 +24,13 @@
         <accountPanel v-if="!loggedIn" class="accountContent" @loggedIn="startWithAccount" />
         <el-button v-else class="startButton" type="primary" :loading="saving" @click="completeSetup">开始使用</el-button>
         <div class="secondaryActions">
-          <el-button class="secondaryButton" round :disabled="saving" @click="view = 'custom'">
-            <icon-key class="buttonIcon" />
-            配置第三方模型
-          </el-button>
-          <span class="separator">或</span>
+          <template v-if="!multiTenantEnabled">
+            <el-button class="secondaryButton" round :disabled="saving" @click="view = 'custom'">
+              <icon-key class="buttonIcon" />
+              配置第三方模型
+            </el-button>
+            <span class="separator">或</span>
+          </template>
           <el-button class="secondaryButton" round :loading="saving" @click="completeSetup">稍后配置</el-button>
         </div>
       </div>
@@ -54,7 +56,7 @@ import { defineAsyncComponent, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { IconArrowLeft, IconDevices } from "@tabler/icons-vue";
-import { customProviders, toonflowAccountToken } from "@/stores/settings";
+import { customProviders, multiTenantEnabled, toonflowAccountToken } from "@/stores/settings";
 import { useHelloStore } from "@/stores/hello";
 import anonymousData from "@/lib/anonymousData";
 import logoSvg from "@toonflow/assets/logo.svg?raw";

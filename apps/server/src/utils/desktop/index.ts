@@ -91,7 +91,7 @@ function getUpdateBaseUrl(): string {
 }
 
 async function withUpdateSource<T>(updater: DesktopRuntime["updater"], updateBaseUrl: string, run: () => Promise<T>) {
-  // ACT: 两版 Mac SDK 和 Windows 更新器均返回缓存对象；只在互斥的更新操作期间覆盖地址。
+  // ACT: SDK 和 Windows 更新器均返回缓存对象；只在互斥的更新操作期间覆盖地址。
   const info = await updater.getLocalInfo();
   const baseUrl = info.baseUrl;
   info.baseUrl = updateBaseUrl;
@@ -142,7 +142,6 @@ export async function getDesktopUpdate(req: Request): Promise<updateSnapshot> {
   const state = getDesktopState(req);
   const local = await updater.getLocalInfo();
   const { version, channel, hash } = local;
-  // ACT: Intel 1.18.1 首次检查前没有状态，旧清单也可能缺少状态字段。
   const update = updater.updateInfo();
   const updateBaseUrl = getUpdateBaseUrl();
   const validUpdate = state.checkedBaseUrl === updateBaseUrl;

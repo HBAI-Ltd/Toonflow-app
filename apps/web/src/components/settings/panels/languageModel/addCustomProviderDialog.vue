@@ -25,6 +25,16 @@
         <el-form-item label="API 密钥" prop="apiKey">
           <el-input v-model="form.apiKey" type="password" dir="ltr" showPassword autocomplete="off" placeholder="本地无鉴权服务可留空" />
         </el-form-item>
+        <el-form-item label="自定义请求头" prop="headers" class="requestHeaders">
+          <div class="headersEditor">
+            <div v-for="item in form.headers" :key="item.key" class="headerRow">
+              <el-input v-model="item.name" class="headerName" dir="ltr" autocomplete="off" placeholder="请求头名称" aria-label="请求头名称" />
+              <el-input v-model="item.value" type="password" dir="ltr" showPassword autocomplete="off" placeholder="请求头值（可留空）" aria-label="请求头值" />
+              <el-button text type="danger" :icon="IconTrash" aria-label="删除请求头" @click="form.headers = form.headers.filter(header => header.key !== item.key)" />
+            </div>
+            <el-button text :icon="IconPlus" @click="addRequestHeader">添加请求头</el-button>
+          </div>
+        </el-form-item>
         <div class="modelHeader">
           <el-text tag="strong">模型列表</el-text>
           <el-button :icon="IconDownload" :loading="fetching" @click="fetchModels()">获取模型列表</el-button>
@@ -163,7 +173,7 @@ import { thinkingLevels, type ThinkingLevel, type ReasoningEfforts } from "@toon
 const props = defineProps<{ provider?: CustomProvider }>();
 const visible = defineModel<boolean>({ default: false });
 const providerForm = ref<FormInstance>();
-const form = reactive({ id: "", label: "", apiUrl: "", protocol: "openai-completions", apiKey: "" });
+const form = reactive({ id: "", label: "", apiUrl: "", protocol: "openai-completions", apiKey: "", headers: [] as { key: string; name: string; value: string }[] });
 const models = ref<(CustomProviderModel & { key: string })[]>([]);
 const expandedModels = ref(new Set<string>());
 const fetchedModels = shallowRef<CustomProviderModel[]>([]);
@@ -219,14 +229,22 @@ const rules: FormRules = {
       trigger: "blur",
     },
   ],
+  headers: [{
+    validator: (_rule, _value, callback) => {
+      try { getProviderHeaders(); callback(); }
+      catch (error) { callback(error as Error); }
+    },
+    trigger: "blur",
+  }],
 };
 
 watch(visible, (value) => {
   if (value) {
     resetForm();
     if (props.provider) {
-      const { models: providerModels, id, label, apiUrl, protocol, apiKey } = props.provider;
+      const { models: providerModels, id, label, apiUrl, protocol, apiKey, headers } = props.provider;
       Object.assign(form, { id, label, apiUrl, protocol, apiKey });
+      form.headers = Object.entries(headers ?? {}).map(([name, value]) => ({ key: crypto.randomUUID(), name, value }));
       models.value = providerModels.map((item) => ({ ...item, key: crypto.randomUUID() }));
     }
   } else {
@@ -236,9 +254,11 @@ watch(visible, (value) => {
 }, { immediate: true });
 onBeforeUnmount(() => request?.abort());
 watch([() => form.id, () => form.apiUrl, () => form.protocol, () => form.apiKey], () => request?.abort());
+watch(() => form.headers, () => request?.abort(), { deep: true });
 
 function resetForm() {
   Object.assign(form, { id: "", label: "", apiUrl: "", protocol: "openai-completions", apiKey: "" });
+  form.headers = [];
   models.value = [];
   expandedModels.value = new Set();
   fetchedModels.value = [];
@@ -247,8 +267,28 @@ function resetForm() {
   formError.value = "";
 }
 
+function addRequestHeader() {
+  form.headers.push({ key: crypto.randomUUID(), name: "", value: "" });
+}
+
+function getProviderHeaders() {
+  const entries: [string, string][] = [];
+  const names = new Set<string>();
+  for (const item of form.headers) {
+    const name = item.name.trim();
+    if (!name && /^[\t ]*$/.test(item.value)) continue;
+    if (!name) throw new Error("请输入请求头名称");
+    if (!/^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/.test(name)) throw new Error("请求头名称只能包含字母、数字和 HTTP 标记字符");
+    if (names.has(name.toLowerCase())) throw new Error("请求头名称不能重复（不区分大小写）");
+    if (!/^[\t\x20-\x7e\x80-\xff]*$/.test(item.value)) throw new Error("请求头值不能包含控制字符、换行或非 Latin1 字符");
+    names.add(name.toLowerCase());
+    entries.push([name, item.value]);
+  }
+  return entries.length ? Object.fromEntries(entries) : undefined;
+}
+
 async function fetchModels() {
-  if (fetching.value || !(await providerForm.value?.validateField("apiUrl").catch(() => false))) return;
+  if (fetching.value || !(await providerForm.value?.validateField(["apiUrl", "headers"]).catch(() => false))) return;
   fetching.value = true;
   formError.value = "";
   const controller = new AbortController();
@@ -256,7 +296,7 @@ async function fetchModels() {
   try {
     const { data } = await axios.post(
       "/api/providers/models",
-      { apiUrl: form.apiUrl.trim(), protocol: form.protocol, apiKey: form.apiKey.trim() },
+      { apiUrl: form.apiUrl.trim(), protocol: form.protocol, apiKey: form.apiKey.trim(), headers: getProviderHeaders() },
       { signal: controller.signal, timeout: 35000 }
     );
     if (controller.signal.aborted) return;
@@ -362,6 +402,7 @@ async function addProvider() {
       label: form.label.trim(),
       apiUrl: form.apiUrl.trim(),
       apiKey: form.apiKey.trim(),
+      headers: getProviderHeaders(),
       models: models.value.map(({ key, ...item }) => ({
         ...item,
         id: item.id.trim(),
@@ -397,6 +438,27 @@ async function addProvider() {
 <style lang="scss" scoped>
 .customProviderForm {
   padding-right: 12px;
+
+  .requestHeaders {
+    .headersEditor {
+      width: 100%;
+
+      .headerRow {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto;
+        gap: 8px;
+        margin-bottom: 8px;
+
+        @media (max-width: 560px) {
+          grid-template-columns: minmax(0, 1fr) auto;
+
+          .headerName {
+            grid-column: 1 / -1;
+          }
+        }
+      }
+    }
+  }
 
   .formGrid {
     display: grid;

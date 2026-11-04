@@ -69,6 +69,7 @@ const plugin: ToolPlugin = {
             requestSignal.removeEventListener("abort", onAbort);
           }
         } else if (config.provider === "deepseek") {
+          context.requireDirectModelAccess?.();
           if (!config.apiKey) throw new Error("联网搜索需要官方 DeepSeek API Key，请在联网搜索的工具配置中填写");
           const provider = new DeepSeekSearchProvider(() => ({
             apiKey: config.apiKey, baseURL: DEEPSEEK_DEFAULT_BASE_URL, model: DEEPSEEK_DEFAULT_MODEL,

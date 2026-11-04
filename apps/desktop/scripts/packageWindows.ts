@@ -6,19 +6,21 @@ import { dirname, join, resolve } from "node:path";
 import desktopConfig from "../../../electrobun.config";
 import signWindows from "./signWindows";
 
-if (process.platform !== "win32" || process.arch !== "x64") {
-  throw new Error("NSIS 打包需要 Windows x64 环境。");
+if (process.platform !== "win32" || !["x64", "arm64"].includes(process.arch)) {
+  throw new Error("NSIS 打包需要 Windows x64/arm64 环境。");
 }
 
 const projectDir = realpathSync(resolve(import.meta.dirname, "../../.."));
 process.chdir(projectDir);
 const nsisDir = resolve("build/desktop/nsis");
 const artifactDir = resolve(desktopConfig.build.artifactFolder);
-const outputFile = join(artifactDir, `toonflow-${desktopConfig.app.version}-Setup.exe`);
+const installerName = `toonflow-${desktopConfig.app.version}${process.arch === "arm64" ? "-win-arm64" : ""}-Setup.exe`;
+const outputFile = join(artifactDir, installerName);
 const installerDir = resolve("apps/desktop/installer");
 const appIcon = resolve("packages/assets/logo.ico");
 const makensis = process.env.NSIS_PATH ?? "C:/Program Files (x86)/NSIS/makensis.exe";
 const csc = join(process.env.WINDIR!, "Microsoft.NET/Framework64/v4.0.30319/csc.exe");
+const helperPlatform = `/platform:${process.arch === "arm64" ? "anycpu" : "x64"}`;
 const webViewDir = join(nsisDir, "webview2");
 const bootstrapper = join(webViewDir, "MicrosoftEdgeWebview2Setup.exe");
 const loader = join(webViewDir, "WebView2Loader.dll");
@@ -29,8 +31,10 @@ const runningChecker = join(nsisDir, "checkRunning.exe");
 const assemblyInfo = resolve("build/desktop/protocol/assemblyInfo.cs");
 const initializeInstallScript = join(nsisDir, "initializeInstall.js");
 const quotePowerShell = (value: string) => `'${value.replaceAll("'", "''")}'`;
-const manifest = await file(join(artifactDir, "stable-win-x64-update.json")).json();
-if (manifest.version !== desktopConfig.app.version) throw new Error("构建产物版本不一致，请重新构建。");
+const manifest = await file(join(artifactDir, `stable-win-${process.arch}-update.json`)).json();
+if (manifest.version !== desktopConfig.app.version || manifest.platform !== "win" || manifest.arch !== process.arch) {
+  throw new Error("构建产物版本或架构不一致，请重新构建。");
+}
 const assemblySource = await file(assemblyInfo).text();
 if (!["AssemblyVersion", "AssemblyFileVersion"].every(name => assemblySource.includes(`[assembly: ${name}("${manifest.version}.0")]`))
     || !assemblySource.includes(`[assembly: AssemblyInformationalVersion("${manifest.version}")]`)) {
@@ -40,13 +44,30 @@ if (!["AssemblyVersion", "AssemblyFileVersion"].every(name => assemblySource.inc
 mkdirSync(webViewDir, { recursive: true });
 const stagingDir = mkdtempSync(join(nsisDir, "payload"));
 const tarFile = join(stagingDir, "app.tar");
+const installerTar = join(stagingDir, "installerPayload.tar");
 const updateHelper = join(stagingDir, "updateHelper.exe");
-const stagedOutputFile = join(stagingDir, `toonflow-${desktopConfig.app.version}-Setup.exe`);
+const runtimeDownloader = join(stagingDir, "runtimeDownloader.exe");
+const stagedOutputFile = join(stagingDir, installerName);
 try {
   const archive = await file(join(artifactDir, manifest.artifact.file)).arrayBuffer();
   await write(tarFile, Bun.zstdDecompressSync(archive));
+  const { stdout: archiveListing } = await $`tar.exe -tf ${tarFile}`.quiet();
+  const archiveEntries = archiveListing.toString().split(/\r?\n/).filter(Boolean);
+  const runtimeMember = `${desktopConfig.app.name.replace(/\s/g, "")}/bin/bun.exe`;
+  if (archiveEntries.filter(name => name === runtimeMember).length !== 1) {
+    throw new Error("SDK 更新归档必须包含且仅包含一份目标 Bun，请重新运行 package:desktop。");
+  }
+  // ACT: 旧客户端更新助手只有 120 秒启动预算，更新归档仍保留 Bun；仅 NSIS 排除运行时。
+  // bsdtar 的 @archive 直接转存成员，避免在构建目录展开应用或修改 SDK 的 Hash 和增量基线。
+  await $`tar.exe -cf ${installerTar} --exclude ${runtimeMember} ${`@${tarFile}`}`.quiet();
+  const { stdout: installerListing } = await $`tar.exe -tf ${installerTar}`.quiet();
+  const installerEntries = installerListing.toString().split(/\r?\n/).filter(Boolean);
+  if (installerEntries.some(name => /(?:^|\/)bun\.exe$/i.test(name))
+    || installerEntries.sort().join("\n") !== archiveEntries.filter(name => name !== runtimeMember).sort().join("\n")) {
+    throw new Error("安装归档成员不一致，必须仅移除 Bun 并保留其他应用文件。");
+  }
   // ACT: 安装器使用归档中的同一份助手；只读取指定成员的字节，不解压归档路径或链接。
-  const helpers = ["startupLauncher.exe", "protocolLauncher.exe", "saveFileDialog.exe", "updateHelper.exe"];
+  const helpers = ["startupLauncher.exe", "protocolLauncher.exe", "saveFileDialog.exe", "updateHelper.exe", "runtimeDownloader.exe"];
   for (const name of helpers) {
     const member = `${desktopConfig.app.name.replace(/\s/g, "")}/Resources/app/${name}`;
     const { stdout } = await $`tar.exe -xOf ${tarFile} ${member}`.quiet();
@@ -78,8 +99,9 @@ foreach ($path in @(${helpers.map(name => quotePowerShell(join(stagingDir, name)
 
   const dependencies = await file(".hutch/dependencies.lock").json();
   const electrobun = dependencies.objects.find(
-    (item: { type: string; platform: string }) => item.type === "electrobun" && item.platform === "windows-x64"
+    (item: { type: string; platform: string }) => item.type === "electrobun" && item.platform === `windows-${process.arch}`
   );
+  if (!electrobun) throw new Error(`缺少 Windows ${process.arch} 的 Electrobun 原生依赖记录。`);
   const hutchHome = process.env.HUTCH_HOME ?? join(homedir(), ".hutch");
   copyFileSync(join(hutchHome, electrobun.relativeRoot, "WebView2Loader.dll"), loader);
 
@@ -103,8 +125,8 @@ foreach ($path in @(${helpers.map(name => quotePowerShell(join(stagingDir, name)
   copyFileSync(sdkCore, webViewCore);
   copyFileSync(sdkLicense, join(webViewDir, "webView2SdkLicense.txt"));
   copyFileSync(sdkNotice, join(webViewDir, "webView2SdkNotice.txt"));
-  await $`${csc} /nologo /target:exe /platform:x64 /optimize+ /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:${webViewCore} /out:${join(webViewDir, "checkWebView2.exe")} ${assemblyInfo} ${join(installerDir, "checkWebView2.cs")}`;
-  await $`${csc} /nologo /target:exe /platform:x64 /optimize+ /out:${runningChecker} ${assemblyInfo} ${join(installerDir, "checkRunning.cs")}`;
+  await $`${csc} /nologo /target:exe ${helperPlatform} /optimize+ /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:${webViewCore} /out:${join(webViewDir, "checkWebView2.exe")} ${assemblyInfo} ${join(installerDir, "checkWebView2.cs")}`;
+  await $`${csc} /nologo /target:exe ${helperPlatform} /optimize+ /out:${runningChecker} ${assemblyInfo} ${join(installerDir, "checkRunning.cs")}`;
   await signWindows([join(webViewDir, "checkWebView2.exe"), runningChecker]);
   // ACT: 每次打包刷新微软引导器，验签通过后才替换旧文件，避免长期沿用旧版组件。
   // ACT: 官方短链不可达时，可显式传入它当前重定向的微软 CDN 地址；不关闭 TLS 或复用旧缓存。
@@ -155,9 +177,9 @@ foreach ($path in @(${helpers.map(name => quotePowerShell(join(stagingDir, name)
   const signingArgs = process.env.windowsSigningThumbprint?.trim()
     ? [`/DwindowsSignCommand="${process.execPath}" "${join(import.meta.dirname, "signWindows.ts")}"`]
     : [];
-  await $`${makensis} /INPUTCHARSET UTF8 ${signingArgs} /DwebView2Dir=${webViewDir} /DrunningChecker=${runningChecker} /DupdateHelper=${updateHelper} /DappIcon=${appIcon} /DappVersion=${
+  await $`${makensis} /INPUTCHARSET UTF8 ${signingArgs} /DwebView2Dir=${webViewDir} /DrunningChecker=${runningChecker} /DupdateHelper=${updateHelper} /DruntimeDownloader=${runtimeDownloader} /DappIcon=${appIcon} /DappVersion=${
     desktopConfig.app.version
-  } /DappIdentifier=${desktopConfig.app.identifier} /DappTar=${tarFile} /DappHash=${manifest.hash} /DoutputFile=${stagedOutputFile} /DinitializeInstallScript=${initializeInstallScript} ${join(installerDir, "installer.nsi")}`;
+  } /DappArch=${process.arch} /DappIdentifier=${desktopConfig.app.identifier} /DappTar=${installerTar} /DappHash=${manifest.hash} /DoutputFile=${stagedOutputFile} /DinitializeInstallScript=${initializeInstallScript} ${join(installerDir, "installer.nsi")}`;
   await signWindows([stagedOutputFile]);
   renameSync(stagedOutputFile, outputFile);
   console.log(`NSIS 安装包：${outputFile}`);

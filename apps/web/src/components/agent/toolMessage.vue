@@ -6,7 +6,7 @@
     <template #header>
       <span class="toolHeader" :data-status="tool.status">
         <icon-tool :size="14" />
-        <span class="toolName">{{ renderer ? "操作工具" : tool.name || "工具调用" }}</span>
+        <span class="toolName">{{ tool.name === "installMarketPlugin" ? "安装插件" : renderer ? "操作工具" : tool.name || "工具调用" }}</span>
         <span class="toolState">{{ tool.name === 'subAgent' && tool.status === 'success' ? '调用已返回' : toolStatusLabels[tool.status] }}</span>
       </span>
     </template>
@@ -32,6 +32,7 @@ import { IconChevronDown, IconChevronRight, IconCopy, IconTool } from "@tabler/i
 import chatReasoning from "@tdesign-vue-next/chat/es/chat-reasoning";
 import type { AgentToolCall } from "@toonflow/server/agent/types";
 import messageMarkdown from "@/components/messageMarkdown.vue";
+import marketInstallApproval from "./marketInstallApproval.vue";
 
 const { tool, directory, toolSessionId } = defineProps<{ tool: AgentToolCall; directory?: string; toolSessionId?: string }>();
 const emit = defineEmits<{ copy: [content: string] }>();
@@ -40,8 +41,12 @@ const rendererError = ref("");
 watch(() => [tool.name, tool.question?.callId] as const, async ([name], previous, onCleanup) => {
   let active = true;
   onCleanup(() => { active = false; });
-  if (name !== previous?.[0]) renderer.value = name === "subAgent" ? undefined : getCachedToolComponent(name);
   rendererError.value = "";
+  if (name === "installMarketPlugin" && !toolSessionId) {
+    renderer.value = marketInstallApproval;
+    return;
+  }
+  if (name !== previous?.[0]) renderer.value = name === "subAgent" ? undefined : getCachedToolComponent(name);
   if (name === "subAgent") return;
   const initialRenderer = renderer.value;
   try {

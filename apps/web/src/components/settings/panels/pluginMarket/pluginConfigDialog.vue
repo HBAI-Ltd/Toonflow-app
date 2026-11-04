@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import axios from "axios";
 import { computed, ref, shallowRef, toRaw, watch } from "vue";
-import formCreate, { type Api, type Options } from "../../formCreate";
+import formCreate, { type Api, type Options } from "@toonflow/provider-web/formCreate";
 import { ElMessage } from "element-plus";
 import type { Plugin } from "./types";
 import { extensionConfig, saveExtensionConfig } from "@/pages/workspace/panels/document/extensions";

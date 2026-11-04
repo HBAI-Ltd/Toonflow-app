@@ -1,5 +1,6 @@
 import { t } from "@/lib/i18n";
 import { z } from "zod";
+import { getProviderBaseUrl } from "@/utils/ai/provider";
 
 const modelSchema = z.object({
   id: z.string().optional(), name: z.string().optional(),
@@ -8,16 +9,16 @@ const modelSchema = z.object({
   outputTokenLimit: z.number().int().positive().optional(),
 });
 
-export async function fetchProviderModels({ apiUrl, protocol, apiKey, signal }: { apiUrl: string; protocol: string; apiKey: string; signal?: AbortSignal }) {
-  const url = new URL(apiUrl);
-  if (url.pathname === "/") url.pathname = "/v1";
-  url.pathname = `${url.pathname.replace(/\/+$/, "")}/models`;
-  const headers: Record<string, string> = { Accept: "application/json" };
+export async function fetchProviderModels({ apiUrl, protocol, apiKey, headers: customHeaders, signal }: { apiUrl: string; protocol: string; apiKey: string; headers?: Record<string, string>; signal?: AbortSignal }) {
+  const url = new URL(getProviderBaseUrl(apiUrl, protocol));
+  url.pathname = `${url.pathname.replace(/\/+$/, "")}${protocol === "anthropic-messages" ? "/v1" : ""}/models`;
+  const headers = new Headers({ Accept: "application/json" });
   if (protocol === "anthropic-messages") {
-    headers["anthropic-version"] = "2023-06-01";
-    headers["x-api-key"] = apiKey;
+    headers.set("anthropic-version", "2023-06-01");
+    headers.set("x-api-key", apiKey);
     url.searchParams.set("limit", "1000");
-  } else if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  } else if (apiKey) headers.set("Authorization", `Bearer ${apiKey}`);
+  for (const [name, value] of Object.entries(customHeaders ?? {})) headers.set(name, value);
 
   const models = new Map<string, { id: string; label: string; contextWindow?: number; maxOutputTokens?: number }>();
   const cursors = new Set<string>();

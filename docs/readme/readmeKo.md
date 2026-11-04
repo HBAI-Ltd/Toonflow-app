@@ -449,6 +449,8 @@ Toonflow는 [MIT License](../../LICENSE)로 배포됩니다. 타사 의존성과
 仰起脸笑的像满月: Codex 20x 개발용 컴퓨팅 자원을 제공했습니다.
 Xi'an Zhongxing Digital Intelligence Technology Co., Ltd.(西安中星数字智能科技有限公司): Apple 인증서 서명을 지원했습니다.
 
+<p align="center"><sub>Free code signing provided by <a href="https://signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</sub></p>
+
 <div align="center">
 
 저작권 © 2026 北京爱阿科技有限公司

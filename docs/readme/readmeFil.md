@@ -449,6 +449,8 @@ Ang Toonflow ay nasa ilalim ng [Lisensyang MIT](../../LICENSE). Nananatiling sak
 仰起脸笑的像满月: nag-ambag ng mga computing resource na Codex 20x para sa development.
 Xi'an Zhongxing Digital Intelligence Technology Co., Ltd. (西安中星数字智能科技有限公司): nag-ambag ng paglagda gamit ang Apple certificate.
 
+<p align="center"><sub>Free code signing provided by <a href="https://signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</sub></p>
+
 <div align="center">
 
 Copyright © 2026 北京爱阿科技有限公司

@@ -108,7 +108,6 @@ async function loadMore() {
     if (controller.signal.aborted) return;
     if (result.nextCursor !== null && (result.nextCursor === cursor || loadedCursors.has(result.nextCursor))) throw new Error("云端分页游标重复，请重试");
     const newItems = [...new Map(result.list.map(item => [item.id, item])).values()].filter(item => !loadedIds.has(item.id));
-    if (!newItems.length && result.nextCursor !== null) throw new Error("云端没有返回新的作品，请重试");
     categories.value = result.categories;
     for (const item of newItems) loadedIds.add(item.id);
     projects.value.push(...newItems);

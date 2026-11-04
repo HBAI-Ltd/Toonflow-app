@@ -1,4 +1,5 @@
 import { createAssistantMessageEventStream } from "@earendil-works/pi-ai";
+import { raceWithAbortSignal } from "@earendil-works/pi-ai/utils/abort";
 import type { AssistantMessage, AssistantMessageEvent, ImageContent, Message, TextContent } from "@earendil-works/pi-ai";
 import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { createHash, randomUUID } from "node:crypto";
@@ -7,7 +8,11 @@ import type { AgentImageReference } from "@/agent/runtime/imageAttachments";
 import { getAgentTaskId } from "@/agent/runtime/sessions";
 import { getRequestFiles, type RequestFile } from "@/utils/ai/requestFiles";
 import { createFileTransport, FileRequestLimitError } from "@/utils/ai/files";
-import { getConfiguredProviders } from "@/utils/ai";
+import { getConfiguredProviders, publicAiMessage } from "@/utils/ai";
+import { createBillingUsageTracker } from "@/utils/ai/billingUsage";
+import { modelGateway, requireDirectModelAccess } from "@/utils/multiTenant/gateway";
+import type { ModelOutcome } from "@toonflow/multi-tenant-gateway/types";
+import { getRuntimeModelConfiguration } from "@/agent/runtime/model";
 import { t } from "@/lib/i18n";
 
 function contentHash(value: unknown) {
@@ -15,6 +20,8 @@ function contentHash(value: unknown) {
 }
 
 export function configureAgentRequests(session: AgentSession, limits?: { maxRequestImageBytes?: number; maxRequestBytes?: number }, runSignal?: AbortSignal, onRetry?: (replyTo?: string) => void) {
+  const configured = getRuntimeModelConfiguration(session.modelRuntime);
+  if (configured?.route) session.setAutoRetryEnabled(false);
   for (const value of Object.values(limits ?? {})) {
     if (value !== undefined && (!Number.isSafeInteger(value) || value <= 0)) throw new Error("图片请求预算必须为正安全整数");
   }
@@ -77,24 +84,37 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
     const operationSignal = options?.signal;
     // SDK 压缩后可能创建新 controller；整轮取消仍约束后续摘要、正文和重试请求。
     const signals = [runSignal, operationSignal].filter((signal): signal is AbortSignal => !!signal);
-    options = { ...options, signal: signals.length ? AbortSignal.any(signals) : undefined };
+    const streamSignal = AbortSignal.any(signals);
+    options = { ...options, signal: streamSignal };
     const output = createAssistantMessageEventStream();
     void (async () => {
       let partial: AssistantMessage | undefined;
-      try {
+      let hasOutput = false;
+      const usageTracker = createBillingUsageTracker(model.api);
+      const failure = (): ModelOutcome => !usageTracker.submitted() ? { kind: "notSubmitted" }
+        : usageTracker.rejected() ? { kind: "rejected", delivered: hasOutput } : { kind: "unknown" };
+      const publishMessage = (message: AssistantMessage, usageKnown = false) => configured?.execution
+        ? publicAiMessage(configured, message, usageKnown) as AssistantMessage : message;
+      async function execute(): Promise<Extract<AssistantMessageEvent, { type: "done" | "error" }>> {
+        if (!configured?.execution) requireDirectModelAccess();
         options?.signal?.throwIfAborted();
         if (toolFailure) { const { error } = toolFailure; toolFailure = undefined; throw error; }
-        const provider = getConfiguredProviders().find(item => item?.id === model.provider);
+        if (configured?.route && (model.provider !== configured.publicProviderId || model.id !== configured.model.id)) {
+          throw new Error("模型路由与当前运行时不匹配");
+        }
+        const provider = configured?.route ? configured.provider : getConfiguredProviders().find(item => item?.id === model.provider);
         const auth = await session.modelRuntime.getAuth(model, { apiKey: options?.apiKey, env: options?.env, signal: options?.signal });
         const apiKey = options?.apiKey ?? auth?.auth.apiKey;
-        if (model.provider.toLowerCase() === "toonflow" && (!provider || provider.apiKey !== apiKey)) {
+        if (!configured?.route && model.provider.toLowerCase() === "toonflow" && (!provider || provider.apiKey !== apiKey)) {
           throw new Error("Toonflow 账号已变更，请重新发起请求");
         }
         const files = createFileTransport({
           apiUrl: auth?.auth.baseUrl ?? model.baseUrl,
           apiKey: apiKey ?? "",
           protocol: model.api,
-        }, { fetch: options?.fetch, signal: options?.signal });
+          headers: Object.fromEntries([model.headers, auth?.auth.headers, options?.headers].flatMap(headers =>
+            Object.entries(headers ?? {}).map(([name, value]) => [name.toLowerCase(), value]))),
+        }, { fetch: configured?.execution ? usageTracker.fetch(options?.fetch ?? globalThis.fetch) : options?.fetch, signal: options?.signal });
         const maxRequestImageBytes = limits?.maxRequestImageBytes ?? provider?.maxRequestImageBytes ?? 20 * 1024 * 1024;
         const maxRequestBytes = limits?.maxRequestBytes ?? provider?.maxRequestBytes ?? 32 * 1024 * 1024;
         for (const value of [maxRequestImageBytes, maxRequestBytes]) {
@@ -182,10 +202,13 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
           }
           const requestContext = {
             ...context,
-            messages: messages.flatMap((message, index) => {
-              if (message.role !== "assistant" || !invalidThinking.has(contentHash(context.messages[index]))) return [message];
-              const content = message.content.filter(part => part.type !== "thinking");
-              return content.length ? [{ ...message, content }] : [];
+            messages: messages.flatMap<Message>((message, index) => {
+              if (message.role !== "assistant") return [message];
+              const content = invalidThinking.has(contentHash(context.messages[index])) ? message.content.filter(part => part.type !== "thinking") : message.content;
+              const identity = configured?.route && message.provider === configured.publicProviderId && message.model === configured.publicModelId
+                && (message as AssistantMessage & { modelRouteRevision?: unknown }).modelRouteRevision === configured.revision
+                ? { provider: model.provider, model: model.id } : {};
+              return content.length ? [{ ...message, ...identity, content }] : [];
             }),
           };
           let restart = false;
@@ -217,12 +240,16 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
             return true;
           }
           const request = files.fetch;
-          const stream = await streamFunction(model, requestContext, {
+          streamSignal.throwIfAborted();
+          const stream = await raceWithAbortSignal(Promise.resolve(streamFunction(model, requestContext, {
             ...options,
             apiKey,
+            ...(configured?.route ? { maxRetries: 0, maxTokens: configured.model.maxOutputTokens } : {}),
             onPayload: async (payload, requestModel) => {
               try {
+                streamSignal.throwIfAborted();
                 const body = await options?.onPayload?.(payload, requestModel) ?? payload;
+                streamSignal.throwIfAborted();
                 const images = getRequestFiles(body).filter(file => file.mimeType.toLowerCase().startsWith("image/"));
                 const imageCursors = new Map<string, number>();
                 activeImages = [];
@@ -236,6 +263,7 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
                   if (!reference) {
                     if (!image.id) throw new Error("onPayload 注入的图片必须提供稳定的 toonflowImageId，每次重新观察图片时使用新 ID");
                     const saved = await saveAgentImage(cwd, { type: "image", data: image.data, mimeType: image.mimeType }, image.id, options?.signal);
+                    streamSignal.throwIfAborted();
                     reference = saved.toonflowImage;
                     history.appendCustomEntry("toonflowImageAttachment", reference);
                     references.set(image.id, reference);
@@ -259,6 +287,7 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
                   }
                   throw error;
                 }
+                streamSignal.throwIfAborted();
                 const imageBytes = activeImages.reduce((sum, image) => sum + image.file.inlineBytes, 0);
                 const bodyBytes = Buffer.byteLength(JSON.stringify(body), "utf8");
                 // ACT: 上传后再计内联 base64 与 JSON；文件 ID 不再占用内联预算，超限仍卸载旧观察。
@@ -276,6 +305,7 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
               }
             },
             fetch: Object.assign(async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+              if (!configured?.execution) requireDirectModelAccess();
               const inputRequest = typeof input === "object" && "url" in input ? input : undefined;
               const requestSignal = init?.signal === undefined ? inputRequest?.signal : init.signal;
               const signal = options?.signal && requestSignal ? AbortSignal.any([options.signal, requestSignal]) : options?.signal ?? requestSignal;
@@ -296,48 +326,80 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
               headers.set("x-should-retry", "false");
               return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
             }, request),
-          });
+          })), streamSignal);
+          const iterator = stream[Symbol.asyncIterator]();
           let visible = false;
           let start: AssistantMessageEvent | undefined;
           let retry = false;
-          for await (const event of stream) {
-            options?.signal?.throwIfAborted();
-            if ("partial" in event) partial = event.partial;
-            if (event.type === "start") { start = event; continue; }
-            if (event.type === "error") {
-              if (fatalError) throw fatalError.error;
-              const imageBytes = activeImages.reduce((sum, image) => sum + image.file.inlineBytes, 0);
-              if (!visible && (restart || (http413 && networkRecoveries < 4
-                && offloadBytes(Math.max(1, networkRecoveries === 3 ? imageBytes : imageBytes / 2))))) {
-                if (http413) networkRecoveries++;
-                retry = true;
-                break;
+          try {
+            for (;;) {
+              streamSignal.throwIfAborted();
+              const next = await raceWithAbortSignal(iterator.next(), streamSignal);
+              streamSignal.throwIfAborted();
+              if (next.done) break;
+              const event = next.value;
+              if ("partial" in event) partial = event.partial;
+              if (event.type === "start") { start = event; continue; }
+              if (event.type === "error") {
+                if (fatalError) throw fatalError.error;
+                const imageBytes = activeImages.reduce((sum, image) => sum + image.file.inlineBytes, 0);
+                if (!visible && (restart || (http413 && networkRecoveries < 4
+                  && offloadBytes(Math.max(1, networkRecoveries === 3 ? imageBytes : imageBytes / 2))))) {
+                  if (http413) networkRecoveries++;
+                  retry = true;
+                  break;
+                }
               }
+              if (start) { output.push(start); start = undefined; }
+              if (event.type === "done" || event.type === "error") return event;
+              if ((event.type === "text_delta" || event.type === "thinking_delta") && event.delta
+                || event.type === "toolcall_start" || event.type === "toolcall_delta" || event.type === "toolcall_end") hasOutput = true;
+              output.push(event);
+              visible = true;
             }
-            if (start) { output.push(start); start = undefined; }
-            output.push(event);
-            visible = true;
-            if (event.type === "done" || event.type === "error") return;
+            if (retry) continue;
+            const message = await raceWithAbortSignal(stream.result(), streamSignal);
+            streamSignal.throwIfAborted();
+            if (start) output.push(start);
+            return message.stopReason === "error" || message.stopReason === "aborted"
+              ? { type: "error", reason: message.stopReason, error: message }
+              : { type: "done", reason: message.stopReason as "stop" | "length" | "toolUse", message };
+          } finally {
+            // ACT: SDK 的 return 会排在挂起的 next 后面；停止时不等待它，网络仍由同一 signal 取消。
+            void iterator.return?.().catch(() => undefined);
           }
-          if (retry) continue;
-          const message = await stream.result();
-          options?.signal?.throwIfAborted();
-          if (start) output.push(start);
-          output.push(message.stopReason === "error" || message.stopReason === "aborted"
-            ? { type: "error", reason: message.stopReason, error: message }
-            : { type: "done", reason: message.stopReason as "stop" | "length" | "toolUse", message });
-          return;
         }
+      }
+      try {
+        const result = configured?.execution ? await modelGateway.run({
+          execution: configured.execution,
+          context: { actor: configured.actor ?? null, requestId: randomUUID(), payload: {
+            providerId: configured.publicProviderId, modelId: configured.publicModelId, context, thinkingLevel: configured.thinkingLevel,
+          }, scope: cwd },
+          async execute() {
+            const event = await execute();
+            const usage = await usageTracker.usage();
+            const message = event.type === "done" ? event.message : event.error;
+            hasOutput ||= message.content.some(part => part.type === "toolCall" || part.type === "text" && !!part.text || part.type === "thinking" && !!part.thinking);
+            const publicMessage = publishMessage(usage ? { ...message, usage: { ...message.usage, ...usage,
+              totalTokens: usage.input + usage.output + usage.cacheRead + usage.cacheWrite } } : message, Boolean(usage));
+            return { value: event.type === "done" ? { ...event, message: publicMessage } : { ...event, error: publicMessage },
+              outcome: usage ? { kind: "usage", usage } as const : failure() };
+          },
+          failure,
+        }) : { value: await execute(), billing: undefined };
+        if (result.billing?.status === "held") throw new Error("模型账务处理失败，请联系管理员");
+        output.push(result.value);
       } catch (error) {
         const reason = runSignal?.aborted ? runSignal.reason : operationSignal?.aborted ? operationSignal.reason : error;
         const message: AssistantMessage = {
           role: "assistant", content: partial?.content ?? [], api: model.api, provider: model.provider, model: model.id,
           stopReason: options?.signal?.aborted ? "aborted" : "error",
-          errorMessage: reason instanceof Error ? reason.message : String(reason),
+          errorMessage: configured?.route ? "模型请求失败，请稍后重试" : reason instanceof Error ? reason.message : String(reason),
           usage: partial?.usage ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
           timestamp: Date.now(),
         };
-        output.push({ type: "error", reason: message.stopReason as "error" | "aborted", error: message });
+        output.push({ type: "error", reason: message.stopReason as "error" | "aborted", error: publishMessage(message) });
       } finally {
         output.end();
       }

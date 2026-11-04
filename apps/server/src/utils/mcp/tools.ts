@@ -1,4 +1,6 @@
-import { t } from "@/lib/i18n";
+import { resolveRequestLocale, runWithLocale, t } from "@/lib/i18n";
+import { AsyncLocalStorage } from "node:async_hooks";
+import type { Request } from "express";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { realpath, stat, mkdir, readdir, readFile } from "@toonflow/file";
 import { z } from "zod";
@@ -9,14 +11,25 @@ import { createAgentTools } from "@/agent/tools";
 import { run as runAgent } from "@/agent";
 import conf from "@/utils/conf";
 import { callControl, getConnection, listConnections } from "@/utils/mcp/control";
-import { appOperations, runAppOperation } from "@/utils/mcp/operations";
+import { appOperations, runAppOperation, type InstallDetails } from "@/utils/mcp/operations";
 import { listTools } from "@/utils/plugins/tools";
+import { runPluginDevelopment } from "@/utils/plugins/development";
+import { installMarketPlugin, installMarketPluginSchema, resolveMarketPlugin, searchPluginMarket, searchPluginMarketSchema } from "@/lib/pluginMarket";
+import { isLocalHostRequest, isLocalWorkspaceRequest } from "@/utils/workspace";
 import { isWithin, lockWorkspaceFiles, protectWorkspaceRoot, renameWorkspaceFile, removeWorkspaceFile, resolveWorkspacePath, writeWorkspaceFile } from "@/utils/workspace/files";
 import { getRuntimePlatform } from "@/lib/platform";
 import { thinkingLevels } from "@/lib/modelReasoning";
 
 const targetSchema = z.strictObject({ connectionId: z.uuid().optional(), directory: z.string().min(1).max(4096).optional(), canvasId: z.string().min(1).max(256).optional() });
 const requestSchema = z.strictObject({ target: targetSchema.optional(), args: z.record(z.string(), z.unknown()) });
+const localMcpRequest = new AsyncLocalStorage<boolean>();
+export function runInMcpRequest<T>(request: Request, operation: () => T): T {
+  // 逐次判定实际调用来源，不能沿用初始化 MCP 会话时的本机权限。
+  const local = isLocalHostRequest(request) && !getRuntimePlatform().mobile
+    && !Object.keys(request.headers).some(key => key === "forwarded" || key === "x-real-ip" || key.startsWith("x-forwarded-"));
+  return localMcpRequest.run(local, () => runWithLocale(resolveRequestLocale(request.get("accept-language")), operation));
+}
+
 let authorizationController = new AbortController();
 for (const key of ["settings.mcp.enabled", "settings.mcp.token"] as const) conf.onDidChange(key, () => {
   authorizationController.abort();
@@ -41,6 +54,33 @@ async function resolveTarget(target: z.infer<typeof targetSchema> = {}, requireD
   if (target.canvasId && connection?.state.canvasId !== target.canvasId) throw new Error("目标画布已切换，请重新获取 getAppState");
   const directory = requireDirectory ? requestedDirectory ?? await resolveDirectory(connection?.state.directory ?? undefined) : undefined;
   return { connection, directory };
+}
+
+async function getInstallTarget(target: z.infer<typeof targetSchema>, signal: AbortSignal) {
+  const { connection } = await resolveTarget(target, false);
+  if (!connection) throw new Error("请先打开 Toonflow 桌面或网页");
+  if (!isLocalWorkspaceRequest(connection.response.req)) throw new Error(t`请在桌面端或服务器本机确认安装插件`);
+  const directory = target.directory ? connection.state.directory ?? undefined : undefined;
+  const installSignal = AbortSignal.any([signal, connection.signal]);
+  installSignal.throwIfAborted();
+  return {
+    signal: installSignal,
+    async confirm(details: InstallDetails) {
+      const confirmed = await callControl(connection.id, "confirmPluginInstall", details, installSignal, directory);
+      installSignal.throwIfAborted();
+      if (confirmed !== true) throw new Error(`${t`安装插件`} · ${t`已取消`}`);
+      return installSignal;
+    },
+  };
+}
+
+async function refreshResources(details: Record<string, unknown>, signal: AbortSignal) {
+  const refreshErrors: string[] = [];
+  for (const connection of listConnections()) {
+    try { await callControl(connection.id, "refreshResources", details, signal); }
+    catch (error) { refreshErrors.push(error instanceof Error ? error.message : String(error)); }
+  }
+  return refreshErrors.length ? { refreshErrors } : {};
 }
 
 function wrapTool(name: string, description: string, schema: object, execute: (args: Record<string, unknown>, target: z.infer<typeof targetSchema>, signal: AbortSignal) => Promise<unknown>): McpTool {
@@ -78,7 +118,13 @@ const uiDescriptions: Record<keyof typeof uiSchemas, string> = {
 export function redactSecrets(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(redactSecrets);
   if (!value || typeof value !== "object") return value;
-  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, /(?:api.?key|access.?token|refresh.?token|password|secret|authorization)$|^token$/i.test(key) ? (item ? "[REDACTED]" : "") : redactSecrets(item)]));
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => {
+    // 自定义鉴权头没有固定名称，保留头名并隐藏所有非空值。
+    if (key === "headers" && item && typeof item === "object" && !Array.isArray(item)) {
+      return [key, Object.fromEntries(Object.entries(item).map(([name, header]) => [name, header ? "[REDACTED]" : header]))];
+    }
+    return [key, /(?:api.?key|access.?token|refresh.?token|password|secret|authorization)$|^token$/i.test(key) ? (item ? "[REDACTED]" : "") : redactSecrets(item)];
+  }));
 }
 
 async function assertFileNotOpen(directory: string, path: string) {
@@ -99,7 +145,7 @@ export async function getMcpTools(): Promise<McpTool[]> {
   const authorizationSignal = authorizationController.signal;
   let pluginError: string | undefined;
   const tools: McpTool[] = [{
-    name: "getAppState", description: "列出连接的 Toonflow 页面及其 connectionId、工作目录、画布、项目列表和节点能力。多个页面时必须用 target.connectionId 明确操作对象；无页面连接时只有显式 target.directory 的服务端工具可用。",
+    name: "getAppState", description: t`列出连接的 Toonflow 页面及其 connectionId、工作目录、画布、项目列表和节点能力。控制多个页面时用 target.connectionId 明确操作对象。市场搜索无需连接页面，服务端工作区工具可显式指定 target.directory。`,
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     async execute() {
       const workspaceRoot = resolve(dirname(conf.path), "workspaces");
@@ -107,6 +153,16 @@ export async function getMcpTools(): Promise<McpTool[]> {
       return { connections: listConnections(), workspaceRoot, ...(pluginError ? { pluginError } : {}) };
     },
   }];
+  tools.push(wrapTool("searchPluginMarket", t`搜索 Toonflow 插件市场，返回可用于申请安装的插件 ID。`, z.toJSONSchema(searchPluginMarketSchema, { io: "input" }), async (args, _target, signal) =>
+    searchPluginMarket(args, signal)));
+  tools.push(wrapTool("installMarketPlugin", t`按市场插件 ID 向目标 Toonflow 页面请求安装，用户允许后下载并安装。`, z.toJSONSchema(installMarketPluginSchema), async (args, target, signal) => {
+    const page = await getInstallTarget(target, signal);
+    const plugin = resolveMarketPlugin(args, page.signal);
+    const source = [t`插件市场`, plugin.supplier, plugin.fileName].filter(Boolean).join(" · ");
+    await page.confirm({ name: `${plugin.name} (${plugin.identifier})`, type: plugin.type, version: plugin.version, source });
+    const result = await installMarketPlugin(plugin, page.signal);
+    return { ...result, ...await refreshResources(result, signal) };
+  }));
   for (const [name, schema] of Object.entries(uiSchemas)) {
     tools.push(wrapTool(name, uiDescriptions[name as keyof typeof uiSchemas], z.toJSONSchema(schema), async (input, target, signal) => {
       const args = schema.parse(input);
@@ -124,8 +180,15 @@ export async function getMcpTools(): Promise<McpTool[]> {
     return [];
   });
   for (const definition of definitions) {
+    if (definition.name === "searchPluginMarket" || definition.name === "installMarketPlugin") continue;
     if (tools.some(tool => tool.name === definition.name)) throw new Error(t`MCP 工具名称重复：${definition.name}`);
     tools.push(wrapTool(definition.name, [definition.description, ...(definition.promptGuidelines ?? [])].join("\n"), definition.parameters, async (args, target, signal) => {
+      if (definition.name === "developPlugin" && localMcpRequest.getStore() && !target.connectionId && !target.canvasId
+        && (args.action === "guide" || (args.action === "build" && target.directory))) {
+        const directory = target.directory ? await resolveDirectory(target.directory) : "";
+        const details = await runPluginDevelopment(directory, args, signal);
+        return { content: [{ type: "text", text: JSON.stringify(details ?? null) }], details };
+      }
       const { connection, directory } = await resolveTarget(target);
       if (["write", "edit"].includes(definition.name) && typeof args.path === "string") await assertFileNotOpen(directory!, args.path);
       const canvas: CanvasContext | undefined = connection ? {
@@ -196,19 +259,15 @@ export async function getMcpTools(): Promise<McpTool[]> {
     if (!operation) throw new Error("应用操作不存在，请查询 listAppOperations");
     const parameters = { ...args.parameters as Record<string, unknown> };
     if (operation.path.startsWith("/api/agent/")) parameters.directory = (await resolveTarget(target)).directory;
-    const result = await runAppOperation(operation.name, parameters, signal);
-    const refreshErrors: string[] = [];
+    const result = await runAppOperation(operation.name, parameters, signal, async details => (await getInstallTarget(target, signal)).confirm(details));
+    let refresh = {};
     if (operation.refresh) {
       const name = operation.refresh.nameField ? parameters[operation.refresh.nameField] : (result as { name?: string } | null)?.name;
-      for (const connection of listConnections()) {
-        try { await callControl(connection.id, "refreshResources", {
-          type: operation.refresh.type, name,
-          ...(operation.name === "deleteMediaProvider" ? { removedProviderId: (parameters.fileName as string).slice(0, -3) } : {}),
-        }, signal); }
-        catch (error) { refreshErrors.push(error instanceof Error ? error.message : String(error)); }
-      }
+      refresh = await refreshResources({ type: operation.refresh.type, name,
+        ...(operation.name === "deleteMediaProvider" ? { removedProviderId: (parameters.fileName as string).slice(0, -3) } : {}),
+      }, signal);
     }
-    return { result: redactSecrets(result), ...(refreshErrors.length ? { refreshErrors } : {}) };
+    return { result: redactSecrets(result), ...refresh };
   }));
   const runAgentSchema = z.strictObject({
     prompt: z.string().trim().min(1), providerId: z.string().min(1), modelId: z.string().min(1),

@@ -52,6 +52,32 @@ UninstPage custom un.showUninstallOptions un.leaveUninstallOptions
 
 !include webview2.nsh
 !include nsDialogs.nsh
+!include x64.nsh
+
+Function .onInit
+!if "${appArch}" == "arm64"
+  ${IfNot} ${IsNativeARM64}
+    MessageBox MB_OK|MB_ICONSTOP "此安装包适用于 Windows ARM64，请下载与你的电脑架构对应的版本。" /SD IDOK
+    SetErrorLevel 2
+    Abort
+  ${EndIf}
+  ; ACT: AnyCPU 助手依赖 4.8.1 的 ARM64 CLR，避免在旧 CLR 下加载 ARM64 WebView2Loader。
+  SetRegView 64
+  ReadRegDWORD $0 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full" "Release"
+  SetRegView 32
+  ${If} $0 < 533320
+    MessageBox MB_OK|MB_ICONSTOP "请先安装 .NET Framework 4.8.1 或更新 Windows，再安装 Toonflow ARM64。下载地址：https://dotnet.microsoft.com/download/dotnet-framework/net481" /SD IDOK
+    SetErrorLevel 2
+    Abort
+  ${EndIf}
+!else
+  ${IfNot} ${RunningX64}
+    MessageBox MB_OK|MB_ICONSTOP "此安装包需要 64 位 Windows。" /SD IDOK
+    SetErrorLevel 2
+    Abort
+  ${EndIf}
+!endif
+FunctionEnd
 
 !macro ensureAppStopped operation
   InitPluginsDir
@@ -144,6 +170,31 @@ Section "Install"
   ${EndIf}
 
 installApp:
+  ; ACT: 下载成功前不覆盖 app；取消后保留已验证缓存和续传文件，重新安装可以复用。
+  InitPluginsDir
+  ClearErrors
+  StrCpy $installStep "准备必要运行时下载"
+  File "/oname=$PLUGINSDIR\runtimeDownloader.exe" "${runtimeDownloader}"
+  IfErrors installFailed
+  CreateDirectory "$PLUGINSDIR\runtimeBin"
+  IfErrors installFailed
+  DetailPrint "正在准备必要运行时，首次安装需要下载，完成后将自动继续。"
+  ${If} ${Silent}
+    ExecWait '"$PLUGINSDIR\runtimeDownloader.exe" "$PLUGINSDIR\runtimeBin" --quiet' $0
+  ${Else}
+    ExecWait '"$PLUGINSDIR\runtimeDownloader.exe" "$PLUGINSDIR\runtimeBin"' $0
+  ${EndIf}
+  IfErrors installFailed
+  ${If} $0 == 2
+    DetailPrint "已取消必要运行时下载，应用文件未修改。"
+    SetErrorLevel 2
+    Abort
+  ${EndIf}
+  ${If} $0 != 0
+    DetailPrint "必要运行时准备失败，下载助手返回码：$0。"
+    Goto installFailed
+  ${EndIf}
+  IfFileExists "$PLUGINSDIR\runtimeBin\bun.exe" 0 installFailed
   Call ensureWebView2
   !insertmacro ensureAppStopped "安装"
   ClearErrors
@@ -174,7 +225,7 @@ installApp:
   SetOutPath "$INSTDIR\self-extraction"
   IfErrors installFailed
   StrCpy $installStep "释放应用压缩包"
-  File "/oname=${appHash}.tar" "${appTar}"
+  File "/oname=installerPayload.tar" "${appTar}"
   IfErrors installFailed
   ; 重新解压前清理包内插件副本，避免旧构建的文件残留并在下次启动时被同步。
   StrCpy $installStep "更新内置插件文件"
@@ -187,8 +238,8 @@ installApp:
   IfFileExists "$INSTDIR\app\Resources\app\providers\*.*" 0 +2
     RMDir /r "$INSTDIR\app\Resources\app\providers"
   IfErrors installFailed
-  ; ACT: 仅打包一份 tar，释放应用后保留原文件作为增量更新基线。
-  nsExec::ExecToStack '"$PLUGINSDIR\updateHelper.exe" --extract-install "$INSTDIR" "$INSTDIR\self-extraction\${appHash}.tar" --quiet --utf16'
+  ; ACT: 安装专用轻量 tar 不等于 SDK 的完整更新归档，使用独立文件名，不能作为增量基线。
+  nsExec::ExecToStack '"$PLUGINSDIR\updateHelper.exe" --extract-install "$INSTDIR" "$INSTDIR\self-extraction\installerPayload.tar" --quiet --utf16'
   Pop $0
   Pop $1
   ${If} $0 != 0
@@ -196,6 +247,15 @@ installApp:
     SetErrorLevel 2
     Abort
   ${EndIf}
+  StrCpy $installStep "清理安装压缩包"
+  ClearErrors
+  Delete "$INSTDIR\self-extraction\installerPayload.tar"
+  IfErrors installFailed
+  StrCpy $installStep "安装必要运行时"
+  ClearErrors
+  CopyFiles /SILENT "$PLUGINSDIR\runtimeBin\bun.exe" "$INSTDIR\app\bin\bun.exe"
+  IfErrors installFailed
+  IfFileExists "$INSTDIR\app\bin\bun.exe" 0 installFailed
   StrCpy $installStep "检查应用启动文件"
   IfFileExists "$INSTDIR\app\bin\launcher.exe" 0 installFailed
   IfFileExists "$INSTDIR\app\Resources\app\startupLauncher.exe" 0 installFailed
@@ -275,6 +335,7 @@ Section "Uninstall"
   Delete "$INSTDIR\.electrobun-uninstall.json"
   Delete "$INSTDIR\.electrobun-update-*.json"
   Delete "$INSTDIR\.electrobun-observed-update-result.json"
+  Delete "$INSTDIR\闪退请双击我兼容运行.bat"
   IfErrors uninstallFailed
   ${If} $removeUserData == ${BST_CHECKED}
     RMDir /r "$INSTDIR\data"

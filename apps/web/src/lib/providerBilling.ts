@@ -2,7 +2,7 @@ import { translate } from "@toonflow/i18n/vue";
 import axios from "axios";
 import { onScopeDispose, ref, watch } from "vue";
 import type { ProviderBalance } from "@toonflow/providers";
-import { settings, toonflowAccountToken } from "@/stores/settings";
+import { multiTenantEnabled, settings, toonflowAccountToken } from "@/stores/settings";
 import { useWorkspaceStore } from "@/stores/workspace";
 
 type BalanceSnapshot = { accountId: string; balance: ProviderBalance | null; revision: number };
@@ -35,6 +35,7 @@ function applySnapshot(snapshot: BalanceSnapshot) {
 }
 
 export function refreshProviderBalance(providerId: string, signal?: AbortSignal): Promise<void> {
+  if (multiTenantEnabled.value) return Promise.resolve();
   const entry = providerBalances.value.find(item => item.id === providerId);
   if (!entry || signal?.aborted) return Promise.resolve();
   const previous = balanceRequests.get(providerId);
@@ -75,6 +76,7 @@ export function useProviderBalances() {
   let refreshRequested = false;
 
   function syncProviders() {
+    if (multiTenantEnabled.value) { providerBalances.value = []; return; }
     const configs = settings.value.mediaProviderConfigs as Record<string, Record<string, unknown>> | undefined;
     const accountProvider = settings.value.toonflowProvider as { id?: string } | null | undefined;
     const previousEntries = new Map(providerBalances.value.map(entry => [entry.id, entry]));
@@ -93,7 +95,7 @@ export function useProviderBalances() {
   }
 
   function subscribe() {
-    const ids = [...new Set(providerBalances.value.map(item => item.accountId).filter(Boolean))].sort();
+    const ids = multiTenantEnabled.value ? [] : [...new Set(providerBalances.value.map(item => item.accountId).filter(Boolean))].sort();
     // ACT: 每 100 个账户共用一个通知流，避免按供应商占用浏览器连接；普通工作区只需一条。
     const groups = Array.from({ length: Math.ceil(ids.length / 100) }, (_, index) => ids.slice(index * 100, index * 100 + 100).join(","));
     for (const [group, connection] of connections) if (!groups.includes(group)) { connection.close(); connections.delete(group); }
@@ -117,7 +119,7 @@ export function useProviderBalances() {
   }
 
   function scheduleSubscribe() {
-    if (disposed || subscriptionTimer !== undefined) return;
+    if (disposed || multiTenantEnabled.value || subscriptionTimer !== undefined) return;
     // 合并同批返回的账户；已读到的余额立即订阅，不等其他供应商超时或完成排队。
     subscriptionTimer = setTimeout(() => {
       subscriptionTimer = undefined;
@@ -126,7 +128,7 @@ export function useProviderBalances() {
   }
 
   async function refresh() {
-    if (disposed || document.visibilityState === "hidden") return;
+    if (disposed || multiTenantEnabled.value || document.visibilityState === "hidden") return;
     if (request) { refreshRequested = true; return; }
     refreshRequested = false;
     const controller = new AbortController();
@@ -160,20 +162,23 @@ export function useProviderBalances() {
   }
 
   function retryConnection() {
-    if (disposed) return;
+    if (disposed || multiTenantEnabled.value) return;
     clearTimeout(timer);
     timer = setTimeout(() => void refresh(), reconnectDelay);
     reconnectDelay = Math.min(reconnectDelay * 2, 30000);
   }
 
   function scheduleRefresh() {
-    if (document.visibilityState === "hidden") return;
+    if (multiTenantEnabled.value || document.visibilityState === "hidden") return;
     clearTimeout(timer);
     // ACT: 合并同一次窗口显示事件；多画布共用工作区这一处监听。
     timer = setTimeout(() => void refresh(), 200);
   }
 
   function invalidate() {
+    clearTimeout(timer);
+    clearTimeout(subscriptionTimer);
+    subscriptionTimer = undefined;
     request?.abort();
     for (const request of balanceRequests.values()) request.controller.abort();
     request = undefined;
@@ -183,6 +188,7 @@ export function useProviderBalances() {
     scheduleRefresh();
   }
   watch(() => providerBalances.value.map(entry => entry.accountId).join(","), scheduleSubscribe);
+  watch(multiTenantEnabled, invalidate, { flush: "sync" });
   watch(() => JSON.stringify(settings.value.mediaProviderConfigs), invalidate, { immediate: true, flush: "sync" });
   watch(() => workspaceStore.project?.lastOpenedAt, scheduleRefresh);
   const refreshProvider = (event: WindowEventMap["toonflow:plugin-installed"]) => {

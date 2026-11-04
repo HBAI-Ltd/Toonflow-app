@@ -3,6 +3,7 @@ import { z } from "zod";
 import { validateFields } from "@/lib/middleware";
 import { success } from "@/lib/responseFormat";
 import u from "@/utils";
+import { providerHeadersSchema } from "@/utils/ai/provider";
 
 const router = Router();
 
@@ -13,7 +14,8 @@ export default router.post("/", validateFields({
   }, "请填写不含查询参数的 HTTP API 基础地址"),
   protocol: z.enum(["openai-completions", "openai-responses", "anthropic-messages"]),
   apiKey: z.string().max(8192),
+  headers: providerHeadersSchema.optional(),
 }), async (req, res) => {
-  const { apiUrl, protocol, apiKey } = req.body as { apiUrl: string; protocol: string; apiKey: string };
-  res.json(success(await u.ai.fetchProviderModels({ apiUrl, protocol, apiKey })));
+  const { apiUrl, protocol, apiKey, headers } = req.body as { apiUrl: string; protocol: string; apiKey: string; headers?: Record<string, string> };
+  res.json(success(await u.ai.fetchProviderModels({ apiUrl, protocol, apiKey, headers })));
 });

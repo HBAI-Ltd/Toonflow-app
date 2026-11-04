@@ -449,6 +449,8 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 仰起脸笑的像满月: ساهم بموارد حوسبة للتطوير باستخدام Codex 20x.
 Xi'an Zhongxing Digital Intelligence Technology Co., Ltd. (西安中星数字智能科技有限公司): ساهمت بتوقيع التطبيق بشهادة Apple.
 
+<p align="center"><sub>Free code signing provided by <a href="https://signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</sub></p>
+
 <div align="center">
 
 حقوق النشر © 2026 北京爱阿科技有限公司

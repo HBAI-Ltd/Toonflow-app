@@ -42,7 +42,7 @@
             <template v-if="!selectedModel" #prefix><icon-music-bolt :size="17" /></template>
             <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
             <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
-              <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="JSON.stringify([item.providerId, item.modelId])">
+              <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="getNodeModelKey(item)">
                 <modelLabel :label="item.label" :providerId="item.providerId" :modelId="item.modelId" />
               </el-option>
             </el-option-group>
@@ -70,7 +70,7 @@
 import { computed, onMounted, onScopeDispose, ref, shallowRef, watch } from "vue";
 import { ElButton, ElCard, ElLoading, ElOption, ElOptionGroup, ElSelect } from "element-plus";
 import { IconArrowUp, IconGauge, IconMusicBolt, IconPlayerStop, IconScissors, IconTransfer, IconTextRecognition } from "@tabler/icons-vue";
-import { getTargetValues, isTypeCompatible, nodeSkeleton, nodeTools, useNode, z, type NodeAudioRequest, type NodeHandle, type NodeInputValue, type NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
+import { findNodeModel, getNodeModelIdentity, getNodeModelKey, getTargetValues, isTypeCompatible, nodeSkeleton, nodeTools, useNode, useNodeModelSelection, z, type NodeAudioRequest, type NodeHandle, type NodeInputValue, type NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import modelLabel from "@toonflow/node-shared/modelLabel";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
@@ -79,7 +79,7 @@ import { useAudioTranscription } from "@toonflow/node-shared/useAudioTranscripti
 import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
 import type { PcmOptions } from "@toonflow/node-shared/pcmPreview";
 import { useNodeReferences } from "@toonflow/node-shared/useNodeReferences";
-import { useModelForm } from "@toonflow/node-shared/useModelForm";
+import { getModelFormValues, useModelForm } from "@toonflow/node-shared/useModelForm";
 import audioPlayer from "@toonflow/node-audio/audioPlayer";
 import audioActions from "@toonflow/node-audio/audioActions";
 import promptInput from "@toonflow/node-shared/promptInput";
@@ -97,7 +97,7 @@ defineOptions({
   ] satisfies NodeHandle[],
 });
 const vLoading = ElLoading.directive;
-const { id, node, nodeProps, nodeEvent, outputs, files, ai, updateNodeInternals } = useNode({ label: "音频生成" });
+const { id, node, nodeProps, nodeEvent, outputs, files, ai, updateNodeInternals } = useNode({ label: "音频生成", onModelsChanged: () => void refreshProviderModels() });
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
 const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; language: string; sampleRate: number; format: string; other: Record<string, unknown> });
 data.value.prompt ??= "";
@@ -129,7 +129,7 @@ const generationState = useNodeGeneration(outputs, () => generationController?.a
 const { generating, pendingRecovery, cancelling } = generationState;
 const busy = computed(() => generating.value || uploading.value || deleting.value || transcribing.value || !!actions.value?.processing);
 watch(busy, value => { if (!value && modelsRefreshPending) void refreshProviderModels(); });
-const selectedModel = computed(() => models.value.find(item => JSON.stringify([item.providerId, item.modelId]) === data.value.model));
+const selectedModel = useNodeModelSelection(models, computed({ get: () => data.value.model, set: value => { data.value.model = value; } }));
 useModelForm(data, selectedModel);
 const modelGroups = computed(() => groupNodeModels(models.value));
 const generationPrompt = computed(() => [data.value.prompt.trim(), ...refList.value.flatMap((item, index) =>
@@ -138,8 +138,7 @@ const generationInput = computed<Omit<NodeAudioRequest, "directory"> | undefined
   const choice = selectedModel.value;
   if (!choice) return;
   return {
-    providerId: choice.providerId,
-    modelId: choice.modelId,
+    ...getNodeModelIdentity(choice),
     prompt: generationPrompt.value,
     language: data.value.language,
     sampleRate: data.value.sampleRate,
@@ -202,7 +201,7 @@ function loadModels() {
     // ACT: 仅空配置选择默认模型，临时不可用的模型保持原选择，避免静默换供应商。
     if (!data.value.model) {
       const first = modelGroups.value[0]?.models[0];
-      data.value.model = first ? JSON.stringify([first.providerId, first.modelId]) : "";
+      data.value.model = first ? getNodeModelKey(first) : "";
     }
   }).finally(() => {
     modelsLoading.value = false;
@@ -293,7 +292,7 @@ function getConfig() {
 
 nodeTools.register({
   name: "getConfig",
-  description: "读取此音频生成节点的配置、可选音频模型、语种、采样率、输出格式与输入数量限制，不含密钥；文本不限，图片与音频互斥且合计最多一个，具体模型能力由供应商校验",
+  description: "读取此音频生成节点的配置、自定义配置 other、可选音频模型、语种、采样率、输出格式与输入数量限制，models 中的 rules 声明自定义字段，不含密钥；文本不限，图片与音频互斥且合计最多一个，具体模型能力由供应商校验",
   parameters: z.strictObject({}),
   async execute(_args, { signal }) {
     signal?.throwIfAborted();
@@ -304,13 +303,14 @@ nodeTools.register({
 });
 nodeTools.register({
   name: "setConfig",
-  description: "修改音频生成模型、语种、采样率或格式；先用 getConfig 查询选项，providerId 与 modelId 必须同时提供；不修改提示词、不启动生成",
+  description: "修改音频生成模型、语种、采样率、格式或自定义配置 other；先用 getConfig 查询选项，providerId 与 modelId 必须同时提供；other 按目标模型 rules 的 field 和值要求填写，仅更新传入字段，其余保留，切换模型时使用新模型默认值；不修改提示词、不启动生成",
   parameters: z.strictObject({
     providerId: z.string().min(1).optional(),
     modelId: z.string().min(1).optional(),
     language: z.string().optional(),
     sampleRate: z.number().int().positive().optional(),
     format: z.string().optional(),
+    other: z.record(z.string(), z.json()).optional(),
   }).refine(args => (args.providerId === undefined) === (args.modelId === undefined), "providerId 与 modelId 必须同时提供"),
   async execute(args, { signal }) {
     signal?.throwIfAborted();
@@ -318,15 +318,17 @@ nodeTools.register({
     await loadModels();
     signal?.throwIfAborted();
     if (busy.value || disposed) throw new Error("音频正在处理或节点已关闭，请稍后修改配置");
-    const choice = args.modelId === undefined ? selectedModel.value : models.value.find(item => item.providerId === args.providerId && item.modelId === args.modelId);
+    const choice = args.modelId === undefined ? selectedModel.value : findNodeModel(models.value, { providerId: args.providerId ?? "", modelId: args.modelId });
     if (!choice) throw new Error("请选择 getConfig 返回的有效音频模型");
     if (args.language !== undefined && !languageOptions.some(item => item.value === args.language)) throw new Error("请选择 getConfig 返回的有效语种");
     if (args.sampleRate !== undefined && !sampleRateOptions.includes(args.sampleRate)) throw new Error("请选择 getConfig 返回的有效采样率");
     if (args.format !== undefined && !formatOptions.includes(args.format)) throw new Error("请选择 getConfig 返回的有效输出格式");
-    data.value.model = JSON.stringify([choice.providerId, choice.modelId]);
+    const other = getModelFormValues(choice, choice === selectedModel.value ? data.value.other : {}, args.other);
+    data.value.model = getNodeModelKey(choice);
     if (args.language !== undefined) data.value.language = args.language;
     if (args.sampleRate !== undefined) data.value.sampleRate = args.sampleRate;
     if (args.format !== undefined) data.value.format = args.format;
+    data.value.other = other;
     return getConfig();
   },
 });

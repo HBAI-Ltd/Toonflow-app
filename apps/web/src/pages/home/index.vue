@@ -18,15 +18,15 @@
           <component :is="section.icon" :size="18" aria-hidden="true" />
           <span class="sidebarText">{{ translate(section.label) }}</span>
         </button>
-        <hr class="sidebarDivider" />
-        <button class="sidebarItem" :class="{ active: assetsVisible }" type="button" aria-label="素材库" title="素材库" aria-haspopup="dialog" :aria-expanded="assetsVisible" @click="assetsVisible = true">
+        <hr v-if="currentUser?.role !== 'user'" class="sidebarDivider" />
+        <button v-if="currentUser?.role !== 'user'" class="sidebarItem" :class="{ active: assetsVisible }" type="button" aria-label="素材库" title="素材库" aria-haspopup="dialog" :aria-expanded="assetsVisible" @click="assetsVisible = true">
           <icon-library-photo :size="18" aria-hidden="true" />
           <span class="sidebarText">素材库</span>
         </button>
       </nav>
       <div class="sidebarFooter">
         <homeAdvertisementCarousel class="sidebarPromotion" :advertisements="advertisements.sidebar" @activate="activateAdvertisement" />
-        <button class="sidebarItem deviceButton" :class="{ connected: deviceHubEnabled || mobileConnection.online === true }" type="button" :aria-label="mobileConnectionLabel" :title="mobileConnectionLabel" @click="mobileConnectVisible = true">
+        <button v-if="!publicWeb" class="sidebarItem deviceButton" :class="{ connected: deviceHubEnabled || mobileConnection.online === true }" type="button" :aria-label="mobileConnectionLabel" :title="mobileConnectionLabel" @click="mobileConnectVisible = true">
           <span class="sidebarIcon">
             <component :is="deviceHubEnabled || mobileConnection.mode === 'remote' ? IconDeviceDesktop : IconQrcode" :size="18" aria-hidden="true" />
             <span v-if="deviceHubEnabled || mobileConnection.online === true" class="connectionDot" />
@@ -83,8 +83,11 @@
             </div>
           </section>
           <section class="projectList" data-home-section="projects" aria-labelledby="projectListTitle">
-            <h2 id="projectListTitle">项目</h2>
-            <div class="projectItems">
+            <h2 id="projectListTitle" class="projectTabs">
+              <button type="button" :class="{ active: projectType === 'local' }" :aria-pressed="projectType === 'local'" aria-controls="projectListContent" @click="projectType = 'local'">项目</button>
+              <button type="button" :class="{ active: projectType === 'team' }" :aria-pressed="projectType === 'team'" aria-controls="projectListContent" @click="projectType = 'team'">团队项目</button>
+            </h2>
+            <div v-if="projectType === 'local'" id="projectListContent" class="projectItems">
               <el-card class="projectLaunchCard" shadow="never" :bodyStyle="{ padding: '0', height: '100%' }">
                 <button class="projectLaunch" type="button" :disabled="creating || opening || relocationPicker?.selecting" :aria-busy="creating || relocationPicker?.selecting" title="选择空文件夹新建，或打开已有项目" @click="createProject(false)">
                   <span class="launchIcon">
@@ -97,22 +100,23 @@
                   </span>
                 </button>
               </el-card>
-              <projectCard v-for="project in sortedProjects" :key="project.directory" :project="project" :disabled="creating || opening" :actionsVisible="exportingDirectory === project.directory" @select="openProject(project)">
+              <projectCard v-for="project in sortedProjects" :key="project.directory" :project="project" :disabled="creating || opening" :actionsLoading="exportingDirectory === project.directory" @select="openProject(project)">
                 <template #actions>
-                  <el-button circle :icon="IconFileZip" :loading="exportingDirectory === project.directory" :disabled="creating || opening || !!exportingDirectory" :aria-label="`打包导出项目 ${project.name}`" title="打包导出 ZIP" @click="exportProject(project)" />
-                  <el-button circle :icon="IconEdit" :disabled="creating || opening || exportingDirectory === project.directory" :aria-label="`重命名项目 ${project.name}`" title="重命名" @click="renameProject(project)" />
-                  <el-button circle plain type="danger" :icon="IconTrash" :disabled="creating || opening || exportingDirectory === project.directory" :aria-label="`移除项目 ${project.name}`" title="从列表移除，不删除文件" @click="workspaceStore.removeProject(project.directory)" />
+                  <el-dropdown-item :icon="IconEdit" :disabled="creating || opening || exportingDirectory === project.directory" @click="renameProject(project)">重命名</el-dropdown-item>
+                  <el-dropdown-item :icon="IconFileZip" :disabled="creating || opening || !!exportingDirectory" @click="exportProject(project)">打包导出 ZIP</el-dropdown-item>
+                  <el-dropdown-item class="removeAction" :icon="IconTrash" divided :disabled="creating || opening || exportingDirectory === project.directory" title="从列表移除，不删除文件" @click="workspaceStore.removeProject(project.directory)">移除项目</el-dropdown-item>
                 </template>
               </projectCard>
             </div>
+            <div v-else id="projectListContent" class="teamProjects" />
           </section>
           <div data-home-section="explore"><explore :scrollElement="pageScroll?.wrapRef" /></div>
         </el-main>
       </div>
     </el-scrollbar>
-    <assetLibraryDialog v-model="assetsVisible" />
+    <assetLibraryDialog v-if="currentUser?.role !== 'user'" v-model="assetsVisible" />
     <settings ref="settingsDialog" v-model="settingsVisible" />
-    <mobileConnect v-model="mobileConnectVisible" />
+    <mobileConnect v-if="!publicWeb" v-model="mobileConnectVisible" />
     <workspacePicker ref="relocationPicker" hideTrigger />
   </div>
 </template>
@@ -138,6 +142,7 @@ import type { AgentAttachment } from "@/components/agent/types";
 import type { HomeAdvertisement, HomeAdvertisements } from "@toonflow/server/channel";
 import logoUrl from "@toonflow/assets/logo.svg";
 import { useWorkspaceStore, type Project } from "@/stores/workspace";
+import { currentUser, publicWeb } from "@/stores/multiTenant";
 import { hasDesktopUpdate } from "@/stores/desktopUpdate";
 import { deviceHubEnabled, mobileConnection, mobileConnectionLabel } from "@/lib/mobile";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
@@ -161,6 +166,7 @@ const sidebarCollapsed = ref(false);
 const pageScroll = ref<ScrollbarInstance>();
 const backgroundScrollTop = ref(0);
 const activeSection = ref("home");
+const projectType = ref<"local" | "team">("local");
 const homeSections = [
   { id: "home", label: "首页", icon: IconHome },
   { id: "projects", label: "项目", icon: IconFolder },
@@ -987,12 +993,33 @@ async function createProject(fromPrompt = true) {
           max-width: 1280px;
           margin: 0 auto;
 
-          h2 {
+          .projectTabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
             margin: 0 0 20px;
             font-size: 22px;
             font-weight: 600;
             line-height: 1.5;
+
+            button {
+              min-height: 44px;
+              padding: 0;
+              border: 0;
+              border-radius: var(--ui-radius);
+              background: transparent;
+              color: var(--el-text-color-secondary);
+              font: inherit;
+              text-align: start;
+              cursor: pointer;
+
+              &.active { color: var(--el-text-color-primary); }
+              &:hover { color: var(--el-color-primary); }
+              &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 4px; }
+            }
           }
+
+          .teamProjects { min-height: 240px; }
 
           .projectItems {
             display: grid;

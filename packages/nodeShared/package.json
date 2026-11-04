@@ -13,6 +13,7 @@
     "./mediaHistory": "./src/components/mediaHistory.vue",
     "./mediaPrice": "./src/components/mediaPrice.vue",
     "./modelForm": "./src/components/modelForm.vue",
+    "./imageGenerationSettings": "./src/components/imageGenerationSettings.vue",
     "./modelLabel": "./src/components/modelLabel.vue",
     "./showNodeError": "./src/showNodeError.ts",
     "./useNodeReferences": "./src/useNodeReferences.ts",

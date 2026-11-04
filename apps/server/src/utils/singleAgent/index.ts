@@ -3,6 +3,7 @@ import { mkdir, rm } from "@toonflow/file";
 import { t } from "@/lib/i18n";
 import { createAgentSession, DefaultResourceLoader, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 import type { AgentSession, ToolDefinition } from "@earendil-works/pi-coding-agent";
+import type { ImageContent } from "@earendil-works/pi-ai";
 import type { QuestionContext } from "@toonflow/tools-scaffold/runtime";
 import { createAgentToolContext } from "@/agent/tools";
 import { createAgentModel } from "@/agent/runtime/model";
@@ -10,6 +11,7 @@ import { configureAgentRequests } from "@/agent/runtime/requests";
 import { getToolResultText } from "@/agent/runtime/sessions";
 import { createQuestionContext, answerQuestion } from "@/agent/bridge/question";
 import { listTools, loadTool, validateToolConfig } from "@/utils/plugins/tools";
+import { listNodeServerTools, loadNodeServerTool } from "@/utils/plugins/nodes";
 import { browserRuntime } from "@/utils/browser";
 import conf from "@/utils/conf";
 import type { ThinkingLevel } from "@/lib/modelReasoning";
@@ -126,18 +128,26 @@ export async function create(options: {
     } };
     const context = createAgentToolContext(cwd, {}, undefined, question, session.workspaceAvailable);
     const available = new Map((await listTools()).map(tool => [tool.name, tool]));
+    let nodeServices: Awaited<ReturnType<typeof listNodeServerTools>> | undefined;
     const names = new Set<string>();
     for (const reference of options.tools) {
       signal?.throwIfAborted();
       let definitions: ToolDefinition[];
       if (typeof reference !== "string" && "name" in reference) definitions = [createClientTool(session, reference)];
       else {
-        const pluginName = typeof reference === "string" ? reference : reference.plugin;
-        const info = available.get(pluginName);
-        if (!info?.enabled) throw Object.assign(new Error(t`工具插件 ${pluginName} 未安装或未启用`), { status: 400 });
-        if (info.loadError) throw new Error(info.loadError);
-        const { plugin, metadata } = await loadTool(pluginName);
-        definitions = await plugin.createTools({ ...context, config: validateToolConfig(plugin, info.config) });
+        const pluginName = typeof reference === "string" ? reference : "node" in reference ? reference.node : reference.plugin;
+        let loaded: Awaited<ReturnType<typeof loadNodeServerTool>>;
+        if ((typeof reference !== "string" && "node" in reference)
+          || (typeof reference === "string" && (nodeServices ??= await listNodeServerTools()).some(service => service.name === pluginName))) loaded = await loadNodeServerTool(pluginName);
+        else {
+          const info = available.get(pluginName);
+          if (!info?.enabled) throw Object.assign(new Error(t`工具插件 ${pluginName} 未安装或未启用`), { status: 400 });
+          if (info.loadError) throw new Error(info.loadError);
+          const tool = await loadTool(pluginName);
+          loaded = { ...tool, config: validateToolConfig(tool.plugin, info.config) };
+        }
+        const { plugin, metadata } = loaded;
+        definitions = await plugin.createTools({ ...context, config: loaded.config });
         const selected = typeof reference === "string" ? undefined : reference.names;
         if (selected?.some(name => !definitions.some(tool => tool.name === name))) throw Object.assign(new Error(t`插件 ${pluginName} 未提供所选工具`), { status: 400 });
         definitions = definitions.filter(tool => !selected || selected.includes(tool.name)).map(tool => ({
@@ -163,9 +173,11 @@ export async function run(options: {
   sessionId: string;
   runId: string;
   prompt: string;
+  images?: ImageContent[];
   providerId: string;
   modelId: string;
   thinkingLevel?: ThinkingLevel;
+  includeToolResults?: boolean;
 }, send: (event: SingleAgentEvent) => void, signal?: AbortSignal, onStart?: () => void) {
   const state = getSession(options.sessionId);
   if (state.active) throw Object.assign(new Error("此对话正在运行，请等待当前回复完成"), { status: 409 });
@@ -204,7 +216,8 @@ export async function run(options: {
         finally { finishAction(active); }
       },
     }));
-    const { runtime, effectiveThinkingLevel } = await createAgentModel(options.providerId, options.modelId, options.thinkingLevel);
+    const { runtime, runtimeModel, effectiveThinkingLevel } = await createAgentModel(options.providerId, options.modelId, options.thinkingLevel);
+    if (options.images?.length && !runtimeModel.input.includes("image")) throw new Error(t`所选模型不支持图片输入，请选择支持视觉的模型`);
     active.controller.signal.throwIfAborted();
     const settingsManager = SettingsManager.inMemory({
       compaction: { enabled: false },
@@ -220,7 +233,7 @@ export async function run(options: {
     await resourceLoader.reload();
     active.controller.signal.throwIfAborted();
     const { session } = await createAgentSession({
-      cwd: state.cwd, agentDir, modelRuntime: runtime, model: runtime.getModel(options.providerId, options.modelId),
+      cwd: state.cwd, agentDir, modelRuntime: runtime, model: runtimeModel,
       thinkingLevel: effectiveThinkingLevel, sessionManager: state.history, settingsManager, resourceLoader,
       tools: tools.map(tool => tool.name), customTools: tools,
     });
@@ -277,12 +290,12 @@ export async function run(options: {
         if (event.type === "tool_execution_end") {
           const result = { id: event.toolCallId, name: event.toolName, result: event.isError ? event.result : imageToolResults.get(event.toolCallId) ?? event.result };
           imageToolResults.delete(event.toolCallId);
-          toolResults.push(result);
+          if (options.includeToolResults !== false) toolResults.push(result);
           send({ type: "toolResult", ...result });
         }
       }
     });
-    await session.prompt(options.prompt, { expandPromptTemplates: false });
+    await session.prompt(options.prompt, { expandPromptTemplates: false, images: options.images });
     active.controller.signal.throwIfAborted();
     const reply = session.messages.findLast(message => message.role === "assistant");
     if (!reply || reply.role !== "assistant") throw new Error("模型未返回回复");

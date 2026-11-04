@@ -35,7 +35,7 @@
         <el-select :modelValue="selectedModel ? model : ''" class="modelSelect" size="small" :loading="modelsLoading" filterable placeholder="选择模型" aria-label="生成模型" @update:modelValue="model = $event" @visibleChange="$event && emit('loadModels')">
           <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
           <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
-            <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="JSON.stringify([item.providerId, item.modelId])">
+            <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="getNodeModelKey(item)">
               <modelLabel :label="item.label" :providerId="item.providerId" :modelId="item.modelId" />
             </el-option>
           </el-option-group>
@@ -52,7 +52,7 @@
 import { computed } from "vue";
 import { ElButton, ElOption, ElOptionGroup, ElSelect } from "element-plus";
 import { IconLoader2, IconSparkles, IconMovie, IconCheck, IconAlertCircle, IconArrowBackUp } from "@tabler/icons-vue";
-import type { NodeAiModel } from "@toonflow/nodes-scaffold/runtime";
+import { getNodeModelKey, useNodeModelSelection, type NodeAiModel } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import modelLabel from "@toonflow/node-shared/modelLabel";
 
@@ -62,7 +62,7 @@ const props = defineProps<{ result?: DirectorPlan; referenceCount: number; initi
 const emit = defineEmits<{ editInstruction: [value: string]; selectPlan: [id: string]; send: []; loadModels: [] }>();
 const prompt = defineModel<string>("prompt", { default: "" });
 const model = defineModel<string>("model", { default: "" });
-const selectedModel = computed(() => props.models.find(item => JSON.stringify([item.providerId, item.modelId]) === model.value));
+const selectedModel = useNodeModelSelection(() => props.models, model);
 const modelGroups = computed(() => groupNodeModels(props.models));
 function sendInstruction() {
   if (props.initializing || !prompt.value.trim() || !selectedModel.value) return;

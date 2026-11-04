@@ -1,0 +1,16 @@
+{
+  "name": "@toonflow/multi-tenant-gateway",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types.ts"
+  },
+  "scripts": { "typecheck": "tsc" },
+  "dependencies": {
+    "@toonflow/multi-tenant-models": "workspace:*",
+    "@toonflow/multi-tenant-billing": "workspace:*",
+    "zod": "^4.6.2"
+  }
+}

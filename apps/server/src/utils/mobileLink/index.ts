@@ -9,6 +9,7 @@ import { isAbsolute, posix } from "node:path";
 import { realpath, stat } from "@toonflow/file";
 import conf from "@/utils/conf";
 import { errorFromCause } from "@/lib/responseFormat";
+import { isEnabled } from "@/utils/multiTenant/mode";
 
 export type MobileLinkConfig = {
   enabled: boolean;
@@ -98,6 +99,7 @@ async function listen(app: Application, port: number) {
   });
   gateway.use("/api/mobileLink/pair", express.json({ limit: "4kb" }));
   gateway.use((req, res, next) => {
+    if (isEnabled()) throw Object.assign(new Error("请通过端口 10888 访问创作功能"), { status: 403 });
     const path = posix.normalize(decodeURIComponent(new URL(req.url, "http://localhost").pathname).replaceAll("\\", "/")).toLowerCase();
     if (req.method === "POST" && path.replace(/\/$/, "") === "/api/mobilelink/pair") {
       Object.defineProperty(res.locals, pairingKey, { value: true });
@@ -134,12 +136,13 @@ async function listen(app: Application, port: number) {
 }
 
 export async function startMobileLinkRuntime(app: Application) {
+  if (isEnabled()) { stopMobileLinkRuntime(app); return; }
   const runtime = getRuntime(app);
   runtime.supported = true;
   const config = getMobileLinkConfig();
   if (config.enabled && !runtime.listener) {
     const listener = await listen(app, config.port);
-    if (runtime.supported) runtime.listener = listener;
+    if (runtime.supported && !isEnabled()) runtime.listener = listener;
     else closeListener(listener);
   }
 }
@@ -160,6 +163,7 @@ export function suspendMobileLinkRuntime(app: Application) {
 }
 
 export async function configureMobileLink(app: Application, value: Omit<MobileLinkConfig, "devices">) {
+  if (isEnabled()) throw Object.assign(new Error("请通过端口 10888 访问创作功能"), { status: 403 });
   const runtime = getRuntime(app);
   if (!runtime.supported) throw Object.assign(new Error("当前运行环境不支持共享后端"), { status: 403 });
   if (runtime.changing) throw Object.assign(new Error("设备互联配置正在保存，请稍后重试"), { status: 409 });
@@ -185,6 +189,7 @@ export async function configureMobileLink(app: Application, value: Omit<MobileLi
     const replaceListener = value.enabled && (!runtime.listener || config.port !== value.port);
     if (replaceListener) listener = await listen(app, value.port);
     if (!runtime.supported) throw Object.assign(new Error("设备互联已停止"), { status: 503 });
+    if (isEnabled()) throw Object.assign(new Error("请通过端口 10888 访问创作功能"), { status: 403 });
     conf.set("mobileLink", { ...getMobileLinkConfig(), enabled: value.enabled, port: value.port, publicUrl, directories: [...new Set(directories)] });
     runtime.pairing = undefined;
     runtime.lastSeen.clear();

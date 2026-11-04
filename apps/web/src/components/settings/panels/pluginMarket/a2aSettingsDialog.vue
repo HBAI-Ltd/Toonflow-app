@@ -26,6 +26,7 @@ import axios from "axios";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { ElMessage } from "element-plus";
 import type { ThinkingLevel } from "@toonflow/server/modelReasoning";
+import { useNodeModelSelection } from "@toonflow/nodes-scaffold/nodeAi";
 import modelPopover from "@/components/modelPopover.vue";
 import workspacePicker from "@/pages/home/workspacePicker.vue";
 import { modelChoices } from "@/stores/settings";
@@ -36,6 +37,7 @@ const visible = ref(true);
 const enabled = ref(false);
 const directory = ref("");
 const selectedModel = ref("");
+const selectedModelChoice = useNodeModelSelection(modelChoices, selectedModel);
 const thinkingLevel = ref<ThinkingLevel>();
 const reasoningEffort = computed({ get: () => thinkingLevel.value ?? "", set: (value: string) => { thinkingLevel.value = value ? value as ThinkingLevel : undefined; } });
 const token = ref("");
@@ -79,7 +81,7 @@ async function save() {
   saving.value = true;
   error.value = "";
   try {
-    const model = modelChoices.value.find(item => item.value === selectedModel.value);
+    const model = selectedModelChoice.value;
     if (enabled.value && !model) throw new Error("请选择可用的文本模型");
     const { data } = await axios.put("/api/agents/a2a/save", {
       enabled: enabled.value, directory: directory.value.trim(), providerId: model?.providerId ?? "", modelId: model?.modelId ?? "",

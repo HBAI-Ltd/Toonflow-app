@@ -25,7 +25,7 @@ import { computed, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { useVueFlow } from "@vue-flow/core";
 import { IconCube3dSphere } from "@tabler/icons-vue";
 import { ElLoading, ElMessage } from "element-plus";
-import { nodeSkeleton, useNode, useNodeFiles, z, type NodeHandle, type NodeData, type NodeAiModel } from "@toonflow/nodes-scaffold/runtime";
+import { getNodeModelIdentity, getNodeModelKey, nodeSkeleton, useNode, useNodeFiles, useNodeModelSelection, z, type NodeHandle, type NodeData, type NodeAiModel } from "@toonflow/nodes-scaffold/runtime";
 import { useNodeReferences } from "@toonflow/node-shared/useNodeReferences";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import promptInput from "@toonflow/node-shared/promptInput";
@@ -50,7 +50,7 @@ defineOptions({
   icon: IconCube3dSphere,
   handles: [{ id: "in", type: "target", dataType: ["STRING", "IMAGE", "VIDEO"], label: "文本、图片、视频输入" }] satisfies NodeHandle[],
 });
-const { node, nodeProps, previewReady, ai, files, nodeEvent } = useNode({ label: "3D导演台" });
+const { node, nodeProps, previewReady, ai, files, nodeEvent } = useNode({ label: "3D导演台", onModelsChanged: () => void loadModels() });
 const vLoading = ElLoading.directive;
 const { addNodes, findNode, getNodes, nodeTypes, removeNodes } = useVueFlow();
 const mediaFiles = useNodeFiles();
@@ -86,7 +86,7 @@ const editing = ref(false);
 const tasks = ref<DirectorGeneration[]>([]);
 const modelsLoading = ref(false);
 const models = ref<NodeAiModel[]>([]);
-const selectedModel = computed(() => models.value.find(item => JSON.stringify([item.providerId, item.modelId]) === model.value));
+const selectedModel = useNodeModelSelection(models, model);
 const preview = ref("");
 let previewVersion = 0;
 const modelLoading = ref(true);
@@ -292,7 +292,7 @@ async function loadModels() {
     models.value = available;
     const first = groupNodeModels(models.value)[0]?.models[0];
     // ACT: 只给空配置选默认模型，保留暂时不可用的旧选择。
-    if (!model.value) model.value = first ? JSON.stringify([first.providerId, first.modelId]) : "";
+    if (!model.value) model.value = first ? getNodeModelKey(first) : "";
   } catch (error) {
     if (!disposed) ElMessage.error(error instanceof Error ? error.message : "模型加载失败");
   } finally {
@@ -368,8 +368,7 @@ async function generate() {
     if (disposed) return;
     await ai.generate({
       references: mediaReferences,
-      providerId: choice.providerId,
-      modelId: choice.modelId,
+      ...getNodeModelIdentity(choice),
       systemPrompt: directorPrompt,
       prompt: JSON.stringify({ instruction: requirement, references, selectedPlanId: basePlanId, document: draft.summary() }),
       directory,

@@ -18,7 +18,7 @@ export const controlStateSchema = z.object({
 
 type ControlState = z.infer<typeof controlStateSchema>;
 type ControlResult = { result?: unknown; error?: string };
-type Connection = { id: string; state: ControlState; revision: number; response: Response; pending?: { id: string; finish(result: ControlResult): void } };
+type Connection = { id: string; state: ControlState; revision: number; response: Response; signal: AbortSignal; pending?: { id: string; finish(result: ControlResult): void } };
 // ACT: 控制连接只属于当前单进程，重连重新注册，不持久化运行中的命令。
 const connections = new Map<string, Connection>();
 
@@ -32,7 +32,7 @@ export function getMcpSettings() {
 }
 
 function allowedHost(req: Request) {
-  return isMobileLinkRequest(req) || !getRuntimePlatform().requiresLocalHost || ["localhost", "127.0.0.1", "[::1]"].includes(req.hostname);
+  return req.res?.locals.multiTenantWeb === true || isMobileLinkRequest(req) || !getRuntimePlatform().requiresLocalHost || ["localhost", "127.0.0.1", "[::1]"].includes(req.hostname);
 }
 
 export function getAppOrigin(req: Request) {
@@ -83,7 +83,8 @@ export function getConnection(id?: string, directory?: string) {
 
 export function connectControl(id: string, response: Response) {
   if (connections.has(id)) throw Object.assign(new Error("控制连接已存在"), { status: 409 });
-  const connection: Connection = { id, response, revision: 0, state: { directory: null, canvasId: null, panel: "home", projectList: [], tools: [] } };
+  const lifetime = new AbortController();
+  const connection: Connection = { id, response, signal: lifetime.signal, revision: 0, state: { directory: null, canvasId: null, panel: "home", projectList: [], tools: [] } };
   response.set({ "Content-Type": "text/event-stream", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no" });
   response.flushHeaders();
   connections.set(id, connection);
@@ -96,6 +97,7 @@ export function connectControl(id: string, response: Response) {
     socket?.off("close", close);
     if (connections.get(id) === connection) connections.delete(id);
     connection.pending?.finish({ error: "Toonflow 页面已断开，操作已取消" });
+    lifetime.abort(new Error("Toonflow 页面已断开，操作已取消"));
   };
   response.once("close", close);
   socket?.once("close", close);
@@ -134,7 +136,7 @@ export function callControl(connectionId: string, name: string, args: Record<str
       finish({ error: "控制命令已取消或超时" });
     };
     // ACT: A2A/MCP 的转写与 Agent 共用浏览器 ASR 超时，避免长音频在两分钟时被截断。
-    const timer = name === "transcribeAudio" ? undefined : setTimeout(abort, 120000);
+    const timer = name === "transcribeAudio" ? undefined : setTimeout(abort, name === "developPlugin" ? 360000 : 120000);
     connection.pending = { id: callId, finish };
     signal.addEventListener("abort", abort, { once: true });
     connection.response.write(`data: ${JSON.stringify({ type: "call", callId, name, args, directory })}\n\n`);

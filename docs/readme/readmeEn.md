@@ -472,6 +472,8 @@ Toonflow is licensed under the [MIT License](../../LICENSE). Third-party depende
 仰起脸笑的像满月: contributed Codex 20x development compute resources.
 Xi'an Zhongxing Digital Intelligence Technology Co., Ltd. (西安中星数字智能科技有限公司): contributed Apple certificate signing.
 
+<p align="center"><sub>Free code signing provided by <a href="https://signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</sub></p>
+
 <div align="center">
 
 Copyright © 2026 北京爱阿科技有限公司

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { loadMediaProviderSource, replaceMediaProviderModels } from "@/utils/media/provider";
 import { t, translateError } from "@/lib/i18n";
+import { requireDirectModelAccess } from "@/utils/multiTenant/gateway";
 
 export const providerDebugSchema = {
   source: z.string().min(1).max(2 * 1024 * 1024),
@@ -8,6 +9,7 @@ export const providerDebugSchema = {
 };
 
 export async function inspectProviderSource(source: string) {
+  requireDirectModelAccess();
   const provider = await loadMediaProviderSource(source);
   return {
     id: provider.id,
@@ -25,6 +27,7 @@ export async function runProviderSource(
   send: (event: Record<string, unknown>) => void,
   models?: Parameters<typeof replaceMediaProviderModels>[1],
 ) {
+  requireDirectModelAccess();
   const startedAt = performance.now();
   const secretFields = /api.?key|secret|token|password|authorization|cookie|credential|private.?key|access.?key|signature/i;
   const secrets = new Set<string>();

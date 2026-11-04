@@ -7,7 +7,7 @@
         </transition>
       </router-view>
       <loadingPage v-model:visible="workspaceStore.projectLoadingVisible" v-model:drawn="workspaceStore.projectLoadingDrawn" :active="workspaceStore.projectLoading" />
-      <ffmpegRequired />
+      <ffmpegRequired v-if="currentUser?.role !== 'user'" />
       <desktopQuit v-if="actualPlatform.isDesktop" />
       <updateBox
         v-if="updateBoxBuild && !installFailure"
@@ -55,10 +55,12 @@ import tdesignAr from "tdesign-vue-next/es/locale/ar_KW";
 import { locale } from "@toonflow/i18n/vue";
 import type { updateSnapshot } from "@toonflow/server/desktop";
 import { chatLocale } from "@/lib/i18n";
+import { registerAppearance } from "@/lib/appearance";
 import { actualPlatform, isMobile } from "@/lib/platform";
 import { saveSettings, settings, uiSettings } from "@/stores/settings";
 import { desktopUpdateSnapshot, stopDesktopUpdateObservation } from "@/stores/desktopUpdate";
 import { useWorkspaceStore } from "@/stores/workspace";
+import { currentUser } from "@/stores/multiTenant";
 import loadingPage from "@/components/loadingPage.vue";
 import { useMcpControl } from "@/lib/mcpControl";
 import ffmpegRequired from "@/components/settings/ffmpegRequired.vue";
@@ -66,7 +68,7 @@ import desktopQuit from "@/components/desktopQuit.vue";
 import updateBox from "@/components/updateBox.vue";
 import "element-plus/theme-chalk/dark/css-vars.css";
 
-useMcpControl();
+if (currentUser.value?.role !== "user") useMcpControl();
 const workspaceStore = useWorkspaceStore();
 
 // ACT: TDesign 缺少的语言使用英语基底，聊天控件由应用字典补齐。
@@ -152,32 +154,7 @@ watchEffect(() => {
   document.querySelector('meta[name="viewport"]')?.setAttribute("content", `width=device-width, initial-scale=${scale}, minimum-scale=${scale}, maximum-scale=${scale}, user-scalable=no`);
 });
 
-const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
-const systemDark = ref(systemTheme.matches);
-function updateSystemTheme(event: MediaQueryListEvent) {
-  systemDark.value = event.matches;
-}
-systemTheme.addEventListener("change", updateSystemTheme);
-onBeforeUnmount(() => systemTheme.removeEventListener("change", updateSystemTheme));
-
-watchEffect(() => {
-  const { theme, primaryColor, fontScale, radius } = uiSettings.value;
-  const dark = theme === "system" ? systemDark.value : theme === "dark";
-  const root = document.documentElement;
-  root.classList.toggle("dark", dark);
-  root.setAttribute("theme-mode", dark ? "dark" : "light");
-  root.style.colorScheme = dark ? "dark" : "light";
-  root.style.fontSize = `${(16 * fontScale) / 100}px`;
-  root.style.setProperty("--ui-radius", `${radius}px`);
-  root.style.setProperty("--el-color-primary", primaryColor);
-  for (let level = 1; level <= 9; level++) {
-    root.style.setProperty(
-      `--el-color-primary-light-${level}`,
-      `color-mix(in srgb, ${primaryColor} ${100 - level * 10}%, ${dark ? "#141414" : "#fff"})`
-    );
-  }
-  root.style.setProperty("--el-color-primary-dark-2", `color-mix(in srgb, ${primaryColor} 80%, ${dark ? "#fff" : "#000"})`);
-});
+onBeforeUnmount(registerAppearance());
 </script>
 
 <style lang="scss">

@@ -9,6 +9,7 @@ export function onAgentStopped(listener: (runIds: string[]) => void) {
 
 export async function stopAgent(directory: string, runIds: string[]) {
   if (!runIds.length) return;
+  for (const listener of stopListeners) listener(runIds);
   const response = await fetch("/api/agent/stop", {
     method: "POST",
     headers: { "Accept-Language": locale.value, "Content-Type": "application/json", "x-toonflow-workspace": "1" },
@@ -18,5 +19,4 @@ export async function stopAgent(directory: string, runIds: string[]) {
   });
   const result = await response.json().catch(() => null);
   if (!response.ok || result?.code !== 200) throw new Error(result?.message || "停止生成失败，请重试");
-  for (const listener of stopListeners) listener(runIds);
 }

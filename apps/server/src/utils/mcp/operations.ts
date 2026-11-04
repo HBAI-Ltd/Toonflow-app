@@ -1,8 +1,9 @@
 import { getLocale, t, validationOptions } from "@/lib/i18n";
 import { z } from "zod";
 import { toolNameSchema } from "@toonflow/tools-scaffold/runtime";
-import { mediaModelsSchema, mediaProviderFileSchema } from "@/utils/media/provider";
+import { addMediaProvider, mediaModelsSchema, mediaProviderFileSchema, validateMediaProviderSource } from "@/utils/media/provider";
 import { getAppRequestHeaders, getMcpRuntime } from "@/utils/mcp/runtime";
+import { installNode, installRemotePlugin, installSkill, installTool } from "@/utils/plugins/install";
 
 const maxBytes = 20 * 1024 * 1024;
 const directory = z.string().min(1).max(4096);
@@ -27,6 +28,7 @@ export const appOperations: {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   path: string;
   parameters: z.ZodType;
+  installType?: "node" | "tool" | "skill" | "provider";
   refresh?: { type: "node" | "tool" | "skill" | "provider"; nameField?: string };
 }[] = [
   {
@@ -37,7 +39,7 @@ export const appOperations: {
     parameters: z.strictObject({ name: pluginName, enabled: z.boolean() }), refresh: { type: "node", nameField: "name" },
   },
   {
-    name: "installNode", description: "通过 fileName/source 安装节点 UMD，或使用 url 下载；force 显式允许覆盖。下载和版本检查沿用现有安装接口。", method: "POST", path: "/api/nodes/install",
+    name: "installNode", description: "通过 fileName/source 安装节点 UMD，或使用 url 下载；force 显式允许覆盖。下载和版本检查沿用现有安装接口。", method: "POST", path: "/api/nodes/install", installType: "node",
     parameters: z.strictObject({ ...sourceFields, fileName: z.string().max(128).optional() }).refine(sourceRequired, "提供 url 或 fileName/source，不能同时提供 url 和 source"), refresh: { type: "node" },
   },
   {
@@ -56,7 +58,7 @@ export const appOperations: {
     parameters: z.strictObject({ name: toolNameSchema, config: z.record(z.string(), z.json()) }), refresh: { type: "tool", nameField: "name" },
   },
   {
-    name: "installTool", description: "通过 fileName/source 安装 .tool.js，或使用 url 下载；force 显式允许覆盖。", method: "POST", path: "/api/tools/install",
+    name: "installTool", description: "通过 fileName/source 安装 .tool.js，或使用 url 下载；force 显式允许覆盖。", method: "POST", path: "/api/tools/install", installType: "tool",
     parameters: z.strictObject({ ...sourceFields, fileName: z.string().max(104).regex(/^[a-z][a-zA-Z0-9]*\.tool\.js$/).optional() }).refine(sourceRequired, "提供 url 或 fileName/source，不能同时提供 url 和 source"), refresh: { type: "tool" },
   },
   {
@@ -86,7 +88,7 @@ export const appOperations: {
     parameters: z.strictObject({ name: skillName, path: skillPath, target: skillPath }), refresh: { type: "skill", nameField: "name" },
   },
   {
-    name: "installSkill", description: "使用 fileName/base64 安装技能文件或压缩包，或使用 url 下载；force 显式允许覆盖。", method: "POST", path: "/api/skills/install",
+    name: "installSkill", description: "使用 fileName/base64 安装技能文件或压缩包，或使用 url 下载；force 显式允许覆盖。", method: "POST", path: "/api/skills/install", installType: "skill",
     parameters: z.strictObject({ fileName: z.string().max(128).optional(), base64: base64.min(1).optional(), url: z.url().max(4096).optional(), force: z.boolean().optional() })
       .refine(value => value.url ? value.base64 === undefined : value.fileName !== undefined && value.base64 !== undefined, "提供 url 或 fileName/base64，不能同时提供 url 和 base64"), refresh: { type: "skill" },
   },
@@ -98,7 +100,7 @@ export const appOperations: {
     name: "listMediaProviders", description: "读取媒体供应商及预置 models、配置 revision；保存与删除时使用最新 revision。", method: "GET", path: "/api/providers/media/list", parameters: z.strictObject({}),
   },
   {
-    name: "addMediaProvider", description: "从完整 TypeScript source 添加媒体供应商，沿用现有供应商结构检查。", method: "POST", path: "/api/providers/media/add",
+    name: "addMediaProvider", description: "从完整 TypeScript source 添加媒体供应商，沿用现有供应商结构检查。", method: "POST", path: "/api/providers/media/add", installType: "provider",
     parameters: z.strictObject({ source: z.string().min(1).max(2 * 1024 * 1024) }), refresh: { type: "provider" },
   },
   {
@@ -141,10 +143,30 @@ export const appOperations: {
   },
 ];
 
-export async function runAppOperation(name: string, parameters: Record<string, unknown>, signal: AbortSignal): Promise<unknown> {
+export type InstallDetails = { name: string; type: string; version?: string; source: string; overwrite?: boolean };
+
+export async function runAppOperation(name: string, parameters: Record<string, unknown>, signal: AbortSignal, confirmInstall: (details: InstallDetails) => Promise<AbortSignal>): Promise<unknown> {
   const operation = appOperations.find(item => item.name === name);
   if (!operation) throw new Error(t`未知应用操作：${name}`);
   const args = operation.parameters.parse(parameters, validationOptions()) as Record<string, unknown>;
+  if (operation.installType) {
+    const type = operation.installType;
+    const source = args.source as string;
+    const provider = type === "provider" ? validateMediaProviderSource(source) : undefined;
+    const url = typeof args.url === "string" ? new URL(args.url) : undefined;
+    if (url && (!["http:", "https:"].includes(url.protocol) || url.username || url.password)) throw new Error("仅支持不含账号密码的 HTTP / HTTPS 地址");
+    const fileName = args.fileName as string | undefined;
+    const displayName = provider?.fileName ?? fileName ?? decodeURIComponent(url?.pathname.split("/").at(-1) ?? "");
+    if (!displayName) throw new Error("请选择文件或填写远端地址");
+    const force = args.force === true;
+    const installSignal = await confirmInstall({ name: displayName, type, version: provider?.version, source: url ? url.origin + url.pathname : "MCP", overwrite: force });
+    installSignal.throwIfAborted();
+    if (url) return installRemotePlugin(type, url.href, fileName, force, undefined, installSignal);
+    if (type === "node") return installNode(displayName, source, force, undefined, installSignal);
+    if (type === "tool") return installTool(displayName, source, force, undefined, installSignal);
+    if (type === "skill") return installSkill(displayName, Buffer.from(args.base64 as string, "base64"), force, undefined, installSignal);
+    return addMediaProvider(source, installSignal);
+  }
   const origin = getMcpRuntime().appOrigin;
   if (!origin) throw new Error("Toonflow 服务尚未就绪");
   const url = new URL(operation.path, origin);

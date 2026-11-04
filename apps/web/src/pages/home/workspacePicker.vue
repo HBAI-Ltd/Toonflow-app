@@ -3,11 +3,11 @@
     <span class="directoryName">{{ selectedDirectory ? selectedDirectory.split(/[\\/]/).filter(Boolean).at(-1) || selectedDirectory : '工作目录' }}</span>
     <component :is="dialogVisible ? IconChevronUp : IconChevronDown" :size="14" aria-hidden="true" />
   </el-button>
-  <el-dialog v-model="dialogVisible" :title="isLocalMobile ? '选择手机工作目录' : '选择服务器工作目录'" width="min(680px, 92vw)" appendToBody :closeOnClickModal="!editing" :closeOnPressEscape="!editing" :showClose="!editing" @close="finishSelection?.(null)">
+  <el-dialog v-model="dialogVisible" :title="!publicWeb && isLocalMobile ? '选择手机工作目录' : '选择服务器工作目录'" width="min(680px, 92vw)" appendToBody :closeOnClickModal="!editing" :closeOnPressEscape="!editing" :showClose="!editing" @close="finishSelection?.(null)">
     <div class="workspaceBrowser">
       <div class="directoryHeader">
         <el-button :icon="IconArrowLeft" circle :disabled="loading || editing || !listing?.path" aria-label="上一级目录" @click="loadDirectory(listing?.parent ?? '')" />
-        <el-text class="directoryPath" truncated :title="listing?.absolutePath">{{ isLocalMobile ? '手机工作区' : '服务器工作区' }}{{ listing?.path ? ` / ${listing.path}` : '' }}</el-text>
+        <el-text class="directoryPath" truncated :title="listing?.absolutePath">{{ !publicWeb && isLocalMobile ? '手机工作区' : '服务器工作区' }}{{ listing?.path ? ` / ${listing.path}` : '' }}</el-text>
         <el-button :icon="IconFolderPlus" :disabled="loading || editing || !listing || !!browseError" @click="manageEntry('mkdir')">新建文件夹</el-button>
       </div>
       <el-alert v-if="browseError" :title="browseError" type="error" :closable="false" />
@@ -41,6 +41,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { IconFolder, IconFolderPlus, IconFile, IconChevronDown, IconChevronUp, IconArrowLeft } from "@tabler/icons-vue";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { actualPlatform, isLocalMobile } from "@/lib/platform";
+import { publicWeb } from "@/stores/multiTenant";
 
 type WorkspaceEntry = { name: string; path: string; type: "file" | "directory" };
 type DirectoryListing = {
@@ -66,20 +67,21 @@ async function chooseDirectory(): Promise<string | null> {
   if (selecting.value || loading.value || props.disabled) return null;
   selecting.value = true;
   try {
-    if (actualPlatform.isLocalDesktop) {
+    if (!publicWeb.value && actualPlatform.isLocalDesktop) {
       const { data } = await axios.post<{ data: { directory: string | null } }>("/api/desktop/selectDirectory", null, { headers: { "x-toonflow-desktop": "1" } });
       if (data.data.directory) selectedDirectory.value = data.data.directory;
       return data.data.directory;
     }
-    const { data } = await axios.post<{ code: number; data: { native: boolean; directory: string | null } }>("/api/workspaces/selectDirectory", null, { headers: { "x-toonflow-workspace": "1" } });
-    if (data.data.native) {
-      if (data.data.directory) selectedDirectory.value = data.data.directory;
-      return data.data.directory;
-    } else {
-      dialogVisible.value = true;
-      void loadDirectory("");
-      return await new Promise<string | null>(resolve => { finishSelection = resolve; });
+    if (!publicWeb.value) {
+      const { data } = await axios.post<{ code: number; data: { native: boolean; directory: string | null } }>("/api/workspaces/selectDirectory", null, { headers: { "x-toonflow-workspace": "1" } });
+      if (data.data.native) {
+        if (data.data.directory) selectedDirectory.value = data.data.directory;
+        return data.data.directory;
+      }
     }
+    dialogVisible.value = true;
+    void loadDirectory("");
+    return await new Promise<string | null>(resolve => { finishSelection = resolve; });
   } catch (error) {
     ElMessage.error(axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || "无法打开文件夹选择器，请重试" : "无法打开文件夹选择器，请重试");
     return null;

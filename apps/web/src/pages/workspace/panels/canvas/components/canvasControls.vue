@@ -5,12 +5,13 @@
     position="bottom-left"
     :pannable="true"
     :zoomable="true"
-    node-color="var(--el-fill-color-dark)"
-    mask-color="var(--el-mask-color-extra-light)" />
+    nodeColor="var(--el-fill-color-dark)"
+    maskColor="var(--el-mask-color-extra-light)"
+    @click="({ position }) => setCenter(position.x, position.y, { zoom: viewport.zoom, duration: 250 })" />
   <panel class="canvasControlsPanel" position="bottom-left">
     <el-card class="canvasControlsCard" shadow="never" :bodyStyle="{ padding: '2px 4px' }">
       <div class="canvasControls">
-        <el-tooltip :showArrow="false" :content="assetsVisible ? '关闭素材库' : '打开素材库'" placement="top" :hideAfter="0" :enterable="false" :triggerKeys="[]">
+        <el-tooltip v-if="currentUser?.role !== 'user'" :showArrow="false" :content="assetsVisible ? '关闭素材库' : '打开素材库'" placement="top" :hideAfter="0" :enterable="false" :triggerKeys="[]">
           <el-button
             class="toolButton"
             text
@@ -121,6 +122,7 @@ import { Panel, useVueFlow, type XYPosition } from "@vue-flow/core";
 import { MiniMap } from "@vue-flow/minimap";
 import { IconMap, IconMagnet, IconFocusCentered } from "@tabler/icons-vue";
 import { ElMessage } from "element-plus";
+import { currentUser } from "@/stores/multiTenant";
 import { arrangeCanvas } from "../arrangeCanvas";
 
 const props = defineProps<{
@@ -134,7 +136,7 @@ const assetsVisible = defineModel<boolean>("assetsVisible", { default: false });
 const showMap = ref(false);
 const zoomMenuVisible = ref(false);
 const flow = useVueFlow();
-const { viewport, zoomTo, zoomIn, zoomOut, fitView, getNodes, updateNode } = flow;
+const { viewport, zoomTo, zoomIn, zoomOut, fitView, setCenter, getNodes, updateNode } = flow;
 const zoomPercent = computed(() => Math.round(viewport.value.zoom * 100));
 const layoutSnapshot = ref<{ id: string; position: XYPosition }[]>();
 const undoPopoverVisible = ref(false);

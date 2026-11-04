@@ -449,6 +449,8 @@ Toonflow تحت [MIT License](../../LICENSE) منتشر می‌شود. وابس�
 仰起脸笑的像满月: منابع پردازشی توسعه با Codex 20x را فراهم کرد.
 Xi'an Zhongxing Digital Intelligence Technology Co., Ltd. (西安中星数字智能科技有限公司): امضای برنامه با گواهی Apple را فراهم کرد.
 
+<p align="center"><sub>Free code signing provided by <a href="https://signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</sub></p>
+
 <div align="center">
 
 حق نشر © 2026 北京爱阿科技有限公司

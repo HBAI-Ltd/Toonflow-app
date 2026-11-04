@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { mkdir, readdir, realpath } from "@toonflow/file";
+import { readdir, realpath } from "@toonflow/file";
 import { dirname, relative, resolve, sep } from "node:path";
 import { z } from "zod";
 import u from "@/utils";
@@ -9,9 +9,7 @@ import { error, success } from "@/lib/responseFormat";
 const router = Router();
 
 export default router.get("/", validateFields({ path: z.string().max(4096).optional() }, "query"), async (req, res) => {
-  const workspaceRoot = resolve(dirname(u.conf.path), "workspaces");
-  await mkdir(workspaceRoot, { recursive: true });
-  const root = await realpath(workspaceRoot);
+  const root = await u.workspace.getWorkspaceRoot(req);
   const target = resolve(root, (req.query.path as string | undefined) ?? "");
   if (!u.workspaceFile.isWithin(root, target)) return res.status(403).json(error("只能选择服务器工作区内的目录", null, 403));
   try {

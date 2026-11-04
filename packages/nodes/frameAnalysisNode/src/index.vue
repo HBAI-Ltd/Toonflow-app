@@ -66,7 +66,7 @@
             <template v-if="!selectedModel" #prefix><icon-sparkles :size="17" /></template>
             <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
             <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
-              <el-option v-for="item in provider.models" :key="item.modelId" :value="JSON.stringify([item.providerId, item.modelId])" :label="item.label">
+              <el-option v-for="item in provider.models" :key="item.modelId" :value="getNodeModelKey(item)" :label="item.label">
                 <modelLabel :label="item.label" :providerId="item.providerId" :modelId="item.modelId" />
               </el-option>
             </el-option-group>
@@ -93,7 +93,7 @@ import { computed, inject, nextTick, onScopeDispose, reactive, ref, shallowRef, 
 import { IconMovie, IconPhoto, IconUpload, IconWaveSine, IconScissors, IconAdjustmentsHorizontal, IconSparkles, IconTransfer, IconMaximize, IconFileText, IconArrowUp, IconPlayerStop } from "@tabler/icons-vue";
 import { ElMessage, ElSelect, ElOption, ElOptionGroup, ElButton, ElCard, ElCheckbox, ElPopover, ElInputNumber, ElSwitch, ElProgress } from "element-plus";
 import {
-  getTargetValues, isNodeOutput, nodeSkeleton, useNode, useNodeInputs, uploadNodeFile,
+  findNodeModel, getNodeModelKey, getTargetValues, isNodeOutput, nodeSkeleton, useNode, useNodeInputs, useNodeModelSelection, uploadNodeFile,
   type NodeHandle, type NodeMediaValue, type WorkspaceFiles, type NodeAiModel, type BrowserFfmpegFactory,
 } from "@toonflow/nodes-scaffold/runtime";
 import { analyzeVideo, type AnalysisResult } from "./videoAnalysis";
@@ -127,7 +127,7 @@ type AnalysisSettings = {
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
 type AnalysisState = AnalysisSettings & { source?: NodeMediaValue; lastResult?: AnalysisResult; resultSource?: string };
 
-const { id, node, nodeProps, outputs, ai, nodeEvent, files, ffmpeg: loadFfmpeg, updateNodeInternals } = useNode({ label: "逐帧拉片" });
+const { id, node, nodeProps, outputs, ai, nodeEvent, files, ffmpeg: loadFfmpeg, updateNodeInternals } = useNode({ label: "逐帧拉片", onModelsChanged: () => void loadModels() });
 // ACT: 拉片结果由独立素材节点承载，本节点仅保留视频输入；迁移旧版遗留输出。
 outputs.value = {};
 node.data.outputs = outputs.value;
@@ -176,11 +176,10 @@ const reportVisible = ref(false);
 const models = ref<NodeAiModel[]>([]);
 const modelsLoading = ref(false);
 const modelError = ref("");
-const selectedModel = computed(() => models.value.find(item => JSON.stringify([item.providerId, item.modelId]) === settings.aiModel));
+const selectedModel = useNodeModelSelection(models, computed({ get: () => settings.aiModel, set: value => { settings.aiModel = value; } }));
 const modelGroups = computed(() => groupNodeModels(models.value));
 const retryOverview = computed(() => !!lastResult.value?.ai?.overviewError
-  && lastResult.value.ai.providerId === selectedModel.value?.providerId
-  && lastResult.value.ai.modelId === selectedModel.value?.modelId
+  && !!selectedModel.value && !!findNodeModel([selectedModel.value], lastResult.value.ai)
   && (lastResult.value.ai.focus ?? "") === settings.focus.trim());
 const resultNodes = useResultNodes();
 resultNodes.removeOutputEdges();
@@ -218,11 +217,10 @@ nodeEvent.on("canConnect", (connection, context) => {
     || edge.target !== connection.target || edge.targetHandle !== connection.targetHandle);
   return getTargetValues(id, "in", context.nodes, [...edges, connection]).length <= 1;
 });
-nodeEvent.on("save", async reason => {
+nodeEvent.on("save", reason => {
   if (reason === "reload" && busy.value) throw new Error("拉片处理中，请完成或取消后再刷新节点");
   if (uploading.value) throw new Error("视频上传中，请稍后切换画布或删除节点");
   if (player.value?.capturing) throw new Error("截图保存中，请稍后切换画布或删除节点");
-  await cancelAndWait();
 });
 // ACT: 结果文件由多个生成节点及撤销历史引用，删除本节点仅停止任务，保留已提交素材。
 nodeEvent.on("delete", cancelAndWait);
@@ -246,7 +244,7 @@ async function loadModels() {
     if (!disposed) {
       models.value = available;
       const first = modelGroups.value[0]?.models[0];
-      if (!settings.aiModel && first) settings.aiModel = JSON.stringify([first.providerId, first.modelId]);
+      if (!settings.aiModel && first) settings.aiModel = getNodeModelKey(first);
     }
   } catch (error) {
     if (!disposed) modelError.value = readError(error, "模型列表加载失败");

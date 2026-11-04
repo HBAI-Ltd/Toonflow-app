@@ -1,0 +1,106 @@
+name: SignPath test signing
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop]
+    paths: [.github/workflows/signPath.yml]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: signPathTest-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sign:
+    name: Windows x64 测试签名
+    if: github.repository == 'HBAI-Ltd/Toonflow-app' && github.ref == 'refs/heads/develop'
+    runs-on: windows-2025
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: 确认 SignPath CI 凭据
+        env:
+          signPathToken: ${{ secrets.SIGNPATH_API_TOKEN }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:signPathToken)) {
+            throw '请先将 SignPath CI builds 用户的 API token 保存为 SIGNPATH_API_TOKEN Secret。'
+          }
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: 安装依赖
+        run: bun install --frozen-lockfile
+      - name: 准备 Electrobun SDK
+        run: bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
+      - name: 准备 NSIS
+        run: |
+          $nsisPath = 'C:/Program Files (x86)/NSIS/makensis.exe'
+          if (!(Test-Path -LiteralPath $nsisPath)) {
+            choco install nsis --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'NSIS 安装失败' }
+          }
+          if (!(Test-Path -LiteralPath $nsisPath)) { throw '找不到 makensis.exe' }
+      - name: 构建 Windows 安装包
+        run: bun run package:desktop
+      # ACT: 原始文件按文件名登记；批次名避免重跑时与上次上传的产物冲突。
+      - name: 标记测试签名批次
+        run: |
+          bun -e '
+          import { constants, copyFileSync } from "@toonflow/file";
+          import config from "./electrobun.config.ts";
+          const source = `build/desktop/artifacts/toonflow-${config.app.version}-Setup.exe`;
+          copyFileSync(source, source.replace("-Setup.exe", `-test${process.env.GITHUB_RUN_ATTEMPT}-Setup.exe`), constants.COPYFILE_EXCL);
+          '
+      # ACT: 本阶段仅签安装包外层，验证 GitHub 到 SignPath 的链路；内部 PE 签名留待正式接入。
+      - name: 上传未签名安装包
+        id: unsignedArtifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          path: build/desktop/artifacts/toonflow-*-test${{ github.run_attempt }}-Setup.exe
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
+      - name: 提交 SignPath 测试签名并下载结果
+        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: 510d3817-c746-4a67-b352-dbd1174c1ef5
+          project-slug: Toonflow-app
+          signing-policy-slug: test-signing
+          github-artifact-id: ${{ steps.unsignedArtifact.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: build/desktop/signPath
+          skip-decompress: true
+      - name: 核对测试证书签名
+        run: |
+          $installers = @(Get-ChildItem -LiteralPath build/desktop/signPath -File -Filter 'toonflow-*-Setup.exe')
+          if ($installers.Count -ne 1) { throw '签名结果必须包含且仅包含一个安装包。' }
+          $signature = Get-AuthenticodeSignature -LiteralPath $installers[0].FullName
+          if (!$signature.SignerCertificate -or $signature.SignerCertificate.Thumbprint -ne '3C9837E1C5EB015CA15D32DDD317BB936D446870') {
+            throw '安装包签名与 Toonflow 的 SignPath 测试证书不一致。'
+          }
+          # ACT: PowerShell 将 CERT_E_UNTRUSTEDROOT 映射为 UnknownError；仅容许固定测试证书的这一链错误。
+          $untrustedRootMessage = [System.ComponentModel.Win32Exception]::new(-2146762487).Message
+          $untrustedTestRoot = $signature.Status -eq 'UnknownError' -and $signature.StatusMessage -ceq $untrustedRootMessage
+          if ($signature.Status -ne 'Valid' -and !$untrustedTestRoot) {
+            throw "安装包签名验证失败：$($signature.Status)；$($signature.StatusMessage)"
+          }
+          Write-Output "测试签名证书：$($signature.SignerCertificate.Subject)；系统信任状态：$($signature.Status)"
+      - name: 保留测试签名安装包
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: toonflow-windows-x64-test-signed-${{ github.run_attempt }}
+          path: build/desktop/signPath/*.exe
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7

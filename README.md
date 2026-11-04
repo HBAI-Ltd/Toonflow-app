@@ -279,15 +279,25 @@ Toonflow 采用 MIT 开源许可，可自行部署。第三方模型服务的 AP
 
 | 操作系统 | GitHub                                                       |
 | -------- | ------------------------------------------------------------ |
-| Windows  | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
-| macOS    | [Release](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Windows x64 | [EXE 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Windows ARM64 | [EXE 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| macOS Apple Silicon（ARM64，macOS 14 及以上） | [PKG 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| macOS Intel（x64，macOS 14 及以上） | [PKG 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Linux x64（Debian / Ubuntu） | [DEB 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| Linux ARM64（Debian / Ubuntu） | [DEB 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | Android ARM64 | [APK 下载](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
 
 Android 版仅支持 ARM64 设备，下载发布页中的 `toonflow-版本号-android-arm64.apk` 安装。手机内置本地 Bun 后端，可独立运行；也可从首页「设备互联」扫码或手动连接已开启共享的电脑或远程后端（支持局域网与公网）。
 
 Windows 安装器会自动检测并安装 WebView2；如果安装后打开闪退，请前往 [WebView2 下载页面](https://developer.microsoft.com/microsoft-edge/webview2/) 手动安装运行时。
 
-macOS（Apple Silicon）将 Toonflow 拖入“应用程序”后直接打开即可，无需预先执行终端命令。若遇到系统安全提示，请按以下顺序处理。
+Windows 的 Intel / AMD 电脑选择 `toonflow-版本号-Setup.exe`，ARM64 电脑选择 `toonflow-版本号-win-arm64-Setup.exe`。ARM64 需要 .NET Framework 4.8.1，较新的 Windows 11 已内置。
+
+Linux 选择对应架构的 `toonflow-版本号-linux-x64.deb` 或 `toonflow-版本号-linux-arm64.deb`，在下载目录执行 `sudo apt install ./安装包文件名.deb`，安装后从应用菜单打开。安装时会一并安装所需的系统依赖与 FFmpeg。
+
+macOS 两种架构均使用统一的 Electrobun SDK，最低支持 macOS 14。选择对应架构的 `toonflow-版本号-macos-arm64.pkg` 或 `toonflow-版本号-macos-x64.pkg`，双击后点击“继续”，按系统安装向导完成安装，再从“应用程序”打开 Toonflow。正式发布流程使用 Developer ID Application 签署应用、Developer ID Installer 签署 PKG，并完成 Apple 公证。旧版 Intel Mac 客户端首次迁移时须下载完整 PKG 覆盖安装，不能通过旧版增量更新直接迁移；安装前退出应用并备份原数据目录。
+
+macOS 若遇到系统安全提示，请按以下顺序处理。
 
 <details>
 <summary><strong>macOS 无法安装或打开时的处理方法</strong></summary>
@@ -473,6 +483,8 @@ Toonflow 采用 [MIT 许可证](./LICENSE)。第三方依赖和素材遵循各�
 
 仰起脸笑的像满月：贡献 Codex 20x 开发算力。
 西安中星数字智能科技有限公司：贡献苹果证书签名。
+
+<p align="center"><sub>Free code signing provided by <a href="https://signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</sub></p>
 
 <div align="center">
 

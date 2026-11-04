@@ -10,7 +10,6 @@
       :enableAnimate="false"
       :shikiOptions="shikiOptions"
       :codeOptions="codeOptions"
-      :linkOptions="{ safetyCheck: false }"
       :cdnOptions="cdnOptions"
       :components="markdownOverlays"
       :nodeRenderers="nodeRenderers"
@@ -23,7 +22,7 @@
 <script setup lang="ts">
 import { computed, h } from "vue";
 import { translate } from "@toonflow/i18n/vue";
-import { Markdown, COMPONENT_RENDERERS, parseMarkdownIntoBlocks } from "vue-stream-markdown";
+import { Markdown, NodeList, parseMarkdownIntoBlocks, useSanitizers } from "vue-stream-markdown";
 import { MarkdownAstParser, postnormalize, type DefinitionNode, type ParsedNode, type SyntaxTree } from "@markmend/ast";
 import type { CodeOptions, ImageNodeRendererProps, LinkNodeRendererProps, ShikiOptions } from "vue-stream-markdown";
 import "vue-stream-markdown/index.css";
@@ -34,9 +33,10 @@ import { markdownLocale } from "@/lib/i18n";
 
 const { content, streaming = false, codeOptions, directory } = defineProps<{ content: string; streaming?: boolean; codeOptions?: CodeOptions; directory?: string }>();
 const renderImage = (image: ImageNodeRendererProps) => h(markdownImage, { image: { ...image }, directory: directory! });
-const nodeRenderers = computed(() => directory ? { image: renderImage, link: renderLink } : {});
+const nodeRenderers = computed(() => ({ link: renderLink, ...(directory ? { image: renderImage } : {}) }));
 const shikiOptions: ShikiOptions = { theme: ["github-light", "github-dark"] };
 const cdnOptions = { shiki: false } as const;
+const { transformHardenUrl } = useSanitizers({});
 const keepChunk = (value: string) => [value];
 const blocks = computed(() => parseMarkdownIntoBlocks(content));
 const definitionParser = new MarkdownAstParser({ mode: "static" });
@@ -45,9 +45,18 @@ const isDefinition = (block: string) => /^ {0,3}\[(?!\^)[^\]\n]+\]:/.test(block)
 const definitions = computed(() => blocks.value.length > 1 ? blocks.value.filter(isDefinition).join("\n\n") : "");
 
 function renderLink(link: LinkNodeRendererProps) {
-  const renderedLink = h(COMPONENT_RENDERERS.link, link);
+  // ACT: 解析器会把端口后紧跟的全角括号说明并入网址；仅修正端口尾部，保留路径中的括号。
+  const href = link.node.url.replace(/^(https?:\/\/[^/?#（）]+:\d+)（[^（）]*）$/i, "$1");
+  const allowed = transformHardenUrl(href) !== null;
+  const loading = streaming && link.markdownParser.hasLoadingNode([link.node]);
+  // ACT: 只复用协议过滤，保留相对链接地址；正常链接仍直接交给浏览器打开。
+  const renderedLink = h("a", {
+    class: "messageLink", href: loading || !allowed ? undefined : href, title: link.node.title,
+    target: "_blank", rel: "noreferrer", "data-stream-markdown": "link", "data-stream-markdown-loading": loading,
+  }, h(NodeList, { ...link, parentNode: link.node, nodes: link.node.children, deep: link.deep + 1 }));
+  if (!directory || !allowed) return renderedLink;
   let url: URL;
-  try { url = new URL(link.node.url.startsWith("//") ? `https:${link.node.url}` : link.node.url); }
+  try { url = new URL(href.startsWith("//") ? `https:${href}` : href); }
   catch { return renderedLink; }
   // ACT: 只预览带图片后缀的纯文字链接；普通网页和已含缩略图的链接保持原样。
   if (!/^https?:$/.test(url.protocol) || !/\.(?:png|jpe?g|webp|gif|avif|bmp)$/i.test(url.pathname)
@@ -120,6 +129,17 @@ const chunks = computed(() => {
 
     :deep([data-stream-markdown="code-block-header"]) {
       position: relative;
+    }
+
+    :deep(.messageLink) {
+      color: var(--el-color-primary);
+      text-decoration: underline;
+      overflow-wrap: anywhere;
+
+      &[data-stream-markdown-loading="true"] {
+        text-decoration: none;
+        pointer-events: none;
+      }
     }
   }
 }

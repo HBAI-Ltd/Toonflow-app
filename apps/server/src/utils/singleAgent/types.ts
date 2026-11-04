@@ -9,7 +9,7 @@ export type SingleAgentToolDescriptor = {
   executionMode?: "sequential" | "parallel";
 };
 
-export type SingleAgentToolReference = string | { plugin: string; names?: string[] };
+export type SingleAgentToolReference = string | { plugin: string; names?: string[] } | { node: string; names?: string[] };
 export type SingleAgentToolResult = Awaited<ReturnType<ToolDefinition["execute"]>>;
 export type SingleAgentResult = { text: string; toolResults: { id: string; name: string; result: SingleAgentToolResult }[] };
 export type SingleAgentStatus = "idle" | "running" | "pausing" | "paused";

@@ -13,7 +13,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="版本号" required>
-        <el-input v-model="form.version" :maxlength="128" autocomplete="off" placeholder="例如 1.0.0" />
+        <el-input v-model="form.version" :readonly="!!pluginFile" :maxlength="128" autocomplete="off" placeholder="例如 1.0.0" />
       </el-form-item>
       <el-form-item label="描述">
         <el-input v-model="form.desc" type="textarea" :rows="3" :maxlength="20000" resize="none" />
@@ -69,7 +69,7 @@ import videoPlayer from "@/components/videoPlayer.vue";
 import type { PluginUploadSignature } from "@toonflow/server/channel";
 import type { Plugin, PluginType } from "./types";
 
-const props = defineProps<{ plugin?: Plugin; marketPlugin?: Plugin; token: string }>();
+const props = defineProps<{ plugin?: Plugin; pluginFile?: File; marketPlugin?: Plugin; token: string }>();
 const emit = defineEmits<{ uploaded: []; closed: [] }>();
 const visible = ref(true);
 const formId = useId();
@@ -82,7 +82,7 @@ const typeOptions: { label: string; value: PluginType }[] = [
   { label: "节点", value: "node" }, { label: "文件扩展", value: "ext" }, { label: "技能", value: "skill" },
   { label: "工具", value: "tool" }, { label: "Agent", value: "agent" },
 ];
-const canLoadLocalFile = computed(() => !!props.plugin && (!props.marketPlugin
+const canLoadLocalFile = computed(() => !!props.plugin && !props.pluginFile && (!props.marketPlugin
   || (props.plugin.name === props.marketPlugin.name && props.plugin.type === props.marketPlugin.type)));
 const fileName = ref("");
 const fileInput = ref<HTMLInputElement>();
@@ -117,8 +117,15 @@ let controller: AbortController | undefined;
 let fileReader: FileReader | undefined;
 
 async function loadFile() {
-  const plugin = props.plugin;
-  if (!visible.value || uploading.value || !plugin || !canLoadLocalFile.value) return;
+  const { plugin, pluginFile } = props;
+  if (!visible.value || uploading.value || !plugin) return;
+  if (pluginFile) {
+    fileName.value = pluginFile.name;
+    fileError.value = validateFile(pluginFile, pluginFile.name);
+    file.value = fileError.value ? undefined : pluginFile;
+    return;
+  }
+  if (!canLoadLocalFile.value) return;
   controller?.abort();
   const request = new AbortController();
   controller = request;
@@ -266,7 +273,7 @@ function selectMedia(event: Event) {
 }
 
 watch(visible, value => { if (!value) cancelRequests(); }, { flush: "sync" });
-watch(() => [props.token, props.plugin?.key, props.marketPlugin?.key], () => { visible.value = false; }, { flush: "sync" });
+watch(() => [props.token, props.plugin?.key, props.pluginFile, props.marketPlugin?.key], () => { visible.value = false; }, { flush: "sync" });
 watch(() => form.type, () => {
   if (props.plugin || props.marketPlugin) return;
   clearMedia();

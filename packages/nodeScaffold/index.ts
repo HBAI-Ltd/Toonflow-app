@@ -33,9 +33,10 @@ export interface NodeConfig {
   author: string;
   github: string;
   configRules?: Rule[];
+  serverTool?: string;
 }
 
-export function createNodeConfig(config: NodeConfig, configUrl: string) {
+export function createNodeConfig(config: NodeConfig, configUrl: string, options: { outDir?: string; syncToData?: boolean } = {}) {
   const { name: nodeName } = config;
   const metadata = {
     displayName: config.displayName.trim(),
@@ -51,9 +52,9 @@ export function createNodeConfig(config: NodeConfig, configUrl: string) {
   const root = fileURLToPath(new URL(".", configUrl));
   if (!/^[a-z][a-zA-Z0-9]*$/.test(nodeName)) throw new Error(`节点名必须使用小驼峰：${nodeName}`);
   const fileName = `${nodeName}.umd.js`;
-  const outDir = fileURLToPath(new URL("../../build/nodes", import.meta.url));
+  const outDir = options.outDir ? resolve(root, options.outDir) : fileURLToPath(new URL("../../build/nodes", import.meta.url));
   const dataDir = fileURLToPath(new URL("../../data/nodes", import.meta.url));
-  let syncToData = process.env.NODE_ENV === "dev";
+  let syncToData = options.syncToData ?? process.env.NODE_ENV === "dev";
 
   return defineConfig({
     root,
@@ -62,12 +63,14 @@ export function createNodeConfig(config: NodeConfig, configUrl: string) {
       vue(),
       {
         name: "syncNodeFile",
+        enforce: "post",
         configResolved(resolvedConfig) {
-          syncToData ||= Boolean(resolvedConfig.build.watch) || resolvedConfig.mode === "development";
+          if (options.syncToData === undefined) syncToData ||= Boolean(resolvedConfig.build.watch) || resolvedConfig.mode === "development";
         },
         async generateBundle(_options, bundle) {
           const chunk = bundle[fileName];
           if (!chunk || chunk.type !== "chunk") throw new Error(`未生成节点文件：${fileName}`);
+          if (Object.keys(bundle).length !== 1) throw new Error(`节点必须构建为单个脚本，不能包含未内联的资源：${nodeName}`);
           const packagePath = resolve(root, "package.json");
           this.addWatchFile(packagePath);
           const packageInfo = JSON.parse(await readFile(packagePath, "utf8"));
@@ -79,8 +82,19 @@ export function createNodeConfig(config: NodeConfig, configUrl: string) {
             if (error.code === "ENOENT") return "";
             throw error;
           });
+          let serverTool: string | undefined;
+          if (config.serverTool !== undefined) {
+            const toolPath = resolve(root, config.serverTool);
+            this.addWatchFile(toolPath);
+            serverTool = await readFile(toolPath, "utf8");
+            const toolHeader = serverTool.match(/^\/\*! toonflowTool:([^\r\n]*) \*\/(?:\r?\n|$)/)?.[1];
+            if (!toolHeader || JSON.parse(toolHeader).name !== nodeName || Buffer.byteLength(serverTool, "utf8") > 20 * 1024 * 1024) {
+              throw new Error(`节点配套服务必须是同名且不超过 20 MB 的已构建工具：${nodeName}`);
+            }
+          }
           // 压缩后再写入，防止元数据注释被移除。
-          chunk.code = `/*! toonflowNode:${JSON.stringify({ ...metadata, version, readme }).replaceAll("/", "\\u002f")} */\n${chunk.code}`;
+          chunk.code = `/*! toonflowNode:${JSON.stringify({ ...metadata, version, readme, ...(serverTool ? { serverTool } : {}) }).replaceAll("/", "\\u002f")} */\n${chunk.code}`;
+          if (Buffer.byteLength(chunk.code, "utf8") > 20 * 1024 * 1024) throw new Error(`节点与配套服务合计不能超过 20 MB：${nodeName}`);
         },
         async writeBundle() {
           if (!syncToData) return;
@@ -101,6 +115,7 @@ export function createNodeConfig(config: NodeConfig, configUrl: string) {
       outDir,
       // ACT: 单包构建不清公共产物目录，由根 build:nodes 在批量构建前统一清理。
       emptyOutDir: false,
+      assetsInlineLimit: Number.MAX_SAFE_INTEGER,
       cssCodeSplit: true,
       lib: {
         entry: resolve(root, "src/index.vue"),

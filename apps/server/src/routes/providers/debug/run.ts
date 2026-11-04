@@ -9,6 +9,7 @@ export default Router().post("/", validateFields({
   models: u.mediaProvider.mediaModelsSchema.optional(),
 }), async (req, res) => {
   u.mcpControl.assertAppRequest(req);
+  u.multiTenant.requireDirectModelAccess();
   res.set({ "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store, no-transform", "X-Accel-Buffering": "no" });
   res.flushHeaders();
   const controller = new AbortController();

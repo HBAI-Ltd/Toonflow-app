@@ -14,5 +14,5 @@ export default Router().post("/", validateFields({
 }), async (req, res) => {
   const { directory, callId, ...response } = req.body;
   const cwd = await u.workspace.resolveWorkspace(req, directory);
-  res.json(success(u.question.answerQuestion(cwd, callId, response)));
+  res.json(success(u.question.answerQuestion(cwd, callId, response, u.workspace.isLocalWorkspaceRequest(req))));
 });

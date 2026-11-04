@@ -7,13 +7,21 @@
         <span class="projectTime">最近打开 {{ new Date(project.lastOpenedAt).toLocaleString(locale, { hour12: false }) }}</span>
       </span>
     </button>
-    <div v-if="$slots.actions" class="projectActions" :class="{ actionsVisible }">
-      <slot name="actions" />
-    </div>
+    <el-dropdown v-if="$slots.actions" class="projectActions" :class="{ actionsVisible: menuVisible || actionsLoading }" trigger="click" placement="bottom-end" :showArrow="false" :disabled="disabled" @visibleChange="menuVisible = $event">
+      <el-button class="projectMenuButton" text :icon="IconDotsVertical" :loading="actionsLoading" :disabled="disabled" aria-label="更多操作" title="更多操作" />
+      <template #dropdown>
+        <el-dropdown-menu class="projectActionMenu" :aria-label="project.name">
+          <el-dropdown-item :icon="IconFolderOpen" :disabled="disabled" @click="emit('select')">打开</el-dropdown-item>
+          <slot name="actions" />
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
   </el-card>
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
+import { IconDotsVertical, IconFolderOpen } from "@tabler/icons-vue";
 import { locale, translate } from "@toonflow/i18n/vue";
 import type { Project } from "@/stores/workspace";
 import projectCover from "./projectCover.vue";
@@ -22,9 +30,10 @@ withDefaults(defineProps<{
   project: Project;
   disabled?: boolean;
   actionLabel?: string;
-  actionsVisible?: boolean;
+  actionsLoading?: boolean;
 }>(), { actionLabel: "打开项目" });
 const emit = defineEmits<{ select: [] }>();
+const menuVisible = ref(false);
 </script>
 
 <style lang="scss" scoped>
@@ -83,18 +92,25 @@ const emit = defineEmits<{ select: [] }>();
     position: absolute;
     top: 12px;
     right: 12px;
-    display: flex;
-    gap: 4px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s;
 
-    :deep(.el-button) {
+    .projectMenuButton {
       width: 32px;
       height: 32px;
       margin: 0;
       padding: 0;
-      box-shadow: var(--el-box-shadow-lighter);
+      border-radius: var(--ui-radius);
+      background: var(--el-bg-color-overlay);
+      color: var(--el-text-color-regular);
+
+      &:hover:not(:disabled), &[aria-expanded="true"] {
+        background: var(--el-fill-color);
+        color: var(--el-text-color-primary);
+      }
+
+      &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
     }
   }
 
@@ -106,6 +122,14 @@ const emit = defineEmits<{ select: [] }>();
 
   @media (prefers-reduced-motion: reduce) {
     .projectActions { transition: none; }
+  }
+}
+
+.projectActionMenu {
+  min-width: 170px;
+
+  :deep(.removeAction:not(.is-disabled)) {
+    color: var(--el-color-danger);
   }
 }
 </style>

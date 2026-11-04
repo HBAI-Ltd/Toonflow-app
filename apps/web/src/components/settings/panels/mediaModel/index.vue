@@ -1,6 +1,7 @@
 <template>
-  <div v-if="loaded" class="providerList">
+  <div class="providerList">
     <div class="itemList">
+      <toonflowProviderCard scope="media" :provider="providers.find(item => item.id === 'toonflow')" />
       <el-card v-for="item in visibleProviders" :key="item.fileName" class="providerItem" shadow="never">
         <div class="providerHeader">
           <div v-if="item.icon" class="providerMark" aria-hidden="true">
@@ -45,16 +46,16 @@ import axios from "axios";
 import { computed, defineAsyncComponent, onMounted, onBeforeUnmount, ref, shallowRef, type Component } from "vue";
 import { ElMessage } from "element-plus";
 import { IconPlus, IconSettings, IconEdit, IconTrash, IconDownload, IconCode } from "@tabler/icons-vue";
-import type { MediaProvider } from "./types";
+import type { MediaProvider } from "@toonflow/provider-web/types";
 import { saveSettings } from "@/stores/settings";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
+import toonflowProviderCard from "../../toonflowProviderCard.vue";
 
 defineProps<{ visible?: boolean }>();
 const mediaProviderDialog = shallowRef<Component>();
 const editProviderDialog = shallowRef<Component>();
 const providers = ref<MediaProvider[]>([]);
 const visibleProviders = computed(() => providers.value.filter(item => item.id !== "toonflow"));
-const loaded = ref(false);
 const providerDialogVisible = ref(false);
 const editorVisible = ref(false);
 const addMode = ref<"builtin" | "custom">("builtin");
@@ -83,8 +84,6 @@ async function loadProviders() {
     if (request === loadRequest) providers.value = data.data;
   } catch (error) {
     if (request === loadRequest) ElMessage.error(axios.isAxiosError(error) ? error.response?.data?.message || error.message : "读取媒体供应商失败");
-  } finally {
-    if (request === loadRequest) loaded.value = true;
   }
 }
 
@@ -96,20 +95,20 @@ function openAdd(mode: "builtin" | "custom") {
 }
 
 function editProviderCode(provider: MediaProvider) {
-  if (fetchingFile.value || deletingFile.value || !provider.revision) return;
+  if (provider.id === "toonflow" || fetchingFile.value || deletingFile.value || !provider.revision) return;
   openAdd("custom");
   editingSourceProvider.value = provider;
 }
 
 function editProvider(provider: MediaProvider) {
-  if (fetchingFile.value || deletingFile.value || provider.loadError) return;
+  if (provider.id === "toonflow" || fetchingFile.value || deletingFile.value || provider.loadError) return;
   editProviderDialog.value ??= defineAsyncComponent(() => import("./editProviderDialog.vue"));
   editingProvider.value = provider;
   editorVisible.value = true;
 }
 
 async function fetchModels(provider: MediaProvider) {
-  if (fetchingFile.value || deletingFile.value || !provider.modelsUrl || !provider.revision || provider.loadError) return;
+  if (provider.id === "toonflow" || fetchingFile.value || deletingFile.value || !provider.modelsUrl || !provider.revision || provider.loadError) return;
   fetchingFile.value = provider.fileName;
   try {
     const { data } = await axios.post<{ code: number; data: MediaProvider; message: string }>("/api/providers/media/models", {
@@ -125,7 +124,7 @@ async function fetchModels(provider: MediaProvider) {
 }
 
 async function deleteProvider(provider: MediaProvider) {
-  if (fetchingFile.value || deletingFile.value || !provider.revision) return;
+  if (provider.id === "toonflow" || fetchingFile.value || deletingFile.value || !provider.revision) return;
   deletingFile.value = provider.fileName;
   let deleted = false;
   try {

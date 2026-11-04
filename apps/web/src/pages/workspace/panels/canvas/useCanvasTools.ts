@@ -1,10 +1,14 @@
-import { nextTick, watch, type Ref } from "vue";
+import { inject, nextTick, watch, type Ref } from "vue";
 import { useVueFlow, type XYPosition } from "@vue-flow/core";
 import { useNodeEvent, useNodeToolsContext, validateConnection } from "@toonflow/nodes-scaffold/runtime";
 import { canvasSchemas, isNodeToolAllowed, type CanvasContext, type CanvasToolCall } from "@toonflow/tool-canvas/runtime";
 import { asrRequestSchema } from "@toonflow/tools-scaffold/runtime";
+import { pluginDevelopmentSchema, type PluginInstallPreview, type PluginUploadDraft } from "@toonflow/server/pluginDevelopment";
 import { isBrowserAudioAsrSupported, transcribeBrowserAudio } from "@toonflow/asr";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
+import http from "@/lib/http";
+import { confirmPluginInstall } from "@/lib/pluginInstallConfirmation";
+import { openPluginUploadKey } from "@/components/settings/panels/pluginMarket/marketUpload";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { agentNodeToolPermissions } from "@/stores/settings";
 import { arrangeCanvas } from "./arrangeCanvas";
@@ -13,6 +17,7 @@ import { canvasEdgeSummary, canvasNodeSummary, createCanvasQueries, isCanvasRead
 export function useCanvasTools(options: {
   availableNodes: Ref<{ type: string; label: string }[]>;
   flushSave(): Promise<void>;
+  reloadPlugin(type: "node" | "tool", name: string): Promise<void>;
   menu(): {
     getCanvases(signal?: AbortSignal): Promise<{ id: string; name: string }[]>;
     peekCanvases(): { id: string; name: string }[];
@@ -25,6 +30,7 @@ export function useCanvasTools(options: {
 }) {
   const flow = useVueFlow();
   const workspaceStore = useWorkspaceStore();
+  const openPluginUpload = inject(openPluginUploadKey)!;
   const getNodeTools = useNodeToolsContext();
   let nodeRevision = 0;
   let edgeRevision = 0;
@@ -62,7 +68,9 @@ export function useCanvasTools(options: {
     return { x: Math.round(position.x / x) * x, y: Math.round(position.y / y) * y };
   }
 
-  return (id: string, canvasSignal: AbortSignal, workspaceSignal: AbortSignal): CanvasContext => {
+  return { createCanvasContext, getNodeRevision: () => nodeRevision };
+
+  function createCanvasContext(id: string, canvasSignal: AbortSignal, workspaceSignal: AbortSignal): CanvasContext {
     let redirected: CanvasContext | undefined;
     return {
       get id() { return redirected?.id ?? options.getCanvasBinding().id; },
@@ -78,7 +86,7 @@ export function useCanvasTools(options: {
         if (redirected) return redirected.call(request, signal);
         const changesCanvas = request.name === "addCanvas" || request.name === "switchCanvas" || request.name === "renameCanvas";
         // ACT: 转写按音频时长运行，复用 ASR 的停滞与收尾超时，不套用画布操作的总时限。
-        const callSignal = AbortSignal.any([workspaceSignal, ...(changesCanvas ? [] : [canvasSignal]), ...(request.name === "transcribeAudio" ? [] : [AbortSignal.timeout(120000)]), ...(signal ? [signal] : [])]);
+        const callSignal = AbortSignal.any([workspaceSignal, ...(changesCanvas ? [] : [canvasSignal]), ...(request.name === "transcribeAudio" ? [] : [AbortSignal.timeout(request.name === "developPlugin" ? 360000 : 120000)]), ...(signal ? [signal] : [])]);
         let cancel = () => {};
         try {
           canvasSignal.throwIfAborted();
@@ -102,7 +110,7 @@ export function useCanvasTools(options: {
                 canvasSignal.throwIfAborted();
                 result = await execute({ name: "getCanvas", args: {} }, callSignal, id);
               }
-              if (!isCanvasRead(request.name) && request.name !== "selectNodes" && request.name !== "transcribeAudio") await options.flushSave();
+              if (!isCanvasRead(request.name) && !["selectNodes", "transcribeAudio", "developPlugin"].includes(request.name)) await options.flushSave();
               callSignal.throwIfAborted();
               canvasSignal.throwIfAborted();
               return result;
@@ -123,17 +131,43 @@ export function useCanvasTools(options: {
         }
       },
       };
-  };
+  }
 
   async function execute(request: CanvasToolCall, signal: AbortSignal, canvasId: string): Promise<unknown> {
     signal.throwIfAborted();
-    if (!canvasId && !["getCanvas", "addCanvas", "switchCanvas"].includes(request.name)) throw new Error("请先选择画布");
+    if (!canvasId && !["getCanvas", "addCanvas", "switchCanvas", "developPlugin"].includes(request.name)) throw new Error("请先选择画布");
     if (isCanvasRead(request.name)) {
       await nextTick();
       signal.throwIfAborted();
       return readCanvas(request, canvasId, signal);
     }
     switch (request.name) {
+      case "developPlugin": {
+        const args = pluginDevelopmentSchema.parse(request.args);
+        const directory = workspaceStore.project?.directory;
+        if (!directory) throw new Error("请先选择工作目录");
+        const develop = <T>(action: typeof args.action | "previewInstall" = args.action, installDigest?: string) =>
+          http<T>({ method: "POST", url: "/api/plugins/develop", data: { directory, ...args, action, installDigest }, signal, timeout: 360000 });
+        if (args.action === "upload") return openPluginUpload(() => develop<PluginUploadDraft>(), signal);
+        if (args.action !== "install") return develop();
+        const preview = await develop<PluginInstallPreview>("previewInstall");
+        if (!preview || (preview.type !== "node" && preview.type !== "tool") || !preview.fileName || !/^[a-f0-9]{64}$/.test(preview.digest)) throw new Error("安装接口未返回有效的插件名称");
+        const allowed = await confirmPluginInstall({ type: preview.type, name: preview.fileName, source: `${directory}/${args.path}` }, signal);
+        signal.throwIfAborted();
+        if (!allowed) return { installed: false, status: "declined" };
+        const result = await develop<Record<string, unknown>>("install", preview.digest);
+        try {
+          signal.throwIfAborted();
+          const { type, name } = result;
+          if ((type !== "node" && type !== "tool") || typeof name !== "string" || !/^[a-z][a-zA-Z0-9]*$/.test(name)) {
+            throw new Error("安装接口未返回有效的插件名称");
+          }
+          await options.reloadPlugin(type, name);
+          return { ...result, installed: true, refreshed: true, ...(type === "tool" ? { nextTurn: true } : {}) };
+        } catch (error) {
+          return { ...result, installed: true, refreshed: false, refreshError: error instanceof Error ? error.message : String(error) };
+        }
+      }
       case "transcribeAudio": {
         const { path, lang } = asrRequestSchema.parse(request.args);
         if (!isBrowserAudioAsrSupported()) throw new Error("当前浏览器或 WebView 不支持音频文件语音识别");
