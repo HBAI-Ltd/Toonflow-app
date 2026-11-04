@@ -10,8 +10,9 @@ type RuntimeEntry = {
 
 export default function prepareRuntime() {
   const projectDirectory = resolve(import.meta.dir, "../../..");
-  const platform = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : undefined;
-  if (!platform || !["x64", "arm64"].includes(process.arch)) throw new Error("必要运行时准备仅支持 Windows/macOS x64/arm64。");
+  const platform = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos"
+    : process.platform === "linux" ? "linux" : undefined;
+  if (!platform || !["x64", "arm64"].includes(process.arch)) throw new Error("必要运行时准备仅支持 Windows/macOS/Linux x64/arm64。");
   const target = `${platform}-${process.arch}`;
   const catalog = JSON.parse(readFileSync(resolve(projectDirectory, "apps/desktop/runtimeInfo.json"), "utf8")) as {
     version: string;

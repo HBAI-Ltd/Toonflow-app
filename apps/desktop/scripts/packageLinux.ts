@@ -3,6 +3,7 @@ import { chmod, copyFile, mkdir, mkdtemp, realpath, rename, rm, writeAtomic } fr
 import { file, write } from "@toonflow/file/bun";
 import { dirname, join, resolve } from "node:path";
 import desktopConfig from "../../../electrobun.config";
+import prepareRuntime from "./prepareRuntime";
 
 if (process.platform !== "linux" || !["x64", "arm64"].includes(process.arch)) {
   throw new Error("Debian 打包需要 Linux x64/arm64 环境。");
@@ -13,6 +14,7 @@ const artifactDir = resolve(projectDir, desktopConfig.build.artifactFolder);
 const stagingParent = resolve(projectDir, "build/desktop/deb");
 const version = desktopConfig.app.version;
 if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("Linux 版本号必须为 X.Y.Z。");
+const runtime = prepareRuntime();
 const prefix = `stable-linux-${process.arch}`;
 const manifest = await file(join(artifactDir, `${prefix}-update.json`)).json();
 if (manifest.version !== version || manifest.platform !== "linux" || manifest.arch !== process.arch
@@ -53,7 +55,33 @@ try {
   const appVersion = await file(join(appRoot, "Resources/version.json")).json();
   if (appVersion.version !== version || appVersion.hash !== manifest.hash) throw new Error("Linux 应用与更新清单不一致。");
   await chmod(join(appRoot, "bin/launcher"), 0o755);
-  await chmod(join(appRoot, "bin/bun"), 0o755);
+  const runtimePath = join(appRoot, "bin/bun");
+  const runtimeFile = file(runtimePath);
+  if (runtimeFile.size !== runtime.executableSize
+    || new Bun.CryptoHasher("sha256").update(await runtimeFile.arrayBuffer()).digest("hex") !== runtime.executableSha256) {
+    throw new Error("SDK 中的 Bun 与下载校验清单不一致，拒绝生成 Debian 安装包。");
+  }
+  // ACT: 空占位保留 dpkg 文件归属；仅 DEB 在安装时补齐 Bun，不改完整更新归档和补丁基线。
+  await writeAtomic(runtimePath, "", { mode: 0o755 });
+  const installer = await file(resolve(projectDir, "apps/desktop/installer/installLinuxRuntime.sh")).text();
+  if (installer.split("# runtimeConfig").length !== 2) throw new Error("Linux 运行时安装脚本缺少唯一配置入口。");
+  const runtimeConfig = {
+    runtimeVersion: runtime.version,
+    runtimeArch: runtime.arch,
+    archiveSize: runtime.archiveSize,
+    archiveSha256: runtime.archiveSha256,
+    executableSize: runtime.executableSize,
+    executableSha256: runtime.executableSha256,
+    archiveMember: runtime.archiveMember,
+  };
+  const quoteShell = (value: string | number) => `'${String(value).replaceAll("'", "'\\''")}'`;
+  const installerScript = installer.replace("# runtimeConfig", [
+    ...Object.entries(runtimeConfig).map(([key, value]) => `${key}=${quoteShell(value)}`),
+    `set -- ${runtime.sources.map(source => quoteShell(source.url)).join(" ")}`,
+  ].join("\n"));
+  for (const name of ["preinst", "postinst"]) {
+    await writeAtomic(join(controlDir, name), installerScript, { mode: 0o755 });
+  }
 
   await writeAtomic(join(binDir, "toonflow"), [
     "#!/bin/sh",
@@ -69,12 +97,14 @@ try {
   await copyFile(resolve(projectDir, "packages/assets/logo.iconset/icon_256x256.png"), join(iconDir, "toonflow.png"));
   await chmod(join(iconDir, "toonflow.png"), 0o644);
   const sizeKiB = (await $`du -sk ${join(packageRoot, "opt")} ${join(packageRoot, "usr")}`.text())
-    .trim().split("\n").reduce((sum, line) => sum + Number(line.split(/\s+/)[0]), 0);
+    .trim().split("\n").reduce((sum, line) => sum + Number(line.split(/\s+/)[0]), 0)
+    + Math.ceil(runtime.executableSize / 1024);
   await writeAtomic(join(controlDir, "control"), [
     "Package: toonflow", `Version: ${version}`, "Section: graphics", "Priority: optional",
     `Architecture: ${process.arch === "x64" ? "amd64" : "arm64"}`,
     "Maintainer: HBAI-Ltd <ltlctools@outlook.com>",
     `Installed-Size: ${sizeKiB}`,
+    "Pre-Depends: ca-certificates, curl, unzip",
     "Depends: libc6 (>= 2.39), libstdc++6, libgcc-s1, libgtk-3-0t64 | libgtk-3-0, libwebkit2gtk-4.1-0, libayatana-appindicator3-1, librsvg2-2, libpipewire-0.3-0t64 | libpipewire-0.3-0, zenity, ffmpeg, util-linux, xdg-utils",
     "Homepage: https://github.com/HBAI-Ltd/Toonflow-app",
     "Description: Toonflow AI creative workspace", " Local AI workflow for scripts, images and video.", "",

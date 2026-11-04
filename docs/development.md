@@ -97,7 +97,7 @@ bun run dev
 | `bun run build:tools` | 构建默认工具到 `build/tools/`，不写入 `data/tools/`；不包含可选的插件开发套件。 |
 | `bun run start:server` | 运行 `build/server/` 中已构建的服务。 |
 | `bun run build:desktop` | 构建当前平台的桌面应用及随包资源。 |
-| `bun run package:desktop` | 生成当前平台的 Windows NSIS 安装包或 macOS DMG。 |
+| `bun run package:desktop` | 生成当前平台的 Windows NSIS、macOS DMG 或 Linux DEB 安装包。 |
 | `bun run release:desktop <版本号> --auto` | 生成当前平台安装包、完整更新包，并在存在上一版时生成 patch。 |
 | `bun run typecheck` | 单独执行各工作区的类型检查。 |
 | `bun run --cwd packages/i18n extract` | 手动抽取中文源文案和来源索引，不生成其他语言的译文。 |
@@ -170,7 +170,7 @@ NSIS 安装包不内置 Bun。安装器会自动打开“必要运行时下载�
 
 线路探测最多 4 路并发，每次仅请求实际 ZIP 的前 32 KiB；单次目标上限 2 秒、整个阶段预算 6 秒，每条线路首次成功后才做第二次确认。出现连续两次成功的候选后，再留 500 毫秒比较其他已启动的线路，然后中断剩余探测、等待工作任务结束并开始单路下载；未测或探测失败的线路继续保留为后备。暂停、取消或更改设置会同时停止全部探测。短时结果只代表当前连接表现；操作系统的 DNS、代理和取消收尾仍可能增加实际等待时间，不承诺所有网络下恰好 6 秒结束。
 
-为兼容已经安装的旧版更新助手，Windows 的 `.tar.zst` 更新归档仍保留 Bun；仅 NSIS 使用剔除运行时的独立归档，解压后删除这份归档，不将它冒用为原始增量基线。因此通过精简安装包安装后，首次更新会使用完整更新包，之后恢复正常增量更新。构建时的 Bun 版本和下载摘要由 `apps/desktop/runtimeInfo.json` 锁定，并与 Hutch 的托管版本核对；升级 SDK 携带的 Bun 时需同步核验四个平台的清单。
+为兼容已经安装的旧版更新助手，Windows 的 `.tar.zst` 更新归档仍保留 Bun；仅 NSIS 使用剔除运行时的独立归档，解压后删除这份归档，不将它冒用为原始增量基线。因此通过精简安装包安装后，首次更新会使用完整更新包，之后恢复正常增量更新。构建时的 Bun 版本和下载摘要由 `apps/desktop/runtimeInfo.json` 锁定，并与 Hutch 的托管版本核对；升级 SDK 携带的 Bun 时需同步核验相关平台的清单。
 
 **macOS**
 
@@ -209,7 +209,11 @@ bun run build:desktop
 bun run package:desktop
 ```
 
-安装包为 `toonflow-<版本>-linux-<架构>.deb`，产物分别位于 `build/desktop/artifacts/linuxX64/`、`build/desktop/artifacts/linuxArm64/`。使用 `sudo apt install ./安装包文件名.deb` 安装时会一并安装所需系统依赖与 FFmpeg。
+安装包为 `toonflow-<版本>-linux-<架构>.deb`，产物分别位于 `build/desktop/artifacts/linuxX64/`、`build/desktop/artifacts/linuxArm64/`。使用 `sudo apt install ./安装包文件名.deb` 安装时会准备所需系统依赖与 FFmpeg，并先安装 `Pre-Depends` 声明的 `ca-certificates`、`curl`、`unzip`。安装需要可访问下载源的网络。
+
+DEB 不内置 Bun 二进制。`preinst` 在首次安装、重装或升级的解包前阶段，准备 `apps/desktop/runtimeInfo.json` 锁定版本与架构的 ZIP，校验固定大小和 SHA-256，再流式解压指定成员到缓存临时文件并校验二进制大小和 SHA-256；下载或校验失败会在解包前中止安装。`postinst` 在配置阶段复核缓存与解压出的二进制，最后原子替换 `/opt/toonflow/bin/bun`；该阶段已有有效运行时可直接复用，不重新下载。
+
+匹配版本与架构的 ZIP 缓存位于 `/var/cache/toonflow/bun-<版本>-linux-<架构>.zip`，由 root 持有且仅 root 可访问，复用前重新校验；重装与升级也先确保缓存有效。卸载由包管理器删除安装目录中的 Bun，下载缓存保留，不触碰用户项目与配置。SDK 的完整 `.tar.zst` 更新归档继续保留 Bun，更新清单、Hash 与增量基线不因 DEB 精简而改变。
 
 完成 SDK 准备后，可显式运行 `bun run typecheck`。类型检查不会隐式安装依赖或编译原生库。
 

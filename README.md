@@ -293,7 +293,7 @@ Windows 安装器会自动检测并安装 WebView2；如果安装后打开闪退
 
 Windows 的 Intel / AMD 电脑选择 `toonflow-版本号-Setup.exe`，ARM64 电脑选择 `toonflow-版本号-win-arm64-Setup.exe`。ARM64 需要 .NET Framework 4.8.1，较新的 Windows 11 已内置。
 
-Linux 选择对应架构的 `toonflow-版本号-linux-x64.deb` 或 `toonflow-版本号-linux-arm64.deb`，在下载目录执行 `sudo apt install ./安装包文件名.deb`，安装后从应用菜单打开。安装时会一并安装所需的系统依赖与 FFmpeg。
+Linux 选择对应架构的 `toonflow-版本号-linux-x64.deb` 或 `toonflow-版本号-linux-arm64.deb`，在下载目录执行 `sudo apt install ./安装包文件名.deb`，安装后从应用菜单打开。安装需要联网；apt 会准备 FFmpeg、curl、unzip、CA 证书等依赖，安装脚本在解包应用前下载固定版本的 Bun 并校验大小与 SHA-256，配置阶段再安装运行时。下载或校验失败会在解包前中止安装。
 
 macOS 两种架构均使用统一的 Electrobun SDK，最低支持 macOS 14。选择对应架构的 `toonflow-版本号-macos-arm64.dmg` 或 `toonflow-版本号-macos-x64.dmg`，打开后将 `toonflow.app` 拖入“应用程序”，再从“应用程序”打开 Toonflow。正式发布流程使用 Developer ID Application 签署应用与 DMG，并完成 Apple 公证。旧版 Intel Mac 客户端首次迁移时须下载完整 DMG 覆盖安装，不能通过旧版增量更新直接迁移；安装前退出应用并备份原数据目录。
 

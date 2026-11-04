@@ -24,6 +24,18 @@
       "archiveSha256": "c240d7f0ccb90c263a849fcdb09b7ee62630d921348ed6aafda86b9d577bc510",
       "executableSize": 88660864,
       "executableSha256": "0a2237cdcfa0d16ef501d9acca9f0026309ef348bea7393a64e8d1e3609565cc"
+    },
+    "linux-x64": {
+      "archiveSize": 51794595,
+      "archiveSha256": "bf8ccbfb2b0b80159e0f9a6d15c55317add8077534dbc6130a3edb52fccb395c",
+      "executableSize": 107308936,
+      "executableSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235"
+    },
+    "linux-arm64": {
+      "archiveSize": 51644673,
+      "archiveSha256": "baa6bb36f51d6e58561e02bbea825038a9df454f673d6d776e8bbf86f8c7850e",
+      "executableSize": 107339768,
+      "executableSha256": "354c2b049c716aca07b2e5cddb887928ac58950675d1258bb6312083917793b6"
     }
   }
 }
