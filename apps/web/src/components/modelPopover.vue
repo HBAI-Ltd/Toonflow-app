@@ -22,7 +22,7 @@
       </template>
       <el-form class="modelOptions" labelPosition="top">
         <el-form-item label="模型">
-          <el-select :modelValue="selectedModelChoice ? selectedModel : ''" filterable :disabled="disabled" :teleported="false" placeholder="选择模型" aria-label="选择模型" noDataText="请先在设置中添加模型" @update:modelValue="selectedModel = $event" @change="reasoningEffort = ''">
+          <el-select :modelValue="selectedModelChoice ? selectedModel : ''" filterable :disabled="disabled" :teleported="false" popperClass="agentModelSelectPopper" placeholder="选择模型" aria-label="选择模型" noDataText="请先在设置中添加模型" @update:modelValue="selectedModel = $event" @change="reasoningEffort = ''">
             <template #prefix><modelIcon v-if="selectedModelChoice" :model="selectedModelChoice.modelId" :size="18" /></template>
             <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModelChoice?.providerId" /></template>
             <el-option-group v-for="provider in customProviders" :key="provider.id" :label="provider.label">
@@ -205,6 +205,15 @@ watch(() => !props.active || props.disabled, close => { if (close) visible.value
         }
       }
     }
+  }
+}
+
+// WKWebView 下嵌套 popper 的 zoom-in-top 进出场会卡在 scaleY(0)，下拉整体不可见；直接呈现最终态，跳过该动画。
+.agentModelSelectPopper {
+  &.el-zoom-in-top-enter-from,
+  &.el-zoom-in-top-leave-active {
+    opacity: 1;
+    transform: scaleY(1);
   }
 }
 </style>
