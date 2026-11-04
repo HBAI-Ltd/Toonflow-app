@@ -110,7 +110,7 @@ if (mode === "dev") {
     const groupDirectory = resolve(projectDir, "packages", group);
     rmSync(resolve(projectDir, "build", group), { recursive: true, force: true });
     for (const entry of readdirSync(groupDirectory, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
+      if (!entry.isDirectory() || !existsSync(resolve(groupDirectory, entry.name, "package.json"))) continue;
       await $`${process.execPath} run build`
         .cwd(resolve(groupDirectory, entry.name))
         .env({ ...process.env, NODE_ENV: "production" });
