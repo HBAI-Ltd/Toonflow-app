@@ -74,7 +74,7 @@ bun run dev
 
 - **Windows**：运行窗口需要 WebView2；构建脚本会调用 `%WINDIR%/Microsoft.NET/Framework64/v4.0.30319/csc.exe` 编译辅助程序。ARM64 需要 .NET Framework 4.8.1，较新的 Windows 11 已内置。NSIS 是制作 Windows 安装包的要求，不是普通 Web 开发或桌面开发的前置条件。
 - **macOS**：最低支持 macOS 14，先安装 Xcode Command Line Tools。
-- **Linux**：DEB 面向 Debian / Ubuntu，需要 GTK 3、WebKitGTK 4.1、Ayatana AppIndicator、librsvg、Zenity、FFmpeg，以及提供 `dpkg-deb` 的 dpkg。Ubuntu 24.04 的安装命令见[开发与构建指南](./docs/development.md)。
+- **Linux**：DEB 面向 Debian / Ubuntu，需要 GTK 3、WebKitGTK 4.1、Ayatana AppIndicator、librsvg、Zenity、FFmpeg，以及提供 `dpkg-deb` 的 dpkg。DEB 在解包前联网准备并校验固定版本的 Bun；apt 会先安装 `Pre-Depends` 声明的 `ca-certificates`、`curl`、`unzip`，安装配置阶段再安装运行时。Ubuntu 24.04 的安装命令见[开发与构建指南](./docs/development.md)。
 
 所有桌面平台首次开发或单独类型检查前，显式准备当前平台的 SDK：
 
