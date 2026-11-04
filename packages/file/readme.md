@@ -9,7 +9,7 @@ await writeAtomic(absolutePath, JSON.stringify(snapshot));
 const content = await readFile(absolutePath, "utf8");
 ```
 
-- `writeAtomic` / `writeAtomicSync`：同目录短随机临时文件、`wx` 创建、完整写入后重命名；`exclusive: true` 用硬链接提交，目标已存在时报 `EEXIST`。默认权限 `0o600`，不自动创建父目录，不合并快照，不保证断电持久性。
+- `writeAtomic` / `writeAtomicSync`：同目录短随机临时文件、`wx` 创建、完整写入后重命名；`exclusive: true` 在 Windows Bun 和移动端使用系统独占重命名，其他环境用硬链接提交，目标文件已存在时报 `EEXIST`，不覆盖已有文件、目录或符号链接。默认权限 `0o600`，不自动创建父目录，不合并快照，不保证断电持久性。
 - 普通 `writeFile`、`appendFile`、`copyFile` 保留标准库语义并参与队列。需要完整覆盖的业务快照显式选择原子接口；追加、开发热更新复制和安装 staging 不改成另一种操作。
 - `async-mutex` 负责 FIFO 队列：同文件最多 64 个并发读，写入独占，不同文件并行。Windows 路径忽略大小写；多路径按固定顺序获取，避免互相等待。调用模块负责 realpath、链接和目录层级的事务边界。
 - 读写流、`open` 返回的句柄、`opendir` 返回的目录持有访问许可直到关闭；调用方必须结束、取消或关闭它们。排队最多等待 30 秒，支持 `withFileAccess` 的 AbortSignal；同步调用碰到本进程未结束的冲突操作立即报 `EBUSY`。

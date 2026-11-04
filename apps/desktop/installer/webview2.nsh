@@ -33,7 +33,7 @@ Function runWebView2Check
   Call logWebView2Check
 FunctionEnd
 
-; NSIS 是 x86，使用 x64 检测程序检查与应用相同架构的 Runtime。
+; NSIS 是 x86，独立检测程序使用应用对应的 x64 或 ARM64 Runtime。
 Function ensureWebView2
   InitPluginsDir
   File "/oname=$PLUGINSDIR\checkWebView2.exe" "${webView2Dir}\checkWebView2.exe"

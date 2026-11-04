@@ -94,15 +94,19 @@ bun run dev
 | `bun run build` | 构建工具、Web、Server、MCP，并输出技能和提供方文件。 |
 | `bun run build:server` | 构建独立部署所需的节点、工具、Web、Server、MCP、技能和提供方，支持 Linux。 |
 | `bun run build:nodes` | 构建节点到 `build/nodes/`，不写入 `data/nodes/`。 |
-| `bun run build:tools` | 构建工具到 `build/tools/`，不写入 `data/tools/`。 |
+| `bun run build:tools` | 构建默认工具到 `build/tools/`，不写入 `data/tools/`；不包含可选的插件开发套件。 |
 | `bun run start:server` | 运行 `build/server/` 中已构建的服务。 |
 | `bun run build:desktop` | 构建当前平台的桌面应用及随包资源。 |
-| `bun run package:desktop` | 生成当前平台的 Windows NSIS 安装包或 macOS DMG。 |
+| `bun run package:desktop` | 生成当前平台的 Windows NSIS 安装包或 macOS PKG。 |
 | `bun run release:desktop <版本号> --auto` | 生成当前平台安装包、完整更新包，并在存在上一版时生成 patch。 |
 | `bun run typecheck` | 单独执行各工作区的类型检查。 |
 | `bun run --cwd packages/i18n extract` | 手动抽取中文源文案和来源索引，不生成其他语言的译文。 |
 
 构建与类型检查分别执行。新增、移动或删除业务接口后，在 `apps/server` 执行 `bun run routes` 生成路由。
+
+Windows 桌面日志位于安装目录的 `app/bin/app.log`。桌面 JavaScript 日志、初始化与依赖加载异常追加到同一文件，保留错误堆栈；启动助手也记录异常退出码。日志采用追加写入，日志不可写时仍保留控制台输出和启动失败提示。
+
+插件开发工具位于 `packages/tools/pluginDeveloper`，作为工作区子包随默认工具构建和内置，产物为 `build/tools/pluginDeveloper.tool.js`，开发构建同步到 `data/tools/`。SDK 下载、缓存和插件构建由工具负责，主程序只提供本机权限校验及安装、刷新、上传桥接。工具私有资源在卸载时一并清理。
 
 ### 云端渠道
 
@@ -143,31 +147,34 @@ bun run start:server
 </details>
 
 <details>
-<summary><strong>桌面构建准备：Windows 与 macOS</strong></summary>
+<summary><strong>桌面构建准备：Windows、macOS 与 Linux</strong></summary>
 
-桌面脚本支持 Windows x64、macOS arm64 和 macOS x64，需要在对应系统与架构上构建。
+六种桌面目标统一使用 Electrobun 2.0.5：Windows、macOS、Linux，各支持 x64 / ARM64。需要在对应系统与架构上构建，不提供跨系统交叉打包。安装工作区依赖后，首次构建或单独类型检查前显式准备当前平台 SDK：
 
-**Windows x64**
+```sh
+bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
+```
 
-使用 Electrobun 2.0.1。打包需要 NSIS，默认查找 `C:/Program Files (x86)/NSIS/makensis.exe`，可通过 `NSIS_PATH` 指定路径。首次打包会下载并验证微软 WebView2 引导程序。
+**Windows**
+
+运行应用需要 WebView2；ARM64 还需 .NET Framework 4.8.1，较新的 Windows 11 已内置。构建脚本通过 `%WINDIR%/Microsoft.NET/Framework64/v4.0.30319/csc.exe` 编译辅助程序。打包需要 NSIS，默认查找 `C:/Program Files (x86)/NSIS/makensis.exe`，可通过 `NSIS_PATH` 指定路径。首次打包会下载并验证微软 WebView2 引导程序。
 
 ```sh
 bun run build:desktop
 bun run package:desktop
 ```
 
-安装包输出到 `build/desktop/artifacts/toonflow-<版本>-Setup.exe`。
+Windows x64 安装包为 `toonflow-<版本>-Setup.exe`，ARM64 为 `toonflow-<版本>-win-arm64-Setup.exe`，分别位于 `build/desktop/artifacts/`、`build/desktop/artifacts/windowsArm64/`。
+
+NSIS 安装包不内置 Bun。安装器会自动打开“必要运行时下载”，提供 npmmirror、CNPM 备用线路、GitHub 官方源、SourceForge 镜像四个预设入口，并在系统代理和直连之间自动回退；所有组合失败后才提示重试。npmmirror 与 CNPM 属于同一维护体系，使用不同下载入口，不视为两个独立镜像运营方。高级设置默认折叠，下载中可以暂停、切换来源或取消，缓存位于 `%LOCALAPPDATA%/local.toonflow.desktop/runtime/bun/<版本>/<架构>`。下载的 ZIP 与可执行文件均校验固定大小和 SHA-256，不接受任意版本替换。`/S` 安装使用相同下载流程，不显示交互窗口。首次下载成功后，重新安装可以复用已校验缓存。
+
+线路探测最多 4 路并发，每次仅请求实际 ZIP 的前 32 KiB；单次目标上限 2 秒、整个阶段预算 6 秒，每条线路首次成功后才做第二次确认。出现连续两次成功的候选后，再留 500 毫秒比较其他已启动的线路，然后中断剩余探测、等待工作任务结束并开始单路下载；未测或探测失败的线路继续保留为后备。暂停、取消或更改设置会同时停止全部探测。短时结果只代表当前连接表现；操作系统的 DNS、代理和取消收尾仍可能增加实际等待时间，不承诺所有网络下恰好 6 秒结束。
+
+为兼容已经安装的旧版更新助手，Windows 的 `.tar.zst` 更新归档仍保留 Bun；仅 NSIS 使用剔除运行时的独立归档，解压后删除这份归档，不将它冒用为原始增量基线。因此通过精简安装包安装后，首次更新会使用完整更新包，之后恢复正常增量更新。构建时的 Bun 版本和下载摘要由 `apps/desktop/runtimeInfo.json` 锁定，并与 Hutch 的托管版本核对；升级 SDK 携带的 Bun 时需同步核验四个平台的清单。
 
 **macOS**
 
-先安装 Xcode Command Line Tools。Apple Silicon 使用 Electrobun 2.0.1；Intel Mac 使用 `compat/macIntel/` 中的 Electrobun 1.18.1 兼容构建，需先准备其依赖：
-
-```sh
-# 仅 Intel Mac 需要
-cd compat/macIntel
-bun install --frozen-lockfile
-cd ../..
-```
+最低支持 macOS 14。先安装 Xcode Command Line Tools，Intel 与 Apple Silicon 使用同一 SDK 和构建入口。
 
 在对应架构的 Mac 上生成原生启动库，然后构建：
 
@@ -177,24 +184,32 @@ bun run build:desktop
 bun run package:desktop
 ```
 
-启动库脚本会下载固定版本的 ThorVG 源码并校验摘要。产物分别位于 `build/desktop/artifacts/macArm64/` 和 `build/desktop/artifacts/macX64/`。
+启动库脚本会下载固定版本的 ThorVG 源码并校验摘要。安装包为 `toonflow-<版本>-macos-<架构>.pkg`，产物分别位于 `build/desktop/artifacts/macArm64/` 和 `build/desktop/artifacts/macX64/`。双击 PKG 后点击“继续”，按系统安装向导完成安装，再从“应用程序”打开 Toonflow。
 
-本机默认生成未做 Developer ID 签名与公证的测试包；GitHub Actions 的 ARM 包会按下方配置自动签名并公证，Intel 仍不重签。对于自己构建且确认来源的测试应用，若被隔离属性拦截，可仅移除该应用的隔离属性，路径按实际位置调整：
+macOS 默认仍内置 Bun。仓库保留 `TOONFLOW_EXTERNAL_RUNTIME=1` 的精简安装包试验入口：PKG 在安装应用前，以当前已登录桌面用户的身份打开“必要运行时下载”，校验成功后才继续安装，缓存位于该用户的 Application Support；取消或失败不会覆盖原应用。已有有效缓存时直接复用，首次启动仅作校验与缺失后的恢复。安装阶段需要已登录的桌面会话；macOS 15 的组件脚本时限设为 60 分钟，macOS 14 使用系统默认的 10 分钟时限，超时退出助手，重新安装可续传。SDK 的完整更新归档保持不变。此入口默认关闭，外置 Bun 的可执行路径会改变系统识别的主 Bundle，仅修正 SDK 资源路径和工作目录不能保证麦克风权限、协议链接与应用身份正常。需要在 Intel、Apple Silicon Mac 上解决并验证这些行为，再考虑正式启用。启用签名时，试验构建会在打包前重新签名，并对 PKG 公证，不在用户启动时修改已签名的 `.app`。
+
+本机默认生成未做 Developer ID 签名与公证的开发包；GitHub Actions 的两种 Mac 包都会按下方配置自动签名并公证。旧版 Intel 客户端首次迁移到统一 SDK 版本时，须下载完整 PKG 覆盖安装，不能通过旧版增量更新直接迁移；安装前退出应用并备份原数据目录。对于自己构建且确认来源的开发应用，若被隔离属性拦截，可仅移除该应用的隔离属性，路径按实际位置调整：
 
 ```sh
 xattr -dr com.apple.quarantine "/Applications/toonflow.app"
 ```
 
-**类型检查与 SDK**
+**Linux**
 
-若 Windows x64 或 Apple Silicon 在首次构建前单独进行类型检查，先准备 Electrobun SDK：
+使用系统 GTKWebKit，不捆绑 CEF。以下以 Ubuntu 24.04 为例，显式安装桌面运行库与打包工具后构建：
 
 ```sh
-bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
-bun run typecheck
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends \
+  libgtk-3-0t64 libwebkit2gtk-4.1-0 libayatana-appindicator3-1 librsvg2-2 \
+  zenity ffmpeg dpkg
+bun run build:desktop
+bun run package:desktop
 ```
 
-Intel Mac 在安装兼容 SDK 后，先运行桌面开发或构建命令生成适配文件。类型检查不会隐式安装依赖或编译原生库。
+安装包为 `toonflow-<版本>-linux-<架构>.deb`，产物分别位于 `build/desktop/artifacts/linuxX64/`、`build/desktop/artifacts/linuxArm64/`。使用 `sudo apt install ./安装包文件名.deb` 安装时会一并安装所需系统依赖与 FFmpeg。
+
+完成 SDK 准备后，可显式运行 `bun run typecheck`。类型检查不会隐式安装依赖或编译原生库。
 
 </details>
 
@@ -209,7 +224,7 @@ Intel Mac 在安装兼容 SDK 后，先运行桌面开发或构建命令生成�
 2. 填写完整标签名，例如 `v2.0.0`，确认标签指向要发布的提交。
 3. 在左侧标签列表右键这个新标签，选择 **推送标签**，目标选择正式仓库 `origin`。只推送本次标签，不勾选“推送所有标签”。
 
-推送标签会一并上传它所引用的提交，无需创建或推送发布分支。GitHub Actions 会自动运行 **Release desktop v2.0.0**，构建 Windows x64、macOS ARM64 和 macOS x64，全部成功后创建对应 GitHub Release。
+推送标签会一并上传它所引用的提交，无需创建或推送发布分支。GitHub Actions 会自动运行 **Release Toonflow**，构建六种桌面目标与 Android ARM64，全部成功后创建对应 GitHub Release。
 
 也可在仓库终端执行下面两条命令（将 `2.0.0` 换成本次版本）：
 
@@ -220,21 +235,25 @@ git push --no-follow-tags origin refs/tags/v2.0.0:refs/tags/v2.0.0
 
 版本格式为小写 `v` 加 `X.Y.Z`；轻量标签和附注标签均支持。使用新的版本号，不覆盖已有标签。构建失败时，在 Actions 中查看日志；代码不变可重跑任务，修改代码后使用新版本号。
 
-**一次构建三个平台**
+**一次构建全部平台**
 
-在 GitHub 仓库打开 **Actions → Release desktop → Run workflow**，选择要发布的可信分支，填写版本号（例如 `2.0.1`），将 `ref` 留空后运行。推送 `vX.Y.Z` 标签同样会触发发布。包含 ARM 的构建要求 `ref` 与触发工作流的分支或标签指向同一提交，不允许借此切换到其他提交；仅构建 Windows 或 Intel 时仍可指定其他 `ref`。
+在 GitHub 仓库打开 **Actions → Release Toonflow → Run workflow**，选择要发布的可信分支，填写版本号（例如 `2.0.1`），将 `ref` 留空后运行。推送 `vX.Y.Z` 标签同样会触发发布。包含任一种 Mac 的签名构建要求 `ref` 与触发工作流的分支或标签指向同一提交，不允许借此切换到其他提交；在 Debug 工作流仅构建 Windows、Linux 或 Android 时可指定其他 `ref`。
 
-工作流分别在 Windows、Intel Mac 和 Apple Silicon 运行器上构建，全部成功后统一上传到对应 GitHub Release：
+工作流使用各系统与架构的原生运行器构建，全部成功后统一上传到对应 GitHub Release：
 
 | 平台 | 安装包 | 更新文件 |
 | --- | --- | --- |
 | Windows x64 | `toonflow-<版本号>-Setup.exe` | `stable-win-x64-*` |
-| macOS Intel | DMG | `stable-macos-x64-*` |
-| macOS Apple Silicon | DMG | `stable-macos-arm64-*` |
+| Windows ARM64 | `toonflow-<版本号>-win-arm64-Setup.exe` | `stable-win-arm64-*` |
+| macOS Intel | `toonflow-<版本号>-macos-x64.pkg` | `stable-macos-x64-*` |
+| macOS Apple Silicon | `toonflow-<版本号>-macos-arm64.pkg` | `stable-macos-arm64-*` |
+| Linux x64 | `toonflow-<版本号>-linux-x64.deb` | `stable-linux-x64-*` |
+| Linux ARM64 | `toonflow-<版本号>-linux-arm64.deb` | `stable-linux-arm64-*` |
+| Android ARM64 | `toonflow-<版本号>-android-arm64.apk` | APK 随 Release 发布，不使用桌面更新清单 |
 
-各平台包含完整更新包 `.tar.zst`、更新清单 `*-update.json`，以及**GitHub 最新发布版 → 当前版本**的 `<平台前缀>-<旧 hash>.patch`。首次发布找不到该平台清单（HTTP 404）时只生成安装包和完整更新包；其他网络错误、无效清单或缺失 patch 会中止构建。版本号必须高于更新源中的上一版。
+各桌面目标包含完整更新包 `.tar.zst`、更新清单 `*-update.json`，以及**GitHub 最新发布版 → 当前版本**的 `<平台前缀>-<旧 hash>.patch`。首次发布找不到该目标清单（HTTP 404）时只生成安装包和完整更新包；Intel Mac 首次遇到旧 SDK 清单时也只生成统一 SDK 的首版完整包。其他网络错误、无效清单或缺失 patch 会中止构建。版本号必须高于更新源中的上一版。
 
-构建固定使用 GitHub Releases 的 `releases/latest/download` 读取上一版清单及完整包，用于生成补丁。GitHub Actions 使用当前工作流仓库（`GITHUB_SERVER_URL` / `GITHUB_REPOSITORY`），本机构建默认使用 `HBAI-Ltd/Toonflow-app`。此地址写入 SDK 的构建配置，不受客户端设置影响；客户端运行时在“设置 → 关于”选择更新源，默认使用官方源 `https://api.toonflow.net/version/desktopUpdates`，也可切换到 GitHub Releases。开发者选项可保存一个自定义更新文件目录地址，保存后会出现在“关于”的更新源下拉框。工作流会上传文件到 GitHub Release，官方更新服务的文件仍需按下方命令单独同步。
+构建固定使用 GitHub Releases 的 `releases/latest/download` 读取上一版清单及完整包，用于生成补丁。GitHub Actions 使用当前工作流仓库（`GITHUB_SERVER_URL` / `GITHUB_REPOSITORY`），本机构建默认使用 `HBAI-Ltd/Toonflow-app`。此地址写入 SDK 的构建配置，不受客户端设置影响；客户端运行时在“设置 → 关于”选择更新源，默认使用官方源 `https://api.toonflow.net/version/desktopUpdates`，也可切换到 GitHub Releases。开发者选项可保存一个自定义更新文件目录地址，保存后会出现在“关于”的更新源下拉框。Release 工作流会上传安装包和更新文件到 GitHub Release，再通过配置的托管接口登记六个桌面目标；使用独立更新服务时按下方命令单独同步。
 
 [Debug 工作流](../.github/workflows/debug.yml) 可单独选择平台或全部平台，产物保留 7 天，不创建 Release。默认只打完整包，勾选 `generatePatch` 可验证增量构建。CI 构建和归档检查不等于已验证真实安装、GUI 启动或 macOS Gatekeeper。
 
@@ -256,13 +275,13 @@ SignTool 已在 PATH 时可省略 `windowsSignToolPath`；指定路径时必须�
 
 签名接入与编译通过不等于误报已解除。Defender 已检测的原始文件需结合保护历史记录复核，必要时通过 [Microsoft Security Intelligence](https://www.microsoft.com/en-us/wdsi/filesubmission) 以软件开发者身份提交分析。
 
-**ARM 自动签名与公证：首次配置**
+**macOS 自动签名与公证：首次配置**
 
 在 GitHub 仓库的 **Settings → Secrets and variables → Actions → New repository secret** 添加：
 
 | Secret | 内容 |
 | --- | --- |
-| `MACOS_CERTIFICATE_BASE64` | 包含一个有效 **Developer ID Application** 证书及其私钥的 `.p12` 文件，编码为 Base64。 |
+| `MACOS_CERTIFICATE_BASE64` | 同一个 `.p12` 文件，包含各一个有效的 **Developer ID Application**、**Developer ID Installer** 证书及各自匹配的私钥，编码为 Base64。 |
 | `MACOS_CERTIFICATE_PASSWORD` | 导出该 `.p12` 时设置的非空密码。 |
 | `MACOS_NOTARIZATION_KEY_ID` | App Store Connect 团队 API 密钥的 Key ID。 |
 | `MACOS_NOTARIZATION_ISSUER_ID` | 该团队 API 密钥的完整 Issuer ID，不是 Team ID。 |
@@ -282,17 +301,17 @@ SignTool 已在 PATH 时可省略 `windowsSignToolPath`；指定路径时必须�
 
 粘贴保存后可执行 `Set-Clipboard -Value ''` 清空剪贴板。密码直接填写到 `MACOS_CERTIFICATE_PASSWORD`，不写进命令、源码或聊天记录。Base64 只是编码，不是加密；P12、P8、Base64、密码均不得提交到公开仓库或上传为构建产物。
 
-公证使用 App Store Connect **团队 API 密钥**，Key ID、Issuer ID 与 P8 必须对应同一把有权限的密钥。更换签名 P12 不要求同时更换仍有效且有权限的公证 API 密钥。这种认证方式不需要 Apple ID 密码或 Team ID；P12 及其密码用于代码签名。
+公证使用 App Store Connect **团队 API 密钥**，Key ID、Issuer ID 与 P8 必须对应同一把有权限的密钥。应用与 PKG 复用这把公证密钥，更换签名 P12 不要求同时更换仍有效且有权限的公证 API 密钥。这种认证方式不需要 Apple ID 密码或 Team ID；P12 及其密码用于应用和安装包签名。
 
-配置后，Debug 与 Release 的 ARM 构建都会自动导入临时钥匙串，使用 Electrobun 签署应用内的原生代码、完整更新包中的应用、安装包装程序和 DMG，并分别提交 Apple 公证、等待通过、附加并验证公证票据。完整更新归档在应用公证后生成；上传前还会严格验证解压后的应用、DMG 及镜像内应用的签名和公证票据，并核对是否使用本次导入的 Developer ID 证书。
+配置后，Debug 与 Release 的两种 Mac 构建都会自动导入临时钥匙串，使用 Developer ID Application 签署应用及其原生代码，使用 Developer ID Installer 签署 PKG，并对应用与安装包分别提交 Apple 公证、等待通过、附加并验证公证票据。完整更新归档在应用公证后生成；上传前会验证更新归档中应用的签名和公证票据，并核对是否使用本次导入的 Developer ID Application 证书；PKG 会校验安装器签名、公证票据与系统安装评估。
 
-缺少 Secret、没有唯一有效的 Developer ID Application 身份、Apple 拒绝公证或验收失败都会中止构建，不回退为未签名或未公证包。临时 P12 在导入步骤结束后删除；P8 与钥匙串在构建成功、失败或取消后的清理步骤中删除，均放在运行器临时目录。证书 Base64、密码和 P8 Base64 只注入凭据准备步骤，公证 API 标识只额外传给 ARM 构建步骤。公证等待计入工作流现有的 90 分钟超时，超时不会发布。
+缺少 Secret、没有各自唯一有效的 Developer ID Application 和 Developer ID Installer 身份、Apple 拒绝公证或验收失败都会中止构建，不回退为未签名或未公证包。临时 P12 在导入步骤结束后删除；P8 与钥匙串在构建成功、失败或取消后的清理步骤中删除，均放在运行器临时目录。证书 Base64、密码和 P8 Base64 只注入凭据准备步骤，公证 API 标识只额外传给 Mac 构建步骤。公证等待计入工作流现有的 90 分钟超时，超时不会发布。
 
 公开仓库只从可信的手动操作或 `v*` 标签触发签名，不接入 `pull_request` / `pull_request_target`。请用 GitHub Rulesets 保护发布分支及 `v*` 标签，并限制仓库写权限；签名构建会执行所选提交的代码，有权修改发布代码或工作流的人也处于 Secrets 的信任边界内。证书导入方式参见 [GitHub 官方说明](https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms/sign-xcode-applications)。
 
-ARM 的 CI 构建强制同时签名与公证，本机构建默认不启用；Intel 的旧 SDK 重签限制保持不变。公证无需上架 App Store，首次打开仍可能出现确认打开互联网下载应用的提示。CI 验收不代替实际 Mac 上从浏览器下载、安装、启动及升级的验证，参见 [Apple 安全打开应用说明](https://support.apple.com/en-us/102445)。
+两种 Mac 的 CI 构建强制同时签名与公证，本机构建默认不启用。公证无需上架 App Store，首次打开仍可能出现确认打开互联网下载应用的提示。CI 验收不代替实际 Mac 上从浏览器下载、安装、启动及升级的验证，参见 [Apple 安全打开应用说明](https://support.apple.com/en-us/102445)。
 
-若凭据准备步骤提示“未找到唯一有效的 Developer ID Application 身份”，查看该步骤后续输出的证书类别、有效期和系统诊断。`Apple Development`、`Apple Distribution`、`Developer ID Installer` 均不能替代当前所需的 `Developer ID Application`。若类别正确，仍需检查是否含匹配私钥、是否过期，以及证书信任链；成功导入 P12 不等于存在有效的代码签名身份。诊断不会打印私钥、密码或证书姓名。
+若凭据准备步骤提示未找到唯一有效的签名身份，查看该步骤后续输出的证书类别、有效期和系统诊断。应用需要 `Developer ID Application`，PKG 需要 `Developer ID Installer`，两者不能互相替代；`Apple Development`、`Apple Distribution` 也不能替代这两种身份。若类别正确，仍需检查是否含匹配私钥、是否过期，以及证书信任链；成功导入 P12 不等于存在有效的签名身份。诊断不会打印私钥、密码或证书姓名。
 
 **本机打包与独立更新服务**
 
@@ -310,7 +329,7 @@ bun run release:desktop 2.0.1
 bun run publish:update build/desktop/releases/2.0.1
 ```
 
-Mac 发布目录增加 `macX64/` 或 `macArm64/`，例如 `build/desktop/releases/macArm64/2.0.1`。所有 release 模式都会生成安装包；`--auto` 自动判断基线，不带选项要求已有上一版，`--initial` 跳过基线检查且不生成 patch。同一平台、架构和版本不能重复生成快照。普通 `build:desktop`、`package:desktop` 不访问更新服务器。
+Windows x64 发布目录保留 `build/desktop/releases/<版本>/`；其他目标分别增加 `windowsArm64/`、`macX64/`、`macArm64/`、`linuxX64/` 或 `linuxArm64/`，例如 `build/desktop/releases/macArm64/2.0.1`。所有 release 模式都会生成安装包；`--auto` 自动判断基线，不带选项要求已有上一版，`--initial` 跳过基线检查且不生成 patch。同一平台、架构和版本不能重复生成快照。普通 `build:desktop`、`package:desktop` 不访问更新服务器。
 
 桌面用户可在“设置 → 关于”检查更新、下载并重启应用。Windows 更新交换程序目录，保留 `data/` 和 `WebView2/`；卸载时也默认保留这些数据，选择“同时删除用户数据”才会一并清理。
 
@@ -339,7 +358,6 @@ packages/
   ffmpeg/              FFmpeg 能力
   startup/             原生启动窗口与动画
 docs/                  项目介绍译版、开发文档与图片
-compat/macIntel/       Intel Mac 兼容构建
 build/                 构建产物
 data/                  本机运行数据，不提交到仓库
 ```

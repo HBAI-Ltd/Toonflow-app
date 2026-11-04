@@ -1,9 +1,9 @@
 import axios from "axios";
 import { t, translate } from "@toonflow/i18n/vue";
-import { h } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage } from "element-plus";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
 import type { PluginInstallRequest, PluginInstallType } from "@toonflow/server/desktop";
+import { confirmPluginInstall, pluginTypeLabels } from "./pluginInstallConfirmation";
 
 declare global {
   interface WindowEventMap {
@@ -13,13 +13,12 @@ declare global {
 }
 
 export function registerDesktopProtocol() {
-  const labels = { node: "节点", ext: "文件扩展", tool: "工具", skill: "技能", provider: "供应商", agent: "Agent" };
   const pending = new Set<string>();
   let queue = Promise.resolve();
 
   const handleInstall = (event: WindowEventMap["toonflow:install-plugin"]) => {
     const request = event.detail;
-    if (!request || !Object.hasOwn(labels, request.type) || typeof request.url !== "string" || typeof request.fileName !== "string") return;
+    if (!request || !Object.hasOwn(pluginTypeLabels, request.type) || typeof request.url !== "string" || typeof request.fileName !== "string") return;
     const key = `${request.type}:${request.url}`;
     if (pending.has(key)) return;
     if (pending.size >= 20) {
@@ -34,15 +33,8 @@ export function registerDesktopProtocol() {
   window.addEventListener("toonflow:install-plugin", handleInstall);
 
   async function confirmInstall(request: PluginInstallRequest) {
-    const confirmed = await ElMessageBox.confirm(
-      h("div", { style: { overflowWrap: "anywhere" } }, [
-        h("p", `${labels[request.type]}：${request.fileName}`),
-        h("p", { style: { maxHeight: "120px", overflow: "auto", fontSize: "12px", color: "var(--el-text-color-secondary)" } }, request.url),
-        h("p", translate("插件可能执行代码并访问本地文件，请仅安装信任来源的插件。")),
-      ]),
-      "安装插件",
-      { confirmButtonText: "确认安装", cancelButtonText: "取消", closeOnClickModal: false },
-    ).then(() => true, () => false);
+    const url = new URL(request.url);
+    const confirmed = await confirmPluginInstall({ name: request.fileName, type: request.type, source: url.origin + url.pathname });
     if (!confirmed) return;
 
     const loading = ElMessage({ message: "正在安装插件…", duration: 0 });
@@ -56,7 +48,7 @@ export function registerDesktopProtocol() {
       if (request.type === "provider") invalidateNodeModels("media");
       window.dispatchEvent(new CustomEvent("toonflow:plugin-installed", { detail: { type: request.type, name: data.data.name } }));
       if (request.type === "ext") window.dispatchEvent(new CustomEvent("toonflow:ext-updated", { detail: { name: data.data.name } }));
-      ElMessage({ type: "success", message: `${labels[request.type]}已安装` });
+      ElMessage({ type: "success", message: `${pluginTypeLabels[request.type]}已安装` });
     } catch (error) {
       let message = error instanceof Error ? error.message : translate("安装失败，请稍后重试");
       if (axios.isAxiosError(error)) {
@@ -73,7 +65,7 @@ export function registerDesktopProtocol() {
           message = t`安装接口返回异常（HTTP ${response.status}），请重启或更新 Toonflow 后重试。`;
         }
       }
-      ElMessage({ type: "error", message: `${labels[request.type]}“${request.fileName}”安装失败：${message}`, duration: 10000, showClose: true });
+      ElMessage({ type: "error", message: `${pluginTypeLabels[request.type]}“${request.fileName}”安装失败：${message}`, duration: 10000, showClose: true });
     } finally {
       loading.close();
     }

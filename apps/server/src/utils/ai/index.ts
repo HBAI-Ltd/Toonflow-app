@@ -1,129 +1,47 @@
 import { openAICompletionsApi } from "@earendil-works/pi-ai/api/openai-completions.lazy";
 import { openAIResponsesApi } from "@earendil-works/pi-ai/api/openai-responses.lazy";
 import { anthropicMessagesApi } from "@earendil-works/pi-ai/api/anthropic-messages.lazy";
-import { getBuiltinModels, getBuiltinProviders } from "@earendil-works/pi-ai/providers/all";
-import { getSupportedThinkingLevels, type Context, type KnownApi, type Model, type ThinkingLevelMap } from "@earendil-works/pi-ai";
-import { defaultThinkingLevels, thinkingLevels, type ThinkingLevel } from "@/lib/modelReasoning";
+import type { AssistantMessage, Context, Model } from "@earendil-works/pi-ai";
 import { z } from "zod";
-import conf from "@/utils/conf";
 import { readReference } from "@/utils/media/generation";
-import { findModelContextLimits } from "@/utils/ai/modelContextLimits";
 import { createFileTransport, getUnsupportedFileText, type FileProvider } from "@/utils/ai/files";
 import { getRequestFiles } from "@/utils/ai/requestFiles";
 import { readFile, stat } from "@toonflow/file";
 import { resolveWorkspacePath } from "@/utils/workspace/files";
 import { getReadableFileMimeType } from "@/lib/documentFormats";
 import { readDocument } from "@/utils/documents";
+import { getConfiguredProviders, getModelLimits, getModelReasoning, getProviderBaseUrl, providerSchema } from "@/utils/ai/provider";
+import { modelGateway, requireDirectModelAccess } from "@/utils/multiTenant/gateway";
+import { createBillingUsageTracker } from "@/utils/ai/billingUsage";
 
 export { fetchProviderModels } from "@/utils/ai/models";
+export { accountProviderSchema, getAccountProvider, getAccountToken, getConfiguredProviders, getModelLimits, getModelReasoning, providerSchema, reasoningEffortsSchema } from "@/utils/ai/provider";
 
-export const reasoningEffortsSchema = z.union([
-  z.literal(false),
-  z.partialRecord(z.enum(thinkingLevels), z.string().min(1).refine(value => value.trim() === value, "接口值不能包含首尾空白").nullable())
-    .refine(value => Object.entries(value).every(([level, wire]) => level === "off" || typeof wire === "string"), "仅关闭档位可省略接口值")
-    .refine(value => Object.keys(value).some(level => level !== "off"), "请至少声明一个推理档位"),
-]);
-
-export const providerSchema = z.object({
-  apiUrl: z.url({ protocol: /^https?$/ }),
-  apiKey: z.string(),
-  protocol: z.enum(["openai-completions", "openai-responses", "anthropic-messages"]),
-  maxRequestImageBytes: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional(),
-  maxRequestBytes: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional(),
-  models: z.array(z.object({
-    id: z.string(), label: z.string(),
-    contextWindow: z.number().int().positive().optional(),
-    maxOutputTokens: z.number().int().positive().optional(),
-    reasoningEfforts: reasoningEffortsSchema.optional(),
-  })),
-});
-
-export const accountProviderSchema = providerSchema.extend({
-  id: z.enum(["Toonflow", "toonflow"]), label: z.string().min(1), apiKey: z.literal(""),
-  token: z.string().trim().min(1).max(16384).optional(),
-  icon: z.string().optional(), version: z.string().optional(),
-});
-
-export function getAccountToken() {
-  const account = conf.get("settings", {}).toonflowAccount as { token?: unknown } | null | undefined;
-  return typeof account?.token === "string" ? account.token.trim() : "";
-}
-
-export function getAccountProvider() {
-  const accountToken = getAccountToken();
-  const parsed = accountProviderSchema.safeParse(conf.get("settings", {}).toonflowProvider);
-  return accountToken && parsed.success && parsed.data.token ? { ...parsed.data, apiKey: parsed.data.token } : undefined;
-}
-
-export function getConfiguredProviders() {
-  const providers = conf.get("settings", {}).customProviders;
-  const account = getAccountProvider();
-  return [...(account ? [account] : []), ...(Array.isArray(providers) ? providers.filter(item => typeof item?.id !== "string" || item.id.toLowerCase() !== "toonflow") : [])];
-}
-
-const builtinModels: Model<KnownApi>[] = getBuiltinProviders().flatMap(provider => getBuiltinModels(provider));
-
-export function getModelReasoning(providerId: string, model: z.infer<typeof providerSchema>["models"][number], protocol: string) {
-  const matches = builtinModels.filter(item => item.id === model.id);
-  const base = matches.find(item => item.provider.toLowerCase() === providerId.toLowerCase() && item.api === protocol);
-  const candidates = base ? [base] : matches;
-  const efforts = model.reasoningEfforts;
-  const supported = candidates.map(item => item.reasoning ? getSupportedThinkingLevels(item) : []);
-  const wireValue = (item: Model<KnownApi>, level: ThinkingLevel) => item.thinkingLevelMap?.[level] ?? (level === "off" ? undefined : level);
-  // ACT: 中转站仅继承同 ID 模型共同支持且接口值一致的档位，不猜别名或取能力全集。
-  const inheritedLevels: ThinkingLevel[] = candidates.length
-    ? thinkingLevels.filter(level => candidates.every((item, index) => supported[index]!.includes(level)
-      && wireValue(item, level) === wireValue(candidates[0]!, level)))
-    // ACT: 目录未知不等于禁用，保留旧版低中高；额外档位由模型显式声明。
-    : [...defaultThinkingLevels];
-  const reasoningLevels = efforts === false ? [] : efforts
-    ? thinkingLevels.filter(level => Object.hasOwn(efforts, level))
-    : inheritedLevels;
-  const reasoning = reasoningLevels.length > 0;
-  const thinkingLevelMap: ThinkingLevelMap = {};
-  for (const level of thinkingLevels) {
-    if (!reasoningLevels.includes(level)) { thinkingLevelMap[level] = null; continue; }
-    const wire = efforts ? efforts[level] : candidates[0] ? wireValue(candidates[0], level) : level;
-    if (wire != null) thinkingLevelMap[level] = wire;
+export async function getConfiguredModel(providerId: string, modelId: string) {
+  const execution = modelGateway.enabled() ? await modelGateway.resolve("text", providerId, modelId) : undefined;
+  const resolved = execution?.upstream;
+  const parsed = providerSchema.safeParse(resolved?.provider ?? getConfiguredProviders().find(item => item?.id === providerId));
+  if (!parsed.success) {
+    const official = providerId.toLowerCase() === "toonflow";
+    throw Object.assign(new Error(official ? "请先登录 Toonflow 账号并刷新供应商" : "请先在设置中配置模型供应商"), { status: official ? 401 : 400 });
   }
-  // ACT: 显式接口值声明使用 Anthropic effort 协议，避免 SDK 将映射值改为 token 预算。
-  const compat = protocol === "anthropic-messages" && efforts
-    ? { ...base?.compat, forceAdaptiveThinking: true, supportsMidConvoEffort: false }
-    : base?.compat;
-  return { reasoning, thinkingLevelMap, reasoningLevels, compat };
-}
-
-export function getModelLimits(providerId: string, model: z.infer<typeof providerSchema>["models"][number]) {
-  const limits = findModelContextLimits(model.id);
-  if (limits) return { contextWindow: limits.contextWindow, maxTokens: limits.maxTokens };
-  if (model.contextWindow != null && model.maxOutputTokens != null) {
-    return { contextWindow: model.contextWindow, maxTokens: model.maxOutputTokens };
-  }
-  const matches = builtinModels.filter(item => item.id === model.id);
-  const exact = matches.find(item => item.provider === providerId);
-  const candidates = exact ? [exact] : matches;
-  // ACT: 只精确匹配 ID；跨供应商同名参数逐项一致才采用，不猜别名。
-  const contextWindow = candidates.every(item => item.contextWindow === candidates[0]?.contextWindow) ? candidates[0]?.contextWindow : undefined;
-  const maxTokens = candidates.every(item => item.maxTokens === candidates[0]?.maxTokens) ? candidates[0]?.maxTokens : undefined;
+  const provider = parsed.data;
+  const model = resolved?.model ?? provider.models.find(item => item.id === modelId);
+  if (!model) throw Object.assign(new Error("所选模型不存在，请重新选择"), { status: 400 });
+  const baseUrl = getProviderBaseUrl(provider.apiUrl, provider.protocol);
+  const upstreamProviderId = execution?.route.providerId ?? providerId;
+  const limits = getModelLimits(upstreamProviderId, model);
   return {
-    contextWindow: model.contextWindow ?? contextWindow ?? 262144,
-    maxTokens: model.maxOutputTokens ?? maxTokens ?? 32768,
+    provider,
+    model: { ...model, label: execution?.route.label ?? model.label, ...getModelReasoning(upstreamProviderId, model, provider.protocol), contextWindow: limits.contextWindow, maxOutputTokens: limits.maxTokens },
+    baseUrl, execution, route: execution?.route, revision: execution?.revision, publicProviderId: providerId, publicModelId: modelId,
   };
 }
 
-export function getConfiguredModel(providerId: string, modelId: string) {
-  const parsed = providerSchema.safeParse(getConfiguredProviders().find(item => item?.id === providerId));
-  if (!parsed.success) throw Object.assign(new Error("请先在设置中配置模型供应商"), { status: 400 });
-  const provider = parsed.data;
-  const model = provider.models.find(item => item.id === modelId);
-  if (!model) throw Object.assign(new Error("所选模型不存在，请重新选择"), { status: 400 });
-  const baseUrl = new URL(provider.apiUrl);
-  if (baseUrl.pathname === "/") baseUrl.pathname = "/v1";
-  const limits = getModelLimits(providerId, model);
-  return { provider, model: { ...model, ...getModelReasoning(providerId, model, provider.protocol), contextWindow: limits.contextWindow, maxOutputTokens: limits.maxTokens }, baseUrl: baseUrl.href.replace(/\/+$/, "") };
-}
+export type ConfiguredModel = Awaited<ReturnType<typeof getConfiguredModel>>;
 
-export function listAiModels() {
+export async function listAiModels() {
+  if (modelGateway.enabled()) return modelGateway.catalog(["text"]);
   return getConfiguredProviders().flatMap(item => {
     const parsed = providerSchema.extend({ id: z.string().min(1), label: z.string() }).safeParse(item);
     if (!parsed.success) return [];
@@ -137,6 +55,27 @@ export function listAiModels() {
       };
     });
   });
+}
+
+export function publicAiMessage(configured: ConfiguredModel, message: AssistantMessage, usageKnown = true) {
+  if (!configured.route) return message;
+  const priceQuote = usageKnown && configured.execution ? modelGateway.quote(configured.execution, message.usage) : undefined;
+  return {
+    role: message.role, content: message.content, api: message.api,
+    provider: configured.publicProviderId, model: configured.publicModelId,
+    usage: {
+      input: message.usage.input, output: message.usage.output, cacheRead: message.usage.cacheRead,
+      cacheWrite: message.usage.cacheWrite, totalTokens: message.usage.totalTokens,
+      // ACT: SDK cost 默认按美元解释；平台报价单独携带币种和精确金额，不将它伪装成上游 cost 或结算记录。
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+    },
+    stopReason: message.stopReason, timestamp: message.timestamp,
+    ...(message.providerThinkingLevel === undefined ? {} : { providerThinkingLevel: message.providerThinkingLevel }),
+    usageKnown,
+    modelRouteRevision: configured.revision,
+    ...(message.errorMessage ? { errorMessage: "模型请求失败，请稍后重试" } : {}),
+    ...(priceQuote ? { priceQuote: { ...priceQuote, routeRevision: configured.revision } } : {}),
+  };
 }
 
 const aiApis = {
@@ -205,7 +144,7 @@ export function referenceContent(protocol: string, prompt: string, references: A
 }
 
 export function streamAi(
-  configured: ReturnType<typeof getConfiguredModel>,
+  configured: ConfiguredModel,
   context: Context,
   signal: AbortSignal,
   references: Awaited<ReturnType<typeof readAiReferences>> = [],
@@ -218,13 +157,29 @@ export function streamAi(
     contextWindow: configuredModel.contextWindow,
     maxTokens: configuredModel.maxOutputTokens,
   };
-  const files = createFileTransport({ ...provider, apiUrl: baseUrl }, { signal });
-  return aiApis[provider.protocol].streamSimple(model, context, {
+  const usageTracker = createBillingUsageTracker(provider.protocol);
+  const files = createFileTransport({ ...provider, apiUrl: baseUrl }, {
+    signal, ...(configured.route ? { fetch: usageTracker.fetch(globalThis.fetch) } : {}),
+  });
+  const requestContext = configured.route ? {
+    ...context,
+    messages: context.messages.map(message => message.role === "assistant"
+      && message.provider === configured.publicProviderId && message.model === configured.publicModelId
+      && (message as AssistantMessage & { modelRouteRevision?: unknown }).modelRouteRevision === configured.revision
+      // ACT: 对外只留逻辑身份；同一路由版本进入 SDK 时恢复内部身份，避免工具循环误判跨模型而丢弃推理签名。
+      ? { ...message, provider: model.provider, model: model.id } : message),
+  } : context;
+  const stream = aiApis[provider.protocol].streamSimple(model, requestContext, {
     apiKey: provider.apiKey,
+    headers: provider.headers,
     signal,
+    ...(configured.route ? { maxTokens: configuredModel.maxOutputTokens } : {}),
     // 此入口没有 AgentSession，仅重试尚未交付响应的请求，已输出的流不能直接拼接重放。
-    maxRetries: 3,
-    fetch: files.fetch,
+    maxRetries: configured.route ? 0 : 3,
+    fetch: Object.assign((input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+      if (!configured.execution) requireDirectModelAccess();
+      return files.fetch(input, init);
+    }, files.fetch),
     onPayload: async (payload) => {
       let body = payload as Record<string, unknown>;
       if (references.length) {
@@ -248,5 +203,10 @@ export function streamAi(
       }
       return body;
     },
+  });
+  return Object.assign(stream, {
+    billingUsage: usageTracker.usage,
+    upstreamSubmitted: usageTracker.submitted,
+    upstreamRejected: usageTracker.rejected,
   });
 }

@@ -110,8 +110,8 @@ import axios from "axios";
 import { IconPlus, IconX, IconMusic, IconPlayerPlay, IconPlayerStop } from "@tabler/icons-vue";
 import type { Provider } from "@toonflow/providers";
 import videoPlayer from "@/components/videoPlayer.vue";
-import formCreate, { type Api, type Options, type Rule } from "../../formCreate";
-import type { MediaProvider, MediaProviderModel } from "./types";
+import formCreate, { type Api, type Options, type Rule } from "@toonflow/provider-web/formCreate";
+import type { MediaProvider, MediaProviderModel } from "@toonflow/provider-web/types";
 
 type DebugLog = { id: number; method: string; url: string; state: string; status?: number; duration?: number; request?: string; response?: string; error?: string };
 const props = defineProps<{

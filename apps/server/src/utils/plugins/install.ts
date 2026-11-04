@@ -7,6 +7,7 @@ import { parseFrontmatter } from "@earendil-works/pi-coding-agent";
 import type { PluginInstallType } from "@/types/desktop";
 import conf from "@/utils/conf";
 import { parseTool, toolsDirectory } from "@/utils/plugins/tools";
+import { parseNodeServerTool } from "@/utils/plugins/nodes";
 import { extDirectory, parseExt } from "@/utils/plugins/ext";
 import { addMediaProvider } from "@/utils/media/provider";
 import { isSafeSegment } from "@/utils/skills/files";
@@ -24,16 +25,18 @@ function invalid(message: string, status = 400): never {
   throw Object.assign(new Error(message), { status });
 }
 
+// ACT: Bun 的比较器接受宽松版本；编译与安装升级共用完整 SemVer 判定。
+export function parsePluginVersion(value: unknown) {
+  if (typeof value !== "string" || value.length > 256) return;
+  const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.exec(value.trim());
+  if (!match || !match.slice(1, 4).every(part => Number.isSafeInteger(Number(part)))
+    || match[4]?.split(".").some(part => /^\d+$/.test(part) && (!/^(0|[1-9]\d*)$/.test(part) || !Number.isSafeInteger(Number(part))))) return;
+  return match[0];
+}
+
 export function requireNewerVersion(current: unknown, incoming: unknown, label: string) {
-  // ACT: Bun 的比较器接受宽松版本；先限定完整 SemVer，缺失版本不猜测更新顺序。
-  const versions = [current, incoming].map(value => {
-    if (typeof value !== "string" || value.length > 256) return;
-    const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.exec(value.trim());
-    if (!match || !match.slice(1, 4).every(part => Number.isSafeInteger(Number(part)))
-      || match[4]?.split(".").some(part => /^\d+$/.test(part) && (!/^(0|[1-9]\d*)$/.test(part) || !Number.isSafeInteger(Number(part))))) return;
-    return match[0];
-  });
-  const [installed, next] = versions;
+  const installed = parsePluginVersion(current);
+  const next = parsePluginVersion(incoming);
   if (!installed || !next) invalid(t`${label}已安装，但现有或待安装版本缺失或无效，无法判断更新顺序；请在开发者设置中使用强制安装`, 409);
   if (Bun.semver.order(next, installed) <= 0) invalid(t`${label}已安装版本 ${installed}，待安装版本 ${next} 不高于现有版本；如需覆盖或降级，请在开发者设置中使用强制安装`, 409);
 }
@@ -69,10 +72,11 @@ async function readBounded(stream: ReadableStream<Uint8Array>, limit: number, me
   } finally { await reader.cancel().catch(() => {}); }
 }
 
-async function download(url: string, limit: number, label: string) {
+async function download(url: string, limit: number, label: string, callerSignal?: AbortSignal) {
   label = translateMessage(label);
   let address = remoteAddress(url);
-  const signal = AbortSignal.timeout(30_000);
+  const timeout = AbortSignal.timeout(30_000);
+  const signal = callerSignal ? AbortSignal.any([callerSignal, timeout]) : timeout;
   try {
     for (let redirects = 0; redirects <= 5; redirects++) {
       const response = await fetch(address, { signal, redirect: "manual" });
@@ -102,6 +106,7 @@ async function download(url: string, limit: number, label: string) {
       return bytes;
     }
   } catch (error) {
+    callerSignal?.throwIfAborted();
     if (error instanceof Error && "status" in error) throw error;
     if (signal.aborted) invalid(t`${label}下载超时（30 秒），请检查网络或重新获取下载链接`, 504);
     invalid(t`${label}下载连接失败，请检查网络、下载域名和 HTTPS 证书后重试`, 502);
@@ -114,7 +119,7 @@ export function decodeText(bytes: Uint8Array) {
   catch { return invalid("插件文本内容不是有效的 UTF-8 编码，请检查文件编码后重新上传"); }
 }
 
-export async function installNode(fileName: string, source: string, force = false, marketVersion?: string) {
+export async function installNode(fileName: string, source: string, force = false, marketVersion?: string, signal?: AbortSignal) {
   if (!/^[a-z][a-zA-Z0-9]*\.umd\.js$/.test(fileName)) invalid("文件名需为小驼峰格式，例如 imageNode.umd.js");
   if (!source.trim()) invalid("节点文件内容为空，请重新上传节点脚本");
   if (Buffer.byteLength(source, "utf8") > maxBytes) invalid("节点文件不能超过 20 MB", 413);
@@ -127,6 +132,7 @@ export async function installNode(fileName: string, source: string, force = fals
   if (!source.includes(`toonflowNodes.${name}`)) invalid(t`文件名与节点导出名不一致：${fileName} 需要导出 toonflowNodes.${name}，请按实际节点名修改文件名`);
   try { new Bun.Transpiler({ loader: "js" }).scan(source); }
   catch { invalid("节点脚本语法无效，请重新构建并上传完整的 .umd.js 文件"); }
+  parseNodeServerTool(source, name);
   const directory = resolve(dirname(conf.path), "nodes");
   await mkdir(directory, { recursive: true });
   if ((await lstat(directory)).isSymbolicLink()) invalid("节点目录不能是符号链接", 403);
@@ -136,13 +142,14 @@ export async function installNode(fileName: string, source: string, force = fals
     const current = await lstat(path).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
     if (current && !current.isFile()) invalid("现有节点必须是普通文件", 403);
     if (current && !force) requireNewerVersion(current.size <= maxBytes ? nodeVersion(await readFile(path, "utf8")) : undefined, marketVersion ?? nodeVersion(source), t`节点“${name}”`);
+    signal?.throwIfAborted();
     await writeWorkspaceFile(path, source, !current);
     recordInstalledAt("node", name);
   } finally { release(); }
   return { name };
 }
 
-export async function installExt(fileName: string, source: string, force = false, marketVersion?: string) {
+export async function installExt(fileName: string, source: string, force = false, marketVersion?: string, signal?: AbortSignal) {
   if (!/^ext-[a-z][a-zA-Z0-9]*\.umd\.js$/.test(fileName)) invalid("文件名需为 ext-小驼峰格式，例如 ext-image.umd.js");
   if (!source.trim()) invalid("文件扩展内容为空，请重新上传扩展脚本");
   if (Buffer.byteLength(source, "utf8") > maxBytes) invalid("文件扩展不能超过 20 MB", 413);
@@ -166,6 +173,7 @@ export async function installExt(fileName: string, source: string, force = false
       catch { /* 损坏的已安装版本只能由明确的强制安装覆盖。 */ }
       requireNewerVersion(version, marketVersion ?? metadata.version, t`文件扩展“${name}”`);
     }
+    signal?.throwIfAborted();
     await writeWorkspaceFile(path, source, !current);
     await unlink(resolve(extDirectory, `${name}.removed`)).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
     recordInstalledAt("ext", name);
@@ -173,7 +181,7 @@ export async function installExt(fileName: string, source: string, force = false
   return { name };
 }
 
-export async function installTool(fileName: string, source: string, force = false, marketVersion?: string) {
+export async function installTool(fileName: string, source: string, force = false, marketVersion?: string, signal?: AbortSignal) {
   if (!/^[a-z][a-zA-Z0-9]*\.tool\.js$/.test(fileName)) invalid("工具文件名无效，请选择小驼峰命名的 .tool.js 文件");
   if (!source.trim()) invalid("工具文件内容为空，请重新上传工具脚本");
   if (Buffer.byteLength(source, "utf8") > maxBytes) invalid("工具文件不能超过 20 MB", 413);
@@ -197,6 +205,7 @@ export async function installTool(fileName: string, source: string, force = fals
       }
       requireNewerVersion(version, marketVersion ?? metadata.version, t`工具“${name}”`);
     }
+    signal?.throwIfAborted();
     await writeWorkspaceFile(path, source, !current);
     // ACT: Bun 按文件路径缓存模块，URL query 不会使已加载的工具失效。
     delete require.cache[path];
@@ -356,7 +365,7 @@ async function skillArchive(bytes: Uint8Array) {
   return result;
 }
 
-export async function installSkill(fileName: string, bytes: Uint8Array, force = false, marketVersion?: string) {
+export async function installSkill(fileName: string, bytes: Uint8Array, force = false, marketVersion?: string, signal?: AbortSignal) {
   if (!fileName || fileName.length > 128 || /[\\/]/.test(fileName) || !/\.(md|zip|tar|tar\.gz|tgz)$/i.test(fileName)) invalid("请选择 .zip、.md、.tar、.tar.gz 或 .tgz 技能文件");
   skillPath(fileName);
   if (!bytes.byteLength) invalid("技能文件不能为空");
@@ -406,6 +415,7 @@ export async function installSkill(fileName: string, bytes: Uint8Array, force = 
     if (!isWithin(root, temporary)) invalid("技能暂存目录无效");
     const staged = join(temporary, "new");
     for (const [path, content] of files) {
+      signal?.throwIfAborted();
       const destination = resolve(staged, path.slice(prefix.length));
       if (!isWithin(staged, destination)) invalid("技能资源路径无效");
       await mkdir(dirname(destination), { recursive: true });
@@ -413,6 +423,7 @@ export async function installSkill(fileName: string, bytes: Uint8Array, force = 
     }
     // ACT: 单进程锁内切换完整目录；旧版留到新版就位，失败时原路恢复。
     const backup = join(temporary, "previous");
+    signal?.throwIfAborted();
     if (existing) await rename(target, backup);
     try { await rename(staged, target); }
     catch (error) {
@@ -436,7 +447,8 @@ export async function installSkill(fileName: string, bytes: Uint8Array, force = 
   }
 }
 
-export async function installRemotePlugin(type: PluginInstallType, url: string, fileName?: string, force = false, marketVersion?: string) {
+export async function installRemotePlugin(type: PluginInstallType, url: string, fileName?: string, force = false, marketVersion?: string, signal?: AbortSignal) {
+  signal?.throwIfAborted();
   const address = remoteAddress(url);
   if (fileName === undefined) {
     try { fileName = decodeURIComponent(address.pathname.split("/").at(-1) ?? ""); }
@@ -448,13 +460,14 @@ export async function installRemotePlugin(type: PluginInstallType, url: string, 
   if (!fileName) invalid(t`下载地址缺少文件名，请使用指向文件的地址，例如 ${examples[type]}`);
   if (fileName.length > 128 || /[\\/]/.test(fileName)) invalid("插件文件名无效，不能包含目录路径或超过 128 字符");
   if (!patterns[type].test(fileName)) invalid(t`下载文件名“${fileName.slice(0, 128)}”不符合 ${type} 类型规范，文件名示例：${examples[type]}；改名后请重新生成下载链接`);
-  const bytes = await download(url, type === "provider" ? 2 * 1024 * 1024 : maxBytes, { node: "节点", ext: "文件扩展", tool: "工具", skill: "技能", provider: "供应商", agent: "团队" }[type]);
+  const bytes = await download(url, type === "provider" ? 2 * 1024 * 1024 : maxBytes, { node: "节点", ext: "文件扩展", tool: "工具", skill: "技能", provider: "供应商", agent: "团队" }[type], signal);
+  signal?.throwIfAborted();
   // ACT: 市场更新以卡片版本比较已安装文件的内部版本；其他入口沿用待安装文件版本。
   if (type === "agent") return (await import("@/utils/teams/install")).installTeam(fileName, bytes, force, marketVersion);
-  if (type === "skill") return installSkill(fileName, bytes, force, marketVersion);
+  if (type === "skill") return installSkill(fileName, bytes, force, marketVersion, signal);
   const source = decodeText(bytes);
-  if (type === "node") return installNode(fileName, source, force, marketVersion);
-  if (type === "ext") return installExt(fileName, source, force, marketVersion);
-  if (type === "tool") return installTool(fileName, source, force, marketVersion);
+  if (type === "node") return installNode(fileName, source, force, marketVersion, signal);
+  if (type === "ext") return installExt(fileName, source, force, marketVersion, signal);
+  if (type === "tool") return installTool(fileName, source, force, marketVersion, signal);
   return { name: (await addMediaProvider(source)).id };
 }

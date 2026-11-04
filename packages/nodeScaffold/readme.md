@@ -465,6 +465,8 @@ export default createNodeConfig({
 
 需要额外 alias、插件等配置时，在该节点的 `vite.config.ts` 中用 Vite 的 `mergeConfig` 合并。保持共享配置中的 UMD 格式、输出目录和所有共享依赖的 external/globals 设置。
 
+宿主也可调用 `createNodeConfig(metadata, configUrl, { outDir, syncToData: false })`，将产物写入指定目录后交给现有安装流程。`outDir` 为绝对路径或相对节点项目的路径；不传选项时保持原构建目录与开发同步行为。显式关闭同步后，即使使用开发模式或监听构建，也不会写入 `data/nodes`。构建只允许一个 UMD 脚本，资源内联，不能依赖额外安装文件。
+
 ### 节点插件配置
 
 节点可在 `createNodeConfig` 中声明 `configRules`，类型直接使用 `@form-create/element-ui` 的 `Rule[]`，与工具共用同一套格式和前端 `<form-create>` 渲染。`type`、`field`、`title`、`value`、`props`、`options`、`validate` 等均遵循库的原生规则，不另定义表单格式。规则随插件元数据以 JSON 传输，最多 100 项，不能包含函数或其它非 JSON 值。未声明或为空时隐藏配置按钮；必填字段使用 `validate` 声明：

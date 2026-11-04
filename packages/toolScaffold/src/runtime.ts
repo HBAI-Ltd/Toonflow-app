@@ -205,6 +205,8 @@ export interface ToolFiles {
 }
 
 export interface ToolContext {
+  /** 平台要求模型请求统一路由时，阻止插件直接使用独立供应商凭据。 */
+  requireDirectModelAccess?(): void;
   asr: {
     transcribe(path: string, options?: { lang?: string; signal?: AbortSignal }): Promise<string>;
   };

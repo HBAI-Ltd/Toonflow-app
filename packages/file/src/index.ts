@@ -10,7 +10,8 @@ export type { Dirent, Stats, PathLike, Dir, ReadStream, WriteStream } from "node
 export type { FileHandle } from "node:fs/promises";
 
 const retryOptions = { timeout: 5000, interval: 100 };
-const useExclusiveRename = process.platform === "android" || (process.platform === "linux" && process.env.TOONFLOW_PLATFORM === "ohos");
+const useExclusiveRename = process.platform === "win32" && Boolean(process.versions.bun)
+  || process.platform === "android" || (process.platform === "linux" && process.env.TOONFLOW_PLATFORM === "ohos");
 
 // 元数据查询不持有长期句柄；保留标准 API 的重载和错误语义。
 export const access = promises.access;
@@ -43,6 +44,7 @@ export const rename: typeof promises.rename = (source, target) =>
   withFileAccess([source, target], "write", () => stubborn.retry.rename(retryOptions)(source, target));
 export const unlink: typeof promises.unlink = path => withFileAccess([path], "write", () => promises.unlink(path));
 export const link: typeof promises.link = (source, target) => withFileAccess([source, target], "write", () => promises.link(source, target));
+export const symlink: typeof promises.symlink = (source, target, type) => withFileAccess([target], "write", () => promises.symlink(source, target, type));
 export const copyFile: typeof promises.copyFile = (source, target, mode) =>
   withFileAccess([source, target], "write", () => promises.copyFile(source, target, mode));
 export const cp: typeof promises.cp = (source, target, options) =>

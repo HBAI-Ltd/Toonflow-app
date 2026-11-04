@@ -112,7 +112,7 @@
 import { translate } from "@toonflow/i18n/vue";
 import axios from "axios";
 import { computed, defineAsyncComponent, onBeforeUnmount, ref, shallowRef, watch, type Component } from "vue";
-import formCreate, { type Api, type Options } from "../../formCreate";
+import formCreate, { type Api, type Options } from "@toonflow/provider-web/formCreate";
 import { IconFileCode, IconCode, IconFolderOpen, IconCopy, IconSparkles, IconLink } from "@tabler/icons-vue";
 import { ElMessage } from "element-plus";
 import { mediaProviders } from "@toonflow/providers";
@@ -122,7 +122,7 @@ import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
 import apiMartSource from "@toonflow/providers/media/apiMart?raw";
 import metasoSource from "@toonflow/providers/media/metaso?raw";
 import compshareSource from "@toonflow/providers/media/compshare?raw";
-import type { MediaProvider } from "./types";
+import type { MediaProvider } from "@toonflow/provider-web/types";
 import { providerPrompt } from "./providerPrompt";
 import { modelChoices, saveSettings } from "@/stores/settings";
 import { writeClipboardText } from "@/lib/clipboard";

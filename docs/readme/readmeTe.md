@@ -449,6 +449,8 @@ Toonflow [MIT License](../../LICENSE) కింద లైసెన్స్ ప�
 仰起脸笑的像满月: అభివృద్ధి కోసం Codex 20x కంప్యూటింగ్ వనరులను అందించారు.
 Xi'an Zhongxing Digital Intelligence Technology Co., Ltd. (西安中星数字智能科技有限公司): Apple సర్టిఫికెట్‌తో యాప్ సంతకానికి సహకరించింది.
 
+<p align="center"><sub>Free code signing provided by <a href="https://signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</sub></p>
+
 <div align="center">
 
 కాపీరైట్ © 2026 北京爱阿科技有限公司

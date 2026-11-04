@@ -11,7 +11,7 @@
       </div>
     </div>
 
-    <el-card v-if="isMobile || !isRemoteConnection" class="infoCard updateCard" shadow="never">
+    <el-card v-if="!publicWeb && (isMobile || !isRemoteConnection)" class="infoCard updateCard" shadow="never">
       <div class="cardHeader">
         <div class="updateCopy">
           <div class="cardLabel">
@@ -218,6 +218,7 @@
 import { translate, t } from "@toonflow/i18n/vue";
 
 import { computed, defineAsyncComponent, onMounted, onBeforeUnmount, ref } from "vue";
+import { publicWeb } from "@/stores/multiTenant";
 import axios from "axios";
 import { ElMessage } from "element-plus";
 import { actualPlatform, isMobile, isLocalDesktop, isRemoteConnection } from "@/lib/platform";

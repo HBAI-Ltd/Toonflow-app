@@ -143,6 +143,12 @@ async function refresh() {
     if (props.serverTime > 0 && result.summary.nextExpiresAt !== null && result.summary.nextExpiresAt <= Date.now() + clockOffset) {
       throw new Error("赠送余额信息已过期，请刷新后重试");
     }
+    const lastPage = Math.max(1, Math.ceil(result.total / pageSize.value));
+    if (page.value > lastPage) {
+      page.value = lastPage;
+      await refresh();
+      return;
+    }
     summary.value = result.summary;
     batches.value = result.list;
     total.value = result.total;

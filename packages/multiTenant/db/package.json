@@ -1,0 +1,14 @@
+{
+  "name": "@toonflow/multi-tenant-db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./index.ts" },
+  "scripts": { "typecheck": "tsc" },
+  "dependencies": {
+    "@toonflow/file": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "mysql2": "^3.24.6",
+    "zod": "^4.6.2"
+  }
+}

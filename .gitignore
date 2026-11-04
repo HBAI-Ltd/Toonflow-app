@@ -7,7 +7,6 @@ dist/
 .playwright-mcp/
 playwright-report/
 test-results/
-/compat/macIntel/generated/
 /packages/startup/assets/macX64/
 /packages/startup/assets/macArm64/
 /apps/updateServer/public/

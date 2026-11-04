@@ -27,7 +27,7 @@ import { IconFolderOpen, IconRefresh, IconDownload } from "@tabler/icons-vue";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
 import { actualPlatform } from "@/lib/platform";
 import providerTestPanel from "../mediaModel/providerTestPanel.vue";
-import type { MediaProvider } from "../mediaModel/types";
+import type { MediaProvider } from "@toonflow/provider-web/types";
 
 type DebugProvider = Pick<MediaProvider, "id" | "label" | "rules" | "models">;
 type FileHandle = { getFile(): Promise<File>; requestPermission?(options: { mode: "read" }): Promise<PermissionState> };

@@ -17,6 +17,6 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "electrobun": "2.0.1"
+    "electrobun": "2.0.5"
   }
 }

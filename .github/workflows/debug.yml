@@ -7,7 +7,7 @@ on:
         description: 构建平台
         type: choice
         default: windowsX64
-        options: [windowsX64, macArm64, macX64, androidArm64, all]
+        options: [windowsX64, windowsArm64, macArm64, macX64, linuxX64, linuxArm64, androidArm64, all]
       ref:
         description: 代码分支、标签或提交；签名构建要求与所选工作流版本为同一提交
         type: string
@@ -41,7 +41,7 @@ on:
         default: false
     secrets:
       MACOS_CERTIFICATE_BASE64:
-        description: 包含 Developer ID Application 证书及私钥的 P12 Base64
+        description: 包含 Developer ID Application、Developer ID Installer 证书及对应私钥的 P12 Base64
         required: false
       MACOS_CERTIFICATE_PASSWORD:
         description: P12 导出密码
@@ -99,8 +99,11 @@ jobs:
           import config from "./electrobun.config.ts";
           const targets = [
             { target: "windowsX64", os: "windows-2025", platform: "win32", arch: "x64", releaseFolder: "build/desktop/releases" },
+            { target: "windowsArm64", os: "windows-11-arm", platform: "win32", arch: "arm64", releaseFolder: "build/desktop/releases/windowsArm64" },
             { target: "macArm64", os: "macos-15", platform: "darwin", arch: "arm64", releaseFolder: "build/desktop/releases/macArm64" },
             { target: "macX64", os: "macos-15-intel", platform: "darwin", arch: "x64", releaseFolder: "build/desktop/releases/macX64" },
+            { target: "linuxX64", os: "ubuntu-24.04", platform: "linux", arch: "x64", releaseFolder: "build/desktop/releases/linuxX64" },
+            { target: "linuxArm64", os: "ubuntu-24.04-arm", platform: "linux", arch: "arm64", releaseFolder: "build/desktop/releases/linuxArm64" },
             { target: "androidArm64", os: "windows-2025", platform: "win32", arch: "x64", releaseFolder: "build/mobile/releases" },
           ];
           const selected = process.env.buildTarget || "all";
@@ -124,15 +127,15 @@ jobs:
     env:
       appVersion: ${{ needs.prepare.outputs.version }}
       releaseMode: ${{ inputs.generatePatch && '--auto' || '--initial' }}
-      macCodesign: ${{ matrix.target == 'macArm64' && '1' || '0' }}
+      macCodesign: ${{ matrix.platform == 'darwin' && '1' || '0' }}
     steps:
       - uses: actions/checkout@v7
         with:
           # ACT: 签名只使用触发工作流的代码，避免额外 ref 引入未审查的 PR 代码。
-          ref: ${{ matrix.target == 'macArm64' && github.sha || needs.prepare.outputs.commit }}
+          ref: ${{ matrix.platform == 'darwin' && github.sha || needs.prepare.outputs.commit }}
           persist-credentials: false
       - name: 校验签名来源
-        if: matrix.target == 'macArm64'
+        if: matrix.platform == 'darwin'
         env:
           buildCommit: ${{ needs.prepare.outputs.commit }}
         run: |
@@ -158,21 +161,21 @@ jobs:
           $env:JAVA_HOME = $env:JAVA_HOME_17_X64
       - name: 安装依赖
         run: bun install --frozen-lockfile
-      - name: 安装 Intel Mac 兼容 SDK
-        if: matrix.target == 'macX64'
-        working-directory: compat/macIntel
-        run: bun install --frozen-lockfile
-      - name: 编译 macOS 13 Intel 原生 SDK
-        if: matrix.target == 'macX64'
-        run: bun compat/macIntel/prepareNative.ts
+      - name: 准备 Linux 桌面与打包依赖
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-3-0t64 libwebkit2gtk-4.1-0 libayatana-appindicator3-1 librsvg2-2 \
+            zenity ffmpeg dpkg
       - name: 准备 Electrobun SDK
-        if: matrix.target != 'macX64' && matrix.target != 'androidArm64'
+        if: matrix.target != 'androidArm64'
         run: bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
       - name: 编译 macOS 原生启动库
         if: runner.os == 'macOS'
         run: bun packages/startup/scripts/buildMac.ts
       - name: 准备 NSIS
-        if: matrix.target == 'windowsX64'
+        if: matrix.platform == 'win32' && matrix.target != 'androidArm64'
         shell: pwsh
         run: |
           $nsisPath = 'C:/Program Files (x86)/NSIS/makensis.exe'
@@ -183,7 +186,7 @@ jobs:
           if (!(Test-Path -LiteralPath $nsisPath)) { throw '找不到 makensis.exe' }
           "NSIS_PATH=$nsisPath" >> $env:GITHUB_ENV
       - name: 构建 Windows 安装包及更新文件
-        if: matrix.target == 'windowsX64'
+        if: matrix.platform == 'win32' && matrix.target != 'androidArm64'
         # ACT: 使用原生环境，避免 Git Bash 的 GNU tar 将 Windows 盘符识别为远程主机。
         shell: pwsh
         run: bun run release:desktop "$env:appVersion" "$env:releaseMode"
@@ -197,8 +200,8 @@ jobs:
         env:
           androidRelease: ${{ inputs.androidRelease && '1' || '0' }}
         run: bun run --cwd apps/mobile build
-      - name: 准备 ARM 签名与公证凭据
-        if: matrix.target == 'macArm64'
+      - name: 准备 macOS 签名与公证凭据
+        if: matrix.platform == 'darwin'
         id: signing
         env:
           certificateBase64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
@@ -226,14 +229,15 @@ jobs:
           security create-keychain -p "$keychainPassword" "$keychainPath"
           security set-keychain-settings -lut 7200 "$keychainPath"
           security unlock-keychain -p "$keychainPassword" "$keychainPath"
-          security import "$certificatePath" -P "$certificatePassword" -k "$keychainPath" -T /usr/bin/codesign > /dev/null
+          security import "$certificatePath" -P "$certificatePassword" -k "$keychainPath" -T /usr/bin/codesign -T /usr/bin/productbuild > /dev/null
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychainPassword" "$keychainPath" > /dev/null
           security list-keychains -d user -s "$keychainPath"
           identity="$(security find-identity -v -p codesigning "$keychainPath" | awk '/"Developer ID Application: / { print $2 }')"
-          if [[ ! "$identity" =~ ^[[:xdigit:]]{40}$ ]]; then
-            echo '::error::未找到唯一有效的 Developer ID Application 身份。请检查下方证书类型、有效期及系统信任诊断；不会输出私钥或密码。'
+          installerIdentity="$(security find-identity -v "$keychainPath" | awk '/"Developer ID Installer: / { print $2 }')"
+          if [[ ! "$identity" =~ ^[[:xdigit:]]{40}$ || ! "$installerIdentity" =~ ^[[:xdigit:]]{40}$ ]]; then
+            echo '::error::必须各有一个有效的 Developer ID Application 和 Developer ID Installer 身份。请检查下方证书类型、有效期及系统信任诊断；不会输出私钥或密码。'
             # ACT: 身份列表保留系统错误码、隐藏证书姓名。
-            security find-identity -p codesigning "$keychainPath" | sed -E 's/"[^"]*"/"<certificate name hidden>"/g'
+            security find-identity "$keychainPath" | sed -E 's/"[^"]*"/"<certificate name hidden>"/g'
             security find-certificate -a -p "$keychainPath" | bun -e '
             import { X509Certificate } from "node:crypto";
             const pem = await Bun.stdin.text();
@@ -248,9 +252,10 @@ jobs:
             exit 1
           fi
           printf 'identity=%s\n' "$identity" >> "$GITHUB_OUTPUT"
+          printf 'installerIdentity=%s\n' "$installerIdentity" >> "$GITHUB_OUTPUT"
           printf 'notarizationKeyPath=%s\n' "$notarizationKeyPath" >> "$GITHUB_OUTPUT"
       - name: 为 Apple 公证票据网络错误启用有限重试
-        if: matrix.target == 'macArm64'
+        if: matrix.platform == 'darwin'
         run: |
           bun -e '
           import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "@toonflow/file";
@@ -263,33 +268,34 @@ jobs:
           chmodSync(target, 0o755);
           writeFileSync(process.env.GITHUB_PATH, `${directory}\n`, { flag: "a" });
           '
-      - name: 构建 macOS 安装包及更新文件（ARM 自动公证）
+      - name: 构建 macOS 安装包及更新文件（自动签名与公证）
         if: runner.os == 'macOS'
         env:
           ELECTROBUN_DEVELOPER_ID: ${{ steps.signing.outputs.identity }}
-          ELECTROBUN_APPLEAPIKEY: ${{ matrix.target == 'macArm64' && secrets.MACOS_NOTARIZATION_KEY_ID || '' }}
-          ELECTROBUN_APPLEAPIISSUER: ${{ matrix.target == 'macArm64' && secrets.MACOS_NOTARIZATION_ISSUER_ID || '' }}
+          ELECTROBUN_INSTALLER_ID: ${{ steps.signing.outputs.installerIdentity }}
+          ELECTROBUN_APPLEAPIKEY: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
+          ELECTROBUN_APPLEAPIISSUER: ${{ secrets.MACOS_NOTARIZATION_ISSUER_ID }}
           ELECTROBUN_APPLEAPIKEYPATH: ${{ steps.signing.outputs.notarizationKeyPath }}
         run: bun run release:desktop "$appVersion" "$releaseMode"
-      - name: 清理 ARM 签名与公证凭据
-        if: always() && matrix.target == 'macArm64'
+      - name: 清理 macOS 签名与公证凭据
+        if: always() && matrix.platform == 'darwin'
         run: |
           rm -f "$RUNNER_TEMP/toonflowSigning.p12" "$RUNNER_TEMP/toonflowNotarization.p8"
           keychainPath="$RUNNER_TEMP/toonflowSigning.keychain-db"
           if [[ -f "$keychainPath" ]]; then
             security delete-keychain "$keychainPath"
           fi
-      - name: 验证 macOS 更新包与安装镜像
+      - name: 验证 macOS 更新包与 PKG 安装包
         if: runner.os == 'macOS'
         env:
           releaseDirectory: ${{ matrix.releaseFolder }}/${{ needs.prepare.outputs.version }}
           signingIdentity: ${{ steps.signing.outputs.identity }}
+          packageArchitecture: ${{ matrix.arch }}
         run: |
           verifyMacArtifact() {
             if [[ "$macCodesign" == '1' ]]; then
               codesign --verify --deep --strict --verbose=2 \
                 --test-requirement "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf = H\"$signingIdentity\"" "$1"
-              xcrun stapler validate "$1"
             fi
           }
           inspectionDirectory="$RUNNER_TEMP/toonflowPackageCheck"
@@ -310,18 +316,30 @@ jobs:
           test -s "$app/Contents/Resources/app/bun/index.js"
           test -x "$app/Contents/MacOS/bun"
           verifyMacArtifact "$app"
-          mountDirectory="$inspectionDirectory/dmg"
-          mkdir -p "$mountDirectory"
-          for dmg in "$releaseDirectory"/*.dmg; do
-            hdiutil verify "$dmg"
-            verifyMacArtifact "$dmg"
-            hdiutil attach "$dmg" -readonly -nobrowse -mountpoint "$mountDirectory"
-            trap 'hdiutil detach "$mountDirectory"' EXIT
-            test -x "$mountDirectory/toonflow.app/Contents/MacOS/launcher"
-            verifyMacArtifact "$mountDirectory/toonflow.app"
-            hdiutil detach "$mountDirectory"
-            trap - EXIT
-          done
+          if [[ "$macCodesign" == '1' ]]; then xcrun stapler validate "$app"; fi
+          packagePath="$releaseDirectory/toonflow-$appVersion-macos-$packageArchitecture.pkg"
+          test -s "$packagePath"
+          if [[ "$macCodesign" == '1' ]]; then
+            pkgutil --check-signature "$packagePath"
+            spctl --assess --type install --verbose=2 "$packagePath"
+            xcrun stapler validate "$packagePath"
+          fi
+          packageDirectory="$inspectionDirectory/package"
+          pkgutil --expand-full "$packagePath" "$packageDirectory"
+          packageApps=()
+          while IFS= read -r -d '' appPath; do
+            packageApps+=("$appPath")
+          done < <(find "$packageDirectory" -type d -name 'toonflow.app' -print0)
+          if [[ ${#packageApps[@]} -ne 1 ]]; then
+            echo '::error::PKG 必须包含且仅包含一个 toonflow.app。'
+            exit 1
+          fi
+          packageApp="${packageApps[0]}"
+          test -x "$packageApp/Contents/MacOS/launcher"
+          verifyMacArtifact "$packageApp"
+      - name: 构建 Linux 安装包及更新文件
+        if: matrix.platform == 'linux'
+        run: bun run release:desktop "$appVersion" "$releaseMode"
       - name: 命名 Android 安装包
         if: matrix.target == 'androidArm64'
         shell: pwsh

@@ -1,0 +1,16 @@
+{
+  "name": "@toonflow/multi-tenant-models",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./config": "./config.ts"
+  },
+  "scripts": { "typecheck": "tsc" },
+  "dependencies": {
+    "@toonflow/file": "workspace:*",
+    "@toonflow/multi-tenant-db": "workspace:*",
+    "zod": "^4.6.2"
+  }
+}

@@ -5,6 +5,7 @@ import type { NodeToolInfo } from "@toonflow/tools-scaffold/runtime";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
 import { saveSettings, settings } from "@/stores/settings";
 import { useWorkspaceStore } from "@/stores/workspace";
+import { confirmPluginInstall } from "@/lib/pluginInstallConfirmation";
 
 type ControlCall = { type: "call"; callId: string; name: string; args: Record<string, unknown>; directory?: string };
 type WorkspaceControl = {
@@ -44,8 +45,13 @@ export function useMcpControl() {
   const router = useRouter();
   const workspaceStore = useWorkspaceStore();
   const calls = new Map<string, AbortController>();
-  const readSettings = () => JSON.parse(JSON.stringify(settings.value, (key, value) =>
-    /(?:api.?key|token|password|secret)$/i.test(key) && value ? "[REDACTED]" : value));
+  const readSettings = () => JSON.parse(JSON.stringify(settings.value, (key, value) => {
+    // 自定义鉴权头没有固定名称，保留头名并隐藏所有非空值。
+    if (key === "headers" && value && typeof value === "object" && !Array.isArray(value)) {
+      return Object.fromEntries(Object.entries(value).map(([name, header]) => [name, header ? "[REDACTED]" : header]));
+    }
+    return /(?:api.?key|token|password|secret)$/i.test(key) && value ? "[REDACTED]" : value;
+  }));
   const getState = () => ({
     directory: null, canvasId: null, panel: router.currentRoute.value.path.slice(1), tools: [] as NodeToolInfo[],
     ...workspaceControl.value?.getState(),
@@ -89,13 +95,21 @@ export function useMcpControl() {
         calls.set(request.callId, controller);
         connectionCalls.set(request.callId, controller);
         // ACT: 长音频转写由 ASR 检测停滞与收尾超时，连接关闭和主动取消仍立即中止。
-        const callSignal = AbortSignal.any([signal, controller.signal, ...(request.name === "transcribeAudio" ? [] : [AbortSignal.timeout(120000)])]);
+        const callSignal = AbortSignal.any([signal, controller.signal, ...(request.name === "transcribeAudio" ? [] : [AbortSignal.timeout(request.name === "developPlugin" ? 360000 : 120000)])]);
         let result: unknown;
         let error: string | undefined;
         try {
           callSignal.throwIfAborted();
           if (request.name === "getAppState") result = getState();
           else if (request.name === "getSettings") result = readSettings();
+          else if (request.name === "confirmPluginInstall") {
+            const { name, type, version, source, overwrite } = request.args;
+            if (typeof name !== "string" || !name.trim() || typeof type !== "string" || typeof source !== "string"
+              || (version !== undefined && typeof version !== "string") || (overwrite !== undefined && typeof overwrite !== "boolean")) throw new Error("安装插件失败");
+            if (request.directory && request.directory !== workspaceControl.value?.getState().directory) throw new Error("工作区已切换，请重新读取应用状态");
+            result = await confirmPluginInstall({ name, type, version, source, overwrite }, callSignal);
+            callSignal.throwIfAborted();
+          }
           else if (request.name === "updateSettings") {
             const patch = request.args.patch;
             if (!patch || typeof patch !== "object" || Array.isArray(patch)) throw new Error("设置 patch 必须是对象");
@@ -108,7 +122,7 @@ export function useMcpControl() {
             result = readSettings();
           } else if (request.name === "refreshResources") {
             const { type, name, removedProviderId } = request.args;
-            if (type !== "node" && type !== "tool" && type !== "skill" && type !== "provider") throw new Error("未知资源类型");
+            if (type !== "node" && type !== "tool" && type !== "skill" && type !== "provider" && type !== "ext" && type !== "agent") throw new Error("未知资源类型");
             if (type === "provider") {
               if (typeof removedProviderId === "string" && removedProviderId) await saveSettings(current => {
                 callSignal.throwIfAborted();
@@ -121,6 +135,7 @@ export function useMcpControl() {
               invalidateNodeModels("media");
             }
             window.dispatchEvent(new CustomEvent("toonflow:plugin-installed", { detail: { type, name: typeof name === "string" ? name : "" } }));
+            if (type === "ext" && typeof name === "string") window.dispatchEvent(new CustomEvent("toonflow:ext-updated", { detail: { name } }));
             result = { refreshed: true };
           } else if (request.name === "openProject") {
             const directory = request.args.directory;

@@ -1,0 +1,10 @@
+{
+  "type": "tool",
+  "name": "pluginDeveloper",
+  "displayName": "插件开发",
+  "description": "在当前工作区编写、构建、安装节点或工具插件，也可为新插件准备市场上传。",
+  "prompt": "开发插件前用 guide 读取对应 SDK 文档。用工作区文件工具编写源码，由 build 编译，不调用 sandbox 运行 Vite。构建失败按错误修复。install 返回 refreshed:true 后才可添加新节点；已启用的工具从下一轮对话生效。更新同名插件必须提升 package.json.version，不强制覆盖。仅在用户要求上传到市场时调用 upload，可跳过安装。awaitingSubmission 表示表单已打开，请用户点击提交审核（节点需选截图），不要报告已上传或已发布；dialogBusy 表示有上传操作进行中；alreadyExists 表示标识已被使用，本人插件可到「我的插件」管理。不要修改宿主源码或直接修改画布 JSON。",
+  "author": "Toonflow",
+  "github": "https://github.com/HBAI-Ltd/Toonflow-app",
+  "configRules": []
+}

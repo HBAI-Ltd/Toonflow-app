@@ -449,6 +449,8 @@ Toonflow ஆனது [MIT License](../../LICENSE) இன் கீழ் உர
 仰起脸笑的像满月: மேம்பாட்டிற்கான Codex 20x கணினி வளங்களை வழங்கினார்.
 Xi'an Zhongxing Digital Intelligence Technology Co., Ltd. (西安中星数字智能科技有限公司): Apple சான்றிதழ் மூலம் பயன்பாட்டைக் கையொப்பமிட ஆதரவளித்தது.
 
+<p align="center"><sub>Free code signing provided by <a href="https://signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</sub></p>
+
 <div align="center">
 
 பதிப்புரிமை © 2026 北京爱阿科技有限公司

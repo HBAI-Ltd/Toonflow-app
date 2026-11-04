@@ -11,6 +11,7 @@ import * as mediaBilling from "@/utils/media/billing";
 import * as mediaPreview from "@/utils/media/preview";
 import * as ffmpeg from "@/utils/ffmpeg";
 import * as pluginInstall from "@/utils/plugins/install";
+import * as pluginDevelopment from "@/utils/plugins/development";
 import conf, { cleanNodeMenuSettings, removeLegacySettings } from "@/utils/conf";
 import * as ai from "@/utils/ai";
 import * as plugins from "@/utils/plugins/tools";
@@ -35,6 +36,7 @@ import * as personalization from "@/utils/personalization";
 import * as mentionFiles from "@/agent/mentionFiles";
 import * as network from "@/utils/network";
 import * as channel from "@/utils/channel";
+import * as multiTenant from "@/utils/multiTenant";
 
 export default {
   assets,
@@ -50,6 +52,7 @@ export default {
   mediaPreview,
   ffmpeg,
   pluginInstall,
+  pluginDevelopment,
   conf,
   cleanNodeMenuSettings,
   removeLegacySettings,
@@ -76,4 +79,5 @@ export default {
   mentionFiles,
   network,
   channel,
+  multiTenant,
 };

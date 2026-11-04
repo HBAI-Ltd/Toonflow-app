@@ -14,7 +14,7 @@ if (typeof identifier !== "string" || typeof name !== "string" || channel !== "s
   throw new Error("应用安装信息无效，请重新构建安装包。");
 }
 
-// ACT: 系统注册由 NSIS 负责；补齐 Electrobun 2.0.1 的记录，避免首次启动再次调用 PowerShell。
+// ACT: 系统注册由 NSIS 负责；补齐 Electrobun 的记录，避免首次启动再次调用 PowerShell。
 // 保留真实更新助手和完整 manifest，不用占位文件跳过 SDK 检查。
 copyFileSync(join(resourcesDirectory, "uninstall"), join(installDirectory, "uninstall.exe"));
 writeAtomicSync(join(installDirectory, ".electrobun-uninstall.json"), JSON.stringify({
@@ -28,6 +28,13 @@ writeAtomicSync(join(installDirectory, ".electrobun-uninstall.json"), JSON.strin
   install_root_name: basename(installDirectory),
   data_path_versions: [1],
 }, null, 2));
+
+writeAtomicSync(join(installDirectory, "闪退请双击我兼容运行.bat"), [
+  "@echo off",
+  "setlocal DisableDelayedExpansion",
+  "start \"\" \"%~dp0app\\Resources\\app\\startupLauncher.exe\" --compatibility",
+  "",
+].join("\r\n"));
 
 // 重装同一构建也重新同步内置节点、工具和供应商；技能沿用首次初始化，保留用户修改。
 for (const directory of ["nodes", "tools", "providers"]) {

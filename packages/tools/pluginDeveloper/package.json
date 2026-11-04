@@ -1,0 +1,32 @@
+{
+  "name": "@toonflow/tool-plugin-developer",
+  "version": "1.3.0",
+  "fullSdkVersion": "1.2.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./runtime": "./src/runtime.ts"
+  },
+  "scripts": {
+    "build": "bun build.ts",
+    "build:sdk": "bun scripts/buildSdk.ts",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@toonflow/file": "workspace:*",
+    "fflate": "0.8.3",
+    "zod": "4.6.2"
+  },
+  "devDependencies": {
+    "@toonflow/nodes-scaffold": "workspace:*",
+    "@toonflow/node-shared": "workspace:*",
+    "@toonflow/tools-scaffold": "workspace:*",
+    "@types/bun": "1.4.2",
+    "@types/postcss-pxtorem": "6.1.0",
+    "postcss-pxtorem": "6.1.0",
+    "sass": "1.104.0",
+    "typescript": "6.0.3",
+    "vue": "3.5.42",
+    "vite": "8.2.2"
+  }
+}

@@ -10,8 +10,11 @@ export async function* readAgentEvents<T extends { type: string; message?: unkno
   }
   if (!response.body) throw new Error("未收到响应流");
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+  const cancelReader = () => { void reader.cancel().catch(() => {}); };
+  signal.addEventListener("abort", cancelReader, { once: true });
   let pending = "";
   try {
+    signal.throwIfAborted();
     while (true) {
       const { value, done } = await reader.read();
       signal.throwIfAborted();
@@ -30,7 +33,8 @@ export async function* readAgentEvents<T extends { type: string; message?: unkno
       if (done) throw new Error("连接已中断，请重试");
     }
   } finally {
-    await reader.cancel().catch(() => {});
+    signal.removeEventListener("abort", cancelReader);
+    cancelReader();
     reader.releaseLock();
   }
 }

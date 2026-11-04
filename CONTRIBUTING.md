@@ -70,16 +70,16 @@ bun run dev
 
 ### 桌面开发（按需）
 
-桌面脚本支持 **Windows x64、macOS arm64 和 macOS x64**，需要在对应系统与架构上运行；当前不支持 Linux 桌面构建。
+桌面统一使用 **Electrobun 2.0.5**，支持 **Windows、macOS、Linux 的 x64 / ARM64** 六种目标，需要在对应系统与架构上运行，不提供跨系统交叉打包。
 
-- **Windows x64**：使用 Electrobun 2.0.1。运行窗口需要 WebView2；构建脚本会调用 `%WINDIR%/Microsoft.NET/Framework64/v4.0.30319/csc.exe` 编译原生辅助程序。NSIS 是制作 Windows 安装包的要求，不是普通 Web 开发或桌面开发的前置条件。
-- **macOS**：先安装 Xcode Command Line Tools。Apple Silicon 使用 Electrobun 2.0.1；Intel Mac 使用独立的 Electrobun 1.18.1 兼容构建，先安装其依赖：
+- **Windows**：运行窗口需要 WebView2；构建脚本会调用 `%WINDIR%/Microsoft.NET/Framework64/v4.0.30319/csc.exe` 编译辅助程序。ARM64 需要 .NET Framework 4.8.1，较新的 Windows 11 已内置。NSIS 是制作 Windows 安装包的要求，不是普通 Web 开发或桌面开发的前置条件。
+- **macOS**：最低支持 macOS 14，先安装 Xcode Command Line Tools。
+- **Linux**：DEB 面向 Debian / Ubuntu，需要 GTK 3、WebKitGTK 4.1、Ayatana AppIndicator、librsvg、Zenity、FFmpeg，以及提供 `dpkg-deb` 的 dpkg。Ubuntu 24.04 的安装命令见[开发与构建指南](./docs/development.md)。
+
+所有桌面平台首次开发或单独类型检查前，显式准备当前平台的 SDK：
 
 ```sh
-# 仅 Intel Mac 需要；执行后回到仓库根目录
-cd compat/macIntel
-bun install --frozen-lockfile
-cd ../..
+bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
 ```
 
 Apple Silicon 与 Intel Mac 都需要在各自的 Mac 上准备当前架构的原生启动库，首次桌面开发或更新原生启动实现后执行：
@@ -104,7 +104,7 @@ bun run dev:desktop
 | --- | --- |
 | 页面、画布、设置与前端状态 | `apps/web/src/` |
 | HTTP 接口、Agent 运行时与服务端工具 | `apps/server/src/` |
-| 桌面宿主、原生交互、安装与更新 | `apps/desktop/`；Intel Mac 兼容层在 `compat/macIntel/` |
+| 桌面宿主、原生交互、安装与更新 | `apps/desktop/` |
 | 画布节点 | `packages/nodes/`、[节点脚手架](./packages/nodeScaffold/readme.md) |
 | Agent 工具及其交互组件 | `packages/tools/`、[工具脚手架](./packages/toolScaffold/readme.md) |
 | 模型提供方与技能 | `packages/providers/src/`、`packages/skills/` |
@@ -158,13 +158,13 @@ bun run dev:desktop
 
 ### 类型检查的桌面前置条件
 
-根目录 `bun run typecheck` 会检查各工作区，包括桌面端。Windows x64 或 Apple Silicon 在首次桌面构建前单独检查类型时，先准备 Electrobun SDK：
+根目录 `bun run typecheck` 会检查各工作区，包括桌面端。Windows、macOS 和 Linux 的 x64 / ARM64 在首次桌面构建前单独检查类型时，先准备 Electrobun SDK：
 
 ```sh
 bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
 ```
 
-Intel Mac 则先安装兼容 SDK，并运行一次桌面开发或构建命令生成适配文件。类型检查本身不会安装依赖、生成适配文件或编译原生库。只改 Web 或 Server 时，可以先执行下面对应工作区的检查。
+所有桌面平台使用同一版 SDK。类型检查本身不会安装依赖、生成文件或编译原生库。只改 Web 或 Server 时，可以先执行下面对应工作区的检查。
 
 ### 按改动选择命令
 
@@ -180,7 +180,7 @@ Intel Mac 则先安装兼容 SDK，并运行一次桌面开发或构建命令生
 | `bun run --cwd apps/server build` | 构建 Server、MCP，并输出技能与提供方文件；不代替路由生成。 |
 | `bun run build` | 构建工具、Web、Server、MCP，并输出技能与提供方；**不包含节点、桌面构建或类型检查**。 |
 | `bun run build:desktop` | 构建当前平台桌面应用及随包资源，包含节点、工具、Web 与 MCP 构建。 |
-| `bun run package:desktop` | 重新构建并制作 Windows NSIS 安装包或 macOS DMG，需满足对应平台的打包要求。 |
+| `bun run package:desktop` | 重新构建并制作 Windows NSIS、macOS PKG 或 Linux DEB 安装包，需满足对应平台的打包要求。 |
 
 需要验证构建后的 Web 与独立 Server 时，首次仍先执行 `bun run dev:plugins`，再执行 `bun run build`、`bun run start:server`，访问 `http://localhost:3000`。独立 Server 不负责初始化节点；不能只复制 `build/` 就视作完整安装，也不要与开发 Server 同时占用 `3000`。
 

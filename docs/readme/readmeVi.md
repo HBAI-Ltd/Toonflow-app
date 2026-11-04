@@ -449,6 +449,8 @@ Toonflow sử dụng [giấy phép MIT](../../LICENSE). Các gói phụ thuộc 
 仰起脸笑的像满月: đóng góp tài nguyên tính toán Codex 20x cho việc phát triển.
 西安中星数字智能科技有限公司: hỗ trợ ký ứng dụng bằng chứng chỉ Apple.
 
+<p align="center"><sub>Free code signing provided by <a href="https://signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</sub></p>
+
 <div align="center">
 
 Bản quyền © 2026 北京爱阿科技有限公司

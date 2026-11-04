@@ -1,0 +1,30 @@
+{
+  "name": "@toonflow/multi-tenant-admin-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.vue",
+    "./routes": "./routes.ts"
+  },
+  "scripts": {
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@toonflow/i18n": "workspace:*",
+    "@toonflow/multi-tenant-billing": "workspace:*",
+    "@toonflow/multi-tenant-models": "workspace:*",
+    "@toonflow/multi-tenant-source-mapping": "workspace:*",
+    "@toonflow/provider-web": "workspace:*"
+  },
+  "peerDependencies": {
+    "@tabler/icons-vue": "^3.46.0",
+    "element-plus": "^2.14.5",
+    "vue": "^3.5.42",
+    "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "vue-tsc": "^3.3.11"
+  }
+}

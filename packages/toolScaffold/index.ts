@@ -2,14 +2,19 @@ import { copyFile, mkdir, readFile } from "@toonflow/file";
 import { file, write } from "@toonflow/file/bun";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { build } from "vite";
+import { build, type PluginOption } from "vite";
+import type { BunPlugin } from "bun";
 import vue from "@vitejs/plugin-vue";
 import postcssConfig from "../../postcss.config.ts";
 import { toolMetadataSchema, type ToolMetadata } from "./src/runtime";
 
 export type { ToolMetadata } from "./src/runtime";
 
-export async function createToolConfig(config: Omit<ToolMetadata, "components" | "readme" | "version"> & { components?: Record<string, string> }, configUrl: string) {
+export async function createToolConfig(
+  config: Omit<ToolMetadata, "components" | "readme" | "version"> & { components?: Record<string, string> },
+  configUrl: string,
+  options: { outDir?: string; syncToData?: boolean; buildPlugins?: BunPlugin[]; clientPlugins?: PluginOption[]; tsconfig?: string } = {},
+) {
   const { components, ...toolConfig } = config;
   if (components !== undefined && (!components || Array.isArray(components) || typeof components !== "object" ||
     Object.entries(components).some(([name, entry]) => !name.trim() || typeof entry !== "string" || !entry.trim()))) {
@@ -37,7 +42,7 @@ export async function createToolConfig(config: Omit<ToolMetadata, "components" |
   });
   const metadataJson = JSON.stringify(metadata).replaceAll("/", "\\u002f");
   const fileName = `${metadata.name}.tool.js`;
-  const outDir = fileURLToPath(new URL("../../build/tools", import.meta.url));
+  const outDir = options.outDir ? resolve(root, options.outDir) : fileURLToPath(new URL("../../build/tools", import.meta.url));
   const dataDir = fileURLToPath(new URL("../../data/tools", import.meta.url));
   let clientBanner = "";
   const componentEntries = Object.entries(components ?? {});
@@ -47,7 +52,7 @@ export async function createToolConfig(config: Omit<ToolMetadata, "components" |
       configFile: false,
       root,
       css: { postcss: postcssConfig },
-      plugins: [vue(), {
+      plugins: [...(options.clientPlugins ?? []), vue(), {
         name: "toolClientEntry",
         resolveId(id) { return id === "virtual:toonflowToolClient" ? entryId : undefined; },
         load(id) {
@@ -117,7 +122,7 @@ export async function createToolConfig(config: Omit<ToolMetadata, "components" |
           return { contents, loader: "js" };
         });
       },
-    }],
+    }, ...(options.buildPlugins ?? [])],
     entrypoints: [resolve(root, "src/index.ts")],
     outdir: outDir,
     naming: fileName,
@@ -126,12 +131,14 @@ export async function createToolConfig(config: Omit<ToolMetadata, "components" |
     packages: "bundle",
     external: ["toonflow:tool-zod"],
     minify: true,
+    tsconfig: options.tsconfig,
   });
   if (!result.success) throw new AggregateError(result.logs, `工具构建失败：${metadata.name}`);
+  if (result.outputs.length !== 1) throw new Error(`工具必须构建为单个脚本，不能包含未内联的资源：${metadata.name}`);
   // Bun 会把 @bun 标记放在 banner 前，构建完成后再写入首行元数据。
   const builtPath = resolve(outDir, fileName);
   await write(builtPath, `/*! toonflowTool:${metadataJson} */\n${clientBanner}${await result.outputs[0].text()}`);
-  if (process.env.NODE_ENV === "dev") {
+  if (options.syncToData ?? process.env.NODE_ENV === "dev") {
     await mkdir(dataDir, { recursive: true });
     // ACT: Windows 的 bun --watch 占用已加载模块，开发同步直接复制覆盖，不使用 rename。
     await copyFile(builtPath, resolve(dataDir, fileName));

@@ -14,13 +14,13 @@ export function getRuntimePlatform() {
   const desktopSystem = process.platform === "win32" || process.platform === "darwin";
   const nativeDevelopment = desktopSystem && development;
   // local 表示本机任意工作目录能力，不代替请求授权。
-  const local = desktopSystem && (development || desktop);
+  const local = desktop || nativeDevelopment;
 
   return {
     os, development, desktop, mobile, local,
     nativeDevelopment,
     browserSupported: desktop || development,
-    // 此限制与 local 不等价：Linux 桌面宿主仍限制 Host，但不开放任意工作目录。
+    // 独立 Linux 服务仍保留服务器工作区边界；桌面宿主始终限制 Host。
     requiresLocalHost: desktop || nativeDevelopment,
   };
 }

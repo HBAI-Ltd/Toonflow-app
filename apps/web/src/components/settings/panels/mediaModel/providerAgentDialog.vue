@@ -105,7 +105,7 @@ import { writeClipboardText } from "@/lib/clipboard";
 import { settings } from "@/stores/settings";
 import providerTestPanel from "./providerTestPanel.vue";
 import { providerPrompt } from "./providerPrompt";
-import type { MediaProvider } from "./types";
+import type { MediaProvider } from "@toonflow/provider-web/types";
 
 const props = defineProps<{ askUserEnabled: boolean; provider?: MediaProvider; source?: string }>();
 const visible = defineModel<boolean>({ default: false });

@@ -1,22 +1,60 @@
-import { onScopeDispose } from "vue";
+import { computed, onScopeDispose, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
 import { runAgentLoop, type AgentTool, type AgentToolResult } from "@earendil-works/pi-agent-core";
 import { createAssistantMessageEventStream, type AssistantMessage, type Context, type Message, type Model } from "@earendil-works/pi-ai";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 import type { MediaGenerationRequest, MediaModel } from "@toonflow/tools-scaffold/runtime";
 import type { NodeOutput } from "./values";
+import { readNodeModels, subscribeNodeModels } from "./modelCatalog";
+export { invalidateNodeModels, readNodeModels, subscribeNodeModels } from "./modelCatalog";
 
 export type NodeAiModel = {
   providerId: string;
   providerLabel: string;
   modelId: string;
+  routeId?: string;
   label: string;
   protocol: "openai-completions" | "openai-responses" | "anthropic-messages";
   contextWindow?: number;
   maxOutputTokens?: number;
 };
 export type NodeMediaModel = Omit<MediaModel, "mode"> & {
+  routeId?: string;
   mode?: (string | string[])[];
 };
+type ModelIdentity = { providerId: string; modelId: string; routeId?: string };
+
+export function getNodeModelIdentity(model: ModelIdentity) {
+  return { providerId: model.providerId, modelId: model.providerId === "multiTenant" ? model.routeId ?? model.modelId : model.modelId };
+}
+
+export function getNodeModelKey(model: ModelIdentity) {
+  const identity = getNodeModelIdentity(model);
+  return JSON.stringify([identity.providerId, identity.modelId]);
+}
+
+export function findNodeModel<T extends ModelIdentity>(models: readonly T[], selection: string | Pick<ModelIdentity, "providerId" | "modelId">): T | undefined {
+  let identity: Pick<ModelIdentity, "providerId" | "modelId">;
+  if (typeof selection === "string") {
+    let value: unknown;
+    try { value = JSON.parse(selection); } catch { return; }
+    if (!Array.isArray(value) || value.length !== 2 || !value.every(item => typeof item === "string")) return;
+    identity = { providerId: value[0], modelId: value[1] };
+  } else identity = selection;
+  if (!identity || typeof identity.providerId !== "string" || !identity.providerId
+    || typeof identity.modelId !== "string" || !identity.modelId) return;
+  return models.find(model => model.providerId === identity.providerId && (model.modelId === identity.modelId
+    || identity.providerId === "multiTenant" && model.routeId === identity.modelId));
+}
+
+export function useNodeModelSelection<T extends ModelIdentity>(models: MaybeRefOrGetter<readonly T[]>, selection: Ref<string>) {
+  const selected = computed(() => findNodeModel(toValue(models), selection.value));
+  watch(selected, model => {
+    if (!model || model.providerId !== "multiTenant") return;
+    const key = getNodeModelKey(model);
+    if (selection.value !== key) selection.value = key;
+  }, { immediate: true, flush: "sync" });
+  return selected;
+}
 export type NodeImageRequest = {
   directory: string;
   providerId: string;
@@ -66,11 +104,6 @@ async function readResult<T>(response: Response): Promise<T> {
   return result.data;
 }
 
-// ACT: 独立 UMD 各有模块作用域，共用宿主缓存；模型设置保存后失效，不按节点重复请求。
-const modelCacheKey = Symbol.for("toonflow.nodeModels");
-const modelCacheHost = globalThis as typeof globalThis & { [modelCacheKey]?: Map<string, Promise<unknown[]>> };
-const modelCache = modelCacheHost[modelCacheKey] ??= new Map<string, Promise<unknown[]>>();
-
 type MediaPriceCache = {
   prices: Map<string, { expires: number; value: Promise<NodeMediaPrice | null> }>;
   requestedAt: Map<string, number>;
@@ -80,12 +113,7 @@ const mediaPriceCacheHost = globalThis as typeof globalThis & { [mediaPriceCache
 const mediaPriceCache = mediaPriceCacheHost[mediaPriceCacheKey] ??= (() => {
   const cache: MediaPriceCache = { prices: new Map(), requestedAt: new Map() };
   if (typeof window !== "undefined") {
-    const invalidate = (event: Event) => {
-      if (event.type === "toonflow:plugin-installed" && (event as CustomEvent<{ type?: string }>).detail?.type !== "provider") return;
-      cache.prices.clear();
-    };
-    window.addEventListener("toonflow:provider-config-changed", invalidate);
-    window.addEventListener("toonflow:plugin-installed", invalidate);
+    subscribeNodeModels(type => { if (type === "media") cache.prices.clear(); });
   }
   return cache;
 })();
@@ -199,39 +227,6 @@ function createMediaTasks() {
   return { wait };
 }
 
-export function invalidateNodeModels(type: "language" | "media") {
-  modelCache.delete(type === "language" ? "/api/ai/models" : "/api/ai/media/models");
-  if (type === "media") mediaPriceCache.prices.clear();
-}
-
-async function readModels<T>(url: string, signal: AbortSignal): Promise<T[]> {
-  signal.throwIfAborted();
-  let pending = modelCache.get(url);
-  if (!pending) {
-    const request = fetch(url, { cache: "no-store" }).then(readResult<unknown[]>).catch(error => {
-      if (modelCache.get(url) === request) modelCache.delete(url);
-      throw error;
-    });
-    pending = request;
-    modelCache.set(url, request);
-  }
-  // 单个节点关闭只取消自己的等待，不能中断其他节点共用的请求。
-  let cancel = () => {};
-  try {
-    const models = await Promise.race([
-      pending,
-      new Promise<never>((_resolve, reject) => {
-        cancel = () => reject(signal.reason);
-        signal.addEventListener("abort", cancel, { once: true });
-      }),
-    ]);
-    signal.throwIfAborted();
-    return modelCache.get(url) === pending ? models as T[] : readModels<T>(url, signal);
-  } finally {
-    signal.removeEventListener("abort", cancel);
-  }
-}
-
 async function requestModel(input: NodeAiRequest, context: Context, model: Model<NodeAiModel["protocol"]>, signal: AbortSignal) {
   const { providerId, modelId, references, directory, onEvent } = input;
   const stream = createAssistantMessageEventStream();
@@ -239,7 +234,7 @@ async function requestModel(input: NodeAiRequest, context: Context, model: Model
     signal.throwIfAborted();
     const response = await fetch("/api/ai/generate", {
       method: "POST", headers: { "Content-Type": "application/json", "x-toonflow-workspace": "1" },
-      body: JSON.stringify({ providerId, modelId, context, directory, references }), signal,
+      body: JSON.stringify({ providerId, modelId, context, directory, references, requestId: crypto.randomUUID() }), signal,
     });
     if (!response.ok) await readResult(response);
     if (!response.body || !response.headers.get("content-type")?.includes("text/event-stream")) throw new Error("AI 未返回预期的 SSE 数据流，无法接收生成内容。");
@@ -277,22 +272,38 @@ async function requestModel(input: NodeAiRequest, context: Context, model: Model
   return stream;
 }
 
-export function useNodeAi() {
+export function useNodeAi(options: { onModelsChanged?: () => unknown } = {}) {
   const controller = new AbortController();
   onScopeDispose(() => controller.abort());
   const requestSignal = (signal?: AbortSignal) => signal ? AbortSignal.any([controller.signal, signal]) : controller.signal;
+  const loadedTypes = new Set<"language" | "media">();
+  const unsubscribe = subscribeNodeModels(type => {
+    if (!loadedTypes.has(type) || controller.signal.aborted || !options.onModelsChanged) return;
+    void Promise.resolve().then(() => {
+      if (!controller.signal.aborted) return options.onModelsChanged?.();
+    }).catch(() => {});
+  });
+  onScopeDispose(unsubscribe);
 
-  async function getModels(signal?: AbortSignal) {
-    return readModels<NodeAiModel>("/api/ai/models", requestSignal(signal));
+  async function getModels(signal?: AbortSignal, fresh = false) {
+    loadedTypes.add("language");
+    return readNodeModels<NodeAiModel>("language", requestSignal(signal), fresh);
   }
 
-  async function getMediaModels(signal?: AbortSignal) {
-    return readModels<NodeMediaModel>("/api/ai/media/models", requestSignal(signal));
+  async function getMediaModels(signal?: AbortSignal, fresh = false) {
+    loadedTypes.add("media");
+    return readNodeModels<NodeMediaModel>("media", requestSignal(signal), fresh);
   }
 
   async function getMediaPrice(input: NodeMediaPriceRequest, signal?: AbortSignal): Promise<NodeMediaPrice | null> {
     const waitingSignal = requestSignal(signal);
     waitingSignal.throwIfAborted();
+    const requestedInput = input;
+    if (input.providerId === "multiTenant") {
+      const selected = findNodeModel(await getMediaModels(waitingSignal, true), input);
+      if (!selected) throw new Error("所选模型不存在，请重新选择");
+      input = { ...input, modelId: selected.modelId };
+    }
     const now = Date.now();
     const { prices, requestedAt } = mediaPriceCache;
     for (const [key, entry] of prices) if (entry.expires <= now) prices.delete(key);
@@ -312,7 +323,7 @@ export function useNodeAi() {
             cancel = () => reject(waitingSignal.reason);
             waitingSignal.addEventListener("abort", cancel, { once: true });
           });
-          return await getMediaPrice(input, signal);
+          return await getMediaPrice(requestedInput, signal);
         } finally {
           clearTimeout(timer);
           waitingSignal.removeEventListener("abort", cancel);
@@ -351,7 +362,7 @@ export function useNodeAi() {
         waitingSignal.addEventListener("abort", cancel, { once: true });
       })]);
       waitingSignal.throwIfAborted();
-      return prices.get(key) === entry ? price : getMediaPrice(input, signal);
+      return prices.get(key) === entry ? price : getMediaPrice(requestedInput, signal);
     } finally {
       waitingSignal.removeEventListener("abort", cancel);
     }
@@ -360,6 +371,12 @@ export function useNodeAi() {
   async function generateMedia<T extends "image" | "video" | "audio">(mediaType: T, input: NodeImageRequest | NodeVideoRequest | NodeAudioRequest, signal?: AbortSignal, options: NodeMediaTaskOptions = {}) {
     const waitingSignal = requestSignal(signal);
     waitingSignal.throwIfAborted();
+    if (input.providerId === "multiTenant") {
+      const selected = findNodeModel(await getMediaModels(waitingSignal, true), input);
+      if (!selected) throw new Error("所选模型不存在，请重新选择");
+      input = { ...input, modelId: selected.modelId };
+      waitingSignal.throwIfAborted();
+    }
     const taskId = options.taskId ?? crypto.randomUUID();
     // 提交使用独立超时；断线或卸载只结束等待，任务仍可按提交前保存的 ID 查询。
     const submitted = fetch("/api/ai/media/generate", {
@@ -435,10 +452,10 @@ export function useNodeAi() {
     if (!prompt.trim()) throw new Error("请输入提示词");
     const definitions = input.tools ?? [];
     if (new Set(definitions.map(tool => tool.name)).size !== definitions.length) throw new Error("工具名称不能重复");
-    const selected = (await getModels(callSignal)).find(model => model.providerId === providerId && model.modelId === modelId);
+    const selected = findNodeModel(await getModels(callSignal, providerId === "multiTenant"), { providerId, modelId });
     if (!selected) throw new Error("所选模型不存在，请重新选择");
     const model: Model<NodeAiModel["protocol"]> = {
-      id: modelId, name: selected.label, provider: providerId, api: selected.protocol, baseUrl: "",
+      id: selected.modelId, name: selected.label, provider: selected.providerId, api: selected.protocol, baseUrl: "",
       reasoning: false, input: ["text", "image"],
       cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
       contextWindow: selected.contextWindow ?? 262144, maxTokens: selected.maxOutputTokens ?? 32768,
@@ -454,6 +471,8 @@ export function useNodeAi() {
       },
     }));
     let turns = 0;
+    let requests = 0;
+    const identity = getNodeModelIdentity(selected);
     const messages = await runAgentLoop([{ role: "user", content: prompt, timestamp: Date.now() }], {
       systemPrompt: systemPrompt ?? "", messages: [], tools,
     }, {
@@ -466,7 +485,12 @@ export function useNodeAi() {
         const text = (event.result as AgentToolResult<unknown>).content.filter(part => part.type === "text").map(part => part.text).join("\n");
         onEvent({ type: "toolEnd", id: event.toolCallId, name: event.toolName, result: event.isError ? text : JSON.parse(text), isError: event.isError });
       }
-    }, callSignal, (_model, context) => requestModel(input, context, model, callSignal));
+    }, callSignal, async (_model, context) => {
+      const current = requests++ === 0 || selected.providerId !== "multiTenant" ? selected
+        : findNodeModel(await getModels(callSignal, true), identity);
+      if (!current) throw new Error("所选模型不存在，请重新选择");
+      return requestModel({ ...input, providerId: current.providerId, modelId: current.modelId }, context, model, callSignal);
+    });
     callSignal.throwIfAborted();
     const message = messages.findLast((message): message is AssistantMessage => message.role === "assistant");
     if (!message) throw new Error("AI 未返回结果");

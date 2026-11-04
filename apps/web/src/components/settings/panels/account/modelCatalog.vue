@@ -1,7 +1,7 @@
 <template>
   <section class="modelCatalog" aria-label="模型列表" :aria-busy="loading">
     <div class="catalogToolbar">
-      <el-segmented v-model="selectedType" class="typeSwitch" :options="typeOptions" aria-label="模型分类" />
+      <el-segmented v-if="scope !== 'text'" v-model="selectedType" class="typeSwitch" :options="typeOptions" aria-label="模型分类" />
       <el-input v-model="search" class="modelSearch" :prefixIcon="IconSearch" placeholder="搜索模型名称" aria-label="搜索模型名称" clearable />
     </div>
     <el-alert v-if="errorMessage" :title="errorMessage" type="error" :closable="false" showIcon>
@@ -37,7 +37,7 @@
         </footer>
       </article>
     </div>
-    <el-dialog v-model="detailsVisible" :title="selectedModel?.name" width="min(760px, calc(100vw - 32px))" alignCenter appendToBody destroyOnClose>
+    <el-dialog v-model="detailsVisible" class="modelDetailsDialog" :title="selectedModel?.name" width="min(760px, calc(100vw - 32px))" alignCenter appendToBody destroyOnClose>
       <div v-if="selectedModel" class="modelDetails">
         <div class="detailTags">
           <el-tag size="small">{{ typeLabels[selectedModel.type] }}</el-tag>
@@ -97,21 +97,27 @@ import DOMPurify from "dompurify";
 import type { ModelData, ModelPriceStep, ModelType } from "@toonflow/server/channel";
 import http from "@/lib/http";
 
-const props = defineProps<{ visible: boolean; token: string }>();
+const props = withDefaults(defineProps<{ visible: boolean; token: string; scope?: "all" | "text" | "media" }>(), { scope: "all" });
 const loading = defineModel<boolean>("loading", { default: false });
-const selectedType = ref<ModelType | "all">("all");
+const chosenType = ref<ModelType | "all">("all");
+const selectedType = computed({
+  get: () => props.scope === "text" ? "text" : props.scope === "media" && chosenType.value === "text" ? "all" : chosenType.value,
+  set: (value: ModelType | "all") => { chosenType.value = value; },
+});
 const search = ref("");
 const models = ref<ModelData[]>([]);
 const errorMessage = ref("");
 const selectedModel = ref<ModelData>();
 const detailsVisible = ref(false);
 const typeLabels: Record<ModelType, string> = { text: "文本", image: "图片", video: "视频", audio: "音频" };
-const typeOptions = computed(() => [{ label: translate("全部"), value: "all" }, ...Object.entries(typeLabels).map(([value, label]) => ({ value, label }))]);
+const typeOptions = computed(() => [{ label: translate("全部"), value: "all" }, ...Object.entries(typeLabels)
+  .filter(([value]) => props.scope !== "media" || value !== "text").map(([value, label]) => ({ value, label }))]);
 const billingLabels: Record<number, string> = { 0: "按 Token 计费", 1: "按次计费", 3: "阶梯计费", 4: "规则计费", 5: "分时计费" };
 const numberFormat = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 8 });
 const filteredModels = computed(() => {
   const keyword = search.value.trim().toLocaleLowerCase();
-  return models.value.filter(model => model.name.toLocaleLowerCase().includes(keyword));
+  return models.value.filter(model => (props.scope === "all" || (props.scope === "text" ? model.type === "text" : model.type !== "text"))
+    && model.name.toLocaleLowerCase().includes(keyword));
 });
 const ruleDescription = computed(() => DOMPurify.sanitize((selectedModel.value?.billing.ruleDescription ?? "").replace(/\\n/g, "\n"), {
   ALLOWED_TAGS: ["p", "div", "span", "br", "strong", "b", "em", "i", "s", "del", "u", "ul", "ol", "li"],
@@ -178,7 +184,7 @@ async function refresh() {
   }
 }
 
-watch([() => props.visible, () => props.token, selectedType], refresh, { immediate: true, flush: "sync" });
+watch([() => props.visible, () => props.token, () => props.scope, selectedType], refresh, { immediate: true });
 onBeforeUnmount(() => {
   activeRequest?.abort();
   loading.value = false;
@@ -355,6 +361,26 @@ defineExpose({ refresh });
 
     h4 { margin: 0; color: var(--el-text-color-primary); font-size: 13px; }
     .periodSchedule { margin: 0; color: var(--el-text-color-secondary); font-size: 12px; }
+  }
+}
+</style>
+
+<style lang="scss">
+.modelDetailsDialog {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 48px);
+
+  .el-dialog__header { flex-shrink: 0; }
+
+  .el-dialog__body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  @media (max-width: 600px) {
+    max-height: calc(100dvh - 32px);
   }
 }
 </style>

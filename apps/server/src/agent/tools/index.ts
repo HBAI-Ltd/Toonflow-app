@@ -12,17 +12,23 @@ import {
   defineTool, createReadToolDefinition, createWriteToolDefinition, createEditToolDefinition, createLsToolDefinition,
   detectSupportedImageMimeTypeFromFile, type ToolDefinition,
 } from "@earendil-works/pi-coding-agent";
-import type { CanvasContext, QuestionContext, ToolContext, ToolFiles } from "@toonflow/tools-scaffold/runtime";
+import type { CanvasContext, QuestionContext, ToolContext, ToolFiles, MediaGenerationRequest } from "@toonflow/tools-scaffold/runtime";
 import { asrRequestSchema } from "@toonflow/tools-scaffold/runtime";
 import conf from "@/utils/conf";
 import { isWithin, resolveWorkspacePath, writeWorkspaceFile, renameWorkspaceFile, removeWorkspaceFile, lockWorkspaceFiles, protectWorkspaceRoot } from "@/utils/workspace/files";
 import { listTools, loadTool, validateToolConfig } from "@/utils/plugins/tools";
+import { listNodeServerTools, loadNodeServerTool } from "@/utils/plugins/nodes";
 import { createSkillContext } from "@/agent/skills";
 import { createAssetContext } from "@/agent/assets";
 import { readDocument } from "@/utils/documents";
 import { createMcpAgentTools } from "@/utils/mcp/servers";
+import { createPluginMarketTools } from "./pluginMarket";
+import { currentIdentity } from "@/utils/multiTenant/context";
+import { modelGateway, requireDirectModelAccess } from "@/utils/multiTenant/gateway";
+import * as mediaTasks from "@/utils/media/tasks";
 
 export function createAgentToolContext(cwd: string, config: Record<string, unknown> = {}, canvas?: CanvasContext, question?: QuestionContext, workspaceAvailable = true): ToolContext {
+  const actor = currentIdentity();
   const sourceCanvas = canvas;
   if (sourceCanvas) {
     canvas = {
@@ -43,6 +49,15 @@ export function createAgentToolContext(cwd: string, config: Record<string, unkno
   }
   const skillsDirectory = join(dirname(conf.path), "skills");
   const requireWorkspace = () => { if (!workspaceAvailable) throw new Error("此对话未提供工作目录，无法使用文件或媒体操作"); };
+  async function generate(mediaType: "image" | "video" | "audio", request: MediaGenerationRequest, signal?: AbortSignal) {
+    requireWorkspace();
+    signal?.throwIfAborted();
+    if (!modelGateway.enabled()) return generateMedia(cwd, mediaType, request, signal);
+    if (!actor) throw Object.assign(new Error("请先登录 Toonflow"), { status: 401 });
+    const taskId = crypto.randomUUID();
+    await mediaTasks.start(cwd, taskId, mediaType, request, {}, actor);
+    return mediaTasks.wait(cwd, taskId, actor, signal);
+  }
   const resolvePath = async (path: string, readOnly = false) => {
     requireWorkspace();
     const absolute = resolve(cwd, path);
@@ -108,7 +123,7 @@ export function createAgentToolContext(cwd: string, config: Record<string, unkno
     }),
   };
   return {
-    cwd, config, files, resolvePath, writeFile: files.writeFile, canvas, question,
+    cwd, config, files, resolvePath, writeFile: files.writeFile, canvas, question, requireDirectModelAccess,
     skills: workspaceAvailable ? createSkillContext(cwd) : undefined, assets: workspaceAvailable ? createAssetContext(cwd) : undefined,
     browser: createBrowserContext(cwd),
     // ACT: OHOS 使用禁用 WASM 的嵌入式 Node，无法启动当前沙盒子进程。
@@ -130,9 +145,9 @@ export function createAgentToolContext(cwd: string, config: Record<string, unkno
     executeFfmpeg: (request, emit, signal) => { requireWorkspace(); return executeWorkspaceFfmpeg(cwd, request, emit, signal); },
     media: workspaceAvailable ? {
       listModels: listMediaModels,
-      generateImage: (request, signal) => generateMedia(cwd, "image", request, signal),
-      generateVideo: (request, signal) => generateMedia(cwd, "video", request, signal),
-      generateAudio: (request, signal) => generateMedia(cwd, "audio", request, signal),
+      generateImage: (request, signal) => generate("image", request, signal),
+      generateVideo: (request, signal) => generate("video", request, signal),
+      generateAudio: (request, signal) => generate("audio", request, signal),
     } : undefined,
     sdk: {
       defineTool, createWriteToolDefinition, createEditToolDefinition, createLsToolDefinition,
@@ -154,28 +169,31 @@ export function createAgentToolContext(cwd: string, config: Record<string, unkno
 }
 
 export async function createAgentTools(cwd: string, canvas?: CanvasContext, question?: QuestionContext, includeMcp = true): Promise<ToolDefinition[]> {
-  const tools: ToolDefinition[] = [];
-  const names = new Set<string>();
+  const tools = createPluginMarketTools(question);
+  const names = new Set(tools.map(tool => tool.name));
   const context = createAgentToolContext(cwd, {}, canvas, question);
+  function appendTools(definitions: ToolDefinition[], prompt: string, label: string) {
+    for (const tool of definitions) {
+      if (!tool.name || typeof tool.execute !== "function") throw new Error(t`${label} 返回了无效的工具`);
+      if (names.has(tool.name)) throw new Error(t`工具名称重复：${tool.name}`);
+      names.add(tool.name);
+      tools.push({ ...tool, promptGuidelines: [...(prompt ? [prompt] : []), ...(tool.promptGuidelines ?? [])] });
+    }
+  }
+  const nodeServices = await listNodeServerTools();
+  for (const item of nodeServices) {
+    const { plugin, metadata, config } = await loadNodeServerTool(item.name);
+    appendTools(await plugin.createTools({ ...context, config }), metadata.prompt ?? "", item.displayName);
+  }
   for (const item of await listTools()) {
+    if (nodeServices.some(node => node.name === item.name)) continue;
     if (!item.enabled) continue;
     if (item.loadError) throw new Error(`${item.displayName}：${item.loadError}`);
     const { plugin, metadata } = await loadTool(item.name);
     const config = validateToolConfig(plugin, item.config);
     const definitions = await plugin.createTools({ ...context, config });
-    for (const tool of definitions) {
-      if (!tool.name || typeof tool.execute !== "function") throw new Error(t`${item.displayName} 返回了无效的工具`);
-      if (names.has(tool.name)) throw new Error(t`工具名称重复：${tool.name}`);
-      names.add(tool.name);
-      tools.push({
-        ...tool,
-        promptGuidelines: [
-          ...(metadata.prompt ? [metadata.prompt] : []),
-          ...(tool.promptGuidelines ?? []),
-        ],
-      });
-    }
+    appendTools(definitions, metadata.prompt ?? "", item.displayName);
   }
-  if (includeMcp) tools.push(...await createMcpAgentTools());
+  if (includeMcp) appendTools(await createMcpAgentTools(), "", "MCP");
   return tools;
 }

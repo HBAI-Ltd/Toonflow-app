@@ -124,6 +124,10 @@ URI 结构为 `toonflow://skills/<技能名称编码>/<技能内文件路径分�
 
 管理结果中的供应商密钥等敏感字段显示为 `[REDACTED]`。不要将读到的脱敏对象整体回写；按操作 schema 提交需要修改的字段，必须提供密钥时填写真实值。
 
+已登录 Toonflow 账号后，`searchPluginMarket` 可按关键词和类型搜索插件，无需打开工作区。调用 `installMarketPlugin` 时传入搜索结果的 `args.id`，用户在指定的本机页面确认后才会下载。通过 `appOperation` 安装节点、工具、技能或添加媒体供应商也会请求确认。
+
+安装并启用开发工具后，MCP 在 `tools/list` 中提供 `developPlugin`。本机 HTTP 或 stdio 客户端可直接用 `guide` 读取 SDK 指南，用 `build` 和显式的 `target.directory` 构建该工作区内的插件。远程开发调用需要连接已打开的本机工作区页面。安装与上传都在工作区界面中确认或提交。
+
 ## 宿主接入
 
 ```ts

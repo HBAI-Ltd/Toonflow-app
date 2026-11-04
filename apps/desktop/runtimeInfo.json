@@ -1,0 +1,29 @@
+{
+  "version": "1.4.4",
+  "platforms": {
+    "windows-x64": {
+      "archiveSize": 54731706,
+      "archiveSha256": "cd2c0fccc78f3ede1f50ca827a15f063eda13d4d150a3d0674f4f6e323d864a5",
+      "executableSize": 115281496,
+      "executableSha256": "cb1d8e6564e655e49d30cead359750a1cbbd12f42651caa4b62244d7bd93c244"
+    },
+    "windows-arm64": {
+      "archiveSize": 49392935,
+      "archiveSha256": "2d57a0eec0cb44d95c918c3f9734f60455a1306ae5085d76fc68f44e3ee30d09",
+      "executableSize": 100226136,
+      "executableSha256": "ee42e8757c6dce6d60435f079942960e56941c1783b77b7b72d3bb75c8677859"
+    },
+    "macos-x64": {
+      "archiveSize": 43442571,
+      "archiveSha256": "50a3491f73abc2fe81673171a85762d3bc2cc1680ccecadd983de99adf77977e",
+      "executableSize": 98168288,
+      "executableSha256": "c35307c7d45d65c5a385a58c4a6cb0bb9499e4e626abdee207c177a77ba666ab"
+    },
+    "macos-arm64": {
+      "archiveSize": 40323673,
+      "archiveSha256": "c240d7f0ccb90c263a849fcdb09b7ee62630d921348ed6aafda86b9d577bc510",
+      "executableSize": 88660864,
+      "executableSha256": "0a2237cdcfa0d16ef501d9acca9f0026309ef348bea7393a64e8d1e3609565cc"
+    }
+  }
+}

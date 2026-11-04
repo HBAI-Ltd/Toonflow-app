@@ -13,6 +13,8 @@ const photonDirectory = dirname(Bun.resolveSync("@silvia-odwyer/photon-node", ag
 // await $`${process.execPath} run build:teams`.cwd(projectDir);
 await $`${process.execPath} run build`.cwd(resolve(projectDir, "packages/mcp"));
 await mkdir(outputDirectory, { recursive: true });
+// ACT: 移除旧版构建遗留的宿主 SDK，避免增量构建继续把它带入发布目录。
+await rm(resolve(outputDirectory, "pluginSdk"), { recursive: true, force: true });
 // ACT: Photon、anydoc 与沙盒依赖保留运行时目录，WASM/Worker 不依赖源码目录或启动位置。
 await $`${process.execPath} build src/index.ts --target=bun --minify --external @silvia-odwyer/photon-node --external @firecrawl/anydoc --external @firecrawl/anydoc-wasm --external just-bash --define ${`process.env.appVersion:${JSON.stringify(config.app.version)}`} --outdir ${outputDirectory}`.cwd(resolve(projectDir, "apps/server"));
 await $`${process.execPath} build packages/ffmpeg/src/ffmpegWorker.ts --target=bun --minify --outdir ${outputDirectory}`.cwd(projectDir);

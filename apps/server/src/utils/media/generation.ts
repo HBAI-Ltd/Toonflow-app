@@ -5,11 +5,12 @@ import { createHash } from "node:crypto";
 import { mediaProviders, type Provider, type ProviderTaskData } from "@toonflow/providers";
 import type { GeneratedMedia, MediaGenerationRequest, MediaModel, MediaReference } from "@toonflow/tools-scaffold/runtime";
 import conf from "@/utils/conf";
-import { getAccountProvider } from "@/utils/ai";
+import { getAccountProvider } from "@/utils/ai/provider";
 import { getMediaProvider, listMediaProviders, loadMediaProviderSource } from "@/utils/media/provider";
 import { lockWorkspaceFiles, resolveWorkspacePath, writeWorkspaceFile } from "@/utils/workspace/files";
 import { beginGeneration, getProviderPrice } from "@/utils/media/billing";
 import { detectMimeType, readPriceReference } from "@/utils/media/priceReference";
+import { modelGateway } from "@/utils/multiTenant/gateway";
 
 const maxMediaSize = 100 * 1024 * 1024;
 export type MediaGenerationCheckpoint = {
@@ -23,8 +24,14 @@ type MediaGenerationTask = {
   taskId: string;
   resume: boolean;
   checkpoint: MediaGenerationCheckpoint;
+  modelRouteCipher?: string;
   save: (patch: Partial<MediaGenerationCheckpoint>) => Promise<void>;
 };
+const notSubmittedFailures = new WeakSet<object>();
+
+export function isMediaNotSubmitted(cause: unknown) {
+  return !!cause && typeof cause === "object" && notSubmittedFailures.has(cause);
+}
 const mediaExtensions: Record<string, string> = {
   "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif",
   "image/avif": "avif", "image/bmp": "bmp", "image/tiff": "tiff",
@@ -37,6 +44,14 @@ function invalid(message: string): never {
   throw Object.assign(new Error(message), { status: 400 });
 }
 
+function requireGenerationMode(task?: MediaGenerationTask) {
+  if (modelGateway.enabled()) {
+    if (!task?.modelRouteCipher) invalid("多租户媒体生成必须通过持久任务提交");
+  } else if (task?.modelRouteCipher) {
+    throw Object.assign(new Error("多租户模型路由尚未开启"), { status: 403 });
+  }
+}
+
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
@@ -46,6 +61,7 @@ function imageOptions(value: unknown, pattern: RegExp) {
 }
 
 export async function listMediaModels(): Promise<MediaModel[]> {
+  if (modelGateway.enabled()) return modelGateway.catalog(["image", "video", "audio"]);
   const installedProviders = await listMediaProviders();
   installedProviders.sort((left, right) => Number(right.id === "toonflow") - Number(left.id === "toonflow"));
   return installedProviders.filter(provider => provider.id !== "toonflow" || !!getAccountProvider()).flatMap(provider => provider.models.flatMap(model => {
@@ -183,11 +199,17 @@ async function prepareRequest<T>(directory: string | undefined, mediaType: "imag
 }
 
 async function configuredProvider(request: MediaGenerationRequest, mediaType: "image" | "video" | "audio", signal?: AbortSignal, directory?: string,
-  saveTaskData?: (data: ProviderTaskData) => Promise<void>, resume = false) {
+  saveTaskData?: (data: ProviderTaskData) => Promise<void>, resume = false, modelRouteCipher?: string) {
+  if (modelGateway.enabled() || modelRouteCipher) {
+    const { upstream } = await modelGateway.resolve(mediaType, request.providerId, request.modelId, modelRouteCipher, request);
+    const provider = await loadMediaProviderSource(upstream.source, upstream.config, signal, undefined, directory, saveTaskData, upstream.cloud);
+    return { provider, request: { ...request, providerId: provider.id, modelId: upstream.upstreamModelId } };
+  }
   const info = await getMediaProvider(request.providerId);
   if (!resume && !info.models.some(model => model.id === request.modelId && model.type === mediaType)) invalid("所选媒体模型不存在或类型不匹配，请重新选择");
   const configurations = record(conf.get("settings", {}).mediaProviderConfigs);
-  return loadMediaProviderSource(info.source, record(configurations[info.id]), signal, undefined, directory, saveTaskData);
+  const provider = await loadMediaProviderSource(info.source, record(configurations[info.id]), signal, undefined, directory, saveTaskData);
+  return { provider, request };
 }
 
 async function preparePriceRequest(directory: string | undefined, mediaType: "image" | "video" | "audio", request: MediaGenerationRequest, signal?: AbortSignal) {
@@ -207,7 +229,11 @@ async function preparePriceRequest(directory: string | undefined, mediaType: "im
 
 export async function getMediaPrice(directory: string | undefined, mediaType: "image" | "video" | "audio", request: MediaGenerationRequest, signal?: AbortSignal) {
   signal?.throwIfAborted();
-  const provider = await configuredProvider(request, mediaType, signal, directory);
+  if (modelGateway.enabled()) {
+    const quote = await modelGateway.quoteRequest(mediaType, request.providerId, request.modelId, request);
+    return { ...quote, price: `${quote.amount} ${quote.currency}`, tips: translateMessage("平台售价，按实际用量结算") };
+  }
+  const { provider } = await configuredProvider(request, mediaType, signal, directory);
   if (!provider.getPrice) return null;
   const prepared = await preparePriceRequest(directory, mediaType, request, signal);
   signal?.throwIfAborted();
@@ -221,8 +247,31 @@ export async function generateMedia(
   signal?: AbortSignal,
   task?: MediaGenerationTask,
 ): Promise<GeneratedMedia[]> {
+  requireGenerationMode(task);
+  const checkpoint = task?.checkpoint;
+  let submitted = task?.resume === true || !!checkpoint?.providerData || checkpoint?.assetCount !== undefined || !!checkpoint?.files?.length;
+  try {
+    return await executeMedia(cwd, mediaType, request, signal, task, () => { submitted = true; });
+  } catch (cause) {
+    // ACT: 仅宿主确认尚未调用供应商的异常证明未提交；供应商错误码不能伪造此证据。
+    if (!task?.modelRouteCipher || submitted) throw cause;
+    const failure = cause instanceof Error ? cause : new Error(String(cause));
+    notSubmittedFailures.add(failure);
+    throw failure;
+  }
+}
+
+async function executeMedia(
+  cwd: string,
+  mediaType: "image" | "video" | "audio",
+  request: MediaGenerationRequest,
+  signal: AbortSignal | undefined,
+  task: MediaGenerationTask | undefined,
+  markSubmitted: () => void,
+): Promise<GeneratedMedia[]> {
   signal?.throwIfAborted();
   if (!request.prompt.trim()) invalid("请输入生成提示词");
+  const modelRouteCipher = task?.modelRouteCipher;
   const directory = await realpath(cwd);
   const outputDirectory = request.outputDirectory ?? "assets/generated";
   await resolveWorkspacePath(directory, outputDirectory, true);
@@ -245,10 +294,11 @@ export async function generateMedia(
   }
   let finish = () => {};
   const resumeAssets = async () => {
-    const provider = await configuredProvider(request, mediaType, signal, directory, data => task!.save({ providerData: data }), true);
+    const { provider } = await configuredProvider(request, mediaType, signal, directory, data => task!.save({ providerData: data }), true, modelRouteCipher);
     if (!checkpoint?.providerData || !provider.resumeTask) invalid("该任务没有可恢复的供应商凭据，不能重新提交生成");
+    requireGenerationMode(task);
     finish();
-    finish = beginGeneration(provider);
+    if (!modelRouteCipher) finish = beginGeneration(provider);
     // 恢复只使用已保存的凭据，不重新读取参考文件、预处理或提交生成。
     return provider.resumeTask(checkpoint.providerData);
   };
@@ -260,15 +310,18 @@ export async function generateMedia(
     if (task?.resume) {
       assets = checkpoint?.assets ?? await resumeAssets();
     } else {
-      const provider = await configuredProvider(request, mediaType, signal, directory,
-        task ? data => task.save({ providerData: data }) : undefined);
+      const { provider, request: upstreamRequest } = await configuredProvider(request, mediaType, signal, directory,
+        task ? data => task.save({ providerData: data }) : undefined, false, modelRouteCipher);
       const generate = mediaType === "image" ? provider.generateImage : mediaType === "video" ? provider.generateVideo : provider.generateAudio;
       if (typeof generate !== "function") invalid(t`此供应商不支持${translateMessage({ image: "图片", video: "视频", audio: "音频" }[mediaType])}生成`);
       const rules = Array.isArray(provider.rules) ? provider.rules : [];
-      if (rules.some(rule => rule.field === "apiKey") && (typeof provider.config.apiKey !== "string" || !provider.config.apiKey.trim())) invalid("请先在媒体模型设置中配置供应商 API Key");
-      const { type, ...parameters } = await prepareRequest(directory, mediaType, request, readReference, signal);
+      if (provider.id !== "toonflow" && rules.some(rule => rule.field === "apiKey")
+        && (typeof provider.config.apiKey !== "string" || !provider.config.apiKey.trim())) invalid("请先在媒体模型设置中配置供应商 API Key");
+      const { type, ...parameters } = await prepareRequest(directory, mediaType, upstreamRequest, readReference, signal);
       signal?.throwIfAborted();
-      finish = beginGeneration(provider);
+      requireGenerationMode(task);
+      if (!modelRouteCipher) finish = beginGeneration(provider);
+      markSubmitted();
       assets = type === "audio" ? await provider.generateAudio!(parameters as AudioRequest)
         : type === "image" ? await provider.generateImage!(parameters as ImageRequest) : await provider.generateVideo!(parameters as VideoRequest);
     }
@@ -315,7 +368,7 @@ export async function generateMedia(
     return result;
   } catch (err) {
     // ACT: 只回滚本次创建的文件，保留目录中已有的节点资源。
-    if (!task) await Promise.all(written.map(path => unlink(path).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; })));
+    if (!task && !modelRouteCipher) await Promise.all(written.map(path => unlink(path).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; })));
     throw err;
   } finally { finish(); }
 }

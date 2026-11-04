@@ -57,7 +57,7 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
     unregister = u.agent.registerAgentRun(run);
     const cwd = await workspace;
     controller.signal.throwIfAborted();
-    getAgentModelConfiguration(options.providerId, options.modelId, options.thinkingLevel);
+    await getAgentModelConfiguration(options.providerId, options.modelId, options.thinkingLevel);
     res.set({ "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no" });
     res.flushHeaders();
     send = (event: AgentEvent) => {

@@ -72,11 +72,12 @@ import { IconArrowUp, IconChevronRight, IconPlayerPause, IconPlayerPlay, IconPla
 import type { SingleAgentEvent } from "@toonflow/server/singleAgent/types";
 import type { ThinkingLevel } from "@toonflow/server/modelReasoning";
 import type { ToolCall } from "@toonflow/tools-scaffold/runtime";
+import { useNodeModelSelection } from "@toonflow/nodes-scaffold/nodeAi";
 import modelPopover from "@/components/modelPopover.vue";
 import messageMarkdown from "@/components/messageMarkdown.vue";
 import toolMessage from "./agent/toolMessage.vue";
 import { createReplyStream, readAgentEvents } from "./agent/replyStream";
-import { modelChoices } from "@/stores/settings";
+import { modelChoices, refreshModelChoices } from "@/stores/settings";
 import { writeClipboardText } from "@/lib/clipboard";
 import { showNotification } from "@/lib/notification";
 
@@ -91,6 +92,7 @@ const props = withDefaults(defineProps<{
 const visible = defineModel<boolean>({ default: false });
 const msgList = defineModel<AgentMessage[]>("msgList", { default: () => [] });
 const selectedModel = defineModel<string>("model", { default: "" });
+const selectedModelChoice = useNodeModelSelection(modelChoices, selectedModel);
 const thinkingLevel = defineModel<ThinkingLevel | undefined>("thinkingLevel", { default: undefined });
 const emit = defineEmits<{
   complete: [result: SingleAgentDialogResult];
@@ -200,7 +202,7 @@ async function executeClientTool(event: Extract<SingleAgentEvent, { type: "clien
 async function send(content = draft.value) {
   const prompt = content.trim();
   if (busy.value || !visible.value || !prompt) return;
-  const model = modelChoices.value.find(item => item.value === selectedModel.value);
+  const model = selectedModelChoice.value;
   if (!model) { reportError(new Error("请选择已配置的文本模型")); return; }
   busy.value = true;
   formError.value = "";
@@ -216,6 +218,9 @@ async function send(content = draft.value) {
   const notifiedQuestions = new Set<string>();
   try {
     const id = await ensureSession(owner, signal);
+    await refreshModelChoices(true, signal);
+    const currentModel = selectedModelChoice.value;
+    if (!currentModel) throw new Error("请选择已配置的文本模型");
     signal.throwIfAborted();
     changeStatus("running");
     following = true;
@@ -224,7 +229,7 @@ async function send(content = draft.value) {
     accepted = true;
     const response = await fetch("/api/singleAgent/run", {
       method: "POST", headers: { ...requestHeaders, "Content-Type": "application/json" }, signal,
-      body: JSON.stringify({ sessionId: id, runId: reply.id, prompt, providerId: model.providerId, modelId: model.modelId, thinkingLevel: thinkingLevel.value }),
+      body: JSON.stringify({ sessionId: id, runId: reply.id, prompt, providerId: currentModel.providerId, modelId: currentModel.modelId, thinkingLevel: thinkingLevel.value }),
     });
     for await (const event of readAgentEvents<SingleAgentEvent>(response, signal)) {
       if (lifecycle !== owner) break;

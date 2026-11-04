@@ -1,5 +1,9 @@
 本规范适用于整个仓库。
 
+## 多租户开发规范
+
+- 涉及多租户的设计、开发、修复及迁移时，必须先读取 [.agent/multiTenantContext.md](.agent/multiTenantContext.md) 中的需求共识与交接说明，再遵循 [.agent/multiTenant.md](.agent/multiTenant.md) 中的开发规则；接手时不得仅凭当前局部任务重新解释产品目标。
+
 ## 线上 OSS 与数据库保护
 
 - 未经用户针对具体操作明确确认，禁止删除任何线上 OSS 文件、目录、对象或版本，禁止删除数据库、表或记录（包括软删除、级联删除、`DELETE`、`TRUNCATE`、`DROP`）。

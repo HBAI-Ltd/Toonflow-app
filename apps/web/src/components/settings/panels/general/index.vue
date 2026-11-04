@@ -1,7 +1,7 @@
 <template>
   <div class="general">
     <ui />
-    <section class="settingSection" aria-labelledby="extensionAssociationsTitle">
+    <section v-if="!publicWeb" class="settingSection" aria-labelledby="extensionAssociationsTitle">
       <div class="settingHeader">
         <div class="settingInfo">
           <h3 id="extensionAssociationsTitle">默认打开方式</h3>
@@ -95,7 +95,7 @@
     </section>
     <nodeMenuSettings />
     <canvasShortcuts />
-    <extensionAssociationsDialog v-model="associationsVisible" />
+    <extensionAssociationsDialog v-if="!publicWeb" v-model="associationsVisible" />
   </div>
 </template>
 
@@ -103,6 +103,7 @@
 import { onBeforeUnmount, onMounted, ref } from "vue";
 import { ElMessage } from "element-plus";
 import { defaultUiSettings, generalSettings, uiSettings, updateGeneralSettings, updateUiSettings } from "@/stores/settings";
+import { publicWeb } from "@/stores/multiTenant";
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notification";
 import { actualPlatform } from "@/lib/platform";
 import ui from "./ui.vue";

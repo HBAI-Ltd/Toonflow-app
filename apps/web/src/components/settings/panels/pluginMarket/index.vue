@@ -366,14 +366,15 @@ import parse from "semver/functions/parse";
 import { computed, defineAsyncComponent, markRaw, onMounted, onBeforeUnmount, ref, watch } from "vue";
 import { IconBox, IconBook, IconTool, IconFileText, IconExternalLink, IconSparkles2, IconUpload, IconCloudUpload, IconShare, IconStar, IconStarFilled, IconLink, IconSettings, IconCopy } from "@tabler/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { settings } from "@/stores/settings";
+import { toonflowAccountToken as accountToken } from "@/stores/settings";
 import http from "@/lib/http";
 import videoPlayer from "@/components/videoPlayer.vue";
-import type { Plugin as MarketPlugin, PluginExistence } from "@toonflow/server/channel";
+import type { Plugin as MarketPlugin } from "@toonflow/server/channel";
 import saveFile from "@/lib/saveFile";
 import { writeClipboardText } from "@/lib/clipboard";
 import pluginConfigDialog from "./pluginConfigDialog.vue";
 import uploadPluginDialog from "./uploadPluginDialog.vue";
+import { getPluginExistence } from "./marketUpload";
 import skillEditorDialog from "./skillEditorDialog.vue";
 import ffmpeg from "./ffmpeg.vue";
 import mcpServers from "./mcpServers.vue";
@@ -437,10 +438,6 @@ const exportingPlugins = ref(new Set<string>());
 const selectedUploadPlugin = ref<Plugin>();
 const selectedMarketPlugin = ref<Plugin>();
 const uploadVisible = ref(false);
-const accountToken = computed(() => {
-  const account = settings.value.toonflowAccount as { token?: unknown } | null | undefined;
-  return typeof account?.token === "string" ? account.token.trim() : "";
-});
 const localUploadCandidates = computed(() => installedPlugins.value.filter(canUploadLocalPlugin));
 const pluginExistence = ref(new Map<string, boolean>());
 const checkingPluginExistence = ref(false);
@@ -589,9 +586,11 @@ watch(
     marketLoading.value = false;
     marketError.value = "";
     marketPlugins.value = [];
-    marketTotal.value = 0;
     const token = accountToken.value;
-    if (!visible || !isMarketTab.value || !token) return;
+    if (!visible || !isMarketTab.value || !token) {
+      marketTotal.value = 0;
+      return;
+    }
     const controller = new AbortController();
     onCleanup(() => controller.abort());
     marketLoading.value = true;
@@ -702,10 +701,7 @@ watch(
     checkingPluginExistence.value = true;
     try {
       // ACT: 整批只请求一次；未接入或失败时保持未知，不查询市场分页兜底。
-      const results = await http<PluginExistence[]>({
-        method: "POST", url: "/api/channel/plugin/getPluginExistence", data: { plugins },
-        signal: controller.signal, headers: { Authorization: `Bearer ${token}` },
-      });
+      const results = await getPluginExistence(plugins, token, controller.signal);
       if (controller.signal.aborted || accountToken.value !== token) return;
       pluginExistence.value = new Map(results.map(item => [`${item.type}:${item.identifier}`, item.exists]));
     } catch (error) {

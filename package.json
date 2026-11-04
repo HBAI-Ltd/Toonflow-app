@@ -22,6 +22,7 @@
   "workspaces": [
     "apps/*",
     "packages/*",
+    "packages/multiTenant/*",
     "packages/nodes/*",
     "packages/tools/*",
     "packages/teams/*",

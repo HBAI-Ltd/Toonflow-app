@@ -9,6 +9,7 @@ const inputSchema = z.strictObject({
   tools: z.array(z.union([
     toolName,
     z.strictObject({ plugin: toolName, names: z.array(toolName).min(1).refine(names => new Set(names).size === names.length, "工具名称不能重复").optional() }),
+    z.strictObject({ node: z.string().max(96).regex(/^[a-z][a-zA-Z0-9]*$/), names: z.array(toolName).min(1).refine(names => new Set(names).size === names.length, "工具名称不能重复").optional() }),
     z.strictObject({
       name: toolName, label: z.string().trim().min(1).max(200).optional(), description: z.string().trim().min(1).max(20000),
       parameters: z.record(z.string(), z.json()).refine(value => value.type === "object" && JSON.stringify(value).length <= 100000, "工具参数必须是 JSON 对象结构，且不超过 100 KB"),

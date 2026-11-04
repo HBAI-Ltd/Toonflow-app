@@ -24,9 +24,9 @@ bun run start
 bun run publish <桌面构建产物目录>
 ```
 
-参数必须是包含且仅包含一个 `*-update.json` 的目录。清单的 `platform`、`arch` 必须与文件名前缀一致。新格式读取 `artifact.file` 指定的同前缀 `.tar.zst` 归档；Electrobun 1.18.1 Intel Mac 旧清单没有 `artifact` 时，从同目录查找且仅接受一个同前缀的 `.app.tar.zst`。Apple Silicon 使用包含 `artifact.file` 的新格式。
+参数必须是包含且仅包含一个 `*-update.json` 的目录。清单的 `platform`（`win`、`macos`、`linux`）、`arch`（`x64`、`arm64`）必须与文件名前缀一致。六种桌面目标统一读取 `artifact.file` 指定的同前缀 `.tar.zst` 归档，不再接受旧 SDK 缺少 `artifact` 的清单。旧版 Intel Mac 客户端首次迁移到统一 SDK 版本时，须下载完整 PKG 覆盖安装，不能通过旧版增量更新直接迁移。
 
-发布器同时复制同平台、渠道前缀的 `.patch`，保留旧补丁，先替换文件，最后原子替换清单。`public/` 是所有平台共用的静态目录，文件名前缀区分平台和架构。Windows 保持 `releases/<version>/` 快照；Intel Mac 和 Apple Silicon 分别保存到 `releases/macX64/<version>/`、`releases/macArm64/<version>/`。三个目标可以发布相同版本号，同一目标的同版本禁止重复发布。静态下载只开放平铺 ASCII 文件名的 GET/HEAD，并禁止缓存。
+发布器同时复制同平台、渠道前缀的 `.patch`，保留旧补丁，先替换文件，最后原子替换清单。`public/` 是所有平台共用的静态目录，文件名前缀区分平台和架构。Windows x64 保持 `releases/<version>/` 快照；其他目标分别保存到 `releases/windowsArm64/<version>/`、`releases/macX64/<version>/`、`releases/macArm64/<version>/`、`releases/linuxX64/<version>/`、`releases/linuxArm64/<version>/`。六个目标可以发布相同版本号，同一目标的同版本禁止重复发布。静态下载只开放平铺 ASCII 文件名的 GET/HEAD，并禁止缓存。
 
 复制或发布失败会清理本次新建的快照目录和当前临时文件，允许重试，已有快照不会删除。已替换的公开文件不回滚，因此整个发布过程不是一次原子操作。
 

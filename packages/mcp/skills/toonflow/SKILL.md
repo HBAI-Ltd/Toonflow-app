@@ -27,7 +27,7 @@ description: 通过 Toonflow MCP 操作工作区、实时画布、节点、文�
    `args` 按该工具的 schema 填写。`getAppState` 本身使用 `{}`。`target` 及其字段可选；连接 ID 定位界面，目录约束工作区，`canvasId` 校验预期画布。画布修改前建议带齐这三个字段，防止用户手动切换后旧命令修改新画布。
 
 4. 用户需要打开其他项目时使用 `openProject`，完成后重新获取状态；不要复用旧项目的节点 ID。多个连接且目标不明确时，先依据目录定位，再向用户确认歧义。
-5. 没有前端连接时，仅使用支持 `target.directory` 的服务端工具。Linux 部署只能操作 `data/workspaces` 内的工作区。Vue Flow 和节点函数需要打开的 Toonflow 界面；遇到未连接错误应说明需要打开工作区，不要直接改画布文件绕过。
+5. 没有前端连接时，市场搜索可直接调用。服务端工作区工具需指定 `target.directory`。Linux 部署只能操作 `data/workspaces` 内的工作区。Vue Flow 和节点函数需要打开的 Toonflow 界面。
 
 ## 操作画布和节点
 
@@ -59,6 +59,8 @@ description: 通过 Toonflow MCP 操作工作区、实时画布、节点、文�
 
 ## 管理应用与委托 Agent
 
+- 用 `searchPluginMarket` 搜索当前 Toonflow 账号的插件市场。对返回的可安装插件，向 `installMarketPlugin` 传入 `args.id` 和目标本机页面的 `target.connectionId`，等待用户在 Toonflow 确认。拒绝或取消后结束本次安装。
+- 在插件开发工具安装并启用后，重新读取工具列表。本机 MCP 可直接用 `developPlugin` 的 `guide` 查阅 SDK。用 `build` 构建时，传入工作区绝对目录 `target.directory` 和工作区内项目相对路径 `args.path`。安装构建产物需要在已打开的工作区确认。
 - 插件、全局技能、媒体供应商、素材库和对话历史通过按需发现的应用操作管理。先用 `listAppOperations` 传入 `{ "args": {} }` 查询目录，或 `{ "args": { "name": "操作名" } }` 读取单项 schema，再用 `appOperation` 传入 `{ "args": { "name": "操作名", "parameters": {} } }` 执行。不要猜测参数，也不要把全部操作描述一次性塞进后续上下文。
 - 会话管理的工作目录由 `target.directory` 或指定连接的工作区注入，不在 `parameters` 里另设目录。安装、覆盖或卸载应符合用户请求。
 - 密钥等字段返回 `[REDACTED]` 时，这只是脱敏占位符。不要将含占位符的对象整体写回；按 schema 提交变更，必填密钥使用真实值。

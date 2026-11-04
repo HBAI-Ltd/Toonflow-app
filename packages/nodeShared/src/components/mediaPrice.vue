@@ -11,7 +11,7 @@
 import { computed, inject, onScopeDispose, ref, watch } from "vue";
 import { ElTooltip } from "element-plus";
 import { IconInfoCircle } from "@tabler/icons-vue";
-import { useNodeAi, type NodeMediaPrice, type NodeMediaPriceRequest } from "@toonflow/nodes-scaffold/nodeAi";
+import { subscribeNodeModels, useNodeAi, type NodeMediaPrice, type NodeMediaPriceRequest } from "@toonflow/nodes-scaffold/nodeAi";
 
 const props = defineProps<{ input: Omit<NodeMediaPriceRequest, "directory">; supported: boolean }>();
 const ai = useNodeAi();
@@ -25,16 +25,7 @@ const priceLabel = computed(() => !props.supported ? "当前供应商尚未提�
   ? `价格查询失败：${error.value}。请检查供应商配置或稍后重试。`
   : price.value ? price.value.tips : "当前模型或参数组合暂无预估价格。你仍可发起生成，实际费用以供应商结算为准。");
 
-function refreshPrice(event: Event) {
-  if (event.type === "toonflow:plugin-installed" && (event as CustomEvent<{ type?: string }>).detail?.type !== "provider") return;
-  revision.value++;
-}
-window.addEventListener("toonflow:provider-config-changed", refreshPrice);
-window.addEventListener("toonflow:plugin-installed", refreshPrice);
-onScopeDispose(() => {
-  window.removeEventListener("toonflow:provider-config-changed", refreshPrice);
-  window.removeEventListener("toonflow:plugin-installed", refreshPrice);
-});
+onScopeDispose(subscribeNodeModels(type => { if (type === "media") revision.value++; }));
 
 function currentDirectory() {
   try { return getDirectory?.(); }

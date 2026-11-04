@@ -117,8 +117,10 @@ const previewUrl = files.useFileUrl(
 );
 const imagePreviewUrl = computed(() => editor.value?.previewSrc || previewUrl.value);
 
-nodeEvent.on("save", () => {
-  if (uploading.value || editor.value?.busy || inpaintPrompt.value?.creating || lighting.value?.generating || multiAngle.value?.generating || panorama.value?.busy) throw new Error("图片处理中，请完成后再切换或刷新节点");
+nodeEvent.on("save", reason => {
+  // ACT: 普通保存不等待打光和多角度生成，后台任务继续由原画布实例承载。
+  if (uploading.value || editor.value?.busy || inpaintPrompt.value?.creating || panorama.value?.busy
+    || (reason === "reload" && (lighting.value?.generating || multiAngle.value?.generating))) throw new Error("图片处理中，请完成后再切换或刷新节点");
 });
 nodeEvent.on("delete", () => {
   if (uploading.value || editor.value?.busy || inpaintPrompt.value?.creating || lighting.value?.generating || multiAngle.value?.generating || panorama.value?.busy) throw new Error("图片处理中，请稍后删除节点");

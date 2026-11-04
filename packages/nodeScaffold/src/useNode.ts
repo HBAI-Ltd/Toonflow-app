@@ -16,6 +16,7 @@ export type NodeOptions<T extends NodeOutputs = NodeOutputs> = {
   icon?: Component;
   handles?: NodeHandle[];
   outputs?: T;
+  onModelsChanged?: () => unknown;
 };
 
 export function useNode<T extends NodeOutputs = NodeOutputs>(options: NodeOptions<T> = {}) {
@@ -54,7 +55,7 @@ export function useNode<T extends NodeOutputs = NodeOutputs>(options: NodeOption
     outputs,
     nodeEvent,
     nodeTools,
-    ai: useNodeAi(),
+    ai: useNodeAi({ onModelsChanged: options.onModelsChanged }),
     ffmpeg: useNodeFfmpeg(),
     asr: useNodeAsr(),
     files: {

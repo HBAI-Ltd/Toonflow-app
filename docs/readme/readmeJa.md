@@ -449,6 +449,8 @@ Toonflow は [MIT ライセンス](../../LICENSE)を採用しています。サ�
 仰起脸笑的像满月：Codex 20x の開発用計算リソースをご提供いただきました。
 西安中星数字智能科技有限公司：Apple 証明書による署名をご提供いただきました。
 
+<p align="center"><sub>Free code signing provided by <a href="https://signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</sub></p>
+
 <div align="center">
 
 Copyright © 2026 北京爱阿科技有限公司

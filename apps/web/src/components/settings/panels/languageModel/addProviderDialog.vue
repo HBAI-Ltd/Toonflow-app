@@ -53,7 +53,7 @@
 import { computed, ref, shallowRef, watch } from "vue";
 import axios from "axios";
 import { IconRefresh } from "@tabler/icons-vue";
-import formCreate, { type Api, type Options } from "../../formCreate";
+import formCreate, { type Api, type Options } from "@toonflow/provider-web/formCreate";
 import { languageProviders } from "@toonflow/providers";
 import { modelIcon } from "@toonflow/model-icons";
 import messageMarkdown from "@/components/messageMarkdown.vue";

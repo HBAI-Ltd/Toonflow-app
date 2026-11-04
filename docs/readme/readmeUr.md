@@ -449,6 +449,8 @@ Toonflow، ‏[MIT License](../../LICENSE) کے تحت دستیاب ہے۔ تھ�
 仰起脸笑的像满月: ‏Codex 20x کے ذریعے ڈویلپمنٹ کے لیے کمپیوٹنگ وسائل فراہم کیے۔
 Xi'an Zhongxing Digital Intelligence Technology Co., Ltd. (西安中星数字智能科技有限公司): ‏Apple سرٹیفکیٹ سے دستخط کی سہولت فراہم کی۔
 
+<p align="center"><sub>Free code signing provided by <a href="https://signpath.io/">SignPath.io</a>, certificate by <a href="https://signpath.org/">SignPath Foundation</a>.</sub></p>
+
 <div align="center">
 
 حقوقِ اشاعت © 2026 北京爱阿科技有限公司

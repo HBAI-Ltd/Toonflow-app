@@ -4,7 +4,7 @@ import { mkdir, readFile, unlink, writeAtomic } from "@toonflow/file";
 import conf from "@/utils/conf";
 import { getRequestFiles, getRequestFileReferences } from "@/utils/ai/requestFiles";
 
-export type FileProvider = { apiUrl: string; apiKey: string; protocol: string };
+export type FileProvider = { apiUrl: string; apiKey: string; protocol: string; headers?: Record<string, string | null> };
 export class FileRequestLimitError extends Error {
   constructor(readonly excessBytes: number, readonly excessCount: number, message = "输入图片超过供应商的请求限制") {
     super(message);
@@ -23,7 +23,7 @@ type FileAdapter = {
   unsupported(file: { path: string; mimeType: string }): string | undefined;
   reference(protocol: string, fileId: string, mimeType: string): Record<string, unknown>;
   headers(protocol: string, headers: Headers): void;
-  upload(provider: FileProvider, source: FileSource, request: typeof fetch, signal?: AbortSignal): Promise<CachedFile>;
+  upload(headers: Headers, source: FileSource, request: typeof fetch, signal?: AbortSignal): Promise<CachedFile>;
   stale(status: number, error: string, fileIds: string[]): string[];
 };
 
@@ -58,7 +58,7 @@ const adapters: FileAdapter[] = [{
     beta.add("files-api-2025-04-14");
     headers.set("anthropic-beta", [...beta].join(","));
   },
-  async upload(provider, source, request, signal) {
+  async upload(headers, source, request, signal) {
     signal?.throwIfAborted();
     const form = new FormData();
     form.set("purpose", "user_data");
@@ -66,7 +66,7 @@ const adapters: FileAdapter[] = [{
     form.set("expires_after[seconds]", String(7 * 24 * 60 * 60));
     const extension = source.mimeType.slice(6).replace("jpeg", "jpg");
     form.set("file", new Blob([Uint8Array.from(Buffer.from(source.data.replace(/\s/g, ""), "base64")).buffer], { type: source.mimeType }), `toonflow-${hash(source.data).slice(0, 16)}.${extension}`);
-    const response = await request(this.endpoint, { method: "POST", headers: { authorization: `Bearer ${provider.apiKey}` }, body: form, signal });
+    const response = await request(this.endpoint, { method: "POST", headers, body: form, signal });
     if (!response.ok) throw Object.assign(new Error(`DeepSeek 文件上传失败（HTTP ${response.status}）：${await response.text()}`), { status: response.status });
     const file = await response.json() as { id?: unknown; expires_at?: unknown };
     if (typeof file.id !== "string" || !file.id.trim() || typeof file.expires_at !== "number" || !Number.isFinite(file.expires_at)
@@ -156,7 +156,16 @@ export function createFileTransport(provider: FileProvider, options: { fetch?: t
   }, fetchRequest);
   const adapter = adapters.find(adapter => adapter.accepts(provider));
   if (!adapter) return { prepare: async () => {}, fetch: request };
-  const scope = hash(`${adapter.endpoint}\0${hash(provider.apiKey)}`);
+  const headers = new Headers(provider.apiKey ? { authorization: `Bearer ${provider.apiKey}` } : undefined);
+  for (const [name, value] of Object.entries(provider.headers ?? {})) {
+    if (value === null) headers.delete(name);
+    else headers.set(name, value);
+  }
+  // ACT: 附件鉴权沿用模型请求的覆盖顺序，multipart 边界和长度仍由运行时生成。
+  headers.delete("content-type");
+  headers.delete("content-length");
+  // ACT: 缓存按实际上传请求头隔离，凭据只参与路径摘要，不写入缓存内容。
+  const scope = hash(`${adapter.endpoint}\0${JSON.stringify([...headers])}`);
   const directory = join(dirname(conf.path), "ai", "files", scope);
   const preparedFiles = new Map<string, PreparedFile>();
   const renewedFiles = new Map<string, string>();
@@ -171,7 +180,7 @@ export function createFileTransport(provider: FileProvider, options: { fetch?: t
           const cached = await cacheOperation(source.cachePath, () => readCachedFile(source.cachePath));
           signal?.throwIfAborted();
           if (cached) return cached;
-          const uploaded = await adapter!.upload(provider, source, request, signal);
+          const uploaded = await adapter!.upload(headers, source, request, signal);
           if (invalidatedFiles.has(`${source.cachePath}\0${uploaded.fileId}`)) throw new Error("DeepSeek 文件上传再次返回了已失效的文件 ID");
           signal?.throwIfAborted();
           await cacheOperation(source.cachePath, async () => {
