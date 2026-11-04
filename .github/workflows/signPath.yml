@@ -71,7 +71,6 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - name: 提交 SignPath 测试签名并下载结果
-        id: testSigning
         uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
@@ -98,7 +97,6 @@ jobs:
           }
           Write-Output "测试签名证书：$($signature.SignerCertificate.Subject)；系统信任状态：$($signature.Status)"
       - name: 保留测试签名安装包
-        id: signedArtifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: toonflow-windows-x64-test-signed-${{ github.run_attempt }}
@@ -106,17 +104,3 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 7
-      - name: 输出签名请求和下载链接
-        env:
-          signingRequestUrl: ${{ steps.testSigning.outputs.signing-request-web-url }}
-          signedArtifactUrl: ${{ steps.signedArtifact.outputs.artifact-url }}
-        run: |
-          bun -e '
-          import { appendFileSync } from "@toonflow/file";
-          appendFileSync(process.env.GITHUB_STEP_SUMMARY, [
-            "仅供接入验证：安装包使用自签测试证书，不作为正式发布版本。",
-            `[SignPath 签名请求](${process.env.signingRequestUrl})`,
-            `[下载测试签名安装包](${process.env.signedArtifactUrl})`,
-            "",
-          ].join("\n\n"));
-          '
