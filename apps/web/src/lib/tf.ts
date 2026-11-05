@@ -1,6 +1,7 @@
 import axios from "axios";
 import type { NodeHandle } from "@toonflow/nodes-scaffold/connection";
 import { customProviders, settings } from "@/stores/settings";
+import { accountEnabled } from "@/lib/account";
 
 type TfRequestOptions = { apiKey?: string; signal?: AbortSignal };
 
@@ -86,6 +87,7 @@ export function isTfRouterProvider(provider: { id: string; apiUrl: string }) {
 const client = axios.create({ baseURL: "https://api.toonflow.net" });
 
 export function getTfApiKey() {
+  if (accountEnabled.value) return "";
   const provider = customProviders.value.find(isTfRouterProvider);
   const mediaConfigs = settings.value.mediaProviderConfigs as Record<string, { apiKey?: unknown }> | undefined;
   return [provider?.apiKey, mediaConfigs?.tfRouter?.apiKey]

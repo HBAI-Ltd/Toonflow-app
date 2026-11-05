@@ -5,6 +5,7 @@ import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
 import type { AgentMention } from "@/agent/runtime/types";
 import { getAssetsDirectory } from "@/utils/assets";
+import { withStorageCopy } from "@/utils/hosting/storage";
 import { lockWorkspaceFiles, resolveWorkspacePath } from "@/utils/workspace/files";
 import { getReadableFileExtension } from "@/lib/documentFormats";
 
@@ -99,7 +100,7 @@ export async function snapshotMentions(cwd: string, mentions: AgentMention[], sa
       const release = lockWorkspaceFiles([source, target.path]);
       try {
         await mkdir(folder.path, { recursive: true });
-        await copyFile(source, target.path, constants.COPYFILE_EXCL);
+        await withStorageCopy(source, target.path, () => copyFile(source, target.path, constants.COPYFILE_EXCL));
         created.push(target.path);
         signal?.throwIfAborted();
         const info = await stat(target.path);

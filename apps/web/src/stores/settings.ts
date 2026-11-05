@@ -1,4 +1,5 @@
 import axios from "axios";
+import { accountEnabled } from "@/lib/account";
 import { normalizeLocale } from "@toonflow/i18n";
 import { computed, nextTick, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
@@ -16,14 +17,17 @@ let applyingSettings = false;
 
 export const settingsStorage = {
   getItem(key: string) {
+    if (accountEnabled.value && key === "toonflow.projectList") return null;
     const stores = settings.value.stores as Record<string, unknown> | undefined;
     if (stores && Object.hasOwn(stores, key)) return JSON.stringify(stores[key]);
+    if (accountEnabled.value) return null;
     // ACT: 只迁移当前来源可读取的旧缓存，保留原值；不同端口的 localStorage 不能互读。
     const value = localStorage.getItem(key);
     if (value !== null) settingsStorage.setItem(key, value);
     return value;
   },
   setItem(key: string, value: string) {
+    if (accountEnabled.value && key === "toonflow.projectList") return;
     settings.value.stores = { ...(settings.value.stores as Record<string, unknown> | undefined), [key]: JSON.parse(value) };
   },
 };
@@ -139,6 +143,19 @@ export function saveSettings(update?: (current: Record<string, unknown>) => Reco
     );
     if (data.code !== 200) throw new Error("保存设置失败");
     if (data.data?.aiModels) applyModelReasoning(data.data.aiModels);
+    if (accountEnabled.value && data.data) {
+      const { aiModels, modelRefreshErrors, mediaProvider, nodeMenu, ...savedSettings } = data.data;
+      applyingSettings = true;
+      try { settings.value = savedSettings; }
+      finally { applyingSettings = false; }
+      if (patch && Object.hasOwn(patch, "customProviders")) invalidateNodeModels("language");
+      if (patch && Object.hasOwn(patch, "mediaProviderConfigs")) {
+        invalidateNodeModels("media");
+        window.dispatchEvent(new Event("toonflow:provider-config-changed"));
+      }
+      if (modelRefreshErrors?.length) ElMessage.warning(`API Key 已保存，部分模型获取失败：${modelRefreshErrors.join("；")}`);
+      return true;
+    }
     const providers = data.data?.customProviders;
     if ((patch && Object.hasOwn(patch, "customProviders")) || providers) invalidateNodeModels("language");
     if (patch || providers) {

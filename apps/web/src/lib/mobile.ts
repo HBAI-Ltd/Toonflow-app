@@ -2,6 +2,7 @@ import { computed, ref } from "vue";
 import axios from "axios";
 import { t, translate } from "@toonflow/i18n/vue";
 import { isMobile, isDesktop, isRemoteConnection } from "./platform";
+import { accountEnabled } from "./account";
 
 type MobileConnection = { mode: "local" | "remote"; name?: string; url?: string; online?: boolean | null; appVersion?: string; remoteAppVersion?: string };
 
@@ -25,6 +26,7 @@ let connectionRequest: Promise<MobileConnection> | undefined;
 let connectionTimer: ReturnType<typeof setTimeout> | undefined;
 
 export async function refreshMobileConnection() {
+  if (accountEnabled.value) return mobileConnection.value;
   if (connectionRequest) return connectionRequest;
   clearTimeout(connectionTimer);
   connectionRequest = (async () => {
@@ -74,10 +76,13 @@ export async function changeDeviceConnection(action: "connect" | "disconnect", b
   if (data.restart === "mobile") window.location.href = "toonflow://restart";
 }
 
-document.addEventListener("visibilitychange", () => {
-  clearTimeout(connectionTimer);
-  if (!document.hidden) void refreshMobileConnection().catch(() => {});
-});
-window.addEventListener("pagehide", () => clearTimeout(connectionTimer));
-window.addEventListener("pageshow", () => { void refreshMobileConnection().catch(() => {}); });
-void refreshMobileConnection().catch(() => {});
+export function registerMobileConnection() {
+  if (accountEnabled.value) return;
+  document.addEventListener("visibilitychange", () => {
+    clearTimeout(connectionTimer);
+    if (!document.hidden) void refreshMobileConnection().catch(() => {});
+  });
+  window.addEventListener("pagehide", () => clearTimeout(connectionTimer));
+  window.addEventListener("pageshow", () => { void refreshMobileConnection().catch(() => {}); });
+  void refreshMobileConnection().catch(() => {});
+}

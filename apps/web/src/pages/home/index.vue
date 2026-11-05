@@ -24,7 +24,7 @@
         </button>
       </nav>
       <div class="sidebarFooter">
-        <button class="sidebarItem deviceButton" :class="{ connected: deviceHubEnabled || mobileConnection.online === true }" type="button" :aria-label="mobileConnectionLabel" :title="mobileConnectionLabel" @click="mobileConnectVisible = true">
+        <button v-if="!accountEnabled" class="sidebarItem deviceButton" :class="{ connected: deviceHubEnabled || mobileConnection.online === true }" type="button" :aria-label="mobileConnectionLabel" :title="mobileConnectionLabel" @click="mobileConnectVisible = true">
           <span class="sidebarIcon">
             <component :is="deviceHubEnabled || mobileConnection.mode === 'remote' ? IconDeviceDesktop : IconQrcode" :size="18" aria-hidden="true" />
             <span v-if="deviceHubEnabled || mobileConnection.online === true" class="connectionDot" />
@@ -66,18 +66,18 @@
                   <div class="composerFooter">
                     <div class="composerTools">
                       <el-button class="attachmentButton" text circle :icon="IconPaperclip" :disabled="creating || opening" aria-label="添加附件" title="添加附件" @click="attachmentInput?.click()" />
-                      <workspacePicker ref="promptWorkspacePicker" v-model="workspaceDirectory" :disabled="creating || opening" />
+                      <workspacePicker v-if="!accountEnabled" ref="promptWorkspacePicker" v-model="workspaceDirectory" :disabled="creating || opening" />
                     </div>
                     <div class="sendActions">
                       <modelPopover v-model="selectedModel" v-model:reasoningEffort="reasoningEffort" class="modelSelect" :disabled="creating || opening" />
-                      <el-button class="sendButton" type="primary" :circle="!!workspaceDirectory" :icon="workspaceDirectory ? IconArrowUp : IconFolder" :loading="creating" :disabled="creating || opening" :aria-label="workspaceDirectory ? '发送' : '选择工作目录'" @click="workspaceDirectory ? createProject() : promptWorkspacePicker?.chooseDirectory()">
-                        <template v-if="!workspaceDirectory" #default>选择工作目录</template>
+                      <el-button class="sendButton" type="primary" :circle="accountEnabled || !!workspaceDirectory" :icon="accountEnabled || workspaceDirectory ? IconArrowUp : IconFolder" :loading="creating" :disabled="creating || opening" :aria-label="accountEnabled || workspaceDirectory ? '发送' : '选择工作目录'" @click="accountEnabled || workspaceDirectory ? createProject() : promptWorkspacePicker?.chooseDirectory()">
+                        <template v-if="!accountEnabled && !workspaceDirectory" #default>选择工作目录</template>
                       </el-button>
                     </div>
                   </div>
                 </template>
               </el-card>
-              <p v-if="!workspaceDirectory" class="workspaceHint" role="status">请先选择一个空文件夹作为工作目录，画布和素材会保存在这里。</p>
+              <p v-if="!accountEnabled && !workspaceDirectory" class="workspaceHint" role="status">请先选择一个空文件夹作为工作目录，画布和素材会保存在这里。</p>
             </div>
           </section>
           <section class="projectList" data-home-section="projects" aria-labelledby="projectListTitle">
@@ -91,7 +91,7 @@
                   </span>
                   <span class="launchText">
                     <span class="launchTitle">新建项目</span>
-                    <span class="launchDescription">或打开已有项目</span>
+                    <span v-if="!accountEnabled" class="launchDescription">或打开已有项目</span>
                   </span>
                 </button>
               </el-card>
@@ -100,12 +100,12 @@
                   <projectCover :directory="project.directory" />
                   <span class="projectInfo">
                     <span class="projectName" :title="project.name">{{ project.name }}</span>
-                    <span class="projectTime">最近打开 {{ new Date(project.lastOpenedAt).toLocaleString(locale, { hour12: false }) }}</span>
+                    <span v-if="project.lastOpenedAt" class="projectTime">最近打开 {{ new Date(project.lastOpenedAt).toLocaleString(locale, { hour12: false }) }}</span>
                   </span>
                 </button>
                 <div class="projectActions">
                   <el-button circle :icon="IconEdit" :disabled="creating || opening" :aria-label="`重命名项目 ${project.name}`" title="重命名" @click="renameProject(project)" />
-                  <el-button circle plain type="danger" :icon="IconTrash" :disabled="creating || opening" :aria-label="`移除项目 ${project.name}`" title="从列表移除，不删除文件" @click="workspaceStore.removeProject(project.directory)" />
+                  <el-button circle plain type="danger" :icon="IconTrash" :disabled="creating || opening" :aria-label="`移除项目 ${project.name}`" title="从列表移除，不删除文件" @click="removeProject(project)" />
                 </div>
               </el-card>
             </div>
@@ -151,6 +151,7 @@ import bg from "./bg.vue";
 import explore from "./explore.vue";
 import projectCover from "./projectCover.vue";
 import workspacePicker from "./workspacePicker.vue";
+import { accountEnabled } from "@/lib/account";
 
 const settingsVisible = ref(false);
 const assetsVisible = ref(false);
@@ -404,7 +405,7 @@ async function openProject(project: Project) {
     const directory = project.directory;
     try { await workspaceStore.openProject(directory); }
     catch (err) {
-      if (!axios.isAxiosError(err) || err.response?.status !== 404) throw err;
+      if (accountEnabled.value || !axios.isAxiosError(err) || err.response?.status !== 404) throw err;
       const reselect = await ElMessageBox.confirm(`项目“${project.name}”的文件夹不存在，是否重新选择文件夹？`, "工作目录不存在", {
         confirmButtonText: "重新选择", cancelButtonText: "取消", type: "warning",
       }).then(() => true, () => false);
@@ -426,13 +427,33 @@ async function renameProject(project: Project) {
     inputValue: project.name, confirmButtonText: "保存", cancelButtonText: "取消",
     inputValidator: value => !!value?.trim() || "项目名称不能为空",
   }).catch(() => null);
-  if (result) workspaceStore.renameProject(project.directory, result.value);
+  if (result) {
+    try { await workspaceStore.renameProject(project.directory, result.value); }
+    catch (error) { ElMessage.error(error instanceof Error ? error.message : "重命名失败"); }
+  }
+}
+
+async function removeProject(project: Project) {
+  try { await workspaceStore.removeProject(project.directory); }
+  catch (error) { ElMessage.error(error instanceof Error ? error.message : "移除项目失败"); }
 }
 
 async function createProject(fromPrompt = true) {
-  if (creating.value || opening.value || (fromPrompt && !workspaceDirectory.value)) return;
-  const path = fromPrompt ? workspaceDirectory.value : await relocationPicker.value?.chooseDirectory();
-  if (!path || creating.value || opening.value || pageLifetime.signal.aborted) return;
+  if (creating.value || opening.value || (!accountEnabled.value && fromPrompt && !workspaceDirectory.value)) return;
+  let path: string | null | undefined;
+  if (accountEnabled.value) {
+    const result = await ElMessageBox.prompt("请输入项目名称", "新建项目", {
+      inputValidator: value => !!value?.trim() || "项目名称不能为空", confirmButtonText: "创建", cancelButtonText: "取消",
+    }).catch(() => null);
+    if (!result || creating.value || opening.value) return;
+    creating.value = true;
+    try { path = (await workspaceStore.createProject(result.value.trim())).directory; }
+    catch (error) { creating.value = false; ElMessage.error(error instanceof Error ? error.message : "创建项目失败"); return; }
+  } else path = fromPrompt ? workspaceDirectory.value : await relocationPicker.value?.chooseDirectory();
+  if (!path || !accountEnabled.value && creating.value || opening.value || pageLifetime.signal.aborted) {
+    if (accountEnabled.value) creating.value = false;
+    return;
+  }
   creating.value = true;
   try {
     const { directory, empty } = await useWorkspaceFiles(path).list();

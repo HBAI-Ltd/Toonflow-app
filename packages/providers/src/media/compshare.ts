@@ -1773,6 +1773,17 @@ export default {
       ],
     },
   ] satisfies ProviderModel[],
+  async queryTaskStatus(this: Context, id: string, options?: ProviderTaskQuery) {
+    if (!options?.protocol && !options?.model) return { status: "unknown", reason: "missingProtocol" };
+    const h3 = options.protocol ? options.protocol === "minimaxH3" : isH3Model(options.model!);
+    const apiKey = h3 ? requireH3Key(this) : requireModelVerseKey(this);
+    const url = h3 ? H3_BASE + "/minimax/v2/query/video_generation/" + encodeURIComponent(id)
+      : API_BASE + "/v1/tasks/status?task_id=" + encodeURIComponent(id);
+    const payload = await requestJson(this, url, { method: "GET", headers: authHeaders(apiKey), signal: this.signal ?? AbortSignal.timeout(10000) });
+    const data = h3 ? payload.task : payload.output;
+    const state = data && typeof data === "object" ? data as Record<string, unknown> : {};
+    return { status: String((h3 ? state.status : state.task_status) ?? "unknown") };
+  },
   async generateImage(this: Context, request: ImageRequest): Promise<MediaAsset[]> {
     this.signal?.throwIfAborted();
     const model = typeof request.model === "string" ? request.model.trim() : "";

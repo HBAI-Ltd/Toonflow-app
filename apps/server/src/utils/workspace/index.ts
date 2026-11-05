@@ -4,8 +4,11 @@ import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import conf from "@/utils/conf";
 import { getMobileLinkConfig, isMobileLinkRequest } from "@/utils/mobileLink";
 import { getRuntimePlatform } from "@/lib/platform";
+import { isMultiUser, requireUser } from "@/utils/accounts/context";
+import { authorizeWorkspace } from "@/utils/hosting/tenant";
 
 export function isLocalWorkspaceRequest(req: Request) {
+  if (isMultiUser()) return requireUser().role === "admin";
   if (isMobileLinkRequest(req)) return false;
   const localAddress = ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.socket.remoteAddress ?? "") && req.get("x-toonflow-local-client") !== "0";
   const localHost = ["localhost", "127.0.0.1", "[::1]"].includes(req.hostname);
@@ -22,6 +25,7 @@ export async function resolveWorkspace(req: Request, path: string) {
     throw err;
   });
   if (!(await stat(directory)).isDirectory()) throw Object.assign(new Error("工作目录不是文件夹，请重新选择"), { status: 404 });
+  if (isMultiUser()) return authorizeWorkspace(directory);
   if (getRuntimePlatform().local && isLocalWorkspaceRequest(req)) return directory;
 
   if (isMobileLinkRequest(req)) {

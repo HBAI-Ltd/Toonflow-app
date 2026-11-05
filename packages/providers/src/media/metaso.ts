@@ -75,6 +75,17 @@ export default {
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["768P", "2K"] }],
     },
   ] satisfies ProviderModel[],
+  async queryTaskStatus(id: string) {
+    const apiKey = this.config.apiKey?.trim();
+    if (!apiKey) throw new Error("请填写 API Key");
+    const baseUrl = (this.config.baseUrl?.trim() || "https://metaso.cn/api/minimax").replace(/\/$/, "");
+    const response = await this.tool.fetch(`${baseUrl}/v2/query/video_generation/${encodeURIComponent(id)}`, {
+      method: "GET", headers: { Authorization: `Bearer ${apiKey}` }, signal: this.signal,
+    });
+    if (!response.ok) throw new Error(`查询任务失败：HTTP ${response.status}`);
+    const data = await response.json() as { task?: { status?: string } };
+    return { status: data.task?.status ?? "unknown" };
+  },
   async generateVideo(request: VideoRequest): Promise<MediaAsset[]> {
     const apiKey = this.config.apiKey?.trim();
     if (!apiKey) throw new Error("请填写 API Key");

@@ -7,6 +7,9 @@ import u from "@/utils";
 import { translateError, translateMessage } from "@/lib/i18n";
 import { thinkingLevels } from "@/lib/modelReasoning";
 import { getAgentModelConfiguration } from "@/agent/runtime/model";
+import { runTask } from "@/utils/hosting/tasks";
+import { isMultiUser } from "@/utils/accounts/context";
+import { sanitizeHostingError } from "@/utils/hosting/policy";
 
 const inputSchema = z.object({
   prompt: z.string().trim(), directory: z.string().min(1),
@@ -51,10 +54,11 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
   req.once("aborted", close);
   req.socket.once("close", close);
   try {
-    await u.agent.run({ ...options, cwd, canvas: bridge?.context, question: questions.context, signal: controller.signal, onCancel: close }, send);
+    await runTask({ kind: "agent", model: `${options.providerId}/${options.modelId}`, directory: cwd, signal: controller.signal },
+      signal => u.agent.run({ ...options, cwd, canvas: bridge?.context, question: questions.context, signal, onCancel: close }, send));
     send({ type: "done" });
   } catch (error) {
-    send({ type: "error", message: error instanceof Error ? translateError(error) : translateMessage("Agent 运行失败") });
+    send({ type: "error", message: isMultiUser() ? sanitizeHostingError(error) : error instanceof Error ? translateError(error) : translateMessage("Agent 运行失败") });
   } finally {
     clearInterval(heartbeat);
     res.off("close", close);

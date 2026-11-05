@@ -5,6 +5,7 @@ import { translateError } from "@/lib/i18n";
 import u from "@/utils";
 import { thinkingLevels } from "@/lib/modelReasoning";
 import { getAgentModelConfiguration } from "@/agent/runtime/model";
+import { runTask } from "@/utils/hosting/tasks";
 
 const inputSchema = z.strictObject({
   sessionId: z.uuid(), runId: z.uuid(), prompt: z.string().trim().min(1).max(100000),
@@ -23,13 +24,13 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
   req.socket.once("close", abort);
   let heartbeat: ReturnType<typeof setInterval> | undefined;
   try {
-    await u.singleAgent.run(input, event => {
+    await runTask({ kind: "agent", model: `${input.providerId}/${input.modelId}`, signal: controller.signal }, signal => u.singleAgent.run(input, event => {
       if (!res.destroyed) res.write(`${JSON.stringify(event.type === "error" ? { ...event, message: translateError(new Error(event.message)) } : event)}\n`);
-    }, controller.signal, () => {
+    }, signal, () => {
       res.set({ "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store, no-transform", "X-Accel-Buffering": "no" });
       res.flushHeaders();
       heartbeat = setInterval(() => { if (!res.destroyed && !res.writableNeedDrain) res.write("\n"); }, 1000);
-    });
+    }));
     if (!res.destroyed) res.end();
   } finally {
     clearInterval(heartbeat);

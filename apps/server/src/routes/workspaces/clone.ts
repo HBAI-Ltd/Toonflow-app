@@ -5,6 +5,9 @@ import { z } from "zod";
 import u from "@/utils";
 import { validateFields } from "@/lib/middleware";
 import { success } from "@/lib/responseFormat";
+import { isMultiUser } from "@/utils/accounts/context";
+import { storageUsage } from "@/utils/hosting/storage";
+import { runTask } from "@/utils/hosting/tasks";
 
 const inputSchema = z.strictObject({
   directory: z.string().min(1).max(4096),
@@ -21,13 +24,17 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
   res.once("close", close);
   req.once("aborted", close);
   req.socket.once("close", close);
-  const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(300000)]);
+  let signal = AbortSignal.any([controller.signal, AbortSignal.timeout(300000)]);
   let directory: string | undefined;
   let created: Awaited<ReturnType<typeof lstat>> | undefined;
   let release: (() => void) | undefined;
+  await runTask({ kind: "import", directory: parent, signal }, async taskSignal => {
+  signal = taskSignal;
   try {
-    // ACT: 复用内存 ZIP 校验，压缩包和解压内容各限 512 MB、2 万条目；更大项目需改为流式暂存与解压。
-    const maxBytes = 512 * 1024 * 1024;
+    // ACT: 托管导入与生成共用并发槽，输入和展开内容均不超过100MiB；更大项目需改为流式解压。
+    const usage = isMultiUser() ? await storageUsage() : undefined;
+    const maxBytes = usage ? Math.min(100 * 1024 ** 2, usage.limitBytes - usage.usedBytes) : 512 * 1024 ** 2;
+    if (maxBytes <= 0) throw Object.assign(new Error("账户存储配额不足"), { status: 507 });
     const bytes = await u.workspaceDownload.downloadPublicFile(input.url, { signal, maxBytes, label: "项目包", httpsOnly: true });
     signal.throwIfAborted();
     let files: Map<string, Uint8Array>;
@@ -91,4 +98,5 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
     req.off("aborted", close);
     req.socket.off("close", close);
   }
+  });
 });

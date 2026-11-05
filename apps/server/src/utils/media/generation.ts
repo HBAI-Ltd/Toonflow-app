@@ -8,6 +8,9 @@ import { getMediaProvider, listMediaProviders, loadMediaProviderSource } from "@
 import { lockWorkspaceFiles, resolveWorkspacePath, writeWorkspaceFile } from "@/utils/workspace/files";
 import { beginGeneration, getProviderPrice } from "@/utils/media/billing";
 import { detectMimeType, readPriceReference } from "@/utils/media/priceReference";
+import { isMultiUser } from "@/utils/accounts/context";
+import { createMediaPreview, isPreviewPath, materializePreview } from "@/utils/hosting/mediaPreview";
+import { runTask } from "@/utils/hosting/tasks";
 
 const maxMediaSize = 100 * 1024 * 1024;
 const mediaExtensions: Record<string, string> = {
@@ -50,7 +53,8 @@ export async function listMediaModels(): Promise<MediaModel[]> {
 
 export async function readReference(cwd: string, reference: MediaReference, mediaType: string, signal?: AbortSignal): Promise<Extract<MediaInput, { type: "base64" }>> {
   signal?.throwIfAborted();
-  const { path } = await resolveWorkspacePath(cwd, reference.path);
+  const path = isMultiUser() && isPreviewPath(reference.path) ? await materializePreview(cwd, reference.path)
+    : (await resolveWorkspacePath(cwd, reference.path)).path;
   const info = await stat(path);
   if (!info.isFile() || info.size > maxMediaSize) invalid("参考媒体须为不超过 100 MB 的文件");
   const bytes = await readFile(path, { signal });
@@ -161,7 +165,7 @@ export async function getMediaPrice(directory: string | undefined, mediaType: "i
   return getProviderPrice(provider, prepared);
 }
 
-export async function generateMedia(
+async function generateMediaFiles(
   cwd: string,
   mediaType: "image" | "video" | "audio",
   request: MediaGenerationRequest,
@@ -190,8 +194,18 @@ export async function generateMedia(
     if (!Array.isArray(assets) || !assets.length) invalid("供应商未返回生成结果");
     for (const asset of assets) {
       signal?.throwIfAborted();
+      if (isMultiUser() && asset.type === "url") {
+        const mimeType = asset.mimeType ?? ({ image: "image/png", video: "video/mp4", audio: "audio/mpeg" }[mediaType]);
+        if (!mimeType.startsWith(`${mediaType}/`) || !mediaExtensions[mimeType]) invalid("供应商返回了不支持的媒体类型");
+        result.push(await createMediaPreview(directory, mediaType, mimeType, mediaExtensions[mimeType]!, { url: asset.url }));
+        continue;
+      }
       const { bytes, mimeType } = await assetBytes(asset, mediaType, signal);
       signal?.throwIfAborted();
+      if (isMultiUser()) {
+        result.push(await createMediaPreview(directory, mediaType, mimeType, mediaExtensions[mimeType]!, { bytes }));
+        continue;
+      }
       const output = await resolveWorkspacePath(directory, outputDirectory, true);
       const release = lockWorkspaceFiles([output.path]);
       try {
@@ -211,4 +225,9 @@ export async function generateMedia(
     await Promise.all(written.map(path => unlink(path).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; })));
     throw err;
   } finally { finish(); }
+}
+
+export function generateMedia(cwd: string, mediaType: "image" | "video" | "audio", request: MediaGenerationRequest, signal?: AbortSignal) {
+  return runTask({ kind: mediaType, model: `${request.providerId}/${request.modelId}`, directory: cwd, signal },
+    taskSignal => generateMediaFiles(cwd, mediaType, request, taskSignal));
 }

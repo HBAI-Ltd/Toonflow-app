@@ -4,6 +4,9 @@ import type { Context, Message } from "@earendil-works/pi-ai";
 import { validateFields } from "@/lib/middleware";
 import u from "@/utils";
 import { translateError, translateMessage, validationOptions } from "@/lib/i18n";
+import { runTask, recordTaskUsage } from "@/utils/hosting/tasks";
+import { isMultiUser } from "@/utils/accounts/context";
+import { sanitizeHostingError } from "@/utils/hosting/policy";
 
 const textPart = z.object({ type: z.literal("text"), text: z.string(), textSignature: z.string().optional() });
 const imagePart = z.object({ type: z.literal("image"), data: z.string(), mimeType: z.string().startsWith("image/") });
@@ -63,7 +66,7 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
   const configured = u.ai.getConfiguredModel(input.providerId, input.modelId);
   const controller = new AbortController();
   let heartbeat: ReturnType<typeof setInterval> | undefined;
-  const close = () => { clearInterval(heartbeat); controller.abort(); };
+  const close = () => { clearInterval(heartbeat); if (!res.writableFinished) controller.abort(); };
   res.once("close", close);
   req.once("aborted", close);
   // ACT: 兼容不同运行时的关闭事件；Bun 1.3.14 的静默 SSE 仍可能不通知，不能保证立即停止上游。
@@ -71,8 +74,9 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
   try {
     const directory = input.references?.some(item => item.dataType !== "STRING")
       ? await u.workspace.resolveWorkspace(req, input.directory ?? "") : undefined;
-    const references = await u.ai.readAiReferences(directory, input.references ?? [], controller.signal, configured.provider);
-    const stream = u.ai.streamAi(configured, input.context, controller.signal, references);
+    await runTask({ kind: "text", model: `${input.providerId}/${input.modelId}`, directory, signal: controller.signal }, async signal => {
+    const references = await u.ai.readAiReferences(directory, input.references ?? [], signal, configured.provider);
+    const stream = u.ai.streamAi(configured, input.context, signal, references);
     res.set({ "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no" });
     res.flushHeaders();
     heartbeat = setInterval(() => {
@@ -86,13 +90,16 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
         }
       }
       const message = await stream.result();
+      recordTaskUsage(message.usage);
       if (message.stopReason === "error" || message.stopReason === "aborted") throw new Error(message.errorMessage || "模型请求失败");
       send({ type: "done", message });
     } catch (error) {
-      send({ type: "error", message: error instanceof Error ? translateError(error) : translateMessage("模型请求失败") });
+      send({ type: "error", message: isMultiUser() ? sanitizeHostingError(error) : error instanceof Error ? translateError(error) : translateMessage("模型请求失败") });
+      throw error;
     } finally {
       res.end();
     }
+    });
   } finally {
     clearInterval(heartbeat);
     res.off("close", close);

@@ -6,7 +6,7 @@ import { resolve } from "node:path";
 import { readFile, readdir } from "@toonflow/file";
 import type { Request, Response, NextFunction } from "express";
 import buildRoute from "@/core";
-import { errorFromCause } from "@/lib/responseFormat";
+import { errorFromCause, setErrorSanitizer } from "@/lib/responseFormat";
 import desktopRequest from "@/lib/desktop";
 import { getRuntimePlatform } from "@/lib/platform";
 import initializePlugins from "@/utils/plugins/initialize";
@@ -48,7 +48,8 @@ export async function createApp({
   if (dataDirectory && nodesRoot) await initializePlugins(resolve(dataDirectory, "nodes"), nodesRoot, /^[a-z][a-zA-Z0-9]*\.umd\.js$/, pluginRevision);
   if (dataDirectory && extRoot) {
     const { default: initializeExt } = await import("@/utils/plugins/initializeExt");
-    await initializeExt(resolve(dataDirectory, "ext"), extRoot, pluginRevision);
+    const { runSystemMaintenance } = await import("@/utils/hosting/storage");
+    await runSystemMaintenance(() => initializeExt(resolve(dataDirectory, "ext"), extRoot, pluginRevision));
   }
   // ACT: 内置媒体供应商随构建同步，其他供应商文件和独立保存的配置保留。
   if (dataDirectory && providersRoot) {
@@ -71,6 +72,30 @@ export async function createApp({
   if (dataDirectory && skillsRoot) await initializePlugins(resolve(dataDirectory, "skills"), skillsRoot);
   if (dataDirectory && agentsRoot) await initializePlugins(resolve(dataDirectory, "agents"), agentsRoot);
   const app = express();
+  const { isMultiUser } = await import("@/utils/accounts/context");
+  const { accountMiddleware } = await import("@/utils/accounts/middleware");
+  const { hostingPolicy, sanitizeHostingError } = await import("@/utils/hosting/policy");
+  if (isMultiUser()) {
+    setErrorSanitizer(sanitizeHostingError);
+    const { migrateLegacyData } = await import("@/utils/hosting/tenant");
+    const { initializeTaskQueue } = await import("@/utils/hosting/tasks");
+    initializeTaskQueue();
+    await migrateLegacyData(conf.get("settings", {}));
+    const { cleanupMediaPreviews } = await import("@/utils/hosting/mediaPreview");
+    await cleanupMediaPreviews();
+    const cleanupTimer = setInterval(() => {
+      void cleanupMediaPreviews().catch(error => console.error(`临时媒体清理失败：${sanitizeHostingError(error)}`));
+    }, 3600000);
+    cleanupTimer.unref();
+    // ACT: 生产代理只信任容器网关；公网来源不能自行指定转发 IP 或协议。
+    app.set("trust proxy", process.env.TOONFLOW_PROXY_ADDRESS ?? "loopback");
+    app.set("case sensitive routing", true);
+    app.use((_req, res, next) => {
+      res.set({ "X-Content-Type-Options": "nosniff", "Referrer-Policy": "same-origin", "X-Frame-Options": "DENY" });
+      next();
+    });
+    app.use(accountMiddleware);
+  }
   app.locals.appVersion = appVersion;
   // ACT: 内置身份取自当前发行包的目录，不依赖作者或安装记录；更新后的同名插件仍属于内置插件。
   app.locals.builtinPlugins = Object.fromEntries(await Promise.all(
@@ -90,19 +115,25 @@ export async function createApp({
     await buildRoute();
     app.use(logger("dev"));
   }
-  app.use(cors());
+  if (!isMultiUser()) app.use(cors());
   app.use(languageRequest);
   app.use("/a2a", express.json({ limit: "2mb" }));
   app.use(["/api/workspaces/files/write", "/api/assets/save"], express.raw({ type: "application/octet-stream", limit: "100mb" }));
   app.use(express.json({ limit: "100mb" }));
   app.use(express.urlencoded({ extended: true, limit: "100mb" }));
+  app.use(hostingPolicy);
   app.use("/api/desktop", desktopRequest);
 
   const { default: initializeProviderModels } = await import("@/utils/ai/initialize");
   // ACT: 启动先使用已有模型，远程刷新不阻塞服务监听。
-  void initializeProviderModels().catch(error => console.warn("启动时刷新供应商模型失败：", error));
+  const { runSystemMaintenance } = await import("@/utils/hosting/storage");
+  void runSystemMaintenance(() => initializeProviderModels()).catch(error => console.warn("启动时刷新供应商模型失败：", isMultiUser() ? sanitizeHostingError(error) : error));
   const router = await import("@/router");
   router.default(app);
+  if (isMultiUser()) {
+    const { reconcileInterruptedTasks } = await import("@/utils/hosting/recovery");
+    void reconcileInterruptedTasks().catch(error => console.error(`上游任务状态核对失败：${sanitizeHostingError(error)}`));
+  }
   const [{ createMcpRouter }, { getMcpTools }, { authorizeMcp }, { skillResources }] = await Promise.all([
     import("@toonflow/mcp"),
     import("@/utils/mcp/tools"),
@@ -120,13 +151,22 @@ export async function createApp({
 
   // 错误处理
   app.use((err: Error & { status?: number }, request: Request, response: Response, next: NextFunction) => {
-    if (response.headersSent) return next(err);
-    console.error(err);
+    if (response.headersSent) {
+      if (!isMultiUser()) return next(err);
+      console.error(`[HTTP stream] ${sanitizeHostingError(err)}`);
+      response.end();
+      return;
+    }
     const body = errorFromCause(err);
+    if (isMultiUser()) {
+      body.message = sanitizeHostingError(err);
+      body.data = null;
+      console.error(`[HTTP ${body.code}] ${body.message}`);
+    } else console.error(err);
     response.status(body.code).json(body);
   });
 
   const { initializeMobileLinkRuntime } = await import("@/utils/mobileLink");
-  initializeMobileLinkRuntime(app);
+  if (!isMultiUser()) initializeMobileLinkRuntime(app);
   return app;
 }

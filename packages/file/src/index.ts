@@ -15,6 +15,7 @@ const useExclusiveRename = process.platform === "android" || (process.platform =
 // 元数据查询不持有长期句柄；保留标准 API 的重载和错误语义。
 export const access = promises.access;
 export const stat = promises.stat;
+export const statfs = promises.statfs;
 export const lstat = promises.lstat;
 export const realpath = promises.realpath;
 export const chmod = promises.chmod;

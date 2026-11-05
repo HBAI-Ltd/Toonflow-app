@@ -28,6 +28,9 @@ import { lockWorkspaceFiles, resolveWorkspacePath } from "@/utils/workspace/file
 import { t } from "@/lib/i18n";
 import { decodeTextFile } from "@/lib/documentFormats";
 import type { ThinkingLevel } from "@/lib/modelReasoning";
+import { isMultiUser } from "@/utils/accounts/context";
+import { createHostedHistory, flushHostedHistory } from "@/utils/hosting/history";
+import { recordTaskUsage } from "@/utils/hosting/tasks";
 
 type AgentOptions = {
   prompt: string;
@@ -110,16 +113,23 @@ export async function run(
     if (!file.isFile()) throw Object.assign(new Error("会话必须是普通文件"), { status: 400 });
   }
   // ACT: SDK 新会话先分配文件名、首条回复才落盘；只锁所属文件，允许不同对话同时运行。
-  const newHistory = sessionPath ? undefined : SessionManager.create(cwd, sessionsDir);
-  const release = lockWorkspaceFiles([sessionPath ?? newHistory!.getSessionFile()!]);
   const controller = new AbortController();
+  const onHistoryFailure = (cause: unknown) => controller.abort(cause);
+  const newHistory = sessionPath ? undefined : isMultiUser()
+    ? await createHostedHistory({ cwd, directory: sessionsDir, onFailure: onHistoryFailure })
+    : SessionManager.create(cwd, sessionsDir);
+  const release = lockWorkspaceFiles([sessionPath ?? newHistory!.getSessionFile()!]);
   signal = signal ? AbortSignal.any([signal, controller.signal]) : controller.signal;
   const finished = Promise.withResolvers<void>();
   let unregister = () => {};
   let mentionFiles: string[] = [];
   let messageAccepted = false;
+  let hostedHistory: SessionManager | undefined;
   try {
-    const history = newHistory ?? SessionManager.open(sessionPath!, sessionsDir, cwd);
+    const history = newHistory ?? (isMultiUser()
+      ? await createHostedHistory({ cwd, directory: sessionsDir, path: sessionPath!, onFailure: onHistoryFailure })
+      : SessionManager.open(sessionPath!, sessionsDir, cwd));
+    hostedHistory = history;
     const file = basename(history.getSessionFile()!);
     const parentFile = getParentSessionFile(history);
     const child = getSubAgentInfo(history)?.data;
@@ -149,7 +159,7 @@ export async function run(
       if (tools.some(tool => tool.name === "report")) throw new Error("工具名称 report 已被内置上报工具占用");
       tools.push(createReportTool(cwd, parentFile, file, child.name, send));
     }
-    tools.push(await createSubAgentTool({
+    if (!isMultiUser()) tools.push(await createSubAgentTool({
       cwd, tools, canvas, modelRuntime: runtime, model: runtime.getModel(providerId, modelId), thinkingLevel: effectiveThinkingLevel,
       runTask: (name, task, taskSignal, onProgress) => runDelegatedAgent({
         cwd, parentFile: file, name, task, providerId, modelId, thinkingLevel, canvas, signal: taskSignal, send, onProgress,
@@ -187,8 +197,16 @@ export async function run(
 
     const streamFunction = session.agent.streamFunction;
     session.agent.streamFunction = async (...args) => {
+      await flushHostedHistory(history);
+      signal?.throwIfAborted();
       const compacting = session.isCompacting;
-      const stream = await streamFunction(...args);
+      const request = args[2]?.fetch ?? fetch;
+      const guardedFetch = Object.assign(async (input: Parameters<typeof request>[0], init?: Parameters<typeof request>[1]) => {
+        await flushHostedHistory(history);
+        signal?.throwIfAborted();
+        return request(input, init);
+      }, request);
+      const stream = await streamFunction(args[0], args[1], isMultiUser() ? { ...args[2], fetch: guardedFetch } : args[2]);
       // ACT: 摘要落盘前拒绝空正文，压缩、重试和普通回复仍由 SDK 处理。
       if (compacting) {
         const response = await stream.result();
@@ -205,6 +223,8 @@ export async function run(
     session.agent.onPayload = async (payload, requestModel) => {
       const body = (await onPayload?.(payload, requestModel) ?? payload) as Record<string, unknown>;
       sendUserMessage();
+      await flushHostedHistory(history);
+      signal?.throwIfAborted();
       const imageReferences = new Map(history.getBranch().flatMap(entry => {
         const reference = entry.type === "custom" && entry.customType === "toonflowImageAttachment"
           ? getAgentImageReference({ type: "text", text: "", toonflowImage: entry.data }) : undefined;
@@ -294,6 +314,7 @@ export async function run(
     let messageIndex = 0;
     const toolBlocks = new Map<string, string>();
     const timing = { outputTokens: 0, decodeMs: 0 };
+    const taskUsage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0 };
     session.subscribe((event) => {
       if (event.type === "compaction_start" || event.type === "compaction_end") {
         send({ type: "compaction", active: event.type === "compaction_start" });
@@ -355,6 +376,11 @@ export async function run(
         });
       }
       if (event.type === "message_end" && event.message.role === "assistant") {
+        for (const key of Object.keys(taskUsage) as (keyof typeof taskUsage)[]) {
+          const value = event.message.usage[key];
+          if (typeof value === "number" && Number.isFinite(value) && value >= 0) taskUsage[key] += value;
+        }
+        recordTaskUsage(taskUsage);
         event.message.content.forEach((part, index) => {
           const blockId = `${messageIndex}:${index}`;
           if (part.type === "text" || part.type === "thinking") {
@@ -413,6 +439,7 @@ export async function run(
         : mentionPrompt(prompt, mentions);
       // SDK 仅以空格分隔技能名；兼容换行输入与追加的附件说明。
       await session.prompt(content.replace(/^(\/skill:\S+)\s+/, "$1 "));
+      await flushHostedHistory(history);
       if (compactionError) throw new Error(compactionError);
       if (modelError) throw Object.assign(new Error(modelError), limited ? { code: "AGENT_LENGTH" } : {});
     } catch (error) {
@@ -436,6 +463,7 @@ export async function run(
         }
         // ACT: 只记录有首个内容增量的生成耗时，旧历史和未计时输出不参与速度统计。
         if (timing.decodeMs > 0) history.appendCustomEntry("toonflowTiming", timing);
+        await flushHostedHistory(history);
         send({ type: "stats", stats: getAgentStats(history), contextUsage: getAgentContext(history, session.model?.contextWindow) });
         if (parentFile && child) {
           const entry = history.getBranch().findLast(entry => entry.type === "message" && entry.message.role === "assistant");
@@ -451,10 +479,14 @@ export async function run(
       }
     }
   } finally {
-    unregister();
-    release();
-    finished.resolve();
-    if (!messageAccepted) await Promise.all(mentionFiles.map(path => unlink(path)));
+    try {
+      if (hostedHistory) await flushHostedHistory(hostedHistory);
+    } finally {
+      unregister();
+      release();
+      finished.resolve();
+      if (!messageAccepted) await Promise.all(mentionFiles.map(path => unlink(path)));
+    }
   }
 }
 

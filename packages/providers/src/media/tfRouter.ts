@@ -237,6 +237,15 @@ export default {
       pitchRate: pitch,
     }, mimeTypes[format]);
   },
+  async queryTaskStatus(id: string, options?: ProviderTaskQuery) {
+    const type = options?.mediaType;
+    if (!type) return { status: "unknown", reason: "missingMediaType" };
+    const path = type === "audio" ? "tts" : type;
+    const name = { image: "Image", video: "Video", audio: "Audio" }[type];
+    const result = await fetchJson(this, `${path}/get${name}Status`, { taskICode: id });
+    const data = result.data && typeof result.data === "object" && !Array.isArray(result.data) ? result.data as Record<string, unknown> : {};
+    return { status: String(data.status ?? result.status ?? "unknown") };
+  },
   async getPrice(request: ProviderPriceRequest): Promise<ProviderPrice | null> {
     const result = await fetchJson(this, "price", request);
     if (result.code !== 200) throw new Error(this.tool.errorMessage(result) || "TF-router 价格查询失败");

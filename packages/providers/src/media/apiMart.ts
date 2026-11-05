@@ -350,6 +350,17 @@ export default {
     });
     return [{ mediaType: "video", type: "url", url }];
   },
+  async queryTaskStatus(id: string) {
+    const apiKey = this.config.apiKey?.trim();
+    if (!apiKey) throw new Error("请填写 API Key");
+    const response = await this.tool.fetch(`${getBaseUrl(this.config.isOverseas)}/tasks/${encodeURIComponent(id)}`, {
+      method: "GET", headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }, signal: this.signal,
+    });
+    if (!response.ok) throw new Error(`查询任务失败：HTTP ${response.status}`);
+    const result = object(await response.json());
+    const data = object(result.data ?? {});
+    return { status: String(data.status ?? result.status ?? "unknown") };
+  },
   async updateVendor(): Promise<string> {
     const apiKey = this.config.apiKey?.trim();
     if (!apiKey) throw new Error("请填写 API Key");

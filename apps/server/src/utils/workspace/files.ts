@@ -1,20 +1,26 @@
-import { constants, copyFile, cp, lstat, mkdir, rename, unlink, realpath, writeAtomic } from "@toonflow/file";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { constants, copyFile, cp, lstat, mkdir, readdir, rename, unlink, realpath, writeAtomic } from "@toonflow/file";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import type { Request } from "express";
 import { resolveWorkspace } from "@/utils/workspace";
+import { assertStorageDirectory, withStorageCopy, withStorageWrite } from "@/utils/hosting/storage";
 
 export async function writeWorkspaceFile(path: string, content: string | Uint8Array, exclusive = false) {
-  await writeAtomic(path, content, { exclusive });
+  const bytes = typeof content === "string" ? Buffer.byteLength(content) : content.byteLength;
+  await withStorageWrite(path, bytes, () => writeAtomic(path, content, { exclusive }));
 }
 
 export async function copyWorkspaceFile(source: string, target: string) {
+  return withStorageCopy(source, target, () => copyWorkspaceContent(source, target));
+}
+
+async function copyWorkspaceContent(source: string, target: string) {
   const info = await lstat(source);
   if (info.isSymbolicLink() || (!info.isFile() && !info.isDirectory())) throw Object.assign(new Error("只能复制普通文件或文件夹"), { status: 403 });
   if (!info.isDirectory()) return copyFile(source, target, constants.COPYFILE_EXCL);
   if (isWithin(source, target)) throw Object.assign(new Error("不能把文件夹复制到自身或子目录"), { status: 400 });
   await mkdir(target);
   try {
-    await cp(source, target, {
+    for (const name of await readdir(source)) await cp(join(source, name), join(target, name), {
       recursive: true,
       force: false,
       errorOnExist: true,
@@ -34,6 +40,8 @@ export async function copyWorkspaceFile(source: string, target: string) {
 }
 
 export async function renameWorkspaceFile(source: string, target: string) {
+  await assertStorageDirectory(source);
+  await assertStorageDirectory(target);
   const info = await lstat(source);
   if (source === target || (process.platform === "win32" && source.toLowerCase() === target.toLowerCase())) {
     if (source !== target) await rename(source, target);
@@ -45,7 +53,7 @@ export async function renameWorkspaceFile(source: string, target: string) {
     await rename(source, target);
     return;
   }
-  await copyFile(source, target, constants.COPYFILE_EXCL);
+  await withStorageCopy(source, target, () => copyFile(source, target, constants.COPYFILE_EXCL));
   // ACT: 目标完整写入后才移除源文件；移除失败只回滚本次目标。
   try { await unlink(source); }
   catch (err) {

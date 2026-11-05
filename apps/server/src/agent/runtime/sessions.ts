@@ -10,6 +10,9 @@ import { providerSchema, getModelLimits } from "@/utils/ai";
 import { lockWorkspaceFiles, resolveWorkspacePath, writeWorkspaceFile } from "@/utils/workspace/files";
 import { getReadableFileMimeType } from "@/lib/documentFormats";
 import { thinkingLevels } from "@/lib/modelReasoning";
+import { isMultiUser } from "@/utils/accounts/context";
+import { createHostedHistory, flushHostedHistory } from "@/utils/hosting/history";
+import { sanitizeHostingError } from "@/utils/hosting/policy";
 
 export const agentAttachmentsSchema = z
   .array(
@@ -86,11 +89,16 @@ async function updateAgentSession(cwd: string, file: string, update: (history: S
   if (!/^[\w-]+\.jsonl$/.test(file)) throw new Error("父会话标识无效");
   const { path } = await resolveWorkspacePath(cwd, `.agent/sessions/${file}`);
   const active = getActiveAgentSession(path);
-  if (active) return update(active.history, active);
+  if (active) {
+    await update(active.history, active);
+    return flushHostedHistory(active.history);
+  }
   const release = lockWorkspaceFiles([path]);
   try {
-    const pending = update(SessionManager.open(path, dirname(path), cwd));
+    const history = isMultiUser() ? await createHostedHistory({ cwd, directory: dirname(path), path }) : SessionManager.open(path, dirname(path), cwd);
+    const pending = update(history);
     if (pending) await pending;
+    await flushHostedHistory(history);
   } finally { release(); }
 }
 
@@ -217,7 +225,9 @@ export async function deleteAgentMessage(cwd: string, path: string, options: { e
 
 export async function createAgentConversation(cwd: string, child?: Omit<AgentSubAgent, "file" | "status">) {
   const { path: directory } = await resolveWorkspacePath(cwd, ".agent/sessions", true);
-  const history = SessionManager.create(cwd, directory, child ? { parentSession: child.parentFile } : undefined);
+  const history = isMultiUser()
+    ? await createHostedHistory({ cwd, directory, parentSession: child?.parentFile })
+    : SessionManager.create(cwd, directory, child ? { parentSession: child.parentFile } : undefined);
   const path = history.getSessionFile()!;
   history.appendCustomEntry("toonflowReasoning", { thinkingLevel: child?.thinkingLevel ?? null });
   if (child) {
@@ -227,7 +237,8 @@ export async function createAgentConversation(cwd: string, child?: Omit<AgentSub
     if (child.thinkingLevel) history.appendThinkingLevelChange(child.thinkingLevel);
   }
   // ACT: SDK 默认等首条回复才落盘；先保存会话头，让空对话也能被历史列表读取。
-  await writeWorkspaceFile(path, [history.getHeader(), ...history.getEntries()].map(entry => JSON.stringify(entry)).join("\n") + "\n", true);
+  if (isMultiUser()) await flushHostedHistory(history);
+  else await writeWorkspaceFile(path, [history.getHeader(), ...history.getEntries()].map(entry => JSON.stringify(entry)).join("\n") + "\n", true);
   return getAgentSession(cwd, path);
 }
 
@@ -236,8 +247,9 @@ export async function renameAgentSession(cwd: string, path: string, name: string
   try {
     const entries = parseSessionEntries(await readFile(path, "utf8"));
     if (entries[0]?.type !== "session") throw Object.assign(new Error("会话文件无效"), { status: 400 });
-    const history = SessionManager.open(path, dirname(path), cwd);
+    const history = isMultiUser() ? await createHostedHistory({ cwd, directory: dirname(path), path }) : SessionManager.open(path, dirname(path), cwd);
     history.appendSessionInfo(name);
+    await flushHostedHistory(history);
     return { name: history.getSessionName()! };
   } finally {
     release();
@@ -347,7 +359,7 @@ export async function getAgentSession(cwd: string, path: string) {
         role: message.role,
         content,
         parts,
-        error,
+        error: isMultiUser() && error ? sanitizeHostingError(error) : error,
         attachments,
         mentions: attachmentMessage?.mentions,
         report: undefined,

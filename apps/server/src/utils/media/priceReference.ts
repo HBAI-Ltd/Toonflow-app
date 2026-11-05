@@ -4,6 +4,8 @@ import type { MediaReference } from "@toonflow/tools-scaffold/runtime";
 import conf from "@/utils/conf";
 import { getStatus } from "@/utils/ffmpeg";
 import { resolveWorkspacePath } from "@/utils/workspace/files";
+import { isMultiUser } from "@/utils/accounts/context";
+import { isPreviewPath, materializePreview } from "@/utils/hosting/mediaPreview";
 
 const references = new Map<string, { revision: string; expires: number; value: Promise<ProviderPriceReference> }>();
 let probeStatus: { config: string; expires: number; value: Promise<string | null> } | undefined;
@@ -86,7 +88,8 @@ async function probeMedia(path: string, mediaType: string, config: string, signa
 
 async function loadPriceReference(cwd: string, reference: MediaReference, mediaType: string, signal?: AbortSignal): Promise<ProviderPriceReference> {
   signal?.throwIfAborted();
-  const { path } = await resolveWorkspacePath(cwd, reference.path);
+  const path = isMultiUser() && isPreviewPath(reference.path) ? await materializePreview(cwd, reference.path)
+    : (await resolveWorkspacePath(cwd, reference.path)).path;
   signal?.throwIfAborted();
   const info = await stat(path);
   signal?.throwIfAborted();

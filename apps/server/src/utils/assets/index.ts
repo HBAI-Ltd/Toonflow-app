@@ -4,6 +4,7 @@ import { basename, dirname, extname, join, relative, resolve, sep } from "node:p
 import conf from "@/utils/conf";
 import { isWithin, lockWorkspaceFiles, protectWorkspaceRoot, renameWorkspaceFile, resolveWorkspacePath, writeWorkspaceFile } from "@/utils/workspace/files";
 import { mentionAssetType, type MentionAsset, type MentionQuery } from "@/agent/mentionSources";
+import { scopedDataDirectory } from "@/utils/hosting/tenant";
 
 const maxAssetBytes = 100 * 1024 * 1024;
 type AssetSearch = { key: string; directory: string; offset: number; touched: number; busy: boolean; iterator: AsyncGenerator<MentionAsset>;
@@ -11,7 +12,7 @@ type AssetSearch = { key: string; directory: string; offset: number; touched: nu
 const assetSearches = new Map<string, AssetSearch>();
 
 export async function getAssetsDirectory() {
-  const directory = join(dirname(conf.path), "assets");
+  const directory = join(scopedDataDirectory(dirname(conf.path)), "assets");
   try { return await realpath(directory); }
   catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;

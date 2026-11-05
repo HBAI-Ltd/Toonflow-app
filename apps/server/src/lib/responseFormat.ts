@@ -1,6 +1,11 @@
 import { translateError, translateMessage } from "./i18n";
 import type { MessageDescriptor } from "@toonflow/i18n";
 import { z } from "zod";
+let sanitizeError: ((message: string) => string) | undefined;
+
+export function setErrorSanitizer(sanitizer?: (message: string) => string) {
+  sanitizeError = sanitizer;
+}
 export interface ApiResponse<T = unknown> {
   code: number;
   data: T | null;
@@ -21,7 +26,7 @@ export function error<T = unknown>(message: string | MessageDescriptor = "", dat
   return {
     code,
     data,
-    message: translateMessage(message),
+    message: sanitizeError?.(translateMessage(message)) ?? translateMessage(message),
   };
 }
 

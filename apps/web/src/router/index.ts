@@ -1,5 +1,7 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import { useHelloStore } from "@/stores/hello";
+import { accountEnabled } from "@/lib/account";
+import { useWorkspaceStore } from "@/stores/workspace";
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
@@ -9,7 +11,7 @@ const router = createRouter({
     },
     {
       path: "/hello",
-      beforeEnter: async () => await useHelloStore().load() ? { path: "/home", replace: true } : true,
+      beforeEnter: async () => accountEnabled.value || await useHelloStore().load() ? { path: "/home", replace: true } : true,
       component: () => import("@/pages/hello/index.vue"),
     },
     {
@@ -22,6 +24,7 @@ const router = createRouter({
     },
     {
       path: "/workspace",
+      beforeEnter: () => accountEnabled.value && !useWorkspaceStore().project ? { path: "/home", replace: true } : true,
       component: () => import("@/pages/workspace/index.vue"),
     },
   ],

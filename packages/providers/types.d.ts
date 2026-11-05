@@ -223,12 +223,20 @@ interface ProviderDefinition<TRules extends readonly ProviderFormRule[] = readon
   getPrice?: (this: ProviderContext<ProviderConfig<TRules>>, request: ProviderPriceRequest) => Promise<ProviderPrice | null>;
   /** 查询当前配置账户的余额；计价单位由供应商返回。 */
   getBalance?: (this: ProviderContext<ProviderConfig<TRules>>) => Promise<ProviderBalance>;
+  /** 单次只读核对已有任务；不得创建、重试生成或自动轮询。 */
+  queryTaskStatus?: (this: ProviderContext<ProviderConfig<TRules>>, id: string, options?: ProviderTaskQuery) => Promise<{ status: string; reason?: string }>;
   /** 未实现的方法保持缺省，调用方据此判断能力是否可用。 */
   generateImage?: GenerateMedia<ImageRequest, ProviderConfig<TRules>>;
   generateVideo?: GenerateMedia<VideoRequest, ProviderConfig<TRules>>;
   generateAudio?: GenerateMedia<AudioRequest, ProviderConfig<TRules>>;
   /** 可选的供应商媒体预处理；未实现时保持原请求。 */
   processMedia?: (this: ProviderContext<ProviderConfig<TRules>>, request: ImageRequest | VideoRequest | AudioRequest) => Promise<ImageRequest | VideoRequest | AudioRequest>;
+}
+
+interface ProviderTaskQuery {
+  mediaType?: "image" | "video" | "audio";
+  model?: string;
+  protocol?: "modelVerse" | "minimaxH3";
 }
 
 /** 仅用于展示，不参与余额计算；没有额外提示时 tips 返回空字符串。 */

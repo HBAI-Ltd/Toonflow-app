@@ -8,6 +8,8 @@ import type { desktopUpdateAttempt } from "@/types/desktop";
 import type { MobileLinkConfig } from "@/utils/mobileLink";
 import { normalizeNodeMenu, serializeNodeMenu } from "@/lib/nodeMenu";
 import type { SavedMcpServer } from "@toonflow/mcp/client";
+import { currentUser, isMultiUser } from "@/utils/accounts/context";
+import { mergedSettings } from "@/utils/hosting/tenant";
 
 const autoInstallProviders = [tfRouter];
 const dataDirectory = process.env.TOONFLOW_DATA_DIR ?? resolve(import.meta.dirname, "../../../../../data");
@@ -66,4 +68,23 @@ if (!config.has("settings.customProviders")) {
     ({ id, label, icon, version, apiUrl, protocol, models, apiKey: "" })));
 }
 
-export default config;
+export { config as systemConfig };
+
+const scopedConfig = new Proxy(config, {
+  get(target, property) {
+    if (property === "get") return ((key: string, fallback?: unknown) => {
+      if (isMultiUser() && currentUser() && (key === "settings" || key.startsWith("settings."))) {
+        const settings = mergedSettings(target.get("settings", {}));
+        if (key === "settings") return settings;
+        const value = key.slice(9).split(".").reduce<unknown>((value, part) =>
+          value && typeof value === "object" ? (value as Record<string, unknown>)[part] : undefined, settings);
+        return value ?? fallback;
+      }
+      return target.get(key as "settings", fallback as Record<string, unknown>);
+    }) as typeof config.get;
+    const value = Reflect.get(target, property, target);
+    return typeof value === "function" ? value.bind(target) : value;
+  },
+});
+
+export default scopedConfig;

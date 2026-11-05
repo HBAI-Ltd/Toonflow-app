@@ -1,4 +1,4 @@
-import { lstat, mkdir, readFile, readdir, writeAtomic } from "@toonflow/file";
+import { lstat, mkdir, readFile, readdir } from "@toonflow/file";
 import { resolve } from "node:path";
 import { parseExt } from "@/utils/plugins/ext";
 import { requireNewerVersion } from "@/utils/plugins/install";
@@ -45,7 +45,7 @@ export default async function initializeExt(targetDirectory: string, sourceDirec
       }
       await writeWorkspaceFile(path, source, !current);
       state[name] = { hash: Bun.hash(source).toString(16), revision };
-      await writeAtomic(statePath, JSON.stringify(state), { mode: 0o600 });
+      await writeWorkspaceFile(statePath, JSON.stringify(state));
     } finally { release(); }
   }
 }

@@ -1,9 +1,15 @@
 import { t, translateError, translateMessage } from "@/lib/i18n";
-import { dirname, join } from "node:path";
+import { dirname, extname, join } from "node:path";
+import { mkdir, readFile, stat } from "@toonflow/file";
 import { build, createFfmpeg, downloadSources, getToolStatus, installFfmpeg, target } from "@toonflow/ffmpeg";
 import type { DownloadState, FfmpegMode, SourceId } from "@toonflow/ffmpeg";
+import type { FfmpegCommand } from "@toonflow/ffmpeg";
 import conf from "@/utils/conf";
 import { getRuntimePlatform } from "@/lib/platform";
+import { isMultiUser } from "@/utils/accounts/context";
+import { runTask } from "@/utils/hosting/tasks";
+import { assertStorageDirectory, maximumUploadBytes, userTemporaryRoot, withStorageWrite, withTemporaryDirectory } from "@/utils/hosting/storage";
+import { writeWorkspaceFile } from "@/utils/workspace/files";
 
 export { executeRemoteFfmpeg } from "@toonflow/ffmpeg";
 
@@ -21,6 +27,7 @@ export function onRequired(listener: () => void) {
 
 export async function createWorkspaceFfmpeg(cwd: string, signal?: AbortSignal) {
   signal?.throwIfAborted();
+  await assertStorageDirectory(cwd);
   const { tools } = await getStatus();
   signal?.throwIfAborted();
   if (!tools.ffmpeg.path || tools.ffmpeg.error || !tools.ffprobe.path || tools.ffprobe.error) {
@@ -29,10 +36,72 @@ export async function createWorkspaceFfmpeg(cwd: string, signal?: AbortSignal) {
       name: "FfmpegRequiredError", code: "FFMPEG_REQUIRED", status: 424,
     });
   }
-  const ffmpeg = createFfmpeg(cwd);
+  const ffmpeg = createFfmpeg(cwd, isMultiUser() ? {
+    additionalRoots: [userTemporaryRoot()],
+    run: (command, start) => runWorkspaceTranscode(cwd, command, start, signal),
+  } : undefined);
   ffmpeg.setFfmpegPath(tools.ffmpeg.path);
   ffmpeg.setFfprobePath(tools.ffprobe.path);
   return ffmpeg;
+}
+
+function runWorkspaceTranscode(cwd: string, command: FfmpegCommand, start: () => void, signal?: AbortSignal) {
+  const emit = command.emit;
+  let endArgs: unknown[] = [];
+  void runTask({ kind: "transcode", directory: cwd, signal }, activeSignal => withTemporaryDirectory(async directory => {
+    const outputs = (command as FfmpegCommand & { _outputs: { target?: string | NodeJS.WritableStream }[] })._outputs;
+    if (!outputs.length || outputs.some(output => typeof output.target !== "string" || /[%\r\n]/.test(output.target))) {
+      throw new Error("托管转码仅支持明确命名的文件输出，不支持输出流或文件序列");
+    }
+    const paths = outputs.map(output => output.target as string);
+    for (const path of paths) await assertStorageDirectory(path);
+    // ACT: 原生转码在临时区运行。-fs 是 FFmpeg 的软件上界，封装不等价于操作系统硬配额。
+    await withStorageWrite(directory, outputs.length * maximumUploadBytes, async () => {
+      outputs.forEach((output, index) => { output.target = join(directory, `${index}${extname(paths[index]!)}`); });
+      const internal = command as FfmpegCommand & { _currentOutput: unknown };
+      const current = internal._currentOutput;
+      for (const output of outputs) {
+        internal._currentOutput = output;
+        command.outputOptions("-fs", String(maximumUploadBytes));
+      }
+      internal._currentOutput = current;
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const cancel = () => { command.kill("SIGKILL"); };
+          const started = () => { if (activeSignal.aborted) cancel(); };
+          const dispose = () => {
+            activeSignal.removeEventListener("abort", cancel);
+            command.off("start", started);
+          };
+          command.emit = ((event: string | symbol, ...args: unknown[]) => {
+            if (event === "end") { endArgs = args; dispose(); resolve(); return true; }
+            if (event === "error") { dispose(); reject(args[0]); return true; }
+            return Reflect.apply(emit, command, [event, ...args]);
+          }) as typeof command.emit;
+          activeSignal.addEventListener("abort", cancel, { once: true });
+          command.on("start", started);
+          try { activeSignal.throwIfAborted(); start(); }
+          catch (error) { dispose(); reject(error); }
+        });
+        activeSignal.throwIfAborted();
+        // 完成后按实际大小提交；任何超界结果不进入持久工作区。
+        for (let index = 0; index < outputs.length; index++) {
+          const path = outputs[index]!.target as string;
+          const info = await stat(path);
+          if (!info.isFile() || info.size > maximumUploadBytes) throw new Error("转码结果不能超过 100 MB");
+          activeSignal.throwIfAborted();
+          await mkdir(dirname(paths[index]!), { recursive: true });
+          await writeWorkspaceFile(paths[index]!, await readFile(path));
+        }
+      } finally { outputs.forEach((output, index) => { output.target = paths[index]; }); }
+    });
+  })).then(() => {
+    command.emit = emit;
+    Reflect.apply(emit, command, ["end", ...endArgs]);
+  }, error => {
+    command.emit = emit;
+    Reflect.apply(emit, command, ["error", error]);
+  });
 }
 
 export function getProgress() {

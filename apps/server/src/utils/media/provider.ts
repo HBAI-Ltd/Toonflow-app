@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { lstat, mkdir, readFile, readdir, unlink } from "@toonflow/file";
 import { dirname, join } from "node:path";
 import { createContext, SourceTextModule } from "node:vm";
-import type { AudioConvertOptions, Provider, ProviderTools } from "@toonflow/providers";
+import { mediaProviders, type AudioConvertOptions, type Provider, type ProviderTools } from "@toonflow/providers";
 import tfRouter from "@toonflow/providers/media/tfRouter";
 import { parse, parseExpression } from "@babel/parser";
 import { z } from "zod";
@@ -12,6 +12,7 @@ import conf from "@/utils/conf";
 import { convertAudio } from "@/utils/media/audioProcessor";
 import { createWorkspaceFfmpeg } from "@/utils/ffmpeg";
 import { lockWorkspaceFiles, writeWorkspaceFile } from "@/utils/workspace/files";
+import { recordTaskUpstreamJob, recordTaskUsage } from "@/utils/hosting/tasks";
 
 type Expression = Extract<ReturnType<typeof parseExpression>, { type: "ParenthesizedExpression" }>["expression"];
 type ObjectExpression = Extract<Expression, { type: "ObjectExpression" }>;
@@ -403,6 +404,8 @@ export async function loadMediaProviderSource(source: string, config: Record<str
     definition.getPrice ??= tfRouter.getPrice;
     definition.getBalance ??= tfRouter.getBalance;
   }
+  // 已安装内置适配文件只补齐新的只读核对方法，保留其生成实现和配置。
+  definition.queryTaskStatus ??= (mediaProviders.find(provider => provider.id === id) as Provider | undefined)?.queryTaskStatus;
   const rules = Array.isArray(definition.rules) ? definition.rules : [];
   const providerConfig = { ...Object.fromEntries(rules.map(rule => [rule.field, rule.value])), ...structuredClone(config) };
   const provider = {
@@ -451,6 +454,27 @@ export async function loadMediaProviderSource(source: string, config: Record<str
             const readJson = response.json;
             Object.assign(response, { json: async function(this: Response) {
               const result = await readJson.call(this);
+              if (this === response && result && typeof result === "object") {
+                const data = result as Record<string, unknown>;
+                const requestUrl = String(input instanceof Request ? input.url : input);
+                const mediaType = name === "generateImage" ? "image" : name === "generateVideo" ? "video" : "audio";
+                const protocol = id === "compshare" && /\/minimax\/v2\/(?:video_generation|query\/video_generation)(?:\/|\?|$)/.test(requestUrl) ? "minimaxH3"
+                  : id === "compshare" && /\/v1\/tasks\/(?:submit|status)(?:\?|$)/.test(requestUrl) ? "modelVerse" : undefined;
+                const records = [data, data.data, data.task, data.output, ...(Array.isArray(data.data) ? data.data : [])];
+                for (const entry of records) {
+                  if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+                  const item = entry as Record<string, unknown>;
+                  if (item.usage && typeof item.usage === "object") recordTaskUsage(item.usage);
+                  const taskId = item.task_id ?? item.taskId ?? (id === "apiMart" ? item.id : undefined);
+                  const status = item.task_status ?? item.status ?? item.state;
+                  if (typeof taskId === "string" || (!overlappingRequests && typeof status === "string")) {
+                    recordTaskUpstreamJob({ provider: id, id: typeof taskId === "string" ? taskId : undefined, status: typeof status === "string" ? status : undefined, mediaType, protocol });
+                  }
+                }
+                if (id === "tfRouter" && /\/(?:image\/generateImage|video\/generateVideo|tts\/create)(?:\?|$)/.test(requestUrl) && typeof data.data === "string") {
+                  recordTaskUpstreamJob({ provider: id, id: data.data, status: "submitted", mediaType });
+                }
+              }
               if (this === response && requestId === requestCount && !overlappingRequests && result && typeof result === "object") {
                 const data = result as Record<string, unknown>;
                 const failed = [data, data.data, data.task].some(item => {

@@ -10,7 +10,7 @@
       </div>
       <div class="accountActions">
         <el-button text circle :icon="IconRefresh" :loading="loading" :disabled="!apiKey" aria-label="刷新余额" title="刷新余额" @click="refresh" />
-        <el-button size="small" :icon="IconCreditCard" :disabled="!apiKey" @click="openRecharge">充值</el-button>
+        <el-button v-if="!accountEnabled" size="small" :icon="IconCreditCard" :disabled="!apiKey" @click="openRecharge">充值</el-button>
       </div>
     </div>
     <div v-if="!apiKey" class="accountSetup">
@@ -61,6 +61,7 @@ import axios from "axios";
 import { IconCreditCard, IconExternalLink, IconRefresh } from "@tabler/icons-vue";
 import type { ProviderBalance } from "@toonflow/providers";
 import { getProviderBalance, providerBalances } from "@/lib/providerBilling";
+import { accountEnabled } from "@/lib/account";
 
 const props = withDefaults(defineProps<{
   apiKey: string;

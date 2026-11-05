@@ -4,6 +4,7 @@ import type { ProviderBalance } from "@toonflow/providers";
 import { getTfApiKey } from "@/lib/tf";
 import { saveSettings, settings } from "@/stores/settings";
 import { useWorkspaceStore } from "@/stores/workspace";
+import { accountEnabled, accountUser } from "@/lib/account";
 
 type BalanceSnapshot = { accountId: string; balance: ProviderBalance | null; revision: number };
 
@@ -13,7 +14,7 @@ export async function getProviderBalance(providerId: string, options: { apiKey?:
   const currentApiKey = providerId === "tfRouter" ? tfBalanceApiKey.value : configs?.[providerId]?.apiKey;
   const matchesAccount = options.apiKey === undefined || (providerId === "tfRouter" ? normalizeApiKey(options.apiKey) : options.apiKey) === currentApiKey;
   const { data } = await axios.post<{ code: number; data: BalanceSnapshot; message?: string }>("/api/ai/media/balance", {
-    providerId, ...(options.apiKey !== undefined ? { apiKey: options.apiKey } : {}),
+    providerId, ...(!accountEnabled.value && options.apiKey !== undefined ? { apiKey: options.apiKey } : {}),
   }, { signal: options.signal, timeout: 25000, headers: { "x-toonflow-workspace": "1" } });
   if (data.code !== 200) throw new Error(data.message || "余额查询失败，请重试");
   if (entry && matchesAccount && !options.signal?.aborted && providerBalances.value.includes(entry)) {
@@ -86,6 +87,7 @@ export function saveTfMediaApiKey(apiKey: string) {
 }
 
 export function useProviderBalances() {
+  if (accountEnabled.value && accountUser.value?.role !== "admin") return;
   const workspaceStore = useWorkspaceStore();
   let providers: BalanceProvider[] = [];
   let request: AbortController | undefined;

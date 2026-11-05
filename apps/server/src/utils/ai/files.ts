@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
-import { mkdir, readFile, unlink, writeAtomic } from "@toonflow/file";
+import { mkdir, readFile, unlink } from "@toonflow/file";
 import conf from "@/utils/conf";
 import { getRequestFiles, getRequestFileReferences } from "@/utils/ai/requestFiles";
+import { scopedDataDirectory } from "@/utils/hosting/tenant";
+import { writeWorkspaceFile } from "@/utils/workspace/files";
 
 export type FileProvider = { apiUrl: string; apiKey: string; protocol: string };
 export class FileRequestLimitError extends Error {
@@ -145,7 +147,7 @@ export function createFileTransport(provider: FileProvider, options: { fetch?: t
   const adapter = adapters.find(adapter => adapter.accepts(provider));
   if (!adapter) return { prepare: async () => {}, fetch: request };
   const scope = hash(`${adapter.endpoint}\0${hash(provider.apiKey)}`);
-  const directory = join(dirname(conf.path), "ai", "files", scope);
+  const directory = join(scopedDataDirectory(dirname(conf.path)), "ai", "files", scope);
   const preparedFiles = new Map<string, PreparedFile>();
   const renewedFiles = new Map<string, string>();
   let recovered = false;
@@ -164,7 +166,7 @@ export function createFileTransport(provider: FileProvider, options: { fetch?: t
           signal?.throwIfAborted();
           await cacheOperation(source.cachePath, async () => {
             await mkdir(directory, { recursive: true });
-            await writeAtomic(source.cachePath, JSON.stringify(uploaded));
+            await writeWorkspaceFile(source.cachePath, JSON.stringify(uploaded));
           });
           return uploaded;
         })();

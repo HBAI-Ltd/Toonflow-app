@@ -18,12 +18,17 @@ import { createSkillContext } from "@/agent/skills";
 import { createAssetContext } from "@/agent/assets";
 import { readDocument } from "@/utils/documents";
 import { createMcpAgentTools } from "@/utils/mcp/servers";
+import { isMultiUser, requireUser } from "@/utils/accounts/context";
+import { canUseHostedTool } from "@/utils/hosting/tools";
+import { withStorageWrite } from "@/utils/hosting/storage";
+import { isPreviewPath, materializePreview } from "@/utils/hosting/mediaPreview";
 
 export function createAgentToolContext(cwd: string, config: Record<string, unknown> = {}, canvas?: CanvasContext, question?: QuestionContext, workspaceAvailable = true): ToolContext {
   const skillsDirectory = join(dirname(conf.path), "skills");
   const requireWorkspace = () => { if (!workspaceAvailable) throw new Error("此对话未提供工作目录，无法使用文件或媒体操作"); };
   const resolvePath = async (path: string, readOnly = false) => {
     requireWorkspace();
+    if (isMultiUser() && isPreviewPath(path)) return materializePreview(cwd, path);
     const absolute = resolve(cwd, path);
     const root = readOnly && isWithin(skillsDirectory, absolute) ? skillsDirectory : cwd;
     return (await resolveWorkspacePath(root, relative(root, absolute), true)).path;
@@ -69,7 +74,9 @@ export function createAgentToolContext(cwd: string, config: Record<string, unkno
       else await rm(target, { recursive });
     }),
     copyFile: (path, target, exclusive = false) => withWritePaths([path, target], async ([source, destination]) => {
-      await copyFile(source, destination, exclusive ? constants.COPYFILE_EXCL : 0);
+      const info = await lstat(source);
+      if (!info.isFile()) throw new Error("只能复制普通文件");
+      await withStorageWrite(destination, info.size, () => copyFile(source, destination, exclusive ? constants.COPYFILE_EXCL : 0));
     }),
   };
   return {
@@ -120,6 +127,7 @@ export async function createAgentTools(cwd: string, canvas?: CanvasContext, ques
   const names = new Set<string>();
   const context = createAgentToolContext(cwd, {}, canvas, question);
   for (const item of await listTools()) {
+    if (!canUseHostedTool(item.name)) continue;
     if (!item.enabled) continue;
     if (item.loadError) throw new Error(`${item.displayName}：${item.loadError}`);
     const { plugin, metadata } = await loadTool(item.name);
@@ -138,6 +146,6 @@ export async function createAgentTools(cwd: string, canvas?: CanvasContext, ques
       });
     }
   }
-  if (includeMcp) tools.push(...await createMcpAgentTools());
+  if (includeMcp && (!isMultiUser() || requireUser().role === "admin")) tools.push(...await createMcpAgentTools());
   return tools;
 }

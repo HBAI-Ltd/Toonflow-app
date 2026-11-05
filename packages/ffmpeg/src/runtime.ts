@@ -15,13 +15,18 @@ const require = createRequire(import.meta.url);
 const native = ffmpeg.prototype as FfmpegInternals;
 
 /** 原生 fluent 工厂；文件路径相对工作区解析，不修改库的全局原型。 */
-export function createFfmpeg(directory: string): typeof ffmpeg {
+export function createFfmpeg(directory: string, runtime?: {
+  additionalRoots?: string[];
+  run?: (command: ffmpeg.FfmpegCommand, start: () => void) => void;
+}): typeof ffmpeg {
   const root = realpathSync(directory);
   if (!statSync(root).isDirectory()) throw new Error("FFmpeg 工作区必须是目录");
 
   function assertWithin(path: string) {
-    const offset = relative(root, path);
-    if (offset === ".." || offset.startsWith(`..${sep}`) || isAbsolute(offset)) {
+    if (![root, ...(runtime?.additionalRoots ?? [])].some(base => {
+      const offset = relative(base, path);
+      return offset !== ".." && !offset.startsWith(`..${sep}`) && !isAbsolute(offset);
+    })) {
       throw Object.assign(new Error("FFmpeg 只能操作当前工作区内的文件"), { status: 403 });
     }
   }
@@ -71,6 +76,14 @@ export function createFfmpeg(directory: string): typeof ffmpeg {
 
   // ACT: 只保护显式文件入口；原始参数、滤镜、清单内的间接 I/O 仍是可信代码，不是进程沙箱。
   const proto = Object.create(native) as FfmpegInternals;
+  if (runtime?.run) {
+    const run = function(this: FfmpegInternals) {
+      const command = this;
+      runtime.run!(command, () => { native.run.call(command); });
+      return command;
+    };
+    Object.assign(proto, { run, exec: run, execute: run });
+  }
   proto.input = proto.addInput = proto.mergeAdd = function(source) {
     return native.input.call(this, fileArgument(source));
   };

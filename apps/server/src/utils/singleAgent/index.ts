@@ -14,6 +14,11 @@ import { browserRuntime } from "@/utils/browser";
 import conf from "@/utils/conf";
 import type { ThinkingLevel } from "@/lib/modelReasoning";
 import type { SingleAgentEvent, SingleAgentResult, SingleAgentStatus, SingleAgentToolDescriptor, SingleAgentToolReference, SingleAgentToolResult } from "./types";
+import { currentUser, isMultiUser, requireUser } from "@/utils/accounts/context";
+import { scopedDataDirectory } from "@/utils/hosting/tenant";
+import { canUseHostedTool } from "@/utils/hosting/tools";
+import { recordTaskUsage } from "@/utils/hosting/tasks";
+import { sanitizeHostingError } from "@/utils/hosting/policy";
 
 type ClientCall = {
   finish(result: SingleAgentToolResult | Error): void;
@@ -34,6 +39,7 @@ type RunState = {
   clientCalls: Map<string, ClientCall>;
 };
 type SingleSession = {
+  ownerId?: string;
   id: string;
   cwd: string;
   workspaceAvailable: boolean;
@@ -51,6 +57,7 @@ const sessions = new Map<string, SingleSession>();
 function getSession(sessionId: string) {
   const session = sessions.get(sessionId);
   if (!session || session.closed) throw Object.assign(new Error("临时对话不存在或已关闭"), { status: 404 });
+  if (isMultiUser() && session.ownerId !== requireUser().id) throw Object.assign(new Error("临时对话不存在或已关闭"), { status: 404 });
   return session;
 }
 
@@ -111,14 +118,16 @@ export async function create(options: {
 }, signal?: AbortSignal) {
   signal?.throwIfAborted();
   const id = crypto.randomUUID();
-  const cwd = options.directory ?? join(dirname(conf.path), "singleAgent", id);
-  if (!options.directory) await mkdir(cwd, { recursive: true });
+  if (isMultiUser() && [...sessions.values()].filter(session => session.ownerId === requireUser().id).length >= 10) throw Object.assign(new Error("临时对话过多，请先关闭已有对话"), { status: 429 });
+  const cwd = options.directory ?? join(scopedDataDirectory(dirname(conf.path)), "singleAgent", id);
   const session: SingleSession = {
+    ownerId: currentUser()?.id,
     id, cwd, workspaceAvailable: !!options.directory, history: SessionManager.inMemory(cwd),
     systemPrompt: options.systemPrompt ?? "", tools: [], closed: false,
   };
   sessions.set(id, session);
   try {
+    if (!options.directory) await mkdir(cwd, { recursive: true });
     const question: QuestionContext = { ask: (...args) => {
       const active = session.active;
       if (!active?.questions) throw new Error("临时对话未在运行");
@@ -133,6 +142,7 @@ export async function create(options: {
       if (typeof reference !== "string" && "name" in reference) definitions = [createClientTool(session, reference)];
       else {
         const pluginName = typeof reference === "string" ? reference : reference.plugin;
+        if (!canUseHostedTool(pluginName)) throw Object.assign(new Error("此工具仅限管理员使用"), { status: 403 });
         const info = available.get(pluginName);
         if (!info?.enabled) throw Object.assign(new Error(t`工具插件 ${pluginName} 未安装或未启用`), { status: 400 });
         if (info.loadError) throw new Error(info.loadError);
@@ -235,6 +245,7 @@ export async function run(options: {
       } catch (error) { finishAction(active); throw error; }
     };
     let messageIndex = 0;
+    const taskUsage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0 };
     const toolBlocks = new Map<string, string>();
     session.subscribe(event => {
       if (event.type === "message_start" && event.message.role === "assistant") messageIndex++;
@@ -254,14 +265,21 @@ export async function run(options: {
           }
         }
       }
-      if (event.type === "message_end" && event.message.role === "assistant") event.message.content.forEach((part, index) => {
+      if (event.type === "message_end" && event.message.role === "assistant") {
+        for (const key of Object.keys(taskUsage) as (keyof typeof taskUsage)[]) {
+          const value = event.message.usage[key];
+          if (typeof value === "number" && Number.isFinite(value) && value >= 0) taskUsage[key] += value;
+        }
+        recordTaskUsage(taskUsage);
+        event.message.content.forEach((part, index) => {
         const blockId = `${messageIndex}:${index}`;
         if (part.type === "text" || part.type === "thinking") send({ type: part.type, blockId, content: part.type === "text" ? part.text : part.thinking, done: true });
         if (part.type === "toolCall") {
           toolBlocks.set(part.id, blockId);
           send({ type: "tool", blockId, tool: { id: part.id, name: part.name, args: part.arguments, status: "running" } });
         }
-      });
+        });
+      }
       if (event.type === "tool_execution_start" || event.type === "tool_execution_end" || event.type === "tool_execution_update") {
         const result = event.type === "tool_execution_end" ? event.result : event.type === "tool_execution_update" ? event.partialResult : undefined;
         send({ type: "tool", blockId: toolBlocks.get(event.toolCallId) ?? event.toolCallId, tool: {
@@ -284,7 +302,9 @@ export async function run(options: {
     if (reply.stopReason === "length") throw new Error("模型回复因长度限制被截断，未能完整生成回答。");
     send({ type: "complete", text: reply.content.filter(part => part.type === "text").map(part => part.text).join("\n"), toolResults });
   } catch (error) {
-    send({ type: "error", message: active.controller.signal.aborted ? "本次回复已停止" : error instanceof Error ? error.message : "临时对话执行失败" });
+    const message = active.controller.signal.aborted ? "本次回复已停止" : isMultiUser() ? sanitizeHostingError(error) : error instanceof Error ? error.message : "临时对话执行失败";
+    send({ type: "error", message });
+    if (isMultiUser()) throw new Error(message);
   } finally {
     active.controller.signal.removeEventListener("abort", stopSdk);
     signal?.removeEventListener("abort", abort);
@@ -355,6 +375,7 @@ export function assertWorkspaceBrowserAccess(browserSessionId: string) {
 export async function close(sessionId: string) {
   const session = sessions.get(sessionId);
   if (!session) return;
+  if (isMultiUser() && session.ownerId !== requireUser().id) throw Object.assign(new Error("临时对话不存在或已关闭"), { status: 404 });
   if (session.closing) return session.closing;
   session.closed = true;
   const active = session.active;
@@ -368,7 +389,7 @@ export async function close(sessionId: string) {
     } finally {
       sessions.delete(sessionId);
       // 仅清理 create 分配的私有目录，用户提供的工作区由用户管理。
-      if (!session.workspaceAvailable) await rm(join(dirname(conf.path), "singleAgent", session.id), { recursive: true, force: true });
+      if (!session.workspaceAvailable) await rm(session.cwd, { recursive: true, force: true });
     }
   })();
   return session.closing;

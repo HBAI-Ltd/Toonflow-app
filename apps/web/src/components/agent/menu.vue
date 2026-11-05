@@ -75,7 +75,7 @@
           </div>
         </div>
       </el-popover>
-      <el-button text circle :loading="configLoading" :icon="IconAdjustmentsHorizontal" aria-label="媒体生成控制" title="媒体生成控制" @click="openMediaConfig" />
+      <el-button v-if="!accountEnabled || accountUser?.role === 'admin'" text circle :loading="configLoading" :icon="IconAdjustmentsHorizontal" aria-label="媒体生成控制" title="媒体生成控制" @click="openMediaConfig" />
       <slot name="actions" />
       <el-button text circle aria-label="关闭对话" title="关闭" @click="emit('close')"><icon-x :size="16" /></el-button>
     </div>
@@ -85,6 +85,7 @@
 
 <script setup lang="ts">
 import axios from "axios";
+import { accountEnabled, accountUser } from "@/lib/account";
 import { nextTick, ref, shallowRef, watch } from "vue";
 import { ElMessage, ElMessageBox, type InputInstance } from "element-plus";
 import type { AgentHistory } from "./types";
