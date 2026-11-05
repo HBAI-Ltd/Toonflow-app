@@ -58,8 +58,8 @@ try {
     throw new Error("SDK 更新归档必须包含且仅包含一份目标 Bun，请重新运行 package:desktop。");
   }
   // ACT: 旧客户端更新助手只有 120 秒启动预算，更新归档仍保留 Bun；仅 NSIS 排除运行时。
-  // bsdtar 的 @archive 直接转存成员，避免在构建目录展开应用或修改 SDK 的 Hash 和增量基线。
-  await $`tar.exe -cf ${installerTar} --exclude ${runtimeMember} ${`@${tarFile}`}`.quiet();
+  // bsdtar 的 @archive 直接转存成员；固定 UTF-8，避免系统 tar 写入解包校验不支持的 BINARY PAX 声明。
+  await $`tar.exe -cf ${installerTar} --format=pax --options hdrcharset=UTF-8 --exclude ${runtimeMember} ${`@${tarFile}`}`.quiet();
   const { stdout: installerListing } = await $`tar.exe -tf ${installerTar}`.quiet();
   const installerEntries = installerListing.toString().split(/\r?\n/).filter(Boolean);
   if (installerEntries.some(name => /(?:^|\/)bun\.exe$/i.test(name))
