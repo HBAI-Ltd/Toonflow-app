@@ -12,6 +12,7 @@ import { isPreviewPath, sendMediaPreview } from "@/utils/hosting/mediaPreview";
 const router = Router();
 
 export default router.get("/", validateFields({ directory: z.string().min(1).max(4096), path: z.string().max(4096), snapshot: z.enum(["true"]).optional(), maxBytes: z.coerce.number().int().positive().max(20 * 1024 * 1024).optional() }, "query"), async (req, res, next) => {
+  if (isMultiUser()) res.set("Content-Security-Policy", "sandbox");
   if (isMultiUser() && isPreviewPath(req.query.path as string)) {
     const directory = await u.workspace.resolveWorkspace(req, req.query.directory as string);
     await sendMediaPreview(res, directory, req.query.path as string);
