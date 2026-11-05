@@ -58,8 +58,8 @@ try {
     throw new Error("SDK 更新归档必须包含且仅包含一份目标 Bun，请重新运行 package:desktop。");
   }
   // ACT: 旧客户端更新助手只有 120 秒启动预算，更新归档仍保留 Bun；仅 NSIS 排除运行时。
-  // bsdtar 的 @archive 直接转存成员；固定 UTF-8，避免系统 tar 写入解包校验不支持的 BINARY PAX 声明。
-  await $`tar.exe -cf ${installerTar} --format=pax --options hdrcharset=UTF-8 --exclude ${runtimeMember} ${`@${tarFile}`}`.quiet();
+  // ACT: USTAR 不生成 PAX 编码声明；超出其路径或单文件 8 GiB 上限时直接失败，不回退到 PAX。
+  await $`tar.exe -cf ${installerTar} --format=ustar --options hdrcharset=UTF-8 --exclude ${runtimeMember} ${`@${tarFile}`}`.quiet();
   const { stdout: installerListing } = await $`tar.exe -tf ${installerTar}`.quiet();
   const installerEntries = installerListing.toString().split(/\r?\n/).filter(Boolean);
   if (installerEntries.some(name => /(?:^|\/)bun\.exe$/i.test(name))
