@@ -24,5 +24,6 @@ export default router.get("/", validateFields({ name: z.string().regex(/^[a-z][a
   });
   if (disabled) return res.status(404).json(error("节点已禁用", null, 404));
   res.set("Cache-Control", "no-cache");
-  await sendFile(res, filePath);
+  // ACT: 以数据目录为 root，避免 Linux 桌面端 ~/.local 被 send 当作 URL 中的隐藏目录拒绝。
+  await sendFile(res, `${name}.umd.js`, { root: nodesDirectory });
 });
