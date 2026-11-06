@@ -502,6 +502,31 @@ nodeTools.register({
 });
 
 nodeTools.register({
+  name: "setVideo",
+  description: "选择工作区内已有的视频文件作为此节点的输出，例如用本地下载的无水印成片替换生成结果；path 使用工作区相对路径，不启动生成",
+  parameters: z.strictObject({
+    path: z.string().min(1).max(4096),
+    mimeType: z.string().regex(/^video\/[a-zA-Z0-9.+-]+$/),
+  }),
+  async execute({ path, mimeType }, { signal }) {
+    signal?.throwIfAborted();
+    if (generating.value || cancelling.value || deleting.value || uploading.value) throw new Error("视频正在生成、替换或删除，请稍后重试");
+    uploading.value = true;
+    try {
+      const content = await files.getWorkspaceFiles().read(path);
+      signal?.throwIfAborted();
+      if (!content.byteLength) throw new Error("视频不能为空");
+      if (content.byteLength > 200 * 1024 * 1024) throw new Error("视频不能超过 200 MB");
+      // ACT: 与界面“替换视频”一致，只改输出引用，保留原生成文件以免破坏历史记录。
+      outputs.value.video = { dataType: "VIDEO", value: { url: path, mimeType } };
+      return outputs.value.video;
+    } finally {
+      uploading.value = false;
+    }
+  },
+});
+
+nodeTools.register({
   name: "generateVideo",
   description: "启动此节点的后台视频生成，使用当前提示词、模型、模式、时长、分辨率、比例和参考素材；立即返回已开始，用 getGenerationStatus 查询完成结果，cancelGeneration 停止生成",
   parameters: z.strictObject({}),
