@@ -22,7 +22,7 @@ export function isNodeToolAllowed(name: string, permissions: NodeToolPermissions
 const nodeId = z.string().min(1).max(256);
 const position = z.strictObject({ x: z.number().finite(), y: z.number().finite() });
 const canvasId = nodeId.optional();
-const cursor = z.string().min(1).max(4096).optional();
+const cursor = z.string().max(4096).trim().optional().describe("分页游标。首次查询或重新查询时省略；空字符串或纯空白按首次查询处理。续页时原样传入上次返回的 nextCursor，并保留其他查询参数。");
 const nodeIds = z.array(nodeId).min(1).max(20);
 
 export const canvasSchemas = {
