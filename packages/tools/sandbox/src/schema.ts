@@ -1,9 +1,11 @@
 import { z } from "zod";
 
-const relativePathSchema = z.string().min(1).max(4096).regex(
-  /^(?!\.{1,2}(?:\/|$))(?!.*\/\.{1,2}(?:\/|$))[^/\\:\u0000-\u001f\u007f]+(?:\/[^/\\:\u0000-\u001f\u007f]+)*$/,
-  "请使用以 / 分隔的相对路径，不能包含空路径段、.、..、盘符或控制字符",
-);
+const relativePathMessage = "请使用以 / 分隔的相对路径，不能包含空路径段、.、..、盘符或控制字符";
+// ACT: JSON Schema 的 pattern 不能含 lookaround（部分模型供应商会拒绝整个工具），因此正则只做字符与分段校验，
+// 禁止 . 和 .. 段改由 refine 在运行时判断；refine 不会写入 JSON Schema。
+const relativePathSchema = z.string().min(1).max(4096)
+  .regex(/^[^/\\:\u0000-\u001f\u007f]+(?:\/[^/\\:\u0000-\u001f\u007f]+)*$/, relativePathMessage)
+  .refine(path => path.split("/").every(segment => segment !== "." && segment !== ".."), relativePathMessage);
 
 export const sandboxRequestSchema = z.object({
   command: z.string().min(1).max(20000).describe("在 /workspace 执行的 Bash 脚本；JavaScript 使用 js-exec，Python 使用 python3"),
