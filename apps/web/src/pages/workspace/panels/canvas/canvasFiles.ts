@@ -29,6 +29,14 @@ export function remapNodeReferences(node: Pick<Node, "data">, ids: ReadonlyMap<s
       tag.html = tag.html.replace(/(data-reference-id=["'])([^"']+)(["'])/g, (_match: string, before: string, value: string, after: string) => before + remapReference(value) + after);
     }
   }
+  const plan = node.data?.editingPlan;
+  if (plan && typeof plan === "object") {
+    if (typeof plan.sourceReferenceId === "string") plan.sourceReferenceId = remapReference(plan.sourceReferenceId);
+    if (Array.isArray(plan.replacements)) for (const item of plan.replacements) {
+      if (item && typeof item.targetReferenceId === "string") item.targetReferenceId = remapReference(item.targetReferenceId);
+    }
+    delete node.data.editingPlanSnapshot;
+  }
 }
 
 export async function findRemainingCanvas(files: Files, excludedPath: string, signal?: AbortSignal) {

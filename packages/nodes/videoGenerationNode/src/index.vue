@@ -59,7 +59,22 @@
         <div v-if="frameMode" class="referenceHint">
           {{ selectedMode === "startFrameOptional" ? "仅一张图片时作为尾帧；两张图片按顺序作为首帧、尾帧" : "图片引用按顺序作为首帧、尾帧" }}
         </div>
-        <promptInput v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" expandable />
+        <promptInput v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" expandable keepMissingReferences />
+        <details v-if="data.editingPlan" class="editingPlan">
+          <summary>替换清单</summary>
+          <div v-if="editingPlanDetails?.error" class="referenceHint" role="alert">{{ editingPlanDetails.error }}</div>
+          <template v-if="editingPlanDetails?.plan">
+            <p>原视频：{{ referenceLabel(editingPlanDetails.plan.sourceReferenceId) }}</p>
+            <ol>
+              <li v-for="(replacement, index) in editingPlanDetails.plan.replacements" :key="index">
+                <div>{{ replacement.start }}–{{ replacement.end }} 秒：{{ replacement.original }} → {{ referenceLabel(replacement.targetReferenceId) }}</div>
+                <div>修改范围：{{ replacement.scope }}</div>
+              </li>
+            </ol>
+            <p>保留：{{ editingPlanDetails.plan.preserve }}</p>
+          </template>
+          <el-button text size="small" :disabled="generating || deleting" @click="clearEditingPlan">清除清单</el-button>
+        </details>
         <div class="promptFooter">
           <el-select
             :modelValue="selectedModel ? data.model : ''"
@@ -124,7 +139,8 @@ import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { useNodeGeneration } from "@toonflow/node-shared/useNodeGeneration";
 import { useModelForm } from "@toonflow/node-shared/useModelForm";
 import { useNodeReferences } from "@toonflow/node-shared/useNodeReferences";
-import { getPromptText } from "@toonflow/node-shared/promptText";
+import { getPromptText, normalizePromptModel } from "@toonflow/node-shared/promptText";
+import { isNodeOutput } from "@toonflow/nodes-scaffold/values";
 import promptInput from "@toonflow/node-shared/promptInput";
 import videoPlayer from "@toonflow/node-video/videoPlayer";
 import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
@@ -147,7 +163,24 @@ const { id, node, nodeProps, nodeEvent, outputs, files, ai, updateNodeInternals 
   label: "视频生成",
 });
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
-const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean; other: Record<string, unknown>; providerAssets: NonNullable<NodeVideoRequest["providerAssets"]> });
+const editingText = z.string().trim().min(1).refine(value => !/\{\{ref \d+\}\}/.test(value), "清单描述不能包含 {{ref N}}；目标素材请使用稳定引用 ID，额外素材引用请通过 setPrompt 写入");
+const editingPlanSchema = z.strictObject({
+  sourceReferenceId: z.string().min(1).max(2048).describe("getConfig.references 中待编辑原视频的稳定 id，不是引用编号"),
+  replacements: z.array(z.strictObject({
+    original: editingText.max(500).describe("原视频中被替换对象的可辨识特征，不含引用标记"),
+    start: z.number().finite().nonnegative().describe("对象出现时段的开始时间，单位秒"),
+    end: z.number().finite().positive().describe("对象出现时段的结束时间，单位秒"),
+    targetReferenceId: z.string().min(1).max(2048).describe("getConfig.references 中目标图片或视频的稳定 id"),
+    scope: editingText.max(2000).describe("本项具体修改范围，例如人物整体或商品包装，不含引用标记"),
+  }).refine(value => value.end > value.start, "替换时段的结束时间必须大于开始时间")).min(1).max(30),
+  preserve: editingText.max(4000).describe("需要保留的动作、遮挡关系、背景、声音及其他对象，不含引用标记"),
+});
+type EditingPlan = z.infer<typeof editingPlanSchema>;
+type EditingReference = {
+  id: string; reference: string; label: string; dataType: string | string[]; ready: boolean | null;
+  source?: string; sourceHandle?: string; path?: string; mimeType?: string; assetId?: string;
+};
+const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean; other: Record<string, unknown>; providerAssets: NonNullable<NodeVideoRequest["providerAssets"]>; editingPlan?: EditingPlan | null; editingPlanSnapshot?: string });
 data.value.prompt ??= "";
 data.value.promptModel ??= [];
 data.value.model ??= "";
@@ -171,6 +204,73 @@ const referenceMentions = computed(() => [...localReferenceMentions.value, ...da
   value: `{{ref ${refList.value.length + index + 1}}}`,
   previewable: false,
 }))]);
+const references = computed<EditingReference[]>(() => [
+  ...refList.value.map((item, index) => {
+    const referenceId = encodeURIComponent(JSON.stringify([item.source, item.sourceHandle]));
+    const valid = isNodeOutput(item);
+    return {
+      id: referenceId, reference: `{{ref ${index + 1}}}`,
+      label: localReferenceMentions.value.find(reference => reference.id === referenceId)?.label || item.source,
+      dataType: item.dataType, source: item.source, sourceHandle: item.sourceHandle,
+      ready: valid && (item.dataType !== "STRING" || !!item.value?.trim()),
+      ...(valid && (item.dataType === "IMAGE" || item.dataType === "VIDEO" || item.dataType === "AUDIO")
+        ? { path: item.value.url, mimeType: item.value.mimeType } : {}),
+    };
+  }),
+  ...data.value.providerAssets.map((asset, index) => ({
+    id: `providerAsset:${asset.id}`, reference: `{{ref ${refList.value.length + index + 1}}}`,
+    label: asset.name || asset.id, dataType: asset.mediaType.toUpperCase(), assetId: asset.id,
+    ready: null,
+  })),
+]);
+
+function referenceLabel(referenceId: string) {
+  const reference = references.value.find(item => item.id === referenceId);
+  return reference ? `${reference.reference} ${reference.label}` : "引用已失效";
+}
+
+function resolveEditingReferences(plan: EditingPlan) {
+  return [plan.sourceReferenceId, ...plan.replacements.map(item => item.targetReferenceId)].map((referenceId, index) => {
+    const reference = references.value.find(item => item.id === referenceId);
+    if (!reference) throw new Error("替换清单中的引用已失效，请重新核对并保存清单");
+    if (reference.ready === false) throw new Error(`${reference.reference} 尚未就绪，请补充素材后重新保存清单`);
+    if (index === 0 ? reference.dataType !== "VIDEO" : !["IMAGE", "VIDEO"].includes(String(reference.dataType))) {
+      throw new Error(index === 0 ? "替换清单的原视频必须是视频引用" : "替换目标必须是图片或视频引用");
+    }
+    return reference;
+  });
+}
+
+function editingReferenceSnapshot(items: EditingReference[]) {
+  // ACT: shortcut: 同路径覆盖需人工复核，需要自动识别时再接入文件内容指纹。
+  return JSON.stringify(items.map(item => [item.id, item.dataType, item.path, item.mimeType, item.assetId]));
+}
+
+const editingPlanDetails = computed(() => {
+  if (!data.value.editingPlan) return;
+  const parsed = editingPlanSchema.safeParse(data.value.editingPlan);
+  if (!parsed.success) return { error: "替换清单格式无效，请重新核对并保存清单" };
+  const plan = parsed.data;
+  try {
+    const items = resolveEditingReferences(plan);
+    if (data.value.editingPlanSnapshot !== editingReferenceSnapshot(items)) throw new Error("替换清单的素材已变化，请重新核对并保存清单");
+    return {
+      plan,
+      prompt: [
+        `视频编辑：以 ${items[0].reference} 为待编辑原视频，按以下替换清单执行。`,
+        ...plan.replacements.map((item, index) => `${index + 1}. ${item.start}–${item.end} 秒：将原视频中的${item.original}替换为 ${items[index + 1].reference} 所示对象；修改范围：${item.scope}。`),
+        `保留：${plan.preserve}`,
+      ].join("\n"),
+    };
+  } catch (error) {
+    return { plan, error: error instanceof Error ? error.message : "替换清单无效" };
+  }
+});
+
+function clearEditingPlan() {
+  data.value.editingPlan = null;
+  delete data.value.editingPlanSnapshot;
+}
 const models = shallowRef<NodeMediaModel[]>([]);
 const modelsLoading = ref(false);
 const uploading = ref(false);
@@ -246,6 +346,7 @@ watch([selectedModel, () => data.value.duration], ([choice]) => {
 const modelGroups = computed(() => groupNodeModels(models.value));
 function getGenerationPrompt(prompt: string, references = refList.value) {
   return [
+    editingPlanDetails.value?.prompt,
     prompt.trim(),
     ...references.flatMap((item, index) => (item.dataType === "STRING" && item.value?.trim() ? [`参考 ${index + 1}：\n${item.value.trim()}`] : [])),
   ]
@@ -383,19 +484,23 @@ async function startGeneration() {
     return { status: "generating" };
   }
   const choice = selectedModel.value;
-  // ACT: 提交时按稳定 ID 解析，避免依赖编辑器挂载及异步重排同步。
-  const references = referenceMentions.value;
-  const prompt = data.value.promptModel.length ? getPromptText(data.value.promptModel, referenceId => {
-    const value = references.find(reference => reference.id === referenceId)?.value;
-    if (value === undefined) throw new Error("提示词引用的素材已失效，请重新选择引用");
-    return value;
-  }) : data.value.prompt;
+  const prompt = resolvePrompt();
+  if (editingPlanDetails.value?.error) throw new Error(editingPlanDetails.value.error);
   const input = getGenerationInput(prompt);
   if (!choice || !input) throw new Error("请先选择视频模型");
   if (data.value.providerAssets.length && choice.providerId !== "volcengine") throw new Error("官方素材仅支持火山方舟视频模型，请切换模型或移除素材");
   if (!input.prompt) throw new Error("请输入生成提示词");
+  if (data.value.editingPlan) {
+    if (!Array.isArray(input.mode)) throw new Error("使用替换清单时请选择支持视频的混合参考模式");
+    if (choice.providerId === "volcengine" && choice.modelId === "doubao-seedance-2-5-260628" && input.other?.taskType !== "edit") {
+      throw new Error("使用替换清单时，请将 Seedance 2.5 的参考任务类型设为视频编辑（edit）");
+    }
+  }
   if (refList.value.some(item => item.value === undefined)) throw new Error("引用节点暂无内容，请先补充引用内容");
+  const missingReference = references.value.find(item => item.ready === false && item.dataType !== "STRING");
+  if (missingReference) throw new Error(`${missingReference.reference} 尚未就绪，请先补充引用内容`);
   for (const match of input.prompt.matchAll(/\{\{ref (\d+)\}\}/g)) {
+    if (!references.value[Number(match[1]) - 1]) throw new Error(`引用标记 ${match[0]} 没有对应素材，请重新选择引用`);
     const reference = refList.value[Number(match[1]) - 1];
     if (reference?.dataType === "STRING" && !reference.value?.trim()) throw new Error(`参考 ${match[1]} 的文本为空，请补充内容或移除提示词中的引用`);
   }
@@ -447,6 +552,10 @@ async function resizeVideo(event: Event) {
 }
 
 function getConfig() {
+  let prompt: string | undefined;
+  let promptError: string | undefined;
+  try { prompt = resolvePrompt(); }
+  catch (error) { promptError = error instanceof Error ? error.message : "提示词引用无效"; }
   return {
     config: {
       providerId: selectedModel.value?.providerId ?? "",
@@ -462,13 +571,27 @@ function getConfig() {
     models: models.value,
     ratios: ratioOptions,
     matchingModes: matchingModes.value,
+    references: references.value,
     providerReferences: data.value.providerAssets.map((asset, index) => ({ ...asset, reference: `{{ref ${refList.value.length + index + 1}}}` })),
+    editingPlan: data.value.editingPlan ?? null,
+    editingPlanError: editingPlanDetails.value?.error ?? null,
+    promptError: promptError ?? null,
+    generationPrompt: prompt === undefined || editingPlanDetails.value?.error ? null : getGenerationPrompt(prompt),
   };
+}
+
+function resolvePrompt() {
+  // ACT: 提交时按稳定 ID 解析，避免依赖编辑器挂载及异步重排同步。
+  return data.value.promptModel.length ? getPromptText(data.value.promptModel, referenceId => {
+    const value = referenceMentions.value.find(reference => reference.id === referenceId)?.value;
+    if (value === undefined) throw new Error("提示词引用的素材已失效，请重新选择引用");
+    return value;
+  }) : data.value.prompt;
 }
 
 nodeTools.register({
   name: "getConfig",
-  description: "读取此视频生成节点的当前配置、可选视频模型能力、通用比例及适合当前引用的模式，不含密钥；时长与分辨率须符合 durationResolutionMap",
+  description: "读取视频配置、模型能力、完整 references 引用表、替换清单及实际 generationPrompt。references 按提交顺序列出稳定 id、当前编号、类型、来源和 ready；ready=false 表示本地素材未就绪，ready=null 的官方素材在提交时由服务端审核。不含密钥；时长与分辨率须符合 durationResolutionMap",
   parameters: z.strictObject({}),
   async execute(_args, { signal }) {
     signal?.throwIfAborted();
@@ -549,14 +672,34 @@ nodeTools.register({
 });
 
 nodeTools.register({
+  name: "setEditingPlan",
+  description: "保存视频编辑替换清单，不启动生成。先从 getConfig.references 读取原视频及目标素材的稳定 id；每项写清原对象特征、起止秒数、目标引用和修改范围，多次出现分别列项。清单会自动加入实际生成提示词，preserve 写保留条件；plan=null 清除清单。素材变化后须重新核对并保存。",
+  parameters: z.strictObject({ plan: editingPlanSchema.nullable() }),
+  execute({ plan }) {
+    if (generating.value || deleting.value) throw new Error("节点正在生成或删除，请稍后修改清单");
+    if (plan === null) clearEditingPlan();
+    else {
+      const snapshot = editingReferenceSnapshot(resolveEditingReferences(plan));
+      data.value.editingPlan = plan;
+      data.value.editingPlanSnapshot = snapshot;
+    }
+    return getConfig();
+  },
+});
+
+nodeTools.register({
   name: "setPrompt",
-  description: "修改此节点的视频生成提示词，仅接收 prompt，支持 {{ref 1}} 等参考标记；时长 duration、分辨率等配置须先用 node:getConfig 查询能力，再单独调用 node:setConfig；不启动生成",
+  description: "修改视频提示词，按 getConfig.references 的当前编号使用 {{ref 1}}，写入时绑定稳定 id，失效编号会报错。已有替换清单自动加入 generationPrompt，此处只补充不冲突的要求。时长、分辨率等配置单独用 setConfig 修改；不启动生成",
   parameters: z.strictObject({ prompt: z.string() }),
   execute({ prompt: value }) {
     if (deleting.value) throw new Error("节点正在删除，请稍后修改");
+    for (const match of value.matchAll(/\{\{ref (\d+)\}\}/g)) {
+      if (!referenceMentions.value.some(reference => reference.value === match[0])) throw new Error(`引用标记 ${match[0]} 没有对应素材，请先读取 getConfig.references`);
+    }
+    const model = normalizePromptModel(value.split("\n").map(text => [{ type: "Write", text }]), referenceMentions.value.map(reference => ({ ...reference, avatar: undefined })));
     data.value.prompt = value;
-    data.value.promptModel = value.split("\n").map((text) => [{ type: "Write", text }]);
-    return { prompt: value };
+    data.value.promptModel = model;
+    return { prompt: value, generationPrompt: editingPlanDetails.value?.error ? null : getGenerationPrompt(value) };
   },
 });
 
@@ -621,6 +764,17 @@ nodeTools.register({
     margin: 8px 0;
     color: var(--el-text-color-secondary);
     font-size: 12px;
+  }
+
+  .editingPlan {
+    margin: 0 0 12px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+
+    summary { cursor: pointer; }
+    p { margin: 8px 0; }
+    ol { margin: 8px 0; padding-left: 20px; }
+    li + li { margin-top: 8px; }
   }
 
   .promptFooter {

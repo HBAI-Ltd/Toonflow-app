@@ -34,7 +34,7 @@ import { IconMaximize } from "@tabler/icons-vue";
 import xSender, { type AnyTagProps, type MentionItem } from "x-sender";
 import "x-sender/lib/XSender.css";
 import type { MaterialMention, ReferenceMention } from "../useNodeReferences";
-import { getPromptText } from "../promptText";
+import { getPromptText, normalizePromptModel, referenceHtml } from "../promptText";
 import promptReferenceMenu from "./promptReferenceMenu.vue";
 
 type Reference = ReferenceMention;
@@ -45,6 +45,7 @@ const props = defineProps<{
   selectAsset?: () => Promise<Reference | undefined>;
   expandable?: boolean;
   placeholder?: string;
+  keepMissingReferences?: boolean;
 }>();
 const model = defineModel<AnyTagProps[][]>({ required: true });
 const text = defineModel<string>("text", { default: "" });
@@ -142,56 +143,6 @@ function previewReference(event: MouseEvent) {
   previewReferenceId.value = reference.id;
 }
 
-function referenceHtml(reference: Reference) {
-  const tag = document.createElement("span");
-  tag.className = "imageReference";
-  tag.dataset.referenceId = reference.id;
-  tag.dataset.value = reference.value;
-  if (reference.avatar) {
-    if (reference.previewable !== false) tag.classList.add("previewable");
-    const image = document.createElement("img");
-    image.src = String(reference.avatar);
-    image.alt = "";
-    image.draggable = false;
-    tag.append(image);
-  }
-  tag.append(document.createTextNode(reference.label || reference.name));
-  return tag.outerHTML;
-}
-
-function normalizeModel(value: AnyTagProps[][]): AnyTagProps[][] {
-  if (!value.length) return [[{ type: "Write", text: "" }]];
-  return value.map(line => {
-    const tags = line.flatMap((tag): AnyTagProps[] => {
-      if (tag.type === "Write") return tag.text.split(/(\{\{ref \d+\}\})/g).map(text => {
-        const reference = props.references.find(item => item.value === text);
-        return reference
-          ? { type: "Custom", html: `<span style="display: inline-block;">${referenceHtml(reference)}</span>` }
-          : { type: "Write", text };
-      });
-      if (tag.type !== "Custom") return [tag];
-      const template = document.createElement("template");
-      template.innerHTML = tag.html;
-      const id = template.content.querySelector<HTMLElement>(".imageReference[data-reference-id]")?.dataset.referenceId;
-      if (!id) return [tag];
-      const reference = props.references.find(item => item.id === id);
-      if (!reference) return [];
-      return [{ type: "Custom", html: `<span style="display: inline-block;">${referenceHtml(reference)}</span>` }];
-    });
-    const next: AnyTagProps[] = [{ type: "Write", text: "" }];
-    for (const tag of tags) {
-      const previous = next[next.length - 1];
-      if (tag.type === "Write" && previous.type === "Write") previous.text += tag.text;
-      else {
-        if (tag.type !== "Write" && previous.type !== "Write") next.push({ type: "Write", text: "" });
-        next.push(tag);
-      }
-    }
-    if (next[next.length - 1].type !== "Write") next.push({ type: "Write", text: "" });
-    return next;
-  });
-}
-
 function releaseNodeFocus(instance: xSender) {
   // ACT: 1.4.6 的排队输入回调仍会聚焦旧 Write；仅让即将移除的节点失效，库支持取消回调后可移除。
   for (const grid of instance.chatEditor.NODES) {
@@ -203,7 +154,7 @@ function releaseNodeFocus(instance: xSender) {
 
 function syncModel(value = sender?.getModel() ?? model.value) {
   // 输入法组字时只同步文本，等 compositionend 后再替换参考标签，保留正在编辑的 DOM。
-  const next = sender?.chatEditor.isComposition ? value : normalizeModel(value);
+  const next = sender?.chatEditor.isComposition ? value : normalizePromptModel(value, props.references, props.keepMissingReferences);
   if (sender && JSON.stringify(sender.getModel()) !== JSON.stringify(next)) {
     const instance = sender;
     const editor = instance.chatElement.richText;
