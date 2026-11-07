@@ -94,7 +94,7 @@ async function requestJson(context: { tool: Pick<ProviderTools, "fetch" | "error
   });
   if (!response.ok) {
     const message = context.tool.errorMessage(await response.text());
-    throw new Error(`火山方舟请求失败（HTTP ${response.status}）${message ? `：${message}` : ""}`);
+    throw Object.assign(new Error(`火山方舟请求失败（HTTP ${response.status}）${message ? `：${message}` : ""}`), { status: response.status });
   }
   return object(await response.json());
 }
@@ -272,14 +272,18 @@ Seedance 2.0 系列输出 4～15 秒 MP4。标准版支持 480p/720p/1080p/4k，
     if (Buffer.byteLength(payload, "utf8") > 64 * 1024 * 1024) throw new Error("火山方舟请求体超过 64 MB，请减少参考素材大小");
     const signal = AbortSignal.any([AbortSignal.timeout(30 * 60_000), ...(this.signal ? [this.signal] : [])]);
     await this.saveTaskData?.({ kind: "submitting", ...(uploads.length ? { uploads } : {}) });
-    const data = await requestJson(this, "/contents/generations/tasks", apiKey, signal, payload);
+    // 仅 HTTP 明确拒绝（任务未被接单）时标记为失败；5xx、网络中断、超时等仍按结果未知处理，需人工确认。
+    const data = await requestJson(this, "/contents/generations/tasks", apiKey, signal, payload).catch(error => {
+      if (![400, 401, 403, 404, 405, 413, 415, 422, 429].includes(error?.status)) throw error;
+      throw Object.assign(error, { code: "MEDIA_TASK_FAILED" });
+    });
     if (typeof data.id !== "string" || !data.id.trim()) throw new Error("火山方舟未返回任务 ID，请先在平台确认提交结果");
     await this.saveTaskData?.({ kind: "video", taskId: data.id, ...(uploads.length ? { uploads } : {}) });
     return waitForVideo(this, apiKey, data.id, signal);
   },
   async resumeTask(data: ProviderTaskData): Promise<MediaAsset[]> {
     if (data.kind === "uploading") throw new Error("上次 OSS 上传阶段中断，尚未提交视频生成；请按任务中的对象键核对上传结果，再明确发起新任务");
-    if (data.kind === "submitting") throw new Error("上次火山方舟提交结果未知，不能自动重新提交，请先在平台确认任务");
+    if (data.kind === "submitting") throw new Error("上次火山方舟提交结果未知，不能自动重新提交，请先在平台确认任务；如需改用其他模型重新生成，请先点击节点上的“放弃任务”");
     if (data.kind !== "video" || typeof data.taskId !== "string" || !data.taskId.trim()) throw new Error("火山方舟任务恢复数据无效");
     const apiKey = this.config.apiKey?.trim();
     if (!apiKey) throw new Error("请填写火山方舟 API Key");
