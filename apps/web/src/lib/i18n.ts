@@ -24,6 +24,7 @@ import "dayjs/locale/pa-in";
 import "dayjs/locale/ar";
 import "dayjs/locale/fa";
 import "dayjs/locale/tr";
+import "dayjs/locale/pt-br";
 
 export function registerApiLanguage(client: AxiosInstance) {
   const interceptor = client.interceptors.request.use(config => {

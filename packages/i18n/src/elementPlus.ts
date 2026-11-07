@@ -20,7 +20,8 @@ import pa from "./elementPlus/pa.json";
 import ar from "./elementPlus/ar.json";
 import fa from "./elementPlus/fa.json";
 import tr from "./elementPlus/tr.json";
+import pt from "./elementPlus/pt.json";
 
 export const elementLocales = {
-  "zh-CN": zhCn, "zh-TW": zhTw, en, ja, ru, vi, th, ko, hi, id, ms, fil, bn, ur, ta, te, mr, pa, ar, fa, tr,
+  "zh-CN": zhCn, "zh-TW": zhTw, en, ja, ru, vi, th, ko, hi, id, ms, fil, bn, ur, ta, te, mr, pa, ar, fa, tr, pt,
 } satisfies Record<Locale, typeof en>;
