@@ -4,7 +4,7 @@ import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { createHash, randomUUID } from "node:crypto";
 import { getAgentImageReference, getOffloadedImageText, readAgentImage, saveAgentImage } from "@/agent/runtime/imageAttachments";
 import type { AgentImageReference } from "@/agent/runtime/imageAttachments";
-import { getAgentTaskId } from "@/agent/runtime/sessions";
+import { agentUserMessageSchema, getAgentTaskId } from "@/agent/runtime/sessions";
 import { getRequestFiles, type RequestFile } from "@/utils/ai/requestFiles";
 import { createFileTransport, FileRequestLimitError } from "@/utils/ai/files";
 import { getConfiguredProviders } from "@/utils/ai";
@@ -141,6 +141,23 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
           const index = branch.findIndex(entry => entry.id === entryId);
           return index >= 0 && branch.slice(index + 1).some(entry => entry.type === "message" && entry.message.role === "assistant");
         }
+        if (!branch.some(entry => entry.type === "custom" && entry.customType === "toonflowVideoReferences")
+          && branch.some(entry => {
+            if (entry.type !== "custom" || !["toonflowAttachments", "toonflowUserMessage"].includes(entry.customType)) return false;
+            const parsed = agentUserMessageSchema.safeParse(entry.data);
+            return parsed.success && (parsed.data.attachments.some(item => item.mimeType.startsWith("video/"))
+              || parsed.data.mentions?.some(item => item.dataType === "VIDEO"));
+          })) {
+          // 视频从内联改为引用后，旧 thinking 不再匹配原始视觉上下文；每个分支只迁移一次。
+          recordOffload([]);
+          history.appendCustomEntry("toonflowVideoReferences", {});
+        }
+        const lastAnalysis = context.messages.findLastIndex(message => message.role === "assistant" && message.stopReason === "stop"
+          && message.content.some(part => part.type === "text" && part.text.trim()));
+        const videoFrames = context.messages.slice(0, lastAnalysis < 0 ? 0 : lastAnalysis).flatMap(message =>
+          message.role === "toolResult" && message.toolName === "readVideo" && !message.isError
+            ? message.content.flatMap(part => { const reference = getAgentImageReference(part); return reference ? [reference.id] : []; }) : []);
+        if (videoFrames.some(id => !offloaded.has(id))) recordOffload(videoFrames);
         let networkRecoveries = 0;
         for (;;) {
           options?.signal?.throwIfAborted();

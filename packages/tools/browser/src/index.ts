@@ -49,7 +49,10 @@ const plugin: ToolPlugin = {
         if (!parsed.success) {
           const action = args && typeof args === "object" && "action" in args ? args.action : undefined;
           const actionSchema = actionParameters.find(item => item.action === action)?.parameters;
-          throw new Error(`浏览器参数校验失败，未执行。仅传当前 action 的字段，修正后再调用，不要原样重试。${JSON.stringify({ parameters: actionSchema ?? parameters, issues: parsed.error.issues })}`);
+          const hint = parsed.error.issues.some(issue => issue.path[0] === "url")
+            ? "url 仅支持不含账号密码的 HTTP/HTTPS 地址，不接受 data:、file:、javascript: 或 about:。open 或 newTab 打开空白页时省略 url；本地 HTML 需先通过 HTTP/HTTPS 服务提供页面。修正后再调用，不要原样重试。"
+            : "仅传当前 action 的字段，修正后再调用，不要原样重试。";
+          throw new Error(`浏览器参数校验失败，未执行。${hint}${JSON.stringify({ parameters: actionSchema ?? parameters, issues: parsed.error.issues })}`);
         }
         const request = parsed.data;
         if (!context.browser) throw new Error("当前宿主不支持浏览器工具，请升级 Toonflow 桌面客户端");

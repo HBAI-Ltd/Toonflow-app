@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { chainMethods, queryMethods, runMethods } from "@toonflow/ffmpeg/remote";
 import type { ToolPlugin } from "@toonflow/tools-scaffold/runtime";
+import { createReadVideoTool } from "./video";
 
 const configSchema = z.strictObject({});
 const probeSchema = z.strictObject({
@@ -45,7 +46,10 @@ const plugin: ToolPlugin = {
       }, event => {
         if (event.event === "error") {
           const failure = event.args[0] as { message?: string };
-          error = Object.assign(new Error(failure.message ?? "FFmpeg 执行失败"), failure);
+          const stderr = event.args[2];
+          error = Object.assign(new Error(), failure, {
+            message: [failure.message ?? "FFmpeg 执行失败", typeof stderr === "string" ? stderr.trim() : ""].filter(Boolean).join("\n"),
+          });
         } else if (event.event === "result") details = event.args[0];
         else if (event.event === "filenames") filenames = event.args[0];
         else if (event.event === "end") details = { stdout: event.args[0], stderr: event.args[1], ...(filenames ? { filenames } : {}) };
@@ -71,7 +75,10 @@ const plugin: ToolPlugin = {
       promptSnippet: "使用 ffmpeg 处理本地媒体，ffprobe 查询媒体信息；按用户要求选择输出位置。",
       promptGuidelines: [
         '截帧示例：{"steps":[{"method":"input","args":["assets/input.mp4"]},{"method":"seekInput","args":[1]},{"method":"frames","args":[1]},{"method":"output","args":["assets/frame.png"]}]}。',
+        '连续截帧并缩放可使用 videoFilters，args:["fps=1/2,scale=540:-1"]；complexFilter 的多个滤镜放在第一个参数数组中，例如 args:[["fps=1/2,scale=540:-1"]]，第二个参数是输出映射，不是另一个滤镜。',
+        "多输出时，先 output(path)，再为该输出设置 frames、videoFilters 等参数；后续参数作用于当前输出。每张单帧图片都要设置 frames(1)，包括最后一个输出。",
         'inputOptions/outputOptions 按 fluent 原生语法传参，不额外拆分空格。含空格的元数据使用 args:["-metadata","title=a b"]，不要再嵌套数组。先用 operation={"method":"availableEncoders","args":[]} 等查询实际能力，不猜测本机编码器。',
+        "失败时先读取完整 stderr，按具体错误修正参数后再重试；不原样重复失败的调用。",
         "除非用户要求覆盖，否则使用新文件名；所有显式路径及参数、滤镜和媒体清单中引用的文件都应位于当前工作区。",
       ],
       parameters: z.toJSONSchema(processSchema, { io: "input", target: "draft-07" }),
@@ -79,7 +86,13 @@ const plugin: ToolPlugin = {
       execute(_id, params, signal) {
         return execute(processSchema.parse(params), signal);
       },
-    }];
+    }, createReadVideoTool(context, async (steps, operation, signal) => {
+      const result = await execute({
+        steps: processSchema.shape.steps.parse(steps),
+        operation: processSchema.shape.operation.parse(operation),
+      }, signal);
+      return result.details;
+    })];
   },
 };
 

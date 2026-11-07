@@ -3,7 +3,7 @@ import { z } from "zod";
 const webUrl = z.url().refine(value => {
   const url = new URL(value);
   return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password;
-}, "仅支持不含账号密码的 HTTP/HTTPS 网页地址").describe("HTTP/HTTPS 网页地址，用于 open、navigate 或 newTab");
+}, "仅支持不含账号密码的 HTTP/HTTPS 网页地址").describe("仅支持不含账号密码的 HTTP/HTTPS 网页地址，不接受 data:、file:、javascript: 或 about:。open 或 newTab 打开空白页时省略 url");
 const sessionFields = { browserSessionId: z.uuid().optional().describe("当前对话之前返回的浏览器会话 ID；省略则复用本对话会话") };
 const ref = z.string().min(1).max(100).describe("最近一次 snapshot 返回的元素引用；页面变化后重新 snapshot");
 const offset = z.number().int().min(0).default(0).describe("snapshot、read 或 tabs 的分页起点，默认 0；按返回的 nextOffset 继续读取");

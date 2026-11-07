@@ -1,8 +1,16 @@
 # FFmpeg 媒体处理
 
-为 Agent 提供 `ffmpeg` 和 `ffprobe`，直接连接 `context.ffmpeg()`，复用插件市场配置的执行程序及节点已有的调用桥接。
+为 Agent 提供 `ffmpeg`、`ffprobe` 和按需查看视频的 `readVideo`，复用插件市场配置的执行程序及节点已有的调用桥接。
 
 ## 调用方式
+
+`readVideo` 按需返回带时间戳的抽样画面，完整视频不会进入模型请求：
+
+```json
+{ "path": "assets/input.mp4", "start": 10, "end": 20, "frames": 8, "transcribe": true }
+```
+
+`start` 默认为 0，省略 `end` 时读取到视频结尾；`frames` 默认为 8，最多 12 张，设为 1 时查看 `start` 附近的画面。需要声音时设置 `transcribe: true`，单次最多转写 120 秒，可用 `language` 指定语言；转写依赖已连接画布及浏览器语音识别支持。抽样画面不等于完整连续视频，分析后保留来源和时间戳摘要，追问时重新读取相关区间。工具只清理本次抽帧和转写产生的临时文件，原视频保留。
 
 `ffprobe` 接收文件路径和可选的原生参数：
 
@@ -27,6 +35,8 @@
 `options` 对应宿主支持的 fluent 构造选项：`source`、`cwd`、`niceness`、`priority`、`stdoutLines`、`timeout`。`steps` 支持宿主已有的全部配置方法和别名；`args` 中的 JSON 值保持原样，`undefinedArgs` 可指定要传入 `undefined` 的位置。
 
 ## 原生能力与执行
+
+以下规则适用于原生 `ffmpeg`、`ffprobe` 调用。
 
 - 不另设 FFmpeg 参数白名单，不拆分或重写 `inputOptions`、`outputOptions`、滤镜参数。
 - 不限制为单文件输出，图片序列、HLS/DASH 分片、多输入多输出均按原生方式处理。
