@@ -589,7 +589,7 @@
     },
     "packages/nodes/videoNode": {
       "name": "@toonflow/node-video",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
       },
@@ -597,6 +597,7 @@
         "@toonflow/ffmpeg": "workspace:*",
         "@toonflow/node-shared": "workspace:*",
         "@toonflow/nodes-scaffold": "workspace:*",
+        "@toonflow/tools-scaffold": "workspace:*",
         "typescript": "~6.0.3",
         "vite": "^8.2.2",
         "vue-tsc": "^3.3.11",
@@ -788,6 +789,24 @@
       },
       "devDependencies": {
         "@toonflow/tools-scaffold": "workspace:*",
+      },
+    },
+    "packages/tools/videoUpscale": {
+      "name": "@toonflow/tool-video-upscale",
+      "version": "1.1.0",
+      "dependencies": {
+        "@toonflow/file": "workspace:*",
+        "zod": "^4.6.2",
+      },
+      "devDependencies": {
+        "@toonflow/tools-scaffold": "workspace:*",
+        "typescript": "~6.0.3",
+        "vue-tsc": "^3.3.11",
+      },
+      "peerDependencies": {
+        "axios": "^1.20.0",
+        "element-plus": "^2.14.5",
+        "vue": "^3.5.42",
       },
     },
     "packages/tools/webFetch": {
@@ -1487,6 +1506,8 @@
     "@toonflow/tool-seedance-assets": ["@toonflow/tool-seedance-assets@workspace:packages/tools/seedanceAssets"],
 
     "@toonflow/tool-skill-operator": ["@toonflow/tool-skill-operator@workspace:packages/tools/skillOperator"],
+
+    "@toonflow/tool-video-upscale": ["@toonflow/tool-video-upscale@workspace:packages/tools/videoUpscale"],
 
     "@toonflow/tool-web-fetch": ["@toonflow/tool-web-fetch@workspace:packages/tools/webFetch"],
 
@@ -2979,6 +3000,8 @@
     "@toonflow/tool-canvas/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@toonflow/tool-seedance-assets/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
+
+    "@toonflow/tool-video-upscale/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@toonflow/web/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 

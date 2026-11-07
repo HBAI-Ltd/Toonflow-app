@@ -12,6 +12,7 @@
       <el-button :icon="IconLayersSubtract" text :disabled="!outputFile || uploading || exporting || actions?.processing" @click.stop="actions?.open('separate')">分离音视频</el-button>
       <el-button :icon="IconScissors" text :disabled="!outputFile || uploading || exporting || actions?.processing" @click.stop="actions?.open('trim')">截取片段</el-button>
       <el-button :icon="IconMovie" text :loading="actions?.creatingAnalysis" :disabled="!outputFile || uploading || exporting || actions?.processing || actions?.creatingAnalysis" @click.stop="actions?.createFrameAnalysis()">逐帧拉片</el-button>
+      <el-button text :loading="actions?.loadingUpscale" :disabled="(!outputFile && !actions?.hasUnappliedUpscale) || uploading || exporting || actions?.processing" @click.stop="actions?.openUpscale()">视频升清</el-button>
       <el-button
         :icon="IconTransfer"
         :loading="uploading"
@@ -95,6 +96,7 @@ nodeEvent.on("save", (reason) => {
   if (reason === "reload" && exporting.value) throw new Error("视频正在导出，请完成后再刷新节点");
 });
 nodeEvent.on("delete", () => {
+  actions.value?.ensureUpscaleFinished();
   if (uploading.value) throw new Error("视频上传中，请稍后删除节点");
   uploading.value = true;
   return files.removeNodeFiles().finally(() => {

@@ -1,0 +1,24 @@
+{
+  "name": "@toonflow/tool-video-upscale",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build.ts",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@toonflow/file": "workspace:*",
+    "zod": "^4.6.2"
+  },
+  "peerDependencies": {
+    "axios": "^1.20.0",
+    "element-plus": "^2.14.5",
+    "vue": "^3.5.42"
+  },
+  "devDependencies": {
+    "@toonflow/tools-scaffold": "workspace:*",
+    "typescript": "~6.0.3",
+    "vue-tsc": "^3.3.11"
+  }
+}

@@ -76,13 +76,26 @@
       </div>
     </div>
   </el-dialog>
+  <component
+    :is="upscaleComponent"
+    v-if="upscaleComponent && upscaleContext"
+    ref="upscalePanel"
+    :directory="upscaleContext.directory"
+    :canvasPath="upscaleContext.canvasPath"
+    :nodeId="node.id"
+    :path="file?.url || ''"
+    :savedTask="upscaleTask"
+    :saveTask="saveUpscaleTask"
+    :applyResult="applyUpscaleResult" />
 </template>
 
 <script setup lang="ts">
-import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { computed, inject, nextTick, onBeforeUnmount, ref, shallowRef, toRaw, watch, type Component } from "vue";
 import { useNode, useVueFlow, type Node } from "@vue-flow/core";
 import { ElButton, ElDialog, ElMessage, ElProgress } from "element-plus";
 import { useNodeFiles, useNodeFfmpeg, useNodeEvent, type WorkspaceFiles, type NodeMediaValue } from "@toonflow/nodes-scaffold/runtime";
+import { useNodePersistence } from "@toonflow/nodes-scaffold/nodeDocument";
+import { loadToolComponent } from "@toonflow/tools-scaffold/client";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { processVideo } from "../videoProcessing";
 import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
@@ -93,6 +106,7 @@ const { addNodes, addEdges, removeNodes, findNode, getNodes, nodeTypes, removeSe
 const files = useNodeFiles();
 const loadFfmpeg = useNodeFfmpeg();
 const nodeEvent = useNodeEvent();
+const getPersistence = useNodePersistence();
 const getCanvas = inject<(() => { id: string } | undefined) | undefined>("canvas", undefined);
 const batchHistory = inject<(action: () => Promise<void>) => Promise<void>>("batchCanvasHistory", action => action());
 const actionLabels = { extractAudio: "提取音轨", separate: "分离音视频", trim: "截取片段" };
@@ -101,6 +115,21 @@ const visible = ref(false);
 const { src: playbackSrc, preparing: preparingPreview, error: previewError, handleError, handleLoaded } = useMediaPreview(() => visible.value && action.value === "trim" ? props.src : "", "video");
 const processing = ref(false);
 const creatingAnalysis = ref(false);
+const loadingUpscale = ref(false);
+const upscaleComponent = shallowRef<Component>();
+const upscalePanel = ref<{ open: () => Promise<void>; close: () => void; busy: boolean }>();
+const upscaleContext = ref<{ directory: string; canvasPath: string }>();
+type UpscaleResult = { path: string; mimeType: "video/mp4"; width: number; height: number; duration: number };
+type UpscaleResolution = "720p" | "1080p" | "4k";
+type UpscaleTask = {
+  taskId: string; nodeId: string; directory: string; canvasPath: string; path: string; sourceHash: string;
+  resolution?: UpscaleResolution;
+  estimatedCostUsd: number; duration: number; width: number; height: number; frameRate: number; hasAudio: boolean;
+  state: "uploading" | "submitting" | "processing" | "succeeded" | "failed";
+  result?: UpscaleResult; costUsd?: number; message?: string; applied?: boolean;
+};
+const upscaleTask = computed(() => (node.data as { videoUpscaleTask?: UpscaleTask }).videoUpscaleTask);
+const hasUnappliedUpscale = computed(() => !!upscaleTask.value && !upscaleTask.value.applied && upscaleTask.value.state !== "failed");
 const cancelling = ref(false);
 const preview = ref<HTMLVideoElement>();
 const duration = ref(0);
@@ -145,6 +174,7 @@ onBeforeUnmount(() => { cancel(); clearPreview(); });
 nodeEvent.on("save", reason => {
   if (reason === "reload" && processing.value) throw new Error("视频处理中，请完成或取消后再刷新节点");
 });
+nodeEvent.on("copy", () => ({ videoUpscaleTask: undefined }));
 nodeEvent.on("delete", async () => { cancel(); await job; });
 
 function open(value: keyof typeof actionLabels) {
@@ -155,6 +185,149 @@ function open(value: keyof typeof actionLabels) {
   frames.value = [];
   visible.value = true;
   if (value !== "trim") run();
+}
+
+async function openUpscale() {
+  if (processing.value || creatingAnalysis.value || loadingUpscale.value || props.disabled || (!props.file && !hasUnappliedUpscale.value)) return;
+  const context = getPersistence?.();
+  const source = props.file?.url;
+  loadingUpscale.value = true;
+  try {
+    if (!context) throw new Error("请先打开并保存画布");
+    const component = await loadToolComponent("videoUpscalePanel");
+    if (!component) throw new Error("请先安装并启用视频升清工具插件");
+    const current = getPersistence?.();
+    if (current?.directory !== context.directory || current.canvasPath !== context.canvasPath || findNode(node.id) !== node || props.file?.url !== source) {
+      throw new Error("画布或视频已变化，请重新操作");
+    }
+    const task = upscaleTask.value;
+    if (task && (task.directory !== current.directory || task.nodeId !== node.id)) {
+      throw new Error("已保存的升清任务属于其他工作区或节点，请在原位置查询");
+    }
+    if (task && (typeof task.taskId !== "string" || !/^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(task.taskId)
+      || typeof task.path !== "string" || typeof task.sourceHash !== "string" || !/^[a-f\d]{64}$/.test(task.sourceHash)
+      || (task.resolution !== undefined && !["720p", "1080p", "4k"].includes(task.resolution))
+      || !["uploading", "submitting", "processing", "succeeded", "failed"].includes(task.state)
+      || ![task.duration, task.width, task.height, task.frameRate].every(value => Number.isFinite(value) && value > 0)
+      || !Number.isFinite(task.estimatedCostUsd) || task.estimatedCostUsd < 0 || typeof task.hasAudio !== "boolean"
+      || (task.costUsd !== undefined && (!Number.isFinite(task.costUsd) || task.costUsd < 0)))) {
+      throw new Error("已保存的升清任务数据无效，请核对原画布及服务商任务记录");
+    }
+    if (task && task.canvasPath !== current.canvasPath) {
+      if (upscalePanel.value?.busy) throw new Error("升清任务操作仍在进行，请稍后重新打开");
+      upscalePanel.value?.close();
+      const migrated = { ...task, canvasPath: current.canvasPath };
+      node.data.videoUpscaleTask = migrated;
+      try {
+        await current.save();
+        const latest = getPersistence?.();
+        if (!latest || latest.directory !== current.directory || latest.canvasPath !== current.canvasPath
+          || findNode(node.id) !== node || toRaw(upscaleTask.value) !== toRaw(migrated)) {
+          throw new Error("画布或节点已变化，请重新操作");
+        }
+      } catch (error) {
+        if (toRaw(upscaleTask.value) === toRaw(migrated)) node.data.videoUpscaleTask = task;
+        throw error;
+      }
+    }
+    upscaleContext.value = { directory: current.directory, canvasPath: current.canvasPath };
+    upscaleComponent.value = component;
+    await nextTick();
+    await upscalePanel.value?.open();
+  } catch (error) {
+    showNodeError(error, "打开视频升清失败");
+  } finally {
+    loadingUpscale.value = false;
+  }
+}
+
+async function saveUpscaleTask(task: UpscaleTask, requireSource = false) {
+  const context = getPersistence?.();
+  const binding = upscaleContext.value;
+  if (!context || !binding || context.directory !== binding.directory || context.canvasPath !== binding.canvasPath
+    || task.directory !== binding.directory || task.canvasPath !== binding.canvasPath || task.nodeId !== node.id || findNode(node.id) !== node) {
+    throw new Error("画布或节点已变化，无法保存升清任务");
+  }
+  if (task.resolution !== undefined && !["720p", "1080p", "4k"].includes(task.resolution)) throw new Error("升清分辨率无效");
+  const previous = upscaleTask.value;
+  if (previous?.taskId === task.taskId) {
+    if (previous.path !== task.path || previous.sourceHash !== task.sourceHash || previous.estimatedCostUsd !== task.estimatedCostUsd
+      || (previous.resolution ?? "720p") !== (task.resolution ?? "720p")
+      || previous.directory !== task.directory || previous.canvasPath !== task.canvasPath || previous.nodeId !== task.nodeId
+      || (previous.applied && !task.applied) || (previous.state === "succeeded" && task.state !== "succeeded")) throw new Error("升清任务信息不一致");
+  } else {
+    if (previous && !previous.applied && previous.state !== "failed") throw new Error("已有未完成的升清任务，请先查询原任务");
+    if (props.file?.url !== task.path) throw new Error("原视频已变化，请重新报价");
+  }
+  node.data.videoUpscaleTask = task;
+  try {
+    await context.save();
+    const current = getPersistence?.();
+    if (!current || current.directory !== task.directory || current.canvasPath !== task.canvasPath
+      || findNode(node.id) !== node || upscaleTask.value?.taskId !== task.taskId
+      || (upscaleTask.value?.resolution ?? "720p") !== (task.resolution ?? "720p") || (requireSource && props.file?.url !== task.path)) {
+      throw new Error("画布、节点或原视频已变化，无法继续提交升清任务");
+    }
+  }
+  catch (error) {
+    if (upscaleTask.value && toRaw(upscaleTask.value) === toRaw(task)) node.data.videoUpscaleTask = previous;
+    throw error;
+  }
+}
+
+async function applyUpscaleResult(task: UpscaleTask, result: UpscaleResult) {
+  const check = () => {
+    const context = getPersistence?.();
+    const saved = upscaleTask.value;
+    if (!context || context.directory !== task.directory || context.canvasPath !== task.canvasPath || task.nodeId !== node.id
+      || findNode(node.id) !== node || saved?.taskId !== task.taskId || saved.path !== task.path || saved.canvasPath !== task.canvasPath
+      || (saved.resolution ?? "720p") !== (task.resolution ?? "720p")) {
+      throw new Error("画布、节点或升清任务已变化，升清结果未应用");
+    }
+    if (saved.state !== "succeeded" || JSON.stringify(saved.result) !== JSON.stringify(result)) throw new Error("升清结果与已保存任务不一致");
+    return context;
+  };
+  const context = check();
+  if (result.mimeType !== "video/mp4" || !result.path.startsWith("assets/generated/")
+    || result.path.includes("\\") || result.path.split("/").includes("..")) throw new Error("升清结果路径无效");
+  const type = "remote-videoNode";
+  if (!nodeTypes?.value?.[type]) throw new Error("请先启用视频节点插件");
+  const resultId = `videoUpscale-${task.taskId}`;
+  const resolution = task.resolution === "4k" ? "4K" : task.resolution ?? "720p";
+  await batchHistory(async () => {
+    check();
+    if (!findNode(resultId)) {
+      const width = Math.max(320, result.width && result.height ? 240 * result.width / result.height + 18 : 320);
+      const x = node.computedPosition.x + (node.dimensions.width || 320) + 80;
+      let y = node.computedPosition.y;
+      for (const other of [...getNodes.value].sort((left, right) => left.computedPosition.y - right.computedPosition.y)) {
+        const position = other.computedPosition;
+        if (position.x < x + width && position.x + (other.dimensions.width || 320) > x && position.y < y + 320 && position.y + (other.dimensions.height || 300) > y) y = position.y + (other.dimensions.height || 300) + 40;
+      }
+      addNodes({ id: resultId, type, position: { x, y }, data: {
+        label: `${node.data.label || "视频"} · ${resolution}`, videoUpscaleTaskId: task.taskId, videoUpscaleSource: task.path,
+        outputs: { video: { dataType: "VIDEO", value: { url: result.path, mimeType: result.mimeType } } },
+      } });
+    }
+  });
+  check();
+  const created = findNode(resultId);
+  const output = created?.data?.outputs?.video;
+  if (created?.type !== type || created.data.videoUpscaleTaskId !== task.taskId || output?.dataType !== "VIDEO"
+    || (created.data.videoUpscaleSource !== undefined && created.data.videoUpscaleSource !== task.path)
+    || output.value?.url !== result.path || output.value?.mimeType !== result.mimeType) throw new Error("已有同名节点与升清结果不一致");
+  created.data.videoUpscaleSource = task.path;
+  check();
+  await context.save();
+  check();
+  await saveUpscaleTask({ ...upscaleTask.value!, applied: true });
+}
+
+function ensureUpscaleFinished() {
+  const task = upscaleTask.value;
+  const context = getPersistence?.();
+  if (task && task.nodeId === node.id && (!context || context.directory === task.directory)
+    && !task.applied && task.state !== "failed") throw new Error("视频升清任务尚未完成，请先查询并保存结果");
 }
 
 async function createFrameAnalysis() {
@@ -207,7 +380,7 @@ async function createFrameAnalysis() {
   }
 }
 
-defineExpose({ open, processing, createFrameAnalysis, creatingAnalysis });
+defineExpose({ open, processing, createFrameAnalysis, creatingAnalysis, openUpscale, loadingUpscale, hasUnappliedUpscale, ensureUpscaleFinished });
 
 function readDuration(event: Event) {
   if (!handleLoaded(event)) return;
