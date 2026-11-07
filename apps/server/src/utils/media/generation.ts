@@ -3,13 +3,14 @@ import { mkdir, readFile, realpath, stat, unlink } from "@toonflow/file";
 import { join, relative } from "node:path";
 import { createHash } from "node:crypto";
 import { mediaProviders, type Provider, type ProviderTaskData } from "@toonflow/providers";
-import type { GeneratedMedia, MediaGenerationRequest, MediaModel, MediaReference } from "@toonflow/tools-scaffold/runtime";
+import type { GeneratedMedia, MediaGenerationRequest, MediaModel, MediaProviderAsset, MediaReference } from "@toonflow/tools-scaffold/runtime";
 import conf from "@/utils/conf";
 import { getAccountProvider } from "@/utils/ai";
 import { getMediaProvider, listMediaProviders, loadMediaProviderSource } from "@/utils/media/provider";
 import { lockWorkspaceFiles, resolveWorkspacePath, writeWorkspaceFile } from "@/utils/workspace/files";
 import { beginGeneration, getProviderPrice } from "@/utils/media/billing";
 import { detectMimeType, readPriceReference } from "@/utils/media/priceReference";
+import { resolveProviderAssetsFromTool } from "@/utils/plugins/tools";
 
 const maxMediaSize = 100 * 1024 * 1024;
 export type MediaGenerationCheckpoint = {
@@ -144,10 +145,16 @@ function resumableAssets(assets: MediaAsset[], mediaType: "image" | "video" | "a
 
 async function prepareRequest<T>(directory: string | undefined, mediaType: "image" | "video" | "audio", request: MediaGenerationRequest,
   read: (cwd: string, reference: MediaReference, type: string, signal?: AbortSignal) => Promise<T>, signal?: AbortSignal) {
+  const providerAssets = request.providerAssets ?? [];
+  if (providerAssets.length && (mediaType !== "video" || request.providerId !== "volcengine")) invalid("所选媒体模型不存在或类型不匹配，请重新选择");
   // ACT: 仅向已适配引用映射的内置供应商传递，其他第三方适配器仍接收原有公共参数。
-  const referenceOrder = mediaType === "video" && ["toonflow", "apiMart", "metaso", "compshare"].includes(request.providerId) ? request.referenceOrder : undefined;
+  const referenceOrder = mediaType === "video" && ["toonflow", "apiMart", "metaso", "compshare", "volcengine"].includes(request.providerId) ? request.referenceOrder : undefined;
   if (referenceOrder) {
-    const media = { image: request.images, video: request.videos, audio: request.audios };
+    const media = {
+      image: [...(request.images ?? []), ...providerAssets.filter(asset => asset.mediaType === "image")],
+      video: [...(request.videos ?? []), ...providerAssets.filter(asset => asset.mediaType === "video")],
+      audio: [...(request.audios ?? []), ...providerAssets.filter(asset => asset.mediaType === "audio")],
+    };
     for (const [index, reference] of referenceOrder.entries()) {
       const available = reference.type === "text" || ("index" in reference
         ? Number.isSafeInteger(reference.index) && reference.index >= 0 && !!media[reference.type]?.[reference.index]
@@ -174,6 +181,7 @@ async function prepareRequest<T>(directory: string | undefined, mediaType: "imag
   if (mediaType === "image") return { type: "image" as const, model: request.modelId, prompt: request.prompt, images, ratio: request.ratio, size: request.size, other: request.other };
   return {
     type: "video" as const, model: request.modelId, prompt: request.prompt, images, other: request.other,
+    ...(providerAssets.length ? { providerAssets } : {}),
     ...(referenceOrder ? { referenceOrder } : {}),
     videos: await references(request.videos, "video"), audios: await references(request.audios, "audio"),
     firstFrame: (await references(request.firstFrame ? [request.firstFrame] : undefined, "image"))?.[0],
@@ -266,7 +274,14 @@ export async function generateMedia(
       if (typeof generate !== "function") invalid(t`此供应商不支持${translateMessage({ image: "图片", video: "视频", audio: "音频" }[mediaType])}生成`);
       const rules = Array.isArray(provider.rules) ? provider.rules : [];
       if (rules.some(rule => rule.field === "apiKey") && (typeof provider.config.apiKey !== "string" || !provider.config.apiKey.trim())) invalid("请先在媒体模型设置中配置供应商 API Key");
+      // 官方素材须在读取本地参考文件前确认供应商支持，并由素材库插件校验通过。
+      let verifiedAssets: MediaProviderAsset[] | undefined;
+      if (mediaType === "video" && request.providerAssets?.length) {
+        if (provider.supportsProviderAssets !== true) invalid("供应商未声明官方素材支持，请更新供应商配置");
+        verifiedAssets = await resolveProviderAssetsFromTool(request.providerAssets, signal);
+      }
       const { type, ...parameters } = await prepareRequest(directory, mediaType, request, readReference, signal);
+      if (verifiedAssets && "providerAssets" in parameters) parameters.providerAssets = verifiedAssets;
       signal?.throwIfAborted();
       finish = beginGeneration(provider);
       assets = type === "audio" ? await provider.generateAudio!(parameters as AudioRequest)

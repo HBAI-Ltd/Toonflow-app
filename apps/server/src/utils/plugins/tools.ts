@@ -4,7 +4,8 @@ import { lstat, readFile, readdir } from "@toonflow/file";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import * as zod from "zod";
-import { toolMetadataSchema, toolNameSchema, type ToolMetadata, type ToolPlugin } from "@toonflow/tools-scaffold/runtime";
+import { providerAssetsSchema, toolMetadataSchema, toolNameSchema, type MediaProviderAsset, type ToolMetadata, type ToolPlugin } from "@toonflow/tools-scaffold/runtime";
+import type { MediaUploadRecord, MediaUploadRequest, MediaUploadResult } from "@toonflow/providers";
 import conf from "@/utils/conf";
 
 export { toolNameSchema } from "@toonflow/tools-scaffold/runtime";
@@ -66,6 +67,17 @@ export function getToolConfig(metadata: ToolMetadata): Record<string, unknown> {
   return { ...defaults, ...(Object.hasOwn(saved, metadata.name) ? saved[metadata.name] : {}) };
 }
 
+// 只读取单个插件：启用判断与 listTools 一致，存在 `${name}.disabled` 标记即未启用。
+export async function getEnabledToolConfig(name: string) {
+  const missing = () => Object.assign(new Error(t`工具插件 ${name} 未安装或未启用`), { status: 400 });
+  // readTool 先校验名称，之后才拼接禁用标记路径。
+  const tool = await readTool(name).catch(() => undefined);
+  if (!tool) throw missing();
+  const disabled = await lstat(resolve(toolsDirectory, `${name}.disabled`)).then(() => true, () => false);
+  if (disabled) throw missing();
+  return getToolConfig(tool.metadata);
+}
+
 export async function listTools() {
   const files = await readdir(toolsDirectory, { withFileTypes: true }).catch((err: NodeJS.ErrnoException) => {
     if (err.code === "ENOENT") return [];
@@ -102,4 +114,56 @@ export function validateToolConfig(plugin: ToolPlugin, config: Record<string, un
   } catch (err) {
     throw Object.assign(err instanceof Error ? err : new Error("工具配置无效"), { status: 400 });
   }
+}
+
+export async function uploadMediaToStorage(request: MediaUploadRequest): Promise<MediaUploadResult> {
+  const name = "aliOss";
+  const config = await getEnabledToolConfig(name);
+  const { plugin } = await loadTool(name);
+  if (typeof plugin.uploadMedia !== "function") throw Object.assign(new Error("工具配置无效"), { status: 400 });
+  const recordSchema = z.object({
+    storageId: z.literal(name), bucket: z.string().min(1).max(63), objectKey: z.string().min(1).max(1024),
+    expiresAt: z.string().datetime().optional(),
+  });
+  request.signal?.throwIfAborted();
+  const result = await plugin.uploadMedia({ ...request, config: validateToolConfig(plugin, config),
+    onPrepared: async (value: MediaUploadRecord) => { await request.onPrepared?.(recordSchema.parse(value)); },
+  });
+  request.signal?.throwIfAborted();
+  return recordSchema.extend({ url: z.url({ protocol: /^https$/ }), expiresAt: z.string().datetime() }).parse(result);
+}
+
+export async function resolveProviderAssetsFromTool(assets: MediaProviderAsset[], signal?: AbortSignal) {
+  const name = "seedanceAssets";
+  const config = await getEnabledToolConfig(name);
+  const { plugin } = await loadTool(name);
+  if (typeof plugin.resolveProviderAssets !== "function") throw Object.assign(new Error("工具配置无效"), { status: 400 });
+  signal?.throwIfAborted();
+  const resolved = providerAssetsSchema.parse(await plugin.resolveProviderAssets({ config: validateToolConfig(plugin, config), assets, signal }));
+  if (resolved.length !== assets.length || resolved.some((item, index) => item.id !== assets[index].id || item.mediaType !== assets[index].mediaType)) {
+    throw new Error("官方素材校验结果与所选素材不一致，请重新选择");
+  }
+  return resolved;
+}
+
+export async function callClientTool(name: string, operation: string, args: Record<string, unknown>, cwd: string, signal?: AbortSignal) {
+  const config = await getEnabledToolConfig(name);
+  const { plugin } = await loadTool(name);
+  if (!plugin.clientTools || !Object.hasOwn(plugin.clientTools, operation) || typeof plugin.clientTools[operation] !== "function") {
+    throw Object.assign(new Error("工具配置无效"), { status: 403 });
+  }
+  const { createAgentToolContext } = await import("@/agent/tools");
+  const context = createAgentToolContext(cwd, validateToolConfig(plugin, config));
+  signal?.throwIfAborted();
+  return plugin.clientTools[operation](context, args, signal);
+}
+
+export async function getToolClientLink(name: string, id: string, cwd: string) {
+  const config = await getEnabledToolConfig(name);
+  const { plugin } = await loadTool(name);
+  if (typeof plugin.getClientLink !== "function") throw Object.assign(new Error("工具配置无效"), { status: 400 });
+  const value = await plugin.getClientLink({ id, cwd, config: validateToolConfig(plugin, config) });
+  const url = new URL(value);
+  if (url.protocol !== "https:" || url.username || url.password) throw new Error("连接地址无效");
+  return url.href;
 }

@@ -16,7 +16,7 @@ import type { CanvasContext, QuestionContext, ToolContext, ToolFiles } from "@to
 import { asrRequestSchema } from "@toonflow/tools-scaffold/runtime";
 import conf from "@/utils/conf";
 import { isWithin, resolveWorkspacePath, writeWorkspaceFile, renameWorkspaceFile, removeWorkspaceFile, lockWorkspaceFiles, protectWorkspaceRoot } from "@/utils/workspace/files";
-import { listTools, loadTool, validateToolConfig } from "@/utils/plugins/tools";
+import { listTools, loadTool, validateToolConfig, uploadMediaToStorage } from "@/utils/plugins/tools";
 import { createSkillContext } from "@/agent/skills";
 import { createAssetContext } from "@/agent/assets";
 import { readDocument } from "@/utils/documents";
@@ -109,6 +109,7 @@ export function createAgentToolContext(cwd: string, config: Record<string, unkno
   };
   return {
     cwd, config, files, resolvePath, writeFile: files.writeFile, canvas, question,
+    uploadMedia: request => { requireWorkspace(); return uploadMediaToStorage(request); },
     skills: workspaceAvailable ? createSkillContext(cwd) : undefined, assets: workspaceAvailable ? createAssetContext(cwd) : undefined,
     browser: createBrowserContext(cwd),
     // ACT: OHOS 使用禁用 WASM 的嵌入式 Node，无法启动当前沙盒子进程。

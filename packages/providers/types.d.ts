@@ -64,6 +64,27 @@ type MediaInput =
 
 type MediaAsset = MediaInput & { mediaType: "image" | "video" | "audio" };
 
+interface ProviderUploadRecord {
+  storageId: string;
+  bucket: string;
+  objectKey: string;
+  expiresAt?: string;
+}
+
+interface ProviderUploadResult extends ProviderUploadRecord {
+  url: string;
+  expiresAt: string;
+}
+
+interface ProviderUploadRequest {
+  data: Uint8Array;
+  mimeType: string;
+  signal?: AbortSignal;
+  fetch?: typeof globalThis.fetch;
+  /** 上传前保存稳定对象标识；不得记录签名 URL 或存储凭证。 */
+  onPrepared?: (record: ProviderUploadRecord) => Promise<void>;
+}
+
 type MediaImageInfo = { width: number; height: number; format: string };
 type MediaImageResizeOptions = { width?: number; height?: number; format?: "jpeg" | "png" | "webp"; quality?: number };
 
@@ -88,6 +109,11 @@ interface FfmpegRequiredError extends Error {
 
 interface ProviderTools {
   fetch: typeof globalThis.fetch;
+  /**
+   * 已启用存储插件上传本地媒体字节；仅内置火山方舟适配器由宿主注入，其他供应商此成员为 undefined，使用前必须判断。
+   * 存储凭证留在宿主，不注入供应商 VM。
+   */
+  uploadMedia?: (input: { data: Uint8Array; mimeType: string }, options?: Pick<ProviderUploadRequest, "signal" | "onPrepared">) => Promise<ProviderUploadResult>;
   /** 提取供应商错误正文中的可读原因，并隐藏配置中的密钥和 URL 查询参数。 */
   errorMessage(value: unknown): string;
   hash: typeof Bun.hash;
@@ -135,6 +161,8 @@ interface ImageRequest extends MediaRequest {
 
 interface VideoRequest extends MediaRequest {
   prompt: string;
+  /** 已由宿主校验状态的官方素材；仅支持该素材协议的供应商处理，不是工作区路径。 */
+  providerAssets?: { id: string; mediaType: "image" | "video" | "audio"; name?: string }[];
   /** 当前生成模式；参考模式数组声明各类参考媒体数量上限。 */
   mode?: VideoMode;
   /** 参考图；首尾帧通过 firstFrame、lastFrame 单独传入。 */
@@ -207,6 +235,8 @@ interface ProviderDefinition<TRules extends readonly ProviderFormRule[] = readon
   icon?: string;
   /** 适配文件版本，独立于模型版本；新增供应商应填写，缺省仅兼容旧文件。 */
   version?: string;
+  /** 显式声明会处理 VideoRequest.providerAssets，避免旧适配器静默丢弃官方素材。 */
+  supportsProviderAssets?: boolean;
   apiUrl?: string;
   /**
    * 媒体模型列表 GET 地址，使用配置的 apiKey 作为 Bearer 凭据，返回 { data: 模型数组 }。

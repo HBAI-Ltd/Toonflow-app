@@ -569,7 +569,7 @@
     },
     "packages/nodes/videoGenerationNode": {
       "name": "@toonflow/node-video-generation",
-      "version": "2.0.0",
+      "version": "2.1.1",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
       },
@@ -666,6 +666,17 @@
         "vue": "^3.5.42",
       },
     },
+    "packages/tools/aliOss": {
+      "name": "@toonflow/tool-ali-oss",
+      "version": "1.0.0",
+      "dependencies": {
+        "zod": "^4.6.2",
+      },
+      "devDependencies": {
+        "@toonflow/providers": "workspace:*",
+        "@toonflow/tools-scaffold": "workspace:*",
+      },
+    },
     "packages/tools/askUser": {
       "name": "@toonflow/tool-ask-user",
       "version": "2.0.0",
@@ -751,6 +762,22 @@
       },
       "devDependencies": {
         "@toonflow/tools-scaffold": "workspace:*",
+      },
+    },
+    "packages/tools/seedanceAssets": {
+      "name": "@toonflow/tool-seedance-assets",
+      "version": "1.1.0",
+      "dependencies": {
+        "zod": "^4.6.2",
+      },
+      "devDependencies": {
+        "@toonflow/tools-scaffold": "workspace:*",
+        "typescript": "~6.0.3",
+        "vue-tsc": "^3.3.11",
+      },
+      "peerDependencies": {
+        "axios": "^1.20.0",
+        "vue": "^3.5.42",
       },
     },
     "packages/tools/skillOperator": {
@@ -1443,6 +1470,8 @@
 
     "@toonflow/teams-scaffold": ["@toonflow/teams-scaffold@workspace:packages/teamScaffold"],
 
+    "@toonflow/tool-ali-oss": ["@toonflow/tool-ali-oss@workspace:packages/tools/aliOss"],
+
     "@toonflow/tool-ask-user": ["@toonflow/tool-ask-user@workspace:packages/tools/askUser"],
 
     "@toonflow/tool-asset-operator": ["@toonflow/tool-asset-operator@workspace:packages/tools/assetOperator"],
@@ -1454,6 +1483,8 @@
     "@toonflow/tool-ffmpeg": ["@toonflow/tool-ffmpeg@workspace:packages/tools/ffmpeg"],
 
     "@toonflow/tool-sandbox": ["@toonflow/tool-sandbox@workspace:packages/tools/sandbox"],
+
+    "@toonflow/tool-seedance-assets": ["@toonflow/tool-seedance-assets@workspace:packages/tools/seedanceAssets"],
 
     "@toonflow/tool-skill-operator": ["@toonflow/tool-skill-operator@workspace:packages/tools/skillOperator"],
 
@@ -2946,6 +2977,8 @@
     "@toonflow/tool-browser/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@toonflow/tool-canvas/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
+
+    "@toonflow/tool-seedance-assets/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@toonflow/web/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 

@@ -1,0 +1,22 @@
+{
+  "name": "@toonflow/tool-seedance-assets",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build.ts",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.2"
+  },
+  "peerDependencies": {
+    "axios": "^1.20.0",
+    "vue": "^3.5.42"
+  },
+  "devDependencies": {
+    "@toonflow/tools-scaffold": "workspace:*",
+    "typescript": "~6.0.3",
+    "vue-tsc": "^3.3.11"
+  }
+}

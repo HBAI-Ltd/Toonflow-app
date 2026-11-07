@@ -48,6 +48,13 @@
           v-model="refList"
           @preview="setReferencePreview"
           @remove="removeReference" />
+        <div v-if="data.providerAssets.length" class="providerReferences" role="list" aria-label="已选择的官方素材">
+          <div v-for="(asset, index) in data.providerAssets" :key="asset.id" class="providerReference" role="listitem">
+            <span>参考 {{ refList.length + index + 1 }}：{{ asset.name || asset.id }}（{{ { image: '图片', video: '视频', audio: '音频' }[asset.mediaType] }}）</span>
+            <el-button text size="small" :disabled="generating || deleting" :aria-label="`移除官方素材 ${asset.name || asset.id}`" @click="data.providerAssets = data.providerAssets.filter(item => item.id !== asset.id)">移除</el-button>
+          </div>
+          <div v-if="selectedModel?.providerId !== 'volcengine'" class="referenceHint">官方素材仅支持火山方舟视频模型，请切换模型或移除素材。</div>
+        </div>
         <div v-if="frameMode" class="referenceHint">
           {{ selectedMode === "startFrameOptional" ? "仅一张图片时作为尾帧；两张图片按顺序作为首帧、尾帧" : "图片引用按顺序作为首帧、尾帧" }}
         </div>
@@ -139,7 +146,7 @@ const { id, node, nodeProps, nodeEvent, outputs, files, ai, updateNodeInternals 
   label: "视频生成",
 });
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
-const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean; other: Record<string, unknown> });
+const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean; other: Record<string, unknown>; providerAssets: NonNullable<NodeVideoRequest["providerAssets"]> });
 data.value.prompt ??= "";
 data.value.promptModel ??= [];
 data.value.model ??= "";
@@ -148,7 +155,21 @@ data.value.mode ??= "";
 data.value.generateAudio ??= true;
 data.value.ratio ??= "9:16";
 data.value.other ??= {};
-const { refList, referenceMentions, materialMentions, selectMaterialReference, selectAssetReference, setReferencePreview, removeReference } = useNodeReferences();
+const providerAssetsSchema = z.array(z.strictObject({
+  id: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,199}$/),
+  mediaType: z.enum(["image", "video", "audio"]),
+  name: z.string().max(64).optional(),
+})).max(50).refine(assets => new Set(assets.map(asset => asset.id)).size === assets.length, "官方素材 ID 不能重复");
+data.value.providerAssets = providerAssetsSchema.parse(data.value.providerAssets ?? []);
+const { refList, referenceMentions: localReferenceMentions, materialMentions, selectMaterialReference, selectAssetReference, setReferencePreview, removeReference } = useNodeReferences();
+const referenceMentions = computed(() => [...localReferenceMentions.value, ...data.value.providerAssets.map((asset, index) => ({
+  id: `providerAsset:${asset.id}`,
+  name: `参考 ${refList.value.length + index + 1}`,
+  label: asset.name || asset.id,
+  dataType: asset.mediaType.toUpperCase(),
+  value: `{{ref ${refList.value.length + index + 1}}}`,
+  previewable: false,
+}))]);
 const models = shallowRef<NodeMediaModel[]>([]);
 const modelsLoading = ref(false);
 const uploading = ref(false);
@@ -171,14 +192,15 @@ useModelForm(data, selectedModel);
 const selectedMode = computed(() => selectedModel.value?.mode?.find((item) => JSON.stringify(item) === data.value.mode) as NodeVideoRequest["mode"]);
 const frameMode = computed(() => ["startEndRequired", "endFrameOptional", "startFrameOptional"].includes(String(selectedMode.value)));
 const mediaCounts = computed(() => ({
-  image: refList.value.filter((item) => item.dataType === "IMAGE").length,
-  video: refList.value.filter((item) => item.dataType === "VIDEO").length,
-  audio: refList.value.filter((item) => item.dataType === "AUDIO").length,
+  image: refList.value.filter((item) => item.dataType === "IMAGE").length + data.value.providerAssets.filter(asset => asset.mediaType === "image").length,
+  video: refList.value.filter((item) => item.dataType === "VIDEO").length + data.value.providerAssets.filter(asset => asset.mediaType === "video").length,
+  audio: refList.value.filter((item) => item.dataType === "AUDIO").length + data.value.providerAssets.filter(asset => asset.mediaType === "audio").length,
 }));
 const matchingModes = computed(() => getMatchingModes(selectedModel.value));
 
 function getMatchingModes(choice?: NodeMediaModel) {
   return (choice?.mode ?? []).filter((mode) => {
+    if (data.value.providerAssets.length && (choice?.providerId !== "volcengine" || !Array.isArray(mode))) return false;
     const { image, video, audio } = mediaCounts.value;
     if (Array.isArray(mode)) return image + video + audio > 0 && Object.entries(mediaCounts.value).every(([type, count]) =>
       count <= Number(mode.find((item) => item.startsWith(`${type}Reference:`))?.split(":")[1] ?? 0)
@@ -196,9 +218,10 @@ function getDurations(choice: NodeMediaModel) {
 }
 
 function getResolutions(choice: NodeMediaModel, duration?: number) {
-  // ACT: 当前视频分辨率使用 p 单位；出现其他单位时再统一换算。
+  // 按 p/k 档位排序，避免 4k 被按数字 4 排到 480p 之前成为默认规格。
+  const rank = (value: string) => Number.parseFloat(value) * (/k$/i.test(value) ? 1000 : 1) || Infinity;
   return [...new Set((choice.durationResolutionMap ?? []).filter((item) => item.duration.includes(duration!)).flatMap((item) => item.resolution))]
-    .sort((left, right) => (Number.parseFloat(left) || Infinity) - (Number.parseFloat(right) || Infinity));
+    .sort((left, right) => rank(left) - rank(right));
 }
 // ACT: 引用改变时只替换不适用的模式；普通媒体优先作为参考，避免自动变成首尾帧。
 watch([selectedModel, matchingModes, () => data.value.mode], ([choice, matches]) => {
@@ -253,6 +276,8 @@ function getGenerationInput(prompt: string): Omit<NodeVideoRequest, "directory">
     }
     return { type: "text" };
   });
+  const counts = { image: images.length, video: videos.length, audio: audios.length };
+  for (const asset of data.value.providerAssets) referenceOrder.push({ type: asset.mediaType, index: counts[asset.mediaType]++ });
   const firstFrame = frameMode.value && (selectedMode.value !== "startFrameOptional" || images.length > 1) ? images[0] : undefined;
   const lastFrame = frameMode.value ? images[selectedMode.value === "startFrameOptional" && images.length === 1 ? 0 : 1] : undefined;
   return {
@@ -265,6 +290,7 @@ function getGenerationInput(prompt: string): Omit<NodeVideoRequest, "directory">
     ratio: data.value.ratio,
     generateAudio: choice.audio === "optional" ? data.value.generateAudio : choice.audio,
     other: Object.keys(data.value.other).length ? { ...data.value.other } : undefined,
+    ...(data.value.providerAssets.length ? { providerAssets: data.value.providerAssets.map(asset => ({ ...asset })) } : {}),
     outputDirectory: `assets/${id}`,
     images: frameMode.value ? undefined : images,
     firstFrame,
@@ -365,6 +391,7 @@ async function startGeneration() {
   }) : data.value.prompt;
   const input = getGenerationInput(prompt);
   if (!choice || !input) throw new Error("请先选择视频模型");
+  if (data.value.providerAssets.length && choice.providerId !== "volcengine") throw new Error("官方素材仅支持火山方舟视频模型，请切换模型或移除素材");
   if (!input.prompt) throw new Error("请输入生成提示词");
   if (refList.value.some(item => item.value === undefined)) throw new Error("引用节点暂无内容，请先补充引用内容");
   for (const match of input.prompt.matchAll(/\{\{ref (\d+)\}\}/g)) {
@@ -428,10 +455,12 @@ function getConfig() {
       mode: selectedMode.value,
       generateAudio: data.value.generateAudio,
       other: data.value.other,
+      providerAssets: data.value.providerAssets.map(asset => ({ ...asset })),
     },
     models: models.value,
     ratios: ratioOptions,
     matchingModes: matchingModes.value,
+    providerReferences: data.value.providerAssets.map((asset, index) => ({ ...asset, reference: `{{ref ${refList.value.length + index + 1}}}` })),
   };
 }
 
@@ -449,7 +478,7 @@ nodeTools.register({
 
 nodeTools.register({
   name: "setConfig",
-  description: "修改此视频生成节点的模型、时长、分辨率、比例、模式或声音；先用 getConfig 查询能力，providerId 与 modelId 必须同时提供；mode 使用返回的原始字符串或数组，须匹配当前引用；不修改提示词、不启动生成",
+  description: "修改此视频生成节点的模型、时长、分辨率、比例、模式、声音或模型专属参数 other；先用 getConfig 查询能力，providerId 与 modelId 必须同时提供；mode 须匹配当前引用；other 仅填写模型 rules 声明的字段，按字段合并；不修改提示词、不启动生成",
   parameters: z.strictObject({
     providerId: z.string().min(1).optional(),
     modelId: z.string().min(1).optional(),
@@ -458,6 +487,7 @@ nodeTools.register({
     ratio: z.enum(ratioOptions).optional(),
     mode: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]).optional(),
     generateAudio: z.boolean().optional(),
+    other: z.record(z.string(), z.json()).optional(),
   }).refine((args) => (args.providerId === undefined) === (args.modelId === undefined), "providerId 与 modelId 必须同时提供"),
   async execute(args, { signal }) {
     signal?.throwIfAborted();
@@ -476,12 +506,42 @@ nodeTools.register({
     const resolution = args.resolution ?? (resolutions.includes(data.value.resolution) ? data.value.resolution : resolutions[0] ?? "");
     if (args.mode !== undefined && !getMatchingModes(choice).some((item) => JSON.stringify(item) === JSON.stringify(args.mode))) throw new Error("所选模式不受当前模型支持或不适用于当前引用，请根据模型能力及已连接素材选择");
     if (args.generateAudio !== undefined && choice.audio !== "optional" && args.generateAudio !== (choice.audio === true)) throw new Error("当前模型不支持切换声音，请查看 getConfig 返回的 audio 能力");
+    for (const [field, value] of Object.entries(args.other ?? {})) {
+      const rule = choice.rules?.find(item => item.field === field);
+      if (!rule) throw new Error(`当前模型未声明参数 ${field}，请查看 getConfig 返回的 rules`);
+      if (Array.isArray(rule.options) && !rule.options.some(option => option && typeof option === "object" && option.value === value)) throw new Error(`模型参数 ${field} 的值不在可选范围内`);
+    }
     data.value.model = JSON.stringify([choice.providerId, choice.modelId]);
     data.value.duration = duration;
     data.value.resolution = resolution;
     if (args.ratio !== undefined) data.value.ratio = args.ratio;
     if (args.mode !== undefined) data.value.mode = JSON.stringify(args.mode);
     if (args.generateAudio !== undefined) data.value.generateAudio = args.generateAudio;
+    if (args.other !== undefined) data.value.other = { ...data.value.other, ...args.other };
+    return getConfig();
+  },
+});
+
+nodeTools.register({
+  name: "setProviderAssets",
+  description: "设置此视频节点的整组官方素材 ID；仅支持火山方舟混合参考，先由官方肖像素材库工具确认素材 Active。空数组仅移除节点引用，不删除远端素材；不启动生成。官方引用追加在本地引用之后，修改后用 getConfig 核对编号。",
+  parameters: z.strictObject({
+    assets: providerAssetsSchema,
+  }),
+  async execute({ assets }, { signal }) {
+    signal?.throwIfAborted();
+    if (generating.value || deleting.value) throw new Error("节点正在生成或删除，请稍后修改引用");
+    await loadModels();
+    signal?.throwIfAborted();
+    if (generating.value || deleting.value) throw new Error("节点正在生成或删除，请稍后修改引用");
+    if (assets.length && selectedModel.value?.providerId !== "volcengine") throw new Error("请先选择火山方舟视频模型");
+    const referenceMode = selectedModel.value?.mode?.find(Array.isArray);
+    for (const mediaType of assets.length ? ["image", "video", "audio"] as const : []) {
+      const limit = Number(referenceMode?.find(item => item.startsWith(`${mediaType}Reference:`))?.split(":")[1] ?? 0);
+      const localCount = refList.value.filter(item => item.dataType === mediaType.toUpperCase()).length;
+      if (localCount + assets.filter(asset => asset.mediaType === mediaType).length > limit) throw new Error(`本地与官方 ${mediaType} 参考合计不能超过 ${limit} 个`);
+    }
+    data.value.providerAssets = assets;
     return getConfig();
   },
 });
@@ -541,6 +601,20 @@ nodeTools.register({
 }
 
 .promptCard {
+  .providerReferences {
+    margin-bottom: 10px;
+
+    .providerReference {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+
+      span { overflow-wrap: anywhere; }
+    }
+  }
+
   .referenceHint {
     margin: 8px 0;
     color: var(--el-text-color-secondary);

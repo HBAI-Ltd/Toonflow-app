@@ -26,6 +26,10 @@
 
 `createTools(context)` 返回 Pi 的工具定义数组，一个插件可提供多个工具。宿主传入当前工作区 `cwd`、仅属于该工具且已校验的配置 `config`、统一文件能力 `files`，以及 Pi SDK 工具构造函数。不传入应用全局设置或其他工具的配置；工具需要的密钥通过自身配置项填写。工作区文件插件通过宿主方法限制路径；只读模式只注册 `read` 与 `ls`。
 
+宿主生成链路需要校验官方素材时，调用可选的 `resolveProviderAssets({ config, assets, signal })`。插件只返回与输入一一对应的 `{ id, mediaType, name? }` 列表，宿主会严格校验；未实现时，启用官方素材的生成会报错。该钩子不向 Agent 开放，也不替代 `validateConfig`。
+
+需要由工作区界面直接调用的操作，显式声明 `clientTools: { operation: async (context, args, signal) => result }`。界面向 `/api/tools/call` 提交 `{ name: 插件名, tool: 操作名, directory: 工作区目录, args: 参数对象 }`，并携带 `x-toonflow-workspace: 1`；宿主校验工作区、插件启用状态和操作白名单后执行，返回统一响应中的 `data`。未声明的 Agent 工具不会因此开放，插件仍须严格校验 `args`。此上下文不提供对话、提问或画布通道；界面负责应用返回结果。独立面板组件应使用不同于 Agent 工具名的注册名，避免消息视图将其当作工具结果卡片。
+
 `context.files` 提供 `readFile`、`access`、`stat`、`readdir`、`detectImageMimeType`、`writeFile`、`mkdir`、`rename`、`remove` 和 `copyFile`，全部接入宿主的统一文件层。读取方法第二个参数 `readOnly=true` 时额外允许读取全局技能目录；写入始终限制在当前工作区。`writeFile(path, content, exclusive?)` 原子保存，`exclusive=true` 禁止覆盖；`mkdir(path, recursive?)` 和 `remove(path, recursive?)` 默认不递归；`rename` 禁止覆盖已有目标；`copyFile(path, target, exclusive?)` 默认允许覆盖。旧 `resolvePath`、`writeFile` 入口继续保留，新工具使用 `files`，避免直接导入文件 API 或把文件层实现打入插件。已有直接调用系统 API 的旧工具需要更新其源码后重新构建。
 
 `context.skills` 提供统一的技能扫描、读取、新建和修改，复用宿主的 SDK 扫描与文件落盘。`skillOperator` 据此操作工作区 `skill/` 和全局 `data/skills/`，无需把 Pi SDK 打入工具。读取、新建、修改默认开启，可在工具配置中分别关闭；目录查询始终保留，普通工作区文件的写入范围不因此扩大。

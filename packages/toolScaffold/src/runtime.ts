@@ -3,6 +3,7 @@ import type { Rule } from "@form-create/element-ui";
 import type { BrowserFfmpegRequest, FfmpegFactory, FfmpegRemoteEvent } from "@toonflow/ffmpeg/types";
 import type { Stats } from "@toonflow/file";
 import { z } from "zod";
+import type { MediaUploadRequest, MediaUploadResult } from "@toonflow/providers";
 
 export type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 export type { FfmpegFactory, FfmpegCommand, FfprobeData } from "@toonflow/ffmpeg/types";
@@ -98,6 +99,21 @@ export interface MediaReference {
   mimeType: string;
 }
 
+export interface MediaProviderAsset {
+  id: string;
+  mediaType: "image" | "video" | "audio";
+  name?: string;
+}
+
+export const providerAssetIdSchema = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,199}$/);
+export const providerAssetSchema = z.strictObject({
+  id: providerAssetIdSchema,
+  mediaType: z.enum(["image", "video", "audio"]),
+  name: z.string().max(64).optional(),
+});
+export const providerAssetsSchema = z.array(providerAssetSchema).max(50)
+  .refine(assets => new Set(assets.map(asset => asset.id)).size === assets.length, "官方素材 ID 不能重复");
+
 /** referenceOrder[0] 对应 {{ref 1}}；媒体 index 为分类数组的零基下标。 */
 export type VideoReference = { type: "image" | "video" | "audio"; index: number }
   | { type: "firstFrame" | "lastFrame" | "text" };
@@ -115,6 +131,8 @@ export interface MediaGenerationRequest {
   lastFrame?: MediaReference;
   /** 原引用顺序，媒体 index 为分类数组的零基下标。 */
   referenceOrder?: VideoReference[];
+  /** 官方素材 ID，与本地引用分开保存；提交前由支持的供应商素材库校验。 */
+  providerAssets?: MediaProviderAsset[];
   ratio?: string;
   size?: string;
   resolution?: string;
@@ -205,6 +223,7 @@ export interface ToolFiles {
 }
 
 export interface ToolContext {
+  uploadMedia?: (request: MediaUploadRequest) => Promise<MediaUploadResult>;
   asr: {
     transcribe(path: string, options?: { lang?: string; signal?: AbortSignal }): Promise<string>;
   };
@@ -233,4 +252,12 @@ export interface ToolContext {
 export interface ToolPlugin {
   validateConfig(config: Record<string, unknown>): Record<string, unknown>;
   createTools(context: ToolContext): ToolDefinition[] | Promise<ToolDefinition[]>;
+  /** 宿主自动生成链路调用的存储能力，独立于 Agent 工具执行。 */
+  uploadMedia?(request: MediaUploadRequest & { config: Record<string, unknown> }): Promise<MediaUploadResult>;
+  /** 宿主生成链路调用的官方素材校验；返回结果必须与输入的 id 和 mediaType 一一对应。 */
+  resolveProviderAssets?(request: { config: Record<string, unknown>; assets: MediaProviderAsset[]; signal?: AbortSignal }): Promise<MediaProviderAsset[]>;
+  /** 显式开放给工作区界面的操作；未声明的 Agent 工具不能通过 HTTP 调用。 */
+  clientTools?: Record<string, (context: ToolContext, args: Record<string, unknown>, signal?: AbortSignal) => Promise<unknown>>;
+  /** 已授权工作区界面读取短期链接；含凭据的 URL 不应放入 Agent 工具结果。 */
+  getClientLink?(request: { id: string; cwd: string; config: Record<string, unknown> }): string | Promise<string>;
 }

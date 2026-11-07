@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { providerAssetsSchema } from "@toonflow/tools-scaffold/runtime";
 
 const relativePath = z.string().min(1).max(2048).refine(
   path => !/^[\\/]|[:\u0000-\u001f]/.test(path) && path.split(/[\\/]/).every(part => part && part !== "." && part !== ".."),
@@ -25,6 +26,7 @@ export const imageGenerationSchema = z.strictObject({
 });
 export const videoGenerationSchema = z.strictObject({
   ...sharedFields,
+  providerAssets: providerAssetsSchema.optional(),
   referenceOrder: z.array(z.union([
     z.strictObject({ type: z.enum(["image", "video", "audio"]), index: z.number().int().min(0).max(63) }),
     z.strictObject({ type: z.enum(["firstFrame", "lastFrame", "text"]) }),

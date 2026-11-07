@@ -1,0 +1,17 @@
+{
+  "name": "@toonflow/tool-ali-oss",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build.ts",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@toonflow/providers": "workspace:*",
+    "@toonflow/tools-scaffold": "workspace:*"
+  }
+}

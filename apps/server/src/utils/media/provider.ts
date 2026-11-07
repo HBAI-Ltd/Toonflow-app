@@ -13,6 +13,7 @@ import type { ProviderSources } from "@/utils/channel/types";
 import { convertAudio } from "@/utils/media/audioProcessor";
 import { createWorkspaceFfmpeg } from "@/utils/ffmpeg";
 import { lockWorkspaceFiles, writeWorkspaceFile } from "@/utils/workspace/files";
+import { uploadMediaToStorage } from "@/utils/plugins/tools";
 
 type Expression = Extract<ReturnType<typeof parseExpression>, { type: "ParenthesizedExpression" }>["expression"];
 type ObjectExpression = Extract<Expression, { type: "ObjectExpression" }>;
@@ -561,6 +562,13 @@ export async function loadMediaProviderSource(source: string, config: Record<str
       }, { preconnect: fetchRequest.preconnect }) as typeof fetch : fetchRequest,
       hash: Bun.hash,
       errorMessage: (value: unknown) => mediaErrorMessage(value, providerConfig),
+      uploadMedia: id === "volcengine" ? async (input, options) => {
+        // 测试面板直接提供媒体字节；上传不读取磁盘，因此无需工作目录。
+        const maxBytes = 100 * 1024 * 1024;
+        if (!(input.data instanceof Uint8Array) || !input.data.byteLength || input.data.byteLength > maxBytes) throw new Error("参考素材为空或超过 100 MB");
+        const uploadSignal = signal && options?.signal ? AbortSignal.any([signal, options.signal]) : signal ?? options?.signal;
+        return uploadMediaToStorage({ data: input.data, mimeType: input.mimeType, signal: uploadSignal, fetch: fetchRequest, onPrepared: options?.onPrepared });
+      } : undefined,
       image: Bun.Image,
       media: createMediaTools(fetchRequest),
       audio: { convert: (input: Uint8Array, options: AudioConvertOptions) => convertAudio(input, options, signal) },

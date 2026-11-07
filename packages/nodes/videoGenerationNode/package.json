@@ -1,6 +1,6 @@
 {
   "name": "@toonflow/node-video-generation",
-  "version": "2.0.0",
+  "version": "2.1.1",
   "private": true,
   "type": "module",
   "scripts": {
