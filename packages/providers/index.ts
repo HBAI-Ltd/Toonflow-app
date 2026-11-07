@@ -4,6 +4,7 @@ import deepSeek from "./src/language/deepSeek";
 import apiMart from "./src/media/apiMart";
 import metaso from "./src/media/metaso";
 import compshare from "./src/media/compshare";
+import grsai from "./src/media/grsai";
 import volcengine from "./src/media/volcengine";
 
 export type Provider = ProviderDefinition;
@@ -20,4 +21,4 @@ export type AudioConvertOptions = Parameters<ProviderTools["audio"]["convert"]>[
 export type { FfmpegFactory, FfmpegCommand } from "@toonflow/ffmpeg/types";
 
 export const languageProviders = [deepSeek] as const;
-export const mediaProviders = [apiMart, metaso, compshare, volcengine] as const;
+export const mediaProviders = [apiMart, metaso, compshare, grsai, volcengine] as const;
