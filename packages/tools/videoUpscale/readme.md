@@ -4,7 +4,9 @@
 
 先在插件市场配置可用的 FFmpeg/FFprobe，用于读取源视频和校验输出。安装并启用本工具后，在视频节点或视频生成节点顶部点击“视频升清”，选择目标分辨率。宿主须包含工作区工具调用接口 `/api/tools/call`，两个视频节点须使用支持该入口的版本。
 
-在插件设置中填写 reAPI API Key，以及 S3 兼容私有存储的 HTTPS Endpoint、Bucket、Region、Access Key ID 和 Secret Access Key。源视频会上传到私有桶，并通过有效期 48 小时的临时链接交给 reAPI 处理。存储服务须支持带 `If-None-Match: *` 的条件 PUT 和对象 GET，以防覆盖既有对象并安全恢复上传。上传的对象会保留在桶中，插件不会自动删除；对象存储及流量费用由存储服务商单独收取。
+在插件设置中填写 reAPI API Key，以及 S3 兼容私有存储的 HTTPS Endpoint、Bucket、Region、Access Key ID 和 Secret Access Key。源视频会上传到私有桶，并通过有效期 48 小时的临时链接交给 reAPI 处理。存储服务须支持条件 PUT（`If-None-Match: *`，阿里云 OSS 见下文）和对象 GET，以防覆盖既有对象并安全恢复上传。上传的对象会保留在桶中，插件不会自动删除；对象存储及流量费用由存储服务商单独收取。
+
+使用阿里云 OSS 时，Endpoint 填含桶名的主机 `https://<bucket>.oss-<region>.aliyuncs.com`，Region 填 `oss-<region>`（如 `oss-cn-hangzhou`），Bucket 填同一桶名。插件检测到 `aliyuncs.com` 端点后会自动改用 OSS 的 `x-oss-forbid-overwrite` 禁止覆盖头，并以虚拟主机方式寻址。
 
 先选择视频和目标分辨率查看估算费用，再确认提交。按 Standard、30 fps 以内的公开标价，720p 为每秒 0.003 美元，1080p 为每秒 0.005 美元，4K 为每秒 0.017 美元。切换分辨率后重新报价；估算仅供参考，不是最终费用或扣费上限，具体金额以 reAPI 实际结算为准。若接口返回实际费用，界面会展示该金额。任务的分辨率在提交后固定，旧记录缺少分辨率时按 720p 恢复。
 

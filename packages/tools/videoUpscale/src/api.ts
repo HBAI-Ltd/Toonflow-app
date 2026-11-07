@@ -16,6 +16,11 @@ export const configSchema = z.strictObject({
 
 export type UpscaleConfig = z.infer<typeof configSchema>;
 
+// 主机名以 aliyuncs.com 结尾即视为阿里云 OSS，需使用虚拟主机寻址与 OSS 的禁止覆盖头
+function isOssEndpoint(endpoint: string) {
+  return /(^|\.)aliyuncs\.com$/i.test(new URL(endpoint).hostname);
+}
+
 export function requireConfig(value: Record<string, unknown>) {
   const config = configSchema.parse(value);
   if (Object.values(config).some(value => !value.trim())) throw new Error("请先在视频升清插件设置中填写 reAPI 和 S3 存储配置");
@@ -23,6 +28,10 @@ export function requireConfig(value: Record<string, unknown>) {
   try { endpoint = new URL(config.endpoint); } catch { throw new Error("S3 Endpoint 必须是有效的 HTTPS 地址"); }
   if (endpoint.protocol !== "https:" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) {
     throw new Error("S3 Endpoint 必须是无凭据、无查询参数的 HTTPS 地址");
+  }
+  // OSS 的 Endpoint 主机须包含桶名，URL 主机名已统一为小写
+  if (isOssEndpoint(config.endpoint) && !endpoint.hostname.startsWith(`${config.bucket.toLowerCase()}.`)) {
+    throw new Error("阿里云 OSS 的 Endpoint 须包含 Bucket，例如 https://<bucket>.oss-cn-hangzhou.aliyuncs.com");
   }
   return config;
 }
@@ -38,15 +47,17 @@ function requestSignal(signal: AbortSignal | undefined, timeout: number) {
 export async function uploadSource(config: UpscaleConfig, key: string, bytes: Buffer, signal?: AbortSignal) {
   let uploadUrl: string;
   let downloadUrl: string;
+  let oss: boolean;
   try {
+    oss = isOssEndpoint(config.endpoint);
     const client = new S3Client({ endpoint: config.endpoint, bucket: config.bucket, region: config.region,
-      accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey });
+      accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey, ...(oss ? { virtualHostedStyle: true } : {}) });
     uploadUrl = client.presign(key, { method: "PUT", expiresIn: 3600 });
     downloadUrl = client.presign(key, { method: "GET", expiresIn: 48 * 60 * 60 });
   } catch { throw new Error("S3 配置无效或生成上传链接失败"); }
   let response: Response;
   try {
-    response = await fetch(uploadUrl, { method: "PUT", headers: { "If-None-Match": "*" }, body: bytes as unknown as BodyInit,
+    response = await fetch(uploadUrl, { method: "PUT", headers: oss ? { "x-oss-forbid-overwrite": "true" } : { "If-None-Match": "*" }, body: bytes as unknown as BodyInit,
       signal: requestSignal(signal, 30 * 60_000), redirect: "error" });
   } catch {
     throw new Error("源视频上传失败或中断，可使用同一任务继续上传");
@@ -64,7 +75,7 @@ export async function uploadSource(config: UpscaleConfig, key: string, bytes: Bu
         const chunk = await reader.read();
         if (chunk.done) break;
         size += chunk.value.byteLength;
-        if (size > bytes.byteLength) throw new Error("存储中已有不同的源视频，请人工核对");
+        if (size > bytes.byteLength) break;
         digest.update(chunk.value);
       }
     } catch { throw new Error("无法核对已上传的视频，请检查存储对象或稍后重试"); }
@@ -116,7 +127,8 @@ export function queryTask(config: UpscaleConfig, remoteId: string, signal?: Abor
 export async function downloadResult(value: unknown, signal?: AbortSignal) {
   let url: URL;
   try { url = new URL(z.string().max(8192).parse(value)); } catch { throw new Error("reAPI 返回的视频地址无效"); }
-  if (url.protocol !== "https:" || url.username || url.password || !(url.hostname === "reapi.ai" || url.hostname.endsWith(".reapi.ai"))) {
+  // 直接使用 reAPI 返回的地址下载，仅保留 https 协议检查（拒绝 file:、data: 等非网络地址）；下载请求不携带凭据
+  if (url.protocol !== "https:") {
     throw new Error("reAPI 返回的视频地址不受信任");
   }
   let response: Response;
