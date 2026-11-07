@@ -2,17 +2,17 @@
 
 [返回项目首页](../../README.md) · [文档目录](../../docs/readme.md) · [开发与扩展指南](../../docs/development.md)
 
-语言字典集中在 `src/locales/`，共 21 种语言：简体中文、繁体中文、英语、日语、俄语、越南语、泰语、韩语、印地语，以及印尼语（`id`）、马来语（`ms`）、菲律宾语（`fil`）、孟加拉语（`bn`）、乌尔都语（`ur`）、泰米尔语（`ta`）、泰卢固语（`te`）、马拉地语（`mr`）、旁遮普语（`pa`，Gurmukhi 文字）、阿拉伯语（`ar`）、波斯语（`fa`）和土耳其语（`tr`）。`zhCn.json` 是抽取的中文源文案，其他语言使用同一消息键。
+语言字典集中在 `src/locales/`，共 22 种语言：简体中文、繁体中文、英语、日语、俄语、越南语、泰语、韩语、印地语，以及印尼语（`id`）、马来语（`ms`）、菲律宾语（`fil`）、孟加拉语（`bn`）、乌尔都语（`ur`）、泰米尔语（`ta`）、泰卢固语（`te`）、马拉地语（`mr`）、旁遮普语（`pa`，Gurmukhi 文字）、阿拉伯语（`ar`）、波斯语（`fa`）、土耳其语（`tr`）和巴西葡萄牙语（`pt`）。`zhCn.json` 是抽取的中文源文案，其他语言使用同一消息键。
 
 ## 使用
 
 Web 设置和首次引导复用 `languageSelect.vue`：设置页直接展示语言卡片，首次引导通过按钮弹出同一组卡片。卡片使用本地 SVG 国旗和原生语言名，支持方向键、Home/End 选择。首次默认跟随 `navigator.languages`；手动选择保存在现有 `settings.ui.language`，不会覆盖主题、模型或其他设置。选择“跟随系统”后继续监听系统语言变化。中文优先按 Hans/Hant 区分，再按地区判断；不支持的系统语言回退英语。
 
-全部 16 幅国旗统一来自 [flag-icons 7.3.2](https://github.com/lipis/flag-icons/tree/7.3.2/flags/4x3) 的现成 4:3 SVG，仅将根元素包装为本地 `languageFlags.svg` 的 symbol，保留原始路径、定义、比例和 MIT 授权声明。只收录组件实际引用的国家，不安装整套图库，运行时不请求 CDN；修改图案时应更新对应上游资源，不再手绘。
+全部 17 幅国旗统一来自 [flag-icons 7.3.2](https://github.com/lipis/flag-icons/tree/7.3.2/flags/4x3) 的现成 4:3 SVG，仅将根元素包装为本地 `languageFlags.svg` 的 symbol，保留原始路径、定义、比例和 MIT 授权声明。只收录组件实际引用的国家，不安装整套图库，运行时不请求 CDN；修改图案时应更新对应上游资源，不再手绘。
 
 亚洲新增语言支持地区形式（如 `id-ID`、`bn-BD`、`ar-SA`）与 `tl-PH` → `fil`、`in-ID` → `id` 别名。每种语言目前只提供一种文字体系，`pa-PK` / `pa-Arab` 不会误用 Gurmukhi 旁遮普语，未支持的文字体系继续尝试系统语言列表的下一项。阿拉伯语、波斯语、乌尔都语使用 RTL；画布坐标、代码、地址、密钥和 JSON 等技术内容保留 LTR。阿拉伯语和波斯语卡片分别使用沙特阿拉伯、伊朗国旗。国旗用于视觉辅助，同一国家的不同语言会复用图标。
 
-Element Plus 使用 `src/elementPlus/` 中的 21 份完整语言 JSON，通过 `@toonflow/i18n/elementPlus` 接入全局 ConfigProvider；分页、日期、上传、筛选及无障碍提示随语言即时更新，不再因官方语言包缺失而回退英语。日期格式和星期名称使用 Web 已注册的 Day.js 语言包；菲律宾语映射为 `tl-ph`，Gurmukhi 旁遮普语映射为 `pa-in`。TDesign 缺少的语言仍使用英语基底，聊天控件由应用字典补齐；Zod 的 `fil/te/mr/pa` 通用校验提示仍回退英语。
+Element Plus 使用 `src/elementPlus/` 中的 22 份完整语言 JSON，通过 `@toonflow/i18n/elementPlus` 接入全局 ConfigProvider；分页、日期、上传、筛选及无障碍提示随语言即时更新，不再因官方语言包缺失而回退英语。日期格式和星期名称使用 Web 已注册的 Day.js 语言包；菲律宾语映射为 `tl-ph`，Gurmukhi 旁遮普语映射为 `pa-in`。TDesign 缺少的语言仍使用英语基底，聊天控件由应用字典补齐；Zod 的 `fil/te/mr/pa` 通用校验提示仍回退英语。
 
 Web 静态文本和明确的展示属性由 `@toonflow/i18n/vite` 在 Vue 编译前转换，业务源码继续写中文。转换仅作用于 `apps/web/src`；编译器只处理已知显示位置，不遍历 DOM，不调用在线翻译，不关闭 Vue 静态优化，也不通过重新挂载页面切换语言。
 
