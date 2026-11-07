@@ -1,20 +1,20 @@
 import logger from "morgan";
 import express from "express";
 import cors from "cors";
-import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
-import { lstat, readFile, readdir, unlink } from "@toonflow/file";
+import { lstat, readdir, unlink } from "@toonflow/file";
 import type { Request, Response, NextFunction } from "express";
 import buildRoute from "@/core";
 import { errorFromCause } from "@/lib/responseFormat";
 import desktopRequest from "@/lib/desktop";
 import { getRuntimePlatform } from "@/lib/platform";
 import initializePlugins from "@/utils/plugins/initialize";
+import directoryRevision from "@/utils/plugins/directoryRevision";
 import { initializeAccess, accessRequest } from "@/utils/access";
 import { languageRequest, resolveRequestLocale, runWithLocale, setLocaleFallback, translateError, translateMessage } from "@/lib/i18n";
 import { detectLocale, normalizeLocale } from "@toonflow/i18n";
 
-const autoInstallProviders = ["apiMart.ts", "metaso.ts", "compshare.ts"];
+const autoInstallProviders = ["apiMart.ts", "metaso.ts", "compshare.ts", "volcengine.ts", "grsai.ts"];
 
 export async function createApp({
   webRoot,
@@ -62,23 +62,17 @@ export async function createApp({
   await initializeNetwork();
   setLocaleFallback(() => normalizeLocale((conf.get("settings", {}).ui as { language?: unknown } | undefined)?.language)
     ?? detectLocale([Intl.DateTimeFormat().resolvedOptions().locale]));
-  if (dataDirectory && toolsRoot)
-    await initializePlugins(resolve(dataDirectory, "tools"), toolsRoot, /^[a-z][a-zA-Z0-9]*\.tool\.js$/, pluginRevision);
+  if (dataDirectory && toolsRoot) {
+    const toolPattern = /^[a-z][a-zA-Z0-9]*\.tool\.js$/;
+    // 独立 server 按内置工具内容更新数据卷，避免 Docker 重建后新增或更新的工具不生效。
+    const toolRevision = pluginRevision ?? await directoryRevision(toolsRoot, toolPattern);
+    await initializePlugins(resolve(dataDirectory, "tools"), toolsRoot, toolPattern, toolRevision);
+  }
   if (dataDirectory && nodesRoot) {
-    let nodeRevision = pluginRevision;
+    const nodePattern = /^[a-z][a-zA-Z0-9]*\.umd\.js$/;
     // 独立 server 按内置节点内容更新数据卷，避免 Docker 重建后仍加载旧节点。
-    if (nodeRevision === undefined) {
-      const entries = await readdir(nodesRoot, { withFileTypes: true }).catch((error: NodeJS.ErrnoException) => {
-        if (error.code === "ENOENT") return [];
-        throw error;
-      });
-      const hash = createHash("sha256");
-      for (const name of entries.filter(entry => entry.isFile() && /^[a-z][a-zA-Z0-9]*\.umd\.js$/.test(entry.name)).map(entry => entry.name).sort()) {
-        hash.update(name).update("\0").update(await readFile(resolve(nodesRoot, name))).update("\0");
-      }
-      nodeRevision = hash.digest("hex");
-    }
-    await initializePlugins(resolve(dataDirectory, "nodes"), nodesRoot, /^[a-z][a-zA-Z0-9]*\.umd\.js$/, nodeRevision);
+    const nodeRevision = pluginRevision ?? await directoryRevision(nodesRoot, nodePattern);
+    await initializePlugins(resolve(dataDirectory, "nodes"), nodesRoot, nodePattern, nodeRevision);
   }
   if (dataDirectory && extRoot) {
     const { default: initializeExt } = await import("@/utils/plugins/initializeExt");
@@ -87,18 +81,7 @@ export async function createApp({
   // ACT: 内置媒体供应商随构建同步，其他供应商文件和独立保存的配置保留。
   if (dataDirectory && providersRoot) {
     const sourceDirectory = resolve(providersRoot, "media");
-    let providerRevision = pluginRevision;
-    if (providerRevision === undefined) {
-      const hash = createHash("sha256");
-      for (const name of autoInstallProviders) {
-        const source = await readFile(resolve(sourceDirectory, name)).catch((error: NodeJS.ErrnoException) => {
-          if (error.code === "ENOENT") return Buffer.alloc(0);
-          throw error;
-        });
-        hash.update(name).update("\0").update(source).update("\0");
-      }
-      providerRevision = hash.digest("hex");
-    }
+    const providerRevision = pluginRevision ?? await directoryRevision(sourceDirectory, autoInstallProviders);
     await initializePlugins(resolve(dataDirectory, "providers"), sourceDirectory, autoInstallProviders, providerRevision);
   }
   // ACT: 技能和团队只补首次安装，保留用户修改。
