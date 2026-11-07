@@ -7,7 +7,7 @@
             <div class="welcomeHeader">
               <span class="welcomeIcon" aria-hidden="true"><span class="welcomeLogo" :style="{ maskImage: `url(${logoUrl})` }" /></span>
               <div>
-                <p class="welcomeLabel">你好，我是 Toonflow 助手</p>
+                <p class="welcomeLabel">你好，我是 TTLflow 助手</p>
                 <h3>从一个想法开始</h3>
               </div>
             </div>

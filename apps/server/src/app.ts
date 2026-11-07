@@ -10,6 +10,7 @@ import { errorFromCause } from "@/lib/responseFormat";
 import desktopRequest from "@/lib/desktop";
 import { getRuntimePlatform } from "@/lib/platform";
 import initializePlugins from "@/utils/plugins/initialize";
+import { initializeAccess, accessRequest } from "@/utils/access";
 import { languageRequest, resolveRequestLocale, runWithLocale, setLocaleFallback, translateError, translateMessage } from "@/lib/i18n";
 import { detectLocale, normalizeLocale } from "@toonflow/i18n";
 
@@ -41,6 +42,7 @@ export async function createApp({
   // conf 由下方的路由动态加载，必须先确定整个进程共用的数据目录。
   if (dataDirectory) process.env.TOONFLOW_DATA_DIR = resolve(dataDirectory);
   const { default: conf } = await import("@/utils/conf");
+  const accessEnabled = await initializeAccess(dirname(conf.path));
   const providerDirectory = resolve(dirname(conf.path), "providers");
   const providerDirectoryInfo = await lstat(providerDirectory).catch((error: NodeJS.ErrnoException) => {
     if (error.code === "ENOENT") return null;
@@ -62,7 +64,22 @@ export async function createApp({
     ?? detectLocale([Intl.DateTimeFormat().resolvedOptions().locale]));
   if (dataDirectory && toolsRoot)
     await initializePlugins(resolve(dataDirectory, "tools"), toolsRoot, /^[a-z][a-zA-Z0-9]*\.tool\.js$/, pluginRevision);
-  if (dataDirectory && nodesRoot) await initializePlugins(resolve(dataDirectory, "nodes"), nodesRoot, /^[a-z][a-zA-Z0-9]*\.umd\.js$/, pluginRevision);
+  if (dataDirectory && nodesRoot) {
+    let nodeRevision = pluginRevision;
+    // 独立 server 按内置节点内容更新数据卷，避免 Docker 重建后仍加载旧节点。
+    if (nodeRevision === undefined) {
+      const entries = await readdir(nodesRoot, { withFileTypes: true }).catch((error: NodeJS.ErrnoException) => {
+        if (error.code === "ENOENT") return [];
+        throw error;
+      });
+      const hash = createHash("sha256");
+      for (const name of entries.filter(entry => entry.isFile() && /^[a-z][a-zA-Z0-9]*\.umd\.js$/.test(entry.name)).map(entry => entry.name).sort()) {
+        hash.update(name).update("\0").update(await readFile(resolve(nodesRoot, name))).update("\0");
+      }
+      nodeRevision = hash.digest("hex");
+    }
+    await initializePlugins(resolve(dataDirectory, "nodes"), nodesRoot, /^[a-z][a-zA-Z0-9]*\.umd\.js$/, nodeRevision);
+  }
   if (dataDirectory && extRoot) {
     const { default: initializeExt } = await import("@/utils/plugins/initializeExt");
     await initializeExt(resolve(dataDirectory, "ext"), extRoot, pluginRevision);
@@ -107,8 +124,25 @@ export async function createApp({
     await buildRoute();
     app.use(logger("dev"));
   }
-  app.use(cors());
   app.use(languageRequest);
+  if (accessEnabled) {
+    if (process.env.TOONFLOW_TRUST_PROXY) app.set("trust proxy", process.env.TOONFLOW_TRUST_PROXY.split(",").map(value => value.trim()));
+    const [{ isMobileLinkRequest, isMobilePairingRequest }, { authorizeMcp, getAppOrigin }, { authenticateA2a }] = await Promise.all([
+      import("@/utils/mobileLink"), import("@/utils/mcp/control"), import("@/agent/a2a/settings"),
+    ]);
+    app.use((req, res, next) => {
+      if (isMobileLinkRequest(req) || isMobilePairingRequest(req)) return next();
+      if (/^\/mcp(\/|$)/i.test(req.path) && authorizeMcp(req)) return next();
+      if (/^\/a2a(\/|$)/i.test(req.path) && authenticateA2a(req)) return next();
+      accessRequest(req, res, () => {
+        if (!["GET", "HEAD", "OPTIONS"].includes(req.method) || req.get("origin")) getAppOrigin(req);
+        next();
+      });
+    });
+  }
+  app.use(cors());
+  // 登录表单先使用较小的限制，避免落入业务接口的 100 MB 解析器。
+  app.use("/api/access/login", express.urlencoded({ extended: false, limit: "16kb" }), express.json({ limit: "16kb" }));
   app.use("/a2a", express.json({ limit: "2mb" }));
   app.use(["/api/workspaces/files/write", "/api/assets/save"], express.raw({ type: "application/octet-stream", limit: "100mb" }));
   app.use(express.json({ limit: "100mb" }));

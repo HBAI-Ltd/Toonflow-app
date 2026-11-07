@@ -337,7 +337,29 @@ cd Toonflow-app
 docker compose up -d --build
 ```
 
-首次构建会安装依赖并编译内置节点、工具、Web 与 Server。启动后访问 `http://127.0.0.1:3000`；远程主机可按下方“访问与数据说明”通过 SSH 隧道访问。首次启动会初始化内置插件，并提供 `myProject` 工作目录。
+首次构建会安装依赖并编译内置节点、工具、Web 与 Server。未设置非空 `TOONFLOW_SERVER_PASSWORD` 时，首次启动会生成 24 个字符的随机密码并保存到数据卷中的 `/app/data/access.json`；后续启动继续使用该文件中的密码。可在服务器终端查看：
+
+```sh
+docker compose exec toonflow cat /app/data/access.json
+```
+
+访问 `http://127.0.0.1:3000`，输入文件中 `password` 字段的密码登录；远程主机可按下方“访问与数据说明”通过 SSH 隧道访问。首次启动会初始化内置插件，并提供 `myProject` 工作目录。
+
+需要修改密码时，可将配置文件拷出，编辑 `password` 字段（12–1024 个字符），再拷回并重启服务：
+
+```sh
+accessFile="$(mktemp)"
+docker compose cp toonflow:/app/data/access.json "$accessFile"
+# 使用本机编辑器修改 "$accessFile" 中的 password
+docker compose cp "$accessFile" toonflow:/app/data/access.json
+docker compose exec -u 0 toonflow chown bun:bun /app/data/access.json
+docker compose exec toonflow chmod 600 /app/data/access.json
+docker compose restart toonflow
+```
+
+修改完成并确认能够登录后，请删除本机临时副本。配置文件包含明文密码，须仅允许受信任人员访问，不要提交到版本库。
+
+也可通过非空的 `TOONFLOW_SERVER_PASSWORD` 环境变量覆盖文件中的密码，此时不会读取或创建 `access.json`。若要改回使用配置文件，须从当前终端和 Compose 的 `.env` 等配置来源中移除该变量，然后执行 `docker compose up -d` 重新创建容器；单纯执行 `restart` 不会更新容器环境变量。
 
 配置、插件和项目文件保存在 Docker 命名卷 `toonflowData` 中，挂载至容器的 `/app/data/`。卷的实际名称带有 Compose 项目前缀；停止或重建容器会保留数据，**请勿使用 `docker compose down -v`，该命令会删除数据卷**。
 
@@ -396,7 +418,11 @@ mkdir -p data/workspaces/myProject
 bun run start:server
 ```
 
-看到“服务启动成功”后，可在服务器本机访问 `http://127.0.0.1:3000`。上述命令以前台方式运行，按 `Ctrl+C` 停止；需要开机自启和进程托管时，可参考 [Bun 的 systemd 部署指南](https://bun.sh/guides/ecosystem/systemd)，将工作目录设为仓库目录，启动命令设为 Bun 的绝对路径加 `run start:server`，使用有权读写该目录的用户运行。
+未设置非空 `TOONFLOW_SERVER_PASSWORD` 时，首次启动会自动生成 24 个字符的随机密码并保存到 `data/access.json`；可在另一个服务器终端执行 `cat data/access.json` 查看 `password` 字段。看到“服务启动成功”后，可在服务器本机访问 `http://127.0.0.1:3000` 并输入该密码登录。需要更改密码时，修改 `data/access.json` 中的 `password` 字段（12–1024 个字符）并重启服务。该文件包含明文密码，仅允许受信任人员访问。
+
+也可通过非空的 `TOONFLOW_SERVER_PASSWORD` 环境变量覆盖文件中的密码，此时不会读取或创建 `access.json`。若要改回使用配置文件，须移除该环境变量后重启服务。
+
+上述命令以前台方式运行，按 `Ctrl+C` 停止；需要开机自启和进程托管时，可参考 [Bun 的 systemd 部署指南](https://bun.sh/guides/ecosystem/systemd)，将工作目录设为仓库目录，启动命令设为 Bun 的绝对路径加 `run start:server`，使用有权读写该目录的用户运行。
 
 </details>
 
@@ -404,7 +430,10 @@ bun run start:server
 
 ### 4.4 访问与数据说明
 
-- 当前服务使用固定端口 `3000`，业务页面与 API 没有独立登录鉴权。服务器安装时，请通过防火墙或安全组限制 `3000` 端口的访问来源；公网访问需配置带认证的反向代理。
+- 生产服务器默认使用 `3000` 端口，业务页面和普通 API 需要登录；密码由所有访问者共用，不提供用户数据隔离。首次启动会生成随机密码，也可按上述步骤自定义密码。MCP、A2A 和设备互联继续使用各自的凭证，桌面端、本机移动端及开发模式不受影响。
+- 登录有效期为 7 天，服务重启后需要重新登录；会话失效时可在当前页面重新输入密码，页面内容保留，被门禁拒绝的请求在登录后重试一次。每个客户端每分钟最多接受 10 次登录尝试。服务器安装时，请通过防火墙或安全组限制 `3000` 端口的访问来源；公网访问需通过 HTTPS 反向代理，保护传输中的密码和登录凭证。
+- 默认使用直连客户端 IP 限流，不信任转发头。使用反向代理时，通过 `TOONFLOW_TRUST_PROXY` 配置可信代理的 IP 或 CIDR（多个值用逗号分隔），并让代理覆盖客户端传入的转发头；例如直接安装且 Nginx 位于本机时可设置 `127.0.0.1,::1`。Docker 中应填写应用实际看到的代理来源 IP。不要配置所有来源为可信，否则客户端可伪造 IP；未配置时，同一代理后的用户会共用登录额度。
+- A2A 的 Agent Card 也需要有效的 A2A 凭证或网页登录会话，不再支持匿名发现。
 - 个人远程使用可在自己的电脑上执行 `ssh -N -L 3000:127.0.0.1:3000 用户名@服务器地址`，保持连接后打开 `http://127.0.0.1:3000`，无需将服务器的 `3000` 端口向公网开放。
 - 直接安装时，配置、插件与工作区默认保存在仓库的 `data/`；Docker 安装则保存在数据卷内的 `/app/data/`。迁移或备份时请完整保留。进入页面后选择服务器工作区内的 `myProject`，更多项目可在对应的 `workspaces/` 下创建子目录。
 - 两种安装方式均包含系统 FFmpeg。模型服务的 API Key 仍需在页面内配置。

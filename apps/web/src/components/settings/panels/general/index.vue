@@ -1,5 +1,6 @@
 <template>
   <div class="general">
+    <about v-if="actualPlatform.isLocalDesktop || actualPlatform.isMobile" onlyUpdate />
     <ui />
     <section class="settingSection" aria-labelledby="extensionAssociationsTitle">
       <div class="settingHeader">
@@ -106,6 +107,7 @@ import { defaultUiSettings, generalSettings, uiSettings, updateGeneralSettings, 
 import { getNotificationPermission, requestNotificationPermission } from "@/lib/notification";
 import { actualPlatform } from "@/lib/platform";
 import ui from "./ui.vue";
+import about from "../about/index.vue";
 import canvasShortcuts from "./canvasShortcuts.vue";
 import nodeMenuSettings from "./nodeMenuSettings.vue";
 import extensionAssociationsDialog from "./extensionAssociationsDialog.vue";

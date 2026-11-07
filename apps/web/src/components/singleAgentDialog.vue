@@ -79,6 +79,7 @@ import { createReplyStream, readAgentEvents } from "./agent/replyStream";
 import { modelChoices } from "@/stores/settings";
 import { writeClipboardText } from "@/lib/clipboard";
 import { showNotification } from "@/lib/notification";
+import { fetchWithAccess } from "@/lib/access";
 
 const props = withDefaults(defineProps<{
   tools?: SingleAgentTool[];
@@ -134,7 +135,7 @@ function reportError(error: unknown) {
 
 async function closeSession(id: string) {
   if (!id) return;
-  const response = await fetch("/api/singleAgent/control", {
+  const response = await fetchWithAccess("/api/singleAgent/control", {
     method: "POST", headers: { ...requestHeaders, "Content-Type": "application/json" },
     body: JSON.stringify({ sessionId: id, action: "close" }), keepalive: true,
   });
@@ -220,18 +221,18 @@ async function send(content = draft.value) {
     changeStatus("running");
     following = true;
     msgList.value = [...msgList.value, { id: crypto.randomUUID(), role: "user", content: prompt }, reply];
-    draft.value = "";
     accepted = true;
-    const response = await fetch("/api/singleAgent/run", {
+    const response = await fetchWithAccess("/api/singleAgent/run", {
       method: "POST", headers: { ...requestHeaders, "Content-Type": "application/json" }, signal,
       body: JSON.stringify({ sessionId: id, runId: reply.id, prompt, providerId: model.providerId, modelId: model.modelId, thinkingLevel: thinkingLevel.value }),
     });
+    if (response.ok && draft.value === content) draft.value = "";
     for await (const event of readAgentEvents<SingleAgentEvent>(response, signal)) {
       if (lifecycle !== owner) break;
       if (event.type === "text" || event.type === "thinking" || event.type === "tool" || event.type === "question" || event.type === "retry") stream.receive(event);
       if (event.type === "question" && !signal.aborted && !notifiedQuestions.has(event.callId)) {
         notifiedQuestions.add(event.callId);
-        void showNotification({ title: "Toonflow", body: translate("工具正在等待你的确认") })
+        void showNotification({ title: "TTLflow", body: translate("工具正在等待你的确认") })
           .catch(error => console.warn("系统通知发送失败", error));
       }
       if (event.type === "status") changeStatus(event.status);
@@ -241,7 +242,7 @@ async function send(content = draft.value) {
         stream.finish();
         if (!notifiedCompletion && !signal.aborted) {
           notifiedCompletion = true;
-          void showNotification({ title: "Toonflow", body: translate("Agent 已完成回复") })
+          void showNotification({ title: "TTLflow", body: translate("Agent 已完成回复") })
             .catch(error => console.warn("系统通知发送失败", error));
         }
         emit("complete", { text: event.text, toolResults: event.toolResults, messages: JSON.parse(JSON.stringify(msgList.value)) });

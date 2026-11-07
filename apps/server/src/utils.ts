@@ -35,8 +35,10 @@ import * as personalization from "@/utils/personalization";
 import * as mentionFiles from "@/agent/mentionFiles";
 import * as network from "@/utils/network";
 import * as channel from "@/utils/channel";
+import * as access from "@/utils/access";
 
 export default {
+  access,
   assets,
   browser,
   singleAgent,

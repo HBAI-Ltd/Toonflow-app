@@ -3,6 +3,9 @@ services:
     build: .
     init: true
     restart: unless-stopped
+    environment:
+      TOONFLOW_SERVER_PASSWORD: ${TOONFLOW_SERVER_PASSWORD:-}
+      TOONFLOW_TRUST_PROXY: ${TOONFLOW_TRUST_PROXY:-}
     ports:
       - "127.0.0.1:3000:3000"
     volumes:

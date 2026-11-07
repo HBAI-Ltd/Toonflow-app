@@ -2,10 +2,10 @@
   <div class="promptInputWrap nodrag nopan nowheel">
     <el-button v-if="expandable" class="expandButton" :icon="IconMaximize" text circle title="展开编辑提示词" aria-label="展开编辑提示词" @mousedown.prevent @click.stop="expanded = true" />
     <teleport :to="expandedTarget || 'body'" :disabled="!expanded || !expandedTarget">
-      <div ref="senderElement" class="promptInput nodrag nopan nowheel" :class="{ expandedInput: expanded }" @keydown.capture="handleMentionKey" @click.capture="previewReference" />
+      <div ref="senderElement" class="promptInput chat-area-wrap notranslate nodrag nopan nowheel" :class="{ expandedInput: expanded }" @keydown.capture="handleMentionKey" @click.capture="previewReference" />
     </teleport>
   </div>
-  <el-dialog v-if="expandable" v-model="expanded" class="promptEditorDialog" title="生成提示词" width="80%" alignCenter appendToBody :closeOnClickModal="false" @opened="sender?.focus('mark')" @close="expanded = false" @closed="sender?.focus('mark')">
+  <el-dialog v-if="expandable" v-model="expanded" class="promptEditorDialog" title="生成提示词" width="min(960px, calc(100vw - 40px))" alignCenter appendToBody :closeOnClickModal="false" @opened="sender?.focus('mark')" @close="expanded = false" @closed="sender?.focus('mark')">
     <div ref="expandedTarget" class="promptExpandedTarget nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop />
   </el-dialog>
   <el-image-viewer v-if="previewUrl" :urlList="[previewUrl]" teleported @close="previewReferenceId = undefined" />
@@ -289,7 +289,7 @@ watch(senderElement, (element, _previous, onCleanup) => {
   const instance = new xSender(element, {
     autoFocus: false,
     placeholder: props.placeholder ?? "描述一下生成风格提示词，输入 @ 引用参考",
-    chatStyle: { minHeight: "70px", maxHeight: "180px", fontSize: "14px", lineHeight: "1.6" },
+    chatStyle: { minHeight: "70px", maxHeight: "180px" },
     getPopupContainer: () => popup,
     // ACT: XSender 1.4.6 不支持分组候选渲染，扩展引用菜单由 Vue 管理，标签仍走编辑器公开 API。
     ...(props.materials === undefined ? { mentionConfig: { dialogTitle: "选择参考", callEvery: false, options: props.references } } : {}),
@@ -460,11 +460,47 @@ function handleMentionKey(event: KeyboardEvent) {
 :global(.promptEditorDialog) {
   display: flex;
   flex-direction: column;
-  height: 80vh;
+  height: min(640px, calc(100dvh - 64px));
+  padding: 0;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 16px;
 }
 
-:global(.promptEditorDialog .el-dialog__body) { flex: 1; min-height: 0; }
-.promptExpandedTarget { height: 100%; }
+:global(.promptEditorDialog .el-dialog__header) {
+  margin: 0;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+:global(.promptEditorDialog .el-dialog__title) {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+:global(.promptEditorDialog .el-dialog__headerbtn) {
+  top: 14px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+}
+
+:global(.promptEditorDialog .el-dialog__body) {
+  flex: 1;
+  min-height: 0;
+  padding: 20px 24px 24px;
+}
+
+.promptExpandedTarget {
+  height: 100%;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 12px;
+  background: var(--el-bg-color);
+
+  &:focus-within {
+    border-color: var(--el-color-primary-light-5);
+  }
+}
 
 .promptInput,
 :global(.textNodeMentions) {
@@ -493,12 +529,28 @@ function handleMentionKey(event: KeyboardEvent) {
 .promptInput {
   display: block;
   cursor: text;
+  font-size: 14px;
+  line-height: 1.6;
   -webkit-user-select: text;
   user-select: text;
 
+  :deep(.chat-rich-text) {
+    font-size: inherit;
+    line-height: inherit;
+
+    > [contenteditable] {
+      min-height: inherit;
+    }
+  }
+
   &.expandedInput {
+    --chat-rect-padding: 20px;
     height: 100%;
     margin: 0;
+    font-size: 15px;
+    line-height: 1.8;
+
+    :deep(.chat-rich-text) { height: 100%; }
   }
 
   &:deep(.imageReference) {

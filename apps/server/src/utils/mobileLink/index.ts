@@ -44,6 +44,10 @@ export function isMobileLinkRequest(req: Request) {
   return Boolean(req.res && Reflect.get(req.res.locals, deviceKey));
 }
 
+export function isMobilePairingRequest(req: Request) {
+  return Boolean(req.res && Reflect.get(req.res.locals, pairingKey));
+}
+
 export function assertMobileLinkControl(req: Request) {
   const origin = `${req.protocol}://${req.get("host")}`;
   const sameOrigin = req.get("origin") === undefined ? req.get("referer")?.startsWith(`${origin}/`) : req.get("origin") === origin;

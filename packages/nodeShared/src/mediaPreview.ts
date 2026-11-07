@@ -1,11 +1,14 @@
 import { onScopeDispose, ref, toValue, watch, type MaybeRefOrGetter } from "vue";
+import { accessState, fetchWithAccess } from "./access";
 
 export type MediaPreviewKind = "video" | "audio" | "image";
 const previews = new Map<string, { users: number; controller: AbortController; url: Promise<string> }>();
 
 export async function createMediaPreview(source: string, kind: MediaPreviewKind, signal: AbortSignal) {
-  const original = await fetch(source, { signal });
-  if (!original.ok) throw new Error("无法读取原文件以生成兼容预览");
+  const original = await fetchWithAccess(source, { signal });
+  if (!original.ok) throw Object.assign(new Error("无法读取原文件以生成兼容预览"), {
+    accessRequired: original.status === 401 && original.headers.get("x-toonflow-access") === "required",
+  });
   const maxBytes = 100 * 1024 * 1024;
   const sizeError = "兼容预览仅支持 100 MB 以内的非空媒体文件";
   if (Number(original.headers.get("content-length")) > maxBytes) {
@@ -33,12 +36,14 @@ export async function createMediaPreview(source: string, kind: MediaPreviewKind,
   if (!size) throw new Error(sizeError);
   const content = new Blob(chunks);
   signal.throwIfAborted();
-  const response = await fetch(`/api/media/preview?kind=${kind}`, {
+  const response = await fetchWithAccess(`/api/media/preview?kind=${kind}`, {
     method: "POST", headers: { "Content-Type": "application/octet-stream", "x-toonflow-workspace": "1" }, body: content, signal,
   });
   if (!response.ok) {
     const details = await response.json().catch(() => null) as { message?: string } | null;
-    throw new Error(details?.message || "生成兼容预览失败");
+    throw Object.assign(new Error(details?.message || "生成兼容预览失败"), {
+      accessRequired: response.status === 401 && response.headers.get("x-toonflow-access") === "required",
+    });
   }
   const preview = await response.blob();
   signal.throwIfAborted();
@@ -51,7 +56,10 @@ function acquirePreview(source: string, kind: MediaPreviewKind) {
   let entry = previews.get(key);
   if (!entry) {
     const controller = new AbortController();
-    entry = { users: 0, controller, url: createMediaPreview(source, kind, controller.signal).then(blob => URL.createObjectURL(blob)) };
+    entry = { users: 0, controller, url: createMediaPreview(source, kind, controller.signal).then(blob => URL.createObjectURL(blob)).catch(cause => {
+      if (cause?.accessRequired && previews.get(key) === entry) previews.delete(key);
+      throw cause;
+    }) };
     previews.set(key, entry);
   }
   const current = entry;
@@ -76,15 +84,27 @@ export function useMediaPreview(source: MaybeRefOrGetter<string | undefined>, ki
   const preparing = ref(false);
   const error = ref("");
   let attempted = false;
+  let accessFailed = false;
   let preview: ReturnType<typeof acquirePreview> | undefined;
   watch([() => toValue(source), () => toValue(kind)], ([value], _previous, onCleanup) => {
     src.value = value || "";
     error.value = "";
     preparing.value = false;
     attempted = false;
+    accessFailed = false;
     onCleanup(() => { preview?.release(); preview = undefined; });
   }, { immediate: true, flush: "sync" });
   onScopeDispose(() => { preview?.release(); preview = undefined; });
+  watch(accessState.revision, () => {
+    if (accessFailed && !preparing.value) retryPreview();
+  });
+
+  function retryPreview() {
+    preview?.release();
+    preview = undefined;
+    attempted = false;
+    handleError();
+  }
 
   function isCurrent(event?: Event) {
     const target = event?.target as HTMLMediaElement | HTMLImageElement | null;
@@ -99,13 +119,21 @@ export function useMediaPreview(source: MaybeRefOrGetter<string | undefined>, ki
     if (preparing.value && src.value === toValue(source)) return;
     if (attempted) { error.value = "当前环境无法显示兼容预览，文件可能已损坏"; return; }
     attempted = true;
+    accessFailed = false;
     preparing.value = true;
+    const revision = accessState.revision.value;
     const current = preview = acquirePreview(toValue(source)!, toValue(kind));
     void current.url.then(url => {
       if (preview === current) src.value = url;
     }).catch(cause => {
-      if (preview === current) error.value = cause instanceof Error ? cause.message : "生成兼容预览失败";
-    }).finally(() => { if (preview === current) preparing.value = false; });
+      if (preview !== current) return;
+      accessFailed = cause?.accessRequired === true;
+      error.value = cause instanceof Error ? cause.message : "生成兼容预览失败";
+    }).finally(() => {
+      if (preview !== current) return;
+      preparing.value = false;
+      if (accessFailed && accessState.revision.value !== revision) retryPreview();
+    });
   }
 
   function handleLoaded(event: Event) {

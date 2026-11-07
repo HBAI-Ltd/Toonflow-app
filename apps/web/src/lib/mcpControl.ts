@@ -1,4 +1,6 @@
 import { locale } from "@toonflow/i18n/vue";
+import { fetchWithAccess } from "@/lib/access";
+import { accessState } from "@toonflow/node-shared/access";
 import { onScopeDispose, shallowRef, watch, type WatchSource } from "vue";
 import { useRouter } from "vue-router";
 import type { NodeToolInfo } from "@toonflow/tools-scaffold/runtime";
@@ -62,23 +64,28 @@ export function useMcpControl() {
     if (!token) return;
     const lifetime = new AbortController();
     let reconnect: ReturnType<typeof setTimeout> | undefined;
+    let resumeAccess = () => {};
     onCleanup(() => {
       lifetime.abort();
       clearTimeout(reconnect);
+      resumeAccess();
       for (const controller of calls.values()) controller.abort(new Error("MCP 连接已关闭"));
     });
 
     async function connect() {
+      let deniedAccessRevision: number | undefined;
       const connectionId = crypto.randomUUID();
       const connection = new AbortController();
       const signal = AbortSignal.any([lifetime.signal, connection.signal]);
       const headers = { Authorization: `Bearer ${token}`, "x-toonflow-workspace": "1" };
       let revision = 0;
       async function post(path: "state" | "result", body: object, callSignal?: AbortSignal) {
-        const response = await fetch(`/api/mcp/control/${path}`, {
+        const accessRevision = accessState.revision.value;
+        const response = await fetchWithAccess(`/api/mcp/control/${path}`, {
           method: "POST", headers: { ...headers, "Content-Type": "application/json", "Accept-Language": locale.value },
           body: JSON.stringify({ connectionId, ...(path === "state" ? { revision: ++revision } : {}), ...body }), signal,
         });
+        if (response.status === 401 && response.headers.get("x-toonflow-access") === "required") deniedAccessRevision = accessRevision;
         if (path === "result" && response.status === 404 && callSignal?.aborted) return;
         if (!response.ok) throw new Error(`MCP ${path} 请求失败（${response.status}）`);
       }
@@ -158,7 +165,9 @@ export function useMcpControl() {
         }
       }
       try {
-        const response = await fetch(`/api/mcp/control/events?connectionId=${encodeURIComponent(connectionId)}`, { headers: { ...headers, "Accept-Language": locale.value }, signal });
+        const accessRevision = accessState.revision.value;
+        const response = await fetchWithAccess(`/api/mcp/control/events?connectionId=${encodeURIComponent(connectionId)}`, { headers: { ...headers, "Accept-Language": locale.value }, signal });
+        if (response.status === 401 && response.headers.get("x-toonflow-access") === "required") deniedAccessRevision = accessRevision;
         if (!response.ok || !response.body) throw new Error(`MCP 连接失败（${response.status}）`);
         stopState = watch(() => JSON.stringify(getState()), state => {
           void post("state", { state: JSON.parse(state) }).catch(error => { if (!signal.aborted) connection.abort(error); });
@@ -193,7 +202,11 @@ export function useMcpControl() {
       } finally {
         stopState();
         connection.abort();
-        if (!lifetime.signal.aborted) reconnect = setTimeout(() => void connect(), 3000);
+        if (!lifetime.signal.aborted) {
+          if (deniedAccessRevision !== undefined && accessState.revision.value === deniedAccessRevision) {
+            resumeAccess = watch(accessState.revision, () => { resumeAccess(); void connect(); });
+          } else reconnect = setTimeout(() => void connect(), 3000);
+        }
       }
     }
     void connect();

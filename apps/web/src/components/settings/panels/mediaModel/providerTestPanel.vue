@@ -107,6 +107,7 @@
 import { locale, translate } from "@toonflow/i18n/vue";
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import axios from "axios";
+import { fetchWithAccess } from "@/lib/access";
 import { IconPlus, IconX, IconMusic, IconPlayerPlay, IconPlayerStop } from "@tabler/icons-vue";
 import type { Provider } from "@toonflow/providers";
 import videoPlayer from "@/components/videoPlayer.vue";
@@ -306,7 +307,7 @@ async function run() {
     const request = await buildRequest(signal);
     signal.throwIfAborted();
     lastRequest = request;
-    const response = await fetch("/api/providers/debug/run", { method: "POST", headers: { "x-toonflow-workspace": "1", "Accept-Language": locale.value, "Content-Type": "application/json" }, body: JSON.stringify({ source, config, request, models }), signal });
+    const response = await fetchWithAccess("/api/providers/debug/run", { method: "POST", headers: { "x-toonflow-workspace": "1", "Accept-Language": locale.value, "Content-Type": "application/json" }, body: JSON.stringify({ source, config, request, models }), signal });
     if (!response.ok) throw new Error((await response.json()).message || "测试请求失败");
     if (!response.body) throw new Error("未收到运行结果");
     const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();

@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./access": "./src/access.ts",
     "./mediaPreview": "./src/mediaPreview.ts",
     "./mediaTypes": "./src/mediaTypes.ts",
     "./pcmPreview": "./src/pcmPreview.ts",

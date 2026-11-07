@@ -1,5 +1,6 @@
 import type { NodeTypesObject } from "@vue-flow/core";
 import { shallowReactive, type Component } from "vue";
+import { fetchWithAccess } from "@/lib/access";
 
 type NodeComponent = Exclude<NodeTypesObject[string], string>;
 
@@ -24,7 +25,7 @@ export function loadNodeComponent(name: string, url: string, force = false): Pro
   // ACT: 同名节点只加载一份脚本，所有画布共享进行中的重载，避免互相清除全局导出。
   const request = (async () => {
     const scriptUrl = force ? `${url}${url.includes("?") ? "&" : "?"}reload=${crypto.randomUUID()}` : url;
-    const response = await fetch(scriptUrl);
+    const response = await fetchWithAccess(scriptUrl);
     if (!response.ok) throw new Error(`节点脚本加载失败（HTTP ${response.status}）`);
     const code = await response.text();
     if (code.includes("toonflowTiptapHost")) await import("@/lib/tiptapHost");

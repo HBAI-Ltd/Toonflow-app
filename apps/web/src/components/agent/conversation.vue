@@ -68,6 +68,7 @@ import { IconCornerDownRight, IconListDetails, IconLoader2, IconPencil, IconTras
 import { ElMessage } from "element-plus";
 import { getReadableFileExtension, getReadableFileMimeType } from "@toonflow/server/documentFormats";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
+import { fetchWithAccess } from "@/lib/access";
 import { onAgentStopped, stopAgent } from "@/lib/agentControl";
 import { writeClipboardText } from "@/lib/clipboard";
 import { showNotification } from "@/lib/notification";
@@ -229,7 +230,7 @@ async function sendQueuedMessage(streamingBehavior: "steer" | "followUp") {
   pendingRunIds.add(requestRunId);
   let accepted = false;
   try {
-    const response = await fetch("/api/agent", {
+    const response = await fetchWithAccess("/api/agent", {
       method: "POST",
       headers: { "Accept-Language": locale.value, "Content-Type": "application/json", "x-toonflow-workspace": "1" },
       body: JSON.stringify({ prompt, directory, sessionFile, runId: requestRunId, expectedRunId,
@@ -449,7 +450,7 @@ async function sendCanvasResult(event: Extract<AgentEvent, { type: "canvasCall" 
   const cancelled = signal.aborted;
   if (cancelled) body = JSON.stringify({ directory, callId: event.callId, error: translate("画布操作已取消"), cancelled: true });
   try {
-    const response = await fetch("/api/agent/canvasResult", {
+    const response = await fetchWithAccess("/api/agent/canvasResult", {
       method: "POST",
       headers: { "Accept-Language": locale.value, "Content-Type": "application/json", "x-toonflow-workspace": "1" },
       body,
@@ -469,6 +470,8 @@ async function sendCanvasResult(event: Extract<AgentEvent, { type: "canvasCall" 
 async function sendMessage(source?: AgentMessage) {
   const instance = input.value;
   const draft = instance?.getDraft();
+  const draftAttachments = draft?.attachments.slice() ?? [];
+  const draftMentionIds = [...draft?.mentionedIds ?? []];
   const editing = source && editingId.value === source.id;
   const prompt = (source && !editing ? source.content : (draft?.prompt ?? "")).trim();
   const attachments = reactive((source && !editing ? source.attachments ?? [] : draft?.attachments ?? []).map(item => ({ ...item })));
@@ -507,6 +510,7 @@ async function sendMessage(source?: AgentMessage) {
   }
   let accepted = false;
   if (ownsStream) stream.begin(reply);
+  let draftPending = !source;
   const handledCanvasCalls = new Set<string>();
   const pendingQuestions = new Map<string, string>();
   const notifiedQuestions = new Set<string>();
@@ -519,12 +523,11 @@ async function sendMessage(source?: AgentMessage) {
   });
   const finishStats = anonymousData.startAgent();
   try {
-    if (!source) await instance.clearDraft();
     requestController.signal.throwIfAborted();
     await uploadAttachments(attachments, directory, requestController.signal);
     if (!isSuperseded()) remoteRunning.value = true;
     pendingRunIds.add(requestRunId);
-    const response = await fetch("/api/agent", {
+    const response = await fetchWithAccess("/api/agent", {
       method: "POST",
       headers: { "Accept-Language": locale.value, "Content-Type": "application/json", "x-toonflow-workspace": "1" },
       body: JSON.stringify({ prompt, mentions, attachments: attachments.map(({ name, path, mimeType }) => ({ name, path, mimeType })), directory, runId: requestRunId, providerId: model.providerId, modelId: model.modelId, thinkingLevel: reasoningEffort.value || undefined, sessionFile: props.sessionFile, resendFrom, canvas: canvasContext ? { id: canvasContext.id, tools: canvasContext.tools } : undefined }),
@@ -532,6 +535,17 @@ async function sendMessage(source?: AgentMessage) {
     });
     connected = response.ok;
     for await (const event of readAgentEvents(response, requestController.signal)) {
+      if (draftPending && (event.type === "accepted" || event.type === "userMessage")) {
+        draftPending = false;
+        if (draft && input.value === instance) {
+          const currentDraft = instance.getDraft();
+          if (currentDraft.prompt === draft.prompt
+            && currentDraft.attachments.length === draftAttachments.length && currentDraft.attachments.every((item, index) => item === draftAttachments[index])
+            && currentDraft.mentionedIds.length === draftMentionIds.length && currentDraft.mentionedIds.every((id, index) => id === draftMentionIds[index])) {
+            await instance.clearDraft();
+          }
+        }
+      }
       if (isSuperseded() && !["subAgent", "subAgentEvent", "report", "agentMessage"].includes(event.type)) {
         if (event.type === "userMessage") {
           const existing = messages.value.find(message => message.role === "user"
@@ -560,7 +574,7 @@ async function sendMessage(source?: AgentMessage) {
         if (!notifiedQuestions.has(toolEvent.callId) && !stopping.value && !projectStops.value
           && !requestController.signal.aborted && !canvasRunIds.some(id => stoppedRunIds.has(id))) {
           notifiedQuestions.add(toolEvent.callId);
-          void showNotification({ title: "Toonflow", body: translate("工具正在等待你的确认") })
+          void showNotification({ title: "TTLflow", body: translate("工具正在等待你的确认") })
             .catch(error => console.warn("系统通知发送失败", error));
         }
       }
@@ -638,7 +652,7 @@ async function sendMessage(source?: AgentMessage) {
     emit("sent", mentionPlainText(prompt, mentions) || attachments[0]?.name || "新对话");
     if (accepted && ownsStream && !forwarded && !isSuperseded() && !props.initialSession?.parentFile && !stopping.value && !projectStops.value
       && !requestController.signal.aborted && !stoppedRunIds.has(requestRunId)) {
-      void showNotification({ title: "Toonflow", body: translate("Agent 已完成回复") })
+      void showNotification({ title: "TTLflow", body: translate("Agent 已完成回复") })
         .catch(error => console.warn("系统通知发送失败", error));
     }
   } catch (error) {
@@ -664,7 +678,7 @@ async function sendMessage(source?: AgentMessage) {
     unlistenStop();
     // ACT: Bun 的流断开事件可能不触发；主动结束仍在等待的提问，不依赖断开通知。
     for (const callId of pendingQuestions.values()) {
-      void fetch("/api/agent/answer", {
+      void fetchWithAccess("/api/agent/answer", {
         method: "POST", headers: { "Accept-Language": locale.value, "Content-Type": "application/json", "x-toonflow-workspace": "1" },
         body: JSON.stringify({ directory, callId, cancelled: true }), keepalive: true,
       }).catch(() => {});

@@ -4,7 +4,7 @@
       <div class="noticeContent">
         <icon-barrier-block :size="36" aria-hidden="true" />
         <h3 id="developmentTitle">正在开发</h3>
-        <p>Toonflow 将在后续更新中推出多租户能力，敬请期待。</p>
+        <p>TTLflow 将在后续更新中推出多租户能力，敬请期待。</p>
       </div>
     </section>
 

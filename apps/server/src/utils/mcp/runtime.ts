@@ -9,6 +9,7 @@ import type { Express } from "express";
 import conf from "@/utils/conf";
 import { getMcpSettings } from "@/utils/mcp/control";
 import { closeMcpServers } from "@/utils/mcp/servers";
+import { getAccessHeaders } from "@/utils/access";
 
 let runtime: { app: Express; appOrigin: string; requestHeaders: Record<string, string>; server?: Server; sockets?: Set<Socket>; url?: string; port?: number; preferredPort?: number; file?: string; command: string; entry: string; error?: { cause: unknown; keepAddress: boolean } } | undefined;
 let reloadQueue = Promise.resolve();
@@ -37,7 +38,7 @@ export function initializeMcpRuntime(app: Express, url: string, entry: string, c
 }
 
 export function getAppRequestHeaders() {
-  return { ...runtime?.requestHeaders };
+  return { ...getAccessHeaders(), ...runtime?.requestHeaders };
 }
 
 export function stopMcpRuntime() {

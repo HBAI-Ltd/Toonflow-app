@@ -1,4 +1,5 @@
 import { locale } from "@toonflow/i18n/vue";
+import { fetchWithAccess } from "@/lib/access";
 
 const stopListeners = new Set<(runIds: string[]) => void>();
 
@@ -9,7 +10,7 @@ export function onAgentStopped(listener: (runIds: string[]) => void) {
 
 export async function stopAgent(directory: string, runIds: string[]) {
   if (!runIds.length) return;
-  const response = await fetch("/api/agent/stop", {
+  const response = await fetchWithAccess("/api/agent/stop", {
     method: "POST",
     headers: { "Accept-Language": locale.value, "Content-Type": "application/json", "x-toonflow-workspace": "1" },
     body: JSON.stringify({ directory, runIds: [...new Set(runIds)] }),
