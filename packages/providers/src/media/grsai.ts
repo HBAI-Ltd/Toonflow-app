@@ -27,7 +27,7 @@ const imagePixels: Record<string, string[]> = {
 };
 
 const modelQualities: Record<string, string[]> = {
-  "gpt-image-2": ["auto"],
+  "gpt-image-2.6": ["auto"],
   "gpt-image-2.5": ["auto"],
   "gpt-image-2-vip": ["medium"],
   "gpt-image-2.5-flare": ["low", "medium", "high"],
@@ -132,7 +132,7 @@ export default {
   readme: "支持 GPT 图片系列的文生图与单图、多图参考，默认使用国内节点。[获取 API Key](https://grsai.ai/zh/dashboard/api-keys)。普通模型支持 1K，VIP、Flare、Sunburst 支持 1K/2K/4K。蒙版仅支持平台可访问的 HTTP(S) 图片地址。停止本地等待不会取消远端任务。",
   rules,
   models: [
-    { id: "gpt-image-2", label: "GPT Image 2", type: "image", mode: ["text", "singleImage", "multiReference"], imageSizes: ["1K"], imageRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"] },
+    { id: "gpt-image-2.6", label: "GPT Image 2.6", type: "image", mode: ["text", "singleImage", "multiReference"], imageSizes: ["1K"], imageRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"] },
     { id: "gpt-image-2.5", label: "GPT Image 2.5", type: "image", mode: ["text", "singleImage", "multiReference"], imageSizes: ["1K"], imageRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"] },
     { id: "gpt-image-2-vip", label: "GPT Image 2 VIP", type: "image", mode: ["text", "singleImage", "multiReference"], imageSizes: ["1K", "2K", "4K"], imageRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"] },
     { id: "gpt-image-2.5-flare", label: "GPT Image 2.5 Flare", type: "image", mode: ["text", "singleImage", "multiReference"], imageSizes: ["1K", "2K", "4K"], imageRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"] },
