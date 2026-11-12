@@ -23,6 +23,7 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) HBAI-Ltd"
 Var removeUserData
 Var removeUserDataCheckbox
 Var installStep
+Var installDetail
 
 Name "${appName}"
 Caption "${appName}"
@@ -123,6 +124,17 @@ Function showFinishPage
   System::Store "L"
 FunctionEnd
 
+Function logInstallFailure
+  ; ACT: 只保留最近一次失败，静默安装也能据此排查；日志写入失败不改变安装结果。
+  ClearErrors
+  FileOpen $3 "$TEMP\toonflowInstall.log" w
+  ${IfNot} ${Errors}
+    FileWriteUTF16LE /BOM $3 "Toonflow ${appVersion} ${appArch}$\r$\n失败步骤：$installStep$\r$\n安装目录：$INSTDIR$\r$\n$installDetail$\r$\n"
+    FileClose $3
+  ${EndIf}
+  ClearErrors
+FunctionEnd
+
 Function un.onInit
   StrCpy $removeUserData ${BST_UNCHECKED}
 FunctionEnd
@@ -191,27 +203,16 @@ installApp:
     Abort
   ${EndIf}
   ${If} $0 != 0
-    DetailPrint "必要运行时准备失败，下载助手返回码：$0。"
+    StrCpy $installDetail "下载助手返回码：$0；下载记录见 $LOCALAPPDATA\${appIdentifier}\runtime\bun 内的 download.log"
     Goto installFailed
   ${EndIf}
   IfFileExists "$PLUGINSDIR\runtimeBin\bun.exe" 0 installFailed
   Call ensureWebView2
   !insertmacro ensureAppStopped "安装"
   ClearErrors
-  StrCpy $installStep "准备应用解压工具"
+  StrCpy $installStep "释放应用解压助手"
   File "/oname=$PLUGINSDIR\updateHelper.exe" "${updateHelper}"
   IfErrors installFailed
-  DetailPrint "正在检查解压工具，缺失时将从 7-Zip 官方下载。"
-  nsExec::ExecToStack /TIMEOUT=720000 '"$PLUGINSDIR\updateHelper.exe" --ensure-archive-tool "$INSTDIR" --quiet --utf16'
-  Pop $0
-  Pop $1
-  ${If} $0 != 0
-    DetailPrint "解压工具准备失败，返回码：$0；$1"
-    MessageBox MB_OK|MB_ICONSTOP "无法准备应用解压工具，请确认网络和目录权限后重试。$\r$\n$1" /SD IDOK
-    SetErrorLevel 2
-    Abort
-  ${EndIf}
-  ClearErrors
   StrCpy $installStep "创建应用目录"
   SetOutPath "$INSTDIR\app"
   IfErrors installFailed
@@ -239,13 +240,13 @@ installApp:
     RMDir /r "$INSTDIR\app\Resources\app\providers"
   IfErrors installFailed
   ; ACT: 安装专用轻量 tar 不等于 SDK 的完整更新归档，使用独立文件名，不能作为增量基线。
+  StrCpy $installStep "解压应用文件"
   nsExec::ExecToStack '"$PLUGINSDIR\updateHelper.exe" --extract-install "$INSTDIR" "$INSTDIR\self-extraction\installerPayload.tar" --quiet --utf16'
   Pop $0
   Pop $1
   ${If} $0 != 0
-    MessageBox MB_OK|MB_ICONSTOP "应用解压失败，请确认目标目录可写并关闭正在运行的 Toonflow 后重试。$\r$\n解压返回码：$0$\r$\n$1" /SD IDOK
-    SetErrorLevel 2
-    Abort
+    StrCpy $installDetail "解压返回码：$0$\r$\n$1"
+    Goto installFailed
   ${EndIf}
   StrCpy $installStep "清理安装压缩包"
   ClearErrors
@@ -269,7 +270,7 @@ installApp:
   Pop $0
   Pop $1
   ${If} $0 != 0
-    DetailPrint "$1"
+    StrCpy $installDetail "初始化返回码：$0$\r$\n$1"
     Goto installFailed
   ${EndIf}
   ; SDK 将 uninstall.exe 当作原生更新助手，NSIS 卸载器必须使用不同名称。
@@ -298,7 +299,10 @@ installApp:
   Goto installDone
 
 installFailed:
-  MessageBox MB_OK|MB_ICONSTOP "安装未完成。$\r$\n失败步骤：$installStep$\r$\n安装目录：$INSTDIR$\r$\n$\r$\n请确认目录可写并关闭 Toonflow 后重试，详细信息见安装窗口。" /SD IDOK
+  DetailPrint "安装未完成，失败步骤：$installStep"
+  DetailPrint "$installDetail"
+  Call logInstallFailure
+  MessageBox MB_OK|MB_ICONSTOP "安装未完成。$\r$\n失败步骤：$installStep$\r$\n安装目录：$INSTDIR$\r$\n$installDetail$\r$\n$\r$\n请确认目录可写并关闭 Toonflow 后重试。$\r$\n诊断日志：$TEMP\toonflowInstall.log" /SD IDOK
   SetErrorLevel 2
   Abort
 installDone:
