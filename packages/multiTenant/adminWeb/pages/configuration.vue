@@ -45,6 +45,7 @@ import { translate } from "@toonflow/i18n/vue";
 import { computed } from "vue";
 import { ElSwitch } from "element-plus";
 import "element-plus/es/components/switch/style/css";
+import { defaultCreationPort } from "../constants";
 
 const props = defineProps<{ enabled: boolean; saving: boolean; registrationEnabled: boolean; registrationSaving: boolean; creationUrl: string }>();
 const emit = defineEmits<{ changeEnabled: [enabled: boolean]; changeRegistration: [enabled: boolean]; openCreation: [] }>();
@@ -52,7 +53,7 @@ const accessPort = computed(() => {
   try {
     const url = new URL(props.creationUrl);
     return url.port || (url.protocol === "https:" ? "443" : "80");
-  } catch { return "10888"; }
+  } catch { return defaultCreationPort; }
 });
 
 function changeEnabled(value: boolean | string | number) {

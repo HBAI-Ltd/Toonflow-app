@@ -58,6 +58,9 @@ export default router.put("/", validateFields({ expectedRevision: z.number().int
     const commit = () => {
       // 开关只由超管接口修改；异步准备完成后读取最新值，避免其他页面的旧快照覆盖。
       settings.multiTenantEnabled = u.multiTenant.isEnabled();
+      // 创作入口地址只从 settings.json 运维配置生效；创作 Web 保存设置不带该字段，按服务端现值保留。
+      if (previousSettings.multiTenantCreationUrl === undefined) delete settings.multiTenantCreationUrl;
+      else settings.multiTenantCreationUrl = previousSettings.multiTenantCreationUrl;
       u.conf.set("settings", settings);
     };
     if (network) u.network.configureNetwork(network, undefined, commit);

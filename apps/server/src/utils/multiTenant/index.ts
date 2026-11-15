@@ -10,10 +10,10 @@ import conf from "@/utils/conf";
 import { assertAppRequest } from "@/utils/mcp/control";
 import { isMobileLinkRequest } from "@/utils/mobileLink";
 import { changeMultiTenantEnabled } from "./runtime";
-import { isEnabled } from "./mode";
+import { isEnabled, readCreationUrl } from "./mode";
 
 export { startMultiTenantRuntime, stopMultiTenantRuntime } from "./runtime";
-export { creationPort, isEnabled } from "./mode";
+export { creationPort, isEnabled, readCreationUrl } from "./mode";
 export { requestIdentity } from "./runtime";
 export { currentIdentity } from "./context";
 export { modelGateway, requireDirectModelAccess } from "./gateway";
@@ -229,6 +229,7 @@ export async function state(req: Request) {
   const ui = value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
   return {
     enabled: isEnabled(),
+    creationUrl: readCreationUrl(),
     registrationEnabled: await accessControl(() => control.getRegistrationEnabled()),
     user: await accessControl(() => control.getAdminIdentity()),
     ui: Object.fromEntries(["theme", "language", "primaryColor", "fontScale", "radius"]

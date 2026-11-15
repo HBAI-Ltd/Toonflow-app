@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./index.vue",
+    "./constants": "./constants.ts",
     "./routes": "./routes.ts"
   },
   "scripts": {
