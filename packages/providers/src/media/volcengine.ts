@@ -25,36 +25,10 @@ const rules = [
 
 const version = "1.0.0";
 
-type ReferencedVideoRequest = VideoRequest & {
-  referenceOrder?: ({ type: "image" | "video" | "audio"; index: number } | { type: "firstFrame" | "lastFrame" | "text" })[];
-};
-
-/** Seedance 2.5 的提示词引用素材使用 @ 前缀，2.0 系列使用中文序号；素材上限与仅音频能力也按此版本区分。 */
+/** Seedance 2.5 的素材上限与仅音频能力不同于 2.0 系列。 */
 function isSeedance25(model: string) {
   const lower = model.toLowerCase();
   return lower.includes("seedance-2.5") || lower.includes("seedance-2-5");
-}
-
-function videoPrompt(request: ReferencedVideoRequest, mode: VideoMode) {
-  const labels = isSeedance25(request.model)
-    ? { image: "@图片", video: "@视频", audio: "@音频" }
-    : { image: "图片", video: "视频", audio: "音频" };
-  const isFrames = mode === "startEndRequired" || mode === "endFrameOptional" || mode === "startFrameOptional";
-  return request.prompt.replace(/\{\{ref (\d+)\}\}/g, (marker, number: string) => {
-    const reference = request.referenceOrder?.[Number(number) - 1];
-    if (!reference) throw new Error(`引用标记 ${marker} 缺少素材映射，请更新视频节点或提供 referenceOrder`);
-    if (reference.type === "text") return `参考 ${Number(number)}`;
-    if (reference.type === "firstFrame" || reference.type === "lastFrame") {
-      if (!isFrames || !request[reference.type]) throw new Error(`引用标记 ${marker} 对应的首尾帧未提交`);
-      return reference.type === "firstFrame" ? "首帧" : "尾帧";
-    }
-    if (!("index" in reference)) throw new Error(`引用标记 ${marker} 的素材类型无效`);
-    const media = { image: request.images, video: request.videos, audio: request.audios };
-    if (!Number.isSafeInteger(reference.index) || reference.index < 0 || !media[reference.type]?.[reference.index]) {
-      throw new Error(`引用标记 ${marker} 对应的素材未提交，请重新选择引用`);
-    }
-    return `${labels[reference.type]}${reference.index + 1}`;
-  });
 }
 
 /** 已是 URL 的输入直接透传；字节与 base64 输入转成 data URL（文档要求格式小写）。 */
@@ -137,6 +111,7 @@ export default {
   version,
   apiUrl: API_BASE,
   readme: `火山引擎方舟平台提供豆包 Seedance 系列视频生成模型：Seedance 2.5 单次最长 30 秒，支持全模态参考（图片/视频/音频）与首尾帧；Seedance 2.0 系列单次最长 15 秒，支持参考图/视频/音频与首尾帧。
+\n本供应商不支持节点的 {{ref N}} 引用标记，请直接使用模型原生引用名称：Seedance 2.5 使用 @图片1、@视频1、@音频1，2.0 使用图片1、视频1、音频1；各类素材分别按传入顺序从 1 编号，首尾帧使用“首帧”“尾帧”。
  \n 👉 点击 [前往平台](https://console.volcengine.com/ark) 开通模型并获取 API Key`,
   rules,
   models: [
@@ -159,11 +134,14 @@ export default {
       durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["480p", "720p", "1080p"] }],
     },
   ] satisfies ProviderModel[],
-  async generateVideo(request: ReferencedVideoRequest): Promise<MediaAsset[]> {
+  async generateVideo(request: VideoRequest): Promise<MediaAsset[]> {
     this.signal?.throwIfAborted();
     const apiKey = this.config.apiKey?.trim();
     if (!apiKey) throw new Error("请填写 API Key");
     if (!request.prompt.trim()) throw new Error("请先填写视频提示词");
+    if (/\{\{ref \d+\}\}/.test(request.prompt)) {
+      throw new Error("此供应商不支持节点的 {{ref N}} 引用标记，请按供应商说明使用模型原生素材引用名称");
+    }
 
     const images = request.images ?? [];
     const videos = request.videos ?? [];
@@ -181,7 +159,7 @@ export default {
     const isReference = Array.isArray(mode);
 
     // 图生视频-首帧、首尾帧、全模态参考是三种互斥场景，不可混用。
-    const content: Record<string, unknown>[] = [{ type: "text", text: videoPrompt(request, mode) }];
+    const content: Record<string, unknown>[] = [{ type: "text", text: request.prompt }];
     if (isReference) {
       if (request.firstFrame || request.lastFrame) throw new Error("参考素材模式不能同时传入首尾帧，请在引用中选择参考模式");
       if (audios.length > 0 && images.length === 0 && videos.length === 0 && !isSeedance25(request.model)) {
