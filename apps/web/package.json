@@ -9,7 +9,7 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "vue-tsc"
+    "typecheck": "vue-tsc && tsc --project tsconfig.config.json"
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.1.1",

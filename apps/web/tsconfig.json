@@ -1,6 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/vue-tsc.tsbuildinfo",
     "lib": [
       "ESNext",
       "DOM",
@@ -16,7 +18,6 @@
     },
   },
   "include": [
-    "src",
-    "vite.config.ts"
+    "src"
   ]
 }

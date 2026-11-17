@@ -789,6 +789,7 @@
   },
   "patchedDependencies": {
     "@vue-flow/core@1.48.2": "patches/vueFlowCore.patch",
+    "tdesign-vue-next@1.20.7": "patches/tdesignTypes.patch",
   },
   "packages": {
     "@a2a-js/sdk": ["@a2a-js/sdk@1.2.0", "https://registry.npmmirror.com/@a2a-js/sdk/-/sdk-1.2.0.tgz", { "dependencies": { "jose": "^6.2.3" }, "peerDependencies": { "@bufbuild/protobuf": "^2.10.2", "@grpc/grpc-js": "^1.11.0", "express": "^4.21.2 || ^5.1.0" }, "optionalPeers": ["@bufbuild/protobuf", "@grpc/grpc-js", "express"] }, "sha512-zxjvBrxhPV4J/RN8QTbsYaUIu9Y9RvmR06IP5o42UdJX42A9I0m1StGVvqrcCQ3bdu3SzWHPm5CeC2FNHARvkw=="],

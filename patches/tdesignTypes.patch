@@ -1,0 +1,23 @@
+diff --git a/es/config-provider/type.d.ts b/es/config-provider/type.d.ts
+index c20c811686d3f3b723d73aeac5b93d5f88750932..76b27be2086953b2738a605a309b55556b14e504 100644
+--- a/es/config-provider/type.d.ts
++++ b/es/config-provider/type.d.ts
+@@ -1,4 +1,4 @@
+-import { GlobalIconConfig } from 'tdesign-icons-vue-next';
++import type { GlobalIconConfig } from 'tdesign-icons-vue-next/lib/global-config';
+ import { CalendarController } from '../calendar';
+ import { ButtonProps } from '../button';
+ import { FormErrorMessage } from '../form';
+diff --git a/es/tree/utils/adapt.d.ts b/es/tree/utils/adapt.d.ts
+index f0516ae3afe82e414344192d3746b5e374e2fce7..5381f4009c5a34e9424bc7b44b1cd25d7e083af6 100644
+--- a/es/tree/utils/adapt.d.ts
++++ b/es/tree/utils/adapt.d.ts
+@@ -7,7 +7,7 @@ import { TdTreeProps, TreeInstanceFunctions } from '../type';
+ import { VirtualScrollConfig, useVModel as tdUseVModel } from '@tdesign/shared-hooks';
+ import { TreeStore } from 'tdesign-vue-next/es/common/js/tree/tree-store';
+ export { ref, reactive, computed, watch, onMounted, toRefs, defineComponent, TransitionGroup } from 'vue';
+-export { CaretRightSmallIcon as TdCaretRightSmallIcon } from 'tdesign-icons-vue-next';
++export { default as TdCaretRightSmallIcon } from 'tdesign-icons-vue-next/lib/components/caret-right-small';
+ export { Checkbox as TCheckBox } from '../../checkbox';
+ export { Loading as TLoading } from '../../loading';
+ export { useConfig, usePrefixClass } from '@tdesign/shared-hooks';

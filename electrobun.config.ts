@@ -1,4 +1,5 @@
 import type { ElectrobunConfig } from "./.hutch/devkit/api/config/ElectrobunConfig";
+import appVersion from "./appVersion";
 
 const startupTarget = process.platform === "darwin" ? (process.arch === "x64" ? "macX64" : "macArm64") : "windowsX64";
 
@@ -6,7 +7,7 @@ export default {
   app: {
     name: "toonflow",
     identifier: "local.toonflow.desktop",
-    version: process.env.appVersion ?? "2.0.0",
+    version: appVersion,
     urlSchemes: ["toonflow"],
   },
   build: {
