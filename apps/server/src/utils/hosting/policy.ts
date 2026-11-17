@@ -25,6 +25,7 @@ const memberRoutes = new Set([
   "POST /api/singleAgent/answer", "POST /api/singleAgent/toolResult",
   "GET /api/projects/list", "POST /api/projects/create", "PATCH /api/projects/update", "DELETE /api/projects/remove",
   "GET /api/account/usage", "POST /api/account/tasks/cancel", "GET /api/account/media/list", "POST /api/account/media/save",
+  "GET /api/account/ledger",
 ]);
 
 export function hostingPolicy(req: Request, res: Response, next: NextFunction) {

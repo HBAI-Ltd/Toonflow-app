@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { createBillingFetch } from "@/utils/hosting/billing";
 import { dirname, join } from "node:path";
 import { mkdir, readFile, unlink } from "@toonflow/file";
 import conf from "@/utils/conf";
@@ -143,7 +144,7 @@ export function getUnsupportedFileText(provider: FileProvider, file: { path: str
 }
 
 export function createFileTransport(provider: FileProvider, options: { fetch?: typeof fetch; signal?: AbortSignal } = {}): { prepare(payload: unknown): Promise<void>; fetch: typeof fetch } {
-  const request = options.fetch ?? globalThis.fetch;
+  const request = createBillingFetch(options.fetch ?? globalThis.fetch);
   const adapter = adapters.find(adapter => adapter.accepts(provider));
   if (!adapter) return { prepare: async () => {}, fetch: request };
   const scope = hash(`${adapter.endpoint}\0${hash(provider.apiKey)}`);

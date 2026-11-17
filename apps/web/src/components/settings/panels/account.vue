@@ -4,6 +4,8 @@
       <el-descriptions-item label="用户名">{{ accountUser?.username }}</el-descriptions-item>
       <el-descriptions-item label="角色">{{ accountUser?.role === 'admin' ? '管理员' : '成员' }}</el-descriptions-item>
       <el-descriptions-item label="存储空间">{{ formatBytes(usage?.storage.usedBytes ?? 0) }} / {{ formatBytes(usage?.storage.limitBytes ?? 0) }}</el-descriptions-item>
+      <el-descriptions-item label="余额">{{ formatMoney(usage?.wallet.balance) }}</el-descriptions-item>
+      <el-descriptions-item label="消费倍率">{{ usage?.wallet.effectiveMultiplier ?? '—' }}×{{ usage?.wallet.multiplier === null ? '（系统默认）' : '' }}</el-descriptions-item>
     </el-descriptions>
     <el-space wrap>
       <el-button :loading="loading" @click="loadAccount">刷新</el-button>
@@ -17,14 +19,35 @@
       <el-option v-for="user in users.filter(user => user.id !== accountUser?.id)" :key="user.id" :label="user.username" :value="user.id" />
     </el-select>
     <el-table :data="visibleTasks" maxHeight="300">
+      <el-table-column type="expand"><template #default="{ row }">
+        <el-table v-if="row.billing?.requests.length" :data="row.billing.requests">
+          <el-table-column prop="requestId" label="上游 Request ID" minWidth="220" />
+          <el-table-column label="上游金额" minWidth="120"><template #default="{ row: request }">{{ formatMoney(request.upstreamAmount) }}</template></el-table-column>
+          <el-table-column label="实际扣费" minWidth="120"><template #default="{ row: request }">{{ formatMoney(request.chargedAmount) }}</template></el-table-column>
+          <el-table-column label="核对情况" minWidth="220"><template #default="{ row: request }">{{ request.status === 'settled' ? '已核对' : request.note || '账单待核对' }}</template></el-table-column>
+        </el-table>
+        <el-text v-else type="info">没有可核对的上游账单引用。</el-text>
+      </template></el-table-column>
       <el-table-column prop="kind" label="类型" />
       <el-table-column prop="model" label="模型" />
       <el-table-column label="调用时间" minWidth="160"><template #default="{ row }">{{ row.createdAt ? new Date(row.createdAt).toLocaleString() : '—' }}</template></el-table-column>
       <el-table-column label="供应商用量" minWidth="160"><template #default="{ row }">{{ usageText(row.usage) }}</template></el-table-column>
+      <el-table-column label="上游金额" minWidth="120"><template #default="{ row }">{{ formatMoney(row.billing?.upstreamAmount) }}</template></el-table-column>
+      <el-table-column label="倍率" minWidth="85"><template #default="{ row }">{{ row.billing?.multiplier == null ? '—' : `${row.billing.multiplier}×` }}</template></el-table-column>
+      <el-table-column label="实际扣费" minWidth="120"><template #default="{ row }">{{ formatMoney(row.billing?.chargedAmount) }}</template></el-table-column>
+      <el-table-column label="结算状态" minWidth="170"><template #default="{ row }">{{ billingStatus(row.billing) }}</template></el-table-column>
       <el-table-column label="状态"><template #default="{ row }">{{ taskStatus(row.status) }}</template></el-table-column>
       <el-table-column label="上游状态" minWidth="230"><template #default="{ row }">{{ upstreamStatus(row.upstreamJob) }}</template></el-table-column>
       <el-table-column label="操作"><template #default="{ row }"><el-button v-if="(!taskUserId || taskUserId === accountUser?.id) && ['queued', 'running'].includes(row.status)" link type="danger" :disabled="busy" @click="cancelTask(row.id)">取消任务</el-button></template></el-table-column>
     </el-table>
+    <h3>余额流水</h3>
+    <el-table :data="ledger" maxHeight="260">
+      <el-table-column label="时间" minWidth="170"><template #default="{ row }">{{ new Date(row.createdAt).toLocaleString() }}</template></el-table-column>
+      <el-table-column label="变动金额" minWidth="130"><template #default="{ row }">{{ row.amount > 0 ? '+' : '' }}{{ formatMoney(row.amount) }}</template></el-table-column>
+      <el-table-column label="变动后余额" minWidth="130"><template #default="{ row }">{{ formatMoney(row.balance) }}</template></el-table-column>
+      <el-table-column prop="note" label="备注" minWidth="220" />
+    </el-table>
+    <el-text size="small" type="info">显示最近 200 笔流水。</el-text>
     <h3>临时生成结果</h3>
     <el-text type="info">临时结果将在 24 小时后清理，远程链接可能更早失效。请及时下载或保存到项目。</el-text>
     <el-table :data="mediaResults" maxHeight="300">
@@ -36,15 +59,6 @@
         <el-button link :disabled="busy || !!row.savedPath" @click="saveMedia(row as MediaResult)">{{ row.savedPath ? '已保存' : '保存到项目' }}</el-button>
       </template></el-table-column>
     </el-table>
-    <template v-if="accountUser?.role === 'admin'">
-      <div class="usersHeader"><h3>用户管理</h3><el-button type="primary" @click="openUser('create')">创建用户</el-button></div>
-      <el-table :data="users" maxHeight="380">
-        <el-table-column prop="username" label="用户名" minWidth="130" />
-        <el-table-column label="状态"><template #default="{ row }">{{ row.enabled ? '已启用' : '已禁用' }}</template></el-table-column>
-        <el-table-column label="存储空间" minWidth="170"><template #default="{ row }">{{ formatBytes(adminUsage.find(item => item.userId === row.id)?.storage.usedBytes ?? 0) }} / {{ formatBytes(row.storageLimitBytes) }}</template></el-table-column>
-        <el-table-column label="操作" minWidth="190"><template #default="{ row }"><el-button link @click="openUser('update', row as AccountUser)">编辑</el-button><el-button link @click="openUser('reset', row as AccountUser)">重置密码</el-button></template></el-table-column>
-      </el-table>
-    </template>
     <el-dialog :modelValue="!!previewMedia" title="预览生成结果" width="min(800px, 92vw)" appendToBody destroyOnClose @update:modelValue="value => { if (!value) previewMedia = undefined; }">
       <template v-if="previewMedia">
         <el-image v-if="previewMedia.mimeType.startsWith('image/')" class="mediaImage" :src="previewUrl" fit="contain" alt="生成结果" />
@@ -61,17 +75,6 @@
         <el-button type="primary" nativeType="submit" :loading="busy" :disabled="!currentPassword || !newPassword">保存</el-button>
       </el-form>
     </el-dialog>
-    <el-dialog v-model="userVisible" :title="userAction === 'create' ? '创建用户' : userAction === 'reset' ? '重置密码' : '编辑用户'" width="min(480px, 92vw)" appendToBody :closeOnClickModal="false" @closed="clearPasswords">
-      <el-form labelPosition="top" @submit.prevent="saveUser">
-        <el-form-item label="用户名"><el-input v-model="userName" :disabled="busy || userAction !== 'create'" autocomplete="off" /></el-form-item>
-        <el-form-item v-if="userAction !== 'reset'" label="存储上限（MiB）"><el-input-number v-model="storageMiB" :min="1" :max="1048576" :precision="0" :disabled="busy" /></el-form-item>
-        <el-form-item v-if="userAction === 'update'" label="启用账户"><el-switch v-model="userEnabled" :disabled="busy" /></el-form-item>
-        <el-form-item v-if="userAction !== 'update'" label="临时密码"><el-input v-model="temporaryPassword" type="password" autocomplete="new-password" :minlength="15" :maxlength="128" showPassword :disabled="busy" /><el-text size="small">密码长度为 15 至 128 个字符</el-text></el-form-item>
-        <el-form-item label="管理员当前密码"><el-input v-model="currentPassword" type="password" autocomplete="current-password" showPassword :disabled="busy" /></el-form-item>
-        <el-alert v-if="dialogError" :title="dialogError" type="error" :closable="false" />
-        <el-button type="primary" nativeType="submit" :loading="busy" :disabled="!currentPassword || !userName || (userAction !== 'update' && !temporaryPassword)">保存</el-button>
-      </el-form>
-    </el-dialog>
   </div>
 </template>
 
@@ -82,13 +85,15 @@ import { accountUser, accountRequest, logoutAccount, changeAccountPassword, expi
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import saveFile from "@/lib/saveFile";
 import videoPlayer from "@/components/videoPlayer.vue";
+import { billingStatus, formatMoney, type Wallet, type LedgerEntry, type TaskBilling } from "@/lib/billing";
 type UpstreamJob = { provider: string; id?: string; status?: string; checkedAt?: number; reconciliation?: string };
-type AccountUsage = { userId?: string; username?: string; storage: { usedBytes: number; limitBytes: number }; tasks: { id: string; kind: string; model?: string; status: string; createdAt?: number; usage?: Record<string, number> | null; upstreamJob?: UpstreamJob[] | null }[] };
+type AccountUsage = { userId?: string; username?: string; wallet: Wallet; storage: { usedBytes: number; limitBytes: number }; tasks: { id: string; kind: string; model?: string; status: string; createdAt?: number; usage?: Record<string, number> | null; upstreamJob?: UpstreamJob[] | null; billing?: TaskBilling }[] };
 type MediaResult = { id: string; directory: string; path: string; mimeType: string; mediaType: string; createdAt: number; savedPath?: string };
 const mediaResults = ref<MediaResult[]>([]);
 const previewMedia = ref<MediaResult>();
 const previewUrl = computed(() => previewMedia.value ? useWorkspaceFiles(previewMedia.value.directory).readUrl(previewMedia.value.path) : "");
 const usage = ref<AccountUsage>();
+const ledger = ref<LedgerEntry[]>([]);
 const users = ref<AccountUser[]>([]);
 const adminUsage = ref<AccountUsage[]>([]);
 const taskUserId = ref("");
@@ -106,16 +111,9 @@ const loggingOut = ref(false);
 const errorMessage = ref("");
 const dialogError = ref("");
 const passwordVisible = ref(false);
-const userVisible = ref(false);
 const currentPassword = ref("");
 const newPassword = ref("");
 const confirmPassword = ref("");
-const temporaryPassword = ref("");
-const userAction = ref<"create" | "update" | "reset">("create");
-const userId = ref("");
-const userName = ref("");
-const storageMiB = ref<number>(1024);
-const userEnabled = ref(true);
 function formatBytes(bytes: number) { return `${(bytes / 1024 / 1024).toFixed(1)} MiB`; }
 function taskStatus(status: string) {
   const labels: Record<string, string> = { queued: "排队中", running: "运行中", completed: "已完成", succeeded: "已完成", failed: "失败", cancelled: "已取消", canceled: "已取消", interrupted: "上次中断" };
@@ -138,12 +136,13 @@ function upstreamStatus(jobs?: UpstreamJob[] | null) {
     return `${provider} · ${translate(statusLabels[job.status ?? ""] ?? "未知")} · ${translate(reconciliationLabels[job.reconciliation ?? ""] ?? "未知")}`;
   }).join("；");
 }
-function clearPasswords() { currentPassword.value = ""; newPassword.value = ""; confirmPassword.value = ""; temporaryPassword.value = ""; dialogError.value = ""; }
+function clearPasswords() { currentPassword.value = ""; newPassword.value = ""; confirmPassword.value = ""; dialogError.value = ""; }
 async function loadAccount() {
   loading.value = true;
   errorMessage.value = "";
   try {
     usage.value = await accountRequest<AccountUsage>("account/usage");
+    ledger.value = await accountRequest<LedgerEntry[]>("account/ledger");
     mediaResults.value = await accountRequest<MediaResult[]>("account/media/list");
     if (accountUser.value?.role === "admin") {
       [users.value, adminUsage.value] = await Promise.all([accountRequest<AccountUser[]>("admin/users/list"), accountRequest<AccountUsage[]>("admin/usage/list")]);
@@ -187,29 +186,6 @@ async function changePassword() {
   catch (error) { dialogError.value = error instanceof Error ? error.message : "修改密码失败"; }
   finally { busy.value = false; }
 }
-function openUser(action: typeof userAction.value, user?: AccountUser) {
-  clearPasswords();
-  userAction.value = action;
-  userId.value = user?.id ?? "";
-  userName.value = user?.username ?? "";
-  storageMiB.value = (user?.storageLimitBytes ?? 1024 ** 3) / 1024 / 1024;
-  userEnabled.value = user?.enabled ?? true;
-  userVisible.value = true;
-}
-async function saveUser() {
-  if (busy.value) return;
-  busy.value = true;
-  dialogError.value = "";
-  try {
-    if (userAction.value === "create") await accountRequest("admin/users/create", { username: userName.value.trim(), temporaryPassword: temporaryPassword.value, storageLimitBytes: storageMiB.value * 1024 * 1024, currentPassword: currentPassword.value });
-    else if (userAction.value === "reset") await accountRequest("admin/users/resetPassword", { id: userId.value, temporaryPassword: temporaryPassword.value, currentPassword: currentPassword.value });
-    else await accountRequest("admin/users/update", { id: userId.value, enabled: userEnabled.value, storageLimitBytes: storageMiB.value * 1024 * 1024, currentPassword: currentPassword.value }, "PUT");
-    userVisible.value = false;
-    clearPasswords();
-    await loadAccount();
-  } catch (error) { dialogError.value = error instanceof Error ? error.message : "保存用户失败"; }
-  finally { busy.value = false; }
-}
 onMounted(loadAccount);
 </script>
 
@@ -219,7 +195,6 @@ onMounted(loadAccount);
   flex-direction: column;
   gap: 16px;
   h3 { margin: 0; }
-  .usersHeader { display: flex; justify-content: space-between; align-items: center; }
   .el-alert { margin-bottom: 12px; }
   .mediaImage { display: block; width: 100%; max-height: 65vh; }
   .mediaVideo { height: min(56vw, 60vh); }

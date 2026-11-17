@@ -9,10 +9,10 @@
     :closeOnClickModal="false"
     :closeOnPressEscape="!saving"
     :showClose="!saving"
-    @closed="formApi = undefined">
+    @closed="formApi = undefined; formValues = {}; formRules = []">
     <div class="providerEditor">
       <messageMarkdown v-if="provider?.readme" class="providerReadme" :content="provider.readme" />
-      <form-create v-model="formValues" v-model:api="formApi" :rule="formRules" :option="formOptions" />
+      <form-create v-if="!loadingConfig" v-model="formValues" v-model:api="formApi" :rule="formRules" :option="formOptions" />
       <div class="modelHeader">
         <h4>模型配置 <el-text type="info">{{ models.length }}</el-text></h4>
         <el-button :icon="IconPlus" size="small" :disabled="saving" @click="editModel()">手动添加</el-button>
@@ -43,7 +43,7 @@
     <el-alert v-if="formError" class="formError" :title="formError" type="error" :closable="false" showIcon />
     <template #footer>
       <el-button :disabled="saving" @click="visible = false">取消</el-button>
-      <el-button type="primary" :icon="IconDeviceFloppy" :loading="saving" :disabled="!formApi" @click="saveModels">保存</el-button>
+      <el-button type="primary" :icon="IconDeviceFloppy" :loading="saving" :disabled="!formApi || loadingConfig" @click="saveModels">保存</el-button>
     </template>
     <component
       :is="modelEditorDialog"
@@ -65,6 +65,7 @@ import { modelIcon } from "@toonflow/model-icons";
 import messageMarkdown from "@/components/messageMarkdown.vue";
 import type { MediaProvider, MediaProviderModel } from "./types";
 import { settings, saveSettings } from "@/stores/settings";
+import { accountEnabled } from "@/lib/account";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
 
 const { provider } = defineProps<{ provider?: MediaProvider }>();
@@ -75,10 +76,11 @@ const models = ref<MediaProviderModel[]>([]);
 const modelEditorVisible = ref(false);
 const editingModelIndex = ref<number>();
 const saving = ref(false);
+const loadingConfig = ref(false);
 const formApi = shallowRef<Api>();
 const formRules = shallowRef<ReturnType<typeof formCreate.copyRules>>([]);
 const formValues = ref<Record<string, unknown>>({});
-const formOptions = computed<Options>(() => ({ form: { labelPosition: "top", disabled: saving.value }, appendValue: false, submitBtn: false, resetBtn: false }));
+const formOptions = computed<Options>(() => ({ form: { labelPosition: "top", disabled: saving.value || loadingConfig.value }, appendValue: false, submitBtn: false, resetBtn: false }));
 const revision = ref("");
 const formError = ref("");
 const modelTypes = { get image() { return translate("图片"); }, get video() { return translate("视频"); }, get audio() { return translate("音频"); }, get text() { return translate("文本"); } };
@@ -88,7 +90,10 @@ const modeLabels: Record<string, string> = {
   imageReference: "图片参考", videoReference: "视频参考", audioReference: "音频参考",
 };
 
-watch(visible, isVisible => {
+watch(visible, async (isVisible, _previous, onCleanup) => {
+  let cancelled = false;
+  onCleanup(() => { cancelled = true; });
+  loadingConfig.value = false;
   if (!isVisible) return;
   formError.value = "";
   modelEditorVisible.value = false;
@@ -98,6 +103,17 @@ watch(visible, isVisible => {
   formValues.value = structuredClone(toRaw((provider && configs?.[provider.id]) ?? {}));
   revision.value = provider?.revision ?? "";
   models.value = JSON.parse(JSON.stringify(provider?.models ?? []));
+  if (accountEnabled.value && provider && formValues.value.apiKey === "••••••") {
+    loadingConfig.value = true;
+    try {
+      const { data } = await axios.get<{ code: number; data: { mediaProviderConfigs?: Record<string, Record<string, unknown>> } }>("/api/settings/get", { params: { mediaProviderId: provider.id }, headers: { "x-toonflow-workspace": "1" } });
+      if (cancelled) return;
+      const config = data.data?.mediaProviderConfigs?.[provider.id];
+      if (data.code !== 200 || !config || config.apiKey === "••••••") throw new Error("无法读取供应商密钥，请重新打开设置后重试");
+      formValues.value = structuredClone(config);
+    } catch { if (!cancelled) formError.value = "无法读取供应商密钥，已保存值仍隐藏；请重试或重新填写密钥。"; }
+    finally { if (!cancelled) loadingConfig.value = false; }
+  }
 }, { immediate: true });
 
 function modelTags(model: MediaProviderModel) {
@@ -122,7 +138,7 @@ function confirmModel(model: MediaProviderModel) {
 }
 
 async function saveModels() {
-  if (saving.value || !provider || !formApi.value) return;
+  if (saving.value || loadingConfig.value || !provider || !formApi.value) return;
   const { id: providerId, fileName } = provider;
   formError.value = "";
   let modelsSaved = false;

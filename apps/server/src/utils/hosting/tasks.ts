@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { getDatabase } from "@/utils/accounts/database";
 import { getUser } from "@/utils/accounts/service";
 import { isMultiUser, requireUser, runWithUser } from "@/utils/accounts/context";
+import { reconcileBilling, taskBilling, withTaskBilling } from "./billing";
 
 type TaskOptions = { kind: string; model?: string; directory?: string; signal?: AbortSignal; taskId?: string };
 type TaskRecord = {
@@ -100,11 +101,13 @@ export async function runTask<T>(options: TaskOptions, operation: (signal: Abort
   db.query("INSERT INTO hostedTasks (id,userId,kind,model,directory,status,createdAt) VALUES (?,?,?,?,?,'queued',?)")
     .run(id, user.id, options.kind, options.model ?? null, options.directory ?? null, Date.now());
   return new Promise<T>((resolve, reject) => {
-    const finish = (status: string) => {
+    const finish = async (status: string) => {
       const message = status === "failed" ? "任务执行失败，请查看当前请求返回的错误"
         : status === "cancelled" ? "任务已取消；已提交的上游任务可能仍会计费" : null;
       try {
         db.query("UPDATE hostedTasks SET status=?,finishedAt=?,error=? WHERE id=?").run(status, Date.now(), message, id);
+        // 账单可能晚于流结束落库；暂未取得时保留待核对，不能改变已经完成的模型结果。
+        await reconcileBilling(id).catch(() => undefined);
       } finally {
         if (active.get(id)?.running && options.kind === "transcode") transcodes--;
         active.delete(id);
@@ -114,8 +117,7 @@ export async function runTask<T>(options: TaskOptions, operation: (signal: Abort
     };
     const cancel = () => {
       if (active.get(id)?.running) return;
-      finish("cancelled");
-      reject(signal.reason ?? new DOMException("任务已取消", "AbortError"));
+      void finish("cancelled").finally(() => reject(signal.reason ?? new DOMException("任务已取消", "AbortError")));
     };
     const task: ActiveTask = { id, userId: user.id, kind: options.kind, controller, running: false, start: () => {
       db.query("UPDATE hostedTasks SET status='running',startedAt=? WHERE id=?").run(Date.now(), id);
@@ -123,12 +125,12 @@ export async function runTask<T>(options: TaskOptions, operation: (signal: Abort
         try {
           signal.throwIfAborted();
           if (!getUser(user.id)?.enabled) throw Object.assign(new Error("账户已停用"), { status: 403 });
-          const result = await operation(signal);
+          const result = await withTaskBilling(id, user.id, ["agent", "text", "image", "video", "audio"].includes(options.kind), () => operation(signal));
           signal.throwIfAborted();
-          finish("completed");
+          await finish("completed");
           resolve(result);
         } catch (error) {
-          finish(signal.aborted ? "cancelled" : "failed");
+          await finish(signal.aborted ? "cancelled" : "failed");
           reject(error);
         }
       }));
@@ -177,7 +179,7 @@ export function listTasks(userId?: string) {
   if (user.role !== "admin" && userId && userId !== user.id) throw Object.assign(new Error("不能读取其他账户的任务"), { status: 403 });
   const owner = userId ?? user.id;
   const rows = database().query<TaskRecord, [string]>("SELECT * FROM hostedTasks WHERE userId=? ORDER BY createdAt DESC LIMIT 100").all(owner);
-  return rows.map(task => ({ ...task, usage: task.usage ? JSON.parse(task.usage) : null, upstreamJob: task.upstreamJob ? JSON.parse(task.upstreamJob) : null }));
+  return rows.map(task => ({ ...task, usage: task.usage ? JSON.parse(task.usage) : null, upstreamJob: task.upstreamJob ? JSON.parse(task.upstreamJob) : null, billing: taskBilling(task.id) }));
 }
 
 export function getTask(id: string) {

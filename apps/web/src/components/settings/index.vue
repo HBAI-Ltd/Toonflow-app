@@ -52,6 +52,8 @@ import {
   IconUserCog,
   IconSubtitlesAi,
   IconDevices,
+  IconUsers,
+  IconAdjustments,
 } from "@tabler/icons-vue";
 
 const settingsPanels = [
@@ -85,6 +87,10 @@ const settingsPanels = [
     component: defineAsyncComponent(() => import("./panels/personalization.vue")),
   },
   { id: "privacy", label: "隐私", icon: IconShieldLock, component: defineAsyncComponent(() => import("./panels/privacy.vue")) },
+  ...(accountEnabled.value && accountUser.value?.role === "admin" ? [
+    { id: "systemSettings", label: "系统设置", groupLabel: "管理", icon: IconAdjustments, component: defineAsyncComponent(() => import("./panels/systemSettings.vue")) },
+    { id: "userManagement", label: "用户管理", icon: IconUsers, component: defineAsyncComponent(() => import("./panels/userManagement.vue")) },
+  ] : []),
   { id: "developer", label: "开发者选项", icon: IconCode, component: defineAsyncComponent(() => import("./panels/developer/index.vue")) },
   { id: "about", label: "关于", icon: IconInfoCircle, component: defineAsyncComponent(() => import("./panels/about.vue")) },
 ].filter(item => !accountEnabled.value || !["deviceLink", "developer", "personalization"].includes(item.id))
