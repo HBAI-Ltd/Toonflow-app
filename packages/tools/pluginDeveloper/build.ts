@@ -64,7 +64,7 @@ try {
   const name = `${metadata.name}.tool.js`;
   const tool = await readFile(join(stage, name));
   if (tool.length >= 10_000_000) throw new Error(`工具文件 ${tool.length} 字节，必须小于 10 MB（含 ZIP 编码和文档）`);
-  await writeAtomic(join(output, name), tool);
+  await writeAtomic(join(output, name), tool, { mode: 0o644 });
   if (process.env.NODE_ENV === "dev") {
     const dataDirectory = resolve(root, "../../../data/tools");
     await mkdir(dataDirectory, { recursive: true });

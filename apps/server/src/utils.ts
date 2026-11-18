@@ -7,6 +7,7 @@ import * as mediaGeneration from "@/utils/media/generation";
 import * as mediaSchemas from "@/utils/media/schemas";
 import * as mediaTasks from "@/utils/media/tasks";
 import * as mediaProvider from "@/utils/media/provider";
+import * as builtinProvider from "@/utils/media/builtin";
 import * as mediaBilling from "@/utils/media/billing";
 import * as mediaPreview from "@/utils/media/preview";
 import * as ffmpeg from "@/utils/ffmpeg";
@@ -37,6 +38,7 @@ import * as mentionFiles from "@/agent/mentionFiles";
 import * as network from "@/utils/network";
 import * as channel from "@/utils/channel";
 import * as multiTenant from "@/utils/multiTenant";
+import * as pluginServer from "@/utils/pluginServer";
 
 export default {
   assets,
@@ -48,6 +50,7 @@ export default {
   mediaSchemas,
   mediaTasks,
   mediaProvider,
+  builtinProvider,
   mediaBilling,
   mediaPreview,
   ffmpeg,
@@ -80,4 +83,5 @@ export default {
   network,
   channel,
   multiTenant,
+  pluginServer,
 };

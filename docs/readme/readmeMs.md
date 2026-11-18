@@ -40,7 +40,7 @@
   <a href="./readmeTr.md">Türkçe</a>
 </p>
 
-> 🌐 **21 bahasa antara muka** · [Lihat bahasa yang disokong](#languages)
+> 🌐 **22 bahasa antara muka** · [Lihat bahasa yang disokong](#languages)
 
 <div align="center">
 
@@ -210,13 +210,13 @@ Toonflow ialah platform penciptaan AI sumber terbuka untuk drama pendek, komik a
 | 🧩 **Pasaran pemalam** | Tambah nod, alat dan keupayaan kreatif melalui [Pasaran Pemalam](https://api.toonflow.net/console/plugIn). |
 | 🤖 **Agent terbuka** | Akses terbuka kepada arahan AI, alat dan A2A untuk menyesuaikan tingkah laku Agent serta bekerjasama dengan Agent luaran. |
 | 🔧 **Penyepaduan model yang fleksibel** | Konfigurasikan API pihak ketiga atau hubungkan ComfyUI dan model bahasa besar yang dijalankan secara setempat. |
-| 🌐 **Sokongan berbilang bahasa** | Menyokong 21 bahasa antara muka. |
+| 🌐 **Sokongan berbilang bahasa** | Menyokong 22 bahasa antara muka. |
 
 <a id="languages"></a>
 
 ### Sokongan berbilang bahasa
 
-Bahasa yang disokong: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe.
+Bahasa yang disokong: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe, Português (Brasil).
 
 ---
 

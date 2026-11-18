@@ -22,6 +22,7 @@
         </el-button>
         <input ref="fileInput" class="fileInput" type="file" accept="video/*,.mkv,.mov,.avi,.m4v,.ts" aria-label="选择视频" :disabled="busy || connected" @change="uploadVideo" />
       </div>
+      <el-button v-if="!previewUrl && !connected && files.pickAsset" class="assetButton nodrag nopan" :icon="IconFolder" text :disabled="busy" @dblclick.stop @click="selectAsset">从素材库选择</el-button>
       <div v-if="metadata.width" class="sourceInfo">
         <span>{{ formatDuration(metadata.duration) }}</span>
         <span>{{ metadata.width }} × {{ metadata.height }}</span>
@@ -62,7 +63,7 @@
         </template>
         <p v-else class="localHint">本地检测分镜、提取关键帧与原音轨，结果直接生成到画布。</p>
         <div class="promptFooter">
-          <el-select v-if="settings.aiEnabled" :modelValue="selectedModel ? settings.aiModel : ''" class="modelSelect" :loading="modelsLoading" :disabled="busy" filterable placeholder="选择语言模型" aria-label="拉片语言模型" noDataText="请先在设置中添加模型" placement="top-start" @update:modelValue="settings.aiModel = $event" @visible-change="visible => visible && loadModels()">
+          <modelSelect v-if="settings.aiEnabled" :modelValue="selectedModel ? settings.aiModel : ''" :empty="!models.length" class="modelSelect" :loading="modelsLoading" :disabled="busy" filterable placeholder="选择语言模型" aria-label="拉片语言模型" noDataText="请先在设置中添加模型" placement="top-start" @update:modelValue="settings.aiModel = $event" @visibleChange="(visible: boolean) => visible && loadModels()">
             <template v-if="!selectedModel" #prefix><icon-sparkles :size="17" /></template>
             <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
             <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
@@ -70,7 +71,7 @@
                 <modelLabel :label="item.label" :providerId="item.providerId" :modelId="item.modelId" />
               </el-option>
             </el-option-group>
-          </el-select>
+          </modelSelect>
           <span v-else class="localLabel"><icon-scissors :size="17" />本地分析</span>
           <div class="promptActions">
             <el-switch v-model="settings.aiEnabled" :disabled="busy" activeText="AI 辅助" aria-label="AI 辅助拉片" />
@@ -90,7 +91,7 @@
 
 <script setup lang="ts">
 import { computed, inject, nextTick, onScopeDispose, reactive, ref, shallowRef, watch } from "vue";
-import { IconMovie, IconPhoto, IconUpload, IconWaveSine, IconScissors, IconAdjustmentsHorizontal, IconSparkles, IconTransfer, IconMaximize, IconFileText, IconArrowUp, IconPlayerStop } from "@tabler/icons-vue";
+import { IconMovie, IconPhoto, IconUpload, IconFolder, IconWaveSine, IconScissors, IconAdjustmentsHorizontal, IconSparkles, IconTransfer, IconMaximize, IconFileText, IconArrowUp, IconPlayerStop } from "@tabler/icons-vue";
 import { ElMessage, ElSelect, ElOption, ElOptionGroup, ElButton, ElCard, ElCheckbox, ElPopover, ElInputNumber, ElSwitch, ElProgress } from "element-plus";
 import {
   findNodeModel, getNodeModelKey, getTargetValues, isNodeOutput, nodeSkeleton, useNode, useNodeInputs, useNodeModelSelection, uploadNodeFile,
@@ -104,6 +105,7 @@ import videoPlayer from "@toonflow/node-video/videoPlayer";
 import promptInput from "@toonflow/node-shared/promptInput";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import modelLabel from "@toonflow/node-shared/modelLabel";
+import modelSelect from "@toonflow/node-shared/modelSelect";
 
 defineOptions({
   inheritAttrs: false,
@@ -275,7 +277,16 @@ function uploadVideo(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   input.value = "";
-  if (!file || busy.value || connected.value) return;
+  if (file) startImport(file);
+}
+
+async function selectAsset() {
+  const file = await files.pickAsset?.("video");
+  if (file) startImport(file);
+}
+
+function startImport(file: File) {
+  if (busy.value || connected.value) return;
   if (!file.size) return void ElMessage.error("视频文件不能为空");
   if (!file.type.startsWith("video/") && !/\.(mp4|m4v|mov|mkv|webm|avi|ts)$/i.test(file.name)) return void ElMessage.error("请选择视频文件");
   uploadJob = importVideo(file);
@@ -514,6 +525,7 @@ async function processVideo() {
     }
     .fileInput { display: none; }
   }
+  .assetButton { width: 100%; margin: 4px 0 0; }
   .sourceInfo, .resultSummary { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--el-text-color-secondary); font-size: 11px; }
   .sourceInfo { padding: 8px 2px 2px; }
   .resultSummary { flex-wrap: wrap; padding: 4px 0 0; }

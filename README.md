@@ -40,7 +40,7 @@
   <a href="./docs/readme/readmeTr.md">Türkçe</a>
 </p>
 
-> 🌐 **支持 21 种界面语言** · [查看支持的语言](#languages)
+> 🌐 **支持 22 种界面语言** · [查看支持的语言](#languages)
 
 <div align="center">
 
@@ -212,7 +212,7 @@ Toonflow 是面向短剧、漫剧与短视频制作的开源 AI 创作平台，�
 | 🧩 **插件市场** | 通过[插件市场](https://api.toonflow.net/console/plugIn)扩展节点、工具与创作能力。 |
 | 🤖 **开放 Agent** | 开放提示词、工具和 A2A，支持自定义 Agent 行为及外部协作。 |
 | 🔧 **自由接入模型** | 配置第三方 API，也可接入本地 ComfyUI 和 LLM。 |
-| 🌐 **多语言支持** | 支持 21 种界面语言。 |
+| 🌐 **多语言支持** | 支持 22 种界面语言。 |
 
 ### 如何用 Toonflow 制作 AI 短剧与漫剧
 
@@ -241,7 +241,7 @@ Toonflow 采用 MIT 开源许可，可自行部署。第三方模型服务的 AP
 
 ### 多语言支持
 
-支持的语言：简体中文、繁體中文、English、日本語、Русский、Tiếng Việt、ไทย、한국어、हिन्दी、Bahasa Indonesia、Bahasa Melayu、Filipino、বাংলা、اردو、தமிழ்、తెలుగు、मराठी、ਪੰਜਾਬੀ、العربية、فارسی、Türkçe。
+支持的语言：简体中文、繁體中文、English、日本語、Русский、Tiếng Việt、ไทย、한국어、हिन्दी、Bahasa Indonesia、Bahasa Melayu、Filipino、বাংলা、اردو、தமிழ்、తెలుగు、मराठी、ਪੰਜਾਬੀ、العربية、فارسی、Türkçe、Português (Brasil)。
 
 ---
 

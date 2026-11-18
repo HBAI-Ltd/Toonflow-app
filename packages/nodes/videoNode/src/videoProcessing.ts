@@ -67,8 +67,8 @@ export async function processVideo(ffmpeg: BrowserFfmpegFactory, source: string,
   const command = ffmpeg(source);
   if (options.action === "trim") command.seekInput(options.start!);
   if (needsAudio) {
-    command.output(options.audioPath!).noVideo().audioCodec("aac").audioBitrate(192).format("ipod")
-      .outputOptions("-map", "0:a:0", "-movflags", "+faststart");
+    command.output(options.audioPath!).noVideo().audioCodec("libmp3lame").audioBitrate(192).format("mp3")
+      .outputOptions("-map", "0:a:0");
   }
   if (needsVideo) {
     // ACT: 重编码到 H.264，按帧精度截取并兼容播放器；奇数边长只补齐到偶数，不拉伸画面。

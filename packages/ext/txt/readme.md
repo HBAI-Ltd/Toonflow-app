@@ -4,4 +4,4 @@
 
 扩展自行声明文件图标、字号和自动换行设置，通过 `context.config` 读取当前配置。
 
-在仓库根目录执行 `bun run --cwd packages/ext/txt build`，产物为 `build/ext/ext-txt.umd.js`。扩展开发与上下文接口见 `packages/extScaffold/readme.md`。
+在仓库根目录执行 `bun run --cwd packages/ext/txt build`，产物为 `build/ext/txt.ext.js`。扩展开发与上下文接口见 `packages/extScaffold/readme.md`。

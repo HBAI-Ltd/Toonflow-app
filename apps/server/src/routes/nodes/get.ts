@@ -26,6 +26,7 @@ export default router.get("/", async (req, res) => {
       return {
         loadError: "",
         ...metadata,
+        marketIdentifiers: u.pluginInstall.getMarketIdentifiers("node", name),
         builtin: req.app.locals.builtinPlugins.node.has(name),
         url: `/api/nodes/files?name=${name}`,
         enabled: !files.some((entry) => entry.name === `${name}.disabled`),

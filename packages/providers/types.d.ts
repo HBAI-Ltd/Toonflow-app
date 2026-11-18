@@ -114,6 +114,24 @@ interface ProviderTools {
    * @example const ffmpeg = await this.tool.ffmpeg(); const command = ffmpeg("assets/input.mp4").videoCodec("libx264");
    */
   ffmpeg(): Promise<import("@toonflow/ffmpeg/types").FfmpegFactory>;
+  /**
+   * 在用户电脑上直接运行命令行程序（不经过 shell），command[0] 为程序名或路径，其余为逐项参数。
+   * 仅桌面端可用，多租户模式与 Toonflow 账号供应商不可用。源码直接写出 this.tool.terminal 的供应商在安装或保存时会强提醒用户；
+   * 未经安装确认的源码（含调试、预览）及经拼接、遍历等间接方式取得此方法时，调用会抛错。
+   * 非 0 退出码不抛错，由供应商检查 exitCode；取消、超时或单路输出超过 64 MB 时结束整个进程树并抛错。
+   * Windows 下调用 .cmd/.bat 时参数不能含 cmd 特殊字符（如 & | < > ^ %），长文本或特殊字符请经 stdin 传入。
+   * @example const { exitCode, stdout, stderr } = await this.tool.terminal(["mycli", "generate", "--json"], { stdin: request.prompt });
+   */
+  terminal(command: string[], options?: {
+    /** 工作目录；相对路径基于当前工作区，没有工作区时基于用户主目录。 */
+    cwd?: string;
+    /** 追加或覆盖的环境变量；密钥优先经此传入，避免出现在进程参数中。 */
+    env?: Record<string, string>;
+    /** 写入标准输入的 UTF-8 文本。 */
+    stdin?: string;
+    /** 超时毫秒数，缺省 600000（10 分钟）。 */
+    timeout?: number;
+  }): Promise<{ exitCode: number; stdout: string; stderr: string }>;
 }
 
 interface ImageRequest extends MediaRequest {

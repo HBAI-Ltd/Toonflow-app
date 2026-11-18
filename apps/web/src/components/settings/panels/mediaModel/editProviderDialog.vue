@@ -66,7 +66,7 @@ import { translate } from "@toonflow/i18n/vue";
 import axios from "axios";
 import { computed, defineAsyncComponent, onBeforeUnmount, ref, shallowRef, toRaw, watch, type Component } from "vue";
 import { IconPlus, IconTrash, IconDeviceFloppy, IconEdit, IconPlayerPlay } from "@tabler/icons-vue";
-import formCreate, { type Api, type Options } from "@toonflow/provider-web/formCreate";
+import formCreate, { copyProviderRules, type Api, type Options } from "@toonflow/provider-web/formCreate";
 import { modelIcon } from "@toonflow/model-icons";
 import messageMarkdown from "@/components/messageMarkdown.vue";
 import type { MediaProvider, MediaProviderModel } from "@toonflow/provider-web/types";
@@ -112,7 +112,7 @@ watch(visible, isVisible => {
   modelEditorVisible.value = false;
   editingModelIndex.value = undefined;
   const configs = settings.value.mediaProviderConfigs as Record<string, Record<string, unknown>> | undefined;
-  formRules.value = formCreate.copyRules(provider?.rules ?? []);
+  formRules.value = copyProviderRules(provider);
   formValues.value = structuredClone(toRaw((provider && configs?.[provider.id]) ?? {}));
   revision.value = provider?.revision ?? "";
   models.value = JSON.parse(JSON.stringify(provider?.models ?? []));

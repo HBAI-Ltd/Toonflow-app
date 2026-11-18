@@ -15,6 +15,7 @@
     "./modelForm": "./src/components/modelForm.vue",
     "./imageGenerationSettings": "./src/components/imageGenerationSettings.vue",
     "./modelLabel": "./src/components/modelLabel.vue",
+    "./modelSelect": "./src/components/modelSelect.vue",
     "./showNodeError": "./src/showNodeError.ts",
     "./useNodeReferences": "./src/useNodeReferences.ts",
     "./useNodeGeneration": "./src/useNodeGeneration.ts",

@@ -40,7 +40,7 @@
   <strong>Türkçe</strong>
 </p>
 
-> 🌐 **21 arayüz dili** · [Desteklenen dilleri görüntüleyin](#languages)
+> 🌐 **22 arayüz dili** · [Desteklenen dilleri görüntüleyin](#languages)
 
 <div align="center">
 
@@ -210,13 +210,13 @@ Toonflow; senaryoları, varlıkları ve video kliplerini tek bir sonsuz tuvalde 
 | 🧩 **Eklenti pazarı** | [Eklenti Pazarı](https://api.toonflow.net/console/plugIn) üzerinden düğümleri, araçları ve yaratıcı olanakları genişletin. |
 | 🤖 **Açık Agent** | Agent davranışını özelleştirmek ve harici Agent’larla iş birliği yapmak için istemlere, araçlara ve A2A’ya açık erişim. |
 | 🔧 **Esnek model entegrasyonu** | Üçüncü taraf API’leri yapılandırın veya yerel ComfyUI örnekleri ile büyük dil modellerini bağlayın. |
-| 🌐 **Çoklu dil desteği** | Arayüz 21 dili destekler. |
+| 🌐 **Çoklu dil desteği** | Arayüz 22 dili destekler. |
 
 <a id="languages"></a>
 
 ### Çoklu dil desteği
 
-Desteklenen diller: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe.
+Desteklenen diller: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe, Português (Brasil).
 
 ---
 

@@ -7,6 +7,8 @@ const modelContextLimits: { id: string | RegExp; contextWindow: number; maxToken
   // https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro-0813/blob/main/config.json
   { id: "deepseek-flash", contextWindow: 1048576, maxTokens: 393216 },
   { id: "deepseek-v4-flash", contextWindow: 1048576, maxTokens: 393216 },
+  // 官方 deepseek-flash 对应 DeepSeek-V4.1-Flash；中转站按版本号命名，2026-11-18 核对。
+  { id: "deepseek-v4.1-flash", contextWindow: 1048576, maxTokens: 393216 },
   { id: "deepseek-v4-pro", contextWindow: 1048576, maxTokens: 393216 },
 
   // OpenAI：各型号页面 https://developers.openai.com/api/docs/models/{模型 ID}

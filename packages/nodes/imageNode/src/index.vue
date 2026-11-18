@@ -39,16 +39,27 @@
         @load="resizeImage"
         @error="ElMessage.error('无法预览该图片')" />
       <input ref="fileInput" class="fileInput" type="file" accept="image/*" aria-label="选择图片" :disabled="uploading || lighting?.generating || multiAngle?.generating || panorama?.busy" @change="uploadImage" />
-      <el-button
-        v-if="!outputFile"
-        class="nodrag nopan"
-        :icon="IconUpload"
-        text
-        :loading="uploading"
-        title="上传图片"
-        aria-label="上传图片"
-        @dblclick.stop
-        @click.stop="fileInput?.click()">上传</el-button>
+      <div v-if="!outputFile" class="emptyActions">
+        <el-button
+          class="nodrag nopan"
+          :icon="IconUpload"
+          text
+          :loading="uploading"
+          title="上传图片"
+          aria-label="上传图片"
+          @dblclick.stop
+          @click.stop="fileInput?.click()">上传</el-button>
+        <el-button
+          v-if="files.pickAsset"
+          class="nodrag nopan"
+          :icon="IconFolder"
+          text
+          :disabled="uploading"
+          title="从素材库选择图片"
+          aria-label="从素材库选择图片"
+          @dblclick.stop
+          @click.stop="selectAsset">从素材库选择</el-button>
+      </div>
     </div>
     <template v-if="lightingVisible || multiAngleVisible || editor?.mode === 'inpaint'" #bottom>
       <div v-if="lightingVisible" ref="lightingTarget" />
@@ -70,7 +81,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref } from "vue";
-import { IconPhoto, IconUpload, IconTransfer, IconLayoutGrid, IconBrush, IconPencil, IconSun, IconCameraRotate, IconPanoramaHorizontal, IconChevronDown } from "@tabler/icons-vue";
+import { IconPhoto, IconUpload, IconFolder, IconTransfer, IconLayoutGrid, IconBrush, IconPencil, IconSun, IconCameraRotate, IconPanoramaHorizontal, IconChevronDown } from "@tabler/icons-vue";
 import { ElButton, ElImageViewer, ElMessage } from "element-plus";
 import { nodeSkeleton, nodeTools, useNode, z, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
 import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
@@ -193,11 +204,20 @@ async function createInpaint(input: InpaintDraftInput, signal: AbortSignal) {
   await editor.value.createInpaint(input, signal);
 }
 
-async function uploadImage(event: Event) {
+function uploadImage(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   input.value = "";
-  if (!file || uploading.value || editor.value?.busy || inpaintPrompt.value?.creating || lighting.value?.generating || multiAngle.value?.generating || panorama.value?.busy) return;
+  if (file) void setImageFile(file);
+}
+
+async function selectAsset() {
+  const file = await files.pickAsset?.("image");
+  if (file) await setImageFile(file);
+}
+
+async function setImageFile(file: File) {
+  if (uploading.value || editor.value?.busy || inpaintPrompt.value?.creating || lighting.value?.generating || multiAngle.value?.generating || panorama.value?.busy) return;
   const mimeType = getMediaMimeType(file);
   if (!mimeType.startsWith("image/")) return void ElMessage.error("请选择图片文件");
   if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error("图片不能为空且不能超过 100 MB");
@@ -236,6 +256,15 @@ function showError(error: unknown, fallback: string) {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .emptyActions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+
+    .el-button { margin: 0; }
   }
 
   .fileInput {

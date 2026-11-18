@@ -41,15 +41,17 @@
         </div>
         <div class="fileEditor">
           <el-alert v-if="fileError" :title="fileError" type="error" :closable="false" showIcon />
-          <template v-else>
+          <template v-else-if="!fileLoading">
             <el-text v-if="selectedPath === mainPath" size="small" type="info">name 为技能标识，不可修改</el-text>
+            <markdownEditor v-if="isMarkdown" :key="selectedPath" :context="markdownContext" :preserveFrontmatter="selectedPath === mainPath" />
             <el-input
+              v-else
               v-model="draft"
               class="sourceInput"
               type="textarea"
               :rows="20"
               resize="none"
-              :disabled="fileLoading || saving"
+              :disabled="saving"
               :aria-label="`${selectedPath} 源码`"
               :spellcheck="false" />
           </template>
@@ -65,9 +67,11 @@
 
 <script setup lang="ts">
 import axios from "axios";
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { IconChevronRight, IconFile, IconFilePlus, IconFolder, IconFolderOpen } from "@tabler/icons-vue";
+import markdownExtension, { type MarkdownEditorContext } from "@toonflow/ext-md";
+import { writeClipboardText } from "@/lib/clipboard";
 import type { Plugin } from "./types";
 
 interface TreeNode {
@@ -98,6 +102,18 @@ const drafts = new Map<string, string>();
 const dirtyPaths = ref(new Set<string>());
 const headers = { "x-toonflow-workspace": "1" };
 let controller = new AbortController();
+
+const markdownEditor = defineAsyncComponent(markdownExtension.load);
+const isMarkdown = computed(() => markdownExtension.extensions.some(extension => selectedPath.value.toLowerCase().endsWith(`.${extension}`)));
+const markdownContext: MarkdownEditorContext = reactive({
+  resource: { path: selectedPath },
+  text: draft,
+  active: visible,
+  get loading() { return fileLoading.value || saving.value; },
+  updateText(text: string) { draft.value = text; },
+  openFile: selectFile,
+  writeClipboardText,
+});
 
 // 单文件技能只有主文件本身，没有可管理的附属文件目录。
 const isDirectorySkill = computed(() => files.value.length > 1 || files.value[0] !== mainPath.value);
@@ -150,8 +166,9 @@ function errorMessage(error: unknown, fallback: string) {
 
 async function selectFile(path: string) {
   if (path === selectedPath.value || saving.value) return;
+  if (!files.value.includes(path)) throw new Error("文件不存在");
   const previousPath = selectedPath.value;
-  if (previousPath) {
+  if (previousPath && !fileLoading.value && !fileError.value) {
     if (draft.value !== original.value) {
       drafts.set(previousPath, draft.value);
       dirtyPaths.value.add(previousPath);
@@ -182,7 +199,7 @@ async function selectFile(path: string) {
   } catch (error) {
     if (!requestController.signal.aborted && selectedPath.value === path) fileError.value = errorMessage(error, "读取文件失败，请重新选择重试");
   } finally {
-    if (selectedPath.value === path) fileLoading.value = false;
+    if (!requestController.signal.aborted && selectedPath.value === path) fileLoading.value = false;
   }
 }
 
@@ -317,14 +334,14 @@ async function save() {
 .skillEditor {
   display: flex;
   gap: 16px;
-  min-height: min(60vh, 560px);
+  height: min(60vh, 560px);
 
   .fileTree {
     display: flex;
     flex: none;
     flex-direction: column;
     gap: 8px;
-    width: 220px;
+    width: min(220px, 30%);
 
     .newFileButton {
       width: 100%;
@@ -367,17 +384,16 @@ async function save() {
     flex-direction: column;
     gap: 8px;
     min-width: 0;
-  }
 
-  .sourceInput {
-    flex: 1;
+    .sourceInput {
+      flex: 1;
 
-    :deep(textarea) {
-      height: 100%;
-      min-height: min(56vh, 520px);
-      font-family: ui-monospace, Consolas, monospace;
-      line-height: 1.6;
-      tab-size: 2;
+      :deep(textarea) {
+        height: 100%;
+        font-family: ui-monospace, Consolas, monospace;
+        line-height: 1.6;
+        tab-size: 2;
+      }
     }
   }
 }

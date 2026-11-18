@@ -8,6 +8,7 @@ import { useNodeFiles } from "./workspaceFiles";
 import { useNodeAi } from "./nodeAi";
 import { useNodeFfmpeg } from "./nodeFfmpeg";
 import { useNodeAsr } from "./nodeAsr";
+import { useNodeServer } from "./nodeServer";
 import { useNodePreviewReady } from "./useNodePreviewReady";
 import type { NodeDocumentContext } from "./nodeDocument";
 
@@ -43,7 +44,7 @@ export function useNode<T extends NodeOutputs = NodeOutputs>(options: NodeOption
     outputs: outputs.value,
   }));
   const nodeEvent = useNodeEvent();
-  const { getWorkspaceFiles, uploadFile, removeNodeFiles, useFileUrl } = useNodeFiles();
+  const { getWorkspaceFiles, uploadFile, removeNodeFiles, useFileUrl, pickAsset } = useNodeFiles();
 
   return {
     id,
@@ -58,11 +59,13 @@ export function useNode<T extends NodeOutputs = NodeOutputs>(options: NodeOption
     ai: useNodeAi({ onModelsChanged: options.onModelsChanged }),
     ffmpeg: useNodeFfmpeg(),
     asr: useNodeAsr(),
+    server: useNodeServer(),
     files: {
       getWorkspaceFiles,
       useFileUrl,
       uploadFile: (file: File) => uploadFile(id, file),
       removeNodeFiles: () => removeNodeFiles(id),
+      pickAsset: pickAsset && ((kind: "image" | "video" | "audio") => pickAsset(id, kind)),
     },
     updateNodeInternals: () => {
       if (!documentContext?.targets.has(id)) updateNodeInternals([id]);

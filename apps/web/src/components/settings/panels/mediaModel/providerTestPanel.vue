@@ -110,7 +110,7 @@ import axios from "axios";
 import { IconPlus, IconX, IconMusic, IconPlayerPlay, IconPlayerStop } from "@tabler/icons-vue";
 import type { Provider } from "@toonflow/providers";
 import videoPlayer from "@/components/videoPlayer.vue";
-import formCreate, { type Api, type Options, type Rule } from "@toonflow/provider-web/formCreate";
+import formCreate, { copyProviderRules, type Api, type Options } from "@toonflow/provider-web/formCreate";
 import type { MediaProvider, MediaProviderModel } from "@toonflow/provider-web/types";
 
 type DebugLog = { id: number; method: string; url: string; state: string; status?: number; duration?: number; request?: string; response?: string; error?: string };
@@ -398,9 +398,9 @@ watch(() => [props.source, props.provider.id, props.provider.rules] as const, (_
   if (!controller || refreshing !== controller) { stop(); clearResults(); }
   const sameProvider = previous?.[1] === props.provider.id;
   const values = sameProvider ? formApi.value?.formData() ?? configValues.value : props.config ?? {};
-  const rules = (props.provider.rules ?? []) as Rule[];
+  const rules = copyProviderRules(props.provider);
   configValues.value = Object.fromEntries(rules.filter(rule => rule.field).map(rule => [rule.field!, rule.field! in values ? values[rule.field!] : props.config?.[rule.field!] ?? rule.value]));
-  if (JSON.stringify(rules) !== JSON.stringify(formRules.value)) formRules.value = formCreate.copyRules(rules);
+  if (JSON.stringify(rules) !== JSON.stringify(formRules.value)) formRules.value = rules;
 }, { immediate: true });
 watch(() => props.modelId, modelId => { if (modelId) selectedModelId.value = modelId; }, { immediate: true });
 watch(mediaModels, models => {

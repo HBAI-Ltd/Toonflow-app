@@ -25,6 +25,11 @@ if (typeof archiveName !== "string" || !archiveName.startsWith(prefix) || !/^[a-
   throw new Error("更新清单引用的同前缀 .tar.zst 归档不存在或文件名无效");
 }
 const files = [archiveName, ...names.filter((name) => name.startsWith(prefix) && name.endsWith(".patch")), manifestName];
+if (manifest.platform === "linux" && manifest.deb) {
+  const debName = `toonflow-${version}-linux-${manifest.arch}.deb`;
+  if (manifest.deb.file !== debName || !names.includes(debName)) throw new Error("Linux 更新清单引用的 Debian 安装包不存在或文件名无效");
+  files.unshift(debName);
+}
 if (files.some((name) => !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(name))) throw new Error("补丁文件名无效");
 const publicDir = join(serverDir, "public");
 const targetFolder = manifest.platform === "win" ? manifest.arch === "x64" ? "" : "windowsArm64"

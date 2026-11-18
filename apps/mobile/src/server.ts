@@ -112,7 +112,6 @@ if (connection.proxy) {
     toolsRoot: resolve(resources, "tools"),
     nodesRoot: resolve(resources, "nodes"),
     extRoot: resolve(resources, "ext"),
-    providersRoot: resolve(resources, "providers"),
     skillsRoot: resolve(resources, "skills"),
     pluginRevision: fromSource ? undefined : (await readFile(resolve(resources, "revision.txt"), "utf8")).trim(),
   });

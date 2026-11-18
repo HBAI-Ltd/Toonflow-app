@@ -4,10 +4,15 @@ import type {
   AuthenticatedOptions, Captcha, Channel, CreateSubAccountParams, ExploreDetail, ExplorePage, ExploreParams, ExploreProcess, ExploreProject,
   ExploreSubmission, ExploreUploadSignature, ExploreUploadSignatureParams, ForgotPasswordParams, HomeAdvertisement, HomeAdvertisements, Login, LoginParams, ModelData, ModelDataParams, Plugin, PluginExistence, PluginIdentity, PluginsParams, PluginType, PluginUploadSignature, PluginUploadSignatureParams, PointsConsumption,
   PointsConsumptionParams, PreviewData, ProviderSources, RegisterParams, RequestOptions, SmsParams, Sponsor, SubAccountsPage, SubAccountsParams, TaskRecordsPage, TaskRecordsParams,
-  UpdatePluginParams, UploadExploreProjectParams, UploadPluginParams, UsageStatistics, UsageStatisticsParams, WalletActivity, WalletBonusBatchesPage, WalletBonusBatchesParams, WalletOrdersPage, WalletOrdersParams, WalletPayment, WalletPaymentParams, WalletPaymentStatus, WalletPlan, WalletPresentation,
+  UpdatePluginParams, UploadExploreProjectParams, UploadPluginParams, UsageStatistics, UsageStatisticsParams, Vendor, VendorKind, VendorSource, WalletActivity, WalletBonusBatchesPage, WalletBonusBatchesParams, WalletOrdersPage, WalletOrdersParams, WalletPayment, WalletPaymentParams, WalletPaymentStatus, WalletPlan, WalletPresentation,
 } from "./types";
 
 const pluginTypes: PluginType[] = ["node", "tool", "skill", "agent", "ext"];
+const vendorKind = z.enum(["language", "media"]);
+const vendor = z.object({
+  id: z.string().max(96).regex(/^[a-z][a-zA-Z0-9]*$/), name: z.string().min(1), description: z.string(),
+  updateTime: z.number().int().nonnegative(), version: z.string().max(64).optional(),
+});
 const modelTypes = ["text", "image", "video", "audio"] as const;
 const modelPrice = z.number().nonnegative();
 const modelPriceStep = z.object({
@@ -190,7 +195,7 @@ const homeAdvertisement = z.object({
 
 export class Toonflow implements Channel {
   private async request<T>(params: {
-    path: string; method: "GET" | "POST"; data?: unknown; token?: string; signal?: AbortSignal; timeout?: number; sensitiveValues?: string[];
+    path: string; method: "GET" | "POST"; data?: unknown; token?: string; signal?: AbortSignal; timeout?: number; sensitiveValues?: string[]; cache?: "no-store";
   }): Promise<T> {
     const timeout = AbortSignal.timeout(params.timeout ?? 20000);
     const signal = params.signal ? AbortSignal.any([params.signal, timeout]) : timeout;
@@ -201,6 +206,7 @@ export class Toonflow implements Channel {
         method: params.method,
         signal,
         redirect: "error",
+        ...(params.cache ? { cache: params.cache } : {}),
         headers: {
           Accept: "application/json",
           ...(params.data !== undefined ? { "Content-Type": "application/json" } : {}),
@@ -694,6 +700,30 @@ export class Toonflow implements Channel {
       models: data.models,
       keys: data.keys.map(item => ({ id: item.id, name: item.name })),
     };
+  }
+
+  async getVendors(kind: VendorKind, options?: RequestOptions): Promise<Vendor[]> {
+    if (!vendorKind.safeParse(kind).success) fail("供应商类型无效");
+    const data = await this.request<unknown>({
+      method: "GET", path: `/web/toonflow/provider/getVendors?${new URLSearchParams({ kind })}`, signal: options?.signal, cache: "no-store",
+    });
+    const parsed = z.array(vendor).safeParse(data);
+    if (!parsed.success || new Set(parsed.data.map(item => item.id.toLowerCase())).size !== parsed.data.length) fail("供应商列表响应格式不正确", 502);
+    return parsed.data;
+  }
+
+  async getVendorSource(id: string, kind: VendorKind, options?: RequestOptions): Promise<VendorSource> {
+    if (!vendorKind.safeParse(kind).success || !vendor.shape.id.safeParse(id).success) fail("供应商参数无效");
+    const data = await this.request<unknown>({
+      method: "GET", path: `/web/toonflow/provider/getVendorSource?${new URLSearchParams({ id, kind })}`, signal: options?.signal, cache: "no-store",
+    });
+    const parsed = vendor.extend({ language: z.string().optional(), media: z.string().optional() }).safeParse(data);
+    if (!parsed.success || parsed.data.id !== id) fail("供应商源码响应格式不正确", 502);
+    const source = parsed.data[kind];
+    if (typeof source !== "string" || !source.trim()) fail("供应商源码响应格式不正确", 502);
+    if (Buffer.byteLength(source, "utf8") > 2 * 1024 * 1024) fail("供应商源码不能超过 2 MB", 502);
+    const { language, media, ...metadata } = parsed.data;
+    return { ...metadata, source };
   }
 
   async getProviderSource(options: AuthenticatedOptions): Promise<ProviderSources> {

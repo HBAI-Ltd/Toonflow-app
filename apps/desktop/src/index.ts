@@ -14,8 +14,10 @@ import { showNativeSplash } from "@toonflow/startup";
 import Electrobun, { ApplicationMenu, BrowserWindow, PATHS, Screen, Utils, Updater } from "electrobun/main";
 import { parseInstallUrl } from "./protocol";
 import saveFile, { selectSaveFile } from "./saveFile";
+import createLinuxDebUpdater from "./update/linuxDebUpdater";
 import createWindowsUpdater, { confirmWindowsUpdateStartup } from "./update/windowsUpdater";
 import showWindowsNotification from "./windowsNotification";
+import registerWindowAppearance from "./windowAppearance";
 
 const execFileAsync = promisify(execFile);
 const pendingInstalls: PluginInstallRequest[] = [];
@@ -160,7 +162,6 @@ async function start() {
       toolsRoot: resolve(PATHS.VIEWS_FOLDER, "../tools"),
       nodesRoot: resolve(PATHS.VIEWS_FOLDER, "../nodes"),
       extRoot: resolve(PATHS.VIEWS_FOLDER, "../ext"),
-      providersRoot: resolve(PATHS.VIEWS_FOLDER, "../providers"),
       skillsRoot: resolve(PATHS.VIEWS_FOLDER, "../skills"),
       // ACT: 暂不安装内置团队，随团队打包一同恢复。
       // agentsRoot: resolve(PATHS.VIEWS_FOLDER, "../agents"),
@@ -241,6 +242,7 @@ async function start() {
         y: workArea.y + Math.round((workArea.height - height) / 2),
       },
     });
+    registerWindowAppearance(mainWindow);
     const quitApproval = new AsyncLocalStorage<boolean>();
     let quitReady = false;
     let quitAckTimer: ReturnType<typeof setTimeout> | undefined;
@@ -353,6 +355,7 @@ async function start() {
             y: workArea.y + Math.round((workArea.height - creationHeight) / 2),
           },
         });
+        registerWindowAppearance(opened);
         opened.on("close", () => { if (creationWindow === opened) creationWindow = undefined; });
         return;
       }
@@ -409,8 +412,10 @@ async function start() {
       deliverInstall = undefined;
     });
     let isShowing = false;
-    const updater = process.platform === "win32" ? createWindowsUpdater(PATHS.RESOURCES_FOLDER, Utils as unknown as Parameters<typeof createWindowsUpdater>[1]) : Updater;
-    const systemManaged = process.platform === "linux" && process.env.TOONFLOW_INSTALL_METHOD === "deb";
+    const lifecycle = Utils as unknown as Parameters<typeof createWindowsUpdater>[1];
+    const updater = process.platform === "win32" ? createWindowsUpdater(PATHS.RESOURCES_FOLDER, lifecycle)
+      : process.platform === "linux" && process.env.TOONFLOW_INSTALL_METHOD === "deb"
+        ? createLinuxDebUpdater(PATHS.RESOURCES_FOLDER, dataDirectory, lifecycle) : Updater;
     app.locals.desktop = {
       openUrl,
       async showNotification(options) {
@@ -476,11 +481,9 @@ async function start() {
         else await (Updater as DesktopRuntime["updater"]).confirmStartup?.();
       },
       openDevTools() { mainWindow.webview.openDevTools(); },
-      // ACT: deb 由系统包管理器升级，保留检查版本，避免应用更新器覆盖 /opt 中的文件。
       updater: {
         ...updater,
-        downloadUpdate: systemManaged ? undefined : updater.downloadUpdate,
-        applyUpdate: systemManaged ? undefined : async () => {
+        applyUpdate: async () => {
           if (!await confirmQuit()) throw new Error(t`更新重启已取消`);
           // ACT: 只批准这次更新调用链中的退出；普通关闭仍需确认，更新失败后不会留下全局放行状态。
           await quitApproval.run(true, () => updater.applyUpdate());

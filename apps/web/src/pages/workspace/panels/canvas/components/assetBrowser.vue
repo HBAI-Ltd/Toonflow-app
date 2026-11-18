@@ -8,7 +8,7 @@
       </button>
       <div class="directoryHeading"><span>文件夹</span><span>{{ allEntries.length - allFiles.length }}</span></div>
       <el-scrollbar class="directoryScroll">
-        <el-tree class="directoryTree" :data="directoryTree" nodeKey="path" :props="{ label: 'name' }" :icon="IconChevronRight" :currentNodeKey="folder === '.' ? undefined : folder" :expandOnClickNode="false" defaultExpandAll highlightCurrent emptyText="" @nodeClick="selectDirectory">
+        <el-tree class="directoryTree" :data="directoryTree" nodeKey="path" :props="{ label: 'name' }" :icon="IconChevronRight" :currentNodeKey="folder === '.' ? undefined : folder" :expandOnClickNode="false" :defaultExpandAll="generalSettings.assetFoldersExpanded" :defaultExpandedKeys="expandedFolders" :autoExpandParent="false" highlightCurrent emptyText="" @nodeClick="selectDirectory" @nodeExpand="(entry: DirectoryEntry) => emit('expandFolder', entry.path)" @nodeCollapse="(entry: DirectoryEntry) => emit('collapseFolder', entry.path)">
           <template #default="{ data, node }">
             <span class="directoryEntry" :title="data.name" :aria-disabled="navigationLocked" @contextmenu.prevent.stop="emit('menu', $event, data.source)">
               <component :is="node.expanded && !node.isLeaf ? IconFolderOpen : IconFolder" :size="17" aria-hidden="true" />
@@ -94,6 +94,7 @@ import type { InputInstance } from "element-plus";
 import { IconChevronRight, IconDots, IconFile, IconFolder, IconFolderOpen, IconFolderPlus, IconLayoutGrid, IconMusic, IconPhoto, IconPlayerPlay, IconSearch, IconUpload, IconVideo } from "@tabler/icons-vue";
 import { mentionAssetType } from "@toonflow/server/agent/mentionSources";
 import mentionThumbnail from "@/components/agent/mentionThumbnail.vue";
+import { generalSettings } from "@/stores/settings";
 
 type AssetEntry = { name: string; path: string; type: "file" | "directory"; children?: AssetEntry[]; draft?: boolean };
 type MediaKind = "image" | "audio" | "video";
@@ -109,6 +110,7 @@ const props = defineProps<{
   assetUrl: (path: string) => string;
   canSelect?: (entry: AssetEntry) => boolean;
   selecting?: boolean;
+  expandedFolders: string[];
 }>();
 const folder = defineModel<string>("folder", { default: "." });
 const searchQuery = defineModel<string>("searchQuery", { default: "" });
@@ -122,6 +124,8 @@ const emit = defineEmits<{
   menu: [event: MouseEvent, entry: AssetEntry];
   drag: [event: DragEvent, entry: AssetEntry];
   select: [entry: AssetEntry];
+  expandFolder: [path: string];
+  collapseFolder: [path: string];
 }>();
 
 const folderInput = ref<InputInstance>();
@@ -199,6 +203,12 @@ watch(() => props.newFolderParent, async parent => {
 
 watch(allEntries, () => {
   if (folder.value !== "." && !currentDirectory.value) folder.value = ".";
+});
+
+// 进入子文件夹时展开其上级目录，保证目录树中的当前位置可见。
+watch(folder, path => {
+  const parent = path.split("/").slice(0, -1).join("/");
+  if (parent) emit("expandFolder", parent);
 });
 </script>
 

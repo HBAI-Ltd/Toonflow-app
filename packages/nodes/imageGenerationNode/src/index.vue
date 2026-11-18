@@ -54,8 +54,9 @@
         <promptInput v-if="editor?.mode === 'inpaint'" v-model="data.inpaintPromptModel" v-model:text="data.inpaintPrompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" expandable />
         <promptInput v-else v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" expandable />
         <div class="promptFooter">
-          <el-select
+          <modelSelect
             v-if="editor?.mode !== 'inpaint'"
+            :empty="!models.length"
             :modelValue="selectedModel ? data.model : ''"
             class="modelSelect"
             filterable
@@ -65,8 +66,8 @@
             aria-label="生成模型"
             noDataText="请先在设置中添加图片模型"
             placement="top-start"
-            @update:modelValue="data.model = $event"
-            @visible-change="(visible) => visible && loadModels().catch((error) => showNodeError(error, '模型读取失败'))">
+            @update:modelValue="selectModel"
+            @visibleChange="(visible: boolean) => visible && loadModels().catch((error) => showNodeError(error, '模型读取失败'))">
             <template v-if="!selectedModel" #prefix><icon-sparkles :size="17" /></template>
             <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
             <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
@@ -78,7 +79,7 @@
                 <modelLabel :label="item.label" :providerId="item.providerId" :modelId="item.modelId" />
               </el-option>
             </el-option-group>
-          </el-select>
+          </modelSelect>
           <imageGenerationSettings
             v-if="editor?.mode !== 'inpaint'"
             v-model:size="data.size"
@@ -91,7 +92,6 @@
           <el-button v-if="editor?.mode === 'inpaint'" class="confirmButton" type="primary" :icon="IconCheck" :loading="editor.busy" :disabled="deleting || uploading || !generationPrompt" @click="confirmInpaint().catch(error => showNodeError(error, '重绘节点创建失败'))">确认</el-button>
           <div v-else class="generationActions">
             <mediaPrice v-if="priceInput" :input="{ ...priceInput, mediaType: 'image' }" :supported="selectedModel?.supportsPrice === true" />
-            <el-button v-if="pendingRecovery" class="sendButton" :icon="IconPlayerStop" :loading="cancelling" :disabled="deleting || uploading" title="放弃任务" aria-label="放弃任务" @click="generationState.cancel().catch(error => showNodeError(error, '停止生成失败'))" />
             <el-button
               class="sendButton"
               :icon="generating ? IconPlayerStop : IconArrowUp"
@@ -118,12 +118,13 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onScopeDispose, ref, shallowRef, watch } from "vue";
-import { ElButton, ElCard, ElSelect, ElOption, ElOptionGroup, ElLoading, ElImageViewer } from "element-plus";
+import { ElButton, ElCard, ElOption, ElOptionGroup, ElLoading, ElImageViewer } from "element-plus";
 import { IconCheck, IconPhotoAi, IconSparkles, IconArrowUp, IconPlayerStop, IconTransfer, IconLayoutGrid, IconBrush, IconPencil, IconSun, IconCameraRotate, IconPanoramaHorizontal, IconChevronDown } from "@tabler/icons-vue";
-import { findNodeModel, getNodeModelIdentity, getNodeModelKey, nodeSkeleton, nodeTools, useNode, useNodeModelSelection, z, type NodeMediaModel, type NodeImageRequest, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
+import { findNodeModel, getNodeModelIdentity, getNodeModelKey, nodeSkeleton, nodeTools, useNode, useNodeModelMemory, useNodeModelSelection, z, type NodeMediaModel, type NodeImageRequest, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
 import modelLabel from "@toonflow/node-shared/modelLabel";
+import modelSelect from "@toonflow/node-shared/modelSelect";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { useNodeGeneration } from "@toonflow/node-shared/useNodeGeneration";
 import { useNodeReferences } from "@toonflow/node-shared/useNodeReferences";
@@ -199,6 +200,7 @@ let generation: Promise<void> | undefined;
 let modelsRequest: Promise<void> | undefined;
 watch(generating, value => { if (!value && !disposed && !deleting.value && !models.value.length) void loadModels().catch(error => showNodeError(error, "模型读取失败")); });
 const selectedModel = useNodeModelSelection(models, computed({ get: () => data.value.model, set: value => { data.value.model = value; } }));
+const modelMemory = useNodeModelMemory("image");
 const { sizeOptions, ratioOptions } = useImageModelForm(data, selectedModel);
 const modelGroups = computed(() => groupNodeModels(models.value));
 const generationPrompt = computed(() =>
@@ -301,16 +303,21 @@ function loadModels() {
   modelsRequest = ai.getMediaModels().then((items) => {
     if (disposed || generating.value || deleting.value) return;
     models.value = items.filter((item) => item.type === "image");
-    // ACT: 只给空配置选默认模型，保留暂时不可用的旧选择及其参数。
+    // ACT: 只给空配置选默认模型（优先上次手动选择的），保留暂时不可用的旧选择及其参数。
     if (!data.value.model) {
-      const first = modelGroups.value[0]?.models[0];
-      data.value.model = first ? getNodeModelKey(first) : "";
+      const choice = findNodeModel(models.value, modelMemory.get()) ?? modelGroups.value[0]?.models[0];
+      data.value.model = choice ? getNodeModelKey(choice) : "";
     }
   }).finally(() => {
     modelsLoading.value = false;
     modelsRequest = undefined;
   });
   return modelsRequest;
+}
+
+function selectModel(value: string) {
+  data.value.model = value;
+  if (value) modelMemory.set(value);
 }
 
 async function confirmInpaint() {

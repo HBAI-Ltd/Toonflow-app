@@ -17,6 +17,8 @@
     "./nodeAi": "./src/nodeAi.ts",
     "./nodeFfmpeg": "./src/nodeFfmpeg.ts",
     "./nodeAsr": "./src/nodeAsr.ts",
+    "./nodeServer": "./src/nodeServer.ts",
+    "./serverClient": "./src/serverClient.ts",
     "./workspaceFiles": "./src/workspaceFiles.ts",
     "./nodeTools": "./src/nodeTools.ts"
   },
@@ -32,6 +34,7 @@
     "@toonflow/asr": "workspace:*",
     "@toonflow/file": "workspace:*",
     "@toonflow/ffmpeg": "workspace:*",
+    "@toonflow/plugin-server": "workspace:*",
     "@earendil-works/pi-agent-core": "0.85.1",
     "@earendil-works/pi-ai": "0.85.1",
     "@tabler/icons-vue": "^3.46.0",

@@ -298,9 +298,9 @@ export async function analyzeVideo(options: AnalysisOptions): Promise<AnalysisRe
   }
   if (options.audio && audioPresent) {
     progress("提取原音轨");
-    result.audio = `${directory}/originalAudio.m4a`;
-    await runFfmpeg(ffmpeg(source).noVideo().audioCodec("aac").audioBitrate(192).format("ipod")
-      .outputOptions("-map", "0:a:0", "-movflags", "+faststart").output(result.audio), signal);
+    result.audio = `${directory}/originalAudio.mp3`;
+    await runFfmpeg(ffmpeg(source).noVideo().audioCodec("libmp3lame").audioBitrate(192).format("mp3")
+      .outputOptions("-map", "0:a:0").output(result.audio), signal);
     const audioInfo = await probe(ffmpeg, result.audio, signal);
     if (!audioInfo.streams.some(stream => stream.codec_type === "audio") || !(Number(audioInfo.format.duration) > 0)) throw new Error("原音轨生成失败");
   }

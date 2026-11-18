@@ -16,7 +16,6 @@
     "@toonflow/asr": "workspace:*",
     "@toonflow/file": "workspace:*",
     "@toonflow/ffmpeg": "workspace:*",
-    "@toonflow/providers": "workspace:*",
     "@vitejs/plugin-vue": "^6.0.8",
     "vite": "^8.2.2",
     "zod": "^4.6.2"

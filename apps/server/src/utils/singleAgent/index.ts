@@ -178,6 +178,8 @@ export async function run(options: {
   modelId: string;
   thinkingLevel?: ThinkingLevel;
   includeToolResults?: boolean;
+  /** 单轮内工具调用很多的调用方可以打开：接近模型上下文上限时由 SDK 自动压缩较早的内容，默认关闭。 */
+  compaction?: boolean;
 }, send: (event: SingleAgentEvent) => void, signal?: AbortSignal, onStart?: () => void) {
   const state = getSession(options.sessionId);
   if (state.active) throw Object.assign(new Error("此对话正在运行，请等待当前回复完成"), { status: 409 });
@@ -220,7 +222,7 @@ export async function run(options: {
     if (options.images?.length && !runtimeModel.input.includes("image")) throw new Error(t`所选模型不支持图片输入，请选择支持视觉的模型`);
     active.controller.signal.throwIfAborted();
     const settingsManager = SettingsManager.inMemory({
-      compaction: { enabled: false },
+      compaction: { enabled: options.compaction === true },
       retry: { enabled: true, maxRetries: 3, baseDelayMs: 2000, provider: { maxRetries: 0 } },
     });
     const agentDir = join(state.cwd, ".agent");
@@ -243,16 +245,31 @@ export async function run(options: {
     active.controller.signal.throwIfAborted();
     const streamFunction = session.agent.streamFunction;
     session.agent.streamFunction = async (...args) => {
+      const compacting = session.isCompacting;
       await waitForResume(active);
       active.activeActions++;
-      try {
-        const stream = await streamFunction(...args);
-        void stream.result().then(() => finishAction(active), () => finishAction(active));
-        return stream;
-      } catch (error) { finishAction(active); throw error; }
+      let stream: Awaited<ReturnType<typeof streamFunction>>;
+      try { stream = await streamFunction(...args); }
+      catch (error) { finishAction(active); throw error; }
+      const result = stream.result();
+      void result.then(() => finishAction(active), () => finishAction(active));
+      // 与主 Agent 一致：摘要落进会话前拒绝空正文，否则压缩会把上下文换成一段空摘要。
+      if (compacting) {
+        const response = await result;
+        if (response.stopReason === "stop" && !response.content.some(part => part.type === "text" && part.text.trim())) {
+          throw new Error("模型返回了空摘要，已保留原上下文");
+        }
+      }
+      return stream;
     };
     const toolBlocks = new Map<string, string>();
+    // 阈值压缩失败不让本轮作废（上下文可能仍装得下）；只有模型请求随后也失败时，把压缩失败原因一并报出。
+    let compactionError: string | undefined;
     session.subscribe(event => {
+      if (event.type === "compaction_start" || event.type === "compaction_end") {
+        send({ type: "compaction", active: event.type === "compaction_start" });
+        if (event.type === "compaction_end") compactionError = event.errorMessage ? t`上下文压缩失败：${event.errorMessage}` : undefined;
+      }
       if (event.type === "message_start" && event.message.role === "assistant") messageIndex++;
       if (event.type === "message_update") {
         const update = event.assistantMessageEvent;
@@ -299,8 +316,9 @@ export async function run(options: {
     active.controller.signal.throwIfAborted();
     const reply = session.messages.findLast(message => message.role === "assistant");
     if (!reply || reply.role !== "assistant") throw new Error("模型未返回回复");
-    if (reply.stopReason === "error" || reply.stopReason === "aborted") throw new Error(reply.errorMessage || "模型请求失败");
-    if (reply.stopReason === "length") throw new Error("模型回复因长度限制被截断，未能完整生成回答。");
+    const withCompactionError = (message: string) => compactionError ? `${message}（${compactionError}）` : message;
+    if (reply.stopReason === "error" || reply.stopReason === "aborted") throw new Error(withCompactionError(reply.errorMessage || "模型请求失败"));
+    if (reply.stopReason === "length") throw new Error(withCompactionError("模型回复因长度限制被截断，未能完整生成回答。"));
     send({ type: "complete", text: reply.content.filter(part => part.type === "text").map(part => part.text).join("\n"), toolResults });
   } catch (error) {
     send({ type: "error", message: active.controller.signal.aborted ? "本次回复已停止" : error instanceof Error ? error.message : "临时对话执行失败" });

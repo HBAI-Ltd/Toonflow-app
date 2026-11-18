@@ -45,6 +45,7 @@
     "@toonflow/multi-tenant-models": "workspace:*",
     "@toonflow/multi-tenant-source-mapping": "workspace:*",
     "@toonflow/providers": "workspace:*",
+    "@toonflow/plugin-server": "workspace:*",
     "@toonflow/teams-scaffold": "workspace:*",
     "@toonflow/tool-asset-operator": "workspace:*",
     "@toonflow/tool-browser": "workspace:*",

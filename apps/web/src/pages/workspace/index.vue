@@ -111,7 +111,7 @@
       </div>
     </div>
     <floatingAgent v-model="agentVisible" :inert="workspaceStore.projectLoadingVisible" @resize="agentWidth = $event" />
-    <settings v-model="settingsVisible" />
+    <settings ref="settingsDialog" v-model="settingsVisible" />
     <el-dialog v-model="contactVisible" :title="contactInfo.title" width="min(360px, calc(100vw - 32px))" alignCenter appendToBody>
       <div class="contactContent">
         <q-r-code
@@ -138,6 +138,8 @@ import { IconVector, IconFileText, IconPointer, IconHandStop, IconPlus, IconSear
 import { ElMessage, ElMessageBox } from "element-plus";
 import { QRCode } from "tdesign-vue-next";
 import settings from "@/components/settings/index.vue";
+import modelLoginGuide from "@/components/modelLoginGuide.vue";
+import { multiTenantEnabled, toonflowAccountToken } from "@/stores/settings";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { registerWorkspaceControl, waitForControlValue } from "@/lib/mcpControl";
 import anonymousData from "@/lib/anonymousData";
@@ -172,6 +174,9 @@ const panelOptions = [
 const agentVisible = ref(true);
 const agentWidth = ref(0);
 const settingsVisible = ref(false);
+const settingsDialog = ref<InstanceType<typeof settings>>();
+provide("openSettingsPanel", (id: string) => settingsDialog.value?.openPanel(id));
+provide("modelLoginGuide", computed(() => !multiTenantEnabled.value && !toonflowAccountToken.value ? modelLoginGuide : undefined));
 const helpVisible = ref(false);
 const contactVisible = ref(false);
 const contactType = ref<"community" | "business">("community");

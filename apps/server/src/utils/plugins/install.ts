@@ -8,7 +8,7 @@ import type { PluginInstallType } from "@/types/desktop";
 import conf from "@/utils/conf";
 import { parseTool, toolsDirectory } from "@/utils/plugins/tools";
 import { parseNodeServerTool } from "@/utils/plugins/nodes";
-import { extDirectory, parseExt } from "@/utils/plugins/ext";
+import { extDirectory, extFileName, extNameFromFile, extPaths, parseExt, resolveExtPath, validateExtSource } from "@/utils/plugins/ext";
 import { addMediaProvider } from "@/utils/media/provider";
 import { isSafeSegment } from "@/utils/skills/files";
 import { isWithin, lockWorkspaceFiles, writeWorkspaceFile } from "@/utils/workspace/files";
@@ -19,6 +19,16 @@ const require = createRequire(import.meta.url);
 export function recordInstalledAt(type: PluginInstallType, name: string) {
   // ACT: 记录最近一次成功安装（含更新）；卸载后重装会覆盖旧时间，配置和内容编辑不修改此记录。
   conf.set("pluginInstalledAt", { ...conf.get("pluginInstalledAt", {}), [`${type}:${name}`]: Date.now() });
+}
+
+export function getMarketIdentifiers(type: PluginInstallType, name: string) {
+  return conf.get("pluginMarketIdentifiers", {})[`${type}:${name}`] ?? [];
+}
+
+function recordMarketIdentifier(type: PluginInstallType, name: string, identifier: string) {
+  const identifiers = getMarketIdentifiers(type, name);
+  if (name === identifier || identifiers.includes(identifier)) return;
+  conf.set("pluginMarketIdentifiers", { ...conf.get("pluginMarketIdentifiers", {}), [`${type}:${name}`]: [...identifiers, identifier] });
 }
 
 function invalid(message: string, status = 400): never {
@@ -150,26 +160,26 @@ export async function installNode(fileName: string, source: string, force = fals
 }
 
 export async function installExt(fileName: string, source: string, force = false, marketVersion?: string, signal?: AbortSignal) {
-  if (!/^ext-[a-z][a-zA-Z0-9]*\.umd\.js$/.test(fileName)) invalid("文件名需为 ext-小驼峰格式，例如 ext-image.umd.js");
+  const name = extNameFromFile(fileName);
+  if (!name) invalid("文件名需为小驼峰格式，例如 image.ext.js");
   if (!source.trim()) invalid("文件扩展内容为空，请重新上传扩展脚本");
   if (Buffer.byteLength(source, "utf8") > maxBytes) invalid("文件扩展不能超过 20 MB", 413);
-  const name = fileName.slice(0, -7);
-  const metadata = parseExt(source, name);
-  if (!source.includes("toonflowExtHost") || !new RegExp(`toonflowExts\\s*\\[\\s*["']${name}["']\\s*\\]`).test(source)) {
-    invalid("文件不是兼容的 Toonflow 文件扩展，请使用扩展脚手架构建并保留原文件名");
-  }
-  try { new Bun.Transpiler({ loader: "js" }).scan(source); }
-  catch { invalid("文件扩展脚本语法无效，请重新构建完整的 .umd.js 文件"); }
+  const metadata = validateExtSource(source, name);
   await mkdir(extDirectory, { recursive: true });
   if ((await lstat(extDirectory)).isSymbolicLink()) invalid("文件扩展目录不能是符号链接", 403);
-  const path = resolve(extDirectory, fileName);
-  const release = lockWorkspaceFiles([path]);
+  const path = resolve(extDirectory, extFileName(name));
+  const release = lockWorkspaceFiles(extPaths(name));
   try {
     const current = await lstat(path).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
     if (current && !current.isFile()) invalid("现有文件扩展必须是普通文件", 403);
-    if (current && !force) {
+    const installedPath = await resolveExtPath(name);
+    const installed = await lstat(installedPath).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
+    if (installed && !installed.isFile()) invalid("现有文件扩展必须是普通文件", 403);
+    const removed = await lstat(resolve(extDirectory, `${name}.removed`)).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
+    if (removed && !removed.isFile()) invalid("文件扩展状态文件无效", 409);
+    if (installed && !removed && !force) {
       let version: string | undefined;
-      try { if (current.size <= maxBytes) version = parseExt(await readFile(path, "utf8"), name).version; }
+      try { if (installed.size <= maxBytes) version = parseExt(await readFile(installedPath, "utf8"), name).version; }
       catch { /* 损坏的已安装版本只能由明确的强制安装覆盖。 */ }
       requireNewerVersion(version, marketVersion ?? metadata.version, t`文件扩展“${name}”`);
     }
@@ -365,7 +375,7 @@ async function skillArchive(bytes: Uint8Array) {
   return result;
 }
 
-export async function installSkill(fileName: string, bytes: Uint8Array, force = false, marketVersion?: string, signal?: AbortSignal) {
+export async function installSkill(fileName: string, bytes: Uint8Array, force = false, marketVersion?: string, signal?: AbortSignal, marketIdentifier?: string) {
   if (!fileName || fileName.length > 128 || /[\\/]/.test(fileName) || !/\.(md|zip|tar|tar\.gz|tgz)$/i.test(fileName)) invalid("请选择 .zip、.md、.tar、.tar.gz 或 .tgz 技能文件");
   skillPath(fileName);
   if (!bytes.byteLength) invalid("技能文件不能为空");
@@ -404,11 +414,22 @@ export async function installSkill(fileName: string, bytes: Uint8Array, force = 
       if (entries.some(entry => entry.name.toLowerCase() === "skill.md" && join(entry.parentPath, entry.name) !== join(target, "SKILL.md"))) invalid("目录中包含其他技能，不能整体替换", 409);
       if (!force) {
         let version: unknown;
+        let existingSkillValid = false;
         if (current.size <= maxBytes) {
           const previous = await readFile(join(target, "SKILL.md"), "utf8");
-          try { version = (parseFrontmatter(previous).frontmatter.metadata as Record<string, unknown> | undefined)?.version; } catch { /* 损坏元数据没有可比较的版本。 */ }
+          try {
+            const { frontmatter: installed } = parseFrontmatter(previous);
+            version = (installed.metadata as Record<string, unknown> | undefined)?.version;
+            existingSkillValid = installed.name === name && typeof installed.description === "string" && !!installed.description.trim();
+          } catch { /* 损坏元数据没有可比较的版本。 */ }
         }
-        requireNewerVersion(version, marketVersion ?? (frontmatter.metadata as Record<string, unknown> | undefined)?.version, t`技能“${name}”`);
+        try { requireNewerVersion(version, marketVersion ?? (frontmatter.metadata as Record<string, unknown> | undefined)?.version, t`技能“${name}”`); }
+        catch (error) {
+          // ACT: 旧安装没有市场关联；包内名称与有效的已安装技能完全一致时补记，不重写同版本技能。
+          signal?.throwIfAborted();
+          if (existingSkillValid && marketIdentifier) recordMarketIdentifier("skill", name, marketIdentifier);
+          throw error;
+        }
       }
     }
     temporary = await mkdtemp(join(root, ".skillInstall"));
@@ -447,15 +468,16 @@ export async function installSkill(fileName: string, bytes: Uint8Array, force = 
   }
 }
 
-export async function installRemotePlugin(type: PluginInstallType, url: string, fileName?: string, force = false, marketVersion?: string, signal?: AbortSignal) {
+export async function installRemotePlugin(type: PluginInstallType, url: string, fileName?: string, force = false, marketVersion?: string, signal?: AbortSignal, marketIdentifier?: string, allowTerminal = false) {
   signal?.throwIfAborted();
+  marketIdentifier = marketIdentifier?.trim();
   const address = remoteAddress(url);
   if (fileName === undefined) {
     try { fileName = decodeURIComponent(address.pathname.split("/").at(-1) ?? ""); }
     catch { return invalid("下载地址中的文件名编码无效，请重新生成下载链接"); }
   }
-  const patterns = { node: /^[a-z][a-zA-Z0-9]*\.umd\.js$/, ext: /^ext-[a-z][a-zA-Z0-9]*\.umd\.js$/, tool: /^[a-z][a-zA-Z0-9]*\.tool\.js$/, skill: /\.(md|zip|tar|tar\.gz|tgz)$/i, provider: /^[a-z][a-zA-Z0-9]*\.ts$/, agent: /^[a-z][a-zA-Z0-9]*\.agent\.zip$/ };
-  const examples = { node: "audioNode.umd.js", ext: "ext-image.umd.js", tool: "exampleTool.tool.js", skill: "example.zip、SKILL.md、example.tar、example.tar.gz 或 example.tgz", provider: "exampleProvider.ts", agent: "exampleTeam.agent.zip" };
+  const patterns = { node: /^[a-z][a-zA-Z0-9]*\.umd\.js$/, ext: /^(?:[a-z][a-zA-Z0-9]*\.ext\.js|ext-[a-z][a-zA-Z0-9]*\.umd\.js)$/, tool: /^[a-z][a-zA-Z0-9]*\.tool\.js$/, skill: /\.(md|zip|tar|tar\.gz|tgz)$/i, provider: /^[a-z][a-zA-Z0-9]*\.ts$/, agent: /^[a-z][a-zA-Z0-9]*\.agent\.zip$/ };
+  const examples = { node: "audioNode.umd.js", ext: "image.ext.js", tool: "exampleTool.tool.js", skill: "example.zip、SKILL.md、example.tar、example.tar.gz 或 example.tgz", provider: "exampleProvider.ts", agent: "exampleTeam.agent.zip" };
   if (!Object.hasOwn(patterns, type)) invalid("不支持此插件类型，可选值为 node、ext、tool、skill、provider、agent");
   if (!fileName) invalid(t`下载地址缺少文件名，请使用指向文件的地址，例如 ${examples[type]}`);
   if (fileName.length > 128 || /[\\/]/.test(fileName)) invalid("插件文件名无效，不能包含目录路径或超过 128 字符");
@@ -463,11 +485,16 @@ export async function installRemotePlugin(type: PluginInstallType, url: string, 
   const bytes = await download(url, type === "provider" ? 2 * 1024 * 1024 : maxBytes, { node: "节点", ext: "文件扩展", tool: "工具", skill: "技能", provider: "供应商", agent: "团队" }[type], signal);
   signal?.throwIfAborted();
   // ACT: 市场更新以卡片版本比较已安装文件的内部版本；其他入口沿用待安装文件版本。
-  if (type === "agent") return (await import("@/utils/teams/install")).installTeam(fileName, bytes, force, marketVersion);
-  if (type === "skill") return installSkill(fileName, bytes, force, marketVersion, signal);
-  const source = decodeText(bytes);
-  if (type === "node") return installNode(fileName, source, force, marketVersion, signal);
-  if (type === "ext") return installExt(fileName, source, force, marketVersion, signal);
-  if (type === "tool") return installTool(fileName, source, force, marketVersion, signal);
-  return { name: (await addMediaProvider(source)).id };
+  let result: { name: string };
+  if (type === "agent") result = await (await import("@/utils/teams/install")).installTeam(fileName, bytes, force, marketVersion);
+  else if (type === "skill") result = await installSkill(fileName, bytes, force, marketVersion, signal, marketIdentifier);
+  else {
+    const source = decodeText(bytes);
+    result = type === "node" ? await installNode(fileName, source, force, marketVersion, signal)
+      : type === "ext" ? await installExt(fileName, source, force, marketVersion, signal)
+      : type === "tool" ? await installTool(fileName, source, force, marketVersion, signal)
+      : { name: (await addMediaProvider(source, undefined, allowTerminal)).id };
+  }
+  if (marketIdentifier) recordMarketIdentifier(type, result.name, marketIdentifier);
+  return result;
 }

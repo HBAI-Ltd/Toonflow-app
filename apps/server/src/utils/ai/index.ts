@@ -1,7 +1,7 @@
 import { openAICompletionsApi } from "@earendil-works/pi-ai/api/openai-completions.lazy";
 import { openAIResponsesApi } from "@earendil-works/pi-ai/api/openai-responses.lazy";
 import { anthropicMessagesApi } from "@earendil-works/pi-ai/api/anthropic-messages.lazy";
-import type { AssistantMessage, Context, Model } from "@earendil-works/pi-ai";
+import type { AssistantMessage, Context, Model, Tool } from "@earendil-works/pi-ai";
 import { z } from "zod";
 import { readReference } from "@/utils/media/generation";
 import { createFileTransport, getUnsupportedFileText, type FileProvider } from "@/utils/ai/files";
@@ -143,6 +143,47 @@ export function referenceContent(protocol: string, prompt: string, references: A
   return content;
 }
 
+const jsonValueSchema = JSON.stringify({ anyOf: [
+  { type: "string" }, { type: "number" }, { type: "boolean" }, { type: "null" },
+  { type: "array", items: {} }, { type: "object", propertyNames: { type: "string" }, additionalProperties: {} },
+] });
+
+function stripRefs(value: unknown, refs: Set<unknown>): unknown {
+  if (Array.isArray(value)) return value.map(item => stripRefs(item, refs));
+  if (typeof value !== "object" || value === null) return value;
+  return Object.fromEntries(Object.entries(value).flatMap(([key, item]) => {
+    if (key === "$ref" && refs.has(item)) return [];
+    const next = stripRefs(item, refs);
+    // draft-07 带说明的引用写成 allOf:[{$ref}]，去掉引用后整项等价于任意值。
+    return key === "allOf" && JSON.stringify(next) === "[{}]" ? [] : [[key, next]];
+  }));
+}
+
+// ACT: z.json() 生成递归 $ref，部分本地引擎（如 LM Studio 的 llama.cpp）按参数拆分 schema 后无法解析根定义。
+// 仅把与 z.json() 输出逐字一致的“任意 JSON 值”定义替换为等价的 {}；其他递归结构保持原样，Zod 输出格式变化时不再匹配并原样发送。
+export function portableTools(tools?: Tool[]) {
+  return tools?.map(tool => {
+    const refs = new Set<string>();
+    for (const key of ["$defs", "definitions"]) {
+      const definitions = (tool.parameters as Record<string, unknown>)[key];
+      if (typeof definitions !== "object" || definitions === null) continue;
+      for (const [name, definition] of Object.entries(definitions)) {
+        const ref = `#/${key}/${name}`;
+        if (JSON.stringify(stripRefs(definition, new Set([ref]))) === jsonValueSchema) refs.add(ref);
+      }
+    }
+    if (!refs.size) return tool;
+    const parameters = stripRefs(tool.parameters, refs) as Record<string, Record<string, unknown> | undefined>;
+    for (const key of ["$defs", "definitions"]) {
+      const definitions = parameters[key];
+      if (!definitions) continue;
+      for (const name of Object.keys(definitions)) if (refs.has(`#/${key}/${name}`)) delete definitions[name];
+      if (!Object.keys(definitions).length) delete parameters[key];
+    }
+    return { ...tool, parameters: parameters as unknown as Tool["parameters"] };
+  });
+}
+
 export function streamAi(
   configured: ConfiguredModel,
   context: Context,
@@ -169,7 +210,7 @@ export function streamAi(
       // ACT: 对外只留逻辑身份；同一路由版本进入 SDK 时恢复内部身份，避免工具循环误判跨模型而丢弃推理签名。
       ? { ...message, provider: model.provider, model: model.id } : message),
   } : context;
-  const stream = aiApis[provider.protocol].streamSimple(model, requestContext, {
+  const stream = aiApis[provider.protocol].streamSimple(model, { ...requestContext, tools: portableTools(context.tools) }, {
     apiKey: provider.apiKey,
     headers: provider.headers,
     signal,

@@ -26,7 +26,7 @@ export function createDocumentSession(resource: ExtResource, extension: ExtDefin
   const loading = ref(true);
   const extensionDisabled = ref(false);
   const locks = ref(0);
-  const context = shallowReactive<ExtContext>({
+  const context = shallowReactive<Omit<ExtContext, "server">>({
     resource, files, text: "", error: "", dirty: false, active: true,
     get loading() { return loading.value || locks.value > 0 || extensionDisabled.value; },
     get config() { return extensionConfig(extension.id); },

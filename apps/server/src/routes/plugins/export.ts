@@ -44,8 +44,9 @@ export default router.get("/", validateFields({
 
   if (type !== "skill") {
     if (!(type === "ext" ? /^ext-[a-z][a-zA-Z0-9]*$/ : /^[a-z][a-zA-Z0-9]*$/).test(name)) return res.status(400).json(error("插件名称无效", null, 400));
-    const fileName = `${name}.${type === "node" || type === "ext" ? "umd" : "tool"}.js`;
-    const bytes = await readFileBytes(join(directory, fileName));
+    const fileName = type === "ext" ? u.extPlugins.extFileName(name) : `${name}.${type === "node" ? "umd" : "tool"}.js`;
+    if (type === "ext") await u.extPlugins.readExt(name);
+    const bytes = await readFileBytes(type === "ext" ? await u.extPlugins.resolveExtPath(name) : join(directory, fileName));
     return res.set("Cache-Control", "no-store").attachment(fileName).send(bytes);
   }
 

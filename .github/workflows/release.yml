@@ -121,7 +121,7 @@ jobs:
             "",
             "- 💻 **Windows**：双击下载的安装包，按提示完成安装。ARM64 需要 .NET Framework 4.8.1，较新的 Windows 11 已内置。",
             "- 🍎 **Mac（macOS 14 及以上）**：打开下载的 `.dmg` 镜像，将 `toonflow.app` 拖入“应用程序”，复制完成后再从“应用程序”打开。",
-            "- 🐧 **Linux（Debian / Ubuntu）**：选择对应架构的 DEB，在下载目录执行 `sudo apt install ./toonflow-版本号-linux-架构.deb`，安装后从应用菜单打开。",
+            "- 🐧 **Linux（Debian / Ubuntu）**：选择对应架构的 DEB，在下载目录执行 `sudo apt install ./toonflow-版本号-linux-架构.deb`。安装后可在「设置 → 关于」更新；使用 2.0.10 的用户需先手动覆盖安装一次。",
             "- 📱 **Android**：在手机上打开 APK，按系统提示允许此来源安装应用。后续版本可直接覆盖安装。",
             "",
             "两种 Mac 应用与 DMG 镜像均使用 Developer ID Application 签名，并完成 Apple 公证。首次打开时，macOS 仍可能提示确认打开从互联网下载的应用。",
@@ -207,7 +207,11 @@ jobs:
             for (const name of fileNames) {
               if (!Bun.file(join("artifacts", name)).size) throw new Error(`构建产物为空：${name}`);
             }
-            return { ...target, fileNames };
+            if (target.platform === "linux" && (manifest.deb?.file !== installers[0] || !/^[a-zA-Z0-9]+$/.test(manifest.hash))) {
+              throw new Error(`${manifestName} 的 Debian 安装包或构建号无效`);
+            }
+            const debAlias = target.platform === "linux" ? `${prefix}${manifest.hash}.deb` : undefined;
+            return { ...target, fileNames, debAlias };
           }));
           const plannedNames = new Set(plans.flatMap(plan => plan.fileNames));
           if (names.some(name => !plannedNames.has(name))) throw new Error("存在无法归属到发布平台的构建产物");
@@ -274,6 +278,8 @@ jobs:
               console.log(`已上传 ${fileName}（${file.size} 字节）`);
             }
             const [application, ...files] = uploadedFiles;
+            // 官网更新路由只查带渠道及架构前缀的 files；别名复用安装包对象，不重复上传。
+            if (plan.debAlias) files.push({ ...application!, fileName: plan.debAlias });
             return { platform: plan.platform, arch: plan.arch, applicationPath: application!.fileUrl, files };
           })).catch(error => {
             uploadController.abort();

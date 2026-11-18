@@ -38,6 +38,8 @@ export async function uploadNodeFile(files: WorkspaceFiles, nodeId: string, file
 export function useNodeFiles() {
   const createFiles = inject<(() => WorkspaceFiles) | undefined>("workspaceFiles", undefined);
   const retainNodeFiles = inject("retainNodeFiles", false);
+  // 宿主未提供素材库（如无权限的账号）时为 undefined，节点据此隐藏入口；取消选择或节点已移除时返回 undefined。
+  const pickAsset = inject<((nodeId: string, kind: "image" | "video" | "audio") => Promise<File | undefined>) | undefined>("pickNodeAsset", undefined);
 
   function getWorkspaceFiles() {
     if (!createFiles) throw new Error("当前画布未提供工作区文件能力");
@@ -90,5 +92,5 @@ export function useNodeFiles() {
     return fileUrl;
   }
 
-  return { getWorkspaceFiles, uploadFile, removeNodeFiles, useFileUrl };
+  return { getWorkspaceFiles, uploadFile, removeNodeFiles, useFileUrl, pickAsset };
 }

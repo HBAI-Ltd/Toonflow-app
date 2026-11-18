@@ -30,7 +30,7 @@
         <el-table-column :label="translate('操作')" width="100" align="right"><template #default="{ row }"><el-button link type="primary" :disabled="busy" @click="openProvider(row as ManagedModelProvider)">{{ translate("编辑") }}</el-button></template></el-table-column>
       </el-table>
     </section>
-    <providerEditor v-model="editorVisible" :kind="editorKind" :initial="editingProvider" :saving="saving" :error="editorError" :inspect="inspectProvider" @save="saveProvider" @reload="reload" />
+    <providerEditor v-model="editorVisible" :kind="editorKind" :initial="editingProvider" :saving="saving" :error="editorError" :inspect="inspectProvider" :listPresets="listPresets" :getPresetSource="getPresetSource" @save="saveProvider" @reload="reload" />
   </article>
 </template>
 
@@ -39,7 +39,7 @@ import { computed, h, onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
 import { translate } from "@toonflow/i18n/vue";
 import { ElAlert, ElButton, ElForm, ElFormItem, ElInput, ElMessage, ElMessageBox, ElTabPane, ElTabs, ElTable, ElTableColumn, ElTag, vLoading } from "element-plus";
 import providerEditor from "@toonflow/provider-web/providerEditor";
-import type { ProviderConfiguration, ProviderDescription, ProviderInspection, ProviderKind } from "@toonflow/provider-web/providerTypes";
+import type { ProviderConfiguration, ProviderDescription, ProviderInspection, ProviderKind, ProviderPreset } from "@toonflow/provider-web/providerTypes";
 import type { ManagedModelProvider, ProviderConfigurationSnapshot } from "@toonflow/multi-tenant-models/config";
 import type { AdminRequest } from "../types";
 import "element-plus/es/components/alert/style/css";
@@ -127,6 +127,19 @@ function openProvider(provider?: ManagedModelProvider) {
 async function inspectProvider(input: ProviderInspection, signal: AbortSignal) {
   try { return await props.request<ManagedModelProvider>({ method: "POST", url: "/api/multiTenant/providers/inspect", data: input, signal }); }
   catch (cause) { throw new Error(errorMessage(cause, translate("解析供应商失败")), { cause }); }
+}
+
+async function listPresets(kind: ProviderKind, signal: AbortSignal) {
+  try {
+    return await props.request<ProviderPreset[]>({ method: "GET", url: "/api/multiTenant/providers/builtin/list", params: { kind: kind === "text" ? "language" : kind }, signal });
+  } catch (cause) { throw new Error(errorMessage(cause, translate("读取供应商配置失败")), { cause }); }
+}
+
+async function getPresetSource(kind: ProviderKind, id: string, signal: AbortSignal) {
+  try {
+    const result = await props.request<{ source: string }>({ method: "GET", url: "/api/multiTenant/providers/builtin/source", params: { kind: kind === "text" ? "language" : kind, id }, signal });
+    return result.source;
+  } catch (cause) { throw new Error(errorMessage(cause, translate("读取供应商代码失败")), { cause }); }
 }
 
 async function saveProvider(provider: ProviderConfiguration) {

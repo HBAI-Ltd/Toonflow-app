@@ -11,4 +11,4 @@ bun run --cwd packages/ext/media typecheck
 bun run --cwd packages/ext/media build --mode development
 ```
 
-开发构建同步到 `data/ext/ext-media.umd.js`；生产构建输出到 `build/ext/ext-media.umd.js`，随现有扩展打包流程发布。
+开发构建同步到 `data/ext/media.ext.js`；生产构建输出到 `build/ext/media.ext.js`，随现有扩展打包流程发布。

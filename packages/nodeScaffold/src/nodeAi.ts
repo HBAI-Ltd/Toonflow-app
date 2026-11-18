@@ -1,4 +1,4 @@
-import { computed, onScopeDispose, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
+import { computed, inject, onScopeDispose, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
 import { runAgentLoop, type AgentTool, type AgentToolResult } from "@earendil-works/pi-agent-core";
 import { createAssistantMessageEventStream, type AssistantMessage, type Context, type Message, type Model } from "@earendil-works/pi-ai";
 import { EventSourceParserStream } from "eventsource-parser/stream";
@@ -54,6 +54,14 @@ export function useNodeModelSelection<T extends ModelIdentity>(models: MaybeRefO
     if (selection.value !== key) selection.value = key;
   }, { immediate: true, flush: "sync" });
   return selected;
+}
+
+export type NodeModelMemory = { get(type: string): string; set(type: string, key: string): void };
+
+// 宿主未提供记忆能力时读取为空、写入忽略，节点回退到首个可用模型。
+export function useNodeModelMemory(type: string) {
+  const memory = inject<NodeModelMemory | undefined>("nodeModelMemory", undefined);
+  return { get: () => memory?.get(type) ?? "", set: (key: string) => memory?.set(type, key) };
 }
 export type NodeImageRequest = {
   directory: string;

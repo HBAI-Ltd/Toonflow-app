@@ -13,14 +13,15 @@ export default router.post("/", validateFields({
   url: z.string().url().max(4096).optional(),
   force: z.boolean().optional(),
   version: z.string().trim().min(1).max(256).optional(),
+  identifier: z.string().trim().min(1).max(200).optional(),
 }), async (req, res) => {
   if (!u.workspace.isLocalWorkspaceRequest(req)) return res.status(403).json(error("请在桌面端或服务器本机安装技能", null, 403));
-  const { fileName, base64, url, force, version } = req.body as { fileName?: string; base64?: string; url?: string; force?: boolean; version?: string };
+  const { fileName, base64, url, force, version, identifier } = req.body as { fileName?: string; base64?: string; url?: string; force?: boolean; version?: string; identifier?: string };
   if (url ? base64 !== undefined : fileName === undefined || base64 === undefined) {
     return res.status(400).json(error("请选择文件或填写远端地址", null, 400));
   }
   const result = url
-    ? await u.pluginInstall.installRemotePlugin("skill", url, fileName, force, version)
+    ? await u.pluginInstall.installRemotePlugin("skill", url, fileName, force, version, undefined, identifier)
     : await u.pluginInstall.installSkill(fileName!, Buffer.from(base64!, "base64"), force);
   res.json(success(result, "技能已安装"));
 });

@@ -16,6 +16,25 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   const projectLoadingDrawn = ref(false);
   const projectLoadingVisible = ref(false);
   const pendingAgentMessage = ref<{ directory: string; prompt: string; attachments?: AgentAttachment[]; model: string; reasoningEffort: string } | null>(null);
+  // 白模预演打开过的场景文件夹，与普通项目列表分开；最近打开的排在最前。
+  const sceneList = ref<Project[]>([]);
+
+  // directory 须为服务端规范化后的目录，避免同一文件夹不同写法重复入列。
+  function addScene(directory: string) {
+    const existing = sceneList.value.find(item => item.directory === directory);
+    const name = existing?.name || directory.split(/[\\/]/).filter(Boolean).at(-1) || directory;
+    sceneList.value = [{ directory, name, lastOpenedAt: Date.now() }, ...sceneList.value.filter(item => item.directory !== directory)];
+  }
+
+  function renameScene(path: string, name: string) {
+    const target = sceneList.value.find(item => item.directory === path);
+    if (target && name.trim()) target.name = name.trim();
+  }
+
+  // 只从列表移除，不删除场景文件夹。
+  function removeScene(path: string) {
+    sceneList.value = sceneList.value.filter(item => item.directory !== path);
+  }
 
   async function addProject(path: string, name?: string, signal?: AbortSignal, previousDirectory = path) {
     const { data } = await axios.get<{ code: number; data?: { directory: string }; message?: string }>("/api/workspaces/check", {
@@ -51,10 +70,10 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     if (project.value?.directory === path) project.value = null;
   }
 
-  return { project, projectList, projectLoading, projectLoadingDrawn, projectLoadingVisible, pendingAgentMessage, addProject, openProject, renameProject, removeProject };
+  return { project, projectList, sceneList, projectLoading, projectLoadingDrawn, projectLoadingVisible, pendingAgentMessage, addProject, addScene, renameScene, removeScene, openProject, renameProject, removeProject };
 }, {
   persist: {
     key: "toonflow.projectList",
-    pick: ["project", "projectList"],
+    pick: ["project", "projectList", "sceneList"],
   },
 });

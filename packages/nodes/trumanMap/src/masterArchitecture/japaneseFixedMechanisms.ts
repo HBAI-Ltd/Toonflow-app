@@ -1,0 +1,9 @@
+import { base, box, colors, cylinder, design, pipe, rail, slats } from "./structures";
+import { part, ring, type ModelPart } from "../assetModelParts";
+
+function japanese(name:string,purpose:string,build:()=>ModelPart[]){return design(name,purpose,build,"设施","日式");}
+export const japaneseFixedMechanismDesigns = [
+  japanese("莺声摩擦警戒地板","踏板受压后带动金属钉在折边承片间相擦，梁下成列发声触点把步行压力转成提示声而不依赖电路",()=>[...[-1,1].map(s=>box("两侧地板承梁",s*1,0.5,0,0.16,0.7,3,colors.wood)),...Array.from({length:9},(_,i)=>box("可微动独立踏板",0,0.95,-1.2+i*0.3,2.3,0.1,0.27,colors.wood)),...Array.from({length:6},(_,i)=>[pipe("随踏板微移的摩擦钉",[-0.65,0.94,-1+i*0.4],[-0.65,0.6,-1+i*0.4],0.02),box("钉侧弯折摩擦承片",-0.65,0.72,-1+i*0.4,0.035,0.22,0.09),box("地板下短支承楞",0,0.65,-1+i*0.4,1.9,0.1,0.08,colors.wood)]).flat()]),
+  japanese("八角回转经藏","多面封闭经柜连在同一中心竖轴上，底部外伸推杆允许绕行者转动整柜，不是单独转动的小经轮列",()=>[base(5,5),cylinder("经藏固定竖轴",0,2.1,0,0.18,4),cylinder("下部八角转承盘",0,0.6,0,3.5,0.22,colors.wood),...Array.from({length:8},(_,i)=>{const a=i*Math.PI/4;return[part("独立经柜封闭门面","box",colors.wood,[Math.cos(a)*1.5,2,Math.sin(a)*1.5],[1.25,2.4,0.1],[0,90-i*45,0]),box("柜面金属门扣",Math.cos(a)*1.56,2,Math.sin(a)*1.56,0.1,0.15,0.1),rail([Math.cos(a)*1.5,0.6,Math.sin(a)*1.5],[Math.cos(a)*2.2,0.6,Math.sin(a)*2.2],0.08,colors.wood)];}).flat(),ring("上部经柜连结圈",colors.wood,1.55,0.12,3.25,0.2),...[-1,1].map(s=>box("轴外独立承架",s*2.2,2.1,0,0.15,4,0.15,colors.wood)),box("轴顶承重横梁",0,4.15,0,4.6,0.2,0.25,colors.wood)]),
+  japanese("雪吊伞索树护架","高立独杆用放射细索托住树冠枝条抵御积雪，分级护环与落地斜撑为可单独放置的园艺设施",()=>[cylinder("高立雪吊中柱",0,3.7,0,0.12,7.4,colors.wood),...Array.from({length:12},(_,i)=>{const a=i*Math.PI/6;return[pipe("枝条独立承托悬索",[0,7.2,0],[Math.cos(a)*3,1.5,Math.sin(a)*3],0.018),part("末端柔性枝托圈","torus",colors.wood,[Math.cos(a)*3,1.5,Math.sin(a)*3],[0.25,0.25,0.03],[90,0,0])];}).flat(),...Array.from({length:3},(_,i)=>{const a=i*Math.PI*2/3;return rail([0,2.5,0],[Math.cos(a)*1.4,0,Math.sin(a)*1.4],0.08,colors.wood);}),ring("树干外可调缓冲护环",colors.wood,0.55,0.08,1.3,0.15)]),
+];

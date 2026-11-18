@@ -109,7 +109,7 @@ async function process() {
   if (rawPcm && !pcm) return void ElMessage.error("请先在音频预览中填写有效的 PCM 采样率、声道数和采样格式");
   const source = props.file!.url;
   const id = crypto.randomUUID();
-  const outputPath = `assets/${id}/audio.m4a`;
+  const outputPath = `assets/${id}/audio.mp3`;
   const options: AudioProcessingOptions = mode.value === "speed"
     ? { action: "speed", outputPath, speed: speed.value, pcm }
     : { action: "clip", outputPath, segments: segments.value.map(segment => ({ ...segment })), pcm };
@@ -142,7 +142,7 @@ async function process() {
     await batchHistory(async () => {
       current.signal.throwIfAborted();
       if (findNode(node.id) !== node || !nodeTypes?.value?.["remote-audioNode"]) throw new Error("画布节点已变化，请重新处理");
-      addNodes([{ id, type: "remote-audioNode", position: { x, y }, data: { label: `${node.data.label || "音频"} · ${label}`, outputs: { audio: { dataType: "AUDIO", value: { url: outputPath, mimeType: "audio/mp4" } } } } }]);
+      addNodes([{ id, type: "remote-audioNode", position: { x, y }, data: { label: `${node.data.label || "音频"} · ${label}`, outputs: { audio: { dataType: "AUDIO", value: { url: outputPath, mimeType: "audio/mpeg" } } } } }]);
       committed = true;
     });
     mode.value = undefined;

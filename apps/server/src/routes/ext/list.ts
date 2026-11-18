@@ -10,15 +10,15 @@ export default Router().get("/", async (req, res) => {
     if (error.code === "ENOENT") return [];
     throw error;
   });
-  const extensions = await Promise.all(files.filter(file => file.isFile() && /^ext-[a-z][a-zA-Z0-9]*\.umd\.js$/.test(file.name))
-    .sort((left, right) => left.name.localeCompare(right.name)).map(async file => {
-      const name = file.name.slice(0, -7);
+  const names = [...new Set(files.filter(file => file.isFile()).map(file => u.extPlugins.extNameFromFile(file.name)).filter((name): name is string => !!name))];
+  const extensions = await Promise.all(names.sort((left, right) => left.localeCompare(right)).map(async name => {
       const metadata = await u.extPlugins.readExt(name).catch((error: NodeJS.ErrnoException) => {
         if (error.code === "ENOENT") return null;
         return { name, id: name, displayName: name, extensions: [], resourceKind: "file", version: "", readme: "", author: "", github: "", configRules: [], installedAt: u.conf.get("pluginInstalledAt", {})[`ext:${name}`] ?? 0,
           loadError: translateMessage(error instanceof Error ? error.message : "文件扩展无法读取") };
       });
       return metadata && { loadError: "", ...metadata, canManage, canConfigure: canManage, config: canManage ? u.extPlugins.getExtConfig(metadata) : {},
+        marketIdentifiers: u.pluginInstall.getMarketIdentifiers("ext", name),
         builtin: req.app.locals.builtinPlugins.ext.has(name),
         enabled: !files.some(entry => entry.name === `${name}.disabled`), url: `/api/ext/read?name=${name}` };
     }));

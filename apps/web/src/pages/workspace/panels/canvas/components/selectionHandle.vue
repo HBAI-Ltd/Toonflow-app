@@ -62,6 +62,7 @@ const connectionPath = computed(() => pointer.value ? getBezierPath({
   targetX: pointer.value.x, targetY: pointer.value.y, targetPosition: Position.Left,
 })[0] : "");
 let feedback: NodeConnectionFeedback | undefined;
+let autoPanFrame = 0;
 
 function clearFeedback() {
   if (feedback && selectionConnection.value === feedback) selectionConnection.value = undefined;
@@ -101,6 +102,18 @@ function startConnection(event: PointerEvent) {
   (event.currentTarget as HTMLElement).focus({ preventScroll: true });
   (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   moveConnection(event);
+  cancelAnimationFrame(autoPanFrame);
+  autoPan();
+}
+
+// 与 vue-flow 内置连线一致：指针距画布边缘 40px 内时按距离比例平移视口
+function autoPan() {
+  const bounds = flow.vueFlowRef.value?.getBoundingClientRect();
+  if (!dragging.value || !pointer.value || !bounds) return;
+  const { x, y } = pointer.value;
+  const velocity = (value: number, size: number) => value < 40 ? Math.min(40 - value, 40) / 40 : value > size - 40 ? -Math.min(value - size + 40, 40) / 40 : 0;
+  flow.panBy({ x: velocity(x, bounds.width) * flow.autoPanSpeed.value, y: velocity(y, bounds.height) * flow.autoPanSpeed.value });
+  autoPanFrame = requestAnimationFrame(autoPan);
 }
 
 function moveConnection(event: PointerEvent) {

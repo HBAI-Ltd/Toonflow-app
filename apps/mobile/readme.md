@@ -49,7 +49,7 @@ bun run --cwd apps/mobile build
 
 `setup` 显式下载固定版本 ARM64 Android Bun 和 Gradle 9.6.0，校验 SHA256 后分别缓存到 `build/mobile/runtime`、`build/mobile/gradle`；随后由 AGP 9.4.0 自动安装所需 SDK，并准备 GeckoView 及其构建依赖，Gradle 缓存位于 `build/mobile/gradleHome`。SDK 自动安装要求该目录已接受许可。`build` 使用 `--offline` 并禁止 SDK 下载；缺少 SDK 或缓存时先重新执行 `setup`。GeckoView 的 Java、资源与 ARM64 原生内核由 Android 构建工具合并进 APK。
 
-`build` 先调用根目录的 `build:server`，构建节点、工具、扩展、前端、后端及 MCP，再将移动端服务与 MCP stdio 入口一起构建，共享重复依赖。APK 的 payload 包含 `server.js`、`stdio.js`、共享代码块、`web`、`nodes`、`tools`、`ext`、`providers`、`skills` 和 Photon 的 JS/WASM 包；团队保持当前仓库未内置打包的状态。payload 内容生成 `revision.txt`，用于随构建更新内置插件。发行包启用 R8 代码优化与资源裁剪，保留 Gecko 官方消费者规则及完整 ARM64 内核。
+`build` 先调用根目录的 `build:server`，构建节点、工具、扩展、前端、后端及 MCP，再将移动端服务与 MCP stdio 入口一起构建，共享重复依赖。APK 的 payload 包含 `server.js`、`stdio.js`、共享代码块、`web`、`nodes`、`tools`、`ext`、`skills` 和 Photon 的 JS/WASM 包；内置供应商列表与源码在线获取，团队保持当前仓库未内置打包的状态。payload 内容生成 `revision.txt`，用于随构建更新内置插件。发行包启用 R8 代码优化与资源裁剪，保留 Gecko 官方消费者规则及完整 ARM64 内核。
 
 输出：`build/mobile/toonflowMobile.apk`。包名为 `com.toonflow.mobile`，最低 Android 8 / API 26，目标 API 34。本地和 CI 共用仓库内公开的默认签名 `native/defaultSigning.keystore`，别名为 `androiddebugkey`，密码均为 `android`。沿用此前本地默认签名，不再每次生成密钥，后续版本可直接覆盖安装并保留应用数据。
 

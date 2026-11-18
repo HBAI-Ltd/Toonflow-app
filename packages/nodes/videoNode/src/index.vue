@@ -44,16 +44,27 @@
         :src="previewUrl"
         @loadedmetadata="resizeVideo" />
       <input ref="fileInput" class="fileInput" type="file" accept="video/*" aria-label="选择视频" :disabled="uploading || exporting" @change="uploadVideo" />
-      <el-button
-        v-if="!exporting && !outputs.video"
-        class="nodrag nopan"
-        :icon="IconUpload"
-        text
-        :loading="uploading"
-        title="上传视频"
-        aria-label="上传视频"
-        @dblclick.stop
-        @click.stop="fileInput?.click()">上传</el-button>
+      <div v-if="!exporting && !outputs.video" class="emptyActions">
+        <el-button
+          class="nodrag nopan"
+          :icon="IconUpload"
+          text
+          :loading="uploading"
+          title="上传视频"
+          aria-label="上传视频"
+          @dblclick.stop
+          @click.stop="fileInput?.click()">上传</el-button>
+        <el-button
+          v-if="files.pickAsset"
+          class="nodrag nopan"
+          :icon="IconFolder"
+          text
+          :disabled="uploading"
+          title="从素材库选择视频"
+          aria-label="从素材库选择视频"
+          @dblclick.stop
+          @click.stop="selectAsset">从素材库选择</el-button>
+      </div>
     </div>
   </nodeSkeleton>
   <videoActions ref="actions" :file="outputFile" :src="previewUrl" :disabled="uploading || exporting" />
@@ -61,7 +72,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref } from "vue";
-import { IconVideo, IconUpload, IconTransfer, IconMusic, IconLayersSubtract, IconScissors, IconMovie, IconPhotoScan, IconPlayerSkipBack, IconPlayerSkipForward } from "@tabler/icons-vue";
+import { IconVideo, IconUpload, IconFolder, IconTransfer, IconMusic, IconLayersSubtract, IconScissors, IconMovie, IconPhotoScan, IconPlayerSkipBack, IconPlayerSkipForward } from "@tabler/icons-vue";
 import { ElButton, ElMessage, ElProgress, ElDropdown, ElDropdownMenu, ElDropdownItem } from "element-plus";
 import { nodeSkeleton, nodeTools, useNode, z, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
 import videoPlayer from "./components/videoPlayer.vue";
@@ -133,11 +144,20 @@ async function resizeVideo(event: Event) {
   updateNodeInternals();
 }
 
-async function uploadVideo(event: Event) {
+function uploadVideo(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   input.value = "";
-  if (!file || uploading.value || exporting.value) return;
+  if (file) void setVideoFile(file);
+}
+
+async function selectAsset() {
+  const file = await files.pickAsset?.("video");
+  if (file) await setVideoFile(file);
+}
+
+async function setVideoFile(file: File) {
+  if (uploading.value || exporting.value) return;
   const mimeType = getMediaMimeType(file);
   if (!mimeType.startsWith("video/")) return void ElMessage.error("请选择视频文件");
   if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error("视频不能为空且不能超过 100 MB");
@@ -188,6 +208,15 @@ function showError(error: unknown, fallback: string) {
 
   .fileInput {
     display: none;
+  }
+
+  .emptyActions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+
+    .el-button { margin: 0; }
   }
 }
 </style>

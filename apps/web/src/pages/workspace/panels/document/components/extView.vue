@@ -17,7 +17,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onErrorCaptured, onBeforeUnmount, ref } from "vue";
+import { computed, onErrorCaptured, onBeforeUnmount, ref, shallowRef, watch } from "vue";
+import type { ExtContext } from "@toonflow/ext-scaffold/runtime";
+import { usePluginServerFactory } from "@toonflow/plugin-server/vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { IDockviewPanelProps } from "dockview-vue";
 import type { EditorParams } from "../documentSession";
@@ -25,21 +27,32 @@ import { documentError } from "../documentSession";
 
 const props = defineProps<{ params: IDockviewPanelProps<EditorParams> }>();
 const session = computed(() => props.params.params.session);
+const createServer = usePluginServerFactory();
+const server = shallowRef(createServer());
+onBeforeUnmount(() => server.value.dispose());
+function resetServer() { server.value.dispose(); server.value = createServer(); }
+watch(() => [session.value, session.value.component] as const, ([current, component], [previous, previousComponent]) => {
+  if (current !== previous || previousComponent && component !== previousComponent) resetServer();
+}, { flush: "sync" });
 const visible = ref(props.params.api.isVisible);
 const visibility = props.params.api.onDidVisibilityChange(event => { visible.value = event.isVisible; });
 onBeforeUnmount(() => visibility.dispose());
 const context = computed(() => new Proxy(session.value.context, {
   get(target, key, receiver) {
+    if (key === "server") return server.value;
     if (key === "location") return props.params.params.view.location;
     if (key === "active") return visible.value && target.active;
     return Reflect.get(target, key, receiver);
   },
-}));
+}) as ExtContext);
 const runtimeError = ref("");
-onErrorCaptured(error => { runtimeError.value = error instanceof Error ? error.message : String(error); return false; });
+watch(() => session.value.extensionDisabled, disabled => {
+  if (disabled) void server.value.stop().catch(error => { runtimeError.value = documentError(error); });
+});
+onErrorCaptured(error => { server.value.dispose(); runtimeError.value = error instanceof Error ? error.message : String(error); return false; });
 function save() { void context.value.flushSave().catch(() => {}); }
 function retry() {
-  if (runtimeError.value) { runtimeError.value = ""; return; }
+  if (runtimeError.value) { resetServer(); runtimeError.value = ""; return; }
   if (context.value.dirty) save();
   else {
     session.value.ready = session.value.load();

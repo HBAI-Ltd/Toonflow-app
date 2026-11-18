@@ -32,11 +32,10 @@ internal static class saveFileDialog
         dialog.DefaultExt = Path.GetExtension(args[0]).TrimStart('.');
         dialog.OverwritePrompt = true;
         dialog.CheckPathExists = true;
-        if (dialog.ShowDialog(owner) == DialogResult.OK)
-        {
-          using (var output = new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)))
-            output.Write(dialog.FileName);
-        }
+        string selected = dialog.ShowDialog(owner) == DialogResult.OK ? dialog.FileName : "";
+        // Shell 扩展可能向 stdout 写日志；用独立的 ASCII 记录传递路径，空记录表示取消。
+        using (var output = new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)))
+          output.Write("\ntoonflowSaveFile:" + Convert.ToBase64String(Encoding.UTF8.GetBytes(selected)) + "\n");
       }
       return 0;
     }

@@ -16,7 +16,8 @@ const version = desktopConfig.app.version;
 if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("Linux 版本号必须为 X.Y.Z。");
 const runtime = prepareRuntime();
 const prefix = `stable-linux-${process.arch}`;
-const manifest = await file(join(artifactDir, `${prefix}-update.json`)).json();
+const manifestPath = join(artifactDir, `${prefix}-update.json`);
+const manifest = await file(manifestPath).json();
 if (manifest.version !== version || manifest.platform !== "linux" || manifest.arch !== process.arch
   || manifest.identifier !== desktopConfig.app.identifier || manifest.channel !== "stable") {
   throw new Error("Linux 构建产物的版本、平台或应用标识不一致，请重新构建。");
@@ -55,6 +56,9 @@ try {
   const appVersion = await file(join(appRoot, "Resources/version.json")).json();
   if (appVersion.version !== version || appVersion.hash !== manifest.hash) throw new Error("Linux 应用与更新清单不一致。");
   await chmod(join(appRoot, "bin/launcher"), 0o755);
+  const applyHelper = join(appRoot, "bin/applyLinuxDeb");
+  await copyFile(resolve(projectDir, "apps/desktop/installer/applyLinuxDeb.sh"), applyHelper);
+  await chmod(applyHelper, 0o755);
   const runtimePath = join(appRoot, "bin/bun");
   const runtimeFile = file(runtimePath);
   if (runtimeFile.size !== runtime.executableSize
@@ -105,14 +109,19 @@ try {
     "Maintainer: HBAI-Ltd <ltlctools@outlook.com>",
     `Installed-Size: ${sizeKiB}`,
     "Pre-Depends: ca-certificates, curl, unzip",
-    "Depends: libc6 (>= 2.39), libstdc++6, libgcc-s1, libgtk-3-0t64 | libgtk-3-0, libwebkit2gtk-4.1-0, libayatana-appindicator3-1, librsvg2-2, libpipewire-0.3-0t64 | libpipewire-0.3-0, zenity, ffmpeg, util-linux, xdg-utils",
+    "Depends: libc6 (>= 2.39), libstdc++6, libgcc-s1, libgtk-3-0t64 | libgtk-3-0, libwebkit2gtk-4.1-0, libayatana-appindicator3-1, librsvg2-2, libpipewire-0.3-0t64 | libpipewire-0.3-0, zenity, ffmpeg, util-linux, xdg-utils, apt, pkexec | policykit-1",
     "Homepage: https://github.com/HBAI-Ltd/Toonflow-app",
     "Description: Toonflow AI creative workspace", " Local AI workflow for scripts, images and video.", "",
   ].join("\n"), { mode: 0o644 });
   // ACT: 包管理器负责 /opt 内的程序升级；安装与卸载均不触碰用户目录中的项目和配置。
   const stagedOutput = join(stagingDir, outputName);
-  await $`dpkg-deb --root-owner-group -Zxz --build ${packageRoot} ${stagedOutput}`;
+  // SDK 归档保留构建用户的私有文件模式；DEB 内的程序资源属于 root，普通用户启动时也要能读取。
+  await $`chmod -R a+rX,go-w ${appRoot}`;
+  await $`dpkg-deb --root-owner-group -Zxz -z9 --build ${packageRoot} ${stagedOutput}`;
+  const deb = file(stagedOutput);
+  manifest.deb = { file: outputName, size: deb.size, sha256: new Bun.CryptoHasher("sha256").update(await deb.arrayBuffer()).digest("hex") };
   await rename(stagedOutput, join(artifactDir, outputName));
+  await writeAtomic(manifestPath, JSON.stringify(manifest));
   console.log(`Debian 安装包：${join(artifactDir, outputName)}`);
 } finally {
   if (dirname(await realpath(stagingDir)) !== await realpath(stagingParent)) throw new Error("拒绝清理 Debian 暂存目录以外的路径。");

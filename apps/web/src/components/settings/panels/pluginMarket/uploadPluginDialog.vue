@@ -95,7 +95,7 @@ const mediaKind = computed(() => form.type === "skill" ? "video" : form.type ===
 const mediaLabel = computed(() => mediaKind.value === "video" ? "Skill 效果演示视频" : "节点截图封面");
 const existingMediaUrl = computed(() => mediaKind.value === "video" ? props.marketPlugin?.demoVideoUrl : mediaKind.value === "cover" ? props.marketPlugin?.coverUrl : undefined);
 const mediaPreview = computed(() => mediaObjectUrl.value || existingMediaUrl.value || "");
-const fileExtension = computed(() => form.type === "skill" || form.type === "agent" ? ".zip" : ".js");
+const fileExtension = computed(() => form.type === "skill" || form.type === "agent" ? ".zip" : form.type === "ext" ? ".ext.js" : ".js");
 const maxFileMegabytes = computed(() => fileExtension.value === ".zip" ? 20 : 10);
 const loadingFile = ref(false);
 const uploading = ref(false);
@@ -130,7 +130,7 @@ async function loadFile() {
   const request = new AbortController();
   controller = request;
   file.value = undefined;
-  fileName.value = `${plugin.name}.${plugin.type === "node" || plugin.type === "ext" ? "umd.js" : plugin.type === "tool" ? "tool.js" : plugin.type === "agent" ? "agent.zip" : "zip"}`;
+  fileName.value = plugin.type === "ext" ? `${plugin.name.slice(4)}.ext.js` : `${plugin.name}.${plugin.type === "node" ? "umd.js" : plugin.type === "tool" ? "tool.js" : plugin.type === "agent" ? "agent.zip" : "zip"}`;
   loadingFile.value = true;
   fileError.value = "";
   uploadError.value = "";

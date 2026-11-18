@@ -13,7 +13,7 @@
 | 节点 | 为画布增加交互组件、输入输出端口与节点操作。 | [节点脚手架](../packages/nodeScaffold/readme.md) · [内置节点](../packages/nodes/) |
 | 工具 | 为 Agent 增加工作区操作、搜索、媒体生成等能力，可附带交互 UI。 | [工具脚手架](../packages/toolScaffold/readme.md) · [内置工具](../packages/tools/) |
 | 技能 | 用 `SKILL.md` 和附属资料描述创作流程、方法与操作约定。 | [内置技能](../packages/skills/) |
-| 提供方 | 适配不同平台的模型列表、请求参数和媒体返回结果。 | [提供方实现](../packages/providers/src/) |
+| 提供方 | 内置供应商列表和源码通过渠道接口在线获取，子包保留模型、请求参数和媒体返回结果的类型契约。 | [提供方类型](../packages/providers/types.d.ts) |
 
 节点与工具的配置表单统一使用 `@form-create/element-ui` 的规则；有必填项未填写时，配置按钮会显示红点。工具只接收自身配置，宿主不向工具直接传递完整应用设置。
 

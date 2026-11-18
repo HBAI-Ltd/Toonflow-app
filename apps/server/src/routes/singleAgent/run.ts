@@ -23,6 +23,7 @@ const inputSchema = z.strictObject({
   providerId: z.string().min(1).max(200), modelId: z.string().min(1).max(500),
   thinkingLevel: z.enum(thinkingLevels).optional(),
   includeToolResults: z.boolean().optional(),
+  compaction: z.boolean().optional(),
   images: z.array(imageSchema).max(16).refine(images => images.reduce((total, image) => total + Buffer.byteLength(image.data, "base64"), 0) <= 64 * 1024 * 1024, { error: () => t`本次对话图片总量不能超过 64 MiB` }).optional(),
 });
 

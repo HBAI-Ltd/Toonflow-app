@@ -190,6 +190,7 @@
               <strong>v{{ snapshot.latestVersion }}</strong>
             </div>
           </div>
+          <p v-if="isPatchUpdate" class="patchNotice">这是同版本的小补丁更新，版本号保持不变。</p>
           <div v-if="snapshot.channel || snapshot.latestHash" class="releaseMeta">
             <el-tag v-if="snapshot.channel" type="info" size="small" round>{{ snapshot.channel }}</el-tag>
             <code v-if="snapshot.latestHash" :title="snapshot.latestHash">{{ snapshot.latestHash }}</code>
@@ -259,6 +260,7 @@ const communityUrl = "https://work.weixin.qq.com/u/vc36adcc89845edcbe?v=5.0.3.63
 const clientBuild = ref<{ version: string; channel: string }>();
 const currentVersion = computed(() => actualPlatform.isDesktop && actualPlatform.isRemoteConnection
   ? clientBuild.value?.version || "" : snapshot.value?.version || import.meta.env.appVersion);
+const isPatchUpdate = computed(() => !!snapshot.value?.updateAvailable && snapshot.value.latestVersion === snapshot.value.version);
 const sourceSaving = ref(false);
 const autoUpdateSaving = ref(false);
 const checking = computed(() => desktopUpdateChecking.value);
@@ -279,6 +281,7 @@ const resultTitle = computed(() => {
   if (action.value === "apply") return translate("正在重启并更新");
   if (working.value) return translate("正在准备更新");
   if (snapshot.value?.updateReady) return translate("更新已准备完成");
+  if (isPatchUpdate.value) return translate("发现小补丁更新");
   return snapshot.value?.updateAvailable ? translate("发现新版本") : translate("暂无更新");
 });
 const resultMessage = computed(() => {
@@ -770,6 +773,13 @@ async function runUpdate(nextAction: "read" | "check" | "download" | "apply") {
         flex-shrink: 0;
         color: var(--el-text-color-placeholder);
       }
+    }
+
+    .patchNotice {
+      margin: 12px 0 0;
+      color: var(--el-text-color-secondary);
+      font-size: 13px;
+      line-height: 1.6;
     }
 
     .releaseMeta {

@@ -1,0 +1,193 @@
+.providerDialog {
+  .providerTabs {
+    > .el-tabs__header {
+      margin: 0 0 24px;
+
+      .el-tabs__nav-wrap {
+        margin-bottom: 0;
+
+        &::after { display: none; }
+      }
+
+      .el-tabs__nav { gap: 28px; }
+      .el-tabs__active-bar { height: 2px; }
+    }
+
+    &.el-tabs--top > .el-tabs__header .el-tabs__item {
+      height: 40px;
+      padding: 0;
+      color: var(--el-text-color-secondary);
+      transition: color 0.15s;
+
+      &:not(.is-disabled):not(.is-active):hover {
+        color: var(--el-text-color-primary);
+      }
+
+      &.is-active {
+        color: var(--el-text-color-primary);
+        font-weight: 600;
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--el-color-primary);
+        outline-offset: -2px;
+      }
+
+      &.is-disabled { color: var(--el-text-color-placeholder); }
+
+    }
+  }
+
+  .providerLayout {
+    display: grid;
+    grid-template-columns: clamp(200px, 28vw, 260px) minmax(0, 1fr);
+    gap: 24px;
+    height: min(540px, calc(100dvh - 230px));
+    min-height: 0;
+
+    &.providerEditing { grid-template-columns: minmax(0, 1fr); }
+
+    .providerSidebar {
+      min-height: 0;
+      padding: 2px 12px 2px 2px;
+      overflow-y: auto;
+      border-inline-end: 1px solid var(--el-border-color-lighter);
+
+      .providerItem {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 44px;
+        margin: 0 0 4px;
+        padding: 10px 12px;
+        border: 0;
+        border-radius: var(--el-border-radius-base);
+        background: transparent;
+        color: var(--el-text-color-regular);
+        font: inherit;
+        line-height: 1.5;
+        text-align: start;
+        cursor: pointer;
+
+        > svg,
+        .providerLogo {
+          flex-shrink: 0;
+          width: 18px;
+          height: 18px;
+          object-fit: contain;
+        }
+
+        > span {
+          flex: 1;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        &:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--el-fill-color-light); }
+
+        &[aria-pressed="true"] {
+          background: var(--el-color-primary-light-9);
+          color: var(--el-color-primary);
+        }
+
+        &:focus-visible {
+          outline: 2px solid var(--el-color-primary);
+          outline-offset: -2px;
+        }
+
+        &:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+      }
+    }
+
+    .providerDetails {
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+
+      .providerContent {
+        .providerHeader {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 20px;
+
+          h3 {
+            margin: 0;
+            color: var(--el-text-color-primary);
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+          }
+        }
+
+        .providerReadme {
+          margin-bottom: 20px;
+          overflow-wrap: anywhere;
+        }
+
+        .sectionTitle {
+          margin: 0 0 16px;
+          font-size: 14px;
+          font-weight: 600;
+          line-height: 1.5;
+        }
+
+        .modelHeader {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px 12px;
+          margin: 20px 0 12px;
+        }
+
+        .modelList { margin-bottom: 16px; }
+      }
+    }
+  }
+
+  @media (max-width: 600px) {
+    .providerLayout {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 16px;
+
+      &.providerEditing { grid-template-rows: minmax(0, 1fr); }
+
+      .providerSidebar {
+        display: flex;
+        gap: 6px;
+        padding: 2px 2px 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+        border-inline-end: 0;
+        border-bottom: 1px solid var(--el-border-color-lighter);
+
+        &::-webkit-scrollbar { height: 4px; }
+
+        .providerItem {
+          flex: 0 0 auto;
+          width: auto;
+          max-width: 220px;
+          margin: 0;
+          padding: 8px 10px;
+
+          > span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      }
+    }
+  }
+}

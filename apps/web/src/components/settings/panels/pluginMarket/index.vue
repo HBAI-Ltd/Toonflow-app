@@ -35,7 +35,7 @@
             <el-button size="small" type="primary" :icon="IconUpload" :loading="installing" aria-label="安装本地插件" @click="pluginFileInput?.click()">
               安装插件
             </el-button>
-            <input ref="pluginFileInput" type="file" :accept="agentMarketEnabled ? '.umd.js,.tool.js,.agent.zip,.zip,.md,.tar,.tar.gz,.tgz' : '.umd.js,.tool.js,.zip,.md,.tar,.tar.gz,.tgz'" hidden @change="installFile" />
+            <input ref="pluginFileInput" type="file" :accept="agentMarketEnabled ? '.ext.js,.umd.js,.tool.js,.agent.zip,.zip,.md,.tar,.tar.gz,.tgz' : '.ext.js,.umd.js,.tool.js,.zip,.md,.tar,.tar.gz,.tgz'" hidden @change="installFile" />
             <template v-if="agentMarketEnabled && selectedType === 'agent'">
               <el-button size="small" :icon="IconLink" :disabled="loading || !canManageAgents" @click="agentConnectVisible = true">连接远程 Agent</el-button>
               <el-button size="small" :icon="IconSettings" :disabled="loading || !canManageAgents" @click="a2aSettingsVisible = true">A2A 服务</el-button>
@@ -104,7 +104,7 @@
           @click="openPlugin(plugin)"
           @keydown.enter.self.prevent="openPlugin(plugin)"
           @keydown.space.self.prevent="openPlugin(plugin)">
-          <img v-if="plugin.type === 'node' && plugin.coverUrl" class="pluginCover" :src="plugin.coverUrl" :alt="`${plugin.displayName} 节点截图`" loading="lazy" referrerpolicy="no-referrer" />
+          <img v-if="plugin.coverUrl" class="pluginCover" :src="plugin.coverUrl" :alt="`${plugin.displayName} 插件封面`" loading="lazy" referrerpolicy="no-referrer" />
           <div class="pluginHeader">
             <div class="pluginHeading">
               <h3 class="pluginName">
@@ -125,7 +125,6 @@
               <span class="pluginId" :title="plugin.name">{{ plugin.name }}</span>
             </div>
             <div class="pluginTags">
-              <el-tag v-if="plugin.demoVideoUrl" type="info" size="small" effect="plain">效果演示</el-tag>
               <el-tag v-if="plugin.builtin || installedByKey.get(`${plugin.type}:${plugin.name}`)?.builtin" type="info" size="small" effect="plain">内置</el-tag>
               <el-tag
                 v-for="(tag, index) in plugin.tags"
@@ -321,6 +320,21 @@
         destroyOnClose
         @closed="selectedPlugin = undefined">
         <div class="pluginContent" tabindex="0" aria-label="插件详情">
+          <section v-if="selectedPlugin.demoVideoUrl" class="detailDemo" aria-label="效果演示">
+            <h3>效果演示</h3>
+            <el-alert v-if="demoVideoFailed" title="演示视频加载失败，请重试" type="error" :closable="false" showIcon>
+              <el-button size="small" @click="demoVideoFailed = false">重试</el-button>
+            </el-alert>
+            <videoPlayer
+              v-else
+              :key="selectedPlugin.demoVideoUrl"
+              class="demoPlayer"
+              :src="selectedPlugin.demoVideoUrl"
+              :label="`${selectedPlugin.displayName} 效果演示`"
+              :active="detailsVisible && visible"
+              @error="demoVideoFailed = true" />
+          </section>
+          <img v-if="selectedPlugin.coverUrl" class="detailCover" :src="selectedPlugin.coverUrl" :alt="`${selectedPlugin.displayName} 插件封面`" referrerpolicy="no-referrer" />
           <div v-if="selectedPlugin.id !== undefined" class="detailMeta">
             <el-tag :type="pluginTypes[selectedPlugin.type].tagType" size="small">{{ pluginTypes[selectedPlugin.type].label }}</el-tag>
             <span>{{ selectedPlugin.name }}</span>
@@ -337,21 +351,6 @@
               :style="getPluginTagStyle(tag.color)">{{ tag.text }}</el-tag>
           </div>
           <p v-if="selectedPlugin.description && selectedPlugin.id !== undefined" class="detailDescription">{{ selectedPlugin.description }}</p>
-          <img v-if="selectedPlugin.coverUrl" class="detailCover" :src="selectedPlugin.coverUrl" :alt="`${selectedPlugin.displayName} 插件封面`" referrerpolicy="no-referrer" />
-          <section v-if="selectedPlugin.demoVideoUrl" class="detailDemo" aria-label="效果演示">
-            <h3>效果演示</h3>
-            <el-alert v-if="demoVideoFailed" title="演示视频加载失败，请重试" type="error" :closable="false" showIcon>
-              <el-button size="small" @click="demoVideoFailed = false">重试</el-button>
-            </el-alert>
-            <videoPlayer
-              v-else
-              :key="selectedPlugin.demoVideoUrl"
-              class="demoPlayer"
-              :src="selectedPlugin.demoVideoUrl"
-              :label="`${selectedPlugin.displayName} 效果演示`"
-              :active="detailsVisible && visible"
-              @error="demoVideoFailed = true" />
-          </section>
           <messageMarkdown v-if="selectedPlugin.readme" :content="selectedPlugin.readme" />
         </div>
       </el-dialog>
@@ -418,7 +417,18 @@ const selectedType = computed({
 const installedPlugins = ref<Plugin[]>([]);
 const hideBuiltin = ref(false);
 const filteredInstalledPlugins = computed(() => installedPlugins.value.filter(plugin => !hideBuiltin.value || !plugin.builtin));
-const installedByKey = computed(() => new Map(installedPlugins.value.map((plugin) => [plugin.key, plugin])));
+const installedByKey = computed(() => {
+  const plugins = new Map(installedPlugins.value.map((plugin) => [plugin.key, plugin]));
+  for (const plugin of installedPlugins.value) {
+    if (!Array.isArray(plugin.marketIdentifiers)) continue;
+    for (const identifier of plugin.marketIdentifiers) {
+      if (typeof identifier !== "string" || !identifier.trim()) continue;
+      const key = `${plugin.type}:${identifier}`;
+      if (!plugins.has(key)) plugins.set(key, plugin);
+    }
+  }
+  return plugins;
+});
 const marketPlugins = ref<Plugin[]>([]);
 const marketLoading = ref(false);
 const marketError = ref("");
@@ -526,7 +536,7 @@ function openResubmit(plugin: Plugin) {
   if (!visible || !isMarketTab.value || selectedType.value !== "my" || !accountToken.value
     || plugin.id === undefined || !marketPlugins.value.includes(plugin) || (plugin.state !== 1 && plugin.state !== 2)
     || loading.value || deletingPlugins.value.has(plugin.key) || collectingPlugins.value.has(plugin.key) || pendingPlugins.value.has(plugin.key)) return;
-  const localPlugin = installedByKey.value.get(`${plugin.type}:${plugin.name}`);
+  const localPlugin = getInstalledPlugin(plugin);
   selectedUploadPlugin.value = localPlugin && canUploadLocalPlugin(localPlugin) ? localPlugin : undefined;
   selectedMarketPlugin.value = plugin;
   uploadVisible.value = true;
@@ -742,8 +752,18 @@ function canEditPlugin(plugin: Plugin) {
   );
 }
 
-function installLabel(plugin: Plugin) {
+function getInstalledPlugin(plugin: Plugin) {
   const installed = installedByKey.value.get(`${plugin.type}:${plugin.name}`);
+  if (installed) return installed;
+  const suffix = plugin.type === "ext" ? (plugin.fileName?.endsWith(".ext.js") ? ".ext.js" : ".umd.js") : plugin.type === "node" ? ".umd.js" : plugin.type === "tool" ? ".tool.js" : undefined;
+  if (!suffix || !plugin.fileName?.endsWith(suffix)) return;
+  const name = `${plugin.type === "ext" && suffix === ".ext.js" ? "ext-" : ""}${plugin.fileName.slice(0, -suffix.length)}`;
+  const filePlugin = installedByKey.value.get(`${plugin.type}:${name}`);
+  return filePlugin?.name === name ? filePlugin : undefined;
+}
+
+function installLabel(plugin: Plugin) {
+  const installed = getInstalledPlugin(plugin);
   if (!installed) return "安装";
   const [current, incoming] = [installed.version, plugin.version].map(value => {
     const version = parse(value ?? "");
@@ -806,12 +826,14 @@ async function installMarketPlugin(plugin: Plugin) {
   if (action === "已安装") return;
   pendingPlugins.value.add(plugin.key);
   try {
-    const { data } = await axios.post(`/api/${path}/install`, { url: plugin.url, fileName: plugin.fileName, version: plugin.version }, { headers: requestHeaders });
+    const { data } = await axios.post(`/api/${path}/install`, { url: plugin.url, fileName: plugin.fileName, version: plugin.version, identifier: plugin.name }, { headers: requestHeaders });
     if (data.code !== 200) throw new Error(data.message || "安装插件失败");
+    if (typeof data.data?.name !== "string" || !data.data.name.trim()) throw new Error("安装接口未返回有效的插件名称，请先检查插件列表，确认插件是否已安装。");
     window.dispatchEvent(new CustomEvent("toonflow:plugin-installed", { detail: { type: plugin.type, name: data.data.name } }));
     if (plugin.type === "ext") window.dispatchEvent(new CustomEvent("toonflow:ext-updated", { detail: { name: data.data.name } }));
     ElMessage.success(action === "更新" ? `${plugin.displayName}已更新` : `${plugin.displayName}已安装`);
   } catch (error) {
+    refreshInstalled();
     ElMessage.error(errorMessage(error, "安装插件失败，请重试"));
   } finally {
     pendingPlugins.value.delete(plugin.key);
@@ -827,7 +849,7 @@ async function installFile(event: Event) {
   try {
     const type = /\.agent\.zip$/i.test(file.name)
       ? "agent"
-      : /^ext-[a-z][a-zA-Z0-9]*\.umd\.js$/.test(file.name)
+      : /^(?:[a-z][a-zA-Z0-9]*\.ext\.js|ext-[a-z][a-zA-Z0-9]*\.umd\.js)$/.test(file.name)
       ? "ext"
       : /\.umd\.js$/i.test(file.name)
       ? "node"
@@ -836,7 +858,7 @@ async function installFile(event: Event) {
       : /\.(zip|md|tar|tar\.gz|tgz)$/i.test(file.name)
       ? "skill"
       : undefined;
-    if (!type) throw new Error("不支持这个安装文件。支持的格式：文件扩展 ext-*.umd.js；Agent .agent.zip；节点 .umd.js；工具 .tool.js；技能 .zip、.md、.tar、.tar.gz、.tgz。");
+    if (!type) throw new Error("不支持这个安装文件。支持的格式：文件扩展 .ext.js；Agent .agent.zip；节点 .umd.js；工具 .tool.js；技能 .zip、.md、.tar、.tar.gz、.tgz。");
     if (type === "agent" && !agentMarketEnabled) throw new Error("Agent 功能处于测试阶段，暂未开放安装");
     await installPluginFile(type, file);
     ElMessage.success(`${pluginTypes[type].label}已安装`);
@@ -860,7 +882,7 @@ async function exportPlugin(plugin: Plugin) {
     return;
   exportingPlugins.value.add(plugin.key);
   try {
-    const fileName = `${plugin.name}.${plugin.type === "node" || plugin.type === "ext" ? "umd.js" : plugin.type === "tool" ? "tool.js" : plugin.type === "agent" ? "agent.zip" : "zip"}`;
+    const fileName = plugin.type === "ext" ? `${plugin.name.slice(4)}.ext.js` : `${plugin.name}.${plugin.type === "node" ? "umd.js" : plugin.type === "tool" ? "tool.js" : plugin.type === "agent" ? "agent.zip" : "zip"}`;
     await saveFile(
       () =>
         axios

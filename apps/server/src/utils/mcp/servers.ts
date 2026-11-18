@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { isAbsolute } from "node:path";
-import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
+import { DEFAULT_MAX_BYTES, formatSize, type ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { connectMcpServer, getMcpError, mcpServerSchema } from "@toonflow/mcp/client";
 import type { McpServerConfig, SavedMcpServer } from "@toonflow/mcp/client";
 import conf from "@/utils/conf";
@@ -190,6 +190,29 @@ function toolName(id: string, name: string) {
   return `mcp_${name.replace(/[^a-zA-Z0-9_]/g, "_").slice(0, 32)}_${createHash("sha256").update(`${id}\0${name}`).digest("hex").slice(0, 16)}`;
 }
 
+type ResultContent = { type: "text"; text: string } | { type: "image"; data: string; mimeType: string };
+
+// ACT: MCP 结果大小不受控，文本总量沿用 read 的 50KB 上限并保留头部；截断处不保证 JSON 结构完整，需要更多内容时由模型缩小查询或分页。
+function limitResultText(parts: ResultContent[]) {
+  let remaining = DEFAULT_MAX_BYTES;
+  let omitted = 0;
+  const content = parts.flatMap((part): ResultContent[] => {
+    if (part.type !== "text") return [part];
+    const size = Buffer.byteLength(part.text);
+    if (size <= remaining) {
+      remaining -= size;
+      return [part];
+    }
+    // 截断点可能落在多字节字符中间，去掉残缺字符。
+    const text = Buffer.from(part.text).subarray(0, remaining).toString().replace(/�+$/, "");
+    omitted += size - remaining;
+    remaining = 0;
+    return text ? [{ type: "text", text }] : [];
+  });
+  if (omitted) content.push({ type: "text", text: `[MCP 结果超过 ${formatSize(DEFAULT_MAX_BYTES)}，已截断 ${formatSize(omitted)}；请缩小查询范围或分页获取]` });
+  return content;
+}
+
 export async function createMcpAgentTools(): Promise<ToolDefinition[]> {
   const servers = conf.get("mcpServers", []).filter(server => server.enabled);
   const groups = await Promise.all(servers.map(async server => {
@@ -210,14 +233,14 @@ export async function createMcpAgentTools(): Promise<ToolDefinition[]> {
           if (JSON.stringify(current) !== JSON.stringify(server)) throw new Error(`MCP ${server.name} 配置已修改，请重新发送消息以加载工具`);
           const active = await getConnection(current);
           const result = await active.client.callTool({ name: definition.name, arguments: args as Record<string, unknown> }, { signal, timeout: 30 * 60_000 });
-          const content = result.content.map(part => {
+          const content = limitResultText(result.content.map(part => {
             if (part.type === "text") return { type: "text" as const, text: part.text };
             if (part.type === "image") return { type: "image" as const, data: part.data, mimeType: part.mimeType };
             return { type: "text" as const, text: JSON.stringify(part) };
-          });
+          }));
           // ACT: Pi 只把抛出的错误记为工具失败；MCP isError 不能作为普通成功结果返回。
           if (result.isError) throw new Error(content.filter(part => part.type === "text").map(part => part.text).join("\n") || `MCP ${server.name} 工具执行失败`);
-          if (!content.length && result.structuredContent !== undefined) content.push({ type: "text", text: JSON.stringify(result.structuredContent) });
+          if (!content.length && result.structuredContent !== undefined) content.push(...limitResultText([{ type: "text", text: JSON.stringify(result.structuredContent) }]));
           return { content, details: { serverId: server.id, toolName: definition.name, structuredContent: result.structuredContent } };
         },
       }));

@@ -21,9 +21,10 @@ import pa from "./locales/pa.json";
 import ar from "./locales/ar.json";
 import fa from "./locales/fa.json";
 import tr from "./locales/tr.json";
+import pt from "./locales/pt.json";
 
 export type Locale = "zh-CN" | "zh-TW" | "en" | "ja" | "ru" | "vi" | "th" | "ko" | "hi"
-  | "id" | "ms" | "fil" | "bn" | "ur" | "ta" | "te" | "mr" | "pa" | "ar" | "fa" | "tr";
+  | "id" | "ms" | "fil" | "bn" | "ur" | "ta" | "te" | "mr" | "pa" | "ar" | "fa" | "tr" | "pt";
 export interface MessageDescriptor { id: string; values?: Record<string, unknown> }
 export const supportedLocales: { code: Locale; name: string }[] = [
   { code: "zh-CN", name: "简体中文" }, { code: "zh-TW", name: "繁體中文" },
@@ -34,8 +35,9 @@ export const supportedLocales: { code: Locale; name: string }[] = [
   { code: "bn", name: "বাংলা" }, { code: "ur", name: "اردو" }, { code: "ta", name: "தமிழ்" },
   { code: "te", name: "తెలుగు" }, { code: "mr", name: "मराठी" }, { code: "pa", name: "ਪੰਜਾਬੀ" },
   { code: "ar", name: "العربية" }, { code: "fa", name: "فارسی" }, { code: "tr", name: "Türkçe" },
+  { code: "pt", name: "Português (Brasil)" },
 ];
-const catalogs: Record<string, Record<string, string>> = { "zh-TW": zhTw, en, ja, ru, vi, th, ko, hi, id, ms, fil, bn, ur, ta, te, mr, pa, ar, fa, tr };
+const catalogs: Record<string, Record<string, string>> = { "zh-TW": zhTw, en, ja, ru, vi, th, ko, hi, id, ms, fil, bn, ur, ta, te, mr, pa, ar, fa, tr, pt };
 let activeLocale: Locale = "zh-CN";
 const listeners = new Set<(locale: Locale) => void>();
 const formatters = new Map<string, IntlMessageFormat>();

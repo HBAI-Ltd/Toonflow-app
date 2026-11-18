@@ -60,7 +60,7 @@ const result = await Bun.build({
   define: { "process.env.appVersion": JSON.stringify(version) },
 });
 if (!result.success) throw new AggregateError(result.logs, "构建移动端服务失败");
-for (const directory of ["web", "nodes", "tools", "ext", "providers", "skills"]) {
+for (const directory of ["web", "nodes", "tools", "ext", "skills"]) {
   await cp(join(projectRoot, "build", directory), join(payload, directory), { recursive: true });
 }
 // ACT: Photon 与 anydoc 按自身目录读取 WASM，沿用 server 的完整 external 包布局。

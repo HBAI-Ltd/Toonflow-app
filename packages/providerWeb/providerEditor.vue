@@ -9,9 +9,13 @@
           </el-form-item>
           <template v-if="method !== 'manual'">
             <el-form-item v-if="method === 'preset'" :label="translate('内置供应商')" for="providerPreset">
-              <el-select id="providerPreset" v-model="presetId" :disabled="busy" @change="selectPreset">
-                <el-option v-for="preset in availablePresets" :key="preset.id" :value="preset.id" :label="preset.label" />
-              </el-select>
+              <div class="presetRow">
+                <el-select id="providerPreset" v-model="presetId" :disabled="busy || presetsLoading" :loading="presetsLoading || presetSourceLoading" :noDataText="translate('暂无供应商')" @change="selectPreset">
+                  <el-option v-for="preset in availablePresets" :key="preset.id" :value="preset.id" :label="preset.name" />
+                </el-select>
+                <el-button v-if="presetError" :disabled="busy" @click="retryPreset">{{ translate("重试") }}</el-button>
+              </div>
+              <el-alert v-if="presetError" class="presetError" :title="presetError" type="error" :closable="false" showIcon />
             </el-form-item>
             <el-form-item v-if="method === 'file'" :label="translate('供应商文件')">
               <div class="fileRow">
@@ -21,11 +25,11 @@
               </div>
             </el-form-item>
             <el-form-item :label="translate('供应商代码')" for="providerSource">
-              <el-input id="providerSource" v-model="source" type="textarea" dir="ltr" :rows="8" resize="vertical" spellcheck="false" />
+              <el-input id="providerSource" v-model="source" :disabled="presetsLoading || presetSourceLoading" type="textarea" dir="ltr" :rows="8" resize="vertical" spellcheck="false" />
             </el-form-item>
             <div class="inspectRow">
               <span>{{ translate("复用现有 TypeScript 供应商格式，解析后配置连接与上游模型。") }}</span>
-              <el-button :loading="inspecting" :disabled="busy || !source.trim()" @click="inspectSource()">{{ translate("解析供应商") }}</el-button>
+              <el-button :loading="inspecting" :disabled="busy || !presetReady || !source.trim()" @click="inspectSource()">{{ translate("解析供应商") }}</el-button>
             </div>
           </template>
         </details>
@@ -61,13 +65,13 @@
           </details>
           <div class="sectionHeading modelHeading">
             <h3>{{ translate("上游模型") }} <span class="modelCount">{{ models.length }}</span></h3>
-            <el-button :disabled="busy" @click="editModel()">{{ translate("添加模型") }}</el-button>
+            <el-button :disabled="busy || !presetReady" @click="editModel()">{{ translate("添加模型") }}</el-button>
           </div>
           <el-table :data="models" rowKey="id" :emptyText="translate('暂无模型')">
             <el-table-column prop="id" :label="translate('模型 ID')" minWidth="200" />
             <el-table-column prop="label" :label="translate('显示名称')" minWidth="170" />
             <el-table-column :label="translate('类型')" width="90"><template #default="{ row }">{{ modelTypeLabel(row.type) }}</template></el-table-column>
-            <el-table-column :label="translate('操作')" width="90" align="right"><template #default="{ $index }"><el-button link type="primary" :disabled="busy" @click="editModel($index)">{{ translate("编辑") }}</el-button></template></el-table-column>
+            <el-table-column :label="translate('操作')" width="90" align="right"><template #default="{ $index }"><el-button link type="primary" :disabled="busy || !presetReady" @click="editModel($index)">{{ translate("编辑") }}</el-button></template></el-table-column>
           </el-table>
         </template>
       </el-form>
@@ -76,7 +80,7 @@
     <template #footer>
       <div class="dialogActions">
         <el-button :disabled="busy" @click="emit('reload')">{{ translate("重新加载") }}</el-button>
-        <div><el-button :disabled="busy" @click="visible = false">{{ translate("取消") }}</el-button><el-button type="primary" :loading="saving" :disabled="busy || (method !== 'manual' && !inspected)" @click="saveProvider">{{ translate("保存") }}</el-button></div>
+        <div><el-button :disabled="busy" @click="visible = false">{{ translate("取消") }}</el-button><el-button type="primary" :loading="saving" :disabled="busy || !presetReady || (method !== 'manual' && !inspected)" @click="saveProvider">{{ translate("保存") }}</el-button></div>
       </div>
     </template>
   </el-dialog>
@@ -100,14 +104,10 @@
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { translate } from "@toonflow/i18n/vue";
 import { ElAlert, ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElInputNumber, ElOption, ElSegmented, ElSelect, ElTable, ElTableColumn, ElTag } from "element-plus";
-import formCreate, { type Api, type Options } from "./formCreate";
+import formCreate, { copyProviderRules, type Api, type Options } from "./formCreate";
 import modelEditor from "./modelEditorDialog.vue";
 import type { MediaProviderModel } from "./types";
-import type { ProviderConfiguration, ProviderDescription, ProviderInspection, ProviderKind } from "./providerTypes";
-import deepSeekSource from "@toonflow/providers/language/deepSeek?raw";
-import apiMartSource from "@toonflow/providers/media/apiMart?raw";
-import metasoSource from "@toonflow/providers/media/metaso?raw";
-import compshareSource from "@toonflow/providers/media/compshare?raw";
+import type { ProviderConfiguration, ProviderDescription, ProviderInspection, ProviderKind, ProviderPreset } from "./providerTypes";
 import "element-plus/es/components/alert/style/css";
 import "element-plus/es/components/button/style/css";
 import "element-plus/es/components/dialog/style/css";
@@ -123,16 +123,17 @@ const props = defineProps<{
   saving: boolean;
   error?: string;
   inspect: (input: ProviderInspection, signal: AbortSignal) => Promise<ProviderDescription>;
+  listPresets: (kind: ProviderKind, signal: AbortSignal) => Promise<ProviderPreset[]>;
+  getPresetSource: (kind: ProviderKind, id: string, signal: AbortSignal) => Promise<string>;
 }>();
 const visible = defineModel<boolean>({ default: false });
 const emit = defineEmits<{ save: [provider: ProviderConfiguration]; reload: [] }>();
-const presets = [
-  { kind: "text", id: "deepSeek", label: "DeepSeek", source: deepSeekSource },
-  { kind: "media", id: "apiMart", label: "APIMart", source: apiMartSource },
-  { kind: "media", id: "metaso", label: "秘塔", source: metasoSource },
-  { kind: "media", id: "compshare", label: "优刻得", source: compshareSource },
-];
-const availablePresets = computed(() => presets.filter(item => item.kind === props.kind));
+const availablePresets = shallowRef<ProviderPreset[]>([]);
+const presetsLoading = ref(false);
+const presetSourceLoading = ref(false);
+const presetError = ref("");
+const presetFailure = ref<"list" | "source">("list");
+const sourcePresetId = ref("");
 const method = ref("manual");
 const methods = computed(() => [
   ...(props.kind === "text" ? [{ label: translate("手动配置"), value: "manual" }] : []),
@@ -154,6 +155,7 @@ const textConnection = ref({ apiUrl: "", apiKey: "", protocol: "openai-completio
 const inspecting = ref(false);
 const localError = ref("");
 const busy = computed(() => props.saving || inspecting.value);
+const presetReady = computed(() => method.value !== "preset" || !presetsLoading.value && !presetSourceLoading.value && !!presetId.value && sourcePresetId.value === presetId.value);
 const inspected = computed(() => !!description.value && source.value.trim() === inspectedSource.value.trim());
 const formOptions = computed<Options>(() => ({ form: { labelPosition: "top", disabled: busy.value }, submitBtn: false, resetBtn: false }));
 const editingIndex = ref<number>();
@@ -163,6 +165,8 @@ const textEditorVisible = ref(false);
 const textModel = ref<{ id: string; label: string; contextWindow?: number; maxOutputTokens?: number }>({ id: "", label: "" });
 const modelError = ref("");
 let inspectionRequest: AbortController | undefined;
+let presetsRequest: AbortController | undefined;
+let presetSourceRequest: AbortController | undefined;
 let textModelExtra: Record<string, unknown> = {};
 let sourceRead = 0;
 
@@ -173,7 +177,7 @@ function applyDescription(value: ProviderDescription) {
   description.value = clone(value);
   draft.value = { kind: value.kind, id: value.id, label: value.label, source: value.source, config: clone(value.config) };
   models.value = clone(value.models);
-  formRules.value = formCreate.copyRules(value.rules ?? []);
+  formRules.value = copyProviderRules(value);
   formValues.value = clone(value.config);
   formApi.value = undefined;
   headers.value = JSON.stringify(value.config.headers ?? {}, null, 2);
@@ -182,12 +186,15 @@ function applyDescription(value: ProviderDescription) {
   inspectedSource.value = source.value;
 }
 
-watch(visible, value => {
+watch([visible, () => props.kind], ([value]) => {
   stopInspection();
+  stopPresetRequests();
   sourceRead++;
   if (!value) return;
   localError.value = "";
   fileName.value = "";
+  availablePresets.value = [];
+  presetId.value = sourcePresetId.value = presetError.value = "";
   description.value = undefined;
   draft.value = { kind: props.kind, id: "", label: "", config: {} };
   models.value = [];
@@ -197,25 +204,79 @@ watch(visible, value => {
   formApi.value = undefined;
   headers.value = "{}";
   textConnection.value = { apiUrl: "", apiKey: "", protocol: "openai-completions" };
-  method.value = props.initial?.source ? "code" : props.kind === "text" ? "manual" : "preset";
+  method.value = props.initial ? (props.initial.source || props.kind === "media" ? "code" : "manual") : props.kind === "text" ? "manual" : "preset";
   if (props.initial) applyDescription(props.initial);
-  else if (props.kind === "media") selectPreset(availablePresets.value[0]?.id ?? "");
 }, { immediate: true });
 
-function selectPreset(id: string) {
-  let config: Record<string, unknown> = {};
-  if (props.initial) {
-    try { config = currentConfig(); }
-    catch (cause) { localError.value = cause instanceof Error ? cause.message : translate("保存供应商失败"); return; }
+watch([visible, method, () => props.kind], ([isVisible, value]) => {
+  stopPresetRequests();
+  sourceRead++;
+  if (isVisible && value === "preset") void loadPresets();
+}, { immediate: true });
+
+async function loadPresets() {
+  if (!visible.value || method.value !== "preset") return;
+  stopPresetRequests();
+  const request = new AbortController();
+  presetsRequest = request;
+  presetsLoading.value = true;
+  sourcePresetId.value = "";
+  presetError.value = "";
+  presetFailure.value = "list";
+  let selectedId = "";
+  try {
+    const presets = await props.listPresets(props.kind, request.signal);
+    if (request.signal.aborted || !visible.value) return;
+    availablePresets.value = presets;
+    selectedId = [presetId.value, props.initial?.id].find(id => presets.some(preset => preset.id === id)) ?? presets[0]?.id ?? "";
+    presetId.value = selectedId;
+  } catch (cause) {
+    if (!request.signal.aborted) presetError.value = cause instanceof Error ? cause.message : translate("读取供应商配置失败");
+  } finally {
+    if (presetsRequest === request) { presetsRequest = undefined; presetsLoading.value = false; }
   }
+  if (!request.signal.aborted && selectedId) await selectPreset(selectedId);
+}
+
+async function selectPreset(id: string) {
+  presetSourceRequest?.abort();
+  presetSourceRequest = undefined;
+  presetSourceLoading.value = false;
+  if (!visible.value || method.value !== "preset" || !id) return;
   presetId.value = id;
-  source.value = availablePresets.value.find(item => item.id === id)?.source ?? "";
-  description.value = undefined;
-  models.value = [];
-  formRules.value = [];
-  formValues.value = clone(config);
-  draft.value = { kind: props.kind, id: props.initial?.id ?? "", label: props.initial?.label ?? "", config };
+  sourcePresetId.value = "";
+  const request = new AbortController();
+  presetSourceRequest = request;
+  presetSourceLoading.value = true;
+  presetError.value = "";
+  presetFailure.value = "source";
   localError.value = "";
+  try {
+    const content = await props.getPresetSource(props.kind, id, request.signal);
+    if (request.signal.aborted || !visible.value || presetId.value !== id) return;
+    const config = props.initial ? currentConfig() : {};
+    source.value = content;
+    sourcePresetId.value = id;
+    description.value = undefined;
+    models.value = [];
+    formRules.value = [];
+    formApi.value = undefined;
+    formValues.value = clone(config);
+    draft.value = { kind: props.kind, id: props.initial?.id ?? "", label: props.initial?.label ?? "", config };
+  } catch (cause) {
+    if (!request.signal.aborted) presetError.value = cause instanceof Error ? cause.message : translate("读取供应商代码失败");
+  } finally {
+    if (presetSourceRequest === request) { presetSourceRequest = undefined; presetSourceLoading.value = false; }
+  }
+}
+
+function retryPreset() { return presetFailure.value === "list" ? loadPresets() : selectPreset(presetId.value); }
+
+function stopPresetRequests() {
+  presetsRequest?.abort();
+  presetSourceRequest?.abort();
+  presetsRequest = presetSourceRequest = undefined;
+  presetsLoading.value = presetSourceLoading.value = false;
 }
 
 async function readSourceFile(event: Event) {
@@ -250,7 +311,7 @@ function currentConfig() {
 }
 
 async function inspectSource(nextModels?: MediaProviderModel[]) {
-  if (busy.value || !source.value.trim()) return;
+  if (busy.value || !presetReady.value || !source.value.trim()) return;
   inspectionRequest?.abort();
   const request = new AbortController();
   inspectionRequest = request;
@@ -272,7 +333,7 @@ async function inspectSource(nextModels?: MediaProviderModel[]) {
 }
 
 function editModel(index?: number) {
-  if (busy.value) return;
+  if (busy.value || !presetReady.value) return;
   editingIndex.value = index;
   if (props.kind === "media") { mediaEditorVisible.value = true; return; }
   const model = index === undefined ? undefined : models.value[index];
@@ -306,7 +367,7 @@ async function saveMediaModel(model: MediaProviderModel) {
 }
 
 function saveProvider() {
-  if (busy.value) return;
+  if (busy.value || !presetReady.value) return;
   localError.value = "";
   try {
     if (method.value !== "manual" && !inspected.value) throw new Error(translate("请先解析修改后的供应商代码"));
@@ -320,7 +381,7 @@ function saveProvider() {
 }
 
 function stopInspection() { const pending = inspectionRequest; inspectionRequest = undefined; inspecting.value = false; pending?.abort(); }
-function closeEditor() { stopInspection(); sourceRead++; formApi.value = undefined; mediaEditorVisible.value = textEditorVisible.value = false; draft.value.config = {}; formValues.value = {}; textConnection.value.apiKey = ""; }
+function closeEditor() { stopInspection(); stopPresetRequests(); sourceRead++; formApi.value = undefined; mediaEditorVisible.value = textEditorVisible.value = false; draft.value.config = {}; formValues.value = {}; textConnection.value.apiKey = ""; }
 onBeforeUnmount(closeEditor);
 </script>
 
@@ -332,6 +393,8 @@ onBeforeUnmount(closeEditor);
   overscroll-behavior: contain;
   .el-select { width: 100%; }
   .sourceDetails { margin-bottom: 20px; summary { width: fit-content; padding-block: 10px; color: var(--el-text-color-regular); cursor: pointer; font-weight: 500; &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 3px; border-radius: var(--el-border-radius-base); } } &[open] > summary { margin-bottom: 14px; } + .sectionHeading { margin-top: 0; padding-top: 16px; } }
+  .presetRow { display: flex; gap: 12px; width: 100%; .el-select { min-width: 0; flex: 1; } .el-button { flex-shrink: 0; } }
+  .presetError { margin-top: 12px; }
   .fileRow { display: flex; gap: 12px; width: 100%; .el-input { min-width: 0; flex: 1; } }
   .inspectRow { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: -4px 0 24px; color: var(--el-text-color-secondary); font-size: 13px; span { min-width: 0; overflow-wrap: anywhere; } .el-button { flex-shrink: 0; } }
   .sectionHeading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 28px 0 20px; padding-top: 24px; border-top: 1px solid var(--el-border-color-lighter); h3 { margin: 0; font-size: 15px; font-weight: 600; } .modelCount { margin-inline-start: 8px; color: var(--el-text-color-secondary); font-weight: 400; font-variant-numeric: tabular-nums; } }

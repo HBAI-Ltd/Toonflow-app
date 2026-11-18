@@ -46,6 +46,11 @@ body,
   box-sizing: border-box;
 }
 
+// ACT: 去掉 WebKit 列表标记，避免下拉选项内容下移后被裁剪。
+.el-select-dropdown__item {
+  list-style: none;
+}
+
 .stream-markdown [data-stream-markdown="tooltip"] {
   z-index: var(--markdown-tooltip-z-index);
 }

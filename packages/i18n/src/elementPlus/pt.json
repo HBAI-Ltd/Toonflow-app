@@ -1,0 +1,205 @@
+{
+  "name": "pt-br",
+  "el": {
+    "breadcrumb": {
+      "label": "Trilha de navegação"
+    },
+    "colorpicker": {
+      "confirm": "Confirmar",
+      "clear": "Limpar",
+      "defaultLabel": "seletor de cor",
+      "description": "a cor atual é {color}. pressione Enter para escolher uma nova cor.",
+      "alphaLabel": "escolher valor de transparência",
+      "alphaDescription": "transparência {alpha}, a cor atual é {color}",
+      "hueLabel": "escolher matiz",
+      "hueDescription": "matiz {hue}, a cor atual é {color}",
+      "svLabel": "escolher saturação e brilho",
+      "svDescription": "saturação {saturation}, brilho {brightness}, a cor atual é {color}",
+      "predefineDescription": "selecionar {value} como cor"
+    },
+    "datepicker": {
+      "now": "Agora",
+      "today": "Hoje",
+      "cancel": "Cancelar",
+      "clear": "Limpar",
+      "confirm": "Confirmar",
+      "dateTablePrompt": "Use as setas e Enter para escolher o dia do mês",
+      "monthTablePrompt": "Use as setas e Enter para escolher o mês",
+      "quarterTablePrompt": "Use as setas e Enter para escolher o trimestre",
+      "yearTablePrompt": "Use as setas e Enter para escolher o ano",
+      "selectedDate": "Data selecionada",
+      "selectDate": "Selecione a data",
+      "selectTime": "Selecione a hora",
+      "startDate": "Data inicial",
+      "startTime": "Hora inicial",
+      "endDate": "Data final",
+      "endTime": "Hora final",
+      "prevYear": "Ano anterior",
+      "nextYear": "Próximo ano",
+      "prevMonth": "Mês anterior",
+      "nextMonth": "Próximo mês",
+      "year": "",
+      "month1": "Janeiro",
+      "month2": "Fevereiro",
+      "month3": "Março",
+      "month4": "Abril",
+      "month5": "Maio",
+      "month6": "Junho",
+      "month7": "Julho",
+      "month8": "Agosto",
+      "month9": "Setembro",
+      "month10": "Outubro",
+      "month11": "Novembro",
+      "month12": "Dezembro",
+      "weeks": {
+        "sun": "Dom",
+        "mon": "Seg",
+        "tue": "Ter",
+        "wed": "Qua",
+        "thu": "Qui",
+        "fri": "Sex",
+        "sat": "Sab"
+      },
+      "weeksFull": {
+        "sun": "Domingo",
+        "mon": "Segunda-feira",
+        "tue": "Terça-feira",
+        "wed": "Quarta-feira",
+        "thu": "Quinta-feira",
+        "fri": "Sexta-feira",
+        "sat": "Sábado"
+      },
+      "months": {
+        "jan": "Jan",
+        "feb": "Fev",
+        "mar": "Mar",
+        "apr": "Abr",
+        "may": "Mai",
+        "jun": "Jun",
+        "jul": "Jul",
+        "aug": "Ago",
+        "sep": "Set",
+        "oct": "Out",
+        "nov": "Nov",
+        "dec": "Dez"
+      }
+    },
+    "input": {
+      "characters": "{count} / {max} caracteres"
+    },
+    "inputNumber": {
+      "decrease": "diminuir número",
+      "increase": "aumentar número"
+    },
+    "select": {
+      "loading": "Carregando",
+      "noMatch": "Sem resultados",
+      "noData": "Sem dados",
+      "placeholder": "Selecione"
+    },
+    "mention": {
+      "loading": "Carregando"
+    },
+    "dropdown": {
+      "toggleDropdown": "Abrir/fechar menu"
+    },
+    "cascader": {
+      "noMatch": "Sem resultados",
+      "loading": "Carregando",
+      "placeholder": "Selecione",
+      "noData": "Sem dados"
+    },
+    "pagination": {
+      "goto": "Ir para",
+      "pagesize": "/página",
+      "total": "Total {total}",
+      "pageClassifier": "",
+      "page": "Página",
+      "prev": "Ir para a página anterior",
+      "next": "Ir para a próxima página",
+      "currentPage": "página {pager}",
+      "prevPages": "{pager} páginas anteriores",
+      "nextPages": "Próximas {pager} páginas",
+      "deprecationWarning": "Uso obsoleto detectado; consulte a documentação do el-pagination para mais detalhes"
+    },
+    "dialog": {
+      "close": "Fechar esta janela"
+    },
+    "drawer": {
+      "close": "Fechar esta janela"
+    },
+    "messagebox": {
+      "title": "Mensagem",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "error": "Erro!",
+      "close": "Fechar esta janela"
+    },
+    "upload": {
+      "deleteTip": "aperte delete para apagar",
+      "delete": "Apagar",
+      "preview": "Pré-visualizar",
+      "continue": "Continuar"
+    },
+    "slider": {
+      "defaultLabel": "controle deslizante entre {min} e {max}",
+      "defaultRangeStartLabel": "escolher valor inicial",
+      "defaultRangeEndLabel": "escolher valor final"
+    },
+    "table": {
+      "emptyText": "Sem dados",
+      "confirmFilter": "Confirmar",
+      "resetFilter": "Limpar",
+      "clearFilter": "Todos",
+      "sumText": "Total",
+      "selectAllLabel": "Selecionar todas as linhas",
+      "selectRowLabel": "Selecionar esta linha",
+      "expandRowLabel": "Expandir esta linha",
+      "collapseRowLabel": "Recolher esta linha",
+      "sortLabel": "Ordenar por {column}",
+      "filterLabel": "Filtrar por {column}"
+    },
+    "tag": {
+      "close": "Fechar esta tag"
+    },
+    "tour": {
+      "next": "Próximo",
+      "previous": "Anterior",
+      "finish": "Finalizar",
+      "close": "Fechar esta janela"
+    },
+    "tree": {
+      "emptyText": "Sem dados"
+    },
+    "transfer": {
+      "noMatch": "Sem resultados",
+      "noData": "Sem dados",
+      "titles": [
+        "Lista 1",
+        "Lista 2"
+      ],
+      "filterPlaceholder": "Digite uma palavra-chave",
+      "noCheckedFormat": "{total} itens",
+      "hasCheckedFormat": "{checked}/{total} selecionados"
+    },
+    "image": {
+      "error": "Erro ao carregar imagem"
+    },
+    "pageHeader": {
+      "title": "Voltar"
+    },
+    "popconfirm": {
+      "confirmButtonText": "Sim",
+      "cancelButtonText": "Não"
+    },
+    "carousel": {
+      "leftArrow": "Seta esquerda do carrossel",
+      "rightArrow": "Seta direita do carrossel",
+      "indicator": "Ir para o item {index} do carrossel"
+    },
+    "inputOTP": {
+      "groupLabel": "Código OTP",
+      "defaultLabel": "Digite o caractere {index} do código OTP"
+    }
+  }
+}

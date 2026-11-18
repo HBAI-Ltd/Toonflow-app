@@ -1,5 +1,5 @@
 import type { ValidConnectionFunc } from "@vue-flow/core";
-import type { NodeOutputs } from "./values";
+import { isNodeOutput, type NodeOutputs } from "./values";
 
 export type NodeDataType = "STRING" | "INT" | "FLOAT" | "BOOLEAN" | "IMAGE" | "MASK" | "LATENT"
   | "AUDIO" | "VIDEO" | "FILE" | "MODEL" | "CLIP" | "VAE" | "CONDITIONING" | "*" | (string & {});
@@ -22,6 +22,15 @@ export type NodeData = {
   handles?: NodeHandle[];
   outputs?: NodeOutputs;
 };
+
+// 可保存到素材库的输出：有效且非空的输出端口，节点工具栏与画布多选共用。
+export function getAssetOutputs(data: NodeData) {
+  return (Array.isArray(data.handles) ? data.handles : []).flatMap(handle => {
+    const output = data.outputs?.[handle?.id];
+    if (handle?.type !== "source" || !isNodeOutput(output) || (output.dataType === "STRING" && !output.value.trim())) return [];
+    return [{ label: handle.label ?? handle.id, output }];
+  });
+}
 
 function getDataTypes(dataType: NodeHandle["dataType"]) {
   const types = Array.isArray(dataType) ? dataType : [dataType];

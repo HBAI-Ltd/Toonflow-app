@@ -40,7 +40,7 @@
   <a href="./readmeTr.md">Türkçe</a>
 </p>
 
-> 🌐 **21개 인터페이스 언어 지원** · [지원 언어 보기](#languages)
+> 🌐 **22개 인터페이스 언어 지원** · [지원 언어 보기](#languages)
 
 <div align="center">
 
@@ -210,13 +210,13 @@ Toonflow는 숏드라마, 모션 코믹스, 짧은 영상 제작을 위한 오�
 | 🧩 **플러그인 마켓** | [플러그인 마켓](https://api.toonflow.net/console/plugIn)에서 노드, 도구, 창작 기능을 확장합니다. |
 | 🤖 **개방형 Agent** | 프롬프트, 도구, A2A를 개방하여 Agent 동작을 맞춤 설정하고 외부 Agent와 협업할 수 있습니다. |
 | 🔧 **유연한 모델 연결** | 타사 API를 설정하거나 로컬 ComfyUI 및 LLM에 연결합니다. |
-| 🌐 **다국어 지원** | 21개 인터페이스 언어를 지원합니다. |
+| 🌐 **다국어 지원** | 22개 인터페이스 언어를 지원합니다. |
 
 <a id="languages"></a>
 
 ### 다국어 지원
 
-지원 언어: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe.
+지원 언어: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe, Português (Brasil).
 
 ---
 

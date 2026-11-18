@@ -8,4 +8,4 @@
 
 构建产物包含扩展元数据、私有编辑器与样式；宿主在执行扩展前按需加载共享依赖。旧文档的下划线、高亮、上下标、段落对齐及复杂表格仍以混合 HTML 保存；仅打开文件或切换模式不会自动改写原文。
 
-在仓库根目录安装依赖后，可在 `packages/ext/md` 目录运行 `bun run typecheck`；使用生产环境执行 `bun run build`，产物位于仓库根目录的 `build/ext/ext-md.umd.js`。开发构建或 watch 会同步产物到 `data/ext`。
+在仓库根目录安装依赖后，可在 `packages/ext/md` 目录运行 `bun run typecheck`；使用生产环境执行 `bun run build`，产物位于仓库根目录的 `build/ext/md.ext.js`。开发构建或 watch 会同步产物到 `data/ext`。

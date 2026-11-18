@@ -1,0 +1,15 @@
+{
+  "name": "@toonflow/plugin-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./protocol": "./src/protocol.ts",
+    "./client": "./src/client.ts",
+    "./vue": "./src/vue.ts",
+    "./readme.md": "./readme.md"
+  },
+  "scripts": { "typecheck": "tsc" },
+  "peerDependencies": { "vue": "^3.5.42" }
+}

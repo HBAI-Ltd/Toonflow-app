@@ -1,5 +1,9 @@
 import type { Component } from "vue";
 import type { Rule } from "@form-create/element-ui";
+import type { PluginServer } from "@toonflow/plugin-server";
+
+export { createServerClient } from "@toonflow/plugin-server/client";
+export type { PluginServer } from "@toonflow/plugin-server";
 
 export type ExtResource =
   | { kind: "file"; directory: string; path: string; label: string }
@@ -21,6 +25,7 @@ export interface ExtFiles {
 }
 
 export interface ExtContext {
+  server: PluginServer;
   resource: ExtResource;
   files: ExtFiles;
   text: string;
