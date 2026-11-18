@@ -11,12 +11,16 @@
   "本次更新目标": [
     "apps/web/src/App.vue"
   ],
-  "请前往 GitHub 最新发布页，选择适合当前系统的完整安装包，关闭客户端后重新安装。": [
+  "请前往 GitHub 最新发布页或官网 toonflow.net，选择适合当前系统的完整安装包，关闭客户端后重新安装。": [
     "apps/web/src/App.vue",
     "apps/web/src/components/settings/panels/about/index.vue"
   ],
   "稍后": [
     "apps/web/src/App.vue"
+  ],
+  "前往官网": [
+    "apps/web/src/App.vue",
+    "apps/web/src/components/settings/panels/about/index.vue"
   ],
   "前往下载页": [
     "apps/web/src/App.vue",
