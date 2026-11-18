@@ -114,7 +114,7 @@
             <el-button class="sponsorContact" size="small" type="primary" link>成为赞助商</el-button>
           </template>
           <q-r-code
-            value="https://work.weixin.qq.com/u/vc0f54596c5837d05a?v=5.0.8.70675"
+            value="https://work.weixin.qq.com/u/vc66e4c7f8432af0d8?v=5.0.13.84802&bb=c03c3ad130"
             :size="168"
             type="svg"
             color="#000000"
@@ -257,7 +257,7 @@ import {
 const messageMarkdown = defineAsyncComponent(() => import("@/components/messageMarkdown.vue"));
 const privacy = defineAsyncComponent(() => import("./privacy.vue"));
 const repositoryUrl = "https://github.com/HBAI-Ltd/Toonflow-app";
-const communityUrl = "https://work.weixin.qq.com/u/vc36adcc89845edcbe?v=5.0.3.63936&bb=85b8d228e8";
+const communityUrl = "https://work.weixin.qq.com/u/vc66e4c7f8432af0d8?v=5.0.13.84802&bb=c03c3ad130";
 const clientBuild = ref<{ version: string; channel: string }>();
 const currentVersion = computed(() => actualPlatform.isDesktop && actualPlatform.isRemoteConnection
   ? clientBuild.value?.version || "" : snapshot.value?.version || import.meta.env.appVersion);
