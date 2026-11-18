@@ -8,8 +8,11 @@ if (process.platform !== "darwin" || !["x64", "arm64"].includes(process.arch)) {
 }
 
 async function run(command: string[]) {
+  console.log(`执行 macOS 打包命令：${command[0]}`);
   const child = Bun.spawn(command, { stdin: "ignore", stdout: "inherit", stderr: "inherit", timeout: 600000 });
-  if (await child.exited !== 0) throw new Error(`macOS 安装包制作失败：${command[0]}`);
+  const exitCode = await child.exited;
+  if (exitCode !== 0) throw new Error(`macOS 安装包制作失败：${command[0]}（退出码 ${exitCode}，信号 ${child.signalCode ?? "无"}）`);
+  console.log(`完成 macOS 打包命令：${command[0]}`);
 }
 
 const projectDir = realpathSync(resolve(import.meta.dirname, "../../.."));
@@ -29,6 +32,7 @@ if (typeof archiveName !== "string" || !archiveName.startsWith(`${prefix}-`)
 }
 const signed = process.env.macCodesign === "1";
 const installerIdentity = process.env.ELECTROBUN_INSTALLER_ID;
+const installerKeychain = process.env.ELECTROBUN_INSTALLER_KEYCHAIN;
 if (signed && !installerIdentity) throw new Error("PKG 签名缺少 ELECTROBUN_INSTALLER_ID（Developer ID Installer）。");
 
 const stagingParent = resolve(projectDir, "build/desktop/pkg");
@@ -121,10 +125,13 @@ trap 'exit 2' HUP INT TERM
       "--compression", "latest", "--min-os-version", "14.0", component]);
   }
   // ACT: 直接使用系统 Installer 的继续、安装、完成向导，不再生成拖拽 DMG 或兼容脚本。
+  const unsignedOutput = signed ? join(stagingDir, "unsigned.pkg") : output;
   await run(["/usr/bin/productbuild", "--identifier", `${desktopConfig.app.identifier}.installer`, "--version", version,
     ...(component ? ["--package", component] : ["--component", appPath, "/Applications"]),
-    ...(signed ? ["--sign", installerIdentity!, "--timestamp"] : []), output]);
+    unsignedOutput]);
   if (signed) {
+    await run(["/usr/bin/productsign", "--sign", installerIdentity!, "--timestamp",
+      ...(installerKeychain ? ["--keychain", installerKeychain] : []), unsignedOutput, output]);
     await run(["/usr/sbin/pkgutil", "--check-signature", output]);
     if (process.env.ELECTROBUN_SKIP_NOTARIZATION !== "1") {
       const { ELECTROBUN_APPLEAPIISSUER: issuer, ELECTROBUN_APPLEAPIKEY: keyId, ELECTROBUN_APPLEAPIKEYPATH: key,
