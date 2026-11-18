@@ -34,8 +34,6 @@
       :elevate-edges-on-select="false"
       :disable-keyboard-a11y="true"
       :selectNodesOnDrag="false"
-      :auto-pan-on-node-drag="false"
-      :auto-pan-on-connect="false"
       :zoom-on-double-click="false"
       :zoomOnScroll="false"
       :zoomOnPinch="active && !settingsVisible"
@@ -91,6 +89,7 @@
         :disabled="!active || settingsVisible || !project?.directory || !canvasReady"
         :pasteNode="pasteClipboardNode"
         :uploadFiles="canvasId && project?.directory ? selectFiles : undefined"
+        :saveSelection="currentUser?.role === 'user' ? undefined : saveSelectionToAssets"
         :canUndo="canUndo"
         :canRedo="canRedo"
         :selectionBusy="selectionToolbarRef?.busy"
@@ -107,8 +106,8 @@
         :disabled="!canvasId || !project?.directory" />
       <nodeSearch ref="nodeSearchRef" :disabled="!active || settingsVisible || !canvasId || !project?.directory" />
     </vue-flow>
-    <el-dialog v-if="currentUser?.role !== 'user'" :modelValue="!!assetSelection" class="referenceAssetDialog" title="全局素材库" width="min(1200px, 88vw)" alignCenter appendToBody destroyOnClose @update:modelValue="finishAssetSelection()">
-      <assetLibrary :modelValue="!!assetSelection" expanded :canSelect="canSelectAsset" :selecting="assetSelecting" @select="selectAsset" />
+    <el-dialog v-if="currentUser?.role !== 'user'" :modelValue="!!(assetSelection || assetPick)" class="referenceAssetDialog" title="全局素材库" width="min(1200px, 88vw)" alignCenter appendToBody destroyOnClose @update:modelValue="finishAssetSelection(); finishAssetPick()">
+      <assetLibrary :modelValue="!!(assetSelection || assetPick)" expanded :canSelect="canSelectAsset" :selecting="assetSelecting" @select="selectAsset" />
     </el-dialog>
     <teleport to="body">
       <el-button
@@ -139,13 +138,6 @@ import { ElMessage } from "element-plus";
 import { actualPlatform, isMobile } from "@/lib/platform";
 import { storeToRefs } from "pinia";
 import { IconUnlink } from "@tabler/icons-vue";
-import * as vueRuntime from "vue";
-import * as vueFlowRuntime from "@vue-flow/core";
-import * as elementPlusRuntime from "element-plus";
-import * as threeRuntime from "three";
-import * as modelIcons from "@toonflow/model-icons";
-import { runAgentLoop } from "@earendil-works/pi-agent-core";
-import { createAssistantMessageEventStream } from "@earendil-works/pi-ai";
 import "element-plus/dist/index.css";
 import {
   VueFlow,
@@ -182,13 +174,14 @@ import selectionToolbar from "./components/selectionToolbar.vue";
 import nodeSearch from "./components/nodeSearch.vue";
 import { finishGroupDrag, fitGroupBounds, getSelectionTree } from "./selectionNodes";
 import type { NodeOutput } from "@toonflow/nodes-scaffold/values";
-import { validateConnection, type NodeConnectionFeedback, type NodeHandle } from "@toonflow/nodes-scaffold/connection";
+import { getAssetOutputs, validateConnection, type NodeConnectionFeedback, type NodeHandle } from "@toonflow/nodes-scaffold/connection";
+import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
 import { useNodeEvent } from "@toonflow/nodes-scaffold/nodeEvent";
 import type { NodeDocumentContext, NodeDocumentState } from "@toonflow/nodes-scaffold/nodeDocument";
 import { useNodeToolsContext } from "@toonflow/nodes-scaffold/nodeTools";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { currentUser } from "@/stores/multiTenant";
-import { generalSettings } from "@/stores/settings";
+import { generalSettings, settingsStorage } from "@/stores/settings";
 import { getShortcutBindings, shortcutLabel, shortcutMatches, shortcutPressed } from "@/lib/canvasShortcuts";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import anonymousData from "@/lib/anonymousData";
@@ -287,7 +280,14 @@ provide("copyNodeToClipboard", async (node: Parameters<typeof copyNodeToClipboar
 });
 provide("retainNodeFiles", true);
 provide("selectionConnection", shallowRef<NodeConnectionFeedback>());
-provide("saveNodeToAssets", currentUser.value?.role === "user" ? undefined : (label: string, outputs: { label: string; output: NodeOutput }[]) => assetLibraryRef.value?.openSave(label, outputs));
+provide("saveNodeToAssets", currentUser.value?.role === "user" ? undefined : (label: string, outputs: { label: string; output: NodeOutput }[]) => assetLibraryRef.value?.openSave([{ label, outputs }]));
+function saveSelectionToAssets(selection: GraphNode[]) {
+  const nodes = getSelectionTree(selection, flow.getNodes.value).flatMap(node => {
+    const outputs = getAssetOutputs(node.data ?? {});
+    return outputs.length ? [{ label: String(node.data?.label || "未命名节点"), outputs }] : [];
+  });
+  if (nodes.length) void assetLibraryRef.value?.openSave(nodes);
+}
 let canvasController = new AbortController();
 let workspaceController = new AbortController();
 type AssetReference = { source: string; sourceHandle: string };
@@ -296,6 +296,7 @@ const assetSelection = shallowRef<AssetSelection>();
 const assetSelecting = ref(false);
 provide("selectNodeAsset", (targetId: string, targetHandleId: string) => {
   finishAssetSelection();
+  finishAssetPick();
   const target = findNode(targetId);
   const directory = project.value?.directory;
   if (currentUser.value?.role === "user" || !target || !directory || !props.active || !canvasId.value) return Promise.resolve(undefined);
@@ -321,6 +322,48 @@ watch(() => assetSelection.value && (!props.active || props.settingsVisible || a
 });
 onScopeDispose(() => finishAssetSelection());
 
+// 节点从素材库选取文件：只返回文件内容，由节点按自己的上传流程写入工作区。
+type AssetPick = { target: GraphNode; kind: "image" | "video" | "audio"; controller: AbortController; signal: AbortSignal; resolve: (file?: File) => void };
+const assetPick = shallowRef<AssetPick>();
+provide("pickNodeAsset", currentUser.value?.role === "user" ? undefined : (targetId: string, kind: AssetPick["kind"]) => {
+  finishAssetSelection();
+  finishAssetPick();
+  const target = findNode(targetId);
+  if (!target || !props.active || !canvasId.value) return Promise.resolve(undefined);
+  return new Promise<File | undefined>(resolve => {
+    const controller = new AbortController();
+    const signal = AbortSignal.any([controller.signal, canvasController.signal, workspaceController.signal]);
+    assetPick.value = { target, kind, controller, signal, resolve };
+    signal.addEventListener("abort", () => {
+      if (assetPick.value?.signal === signal) finishAssetPick();
+    }, { once: true });
+  });
+});
+function finishAssetPick(file?: File) {
+  const pick = assetPick.value;
+  assetPick.value = undefined;
+  assetSelecting.value = false;
+  pick?.controller.abort();
+  pick?.resolve(file);
+}
+watch(() => assetPick.value && (!props.active || props.settingsVisible || findNode(assetPick.value.target.id) !== assetPick.value.target), invalid => {
+  if (invalid) finishAssetPick();
+});
+onScopeDispose(() => finishAssetPick());
+
+async function pickAssetFile(pick: AssetPick, entry: { name: string; path: string; type: string }) {
+  if (assetSelecting.value || !canSelectAsset(entry)) return;
+  assetSelecting.value = true;
+  try {
+    const { data } = await axios.get<Blob>("/api/assets/read", { params: { path: entry.path }, responseType: "blob", signal: pick.signal });
+    if (assetPick.value === pick) finishAssetPick(new File([data], entry.name, { type: data.type }));
+  } catch (error) {
+    if (!pick.signal.aborted) ElMessage.error(axios.isAxiosError<{ message: string }>(error) ? error.response?.data.message || error.message : (error as Error).message);
+  } finally {
+    if (assetPick.value === pick) assetSelecting.value = false;
+  }
+}
+
 function assetConnection(type: string, selection: AssetSelection, source?: GraphNode) {
   const target = selection.target;
   if (selection.signal.aborted || findNode(target.id) !== target || !flow.nodesConnectable.value || target.connectable === false) return;
@@ -332,12 +375,15 @@ function assetConnection(type: string, selection: AssetSelection, source?: Graph
 }
 
 function canSelectAsset(entry: { name: string; type: string }) {
+  const pick = assetPick.value;
+  if (pick) return entry.type === "file" && getMediaMimeType({ name: entry.name, type: "" }).startsWith(`${pick.kind}/`);
   const selection = assetSelection.value;
   const { type } = getCanvasFileType({ name: entry.name, type: "" });
   return !!selection && entry.type === "file" && !!type && availableNodes.value.some(node => node.type === type) && !!assetConnection(type, selection);
 }
 
 async function selectAsset(entry: { name: string; path: string; type: string }) {
+  if (assetPick.value) return pickAssetFile(assetPick.value, entry);
   const selection = assetSelection.value;
   if (!selection || assetSelecting.value || !canSelectAsset(entry)) return;
   assetSelecting.value = true;
@@ -874,10 +920,10 @@ async function saveCanvasState(action?: () => Promise<void>) {
   if (saveError && project.value?.directory && canvasId.value) saveCanvas(project.value.directory, canvasId.value);
   if (action) savePaused = true;
   try {
-    let revision: number;
+    let changed: boolean;
     do {
       if (saveCancelled) throw new Error("画布保存已取消");
-      revision = saveRevision;
+      const revision = saveRevision;
       if (changedWhilePaused && project.value?.directory && canvasId.value) {
         saveCanvas(project.value.directory, canvasId.value);
         changedWhilePaused = false;
@@ -885,10 +931,14 @@ async function saveCanvasState(action?: () => Promise<void>) {
       saveCanvas.flush();
       await saving;
       if (saveError) throw saveError;
+      await nextTick();
+      // ACT: 只有写入期间的变化才再保存一轮；保存事件自身写回节点数据的改动（如运行中的时钟）不计入，
+      // 否则每次保存都改数据的节点会让循环永不结束。最后一次保存事件带来的改动交给自动保存落盘。
+      changed = revision !== saveRevision;
       // 画布写入期间节点可能完成生成，等新增落盘后重新保存变化。
       await Promise.all(flow.getNodes.value.map((node) => useNodeEvent(node.id, flow).emit("save")));
       await nextTick();
-    } while (revision !== saveRevision);
+    } while (changed);
     if (saveCancelled) throw new Error("画布保存已取消");
     await action?.();
   } finally {
@@ -1235,12 +1285,24 @@ onBeforeUnmount(() => {
   loadRequest++;
 });
 
-const nodeWindow = window as typeof window & {
-  toonflowNodeHost?: { vue: typeof vueRuntime; vueFlow: typeof vueFlowRuntime; elementPlus: typeof elementPlusRuntime; three: typeof threeRuntime; modelIcons: typeof modelIcons; ai: { runAgentLoop: typeof runAgentLoop; createAssistantMessageEventStream: typeof createAssistantMessageEventStream } };
-  toonflowNodes?: NodeTypesObject;
-};
-nodeWindow.toonflowNodeHost = { vue: vueRuntime, vueFlow: vueFlowRuntime, elementPlus: elementPlusRuntime, three: threeRuntime, modelIcons, ai: { runAgentLoop, createAssistantMessageEventStream } };
 provide("nodeConfig", (nodeType: string) => nodeConfigs.value[nodeType] ?? {});
+// 生成节点上次手动选择的模型按媒体类型写入用户设置，新建节点优先使用。
+function readModelMemory(): Record<string, unknown> {
+  try {
+    const value = JSON.parse(settingsStorage.getItem("toonflow.nodeModels") ?? "{}");
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  } catch { return {}; }
+}
+provide("nodeModelMemory", {
+  get: (type: string) => {
+    const value = readModelMemory()[type];
+    return typeof value === "string" ? value : "";
+  },
+  set: (type: string, key: string) => {
+    const memory = readModelMemory();
+    if (memory[type] !== key) settingsStorage.setItem("toonflow.nodeModels", JSON.stringify({ ...memory, [type]: key }));
+  },
+});
 provide("workspaceFiles", () => {
   const directory = project.value?.directory;
   if (!directory) throw new Error("请先选择工作目录");
@@ -1271,8 +1333,12 @@ async function loadNode(name: string, url: string, force = false): Promise<void>
     // ACT: 复用画布修订号收敛等待期间的编辑；持续修改画布时延后刷新，不额外维护节点修订状态。
     let revision: number;
     do {
+      const saved = Promise.all(flow.getNodes.value.filter(node => node.type === nodeType).map(node => useNodeEvent(node.id, flow).emit("save", "reload")));
+      // ACT: 保存事件同步写回节点数据的改动（如运行中的时钟）先计入基准，不算等待期间的编辑，
+      // 否则这类节点永远无法刷新；异步写回数据的节点仍会延后刷新。
+      await nextTick();
       revision = saveRevision;
-      await Promise.all(flow.getNodes.value.filter(node => node.type === nodeType).map(node => useNodeEvent(node.id, flow).emit("save", "reload")));
+      await saved;
       await nextTick();
       signal.throwIfAborted();
     } while (revision !== saveRevision);

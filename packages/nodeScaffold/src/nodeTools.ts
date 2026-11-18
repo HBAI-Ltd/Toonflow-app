@@ -110,9 +110,8 @@ export const nodeTools = {
   },
 };
 
-// 在画布 setup 中创建，按需读取当前节点函数，不复制全量注册表。
-export function useNodeToolsContext() {
-  const flow = useVueFlow();
+// 在画布 setup 中创建，按需读取当前节点函数，不复制全量注册表；不在画布组件内时传入对应的 Vue Flow 实例。
+export function useNodeToolsContext(flow = useVueFlow()) {
   const { registry, index } = getRegistry(flow);
   function* list(nodeIds: string[], names?: string[]): IterableIterator<NodeToolInfo> {
     const nameSet = names ? new Set(names) : undefined;

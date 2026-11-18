@@ -2,4 +2,4 @@
 
 在文档标签页中显示原画布节点的上槽位、内容和下槽位，复用节点运行实例与生成状态。
 
-运行 `bun run build` 生成 `build/ext/ext-canvasNode.umd.js`，可在插件市场的已安装页面导出、安装和更新。
+运行 `bun run build` 生成 `build/ext/canvasNode.ext.js`，可在插件市场的已安装页面导出、安装和更新。

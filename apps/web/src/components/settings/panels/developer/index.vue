@@ -230,7 +230,7 @@ function confirmDeveloper() {
 
 const installTypes = {
   node: { get label() { return translate("节点"); }, accept: ".umd.js", example: "imageNode.umd.js", get description() { return translate("选择脚手架打包的 .umd.js 文件。"); } },
-  ext: { get label() { return translate("文件扩展"); }, accept: ".umd.js", example: "ext-image.umd.js", get description() { return translate("选择扩展脚手架打包的 ext-*.umd.js 文件。"); } },
+  ext: { get label() { return translate("文件扩展"); }, accept: ".ext.js,.umd.js", example: "image.ext.js", get description() { return translate("选择扩展脚手架打包的 .ext.js 文件。"); } },
   skill: { get label() { return translate("技能"); }, accept: ".zip,.md,.tar,.tar.gz,.tgz", example: "skill.zip", get description() { return translate("支持包含技能与资源的 .zip 包、SKILL.md，以及 .tar、.tar.gz、.tgz 包。"); } },
   tool: { get label() { return translate("工具"); }, accept: ".tool.js", example: "canvas.tool.js", get description() { return translate("选择脚手架打包的 .tool.js 文件。"); } },
 };

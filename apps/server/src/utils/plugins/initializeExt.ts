@@ -1,6 +1,6 @@
 import { lstat, mkdir, readFile, readdir, writeAtomic } from "@toonflow/file";
 import { resolve } from "node:path";
-import { parseExt } from "@/utils/plugins/ext";
+import { extFileName, extNameFromFile, extPaths, parseExt, resolveExtPath, validateExtSource } from "@/utils/plugins/ext";
 import { requireNewerVersion } from "@/utils/plugins/install";
 import { lockWorkspaceFiles, writeWorkspaceFile } from "@/utils/workspace/files";
 
@@ -17,21 +17,24 @@ export default async function initializeExt(targetDirectory: string, sourceDirec
     throw error;
   });
   const state = JSON.parse(saved) as Record<string, { hash: string; revision?: string }>;
-  for (const file of files.filter(file => file.isFile() && /^ext-[a-z][a-zA-Z0-9]*\.umd\.js$/.test(file.name))) {
-    const name = file.name.slice(0, -7);
-    const path = resolve(targetDirectory, file.name);
-    const release = lockWorkspaceFiles([path]);
+  const names = new Set(files.filter(file => file.isFile()).map(file => extNameFromFile(file.name)).filter((name): name is string => !!name));
+  for (const name of names) {
+    const path = resolve(targetDirectory, extFileName(name));
+    const release = lockWorkspaceFiles(extPaths(name, targetDirectory));
     try {
       const removed = await lstat(resolve(targetDirectory, `${name}.removed`)).catch((error: NodeJS.ErrnoException) => {
         if (error.code !== "ENOENT") throw error;
       });
       if (removed) continue;
-      const source = await readFile(resolve(sourceDirectory, file.name), "utf8");
-      const incoming = parseExt(source, name);
+      const source = await readFile(await resolveExtPath(name, sourceDirectory), "utf8");
+      const incoming = validateExtSource(source, name);
       const current = await lstat(path).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
       if (current && !current.isFile()) continue;
-      if (current) {
-        const previous = await readFile(path, "utf8");
+      const installedPath = await resolveExtPath(name, targetDirectory);
+      const installed = await lstat(installedPath).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
+      if (installed && !installed.isFile()) continue;
+      if (installed) {
+        const previous = await readFile(installedPath, "utf8");
         if (previous === source) continue;
         let version: string;
         try { version = parseExt(previous, name).version; }

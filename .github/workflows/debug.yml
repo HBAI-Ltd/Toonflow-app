@@ -46,6 +46,12 @@ on:
       MACOS_CERTIFICATE_PASSWORD:
         description: P12 导出密码
         required: false
+      MACOS_INSTALLER_CERTIFICATE_BASE64:
+        description: 包含 Developer ID Installer 证书及对应私钥的 P12 Base64
+        required: false
+      MACOS_INSTALLER_CERTIFICATE_PASSWORD:
+        description: Installer P12 导出密码
+        required: false
       MACOS_NOTARIZATION_KEY_ID:
         description: App Store Connect 团队 API Key ID
         required: false
@@ -206,6 +212,8 @@ jobs:
         env:
           certificateBase64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
           certificatePassword: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          installerCertificateBase64: ${{ secrets.MACOS_INSTALLER_CERTIFICATE_BASE64 }}
+          installerCertificatePassword: ${{ secrets.MACOS_INSTALLER_CERTIFICATE_PASSWORD }}
           notarizationKeyId: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
           notarizationIssuerId: ${{ secrets.MACOS_NOTARIZATION_ISSUER_ID }}
           notarizationKeyBase64: ${{ secrets.MACOS_NOTARIZATION_KEY_BASE64 }}
@@ -213,23 +221,34 @@ jobs:
           set +x
           : "${certificateBase64:?请配置 MACOS_CERTIFICATE_BASE64 Secret}"
           : "${certificatePassword:?请配置 MACOS_CERTIFICATE_PASSWORD Secret}"
+          : "${installerCertificateBase64:?请配置 MACOS_INSTALLER_CERTIFICATE_BASE64 Secret}"
+          : "${installerCertificatePassword:?请配置 MACOS_INSTALLER_CERTIFICATE_PASSWORD Secret}"
           : "${notarizationKeyId:?请配置 MACOS_NOTARIZATION_KEY_ID Secret}"
           : "${notarizationIssuerId:?请配置 MACOS_NOTARIZATION_ISSUER_ID Secret}"
           : "${notarizationKeyBase64:?请配置 MACOS_NOTARIZATION_KEY_BASE64 Secret}"
           umask 077
           certificatePath="$RUNNER_TEMP/toonflowSigning.p12"
+          installerCertificatePath="$RUNNER_TEMP/toonflowInstallerSigning.p12"
+          installerIssuerPath="$RUNNER_TEMP/developerIdG2.cer"
           keychainPath="$RUNNER_TEMP/toonflowSigning.keychain-db"
           notarizationKeyPath="$RUNNER_TEMP/toonflowNotarization.p8"
-          trap 'rm -f "$certificatePath"' EXIT
+          trap 'rm -f "$certificatePath" "$installerCertificatePath" "$installerIssuerPath"' EXIT
           printf '%s' "$notarizationKeyBase64" | base64 --decode > "$notarizationKeyPath"
           openssl pkey -in "$notarizationKeyPath" -passin pass: -check -noout > /dev/null
           keychainPassword="$(openssl rand -hex 32)"
           echo "::add-mask::$keychainPassword"
           printf '%s' "$certificateBase64" | base64 --decode > "$certificatePath"
+          printf '%s' "$installerCertificateBase64" | base64 --decode > "$installerCertificatePath"
           security create-keychain -p "$keychainPassword" "$keychainPath"
           security set-keychain-settings -lut 7200 "$keychainPath"
           security unlock-keychain -p "$keychainPassword" "$keychainPath"
-          security import "$certificatePath" -P "$certificatePassword" -k "$keychainPath" -T /usr/bin/codesign > /dev/null
+          security default-keychain -d user -s "$keychainPath"
+          # ACT: 两种证书可能共用私钥，首次导入就需授权全部实际使用的 Apple 签名工具。
+          security import "$certificatePath" -P "$certificatePassword" -k "$keychainPath" -T /usr/bin/codesign -T /usr/bin/productbuild -T /usr/bin/productsign > /dev/null
+          security import "$installerCertificatePath" -P "$installerCertificatePassword" -k "$keychainPath" -T /usr/bin/codesign -T /usr/bin/productbuild -T /usr/bin/productsign > /dev/null
+          curl --fail --silent --show-error --location --proto '=https' --max-time 60 \
+            https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer -o "$installerIssuerPath"
+          security import "$installerIssuerPath" -k "$keychainPath" > /dev/null
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychainPassword" "$keychainPath" > /dev/null
           security list-keychains -d user -s "$keychainPath"
           identity="$(security find-identity -v -p codesigning "$keychainPath" | awk '/"Developer ID Application: / { print $2 }')"
@@ -250,7 +269,15 @@ jobs:
             '
             exit 1
           fi
+          installerIdentity="$(security find-identity -v "$keychainPath" | awk -F '"' '/"Developer ID Installer: / { print $2 }')"
+          if [[ -z "$installerIdentity" || "$installerIdentity" == *$'\n'* ]]; then
+            echo '::error::未找到唯一有效的 Developer ID Installer 身份，请确认 P12 包含对应私钥。'
+            security find-identity "$keychainPath" | sed -E 's/"[^"]*"/"<certificate name hidden>"/g'
+            exit 1
+          fi
           printf 'identity=%s\n' "$identity" >> "$GITHUB_OUTPUT"
+          printf 'installerIdentity=%s\n' "$installerIdentity" >> "$GITHUB_OUTPUT"
+          printf 'keychainPath=%s\n' "$keychainPath" >> "$GITHUB_OUTPUT"
           printf 'notarizationKeyPath=%s\n' "$notarizationKeyPath" >> "$GITHUB_OUTPUT"
       - name: 为 Apple 公证票据网络错误启用有限重试
         if: matrix.platform == 'darwin'
@@ -269,7 +296,10 @@ jobs:
       - name: 构建 macOS 安装包及更新文件（自动签名与公证）
         if: runner.os == 'macOS'
         env:
+          TOONFLOW_EXTERNAL_RUNTIME: "1"
           ELECTROBUN_DEVELOPER_ID: ${{ steps.signing.outputs.identity }}
+          ELECTROBUN_INSTALLER_ID: ${{ steps.signing.outputs.installerIdentity }}
+          ELECTROBUN_INSTALLER_KEYCHAIN: ${{ steps.signing.outputs.keychainPath }}
           ELECTROBUN_APPLEAPIKEY: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
           ELECTROBUN_APPLEAPIISSUER: ${{ secrets.MACOS_NOTARIZATION_ISSUER_ID }}
           ELECTROBUN_APPLEAPIKEYPATH: ${{ steps.signing.outputs.notarizationKeyPath }}
@@ -277,12 +307,12 @@ jobs:
       - name: 清理 macOS 签名与公证凭据
         if: always() && matrix.platform == 'darwin'
         run: |
-          rm -f "$RUNNER_TEMP/toonflowSigning.p12" "$RUNNER_TEMP/toonflowNotarization.p8"
+          rm -f "$RUNNER_TEMP/toonflowSigning.p12" "$RUNNER_TEMP/toonflowInstallerSigning.p12" "$RUNNER_TEMP/developerIdG2.cer" "$RUNNER_TEMP/toonflowNotarization.p8"
           keychainPath="$RUNNER_TEMP/toonflowSigning.keychain-db"
           if [[ -f "$keychainPath" ]]; then
             security delete-keychain "$keychainPath"
           fi
-      - name: 验证 macOS 更新包与 DMG 安装镜像
+      - name: 验证 macOS 更新包与 PKG 安装向导
         if: runner.os == 'macOS'
         env:
           releaseDirectory: ${{ matrix.releaseFolder }}/${{ needs.prepare.outputs.version }}
@@ -293,7 +323,6 @@ jobs:
             if [[ "$macCodesign" == '1' ]]; then
               codesign --verify --deep --strict --verbose=2 \
                 --test-requirement "=anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf = H\"$signingIdentity\"" "$1"
-              xcrun stapler validate "$1"
             fi
           }
           inspectionDirectory="$RUNNER_TEMP/toonflowPackageCheck"
@@ -314,30 +343,33 @@ jobs:
           test -s "$app/Contents/Resources/app/bun/index.js"
           test -x "$app/Contents/MacOS/bun"
           verifyMacArtifact "$app"
-          dmgPath="$releaseDirectory/toonflow-$appVersion-macos-$packageArchitecture.dmg"
-          test -s "$dmgPath"
-          hdiutil verify "$dmgPath"
-          verifyMacArtifact "$dmgPath"
           if [[ "$macCodesign" == '1' ]]; then
-            spctl --assess --type open --context context:primary-signature --verbose=2 "$dmgPath"
+            xcrun stapler validate "$app"
           fi
-          mountDirectory="$inspectionDirectory/dmg"
-          mkdir -p "$mountDirectory"
-          hdiutil attach "$dmgPath" -readonly -nobrowse -mountpoint "$mountDirectory"
-          trap 'hdiutil detach "$mountDirectory"' EXIT
-          mountedApps=("$mountDirectory"/*.app)
-          if [[ ${#mountedApps[@]} -ne 1 || "${mountedApps[0]}" != "$mountDirectory/toonflow.app" ]]; then
-            echo '::error::DMG 必须包含且仅包含一个 toonflow.app。'
+          pkgPath="$releaseDirectory/toonflow-$appVersion-macos-$packageArchitecture.pkg"
+          test -s "$pkgPath"
+          if [[ "$macCodesign" == '1' ]]; then
+            pkgutil --check-signature "$pkgPath"
+            xcrun stapler validate "$pkgPath"
+            spctl --assess --type install --verbose=2 "$pkgPath"
+          fi
+          expandedDirectory="$inspectionDirectory/pkg"
+          pkgutil --expand-full "$pkgPath" "$expandedDirectory"
+          packagedApps=()
+          while IFS= read -r -d '' appPath; do
+            packagedApps+=("$appPath")
+          done < <(find "$expandedDirectory" -type d -name '*.app' -prune -print0)
+          if [[ ${#packagedApps[@]} -ne 1 || "${packagedApps[0]}" != */Payload/toonflow.app ]]; then
+            echo '::error::PKG 必须包含且仅包含一个 toonflow.app 应用负载。'
             exit 1
           fi
-          app="$mountDirectory/toonflow.app"
+          app="${packagedApps[0]}"
           test -s "$app/Contents/Resources/AppIcon.icns"
           test -s "$app/Contents/Resources/app/bun/index.js"
           test -x "$app/Contents/MacOS/bun"
           test -x "$app/Contents/MacOS/launcher"
           verifyMacArtifact "$app"
-          hdiutil detach "$mountDirectory"
-          trap - EXIT
+          cmp "$inspectionDirectory/toonflow.app/Contents/Resources/version.json" "$app/Contents/Resources/version.json"
       - name: 构建 Linux 安装包及更新文件
         if: matrix.platform == 'linux'
         run: bun run release:desktop "$appVersion" "$releaseMode"

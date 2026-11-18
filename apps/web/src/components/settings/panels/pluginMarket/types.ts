@@ -6,6 +6,7 @@ export type PluginType = "node" | "skill" | "tool" | "agent" | "ext";
 
 export interface Plugin {
   key: string;
+  marketIdentifiers?: string[];
   id?: number;
   isCollected?: boolean;
   state?: 0 | 1 | 2;

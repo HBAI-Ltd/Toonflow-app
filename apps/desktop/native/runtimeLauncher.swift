@@ -619,8 +619,6 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
     technical.isSelectable = true
     address.isEditable = false
     window.center()
-    window.makeKeyAndOrderFront(nil)
-    NSApp.activate(ignoringOtherApps: true)
     do {
       guard let resources = preparationResources ?? Bundle.main.resourceURL else { throw RuntimeFailure.invalid("找不到 Toonflow 应用资源。") }
       let configuration = resources.appendingPathComponent("runtimeInfo.json")
@@ -705,6 +703,7 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
       worker.status = { [weak self, weak worker] text, detail, value in
         DispatchQueue.main.async {
           guard let self = self, let worker = worker, self.preparation === worker, self.busy, self.pause.isEnabled else { return }
+          self.showWindow()
           self.showStatus(text, detail: detail, value: value)
         }
       }
@@ -733,6 +732,12 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
     } catch { showFailure(error) }
   }
 
+  func showWindow() {
+    guard !window.isVisible else { return }
+    window.makeKeyAndOrderFront(nil)
+    NSApp.activate(ignoringOtherApps: true)
+  }
+
   func showStatus(_ text: String, detail: String, value: Double?) {
     if statusLabel.stringValue != text { statusLabel.stringValue = text }
     latestTechnical = detail
@@ -747,6 +752,7 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
   }
 
   func showFailure(_ error: Error) {
+    showWindow()
     busy = false
     progress.stopAnimation(nil)
     pause.isEnabled = true

@@ -33,16 +33,27 @@
         v-model:pcmOptions="pcmOptions"
         @loadedmetadata="updateNodeInternals" />
       <input ref="fileInput" class="fileInput" type="file" accept="audio/*" aria-label="选择音频" :disabled="uploading || transcribing || actions?.processing" @change="uploadAudio" />
-      <el-button
-        v-if="!outputs.audio"
-        class="uploadButton nodrag nopan"
-        :icon="IconUpload"
-        text
-        :loading="uploading"
-        title="上传音频"
-        aria-label="上传音频"
-        @dblclick.stop
-        @click.stop="fileInput?.click()">上传</el-button>
+      <div v-if="!outputs.audio" class="emptyActions">
+        <el-button
+          class="nodrag nopan"
+          :icon="IconUpload"
+          text
+          :loading="uploading"
+          title="上传音频"
+          aria-label="上传音频"
+          @dblclick.stop
+          @click.stop="fileInput?.click()">上传</el-button>
+        <el-button
+          v-if="files.pickAsset"
+          class="nodrag nopan"
+          :icon="IconFolder"
+          text
+          :disabled="uploading"
+          title="从素材库选择音频"
+          aria-label="从素材库选择音频"
+          @dblclick.stop
+          @click.stop="selectAsset">从素材库选择</el-button>
+      </div>
     </div>
     <template v-if="actions?.mode === 'speed'" #bottom><div ref="speedTarget" /></template>
   </nodeSkeleton>
@@ -51,7 +62,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { IconMusic, IconUpload, IconTransfer, IconScissors, IconGauge, IconTextRecognition, IconPlayerStop } from "@tabler/icons-vue";
+import { IconMusic, IconUpload, IconFolder, IconTransfer, IconScissors, IconGauge, IconTextRecognition, IconPlayerStop } from "@tabler/icons-vue";
 import { ElButton, ElMessage } from "element-plus";
 import { nodeSkeleton, nodeTools, useNode, z, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
 import { useAudioTranscription } from "@toonflow/node-shared/useAudioTranscription";
@@ -121,11 +132,20 @@ nodeTools.register({
   },
 });
 
-async function uploadAudio(event: Event) {
+function uploadAudio(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   input.value = "";
-  if (!file || uploading.value || transcribing.value || actions.value?.processing) return;
+  if (file) void setAudioFile(file);
+}
+
+async function selectAsset() {
+  const file = await files.pickAsset?.("audio");
+  if (file) await setAudioFile(file);
+}
+
+async function setAudioFile(file: File) {
+  if (uploading.value || transcribing.value || actions.value?.processing) return;
   const mimeType = getMediaMimeType(file);
   if (!mimeType.startsWith("audio/")) return void ElMessage.error("请选择音频文件");
   if (!file.size || file.size > 100 * 1024 * 1024) return void ElMessage.error("音频不能为空且不能超过 100 MB");
@@ -171,8 +191,13 @@ function showError(error: unknown, fallback: string) {
     display: none;
   }
 
-  .uploadButton {
+  .emptyActions {
+    display: flex;
+    align-items: center;
     align-self: center;
+    gap: 4px;
+
+    .el-button { margin: 0; }
   }
 }
 </style>

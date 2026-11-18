@@ -9,7 +9,7 @@ import { pluginManifestSchema } from "./runtime";
 
 const sdkDirectory = dirname(fileURLToPath(import.meta.url));
 const supportedPackages = new Set([
-  "@toonflow/nodes-scaffold", "@toonflow/tools-scaffold", "@toonflow/node-shared", "@toonflow/asr", "@toonflow/ffmpeg", "@toonflow/file",
+  "@toonflow/nodes-scaffold", "@toonflow/tools-scaffold", "@toonflow/node-shared", "@toonflow/asr", "@toonflow/ffmpeg", "@toonflow/file", "@toonflow/plugin-server",
   "@tabler/icons-vue", "@form-create/element-ui", "vue-draggable-plus", "x-sender", "eventsource-parser", "zod",
 ]);
 

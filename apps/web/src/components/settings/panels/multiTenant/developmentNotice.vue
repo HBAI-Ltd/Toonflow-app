@@ -16,7 +16,7 @@
       </div>
       <div class="businessQr">
         <q-r-code
-          value="https://work.weixin.qq.com/u/vc0f54596c5837d05a?v=5.0.8.70675"
+          value="https://work.weixin.qq.com/u/vc66e4c7f8432af0d8?v=5.0.13.84802&bb=c03c3ad130"
           :size="168"
           type="svg"
           color="#000000"

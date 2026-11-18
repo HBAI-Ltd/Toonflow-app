@@ -204,3 +204,61 @@
      /**
       * Clear all queued messages and return them.
       * Useful for restoring to editor when user aborts.
+--- a/dist/core/compaction/compaction.js
++++ b/dist/core/compaction/compaction.js
+@@ -166,14 +166,21 @@
+ // Cut point detection
+ // ============================================================================
+ const ESTIMATED_IMAGE_CHARS = 4800;
++// ACT: CJK text costs about one token per character, not chars/4. Count each CJK character as
++// four chars so compaction triggers and cut points stay accurate for Chinese sessions. Tokenizers
++// range from about 0.6 to 1.5 tokens per CJK character; use a real tokenizer here if that is too coarse.
++const cjkPattern = /[\u2E80-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF\uFF00-\uFFEF]/g;
++function estimateTextChars(text) {
++    return text.length + 3 * (text.match(cjkPattern)?.length ?? 0);
++}
+ function estimateTextAndImageContentChars(content) {
+     if (typeof content === "string") {
+-        return content.length;
++        return estimateTextChars(content);
+     }
+     let chars = 0;
+     for (const block of content) {
+         if (block.type === "text" && block.text) {
+-            chars += block.text.length;
++            chars += estimateTextChars(block.text);
+         }
+         else if (block.type === "image") {
+             chars += ESTIMATED_IMAGE_CHARS;
+@@ -196,13 +203,13 @@
+             const assistant = message;
+             for (const block of assistant.content) {
+                 if (block.type === "text") {
+-                    chars += block.text.length;
++                    chars += estimateTextChars(block.text);
+                 }
+                 else if (block.type === "thinking") {
+-                    chars += block.thinking.length;
++                    chars += estimateTextChars(block.thinking);
+                 }
+                 else if (block.type === "toolCall") {
+-                    chars += block.name.length + JSON.stringify(block.arguments).length;
++                    chars += block.name.length + estimateTextChars(JSON.stringify(block.arguments));
+                 }
+             }
+             return Math.ceil(chars / 4);
+@@ -213,12 +220,12 @@
+             return Math.ceil(chars / 4);
+         }
+         case "bashExecution": {
+-            chars = message.command.length + message.output.length;
++            chars = estimateTextChars(message.command) + estimateTextChars(message.output);
+             return Math.ceil(chars / 4);
+         }
+         case "branchSummary":
+         case "compactionSummary": {
+-            chars = message.summary.length;
++            chars = estimateTextChars(message.summary);
+             return Math.ceil(chars / 4);
+         }
+     }

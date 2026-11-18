@@ -1,12 +1,37 @@
 import { lstat, readFile } from "@toonflow/file";
 import { dirname, resolve } from "node:path";
 import { z } from "zod";
+import { parse } from "@babel/parser";
 import { t } from "@/lib/i18n";
 import conf from "@/utils/conf";
 import { configFields, configRulesSchema, declaredConfig, validateNodeConfig } from "@/utils/plugins/nodes";
 
 export const extNameSchema = z.string().max(96).regex(/^ext-[a-z][a-zA-Z0-9]*$/);
 export const extDirectory = resolve(dirname(conf.path), "ext");
+
+export function extFileName(name: string) {
+  extNameSchema.parse(name);
+  return `${name.slice(4)}.ext.js`;
+}
+
+export function extNameFromFile(fileName: string) {
+  if (/^[a-z][a-zA-Z0-9]*\.ext\.js$/.test(fileName)) return `ext-${fileName.slice(0, -7)}`;
+  if (/^ext-[a-z][a-zA-Z0-9]*\.umd\.js$/.test(fileName)) return fileName.slice(0, -7);
+}
+
+export function extPaths(name: string, directory = extDirectory) {
+  return [resolve(directory, extFileName(name)), resolve(directory, `${name}.umd.js`)];
+}
+
+export async function resolveExtPath(name: string, directory = extDirectory) {
+  const paths = extPaths(name, directory);
+  // ACT: 旧安装文件只读兼容；新格式优先，不在读取或启动时删除旧文件。
+  for (const path of paths) {
+    const file = await lstat(path).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
+    if (file) return path;
+  }
+  return paths[0]!;
+}
 const metadataSchema = z.object({
   id: extNameSchema,
   displayName: z.string().trim().min(1),
@@ -39,9 +64,46 @@ export function parseExt(source: string, name: string) {
   }
 }
 
+export function validateExtSource(source: string, name: string) {
+  const metadata = parseExt(source, name);
+  let syntax: ReturnType<typeof parse>;
+  try { syntax = parse(source, { sourceType: "script" }); }
+  catch { throw Object.assign(new Error("文件扩展脚本语法无效，请重新构建完整的 .ext.js 文件"), { status: 400 }); }
+  function propertyName(value: unknown): string | undefined {
+    if (!value || typeof value !== "object" || !("type" in value) || value.type !== "MemberExpression") return;
+    const member = value as Record<string, unknown>;
+    const property = member.property as Record<string, unknown> | undefined;
+    if (!property) return;
+    if (!member.computed && property.type === "Identifier") return property.name as string;
+    if (member.computed && property.type === "StringLiteral") return property.value as string;
+    if (member.computed && property.type === "TemplateLiteral" && Array.isArray(property.expressions) && !property.expressions.length) {
+      const quasis = property.quasis as { value: { cooked: string | null } }[];
+      return quasis[0]?.value.cooked ?? undefined;
+    }
+  }
+  const pending: unknown[] = [syntax.program];
+  while (pending.length) {
+    const value = pending.pop();
+    if (!value || typeof value !== "object") continue;
+    if (Array.isArray(value)) { pending.push(...value); continue; }
+    const node = value as Record<string, unknown>;
+    if (node.type === "AssignmentExpression" && node.operator === "=" && propertyName(node.left) === name) {
+      const target = node.left as Record<string, unknown>;
+      if (propertyName(target.object) === "toonflowExts") return metadata;
+    }
+    // 只识别真实语法节点，注释、字符串或源码中的示例不能冒充导出。
+    for (const [key, child] of Object.entries(node)) {
+      if (!["comments", "leadingComments", "trailingComments", "innerComments", "loc", "extra"].includes(key)) pending.push(child);
+    }
+  }
+  throw Object.assign(new Error("文件不是兼容的 Toonflow 文件扩展，请使用扩展脚手架构建并保留原文件名"), { status: 400 });
+}
+
 export async function readExt(name: string) {
   extNameSchema.parse(name);
-  const path = resolve(extDirectory, `${name}.umd.js`);
+  const removed = await lstat(resolve(extDirectory, `${name}.removed`)).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
+  if (removed) throw Object.assign(new Error("文件扩展不存在"), { code: "ENOENT", status: 404 });
+  const path = await resolveExtPath(name);
   const file = await lstat(path);
   if (!file.isFile()) throw Object.assign(new Error("文件扩展必须是普通文件"), { status: 400 });
   if (file.size > 20 * 1024 * 1024) throw Object.assign(new Error("文件扩展不能超过 20 MB"), { status: 413 });

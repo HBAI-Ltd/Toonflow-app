@@ -24,6 +24,7 @@ export default router.get("/", async (req, res) => {
     }
     return {
       name: skill.name,
+      marketIdentifiers: u.pluginInstall.getMarketIdentifiers("skill", skill.name),
       installedAt: u.conf.get("pluginInstalledAt", {})[`skill:${skill.name}`] ?? (info.birthtimeMs || info.mtimeMs),
       builtin: req.app.locals.builtinPlugins.skill.has(relative(skillsDirectory, skill.filePath).split(sep)[0]),
       version: typeof metadata.version === "string" ? metadata.version.trim() : "",

@@ -1,0 +1,46 @@
+{
+  "name": "@toonflow/node-truman-map",
+  "version": "0.16.47",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --bun vite build --watch",
+    "build": "bun --bun vite build",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "peerDependencies": {
+    "vue": "3.5.42",
+    "@vue-flow/core": "1.48.2",
+    "element-plus": "2.14.5",
+    "three": "0.184.0",
+    "marked": "18.0.13",
+    "dompurify": "3.4.16"
+  },
+  "dependencies": {
+    "@tabler/icons-vue": "3.46.0",
+    "fzstd": "0.1.1",
+    "navcat": "0.4.1",
+    "suncalc": "2.1.1",
+    "yuka": "0.7.8"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
+    "@toonflow/file": "workspace:*",
+    "@toonflow/node-shared": "workspace:*",
+    "@toonflow/nodes-scaffold": "workspace:*",
+    "@types/three": "0.184.0",
+    "@types/yuka": "0.7.4",
+    "@vue-flow/core": "1.48.2",
+    "dompurify": "3.4.16",
+    "element-plus": "2.14.5",
+    "marked": "18.0.13",
+    "sass": "1.104.0",
+    "three": "0.184.0",
+    "typescript": "6.0.3",
+    "vite": "8.2.2",
+    "vue": "3.5.42",
+    "vue-tsc": "3.3.11"
+  }
+}

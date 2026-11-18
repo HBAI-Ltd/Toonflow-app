@@ -32,14 +32,14 @@
     <footer class="chatFooter">
       <div class="inputContent"><slot name="input" /></div>
       <div class="inputActions">
-        <el-select :modelValue="selectedModel ? model : ''" class="modelSelect" size="small" :loading="modelsLoading" filterable placeholder="选择模型" aria-label="生成模型" @update:modelValue="model = $event" @visibleChange="$event && emit('loadModels')">
+        <modelSelect :modelValue="selectedModel ? model : ''" :empty="!models.length" class="modelSelect" size="small" :loading="modelsLoading" filterable placeholder="选择模型" aria-label="生成模型" @update:modelValue="model = $event" @visibleChange="$event && emit('loadModels')">
           <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
           <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
             <el-option v-for="item in provider.models" :key="item.modelId" :label="item.label" :value="getNodeModelKey(item)">
               <modelLabel :label="item.label" :providerId="item.providerId" :modelId="item.modelId" />
             </el-option>
           </el-option-group>
-        </el-select>
+        </modelSelect>
         <el-button class="sendButton" type="primary" round :disabled="initializing || !prompt.trim() || !selectedModel" aria-label="生成动画" @click="sendInstruction">
           <icon-sparkles :size="14" /><span>生成方案</span>
         </el-button>
@@ -50,11 +50,12 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { ElButton, ElOption, ElOptionGroup, ElSelect } from "element-plus";
+import { ElButton, ElOption, ElOptionGroup } from "element-plus";
 import { IconLoader2, IconSparkles, IconMovie, IconCheck, IconAlertCircle, IconArrowBackUp } from "@tabler/icons-vue";
 import { getNodeModelKey, useNodeModelSelection, type NodeAiModel } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import modelLabel from "@toonflow/node-shared/modelLabel";
+import modelSelect from "@toonflow/node-shared/modelSelect";
 
 import type { DirectorPlan, DirectorPlanItem, DirectorGeneration } from "./sceneAnimation";
 

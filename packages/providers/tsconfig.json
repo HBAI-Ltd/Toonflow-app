@@ -4,5 +4,5 @@
     "lib": ["ESNext", "DOM"],
     "types": ["./types"]
   },
-  "include": ["index.ts", "src"]
+  "include": ["index.ts", "types.d.ts"]
 }

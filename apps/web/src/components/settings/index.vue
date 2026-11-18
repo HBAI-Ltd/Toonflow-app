@@ -68,7 +68,7 @@ const allSettingsPanels = [
     id: "languageModel",
     label: "文本模型",
     icon: IconSubtitlesAi,
-    groupLabel: "第三方模型",
+    groupLabel: "模型",
     component: defineAsyncComponent(() => import("./panels/languageModel/index.vue")),
   },
   { id: "mediaModel", label: "媒体模型", icon: IconPhotoVideo, component: defineAsyncComponent(() => import("./panels/mediaModel/index.vue")) },

@@ -86,6 +86,8 @@
 
 ## 本次交接状态与接手方式
 
+- 2026-11-11 内置供应商改为通过既有 Channel 的 `getVendors` / `getVendorSource` 在线读取，创作端和超管共享编辑器均按需获取列表与源码；后台新增 `/api/multiTenant/providers/builtin/list`、`source`，仍验证超管身份，公开创作入口权限不放宽。在线源码只沿现有 AST 校验，安装／配置保存及实际执行仍使用原本地或 SQL 链路，不切换 `sourceMapping.providers` 草稿、不隐式更新已有供应商。`@toonflow/providers` 只导出类型，静态源码不再参与运行与桌面／server／Android 打包；用户确认源码已放到云端后，已删除 `src/language` 与 `src/media` 下的四份旧源码。旧媒体源码若缺图片尺寸／比例字段，使用界面默认值，需更新源码后获得对应能力。Web、Server、desktop、mobile、providerWeb、adminWeb、toolScaffold、i18n 类型检查及 Web／Server 构建通过；四份实际线上源码解析通过，隔离临时目录 HTTP 验证列表／源码 `200`、非法类型 `400`、缺少页面来源 `403`、后台未登录 `401`。未执行真实付费模型、桌面／Android 安装包或浏览器交互验证，未删除线上数据。
+
 - 已完成代码分析、方案讨论，以及 `AGENTS.md` 的引用和 `.agent/` 中的多租户规范与交接文档；现有独立包为 `db`、`auth`、`adminWeb`、`userWeb`、`sourceMapping`、`models`、`billing` 与最新统一编排领域 `gateway`。原父目录总包已拆除，gateway 也不是父总包，宿主按各包公开导出接入。
 - 启停标记为 `settings.multiTenantEnabled`，普通设置保存不能修改它。密码及数据库会话凭据保存哈希；管理页面使用 HttpOnly Cookie，管理会话绑定当前服务进程，退出 Toonflow 后失效，不在 URL 或浏览器持久缓存保存管理令牌。
 - 用户后续明确：已配置的设置页保留开关与后台入口，覆盖此前“仅跳板”的默认方案；开启时隐藏整个开发者选项页面，而非只隐藏其中部分工具。
@@ -174,6 +176,9 @@
 - 本阶段 server／desktop／web 类型检查与路由重新生成已通过；3 条入口新词已补齐 21 语言和真实来源，i18n 类型检查通过。i18n 收口后的最终 server／web 构建均以 exit `0` 完成，Web 保留既有 native configLoader 与大于 `500 KB` 的 chunk 警告；全仓差异检查通过，仅有既有 CRLF 提示。
 - 本轮官方隔离进程 PID `60592` 经命令身份核验后已停止，实际 fetch `10888/23140` 均拒绝连接。临时 settings.json 使用 `@toonflow/file` 的 writeAtomic 逐字节恢复启动前备份，核验一致为 true；仅保留本轮新增 SQL 会话和零扣费 released 审计记录，无线上数据或项目删除。原生 desktop、MySQL、真实付费上游与分布式本轮未验证。
 - Agent 模型流取消修复复用 SDK 的 `raceWithAbortSignal`，使流创建、下一事件和最终结果的等待可被停止信号打断；前端停止请求立即通知画布取消，流读取退出时不等待取消回调。共享用量旁路沿实际请求信号取消，并在协议结束标记后收尾；缺少可靠用量仍保留原网关判断，不按零结算或因取消退款。server／web 类型检查及构建通过，保留既有 native configLoader／大 chunk 警告；未调用真实上游或复现概率故障，实际模型对话停止仍待软测确认。
+- 本轮按用户最终范围，只为 Node 与 Ext 增加 `server` HTTP／WS 能力，Tool 执行上下文不接入。共享包 `@toonflow/plugin-server` 负责路由、请求／连接标识、客户端地址与消息分发；Node 按组件实例、Ext 按视图释放，插件自定义处理页面与 API，无静态文件清单。宿主复用 SSE／POST 控制链路，外部请求由同 Bun 进程的专用能力网关转发，不创建第二套业务应用或暴露主应用 API。
+- 多租户只新增已认证创作用户的 POST `/api/pluginServer/connect`、POST `/api/pluginServer/message` 与 GET `/api/pluginServer/events` 精确白名单；服务归属取自认证身份，控制消息不能自报租户或访问其他连接的服务。外部访问使用每次启动重新生成的服务凭据；HTTP 逐次复核所有者，WS 最长 15 秒复核，注销／禁用／模式切换使租约失效。页面 sandbox、Cookie／Authorization 过滤、路径范围、消息大小、超时与并发限制均在公共桥处理，服务不持久化；普通 Agent／MCP／Tool 权限不因此放宽，当前多租户发布屏障不变。
+- 该阶段共享 SDK、Node／Ext 脚手架、Web、Server、desktop、插件开发器与 i18n 类型检查通过；Server／Web、代表 Node、全部五个 Ext 与插件开发器构建通过。隔离临时目录的真实 SDK／HTTP／WS 验证覆盖 JSON、二进制、路径参数、自定义 OPTIONS、HTML 隔离头、WS 消息、同路径双实例隔离、错误凭据拒绝、停止与重启地址失效。Ext 新 `.ext.js` 构建产物通过安装校验，旧 `.umd.js` 兼容安装／读取，同版本冲突与文件名不匹配被拒绝。临时服务经身份核验后已停止，临时数据保留，无线上资源删除；未验证手机／桌面原生、公开反向代理或多租户会话撤销的实际端到端行为。
 - 当前首次设置超管账号与密码限制在受控本机入口，防止互联设备或公开访问者抢先初始化；已有账号后允许在授权的管理入口登录。`10888` 创作网关不开放主机管理接口，完整云端部署的首次授权入口仍需后续明确实现。
 - 仓库存在用户已有的未提交改动，不能为多租户初始化而覆盖、还原或清理这些改动。
 - 接手顺序：先读根 `AGENTS.md`、本文件和 `multiTenant.md`，再阅读当前阶段牵涉的真实调用链，确认已有能力后实现最小必要改动。

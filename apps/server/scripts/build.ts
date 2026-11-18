@@ -27,6 +27,5 @@ await copySandboxPackages(resolve(projectDir, "build/server/node_modules"));
 const skillsOutput = resolve(projectDir, "build/skills");
 await rm(skillsOutput, { recursive: true, force: true });
 await cp(resolve(projectDir, "packages/skills"), skillsOutput, { recursive: true });
-const providersOutput = resolve(projectDir, "build/providers");
-await rm(providersOutput, { recursive: true, force: true });
-await cp(resolve(projectDir, "packages/providers/src"), providersOutput, { recursive: true });
+// ACT: 内置供应商改为在线获取，清除旧构建副本，避免增量发布继续携带静态源码。
+await rm(resolve(projectDir, "build/providers"), { recursive: true, force: true });

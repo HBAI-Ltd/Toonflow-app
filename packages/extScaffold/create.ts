@@ -107,7 +107,7 @@ function updateText(event: Event) {
     `bun run --cwd packages/ext/${name} build`,
     "```",
     "",
-    "构建产物：`build/ext/ext-" + name + ".umd.js`。文件内包含元数据与组件样式。开发构建同步到 `data/ext/`。接口和宿主接入说明见 `packages/extScaffold/readme.md`。",
+    "构建产物：`build/ext/" + name + ".ext.js`。文件内包含元数据与组件样式。开发构建同步到 `data/ext/`。接口和宿主接入说明见 `packages/extScaffold/readme.md`。",
     "",
   ].join("\n"),
 };

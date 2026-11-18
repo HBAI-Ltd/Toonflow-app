@@ -14,7 +14,7 @@ type PackageInfo = {
 const projectDirectory = resolve(import.meta.dir, "..");
 // ACT: 构建入口单独内联；这里只保留公开源码实际使用的依赖，不复制宿主已共享的 peer 运行时。
 const sourceDependencies: Record<string, string[]> = {
-  "@toonflow/nodes-scaffold": ["@toonflow/asr", "@toonflow/ffmpeg", "@tabler/icons-vue", "eventsource-parser", "zod"],
+  "@toonflow/nodes-scaffold": ["@toonflow/asr", "@toonflow/ffmpeg", "@toonflow/plugin-server", "@tabler/icons-vue", "eventsource-parser", "zod"],
   "@toonflow/tools-scaffold": ["@toonflow/asr", "@toonflow/file", "zod"],
   "element-plus": [],
 };

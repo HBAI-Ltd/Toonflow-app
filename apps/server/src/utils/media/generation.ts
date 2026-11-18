@@ -2,7 +2,7 @@ import { t, translateMessage } from "@/lib/i18n";
 import { mkdir, readFile, realpath, stat, unlink } from "@toonflow/file";
 import { join, relative } from "node:path";
 import { createHash } from "node:crypto";
-import { mediaProviders, type Provider, type ProviderTaskData } from "@toonflow/providers";
+import type { Provider, ProviderTaskData } from "@toonflow/providers";
 import type { GeneratedMedia, MediaGenerationRequest, MediaModel, MediaReference } from "@toonflow/tools-scaffold/runtime";
 import conf from "@/utils/conf";
 import { getAccountProvider } from "@/utils/ai/provider";
@@ -64,9 +64,9 @@ export async function listMediaModels(): Promise<MediaModel[]> {
   if (modelGateway.enabled()) return modelGateway.catalog(["image", "video", "audio"]);
   const installedProviders = await listMediaProviders();
   installedProviders.sort((left, right) => Number(right.id === "toonflow") - Number(left.id === "toonflow"));
+  // ACT: 模型能力以已安装源码为准，读取目录不请求在线预设；旧源码需更新后才能获得新增能力。
   return installedProviders.filter(provider => provider.id !== "toonflow" || !!getAccountProvider()).flatMap(provider => provider.models.flatMap(model => {
     if (model.type !== "image" && model.type !== "video" && model.type !== "audio") return [];
-    const builtIn = (mediaProviders as readonly Provider[]).find(item => item.id === provider.id)?.models.find(item => item.id === model.id);
     return [{
       providerId: provider.id, providerLabel: provider.label, modelId: model.id, label: model.label, type: model.type,
       supportsPrice: "supportsPrice" in provider && provider.supportsPrice === true,
@@ -74,8 +74,8 @@ export async function listMediaModels(): Promise<MediaModel[]> {
       mode: model.mode, durationResolutionMap: model.durationResolutionMap, audio: model.audio,
       ...(model.type === "audio" ? { voices: model.voices } : {}),
       ...(model.type === "image" ? {
-        imageSizes: imageOptions(Array.isArray(model.imageSizes) ? model.imageSizes : builtIn?.imageSizes, /^[^\u0000-\u001f\u007f]+$/),
-        imageRatios: imageOptions(Array.isArray(model.imageRatios) ? model.imageRatios : builtIn?.imageRatios, /^[1-9]\d{0,3}:[1-9]\d{0,3}$/),
+        imageSizes: imageOptions(model.imageSizes, /^[^\u0000-\u001f\u007f]+$/),
+        imageRatios: imageOptions(model.imageRatios, /^[1-9]\d{0,3}:[1-9]\d{0,3}$/),
       } : {}),
     } as MediaModel];
   }));

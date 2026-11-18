@@ -1,6 +1,12 @@
 import type { MediaProviderModel } from "./types";
 
 export type ProviderKind = "text" | "media";
+export type ProviderPreset = {
+  id: string;
+  name: string;
+  description: string;
+  updateTime: number;
+};
 export type ProviderConfiguration = {
   kind: ProviderKind;
   id: string;

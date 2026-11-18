@@ -134,7 +134,7 @@ export default createExtConfig(metadata, import.meta.url);
 
 声明文件不导入组件，避免配置打包器提前解析 Vue 文件。每次重建重新读取声明及其依赖，后缀、图标与设置变更会同步进入 UMD 元数据；修改扩展 ID 后须重启构建。
 
-产物为 `build/ext/<id>.umd.js`，例如 `build/ext/ext-image.umd.js`，包含 `toonflowExt` JSON 元数据注释、版本、说明文档和自动注入的组件样式。产物导出 `window.toonflowExts[id]`，结构为 `ExtDefinition`。Vue、Element Plus 与 Toonflow 语言状态由宿主共享：
+产物为 `build/ext/<name>.ext.js`，例如 ID `ext-image` 对应 `build/ext/image.ext.js`。文件名去掉 ID 的 `ext-` 前缀，使用小驼峰；包内保留原 ID，已有配置和市场身份不变。产物包含 `toonflowExt` JSON 元数据注释、版本、说明文档和自动注入的组件样式。产物仍使用 UMD 模块格式，导出 `window.toonflowExts[id]`，结构为 `ExtDefinition`；`.ext.js` 是扩展插件的文件类型标识。Vue、Element Plus 与 Toonflow 语言状态由宿主共享：
 
 ```ts
 import * as vue from "vue";
@@ -146,6 +146,18 @@ Object.assign(window, { toonflowExtHost: { vue, elementPlus, i18n } });
 
 运行时使用 `@toonflow/ext-scaffold/runtime`；构建配置使用 `@toonflow/ext-scaffold`，避免把 Vite 与文件系统代码打包到浏览器。Element Plus 的基础样式由宿主加载，扩展自身的组件样式会打入产物。
 
+安装、导出与新构建统一使用 `.ext.js`。已有 `ext-<name>.umd.js` 保持兼容，新旧文件并存时优先加载 `.ext.js`，只展示一个扩展；读取和启动不会删除旧文件。安装前同时检查元数据 ID、脚本语法与实际导出，不要求无宿主依赖的扩展引用 `toonflowExtHost`，也不使用字符串中的示例判断脚本类型。
+
 `bun run --cwd packages/ext/myEditor dev` 持续构建，并把产物原子替换到 `data/ext/`，供本机插件市场与文档宿主读取。`NODE_ENV=dev` 或 `--mode development` 的单次构建同样同步；生产构建只输出 `build/ext/`。
 
 市场元数据包含 `id`、`displayName`、可选 `icon`、`configRules`、`extensions`、`resourceKind`、可选 `text`、`version` 和 `readme`。`load` 留在运行时导出，不写入 JSON 元数据。插件市场负责安装、更新与启停，脚手架负责声明、生成和独立构建。
+
+## HTTP 与 WebSocket 服务
+
+每个扩展视图通过 `context.server` 获得独立的通用服务对象。扩展在初始化时用 `get/post/put/patch/delete/head/options` 注册 HTTP 路由，用 `ws(path, handler)` 注册 WebSocket；调用 `await context.server.start()` 才启动并返回访问地址，无需声明页面或静态文件清单。
+
+HTTP 回调接收 `{ request, params, query, signal }`，由扩展处理路径与业务参数。普通对象自动返回 JSON，字符串返回纯文本，`context.server.html(content)` 返回 HTML，也可返回原生 `Response`。WebSocket 提供 `send`、`onMessage`、`onClose` 和 `close` 的桥接 socket。`url`、`status`、`error` 为只读响应式状态；`stop()` 停止服务后可再次启动。
+
+同一文档的分屏视图共享正文与保存状态，各自拥有独立服务；相同路由通过不同服务 ID 隔离。关闭视图或退出工作区时自动销毁所属服务，不影响其他视图；扩展停用时停止服务。处理函数运行在扩展的前端实例中，创作页面关闭后不再处理请求。断线不会重放旧请求，重新启动取得新的服务地址。
+
+访问端可从 `@toonflow/ext-scaffold/serverClient` 导入 `createServerClient(serviceUrl)`，使用当前服务内的相对路径访问 HTTP／WS，避免请求落到主应用或其他插件。共享通道协议、限制与客户端方法详见 `packages/pluginServer/readme.md`。此能力只接入 Node 与 Ext，不扩展 Tool 的执行上下文。

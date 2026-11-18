@@ -40,7 +40,7 @@
   <a href="./docs/readme/readmeTr.md">Türkçe</a>
 </p>
 
-> 🌐 **支持 21 种界面语言** · [查看支持的语言](#languages)
+> 🌐 **支持 22 种界面语言** · [查看支持的语言](#languages)
 
 <div align="center">
 
@@ -212,7 +212,7 @@ Toonflow 是面向短剧、漫剧与短视频制作的开源 AI 创作平台，�
 | 🧩 **插件市场** | 通过[插件市场](https://api.toonflow.net/console/plugIn)扩展节点、工具与创作能力。 |
 | 🤖 **开放 Agent** | 开放提示词、工具和 A2A，支持自定义 Agent 行为及外部协作。 |
 | 🔧 **自由接入模型** | 配置第三方 API，也可接入本地 ComfyUI 和 LLM。 |
-| 🌐 **多语言支持** | 支持 21 种界面语言。 |
+| 🌐 **多语言支持** | 支持 22 种界面语言。 |
 
 ### 如何用 Toonflow 制作 AI 短剧与漫剧
 
@@ -241,7 +241,7 @@ Toonflow 采用 MIT 开源许可，可自行部署。第三方模型服务的 AP
 
 ### 多语言支持
 
-支持的语言：简体中文、繁體中文、English、日本語、Русский、Tiếng Việt、ไทย、한국어、हिन्दी、Bahasa Indonesia、Bahasa Melayu、Filipino、বাংলা、اردو、தமிழ்、తెలుగు、मराठी、ਪੰਜਾਬੀ、العربية、فارسی、Türkçe。
+支持的语言：简体中文、繁體中文、English、日本語、Русский、Tiếng Việt、ไทย、한국어、हिन्दी、Bahasa Indonesia、Bahasa Melayu、Filipino、বাংলা、اردو、தமிழ்、తెలుగు、मराठी、ਪੰਜਾਬੀ、العربية、فارسی、Türkçe、Português (Brasil)。
 
 ---
 
@@ -281,8 +281,8 @@ Toonflow 采用 MIT 开源许可，可自行部署。第三方模型服务的 AP
 | -------- | ------------------------------------------------------------ |
 | Windows x64 | [EXE 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | Windows ARM64 | [EXE 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
-| macOS Apple Silicon（ARM64，macOS 14 及以上） | [DMG 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
-| macOS Intel（x64，macOS 14 及以上） | [DMG 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| macOS Apple Silicon（ARM64，macOS 14 及以上） | [PKG 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
+| macOS Intel（x64，macOS 14 及以上） | [PKG 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | Linux x64（Debian / Ubuntu） | [DEB 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | Linux ARM64（Debian / Ubuntu） | [DEB 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | Android ARM64 | [APK 下载](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
@@ -295,7 +295,7 @@ Windows 的 Intel / AMD 电脑选择 `toonflow-版本号-Setup.exe`，ARM64 电�
 
 Linux 选择对应架构的 `toonflow-版本号-linux-x64.deb` 或 `toonflow-版本号-linux-arm64.deb`，在下载目录执行 `sudo apt install ./安装包文件名.deb`，安装后从应用菜单打开。安装需要联网；apt 会准备 FFmpeg、curl、unzip、CA 证书等依赖，安装脚本在解包应用前下载固定版本的 Bun 并校验大小与 SHA-256，配置阶段再安装运行时。下载或校验失败会在解包前中止安装。
 
-macOS 两种架构均使用统一的 Electrobun SDK，最低支持 macOS 14。选择对应架构的 `toonflow-版本号-macos-arm64.dmg` 或 `toonflow-版本号-macos-x64.dmg`，打开后将 `toonflow.app` 拖入“应用程序”，再从“应用程序”打开 Toonflow。正式发布流程使用 Developer ID Application 签署应用与 DMG，并完成 Apple 公证。旧版 Intel Mac 客户端首次迁移时须下载完整 DMG 覆盖安装，不能通过旧版增量更新直接迁移；安装前退出应用并备份原数据目录。
+macOS 两种架构均使用统一的 Electrobun SDK，最低支持 macOS 14。选择对应架构的 `toonflow-版本号-macos-arm64.pkg` 或 `toonflow-版本号-macos-x64.pkg`，双击后按提示继续安装。安装期间会自动下载、解压并校验必要运行时，已有有效缓存时直接复用；完成后从“应用程序”打开 Toonflow。正式发布流程使用 Developer ID Application 签署应用、Developer ID Installer 签署 PKG，并完成 Apple 公证。旧版 Intel Mac 客户端首次迁移时须下载完整 PKG 覆盖安装，不能通过旧版增量更新直接迁移；安装前退出应用并备份原数据目录。
 
 macOS 若遇到系统安全提示，请按以下顺序处理。
 

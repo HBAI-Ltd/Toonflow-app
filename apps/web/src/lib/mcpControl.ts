@@ -103,11 +103,12 @@ export function useMcpControl() {
           if (request.name === "getAppState") result = getState();
           else if (request.name === "getSettings") result = readSettings();
           else if (request.name === "confirmPluginInstall") {
-            const { name, type, version, source, overwrite } = request.args;
+            const { name, type, version, source, overwrite, terminal } = request.args;
             if (typeof name !== "string" || !name.trim() || typeof type !== "string" || typeof source !== "string"
-              || (version !== undefined && typeof version !== "string") || (overwrite !== undefined && typeof overwrite !== "boolean")) throw new Error("安装插件失败");
+              || (version !== undefined && typeof version !== "string") || (overwrite !== undefined && typeof overwrite !== "boolean")
+              || (terminal !== undefined && typeof terminal !== "boolean")) throw new Error("安装插件失败");
             if (request.directory && request.directory !== workspaceControl.value?.getState().directory) throw new Error("工作区已切换，请重新读取应用状态");
-            result = await confirmPluginInstall({ name, type, version, source, overwrite }, callSignal);
+            result = await confirmPluginInstall({ name, type, version, source, overwrite, terminal }, callSignal);
             callSignal.throwIfAborted();
           }
           else if (request.name === "updateSettings") {

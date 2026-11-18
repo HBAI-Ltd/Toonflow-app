@@ -31,7 +31,7 @@ export type ExtMetadata = Omit<ExtDefinition, "load">;
 export function createExtConfig(config: ExtMetadata, configUrl: string) {
   defineExt({ ...config, load: async () => ({ default: {} }) });
   const root = fileURLToPath(new URL(".", configUrl));
-  const fileName = `${config.id}.umd.js`;
+  const fileName = `${config.id.slice(4)}.ext.js`;
   const outDir = fileURLToPath(new URL("../../build/ext", import.meta.url));
   const dataDir = fileURLToPath(new URL("../../data/ext", import.meta.url));
   let syncToData = process.env.NODE_ENV === "dev";
@@ -70,7 +70,8 @@ export function createExtConfig(config: ExtMetadata, configUrl: string) {
           });
           let css = "";
           for (const [name, asset] of Object.entries(bundle)) {
-            if (asset.type !== "asset" || !name.endsWith(".css")) continue;
+            if (name === fileName) continue;
+            if (asset.type !== "asset" || !name.endsWith(".css")) throw new Error(`扩展必须构建为单个脚本，不能包含未内联的资源：${config.id} (${name})`);
             css += typeof asset.source === "string" ? asset.source : new TextDecoder().decode(asset.source);
             delete bundle[name];
           }
@@ -78,6 +79,7 @@ export function createExtConfig(config: ExtMetadata, configUrl: string) {
           const injectStyle = css ? `if(typeof document!=="undefined"){let style=document.getElementById(${styleId});if(!style){style=document.createElement("style");style.id=${styleId};document.head.appendChild(style)}style.textContent=${JSON.stringify(css)}}\n` : "";
           // 压缩完成后加入元数据和样式，单个 JS 即可供扩展加载器使用。
           chunk.code = `/*! toonflowExt:${JSON.stringify({ ...metadata, configRules, version, readme }).replaceAll("/", "\\u002f")} */\n${injectStyle}${chunk.code}`;
+          if (Buffer.byteLength(chunk.code, "utf8") > 20 * 1024 * 1024) throw new Error(`扩展文件不能超过 20 MB：${config.id}`);
         },
         async writeBundle() {
           if (!syncToData) return;
@@ -98,6 +100,7 @@ export function createExtConfig(config: ExtMetadata, configUrl: string) {
       outDir,
       // ACT: 多个扩展共享目录，构建单包时保留其他扩展产物。
       emptyOutDir: false,
+      assetsInlineLimit: Number.MAX_SAFE_INTEGER,
       cssCodeSplit: false,
       lib: {
         entry: resolve(root, "src/index.ts"),

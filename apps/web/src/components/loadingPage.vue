@@ -77,6 +77,19 @@ function finishFilling() {
   z-index: 1100;
   background: var(--el-bg-color);
 
+  // 网格单独成层，用 transform 从中心缩小入场，不逐帧重绘背景尺寸。
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(var(--el-border-color) 1px, transparent 1px);
+    background-position: center;
+    background-size: 20px 20px;
+    animation: gridZoom 1.2s cubic-bezier(0.33, 1, 0.68, 1) both;
+
+    @media (prefers-reduced-motion: reduce) { animation: none; }
+  }
+
   .logoWrap {
     position: absolute;
     top: 50dvh;
@@ -85,12 +98,15 @@ function finishFilling() {
     aspect-ratio: 1;
     transform: translate(-50%, -50%);
 
-    .dark & { filter: invert(1); }
+    // 先沿轮廓投出黑色阴影再整体反相，暗色主题下即为亮色边缘辉光；描边与填充共用。
+    .dark & { filter: drop-shadow(0 0 3px rgb(0 0 0 / 60%)) invert(1); }
 
     .logoOutline {
       width: 100%;
       line-height: 0;
-      will-change: opacity;
+      will-change: opacity, filter;
+      // 时长不超过描边，避免收尾填充提前打断模糊过渡。
+      animation: logoFocus 0.7s ease-out both;
 
       :deep(svg) { display: block; width: 100%; height: auto; overflow: visible; }
       :deep(path) {
@@ -125,12 +141,22 @@ function finishFilling() {
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .logoOutline { opacity: 0; }
+      .logoOutline { opacity: 0; animation: none; }
       .logoOutline :deep(path) { animation: none; }
       &.drawn .logoPulse { animation: none; }
       .logoFill { opacity: 1; }
     }
   }
+}
+
+@keyframes gridZoom {
+  from { opacity: 0; transform: scale(1.2); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes logoFocus {
+  from { opacity: 0; filter: blur(6px); }
+  to { opacity: 1; filter: blur(0); }
 }
 
 @keyframes logoDraw {

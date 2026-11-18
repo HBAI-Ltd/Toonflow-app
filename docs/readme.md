@@ -28,7 +28,7 @@
 | فارسی | [README](./readme/readmeFa.md) |
 | Türkçe | [README](./readme/readmeTr.md) |
 
-项目介绍提供以上 21 种语言版本，与[应用支持的语言](../README.md#languages)保持一致。
+项目介绍提供以上 21 种语言版本；[应用支持的语言](../README.md#languages)共 22 种，巴西葡萄牙语（`pt`）暂无项目介绍译版。
 
 ## 使用与开发
 

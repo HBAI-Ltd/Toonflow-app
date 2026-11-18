@@ -36,7 +36,7 @@ writeAtomicSync(join(installDirectory, "闪退请双击我兼容运行.bat"), [
   "",
 ].join("\r\n"));
 
-// 重装同一构建也重新同步内置节点、工具和供应商；技能沿用首次初始化，保留用户修改。
-for (const directory of ["nodes", "tools", "providers"]) {
+// 重装同一构建也重新同步内置节点和工具；技能沿用首次初始化，保留用户修改。
+for (const directory of ["nodes", "tools"]) {
   rmSync(join(installDirectory, "data", directory, "initialized"), { force: true });
 }

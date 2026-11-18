@@ -7,6 +7,7 @@ import { error, success } from "@/lib/responseFormat";
 export default Router().post("/", validateFields({
   source: z.string().min(1).max(2 * 1024 * 1024).optional(),
   url: z.string().trim().min(1).max(16384).optional(),
+  allowTerminal: z.boolean().optional(),
 }), async (req, res) => {
   if ((req.body.source === undefined) === (req.body.url === undefined)) {
     return res.status(400).json(error("请提供供应商代码或文件链接，不能同时提供"));
@@ -26,5 +27,5 @@ export default Router().post("/", validateFields({
       return res.status(400).json(error("链接返回的内容不是供应商代码，请使用 .ts 文件直链，不要填写中转站地址或 API Base URL"));
     }
   }
-  res.json(success(await u.mediaProvider.addMediaProvider(source)));
+  res.json(success(await u.mediaProvider.addMediaProvider(source, undefined, req.body.allowTerminal === true)));
 });

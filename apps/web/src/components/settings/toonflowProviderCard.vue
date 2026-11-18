@@ -8,19 +8,24 @@
         <div class="providerHeading">
           <el-text class="providerName" tag="strong">Toonflow</el-text>
           <div class="providerBadges">
-            <el-tag class="officialTag" size="small" effect="plain">官方</el-tag>
-            <el-tag size="small" type="info" effect="plain">内置</el-tag>
+            <el-tag size="small" type="success" effect="dark">官方</el-tag>
           </div>
         </div>
-        <div v-if="provider" class="providerMeta">
+        <div class="providerMeta">
           <span v-if="providerLoaded" class="loadedStatus">
             <icon-circle-check class="statusIcon" :size="14" aria-hidden="true" />
             <span>已加载</span>
           </span>
-          <el-text class="modelCount" size="small">{{ provider.models.length }} 个模型</el-text>
+          <el-text v-if="provider" class="modelCount" size="small">{{ provider.models.length }} 个模型</el-text>
+          <el-link class="websiteLink" href="https://api.toonflow.net/" target="_blank" rel="noopener noreferrer" type="primary">
+            跳转至网页查看<icon-external-link :size="12" aria-hidden="true" />
+          </el-link>
         </div>
       </div>
-      <el-button class="viewButton" plain :icon="IconEye" @click="catalogVisible = true">查看</el-button>
+      <div class="providerActions">
+        <el-button class="rechargeButton" plain :icon="IconCreditCard" @click="rechargeVisible = true">充值</el-button>
+        <el-button class="viewButton" plain :icon="IconEye" @click="catalogVisible = true">查看</el-button>
+      </div>
     </div>
   </el-card>
   <el-dialog
@@ -50,17 +55,20 @@
       :token="toonflowAccountToken"
       :scope="scope" />
   </el-dialog>
+  <component :is="rechargeDialog" v-model="rechargeVisible" :token="toonflowAccountToken" />
 </template>
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref } from "vue";
-import { IconCircleCheck, IconEye } from "@tabler/icons-vue";
+import { IconCircleCheck, IconCreditCard, IconExternalLink, IconEye } from "@tabler/icons-vue";
 import logoUrl from "@toonflow/assets/logo.svg";
 import { toonflowAccountToken } from "@/stores/settings";
 
 const props = defineProps<{ scope: "text" | "media"; provider?: { models: unknown[]; loadError?: string } }>();
 const modelCatalog = defineAsyncComponent(() => import("./panels/account/modelCatalog.vue"));
+const rechargeDialog = defineAsyncComponent(() => import("./panels/account/rechargeDialog.vue"));
 const catalogVisible = ref(false);
+const rechargeVisible = ref(false);
 const providerLoaded = computed(() => !!toonflowAccountToken.value && !!props.provider && !props.provider.loadError);
 </script>
 
@@ -116,12 +124,6 @@ const providerLoaded = computed(() => !!toonflowAccountToken.value && !!props.pr
           display: inline-flex;
           align-items: center;
           gap: 6px;
-
-          .officialTag {
-            --el-tag-bg-color: color-mix(in srgb, var(--el-color-primary) 22%, var(--el-bg-color-overlay));
-            --el-tag-border-color: transparent;
-            --el-tag-text-color: var(--el-text-color-primary);
-          }
         }
       }
 
@@ -148,25 +150,39 @@ const providerLoaded = computed(() => !!toonflowAccountToken.value && !!props.pr
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
+
+        .websiteLink {
+          font-size: 12px;
+
+          svg { margin-inline-start: 2px; }
+        }
       }
     }
 
-    .viewButton {
-      --el-button-text-color: var(--el-text-color-primary);
-      --el-button-bg-color: color-mix(in srgb, var(--el-color-primary) 18%, var(--el-bg-color-overlay));
-      --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 45%, var(--el-border-color-light));
-      --el-button-hover-text-color: var(--el-text-color-primary);
-      --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 26%, var(--el-bg-color-overlay));
-      --el-button-hover-border-color: var(--el-color-primary);
-      flex-shrink: 0;
+    .providerActions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       margin-inline-start: auto;
-      min-width: 88px;
-      height: 36px;
-      font-weight: 500;
 
-      &:focus-visible {
-        outline: 2px solid var(--el-color-primary);
-        outline-offset: 3px;
+      .rechargeButton,
+      .viewButton {
+        --el-button-text-color: var(--el-text-color-primary);
+        --el-button-bg-color: color-mix(in srgb, var(--el-color-primary) 18%, var(--el-bg-color-overlay));
+        --el-button-border-color: color-mix(in srgb, var(--el-color-primary) 45%, var(--el-border-color-light));
+        --el-button-hover-text-color: var(--el-text-color-primary);
+        --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 26%, var(--el-bg-color-overlay));
+        --el-button-hover-border-color: var(--el-color-primary);
+        flex-shrink: 0;
+        margin: 0;
+        min-width: 88px;
+        height: 36px;
+        font-weight: 500;
+
+        &:focus-visible {
+          outline: 2px solid var(--el-color-primary);
+          outline-offset: 3px;
+        }
       }
     }
   }

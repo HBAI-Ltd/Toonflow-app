@@ -190,10 +190,6 @@ export default function createWindowsUpdater(resourcesDirectory: string, lifecyc
     return state;
   }
 
-  async function ensureArchiveTool() {
-    await execFileAsync(updateHelperPath, ["--ensure-archive-tool", installDirectory, "--quiet"], { windowsHide: true, timeout: 12 * 60_000, maxBuffer: 65536 });
-  }
-
   async function readArchiveInfo(path: string): Promise<versionInfo> {
     const { stdout } = await execFileAsync(updateHelperPath, ["--read-archive-info", installDirectory, path, `${localInfo.name}/Resources/version.json`, "--quiet"], { windowsHide: true, timeout: 75000, maxBuffer: 65536 });
     const info = JSON.parse(stdout);
@@ -238,7 +234,6 @@ export default function createWindowsUpdater(resourcesDirectory: string, lifecyc
     const temporaryFile = (suffix: string) => { const path = join(extractionDirectory, `${randomUUID()}${suffix}`); temporaryFiles.push(path); return path; };
     try {
       ensureDirectory();
-      await ensureArchiveTool();
       const target = manifest;
       let archivePath = join(extractionDirectory, `${localInfo.hash}.tar`);
       let currentHash = localInfo.hash;
@@ -305,8 +300,6 @@ export default function createWindowsUpdater(resourcesDirectory: string, lifecyc
     let approval: unknown;
     let helperStarted = false;
     try {
-      // ACT: 解压工具缺失时在申请退出前下载，不占用助手的 120 秒交接窗口。
-      await ensureArchiveTool();
       approval = lifecycle.requestQuitApproval();
       if (!approval) throw new Error(t`更新重启已取消`);
       installError = "";

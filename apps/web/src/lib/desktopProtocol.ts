@@ -3,7 +3,7 @@ import { t, translate } from "@toonflow/i18n/vue";
 import { ElMessage } from "element-plus";
 import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
 import type { PluginInstallRequest, PluginInstallType } from "@toonflow/server/desktop";
-import { confirmPluginInstall, pluginTypeLabels } from "./pluginInstallConfirmation";
+import { confirmPluginInstall, pluginTypeLabels, withTerminalConfirm } from "./pluginInstallConfirmation";
 
 declare global {
   interface WindowEventMap {
@@ -39,10 +39,12 @@ export function registerDesktopProtocol() {
 
     const loading = ElMessage({ message: "正在安装插件…", duration: 0 });
     try {
-      const { data } = await axios.post("/api/desktop/plugins/install", { type: request.type, url: request.url }, {
+      const response = await withTerminalConfirm(allowTerminal => axios.post("/api/desktop/plugins/install", { type: request.type, url: request.url, allowTerminal }, {
         headers: { "x-toonflow-desktop": "1" },
         timeout: 60000,
-      });
+      }));
+      if (!response) return;
+      const { data } = response;
       if (data?.code !== 200) throw new Error(typeof data?.message === "string" && data.message.trim() ? data.message : "安装接口返回的响应无效，无法确认安装结果。请先检查插件列表，若未安装，请重启或更新 Toonflow 后重试。");
       if (typeof data.data?.name !== "string" || !data.data.name.trim()) throw new Error("安装接口未返回有效的插件名称，请先检查插件列表，确认插件是否已安装。");
       if (request.type === "provider") invalidateNodeModels("media");

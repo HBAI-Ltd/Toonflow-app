@@ -44,6 +44,7 @@ export async function browserModules(optionalInputPaths: string[] = []): Promise
   }
   for (const path of optionalInputPaths) collectInputNotice(path);
   const nodePackage = await readPackage("@toonflow/nodes-scaffold");
+  const pluginServerPackage = await readPackage("@toonflow/plugin-server", nodePackage.directory);
   const sharedPackage = await readPackage("@toonflow/node-shared");
   const toolPackage = await readPackage("@toonflow/tools-scaffold");
   const asrPackage = await readPackage("@toonflow/asr", nodePackage.directory);
@@ -52,7 +53,7 @@ export async function browserModules(optionalInputPaths: string[] = []): Promise
   const filePackage = await readPackage("@toonflow/file", toolPackage.directory);
   const nodeLibraries = await Promise.all(["@form-create/element-ui", "vue-draggable-plus", "x-sender", "zod"]
     .map(name => readPackage(name, name === "zod" ? projectDirectory : sharedPackage.directory)));
-  const browserPackages = [nodePackage, sharedPackage, toolPackage, asrPackage, ffmpegPackage, iconsPackage, filePackage, ...nodeLibraries];
+  const browserPackages = [nodePackage, sharedPackage, toolPackage, pluginServerPackage, asrPackage, ffmpegPackage, iconsPackage, filePackage, ...nodeLibraries];
   const nodeConfig = createNodeConfig({ name: "browserModules", displayName: "开发模块", author: "", github: "" },
     pathToFileURL(join(projectDirectory, "build.ts")).href, { syncToData: false });
   const nodeOutput = nodeConfig.build!.rolldownOptions!.output as { globals: Record<string, string> };
@@ -80,6 +81,9 @@ export async function browserModules(optionalInputPaths: string[] = []): Promise
     }
   }
   nodePackage.exports["."] = { types: "./index.ts" };
+  for (const [subpath, source] of Object.entries(pluginServerPackage.info.exports ?? {})) {
+    if (!source.endsWith(".md")) entry(nodeEntries, pluginServerPackage, subpath, source);
+  }
   entry(nodeEntries, asrPackage, ".", asrPackage.info.exports!["."]!);
   entry(nodeEntries, ffmpegPackage, "./browser", ffmpegPackage.info.exports!["./browser"]!);
   entry(nodeEntries, ffmpegPackage, "./types", ffmpegPackage.info.exports!["./types"]!);

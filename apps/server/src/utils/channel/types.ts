@@ -5,6 +5,9 @@ export type Captcha = { svg: string; captcha: string };
 export type UserInfo = { userName: string; phone: string };
 export type Login = { token: string; info: UserInfo };
 export type ProviderSources = { language: string; media: string };
+export type VendorKind = "language" | "media";
+export type Vendor = { id: string; name: string; description: string; updateTime: number; version?: string };
+export type VendorSource = Vendor & { source: string };
 export type LoginParams = { userName: string; password: string; captcha: string; originalCaptcha: string };
 export type SmsParams = { phone: string; verify: { ticket: string; randstr: string }; isForget?: 0 | 1 | null };
 export type RegisterParams = { userName: string; phone: string; password: string; verificationCode: string; invitationCode?: string };
@@ -318,6 +321,8 @@ export interface Channel {
   getWalletPaymentStatus(orderNumber: string, options: AuthenticatedOptions): Promise<WalletPaymentStatus>;
   getModelData(params: ModelDataParams, options: AuthenticatedOptions): Promise<ModelData[]>;
   getProviderSource(options: AuthenticatedOptions): Promise<ProviderSources>;
+  getVendors(kind: VendorKind, options?: RequestOptions): Promise<Vendor[]>;
+  getVendorSource(id: string, kind: VendorKind, options?: RequestOptions): Promise<VendorSource>;
   getExploreProjects(params: ExploreParams, options?: RequestOptions): Promise<ExplorePage>;
   getExploreProject(projectId: string, options?: RequestOptions): Promise<ExploreDetail>;
   getExploreProcess(projectId: string, options?: RequestOptions): Promise<ExploreProcess>;

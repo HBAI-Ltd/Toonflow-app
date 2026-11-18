@@ -40,7 +40,7 @@
   <a href="./readmeTr.md">Türkçe</a>
 </p>
 
-> 🌐 **Hỗ trợ 21 ngôn ngữ giao diện** · [Xem các ngôn ngữ được hỗ trợ](#languages)
+> 🌐 **Hỗ trợ 22 ngôn ngữ giao diện** · [Xem các ngôn ngữ được hỗ trợ](#languages)
 
 <div align="center">
 
@@ -210,13 +210,13 @@ Toonflow là nền tảng sáng tạo AI mã nguồn mở dành cho sản xuất
 | 🧩 **Chợ plugin** | Mở rộng các nút, công cụ và khả năng sáng tạo thông qua [chợ plugin](https://api.toonflow.net/console/plugIn). |
 | 🤖 **Agent mở** | Cho phép tùy chỉnh prompt và công cụ, đồng thời hỗ trợ A2A để tùy biến hành vi Agent và phối hợp với Agent bên ngoài. |
 | 🔧 **Tự do kết nối mô hình** | Cấu hình API bên thứ ba hoặc kết nối ComfyUI và LLM chạy cục bộ. |
-| 🌐 **Hỗ trợ đa ngôn ngữ** | Giao diện hỗ trợ 21 ngôn ngữ. |
+| 🌐 **Hỗ trợ đa ngôn ngữ** | Giao diện hỗ trợ 22 ngôn ngữ. |
 
 <a id="languages"></a>
 
 ### Hỗ trợ đa ngôn ngữ
 
-Các ngôn ngữ được hỗ trợ: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe.
+Các ngôn ngữ được hỗ trợ: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe, Português (Brasil).
 
 ---
 

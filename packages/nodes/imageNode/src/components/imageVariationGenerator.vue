@@ -1,13 +1,13 @@
 <template>
   <footer class="variationFooter">
-    <el-select :modelValue="selectedModel ? settings.model : ''" class="modelSelect" filterable :loading="modelsLoading" :disabled="busy" placeholder="选择图片模型" :aria-label="`${label}模型`" noDataText="请先在设置中添加图片模型" placement="top-start" @update:modelValue="settings.model = $event" @visible-change="visible => visible && refreshModels()">
+    <modelSelect :modelValue="selectedModel ? settings.model : ''" :empty="!models.length" class="modelSelect" filterable :loading="modelsLoading" :disabled="busy" placeholder="选择图片模型" :aria-label="`${label}模型`" noDataText="请先在设置中添加图片模型" placement="top-start" @update:modelValue="settings.model = $event" @visibleChange="(visible: boolean) => visible && refreshModels()">
       <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
       <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
         <el-option v-for="model in provider.models" :key="model.modelId" :label="model.label" :value="getNodeModelKey(model)">
           <modelLabel :label="model.label" :providerId="model.providerId" :modelId="model.modelId" />
         </el-option>
       </el-option-group>
-    </el-select>
+    </modelSelect>
     <el-popover trigger="click" placement="top" :width="220" :disabled="busy || !selectedModel" :showArrow="false">
       <template #reference><el-button class="sizeButton" text :disabled="busy || !selectedModel" :aria-label="`${label}输出设置`">{{ settings.ratio || '比例' }} · {{ settings.size || '分辨率' }}</el-button></template>
       <div class="variationSettings nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @wheel.stop @keydown.stop>
@@ -27,6 +27,7 @@ import { IconSparkles } from "@tabler/icons-vue";
 import { getNodeModelKey, useNodeAi, useNodeModelSelection, useNodeToolsContext, type NodeMediaModel, type NodeMediaValue } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import modelLabel from "@toonflow/node-shared/modelLabel";
+import modelSelect from "@toonflow/node-shared/modelSelect";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { useImageVariationNode } from "../useImageVariationNode";
 

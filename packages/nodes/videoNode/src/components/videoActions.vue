@@ -357,7 +357,7 @@ async function process() {
   const outputs = requiredTypes.map(type => {
     const id = crypto.randomUUID();
     const audio = type === "remote-audioNode";
-    return { id, type, audio, path: `assets/${id}/${audio ? "audio.m4a" : "video.mp4"}` };
+    return { id, type, audio, path: `assets/${id}/${audio ? "audio.mp3" : "video.mp4"}` };
   });
   const createdDirectories: string[] = [];
   let workspace: WorkspaceFiles | undefined;
@@ -396,7 +396,7 @@ async function process() {
       position: { x, y: y + index * 320 },
       data: {
         label: `${node.data.label || "视频"} · ${output.audio ? "音轨" : operation === "separate" ? "静音视频" : `${clipStart.toFixed(2)}–${clipEnd.toFixed(2)} 秒`}`,
-        outputs: { [output.audio ? "audio" : "video"]: { dataType: output.audio ? "AUDIO" : "VIDEO", value: { url: output.path, mimeType: output.audio ? "audio/mp4" : "video/mp4" } } },
+        outputs: { [output.audio ? "audio" : "video"]: { dataType: output.audio ? "AUDIO" : "VIDEO", value: { url: output.path, mimeType: output.audio ? "audio/mpeg" : "video/mp4" } } },
       },
     }));
     await batchHistory(async () => {

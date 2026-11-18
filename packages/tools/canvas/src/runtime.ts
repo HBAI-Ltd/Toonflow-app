@@ -22,7 +22,8 @@ export function isNodeToolAllowed(name: string, permissions: NodeToolPermissions
 const nodeId = z.string().min(1).max(256);
 const position = z.strictObject({ x: z.number().finite(), y: z.number().finite() });
 const canvasId = nodeId.optional();
-const cursor = z.string().min(1).max(4096).optional();
+const cursor = z.string().min(1).max(4096).optional()
+  .describe("首次查询请省略 cursor。续页时保持其他参数不变，将上一次返回的 nextCursor 原样传入 cursor。");
 const nodeIds = z.array(nodeId).min(1).max(20);
 
 export const canvasSchemas = {

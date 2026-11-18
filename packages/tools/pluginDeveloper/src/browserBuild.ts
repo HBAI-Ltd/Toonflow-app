@@ -95,7 +95,7 @@ export async function buildBrowser(root: string, sdkModules: string, manifest: P
   }
   const packageName = (source: string) => source.startsWith("@") ? source.split("/").slice(0, 2).join("/") : source.split("/")[0]!;
   const supportedPackages = new Set([
-    "@toonflow/nodes-scaffold", "@toonflow/tools-scaffold", "@toonflow/node-shared", "@toonflow/asr", "@toonflow/ffmpeg", "@toonflow/file",
+    "@toonflow/nodes-scaffold", "@toonflow/tools-scaffold", "@toonflow/node-shared", "@toonflow/asr", "@toonflow/ffmpeg", "@toonflow/file", "@toonflow/plugin-server",
     "@tabler/icons-vue", "@form-create/element-ui", "vue-draggable-plus", "x-sender", "eventsource-parser", "zod",
     ...Object.keys(registry.node).map(packageName), ...Object.keys(registry.tool).map(packageName),
   ]);

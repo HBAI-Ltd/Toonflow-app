@@ -98,7 +98,7 @@ export async function installMarketPlugin(plugin: MarketPlugin, signal?: AbortSi
   try {
     selectedSource(plugin);
     const installSignal = signal ? AbortSignal.any([signal, account.signal]) : account.signal;
-    const { name } = await u.pluginInstall.installRemotePlugin(plugin.type, item.link, plugin.fileName, false, plugin.version, installSignal);
+    const { name } = await u.pluginInstall.installRemotePlugin(plugin.type, item.link, plugin.fileName, false, plugin.version, installSignal, plugin.identifier);
     return { type: plugin.type, name };
   } finally { unsubscribe(); }
 }

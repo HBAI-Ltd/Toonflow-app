@@ -27,7 +27,8 @@
         <referenceItem v-if="refList.length" v-model="refList" @preview="setReferencePreview" @remove="removeReference" />
         <promptInput v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" placeholder="描述您想要的音频效果或输入待朗读文本" expandable />
         <div class="promptFooter">
-          <el-select
+          <modelSelect
+            :empty="!models.length"
             :modelValue="selectedModel ? data.model : ''"
             class="modelSelect"
             filterable
@@ -37,8 +38,8 @@
             aria-label="音频生成模型"
             noDataText="请先在设置中添加音频模型"
             placement="top-start"
-            @update:modelValue="data.model = $event"
-            @visible-change="visible => visible && loadModels().catch(error => showNodeError(error, '模型读取失败'))">
+            @update:modelValue="selectModel"
+            @visibleChange="(visible: boolean) => visible && loadModels().catch(error => showNodeError(error, '模型读取失败'))">
             <template v-if="!selectedModel" #prefix><icon-music-bolt :size="17" /></template>
             <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
             <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
@@ -46,11 +47,10 @@
                 <modelLabel :label="item.label" :providerId="item.providerId" :modelId="item.modelId" />
               </el-option>
             </el-option-group>
-          </el-select>
+          </modelSelect>
           <generationSettings v-model:language="data.language" v-model:sampleRate="data.sampleRate" v-model:format="data.format" v-model:other="data.other" :model="selectedModel" :disabled="busy || !selectedModel" />
           <div class="generationActions">
             <mediaPrice v-if="generationInput" :input="{ ...generationInput, mediaType: 'audio' }" :supported="selectedModel?.supportsPrice === true" />
-            <el-button v-if="pendingRecovery" class="sendButton" :icon="IconPlayerStop" :loading="cancelling" :disabled="deleting || uploading || transcribing || actions?.processing" title="放弃任务" aria-label="放弃任务" @click="generationState.cancel().catch(error => showNodeError(error, '停止生成失败'))" />
             <el-button
               class="sendButton"
               :icon="generating ? IconPlayerStop : IconArrowUp"
@@ -68,11 +68,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onScopeDispose, ref, shallowRef, watch } from "vue";
-import { ElButton, ElCard, ElLoading, ElOption, ElOptionGroup, ElSelect } from "element-plus";
+import { ElButton, ElCard, ElLoading, ElOption, ElOptionGroup } from "element-plus";
 import { IconArrowUp, IconGauge, IconMusicBolt, IconPlayerStop, IconScissors, IconTransfer, IconTextRecognition } from "@tabler/icons-vue";
-import { findNodeModel, getNodeModelIdentity, getNodeModelKey, getTargetValues, isTypeCompatible, nodeSkeleton, nodeTools, useNode, useNodeModelSelection, z, type NodeAudioRequest, type NodeHandle, type NodeInputValue, type NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
+import { findNodeModel, getNodeModelIdentity, getNodeModelKey, getTargetValues, isTypeCompatible, nodeSkeleton, nodeTools, useNode, useNodeModelMemory, useNodeModelSelection, z, type NodeAudioRequest, type NodeHandle, type NodeInputValue, type NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import modelLabel from "@toonflow/node-shared/modelLabel";
+import modelSelect from "@toonflow/node-shared/modelSelect";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { useNodeGeneration } from "@toonflow/node-shared/useNodeGeneration";
 import { useAudioTranscription } from "@toonflow/node-shared/useAudioTranscription";
@@ -130,6 +131,7 @@ const { generating, pendingRecovery, cancelling } = generationState;
 const busy = computed(() => generating.value || uploading.value || deleting.value || transcribing.value || !!actions.value?.processing);
 watch(busy, value => { if (!value && modelsRefreshPending) void refreshProviderModels(); });
 const selectedModel = useNodeModelSelection(models, computed({ get: () => data.value.model, set: value => { data.value.model = value; } }));
+const modelMemory = useNodeModelMemory("audio");
 useModelForm(data, selectedModel);
 const modelGroups = computed(() => groupNodeModels(models.value));
 const generationPrompt = computed(() => [data.value.prompt.trim(), ...refList.value.flatMap((item, index) =>
@@ -198,16 +200,21 @@ function loadModels() {
       return;
     }
     models.value = items.filter(item => item.type === "audio");
-    // ACT: 仅空配置选择默认模型，临时不可用的模型保持原选择，避免静默换供应商。
+    // ACT: 仅空配置选择默认模型（优先上次手动选择的），临时不可用的模型保持原选择，避免静默换供应商。
     if (!data.value.model) {
-      const first = modelGroups.value[0]?.models[0];
-      data.value.model = first ? getNodeModelKey(first) : "";
+      const choice = findNodeModel(models.value, modelMemory.get()) ?? modelGroups.value[0]?.models[0];
+      data.value.model = choice ? getNodeModelKey(choice) : "";
     }
   }).finally(() => {
     modelsLoading.value = false;
     modelsRequest = undefined;
   });
   return modelsRequest;
+}
+
+function selectModel(value: string) {
+  data.value.model = value;
+  if (value) modelMemory.set(value);
 }
 
 async function startGeneration() {

@@ -62,8 +62,7 @@ export async function processAudio(ffmpeg: BrowserFfmpegFactory, source: string,
     throw new Error("每个片段须满足 0 ≤ 开始时间 < 结束时间 ≤ 音频时长");
   }
 
-  const command = ffmpeg(source).output(options.outputPath).noVideo().audioCodec("aac").audioBitrate(192).format("ipod")
-    .outputOptions("-movflags", "+faststart");
+  const command = ffmpeg(source).output(options.outputPath).noVideo().audioCodec("libmp3lame").audioBitrate(192).format("mp3");
   if (inputOptions.length) command.inputOptions(inputOptions);
   if (options.action === "speed") {
     let tempo = options.speed;

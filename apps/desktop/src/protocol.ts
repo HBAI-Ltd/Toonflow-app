@@ -23,13 +23,13 @@ export function parseInstallUrl(value: string): PluginInstallRequest {
     const type = link.searchParams.get("type") as PluginInstallType;
     const patterns = {
       node: /^[a-z][a-zA-Z0-9]*\.umd\.js$/,
-      ext: /^ext-[a-z][a-zA-Z0-9]*\.umd\.js$/,
+      ext: /^(?:[a-z][a-zA-Z0-9]*\.ext\.js|ext-[a-z][a-zA-Z0-9]*\.umd\.js)$/,
       tool: /^[a-z][a-zA-Z0-9]*\.tool\.js$/,
       skill: /^[^\\/\u0000-\u001f\u007f]+\.(?:md|zip|tar|tar\.gz|tgz)$/i,
       provider: /^[a-z][a-zA-Z0-9]*\.ts$/,
       agent: /^[a-z][a-zA-Z0-9]*\.agent\.zip$/,
     };
-    const examples = { node: "imageNode.umd.js", ext: "ext-image.umd.js", tool: "askUser.tool.js", skill: "skill.zip、SKILL.md、skill.tar、skill.tar.gz 或 skill.tgz", provider: "myProvider.ts", agent: "exampleTeam.agent.zip" };
+    const examples = { node: "imageNode.umd.js", ext: "image.ext.js", tool: "askUser.tool.js", skill: "skill.zip、SKILL.md、skill.tar、skill.tar.gz 或 skill.tgz", provider: "myProvider.ts", agent: "exampleTeam.agent.zip" };
     if (!Object.hasOwn(patterns, type)) throw new Error(t`不支持此插件类型；type 仅支持 node（节点）、ext（文件扩展）、tool（工具）、skill（技能）、provider（供应商）或 agent（团队）`);
     const url = link.searchParams.get("url")!;
     if (url.length > 4096) throw new Error(t`插件下载地址不能超过 4096 个字符`);

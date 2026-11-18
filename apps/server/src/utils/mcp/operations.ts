@@ -143,7 +143,7 @@ export const appOperations: {
   },
 ];
 
-export type InstallDetails = { name: string; type: string; version?: string; source: string; overwrite?: boolean };
+export type InstallDetails = { name: string; type: string; version?: string; source: string; overwrite?: boolean; terminal?: boolean };
 
 export async function runAppOperation(name: string, parameters: Record<string, unknown>, signal: AbortSignal, confirmInstall: (details: InstallDetails) => Promise<AbortSignal>): Promise<unknown> {
   const operation = appOperations.find(item => item.name === name);
@@ -159,13 +159,13 @@ export async function runAppOperation(name: string, parameters: Record<string, u
     const displayName = provider?.fileName ?? fileName ?? decodeURIComponent(url?.pathname.split("/").at(-1) ?? "");
     if (!displayName) throw new Error("请选择文件或填写远端地址");
     const force = args.force === true;
-    const installSignal = await confirmInstall({ name: displayName, type, version: provider?.version, source: url ? url.origin + url.pathname : "MCP", overwrite: force });
+    const installSignal = await confirmInstall({ name: displayName, type, version: provider?.version, source: url ? url.origin + url.pathname : "MCP", overwrite: force, terminal: provider?.terminal });
     installSignal.throwIfAborted();
     if (url) return installRemotePlugin(type, url.href, fileName, force, undefined, installSignal);
     if (type === "node") return installNode(displayName, source, force, undefined, installSignal);
     if (type === "tool") return installTool(displayName, source, force, undefined, installSignal);
     if (type === "skill") return installSkill(displayName, Buffer.from(args.base64 as string, "base64"), force, undefined, installSignal);
-    return addMediaProvider(source, installSignal);
+    return addMediaProvider(source, installSignal, provider?.terminal);
   }
   const origin = getMcpRuntime().appOrigin;
   if (!origin) throw new Error("Toonflow 服务尚未就绪");

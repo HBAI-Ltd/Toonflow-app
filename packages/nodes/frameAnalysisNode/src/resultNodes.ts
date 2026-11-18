@@ -44,7 +44,7 @@ export function useResultNodes() {
     const dimensions = [
       { key: "frames", type: "remote-imageNode", output: "image", dataType: "IMAGE", mimeType: "image/jpeg", label: "分镜", prefix: "S", width: previewWidth, height: 300 },
       { key: "clips", type: "remote-videoNode", output: "video", dataType: "VIDEO", mimeType: "video/mp4", label: "动态参考", prefix: "M", width: previewWidth, height: 300 },
-      { key: "audio", type: "remote-audioNode", output: "audio", dataType: "AUDIO", mimeType: "audio/mp4", label: "原音轨", prefix: "A", width: 360, height: 220 },
+      { key: "audio", type: "remote-audioNode", output: "audio", dataType: "AUDIO", mimeType: "audio/mpeg", label: "原音轨", prefix: "A", width: 360, height: 220 },
     ] as const;
 
     for (const dimension of dimensions) {

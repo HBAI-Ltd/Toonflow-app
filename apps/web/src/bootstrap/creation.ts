@@ -3,6 +3,8 @@ import { createPinia } from "pinia";
 import { createPersistedState } from "pinia-plugin-persistedstate";
 import type { UserSession } from "@toonflow/multi-tenant-user-web/types";
 import { actualPlatform } from "@/lib/platform";
+import { pluginServerKey } from "@toonflow/plugin-server/vue";
+import { createPluginServerHost } from "@/lib/pluginServer";
 
 export async function createCreationApp(session: UserSession): Promise<App<Element>> {
   // ACT: 创作端的模块会注册设备轮询和 MCP 等能力；确认身份后才加载，登录页不接触全局设置。
@@ -15,6 +17,9 @@ export async function createCreationApp(session: UserSession): Promise<App<Eleme
   ]);
   await loadSettings();
   const app = createApp(appRoot);
+  const pluginServer = createPluginServerHost();
+  app.provide(pluginServerKey, pluginServer.createServer);
+  app.onUnmount(pluginServer.dispose);
   app.onUnmount(registerLanguage());
   app.use(createPinia().use(createPersistedState({ storage: settingsStorage })));
   app.use(router);

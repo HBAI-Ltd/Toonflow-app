@@ -193,7 +193,7 @@ import {
 } from "@tabler/icons-vue";
 import { ElCard, ElButton, ElDivider, ElDropdown, ElDropdownMenu, ElDropdownItem, ElMessage } from "element-plus";
 import type { DropdownInstance } from "element-plus";
-import { validateConnection } from "./connection";
+import { getAssetOutputs, validateConnection } from "./connection";
 import { useNodeEvent } from "./nodeEvent";
 import type { NodeConnectionFeedback, NodeData, NodeHandle } from "./connection";
 import type { NodeOutput } from "./values";
@@ -506,13 +506,7 @@ const saveNodeToAssets = inject<((label: string, outputs: { label: string; outpu
   "saveNodeToAssets",
   undefined
 );
-const assetOutputs = computed(() =>
-  props.handles.flatMap((handle) => {
-    const output = props.outputs[handle.id];
-    if (handle.type !== "source" || !output || (output.dataType === "STRING" && !output.value.trim())) return [];
-    return [{ label: handle.label ?? handle.id, output }];
-  })
-);
+const assetOutputs = computed(() => getAssetOutputs(props));
 
 async function handleCommand(command: string) {
   if (props.readOnly) return;

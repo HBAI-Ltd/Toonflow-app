@@ -40,7 +40,7 @@
   <a href="./readmeTr.md">Türkçe</a>
 </p>
 
-> 🌐 **Sinusuportahan ang 21 wika ng interface** · [Tingnan ang mga sinusuportahang wika](#languages)
+> 🌐 **Sinusuportahan ang 22 wika ng interface** · [Tingnan ang mga sinusuportahang wika](#languages)
 
 <div align="center">
 
@@ -210,13 +210,13 @@ Ang Toonflow ay isang open-source na AI platform para sa maiikling drama, animat
 | 🧩 **Pamilihan ng mga plugin** | Palawakin ang mga node, tool, at kakayahan sa paglikha gamit ang [Pamilihan ng mga Plugin](https://api.toonflow.net/console/plugIn). |
 | 🤖 **Bukas na Agent** | Bukas ang mga prompt, tool, at A2A upang maiangkop ang kilos ng Agent at makipagtulungan sa mga panlabas na Agent. |
 | 🔧 **Malayang pagkonekta ng mga modelo** | Mag-configure ng mga third-party API o kumonekta sa lokal na ComfyUI at mga LLM. |
-| 🌐 **Suporta sa maraming wika** | Sinusuportahan ang 21 wika ng interface. |
+| 🌐 **Suporta sa maraming wika** | Sinusuportahan ang 22 wika ng interface. |
 
 <a id="languages"></a>
 
 ### Suporta sa maraming wika
 
-Mga sinusuportahang wika: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe.
+Mga sinusuportahang wika: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe, Português (Brasil).
 
 ---
 

@@ -80,6 +80,7 @@ export const generalSettings = computed(() => {
   return {
     nodeMenu: normalizeNodeMenu(general.nodeMenu),
     agentNotificationsEnabled: general.agentNotificationsEnabled !== false,
+    assetFoldersExpanded: general.assetFoldersExpanded === true,
     canvasCompositingEnabled: general.canvasCompositingEnabled === true,
     canvasEdgeAnimationEnabled: general.canvasEdgeAnimationEnabled !== false,
     canvasEdgeColorMode: general.canvasEdgeColorMode === "none" || general.canvasEdgeColorMode === "custom" ? general.canvasEdgeColorMode : "theme",

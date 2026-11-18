@@ -18,7 +18,6 @@ const app = await createApp({
   extRoot: resolve(appDirectory, "build/ext"),
   // ACT: 暂不安装内置团队，随团队打包一同恢复。
   // agentsRoot: resolve(appDirectory, "build/agents"),
-  providersRoot: resolve(appDirectory, fromSource ? "packages/providers/src" : "build/providers"),
   skillsRoot: resolve(appDirectory, fromSource ? "packages/skills" : "build/skills"),
 });
 const { initializeMcpRuntime } = await import("./utils/mcp/runtime");

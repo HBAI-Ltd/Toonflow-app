@@ -136,5 +136,5 @@ const buildEnv = { ...process.env };
 if (isWindows && mode !== "dev") buildEnv.PSModulePath = resolve(process.env.WINDIR!, "System32/WindowsPowerShell/v1.0/Modules");
 await $`${process.execPath} ${cli} ${mode === "dev" ? "dev" : "build"} ${mode === "dev" ? [] : ["--env=stable"]}`.cwd(projectDir).env(buildEnv);
 if (mode === "package") {
-  await $`${process.execPath} ${resolve(import.meta.dir, isMac ? "packageMac.ts" : isWindows ? "packageWindows.ts" : "packageLinux.ts")}`.cwd(projectDir).env(buildEnv);
+  await $`${process.execPath} ${resolve(import.meta.dir, isMac ? "packageMacPkg.ts" : isWindows ? "packageWindows.ts" : "packageLinux.ts")}`.cwd(projectDir).env(buildEnv);
 }

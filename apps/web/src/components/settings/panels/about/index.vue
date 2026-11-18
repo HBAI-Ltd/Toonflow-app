@@ -52,8 +52,9 @@
       <div v-if="!isMobile && snapshot?.installFailure" class="installFailureNotice" role="alert">
         <strong>上次更新未成功</strong>
         <p>{{ snapshot.installFailure.message }}</p>
-        <p>请前往 GitHub 最新发布页，选择适合当前系统的完整安装包，关闭客户端后重新安装。</p>
+        <p>请前往 GitHub 最新发布页或官网 toonflow.net，选择适合当前系统的完整安装包，关闭客户端后重新安装。</p>
         <el-button tag="a" type="primary" size="small" :href="snapshot.installFailure.downloadUrl" target="_blank" rel="noopener noreferrer">前往下载页</el-button>
+        <el-button tag="a" size="small" href="https://toonflow.net" target="_blank" rel="noopener noreferrer">前往官网</el-button>
       </div>
     </el-card>
 
@@ -113,7 +114,7 @@
             <el-button class="sponsorContact" size="small" type="primary" link>成为赞助商</el-button>
           </template>
           <q-r-code
-            value="https://work.weixin.qq.com/u/vc0f54596c5837d05a?v=5.0.8.70675"
+            value="https://work.weixin.qq.com/u/vc66e4c7f8432af0d8?v=5.0.13.84802&bb=c03c3ad130"
             :size="168"
             type="svg"
             color="#000000"
@@ -190,6 +191,7 @@
               <strong>v{{ snapshot.latestVersion }}</strong>
             </div>
           </div>
+          <p v-if="isPatchUpdate" class="patchNotice">这是同版本的小补丁更新，版本号保持不变。</p>
           <div v-if="snapshot.channel || snapshot.latestHash" class="releaseMeta">
             <el-tag v-if="snapshot.channel" type="info" size="small" round>{{ snapshot.channel }}</el-tag>
             <code v-if="snapshot.latestHash" :title="snapshot.latestHash">{{ snapshot.latestHash }}</code>
@@ -255,10 +257,11 @@ import {
 const messageMarkdown = defineAsyncComponent(() => import("@/components/messageMarkdown.vue"));
 const privacy = defineAsyncComponent(() => import("./privacy.vue"));
 const repositoryUrl = "https://github.com/HBAI-Ltd/Toonflow-app";
-const communityUrl = "https://work.weixin.qq.com/u/vc36adcc89845edcbe?v=5.0.3.63936&bb=85b8d228e8";
+const communityUrl = "https://work.weixin.qq.com/u/vc66e4c7f8432af0d8?v=5.0.13.84802&bb=c03c3ad130";
 const clientBuild = ref<{ version: string; channel: string }>();
 const currentVersion = computed(() => actualPlatform.isDesktop && actualPlatform.isRemoteConnection
   ? clientBuild.value?.version || "" : snapshot.value?.version || import.meta.env.appVersion);
+const isPatchUpdate = computed(() => !!snapshot.value?.updateAvailable && snapshot.value.latestVersion === snapshot.value.version);
 const sourceSaving = ref(false);
 const autoUpdateSaving = ref(false);
 const checking = computed(() => desktopUpdateChecking.value);
@@ -279,6 +282,7 @@ const resultTitle = computed(() => {
   if (action.value === "apply") return translate("正在重启并更新");
   if (working.value) return translate("正在准备更新");
   if (snapshot.value?.updateReady) return translate("更新已准备完成");
+  if (isPatchUpdate.value) return translate("发现小补丁更新");
   return snapshot.value?.updateAvailable ? translate("发现新版本") : translate("暂无更新");
 });
 const resultMessage = computed(() => {
@@ -770,6 +774,13 @@ async function runUpdate(nextAction: "read" | "check" | "download" | "apply") {
         flex-shrink: 0;
         color: var(--el-text-color-placeholder);
       }
+    }
+
+    .patchNotice {
+      margin: 12px 0 0;
+      color: var(--el-text-color-secondary);
+      font-size: 13px;
+      line-height: 1.6;
     }
 
     .releaseMeta {

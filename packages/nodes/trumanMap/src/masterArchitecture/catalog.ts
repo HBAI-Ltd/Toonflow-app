@@ -1,0 +1,912 @@
+import { addBuildingDetails } from "./buildingDetailing";
+import { trimGroundSlabs } from "./groundTrim";
+import type { ModelDefinition } from "../modelGeometry";
+import type { SceneAsset } from "../sceneDocument";
+import { finishObjectModel } from "../objectModelParts";
+import { architectureScales } from "./measurements";
+import { agricultureDesigns } from "./agriculture";
+import { productionDesigns } from "./production";
+import { waterworksDesigns } from "./waterworks";
+import { transportDesigns } from "./transport";
+import { maritimeDesigns } from "./maritime";
+import { publicDesigns } from "./publicSpaces";
+import { defenseDesigns } from "./defense";
+import { engineeringDesigns } from "./engineering";
+
+import { thermalDesigns } from "./thermal";
+import { ventilationDesigns } from "./ventilation";
+import { energyDesigns } from "./energy";
+import { communicationsDesigns } from "./communications";
+import { researchDesigns } from "./research";
+import { metallurgyDesigns } from "./metallurgy";
+import { chemicalDesigns } from "./chemical";
+import { formingDesigns } from "./forming";
+import { logisticsDesigns } from "./logistics";
+import { civicEngineeringDesigns } from "./civicEngineering";
+import { performanceDesigns } from "./performance";
+import { navigationDesigns } from "./navigation";
+
+import { foodProcessingDesigns } from "./foodProcessing";
+import { grainProcessingDesigns } from "./grainProcessing";
+import { paperPackagingDesigns } from "./paperPackaging";
+import { buildingMaterialDesigns } from "./buildingMaterials";
+import { processMechanismDesigns } from "./processMechanisms";
+import { oilGasDesigns } from "./oilGas";
+import { geotechnicalDesigns } from "./geotechnical";
+import { buildingServicesDesigns } from "./buildingServices";
+import { leisureDesigns } from "./leisure";
+import { historicWorkshopDesigns } from "./historicWorkshops";
+import { trafficNodeDesigns } from "./trafficNodes";
+import { undergroundDesigns } from "./underground";
+
+import { electricPowerDesigns } from "./electricPower";
+import { radiationFacilityDesigns } from "./radiationFacilities";
+import { biologicalDesigns } from "./biological";
+import { recyclingDesigns } from "./recycling";
+import { industrialInspectionDesigns } from "./industrialInspection";
+import { fluidMachineryDesigns } from "./fluidMachinery";
+import { constructionPlantDesigns } from "./constructionPlants";
+import { structuralSystemDesigns } from "./structuralSystems";
+import { joiningDesigns } from "./joining";
+import { surfaceEngineeringDesigns } from "./surfaceEngineering";
+
+import { adaptiveHabitatDesigns } from "./adaptiveHabitats";
+import { sacredSpaceDesigns } from "./sacredSpaces";
+import { arcaneStructureDesigns } from "./arcaneStructures";
+import { orbitalSystemDesigns } from "./orbitalSystems";
+import { sportsGroundDesigns } from "./sportsGrounds";
+import { civicInteriorDesigns } from "./civicInteriors";
+import { heritageConstructionDesigns } from "./heritageConstruction";
+import { culturalMachineDesigns } from "./culturalMachines";
+import { fantasticalHabitatDesigns } from "./fantasticalHabitats";
+import { performingSpaceDesigns } from "./performingSpaces";
+import { aquaticFarmingDesigns } from "./aquaticFarming";
+
+import { textileMachineryDesigns } from "./textileMachinery";
+import { glassManufacturingDesigns } from "./glassManufacturing";
+import { crossingInterfaceDesigns } from "./crossingInterfaces";
+import { movableBridgeDesigns } from "./movableBridges";
+import { mechanicalTransmissionDesigns } from "./mechanicalTransmissions";
+import { packagingMechanismDesigns } from "./packagingMechanisms";
+import { machineToolDesigns } from "./machineTools";
+import { outdoorExerciseDesigns } from "./outdoorExercise";
+import { pipelineValveDesigns } from "./pipelineValves";
+import { actuationSystemDesigns } from "./actuationSystems";
+import { semiconductorFacilityDesigns } from "./semiconductorFacilities";
+import { particleFacilityDesigns } from "./particleFacilities";
+import { turbineMachineryDesigns } from "./turbineMachinery";
+import { liftingInterfaceDesigns } from "./liftingInterfaces";
+
+import { easternCulturalSpaceDesigns } from "./easternCulturalSpaces";
+import { topologicalSpaceDesigns } from "./topologicalSpaces";
+import { clockworkPublicDesigns } from "./clockworkPublic";
+import { fusionResearchDesigns } from "./fusionResearch";
+import { vernacularStructureDesigns } from "./vernacularStructures";
+import { additionalStructuralDesigns } from "./additionalStructures";
+import { europeanPublicSpaceDesigns } from "./europeanPublicSpaces";
+import { radioMechanismDesigns } from "./radioMechanisms";
+
+import { easternStructuralDesigns } from "./easternStructures";
+import { survivalResourceDesigns } from "./survivalResources";
+import { japaneseFixedMechanismDesigns } from "./japaneseFixedMechanisms";
+import { cyberInfrastructureDesigns } from "./cyberInfrastructure";
+import { frontierPhysicsDesigns } from "./frontierPhysics";
+import { advancedProcessDesigns } from "./advancedProcesses";
+import { energyConversionDesigns } from "./energyConversions";
+
+import { coastalMechanismDesigns } from "./coastalMechanisms";
+import { materialExperimentDesigns } from "./materialExperiments";
+import { foundationalExperimentDesigns } from "./foundationalExperiments";
+
+import { husbandryFacilityDesigns } from "./husbandryFacilities";
+import { ritualStoneworkDesigns } from "./ritualStonework";
+import { publicPhysicsExhibitDesigns } from "./publicPhysicsExhibits";
+
+import { fluidicComponentDesigns } from "./fluidicComponents";
+import { pipelineMeterDesigns } from "./pipelineMeters";
+
+import { groundEngineeringDesigns } from "./groundEngineering";
+
+import { supportEngineeringDesigns } from "./supportEngineering";
+
+import { constructionInterfaceDesigns } from "./constructionInterfaces";
+
+import { classicalSwitchgearDesigns } from "./classicalSwitchgear";
+
+import { trackInterfaceDesigns } from "./trackInterfaces";
+
+import { propulsionComponentDesigns } from "./propulsionComponents";
+
+import { shaftInterfaceDesigns } from "./shaftInterfaces";
+
+import { electromagneticMachineDesigns } from "./electromagneticMachines";
+
+import { opticalInterfaceDesigns } from "./opticalInterfaces";
+
+import { japaneseRoofFittingDesigns } from "./japaneseRoofFittings";
+import { japaneseJoineryDesigns } from "./japaneseJoinery";
+import { japaneseCladdingDesigns } from "./japaneseCladding";
+
+import { japaneseInteriorDesigns } from "./japaneseInteriors";
+
+import { japaneseCastleDetailDesigns } from "./japaneseCastleDetails";
+import { japaneseGableSupportDesigns } from "./japaneseGableSupports";
+
+import { japaneseRoofTileDesigns } from "./japaneseRoofTiles";
+import { japaneseRidgeOrnamentDesigns } from "./japaneseRidgeOrnaments";
+import { japaneseTempleBellDesigns } from "./japaneseTempleBell";
+
+import { chineseTimberNodeDesigns } from "./chineseTimberNodes";
+import { chineseEntranceFittingDesigns } from "./chineseEntranceFittings";
+import { chinesePanelAssemblyDesigns } from "./chinesePanelAssemblies";
+
+import { chineseTimberBridgeDesigns } from "./chineseTimberBridges";
+import { chineseMonumentDesigns } from "./chineseMonuments";
+import { chineseGardenFittingDesigns } from "./chineseGardenFittings";
+
+import { chineseBuildingFittingDesigns } from "./chineseBuildingFittings";
+import { japaneseStreetFittingDesigns } from "./japaneseStreetFittings";
+
+import { coherentOpticDesigns } from "./coherentOptics";
+
+import { classicalStoneDetailDesigns } from "./classicalStoneDetails";
+import { leadedGlazingDesigns } from "./leadedGlazing";
+
+import { ancientPublicBuildingDesigns } from "./ancientPublicBuildings";
+import { vernacularHallSpaceDesigns } from "./vernacularHallSpaces";
+import { traditionalThermalSpaceDesigns } from "./traditionalThermalSpaces";
+
+import { japaneseMemorialStructureDesigns } from "./japaneseMemorialStructures";
+
+import { northernTimberSpaceDesigns } from "./northernTimberSpaces";
+import { peristyleRotundaDesigns } from "./peristyleRotunda";
+
+import { fourIwanCourtDesigns } from "./fourIwanCourt";
+import { crossDomedHallDesigns } from "./crossDomedHall";
+
+import { earthworkCourtyardResidenceDesigns } from "./earthworkCourtyardResidence";
+import { streetResidenceSpaceDesigns } from "./streetResidenceSpace";
+import { fantasySpaceBatchOneDesigns } from "./fantasySpaceBatchOne";
+import { landscapeSpaceBatchOneDesigns } from "./landscapeSpaceBatchOne";
+import { vernacularWorldBatchOneDesigns } from "./vernacularWorldBatchOne";
+import { historicSpaceBatchOneDesigns } from "./historicSpaceBatchOne";
+import { fantasySpaceBatchTwoDesigns } from "./fantasySpaceBatchTwo";
+import { futureSpaceBatchOneDesigns } from "./futureSpaceBatchOne";
+import { publicSpaceBatchOneDesigns } from "./publicSpaceBatchOne";
+import { landscapeSpaceBatchTwoDesigns } from "./landscapeSpaceBatchTwo";
+import { vernacularWorldBatchTwoDesigns } from "./vernacularWorldBatchTwo";
+import { asianResidenceSpaceBatchOneDesigns } from "./asianResidenceSpaceBatchOne";
+import { fantasySpaceBatchThreeDesigns } from "./fantasySpaceBatchThree";
+import { landscapeSpaceBatchThreeDesigns } from "./landscapeSpaceBatchThree";
+import { asianResidenceSpaceBatchTwoDesigns } from "./asianResidenceSpaceBatchTwo";
+import { fantasySpaceBatchFourDesigns } from "./fantasySpaceBatchFour";
+import { futureSpaceBatchTwoDesigns } from "./futureSpaceBatchTwo";
+import { historicSpaceBatchTwoDesigns } from "./historicSpaceBatchTwo";
+import { vernacularWorldBatchThreeDesigns } from "./vernacularWorldBatchThree";
+import { landscapeSpaceBatchFourDesigns } from "./landscapeSpaceBatchFour";
+import { fantasySpaceBatchFiveDesigns } from "./fantasySpaceBatchFive";
+import { publicSpaceBatchTwoDesigns } from "./publicSpaceBatchTwo";
+import { ceremonialResidenceSpaceDesigns } from "./ceremonialResidenceSpace";
+import { landscapeSpaceBatchFiveDesigns } from "./landscapeSpaceBatchFive";
+import { fantasySpaceBatchSixDesigns } from "./fantasySpaceBatchSix";
+import { publicSpaceBatchThreeDesigns } from "./publicSpaceBatchThree";
+import { historicSpaceBatchThreeDesigns } from "./historicSpaceBatchThree";
+import { landscapeSpaceBatchSixDesigns } from "./landscapeSpaceBatchSix";
+import { futureSpaceBatchThreeDesigns } from "./futureSpaceBatchThree";
+import { vernacularWorldBatchFourDesigns } from "./vernacularWorldBatchFour";
+import { fantasySpaceBatchSevenDesigns } from "./fantasySpaceBatchSeven";
+import { publicSpaceBatchFourDesigns } from "./publicSpaceBatchFour";
+import { landscapeSpaceBatchSevenDesigns } from "./landscapeSpaceBatchSeven";
+import { futureSpaceBatchFourDesigns } from "./futureSpaceBatchFour";
+import { historicSpaceBatchFourDesigns } from "./historicSpaceBatchFour";
+import { vernacularWorldBatchFiveDesigns } from "./vernacularWorldBatchFive";
+import { publicSpaceBatchFiveDesigns } from "./publicSpaceBatchFive";
+import { landscapeSpaceBatchEightDesigns } from "./landscapeSpaceBatchEight";
+import { publicSpaceBatchSixDesigns } from "./publicSpaceBatchSix";
+import { vernacularWorldBatchSixDesigns } from "./vernacularWorldBatchSix";
+import { futureSpaceBatchFiveDesigns } from "./futureSpaceBatchFive";
+import { historicSpaceBatchFiveDesigns } from "./historicSpaceBatchFive";
+import { landscapeSpaceBatchNineDesigns } from "./landscapeSpaceBatchNine";
+import { modernCommercialSpaceBatchOneDesigns } from "./modernCommercialSpaceBatchOne";
+import { vernacularWorldBatchSevenDesigns } from "./vernacularWorldBatchSeven";
+import { publicSpaceBatchSevenDesigns } from "./publicSpaceBatchSeven";
+import { futureSpaceBatchSixDesigns } from "./futureSpaceBatchSix";
+import { landscapeSpaceBatchTenDesigns } from "./landscapeSpaceBatchTen";
+import { historicSpaceBatchSixDesigns } from "./historicSpaceBatchSix";
+import { vernacularWorldBatchEightDesigns } from "./vernacularWorldBatchEight";
+import { landscapeSpaceBatchElevenDesigns } from "./landscapeSpaceBatchEleven";
+import { futureSpaceBatchSevenDesigns } from "./futureSpaceBatchSeven";
+import { publicSpaceBatchEightDesigns } from "./publicSpaceBatchEight";
+import { publicSpaceBatchNineDesigns } from "./publicSpaceBatchNine";
+import { landscapeSpaceBatchTwelveDesigns } from "./landscapeSpaceBatchTwelve";
+import { historicSpaceBatchSevenDesigns } from "./historicSpaceBatchSeven";
+import { futureSpaceBatchEightDesigns } from "./futureSpaceBatchEight";
+import { vernacularWorldBatchNineDesigns } from "./vernacularWorldBatchNine";
+import { publicSpaceBatchTenDesigns } from "./publicSpaceBatchTen";
+import { futureSpaceBatchNineDesigns } from "./futureSpaceBatchNine";
+import { historicSpaceBatchEightDesigns } from "./historicSpaceBatchEight";
+import { landscapeSpaceBatchThirteenDesigns } from "./landscapeSpaceBatchThirteen";
+import { publicSpaceBatchElevenDesigns } from "./publicSpaceBatchEleven";
+import { vernacularWorldBatchTenDesigns } from "./vernacularWorldBatchTen";
+import { futureSpaceBatchTenDesigns } from "./futureSpaceBatchTen";
+import { publicSpaceBatchTwelveDesigns } from "./publicSpaceBatchTwelve";
+import { landscapeSpaceBatchFourteenDesigns } from "./landscapeSpaceBatchFourteen";
+import { modernResidenceSpaceBatchOneDesigns } from "./modernResidenceSpaceBatchOne";
+import { fantasySpaceBatchEightDesigns } from "./fantasySpaceBatchEight";
+import { futureSpaceBatchElevenDesigns } from "./futureSpaceBatchEleven";
+import { publicSpaceBatchThirteenDesigns } from "./publicSpaceBatchThirteen";
+import { historicSpaceBatchNineDesigns } from "./historicSpaceBatchNine";
+import { vernacularWorldBatchElevenDesigns } from "./vernacularWorldBatchEleven";
+import { modernResidenceSpaceBatchTwoDesigns } from "./modernResidenceSpaceBatchTwo";
+import { landscapeSpaceBatchFifteenDesigns } from "./landscapeSpaceBatchFifteen";
+import { publicSpaceBatchFourteenDesigns } from "./publicSpaceBatchFourteen";
+import { historicSpaceBatchTenDesigns } from "./historicSpaceBatchTen";
+import { futureSpaceBatchTwelveDesigns } from "./futureSpaceBatchTwelve";
+import { landscapeSpaceBatchSixteenDesigns } from "./landscapeSpaceBatchSixteen";
+import { publicSpaceBatchFifteenDesigns } from "./publicSpaceBatchFifteen";
+import { modernResidenceSpaceBatchThreeDesigns } from "./modernResidenceSpaceBatchThree";
+import { vernacularWorldBatchTwelveDesigns } from "./vernacularWorldBatchTwelve";
+import { fantasySpaceBatchNineDesigns } from "./fantasySpaceBatchNine";
+import { futureSpaceBatchThirteenDesigns } from "./futureSpaceBatchThirteen";
+import { fantasySpaceBatchTenDesigns } from "./fantasySpaceBatchTen";
+import { culturalExhibitionSpaceBatchOneDesigns } from "./culturalExhibitionSpaceBatchOne";
+import { historicSpaceBatchElevenDesigns } from "./historicSpaceBatchEleven";
+import { publicSpaceBatchSixteenDesigns } from "./publicSpaceBatchSixteen";
+import { culturalExhibitionSpaceBatchTwoDesigns } from "./culturalExhibitionSpaceBatchTwo";
+import { futureSpaceBatchFourteenDesigns } from "./futureSpaceBatchFourteen";
+import { landscapeSpaceBatchSeventeenDesigns } from "./landscapeSpaceBatchSeventeen";
+import { everydayResidenceSpaceBatchOneDesigns } from "./everydayResidenceSpaceBatchOne";
+import { publicSpaceBatchSeventeenDesigns } from "./publicSpaceBatchSeventeen";
+import { vernacularWorldBatchThirteenDesigns } from "./vernacularWorldBatchThirteen";
+import { everydayResidenceSpaceBatchTwoDesigns } from "./everydayResidenceSpaceBatchTwo";
+import { everydayResidenceSpaceBatchThreeDesigns } from "./everydayResidenceSpaceBatchThree";
+import { everydayCommercialSpaceBatchOneDesigns } from "./everydayCommercialSpaceBatchOne";
+import { periodPublicSpaceBatchOneDesigns } from "./periodPublicSpaceBatchOne";
+import { everydayOutdoorSpaceBatchOneDesigns } from "./everydayOutdoorSpaceBatchOne";
+import { everydayWorkplaceSpaceBatchOneDesigns } from "./everydayWorkplaceSpaceBatchOne";
+import { everydayCommercialSpaceBatchTwoDesigns } from "./everydayCommercialSpaceBatchTwo";
+import { everydayResidenceSpaceBatchFourDesigns } from "./everydayResidenceSpaceBatchFour";
+import { everydayCommercialSpaceBatchThreeDesigns } from "./everydayCommercialSpaceBatchThree";
+import { everydayResidenceSpaceBatchFiveDesigns } from "./everydayResidenceSpaceBatchFive";
+import { publicSpaceBatchEighteenDesigns } from "./publicSpaceBatchEighteen";
+import { periodResidenceSpaceBatchOneDesigns } from "./periodResidenceSpaceBatchOne";
+import { everydayOutdoorSpaceBatchTwoDesigns } from "./everydayOutdoorSpaceBatchTwo";
+import { periodPublicSpaceBatchTwoDesigns } from "./periodPublicSpaceBatchTwo";
+import { everydayCommercialSpaceBatchFourDesigns } from "./everydayCommercialSpaceBatchFour";
+import { everydayResidenceSpaceBatchSixDesigns } from "./everydayResidenceSpaceBatchSix";
+import { everydayCommercialSpaceBatchFiveDesigns } from "./everydayCommercialSpaceBatchFive";
+import { everydayResidenceSpaceBatchSevenDesigns } from "./everydayResidenceSpaceBatchSeven";
+import { periodResidenceSpaceBatchTwoDesigns } from "./periodResidenceSpaceBatchTwo";
+import { periodPublicSpaceBatchThreeDesigns } from "./periodPublicSpaceBatchThree";
+import { everydayWorkplaceSpaceBatchTwoDesigns } from "./everydayWorkplaceSpaceBatchTwo";
+import { everydayCommercialSpaceBatchSixDesigns } from "./everydayCommercialSpaceBatchSix";
+import { everydayOutdoorSpaceBatchThreeDesigns } from "./everydayOutdoorSpaceBatchThree";
+import { periodPublicSpaceBatchFourDesigns } from "./periodPublicSpaceBatchFour";
+import { everydayWorkplaceSpaceBatchThreeDesigns } from "./everydayWorkplaceSpaceBatchThree";
+import { publicSpaceBatchNineteenDesigns } from "./publicSpaceBatchNineteen";
+import { periodResidenceSpaceBatchThreeDesigns } from "./periodResidenceSpaceBatchThree";
+import { everydayCommercialSpaceBatchSevenDesigns } from "./everydayCommercialSpaceBatchSeven";
+import { periodPublicSpaceBatchFiveDesigns } from "./periodPublicSpaceBatchFive";
+import { everydayOutdoorSpaceBatchFourDesigns } from "./everydayOutdoorSpaceBatchFour";
+import { periodPublicSpaceBatchSixDesigns } from "./periodPublicSpaceBatchSix";
+import { everydayWorkplaceSpaceBatchFourDesigns } from "./everydayWorkplaceSpaceBatchFour";
+import { periodResidenceSpaceBatchFourDesigns } from "./periodResidenceSpaceBatchFour";
+import { publicSpaceBatchTwentyDesigns } from "./publicSpaceBatchTwenty";
+import { periodPublicSpaceBatchSevenDesigns } from "./periodPublicSpaceBatchSeven";
+import { everydayOutdoorSpaceBatchFiveDesigns } from "./everydayOutdoorSpaceBatchFive";
+import { periodPublicSpaceBatchEightDesigns } from "./periodPublicSpaceBatchEight";
+import { periodPublicSpaceBatchNineDesigns } from "./periodPublicSpaceBatchNine";
+import { everydayOutdoorSpaceBatchSixDesigns } from "./everydayOutdoorSpaceBatchSix";
+import { everydayOutdoorSpaceBatchSevenDesigns } from "./everydayOutdoorSpaceBatchSeven";
+import { publicSpaceBatchTwentyOneDesigns } from "./publicSpaceBatchTwentyOne";
+import { periodPublicSpaceBatchTenDesigns } from "./periodPublicSpaceBatchTen";
+import { periodResidenceSpaceBatchFiveDesigns } from "./periodResidenceSpaceBatchFive";
+import { periodTownSpaceBatchOneDesigns } from "./periodTownSpaceBatchOne";
+import { everydayRecreationSpaceBatchOneDesigns } from "./everydayRecreationSpaceBatchOne";
+import { periodResidenceSpaceBatchSixDesigns } from "./periodResidenceSpaceBatchSix";
+import { everydayCeremonySpaceBatchOneDesigns } from "./everydayCeremonySpaceBatchOne";
+import { publicSpaceBatchTwentyTwoDesigns } from "./publicSpaceBatchTwentyTwo";
+import { periodPublicSpaceBatchElevenDesigns } from "./periodPublicSpaceBatchEleven";
+import { periodTownSpaceBatchTwoDesigns } from "./periodTownSpaceBatchTwo";
+import { everydayDiningSpaceBatchOneDesigns } from "./everydayDiningSpaceBatchOne";
+import { everydayRetailBuildingSpaceBatchOneDesigns } from "./everydayRetailBuildingSpaceBatchOne";
+import { everydayAnimalServiceSpaceBatchOneDesigns } from "./everydayAnimalServiceSpaceBatchOne";
+import { everydayWaterfrontBuildingSpaceBatchOneDesigns } from "./everydayWaterfrontBuildingSpaceBatchOne";
+import { everydayServiceBuildingSpaceBatchOneDesigns } from "./everydayServiceBuildingSpaceBatchOne";
+import { everydayOutdoorSpaceBatchNineDesigns } from "./everydayOutdoorSpaceBatchNine";
+import { periodTownSpaceBatchThreeDesigns } from "./periodTownSpaceBatchThree";
+import { periodTownSpaceBatchFourDesigns } from "./periodTownSpaceBatchFour";
+import { everydayMunicipalServiceSpaceBatchOneDesigns } from "./everydayMunicipalServiceSpaceBatchOne";
+import { everydayMunicipalServiceSpaceBatchTwoDesigns } from "./everydayMunicipalServiceSpaceBatchTwo";
+import { everydayOutdoorSpaceBatchEightDesigns } from "./everydayOutdoorSpaceBatchEight";
+import { everydayRecreationSpaceBatchTwoDesigns } from "./everydayRecreationSpaceBatchTwo";
+import { everydayCeremonySpaceBatchTwoDesigns } from "./everydayCeremonySpaceBatchTwo";
+import { everydayCeremonySpaceBatchThreeDesigns } from "./everydayCeremonySpaceBatchThree";
+import { everydayHospitalitySpaceBatchOneDesigns } from "./everydayHospitalitySpaceBatchOne";
+import { everydayFoodSupplyBuildingSpaceBatchOneDesigns } from "./everydayFoodSupplyBuildingSpaceBatchOne";
+import { everydayFoodSupplyBuildingSpaceBatchTwoDesigns } from "./everydayFoodSupplyBuildingSpaceBatchTwo";
+import { everydayFarmBuildingSpaceBatchOneDesigns } from "./everydayFarmBuildingSpaceBatchOne";
+import { everydayTransitBuildingSpaceBatchOneDesigns } from "./everydayTransitBuildingSpaceBatchOne";
+import { everydayTransitBuildingSpaceBatchTwoDesigns } from "./everydayTransitBuildingSpaceBatchTwo";
+import { everydayTransitBuildingSpaceBatchThreeDesigns } from "./everydayTransitBuildingSpaceBatchThree";
+import { everydayRecreationSpaceBatchThreeDesigns } from "./everydayRecreationSpaceBatchThree";
+import { publicSpaceBatchTwentyThreeDesigns } from "./publicSpaceBatchTwentyThree";
+import { publicSpaceBatchTwentyFourDesigns } from "./publicSpaceBatchTwentyFour";
+import { periodPublicSpaceBatchTwelveDesigns } from "./periodPublicSpaceBatchTwelve";
+import { periodPublicSpaceBatchThirteenDesigns } from "./periodPublicSpaceBatchThirteen";
+import { periodTownSpaceBatchFiveDesigns } from "./periodTownSpaceBatchFive";
+import { everydayDiningSpaceBatchTwoDesigns } from "./everydayDiningSpaceBatchTwo";
+import { everydayRetailBuildingSpaceBatchTwoDesigns } from "./everydayRetailBuildingSpaceBatchTwo";
+import { everydayHospitalitySpaceBatchTwoDesigns } from "./everydayHospitalitySpaceBatchTwo";
+import { everydayParkServiceSpaceBatchOneDesigns } from "./everydayParkServiceSpaceBatchOne";
+import { everydayParkServiceSpaceBatchTwoDesigns } from "./everydayParkServiceSpaceBatchTwo";
+import { everydayParkServiceSpaceBatchThreeDesigns } from "./everydayParkServiceSpaceBatchThree";
+import { everydayFreightBuildingSpaceBatchOneDesigns } from "./everydayFreightBuildingSpaceBatchOne";
+import { everydayFreightBuildingSpaceBatchTwoDesigns } from "./everydayFreightBuildingSpaceBatchTwo";
+import { everydayDiningSpaceBatchThreeDesigns } from "./everydayDiningSpaceBatchThree";
+import { everydayDiningSpaceBatchFourDesigns } from "./everydayDiningSpaceBatchFour";
+import { everydayResidenceSpaceBatchEightDesigns } from "./everydayResidenceSpaceBatchEight";
+import { everydayResidenceSpaceBatchNineDesigns } from "./everydayResidenceSpaceBatchNine";
+import { suburbanResidenceSpaceBatchOneDesigns } from "./suburbanResidenceSpaceBatchOne";
+import { suburbanResidenceSpaceBatchTwoDesigns } from "./suburbanResidenceSpaceBatchTwo";
+import { everydayHospitalitySpaceBatchThreeDesigns } from "./everydayHospitalitySpaceBatchThree";
+import { everydayRetailBuildingSpaceBatchThreeDesigns } from "./everydayRetailBuildingSpaceBatchThree";
+import { everydayRetailBuildingSpaceBatchFourDesigns } from "./everydayRetailBuildingSpaceBatchFour";
+import { everydayServiceBuildingSpaceBatchTwoDesigns } from "./everydayServiceBuildingSpaceBatchTwo";
+import { everydayServiceBuildingSpaceBatchThreeDesigns } from "./everydayServiceBuildingSpaceBatchThree";
+import { everydayMunicipalServiceSpaceBatchThreeDesigns } from "./everydayMunicipalServiceSpaceBatchThree";
+import { everydayWaterfrontBuildingSpaceBatchTwoDesigns } from "./everydayWaterfrontBuildingSpaceBatchTwo";
+import { everydayWaterfrontBuildingSpaceBatchThreeDesigns } from "./everydayWaterfrontBuildingSpaceBatchThree";
+import { everydayWaterfrontBuildingSpaceBatchFourDesigns } from "./everydayWaterfrontBuildingSpaceBatchFour";
+import { publicSpaceBatchTwentyFiveDesigns } from "./publicSpaceBatchTwentyFive";
+import { everydayDiningSpaceBatchFiveDesigns } from "./everydayDiningSpaceBatchFive";
+import { publicSpaceBatchTwentySixDesigns } from "./publicSpaceBatchTwentySix";
+import { everydayFreightBuildingSpaceBatchFiveDesigns } from "./everydayFreightBuildingSpaceBatchFive";
+import { everydayRecreationSpaceBatchFourDesigns } from "./everydayRecreationSpaceBatchFour";
+import { everydayTransitBuildingSpaceBatchFourDesigns } from "./everydayTransitBuildingSpaceBatchFour";
+import { everydayTransitBuildingSpaceBatchFiveDesigns } from "./everydayTransitBuildingSpaceBatchFive";
+import { everydayTransitBuildingSpaceBatchSixDesigns } from "./everydayTransitBuildingSpaceBatchSix";
+import { everydayMediaWorkplaceSpaceBatchOneDesigns } from "./everydayMediaWorkplaceSpaceBatchOne";
+import { everydayMediaWorkplaceSpaceBatchTwoDesigns } from "./everydayMediaWorkplaceSpaceBatchTwo";
+import { everydayTransitBuildingSpaceBatchSevenDesigns } from "./everydayTransitBuildingSpaceBatchSeven";
+import { everydayTransitBuildingSpaceBatchEightDesigns } from "./everydayTransitBuildingSpaceBatchEight";
+import { everydayServiceBuildingSpaceBatchFourDesigns } from "./everydayServiceBuildingSpaceBatchFour";
+import { everydayServiceBuildingSpaceBatchFiveDesigns } from "./everydayServiceBuildingSpaceBatchFive";
+import { everydayFreightBuildingSpaceBatchSixDesigns } from "./everydayFreightBuildingSpaceBatchSix";
+import { everydayWorkplaceSpaceBatchFiveDesigns } from "./everydayWorkplaceSpaceBatchFive";
+import { periodTownSpaceBatchSixDesigns } from "./periodTownSpaceBatchSix";
+import { everydayRetailBuildingSpaceBatchFiveDesigns } from "./everydayRetailBuildingSpaceBatchFive";
+import { everydayRetailBuildingSpaceBatchSixDesigns } from "./everydayRetailBuildingSpaceBatchSix";
+import { everydayUtilityBuildingSpaceBatchOneDesigns } from "./everydayUtilityBuildingSpaceBatchOne";
+import { everydayFreightBuildingSpaceBatchThreeDesigns } from "./everydayFreightBuildingSpaceBatchThree";
+import { everydayFreightBuildingSpaceBatchFourDesigns } from "./everydayFreightBuildingSpaceBatchFour";
+import { suburbanResidenceSpaceBatchThreeDesigns } from "./suburbanResidenceSpaceBatchThree";
+import { everydayHospitalitySpaceBatchFourDesigns } from "./everydayHospitalitySpaceBatchFour";
+import { everydayWaterfrontBuildingSpaceBatchFiveDesigns } from "./everydayWaterfrontBuildingSpaceBatchFive";
+import { everydayMediaWorkplaceSpaceBatchThreeDesigns } from "./everydayMediaWorkplaceSpaceBatchThree";
+import { everydayHospitalitySpaceBatchSixDesigns } from "./everydayHospitalitySpaceBatchSix";
+import { everydayTrainingVenueSpaceBatchOneDesigns } from "./everydayTrainingVenueSpaceBatchOne";
+import { everydayRetailBuildingSpaceBatchSevenDesigns } from "./everydayRetailBuildingSpaceBatchSeven";
+import { everydayFarmBuildingSpaceBatchTwoDesigns } from "./everydayFarmBuildingSpaceBatchTwo";
+import { everydayHospitalitySpaceBatchSevenDesigns } from "./everydayHospitalitySpaceBatchSeven";
+import { everydayTransitBuildingSpaceBatchNineDesigns } from "./everydayTransitBuildingSpaceBatchNine";
+import { everydayHospitalitySpaceBatchFiveDesigns } from "./everydayHospitalitySpaceBatchFive";
+import { railTrackBatchOneDesigns } from "./railTrackBatchOne";
+import { railWaysideBatchOneDesigns } from "./railWaysideBatchOne";
+import { chinesePalaceBatchOneDesigns } from "./chinesePalaceBatchOne";
+import { chineseTownBatchOneDesigns } from "./chineseTownBatchOne";
+import { chineseVillageBatchOneDesigns } from "./chineseVillageBatchOne";
+import { chineseGardenBatchOneDesigns } from "./chineseGardenBatchOne";
+import { chineseTempleBatchOneDesigns } from "./chineseTempleBatchOne";
+import { chineseWaterGardenBatchOneDesigns } from "./chineseWaterGardenBatchOne";
+import { chineseStreetShopBatchOneDesigns } from "./chineseStreetShopBatchOne";
+import { chineseStreetWorkshopBatchOneDesigns } from "./chineseStreetWorkshopBatchOne";
+import { chineseMarketBatchOneDesigns } from "./chineseMarketBatchOne";
+import { chineseTownServiceBatchOneDesigns } from "./chineseTownServiceBatchOne";
+import { chineseTownResidenceBatchOneDesigns } from "./chineseTownResidenceBatchOne";
+import { chineseTownStorehouseBatchOneDesigns } from "./chineseTownStorehouseBatchOne";
+import { chineseFilmCourtBatchOneDesigns } from "./chineseFilmCourtBatchOne";
+import { chineseFilmCivicBatchOneDesigns } from "./chineseFilmCivicBatchOne";
+import { chineseFilmStreetBatchOneDesigns } from "./chineseFilmStreetBatchOne";
+import { chineseStreetHeroBatchOneDesigns } from "./chineseStreetHeroBatchOne";
+import { chineseFilmUrbanBatchTwoDesigns } from "./chineseFilmUrbanBatchTwo";
+import { chineseFilmFrontierBatchTwoDesigns } from "./chineseFilmFrontierBatchTwo";
+import { chineseFilmIndustryBatchTwoDesigns } from "./chineseFilmIndustryBatchTwo";
+import { ruinBuildingDesigns } from "./ruinBuildingsBatchOne";
+import { ruinBuildingTwoDesigns } from "./ruinBuildingsBatchTwo";
+import { ruinBuildingThreeDesigns } from "./ruinBuildingsBatchThree";
+import { ruinRoomDesigns } from "./ruinRoomsBatchOne";
+import { ruinBuildingFourDesigns } from "./ruinBuildingsBatchFour";
+import { ruinBuildingFiveDesigns } from "./ruinBuildingsBatchFive";
+import { ceilingVariants, filmSetDesigns } from "./filmSetBatchOne";
+import { filmSetDesignsTwo } from "./filmSetBatchTwo";
+import { backlotFacadeDesigns } from "./backlotFacades";
+import { whiteModuleDesigns } from "./whiteboxModules";
+import { whiteStudioDesigns } from "./whiteboxStudio";
+import { whiteBuildingDesigns } from "./whiteboxBuildings";
+import { whiteSpaceDesigns } from "./whiteboxSpaces";
+import { whiteSiteDesigns } from "./whiteboxSites";
+import { whiteAncientDesigns } from "./whiteboxAncient";
+import { whiteCityDesigns, whiteTunnelDesigns } from "./whiteboxCity";
+import { whiteRegionalDesigns } from "./whiteboxRegional";
+import { whiteWorldDesigns } from "./whiteboxWorld";
+import { whiteIndustryDesigns } from "./whiteboxIndustry";
+import { whiteLandmarkDesigns, whiteScifiDesigns } from "./whiteboxLandmarks";
+import { whiteClassicalDesigns } from "./whiteboxClassical";
+import { whiteCompoundDesigns } from "./whiteboxCompounds";
+import { whiteCampusDesigns } from "./whiteboxCampus";
+import { whiteUndergroundDesigns } from "./whiteboxUnderground";
+import { whiteRoomDesigns } from "./whiteboxRooms";
+import { whiteLandmarkTwoDesigns } from "./whiteboxLandmarksTwo";
+import { whiteFantasyDesigns } from "./whiteboxFantasy";
+import { whiteFolkChinaDesigns } from "./whiteboxFolkChina";
+import { whiteFolkHomesDesigns } from "./whiteboxFolkHomes";
+import { whiteFolkWorldDesigns } from "./whiteboxFolkWorld";
+import { whiteGuFengDesigns } from "./whiteboxGuFeng";
+import "./whiteboxFinish";
+import { filmSetDesignsThree } from "./filmSetBatchThree";
+import { filmSetDesignsFour } from "./filmSetBatchFour";
+import { filmSetDesignsFive } from "./filmSetBatchFive";
+import { filmSetDesignsSix } from "./filmSetBatchSix";
+
+const groups = [
+  { name: "农业仓储", designs: agricultureDesigns },
+  { name: "生产工坊", designs: productionDesigns },
+  { name: "水利工程", designs: waterworksDesigns },
+  { name: "交通设施", designs: transportDesigns },
+  { name: "海事港口", designs: maritimeDesigns },
+  { name: "公共生活", designs: publicDesigns },
+  { name: "历史防御", designs: defenseDesigns },
+  { name: "工程构件", designs: engineeringDesigns },
+  { name: "热能设备", designs: thermalDesigns },
+  { name: "换热暖通", designs: ventilationDesigns },
+  { name: "供能储能", designs: energyDesigns },
+  { name: "通信射频", designs: communicationsDesigns },
+  { name: "大型科研", designs: researchDesigns },
+  { name: "矿冶分选", designs: metallurgyDesigns },
+  { name: "反应分离", designs: chemicalDesigns },
+  { name: "材料成形", designs: formingDesigns },
+  { name: "物流搬运", designs: logisticsDesigns },
+  { name: "市政防灾", designs: civicEngineeringDesigns },
+  { name: "舞台体育", designs: performanceDesigns },
+  { name: "特殊航运", designs: navigationDesigns },
+  { name: "食品处理", designs: foodProcessingDesigns },
+  { name: "谷物加工", designs: grainProcessingDesigns },
+  { name: "纸印包装", designs: paperPackagingDesigns },
+  { name: "木材建材", designs: buildingMaterialDesigns },
+  { name: "粉液工艺", designs: processMechanismDesigns },
+  { name: "油气工程", designs: oilGasDesigns },
+  { name: "地工掘进", designs: geotechnicalDesigns },
+  { name: "建筑机电", designs: buildingServicesDesigns },
+  { name: "公共游憩", designs: leisureDesigns },
+  { name: "历史生产", designs: historicWorkshopDesigns },
+  { name: "固定交通", designs: trafficNodeDesigns },
+  { name: "地下市政", designs: undergroundDesigns },
+  { name: "电力开断与测量", designs: electricPowerDesigns },
+  { name: "辐射设施", designs: radiationFacilityDesigns },
+  { name: "生物工艺", designs: biologicalDesigns },
+  { name: "资源回收", designs: recyclingDesigns },
+  { name: "工业检验", designs: industrialInspectionDesigns },
+  { name: "流体机械", designs: fluidMachineryDesigns },
+  { name: "施工装备", designs: constructionPlantDesigns },
+  { name: "空间结构", designs: structuralSystemDesigns },
+  { name: "连接与增材", designs: joiningDesigns },
+  { name: "表面工程", designs: surfaceEngineeringDesigns },
+  { name: "适应性住所", designs: adaptiveHabitatDesigns },
+  { name: "礼仪空间", designs: sacredSpaceDesigns },
+  { name: "奇幻机构", designs: arcaneStructureDesigns },
+  { name: "轨道设施", designs: orbitalSystemDesigns },
+  { name: "运动场构造", designs: sportsGroundDesigns },
+  { name: "公共服务内场", designs: civicInteriorDesigns },
+  { name: "传统结构工艺", designs: heritageConstructionDesigns },
+  { name: "文化展陈系统", designs: culturalMachineDesigns },
+  { name: "奇幻栖居空间", designs: fantasticalHabitatDesigns },
+  { name: "表演与声学空间", designs: performingSpaceDesigns },
+  { name: "固定渔业设施", designs: aquaticFarmingDesigns },
+  { name: "连续纺织", designs: textileMachineryDesigns },
+  { name: "玻璃制造", designs: glassManufacturingDesigns },
+  { name: "固定通行接口", designs: crossingInterfaceDesigns },
+  { name: "开合桥机构", designs: movableBridgeDesigns },
+  { name: "传动约束构件", designs: mechanicalTransmissionDesigns },
+  { name: "成形包装", designs: packagingMechanismDesigns },
+  { name: "切削与除材", designs: machineToolDesigns },
+  { name: "公共游具与健身", designs: outdoorExerciseDesigns },
+  { name: "管路阀件", designs: pipelineValveDesigns },
+  { name: "执行与储能节点", designs: actuationSystemDesigns },
+  { name: "半导体制造设施", designs: semiconductorFacilityDesigns },
+  { name: "束流与粒子科研", designs: particleFacilityDesigns },
+  { name: "流体能量交换", designs: turbineMachineryDesigns },
+  { name: "吊载接口", designs: liftingInterfaceDesigns },
+  { name: "东方文化空间", designs: easternCulturalSpaceDesigns },
+  { name: "拓扑构筑物", designs: topologicalSpaceDesigns },
+  { name: "发条公共机构", designs: clockworkPublicDesigns },
+  { name: "聚变与光学科研", designs: fusionResearchDesigns },
+  { name: "乡土承重与水路", designs: vernacularStructureDesigns },
+  { name: "薄壳与连接构造", designs: additionalStructuralDesigns },
+  { name: "历史公共空间", designs: europeanPublicSpaceDesigns },
+  { name: "射频主体机构", designs: radioMechanismDesigns },
+  { name: "中式独立构造", designs: easternStructuralDesigns },
+  { name: "无电资源设施", designs: survivalResourceDesigns },
+  { name: "日式固定机构", designs: japaneseFixedMechanismDesigns },
+  { name: "赛博公共基础", designs: cyberInfrastructureDesigns },
+  { name: "前沿场与能量", designs: frontierPhysicsDesigns },
+  { name: "特殊分离反应", designs: advancedProcessDesigns },
+  { name: "独立能量转换", designs: energyConversionDesigns },
+  { name: "滨海取能与水工", designs: coastalMechanismDesigns },
+  { name: "应力与土样试验", designs: materialExperimentDesigns },
+  { name: "基础场与径迹实验", designs: foundationalExperimentDesigns },
+  { name: "畜牧与昆虫设施", designs: husbandryFacilityDesigns },
+  { name: "礼制石构件", designs: ritualStoneworkDesigns },
+  { name: "开放物理展台", designs: publicPhysicsExhibitDesigns },
+  { name: "无动件与压力流路", designs: fluidicComponentDesigns },
+  { name: "不同机制管道计量", designs: pipelineMeterDesigns },
+  { name: "地基与支护构件", designs: groundEngineeringDesigns },
+  { name: "承重与变形控制构件", designs: supportEngineeringDesigns },
+  { name: "建造与围护连接界面", designs: constructionInterfaceDesigns },
+  { name: "古典电工主体机构", designs: classicalSwitchgearDesigns },
+  { name: "独立铁路接触与连接件", designs: trackInterfaceDesigns },
+  { name: "独立航天动力组件", designs: propulsionComponentDesigns },
+  { name: "轴系密封承载与耗能", designs: shaftInterfaceDesigns },
+  { name: "不同磁路与导电主体", designs: electromagneticMachineDesigns },
+  { name: "非互易光机与液滴寻址", designs: opticalInterfaceDesigns },
+  { name: "日式独立脊饰与基坛", designs: japaneseRoofFittingDesigns },
+  { name: "日式具名门窗装配", designs: japaneseJoineryDesigns },
+  { name: "日式传统瓦木外壁", designs: japaneseCladdingDesigns },
+  { name: "日式固定内装与双层轨格", designs: japaneseInteriorDesigns },
+  { name: "日式城郭与栏门构造", designs: japaneseCastleDetailDesigns },
+  { name: "日式梁间独立支承", designs: japaneseGableSupportDesigns },
+  { name: "日式分型筒平与檐瓦", designs: japaneseRoofTileDesigns },
+  { name: "日式独立脊端与梁端饰", designs: japaneseRidgeOrnamentDesigns },
+  { name: "日式固定外击钟架", designs: japaneseTempleBellDesigns },
+  { name: "中式具名承托与檐角木构", designs: chineseTimberNodeDesigns },
+  { name: "中式独立门面与承轴接口", designs: chineseEntranceFittingDesigns },
+  { name: "中式石栏与格扇装配", designs: chinesePanelAssemblyDesigns },
+  { name: "中式直木互承与叠涩桥体", designs: chineseTimberBridgeDesigns },
+  { name: "中式独立礼仪碑屏", designs: chineseMonumentDesigns },
+  { name: "中式排水与透空石构", designs: chineseGardenFittingDesigns },
+  { name: "中式柱身檐板与贯榫", designs: chineseBuildingFittingDesigns },
+  { name: "日式街屋窗笼与阶缝", designs: japaneseStreetFittingDesigns },
+  { name: "独立多束相干与折射阵列", designs: coherentOpticDesigns },
+  { name: "欧式具名柱头与石檐", designs: classicalStoneDetailDesigns },
+  { name: "独立工字铅槽拼窗", designs: leadedGlazingDesigns },
+  { name: "古代暖浴与多龛公共空间", designs: ancientPublicBuildingDesigns },
+  { name: "叉首阁楼与苇拱会所", designs: vernacularHallSpaceDesigns },
+  { name: "分室烧成与三程暖床", designs: traditionalThermalSpaceDesigns },
+  { name: "日式五形轮座与隅耳石塔", designs: japaneseMemorialStructureDesigns },
+  { name: "舟腹长屋与柱板回廊", designs: northernTimberSpaceDesigns },
+  { name: "内室与外环柱廊圆殿", designs: peristyleRotundaDesigns },
+  { name: "四轴高券与转角回廊", designs: fourIwanCourtDesigns },
+  { name: "九格空间与球面传力", designs: crossDomedHallDesigns },
+  { name: "厚土单入口与连续内廊住居", designs: earthworkCourtyardResidenceDesigns },
+  { name: "公共骑廊与贯通天井街屋", designs: streetResidenceSpaceDesigns },
+  { name: "空心生物构造奇幻空间", designs: fantasySpaceBatchOneDesigns },
+  { name: "园林通行与活枝营造", designs: landscapeSpaceBatchOneDesigns },
+  { name: "完整乡土住居与贮藏建筑", designs: vernacularWorldBatchOneDesigns },
+  { name: "历史通路葬室与防御建筑", designs: historicSpaceBatchOneDesigns },
+  { name: "具象承重奇幻大型空间", designs: fantasySpaceBatchTwoDesigns },
+  { name: "未来与蒸汽完整楼体", designs: futureSpaceBatchOneDesigns },
+  { name: "公共服务与文化体育完整馆", designs: publicSpaceBatchOneDesigns },
+  { name: "大型生态连通与滨水工程", designs: landscapeSpaceBatchTwoDesigns },
+  { name: "美洲通风承重与乡土居住", designs: vernacularWorldBatchTwoDesigns },
+  { name: "依坡石台与吊脚楼体", designs: asianResidenceSpaceBatchOneDesigns },
+  { name: "悬浮与膜骨完整奇幻空间", designs: fantasySpaceBatchThreeDesigns },
+  { name: "大型挡水承载与滨海构造", designs: landscapeSpaceBatchThreeDesigns },
+  { name: "收分厚墙多层石宅", designs: asianResidenceSpaceBatchTwoDesigns },
+  { name: "编巢钟罩与交叉巡礼空间", designs: fantasySpaceBatchFourDesigns },
+  { name: "大型未来承重与独立场站", designs: futureSpaceBatchTwoDesigns },
+  { name: "历史高塔圣所与完整观演建筑", designs: historicSpaceBatchTwoDesigns },
+  { name: "乡土通厅石木与束草完整建筑", designs: vernacularWorldBatchThreeDesigns },
+  { name: "大型山地通行与主动护坡空间", designs: landscapeSpaceBatchFourDesigns },
+  { name: "龙栖空港陵园与错门地牢", designs: fantasySpaceBatchFiveDesigns },
+  { name: "大型生态演播与专门公共场馆", designs: publicSpaceBatchTwoDesigns },
+  { name: "双进中轴祭祀与穿堂空间", designs: ceremonialResidenceSpaceDesigns },
+  { name: "大型通航升降与固定修船坞", designs: landscapeSpaceBatchFiveDesigns },
+  { name: "骑士比武与采石坑大型场地", designs: fantasySpaceBatchSixDesigns },
+  { name: "现代客运管制与驾车住宿", designs: publicSpaceBatchThreeDesigns },
+  { name: "大型历史堡垒陵寝与驿院", designs: historicSpaceBatchThreeDesigns },
+  { name: "独立溢流通道与折板洄游设施", designs: landscapeSpaceBatchSixDesigns },
+  { name: "大型航天基地与异形城市地标", designs: futureSpaceBatchThreeDesigns },
+  { name: "乡土生产畜仓与渔乳建筑", designs: vernacularWorldBatchFourDesigns },
+  { name: "悬栈修道与双闸驻守营院", designs: fantasySpaceBatchSevenDesigns },
+  { name: "临床实验与城市公共大楼", designs: publicSpaceBatchFourDesigns },
+  { name: "完整多层高速公路互通", designs: landscapeSpaceBatchSevenDesigns },
+  { name: "大型未来网壳与城市公共结构", designs: futureSpaceBatchFourDesigns },
+  { name: "历史礼仪营堡与大型观象建筑", designs: historicSpaceBatchFourDesigns },
+  { name: "乡土承身风车与岸坡船屋", designs: vernacularWorldBatchFiveDesigns },
+  { name: "完整城市球类与竞速场馆", designs: publicSpaceBatchFiveDesigns },
+  { name: "大型环境库盆与生态水道", designs: landscapeSpaceBatchEightDesigns },
+  { name: "大型棒板球与传统竞技场馆", designs: publicSpaceBatchSixDesigns },
+  { name: "独立木桥桁式与桩居防卫建筑", designs: vernacularWorldBatchSixDesigns },
+  { name: "大型物流救援与科研试验整体", designs: futureSpaceBatchFiveDesigns },
+  { name: "传统连穹宗堡与阶池院落", designs: historicSpaceBatchFiveDesigns },
+  { name: "桥街完整楼体与船模牵引场", designs: landscapeSpaceBatchNineDesigns },
+  { name: "现代商业环路与弧厅整体", designs: modernCommercialSpaceBatchOneDesigns },
+  { name: "浮磨潮磨与束枝蒸卤完整作坊", designs: vernacularWorldBatchSevenDesigns },
+  { name: "独立篮球排球与卡丁泵道整馆", designs: publicSpaceBatchSevenDesigns },
+  { name: "原创城市教学诊疗与居住整形", designs: futureSpaceBatchSixDesigns },
+  { name: "大型分流桥涵与驼峰编组场", designs: landscapeSpaceBatchTenDesigns },
+  { name: "独立历史巨厅围场与山宫空间", designs: historicSpaceBatchSixDesigns },
+  { name: "独立长披阁居与三段农庄本体", designs: vernacularWorldBatchEightDesigns },
+  { name: "独立悬桥浮泳与双层穿瀑空间", designs: landscapeSpaceBatchElevenDesigns },
+  { name: "发射台轨道船坞与接驳港本体", designs: futureSpaceBatchSevenDesigns },
+  { name: "交织螺廊折板与光庭公共空间", designs: publicSpaceBatchEightDesigns },
+  { name: "独立悬挑拱廊与扇庭公共整馆", designs: publicSpaceBatchNineDesigns },
+  { name: "独立互通拓扑与环形高架人行场", designs: landscapeSpaceBatchTwelveDesigns },
+  { name: "独立石院塔山与高桥议宫整体", designs: historicSpaceBatchSevenDesigns },
+  { name: "原创倒楔斜筒卷带与梳齿城体", designs: futureSpaceBatchEightDesigns },
+  { name: "八角阁居尖券与非洲大洋洲屋体", designs: vernacularWorldBatchNineDesigns },
+  { name: "双坡车库球幕馆与分层轮渡楼", designs: publicSpaceBatchTenDesigns },
+  { name: "伞冠孔墙与外翻拱脚完整城体", designs: futureSpaceBatchNineDesigns },
+  { name: "巨浴舰港与错层朝圣完整古建", designs: historicSpaceBatchEightDesigns },
+  { name: "水楔升船折壳庭园与水工整体", designs: landscapeSpaceBatchThirteenDesigns },
+  { name: "分流法院内街商场与井庭客馆", designs: publicSpaceBatchElevenDesigns },
+  { name: "非洲环居与大洋洲祖厅本体", designs: vernacularWorldBatchTenDesigns },
+  { name: "斜框互承冠梁与菱台完整楼体", designs: futureSpaceBatchTenDesigns },
+  { name: "坡校索谷食堂与六瓣音乐整厅", designs: publicSpaceBatchTwelveDesigns },
+  { name: "激流双槽碗池与开放竞速地景", designs: landscapeSpaceBatchFourteenDesigns },
+  { name: "贯屋坡街与错层住宅整体", designs: modernResidenceSpaceBatchOneDesigns },
+  { name: "折返晶谷与贯腹岩脊完整空间", designs: fantasySpaceBatchEightDesigns },
+  { name: "八棱退台倒谷桥居与偏心月牙", designs: futureSpaceBatchElevenDesigns },
+  { name: "分池跳水双院洗浴与折廊公建", designs: publicSpaceBatchThirteenDesigns },
+  { name: "完整椭圆竞技长井与半环市集", designs: historicSpaceBatchNineDesigns },
+  { name: "环盖编竹鲸骨与木斗高塔本体", designs: vernacularWorldBatchElevenDesigns },
+  { name: "折脚承托与三角悬院完整住宅", designs: modernResidenceSpaceBatchTwoDesigns },
+  { name: "假山石舫引潮盐田与石沪整体", designs: landscapeSpaceBatchFifteenDesigns },
+  { name: "半台接坡车库与折脊双臂阅馆", designs: publicSpaceBatchFourteenDesigns },
+  { name: "五廊论坛独石岩沟与双椭圆祠", designs: historicSpaceBatchTenDesigns },
+  { name: "倾鼓楼体与阶列梭舱完整居住", designs: futureSpaceBatchTwelveDesigns },
+  { name: "平转潮障分舱浮桥与顶光峡庭", designs: landscapeSpaceBatchSixteenDesigns },
+  { name: "折街贯通与双透院公共门诊", designs: publicSpaceBatchFifteenDesigns },
+  { name: "居拱承居与下穿庭院完整桥屋", designs: modernResidenceSpaceBatchThreeDesigns },
+  { name: "尼亚斯斜柱松巴塔阁与叠券粮堡", designs: vernacularWorldBatchTwelveDesigns },
+  { name: "肋舟竖月与倒斗天井完整奇幻", designs: fantasySpaceBatchNineDesigns },
+  { name: "交脊弧翼学府与偏脊双弧教研", designs: futureSpaceBatchThirteenDesigns },
+  { name: "统一星腹房腔与连续折壳穹院", designs: fantasySpaceBatchTenDesigns },
+  { name: "串门长卷与裂庭地层原创展馆", designs: culturalExhibitionSpaceBatchOneDesigns },
+  { name: "双环砖殿折檐戒堂与覆丘圣所", designs: historicSpaceBatchElevenDesigns },
+  { name: "双庭康养与放射分庭完整监舍", designs: publicSpaceBatchSixteenDesigns },
+  { name: "斜贯双楔与天光交会艺术馆", designs: culturalExhibitionSpaceBatchTwoDesigns },
+  { name: "斜街切割与错高楔塔办公楼", designs: futureSpaceBatchFourteenDesigns },
+  { name: "完整冰雪赛道与双层桁架水渠", designs: landscapeSpaceBatchSeventeenDesigns },
+  { name: "日常影视住宅与完整私庭居室", designs: everydayResidenceSpaceBatchOneDesigns },
+  { name: "社区诊疗与内庭小学完整公建", designs: publicSpaceBatchSeventeenDesigns },
+  { name: "轮墩木冠与插杆舟壳乡土住居", designs: vernacularWorldBatchThirteenDesigns },
+  { name: "日常侧梯窄宅与前后独立居室", designs: everydayResidenceSpaceBatchTwoDesigns },
+  { name: "日常外廊公寓与转角共用步梯", designs: everydayResidenceSpaceBatchThreeDesigns },
+  { name: "常见影视便利店面馆与夹层咖啡", designs: everydayCommercialSpaceBatchOneDesigns },
+  { name: "常见古装客栈衙署与讲堂书院", designs: periodPublicSpaceBatchOneDesigns },
+  { name: "常见住宅街停车步岛与雨水阶巷", designs: everydayOutdoorSpaceBatchOneDesigns },
+  { name: "常见办公园物流仓与临街修车铺", designs: everydayWorkplaceSpaceBatchOneDesigns },
+  { name: "常见前庭配套与可入街区照相馆", designs: everydayCommercialSpaceBatchTwoDesigns },
+  { name: "日常前车库半层错层独户住宅", designs: everydayResidenceSpaceBatchFourDesigns },
+  { name: "常见前厅咨询与后药库完整药房", designs: everydayCommercialSpaceBatchThreeDesigns },
+  { name: "日常中廊共厨与独立合租卧室", designs: everydayResidenceSpaceBatchFiveDesigns },
+  { name: "常见穿廊中庭社区公共服务楼", designs: publicSpaceBatchEighteenDesigns },
+  { name: "常见影视合院石库门与铺院过街楼", designs: periodResidenceSpaceBatchOneDesigns },
+  { name: "常见接送公交下穿与滨河步街", designs: everydayOutdoorSpaceBatchTwoDesigns },
+  { name: "常见影视双院镖局会馆与说书楼", designs: periodPublicSpaceBatchTwoDesigns },
+  { name: "常见街区湿干分湾完整理发店", designs: everydayCommercialSpaceBatchFourDesigns },
+  { name: "日常通高前厅与后阁单户住宅", designs: everydayResidenceSpaceBatchSixDesigns },
+  { name: "常见前拱零售与后作坊烘焙店", designs: everydayCommercialSpaceBatchFiveDesigns },
+  { name: "日常中央共梯与对门两层小公寓", designs: everydayResidenceSpaceBatchSevenDesigns },
+  { name: "常见年代双街折廊楔角商住楼", designs: periodResidenceSpaceBatchTwoDesigns },
+  { name: "常见年代押库当铺邮电与警署", designs: periodPublicSpaceBatchThreeDesigns },
+  { name: "常见双跨车间货梯仓院与事务所", designs: everydayWorkplaceSpaceBatchTwoDesigns },
+  { name: "常见高侧光削角社区超市整店", designs: everydayCommercialSpaceBatchSixDesigns },
+  { name: "常见中央绿岛环交与地面电车街段", designs: everydayOutdoorSpaceBatchThreeDesigns },
+  { name: "常见年代双池浴堂与高窗印报馆", designs: periodPublicSpaceBatchFourDesigns },
+  { name: "常见双长车道贯穿式客车维保楼", designs: everydayWorkplaceSpaceBatchThreeDesigns },
+  { name: "常见三桥接患内院综合急诊楼", designs: publicSpaceBatchNineteenDesigns },
+  { name: "常见年代三堂横屋半月围龙整宅", designs: periodResidenceSpaceBatchThreeDesigns },
+  { name: "常见折谷屋与湿干后带自助洗衣店", designs: everydayCommercialSpaceBatchSevenDesigns },
+  { name: "常见年代前堂开庭与三石券库票号", designs: periodPublicSpaceBatchFiveDesigns },
+  { name: "常见步入式喷孔台与旱喷公共广场", designs: everydayOutdoorSpaceBatchFourDesigns },
+  { name: "常见年代穿厅双诊与药楼医馆", designs: periodPublicSpaceBatchSixDesigns },
+  { name: "常见前院半环货坡双层物流库", designs: everydayWorkplaceSpaceBatchFourDesigns },
+  { name: "常见平顶晒台与三券石箍窑整宅", designs: periodResidenceSpaceBatchFourDesigns },
+  { name: "常见内坡中庭贯通日间照护楼", designs: publicSpaceBatchTwentyDesigns },
+  { name: "常见年代分叉大阶U廊乐队舞厅", designs: periodPublicSpaceBatchSevenDesigns },
+  { name: "常见高台低庭分层接车物流场地", designs: everydayOutdoorSpaceBatchFiveDesigns },
+  { name: "常见马蹄挑廊与高台塔完整剧院", designs: periodPublicSpaceBatchEightDesigns },
+  { name: "常见年代双站台跨线地面车站", designs: periodPublicSpaceBatchNineDesigns },
+  { name: "常见公铁同高交叉与完整道口街段", designs: everydayOutdoorSpaceBatchSixDesigns },
+  { name: "常见多岛分流与共顶公路收费场", designs: everydayOutdoorSpaceBatchSevenDesigns },
+  { name: "常见双庭交通厅与H形中学校舍", designs: publicSpaceBatchTwentyOneDesigns },
+  { name: "年代北窗连续锯齿织布车间", designs: periodPublicSpaceBatchTenDesigns },
+  { name: "常见通柱梁格与前晒台侧廊整宅", designs: periodResidenceSpaceBatchFiveDesigns },
+  { name: "常见年代侧库夹廊与前高银行厅", designs: periodTownSpaceBatchOneDesigns },
+  { name: "常见下沉球厅与高窗观球环廊", designs: everydayRecreationSpaceBatchOneDesigns },
+  { name: "常见前井跨桥与双梯分流砖宅", designs: periodResidenceSpaceBatchSixDesigns },
+  { name: "常见折肘双厅与客勤分廊婚宴楼", designs: everydayCeremonySpaceBatchOneDesigns },
+  { name: "常见采光院门诊裙厅与完整病房楼", designs: publicSpaceBatchTwentyTwoDesigns },
+  { name: "常见年代街角圆井天光百货整楼", designs: periodPublicSpaceBatchElevenDesigns },
+  { name: "常见年代切角柜厅与穿车邮驿整院", designs: periodTownSpaceBatchTwoDesigns },
+  { name: "常见贯街中厨与客勤双廊完整餐馆", designs: everydayDiningSpaceBatchOneDesigns },
+  { name: "常见书廊花艺与凹湾取货零售整店", designs: everydayRetailBuildingSpaceBatchOneDesigns },
+  { name: "常见双候诊后隔离完整兽医诊疗楼", designs: everydayAnimalServiceSpaceBatchOneDesigns },
+  { name: "常见穿廊急救与海滩瞭望服务楼", designs: everydayWaterfrontBuildingSpaceBatchOneDesigns },
+  { name: "常见加油洗整与销售交车服务整站", designs: everydayServiceBuildingSpaceBatchOneDesigns },
+  { name: "常见连续阶台与多线街式滑板整场", designs: everydayOutdoorSpaceBatchNineDesigns },
+  { name: "常见年代前车厅与后草阁寄马车行", designs: periodTownSpaceBatchThreeDesigns },
+  { name: "常见年代低吧厅侧外阶后客楼酒馆", designs: periodTownSpaceBatchFourDesigns },
+  { name: "常见扇形车厅与后脊生活消防整站", designs: everydayMunicipalServiceSpaceBatchOneDesigns },
+  { name: "常见通高中枢观察廊与侧车廊警务楼", designs: everydayMunicipalServiceSpaceBatchTwoDesigns },
+  { name: "常见完整十一人制球场与观众通路", designs: everydayOutdoorSpaceBatchEightDesigns },
+  { name: "常见高拱舞室与双层侧翼排练楼", designs: everydayRecreationSpaceBatchTwoDesigns },
+  { name: "常见偏庭静候与公众后勤分流告别馆", designs: everydayCeremonySpaceBatchTwoDesigns },
+  { name: "常见双庭错轴与独立仪式婚姻登记馆", designs: everydayCeremonySpaceBatchThreeDesigns },
+  { name: "常见错翼旅店与共餐横厅青年旅舍", designs: everydayHospitalitySpaceBatchOneDesigns },
+  { name: "常见原熟分翼与独立洗消配餐整楼", designs: everydayFoodSupplyBuildingSpaceBatchOneDesigns },
+  { name: "常见双卸货凹院与中脊生鲜配拨厅", designs: everydayFoodSupplyBuildingSpaceBatchTwoDesigns },
+  { name: "常见乡村收货装车与分温收储整楼", designs: everydayFarmBuildingSpaceBatchOneDesigns },
+  { name: "常见贯街票厅与双侧台高架城市站", designs: everydayTransitBuildingSpaceBatchOneDesigns },
+  { name: "常见公共步街与双翼直通公交客厅", designs: everydayTransitBuildingSpaceBatchTwoDesigns },
+  { name: "常见出发到达分流区域航站整楼", designs: everydayTransitBuildingSpaceBatchThreeDesigns },
+  { name: "凹门低翼与灯笼采光拳击整馆", designs: everydayRecreationSpaceBatchThreeDesigns },
+  { name: "常见双拱错廊与前后分流政务服务厅", designs: publicSpaceBatchTwentyThreeDesigns },
+  { name: "常见梁柱架空连院与下穿活动校舍", designs: publicSpaceBatchTwentyFourDesigns },
+  { name: "常见年代贯街双阶机械钟楼", designs: periodPublicSpaceBatchTwelveDesigns },
+  { name: "常见年代下书库与上双筒阅览整馆", designs: periodPublicSpaceBatchThirteenDesigns },
+  { name: "常见年代双阶分流与下押上庭县法院", designs: periodTownSpaceBatchFiveDesigns },
+  { name: "常见双台地客勤实阶与上厅露台餐楼", designs: everydayDiningSpaceBatchTwoDesigns },
+  { name: "常见凹弧试衣与错翼试听零售整店", designs: everydayRetailBuildingSpaceBatchTwoDesigns },
+  { name: "常见侧廊错台客舍与双排叠舱宿馆", designs: everydayHospitalitySpaceBatchTwoDesigns },
+  { name: "常见凹庭分流与票检公园门馆", designs: everydayParkServiceSpaceBatchOneDesigns },
+  { name: "常见架廊跨庭与上下游憩游客中心", designs: everydayParkServiceSpaceBatchTwoDesigns },
+  { name: "常见穿廊炊洗与营地公共服务馆", designs: everydayParkServiceSpaceBatchThreeDesigns },
+  { name: "常见铁路侧台横穿货栈与营业楼", designs: everydayFreightBuildingSpaceBatchOneDesigns },
+  { name: "常见双月台中街快运转运整站", designs: everydayFreightBuildingSpaceBatchTwoDesigns },
+  { name: "常见四角厨核与十字公共餐堂", designs: everydayDiningSpaceBatchThreeDesigns },
+  { name: "常见岸厨双桥与桩梁折台餐楼", designs: everydayDiningSpaceBatchFourDesigns },
+  { name: "常见中廊分户与上下互嵌复式居住", designs: everydayResidenceSpaceBatchEightDesigns },
+  { name: "常见双首层侧院与梁桥连通整宅", designs: everydayResidenceSpaceBatchNineDesigns },
+  { name: "常见贯厅四角分室与炉芯膝墙家庭宅", designs: suburbanResidenceSpaceBatchOneDesigns },
+  { name: "常见斜角前窗室与偏置侧厅整宅", designs: suburbanResidenceSpaceBatchTwoDesigns },
+  { name: "常见双树跨梁与贯台环廊客舍", designs: everydayHospitalitySpaceBatchThreeDesigns },
+  { name: "常见卸货穿巷与双层电器营业楼", designs: everydayRetailBuildingSpaceBatchThreeDesigns },
+  { name: "常见椭圆环棚露院园艺零售整馆", designs: everydayRetailBuildingSpaceBatchFourDesigns },
+  { name: "常见租还分庭驾校跨厅与汽车拍卖馆", designs: everydayServiceBuildingSpaceBatchTwoDesigns },
+  { name: "常见弧形公共厅外沿充电休息整站", designs: everydayServiceBuildingSpaceBatchThreeDesigns },
+  { name: "常见双廊分流三厅便民服务整楼", designs: everydayMunicipalServiceSpaceBatchThreeDesigns },
+  { name: "常见返洗分流与干湿取还滨水服务楼", designs: everydayWaterfrontBuildingSpaceBatchTwoDesigns },
+  { name: "常见堤脚堤顶双入与缓坡骑行驿站", designs: everydayWaterfrontBuildingSpaceBatchThreeDesigns },
+  { name: "常见售票中核与双廊分流游船候乘楼", designs: everydayWaterfrontBuildingSpaceBatchFourDesigns },
+  { name: "常见双层坡台与上下分流垃圾中转整站", designs: publicSpaceBatchTwentyFiveDesigns },
+  { name: "常见双贯通车道与抬厨送餐整楼", designs: everydayDiningSpaceBatchFiveDesigns },
+  { name: "常见前檐错门与后台贯廊公共厕站", designs: publicSpaceBatchTwentySixDesigns },
+  { name: "常见高低双街分流托运营业整站", designs: everydayFreightBuildingSpaceBatchFiveDesigns },
+  { name: "常见玻璃后壁双场与高桥观球会馆", designs: everydayRecreationSpaceBatchFourDesigns },
+  { name: "常见端票厅横廊与梳台尽端铁路总站", designs: everydayTransitBuildingSpaceBatchFourDesigns },
+  { name: "常见回转索轮与双路登离观光索道站", designs: everydayTransitBuildingSpaceBatchFiveDesigns },
+  { name: "常见双浮箱候船厅与铰桥水上巴士站", designs: everydayTransitBuildingSpaceBatchSixDesigns },
+  { name: "常见异形录音核与侧控声闸制作楼", designs: everydayMediaWorkplaceSpaceBatchOneDesigns },
+  { name: "常见围院双层剪辑与独立审片制作楼", designs: everydayMediaWorkplaceSpaceBatchTwoDesigns },
+  { name: "常见斜轨阶梯月台与山坡缆索铁路站", designs: everydayTransitBuildingSpaceBatchSevenDesigns },
+  { name: "常见上下分流跨线候车与到达客站", designs: everydayTransitBuildingSpaceBatchEightDesigns },
+  { name: "常见穿行拱筒与侧廊自动洗车整站", designs: everydayServiceBuildingSpaceBatchFourDesigns },
+  { name: "常见转角双街立面与实背撑电影外景场", designs: everydayServiceBuildingSpaceBatchFiveDesigns },
+  { name: "常见公铁换装双检查路与独立提货整站", designs: everydayFreightBuildingSpaceBatchSixDesigns },
+  { name: "常见双街楔地双梯与十字贯廊办公整楼", designs: everydayWorkplaceSpaceBatchFiveDesigns },
+  { name: "常见年代双衣帽前斗与高窗单室学堂", designs: periodTownSpaceBatchSixDesigns },
+  { name: "常见底店顶院与外独梯五金商住整楼", designs: everydayRetailBuildingSpaceBatchFiveDesigns },
+  { name: "常见圆背闭店与铰展双翼完整报刊屋", designs: everydayRetailBuildingSpaceBatchSixDesigns },
+  { name: "常见下沉作业泵厅与隔廊报修换热整站", designs: everydayUtilityBuildingSpaceBatchOneDesigns },
+  { name: "常见高轨分仓与低场煤商装售整院", designs: everydayFreightBuildingSpaceBatchThreeDesigns },
+  { name: "常见铁路高台赶畜分栏与独立检疫整站", designs: everydayFreightBuildingSpaceBatchFourDesigns },
+  { name: "常见双台入户与外柱偏芯框架整宅", designs: suburbanResidenceSpaceBatchThreeDesigns },
+  { name: "常见上宿下库私梯与公共横桥汽车客舍", designs: everydayHospitalitySpaceBatchFourDesigns },
+  { name: "常见双井分流与桥接堤岸公共上岸楼", designs: everydayWaterfrontBuildingSpaceBatchFiveDesigns },
+  { name: "常见下沉材料坑与高观察廊拟音工场", designs: everydayMediaWorkplaceSpaceBatchThreeDesigns },
+  { name: "常见实鞍双箍托筒壳与端廊完整客舍", designs: everydayHospitalitySpaceBatchSixDesigns },
+  { name: "常见声闸长靶道与折翼下沉坑训练整馆", designs: everydayTrainingVenueSpaceBatchOneDesigns },
+  { name: "常见高干台围低湿场与后作鲜鱼整店", designs: everydayRetailBuildingSpaceBatchSevenDesigns },
+  { name: "常见双高牛台夹低人行坑完整挤奶厅", designs: everydayFarmBuildingSpaceBatchTwoDesigns },
+  { name: "常见双峰受索与独立内帐整台客舍", designs: everydayHospitalitySpaceBatchSevenDesigns },
+  { name: "常见职员中脊与双向分流客运联检楼", designs: everydayTransitBuildingSpaceBatchNineDesigns },
+  { name: "常见下层合厅与横叠箱房共享台客舍", designs: everydayHospitalitySpaceBatchFiveDesigns },
+  { name: "火车铁路轨道与机务地沟", designs: railTrackBatchOneDesigns },
+  { name: "火车铁路接触网与沿线信号设施", designs: railWaysideBatchOneDesigns },
+  { name: "中式古代古装剧皇宫与宫廷建筑", designs: chinesePalaceBatchOneDesigns },
+  { name: "中式古代古装剧城楼山寨与乡土建筑", designs: chineseTownBatchOneDesigns },
+  { name: "中式古代古装剧茅草房窑洞与乡村建筑", designs: chineseVillageBatchOneDesigns },
+  { name: "中式古代古装剧亭台楼阁与园林建筑", designs: chineseGardenBatchOneDesigns },
+  { name: "中式古代古装剧寺庙道观与山寺建筑", designs: chineseTempleBatchOneDesigns },
+  { name: "中式古代古装剧水池潭水与园林水景", designs: chineseWaterGardenBatchOneDesigns },
+  { name: "中式古代古装剧古城街道酒楼茶馆与商铺", designs: chineseStreetShopBatchOneDesigns },
+  { name: "中式古代古装剧古城街道铁匠铺与手工作坊", designs: chineseStreetWorkshopBatchOneDesigns },
+  { name: "中式古代古装剧古城街道集市摊位", designs: chineseMarketBatchOneDesigns },
+  { name: "中式古代古城常备商旅与公署", designs: chineseTownServiceBatchOneDesigns },
+  { name: "中式古代古城常备普通民居", designs: chineseTownResidenceBatchOneDesigns },
+  { name: "中式古代古城常备仓储与街坊设施", designs: chineseTownStorehouseBatchOneDesigns },
+  { name: "中式古代古装片场宫廷府邸", designs: chineseFilmCourtBatchOneDesigns },
+  { name: "中式古代古装片场官署军旅", designs: chineseFilmCivicBatchOneDesigns },
+  { name: "中式古代古装片场水陆市井", designs: chineseFilmStreetBatchOneDesigns },
+  { name: "中式古代古装片场唐风坊市", designs: chineseFilmUrbanBatchTwoDesigns },
+  { name: "中式古代古装片场边塞城防", designs: chineseFilmFrontierBatchTwoDesigns },
+  { name: "中式古代古装片场生产作坊", designs: chineseFilmIndustryBatchTwoDesigns },
+  { name: "中式古代古街样板建筑", designs: chineseStreetHeroBatchOneDesigns },
+  // 以下四组是独立具名的影视废墟与破败房间：各自有残墙、屋架、瓦砾的真几何（raw 标记，不套通用细化），不是对已有建筑加状态的乘积
+  { name: "影视破败废弃与残损建筑", designs: ruinBuildingDesigns },
+  { name: "影视破败年代与现代废弃建筑", designs: ruinBuildingTwoDesigns },
+  { name: "影视破败欧式奇幻与废土战损建筑", designs: ruinBuildingThreeDesigns },
+  { name: "影视破败房间与室内场景", designs: ruinRoomDesigns },
+  { name: "影视破败外景·游乐园矿场电影院旧街庙宇宅院", designs: ruinBuildingFourDesigns },
+  { name: "影视破败外景·野战医院避难所监狱水塔荒村战火街角", designs: ruinBuildingFiveDesigns },
+  { name: "影视内景三壁置景·古装与民国", designs: filmSetDesigns },
+  { name: "影视内景三壁置景·现代与惊悚末日", designs: filmSetDesignsTwo },
+  { name: "影视外景背撑立面", designs: backlotFacadeDesigns },
+  { name: "影视内景三壁置景·古装宫廷与江湖", designs: filmSetDesignsThree },
+  { name: "影视内景三壁置景·民国与年代", designs: filmSetDesignsFour },
+  { name: "影视内景三壁置景·现代生活（一）", designs: filmSetDesignsFive },
+  { name: "影视内景三壁置景·现代生活（二）", designs: filmSetDesignsSix },
+  { name: "白模·建筑模块", designs: whiteModuleDesigns },
+  { name: "白模·影棚布景与天花屋顶", designs: whiteStudioDesigns },
+  { name: "白模·整栋建筑", designs: whiteBuildingDesigns },
+  { name: "白模·大空间", designs: whiteSpaceDesigns },
+  { name: "白模·屋顶街巷场地", designs: whiteSiteDesigns },
+  { name: "白模·古建筑与城防", designs: whiteAncientDesigns },
+  { name: "白模·现代城市建筑", designs: [...whiteCityDesigns, ...whiteTunnelDesigns] },
+  { name: "白模·乡村与地域民居", designs: whiteRegionalDesigns },
+  { name: "白模·欧式日式与西部", designs: whiteWorldDesigns },
+  { name: "白模·工业与军事", designs: whiteIndustryDesigns },
+  { name: "白模·别墅地标与科幻舱室", designs: [...whiteLandmarkDesigns, ...whiteScifiDesigns] },
+  { name: "白模·古典世界与欧洲街屋", designs: whiteClassicalDesigns },
+  { name: "白模·古建群落", designs: whiteCompoundDesigns },
+  { name: "白模·现代院区", designs: whiteCampusDesigns },
+  { name: "白模·地下与隧道空间", designs: whiteUndergroundDesigns },
+  { name: "白模·更多布景房间", designs: whiteRoomDesigns },
+  { name: "白模·地标与交通场所", designs: whiteLandmarkTwoDesigns },
+  { name: "白模·科幻奇幻补充", designs: whiteFantasyDesigns },
+  { name: "影视内景三壁置景·带天花板版", designs: ceilingVariants },
+  { name: "白模·中国民俗建筑", designs: whiteFolkChinaDesigns },
+  { name: "白模·民族与地域民居", designs: whiteFolkHomesDesigns },
+  { name: "白模·世界民居与民俗宗教建筑", designs: whiteFolkWorldDesigns },
+  { name: "白模·古风内景", designs: whiteGuFengDesigns },
+];
+const prototypes = groups.flatMap(group => group.designs.map(prototype => ({ ...prototype, group: group.name })));
+const ids = new Map(prototypes.map((_, design) => ["masterArchitecture" + String(design).padStart(4, "0"), design]));
+
+// ACT: 用途说明整段进标签供搜索和Agent读尺寸；场景文档里单条标签上限160字，长说明按分句拆成几条，否则这件素材加不进场景。
+function purposeTags(purpose: string) {
+  if (purpose.length <= 160) return [purpose];
+  const tags: string[] = [];
+  let current = "";
+  for (const clause of purpose.split(/(?<=[；，。])/)) for (let rest = clause; rest; rest = rest.slice(160)) {
+    const part = rest.slice(0, 160);
+    if (current.length + part.length > 160) { tags.push(current.replace(/[；，。]$/, "")); current = ""; }
+    current += part;
+  }
+  if (current) tags.push(current.replace(/[；，。]$/, ""));
+  return tags;
+}
+
+// 每条是具名用途与主体机构，不使用地域前缀、状态或同一模型参数乘积扩充主目录。
+export const masterArchitectureAssets: SceneAsset[] = prototypes.map((prototype, design) => ({
+  id: "masterArchitecture" + String(design).padStart(4, "0"),
+  name: prototype.name,
+  category: "建筑",
+  itemType: prototype.itemType,
+  ...(prototype.theme ? { theme: prototype.theme } : {}),
+  kind: "model",
+  normalize: false,
+  state: prototype.state ?? "原始",
+  license: "内置原创程序化模型",
+  tags: [prototype.group, ...purposeTags(prototype.purpose), "本地原创", ...(prototype.tags ?? [])],
+  blueprint: { pack: "masterArchitecture", design, revision: 1 },
+}));
+
+export function createMasterArchitectureModel(id: string): ModelDefinition {
+  const design = ids.get(id);
+  if (design === undefined) throw new Error("建筑主素材编号不存在");
+  const prototype = prototypes[design]!;
+  const parts = prototype.build();
+  if (!prototype.raw) addBuildingDetails(parts, prototype.theme, prototype.group, prototype.itemType, prototype.name);
+  // 建筑自带的地皮平板裁到主体范围外扩一圈，不再伸出去盖住街道和旁边的物件
+  try { trimGroundSlabs(parts); } catch { /* 保持原样 */ }
+  const scale = architectureScales[prototype.name] ?? 1;
+  if (scale !== 1) for (const part of parts) {
+    part.position = { x: part.position.x * scale, y: part.position.y * scale, z: part.position.z * scale };
+    part.scale = { x: part.scale.x * scale, y: part.scale.y * scale, z: part.scale.z * scale };
+  }
+  return finishObjectModel(prototype.name, parts);
+}

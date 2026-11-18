@@ -40,7 +40,7 @@
   <a href="./readmeTr.md">Türkçe</a>
 </p>
 
-> 🌐 **21 interface languages** · [View supported languages](#languages)
+> 🌐 **22 interface languages** · [View supported languages](#languages)
 
 <div align="center">
 
@@ -210,7 +210,7 @@ Toonflow is an open-source AI creation platform for short dramas, animated comic
 | 🧩 **Plugin marketplace** | Extend nodes, tools, and creative capabilities through the [Plugin Marketplace](https://api.toonflow.net/console/plugIn). |
 | 🤖 **Open Agent** | Open access to prompts, tools, and A2A to customize Agent behavior and collaborate with external Agents. |
 | 🔧 **Flexible model integration** | Configure third-party APIs or connect local ComfyUI instances and LLMs. |
-| 🌐 **Multilingual support** | Supports 21 interface languages. |
+| 🌐 **Multilingual support** | Supports 22 interface languages. |
 
 ### How to Create AI Short Dramas and Animated Comics with Toonflow
 
@@ -239,7 +239,7 @@ You can configure language and media model services and use custom provider adap
 
 ### Multilingual support
 
-Supported languages: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe.
+Supported languages: 简体中文, 繁體中文, English, 日本語, Русский, Tiếng Việt, ไทย, 한국어, हिन्दी, Bahasa Indonesia, Bahasa Melayu, Filipino, বাংলা, اردو, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, العربية, فارسی, Türkçe, Português (Brasil).
 
 ---
 

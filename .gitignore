@@ -30,3 +30,4 @@ Thumbs.db
 *.keychain
 *.keychain-db
 .tmp/
+.claude

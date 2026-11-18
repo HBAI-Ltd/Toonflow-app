@@ -4,7 +4,7 @@
       <div class="modeToolbar" role="group" :aria-label="translate('编辑模式')">
         <el-button text size="small" :type="mode === 'rich' ? 'primary' : undefined" :aria-pressed="mode === 'rich'" @click="setMode('rich')">{{ translate("富文本") }}</el-button>
         <el-button text size="small" :type="mode === 'source' ? 'primary' : undefined" :aria-pressed="mode === 'source'" @click="setMode('source')">{{ translate("原文") }}</el-button>
-        <span class="attachmentStatus" aria-live="polite">{{ importing ? translate("正在导入图片…") : translate("粘贴截图或拖入图片") }}</span>
+        <span v-if="context.files" class="attachmentStatus" aria-live="polite">{{ importing ? translate("正在导入图片…") : translate("粘贴截图或拖入图片") }}</span>
       </div>
       <p v-if="largeDocument" class="largeDocumentNotice" role="status">{{ translate("超过 50,000 字符或 1,000 行的文档默认使用原文；可手动开启富文本，加载和编辑可能较慢。") }}</p>
       <div v-if="editor && mode === 'rich'" class="editorToolbar" role="group" :aria-label="translate('文档格式')">
@@ -232,8 +232,9 @@ import { computed, nextTick, onBeforeUnmount, onDeactivated, onMounted, ref, sha
 import { ElButton, ElDropdown, ElDropdownItem, ElDropdownMenu, ElInput, ElMessage, ElMessageBox, ElPopover, ElTooltip, type InputInstance } from "element-plus";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import type { ChainedCommands, EditorOptions } from "@tiptap/core";
-import type { ExtContext } from "@toonflow/ext-scaffold/runtime";
-import markdownExtensions, { parseMarkdownContent, resolveDocumentPath, serializeMarkdown } from "./markdownExtensions";
+import type { MarkdownEditorContext } from "./index";
+import markdownExtensions, { parseMarkdownContent, resolveDocumentPath, serializeBlocks } from "./markdownExtensions";
+import { captureSourceBlocks, joinSourceBlocks, mergeSourceBlocks, type SourceBlocks } from "./markdownContent";
 import {
   IconBold,
   IconItalic,
@@ -266,8 +267,15 @@ import {
   IconAlignJustified,
 } from "@tabler/icons-vue";
 
-const props = defineProps<{ context: ExtContext }>();
-let displayedText = props.context.text;
+const props = defineProps<{ context: MarkdownEditorContext; preserveFrontmatter?: boolean }>();
+// 技能头部只在原文中编辑，连同正文前的空行原样保留。
+const frontmatter = computed(() => {
+  if (!props.preserveFrontmatter) return "";
+  return props.context.text.match(/^\uFEFF?---(?=[\r\n])[\s\S]*?[\r\n]---(?:[\r\n]+|$)/)?.[0] ?? "";
+});
+let displayedBody = "";
+// 富文本只改写变化的块，其余块保留原文，避免改一处就重排整篇文件。
+let sourceBlocks: SourceBlocks | undefined;
 const largeDocument = computed(() => props.context.text.length > 50_000 || props.context.text.split("\n").length > 1_000);
 const mode = ref<"rich" | "source">(largeDocument.value ? "source" : "rich");
 const mounted = ref(false);
@@ -286,8 +294,18 @@ const editorOptions: Partial<EditorOptions> = {
   editable: !props.context.loading,
   onUpdate({ editor: currentEditor }) {
     if (!editor.value || !props.context.active || props.context.loading || mode.value !== "rich") return;
-    displayedText = serializeMarkdown(currentEditor);
-    props.context.updateText(displayedText);
+    const prefix = frontmatter.value;
+    const keys = serializeBlocks(currentEditor);
+    sourceBlocks = sourceBlocks && mergeSourceBlocks(sourceBlocks, keys);
+    const markdown = sourceBlocks ? joinSourceBlocks(sourceBlocks) : keys.join("\n\n");
+    const body = markdown.replace(/\n+$/, "");
+    // 序列化与原文块均按 LF 拼接；写回时沿用原文的换行符和结尾换行数。
+    const eol = props.context.text.includes("\r\n") ? "\r\n" : "\n";
+    const ending = (props.context.text.slice(prefix.length) || markdown).match(/(?:\r?\n)*$/)![0].replace(/\r/g, "").length;
+    displayedBody = body && body.replace(/\r?\n/g, eol) + eol.repeat(ending);
+    // 只有头部且末尾没有换行的文档，首次写正文时沿用头部的换行符。
+    const separator = prefix.endsWith("---") && displayedBody ? prefix.match(/\r\n?|\n/)![0] : "";
+    props.context.updateText(prefix + separator + displayedBody);
   },
   editorProps: {
     attributes: { role: "textbox", get "aria-label"() { return translate("Markdown 文档"); }, "aria-multiline": "true" },
@@ -314,19 +332,19 @@ const editorOptions: Partial<EditorOptions> = {
   },
 };
 onMounted(() => { mounted.value = true; });
-watch([() => props.context.text, () => props.context.active, () => props.context.loading, mode, mounted], ([text, active, loading, currentMode, ready]) => {
+watch([() => props.context.text, () => props.context.active, () => props.context.loading, mode, mounted, frontmatter], ([text, active, loading, currentMode, ready, prefix]) => {
   if (largeDocument.value && !richRequested) mode.value = currentMode = "source";
   const editable = active && !loading && currentMode === "rich";
   if (editor.value && editor.value.isEditable !== editable) editor.value.setEditable(editable, false);
   if (!ready || !active || loading || currentMode !== "rich") return;
+  const body = text.slice(prefix.length);
   // ACT: 可见富文本仍同步解析完整正文，确保输入前没有陈旧副本；大文档默认原文，手动开启富文本仍有全文解析成本。
-  if (!editor.value) {
-    editor.value = new Editor({ ...editorOptions, content: parseMarkdownContent(text) });
-    displayedText = text;
-  } else if (displayedText !== text) {
-    editor.value.commands.setContent(parseMarkdownContent(text), { contentType: "html", emitUpdate: false });
-    displayedText = text;
+  if (!editor.value || displayedBody !== body) {
+    if (editor.value) editor.value.commands.setContent(parseMarkdownContent(body), { contentType: "html", emitUpdate: false });
+    else editor.value = new Editor({ ...editorOptions, content: parseMarkdownContent(body) });
+    sourceBlocks = captureSourceBlocks(body, serializeBlocks(editor.value));
   }
+  displayedBody = body;
 }, { flush: "post" });
 
 function updateSource(event: Event) { props.context.updateText((event.target as HTMLTextAreaElement).value); }
@@ -357,17 +375,19 @@ function pasteImages(event: ClipboardEvent) {
 function dragImages(event: DragEvent) {
   if (!event.dataTransfer || !Array.from(event.dataTransfer.types).includes("Files")) return;
   event.preventDefault();
-  event.dataTransfer.dropEffect = props.context.loading ? "none" : "copy";
+  event.dataTransfer.dropEffect = !props.context.files || props.context.loading ? "none" : "copy";
 }
 function dropImages(event: DragEvent) {
   if (!event.dataTransfer?.files.length) return;
   event.preventDefault(); event.stopPropagation();
+  if (!props.context.files) return;
   const files = imageFiles(event.dataTransfer);
   if (files.length) queueImages(files);
   else ElMessage.warning(translate("请拖入图片文件"));
 }
 function queueImages(files: File[]) {
-  if (!props.context.active || props.context.loading || lifetime.signal.aborted) return;
+  const workspaceFiles = props.context.files;
+  if (!workspaceFiles || !props.context.active || props.context.loading || lifetime.signal.aborted) return;
   importing.value += files.length;
   imageQueue = imageQueue.then(async () => {
     let completed = 0;
@@ -375,9 +395,9 @@ function queueImages(files: File[]) {
       if (props.context.loading) throw new Error(translate("文档正在加载或关闭，请稍后重试"));
       for (const directory of ["assets", "assets/documentAttachments"]) {
         lifetime.signal.throwIfAborted();
-        await props.context.files.mkdir(directory).catch(async error => {
+        await workspaceFiles.mkdir(directory).catch(async error => {
           if ((error as { response?: { status?: number } }).response?.status !== 409) throw error;
-          await props.context.files.list(directory);
+          await workspaceFiles.list(directory);
         });
       }
       for (const file of files) {
@@ -386,7 +406,7 @@ function queueImages(files: File[]) {
         const suffix = mimeSuffix[file.type] ?? file.name.split(".").at(-1)?.toLowerCase();
         if (!suffix || !/^(png|jpe?g|webp|gif|bmp|svg|avif|ico)$/.test(suffix)) throw new Error(translate("暂不支持这种图片格式"));
         const path = `assets/documentAttachments/${crypto.randomUUID()}.${suffix}`;
-        await props.context.files.write(path, file, true, lifetime.signal);
+        await workspaceFiles.write(path, file, true, lifetime.signal);
         lifetime.signal.throwIfAborted();
         await nextTick();
         lifetime.signal.throwIfAborted();

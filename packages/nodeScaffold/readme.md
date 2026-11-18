@@ -98,7 +98,7 @@ const { nodeProps, outputs } = useNode({
 </script>
 ```
 
-`useNode(options?)` 接受 `label`、`icon`、`handles`、`outputs`，返回 `id`、`node`、`config`、`nodeProps`、`handles`、`outputs`、`nodeEvent`、`nodeTools`、`files`、`ai`、`ffmpeg`、`asr`、`updateNodeInternals`。`nodeProps` 是供骨架绑定的 computed，包含标题、图标、端口和输出；`outputs` 根据默认值推导类型，并恢复当前节点保存的合法输出，只接受仍存在的 source 端口及匹配类型。文本默认值保持 `STRING`；图片节点无已保存输出时保持为空。
+`useNode(options?)` 接受 `label`、`icon`、`handles`、`outputs`，返回 `id`、`node`、`config`、`nodeProps`、`handles`、`outputs`、`nodeEvent`、`nodeTools`、`files`、`ai`、`ffmpeg`、`asr`、`server`、`updateNodeInternals`。`nodeProps` 是供骨架绑定的 computed，包含标题、图标、端口和输出；`outputs` 根据默认值推导类型，并恢复当前节点保存的合法输出，只接受仍存在的 source 端口及匹配类型。文本默认值保持 `STRING`；图片节点无已保存输出时保持为空。
 
 `files.uploadFile(file)`、`files.removeNodeFiles()` 和 `updateNodeInternals()` 已绑定当前节点，无需再次传 ID；`files` 同时提供 `getWorkspaceFiles()`、`useFileUrl()`。端口定义、具体 UI、上传校验和上传/删除互斥仍由业务节点管理。选中状态可直接使用 `node.selected`，例如绑定 `v-model:bottomVisible="node.selected"`。
 
@@ -187,13 +187,14 @@ await ai.generate({
 文本 AI 只提供 `generate({ ...input, onEvent, signal })`；服务端只接收 `Context` 请求并返回 SSE，不保留旧调用格式。
 
 
+- `useNodeModelMemory(type)`：读写该类型节点上次手动选择的模型键，返回 `{ get(), set(key) }`。宿主通过 `provide("nodeModelMemory", { get(type), set(type, key) })` 提供；图片、视频、音频生成节点分别使用 `image`、`video`、`audio`，仅在模型为空时优先采用仍可用的记忆值。未提供宿主能力时读取为空、写入忽略。
 - `ai.getMediaModels(signal?)`：读取已安装供应商声明的图片、视频模型，返回供应商与模型 ID、名称、类型及模式参数。图片模型可通过 `imageSizes`、`imageRatios` 声明支持的分辨率与比例选项，节点生成时使用 `size`、`ratio` 传入选择值。
 - `ai.generateImage(input, signal?)`：非流式生成并落盘，返回 `{ path, mimeType, mediaType: "image" }[]`。`input` 包含工作区绝对路径 `directory`、`providerId`、`modelId`、`prompt`、工作区相对目录 `outputDirectory`；可传 `images: { path, mimeType }[]`、`ratio`、`size`。图片参考只传工作区相对路径，由后端读取。
 - `ai.generateVideo(input, signal?)`：视频生成并落盘，返回 `{ path, mimeType, mediaType: "video" }[]`。基础字段同图片生成；使用 `duration`、`resolution`、`ratio`、`generateAudio`、`mode` 配置视频，可传 `images`、`videos`、`audios` 和 `firstFrame`、`lastFrame`，素材均为工作区内 `{ path, mimeType }` 引用。
 
 三个媒体 `generate*` 方法保留原返回值，并接受可选第三参数 `{ taskId, nodeId, canvasPath, onStatus }`。`ai.resumeMedia(directory, taskId, signal?, options?)` 只复查已有任务；`ai.cancelMedia(directory, taskId)` 显式取消服务端任务。传入已持久化 `taskId` 时，节点卸载和查询断线仅停止本地等待；旧的两参调用保留卸载或显式 abort 时取消任务的行为。
 
-生成节点复用 `@toonflow/node-shared/useNodeGeneration`，在 `node.data.mediaTask` 保存任务身份和非敏感恢复数据，先通过宿主保存画布再提交；重开画布只查询已有 ID，完成后保存输出。宿主的 `useNodePersistence()` 位于 `@toonflow/nodes-scaffold/nodeDocument`，返回的上下文绑定当前目录和画布，`save()` 可等待保存完成。供应商未提供可恢复任务凭据时，服务进程中断后的同步生成不能自动重做；恢复失败保留原输出。
+生成节点复用 `@toonflow/node-shared/useNodeGeneration`，在 `node.data.mediaTask` 保存任务身份和非敏感恢复数据，先通过宿主保存画布再提交；重开画布只查询已有 ID，完成后保存输出。宿主的 `useNodePersistence()` 位于 `@toonflow/nodes-scaffold/nodeDocument`，返回的上下文绑定当前目录和画布，`save()` 可等待保存完成。节点在 `defineOptions` 中声明 `nodeProject: true` 才会被宿主作为独立项目全屏打开（如白模预演），挂载后须自行打开编辑界面；此时同一模块的 `useNodeProject()` 返回 `{ close, chooseAssetFolder?, saveAssets? }`：`close(error?)` 退出项目，`chooseAssetFolder(defaultName)` 让用户在素材库里选位置并命名（取消返回 `undefined`），`saveAssets(folder, files)` 把一组文件存进全局素材库的该文件夹（重名自动编号）；在画布中返回 `undefined`。供应商未提供可恢复任务凭据时，服务进程中断后的同步生成不能自动重做；生成或恢复失败保留原输出并结束任务，节点回到可发送状态，不需手动复查或放弃。
 
 `directory` 在生成前通过 `files.getWorkspaceFiles().list()` 取得快照，`outputDirectory` 使用 `assets/${id}`。结果可直接赋给 `outputs.value.image = { dataType: "IMAGE", value: { url: result.path, mimeType: result.mimeType } }`；使用 `files.useFileUrl` 预览。图片生成节点会合并文本参考、传入图片参考，成功后替换输出，失败或停止时保留上次图片；删除节点前取消请求。当前画布为支持撤销而保留节点素材，不随节点删除物理文件。
 
@@ -496,6 +497,20 @@ const apiKey = computed(() => String(config.value.apiKey ?? ""));
 ```
 
 `config` 是只读 computed，仅包含当前节点类型自己的配置，不提供全局 settings。宿主通过 Vue `provide("nodeConfig", (nodeType: string) => config)` 提供响应式读取能力；脚手架传入当前节点的完整类型（例如 `remote-exampleNode`）。用户保存后，已有节点会取得新配置；未保存的字段使用 `configRules` 中声明的 `value` 默认值，未提供宿主能力时返回 `{}`。
+
+## HTTP 与 WebSocket 服务
+
+在节点同步 setup 中取得 `const { server } = useNode()`，也可从 `@toonflow/nodes-scaffold/nodeServer` 导入 `useNodeServer()`。`server.get/post/put/patch/delete/head/options(path, handler)` 注册当前实例的 HTTP 路由，`server.ws(path, handler)` 注册 WebSocket；注册本身不联网，在用户操作中调用 `await server.start()` 后取得访问地址。
+
+HTTP 回调接收 `{ request, params, query, signal }`：`request` 为重建的 Web Request，读取 JSON 使用 `await request.json()`，业务参数仍须由插件校验；`params` 包含 `:id` 等路径参数，`query` 为 `URLSearchParams`。返回对象或数组会转为 JSON，字符串为纯文本，`server.html(content)` 为 HTML；也可返回 `Response` 明确设置状态、响应头和内容。无需声明页面或静态文件清单。
+
+WebSocket 回调收到桥接 socket，提供 `id`、`request`、`params`、`query`、`signal`、`send(data)`、`onMessage(callback)`、`onClose(callback)` 和 `close()`。对象消息自动编解码，文本与二进制支持由共同协议处理，`send()` 不代表对端已经完成业务执行。
+
+`server.url`、`status`、`error` 是可响应式读取的只读属性；`stop()` 可主动关闭后再次启动。组件卸载自动销毁服务，后台画布仍保留实例时不关闭。路由和连接不写入节点数据或画布 JSON，每次启动由服务端分配独立服务 ID，相同路径不会在节点间冲突。同一服务重复注册相同方法及路径会报错，路由须在启动前完成注册。
+
+服务通过宿主共享连接转发，回调仍在当前节点前端实例执行。关闭创作页面、服务断线或节点卸载后不能继续处理请求；断线不重放业务请求，重新启动取得新地址。请求和响应正文有 8 MB 上限，WS 单条消息为 1 MB，HTTP 处理超时为 30 秒，不支持无限流式响应。
+
+访问端从 `@toonflow/nodes-scaffold/serverClient` 导入 `createServerClient(serviceUrl)`，也可使用独立的 `@toonflow/plugin-server/client`。客户端绑定完整服务地址，提供 `get/post/put/patch/delete`、`request` 和 `ws`，自动保持路径、凭据与 WS 地址在当前服务范围内。完整通用契约见 `packages/pluginServer/readme.md`。
 
 ## 依赖和样式边界
 

@@ -39,9 +39,10 @@
     </el-card>
     <div class="menuExtension"><slot /></div>
   </panel>
-  <panel v-if="providerBalances.length" class="balanceMenuPanel" position="top-right">
+  <panel v-if="showToonflowBalance || otherProviderBalances.length" class="balanceMenuPanel" position="top-right">
     <div class="balanceList" tabindex="0" aria-label="供应商余额">
-      <el-card v-for="item in providerBalances" :key="item.id" class="balanceCard" shadow="never" :bodyStyle="{ padding: '2px 4px' }">
+      <toonflowBalance v-if="showToonflowBalance" :token="toonflowAccountToken" />
+      <el-card v-for="item in otherProviderBalances" :key="item.id" class="balanceCard" shadow="never" :bodyStyle="{ padding: '2px 4px' }">
         <el-button class="balanceTrigger" text :loading="item.loading" :title="item.error || `点击刷新 ${item.label} 余额`" :aria-label="`刷新 ${item.label} 余额`" @click="refreshProviderBalance(item.id)">
           <span class="providerLabel">{{ item.label }}</span>
           <span>{{ item.balance ? `${balanceFormat.format(Math.min(item.balance.balance, item.balance.keyBalance ?? Infinity))} ${item.balance.unit}` : '—' }}</span>
@@ -82,6 +83,8 @@ import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { getCanvasAssetDirectories, isCanvasFile } from "@/pages/workspace/canvasFile";
 import { findRemainingCanvas } from "../canvasFiles";
 import { providerBalances, refreshProviderBalance } from "@/lib/providerBilling";
+import { multiTenantEnabled, toonflowAccountToken } from "@/stores/settings";
+import toonflowBalance from "./toonflowBalance.vue";
 
 const props = defineProps<{
   directory?: string;
@@ -90,6 +93,8 @@ const props = defineProps<{
   flushSave: (action?: () => Promise<void>) => Promise<void>;
 }>();
 const workspaceStore = useWorkspaceStore();
+const showToonflowBalance = computed(() => !multiTenantEnabled.value && !!toonflowAccountToken.value);
+const otherProviderBalances = computed(() => providerBalances.value.filter(item => item.id !== "toonflow"));
 const balanceFormat = computed(() => new Intl.NumberFormat(locale.value, { maximumFractionDigits: 6 }));
 const workspaceName = computed(() => workspaceStore.project?.name || translate("未命名工作区"));
 const projectNameDraft = ref("");

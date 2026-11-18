@@ -80,7 +80,7 @@ const triggerButton = ref<HTMLButtonElement>();
 const popoverPanel = ref<{ focusSelected: () => void }>();
 const flagIds: Record<Locale, string> = {
   "zh-CN": "cn", "zh-TW": "cn", en: "us", ja: "jp", ru: "ru", vi: "vn", th: "th", ko: "kr", hi: "in",
-  id: "id", ms: "my", fil: "ph", bn: "bd", ur: "pk", ta: "in", te: "in", mr: "in", pa: "in", ar: "sa", fa: "ir", tr: "tr",
+  id: "id", ms: "my", fil: "ph", bn: "bd", ur: "pk", ta: "in", te: "in", mr: "in", pa: "in", ar: "sa", fa: "ir", tr: "tr", pt: "br",
 };
 const systemLanguageName = computed(() => supportedLocales.find(language => language.code === (uiSettings.value.language === "system" ? locale.value : detectLocale(navigator.languages)))?.name);
 const selectedName = computed(() => supportedLocales.find(language => language.code === locale.value)?.name);

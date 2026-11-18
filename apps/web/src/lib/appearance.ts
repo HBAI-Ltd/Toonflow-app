@@ -2,6 +2,9 @@ import { ref, watchEffect } from "vue";
 import { uiSettings } from "@/stores/settings";
 
 export function registerAppearance() {
+  const hostWindow = window as Window & {
+    __electrobunSendToHost?: (message: { type: "appearance"; dark: boolean; backgroundColor: string; textColor: string }) => void;
+  };
   const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
   const systemDark = ref(systemTheme.matches);
   const updateSystemTheme = (event: MediaQueryListEvent) => { systemDark.value = event.matches; };
@@ -21,6 +24,15 @@ export function registerAppearance() {
         `color-mix(in srgb, ${primaryColor} ${100 - level * 10}%, ${dark ? "#141414" : "#fff"})`);
     }
     root.style.setProperty("--el-color-primary-dark-2", `color-mix(in srgb, ${primaryColor} 80%, ${dark ? "#fff" : "#000"})`);
+    if (window === window.top && hostWindow.__electrobunSendToHost) {
+      const style = getComputedStyle(root);
+      hostWindow.__electrobunSendToHost({
+        type: "appearance",
+        dark,
+        backgroundColor: style.getPropertyValue("--el-bg-color").trim(),
+        textColor: style.getPropertyValue("--el-text-color-primary").trim(),
+      });
+    }
   });
   return () => {
     stop();

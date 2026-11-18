@@ -40,7 +40,7 @@
   <a href="./readmeTr.md">Türkçe</a>
 </p>
 
-> 🌐 **21言語に対応** · [対応言語を見る](#languages)
+> 🌐 **22言語に対応** · [対応言語を見る](#languages)
 
 <div align="center">
 
@@ -210,13 +210,13 @@ Toonflow はショートドラマ、モーションコミック、ショート�
 | 🧩 **プラグインマーケット** | [プラグインマーケット](https://api.toonflow.net/console/plugIn)からノード、ツール、制作機能を追加できます。 |
 | 🤖 **オープンな Agent** | プロンプト、ツール、A2A のオープンな仕組みにより、Agent の動作のカスタマイズと外部連携に対応します。 |
 | 🔧 **モデルを自由に接続** | サードパーティーの API に加え、ローカルの ComfyUI や LLM も接続できます。 |
-| 🌐 **多言語対応** | 21の表示言語に対応。 |
+| 🌐 **多言語対応** | 22の表示言語に対応。 |
 
 <a id="languages"></a>
 
 ### 多言語対応
 
-対応言語：简体中文、繁體中文、English、日本語、Русский、Tiếng Việt、ไทย、한국어、हिन्दी、Bahasa Indonesia、Bahasa Melayu、Filipino、বাংলা、اردو、தமிழ்、తెలుగు、मराठी、ਪੰਜਾਬੀ、العربية、فارسی、Türkçe。
+対応言語：简体中文、繁體中文、English、日本語、Русский、Tiếng Việt、ไทย、한국어、हिन्दी、Bahasa Indonesia、Bahasa Melayu、Filipino、বাংলা、اردو、தமிழ்、తెలుగు、मराठी、ਪੰਜਾਬੀ、العربية、فارسی、Türkçe、Português (Brasil)。
 
 ---
 

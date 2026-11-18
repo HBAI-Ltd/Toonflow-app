@@ -1,130 +1,171 @@
 <template>
   <el-dialog
     v-model="visible"
-    :title="provider ? '编辑供应商' : '添加自定义供应商'"
-    width="min(760px, 94vw)"
+    class="providerDialog"
+    :title="provider ? '编辑供应商' : '添加供应商'"
+    :width="provider ? 'min(760px, calc(100vw - 32px))' : 'min(960px, calc(100vw - 32px))'"
     alignCenter
     appendToBody
     destroyOnClose
     :closeOnClickModal="false"
-    :closeOnPressEscape="!saving"
-    :showClose="!saving"
+    :closeOnPressEscape="!saving && !builtinSaving"
+    :showClose="!saving && !builtinSaving"
     @closed="resetForm">
-    <el-scrollbar maxHeight="65vh">
-      <el-form ref="providerForm" :model="form" :rules="rules" labelPosition="top" :disabled="saving" class="customProviderForm">
-        <div class="formGrid">
-          <el-form-item label="Provider ID" prop="id"><el-input v-model="form.id" placeholder="例如 myProvider" /></el-form-item>
-          <el-form-item label="显示名称" prop="label"><el-input v-model="form.label" placeholder="供应商的显示名称" /></el-form-item>
-          <el-form-item label="API 地址" prop="apiUrl"><el-input v-model="form.apiUrl" dir="ltr" placeholder="https://api.example.com/v1" /></el-form-item>
-          <el-form-item label="API 协议" prop="protocol">
-            <el-select v-model="form.protocol" aria-label="API 协议">
-              <el-option v-for="protocol in protocols" :key="protocol" :label="protocol" :value="protocol" />
-            </el-select>
-          </el-form-item>
-        </div>
-        <el-form-item label="API 密钥" prop="apiKey">
-          <el-input v-model="form.apiKey" type="password" dir="ltr" showPassword autocomplete="off" placeholder="本地无鉴权服务可留空" />
-        </el-form-item>
-        <el-form-item label="自定义请求头" prop="headers" class="requestHeaders">
-          <div class="headersEditor">
-            <div v-for="item in form.headers" :key="item.key" class="headerRow">
-              <el-input v-model="item.name" class="headerName" dir="ltr" autocomplete="off" placeholder="请求头名称" aria-label="请求头名称" />
-              <el-input v-model="item.value" type="password" dir="ltr" showPassword autocomplete="off" placeholder="请求头值（可留空）" aria-label="请求头值" />
-              <el-button text type="danger" :icon="IconTrash" aria-label="删除请求头" @click="form.headers = form.headers.filter(header => header.key !== item.key)" />
-            </div>
-            <el-button text :icon="IconPlus" @click="addRequestHeader">添加请求头</el-button>
-          </div>
-        </el-form-item>
-        <div class="modelHeader">
-          <el-text tag="strong">模型列表</el-text>
-          <el-button :icon="IconDownload" :loading="fetching" @click="fetchModels()">获取模型列表</el-button>
-        </div>
-        <div class="modelList">
-          <div v-for="item in models" :key="item.key" class="modelItem">
-            <div class="modelRow">
-              <el-input v-model="item.id" placeholder="模型 ID" aria-label="模型 ID" />
-              <el-input v-model="item.label" placeholder="显示名称" aria-label="模型显示名称" />
-              <el-button
-                text
-                :icon="expandedModels.has(item.key) ? IconChevronUp : IconChevronDown"
-                :aria-expanded="expandedModels.has(item.key)"
-                aria-label="展开模型设置"
-                @click="expandedModels.has(item.key) ? expandedModels.delete(item.key) : expandedModels.add(item.key)" />
-              <el-button
-                text
-                type="danger"
-                :icon="IconTrash"
-                aria-label="删除模型"
-                @click="models = models.filter((model) => model.key !== item.key)" />
-            </div>
-            <div v-if="expandedModels.has(item.key)" class="modelSettings">
-              <div class="formGrid tokenSettings">
-                <el-form-item label="上下文窗口">
-                  <el-input-number
-                    v-model="item.contextWindow"
-                    :min="1"
-                    :max="Number.MAX_SAFE_INTEGER"
-                    :precision="0"
-                    controlsPosition="right"
-                    placeholder="未设置"
-                    aria-label="上下文窗口" />
-                </el-form-item>
-                <el-form-item label="最大输出 token">
-                  <el-input-number
-                    v-model="item.maxOutputTokens"
-                    :min="1"
-                    :max="Number.MAX_SAFE_INTEGER"
-                    :precision="0"
-                    controlsPosition="right"
-                    placeholder="未设置"
-                    aria-label="最大输出 token" />
-                </el-form-item>
-              </div>
-              <el-form-item class="reasoningMode" label="思考强度档位">
-                <el-select :modelValue="getReasoningMode(item)" aria-label="思考强度配置方式" @update:modelValue="setReasoningMode(item, $event)">
-                  <el-option label="继承模型目录" value="inherit" />
-                  <el-option label="禁用思考强度" value="disabled" />
-                  <el-option label="自定义档位" value="custom" />
+    <el-tabs v-if="!provider" v-model="addMode" class="providerTabs">
+      <el-tab-pane label="内置供应商" name="builtin" :disabled="busy" />
+      <el-tab-pane label="自定义供应商" name="custom" :disabled="busy" />
+    </el-tabs>
+    <div class="providerLayout" :class="{ providerEditing: !!provider || addMode === 'custom' }">
+      <aside v-if="!provider && addMode === 'builtin'" class="providerSidebar" aria-label="选择厂商">
+        <button
+          v-for="item in vendors"
+          :key="item.id"
+          class="providerItem"
+          type="button"
+          :title="item.description || item.name"
+          :disabled="busy"
+          :aria-pressed="addMode === 'builtin' && selectedProvider === item.id"
+          @click="selectedProvider = item.id">
+          <modelIcon :model="item.id" :size="18" />
+          <span>{{ item.name }}</span>
+        </button>
+      </aside>
+      <el-scrollbar class="providerDetails">
+        <template v-if="!provider && addMode === 'builtin'">
+          <section v-if="listLoading || sourceLoading || listError || sourceError || !vendors.length" class="providerContent" :aria-busy="listLoading || sourceLoading">
+            <el-text v-if="listLoading || sourceLoading" type="info">正在获取…</el-text>
+            <template v-else-if="listError || sourceError">
+              <el-alert :title="listError || sourceError" type="error" :closable="false" showIcon />
+              <el-button @click="listError ? listRefresh++ : sourceRefresh++">重试</el-button>
+            </template>
+            <el-text v-else type="info">暂无供应商</el-text>
+          </section>
+          <addProviderDialog
+            v-else
+            ref="builtinForm"
+            v-model="visible"
+            :provider="activeProvider"
+            v-model:saving="builtinSaving"
+            v-model:fetching="builtinFetching" />
+        </template>
+        <section v-else class="providerContent">
+          <el-form ref="providerForm" :model="form" :rules="rules" labelPosition="top" :disabled="saving" class="customProviderForm">
+            <h4 class="sectionTitle">连接配置</h4>
+            <div class="formGrid">
+              <el-form-item label="Provider ID" prop="id"><el-input v-model="form.id" placeholder="例如 myProvider" /></el-form-item>
+              <el-form-item label="显示名称" prop="label"><el-input v-model="form.label" placeholder="供应商的显示名称" /></el-form-item>
+              <el-form-item label="API 地址" prop="apiUrl" required><el-input v-model="form.apiUrl" dir="ltr" placeholder="https://api.example.com/v1" /></el-form-item>
+              <el-form-item label="API 协议" prop="protocol" required>
+                <el-select v-model="form.protocol" aria-label="API 协议">
+                  <el-option v-for="protocol in protocols" :key="protocol" :label="protocol" :value="protocol" />
                 </el-select>
               </el-form-item>
-              <div v-if="getReasoningMode(item) === 'custom'" class="reasoningSettings">
-                <div class="reasoningChoices" aria-label="支持的思考档位">
-                  <el-checkbox
-                    v-for="level in thinkingLevels"
-                    :key="level"
-                    class="reasoningChoice"
-                    border
-                    :modelValue="hasReasoningLevel(item, level)"
-                    @update:modelValue="setReasoningLevel(item, level, !!$event)">
-                    {{ thinkingLevelLabels[level] }}
-                  </el-checkbox>
+            </div>
+            <el-form-item label="API 密钥" prop="apiKey">
+              <el-input v-model="form.apiKey" type="password" dir="ltr" showPassword autocomplete="off" placeholder="本地无鉴权服务可留空" />
+            </el-form-item>
+            <el-form-item label="自定义请求头" prop="headers" class="requestHeaders">
+              <div class="headersEditor">
+                <div v-for="item in form.headers" :key="item.key" class="headerRow">
+                  <el-input v-model="item.name" class="headerName" dir="ltr" autocomplete="off" placeholder="请求头名称" aria-label="请求头名称" />
+                  <el-input v-model="item.value" type="password" dir="ltr" showPassword autocomplete="off" placeholder="请求头值（可留空）" aria-label="请求头值" />
+                  <el-button text type="danger" :icon="IconTrash" aria-label="删除请求头" @click="form.headers = form.headers.filter(header => header.key !== item.key)" />
                 </div>
-                <el-text type="info" size="small">勾选支持的档位并填写接口值；off 可留空，不指定强度值。</el-text>
-                <div class="reasoningMappings">
-                  <div v-for="level in thinkingLevels.filter(level => hasReasoningLevel(item, level))" :key="level" class="reasoningRow">
-                    <div class="reasoningLevel">
-                      <span>{{ thinkingLevelLabels[level] }}</span>
-                      <span class="reasoningKey">{{ level }}</span>
+                <el-button text :icon="IconPlus" @click="addRequestHeader">添加请求头</el-button>
+              </div>
+            </el-form-item>
+            <div class="modelHeader">
+              <el-text tag="strong">模型列表</el-text>
+              <el-button :icon="IconDownload" :loading="fetching" @click="fetchModels()">获取模型列表</el-button>
+            </div>
+            <div class="modelList">
+              <div v-for="item in models" :key="item.key" class="modelItem">
+                <div class="modelRow">
+                  <el-input v-model="item.id" placeholder="模型 ID" aria-label="模型 ID" />
+                  <el-input v-model="item.label" placeholder="显示名称" aria-label="模型显示名称" />
+                  <el-button
+                    text
+                    :icon="expandedModels.has(item.key) ? IconChevronUp : IconChevronDown"
+                    :aria-expanded="expandedModels.has(item.key)"
+                    aria-label="展开模型设置"
+                    @click="expandedModels.has(item.key) ? expandedModels.delete(item.key) : expandedModels.add(item.key)" />
+                  <el-button
+                    text
+                    type="danger"
+                    :icon="IconTrash"
+                    aria-label="删除模型"
+                    @click="models = models.filter((model) => model.key !== item.key)" />
+                </div>
+                <div v-if="expandedModels.has(item.key)" class="modelSettings">
+                  <div class="formGrid tokenSettings">
+                    <el-form-item label="上下文窗口">
+                      <el-input-number
+                        v-model="item.contextWindow"
+                        :min="1"
+                        :max="Number.MAX_SAFE_INTEGER"
+                        :precision="0"
+                        controlsPosition="right"
+                        placeholder="未设置"
+                        aria-label="上下文窗口" />
+                    </el-form-item>
+                    <el-form-item label="最大输出 token">
+                      <el-input-number
+                        v-model="item.maxOutputTokens"
+                        :min="1"
+                        :max="Number.MAX_SAFE_INTEGER"
+                        :precision="0"
+                        controlsPosition="right"
+                        placeholder="未设置"
+                        aria-label="最大输出 token" />
+                    </el-form-item>
+                  </div>
+                  <el-form-item class="reasoningMode" label="思考强度档位">
+                    <el-select :modelValue="getReasoningMode(item)" aria-label="思考强度配置方式" @update:modelValue="setReasoningMode(item, $event)">
+                      <el-option label="继承模型目录" value="inherit" />
+                      <el-option label="禁用思考强度" value="disabled" />
+                      <el-option label="自定义档位" value="custom" />
+                    </el-select>
+                  </el-form-item>
+                  <div v-if="getReasoningMode(item) === 'custom'" class="reasoningSettings">
+                    <div class="reasoningChoices" aria-label="支持的思考档位">
+                      <el-checkbox
+                        v-for="level in thinkingLevels"
+                        :key="level"
+                        class="reasoningChoice"
+                        border
+                        :modelValue="hasReasoningLevel(item, level)"
+                        @update:modelValue="setReasoningLevel(item, level, !!$event)">
+                        {{ thinkingLevelLabels[level] }}
+                      </el-checkbox>
                     </div>
-                    <el-input
-                      :modelValue="getReasoningValue(item, level)"
-                      :placeholder="level === 'off' ? '留空使用协议默认值' : '接口值，例如 ' + level"
-                      :aria-label="level + ' 接口值'"
-                      @update:modelValue="setReasoningValue(item, level, $event)" />
+                    <el-text type="info" size="small">勾选支持的档位并填写接口值；off 可留空，不指定强度值。</el-text>
+                    <div class="reasoningMappings">
+                      <div v-for="level in thinkingLevels.filter(level => hasReasoningLevel(item, level))" :key="level" class="reasoningRow">
+                        <div class="reasoningLevel">
+                          <span>{{ thinkingLevelLabels[level] }}</span>
+                          <span class="reasoningKey">{{ level }}</span>
+                        </div>
+                        <el-input
+                          :modelValue="getReasoningValue(item, level)"
+                          :placeholder="level === 'off' ? '留空使用协议默认值' : '接口值，例如 ' + level"
+                          :aria-label="level + ' 接口值'"
+                          @update:modelValue="setReasoningValue(item, level, $event)" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-        <el-button class="manualAdd" :icon="IconPlus" @click="addManualModel">手动添加模型</el-button>
-        <el-alert v-if="formError" :title="formError" type="error" :closable="false" showIcon />
-      </el-form>
-    </el-scrollbar>
+            <el-button class="manualAdd" :icon="IconPlus" @click="addManualModel">手动添加模型</el-button>
+            <el-alert v-if="formError" :title="formError" type="error" :closable="false" showIcon />
+          </el-form>
+        </section>
+      </el-scrollbar>
+    </div>
     <template #footer>
-      <el-button :disabled="saving" @click="visible = false">取消</el-button>
-      <el-button type="primary" :loading="saving" :disabled="fetching" @click="addProvider">
-        {{ provider ? "保存修改" : "确定添加供应商" }}
+      <el-button :disabled="saving || builtinSaving" @click="visible = false">取消</el-button>
+      <el-button type="primary" :loading="saving || builtinSaving" :disabled="!provider && addMode === 'builtin' ? !builtinForm?.canSubmit : fetching" @click="submitProvider">
+        {{ provider ? "保存修改" : "添加供应商" }}
       </el-button>
     </template>
   </el-dialog>
@@ -167,11 +208,21 @@ import {
   IconSearch,
 } from "@tabler/icons-vue";
 import { saveSettings, type CustomProvider, type CustomProviderModel } from "@/stores/settings";
-import { languageProviders } from "@toonflow/providers";
+import { useBuiltinProviders, type BuiltinLanguageProvider } from "@/lib/builtinProviders";
+import { modelIcon } from "@toonflow/model-icons";
 import { thinkingLevels, type ThinkingLevel, type ReasoningEfforts } from "@toonflow/server/modelReasoning";
+import addProviderDialog from "./addProviderDialog.vue";
 
 const props = defineProps<{ provider?: CustomProvider }>();
 const visible = defineModel<boolean>({ default: false });
+const addMode = ref<"builtin" | "custom">("builtin");
+const { vendors, selectedProvider, activeProvider, listLoading, sourceLoading, listError, sourceError, listRefresh, sourceRefresh } = useBuiltinProviders<BuiltinLanguageProvider>(
+  "language", () => visible.value && !props.provider && addMode.value === "builtin",
+);
+const builtinForm = ref<InstanceType<typeof addProviderDialog>>();
+const builtinSaving = ref(false);
+const builtinFetching = ref(false);
+const busy = computed(() => saving.value || fetching.value || builtinSaving.value || builtinFetching.value);
 const providerForm = ref<FormInstance>();
 const form = reactive({ id: "", label: "", apiUrl: "", protocol: "openai-completions", apiKey: "", headers: [] as { key: string; name: string; value: string }[] });
 const models = ref<(CustomProviderModel & { key: string })[]>([]);
@@ -240,6 +291,7 @@ const rules: FormRules = {
 
 watch(visible, (value) => {
   if (value) {
+    addMode.value = props.provider ? "custom" : "builtin";
     resetForm();
     if (props.provider) {
       const { models: providerModels, id, label, apiUrl, protocol, apiKey, headers } = props.provider;
@@ -247,11 +299,17 @@ watch(visible, (value) => {
       form.headers = Object.entries(headers ?? {}).map(([name, value]) => ({ key: crypto.randomUUID(), name, value }));
       models.value = providerModels.map((item) => ({ ...item, key: crypto.randomUUID() }));
     }
-  } else {
-    request?.abort();
-    resultsVisible.value = false;
   }
 }, { immediate: true });
+watch([visible, addMode], ([isVisible, mode]) => {
+  if (isVisible && mode === "custom") return;
+  request?.abort();
+  request = undefined;
+  fetching.value = false;
+  resultsVisible.value = false;
+  formError.value = "";
+  providerForm.value?.clearValidate();
+}, { flush: "sync" });
 onBeforeUnmount(() => request?.abort());
 watch([() => form.id, () => form.apiUrl, () => form.protocol, () => form.apiKey], () => request?.abort());
 watch(() => form.headers, () => request?.abort(), { deep: true });
@@ -265,6 +323,10 @@ function resetForm() {
   selectedIds.value = new Set();
   modelSearch.value = "";
   formError.value = "";
+}
+
+function submitProvider() {
+  return !props.provider && addMode.value === "builtin" ? builtinForm.value?.addProvider() : addProvider();
 }
 
 function addRequestHeader() {
@@ -288,12 +350,13 @@ function getProviderHeaders() {
 }
 
 async function fetchModels() {
-  if (fetching.value || !(await providerForm.value?.validateField(["apiUrl", "headers"]).catch(() => false))) return;
+  if (saving.value || fetching.value || !visible.value || addMode.value !== "custom") return;
   fetching.value = true;
   formError.value = "";
   const controller = new AbortController();
   request = controller;
   try {
+    if (!(await providerForm.value?.validateField(["apiUrl", "headers"]).catch(() => false)) || controller.signal.aborted) return;
     const { data } = await axios.post(
       "/api/providers/models",
       { apiUrl: form.apiUrl.trim(), protocol: form.protocol, apiKey: form.apiKey.trim(), headers: getProviderHeaders() },
@@ -314,7 +377,10 @@ async function fetchModels() {
         : "获取模型列表失败";
     }
   } finally {
-    fetching.value = false;
+    if (request === controller) {
+      request = undefined;
+      fetching.value = false;
+    }
   }
 }
 
@@ -365,6 +431,7 @@ async function addProvider() {
   if (fetching.value) return;
   formError.value = "";
   if (saving.value || !(await providerForm.value?.validate().catch(() => false))) return;
+  if (!visible.value || addMode.value !== "custom") return;
   if (form.id.toLowerCase() === "toonflow") {
     formError.value = "toonflow 为账号供应商保留 ID，请使用其他 ID";
     return;
@@ -417,8 +484,7 @@ async function addProvider() {
     await saveSettings(settings => {
       const existing = settings.customProviders;
       if (existing !== undefined && !Array.isArray(existing)) throw new Error("已保存的供应商配置格式不正确");
-      if (languageProviders.some(item => item.id !== providerId && item.id.toLowerCase() === updatedProvider.id.toLowerCase())
-        || existing?.some(item => typeof item?.id === "string" && item.id !== providerId && item.id.toLowerCase() === updatedProvider.id.toLowerCase())) {
+      if (existing?.some(item => typeof item?.id === "string" && item.id !== providerId && item.id.toLowerCase() === updatedProvider.id.toLowerCase())) {
         throw new Error("Provider ID 已存在");
       }
       if (providerId && !existing?.some(item => item.id === providerId)) throw new Error("供应商已不存在");
@@ -435,10 +501,10 @@ async function addProvider() {
 }
 </script>
 
+<style lang="scss" src="../../providerDialog.scss"></style>
+
 <style lang="scss" scoped>
 .customProviderForm {
-  padding-right: 12px;
-
   .requestHeaders {
     .headersEditor {
       width: 100%;

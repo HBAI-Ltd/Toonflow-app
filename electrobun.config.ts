@@ -49,7 +49,6 @@ export default {
       // "build/agents": "agents",
       "build/nodes": "nodes",
       "build/ext": "ext",
-      "packages/providers/src": "providers",
       "packages/skills": "skills",
       ...(startupTarget ? {
         "packages/startup/assets/startup.json": "startup/startup.json",
@@ -86,5 +85,7 @@ export default {
       postBuild: "apps/desktop/scripts/localizeMac.ts",
       postWrap: "apps/desktop/scripts/localizeMac.ts",
     },
+  } : process.platform === "win32" ? {
+    scripts: { postBuild: "apps/desktop/scripts/restoreWindowsRuntime.ts" },
   } : {}),
 } satisfies ElectrobunConfig;

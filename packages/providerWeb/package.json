@@ -14,8 +14,7 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "@toonflow/i18n": "workspace:*",
-    "@toonflow/providers": "workspace:*"
+    "@toonflow/i18n": "workspace:*"
   },
   "peerDependencies": {
     "@form-create/element-ui": "^3",

@@ -8,7 +8,7 @@ import type { AgentImageReference } from "@/agent/runtime/imageAttachments";
 import { getAgentTaskId } from "@/agent/runtime/sessions";
 import { getRequestFiles, type RequestFile } from "@/utils/ai/requestFiles";
 import { createFileTransport, FileRequestLimitError } from "@/utils/ai/files";
-import { getConfiguredProviders, publicAiMessage } from "@/utils/ai";
+import { getConfiguredProviders, portableTools, publicAiMessage } from "@/utils/ai";
 import { createBillingUsageTracker } from "@/utils/ai/billingUsage";
 import { modelGateway, requireDirectModelAccess } from "@/utils/multiTenant/gateway";
 import type { ModelOutcome } from "@toonflow/multi-tenant-gateway/types";
@@ -202,6 +202,7 @@ export function configureAgentRequests(session: AgentSession, limits?: { maxRequ
           }
           const requestContext = {
             ...context,
+            tools: portableTools(context.tools),
             messages: messages.flatMap<Message>((message, index) => {
               if (message.role !== "assistant") return [message];
               const content = invalidThinking.has(contentHash(context.messages[index])) ? message.content.filter(part => part.type !== "thinking") : message.content;
