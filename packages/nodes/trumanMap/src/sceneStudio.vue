@@ -5275,7 +5275,8 @@ async function hostEnsureModels() {
 }
 function hostFindModel(name: string, models: AiModel[]) {
   const query = name.trim().toLocaleLowerCase();
-  const found = models.find(model => model.modelId.toLocaleLowerCase() === query || model.label.toLocaleLowerCase() === query)
+  // 宿主模型选择器的值（[供应商, 模型]）精确匹配，避免不同供应商同名模型选错。
+  const found = models.find(model => hostModelKey(model) === name.trim()) ?? models.find(model => model.modelId.toLocaleLowerCase() === query || model.label.toLocaleLowerCase() === query)
     ?? models.find(model => `${model.providerLabel} ${model.label} ${model.modelId}`.toLocaleLowerCase().includes(query));
   if (!found) throw new Error(`没有模型“${name}”，可选：${models.slice(0, 20).map(model => model.label).join("、")}`);
   return found;

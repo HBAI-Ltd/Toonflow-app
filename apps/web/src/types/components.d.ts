@@ -97,6 +97,7 @@ declare module 'vue' {
     IconCubePlus: typeof import('@tabler/icons-vue')['IconCubePlus']
     IconDots: typeof import('@tabler/icons-vue')['IconDots']
     IconExternalLink: typeof import('@tabler/icons-vue')['IconExternalLink']
+    IconFolder: typeof import('@tabler/icons-vue')['IconFolder']
     IconFolders: typeof import('@tabler/icons-vue')['IconFolders']
     IconHeart: typeof import('@tabler/icons-vue')['IconHeart']
     IconKey: typeof import('@tabler/icons-vue')['IconKey']

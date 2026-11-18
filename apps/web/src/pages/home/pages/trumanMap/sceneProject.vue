@@ -13,6 +13,7 @@ import { markRaw, onMounted, provide, shallowRef, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { VueFlow, useVueFlow, type Node, type NodeTypesObject } from "@vue-flow/core";
 import type { NodePersistenceContext, NodeProjectContext } from "@toonflow/nodes-scaffold/nodeDocument";
+import { useNodeToolsContext } from "@toonflow/nodes-scaffold/nodeTools";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { currentUser } from "@/stores/multiTenant";
 import { useWorkspaceStore } from "@/stores/workspace";
@@ -21,7 +22,8 @@ import assetLibrary from "@/pages/workspace/panels/canvas/components/assetLibrar
 
 type ProjectFile = { toonflowCanvas: true; nodes: Node[]; edges: unknown[]; viewport: { x: number; y: number; zoom: number } };
 
-const props = defineProps<{ directory: string }>();
+// request：首页“生成预演”新建的场景，打开后设好画幅，把描述作为第一条消息发给内置 Agent。
+const props = defineProps<{ directory: string; request?: { prompt: string; model: string; reasoningEffort: string; format: string } }>();
 const emit = defineEmits<{ close: [] }>();
 // 项目文件沿用画布格式，场景数据由插件写在同一目录的 assets/节点ID/ 下；同一文件夹也能作为普通项目打开。
 const projectPath = "白模预演.json";
@@ -29,6 +31,7 @@ const nodeName = "trumanMap";
 const nodeType = `remote-${nodeName}`;
 const flowId = `trumanMap-${crypto.randomUUID()}`;
 const flow = useVueFlow(flowId);
+const getNodeTools = useNodeToolsContext(flow);
 const workspaceStore = useWorkspaceStore();
 // 子账号没有全局素材库权限，插件据此只保留下载。
 const canSaveAssets = currentUser.value?.role !== "user";
@@ -144,8 +147,23 @@ onMounted(async () => {
   } catch (error) {
     showError(error);
     emit("close");
+    return;
   }
+  if (props.request) sendRequest(props.request).catch(showError);
 });
+
+// 通过插件注册的节点函数操作编辑器（自动打开编辑器、等视口就绪），和画布总 Agent 调用的是同一入口。
+async function sendRequest(request: NonNullable<typeof props.request>) {
+  const tools = getNodeTools();
+  const call = (name: string, args: Record<string, unknown>) => tools.call({ nodeId: nodeId.value, name: `node:${name}`, args });
+  // ACT: 节点函数在节点组件 setup 时注册，挂载时机由 Vue Flow 决定，这里轮询最多 10 秒。
+  for (let tries = 0; !tools.list([nodeId.value], ["node:editorAgentChat"]).next().value; tries++) {
+    if (tries >= 200) throw new Error("TrumanMap 插件版本过旧，不支持自动发送描述，请更新插件后重试");
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  await call("editorCameras", { action: "format", format: request.format });
+  await call("editorAgentChat", { message: request.prompt, ...(request.model ? { model: request.model } : {}), ...(request.reasoningEffort ? { thinking: request.reasoningEffort } : {}) });
+}
 </script>
 
 <style lang="scss" scoped>

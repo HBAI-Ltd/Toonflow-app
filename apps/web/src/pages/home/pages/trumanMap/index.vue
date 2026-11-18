@@ -24,6 +24,7 @@
       <el-input v-model="prompt" type="textarea" :autosize="{ minRows: 3, maxRows: 8 }" resize="none" placeholder="写下场景布局、人物走位和镜头运动，生成可以反复调整的白模预演" aria-label="预演描述" />
       <div class="composerBar">
         <div class="composerTools">
+          <workspacePicker ref="folderPicker" v-model="sceneDirectory" :disabled="busy" />
           <modelPopover v-model="selectedModel" v-model:reasoningEffort="reasoningEffort" class="modelPill" />
           <el-select v-model="aspectRatio" class="toolPill" aria-label="画面比例">
             <template #prefix><icon-aspect-ratio :size="15" aria-hidden="true" /></template>
@@ -34,12 +35,17 @@
             <el-option v-for="option in durationOptions" :key="option.value" :label="translate(option.label)" :value="option.value" />
           </el-select>
         </div>
-        <button class="generateButton" type="button" :disabled="!prompt.trim()">
+        <button v-if="!sceneDirectory" class="generateButton" type="button" :disabled="busy" @click="folderPicker?.chooseDirectory()">
+          <icon-folder :size="14" aria-hidden="true" />
+          <span>选择文件夹</span>
+        </button>
+        <button v-else class="generateButton" type="button" :disabled="busy || !prompt.trim()" :aria-busy="generating" @click="generate">
           <icon-player-play-filled :size="14" aria-hidden="true" />
           <span>生成预演</span>
         </button>
       </div>
     </div>
+    <p v-if="!sceneDirectory" class="folderHint" role="status">请先选择一个空文件夹，白模场景和导出的素材会保存在这里。</p>
 
     <div class="suggestions" role="group" aria-label="示例描述">
       <button v-for="option in suggestionOptions" :key="option.label" class="suggestion" type="button" @click="prompt = translate(option.label)">
@@ -65,16 +71,18 @@
       </div>
     </section>
     <workspacePicker ref="picker" hideTrigger />
-    <sceneProject v-if="projectDirectory" :directory="projectDirectory" @close="projectDirectory = ''; creating = false" />
+    <sceneProject v-if="projectDirectory" :directory="projectDirectory" :request="sceneRequest" @close="projectDirectory = ''; sceneRequest = undefined; creating = false" />
   </section>
 </template>
 
 <script setup lang="ts">
 import { translate } from "@toonflow/i18n/vue";
-import { defineAsyncComponent, ref } from "vue";
-import { ElMessageBox } from "element-plus";
+import axios from "axios";
+import { computed, defineAsyncComponent, ref } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { IconEdit, IconTrash } from "@tabler/icons-vue";
 import modelPopover from "@/components/modelPopover.vue";
+import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { useWorkspaceStore, type Project } from "@/stores/workspace";
 import workspacePicker from "../../workspacePicker.vue";
 import projectCard from "../projects/projectCard.vue";
@@ -108,7 +116,34 @@ async function renameScene(scene: Project) {
 const prompt = ref("");
 const selectedModel = ref("");
 const reasoningEffort = ref("");
-const aspectRatios = ["16:9", "9:16", "1:1", "2.39:1"];
+const folderPicker = ref<InstanceType<typeof workspacePicker>>();
+// 首页输入框选的场景文件夹；“生成预演”在这里新建场景并把描述发给内置 Agent。
+const sceneDirectory = ref("");
+const sceneRequest = ref<{ prompt: string; model: string; reasoningEffort: string; format: string }>();
+const generating = ref(false);
+const busy = computed(() => generating.value || !!projectDirectory.value || !!picker.value?.selecting || !!folderPicker.value?.selecting);
+
+// 和首页新建项目一致：只用空文件夹新建，已有场景从“我的白模场景”打开。
+async function generate() {
+  if (busy.value || !prompt.value.trim()) return;
+  generating.value = true;
+  try {
+    const { empty } = await useWorkspaceFiles(sceneDirectory.value).list();
+    if (!empty) return void ElMessage.warning("该文件夹不为空，请重新选择空文件夹；已有场景请在“我的白模场景”里打开。");
+    const seconds = durationOptions.find(option => option.value === duration.value && option.value !== "auto");
+    sceneRequest.value = {
+      prompt: seconds ? `${prompt.value.trim()}\n\n预演时长：约${seconds.value}秒。` : prompt.value.trim(),
+      model: selectedModel.value, reasoningEffort: reasoningEffort.value, format: aspectRatio.value,
+    };
+    projectDirectory.value = sceneDirectory.value;
+  } catch (error) {
+    ElMessage.error(axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || "无法读取文件夹，请重试" : error instanceof Error ? error.message : "无法读取文件夹，请重试");
+  } finally {
+    generating.value = false;
+  }
+}
+// 与 TrumanMap 成片画幅一致。
+const aspectRatios = ["16:9", "9:16", "2.39:1", "1.85:1", "4:3"];
 const aspectRatio = ref(aspectRatios[0]!);
 const durationOptions = [
   { value: "auto", label: "自动时长" },
@@ -331,6 +366,18 @@ const activeShot = 3;
         min-width: 0;
         gap: 6px;
 
+        :deep(.workspaceButton) {
+          max-width: 200px;
+          height: 32px;
+          margin: 0;
+          padding: 0 12px;
+          border-radius: 999px;
+          background: var(--el-fill-color-light);
+          color: var(--el-text-color-regular);
+
+          &:hover { background: var(--el-fill-color); }
+        }
+
         .modelPill {
           min-width: 0;
           max-width: 230px;
@@ -382,6 +429,15 @@ const activeShot = 3;
         @media (prefers-reduced-motion: reduce) { transition: none; }
       }
     }
+  }
+
+  .folderHint {
+    max-width: 800px;
+    margin: 10px auto 0;
+    padding: 0 18px;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    line-height: 1.7;
   }
 
   .suggestions {
