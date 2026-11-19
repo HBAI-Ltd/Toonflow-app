@@ -10,6 +10,7 @@ import desktopRequest from "@/lib/desktop";
 import { getRuntimePlatform } from "@/lib/platform";
 import initializePlugins from "@/utils/plugins/initialize";
 import { languageRequest, setLocaleFallback, translateError, translateMessage } from "@/lib/i18n";
+import { sameOriginRequest } from "@/lib/middleware";
 import { detectLocale, normalizeLocale } from "@toonflow/i18n";
 
 export async function createApp({
@@ -88,6 +89,8 @@ export async function createApp({
   }
   app.use(cors());
   app.use(languageRequest);
+  // ACT: 浏览器页面始终通过同源入口访问；拒绝跨站页面借本机浏览器调用 API，桌面与移动网关已采用同一规则。
+  app.use("/api", sameOriginRequest);
   const { initializeMultiTenantRuntime, multiTenantAccess } = await import("@/utils/multiTenant/runtime");
   initializeMultiTenantRuntime(app);
   app.use(multiTenantAccess);
