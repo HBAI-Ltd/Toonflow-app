@@ -154,6 +154,11 @@
   <a href="https://api.toonflow.net/">آفیشل ماڈل پلیٹ فارم</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">تعارفی ویڈیو</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap پری ویز ڈیمو</a>
+</p>
+
 ---
 
 ## 1. 💛 اسپانسرز اور معاونت
@@ -181,7 +186,13 @@ Toonflow کے اوپن سورس منصوبے کی معاونت کرنے والے
       <br /><br />
       <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">اس مخصوص لنک سے رجسٹر ہوں</a> اور پلیٹ فارم آزمانے کے لیے CNY 5 کا مفت کریڈٹ حاصل کریں!</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI کم خرچ AI متن، تصویر اور ویڈیو بنانے کی سروس فراہم کرتا ہے اور DeepSeek، GLM، Kimi، Seedream، Seedance، Wan اور MiniMax H3 جیسے نمایاں ماڈلز کو یکجا کرتا ہے۔ متن سے تصویر، تصویر سے تصویر، متن سے ویڈیو اور تصویر سے ویڈیو ایک متحد API کے ذریعے دستیاب ہیں تاکہ ادارے لچک کے ساتھ متعدد ماڈلز استعمال کر سکیں۔ پلیٹ فارم ادارہ جاتی سطح کی خفیہ کاری اور ملٹی ٹیننٹ علیحدگی استعمال کرتا ہے اور چین کی لیول 3 سیکیورٹی جانچ میں کامیاب ہے۔</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">اس مخصوص لنک سے رجسٹر ہوں</a> اور WEIMETA AI کی ملٹی موڈل ماڈل سروسز آزمائیں۔ محدود وقت کی پیشکش: CNY 100 ری چارج پر CNY 15 اضافی۔ کاروباری رابطہ WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@ Toonflow کے اوپن سورس منصوبے کی معاونت کرنے والے
 
 ## 2. 🌟 نمایاں خصوصیات
 
-Toonflow مختصر ڈراموں، متحرک کامکس اور مختصر ویڈیوز کی AI تخلیق کے لیے اوپن سورس پلیٹ فارم ہے، جو اسکرپٹس، اثاثوں اور ویڈیو کلپس کو ایک لامحدود کینوس پر اکٹھا کرتا ہے۔
-
-| خصوصیت | تفصیل |
+| صلاحیت | تفصیل |
 | --- | --- |
-| 🏠 **مقامی تنصیب** | منصوبے اور اثاثے اپنے آلے یا سرور پر رکھیں؛ ڈیسک ٹاپ، Android، Docker اور سرور پر تنصیب کے اختیارات موجود ہیں۔ |
-| 🖼️ **لامحدود کینوس** | اسکرپٹس، کرداروں، مناظر اور ویڈیو کلپس کو ایک ہی کینوس پر ترتیب دیں۔ |
-| 🔌 **MCP** | بیرونی ٹولز اور سروسز کو MCP کے ذریعے جوڑیں۔ |
-| 🧩 **پلگ اِن مارکیٹ** | [پلگ اِن مارکیٹ](https://api.toonflow.net/console/plugIn) کے ذریعے نوڈز، ٹولز اور تخلیقی صلاحیتوں میں اضافہ کریں۔ |
-| 🤖 **اوپن Agent** | پرامپٹس، ٹولز اور A2A تک کھلی رسائی کے ساتھ Agent کا طرزِ عمل اپنی ضرورت کے مطابق بنائیں اور بیرونی ایجنٹس سے تعاون کریں۔ |
-| 🔧 **ماڈلز کا لچک دار انضمام** | تھرڈ پارٹی API ترتیب دیں یا مقامی ComfyUI انسٹینسز اور بڑے لسانی ماڈلز کو جوڑیں۔ |
-| 🌐 **کثیر لسانی معاونت** | انٹرفیس 22 زبانوں میں دستیاب ہے۔ |
+| 🎬 **TrumanMap پری ویز** | اسکرپٹ پیسٹ کریں، ایک کلک میں 3D سیٹ، اسٹوری بورڈ اور بلاکنگ۔ |
+| 🖼️ **لامحدود کینوس** | اسکرپٹ، کردار، مناظر اور کلپس ایک کینوس پر جڑے۔ |
+| 🎥 **AI ویڈیو تخلیق** | @ سے اثاثے جوڑیں، شاٹ بہ شاٹ بنائیں۔ |
+| 🤖 **AI معاون** | کینوس پڑھتا اور بدلتا ہے؛ MCP اور A2A کی سہولت۔ |
+| 🔧 **کوئی بھی ماڈل** | بلٹ اِن فراہم کنندگان، تھرڈ پارٹی API، لوکل LLM، ComfyUI۔ |
+| 🧩 **پلگ اِن مارکیٹ** | نوڈ، ٹول اور اسکل ایک کلک میں۔ |
+| 🏠 **لوکل تنصیب** | Windows، macOS، Linux، Android، Docker۔ |
+| 🌐 **کثیر لسانی** | 22 انٹرفیس زبانیں۔ |
+
+**طریقۂ کار**: اسکرپٹ و اسٹوری بورڈ ← کردار و مناظر ← 3D پری ویز ← شاٹ بہ شاٹ ویڈیو ← ایڈٹ و ڈاؤن لوڈ۔
+
+### عام سوالات
+
+**Toonflow کیا ہے؟** AI مختصر ڈراموں، AI کامکس اور AI ویڈیوز کے لیے اوپن سورس پلیٹ فارم۔
+
+**کیا یہ مفت ہے؟** MIT لائسنس، خود ہوسٹ کرنا مفت؛ تھرڈ پارٹی ماڈل API پر فیس ہو سکتی ہے۔
+
+**کون سے ماڈل؟** Seedance، Seedream، MiniMax، Wan وغیرہ بلٹ اِن؛ تھرڈ پارٹی API، لوکل LLM اور ComfyUI بھی جوڑ سکتے ہیں۔ [استعمال کی رہنمائی](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf) دیکھیں۔
+
+**کون سے پلیٹ فارم؟** Windows، macOS، Linux، Android، نیز Docker اور سرور۔
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Toonflow مختصر ڈراموں، متحرک کامکس اور مختصر وی�
 
 ---
 
-## 3. 📸 اسکرین شاٹس
+## 3. 📸 دس نمایاں خصوصیات
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow · منصوبے کا ہوم پیج اور نئے خیالات کی تخلیق" width="80%" /></a><br /><sub>منصوبے کا ہوم پیج اور نئے خیالات کی تخلیق</sub>
+### نمایاں 1 | اسکرپٹ پیسٹ کریں، 3D پری ویز پائیں
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow · پہلا اجرا اور فوری ترتیب" width="80%" /></a><br /><sub>پہلا اجرا اور فوری ترتیب</sub>
+مکالموں کے مطابق خودکار شاٹ اور بلاکنگ؛ مانیٹر پر تصویر اور سب ٹائٹل براہِ راست۔ 📺 [ڈیمو دیکھیں](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow · تخلیقی کینوس · گہری تھیم" width="80%" /></a><br /><sub>تخلیقی کینوس · گہری تھیم</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · اسکرپٹ پیسٹ کریں، 3D پری ویز پائیں" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow · تخلیقی کینوس · ہلکی تھیم" width="80%" /></a><br /><sub>تخلیقی کینوس · ہلکی تھیم</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · اسکرپٹ پیسٹ کریں، 3D پری ویز پائیں" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · اسکرپٹ پیسٹ کریں، 3D پری ویز پائیں" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow · کرداروں، مناظر اور پروپس کے اثاثے" width="80%" /></a><br /><sub>کرداروں، مناظر اور پروپس کے اثاثے</sub>
+### نمایاں 2 | جیانگنان کا لامتناہی آبی قصبہ
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow · تھری ڈی ڈائریکٹر اسٹوڈیو اور شاٹس کی پیشگی منظرکشی" width="80%" /></a><br /><sub>تھری ڈی ڈائریکٹر اسٹوڈیو اور شاٹس کی پیشگی منظرکشی</sub>
+شہر کی فصیل، گلیاں، نہریں، مندر اور پہاڑ: 1,500 سے زائد اشیا۔
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow · کردار کے تین زاویوں والے خاکے اور تصویر سازی" width="80%" /></a><br /><sub>کردار کے تین زاویوں والے خاکے اور تصویر سازی</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · جیانگنان کا لامتناہی آبی قصبہ" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow · متعدد ریفرنس اثاثوں کے ساتھ ویڈیو بنانا" width="80%" /></a><br /><sub>متعدد ریفرنس اثاثوں کے ساتھ ویڈیو بنانا</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · جیانگنان کا لامتناہی آبی قصبہ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · جیانگنان کا لامتناہی آبی قصبہ" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow · نوڈ مینو اور گروپ بنانے کے کام" width="80%" /></a><br /><sub>نوڈ مینو اور گروپ بنانے کے کام</sub>
+### نمایاں 3 | 64 تیار سیٹ + 80,000 سے زائد اثاثے
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow · پلگ اِن مارکیٹ" width="80%" /></a><br /><sub>پلگ اِن مارکیٹ</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 تیار سیٹ + 80,000 سے زائد اثاثے" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 تیار سیٹ + 80,000 سے زائد اثاثے" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### نمایاں 4 | موسم، وقت اور زمین ایک کلک میں
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · موسم، وقت اور زمین ایک کلک میں" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · موسم، وقت اور زمین ایک کلک میں" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · موسم، وقت اور زمین ایک کلک میں" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · موسم، وقت اور زمین ایک کلک میں" width="100%" /></a></td>
+  </tr>
+</table>
+
+### نمایاں 5 | پری ویز سیدھا ویڈیو تخلیق میں
+
+اسٹوری بورڈ، چار رخی شیٹ، پری ویز ویڈیو، اینیمیٹک اور شاٹ فہرست ایک کلک میں کینوس پر۔
+
+### نمایاں 6 | لامحدود کینوس + AI معاون
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · لامحدود کینوس + AI معاون" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · لامحدود کینوس + AI معاون" width="100%" /></a></td>
+  </tr>
+</table>
+
+### نمایاں 7 | متعدد حوالوں سے ویڈیو
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · متعدد حوالوں سے ویڈیو" width="100%" /></a>
+</p>
+
+### نمایاں 8 | اسکرپٹ دستاویزات اور ورک اسپیس
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · اسکرپٹ دستاویزات اور ورک اسپیس" width="100%" /></a>
+</p>
+
+### نمایاں 9 | ہوم اور اثاثہ لائبریری
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · ہوم اور اثاثہ لائبریری" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · ہوم اور اثاثہ لائبریری" width="100%" /></a></td>
+  </tr>
+</table>
+
+### نمایاں 10 | پلگ اِن مارکیٹ
+
+مزید پلگ اِن [ویب پلگ اِن مارکیٹ](https://api.toonflow.net/console/plugIn) میں۔
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · پلگ اِن مارکیٹ" width="100%" /></a>
+</p>
 
 ---
 

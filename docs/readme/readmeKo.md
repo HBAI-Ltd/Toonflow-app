@@ -154,6 +154,11 @@
   <a href="https://api.toonflow.net/">공식 모델 플랫폼</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">제품 소개 영상</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap 프리비즈 데모</a>
+</p>
+
 ---
 
 ## 1. 💛 후원과 지원
@@ -181,7 +186,13 @@ Toonflow 오픈 소스 프로젝트를 지원해 주시는 다음 파트너 여�
       <br /><br />
       <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">전용 링크로 가입</a>하면 CNY 5 상당의 무료 체험 크레딧을 드립니다!</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI는 DeepSeek, GLM, Kimi, Seedream, Seedance, Wan, MiniMax H3 등 주요 모델을 모아 가성비 높은 AI 텍스트·이미지·영상 생성 서비스를 제공합니다. 텍스트-이미지, 이미지-이미지, 텍스트-영상, 이미지-영상을 지원하며 통합 API로 여러 모델을 유연하게 호출해 기업용 AI 콘텐츠 제작에 활용할 수 있습니다. 기업급 데이터 암호화 전송과 멀티테넌트 격리를 적용했고 중국 등급보호 3급 보안 평가를 통과했습니다.</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">전용 링크로 가입</a>하면 WEIMETA AI 멀티모달 모델 서비스를 체험할 수 있습니다. 기간 한정으로 100위안 충전 시 15위안을 추가로 드립니다. 비즈니스 문의 WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@ Toonflow 오픈 소스 프로젝트를 지원해 주시는 다음 파트너 여�
 
 ## 2. 🌟 주요 기능
 
-Toonflow는 숏드라마, 모션 코믹스, 짧은 영상 제작을 위한 오픈 소스 AI 창작 플랫폼입니다. 대본, 자산, 영상 클립을 하나의 무한 캔버스에 모을 수 있습니다.
-
 | 기능 | 설명 |
 | --- | --- |
-| 🏠 **로컬 배포** | 프로젝트와 자산을 자신의 기기나 서버에 저장하며 데스크톱, Android, Docker, 서버 배포를 지원합니다. |
-| 🖼️ **무한 캔버스** | 하나의 캔버스에서 대본, 캐릭터, 장면, 영상 클립을 정리합니다. |
-| 🔌 **MCP** | MCP를 통해 외부 도구와 서비스에 연결합니다. |
-| 🧩 **플러그인 마켓** | [플러그인 마켓](https://api.toonflow.net/console/plugIn)에서 노드, 도구, 창작 기능을 확장합니다. |
-| 🤖 **개방형 Agent** | 프롬프트, 도구, A2A를 개방하여 Agent 동작을 맞춤 설정하고 외부 Agent와 협업할 수 있습니다. |
-| 🔧 **유연한 모델 연결** | 타사 API를 설정하거나 로컬 ComfyUI 및 LLM에 연결합니다. |
-| 🌐 **다국어 지원** | 22개 인터페이스 언어를 지원합니다. |
+| 🎬 **TrumanMap 프리비즈** | 대본을 붙여 넣으면 3D 세트, 콘티, 동선을 한 번에. |
+| 🖼️ **무한 캔버스** | 대본, 캐릭터, 장면, 영상 클립을 연결해 재사용. |
+| 🎥 **AI 영상 생성** | @로 에셋을 참조해 컷 단위로 생성. |
+| 🤖 **AI 어시스턴트** | 캔버스를 직접 읽고 수정, MCP와 A2A 지원. |
+| 🔧 **자유로운 모델 연결** | 내장 공급자, 외부 API, 로컬 LLM, ComfyUI. |
+| 🧩 **플러그인 마켓** | 노드, 도구, 스킬을 원클릭 설치. |
+| 🏠 **로컬 배포** | Windows, macOS, Linux, Android, Docker. |
+| 🌐 **다국어** | 22개 인터페이스 언어. |
+
+**제작 흐름**: 대본·콘티 → 캐릭터와 장면 → 3D 프리비즈 → 컷별 영상 생성 → 편집·다운로드.
+
+### 자주 묻는 질문
+
+**Toonflow란?** AI 숏드라마, AI 웹툰 영상, AI 영상을 만드는 오픈소스 플랫폼입니다.
+
+**무료인가요?** MIT 라이선스로 무료 자체 배포가 가능하며, 외부 모델 API는 유료일 수 있습니다.
+
+**어떤 모델을 지원하나요?** Seedance, Seedream, MiniMax, Wan 등을 내장하고 외부 API, 로컬 LLM, ComfyUI도 연결할 수 있습니다. [사용 가이드](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)를 참고하세요.
+
+**지원 플랫폼은?** Windows, macOS, Linux, Android, Docker 및 서버 배포.
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Toonflow는 숏드라마, 모션 코믹스, 짧은 영상 제작을 위한 오�
 
 ---
 
-## 3. 📸 스크린샷
+## 3. 📸 10가지 하이라이트
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow 프로젝트 홈과 아이디어 창작" width="80%" /></a><br /><sub>프로젝트 홈과 아이디어 기반 창작</sub>
+### 하이라이트 1 | 대본만 붙이면 3D 프리비즈
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow 첫 실행과 빠른 설정" width="80%" /></a><br /><sub>첫 실행과 빠른 설정</sub>
+대사에 맞춰 자동으로 컷을 나누고 동선을 짜며, 모니터에 화면과 자막이 실시간으로 표시됩니다. 📺 [데모 영상 보기](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow 어두운 캔버스와 AI 도우미" width="80%" /></a><br /><sub>창작 캔버스 · 어두운 테마</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · 대본만 붙이면 3D 프리비즈" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow 밝은 캔버스와 AI 도우미" width="80%" /></a><br /><sub>창작 캔버스 · 밝은 테마</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · 대본만 붙이면 3D 프리비즈" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · 대본만 붙이면 3D 프리비즈" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow 캐릭터·장면·소품 자산 캔버스" width="80%" /></a><br /><sub>캐릭터, 장면, 소품 자산</sub>
+### 하이라이트 2 | 끝이 보이지 않는 강남 수향 마을
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow 3D 연출 스튜디오와 샷 사전 시각화" width="80%" /></a><br /><sub>3D 연출 스튜디오와 샷 사전 시각화</sub>
+성벽, 거리, 수로, 사찰, 산까지 1,500개 이상의 오브젝트.
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow 캐릭터 삼면도와 이미지 생성" width="80%" /></a><br /><sub>캐릭터 삼면도와 이미지 생성</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · 끝이 보이지 않는 강남 수향 마을" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow 다중 참조 자산 영상 생성" width="80%" /></a><br /><sub>여러 참조 자산을 활용한 영상 생성</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · 끝이 보이지 않는 강남 수향 마을" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · 끝이 보이지 않는 강남 수향 마을" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow 노드 메뉴와 그룹 작업" width="80%" /></a><br /><sub>노드 메뉴와 그룹 작업</sub>
+### 하이라이트 3 | 64개 세트 + 8만 개 이상의 에셋
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow 플러그인 마켓" width="80%" /></a><br /><sub>플러그인 마켓</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64개 세트 + 8만 개 이상의 에셋" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64개 세트 + 8만 개 이상의 에셋" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### 하이라이트 4 | 날씨, 시간, 지형을 원클릭으로
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · 날씨, 시간, 지형을 원클릭으로" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · 날씨, 시간, 지형을 원클릭으로" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · 날씨, 시간, 지형을 원클릭으로" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · 날씨, 시간, 지형을 원클릭으로" width="100%" /></a></td>
+  </tr>
+</table>
+
+### 하이라이트 5 | 프리비즈를 바로 영상 생성에
+
+콘티, 4면도, 화이트 모델 영상, 프리비즈, 샷 리스트를 원클릭으로 캔버스에 보냅니다.
+
+### 하이라이트 6 | 무한 캔버스 + AI 어시스턴트
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · 무한 캔버스 + AI 어시스턴트" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · 무한 캔버스 + AI 어시스턴트" width="100%" /></a></td>
+  </tr>
+</table>
+
+### 하이라이트 7 | 다중 레퍼런스 영상 생성
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · 다중 레퍼런스 영상 생성" width="100%" /></a>
+</p>
+
+### 하이라이트 8 | 대본 문서와 작업 폴더
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · 대본 문서와 작업 폴더" width="100%" /></a>
+</p>
+
+### 하이라이트 9 | 홈과 에셋 라이브러리
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · 홈과 에셋 라이브러리" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · 홈과 에셋 라이브러리" width="100%" /></a></td>
+  </tr>
+</table>
+
+### 하이라이트 10 | 플러그인 마켓
+
+더 많은 플러그인은 [웹 플러그인 마켓](https://api.toonflow.net/console/plugIn)에서.
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · 플러그인 마켓" width="100%" /></a>
+</p>
 
 ---
 

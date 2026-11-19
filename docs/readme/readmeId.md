@@ -154,6 +154,11 @@
   <a href="https://api.toonflow.net/">Platform Model Resmi</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">Video pengenalan produk</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">Demo previs TrumanMap</a>
+</p>
+
 ---
 
 ## 1. 💛 Sponsor dan Dukungan
@@ -181,7 +186,13 @@ Terima kasih kepada para mitra berikut atas dukungannya untuk proyek sumber terb
       <br /><br />
       <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">Daftar melalui tautan khusus ini</a> untuk mendapatkan kredit uji coba platform gratis senilai CNY 5!</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI menyediakan layanan pembuatan teks, gambar, dan video AI yang hemat biaya, menggabungkan model utama seperti DeepSeek, GLM, Kimi, Seedream, Seedance, Wan, dan MiniMax H3. Mendukung teks-ke-gambar, gambar-ke-gambar, teks-ke-video, dan gambar-ke-video melalui satu API terpadu dengan pemanggilan multi-model yang fleksibel untuk kebutuhan konten AI perusahaan. Platform ini memakai enkripsi transmisi data tingkat perusahaan dan isolasi multi-tenant, serta lulus penilaian keamanan Level 3 Tiongkok.</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">Daftar melalui tautan khusus ini</a> untuk mencoba layanan model multimodal WEIMETA AI. Promo terbatas: isi ulang CNY 100 dapat bonus CNY 15. Kerja sama bisnis via WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@ Terima kasih kepada para mitra berikut atas dukungannya untuk proyek sumber terb
 
 ## 2. 🌟 Fitur Unggulan
 
-Toonflow adalah platform kreasi AI sumber terbuka untuk drama pendek, komik animasi, dan video pendek yang menyatukan naskah, aset, serta klip video di satu kanvas tanpa batas.
-
-| Kemampuan | Deskripsi |
+| Fitur | Keterangan |
 | --- | --- |
-| 🏠 **Penerapan lokal** | Simpan proyek dan aset di perangkat atau server Anda sendiri, dengan pilihan penerapan desktop, Android, Docker, dan server. |
-| 🖼️ **Kanvas tanpa batas** | Tata naskah, karakter, adegan, dan klip video di kanvas yang sama. |
-| 🔌 **MCP** | Hubungkan alat dan layanan eksternal melalui MCP. |
-| 🧩 **Marketplace plugin** | Tambahkan node, alat, dan kemampuan kreatif melalui [Marketplace Plugin](https://api.toonflow.net/console/plugIn). |
-| 🤖 **Agent terbuka** | Akses terbuka ke prompt, alat, dan A2A untuk menyesuaikan perilaku Agent serta berkolaborasi dengan Agent eksternal. |
-| 🔧 **Integrasi model yang fleksibel** | Konfigurasikan API pihak ketiga atau hubungkan instans ComfyUI dan LLM lokal. |
-| 🌐 **Dukungan multibahasa** | Mendukung 22 bahasa antarmuka. |
+| 🎬 **Previs TrumanMap** | Tempel naskah, set 3D, storyboard, dan blocking jadi dalam sekali klik. |
+| 🖼️ **Kanvas tanpa batas** | Naskah, karakter, adegan, dan klip saling terhubung. |
+| 🎥 **Pembuatan video AI** | @ aset dan buat per shot. |
+| 🤖 **Asisten AI** | Membaca dan mengubah kanvas; mendukung MCP dan A2A. |
+| 🔧 **Bebas pilih model** | Penyedia bawaan, API pihak ketiga, LLM lokal, ComfyUI. |
+| 🧩 **Pasar plugin** | Pasang node, alat, dan skill sekali klik. |
+| 🏠 **Deploy lokal** | Windows, macOS, Linux, Android, Docker. |
+| 🌐 **Multibahasa** | 22 bahasa antarmuka. |
+
+**Alur kerja**: Naskah & storyboard → karakter & adegan → previs 3D → video per shot → sunting & unduh.
+
+### Pertanyaan umum
+
+**Apa itu Toonflow?** Platform sumber terbuka untuk drama pendek AI, komik AI, dan video AI.
+
+**Apakah gratis?** Berlisensi MIT, gratis di-host sendiri; API model pihak ketiga bisa berbayar.
+
+**Model apa yang didukung?** Seedance, Seedream, MiniMax, Wan, dan lainnya bawaan; bisa juga API pihak ketiga, LLM lokal, dan ComfyUI. Lihat [panduan](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf).
+
+**Platform apa saja?** Windows, macOS, Linux, Android, serta Docker dan server.
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Bahasa yang didukung: 简体中文, 繁體中文, English, 日本語, Русск
 
 ---
 
-## 3. 📸 Tangkapan Layar
+## 3. 📸 10 Sorotan Utama
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Beranda proyek dan pengembangan ide Toonflow" width="80%" /></a><br /><sub>Beranda proyek dan pengembangan ide</sub>
+### Sorotan 1 | Tempel naskah, langsung previs 3D
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Peluncuran pertama dan penyiapan cepat Toonflow" width="80%" /></a><br /><sub>Peluncuran pertama dan penyiapan cepat</sub>
+Shot dan blocking otomatis mengikuti dialog; monitor menampilkan gambar dan subtitle secara langsung. 📺 [Tonton demo](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Kanvas gelap dan asisten AI Toonflow" width="80%" /></a><br /><sub>Kanvas kreatif · Tema gelap</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · Tempel naskah, langsung previs 3D" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Kanvas terang dan asisten AI Toonflow" width="80%" /></a><br /><sub>Kanvas kreatif · Tema terang</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · Tempel naskah, langsung previs 3D" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · Tempel naskah, langsung previs 3D" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Kanvas Toonflow untuk aset karakter, adegan, dan properti" width="80%" /></a><br /><sub>Aset karakter, adegan, dan properti</sub>
+### Sorotan 2 | Kota air Jiangnan tanpa batas
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Studio sutradara 3D dan pravisualisasi pengambilan gambar Toonflow" width="80%" /></a><br /><sub>Studio sutradara 3D dan pravisualisasi pengambilan gambar</sub>
+Tembok kota, jalan, kanal, kuil, dan pegunungan: lebih dari 1.500 objek.
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Lembar karakter tiga tampak dan pembuatan gambar Toonflow" width="80%" /></a><br /><sub>Lembar karakter tiga tampak dan pembuatan gambar</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · Kota air Jiangnan tanpa batas" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Pembuatan video Toonflow dengan berbagai aset referensi" width="80%" /></a><br /><sub>Pembuatan video dengan berbagai aset referensi</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · Kota air Jiangnan tanpa batas" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · Kota air Jiangnan tanpa batas" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Menu node dan operasi pengelompokan Toonflow" width="80%" /></a><br /><sub>Menu node dan operasi pengelompokan</sub>
+### Sorotan 3 | 64 set siap pakai + 80.000+ aset
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Marketplace Plugin Toonflow" width="80%" /></a><br /><sub>Marketplace Plugin</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 set siap pakai + 80.000+ aset" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 set siap pakai + 80.000+ aset" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### Sorotan 4 | Cuaca, waktu, dan medan sekali klik
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · Cuaca, waktu, dan medan sekali klik" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · Cuaca, waktu, dan medan sekali klik" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · Cuaca, waktu, dan medan sekali klik" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · Cuaca, waktu, dan medan sekali klik" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Sorotan 5 | Ekspor previs langsung ke pembuatan video
+
+Storyboard, lembar empat sisi, video previs, animatik, dan daftar shot kembali ke kanvas sekali klik.
+
+### Sorotan 6 | Kanvas tanpa batas + asisten AI
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · Kanvas tanpa batas + asisten AI" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · Kanvas tanpa batas + asisten AI" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Sorotan 7 | Video dengan banyak referensi
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · Video dengan banyak referensi" width="100%" /></a>
+</p>
+
+### Sorotan 8 | Dokumen naskah dan ruang kerja
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · Dokumen naskah dan ruang kerja" width="100%" /></a>
+</p>
+
+### Sorotan 9 | Beranda dan pustaka aset
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · Beranda dan pustaka aset" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · Beranda dan pustaka aset" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Sorotan 10 | Pasar plugin
+
+Plugin lainnya di [pasar plugin versi web](https://api.toonflow.net/console/plugIn).
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · Pasar plugin" width="100%" /></a>
+</p>
 
 ---
 

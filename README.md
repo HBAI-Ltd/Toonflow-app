@@ -125,7 +125,8 @@
   </a>
 </p>
 
-Toonflow 是面向短剧、漫剧和短视频创作者的开源 AI 创作工具。通过无限画布编写剧本与分镜、管理角色和场景素材、生成图片与视频。支持本地部署、自由接入模型，并可通过 AI Agent、MCP 与插件扩展创作流程。
+Toonflow 是免费开源的 AI 短剧、AI 漫剧与 AI 视频创作工具：无限画布写剧本分镜，3D 白模预演搭景排机位，按镜头生成视频，可本地部署。<br />
+<sub>Open-source AI short drama &amp; comic video studio · infinite canvas · 3D previs · AI video generation</sub>
 
 </div>
 
@@ -152,6 +153,11 @@ Toonflow 是面向短剧、漫剧和短视频创作者的开源 AI 创作工具�
   <a href="https://api.toonflow.net/console/plugIn">插件市场</a> ·
   <a href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd">开发者文档</a> ·
   <a href="https://api.toonflow.net/">官方模型平台</a>
+</p>
+
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">产品介绍视频</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">白模预演演示视频</a>
 </p>
 
 ---
@@ -183,7 +189,13 @@ Toonflow 是面向短剧、漫剧和短视频创作者的开源 AI 创作工具�
       <br /><br />
       <sub>🎁 通过 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">专属链接注册</a>，可得免费 5 元平台体验金！</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="./docs/images/sponsors/weimeta.svg" alt="唯元智创 WEIMETA AI" height="28" valign="middle" /> <strong>唯元智创（WEIMETA AI）</strong></a>
+      <br />
+      <sub>唯元智创提供高性价比 AI 文本、图像与视频生成服务，聚合 DeepSeek、GLM、Kimi、Seedream、Seedance、Wan、MiniMax H3 等主流模型，支持文生图、图生图、文生视频、图生视频。提供统一 API 接入，支持多模型灵活调用，满足企业级 AI 内容创作需求。平台采用企业级数据加密传输与多租户隔离技术，通过等保三级安全测评，保障企业数据安全与隐私。</sub>
+      <br /><br />
+      <sub>🎁 通过 <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">专属链接注册</a>，即可体验 WEIMETA AI 多模态模型服务，限时充值100送15。商务对接加微信：WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -202,74 +214,132 @@ Toonflow 是面向短剧、漫剧和短视频创作者的开源 AI 创作工具�
 
 ## 2. 🌟 亮点
 
-Toonflow 是面向短剧、漫剧与短视频制作的开源 AI 创作平台，把剧本、资产与视频片段整合进同一张无限画布。
-
 | 能力 | 说明 |
 | --- | --- |
-| 🏠 **本地部署** | 项目与素材保存在自己的设备或服务器，支持桌面、Android、Docker 与服务器部署。 |
-| 🖼️ **无限画布** | 在同一画布中组织剧本、角色、场景与视频片段。 |
-| 🔌 **MCP** | 通过 MCP 连接外部工具与服务。 |
-| 🧩 **插件市场** | 通过[插件市场](https://api.toonflow.net/console/plugIn)扩展节点、工具与创作能力。 |
-| 🤖 **开放 Agent** | 开放提示词、工具和 A2A，支持自定义 Agent 行为及外部协作。 |
-| 🔧 **自由接入模型** | 配置第三方 API，也可接入本地 ComfyUI 和 LLM。 |
-| 🌐 **多语言支持** | 支持 22 种界面语言。 |
+| 🎬 **白模预演** | 粘贴剧本，一键 3D 搭景、分镜、排走位。 |
+| 🖼️ **无限画布** | 剧本、角色、场景、视频片段连线复用。 |
+| 🎥 **AI 视频生成** | @ 引用资产，按镜头出片。 |
+| 🤖 **AI 助手** | 直接读写画布，支持 MCP 与 A2A。 |
+| 🔧 **自由接入模型** | 在线供应商、第三方 API、本地大模型、ComfyUI。 |
+| 🧩 **插件市场** | 节点、工具、技能一键安装。 |
+| 🏠 **本地部署** | Windows、macOS、Linux、Android、Docker。 |
+| 🌐 **多语言** | 22 种界面语言。 |
 
-### 如何用 Toonflow 制作 AI 短剧与漫剧
-
-1. **编写剧本与分镜**：在文本节点中整理故事、人物设定和镜头描述，使用语言模型辅助创作，再审阅与修改内容。
-2. **准备角色与场景素材**：导入参考图片，或通过图片生成节点制作角色、场景和分镜图。
-3. **生成视频镜头**：连接文本与图片参考，选择视频模型和生成模式，按镜头生成视频片段。
-4. **预览、整理与下载**：在无限画布中预览和组织图片、视频片段，下载素材后按创作需求继续处理。
-
-支持的参考素材、视频时长、分辨率和音频能力取决于所选模型与供应商。
+**创作流程**：剧本分镜 → 角色与场景 → 白模预演 → 按镜头生成视频 → 剪辑下载。
 
 ### 常见问题
 
-**Toonflow 可以用于哪些 AI 短剧和漫剧制作环节？**
+**Toonflow 是什么？** 开源的 AI 短剧、AI 漫剧与 AI 视频创作平台。
 
-Toonflow 提供文本、图片与视频生成节点，可用于剧本与分镜创作、角色和场景素材制作、视频镜头生成，以及素材的预览与整理。创作者需要审阅和调整内容，具体生成能力取决于配置的模型。
+**免费吗？** MIT 开源，可免费自部署；第三方模型 API 可能收费。
 
-**Toonflow 免费吗？模型调用需要付费吗？**
+**支持哪些模型？** 内置 Seedance、Seedream、MiniMax、Wan 等，也能接第三方 API、本地大模型和 ComfyUI，详见[使用教程](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)。
 
-Toonflow 采用 MIT 开源许可，可自行部署。第三方模型服务的 API 调用可能收费；使用本地模型或 ComfyUI 时，需要自行准备相应的运行环境与算力。作品示例中的制作费用仅代表该案例，不是固定价格。
-
-**可以接入自己的模型和 ComfyUI 工作流吗？**
-
-可以配置语言模型与媒体模型服务，也可通过自定义供应商适配接入已有的 ComfyUI 工作流。具体接入方式取决于服务 API、模型与工作流，可参考[使用教程](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)与[开发者文档](https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd)。
+**支持哪些系统？** Windows、macOS、Linux、Android，以及 Docker 和服务器部署。
 
 <a id="languages"></a>
 
-### 多语言支持
-
-支持的语言：简体中文、繁體中文、English、日本語、Русский、Tiếng Việt、ไทย、한국어、हिन्दी、Bahasa Indonesia、Bahasa Melayu、Filipino、বাংলা、اردو、தமிழ்、తెలుగు、मराठी、ਪੰਜਾਬੀ、العربية、فارسی、Türkçe、Português (Brasil)。
+<sub>🌐 支持的语言：简体中文、繁體中文、English、日本語、Русский、Tiếng Việt、ไทย、한국어、हिन्दी、Bahasa Indonesia、Bahasa Melayu、Filipino、বাংলা、اردو、தமிழ்、తెలుగు、मराठी、ਪੰਜਾਬੀ、العربية、فارسی、Türkçe、Português (Brasil)。</sub>
 
 ---
 
-## 3. 📸 截图
+## 3. 📸 十大看点
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="./docs/images/screenshots/projectHome.png"><img src="./docs/images/screenshots/projectHome.png" alt="Toonflow 项目首页与灵感创作" width="80%" /></a><br /><sub>项目首页与灵感创作</sub>
+### 看点 1｜粘贴剧本，一键 3D 预演
 
-<a href="./docs/images/screenshots/quickStart.png"><img src="./docs/images/screenshots/quickStart.png" alt="Toonflow 首次启动与快速配置" width="80%" /></a><br /><sub>首次启动与快速配置</sub>
+按台词自动分镜、排走位，监看窗实时出画面和字幕。📺 [看演示视频](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="./docs/images/screenshots/canvasDark.png"><img src="./docs/images/screenshots/canvasDark.png" alt="Toonflow 深色主题画布与 AI 助手" width="80%" /></a><br /><sub>创作画布 · 深色主题</sub>
+<p align="center">
+  <a href="./docs/images/screenshots/trumanMapTimeline.webp"><img src="./docs/images/screenshots/trumanMapTimeline.webp" alt="Toonflow 白模预演：粘贴剧本一键预演，人物走位路线、分镜监看窗与按台词切分的时间轴" width="100%" /></a>
+</p>
 
-<a href="./docs/images/screenshots/canvasLight.png"><img src="./docs/images/screenshots/canvasLight.png" alt="Toonflow 浅色主题画布与 AI 助手" width="80%" /></a><br /><sub>创作画布 · 浅色主题</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="./docs/images/screenshots/trumanMapShot.webp"><img src="./docs/images/screenshots/trumanMapShot.webp" alt="Toonflow 白模预演：古街机位下的过肩镜头监看与台词字幕" width="100%" /></a></td>
+    <td width="50%"><a href="./docs/images/screenshots/trumanMapStreet.webp"><img src="./docs/images/screenshots/trumanMapStreet.webp" alt="Toonflow 白模预演：古街近景，挑檐铺楼、灯笼、摊位与群演" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="./docs/images/screenshots/assetCanvas.png"><img src="./docs/images/screenshots/assetCanvas.png" alt="Toonflow 角色、场景与道具资产画布" width="80%" /></a><br /><sub>角色、场景与道具资产</sub>
+### 看点 2｜一座看不到边的江南古镇
 
-<a href="./docs/images/screenshots/directorStudio.png"><img src="./docs/images/screenshots/directorStudio.png" alt="Toonflow 3D 导演台与镜头预演" width="80%" /></a><br /><sub>3D 导演台与镜头预演</sub>
+城墙、街巷、水乡、寺庙、远山，1500 多件物体。
 
-<a href="./docs/images/screenshots/characterImageGeneration.png"><img src="./docs/images/screenshots/characterImageGeneration.png" alt="Toonflow 角色三视图图片生成" width="80%" /></a><br /><sub>角色三视图与图片生成</sub>
+<p align="center">
+  <a href="./docs/images/screenshots/trumanMapTown.webp"><img src="./docs/images/screenshots/trumanMapTown.webp" alt="Toonflow 白模预演：江南古镇全景，城门、主街、水乡、寺庙与远山" width="100%" /></a>
+</p>
 
-<a href="./docs/images/screenshots/videoGeneration.png"><img src="./docs/images/screenshots/videoGeneration.png" alt="Toonflow 多参考素材视频生成" width="80%" /></a><br /><sub>多参考素材视频生成</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="./docs/images/screenshots/trumanMapAerial.webp"><img src="./docs/images/screenshots/trumanMapAerial.webp" alt="Toonflow 白模预演：古镇俯瞰，主街、横街、水乡河道、寺庙与文庙" width="100%" /></a></td>
+    <td width="50%"><a href="./docs/images/screenshots/trumanMapTemple.webp"><img src="./docs/images/screenshots/trumanMapTemple.webp" alt="Toonflow 白模预演：三进寺庙近景与远山林海" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="./docs/images/screenshots/nodeMenu.png"><img src="./docs/images/screenshots/nodeMenu.png" alt="Toonflow 节点菜单与分组操作" width="80%" /></a><br /><sub>节点菜单与分组操作</sub>
+### 看点 3｜64 套整套景 + 8 万多件素材
 
-<a href="./docs/images/screenshots/pluginMarket.png"><img src="./docs/images/screenshots/pluginMarket.png" alt="Toonflow 插件市场" width="80%" /></a><br /><sub>插件市场</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="./docs/images/screenshots/trumanMapSets.webp"><img src="./docs/images/screenshots/trumanMapSets.webp" alt="Toonflow 白模预演：64 套整套景一键布景" width="100%" /></a></td>
+    <td width="50%"><a href="./docs/images/screenshots/trumanMapAssets.webp"><img src="./docs/images/screenshots/trumanMapAssets.webp" alt="Toonflow 白模预演：搜索古建素材，牌楼、戏台、城墙、城门、亭子" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### 看点 4｜天气、时间、地形随手改
+
+<table>
+  <tr>
+    <td width="50%"><a href="./docs/images/screenshots/trumanMapRain.webp"><img src="./docs/images/screenshots/trumanMapRain.webp" alt="Toonflow 白模预演：天气面板与降雨效果" width="100%" /></a></td>
+    <td width="50%"><a href="./docs/images/screenshots/trumanMapBrush.webp"><img src="./docs/images/screenshots/trumanMapBrush.webp" alt="Toonflow 白模预演：物件画笔涂放树木、围墙与铺装" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="./docs/images/screenshots/trumanMapWorld.webp"><img src="./docs/images/screenshots/trumanMapWorld.webp" alt="Toonflow 白模预演：世界面板按片区分组管理资产" width="100%" /></a></td>
+    <td width="50%"><a href="./docs/images/screenshots/trumanMapHome.webp"><img src="./docs/images/screenshots/trumanMapHome.webp" alt="Toonflow 白模预演入口：一句话描述场景" width="100%" /></a></td>
+  </tr>
+</table>
+
+### 看点 5｜预演直接导出给视频生成
+
+分镜图、四视图、白模视频、预演小样、镜头表，一键导回画布。
+
+### 看点 6｜无限画布 + AI 助手
+
+<table>
+  <tr>
+    <td width="50%"><a href="./docs/images/screenshots/canvasNodeMenu.webp"><img src="./docs/images/screenshots/canvasNodeMenu.webp" alt="Toonflow 无限画布：角色三视图资产、添加节点菜单与 AI 助手" width="100%" /></a></td>
+    <td width="50%"><a href="./docs/images/screenshots/canvasAgent.webp"><img src="./docs/images/screenshots/canvasAgent.webp" alt="Toonflow 无限画布：角色三视图资产与 AI 创作助手对话" width="100%" /></a></td>
+  </tr>
+</table>
+
+### 看点 7｜多参考视频生成
+
+<p align="center">
+  <a href="./docs/images/screenshots/videoGenerationNode.webp"><img src="./docs/images/screenshots/videoGenerationNode.webp" alt="Toonflow 多参考素材视频生成节点：@ 引用角色与场景资产，提取音轨、逐帧拉片" width="100%" /></a>
+</p>
+
+### 看点 8｜剧本文档与工作区
+
+<p align="center">
+  <a href="./docs/images/screenshots/canvasDocument.webp"><img src="./docs/images/screenshots/canvasDocument.webp" alt="Toonflow 文档视图：工作区文件树、分集剧本富文本编辑与 AI 助手" width="100%" /></a>
+</p>
+
+### 看点 9｜首页与素材库
+
+<table>
+  <tr>
+    <td width="50%"><a href="./docs/images/screenshots/home.webp"><img src="./docs/images/screenshots/home.webp" alt="Toonflow 首页：一句话开始创作与项目列表" width="100%" /></a></td>
+    <td width="50%"><a href="./docs/images/screenshots/assetLibrary.webp"><img src="./docs/images/screenshots/assetLibrary.webp" alt="Toonflow 素材库：角色三视图、场景、道具和视频片段统一管理" width="100%" /></a></td>
+  </tr>
+</table>
+
+### 看点 10｜插件市场
+
+更多插件见[网页版插件市场](https://api.toonflow.net/console/plugIn)。
+
+<p align="center">
+  <a href="./docs/images/screenshots/pluginMarket.webp"><img src="./docs/images/screenshots/pluginMarket.webp" alt="Toonflow 插件市场：白模预演、图片生成、视频生成、逐帧拉片、音频生成、3D 导演台等节点插件" width="100%" /></a>
+</p>
 
 ---
 
@@ -287,17 +357,10 @@ Toonflow 采用 MIT 开源许可，可自行部署。第三方模型服务的 AP
 | Linux ARM64（Debian / Ubuntu） | [DEB 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | Android ARM64 | [APK 下载](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
 
-Android 版仅支持 ARM64 设备，下载发布页中的 `toonflow-版本号-android-arm64.apk` 安装。手机内置本地 Bun 后端，可独立运行；也可从首页「设备互联」扫码或手动连接已开启共享的电脑或远程后端（支持局域网与公网）。
-
-Windows 安装器会自动检测并安装 WebView2；如果安装后打开闪退，请前往 [WebView2 下载页面](https://developer.microsoft.com/microsoft-edge/webview2/) 手动安装运行时。
-
-Windows 的 Intel / AMD 电脑选择 `toonflow-版本号-Setup.exe`，ARM64 电脑选择 `toonflow-版本号-win-arm64-Setup.exe`。ARM64 需要 .NET Framework 4.8.1，较新的 Windows 11 已内置。
-
-Linux 选择对应架构的 `toonflow-版本号-linux-x64.deb` 或 `toonflow-版本号-linux-arm64.deb`，在下载目录执行 `sudo apt install ./安装包文件名.deb`，安装后从应用菜单打开。安装需要联网；apt 会准备 FFmpeg、curl、unzip、CA 证书等依赖，安装脚本在解包应用前下载固定版本的 Bun 并校验大小与 SHA-256，配置阶段再安装运行时。下载或校验失败会在解包前中止安装。
-
-macOS 两种架构均使用统一的 Electrobun SDK，最低支持 macOS 14。选择对应架构的 `toonflow-版本号-macos-arm64.pkg` 或 `toonflow-版本号-macos-x64.pkg`，双击后按提示继续安装。安装期间会自动下载、解压并校验必要运行时，已有有效缓存时直接复用；完成后从“应用程序”打开 Toonflow。正式发布流程使用 Developer ID Application 签署应用、Developer ID Installer 签署 PKG，并完成 Apple 公证。旧版 Intel Mac 客户端首次迁移时须下载完整 PKG 覆盖安装，不能通过旧版增量更新直接迁移；安装前退出应用并备份原数据目录。
-
-macOS 若遇到系统安全提示，请按以下顺序处理。
+- **Windows**：Intel / AMD 选 `toonflow-版本号-Setup.exe`，ARM64 选 `toonflow-版本号-win-arm64-Setup.exe`（需 .NET Framework 4.8.1，新版 Windows 11 已内置）。打开闪退请手动安装 [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/)。
+- **macOS**：按架构选 `toonflow-版本号-macos-arm64.pkg` 或 `-macos-x64.pkg`，双击安装，安装时需联网准备运行时。旧版 Intel Mac 客户端须下载完整 PKG 覆盖安装，安装前先退出应用并备份数据目录。
+- **Linux**：按架构下载 `.deb`，执行 `sudo apt install ./安装包文件名.deb`，安装需联网。
+- **Android**：仅支持 ARM64，内置本地后端可独立运行，也可在首页「设备互联」连接电脑或远程后端。
 
 <details>
 <summary><strong>macOS 无法安装或打开时的处理方法</strong></summary>

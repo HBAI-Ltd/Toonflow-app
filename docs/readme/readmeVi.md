@@ -154,6 +154,11 @@
   <a href="https://api.toonflow.net/">Nền tảng mô hình chính thức</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">Video giới thiệu</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">Demo tiền kỳ TrumanMap</a>
+</p>
+
 ---
 
 ## 1. 💛 Tài trợ và hỗ trợ
@@ -181,7 +186,13 @@ Xin cảm ơn các đối tác sau đã hỗ trợ dự án mã nguồn mở Too
       <br /><br />
       <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">Đăng ký qua liên kết riêng</a> để nhận miễn phí 5 nhân dân tệ tín dụng dùng thử trên nền tảng!</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI cung cấp dịch vụ tạo văn bản, hình ảnh và video bằng AI với chi phí hợp lý, tổng hợp các mô hình hàng đầu như DeepSeek, GLM, Kimi, Seedream, Seedance, Wan, MiniMax H3. Hỗ trợ tạo ảnh từ văn bản, ảnh từ ảnh, video từ văn bản và video từ ảnh qua một API thống nhất, gọi linh hoạt nhiều mô hình cho nhu cầu sáng tạo nội dung của doanh nghiệp. Nền tảng dùng mã hóa truyền dữ liệu cấp doanh nghiệp, cách ly đa người thuê và đã đạt đánh giá bảo mật cấp 3 của Trung Quốc.</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">Đăng ký qua liên kết riêng</a> để trải nghiệm dịch vụ mô hình đa phương thức của WEIMETA AI. Ưu đãi có thời hạn: nạp 100 nhân dân tệ tặng thêm 15. Hợp tác kinh doanh qua WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@ Xin cảm ơn các đối tác sau đã hỗ trợ dự án mã nguồn mở Too
 
 ## 2. 🌟 Điểm nổi bật
 
-Toonflow là nền tảng sáng tạo AI mã nguồn mở dành cho sản xuất phim ngắn nhiều tập, phim truyện tranh và video ngắn, kết hợp kịch bản, tài nguyên và các đoạn video trên cùng một canvas vô hạn.
-
-| Khả năng | Mô tả |
+| Tính năng | Mô tả |
 | --- | --- |
-| 🏠 **Triển khai trên hệ thống của bạn** | Lưu dự án và tư liệu trên thiết bị hoặc máy chủ của riêng bạn; hỗ trợ ứng dụng desktop, Android, Docker và triển khai máy chủ. |
-| 🖼️ **Canvas vô hạn** | Sắp xếp kịch bản, nhân vật, bối cảnh và các đoạn video trên cùng một canvas. |
-| 🔌 **MCP** | Kết nối công cụ và dịch vụ bên ngoài qua MCP. |
-| 🧩 **Chợ plugin** | Mở rộng các nút, công cụ và khả năng sáng tạo thông qua [chợ plugin](https://api.toonflow.net/console/plugIn). |
-| 🤖 **Agent mở** | Cho phép tùy chỉnh prompt và công cụ, đồng thời hỗ trợ A2A để tùy biến hành vi Agent và phối hợp với Agent bên ngoài. |
-| 🔧 **Tự do kết nối mô hình** | Cấu hình API bên thứ ba hoặc kết nối ComfyUI và LLM chạy cục bộ. |
-| 🌐 **Hỗ trợ đa ngôn ngữ** | Giao diện hỗ trợ 22 ngôn ngữ. |
+| 🎬 **Tiền kỳ 3D TrumanMap** | Dán kịch bản là dựng cảnh 3D, phân cảnh và vị trí diễn viên. |
+| 🖼️ **Canvas vô hạn** | Kịch bản, nhân vật, bối cảnh, clip nối và tái sử dụng. |
+| 🎥 **Tạo video AI** | @ tài nguyên, tạo theo từng cảnh quay. |
+| 🤖 **Trợ lý AI** | Đọc và sửa canvas; hỗ trợ MCP và A2A. |
+| 🔧 **Tự do kết nối mô hình** | Nhà cung cấp tích hợp, API bên thứ ba, LLM cục bộ, ComfyUI. |
+| 🧩 **Chợ plugin** | Cài node, công cụ, kỹ năng chỉ một cú nhấp. |
+| 🏠 **Triển khai cục bộ** | Windows, macOS, Linux, Android, Docker. |
+| 🌐 **Đa ngôn ngữ** | 22 ngôn ngữ giao diện. |
+
+**Quy trình**: Kịch bản & phân cảnh → nhân vật & bối cảnh → tiền kỳ 3D → video theo cảnh quay → dựng & tải xuống.
+
+### Câu hỏi thường gặp
+
+**Toonflow là gì?** Nền tảng mã nguồn mở để làm phim ngắn AI, truyện tranh động AI và video AI.
+
+**Có miễn phí không?** Giấy phép MIT, tự triển khai miễn phí; API mô hình bên thứ ba có thể tính phí.
+
+**Hỗ trợ mô hình nào?** Tích hợp Seedance, Seedream, MiniMax, Wan…, có thể nối API bên thứ ba, LLM cục bộ và ComfyUI. Xem [hướng dẫn](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf).
+
+**Hỗ trợ hệ điều hành nào?** Windows, macOS, Linux, Android, cùng Docker và máy chủ.
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Các ngôn ngữ được hỗ trợ: 简体中文, 繁體中文, English, 日�
 
 ---
 
-## 3. 📸 Ảnh chụp màn hình
+## 3. 📸 10 điểm nổi bật
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Trang chủ dự án và sáng tạo từ ý tưởng trong Toonflow" width="80%" /></a><br /><sub>Trang chủ dự án và sáng tạo từ ý tưởng</sub>
+### Điểm nổi bật 1 | Dán kịch bản, tiền kỳ 3D tức thì
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Khởi động lần đầu và cấu hình nhanh Toonflow" width="80%" /></a><br /><sub>Khởi động lần đầu và cấu hình nhanh</sub>
+Tự phân cảnh và xếp vị trí theo lời thoại, màn hình giám sát hiện hình và phụ đề trực tiếp. 📺 [Xem video demo](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Canvas giao diện tối và trợ lý AI của Toonflow" width="80%" /></a><br /><sub>Canvas sáng tạo · Giao diện tối</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · Dán kịch bản, tiền kỳ 3D tức thì" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Canvas giao diện sáng và trợ lý AI của Toonflow" width="80%" /></a><br /><sub>Canvas sáng tạo · Giao diện sáng</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · Dán kịch bản, tiền kỳ 3D tức thì" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · Dán kịch bản, tiền kỳ 3D tức thì" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Canvas tài nguyên nhân vật, bối cảnh và đạo cụ của Toonflow" width="80%" /></a><br /><sub>Tài nguyên nhân vật, bối cảnh và đạo cụ</sub>
+### Điểm nổi bật 2 | Thị trấn sông nước Giang Nam bất tận
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Bàn đạo diễn 3D và xem trước cảnh quay trong Toonflow" width="80%" /></a><br /><sub>Bàn đạo diễn 3D và xem trước cảnh quay</sub>
+Tường thành, phố, kênh đào, chùa chiền, núi non: hơn 1.500 vật thể.
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Tạo ảnh nhân vật từ ba góc nhìn trong Toonflow" width="80%" /></a><br /><sub>Nhân vật ở ba góc nhìn và tạo ảnh</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · Thị trấn sông nước Giang Nam bất tận" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Tạo video từ nhiều tư liệu tham chiếu trong Toonflow" width="80%" /></a><br /><sub>Tạo video từ nhiều tư liệu tham chiếu</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · Thị trấn sông nước Giang Nam bất tận" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · Thị trấn sông nước Giang Nam bất tận" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Menu nút và thao tác nhóm trong Toonflow" width="80%" /></a><br /><sub>Menu nút và thao tác nhóm</sub>
+### Điểm nổi bật 3 | 64 bộ cảnh + hơn 80.000 tài nguyên
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Chợ plugin Toonflow" width="80%" /></a><br /><sub>Chợ plugin</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 bộ cảnh + hơn 80.000 tài nguyên" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 bộ cảnh + hơn 80.000 tài nguyên" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### Điểm nổi bật 4 | Thời tiết, giờ, địa hình một cú nhấp
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · Thời tiết, giờ, địa hình một cú nhấp" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · Thời tiết, giờ, địa hình một cú nhấp" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · Thời tiết, giờ, địa hình một cú nhấp" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · Thời tiết, giờ, địa hình một cú nhấp" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Điểm nổi bật 5 | Xuất tiền kỳ thẳng cho tạo video
+
+Phân cảnh, bản bốn mặt, video tiền kỳ, bản nháp và bảng cảnh quay đưa về canvas chỉ một cú nhấp.
+
+### Điểm nổi bật 6 | Canvas vô hạn + trợ lý AI
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · Canvas vô hạn + trợ lý AI" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · Canvas vô hạn + trợ lý AI" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Điểm nổi bật 7 | Tạo video đa tham chiếu
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · Tạo video đa tham chiếu" width="100%" /></a>
+</p>
+
+### Điểm nổi bật 8 | Tài liệu kịch bản và thư mục làm việc
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · Tài liệu kịch bản và thư mục làm việc" width="100%" /></a>
+</p>
+
+### Điểm nổi bật 9 | Trang chủ và thư viện tài nguyên
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · Trang chủ và thư viện tài nguyên" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · Trang chủ và thư viện tài nguyên" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Điểm nổi bật 10 | Chợ plugin
+
+Xem thêm plugin tại [chợ plugin bản web](https://api.toonflow.net/console/plugIn).
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · Chợ plugin" width="100%" /></a>
+</p>
 
 ---
 

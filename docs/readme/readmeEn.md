@@ -154,6 +154,11 @@ Toonflow is an open-source AI creation tool for short dramas, animated comics an
   <a href="https://api.toonflow.net/">Official Model Platform</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">Product intro video</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap previs demo</a>
+</p>
+
 ---
 
 ## 1. 💛 Sponsors and Support
@@ -181,7 +186,13 @@ Thank you to the following partners for supporting the Toonflow open-source proj
       <br /><br />
       <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">Register through this dedicated link</a> to receive CNY 5 in free platform trial credits!</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI offers cost-effective AI text, image, and video generation, bringing together leading models such as DeepSeek, GLM, Kimi, Seedream, Seedance, Wan, and MiniMax H3. It supports text-to-image, image-to-image, text-to-video, and image-to-video through a single unified API with flexible multi-model access for enterprise AI content creation. The platform uses enterprise-grade encrypted transmission and multi-tenant isolation, and has passed China's MLPS Level 3 security assessment to protect enterprise data and privacy.</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">Register through this dedicated link</a> to try WEIMETA AI's multimodal model services. Limited-time offer: top up CNY 100 and get CNY 15 extra. Business inquiries on WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,40 +211,28 @@ Thank you to the following partners for supporting the Toonflow open-source proj
 
 ## 2. 🌟 Highlights
 
-Toonflow is an open-source AI creation platform for short dramas, animated comics, and short videos, bringing scripts, assets, and video clips together on one infinite canvas.
-
-| Capability | Description |
+| Feature | Description |
 | --- | --- |
-| 🏠 **Local deployment** | Keep projects and assets on your own device or server, with desktop, Android, Docker, and server deployment options. |
-| 🖼️ **Infinite canvas** | Organize scripts, characters, scenes, and video clips on the same canvas. |
-| 🔌 **MCP** | Connect external tools and services through MCP. |
-| 🧩 **Plugin marketplace** | Extend nodes, tools, and creative capabilities through the [Plugin Marketplace](https://api.toonflow.net/console/plugIn). |
-| 🤖 **Open Agent** | Open access to prompts, tools, and A2A to customize Agent behavior and collaborate with external Agents. |
-| 🔧 **Flexible model integration** | Configure third-party APIs or connect local ComfyUI instances and LLMs. |
-| 🌐 **Multilingual support** | Supports 22 interface languages. |
+| 🎬 **TrumanMap previs** | Paste a script to build a 3D set, storyboard and blocking in one click. |
+| 🖼️ **Infinite canvas** | Link scripts, characters, scenes and clips on one canvas. |
+| 🎥 **AI video generation** | @-mention assets and generate shot by shot. |
+| 🤖 **AI assistant** | Reads and edits the canvas; supports MCP and A2A. |
+| 🔧 **Bring your own models** | Built-in providers, third-party APIs, local LLMs, ComfyUI. |
+| 🧩 **Plugin market** | Install nodes, tools and skills in one click. |
+| 🏠 **Local deployment** | Windows, macOS, Linux, Android, Docker. |
+| 🌐 **Multilingual** | 22 interface languages. |
 
-### How to Create AI Short Dramas and Animated Comics with Toonflow
+**Workflow**: Script & storyboard → characters & scenes → 3D previs → shot-by-shot video → edit & download.
 
-1. **Write scripts and storyboards**: Develop your story, character descriptions and shot descriptions in text nodes, using a language model for assistance before reviewing and editing the results.
-2. **Prepare character and scene references**: Import reference images or use image generation nodes to create character, scene and storyboard images.
-3. **Generate video shots**: Connect text and image references, select a video model and generation mode, and generate individual clips.
-4. **Preview, organize and download**: Preview and arrange images and video clips on the infinite canvas, then download the assets for further production work.
+### FAQ
 
-Supported references, video durations, resolutions and audio capabilities depend on the selected model and provider.
+**What is Toonflow?** An open-source platform for AI short dramas, AI comics and AI videos.
 
-### Frequently Asked Questions
+**Is it free?** MIT-licensed and free to self-host; third-party model APIs may charge.
 
-**Which stages of AI short drama and animated comic production does Toonflow support?**
+**Which models are supported?** Built-in Seedance, Seedream, MiniMax, Wan and more, plus third-party APIs, local LLMs and ComfyUI. See the [tutorial](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf).
 
-Text, image and video generation nodes support script and storyboard development, character and scene asset creation, video-shot generation, and asset preview and organization. Creators need to review and refine the results. Available generation features depend on the configured models.
-
-**Is Toonflow free? Do model calls cost money?**
-
-Toonflow is open source under the MIT License and can be self-hosted. Third-party model APIs may charge usage fees. Local models and ComfyUI require your own runtime environment and computing resources. The production costs shown in the example apply only to that project and are not a fixed price.
-
-**Can I connect my own models and ComfyUI workflows?**
-
-You can configure language and media model services and use custom provider adapters to connect existing ComfyUI workflows. The integration depends on the service API, model and workflow. See the [User Guide](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf) and [Developer Documentation](https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd) for guidance.
+**Which platforms?** Windows, macOS, Linux, Android, plus Docker and server deployment.
 
 <a id="languages"></a>
 
@@ -243,31 +242,103 @@ Supported languages: 简体中文, 繁體中文, English, 日本語, Русск�
 
 ---
 
-## 3. 📸 Screenshots
+## 3. 📸 Top 10 Highlights
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow project home and idea creation" width="80%" /></a><br /><sub>Project home and idea creation</sub>
+### Highlight 1 | Paste a script, get a 3D previs
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow first launch and quick setup" width="80%" /></a><br /><sub>First launch and quick setup</sub>
+Storyboards and blocking follow your lines; the monitor shows frames and subtitles live. 📺 [Watch the demo](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow dark canvas and AI assistant" width="80%" /></a><br /><sub>Creative canvas · Dark theme</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · Paste a script, get a 3D previs" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow light canvas and AI assistant" width="80%" /></a><br /><sub>Creative canvas · Light theme</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · Paste a script, get a 3D previs" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · Paste a script, get a 3D previs" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow canvas for character, scene, and prop assets" width="80%" /></a><br /><sub>Character, scene, and prop assets</sub>
+### Highlight 2 | An endless Jiangnan water town
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow 3D director's studio and shot previsualization" width="80%" /></a><br /><sub>3D director's studio and shot previsualization</sub>
+City walls, streets, canals, temples and mountains: over 1,500 objects.
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow three-view character sheets and image generation" width="80%" /></a><br /><sub>Three-view character sheets and image generation</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · An endless Jiangnan water town" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow video generation with multiple reference assets" width="80%" /></a><br /><sub>Video generation with multiple reference assets</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · An endless Jiangnan water town" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · An endless Jiangnan water town" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow node menu and grouping operations" width="80%" /></a><br /><sub>Node menu and grouping operations</sub>
+### Highlight 3 | 64 ready-made sets + 80,000+ assets
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow Plugin Marketplace" width="80%" /></a><br /><sub>Plugin Marketplace</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 ready-made sets + 80,000+ assets" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 ready-made sets + 80,000+ assets" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### Highlight 4 | Weather, time and terrain at a click
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · Weather, time and terrain at a click" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · Weather, time and terrain at a click" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · Weather, time and terrain at a click" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · Weather, time and terrain at a click" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Highlight 5 | Export previs straight into video generation
+
+Storyboards, four-view sheets, previs videos, animatics and shot lists go back to the canvas in one click.
+
+### Highlight 6 | Infinite canvas + AI assistant
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · Infinite canvas + AI assistant" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · Infinite canvas + AI assistant" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Highlight 7 | Multi-reference video generation
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · Multi-reference video generation" width="100%" /></a>
+</p>
+
+### Highlight 8 | Script documents and workspace
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · Script documents and workspace" width="100%" /></a>
+</p>
+
+### Highlight 9 | Home and asset library
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · Home and asset library" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · Home and asset library" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Highlight 10 | Plugin market
+
+More plugins in the [web plugin market](https://api.toonflow.net/console/plugIn).
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · Plugin market" width="100%" /></a>
+</p>
 
 ---
 

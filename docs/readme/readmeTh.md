@@ -154,6 +154,11 @@
   <a href="https://api.toonflow.net/">แพลตฟอร์มโมเดลอย่างเป็นทางการ</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">วิดีโอแนะนำผลิตภัณฑ์</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">เดโมพรีวิส TrumanMap</a>
+</p>
+
 ---
 
 ## 1. 💛 ผู้สนับสนุนและการสนับสนุน
@@ -181,7 +186,13 @@
       <br /><br />
       <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">ลงทะเบียนผ่านลิงก์พิเศษ</a>เพื่อรับเครดิตฟรีมูลค่า 5 หยวนสำหรับทดลองใช้งานบนแพลตฟอร์ม!</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI ให้บริการสร้างข้อความ รูปภาพ และวิดีโอด้วย AI ในราคาคุ้มค่า รวมโมเดลชั้นนำอย่าง DeepSeek, GLM, Kimi, Seedream, Seedance, Wan และ MiniMax H3 รองรับการสร้างภาพจากข้อความ ภาพจากภาพ วิดีโอจากข้อความ และวิดีโอจากภาพผ่าน API เดียว เรียกใช้หลายโมเดลได้อย่างยืดหยุ่นสำหรับงานสร้างคอนเทนต์ระดับองค์กร แพลตฟอร์มใช้การเข้ารหัสข้อมูลระดับองค์กรและแยกผู้เช่าหลายราย ผ่านการประเมินความปลอดภัยระดับ 3 ของจีน</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">ลงทะเบียนผ่านลิงก์พิเศษ</a>เพื่อทดลองใช้บริการโมเดลมัลติโมดัลของ WEIMETA AI โปรโมชันจำกัดเวลา เติมเงิน 100 หยวนรับเพิ่ม 15 หยวน ติดต่อธุรกิจทาง WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@
 
 ## 2. 🌟 จุดเด่น
 
-Toonflow คือแพลตฟอร์มสร้างสรรค์ด้วย AI แบบโอเพนซอร์สสำหรับการผลิตละครสั้น วิดีโอการ์ตูน และวิดีโอสั้น โดยรวมบท ทรัพยากร และคลิปวิดีโอไว้บนแคนวาสไม่จำกัดผืนเดียว
-
 | ความสามารถ | รายละเอียด |
 | --- | --- |
-| 🏠 **ติดตั้งในระบบของคุณ** | บันทึกโครงการและสื่อไว้บนอุปกรณ์หรือเซิร์ฟเวอร์ของคุณเอง รองรับการติดตั้งแบบเดสก์ท็อป Android Docker และเซิร์ฟเวอร์ |
-| 🖼️ **แคนวาสไม่จำกัด** | จัดวางบท ตัวละคร ฉาก และคลิปวิดีโอบนแคนวาสเดียวกัน |
-| 🔌 **MCP** | เชื่อมต่อเครื่องมือและบริการภายนอกผ่าน MCP |
-| 🧩 **ตลาดปลั๊กอิน** | เพิ่มโหนด เครื่องมือ และความสามารถในการสร้างสรรค์ผ่าน[ตลาดปลั๊กอิน](https://api.toonflow.net/console/plugIn) |
-| 🤖 **Agent แบบเปิด** | เปิดให้ปรับแต่งพรอมป์ต์และเครื่องมือ พร้อมรองรับ A2A เพื่อกำหนดพฤติกรรมของ Agent และทำงานร่วมกับ Agent ภายนอก |
-| 🔧 **เชื่อมต่อโมเดลได้อย่างอิสระ** | กำหนดค่า API ของบุคคลที่สาม หรือเชื่อมต่อ ComfyUI และ LLM ที่ทำงานในเครื่อง |
-| 🌐 **รองรับหลายภาษา** | รองรับภาษาของส่วนติดต่อผู้ใช้ 22 ภาษา |
+| 🎬 **พรีวิส TrumanMap** | วางบทแล้วสร้างฉาก 3D สตอรีบอร์ด และตำแหน่งนักแสดงในคลิกเดียว |
+| 🖼️ **แคนวาสไร้ขอบเขต** | บท ตัวละคร ฉาก และคลิปเชื่อมต่อใช้ซ้ำบนแคนวาสเดียว |
+| 🎥 **สร้างวิดีโอด้วย AI** | @ อ้างอิงแอสเซ็ต แล้วสร้างทีละช็อต |
+| 🤖 **ผู้ช่วย AI** | อ่านและแก้แคนวาสได้โดยตรง รองรับ MCP และ A2A |
+| 🔧 **เชื่อมโมเดลได้อิสระ** | ผู้ให้บริการในตัว API ภายนอก LLM ในเครื่อง ComfyUI |
+| 🧩 **ตลาดปลั๊กอิน** | ติดตั้งโหนด เครื่องมือ และสกิลในคลิกเดียว |
+| 🏠 **ติดตั้งในเครื่อง** | Windows, macOS, Linux, Android, Docker |
+| 🌐 **หลายภาษา** | อินเทอร์เฟซ 22 ภาษา |
+
+**ขั้นตอน**: บทและสตอรีบอร์ด → ตัวละครและฉาก → พรีวิส 3D → สร้างวิดีโอทีละช็อต → ตัดต่อและดาวน์โหลด
+
+### คำถามที่พบบ่อย
+
+**Toonflow คืออะไร?** แพลตฟอร์มโอเพนซอร์สสำหรับละครสั้น AI การ์ตูน AI และวิดีโอ AI
+
+**ฟรีไหม?** ใช้สัญญาอนุญาต MIT ติดตั้งเองได้ฟรี API โมเดลภายนอกอาจมีค่าใช้จ่าย
+
+**รองรับโมเดลอะไรบ้าง?** มี Seedance, Seedream, MiniMax, Wan ฯลฯ ในตัว และเชื่อม API ภายนอก LLM ในเครื่อง และ ComfyUI ได้ ดู[คู่มือการใช้งาน](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)
+
+**รองรับระบบอะไร?** Windows, macOS, Linux, Android รวมถึง Docker และเซิร์ฟเวอร์
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Toonflow คือแพลตฟอร์มสร้างสรรค์ด�
 
 ---
 
-## 3. 📸 ภาพหน้าจอ
+## 3. 📸 10 ไฮไลต์
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="หน้าแรกของโครงการ Toonflow และการสร้างสรรค์จากแรงบันดาลใจ" width="80%" /></a><br /><sub>หน้าแรกของโครงการและการสร้างสรรค์จากแรงบันดาลใจ</sub>
+### ไฮไลต์ 1 | วางบท ได้พรีวิส 3D ทันที
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="การเปิด Toonflow ครั้งแรกและการตั้งค่าอย่างรวดเร็ว" width="80%" /></a><br /><sub>การเปิดใช้งานครั้งแรกและการตั้งค่าอย่างรวดเร็ว</sub>
+แบ่งช็อตและจัดตำแหน่งตามบทพูดอัตโนมัติ จอมอนิเตอร์แสดงภาพและซับไตเติลแบบเรียลไทม์ 📺 [ดูวิดีโอเดโม](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="แคนวาสธีมมืดและผู้ช่วย AI ของ Toonflow" width="80%" /></a><br /><sub>แคนวาสสร้างสรรค์ · ธีมมืด</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · วางบท ได้พรีวิส 3D ทันที" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="แคนวาสธีมสว่างและผู้ช่วย AI ของ Toonflow" width="80%" /></a><br /><sub>แคนวาสสร้างสรรค์ · ธีมสว่าง</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · วางบท ได้พรีวิส 3D ทันที" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · วางบท ได้พรีวิส 3D ทันที" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="แคนวาสทรัพยากรตัวละคร ฉาก และอุปกรณ์ประกอบของ Toonflow" width="80%" /></a><br /><sub>ทรัพยากรตัวละคร ฉาก และอุปกรณ์ประกอบ</sub>
+### ไฮไลต์ 2 | เมืองริมน้ำเจียงหนานที่กว้างไม่สิ้นสุด
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="โต๊ะผู้กำกับ 3D และการพรีวิซช็อตของ Toonflow" width="80%" /></a><br /><sub>โต๊ะผู้กำกับ 3D และการพรีวิซช็อต</sub>
+กำแพงเมือง ถนน คลอง วัด และภูเขา รวมกว่า 1,500 ชิ้น
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="การสร้างภาพตัวละครสามมุมมองด้วย Toonflow" width="80%" /></a><br /><sub>ภาพตัวละครสามมุมมองและการสร้างภาพ</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · เมืองริมน้ำเจียงหนานที่กว้างไม่สิ้นสุด" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="การสร้างวิดีโอจากสื่ออ้างอิงหลายรายการด้วย Toonflow" width="80%" /></a><br /><sub>การสร้างวิดีโอจากสื่ออ้างอิงหลายรายการ</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · เมืองริมน้ำเจียงหนานที่กว้างไม่สิ้นสุด" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · เมืองริมน้ำเจียงหนานที่กว้างไม่สิ้นสุด" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="เมนูโหนดและการจัดกลุ่มของ Toonflow" width="80%" /></a><br /><sub>เมนูโหนดและการจัดกลุ่ม</sub>
+### ไฮไลต์ 3 | ฉากสำเร็จรูป 64 ชุด + แอสเซ็ตกว่า 80,000 ชิ้น
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="ตลาดปลั๊กอินของ Toonflow" width="80%" /></a><br /><sub>ตลาดปลั๊กอิน</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · ฉากสำเร็จรูป 64 ชุด + แอสเซ็ตกว่า 80,000 ชิ้น" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · ฉากสำเร็จรูป 64 ชุด + แอสเซ็ตกว่า 80,000 ชิ้น" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### ไฮไลต์ 4 | สภาพอากาศ เวลา ภูมิประเทศ ปรับได้ในคลิกเดียว
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · สภาพอากาศ เวลา ภูมิประเทศ ปรับได้ในคลิกเดียว" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · สภาพอากาศ เวลา ภูมิประเทศ ปรับได้ในคลิกเดียว" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · สภาพอากาศ เวลา ภูมิประเทศ ปรับได้ในคลิกเดียว" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · สภาพอากาศ เวลา ภูมิประเทศ ปรับได้ในคลิกเดียว" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ไฮไลต์ 5 | ส่งออกพรีวิสไปสร้างวิดีโอได้ทันที
+
+สตอรีบอร์ด ภาพสี่ด้าน วิดีโอพรีวิส แอนิเมติก และตารางช็อต ส่งกลับแคนวาสในคลิกเดียว
+
+### ไฮไลต์ 6 | แคนวาสไร้ขอบเขต + ผู้ช่วย AI
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · แคนวาสไร้ขอบเขต + ผู้ช่วย AI" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · แคนวาสไร้ขอบเขต + ผู้ช่วย AI" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ไฮไลต์ 7 | สร้างวิดีโอจากหลายภาพอ้างอิง
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · สร้างวิดีโอจากหลายภาพอ้างอิง" width="100%" /></a>
+</p>
+
+### ไฮไลต์ 8 | เอกสารบทและพื้นที่ทำงาน
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · เอกสารบทและพื้นที่ทำงาน" width="100%" /></a>
+</p>
+
+### ไฮไลต์ 9 | หน้าแรกและคลังแอสเซ็ต
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · หน้าแรกและคลังแอสเซ็ต" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · หน้าแรกและคลังแอสเซ็ต" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ไฮไลต์ 10 | ตลาดปลั๊กอิน
+
+ปลั๊กอินเพิ่มเติมดูที่[ตลาดปลั๊กอินเวอร์ชันเว็บ](https://api.toonflow.net/console/plugIn)
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · ตลาดปลั๊กอิน" width="100%" /></a>
+</p>
 
 ---
 
