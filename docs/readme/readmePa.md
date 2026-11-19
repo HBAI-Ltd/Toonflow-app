@@ -154,6 +154,11 @@
 <a href="https://api.toonflow.net/">ਅਧਿਕਾਰਤ ਮਾਡਲ ਪਲੇਟਫਾਰਮ</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">ਉਤਪਾਦ ਜਾਣ-ਪਛਾਣ ਵੀਡੀਓ</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap ਪ੍ਰੀਵਿਜ਼ ਡੈਮੋ</a>
+</p>
+
 ---
 
 ## 1. 💛 ਸਪਾਂਸਰ ਅਤੇ ਸਹਾਇਤਾ
@@ -181,7 +186,13 @@ Toonflow ਓਪਨ-ਸੋਰਸ ਪ੍ਰੋਜੈਕਟ ਦਾ ਸਮਰਥਨ 
 <br /><br />
       <sub>🎁 ਪਲੇਟਫਾਰਮ ਮੁਫ਼ਤ ਅਜ਼ਮਾਉਣ ਲਈ CNY 5 ਕ੍ਰੈਡਿਟ ਪ੍ਰਾਪਤ ਕਰੋ—<a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">ਇਸ ਖ਼ਾਸ ਲਿੰਕ ਰਾਹੀਂ ਰਜਿਸਟਰ ਕਰੋ</a>!</sub>
     </td>
-<td width="50%" valign="top"></td>
+<td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI ਕਿਫ਼ਾਇਤੀ AI ਟੈਕਸਟ, ਤਸਵੀਰ ਅਤੇ ਵੀਡੀਓ ਬਣਾਉਣ ਦੀ ਸੇਵਾ ਦਿੰਦਾ ਹੈ ਅਤੇ DeepSeek, GLM, Kimi, Seedream, Seedance, Wan, MiniMax H3 ਵਰਗੇ ਮੁੱਖ ਮਾਡਲ ਇਕੱਠੇ ਕਰਦਾ ਹੈ। ਟੈਕਸਟ ਤੋਂ ਤਸਵੀਰ, ਤਸਵੀਰ ਤੋਂ ਤਸਵੀਰ, ਟੈਕਸਟ ਤੋਂ ਵੀਡੀਓ ਅਤੇ ਤਸਵੀਰ ਤੋਂ ਵੀਡੀਓ ਇੱਕ ਏਕੀਕ੍ਰਿਤ API ਰਾਹੀਂ ਮਿਲਦੇ ਹਨ। ਪਲੇਟਫਾਰਮ ਐਂਟਰਪ੍ਰਾਈਜ਼-ਪੱਧਰੀ ਇਨਕ੍ਰਿਪਟਡ ਟ੍ਰਾਂਸਮਿਸ਼ਨ ਅਤੇ ਮਲਟੀ-ਟੈਨੈਂਟ ਅਲੱਗਤਾ ਵਰਤਦਾ ਹੈ ਅਤੇ ਚੀਨ ਦੇ ਪੱਧਰ 3 ਸੁਰੱਖਿਆ ਮੁਲਾਂਕਣ ਵਿੱਚ ਪਾਸ ਹੈ।</sub>
+      <br /><br />
+      <sub>🎁 WEIMETA AI ਦੀਆਂ ਮਲਟੀਮੋਡਲ ਮਾਡਲ ਸੇਵਾਵਾਂ ਅਜ਼ਮਾਉਣ ਲਈ <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">ਇਸ ਖ਼ਾਸ ਲਿੰਕ ਰਾਹੀਂ ਰਜਿਸਟਰ ਕਰੋ</a>। ਸੀਮਤ ਸਮੇਂ ਦੀ ਪੇਸ਼ਕਸ਼: CNY 100 ਰੀਚਾਰਜ 'ਤੇ CNY 15 ਵਾਧੂ। ਕਾਰੋਬਾਰੀ ਸੰਪਰਕ WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@ Toonflow ਓਪਨ-ਸੋਰਸ ਪ੍ਰੋਜੈਕਟ ਦਾ ਸਮਰਥਨ 
 
 ## 2. 🌟 ਖ਼ਾਸ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ
 
-Toonflow ਛੋਟੇ ਨਾਟਕਾਂ, ਐਨੀਮੇਟਡ ਕਾਮਿਕਸ ਅਤੇ ਛੋਟੇ ਵੀਡੀਓ ਬਣਾਉਣ ਲਈ ਇੱਕ ਓਪਨ-ਸੋਰਸ AI ਪਲੇਟਫਾਰਮ ਹੈ। ਇਹ ਪਟਕਥਾਵਾਂ, ਰਚਨਾਤਮਕ ਸਮੱਗਰੀ ਅਤੇ ਵੀਡੀਓ ਕਲਿੱਪਾਂ ਨੂੰ ਇੱਕੋ ਬੇਅੰਤ ਕੈਨਵਸ ਉੱਤੇ ਇਕੱਠਾ ਕਰਦਾ ਹੈ।
-
-| ਸਮਰੱਥਾ | ਵਰਣਨ |
+| ਸਮਰੱਥਾ | ਵੇਰਵਾ |
 | --- | --- |
-| 🏠 **ਆਪਣੇ ਸਿਸਟਮ ਉੱਤੇ ਸਥਾਪਨਾ** | ਪ੍ਰੋਜੈਕਟ ਅਤੇ ਸਮੱਗਰੀ ਆਪਣੇ ਡਿਵਾਈਸ ਜਾਂ ਸਰਵਰ ਉੱਤੇ ਰੱਖੋ। ਡੈਸਕਟਾਪ, Android, Docker ਅਤੇ ਸਰਵਰ ਸਥਾਪਨਾ ਦੇ ਵਿਕਲਪ ਹਨ। |
-| 🖼️ **ਬੇਅੰਤ ਕੈਨਵਸ** | ਪਟਕਥਾਵਾਂ, ਪਾਤਰ, ਦ੍ਰਿਸ਼ ਅਤੇ ਵੀਡੀਓ ਕਲਿੱਪਾਂ ਨੂੰ ਇੱਕੋ ਕੈਨਵਸ ਉੱਤੇ ਸਜਾਓ। |
-| 🔌 **MCP** | MCP ਰਾਹੀਂ ਬਾਹਰੀ ਔਜ਼ਾਰਾਂ ਅਤੇ ਸੇਵਾਵਾਂ ਨੂੰ ਕਨੈਕਟ ਕਰੋ। |
-| 🧩 **ਪਲੱਗਇਨ ਮਾਰਕੀਟਪਲੇਸ** | [ਪਲੱਗਇਨ ਮਾਰਕੀਟਪਲੇਸ](https://api.toonflow.net/console/plugIn) ਰਾਹੀਂ ਨੋਡ, ਟੂਲ ਅਤੇ ਰਚਨਾਤਮਕ ਸਹੂਲਤਾਂ ਜੋੜੋ। |
-| 🤖 **ਖੁੱਲ੍ਹਾ Agent ਸਿਸਟਮ** | ਪ੍ਰੋਂਪਟ, ਟੂਲ ਅਤੇ A2A ਦੀ ਖੁੱਲ੍ਹੀ ਪਹੁੰਚ ਨਾਲ Agent ਦਾ ਵਿਹਾਰ ਬਦਲੋ ਅਤੇ ਬਾਹਰੀ Agent ਨਾਲ ਮਿਲ ਕੇ ਕੰਮ ਕਰੋ। |
-| 🔧 **ਮਾਡਲ ਜੋੜਨ ਦੀ ਲਚਕ** | ਤੀਜੀ ਧਿਰ ਦੇ API ਸੈੱਟ ਕਰੋ ਜਾਂ ਆਪਣੇ ਕੰਪਿਊਟਰ ਉੱਤੇ ਚੱਲਦੇ ComfyUI ਅਤੇ LLMs ਜੋੜੋ। |
-| 🌐 **ਬਹੁਭਾਸ਼ੀ ਸਹਾਇਤਾ** | ਇੰਟਰਫੇਸ ਲਈ 22 ਭਾਸ਼ਾਵਾਂ ਦਾ ਸਮਰਥਨ ਹੈ। |
+| 🎬 **TrumanMap ਪ੍ਰੀਵਿਜ਼** | ਸਕ੍ਰਿਪਟ ਪੇਸਟ ਕਰੋ, ਇੱਕ ਕਲਿੱਕ ਵਿੱਚ 3D ਸੈੱਟ, ਸਟੋਰੀਬੋਰਡ ਤੇ ਬਲਾਕਿੰਗ। |
+| 🖼️ **ਬੇਅੰਤ ਕੈਨਵਸ** | ਸਕ੍ਰਿਪਟ, ਕਿਰਦਾਰ, ਦ੍ਰਿਸ਼ ਤੇ ਕਲਿੱਪ ਇੱਕ ਕੈਨਵਸ 'ਤੇ ਜੁੜੇ। |
+| 🎥 **AI ਵੀਡੀਓ ਬਣਾਉਣਾ** | @ ਨਾਲ ਐਸੈੱਟ ਜੋੜੋ, ਸ਼ਾਟ-ਦਰ-ਸ਼ਾਟ ਬਣਾਓ। |
+| 🤖 **AI ਸਹਾਇਕ** | ਕੈਨਵਸ ਪੜ੍ਹਦਾ ਤੇ ਬਦਲਦਾ ਹੈ; MCP ਤੇ A2A ਸਮਰਥਨ। |
+| 🔧 **ਕੋਈ ਵੀ ਮਾਡਲ** | ਬਿਲਟ-ਇਨ ਪ੍ਰਦਾਤਾ, ਥਰਡ-ਪਾਰਟੀ API, ਲੋਕਲ LLM, ComfyUI। |
+| 🧩 **ਪਲੱਗਇਨ ਮਾਰਕੀਟ** | ਨੋਡ, ਟੂਲ ਤੇ ਸਕਿੱਲ ਇੱਕ ਕਲਿੱਕ ਵਿੱਚ। |
+| 🏠 **ਲੋਕਲ ਡਿਪਲੌਏਮੈਂਟ** | Windows, macOS, Linux, Android, Docker। |
+| 🌐 **ਬਹੁ-ਭਾਸ਼ਾਈ** | 22 ਇੰਟਰਫੇਸ ਭਾਸ਼ਾਵਾਂ। |
+
+**ਕੰਮ ਦਾ ਢੰਗ**: ਸਕ੍ਰਿਪਟ ਤੇ ਸਟੋਰੀਬੋਰਡ → ਕਿਰਦਾਰ ਤੇ ਦ੍ਰਿਸ਼ → 3D ਪ੍ਰੀਵਿਜ਼ → ਸ਼ਾਟ-ਦਰ-ਸ਼ਾਟ ਵੀਡੀਓ → ਸੰਪਾਦਨ ਤੇ ਡਾਊਨਲੋਡ।
+
+### ਆਮ ਸਵਾਲ
+
+**Toonflow ਕੀ ਹੈ?** AI ਛੋਟੇ ਨਾਟਕ, AI ਕਾਮਿਕ ਤੇ AI ਵੀਡੀਓ ਬਣਾਉਣ ਲਈ ਓਪਨ-ਸੋਰਸ ਪਲੇਟਫਾਰਮ।
+
+**ਕੀ ਇਹ ਮੁਫ਼ਤ ਹੈ?** MIT ਲਾਇਸੰਸ, ਆਪ ਹੋਸਟ ਕਰਨਾ ਮੁਫ਼ਤ; ਥਰਡ-ਪਾਰਟੀ ਮਾਡਲ API 'ਤੇ ਖ਼ਰਚਾ ਹੋ ਸਕਦਾ ਹੈ।
+
+**ਕਿਹੜੇ ਮਾਡਲ?** Seedance, Seedream, MiniMax, Wan ਆਦਿ ਬਿਲਟ-ਇਨ; ਥਰਡ-ਪਾਰਟੀ API, ਲੋਕਲ LLM ਤੇ ComfyUI ਵੀ ਜੋੜ ਸਕਦੇ ਹੋ। [ਵਰਤੋਂ ਗਾਈਡ](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf) ਵੇਖੋ।
+
+**ਕਿਹੜੇ ਪਲੇਟਫਾਰਮ?** Windows, macOS, Linux, Android, ਨਾਲ ਹੀ Docker ਤੇ ਸਰਵਰ।
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Toonflow ਛੋਟੇ ਨਾਟਕਾਂ, ਐਨੀਮੇਟਡ ਕਾਮਿਕ�
 
 ---
 
-## 3. 📸 ਸਕ੍ਰੀਨਸ਼ਾਟ
+## 3. 📸 10 ਮੁੱਖ ਖ਼ੂਬੀਆਂ
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow · ਪ੍ਰੋਜੈਕਟ ਦਾ ਮੁੱਖ ਪੰਨਾ ਅਤੇ ਵਿਚਾਰ ਬਣਾਉਣਾ" width="80%" /></a><br /><sub>ਪ੍ਰੋਜੈਕਟ ਦਾ ਮੁੱਖ ਪੰਨਾ ਅਤੇ ਵਿਚਾਰ ਬਣਾਉਣਾ</sub>
+### ਖ਼ੂਬੀ 1 | ਸਕ੍ਰਿਪਟ ਪੇਸਟ ਕਰੋ, 3D ਪ੍ਰੀਵਿਜ਼ ਪਾਓ
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow · ਪਹਿਲੀ ਸ਼ੁਰੂਆਤ ਅਤੇ ਤੁਰੰਤ ਸੈੱਟਅੱਪ" width="80%" /></a><br /><sub>ਪਹਿਲੀ ਸ਼ੁਰੂਆਤ ਅਤੇ ਤੁਰੰਤ ਸੈੱਟਅੱਪ</sub>
+ਸੰਵਾਦਾਂ ਮੁਤਾਬਕ ਆਪਣੇ-ਆਪ ਸ਼ਾਟ ਤੇ ਬਲਾਕਿੰਗ; ਮਾਨੀਟਰ 'ਤੇ ਦ੍ਰਿਸ਼ ਤੇ ਸਬਟਾਈਟਲ ਲਾਈਵ। 📺 [ਡੈਮੋ ਵੇਖੋ](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow · ਰਚਨਾਤਮਕ ਕੈਨਵਸ · ਗੂੜ੍ਹਾ ਥੀਮ" width="80%" /></a><br /><sub>ਰਚਨਾਤਮਕ ਕੈਨਵਸ · ਗੂੜ੍ਹਾ ਥੀਮ</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · ਸਕ੍ਰਿਪਟ ਪੇਸਟ ਕਰੋ, 3D ਪ੍ਰੀਵਿਜ਼ ਪਾਓ" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow · ਰਚਨਾਤਮਕ ਕੈਨਵਸ · ਹਲਕਾ ਥੀਮ" width="80%" /></a><br /><sub>ਰਚਨਾਤਮਕ ਕੈਨਵਸ · ਹਲਕਾ ਥੀਮ</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · ਸਕ੍ਰਿਪਟ ਪੇਸਟ ਕਰੋ, 3D ਪ੍ਰੀਵਿਜ਼ ਪਾਓ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · ਸਕ੍ਰਿਪਟ ਪੇਸਟ ਕਰੋ, 3D ਪ੍ਰੀਵਿਜ਼ ਪਾਓ" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow · ਪਾਤਰਾਂ, ਦ੍ਰਿਸ਼ਾਂ ਅਤੇ ਵਸਤੂਆਂ ਦੀ ਸਮੱਗਰੀ" width="80%" /></a><br /><sub>ਪਾਤਰਾਂ, ਦ੍ਰਿਸ਼ਾਂ ਅਤੇ ਵਸਤੂਆਂ ਦੀ ਸਮੱਗਰੀ</sub>
+### ਖ਼ੂਬੀ 2 | ਜਿਆਂਗਨਾਨ ਦਾ ਬੇਅੰਤ ਜਲ-ਨਗਰ
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow · 3D ਨਿਰਦੇਸ਼ਕ ਸਟੂਡੀਓ ਅਤੇ ਸ਼ਾਟ ਦੀ ਪਹਿਲਾਂ ਝਲਕ" width="80%" /></a><br /><sub>3D ਨਿਰਦੇਸ਼ਕ ਸਟੂਡੀਓ ਅਤੇ ਸ਼ਾਟ ਦੀ ਪਹਿਲਾਂ ਝਲਕ</sub>
+ਸ਼ਹਿਰ ਦੀਆਂ ਕੰਧਾਂ, ਗਲੀਆਂ, ਨਹਿਰਾਂ, ਮੰਦਰ ਤੇ ਪਹਾੜ: 1,500 ਤੋਂ ਵੱਧ ਵਸਤੂਆਂ।
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow · ਪਾਤਰਾਂ ਦੇ ਤਿੰਨ ਪਾਸਿਆਂ ਦੇ ਦ੍ਰਿਸ਼ ਅਤੇ ਤਸਵੀਰਾਂ ਬਣਾਉਣਾ" width="80%" /></a><br /><sub>ਪਾਤਰਾਂ ਦੇ ਤਿੰਨ ਪਾਸਿਆਂ ਦੇ ਦ੍ਰਿਸ਼ ਅਤੇ ਤਸਵੀਰਾਂ ਬਣਾਉਣਾ</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · ਜਿਆਂਗਨਾਨ ਦਾ ਬੇਅੰਤ ਜਲ-ਨਗਰ" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow · ਕਈ ਹਵਾਲਾ ਸਮੱਗਰੀਆਂ ਨਾਲ ਵੀਡੀਓ ਬਣਾਉਣਾ" width="80%" /></a><br /><sub>ਕਈ ਹਵਾਲਾ ਸਮੱਗਰੀਆਂ ਨਾਲ ਵੀਡੀਓ ਬਣਾਉਣਾ</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · ਜਿਆਂਗਨਾਨ ਦਾ ਬੇਅੰਤ ਜਲ-ਨਗਰ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · ਜਿਆਂਗਨਾਨ ਦਾ ਬੇਅੰਤ ਜਲ-ਨਗਰ" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow · ਨੋਡ ਮੀਨੂ ਅਤੇ ਗਰੁੱਪ ਕਾਰਵਾਈਆਂ" width="80%" /></a><br /><sub>ਨੋਡ ਮੀਨੂ ਅਤੇ ਗਰੁੱਪ ਕਾਰਵਾਈਆਂ</sub>
+### ਖ਼ੂਬੀ 3 | 64 ਤਿਆਰ ਸੈੱਟ + 80,000+ ਐਸੈੱਟ
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow · ਪਲੱਗਇਨ ਮਾਰਕੀਟਪਲੇਸ" width="80%" /></a><br /><sub>ਪਲੱਗਇਨ ਮਾਰਕੀਟਪਲੇਸ</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 ਤਿਆਰ ਸੈੱਟ + 80,000+ ਐਸੈੱਟ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 ਤਿਆਰ ਸੈੱਟ + 80,000+ ਐਸੈੱਟ" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### ਖ਼ੂਬੀ 4 | ਮੌਸਮ, ਸਮਾਂ ਤੇ ਭੂ-ਭਾਗ ਇੱਕ ਕਲਿੱਕ ਵਿੱਚ
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · ਮੌਸਮ, ਸਮਾਂ ਤੇ ਭੂ-ਭਾਗ ਇੱਕ ਕਲਿੱਕ ਵਿੱਚ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · ਮੌਸਮ, ਸਮਾਂ ਤੇ ਭੂ-ਭਾਗ ਇੱਕ ਕਲਿੱਕ ਵਿੱਚ" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · ਮੌਸਮ, ਸਮਾਂ ਤੇ ਭੂ-ਭਾਗ ਇੱਕ ਕਲਿੱਕ ਵਿੱਚ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · ਮੌਸਮ, ਸਮਾਂ ਤੇ ਭੂ-ਭਾਗ ਇੱਕ ਕਲਿੱਕ ਵਿੱਚ" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ਖ਼ੂਬੀ 5 | ਪ੍ਰੀਵਿਜ਼ ਸਿੱਧਾ ਵੀਡੀਓ ਬਣਾਉਣ ਲਈ
+
+ਸਟੋਰੀਬੋਰਡ, ਚਾਰ-ਪਾਸੀ ਸ਼ੀਟ, ਪ੍ਰੀਵਿਜ਼ ਵੀਡੀਓ, ਐਨੀਮੈਟਿਕ ਤੇ ਸ਼ਾਟ ਸੂਚੀ ਇੱਕ ਕਲਿੱਕ ਵਿੱਚ ਕੈਨਵਸ 'ਤੇ।
+
+### ਖ਼ੂਬੀ 6 | ਬੇਅੰਤ ਕੈਨਵਸ + AI ਸਹਾਇਕ
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · ਬੇਅੰਤ ਕੈਨਵਸ + AI ਸਹਾਇਕ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · ਬੇਅੰਤ ਕੈਨਵਸ + AI ਸਹਾਇਕ" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ਖ਼ੂਬੀ 7 | ਕਈ ਹਵਾਲਿਆਂ ਨਾਲ ਵੀਡੀਓ
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · ਕਈ ਹਵਾਲਿਆਂ ਨਾਲ ਵੀਡੀਓ" width="100%" /></a>
+</p>
+
+### ਖ਼ੂਬੀ 8 | ਸਕ੍ਰਿਪਟ ਦਸਤਾਵੇਜ਼ ਤੇ ਵਰਕਸਪੇਸ
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · ਸਕ੍ਰਿਪਟ ਦਸਤਾਵੇਜ਼ ਤੇ ਵਰਕਸਪੇਸ" width="100%" /></a>
+</p>
+
+### ਖ਼ੂਬੀ 9 | ਹੋਮ ਤੇ ਐਸੈੱਟ ਲਾਇਬ੍ਰੇਰੀ
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · ਹੋਮ ਤੇ ਐਸੈੱਟ ਲਾਇਬ੍ਰੇਰੀ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · ਹੋਮ ਤੇ ਐਸੈੱਟ ਲਾਇਬ੍ਰੇਰੀ" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ਖ਼ੂਬੀ 10 | ਪਲੱਗਇਨ ਮਾਰਕੀਟ
+
+ਹੋਰ ਪਲੱਗਇਨ [ਵੈੱਬ ਪਲੱਗਇਨ ਮਾਰਕੀਟ](https://api.toonflow.net/console/plugIn) ਵਿੱਚ।
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · ਪਲੱਗਇਨ ਮਾਰਕੀਟ" width="100%" /></a>
+</p>
 
 ---
 

@@ -154,6 +154,11 @@
 <a href="https://api.toonflow.net/">அதிகாரப்பூர்வ மாதிரி இயங்குதளம்</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">தயாரிப்பு அறிமுக வீடியோ</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap முன்காட்சி டெமோ</a>
+</p>
+
 ---
 
 ## 1. 💛 ஆதரவாளர்களும் பங்களிப்பும்
@@ -181,7 +186,13 @@ Toonflow திறந்த மூல திட்டத்திற்கு �
 <br /><br />
       <sub>🎁 தளத்தை இலவசமாக முயற்சிக்க CNY 5 கிரெடிட் பெற <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">இந்தச் சிறப்பு இணைப்பின் வழியாகப் பதிவு செய்யவும்</a>!</sub>
     </td>
-<td width="50%" valign="top"></td>
+<td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI குறைந்த செலவில் AI உரை, படம் மற்றும் வீடியோ உருவாக்கச் சேவையை வழங்குகிறது; DeepSeek, GLM, Kimi, Seedream, Seedance, Wan, MiniMax H3 போன்ற முன்னணி மாடல்களை ஒன்றிணைக்கிறது. உரையிலிருந்து படம், படத்திலிருந்து படம், உரையிலிருந்து வீடியோ, படத்திலிருந்து வீடியோ ஆகியவற்றை ஒருங்கிணைந்த API மூலம் ஆதரிக்கிறது. நிறுவன அளவிலான மறையாக்கப் பரிமாற்றம், பல-குத்தகையாளர் தனிமைப்படுத்தல் கொண்டது; சீனாவின் நிலை 3 பாதுகாப்பு மதிப்பீட்டில் தேர்ச்சி பெற்றது.</sub>
+      <br /><br />
+      <sub>🎁 WEIMETA AI-யின் பல்முனை மாடல் சேவைகளை முயற்சிக்க <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">இந்தச் சிறப்பு இணைப்பின் வழியாகப் பதிவு செய்யவும்</a>. குறுகிய கால சலுகை: CNY 100 நிரப்பினால் CNY 15 கூடுதல். வணிகத் தொடர்பு WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@ Toonflow திறந்த மூல திட்டத்திற்கு �
 
 ## 2. 🌟 சிறப்பம்சங்கள்
 
-Toonflow என்பது குறுநாடகங்கள், அனிமேஷன் காமிக்ஸ் மற்றும் குறுகிய வீடியோக்களை உருவாக்குவதற்கான திறந்த மூல AI தளம். திரைக்கதைகள், படைப்பு வளங்கள் மற்றும் வீடியோ கிளிப்புகள் அனைத்தையும் ஒரே எல்லையற்ற கேன்வாஸில் ஒருங்கிணைக்கிறது.
-
 | திறன் | விளக்கம் |
 | --- | --- |
-| 🏠 **உங்கள் சாதனத்தில் நிறுவுதல்** | திட்டங்களையும் படைப்பு வளங்களையும் உங்கள் சாதனத்திலோ சேவையகத்திலோ வைத்திருக்கலாம். டெஸ்க்டாப், Android, Docker மற்றும் சேவையக நிறுவல் முறைகள் உள்ளன. |
-| 🖼️ **எல்லையற்ற கேன்வாஸ்** | ஸ்கிரிப்ட்கள், கதாபாத்திரங்கள், காட்சிகள் மற்றும் வீடியோ கிளிப்புகள் ஆகியவற்றை ஒரே கேன்வாஸில் ஒழுங்கமைக்கவும். |
-| 🔌 **MCP** | MCP மூலம் வெளிப்புற கருவிகள் மற்றும் சேவைகளை இணைக்கவும். |
-| 🧩 **செருகுநிரல் சந்தை** | [செருகுநிரல் சந்தை](https://api.toonflow.net/console/plugIn) மூலம் முனைகள், கருவிகள் மற்றும் படைப்பு வசதிகளைச் சேர்க்கலாம். |
-| 🤖 **திறந்த Agent அமைப்பு** | ப்ராம்ப்ட்கள், கருவிகள் மற்றும் A2A-ஐ அணுகி Agent-இன் செயல்பாட்டை மாற்றியமைக்கவும், வெளிப்புற Agent-களுடன் இணைந்து செயல்படவும் முடியும். |
-| 🔧 **நெகிழ்வான மாதிரி ஒருங்கிணைப்பு** | மூன்றாம் தரப்பு APIகளை உள்ளமைக்கவும் அல்லது உள்ளூர் ComfyUI நிகழ்வுகள் மற்றும் LLMs ஐ இணைக்கவும். |
-| 🌐 **பன்மொழி ஆதரவு** | பயனர் இடைமுகத்தில் 22 மொழிகளை ஆதரிக்கிறது. |
+| 🎬 **TrumanMap முன்காட்சி** | ஸ்கிரிப்டை ஒட்டினால் ஒரே கிளிக்கில் 3D செட், ஸ்டோரிபோர்டு, நிலைப்படுத்தல். |
+| 🖼️ **எல்லையற்ற கேன்வாஸ்** | ஸ்கிரிப்ட், கதாபாத்திரம், காட்சி, கிளிப்புகள் இணைப்பு. |
+| 🎥 **AI வீடியோ உருவாக்கம்** | @ மூலம் சொத்துகளைக் குறிப்பிட்டு ஷாட் வாரியாக. |
+| 🤖 **AI உதவியாளர்** | கேன்வாஸைப் படித்துத் திருத்தும்; MCP, A2A ஆதரவு. |
+| 🔧 **எந்த மாடலும்** | உள்ளமைந்த வழங்குநர்கள், மூன்றாம் தரப்பு API, உள்ளூர் LLM, ComfyUI. |
+| 🧩 **பிளகின் சந்தை** | நோடுகள், கருவிகள், திறன்கள் ஒரே கிளிக்கில். |
+| 🏠 **உள்ளூர் நிறுவல்** | Windows, macOS, Linux, Android, Docker. |
+| 🌐 **பல மொழிகள்** | 22 இடைமுக மொழிகள். |
+
+**செயல்முறை**: ஸ்கிரிப்ட் & ஸ்டோரிபோர்டு → கதாபாத்திரம் & காட்சி → 3D முன்காட்சி → ஷாட் வாரியான வீடியோ → திருத்தம் & பதிவிறக்கம்.
+
+### அடிக்கடி கேட்கப்படுபவை
+
+**Toonflow என்றால் என்ன?** AI குறுந்தொடர், AI காமிக், AI வீடியோ உருவாக்கும் திறந்த மூல தளம்.
+
+**இது இலவசமா?** MIT உரிமம், சுயமாக நிறுவ இலவசம்; மூன்றாம் தரப்பு மாடல் API கட்டணம் இருக்கலாம்.
+
+**எந்த மாடல்கள்?** Seedance, Seedream, MiniMax, Wan போன்றவை உள்ளமைந்தவை; மூன்றாம் தரப்பு API, உள்ளூர் LLM, ComfyUI-யும் இணைக்கலாம். [பயன்பாட்டு வழிகாட்டி](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf) பார்க்கவும்.
+
+**எந்த தளங்கள்?** Windows, macOS, Linux, Android, மேலும் Docker, சர்வர்.
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Toonflow என்பது குறுநாடகங்கள், அனி�
 
 ---
 
-## 3. 📸 ஸ்கிரீன்ஷாட்கள்
+## 3. 📸 10 முக்கிய சிறப்புகள்
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow · திட்ட முகப்பும் யோசனை உருவாக்கமும்" width="80%" /></a><br /><sub>திட்ட முகப்பும் யோசனை உருவாக்கமும்</sub>
+### சிறப்பு 1 | ஸ்கிரிப்டை ஒட்டுங்கள், 3D முன்காட்சி தயார்
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow · முதல் தொடக்கமும் விரைவு அமைப்பும்" width="80%" /></a><br /><sub>முதல் தொடக்கமும் விரைவு அமைப்பும்</sub>
+வசனங்களுக்கு ஏற்ப தானியங்கி ஷாட், நிலைப்படுத்தல்; மானிட்டரில் காட்சியும் வசனவரியும் நேரலையில். 📺 [டெமோ பார்க்க](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow · படைப்புக் கேன்வாஸ் · இருண்ட தோற்றம்" width="80%" /></a><br /><sub>படைப்புக் கேன்வாஸ் · இருண்ட தோற்றம்</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · ஸ்கிரிப்டை ஒட்டுங்கள், 3D முன்காட்சி தயார்" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow · படைப்புக் கேன்வாஸ் · வெளிர் தோற்றம்" width="80%" /></a><br /><sub>படைப்புக் கேன்வாஸ் · வெளிர் தோற்றம்</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · ஸ்கிரிப்டை ஒட்டுங்கள், 3D முன்காட்சி தயார்" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · ஸ்கிரிப்டை ஒட்டுங்கள், 3D முன்காட்சி தயார்" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow · கதாபாத்திரங்கள், காட்சிகள் மற்றும் பொருட்களுக்கான வளங்கள்" width="80%" /></a><br /><sub>கதாபாத்திரங்கள், காட்சிகள் மற்றும் பொருட்களுக்கான வளங்கள்</sub>
+### சிறப்பு 2 | முடிவில்லா ஜியாங்னான் நீர் நகரம்
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow · 3D இயக்குநர் அரங்கமும் காட்சிப் பதிவு முன்னோட்டமும்" width="80%" /></a><br /><sub>3D இயக்குநர் அரங்கமும் காட்சிப் பதிவு முன்னோட்டமும்</sub>
+நகரச் சுவர்கள், தெருக்கள், கால்வாய்கள், கோயில்கள், மலைகள்: 1,500-க்கும் மேற்பட்ட பொருட்கள்.
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow · கதாபாத்திரத்தின் மூன்று கோணத் தோற்றங்களும் பட உருவாக்கமும்" width="80%" /></a><br /><sub>கதாபாத்திரத்தின் மூன்று கோணத் தோற்றங்களும் பட உருவாக்கமும்</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · முடிவில்லா ஜியாங்னான் நீர் நகரம்" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow · பல குறிப்புப் படங்களுடன் வீடியோ உருவாக்கம்" width="80%" /></a><br /><sub>பல குறிப்புப் படங்களுடன் வீடியோ உருவாக்கம்</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · முடிவில்லா ஜியாங்னான் நீர் நகரம்" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · முடிவில்லா ஜியாங்னான் நீர் நகரம்" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow · முனை மெனுவும் குழுவாக்கச் செயல்களும்" width="80%" /></a><br /><sub>முனை மெனுவும் குழுவாக்கச் செயல்களும்</sub>
+### சிறப்பு 3 | 64 தயார் செட்டுகள் + 80,000+ சொத்துகள்
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow · செருகுநிரல் சந்தை" width="80%" /></a><br /><sub>செருகுநிரல் சந்தை</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 தயார் செட்டுகள் + 80,000+ சொத்துகள்" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 தயார் செட்டுகள் + 80,000+ சொத்துகள்" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### சிறப்பு 4 | வானிலை, நேரம், நிலப்பரப்பு ஒரே கிளிக்கில்
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · வானிலை, நேரம், நிலப்பரப்பு ஒரே கிளிக்கில்" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · வானிலை, நேரம், நிலப்பரப்பு ஒரே கிளிக்கில்" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · வானிலை, நேரம், நிலப்பரப்பு ஒரே கிளிக்கில்" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · வானிலை, நேரம், நிலப்பரப்பு ஒரே கிளிக்கில்" width="100%" /></a></td>
+  </tr>
+</table>
+
+### சிறப்பு 5 | முன்காட்சியை நேரடியாக வீடியோ உருவாக்கத்திற்கு
+
+ஸ்டோரிபோர்டு, நான்கு-பார்வைத் தாள், முன்காட்சி வீடியோ, அனிமேட்டிக், ஷாட் பட்டியல் ஒரே கிளிக்கில் கேன்வாஸுக்கு.
+
+### சிறப்பு 6 | எல்லையற்ற கேன்வாஸ் + AI உதவியாளர்
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · எல்லையற்ற கேன்வாஸ் + AI உதவியாளர்" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · எல்லையற்ற கேன்வாஸ் + AI உதவியாளர்" width="100%" /></a></td>
+  </tr>
+</table>
+
+### சிறப்பு 7 | பல குறிப்பு வீடியோ உருவாக்கம்
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · பல குறிப்பு வீடியோ உருவாக்கம்" width="100%" /></a>
+</p>
+
+### சிறப்பு 8 | ஸ்கிரிப்ட் ஆவணங்கள் & பணியிடம்
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · ஸ்கிரிப்ட் ஆவணங்கள் & பணியிடம்" width="100%" /></a>
+</p>
+
+### சிறப்பு 9 | முகப்பு & சொத்து நூலகம்
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · முகப்பு & சொத்து நூலகம்" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · முகப்பு & சொத்து நூலகம்" width="100%" /></a></td>
+  </tr>
+</table>
+
+### சிறப்பு 10 | பிளகின் சந்தை
+
+மேலும் பிளகின்கள் [இணைய பிளகின் சந்தை](https://api.toonflow.net/console/plugIn)-இல்.
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · பிளகின் சந்தை" width="100%" /></a>
+</p>
 
 ---
 

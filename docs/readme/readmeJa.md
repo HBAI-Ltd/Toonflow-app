@@ -154,6 +154,11 @@
   <a href="https://api.toonflow.net/">公式モデルプラットフォーム</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">製品紹介動画</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">ホワイトモデル・プレビズのデモ</a>
+</p>
+
 ---
 
 ## 1. 💛 スポンサーと支援
@@ -181,7 +186,13 @@ Toonflow オープンソースプロジェクトをご支援くださるパー�
       <br /><br />
       <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">専用リンクから登録</a>すると、プラットフォームで使える 5 人民元分のお試しクレジットを無料で受け取れます！</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="唯元智创（WEIMETA AI）" height="28" valign="middle" /> <strong>唯元智创（WEIMETA AI）</strong></a>
+      <br />
+      <sub>WEIMETA AI は、DeepSeek、GLM、Kimi、Seedream、Seedance、Wan、MiniMax H3 などの主要モデルを集約し、高コストパフォーマンスの AI テキスト・画像・動画生成サービスを提供しています。テキストから画像、画像から画像、テキストから動画、画像から動画に対応し、統一 API で複数モデルを柔軟に呼び出せるため、企業向け AI コンテンツ制作に適しています。企業レベルの暗号化通信とマルチテナント分離を採用し、中国の等級保護 3 級のセキュリティ評価に合格しています。</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">専用リンクから登録</a>すると、WEIMETA AI のマルチモーダルモデルサービスを体験できます。期間限定で 100 人民元チャージごとに 15 人民元をプレゼント。商談は WeChat：WeiMeta_AI666 まで</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@ Toonflow オープンソースプロジェクトをご支援くださるパー�
 
 ## 2. 🌟 特長
 
-Toonflow はショートドラマ、モーションコミック、ショート動画の制作に向けたオープンソースの AI 制作プラットフォームです。脚本、素材、動画クリップを一つの無限キャンバスにまとめられます。
-
 | 機能 | 説明 |
 | --- | --- |
-| 🏠 **ローカル環境で運用** | プロジェクトと素材を自分のデバイスやサーバーに保存。デスクトップ、Android、Docker、サーバーへの導入に対応しています。 |
-| 🖼️ **無限キャンバス** | 同じキャンバス上で脚本、キャラクター、シーン、動画クリップを整理できます。 |
-| 🔌 **MCP** | MCP を通じて外部ツールやサービスに接続できます。 |
-| 🧩 **プラグインマーケット** | [プラグインマーケット](https://api.toonflow.net/console/plugIn)からノード、ツール、制作機能を追加できます。 |
-| 🤖 **オープンな Agent** | プロンプト、ツール、A2A のオープンな仕組みにより、Agent の動作のカスタマイズと外部連携に対応します。 |
-| 🔧 **モデルを自由に接続** | サードパーティーの API に加え、ローカルの ComfyUI や LLM も接続できます。 |
-| 🌐 **多言語対応** | 22の表示言語に対応。 |
+| 🎬 **ホワイトモデル・プレビズ** | 台本を貼るだけで 3D セット、絵コンテ、立ち位置を一括作成。 |
+| 🖼️ **無限キャンバス** | 台本・キャラクター・シーン・動画クリップをつないで再利用。 |
+| 🎥 **AI 動画生成** | アセットを @ で参照し、カットごとに生成。 |
+| 🤖 **AI アシスタント** | キャンバスを直接読み書き。MCP と A2A に対応。 |
+| 🔧 **モデルを自由に接続** | 内蔵プロバイダー、外部 API、ローカル LLM、ComfyUI。 |
+| 🧩 **プラグインマーケット** | ノード・ツール・スキルをワンクリック導入。 |
+| 🏠 **ローカル導入** | Windows、macOS、Linux、Android、Docker。 |
+| 🌐 **多言語** | 22 言語の UI。 |
+
+**制作フロー**: 台本・絵コンテ → キャラクターとシーン → 3D プレビズ → カットごとの動画生成 → 編集・ダウンロード。
+
+### よくある質問
+
+**Toonflow とは？** AI ショートドラマ、AI 漫画動画、AI 動画を作るオープンソースのプラットフォームです。
+
+**無料ですか？** MIT ライセンスで無料でセルフホストできます。外部モデル API は有料の場合があります。
+
+**対応モデルは？** Seedance、Seedream、MiniMax、Wan などを内蔵し、外部 API、ローカル LLM、ComfyUI も接続できます。詳しくは[使い方ガイド](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)へ。
+
+**対応 OS は？** Windows、macOS、Linux、Android、Docker とサーバー導入。
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Toonflow はショートドラマ、モーションコミック、ショート�
 
 ---
 
-## 3. 📸 スクリーンショット
+## 3. 📸 10 の見どころ
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow プロジェクトホームとアイデアからの制作" width="80%" /></a><br /><sub>プロジェクトホームとアイデアからの制作</sub>
+### 見どころ 1｜台本を貼るだけで 3D プレビズ
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow 初回起動とクイック設定" width="80%" /></a><br /><sub>初回起動とクイック設定</sub>
+台詞に合わせて自動でカット割りと立ち位置を作り、モニターに映像と字幕をリアルタイム表示。 📺 [デモ動画を見る](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow ダークテーマのキャンバスと AI アシスタント" width="80%" /></a><br /><sub>制作キャンバス · ダークテーマ</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · 台本を貼るだけで 3D プレビズ" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow ライトテーマのキャンバスと AI アシスタント" width="80%" /></a><br /><sub>制作キャンバス · ライトテーマ</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · 台本を貼るだけで 3D プレビズ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · 台本を貼るだけで 3D プレビズ" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow キャラクター・シーン・小道具の素材キャンバス" width="80%" /></a><br /><sub>キャラクター・シーン・小道具の素材</sub>
+### 見どころ 2｜果てしなく広がる江南の水郷
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow 3D 演出台とカメラショットのプレビュー" width="80%" /></a><br /><sub>3D 演出台とカメラショットのプレビュー</sub>
+城壁、街並み、水路、寺院、山々まで、1,500 点以上のオブジェクト。
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow キャラクター三面図の画像生成" width="80%" /></a><br /><sub>キャラクター三面図と画像生成</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · 果てしなく広がる江南の水郷" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow 複数の参考素材を使った動画生成" width="80%" /></a><br /><sub>複数の参考素材を使った動画生成</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · 果てしなく広がる江南の水郷" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · 果てしなく広がる江南の水郷" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow ノードメニューとグループ操作" width="80%" /></a><br /><sub>ノードメニューとグループ操作</sub>
+### 見どころ 3｜64 種のセット + 8 万点超の素材
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow プラグインマーケット" width="80%" /></a><br /><sub>プラグインマーケット</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 種のセット + 8 万点超の素材" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 種のセット + 8 万点超の素材" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### 見どころ 4｜天気・時間・地形をワンクリックで
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · 天気・時間・地形をワンクリックで" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · 天気・時間・地形をワンクリックで" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · 天気・時間・地形をワンクリックで" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · 天気・時間・地形をワンクリックで" width="100%" /></a></td>
+  </tr>
+</table>
+
+### 見どころ 5｜プレビズをそのまま動画生成へ
+
+絵コンテ、四面図、ホワイトモデル動画、プレビズ、カット表をワンクリックでキャンバスへ。
+
+### 見どころ 6｜無限キャンバス + AI アシスタント
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · 無限キャンバス + AI アシスタント" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · 無限キャンバス + AI アシスタント" width="100%" /></a></td>
+  </tr>
+</table>
+
+### 見どころ 7｜複数参照の動画生成
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · 複数参照の動画生成" width="100%" /></a>
+</p>
+
+### 見どころ 8｜台本ドキュメントとワークスペース
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · 台本ドキュメントとワークスペース" width="100%" /></a>
+</p>
+
+### 見どころ 9｜ホームと素材ライブラリ
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · ホームと素材ライブラリ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · ホームと素材ライブラリ" width="100%" /></a></td>
+  </tr>
+</table>
+
+### 見どころ 10｜プラグインマーケット
+
+その他のプラグインは[Web 版プラグインマーケット](https://api.toonflow.net/console/plugIn)へ。
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · プラグインマーケット" width="100%" /></a>
+</p>
 
 ---
 

@@ -154,6 +154,11 @@
   <a href="https://api.toonflow.net/">आधिकारिक मॉडल प्लेटफ़ॉर्म</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">उत्पाद परिचय वीडियो</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap प्रीविज़ डेमो</a>
+</p>
+
 ---
 
 ## 1. 💛 प्रायोजक और सहयोग
@@ -181,7 +186,13 @@ Toonflow ओपन-सोर्स परियोजना का समर्�
       <br /><br />
       <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">इस विशेष लिंक से पंजीकरण करें</a> और प्लेटफ़ॉर्म आज़माने के लिए CNY 5 के मुफ़्त क्रेडिट पाएँ!</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI किफ़ायती AI टेक्स्ट, इमेज और वीडियो जनरेशन सेवा देता है, जिसमें DeepSeek, GLM, Kimi, Seedream, Seedance, Wan, MiniMax H3 जैसे प्रमुख मॉडल एक जगह मिलते हैं। यह टेक्स्ट से इमेज, इमेज से इमेज, टेक्स्ट से वीडियो और इमेज से वीडियो को एकीकृत API से सपोर्ट करता है, ताकि उद्यम कई मॉडल लचीले ढंग से इस्तेमाल कर सकें। प्लेटफ़ॉर्म एंटरप्राइज़-स्तरीय एन्क्रिप्टेड ट्रांसमिशन और मल्टी-टेनेंट आइसोलेशन का उपयोग करता है और चीन का लेवल 3 सुरक्षा मूल्यांकन पास कर चुका है।</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">इस विशेष लिंक से पंजीकरण करें</a> और WEIMETA AI की मल्टीमॉडल मॉडल सेवाएँ आज़माएँ। सीमित समय का ऑफ़र: CNY 100 रिचार्ज पर CNY 15 अतिरिक्त। व्यावसायिक संपर्क WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@ Toonflow ओपन-सोर्स परियोजना का समर्�
 
 ## 2. 🌟 प्रमुख विशेषताएँ
 
-Toonflow लघु नाटकों, एनिमेटेड कॉमिक्स और छोटे वीडियो के लिए एक ओपन-सोर्स AI निर्माण प्लेटफ़ॉर्म है, जो पटकथाओं, सामग्री और वीडियो क्लिप को एक असीमित कैनवस पर साथ लाता है।
-
 | क्षमता | विवरण |
 | --- | --- |
-| 🏠 **स्थानीय परिनियोजन** | डेस्कटॉप, Android, Docker और सर्वर परिनियोजन विकल्पों के साथ अपनी परियोजनाएँ और सामग्री अपने डिवाइस या सर्वर पर रखें। |
-| 🖼️ **असीमित कैनवस** | पटकथाओं, पात्रों, दृश्यों और वीडियो क्लिप को एक ही कैनवस पर व्यवस्थित करें। |
-| 🔌 **MCP** | MCP के माध्यम से बाहरी टूल और सेवाएँ जोड़ें। |
-| 🧩 **प्लगइन मार्केटप्लेस** | [प्लगइन मार्केटप्लेस](https://api.toonflow.net/console/plugIn) से नोड, टूल और रचनात्मक क्षमताएँ बढ़ाएँ। |
-| 🤖 **ओपन Agent** | प्रॉम्प्ट, टूल और A2A की खुली पहुँच के साथ Agent का व्यवहार अनुकूलित करें और बाहरी Agent के साथ काम करें। |
-| 🔧 **लचीला मॉडल एकीकरण** | तृतीय-पक्ष API कॉन्फ़िगर करें या स्थानीय ComfyUI इंस्टेंस और LLM जोड़ें। |
-| 🌐 **बहुभाषी समर्थन** | 22 इंटरफ़ेस भाषाएँ समर्थित हैं। |
+| 🎬 **TrumanMap प्रीविज़** | स्क्रिप्ट पेस्ट करें, एक क्लिक में 3D सेट, स्टोरीबोर्ड और ब्लॉकिंग। |
+| 🖼️ **अनंत कैनवास** | स्क्रिप्ट, किरदार, दृश्य और क्लिप एक कैनवास पर जुड़े। |
+| 🎥 **AI वीडियो जनरेशन** | @ से एसेट जोड़ें, शॉट-दर-शॉट बनाएँ। |
+| 🤖 **AI सहायक** | कैनवास पढ़ता-बदलता है; MCP और A2A समर्थित। |
+| 🔧 **कोई भी मॉडल जोड़ें** | इन-बिल्ट प्रदाता, थर्ड-पार्टी API, लोकल LLM, ComfyUI। |
+| 🧩 **प्लगइन मार्केट** | नोड, टूल और स्किल एक क्लिक में। |
+| 🏠 **लोकल डिप्लॉयमेंट** | Windows, macOS, Linux, Android, Docker। |
+| 🌐 **बहुभाषी** | 22 इंटरफ़ेस भाषाएँ। |
+
+**प्रक्रिया**: स्क्रिप्ट व स्टोरीबोर्ड → किरदार व दृश्य → 3D प्रीविज़ → शॉट-दर-शॉट वीडियो → संपादन व डाउनलोड।
+
+### अक्सर पूछे जाने वाले प्रश्न
+
+**Toonflow क्या है?** AI शॉर्ट ड्रामा, AI कॉमिक और AI वीडियो बनाने का ओपन-सोर्स प्लेटफ़ॉर्म।
+
+**क्या यह मुफ़्त है?** MIT लाइसेंस, खुद होस्ट करना मुफ़्त; थर्ड-पार्टी मॉडल API पर शुल्क लग सकता है।
+
+**कौन-से मॉडल समर्थित हैं?** Seedance, Seedream, MiniMax, Wan आदि इन-बिल्ट हैं; थर्ड-पार्टी API, लोकल LLM और ComfyUI भी जोड़ सकते हैं। [उपयोग गाइड](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf) देखें।
+
+**कौन-से प्लेटफ़ॉर्म?** Windows, macOS, Linux, Android, साथ ही Docker और सर्वर।
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Toonflow लघु नाटकों, एनिमेटेड कॉमिक�
 
 ---
 
-## 3. 📸 स्क्रीनशॉट
+## 3. 📸 10 मुख्य आकर्षण
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow परियोजना का मुख्य पृष्ठ और विचार सृजन" width="80%" /></a><br /><sub>परियोजना का मुख्य पृष्ठ और विचार सृजन</sub>
+### आकर्षण 1 | स्क्रिप्ट पेस्ट करें, 3D प्रीविज़ पाएँ
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow की पहली शुरुआत और त्वरित सेटअप" width="80%" /></a><br /><sub>पहली शुरुआत और त्वरित सेटअप</sub>
+संवादों के अनुसार अपने-आप शॉट और ब्लॉकिंग; मॉनिटर पर दृश्य और सबटाइटल लाइव। 📺 [डेमो देखें](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow डार्क कैनवस और AI सहायक" width="80%" /></a><br /><sub>रचनात्मक कैनवस · डार्क थीम</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · स्क्रिप्ट पेस्ट करें, 3D प्रीविज़ पाएँ" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow लाइट कैनवस और AI सहायक" width="80%" /></a><br /><sub>रचनात्मक कैनवस · लाइट थीम</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · स्क्रिप्ट पेस्ट करें, 3D प्रीविज़ पाएँ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · स्क्रिप्ट पेस्ट करें, 3D प्रीविज़ पाएँ" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="पात्र, दृश्य और प्रॉप्स की सामग्री के लिए Toonflow कैनवस" width="80%" /></a><br /><sub>पात्र, दृश्य और प्रॉप्स की सामग्री</sub>
+### आकर्षण 2 | जियांगनान का अंतहीन जल-नगर
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow 3D निर्देशक स्टूडियो और शॉट पूर्वावलोकन" width="80%" /></a><br /><sub>3D निर्देशक स्टूडियो और शॉट पूर्वावलोकन</sub>
+नगर-दीवारें, गलियाँ, नहरें, मंदिर और पहाड़: 1,500 से अधिक वस्तुएँ।
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow पात्रों के तीन-दृश्य संदर्भ चित्र और चित्र निर्माण" width="80%" /></a><br /><sub>पात्रों के तीन-दृश्य संदर्भ चित्र और चित्र निर्माण</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · जियांगनान का अंतहीन जल-नगर" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="कई संदर्भ सामग्रियों के साथ Toonflow वीडियो निर्माण" width="80%" /></a><br /><sub>कई संदर्भ सामग्रियों के साथ वीडियो निर्माण</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · जियांगनान का अंतहीन जल-नगर" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · जियांगनान का अंतहीन जल-नगर" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow नोड मेनू और समूह संबंधी क्रियाएँ" width="80%" /></a><br /><sub>नोड मेनू और समूह संबंधी क्रियाएँ</sub>
+### आकर्षण 3 | 64 तैयार सेट + 80,000+ एसेट
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow प्लगइन मार्केटप्लेस" width="80%" /></a><br /><sub>प्लगइन मार्केटप्लेस</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 तैयार सेट + 80,000+ एसेट" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 तैयार सेट + 80,000+ एसेट" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### आकर्षण 4 | मौसम, समय और भू-भाग एक क्लिक में
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · मौसम, समय और भू-भाग एक क्लिक में" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · मौसम, समय और भू-भाग एक क्लिक में" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · मौसम, समय और भू-भाग एक क्लिक में" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · मौसम, समय और भू-भाग एक क्लिक में" width="100%" /></a></td>
+  </tr>
+</table>
+
+### आकर्षण 5 | प्रीविज़ सीधे वीडियो जनरेशन में
+
+स्टोरीबोर्ड, चार-दृश्य शीट, प्रीविज़ वीडियो, एनिमैटिक और शॉट सूची एक क्लिक में कैनवास पर।
+
+### आकर्षण 6 | अनंत कैनवास + AI सहायक
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · अनंत कैनवास + AI सहायक" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · अनंत कैनवास + AI सहायक" width="100%" /></a></td>
+  </tr>
+</table>
+
+### आकर्षण 7 | बहु-संदर्भ वीडियो जनरेशन
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · बहु-संदर्भ वीडियो जनरेशन" width="100%" /></a>
+</p>
+
+### आकर्षण 8 | स्क्रिप्ट दस्तावेज़ और वर्कस्पेस
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · स्क्रिप्ट दस्तावेज़ और वर्कस्पेस" width="100%" /></a>
+</p>
+
+### आकर्षण 9 | होम और एसेट लाइब्रेरी
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · होम और एसेट लाइब्रेरी" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · होम और एसेट लाइब्रेरी" width="100%" /></a></td>
+  </tr>
+</table>
+
+### आकर्षण 10 | प्लगइन मार्केट
+
+अधिक प्लगइन [वेब प्लगइन मार्केट](https://api.toonflow.net/console/plugIn) में।
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · प्लगइन मार्केट" width="100%" /></a>
+</p>
 
 ---
 

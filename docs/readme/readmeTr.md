@@ -154,6 +154,11 @@
   <a href="https://api.toonflow.net/">Resmî Model Platformu</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">Ürün tanıtım videosu</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap ön görselleştirme demosu</a>
+</p>
+
 ---
 
 ## 1. 💛 Sponsorlar ve Destek
@@ -181,7 +186,13 @@ Toonflow açık kaynak projesini destekleyen aşağıdaki iş ortaklarına teşe
       <br /><br />
       <sub>🎁 Platformu denemek için CNY 5 değerinde ücretsiz kredi almak üzere <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">bu özel bağlantı üzerinden kaydolun</a>!</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI, DeepSeek, GLM, Kimi, Seedream, Seedance, Wan ve MiniMax H3 gibi önde gelen modelleri bir araya getirerek uygun maliyetli yapay zekâ metin, görsel ve video üretim hizmeti sunar. Metinden görsele, görselden görsele, metinden videoya ve görselden videoya üretimi tek bir birleşik API ile destekler ve kurumsal içerik üretimi için çoklu modelleri esnekçe kullanmanızı sağlar. Platform kurumsal düzeyde şifreli veri iletimi ve çok kiracılı yalıtım kullanır; Çin'in 3. seviye güvenlik değerlendirmesini geçmiştir.</sub>
+      <br /><br />
+      <sub>🎁 WEIMETA AI'nin çok modlu model hizmetlerini denemek için <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">bu özel bağlantı üzerinden kaydolun</a>. Sınırlı süreli kampanya: CNY 100 yüklemeye CNY 15 ek bakiye. İş birliği için WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@ Toonflow açık kaynak projesini destekleyen aşağıdaki iş ortaklarına teşe
 
 ## 2. 🌟 Öne Çıkan Özellikler
 
-Toonflow; senaryoları, varlıkları ve video kliplerini tek bir sonsuz tuvalde bir araya getiren, kısa dramalar, hareketli çizgi romanlar ve kısa videolar için açık kaynaklı bir yapay zekâ üretim platformudur.
-
 | Özellik | Açıklama |
 | --- | --- |
-| 🏠 **Yerel kurulum** | Masaüstü, Android, Docker ve sunucu kurulumu seçenekleriyle projeleri ve varlıkları kendi cihazınızda veya sunucunuzda tutun. |
-| 🖼️ **Sonsuz tuval** | Senaryoları, karakterleri, sahneleri ve video kliplerini aynı tuval üzerinde düzenleyin. |
-| 🔌 **MCP** | Harici araç ve hizmetleri MCP üzerinden bağlayın. |
-| 🧩 **Eklenti pazarı** | [Eklenti Pazarı](https://api.toonflow.net/console/plugIn) üzerinden düğümleri, araçları ve yaratıcı olanakları genişletin. |
-| 🤖 **Açık Agent** | Agent davranışını özelleştirmek ve harici Agent’larla iş birliği yapmak için istemlere, araçlara ve A2A’ya açık erişim. |
-| 🔧 **Esnek model entegrasyonu** | Üçüncü taraf API’leri yapılandırın veya yerel ComfyUI örnekleri ile büyük dil modellerini bağlayın. |
-| 🌐 **Çoklu dil desteği** | Arayüz 22 dili destekler. |
+| 🎬 **TrumanMap ön görselleştirme** | Senaryoyu yapıştırın; 3D set, storyboard ve blocking tek tıkla. |
+| 🖼️ **Sonsuz tuval** | Senaryo, karakter, sahne ve klipler tek tuvalde bağlı. |
+| 🎥 **Yapay zekâ ile video** | Varlıkları @ ile anın, çekim çekim üretin. |
+| 🤖 **Yapay zekâ asistanı** | Tuvali okur ve düzenler; MCP ve A2A destekli. |
+| 🔧 **İstediğiniz model** | Yerleşik sağlayıcılar, üçüncü taraf API, yerel LLM, ComfyUI. |
+| 🧩 **Eklenti pazarı** | Düğüm, araç ve beceriler tek tıkla. |
+| 🏠 **Yerel kurulum** | Windows, macOS, Linux, Android, Docker. |
+| 🌐 **Çok dilli** | 22 arayüz dili. |
+
+**İş akışı**: Senaryo ve storyboard → karakter ve sahne → 3D ön görselleştirme → çekim çekim video → kurgu ve indirme.
+
+### Sık sorulan sorular
+
+**Toonflow nedir?** Yapay zekâ ile kısa dizi, çizgi roman ve video üretmek için açık kaynaklı platform.
+
+**Ücretsiz mi?** MIT lisanslı, kendi sunucunuzda ücretsiz; üçüncü taraf model API'leri ücretli olabilir.
+
+**Hangi modeller?** Seedance, Seedream, MiniMax, Wan ve diğerleri yerleşik; üçüncü taraf API, yerel LLM ve ComfyUI da bağlanabilir. [Kullanım kılavuzu](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf) sayfasına bakın.
+
+**Hangi platformlar?** Windows, macOS, Linux, Android ile Docker ve sunucu.
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Desteklenen diller: 简体中文, 繁體中文, English, 日本語, Русски
 
 ---
 
-## 3. 📸 Ekran Görüntüleri
+## 3. 📸 10 Öne Çıkan Özellik
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow · Proje ana sayfası ve fikir oluşturma" width="80%" /></a><br /><sub>Proje ana sayfası ve fikir oluşturma</sub>
+### Özellik 1 | Senaryoyu yapıştırın, 3D ön görselleştirme hazır
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow · İlk açılış ve hızlı kurulum" width="80%" /></a><br /><sub>İlk açılış ve hızlı kurulum</sub>
+Çekimler ve blocking repliklere göre otomatik; monitörde görüntü ve altyazı canlı. 📺 [Demoyu izleyin](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow · Yaratıcı tuval · Koyu tema" width="80%" /></a><br /><sub>Yaratıcı tuval · Koyu tema</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · Senaryoyu yapıştırın, 3D ön görselleştirme hazır" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow · Yaratıcı tuval · Açık tema" width="80%" /></a><br /><sub>Yaratıcı tuval · Açık tema</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · Senaryoyu yapıştırın, 3D ön görselleştirme hazır" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · Senaryoyu yapıştırın, 3D ön görselleştirme hazır" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow · Karakter, sahne ve aksesuar varlıkları" width="80%" /></a><br /><sub>Karakter, sahne ve aksesuar varlıkları</sub>
+### Özellik 2 | Uçsuz bucaksız bir Jiangnan su kasabası
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow · 3B yönetmen stüdyosu ve çekim ön görselleştirmesi" width="80%" /></a><br /><sub>3B yönetmen stüdyosu ve çekim ön görselleştirmesi</sub>
+Surlar, sokaklar, kanallar, tapınaklar ve dağlar: 1.500'den fazla nesne.
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow · Üç açıdan karakter çizimleri ve görsel üretimi" width="80%" /></a><br /><sub>Üç açıdan karakter çizimleri ve görsel üretimi</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · Uçsuz bucaksız bir Jiangnan su kasabası" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow · Birden çok referans varlığıyla video üretimi" width="80%" /></a><br /><sub>Birden çok referans varlığıyla video üretimi</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · Uçsuz bucaksız bir Jiangnan su kasabası" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · Uçsuz bucaksız bir Jiangnan su kasabası" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow · Düğüm menüsü ve gruplama işlemleri" width="80%" /></a><br /><sub>Düğüm menüsü ve gruplama işlemleri</sub>
+### Özellik 3 | 64 hazır set + 80.000+ varlık
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow · Eklenti Pazarı" width="80%" /></a><br /><sub>Eklenti Pazarı</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 hazır set + 80.000+ varlık" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 hazır set + 80.000+ varlık" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### Özellik 4 | Hava, zaman ve arazi tek tıkla
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · Hava, zaman ve arazi tek tıkla" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · Hava, zaman ve arazi tek tıkla" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · Hava, zaman ve arazi tek tıkla" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · Hava, zaman ve arazi tek tıkla" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Özellik 5 | Ön görselleştirmeyi doğrudan videoya aktarın
+
+Storyboard, dört görünüş, ön görselleştirme videosu, animatik ve çekim listesi tek tıkla tuvale döner.
+
+### Özellik 6 | Sonsuz tuval + yapay zekâ asistanı
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · Sonsuz tuval + yapay zekâ asistanı" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · Sonsuz tuval + yapay zekâ asistanı" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Özellik 7 | Çok referanslı video üretimi
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · Çok referanslı video üretimi" width="100%" /></a>
+</p>
+
+### Özellik 8 | Senaryo belgeleri ve çalışma alanı
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · Senaryo belgeleri ve çalışma alanı" width="100%" /></a>
+</p>
+
+### Özellik 9 | Ana sayfa ve varlık kütüphanesi
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · Ana sayfa ve varlık kütüphanesi" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · Ana sayfa ve varlık kütüphanesi" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Özellik 10 | Eklenti pazarı
+
+Daha fazla eklenti için [web eklenti pazarı](https://api.toonflow.net/console/plugIn).
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · Eklenti pazarı" width="100%" /></a>
+</p>
 
 ---
 

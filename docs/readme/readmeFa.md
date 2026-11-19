@@ -154,6 +154,11 @@
   <a href="https://api.toonflow.net/">پلتفرم رسمی مدل‌ها</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">ویدیوی معرفی محصول</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">دموی پیش‌نمایش TrumanMap</a>
+</p>
+
 ---
 
 ## 1. 💛 حامیان و پشتیبانی
@@ -181,7 +186,13 @@
       <br /><br />
       <sub>🎁 با <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">ثبت‌نام از این پیوند اختصاصی</a>، اعتبار آزمایشی رایگان پلتفرم به ارزش CNY 5 دریافت کنید!</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI خدمات تولید متن، تصویر و ویدیو با هوش مصنوعی را با هزینه‌ای مقرون‌به‌صرفه ارائه می‌دهد و مدل‌های برجسته‌ای مانند DeepSeek، GLM، Kimi، Seedream، Seedance، Wan و MiniMax H3 را گرد هم می‌آورد. تبدیل متن به تصویر، تصویر به تصویر، متن به ویدیو و تصویر به ویدیو را از طریق یک API یکپارچه پشتیبانی می‌کند. این پلتفرم از رمزنگاری انتقال داده در سطح سازمانی و جداسازی چندمستأجری بهره می‌برد و ارزیابی امنیتی سطح ۳ چین را گذرانده است.</sub>
+      <br /><br />
+      <sub>🎁 با <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">ثبت‌نام از این پیوند اختصاصی</a>، خدمات مدل‌های چندوجهی WEIMETA AI را امتحان کنید. پیشنهاد محدود: با شارژ CNY 100، CNY 15 هدیه بگیرید. همکاری تجاری از طریق WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@
 
 ## 2. 🌟 قابلیت‌های برجسته
 
-Toonflow پلتفرمی متن‌باز برای خلق سریال‌های کوتاه، کمیک‌های متحرک و ویدیوهای کوتاه با هوش مصنوعی است که فیلم‌نامه‌ها، دارایی‌ها و کلیپ‌های ویدیویی را روی یک بوم بی‌نهایت گرد هم می‌آورد.
-
 | قابلیت | توضیح |
 | --- | --- |
-| 🏠 **اجرای محلی** | پروژه‌ها و دارایی‌ها را روی دستگاه یا سرور خود نگه دارید؛ با گزینه‌های برنامهٔ دسکتاپ، Android، Docker و استقرار روی سرور. |
-| 🖼️ **بوم بی‌نهایت** | فیلم‌نامه‌ها، شخصیت‌ها، صحنه‌ها و کلیپ‌های ویدیویی را روی یک بوم سازمان‌دهی کنید. |
-| 🔌 **MCP** | ابزارها و سرویس‌های بیرونی را از طریق MCP متصل کنید. |
-| 🧩 **بازار افزونه‌ها** | گره‌ها، ابزارها و قابلیت‌های خلاقانه را از طریق [بازار افزونه‌ها](https://api.toonflow.net/console/plugIn) گسترش دهید. |
-| 🤖 **Agent باز** | دسترسی باز به پرامپت‌ها، ابزارها و A2A برای سفارشی‌سازی رفتار Agent و همکاری با عامل‌های بیرونی. |
-| 🔧 **اتصال انعطاف‌پذیر مدل‌ها** | APIهای شخص ثالث را پیکربندی کنید یا نمونه‌های محلی ComfyUI و مدل‌های زبانی بزرگ را متصل کنید. |
-| 🌐 **پشتیبانی چندزبانه** | رابط کاربری از 22 زبان پشتیبانی می‌کند. |
+| 🎬 **پیش‌نمایش TrumanMap** | فیلمنامه را بچسبانید؛ صحنهٔ سه‌بعدی، استوری‌بورد و میزانسن با یک کلیک. |
+| 🖼️ **بوم بی‌پایان** | فیلمنامه، شخصیت‌ها، صحنه‌ها و کلیپ‌ها روی یک بوم به هم وصل‌اند. |
+| 🎥 **تولید ویدیو با هوش مصنوعی** | دارایی‌ها را با @ ارجاع دهید و نما به نما بسازید. |
+| 🤖 **دستیار هوش مصنوعی** | بوم را می‌خواند و ویرایش می‌کند؛ پشتیبانی از MCP و A2A. |
+| 🔧 **هر مدلی** | ارائه‌دهندگان داخلی، API شخص ثالث، مدل‌های محلی، ComfyUI. |
+| 🧩 **بازار افزونه** | گره، ابزار و مهارت با یک کلیک. |
+| 🏠 **استقرار محلی** | Windows، macOS، Linux، Android، Docker. |
+| 🌐 **چندزبانه** | ۲۲ زبان رابط کاربری. |
+
+**روند کار**: فیلمنامه و استوری‌بورد ← شخصیت و صحنه ← پیش‌نمایش سه‌بعدی ← ویدیو نما به نما ← تدوین و دانلود.
+
+### پرسش‌های متداول
+
+**Toonflow چیست؟** پلتفرم متن‌باز برای ساخت درام کوتاه، کمیک و ویدیو با هوش مصنوعی.
+
+**رایگان است؟** با مجوز MIT و رایگان برای میزبانی شخصی؛ API مدل‌های شخص ثالث ممکن است هزینه داشته باشد.
+
+**چه مدل‌هایی؟** Seedance، Seedream، MiniMax، Wan و دیگران داخلی‌اند؛ API شخص ثالث، مدل‌های محلی و ComfyUI هم قابل اتصال‌اند. [راهنمای استفاده](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf) را ببینید.
+
+**چه سیستم‌هایی؟** Windows، macOS، Linux، Android و همچنین Docker و سرور.
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Toonflow پلتفرمی متن‌باز برای خلق سریال‌های کو
 
 ---
 
-## 3. 📸 تصاویر محیط برنامه
+## 3. 📸 ۱۰ ویژگی برجسته
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow · صفحهٔ اصلی پروژه و ایده‌پردازی" width="80%" /></a><br /><sub>صفحهٔ اصلی پروژه و ایده‌پردازی</sub>
+### ویژگی 1 | فیلمنامه را بچسبانید، پیش‌نمایش سه‌بعدی بگیرید
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow · اجرای نخست و راه‌اندازی سریع" width="80%" /></a><br /><sub>اجرای نخست و راه‌اندازی سریع</sub>
+نما و میزانسن خودکار بر اساس دیالوگ؛ تصویر و زیرنویس زنده در مانیتور. 📺 [دیدن دمو](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow · بوم خلاقیت · پوستهٔ تیره" width="80%" /></a><br /><sub>بوم خلاقیت · پوستهٔ تیره</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · فیلمنامه را بچسبانید، پیش‌نمایش سه‌بعدی بگیرید" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow · بوم خلاقیت · پوستهٔ روشن" width="80%" /></a><br /><sub>بوم خلاقیت · پوستهٔ روشن</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · فیلمنامه را بچسبانید، پیش‌نمایش سه‌بعدی بگیرید" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · فیلمنامه را بچسبانید، پیش‌نمایش سه‌بعدی بگیرید" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow · دارایی‌های شخصیت‌ها، صحنه‌ها و اشیای صحنه" width="80%" /></a><br /><sub>دارایی‌های شخصیت‌ها، صحنه‌ها و اشیای صحنه</sub>
+### ویژگی 2 | شهرک آبی بی‌پایان جیانگنان
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow · استودیوی سه‌بعدی کارگردانی و پیش‌نمایش نماها" width="80%" /></a><br /><sub>استودیوی سه‌بعدی کارگردانی و پیش‌نمایش نماها</sub>
+حصار شهر، کوچه‌ها، کانال‌ها، معابد و کوه‌ها: بیش از ۱٬۵۰۰ شیء.
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow · برگه‌های سه‌نمای شخصیت و تولید تصویر" width="80%" /></a><br /><sub>برگه‌های سه‌نمای شخصیت و تولید تصویر</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · شهرک آبی بی‌پایان جیانگنان" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow · تولید ویدیو با چند دارایی مرجع" width="80%" /></a><br /><sub>تولید ویدیو با چند دارایی مرجع</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · شهرک آبی بی‌پایان جیانگنان" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · شهرک آبی بی‌پایان جیانگنان" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow · منوی گره‌ها و عملیات گروه‌بندی" width="80%" /></a><br /><sub>منوی گره‌ها و عملیات گروه‌بندی</sub>
+### ویژگی 3 | ۶۴ صحنهٔ آماده + بیش از ۸۰٬۰۰۰ دارایی
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow · بازار افزونه‌ها" width="80%" /></a><br /><sub>بازار افزونه‌ها</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · ۶۴ صحنهٔ آماده + بیش از ۸۰٬۰۰۰ دارایی" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · ۶۴ صحنهٔ آماده + بیش از ۸۰٬۰۰۰ دارایی" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### ویژگی 4 | آب‌وهوا، زمان و زمین با یک کلیک
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · آب‌وهوا، زمان و زمین با یک کلیک" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · آب‌وهوا، زمان و زمین با یک کلیک" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · آب‌وهوا، زمان و زمین با یک کلیک" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · آب‌وهوا، زمان و زمین با یک کلیک" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ویژگی 5 | خروجی پیش‌نمایش مستقیم برای تولید ویدیو
+
+استوری‌بورد، نمای چهارطرفه، ویدیوی پیش‌نمایش، انیماتیک و فهرست نماها با یک کلیک به بوم برمی‌گردند.
+
+### ویژگی 6 | بوم بی‌پایان + دستیار هوش مصنوعی
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · بوم بی‌پایان + دستیار هوش مصنوعی" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · بوم بی‌پایان + دستیار هوش مصنوعی" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ویژگی 7 | تولید ویدیو با چند مرجع
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · تولید ویدیو با چند مرجع" width="100%" /></a>
+</p>
+
+### ویژگی 8 | اسناد فیلمنامه و فضای کار
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · اسناد فیلمنامه و فضای کار" width="100%" /></a>
+</p>
+
+### ویژگی 9 | خانه و کتابخانهٔ دارایی
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · خانه و کتابخانهٔ دارایی" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · خانه و کتابخانهٔ دارایی" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ویژگی 10 | بازار افزونه
+
+افزونه‌های بیشتر در [بازار افزونهٔ وب](https://api.toonflow.net/console/plugIn).
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · بازار افزونه" width="100%" /></a>
+</p>
 
 ---
 

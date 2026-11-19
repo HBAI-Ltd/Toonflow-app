@@ -154,6 +154,11 @@
 <a href="https://api.toonflow.net/">అధికారిక మోడల్ వేదిక</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">ఉత్పత్తి పరిచయ వీడియో</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap ప్రీవిజ్ డెమో</a>
+</p>
+
 ---
 
 ## 1. 💛 స్పాన్సర్లు మరియు మద్దతు
@@ -181,7 +186,13 @@ Toonflow ఓపెన్ సోర్స్ ప్రాజెక్ట్‌క
 <br /><br />
       <sub>🎁 ప్లాట్‌ఫారమ్‌ను ఉచితంగా ప్రయత్నించడానికి CNY 5 క్రెడిట్‌లు పొందాలంటే <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">ఈ ప్రత్యేక లింక్ ద్వారా నమోదు చేసుకోండి</a>!</sub>
     </td>
-<td width="50%" valign="top"></td>
+<td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI తక్కువ ఖర్చుతో AI టెక్స్ట్, ఇమేజ్, వీడియో జనరేషన్ సేవలను అందిస్తుంది; DeepSeek, GLM, Kimi, Seedream, Seedance, Wan, MiniMax H3 వంటి ప్రముఖ మోడళ్లను ఒకేచోట కలుపుతుంది. టెక్స్ట్ నుండి ఇమేజ్, ఇమేజ్ నుండి ఇమేజ్, టెక్స్ట్ నుండి వీడియో, ఇమేజ్ నుండి వీడియోను ఏకీకృత API ద్వారా సపోర్ట్ చేస్తుంది. ఎంటర్‌ప్రైజ్ స్థాయి ఎన్‌క్రిప్టెడ్ ట్రాన్స్‌మిషన్, మల్టీ-టెనెంట్ ఐసోలేషన్ ఉపయోగిస్తుంది; చైనా లెవల్ 3 భద్రతా మూల్యాంకనంలో ఉత్తీర్ణమైంది.</sub>
+      <br /><br />
+      <sub>🎁 WEIMETA AI మల్టీమోడల్ మోడల్ సేవలను ప్రయత్నించడానికి <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">ఈ ప్రత్యేక లింక్ ద్వారా నమోదు చేసుకోండి</a>. పరిమిత కాల ఆఫర్: CNY 100 రీఛార్జ్‌పై CNY 15 అదనం. వ్యాపార సంప్రదింపులకు WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@ Toonflow ఓపెన్ సోర్స్ ప్రాజెక్ట్‌క
 
 ## 2. 🌟 ముఖ్యాంశాలు
 
-Toonflow అనేది లఘు నాటకాలు, యానిమేటెడ్ కామిక్స్, చిన్న వీడియోల సృష్టికి ఓపెన్ సోర్స్ AI వేదిక. స్క్రిప్ట్‌లు, సృజనాత్మక వనరులు, వీడియో క్లిప్‌లను ఒకే అనంతమైన కాన్వాస్‌పై ఒకచోట చేర్చుతుంది.
-
 | సామర్థ్యం | వివరణ |
 | --- | --- |
-| 🏠 **సొంత వ్యవస్థలో ఏర్పాటు** | మీ పరికరం లేదా సర్వర్‌లోనే ప్రాజెక్టులు, వనరులను ఉంచుకోండి. డెస్క్‌టాప్, Android, Docker, సర్వర్ ఇన్‌స్టాలేషన్ ఎంపికలు ఉన్నాయి. |
-| 🖼️ **అనంతమైన కాన్వాస్** | స్క్రిప్ట్‌లు, పాత్రలు, సన్నివేశాలు మరియు వీడియో క్లిప్‌లను ఒకే కాన్వాస్‌పై నిర్వహించండి. |
-| 🔌 **MCP** | MCP ద్వారా బాహ్య సాధనాలు మరియు సేవలను కనెక్ట్ చేయండి. |
-| 🧩 **ప్లగిన్ మార్కెట్‌ప్లేస్** | [ప్లగిన్ మార్కెట్‌ప్లేస్](https://api.toonflow.net/console/plugIn) ద్వారా నోడ్‌లు, సాధనాలు, సృజనాత్మక సదుపాయాలను జోడించండి. |
-| 🤖 **ఓపెన్ Agent వ్యవస్థ** | ప్రాంప్ట్‌లు, సాధనాలు, A2Aను ఉపయోగించి Agent ప్రవర్తనను అనుకూలీకరించండి; బయటి Agentలతో కలిసి పనిచేయండి. |
-| 🔧 **మోడల్‌లను సులభంగా అనుసంధానించండి** | ఇతర సంస్థల APIలను కాన్ఫిగర్ చేయండి లేదా మీ కంప్యూటర్‌లో నడుస్తున్న ComfyUI, LLMsను అనుసంధానించండి. |
-| 🌐 **బహుభాషా మద్దతు** | 22 ఇంటర్‌ఫేస్ భాషలకు మద్దతు ఇస్తుంది. |
+| 🎬 **TrumanMap ప్రీవిజ్** | స్క్రిప్ట్ పేస్ట్ చేస్తే ఒక్క క్లిక్‌లో 3D సెట్, స్టోరీబోర్డ్, బ్లాకింగ్. |
+| 🖼️ **అనంత కాన్వాస్** | స్క్రిప్ట్, పాత్రలు, సన్నివేశాలు, క్లిప్‌లు ఒకే కాన్వాస్‌పై. |
+| 🎥 **AI వీడియో జనరేషన్** | @ తో అసెట్‌లను సూచించి షాట్ వారీగా. |
+| 🤖 **AI సహాయకుడు** | కాన్వాస్‌ను చదివి మారుస్తుంది; MCP, A2A మద్దతు. |
+| 🔧 **ఏ మోడల్ అయినా** | అంతర్నిర్మిత ప్రొవైడర్లు, థర్డ్-పార్టీ API, లోకల్ LLM, ComfyUI. |
+| 🧩 **ప్లగిన్ మార్కెట్** | నోడ్‌లు, టూల్స్, స్కిల్స్ ఒక్క క్లిక్‌లో. |
+| 🏠 **లోకల్ డిప్లాయ్‌మెంట్** | Windows, macOS, Linux, Android, Docker. |
+| 🌐 **బహుభాషా** | 22 ఇంటర్‌ఫేస్ భాషలు. |
+
+**ప్రక్రియ**: స్క్రిప్ట్ & స్టోరీబోర్డ్ → పాత్రలు & సన్నివేశాలు → 3D ప్రీవిజ్ → షాట్ వారీ వీడియో → ఎడిట్ & డౌన్‌లోడ్.
+
+### తరచుగా అడిగే ప్రశ్నలు
+
+**Toonflow అంటే ఏమిటి?** AI షార్ట్ డ్రామాలు, AI కామిక్స్, AI వీడియోల కోసం ఓపెన్-సోర్స్ ప్లాట్‌ఫారమ్.
+
+**ఇది ఉచితమా?** MIT లైసెన్స్, సొంతంగా హోస్ట్ చేయడం ఉచితం; థర్డ్-పార్టీ మోడల్ API కి ఛార్జీ ఉండవచ్చు.
+
+**ఏ మోడల్స్?** Seedance, Seedream, MiniMax, Wan మొదలైనవి అంతర్నిర్మితం; థర్డ్-పార్టీ API, లోకల్ LLM, ComfyUI కూడా కలపవచ్చు. [వినియోగ గైడ్](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf) చూడండి.
+
+**ఏ ప్లాట్‌ఫారమ్‌లు?** Windows, macOS, Linux, Android, అలాగే Docker, సర్వర్.
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Toonflow అనేది లఘు నాటకాలు, యానిమేట�
 
 ---
 
-## 3. 📸 స్క్రీన్‌షాట్‌లు
+## 3. 📸 10 ముఖ్య ఆకర్షణలు
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow · ప్రాజెక్టు ముఖపేజీ మరియు ఆలోచనల సృష్టి" width="80%" /></a><br /><sub>ప్రాజెక్టు ముఖపేజీ మరియు ఆలోచనల సృష్టి</sub>
+### ఆకర్షణ 1 | స్క్రిప్ట్ పేస్ట్ చేయండి, 3D ప్రీవిజ్ పొందండి
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow · మొదటి ప్రారంభం మరియు త్వరిత సెటప్" width="80%" /></a><br /><sub>మొదటి ప్రారంభం మరియు త్వరిత సెటప్</sub>
+సంభాషణల ప్రకారం ఆటోమేటిక్ షాట్లు, బ్లాకింగ్; మానిటర్‌లో దృశ్యం, సబ్‌టైటిల్స్ ప్రత్యక్షంగా. 📺 [డెమో చూడండి](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow · సృజనాత్మక కాన్వాస్ · డార్క్ థీమ్" width="80%" /></a><br /><sub>సృజనాత్మక కాన్వాస్ · డార్క్ థీమ్</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · స్క్రిప్ట్ పేస్ట్ చేయండి, 3D ప్రీవిజ్ పొందండి" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow · సృజనాత్మక కాన్వాస్ · లైట్ థీమ్" width="80%" /></a><br /><sub>సృజనాత్మక కాన్వాస్ · లైట్ థీమ్</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · స్క్రిప్ట్ పేస్ట్ చేయండి, 3D ప్రీవిజ్ పొందండి" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · స్క్రిప్ట్ పేస్ట్ చేయండి, 3D ప్రీవిజ్ పొందండి" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow · పాత్రలు, సన్నివేశాలు మరియు వస్తువుల వనరులు" width="80%" /></a><br /><sub>పాత్రలు, సన్నివేశాలు మరియు వస్తువుల వనరులు</sub>
+### ఆకర్షణ 2 | అంతులేని జియాంగ్నాన్ జలనగరం
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow · 3D దర్శకుడి స్టూడియో మరియు షాట్ ముందస్తు వీక్షణ" width="80%" /></a><br /><sub>3D దర్శకుడి స్టూడియో మరియు షాట్ ముందస్తు వీక్షణ</sub>
+నగర గోడలు, వీధులు, కాలువలు, ఆలయాలు, పర్వతాలు: 1,500కు పైగా వస్తువులు.
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow · పాత్రల మూడు కోణాల చిత్రాలు మరియు చిత్ర సృష్టి" width="80%" /></a><br /><sub>పాత్రల మూడు కోణాల చిత్రాలు మరియు చిత్ర సృష్టి</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · అంతులేని జియాంగ్నాన్ జలనగరం" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow · బహుళ రిఫరెన్స్ వనరులతో వీడియో సృష్టి" width="80%" /></a><br /><sub>బహుళ రిఫరెన్స్ వనరులతో వీడియో సృష్టి</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · అంతులేని జియాంగ్నాన్ జలనగరం" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · అంతులేని జియాంగ్నాన్ జలనగరం" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow · నోడ్ మెనూ మరియు గ్రూప్ నిర్వహణ" width="80%" /></a><br /><sub>నోడ్ మెనూ మరియు గ్రూప్ నిర్వహణ</sub>
+### ఆకర్షణ 3 | 64 సిద్ధ సెట్లు + 80,000+ అసెట్లు
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow · ప్లగిన్ మార్కెట్‌ప్లేస్" width="80%" /></a><br /><sub>ప్లగిన్ మార్కెట్‌ప్లేస్</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 సిద్ధ సెట్లు + 80,000+ అసెట్లు" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 సిద్ధ సెట్లు + 80,000+ అసెట్లు" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### ఆకర్షణ 4 | వాతావరణం, సమయం, భూభాగం ఒక్క క్లిక్‌లో
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · వాతావరణం, సమయం, భూభాగం ఒక్క క్లిక్‌లో" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · వాతావరణం, సమయం, భూభాగం ఒక్క క్లిక్‌లో" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · వాతావరణం, సమయం, భూభాగం ఒక్క క్లిక్‌లో" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · వాతావరణం, సమయం, భూభాగం ఒక్క క్లిక్‌లో" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ఆకర్షణ 5 | ప్రీవిజ్ నేరుగా వీడియో జనరేషన్‌కు
+
+స్టోరీబోర్డ్, నాలుగు-వైపుల షీట్, ప్రీవిజ్ వీడియో, యానిమాటిక్, షాట్ జాబితా ఒక్క క్లిక్‌లో కాన్వాస్‌కు.
+
+### ఆకర్షణ 6 | అనంత కాన్వాస్ + AI సహాయకుడు
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · అనంత కాన్వాస్ + AI సహాయకుడు" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · అనంత కాన్వాస్ + AI సహాయకుడు" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ఆకర్షణ 7 | బహుళ రిఫరెన్స్ వీడియో జనరేషన్
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · బహుళ రిఫరెన్స్ వీడియో జనరేషన్" width="100%" /></a>
+</p>
+
+### ఆకర్షణ 8 | స్క్రిప్ట్ పత్రాలు & వర్క్‌స్పేస్
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · స్క్రిప్ట్ పత్రాలు & వర్క్‌స్పేస్" width="100%" /></a>
+</p>
+
+### ఆకర్షణ 9 | హోమ్ & అసెట్ లైబ్రరీ
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · హోమ్ & అసెట్ లైబ్రరీ" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · హోమ్ & అసెట్ లైబ్రరీ" width="100%" /></a></td>
+  </tr>
+</table>
+
+### ఆకర్షణ 10 | ప్లగిన్ మార్కెట్
+
+మరిన్ని ప్లగిన్లు [వెబ్ ప్లగిన్ మార్కెట్](https://api.toonflow.net/console/plugIn)లో.
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · ప్లగిన్ మార్కెట్" width="100%" /></a>
+</p>
 
 ---
 

@@ -154,6 +154,11 @@
   <a href="https://api.toonflow.net/">المنصة الرسمية للنماذج</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">فيديو تعريفي بالمنتج</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">عرض المعاينة TrumanMap</a>
+</p>
+
 ---
 
 ## 1. 💛 الرعاة والدعم
@@ -181,7 +186,13 @@
       <br /><br />
       <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">سجّل عبر هذا الرابط المخصص</a> للحصول على رصيد تجريبي مجاني للمنصة بقيمة CNY 5!</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>تقدّم WEIMETA AI خدمات توليد النصوص والصور والفيديو بالذكاء الاصطناعي بتكلفة مناسبة، وتجمع نماذج رائدة مثل DeepSeek وGLM وKimi وSeedream وSeedance وWan وMiniMax H3. تدعم تحويل النص إلى صورة والصورة إلى صورة والنص إلى فيديو والصورة إلى فيديو عبر واجهة API موحّدة تتيح استخدام نماذج متعددة بمرونة لإنتاج المحتوى في المؤسسات. تعتمد المنصة تشفير نقل البيانات على مستوى المؤسسات وعزل المستأجرين، وقد اجتازت تقييم الأمان الصيني من المستوى الثالث.</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">سجّل عبر هذا الرابط المخصص</a> لتجربة خدمات النماذج متعددة الوسائط من WEIMETA AI. عرض لفترة محدودة: اشحن CNY 100 واحصل على CNY 15 إضافية. للتعاون التجاري عبر WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@
 
 ## 2. 🌟 أبرز المزايا
 
-Toonflow منصة إبداع بالذكاء الاصطناعي مفتوحة المصدر للأعمال الدرامية القصيرة والقصص المصورة المتحركة والفيديوهات القصيرة، تجمع السيناريوهات والأصول ومقاطع الفيديو على لوحة لا نهائية واحدة.
-
 | الميزة | الوصف |
 | --- | --- |
-| 🏠 **تشغيل محلي** | احتفظ بالمشروعات والأصول على جهازك أو خادمك، مع خيارات لتطبيق سطح المكتب وAndroid وDocker والتشغيل على الخادم. |
-| 🖼️ **لوحة لا نهائية** | نظّم السيناريوهات والشخصيات والمشاهد ومقاطع الفيديو على اللوحة نفسها. |
-| 🔌 **MCP** | اربط الأدوات والخدمات الخارجية عبر MCP. |
-| 🧩 **سوق الإضافات** | وسّع العقد والأدوات والإمكانات الإبداعية من خلال [سوق الإضافات](https://api.toonflow.net/console/plugIn). |
-| 🤖 **Agent مفتوح** | وصول مفتوح إلى الموجّهات والأدوات وA2A لتخصيص سلوك Agent والتعاون مع وكلاء خارجيين. |
-| 🔧 **ربط مرن للنماذج** | اضبط واجهات API خارجية، أو اربط نُسخ ComfyUI ونماذج اللغة الكبيرة المحلية. |
-| 🌐 **دعم لغات متعددة** | تدعم الواجهة 22 لغة. |
+| 🎬 **المعاينة المسبقة TrumanMap** | الصق السيناريو لتبني ديكورًا ثلاثي الأبعاد ولوحة قصة وحركة الممثلين بنقرة. |
+| 🖼️ **لوحة لا نهائية** | السيناريو والشخصيات والمشاهد والمقاطع مترابطة في لوحة واحدة. |
+| 🎥 **توليد الفيديو بالذكاء الاصطناعي** | أشر إلى الأصول بـ @ وولّد لقطة لقطة. |
+| 🤖 **مساعد ذكي** | يقرأ اللوحة ويعدّلها؛ يدعم MCP وA2A. |
+| 🔧 **أي نموذج تريده** | مزوّدون مدمجون وواجهات API خارجية ونماذج محلية وComfyUI. |
+| 🧩 **سوق الإضافات** | عُقد وأدوات ومهارات بنقرة واحدة. |
+| 🏠 **نشر محلي** | Windows وmacOS وLinux وAndroid وDocker. |
+| 🌐 **متعدد اللغات** | 22 لغة للواجهة. |
+
+**سير العمل**: السيناريو ولوحة القصة ← الشخصيات والمشاهد ← معاينة ثلاثية الأبعاد ← فيديو لقطة لقطة ← مونتاج وتنزيل.
+
+### الأسئلة الشائعة
+
+**ما هو Toonflow؟** منصة مفتوحة المصدر لإنتاج الدراما القصيرة والقصص المصوّرة والفيديو بالذكاء الاصطناعي.
+
+**هل هو مجاني؟** مرخّص بـ MIT ومجاني للاستضافة الذاتية؛ قد تكون واجهات النماذج الخارجية مدفوعة.
+
+**ما النماذج المدعومة؟** Seedance وSeedream وMiniMax وWan وغيرها مدمجة، ويمكن ربط واجهات API خارجية ونماذج محلية وComfyUI. راجع [دليل الاستخدام](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf).
+
+**ما الأنظمة المدعومة؟** Windows وmacOS وLinux وAndroid، إضافة إلى Docker والخوادم.
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Toonflow منصة إبداع بالذكاء الاصطناعي مفتوحة ال
 
 ---
 
-## 3. 📸 لقطات الشاشة
+## 3. 📸 أبرز 10 مزايا
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Toonflow · الصفحة الرئيسية للمشروع وابتكار الأفكار" width="80%" /></a><br /><sub>الصفحة الرئيسية للمشروع وابتكار الأفكار</sub>
+### الميزة 1 | الصق السيناريو واحصل على معاينة ثلاثية الأبعاد
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Toonflow · التشغيل الأول والإعداد السريع" width="80%" /></a><br /><sub>التشغيل الأول والإعداد السريع</sub>
+تقطيع اللقطات وحركة الممثلين تلقائيًا وفق الحوار، مع عرض الصورة والترجمة مباشرة في شاشة المراقبة. 📺 [شاهد العرض](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Toonflow · لوحة الإبداع · المظهر الداكن" width="80%" /></a><br /><sub>لوحة الإبداع · المظهر الداكن</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · الصق السيناريو واحصل على معاينة ثلاثية الأبعاد" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Toonflow · لوحة الإبداع · المظهر الفاتح" width="80%" /></a><br /><sub>لوحة الإبداع · المظهر الفاتح</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · الصق السيناريو واحصل على معاينة ثلاثية الأبعاد" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · الصق السيناريو واحصل على معاينة ثلاثية الأبعاد" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Toonflow · أصول الشخصيات والمشاهد والإكسسوارات" width="80%" /></a><br /><sub>أصول الشخصيات والمشاهد والإكسسوارات</sub>
+### الميزة 2 | بلدة مائية في جيانغنان بلا حدود
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="Toonflow · استوديو الإخراج ثلاثي الأبعاد والتصور المسبق للقطات" width="80%" /></a><br /><sub>استوديو الإخراج ثلاثي الأبعاد والتصور المسبق للقطات</sub>
+أسوار وشوارع وقنوات ومعابد وجبال: أكثر من 1,500 عنصر.
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Toonflow · لوحات الشخصيات من ثلاث زوايا وإنشاء الصور" width="80%" /></a><br /><sub>لوحات الشخصيات من ثلاث زوايا وإنشاء الصور</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · بلدة مائية في جيانغنان بلا حدود" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Toonflow · إنشاء الفيديو باستخدام أصول مرجعية متعددة" width="80%" /></a><br /><sub>إنشاء الفيديو باستخدام أصول مرجعية متعددة</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · بلدة مائية في جيانغنان بلا حدود" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · بلدة مائية في جيانغنان بلا حدود" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Toonflow · قائمة العقد وعمليات التجميع" width="80%" /></a><br /><sub>قائمة العقد وعمليات التجميع</sub>
+### الميزة 3 | 64 ديكورًا جاهزًا + أكثر من 80,000 أصل
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Toonflow · سوق الإضافات" width="80%" /></a><br /><sub>سوق الإضافات</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 ديكورًا جاهزًا + أكثر من 80,000 أصل" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 ديكورًا جاهزًا + أكثر من 80,000 أصل" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### الميزة 4 | الطقس والوقت والتضاريس بنقرة
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · الطقس والوقت والتضاريس بنقرة" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · الطقس والوقت والتضاريس بنقرة" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · الطقس والوقت والتضاريس بنقرة" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · الطقس والوقت والتضاريس بنقرة" width="100%" /></a></td>
+  </tr>
+</table>
+
+### الميزة 5 | صدّر المعاينة مباشرة لتوليد الفيديو
+
+لوحات القصة والمساقط الأربعة وفيديو المعاينة والمسودات وقوائم اللقطات تعود إلى اللوحة بنقرة.
+
+### الميزة 6 | لوحة لا نهائية + مساعد ذكي
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · لوحة لا نهائية + مساعد ذكي" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · لوحة لا نهائية + مساعد ذكي" width="100%" /></a></td>
+  </tr>
+</table>
+
+### الميزة 7 | توليد فيديو بمراجع متعددة
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · توليد فيديو بمراجع متعددة" width="100%" /></a>
+</p>
+
+### الميزة 8 | مستندات السيناريو ومساحة العمل
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · مستندات السيناريو ومساحة العمل" width="100%" /></a>
+</p>
+
+### الميزة 9 | الصفحة الرئيسية ومكتبة الأصول
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · الصفحة الرئيسية ومكتبة الأصول" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · الصفحة الرئيسية ومكتبة الأصول" width="100%" /></a></td>
+  </tr>
+</table>
+
+### الميزة 10 | سوق الإضافات
+
+المزيد من الإضافات في [سوق الإضافات على الويب](https://api.toonflow.net/console/plugIn).
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · سوق الإضافات" width="100%" /></a>
+</p>
 
 ---
 

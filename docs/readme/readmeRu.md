@@ -154,6 +154,11 @@
   <a href="https://api.toonflow.net/">Официальная платформа моделей</a>
 </p>
 
+<p align="center">
+  📺 <a href="https://www.bilibili.com/video/BV1hbpb6xETF">Обзорное видео</a> ·
+  <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">Демо превиза TrumanMap</a>
+</p>
+
 ---
 
 ## 1. 💛 Спонсоры и поддержка
@@ -181,7 +186,13 @@
       <br /><br />
       <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">Зарегистрируйтесь по специальной ссылке</a> и получите 5 китайских юаней в виде бесплатных бонусных средств для пробного использования платформы!</sub>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY"><img src="../images/sponsors/weimeta.svg" alt="WEIMETA AI" height="28" valign="middle" /> <strong>WEIMETA AI</strong></a>
+      <br />
+      <sub>WEIMETA AI предлагает выгодную генерацию текста, изображений и видео с помощью ИИ и объединяет ведущие модели: DeepSeek, GLM, Kimi, Seedream, Seedance, Wan, MiniMax H3 и другие. Поддерживаются генерация изображений из текста и изображений, а также видео из текста и изображений. Единый API позволяет гибко использовать разные модели для корпоративного создания контента. Платформа использует корпоративное шифрование передачи данных и изоляцию арендаторов и прошла оценку безопасности MLPS третьего уровня.</sub>
+      <br /><br />
+      <sub>🎁 <a href="https://weimeta.cn/console/invite/accept?aff=INV202611191734123p9JeY">Зарегистрируйтесь по специальной ссылке</a>, чтобы попробовать мультимодальные модели WEIMETA AI. Ограниченное предложение: при пополнении на 100 юаней — 15 юаней в подарок. Деловые вопросы в WeChat: WeiMeta_AI666</sub>
+    </td>
   </tr>
 </table>
 
@@ -200,17 +211,28 @@
 
 ## 2. 🌟 Возможности
 
-Toonflow — открытая ИИ-платформа для создания коротких драм, анимированных комиксов и коротких видео. Она объединяет сценарии, материалы и видеоклипы на одном бесконечном холсте.
-
 | Возможность | Описание |
 | --- | --- |
-| 🏠 **Локальное развёртывание** | Храните проекты и материалы на своём устройстве или сервере. Доступны настольное приложение, Android, Docker и установка на сервер. |
-| 🖼️ **Бесконечный холст** | Размещайте сценарии, персонажей, сцены и видеоклипы на одном холсте. |
-| 🔌 **MCP** | Подключайте внешние инструменты и сервисы через MCP. |
-| 🧩 **Каталог плагинов** | Добавляйте узлы, инструменты и творческие возможности через [каталог плагинов](https://api.toonflow.net/console/plugIn). |
-| 🤖 **Открытая система агентов** | Открытый доступ к промптам, инструментам и A2A для настройки поведения агентов и взаимодействия с внешними агентами. |
-| 🔧 **Свободное подключение моделей** | Настраивайте сторонние API или подключайте локальные ComfyUI и LLM. |
-| 🌐 **Поддержка языков** | Интерфейс доступен на 22 языках. |
+| 🎬 **Превиз TrumanMap** | Вставьте сценарий — 3D-декорация, раскадровка и мизансцена в один клик. |
+| 🖼️ **Бесконечный холст** | Сценарий, персонажи, сцены и клипы связаны на одном холсте. |
+| 🎥 **Генерация видео ИИ** | Упоминайте ассеты через @ и генерируйте по кадрам. |
+| 🤖 **ИИ-ассистент** | Читает и меняет холст; поддерживает MCP и A2A. |
+| 🔧 **Любые модели** | Встроенные провайдеры, сторонние API, локальные LLM, ComfyUI. |
+| 🧩 **Магазин плагинов** | Узлы, инструменты и навыки в один клик. |
+| 🏠 **Локальное развёртывание** | Windows, macOS, Linux, Android, Docker. |
+| 🌐 **Многоязычность** | 22 языка интерфейса. |
+
+**Процесс**: Сценарий и раскадровка → персонажи и сцены → 3D-превиз → видео по кадрам → монтаж и загрузка.
+
+### Частые вопросы
+
+**Что такое Toonflow?** Платформа с открытым кодом для ИИ-сериалов, ИИ-комиксов и ИИ-видео.
+
+**Это бесплатно?** Лицензия MIT, бесплатно для самостоятельного развёртывания; сторонние API моделей могут быть платными.
+
+**Какие модели поддерживаются?** Встроены Seedance, Seedream, MiniMax, Wan и другие; можно подключить сторонние API, локальные LLM и ComfyUI. Подробнее — в [руководстве](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf).
+
+**Какие платформы?** Windows, macOS, Linux, Android, а также Docker и сервер.
 
 <a id="languages"></a>
 
@@ -220,31 +242,103 @@ Toonflow — открытая ИИ-платформа для создания к
 
 ---
 
-## 3. 📸 Скриншоты
+## 3. 📸 10 главных возможностей
 
-<div align="center">
+<a id="trumanmap"></a>
 
-<a href="../images/screenshots/projectHome.png"><img src="../images/screenshots/projectHome.png" alt="Главная страница проектов Toonflow и работа с идеями" width="80%" /></a><br /><sub>Главная страница проектов и работа с идеями</sub>
+### Возможность 1 | Вставьте сценарий — получите 3D-превиз
 
-<a href="../images/screenshots/quickStart.png"><img src="../images/screenshots/quickStart.png" alt="Первый запуск и быстрая настройка Toonflow" width="80%" /></a><br /><sub>Первый запуск и быстрая настройка</sub>
+Раскадровка и мизансцена строятся по репликам, монитор показывает кадр и субтитры в реальном времени. 📺 [Смотреть демо](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-<a href="../images/screenshots/canvasDark.png"><img src="../images/screenshots/canvasDark.png" alt="Холст Toonflow в тёмной теме и ИИ-помощник" width="80%" /></a><br /><sub>Творческий холст · Тёмная тема</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · Вставьте сценарий — получите 3D-превиз" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/canvasLight.png"><img src="../images/screenshots/canvasLight.png" alt="Холст Toonflow в светлой теме и ИИ-помощник" width="80%" /></a><br /><sub>Творческий холст · Светлая тема</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapShot.webp"><img src="../images/screenshots/trumanMapShot.webp" alt="Toonflow · Вставьте сценарий — получите 3D-превиз" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapStreet.webp"><img src="../images/screenshots/trumanMapStreet.webp" alt="Toonflow · Вставьте сценарий — получите 3D-превиз" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/assetCanvas.png"><img src="../images/screenshots/assetCanvas.png" alt="Холст Toonflow с материалами персонажей, сцен и реквизита" width="80%" /></a><br /><sub>Материалы персонажей, сцен и реквизита</sub>
+### Возможность 2 | Бескрайний городок Цзяннаня
 
-<a href="../images/screenshots/directorStudio.png"><img src="../images/screenshots/directorStudio.png" alt="3D-студия режиссёра Toonflow и предварительная визуализация кадров" width="80%" /></a><br /><sub>3D-студия режиссёра и предварительная визуализация кадров</sub>
+Крепостные стены, улицы, каналы, храмы и горы — более 1 500 объектов.
 
-<a href="../images/screenshots/characterImageGeneration.png"><img src="../images/screenshots/characterImageGeneration.png" alt="Персонажи в трёх проекциях и генерация изображений в Toonflow" width="80%" /></a><br /><sub>Персонажи в трёх проекциях и генерация изображений</sub>
+<p align="center">
+  <a href="../images/screenshots/trumanMapTown.webp"><img src="../images/screenshots/trumanMapTown.webp" alt="Toonflow · Бескрайний городок Цзяннаня" width="100%" /></a>
+</p>
 
-<a href="../images/screenshots/videoGeneration.png"><img src="../images/screenshots/videoGeneration.png" alt="Генерация видео в Toonflow по нескольким референсам" width="80%" /></a><br /><sub>Генерация видео по нескольким референсам</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapAerial.webp"><img src="../images/screenshots/trumanMapAerial.webp" alt="Toonflow · Бескрайний городок Цзяннаня" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapTemple.webp"><img src="../images/screenshots/trumanMapTemple.webp" alt="Toonflow · Бескрайний городок Цзяннаня" width="100%" /></a></td>
+  </tr>
+</table>
 
-<a href="../images/screenshots/nodeMenu.png"><img src="../images/screenshots/nodeMenu.png" alt="Меню узлов Toonflow и операции с группами" width="80%" /></a><br /><sub>Меню узлов и операции с группами</sub>
+### Возможность 3 | 64 готовые декорации + 80 000+ ассетов
 
-<a href="../images/screenshots/pluginMarket.png"><img src="../images/screenshots/pluginMarket.png" alt="Каталог плагинов Toonflow" width="80%" /></a><br /><sub>Каталог плагинов</sub>
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapSets.webp"><img src="../images/screenshots/trumanMapSets.webp" alt="Toonflow · 64 готовые декорации + 80 000+ ассетов" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapAssets.webp"><img src="../images/screenshots/trumanMapAssets.webp" alt="Toonflow · 64 готовые декорации + 80 000+ ассетов" width="100%" /></a></td>
+  </tr>
+</table>
 
-</div>
+### Возможность 4 | Погода, время и рельеф в один клик
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapRain.webp"><img src="../images/screenshots/trumanMapRain.webp" alt="Toonflow · Погода, время и рельеф в один клик" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapBrush.webp"><img src="../images/screenshots/trumanMapBrush.webp" alt="Toonflow · Погода, время и рельеф в один клик" width="100%" /></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/trumanMapWorld.webp"><img src="../images/screenshots/trumanMapWorld.webp" alt="Toonflow · Погода, время и рельеф в один клик" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/trumanMapHome.webp"><img src="../images/screenshots/trumanMapHome.webp" alt="Toonflow · Погода, время и рельеф в один клик" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Возможность 5 | Экспорт превиза прямо в генерацию видео
+
+Раскадровки, виды с четырёх сторон, превиз-видео, аниматики и монтажные листы возвращаются на холст в один клик.
+
+### Возможность 6 | Бесконечный холст + ИИ-ассистент
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/canvasNodeMenu.webp"><img src="../images/screenshots/canvasNodeMenu.webp" alt="Toonflow · Бесконечный холст + ИИ-ассистент" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/canvasAgent.webp"><img src="../images/screenshots/canvasAgent.webp" alt="Toonflow · Бесконечный холст + ИИ-ассистент" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Возможность 7 | Генерация видео по нескольким референсам
+
+<p align="center">
+  <a href="../images/screenshots/videoGenerationNode.webp"><img src="../images/screenshots/videoGenerationNode.webp" alt="Toonflow · Генерация видео по нескольким референсам" width="100%" /></a>
+</p>
+
+### Возможность 8 | Документы сценария и рабочая папка
+
+<p align="center">
+  <a href="../images/screenshots/canvasDocument.webp"><img src="../images/screenshots/canvasDocument.webp" alt="Toonflow · Документы сценария и рабочая папка" width="100%" /></a>
+</p>
+
+### Возможность 9 | Главная и библиотека ассетов
+
+<table>
+  <tr>
+    <td width="50%"><a href="../images/screenshots/home.webp"><img src="../images/screenshots/home.webp" alt="Toonflow · Главная и библиотека ассетов" width="100%" /></a></td>
+    <td width="50%"><a href="../images/screenshots/assetLibrary.webp"><img src="../images/screenshots/assetLibrary.webp" alt="Toonflow · Главная и библиотека ассетов" width="100%" /></a></td>
+  </tr>
+</table>
+
+### Возможность 10 | Магазин плагинов
+
+Больше плагинов — в [веб-магазине плагинов](https://api.toonflow.net/console/plugIn).
+
+<p align="center">
+  <a href="../images/screenshots/pluginMarket.webp"><img src="../images/screenshots/pluginMarket.webp" alt="Toonflow · Магазин плагинов" width="100%" /></a>
+</p>
 
 ---
 
