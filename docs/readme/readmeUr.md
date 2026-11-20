@@ -161,7 +161,7 @@
 
 <p align="center">🔥 Toonflow کی بنیاد پر بنے مختصر ڈراموں نے Hongguo پر لاکھوں، کروڑوں اور 10 کروڑ سے زیادہ ویوز حاصل کیے ہیں۔ <a href="#works">کام دیکھیں</a></p>
 
-https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+https://github.com/user-attachments/assets/56d81114-7521-454c-9ec9-972567eddda9
 
 ---
 
@@ -254,7 +254,7 @@ Toonflow کے اوپن سورس منصوبے کی معاونت کرنے والے
 
 مکالموں کے مطابق خودکار شاٹ اور بلاکنگ؛ مانیٹر پر تصویر اور سب ٹائٹل براہِ راست۔ 📺 [ڈیمو دیکھیں](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
+https://github.com/user-attachments/assets/bb2f7bfe-46de-44ff-b3b3-95379f9d4b20
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · اسکرپٹ پیسٹ کریں، 3D پری ویز پائیں" width="100%" /></a>
@@ -498,7 +498,7 @@ bun run start:server
 
 ### Hongguo پر مقبول ڈرامے
 
-درج ذیل مقبول مختصر ڈرامے تخلیقی ٹیموں نے Toonflow کی بنیاد پر بنائے ہیں، جنہوں نے Hongguo پر لاکھوں، کروڑوں اور 10 کروڑ سے زیادہ ویوز حاصل کیے۔
+🔥 Toonflow کی بنیاد پر بنے مختصر ڈراموں نے Hongguo پر لاکھوں، کروڑوں اور 10 کروڑ سے زیادہ ویوز حاصل کیے ہیں۔
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Toonflow کی بنیاد پر بنا مختصر ڈراما 《悍妻进门，扶起一屋软骨头》: Hongguo پر 3.5 ارب ویوز، تمام پلیٹ فارمز پر 5 ارب" width="100%" />
@@ -510,24 +510,22 @@ bun run start:server
 
 ### اشتہاری ویڈیوز
 
-https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+<table>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fccf8b46-b8ec-46cb-9574-9273cd1ee9e4" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/b345905e-601f-43be-83a5-305f97a29e44" controls width="100%"></video></td>
+  </tr>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fc5880aa-6b9c-4717-af0e-e51f15c4fdc6" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/0816e794-f07d-4bc3-89cd-69c67566c3a6" controls width="100%"></video></td>
+  </tr>
+</table>
 
-https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
-
-https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
-
-https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
-
-### مختصر ڈراما مثال: 2 گھنٹے، کل لاگت ¥100
+### مختصر ڈراما مثال
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-| شے | ریکارڈ |
-| --- | --- |
-| تیاری کا وقت اور حتمی دورانیہ | تقریباً 2 منٹ کی ویڈیو کے لیے لگ بھگ 2 گھنٹے کا کام۔ |
-| کل لاگت | ¥100 |
-
-یہ اخراجات اس مثال کے لیے درج شدہ اعداد ہیں اور صرف حوالہ دینے کے لیے پیش کیے گئے ہیں۔ اصل خرچ ماڈل سروس، تخلیق کی تعداد اور پیرامیٹرز پر منحصر ہے۔ نمونہ ویڈیو 480p کی کمپریس شدہ کاپی ہے۔
+ڈیمو ویڈیو 480p کا کمپریسڈ ورژن ہے۔
 
 ---
 

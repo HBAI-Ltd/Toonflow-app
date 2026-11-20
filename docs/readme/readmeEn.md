@@ -161,7 +161,7 @@ Toonflow is an open-source AI creation tool for short dramas, animated comics an
 
 <p align="center">🔥 Short dramas built on Toonflow have reached millions, tens of millions, even over 100 million views on Hongguo. <a href="#works">See the works</a></p>
 
-https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+https://github.com/user-attachments/assets/56d81114-7521-454c-9ec9-972567eddda9
 
 ---
 
@@ -254,7 +254,7 @@ Supported languages: 简体中文, 繁體中文, English, 日本語, Русск�
 
 Storyboards and blocking follow your lines; the monitor shows frames and subtitles live. 📺 [Watch the demo](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
+https://github.com/user-attachments/assets/bb2f7bfe-46de-44ff-b3b3-95379f9d4b20
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · Paste a script, get a 3D previs" width="100%" /></a>
@@ -498,7 +498,7 @@ Our partner [AI Galaxy (智星云)](https://www.ai-galaxy.com/) provides an offi
 
 ### Hit Dramas on Hongguo
 
-These hit short dramas were made by creative teams building on Toonflow, reaching millions, tens of millions and over 100 million views on Hongguo.
+🔥 Short dramas built on Toonflow have reached millions, tens of millions, even over 100 million views on Hongguo.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Short drama 《悍妻进门，扶起一屋软骨头》 built on Toonflow: 3.5 billion views on Hongguo, 5 billion across platforms" width="100%" />
@@ -510,24 +510,22 @@ These hit short dramas were made by creative teams building on Toonflow, reachin
 
 ### Commercials
 
-https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+<table>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fccf8b46-b8ec-46cb-9574-9273cd1ee9e4" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/b345905e-601f-43be-83a5-305f97a29e44" controls width="100%"></video></td>
+  </tr>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fc5880aa-6b9c-4717-af0e-e51f15c4fdc6" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/0816e794-f07d-4bc3-89cd-69c67566c3a6" controls width="100%"></video></td>
+  </tr>
+</table>
 
-https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
-
-https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
-
-https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
-
-### Short Drama Case: 2 Hours, ¥100 Total Cost
+### Short Drama Case
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-| Item | Record |
-| --- | --- |
-| Production time and final length | Approximately 2 hours of work for a video of about 2 minutes. |
-| Total cost | ¥100 |
-
-These costs are the recorded figures for this example and are provided for reference only. Actual costs depend on the model service, number of generations, and parameters. The demo video is a compressed 480p version.
+The demo video is a compressed 480p version.
 
 ---
 

@@ -161,7 +161,7 @@
 
 <p align="center">🔥 Toonflow-ஐ அடிப்படையாகக் கொண்டு உருவான குறுந்தொடர்கள் Hongguo-வில் லட்சக்கணக்கான, கோடிக்கணக்கான, 10 கோடிக்கும் மேற்பட்ட பார்வைகளைப் பெற்றுள்ளன. <a href="#works">படைப்புகளைப் பாருங்கள்</a></p>
 
-https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+https://github.com/user-attachments/assets/56d81114-7521-454c-9ec9-972567eddda9
 
 ---
 
@@ -254,7 +254,7 @@ Toonflow திறந்த மூல திட்டத்திற்கு �
 
 வசனங்களுக்கு ஏற்ப தானியங்கி ஷாட், நிலைப்படுத்தல்; மானிட்டரில் காட்சியும் வசனவரியும் நேரலையில். 📺 [டெமோ பார்க்க](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
+https://github.com/user-attachments/assets/bb2f7bfe-46de-44ff-b3b3-95379f9d4b20
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · ஸ்கிரிப்டை ஒட்டுங்கள், 3D முன்காட்சி தயார்" width="100%" /></a>
@@ -498,7 +498,7 @@ bun run start:server
 
 ### Hongguo-வில் வெற்றி பெற்ற தொடர்கள்
 
-கீழே உள்ள வெற்றிக் குறுந்தொடர்களை படைப்புக் குழுக்கள் Toonflow-ஐ அடிப்படையாகக் கொண்டு உருவாக்கின; அவை Hongguo-வில் லட்சக்கணக்கான, கோடிக்கணக்கான, 10 கோடிக்கும் மேற்பட்ட பார்வைகளைப் பெற்றுள்ளன.
+🔥 Toonflow-ஐ அடிப்படையாகக் கொண்டு உருவான குறுந்தொடர்கள் Hongguo-வில் லட்சக்கணக்கான, கோடிக்கணக்கான, 10 கோடிக்கும் மேற்பட்ட பார்வைகளைப் பெற்றுள்ளன.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Toonflow அடிப்படையிலான குறுந்தொடர் 《悍妻进门，扶起一屋软骨头》: Hongguo-வில் 350 கோடி பார்வைகள், அனைத்து தளங்களிலும் 500 கோடி" width="100%" />
@@ -510,24 +510,22 @@ bun run start:server
 
 ### விளம்பர வீடியோக்கள்
 
-https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+<table>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fccf8b46-b8ec-46cb-9574-9273cd1ee9e4" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/b345905e-601f-43be-83a5-305f97a29e44" controls width="100%"></video></td>
+  </tr>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fc5880aa-6b9c-4717-af0e-e51f15c4fdc6" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/0816e794-f07d-4bc3-89cd-69c67566c3a6" controls width="100%"></video></td>
+  </tr>
+</table>
 
-https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
-
-https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
-
-https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
-
-### குறுந்தொடர் எடுத்துக்காட்டு: 2 மணி நேரம், மொத்த செலவு ¥100
+### குறுந்தொடர் எடுத்துக்காட்டு
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-| பொருள் | பதிவு |
-| --- | --- |
-| உற்பத்தி நேரம் மற்றும் இறுதி நீளம் | சுமார் 2 நிமிட வீடியோவிற்கு, தோராயமாக 2 மணிநேர வேலை. |
-| மொத்த செலவு | ¥100 |
-
-இவை இந்த மாதிரிக்காகப் பதிவுசெய்யப்பட்ட செலவுகள்; ஒரு கணிப்பிற்காக மட்டுமே வழங்கப்படுகின்றன. உண்மையான செலவு மாதிரிச் சேவை, உருவாக்கும் முயற்சிகளின் எண்ணிக்கை மற்றும் அளவுருக்களைப் பொறுத்தது. மாதிரி வீடியோ சுருக்கப்பட்ட 480p பதிப்பாகும்.
+டெமோ வீடியோ 480p-க்கு சுருக்கப்பட்ட பதிப்பு.
 
 ---
 

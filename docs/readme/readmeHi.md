@@ -161,7 +161,7 @@
 
 <p align="center">🔥 Toonflow पर आधारित शॉर्ट ड्रामा Hongguo पर दसियों लाख, करोड़ों और 10 करोड़ से ज़्यादा व्यूज़ पा चुके हैं। <a href="#works">रचनाएँ देखें</a></p>
 
-https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+https://github.com/user-attachments/assets/56d81114-7521-454c-9ec9-972567eddda9
 
 ---
 
@@ -254,7 +254,7 @@ Toonflow ओपन-सोर्स परियोजना का समर्�
 
 संवादों के अनुसार अपने-आप शॉट और ब्लॉकिंग; मॉनिटर पर दृश्य और सबटाइटल लाइव। 📺 [डेमो देखें](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
+https://github.com/user-attachments/assets/bb2f7bfe-46de-44ff-b3b3-95379f9d4b20
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · स्क्रिप्ट पेस्ट करें, 3D प्रीविज़ पाएँ" width="100%" /></a>
@@ -498,7 +498,7 @@ bun run start:server
 
 ### Hongguo पर हिट ड्रामा
 
-नीचे दिए गए हिट शॉर्ट ड्रामा रचनात्मक टीमों ने Toonflow के आधार पर बनाए हैं, जिन्हें Hongguo पर दसियों लाख, करोड़ों और 10 करोड़ से ज़्यादा व्यूज़ मिले हैं।
+🔥 Toonflow पर आधारित शॉर्ट ड्रामा Hongguo पर दसियों लाख, करोड़ों और 10 करोड़ से ज़्यादा व्यूज़ पा चुके हैं।
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Toonflow पर आधारित शॉर्ट ड्रामा 《悍妻进门，扶起一屋软骨头》: Hongguo पर 3.5 अरब व्यूज़, सभी प्लेटफ़ॉर्म पर 5 अरब" width="100%" />
@@ -510,24 +510,22 @@ bun run start:server
 
 ### विज्ञापन वीडियो
 
-https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+<table>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fccf8b46-b8ec-46cb-9574-9273cd1ee9e4" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/b345905e-601f-43be-83a5-305f97a29e44" controls width="100%"></video></td>
+  </tr>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fc5880aa-6b9c-4717-af0e-e51f15c4fdc6" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/0816e794-f07d-4bc3-89cd-69c67566c3a6" controls width="100%"></video></td>
+  </tr>
+</table>
 
-https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
-
-https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
-
-https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
-
-### शॉर्ट ड्रामा उदाहरण: 2 घंटे, कुल लागत ¥100
+### शॉर्ट ड्रामा उदाहरण
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-| मद | रिकॉर्ड |
-| --- | --- |
-| निर्माण में लगा समय और अंतिम अवधि | लगभग 2 मिनट के वीडियो के लिए लगभग 2 घंटे का काम। |
-| कुल लागत | ¥100 |
-
-ये इस उदाहरण के लिए दर्ज लागतें हैं और केवल संदर्भ के लिए दी गई हैं। वास्तविक लागत मॉडल सेवा, निर्माण की संख्या और पैरामीटर पर निर्भर करती है। डेमो वीडियो संपीड़ित 480p संस्करण है।
+डेमो वीडियो 480p का संपीड़ित संस्करण है।
 
 ---
 

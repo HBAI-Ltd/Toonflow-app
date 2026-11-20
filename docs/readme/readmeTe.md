@@ -161,7 +161,7 @@
 
 <p align="center">🔥 Toonflow ఆధారంగా రూపొందిన షార్ట్ డ్రామాలు Hongguo లో లక్షల నుంచి కోట్ల వరకు, 10 కోట్లకు పైగా వీక్షణలు సాధించాయి. <a href="#works">రచనలు చూడండి</a></p>
 
-https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+https://github.com/user-attachments/assets/56d81114-7521-454c-9ec9-972567eddda9
 
 ---
 
@@ -254,7 +254,7 @@ Toonflow ఓపెన్ సోర్స్ ప్రాజెక్ట్‌క
 
 సంభాషణల ప్రకారం ఆటోమేటిక్ షాట్లు, బ్లాకింగ్; మానిటర్‌లో దృశ్యం, సబ్‌టైటిల్స్ ప్రత్యక్షంగా. 📺 [డెమో చూడండి](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
+https://github.com/user-attachments/assets/bb2f7bfe-46de-44ff-b3b3-95379f9d4b20
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · స్క్రిప్ట్ పేస్ట్ చేయండి, 3D ప్రీవిజ్ పొందండి" width="100%" /></a>
@@ -498,7 +498,7 @@ bun run start:server
 
 ### Hongguo లో హిట్ డ్రామాలు
 
-కింది హిట్ షార్ట్ డ్రామాలను సృజనాత్మక బృందాలు Toonflow ఆధారంగా రూపొందించాయి; ఇవి Hongguo లో లక్షల నుంచి కోట్ల వరకు, 10 కోట్లకు పైగా వీక్షణలు సాధించాయి.
+🔥 Toonflow ఆధారంగా రూపొందిన షార్ట్ డ్రామాలు Hongguo లో లక్షల నుంచి కోట్ల వరకు, 10 కోట్లకు పైగా వీక్షణలు సాధించాయి.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Toonflow ఆధారంగా రూపొందిన షార్ట్ డ్రామా 《悍妻进门，扶起一屋软骨头》: Hongguo లో 350 కోట్ల వీక్షణలు, అన్ని ప్లాట్‌ఫారమ్‌లలో 500 కోట్లు" width="100%" />
@@ -510,24 +510,22 @@ bun run start:server
 
 ### ప్రకటన వీడియోలు
 
-https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+<table>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fccf8b46-b8ec-46cb-9574-9273cd1ee9e4" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/b345905e-601f-43be-83a5-305f97a29e44" controls width="100%"></video></td>
+  </tr>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fc5880aa-6b9c-4717-af0e-e51f15c4fdc6" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/0816e794-f07d-4bc3-89cd-69c67566c3a6" controls width="100%"></video></td>
+  </tr>
+</table>
 
-https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
-
-https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
-
-https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
-
-### షార్ట్ డ్రామా ఉదాహరణ: 2 గంటలు, మొత్తం ఖర్చు ¥100
+### షార్ట్ డ్రామా ఉదాహరణ
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-| అంశం | నమోదు |
-| --- | --- |
-| ఉత్పత్తి సమయం మరియు చివరి పొడవు | దాదాపు 2 నిమిషాల వీడియో కోసం దాదాపు 2 గంటల పని. |
-| మొత్తం ఖర్చు | ¥100 |
-
-ఇవి ఈ నమూనాకు నమోదైన ఖర్చులు మాత్రమే; అవగాహన కోసం ఇచ్చాం. నిజమైన ఖర్చు మోడల్ సేవ, ఎన్నిసార్లు సృష్టిస్తున్నారు, ఉపయోగించే పరామితులపై ఆధారపడుతుంది. నమూనా వీడియో కుదించిన 480p వెర్షన్.
+డెమో వీడియో 480pకి కుదించిన వెర్షన్.
 
 ---
 
