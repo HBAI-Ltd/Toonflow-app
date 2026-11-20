@@ -159,6 +159,10 @@
   <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">عرض المعاينة TrumanMap</a>
 </p>
 
+<p align="center">🔥 حققت المسلسلات القصيرة المبنية على Toonflow ملايين وعشرات الملايين وأكثر من 100 مليون مشاهدة على Hongguo. <a href="#works">شاهد الأعمال</a></p>
+
+https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+
 ---
 
 ## 1. 💛 الرعاة والدعم
@@ -249,6 +253,8 @@
 ### الميزة 1 | الصق السيناريو واحصل على معاينة ثلاثية الأبعاد
 
 تقطيع اللقطات وحركة الممثلين تلقائيًا وفق الحوار، مع عرض الصورة والترجمة مباشرة في شاشة المراقبة. 📺 [شاهد العرض](https://www.bilibili.com/video/BV1z4sS6NEA3)
+
+https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · الصق السيناريو واحصل على معاينة ثلاثية الأبعاد" width="100%" /></a>
@@ -488,17 +494,38 @@ bun run start:server
 
 ## 5. 🎬 نموذج من الأعمال
 
+<a id="works"></a>
+
+### أعمال ناجحة على Hongguo
+
+أنتجت فرق إبداعية المسلسلات القصيرة الناجحة التالية بالاعتماد على Toonflow، وحققت ملايين وعشرات الملايين وأكثر من 100 مليون مشاهدة على Hongguo.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="مسلسل قصير 《悍妻进门，扶起一屋软骨头》 مبني على Toonflow: 3.5 مليار مشاهدة على Hongguo و5 مليارات عبر جميع المنصات" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2f94bc21-c261-4933-903f-7c7150defb6f" alt="ملصقات مسلسلات قصيرة مبنية على Toonflow حققت من الملايين إلى أكثر من 100 مليون مشاهدة على Hongguo" width="100%" />
+</p>
+
+### فيديوهات إعلانية
+
+https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+
+https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
+
+https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
+
+https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
+
+### مثال مسلسل قصير: ساعتان، بتكلفة إجمالية ¥100
+
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-### تفاصيل الإنتاج
-
-| البند | البيانات المسجلة في المستودع الأصلي |
+| البند | السجل |
 | --- | --- |
 | مدة الإنتاج وطول الفيديو النهائي | نحو ساعتين من العمل لإنتاج فيديو مدته نحو دقيقتين. |
-| نموذج الفيديو | Seedance 2.0 |
-| نموذج الصور | GPT Image 2 |
-| النموذج اللغوي | Claude Opus 4.6 |
-| تكاليف API للنماذج | نحو ¥130 CNY (يوان صيني): قرابة ¥10 للغة، و¥120 للفيديو، وأقل من ¥1 للصور. |
+| التكلفة الإجمالية | ¥100 |
 
 هذه التكاليف هي الأرقام المسجلة لهذا المثال، وهي للمرجع فقط. تعتمد التكلفة الفعلية على خدمة النموذج وعدد مرات التوليد والمعلمات. الفيديو المعروض نسخة مضغوطة بدقة 480p.
 

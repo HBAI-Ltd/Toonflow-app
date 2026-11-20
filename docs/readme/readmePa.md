@@ -159,6 +159,10 @@
   <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap ਪ੍ਰੀਵਿਜ਼ ਡੈਮੋ</a>
 </p>
 
+<p align="center">🔥 Toonflow ਦੇ ਆਧਾਰ 'ਤੇ ਬਣੇ ਸ਼ਾਰਟ ਡਰਾਮਿਆਂ ਨੂੰ Hongguo 'ਤੇ ਲੱਖਾਂ, ਕਰੋੜਾਂ ਅਤੇ 10 ਕਰੋੜ ਤੋਂ ਵੱਧ ਵਿਊਜ਼ ਮਿਲੇ ਹਨ। <a href="#works">ਰਚਨਾਵਾਂ ਵੇਖੋ</a></p>
+
+https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+
 ---
 
 ## 1. 💛 ਸਪਾਂਸਰ ਅਤੇ ਸਹਾਇਤਾ
@@ -249,6 +253,8 @@ Toonflow ਓਪਨ-ਸੋਰਸ ਪ੍ਰੋਜੈਕਟ ਦਾ ਸਮਰਥਨ 
 ### ਖ਼ੂਬੀ 1 | ਸਕ੍ਰਿਪਟ ਪੇਸਟ ਕਰੋ, 3D ਪ੍ਰੀਵਿਜ਼ ਪਾਓ
 
 ਸੰਵਾਦਾਂ ਮੁਤਾਬਕ ਆਪਣੇ-ਆਪ ਸ਼ਾਟ ਤੇ ਬਲਾਕਿੰਗ; ਮਾਨੀਟਰ 'ਤੇ ਦ੍ਰਿਸ਼ ਤੇ ਸਬਟਾਈਟਲ ਲਾਈਵ। 📺 [ਡੈਮੋ ਵੇਖੋ](https://www.bilibili.com/video/BV1z4sS6NEA3)
+
+https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · ਸਕ੍ਰਿਪਟ ਪੇਸਟ ਕਰੋ, 3D ਪ੍ਰੀਵਿਜ਼ ਪਾਓ" width="100%" /></a>
@@ -488,17 +494,38 @@ bun run start:server
 
 ## 5. 🎬 ਨਮੂਨਾ ਰਚਨਾ
 
+<a id="works"></a>
+
+### Hongguo 'ਤੇ ਹਿੱਟ ਡਰਾਮੇ
+
+ਹੇਠਾਂ ਦਿੱਤੇ ਹਿੱਟ ਸ਼ਾਰਟ ਡਰਾਮੇ ਰਚਨਾਤਮਕ ਟੀਮਾਂ ਨੇ Toonflow ਦੇ ਆਧਾਰ 'ਤੇ ਬਣਾਏ ਹਨ, ਜਿਨ੍ਹਾਂ ਨੂੰ Hongguo 'ਤੇ ਲੱਖਾਂ, ਕਰੋੜਾਂ ਅਤੇ 10 ਕਰੋੜ ਤੋਂ ਵੱਧ ਵਿਊਜ਼ ਮਿਲੇ ਹਨ।
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Toonflow ਦੇ ਆਧਾਰ 'ਤੇ ਬਣਿਆ ਸ਼ਾਰਟ ਡਰਾਮਾ 《悍妻进门，扶起一屋软骨头》: Hongguo 'ਤੇ 3.5 ਅਰਬ ਵਿਊਜ਼, ਸਾਰੇ ਪਲੇਟਫਾਰਮਾਂ 'ਤੇ 5 ਅਰਬ" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2f94bc21-c261-4933-903f-7c7150defb6f" alt="Toonflow ਦੇ ਆਧਾਰ 'ਤੇ ਬਣੇ, Hongguo 'ਤੇ ਲੱਖਾਂ ਤੋਂ 10 ਕਰੋੜ ਤੋਂ ਵੱਧ ਵਿਊਜ਼ ਵਾਲੇ ਸ਼ਾਰਟ ਡਰਾਮਿਆਂ ਦੇ ਪੋਸਟਰ" width="100%" />
+</p>
+
+### ਇਸ਼ਤਿਹਾਰ ਵੀਡੀਓ
+
+https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+
+https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
+
+https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
+
+https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
+
+### ਸ਼ਾਰਟ ਡਰਾਮਾ ਉਦਾਹਰਣ: 2 ਘੰਟੇ, ਕੁੱਲ ਲਾਗਤ ¥100
+
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-### ਬਣਾਉਣ ਦੇ ਵੇਰਵੇ
-
-| ਆਈਟਮ | ਅਸਲੀ ਰਿਪੋਜ਼ਟਰੀ ਵਿੱਚ ਦਰਜ |
+| ਆਈਟਮ | ਰਿਕਾਰਡ |
 | --- | --- |
 | ਉਤਪਾਦਨ ਦਾ ਸਮਾਂ ਅਤੇ ਅੰਤਮ ਲੰਬਾਈ | ਲਗਭਗ 2 ਮਿੰਟਾਂ ਦੀ ਵੀਡੀਓ ਲਈ ਕੰਮ ਦੇ ਲਗਭਗ 2 ਘੰਟੇ। |
-| ਵੀਡੀਓ ਮਾਡਲ | Seedance 2.0 |
-| ਚਿੱਤਰ ਮਾਡਲ | GPT Image 2 |
-| ਭਾਸ਼ਾ ਮਾਡਲ | Claude Opus 4.6 |
-| ਮਾਡਲ API ਦੀ ਲਾਗਤ | ਲਗਭਗ ¥130 CNY (ਚੀਨੀ ਯੁਆਨ): ਭਾਸ਼ਾ ਲਈ ਲਗਭਗ ¥10, ਵੀਡੀਓ ਲਈ ¥120, ਅਤੇ ਚਿੱਤਰਾਂ ਲਈ ¥1 ਤੋਂ ਘੱਟ। |
+| ਕੁੱਲ ਲਾਗਤ | ¥100 |
 
 ਇਹ ਇਸ ਉਦਾਹਰਨ ਦੇ ਦਰਜ ਕੀਤੇ ਖਰਚੇ ਹਨ ਅਤੇ ਸਿਰਫ਼ ਅੰਦਾਜ਼ਾ ਦੇਣ ਲਈ ਹਨ। ਅਸਲ ਖਰਚਾ ਮਾਡਲ ਸੇਵਾ, ਕਿੰਨੀ ਵਾਰ ਸਮੱਗਰੀ ਬਣਾਈ ਜਾਂਦੀ ਹੈ ਅਤੇ ਚੁਣੇ ਮਾਪਦੰਡਾਂ ਉੱਤੇ ਨਿਰਭਰ ਕਰਦਾ ਹੈ। ਨਮੂਨਾ ਵੀਡੀਓ ਕੰਪ੍ਰੈੱਸ ਕੀਤਾ 480p ਸੰਸਕਰਣ ਹੈ।
 

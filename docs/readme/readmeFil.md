@@ -159,6 +159,10 @@
   <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">Demo ng TrumanMap previs</a>
 </p>
 
+<p align="center">🔥 Ang mga short drama na binuo batay sa Toonflow ay umabot na sa milyon-milyon, sampu-sampung milyon, at higit 100 milyong views sa Hongguo. <a href="#works">Tingnan ang mga gawa</a></p>
+
+https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+
 ---
 
 ## 1. 💛 Mga Sponsor at Suporta
@@ -249,6 +253,8 @@ Mga sinusuportahang wika: 简体中文, 繁體中文, English, 日本語, Рус
 ### Tampok 1 | I-paste ang script, may 3D previs agad
 
 Awtomatikong shot at blocking ayon sa linya; live na larawan at subtitle sa monitor. 📺 [Panoorin ang demo](https://www.bilibili.com/video/BV1z4sS6NEA3)
+
+https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · I-paste ang script, may 3D previs agad" width="100%" /></a>
@@ -488,17 +494,38 @@ Nagbibigay ang katuwang naming [AI Galaxy (智星云)](https://www.ai-galaxy.com
 
 ## 5. 🎬 Halimbawang Gawa
 
+<a id="works"></a>
+
+### Mga Hit na Drama sa Hongguo
+
+Ang mga sumusunod na hit na short drama ay ginawa ng mga creative team batay sa Toonflow, at umabot sa milyon-milyon, sampu-sampung milyon, at higit 100 milyong views sa Hongguo.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Short drama na 《悍妻进门，扶起一屋软骨头》 na binuo batay sa Toonflow: 3.5 bilyong views sa Hongguo, 5 bilyon sa lahat ng platform" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2f94bc21-c261-4933-903f-7c7150defb6f" alt="Mga poster ng short drama na binuo batay sa Toonflow na may milyon-milyon hanggang higit 100 milyong views sa Hongguo" width="100%" />
+</p>
+
+### Mga commercial
+
+https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+
+https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
+
+https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
+
+https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
+
+### Halimbawang short drama: 2 oras, kabuuang gastos ¥100
+
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-### Detalye ng Produksyon
-
-| Item | Naitala sa orihinal na repository |
+| Item | Tala |
 | --- | --- |
 | Oras ng paggawa at haba ng video | Humigit-kumulang 2 oras na paggawa para sa video na halos 2 minuto ang haba. |
-| Modelo ng video | Seedance 2.0 |
-| Modelo ng larawan | GPT Image 2 |
-| Modelo ng wika | Claude Opus 4.6 |
-| Gastos sa API ng modelo | Humigit-kumulang ¥130 CNY (Chinese yuan): mga ¥10 para sa wika, ¥120 para sa video, at mas mababa sa ¥1 para sa mga larawan. |
+| Kabuuang gastos | ¥100 |
 
 Ang mga halagang ito ay naitala para sa halimbawang ito at ibinibigay bilang sanggunian lamang. Nakadepende ang aktuwal na gastos sa serbisyo ng modelo, bilang ng pagbuo, at mga parameter. Ang demo video ay isang compressed na bersyon sa 480p.
 

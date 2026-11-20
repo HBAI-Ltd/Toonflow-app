@@ -159,6 +159,10 @@
   <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">دموی پیش‌نمایش TrumanMap</a>
 </p>
 
+<p align="center">🔥 سریال‌های کوتاهی که بر پایهٔ Toonflow ساخته شده‌اند در Hongguo میلیون‌ها، ده‌ها میلیون و بیش از 100 میلیون بازدید گرفته‌اند. <a href="#works">دیدن آثار</a></p>
+
+https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+
 ---
 
 ## 1. 💛 حامیان و پشتیبانی
@@ -249,6 +253,8 @@
 ### ویژگی 1 | فیلمنامه را بچسبانید، پیش‌نمایش سه‌بعدی بگیرید
 
 نما و میزانسن خودکار بر اساس دیالوگ؛ تصویر و زیرنویس زنده در مانیتور. 📺 [دیدن دمو](https://www.bilibili.com/video/BV1z4sS6NEA3)
+
+https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · فیلمنامه را بچسبانید، پیش‌نمایش سه‌بعدی بگیرید" width="100%" /></a>
@@ -488,17 +494,38 @@ bun run start:server
 
 ## 5. 🎬 نمونهٔ اثر
 
+<a id="works"></a>
+
+### آثار پرطرفدار در Hongguo
+
+سریال‌های کوتاه پرطرفدار زیر را تیم‌های خلاق بر پایهٔ Toonflow ساخته‌اند و در Hongguo میلیون‌ها، ده‌ها میلیون و بیش از 100 میلیون بازدید گرفته‌اند.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="سریال کوتاه 《悍妻进门，扶起一屋软骨头》 ساخته‌شده بر پایهٔ Toonflow: 3.5 میلیارد بازدید در Hongguo و 5 میلیارد در همهٔ پلتفرم‌ها" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2f94bc21-c261-4933-903f-7c7150defb6f" alt="پوسترهای سریال‌های کوتاه ساخته‌شده بر پایهٔ Toonflow با میلیون‌ها تا بیش از 100 میلیون بازدید در Hongguo" width="100%" />
+</p>
+
+### ویدیوهای تبلیغاتی
+
+https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+
+https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
+
+https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
+
+https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
+
+### نمونهٔ سریال کوتاه: 2 ساعت، هزینهٔ کل ¥100
+
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-### جزئیات تولید
-
-| مورد | اطلاعات ثبت‌شده در مخزن اصلی |
+| مورد | ثبت |
 | --- | --- |
 | زمان تولید و مدت ویدیوی نهایی | حدود 2 ساعت کار برای ویدیویی تقریباً 2 دقیقه‌ای. |
-| مدل ویدیو | Seedance 2.0 |
-| مدل تصویر | GPT Image 2 |
-| مدل زبانی | Claude Opus 4.6 |
-| هزینهٔ API مدل‌ها | حدود ¥130 CNY (یوان چین): تقریباً ¥10 برای زبان، ¥120 برای ویدیو و کمتر از ¥1 برای تصاویر. |
+| هزینهٔ کل | ¥100 |
 
 این هزینه‌ها ارقام ثبت‌شده برای همین نمونه‌اند و فقط جهت اطلاع ارائه شده‌اند. هزینهٔ واقعی به سرویس مدل، تعداد دفعات تولید و پارامترها بستگی دارد. ویدیوی نمایشی نسخه‌ای فشرده با وضوح 480p است.
 

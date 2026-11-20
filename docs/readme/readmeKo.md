@@ -159,6 +159,10 @@
   <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap 프리비즈 데모</a>
 </p>
 
+<p align="center">🔥 Toonflow를 기반으로 만든 숏드라마가 훙궈(红果)에서 수백만, 수천만, 1억 회 이상 조회수를 기록했습니다. <a href="#works">작품 보기</a></p>
+
+https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+
 ---
 
 ## 1. 💛 후원과 지원
@@ -249,6 +253,8 @@ Toonflow 오픈 소스 프로젝트를 지원해 주시는 다음 파트너 여�
 ### 하이라이트 1 | 대본만 붙이면 3D 프리비즈
 
 대사에 맞춰 자동으로 컷을 나누고 동선을 짜며, 모니터에 화면과 자막이 실시간으로 표시됩니다. 📺 [데모 영상 보기](https://www.bilibili.com/video/BV1z4sS6NEA3)
+
+https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · 대본만 붙이면 3D 프리비즈" width="100%" /></a>
@@ -488,17 +494,38 @@ bun run start:server
 
 ## 5. 🎬 제작 예시
 
+<a id="works"></a>
+
+### 훙궈 인기 작품
+
+아래 인기 숏드라마는 제작팀이 Toonflow를 기반으로 제작했으며, 훙궈에서 수백만, 수천만, 1억 회 이상 조회수를 기록했습니다.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Toonflow 기반 숏드라마 《悍妻进门，扶起一屋软骨头》: 훙궈 조회수 35억, 전체 플랫폼 50억" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2f94bc21-c261-4933-903f-7c7150defb6f" alt="Toonflow를 기반으로 제작해 훙궈에서 수백만~1억 회 이상 조회수를 기록한 숏드라마 포스터 모음" width="100%" />
+</p>
+
+### 광고 영상
+
+https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+
+https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
+
+https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
+
+https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
+
+### 숏드라마 사례: 2시간, 총비용 100위안
+
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-### 제작 정보
-
-| 항목 | 원본 저장소의 기록 |
+| 항목 | 기록 |
 | --- | --- |
 | 제작 시간과 완성 길이 | 약 2시간 작업으로 약 2분 분량의 영상 제작. |
-| 영상 모델 | Seedance 2.0 |
-| 이미지 모델 | GPT Image 2 |
-| 언어 모델 | Claude Opus 4.6 |
-| 모델 API 비용 | 약 ¥130 CNY(중국 위안): 언어 모델 약 ¥10, 영상 약 ¥120, 이미지 ¥1 미만. |
+| 총비용 | ¥100 |
 
 이 비용은 해당 예시의 기록이며 참고용입니다. 실제 비용은 모델 서비스, 생성 횟수, 매개변수에 따라 달라집니다. 데모 영상은 압축된 480p 버전입니다.
 

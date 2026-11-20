@@ -159,6 +159,10 @@
   <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">Demo previs TrumanMap</a>
 </p>
 
+<p align="center">🔥 Drama pendek yang dibangun di atas Toonflow telah meraih jutaan, puluhan juta, hingga lebih dari 100 juta penayangan di Hongguo. <a href="#works">Lihat karya</a></p>
+
+https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+
 ---
 
 ## 1. 💛 Sponsor dan Dukungan
@@ -249,6 +253,8 @@ Bahasa yang didukung: 简体中文, 繁體中文, English, 日本語, Русск
 ### Sorotan 1 | Tempel naskah, langsung previs 3D
 
 Shot dan blocking otomatis mengikuti dialog; monitor menampilkan gambar dan subtitle secara langsung. 📺 [Tonton demo](https://www.bilibili.com/video/BV1z4sS6NEA3)
+
+https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · Tempel naskah, langsung previs 3D" width="100%" /></a>
@@ -488,17 +494,38 @@ Mitra kami [AI Galaxy (智星云)](https://www.ai-galaxy.com/) menyediakan image
 
 ## 5. 🎬 Contoh Karya
 
+<a id="works"></a>
+
+### Drama Populer di Hongguo
+
+Drama pendek populer berikut dibuat oleh tim kreatif di atas Toonflow dan meraih jutaan, puluhan juta, hingga lebih dari 100 juta penayangan di Hongguo.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Drama pendek 《悍妻进门，扶起一屋软骨头》 yang dibangun di atas Toonflow: 3,5 miliar penayangan di Hongguo, 5 miliar di seluruh platform" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2f94bc21-c261-4933-903f-7c7150defb6f" alt="Poster drama pendek yang dibangun di atas Toonflow dengan jutaan hingga lebih dari 100 juta penayangan di Hongguo" width="100%" />
+</p>
+
+### Video iklan
+
+https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+
+https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
+
+https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
+
+https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
+
+### Contoh drama pendek: 2 jam, total biaya ¥100
+
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-### Rincian Produksi
-
-| Komponen | Catatan dari repositori asli |
+| Komponen | Catatan |
 | --- | --- |
 | Waktu produksi dan durasi akhir | Sekitar 2 jam pengerjaan untuk video berdurasi sekitar 2 menit. |
-| Model video | Seedance 2.0 |
-| Model gambar | GPT Image 2 |
-| Model bahasa | Claude Opus 4.6 |
-| Biaya API model | Sekitar ¥130 CNY (yuan Tiongkok): sekitar ¥10 untuk bahasa, ¥120 untuk video, dan kurang dari ¥1 untuk gambar. |
+| Total biaya | ¥100 |
 
 Biaya ini adalah angka yang dicatat untuk contoh tersebut dan hanya diberikan sebagai referensi. Biaya sebenarnya bergantung pada layanan model, jumlah pembuatan, dan parameter. Video demo merupakan versi 480p yang telah dikompresi.
 

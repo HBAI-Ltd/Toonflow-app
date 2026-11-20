@@ -159,6 +159,10 @@
   <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap প্রিভিজ ডেমো</a>
 </p>
 
+<p align="center">🔥 Toonflow-এর ভিত্তিতে তৈরি শর্ট ড্রামা Hongguo-তে লক্ষ লক্ষ, কোটি কোটি থেকে 10 কোটিরও বেশি ভিউ পেয়েছে। <a href="#works">কাজগুলো দেখুন</a></p>
+
+https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+
 ---
 
 ## 1. 💛 পৃষ্ঠপোষক ও সহযোগী
@@ -249,6 +253,8 @@ Toonflow ওপেন সোর্স প্রকল্পকে সমর্�
 ### আকর্ষণ 1 | স্ক্রিপ্ট পেস্ট করুন, 3D প্রিভিজ পান
 
 সংলাপ অনুযায়ী নিজে থেকেই শট ও ব্লকিং; মনিটরে ছবি ও সাবটাইটেল সরাসরি। 📺 [ডেমো দেখুন](https://www.bilibili.com/video/BV1z4sS6NEA3)
+
+https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · স্ক্রিপ্ট পেস্ট করুন, 3D প্রিভিজ পান" width="100%" /></a>
@@ -488,17 +494,38 @@ bun run start:server
 
 ## 5. 🎬 উদাহরণ কাজ
 
+<a id="works"></a>
+
+### Hongguo-তে হিট ড্রামা
+
+নিচের হিট শর্ট ড্রামাগুলো সৃজনশীল দলগুলো Toonflow-এর ভিত্তিতে তৈরি করেছে, যা Hongguo-তে লক্ষ লক্ষ, কোটি কোটি থেকে 10 কোটিরও বেশি ভিউ পেয়েছে।
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Toonflow-এর ভিত্তিতে তৈরি শর্ট ড্রামা 《悍妻进门，扶起一屋软骨头》: Hongguo-তে 350 কোটি ভিউ, সব প্ল্যাটফর্মে 500 কোটি" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2f94bc21-c261-4933-903f-7c7150defb6f" alt="Toonflow-এর ভিত্তিতে তৈরি, Hongguo-তে লক্ষ থেকে 10 কোটিরও বেশি ভিউ পাওয়া শর্ট ড্রামার পোস্টার" width="100%" />
+</p>
+
+### বিজ্ঞাপন ভিডিও
+
+https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+
+https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
+
+https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
+
+https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
+
+### শর্ট ড্রামা উদাহরণ: 2 ঘণ্টা, মোট খরচ ¥100
+
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-### নির্মাণের বিবরণ
-
-| আইটেম | মূল ভান্ডারে রেকর্ড করা |
+| আইটেম | রেকর্ড |
 | --- | --- |
 | উৎপাদন সময় এবং চূড়ান্ত দৈর্ঘ্য | প্রায় 2 মিনিটের একটি ভিডিওর জন্য প্রায় 2 ঘন্টা কাজ। |
-| ভিডিও মডেল | Seedance 2.0 |
-| ছবির মডেল | GPT Image 2 |
-| ভাষার মডেল | Claude Opus 4.6 |
-| মডেল API খরচ | আনুমানিক ¥130 CNY (চীনা ইউয়ান): ভাষার জন্য প্রায় ¥10, ভিডিওর জন্য ¥120 এবং ছবির জন্য ¥1 এর চেয়ে কম। |
+| মোট খরচ | ¥100 |
 
 এগুলো এই উদাহরণের নথিভুক্ত খরচ, কেবল ধারণা দেওয়ার জন্য। প্রকৃত খরচ নির্ভর করে মডেল পরিষেবা, কতবার তৈরি করা হচ্ছে এবং ব্যবহৃত পরামিতির ওপর। নমুনা ভিডিওটি সংকুচিত 480p সংস্করণ।
 

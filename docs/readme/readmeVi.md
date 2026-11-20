@@ -159,6 +159,10 @@
   <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">Demo tiền kỳ TrumanMap</a>
 </p>
 
+<p align="center">🔥 Các phim ngắn xây dựng trên nền Toonflow đã đạt hàng triệu, hàng chục triệu đến hơn 100 triệu lượt xem trên Hongguo. <a href="#works">Xem tác phẩm</a></p>
+
+https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+
 ---
 
 ## 1. 💛 Tài trợ và hỗ trợ
@@ -249,6 +253,8 @@ Các ngôn ngữ được hỗ trợ: 简体中文, 繁體中文, English, 日�
 ### Điểm nổi bật 1 | Dán kịch bản, tiền kỳ 3D tức thì
 
 Tự phân cảnh và xếp vị trí theo lời thoại, màn hình giám sát hiện hình và phụ đề trực tiếp. 📺 [Xem video demo](https://www.bilibili.com/video/BV1z4sS6NEA3)
+
+https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · Dán kịch bản, tiền kỳ 3D tức thì" width="100%" /></a>
@@ -488,17 +494,38 @@ Nền tảng đối tác [AI-Galaxy (智星云)](https://www.ai-galaxy.com/) cun
 
 ## 5. 🎬 Tác phẩm mẫu
 
+<a id="works"></a>
+
+### Tác phẩm ăn khách trên Hongguo
+
+Những phim ngắn ăn khách dưới đây do các đội sáng tạo thực hiện trên nền Toonflow, đạt hàng triệu, hàng chục triệu đến hơn 100 triệu lượt xem trên Hongguo.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Phim ngắn 《悍妻进门，扶起一屋软骨头》 làm trên nền Toonflow: 3,5 tỷ lượt xem trên Hongguo, 5 tỷ trên toàn mạng" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2f94bc21-c261-4933-903f-7c7150defb6f" alt="Poster các phim ngắn làm trên nền Toonflow, đạt từ hàng triệu đến hơn 100 triệu lượt xem trên Hongguo" width="100%" />
+</p>
+
+### Video quảng cáo
+
+https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+
+https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
+
+https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
+
+https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
+
+### Ví dụ phim ngắn: 2 giờ, tổng chi phí ¥100
+
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-### Thông tin ví dụ
-
-| Hạng mục | Ghi chép trong kho mã gốc |
-| -------------- | --------------------------------------------------- |
+| Hạng mục | Ghi nhận |
+| --- | --- |
 | Thời gian sản xuất và thành phẩm | Khoảng 2 giờ, video thành phẩm dài khoảng 2 phút. |
-| Mô hình video | Seedance 2.0 |
-| Mô hình ảnh | GPT Image 2 |
-| Mô hình ngôn ngữ | Claude Opus 4.6 |
-| Chi phí gọi mô hình | Khoảng ¥130, gồm khoảng ¥10 cho ngôn ngữ, ¥120 cho video và dưới ¥1 cho ảnh (tất cả đều là nhân dân tệ, CNY). |
+| Tổng chi phí | ¥100 |
 
 Đây là chi phí ghi nhận của ví dụ này, chỉ để tham khảo. Chi phí thực tế phụ thuộc vào dịch vụ mô hình, số lần tạo và tham số. Video minh họa là phiên bản 480p đã nén.
 
