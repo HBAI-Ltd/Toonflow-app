@@ -161,7 +161,7 @@
 
 <p align="center">🔥 Toonflow tabanlı kısa diziler Hongguo'da milyonlarca, on milyonlarca ve 100 milyonu aşan izlenmeye ulaştı. <a href="#works">Eserleri gör</a></p>
 
-https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+https://github.com/user-attachments/assets/56d81114-7521-454c-9ec9-972567eddda9
 
 ---
 
@@ -254,7 +254,7 @@ Desteklenen diller: 简体中文, 繁體中文, English, 日本語, Русски
 
 Çekimler ve blocking repliklere göre otomatik; monitörde görüntü ve altyazı canlı. 📺 [Demoyu izleyin](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
+https://github.com/user-attachments/assets/bb2f7bfe-46de-44ff-b3b3-95379f9d4b20
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · Senaryoyu yapıştırın, 3D ön görselleştirme hazır" width="100%" /></a>
@@ -498,7 +498,7 @@ bun run start:server
 
 ### Hongguo'daki Hit Diziler
 
-Aşağıdaki popüler kısa diziler, yaratıcı ekipler tarafından Toonflow tabanında üretildi ve Hongguo'da milyonlarca, on milyonlarca ve 100 milyonu aşan izlenmeye ulaştı.
+🔥 Toonflow tabanlı kısa diziler Hongguo'da milyonlarca, on milyonlarca ve 100 milyonu aşan izlenmeye ulaştı.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Toonflow tabanlı kısa dizi 《悍妻进门，扶起一屋软骨头》: Hongguo'da 3,5 milyar, tüm platformlarda 5 milyar izlenme" width="100%" />
@@ -510,24 +510,22 @@ Aşağıdaki popüler kısa diziler, yaratıcı ekipler tarafından Toonflow tab
 
 ### Reklam filmleri
 
-https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+<table>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fccf8b46-b8ec-46cb-9574-9273cd1ee9e4" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/b345905e-601f-43be-83a5-305f97a29e44" controls width="100%"></video></td>
+  </tr>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fc5880aa-6b9c-4717-af0e-e51f15c4fdc6" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/0816e794-f07d-4bc3-89cd-69c67566c3a6" controls width="100%"></video></td>
+  </tr>
+</table>
 
-https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
-
-https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
-
-https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
-
-### Kısa dizi örneği: 2 saat, toplam maliyet ¥100
+### Kısa dizi örneği
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-| Kalem | Kayıt |
-| --- | --- |
-| Üretim süresi ve nihai uzunluk | Yaklaşık 2 dakikalık video için yaklaşık 2 saat çalışma. |
-| Toplam maliyet | ¥100 |
-
-Bu maliyetler bu örnek için kaydedilen tutarlardır ve yalnızca fikir vermek amacıyla paylaşılmıştır. Gerçek maliyet model hizmetine, üretim sayısına ve parametrelere bağlıdır. Tanıtım videosu sıkıştırılmış 480p sürümüdür.
+Demo videosu 480p'ye sıkıştırılmış sürümdür.
 
 ---
 

@@ -161,7 +161,7 @@
 
 <p align="center">🔥 基於 Toonflow 打造的短劇已在紅果收穫百萬、千萬到破億播放。<a href="#works">看作品</a></p>
 
-https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+https://github.com/user-attachments/assets/56d81114-7521-454c-9ec9-972567eddda9
 
 ---
 
@@ -254,7 +254,7 @@ https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
 
 按台詞自動分鏡、排走位，監看窗即時出畫面和字幕。 📺 [看示範影片](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
+https://github.com/user-attachments/assets/bb2f7bfe-46de-44ff-b3b3-95379f9d4b20
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · 貼上劇本，一鍵 3D 預演" width="100%" /></a>
@@ -498,7 +498,7 @@ bun run start:server
 
 ### 紅果熱播作品
 
-以下熱播短劇由創作團隊基於 Toonflow 製作，在紅果收穫百萬、千萬到破億播放。
+🔥 基於 Toonflow 打造的短劇已在紅果收穫百萬、千萬到破億播放。
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="基於 Toonflow 打造的短劇《悍妻进门，扶起一屋软骨头》：紅果播放 35 億，全網播放 50 億" width="100%" />
@@ -510,24 +510,22 @@ bun run start:server
 
 ### 廣告片
 
-https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+<table>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fccf8b46-b8ec-46cb-9574-9273cd1ee9e4" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/b345905e-601f-43be-83a5-305f97a29e44" controls width="100%"></video></td>
+  </tr>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fc5880aa-6b9c-4717-af0e-e51f15c4fdc6" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/0816e794-f07d-4bc3-89cd-69c67566c3a6" controls width="100%"></video></td>
+  </tr>
+</table>
 
-https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
-
-https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
-
-https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
-
-### 短劇案例：2 小時，總成本 100 元
+### 短劇案例
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-| 項目 | 記錄 |
-| --- | --- |
-| 製作時間與成片 | 約 2 小時，成片約 2 分鐘。 |
-| 總成本 | ¥100 |
-
-費用為此案例的記錄，僅供參考，實際成本取決於模型服務、生成次數與參數。示範影片為壓縮後的 480p 版本。
+示範影片為壓縮後的 480p 版本。
 
 ---
 

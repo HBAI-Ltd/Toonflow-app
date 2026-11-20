@@ -161,7 +161,7 @@
 
 <p align="center">🔥 ละครสั้นที่สร้างบนพื้นฐาน Toonflow มียอดชมบน Hongguo ตั้งแต่หลักล้าน หลักสิบล้าน จนถึงกว่า 100 ล้านครั้ง <a href="#works">ดูผลงาน</a></p>
 
-https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+https://github.com/user-attachments/assets/56d81114-7521-454c-9ec9-972567eddda9
 
 ---
 
@@ -254,7 +254,7 @@ https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
 
 แบ่งช็อตและจัดตำแหน่งตามบทพูดอัตโนมัติ จอมอนิเตอร์แสดงภาพและซับไตเติลแบบเรียลไทม์ 📺 [ดูวิดีโอเดโม](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
+https://github.com/user-attachments/assets/bb2f7bfe-46de-44ff-b3b3-95379f9d4b20
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · วางบท ได้พรีวิส 3D ทันที" width="100%" /></a>
@@ -498,7 +498,7 @@ bun run start:server
 
 ### ผลงานยอดนิยมบน Hongguo
 
-ละครสั้นยอดนิยมต่อไปนี้สร้างโดยทีมผู้สร้างบนพื้นฐาน Toonflow มียอดชมบน Hongguo ตั้งแต่หลักล้าน หลักสิบล้าน จนถึงกว่า 100 ล้านครั้ง
+🔥 ละครสั้นที่สร้างบนพื้นฐาน Toonflow มียอดชมบน Hongguo ตั้งแต่หลักล้าน หลักสิบล้าน จนถึงกว่า 100 ล้านครั้ง
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="ละครสั้น 《悍妻进门，扶起一屋软骨头》 ที่สร้างบนพื้นฐาน Toonflow: ยอดชมบน Hongguo 3,500 ล้านครั้ง ทุกแพลตฟอร์ม 5,000 ล้านครั้ง" width="100%" />
@@ -510,24 +510,22 @@ bun run start:server
 
 ### วิดีโอโฆษณา
 
-https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+<table>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fccf8b46-b8ec-46cb-9574-9273cd1ee9e4" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/b345905e-601f-43be-83a5-305f97a29e44" controls width="100%"></video></td>
+  </tr>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fc5880aa-6b9c-4717-af0e-e51f15c4fdc6" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/0816e794-f07d-4bc3-89cd-69c67566c3a6" controls width="100%"></video></td>
+  </tr>
+</table>
 
-https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
-
-https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
-
-https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
-
-### ตัวอย่างละครสั้น: 2 ชั่วโมง ต้นทุนรวม ¥100
+### ตัวอย่างละครสั้น
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-| รายการ | บันทึก |
-| --- | --- |
-| เวลาผลิตและความยาวผลงาน | ประมาณ 2 ชั่วโมง ได้วิดีโอสำเร็จยาวประมาณ 2 นาที |
-| ต้นทุนรวม | ¥100 |
-
-ค่าใช้จ่ายนี้เป็นบันทึกของตัวอย่างดังกล่าวเพื่อใช้อ้างอิงเท่านั้น ค่าใช้จ่ายจริงขึ้นอยู่กับบริการโมเดล จำนวนครั้งที่สร้าง และพารามิเตอร์ วิดีโอสาธิตเป็นเวอร์ชันที่บีบอัดเป็น 480p
+วิดีโอตัวอย่างเป็นเวอร์ชันบีบอัด 480p
 
 ---
 

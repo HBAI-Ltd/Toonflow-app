@@ -161,7 +161,7 @@
 
 <p align="center">🔥 Toonflow をベースに制作されたショートドラマが、紅果で数百万から数千万、1 億回超えの再生を記録しています。<a href="#works">作品を見る</a></p>
 
-https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+https://github.com/user-attachments/assets/56d81114-7521-454c-9ec9-972567eddda9
 
 ---
 
@@ -254,7 +254,7 @@ Toonflow オープンソースプロジェクトをご支援くださるパー�
 
 台詞に合わせて自動でカット割りと立ち位置を作り、モニターに映像と字幕をリアルタイム表示。 📺 [デモ動画を見る](https://www.bilibili.com/video/BV1z4sS6NEA3)
 
-https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
+https://github.com/user-attachments/assets/bb2f7bfe-46de-44ff-b3b3-95379f9d4b20
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · 台本を貼るだけで 3D プレビズ" width="100%" /></a>
@@ -498,7 +498,7 @@ bun run start:server
 
 ### 紅果のヒット作品
 
-以下のヒットショートドラマは、制作チームが Toonflow をベースに制作し、紅果で数百万から数千万、1 億回超えの再生を記録しています。
+🔥 Toonflow をベースに制作されたショートドラマが、紅果で数百万から数千万、1 億回超えの再生を記録しています。
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Toonflow をベースに制作したショートドラマ《悍妻进门，扶起一屋软骨头》：紅果で 35 億回、全プラットフォームで 50 億回再生" width="100%" />
@@ -510,24 +510,22 @@ bun run start:server
 
 ### 広告映像
 
-https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+<table>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fccf8b46-b8ec-46cb-9574-9273cd1ee9e4" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/b345905e-601f-43be-83a5-305f97a29e44" controls width="100%"></video></td>
+  </tr>
+  <tr>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/fc5880aa-6b9c-4717-af0e-e51f15c4fdc6" controls width="100%"></video></td>
+    <td width="50%"><video src="https://github.com/user-attachments/assets/0816e794-f07d-4bc3-89cd-69c67566c3a6" controls width="100%"></video></td>
+  </tr>
+</table>
 
-https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
-
-https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
-
-https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
-
-### ショートドラマ事例：2 時間、総コスト 100 元
+### ショートドラマ事例
 
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-| 項目 | 記録 |
-| --- | --- |
-| 制作時間と完成動画 | 約 2 時間で制作、完成動画は約 2 分。 |
-| 総コスト | ¥100 |
-
-費用はこの事例の記録であり、参考値です。実際の費用はモデルサービス、生成回数、パラメーターによって変わります。デモ動画は圧縮済みの 480p 版です。
+デモ動画は 480p に圧縮したものです。
 
 ---
 
