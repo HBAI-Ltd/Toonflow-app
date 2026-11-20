@@ -159,6 +159,10 @@
   <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap ön görselleştirme demosu</a>
 </p>
 
+<p align="center">🔥 Toonflow tabanlı kısa diziler Hongguo'da milyonlarca, on milyonlarca ve 100 milyonu aşan izlenmeye ulaştı. <a href="#works">Eserleri gör</a></p>
+
+https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+
 ---
 
 ## 1. 💛 Sponsorlar ve Destek
@@ -249,6 +253,8 @@ Desteklenen diller: 简体中文, 繁體中文, English, 日本語, Русски
 ### Özellik 1 | Senaryoyu yapıştırın, 3D ön görselleştirme hazır
 
 Çekimler ve blocking repliklere göre otomatik; monitörde görüntü ve altyazı canlı. 📺 [Demoyu izleyin](https://www.bilibili.com/video/BV1z4sS6NEA3)
+
+https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · Senaryoyu yapıştırın, 3D ön görselleştirme hazır" width="100%" /></a>
@@ -488,17 +494,38 @@ bun run start:server
 
 ## 5. 🎬 Örnek Çalışma
 
+<a id="works"></a>
+
+### Hongguo'daki Hit Diziler
+
+Aşağıdaki popüler kısa diziler, yaratıcı ekipler tarafından Toonflow tabanında üretildi ve Hongguo'da milyonlarca, on milyonlarca ve 100 milyonu aşan izlenmeye ulaştı.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Toonflow tabanlı kısa dizi 《悍妻进门，扶起一屋软骨头》: Hongguo'da 3,5 milyar, tüm platformlarda 5 milyar izlenme" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2f94bc21-c261-4933-903f-7c7150defb6f" alt="Hongguo'da milyonlardan 100 milyonun üzerine izlenme alan Toonflow tabanlı kısa dizilerin afişleri" width="100%" />
+</p>
+
+### Reklam filmleri
+
+https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+
+https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
+
+https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
+
+https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
+
+### Kısa dizi örneği: 2 saat, toplam maliyet ¥100
+
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-### Üretim Ayrıntıları
-
-| Kalem | Orijinal depoda kaydedilen bilgiler |
+| Kalem | Kayıt |
 | --- | --- |
 | Üretim süresi ve nihai uzunluk | Yaklaşık 2 dakikalık video için yaklaşık 2 saat çalışma. |
-| Video modeli | Seedance 2.0 |
-| Görsel modeli | GPT Image 2 |
-| Dil modeli | Claude Opus 4.6 |
-| Model API maliyetleri | Yaklaşık ¥130 CNY (Çin yuanı): dil için yaklaşık ¥10, video için ¥120 ve görseller için ¥1’den az. |
+| Toplam maliyet | ¥100 |
 
 Bu maliyetler bu örnek için kaydedilen tutarlardır ve yalnızca fikir vermek amacıyla paylaşılmıştır. Gerçek maliyet model hizmetine, üretim sayısına ve parametrelere bağlıdır. Tanıtım videosu sıkıştırılmış 480p sürümüdür.
 

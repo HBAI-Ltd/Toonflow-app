@@ -159,6 +159,10 @@
   <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">TrumanMap پری ویز ڈیمو</a>
 </p>
 
+<p align="center">🔥 Toonflow کی بنیاد پر بنے مختصر ڈراموں نے Hongguo پر لاکھوں، کروڑوں اور 10 کروڑ سے زیادہ ویوز حاصل کیے ہیں۔ <a href="#works">کام دیکھیں</a></p>
+
+https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+
 ---
 
 ## 1. 💛 اسپانسرز اور معاونت
@@ -249,6 +253,8 @@ Toonflow کے اوپن سورس منصوبے کی معاونت کرنے والے
 ### نمایاں 1 | اسکرپٹ پیسٹ کریں، 3D پری ویز پائیں
 
 مکالموں کے مطابق خودکار شاٹ اور بلاکنگ؛ مانیٹر پر تصویر اور سب ٹائٹل براہِ راست۔ 📺 [ڈیمو دیکھیں](https://www.bilibili.com/video/BV1z4sS6NEA3)
+
+https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · اسکرپٹ پیسٹ کریں، 3D پری ویز پائیں" width="100%" /></a>
@@ -488,17 +494,38 @@ bun run start:server
 
 ## 5. 🎬 نمونہ کام
 
+<a id="works"></a>
+
+### Hongguo پر مقبول ڈرامے
+
+درج ذیل مقبول مختصر ڈرامے تخلیقی ٹیموں نے Toonflow کی بنیاد پر بنائے ہیں، جنہوں نے Hongguo پر لاکھوں، کروڑوں اور 10 کروڑ سے زیادہ ویوز حاصل کیے۔
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Toonflow کی بنیاد پر بنا مختصر ڈراما 《悍妻进门，扶起一屋软骨头》: Hongguo پر 3.5 ارب ویوز، تمام پلیٹ فارمز پر 5 ارب" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2f94bc21-c261-4933-903f-7c7150defb6f" alt="Toonflow کی بنیاد پر بنے، Hongguo پر لاکھوں سے 10 کروڑ سے زیادہ ویوز والے مختصر ڈراموں کے پوسٹر" width="100%" />
+</p>
+
+### اشتہاری ویڈیوز
+
+https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+
+https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
+
+https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
+
+https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
+
+### مختصر ڈراما مثال: 2 گھنٹے، کل لاگت ¥100
+
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-### تیاری کی تفصیلات
-
-| شے | اصل ریپوزٹری میں درج معلومات |
+| شے | ریکارڈ |
 | --- | --- |
 | تیاری کا وقت اور حتمی دورانیہ | تقریباً 2 منٹ کی ویڈیو کے لیے لگ بھگ 2 گھنٹے کا کام۔ |
-| ویڈیو ماڈل | Seedance 2.0 |
-| تصویری ماڈل | GPT Image 2 |
-| لسانی ماڈل | Claude Opus 4.6 |
-| ماڈل API کے اخراجات | تقریباً ¥130 CNY (چینی یوآن): زبان پر لگ بھگ ¥10، ویڈیو پر ¥120 اور تصاویر پر ¥1 سے کم۔ |
+| کل لاگت | ¥100 |
 
 یہ اخراجات اس مثال کے لیے درج شدہ اعداد ہیں اور صرف حوالہ دینے کے لیے پیش کیے گئے ہیں۔ اصل خرچ ماڈل سروس، تخلیق کی تعداد اور پیرامیٹرز پر منحصر ہے۔ نمونہ ویڈیو 480p کی کمپریس شدہ کاپی ہے۔
 

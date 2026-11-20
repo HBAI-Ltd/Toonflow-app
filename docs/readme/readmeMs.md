@@ -159,6 +159,10 @@
   <a href="https://www.bilibili.com/video/BV1z4sS6NEA3">Demo previs TrumanMap</a>
 </p>
 
+<p align="center">🔥 Drama pendek yang dibina berasaskan Toonflow telah mencapai jutaan, puluhan juta hingga lebih 100 juta tontonan di Hongguo. <a href="#works">Lihat karya</a></p>
+
+https://github.com/user-attachments/assets/89dd20ac-fba1-49a4-bb7e-f9617490208e
+
 ---
 
 ## 1. 💛 Penaja dan Sokongan
@@ -249,6 +253,8 @@ Bahasa yang disokong: 简体中文, 繁體中文, English, 日本語, Русск
 ### Sorotan 1 | Tampal skrip, terus previs 3D
 
 Syot dan blocking dijana mengikut dialog; monitor memaparkan imej dan sari kata secara langsung. 📺 [Tonton demo](https://www.bilibili.com/video/BV1z4sS6NEA3)
+
+https://github.com/user-attachments/assets/e51f6711-f751-47f7-83a0-96ae7f6ca616
 
 <p align="center">
   <a href="../images/screenshots/trumanMapTimeline.webp"><img src="../images/screenshots/trumanMapTimeline.webp" alt="Toonflow · Tampal skrip, terus previs 3D" width="100%" /></a>
@@ -488,17 +494,38 @@ Rakan kongsi kami [AI Galaxy (智星云)](https://www.ai-galaxy.com/) menyediaka
 
 ## 5. 🎬 Contoh Karya
 
+<a id="works"></a>
+
+### Drama Popular di Hongguo
+
+Drama pendek popular berikut dihasilkan oleh pasukan kreatif berasaskan Toonflow dan mencapai jutaan, puluhan juta hingga lebih 100 juta tontonan di Hongguo.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/71164bdf-6abe-42d1-b38f-efd270056033" alt="Drama pendek 《悍妻进门，扶起一屋软骨头》 berasaskan Toonflow: 3.5 bilion tontonan di Hongguo, 5 bilion di semua platform" width="100%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2f94bc21-c261-4933-903f-7c7150defb6f" alt="Poster drama pendek berasaskan Toonflow dengan jutaan hingga lebih 100 juta tontonan di Hongguo" width="100%" />
+</p>
+
+### Video iklan
+
+https://github.com/user-attachments/assets/72516236-3133-4d29-a0f3-54a13df25e34
+
+https://github.com/user-attachments/assets/8a59118f-2538-490a-8f04-81fda5c00f57
+
+https://github.com/user-attachments/assets/8a940af3-f78e-419c-be14-69b994571287
+
+https://github.com/user-attachments/assets/64613eb6-4585-4ae5-8309-0e53030c25b1
+
+### Contoh drama pendek: 2 jam, jumlah kos ¥100
+
 https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 
-### Butiran Penghasilan
-
-| Perkara | Catatan dalam repositori asal |
+| Perkara | Rekod |
 | --- | --- |
 | Masa penghasilan dan durasi akhir | Kira-kira 2 jam kerja untuk video berdurasi lebih kurang 2 minit. |
-| Model video | Seedance 2.0 |
-| Model imej | GPT Image 2 |
-| Model bahasa | Claude Opus 4.6 |
-| Kos API model | Kira-kira ¥130 CNY (yuan China): lebih kurang ¥10 untuk bahasa, ¥120 untuk video dan kurang daripada ¥1 untuk imej. |
+| Jumlah kos | ¥100 |
 
 Kos ini ialah angka yang direkodkan untuk contoh ini dan diberikan sebagai rujukan sahaja. Kos sebenar bergantung pada perkhidmatan model, bilangan penjanaan dan parameter. Video demonstrasi ialah versi termampat pada 480p.
 
