@@ -421,6 +421,16 @@ async function start() {
       async showNotification(options) {
         if (process.platform === "win32") {
           await showWindowsNotification(`${identifier}.${channel}`, resolve(PATHS.RESOURCES_FOLDER, "app.ico"), options);
+        } else if (process.platform === "darwin") {
+          // ACT: 运行时 bun 在 .app 外，SDK 原生通知会因 UNUserNotificationCenter 断言导致进程崩溃；改用 osascript，通知来源显示为脚本编辑器。
+          const sound = options.silent ? "" : " sound name \"default\"";
+          await execFileAsync("/usr/bin/osascript", [
+            "-e", "on run argv",
+            "-e", `display notification (item 2 of argv) with title (item 1 of argv)${sound}`,
+            "-e", "end run",
+            options.title,
+            options.body ?? "",
+          ], { timeout: 15000 });
         } else {
           Utils.showNotification(options);
         }
