@@ -19,7 +19,7 @@ export const agentAttachmentsSchema = z
       name: z.string().min(1).max(255),
       path: z.string().min(1).max(4096),
       mimeType: z.string().min(1).max(128),
-    }).refine(attachment => /^(?:(image|video)\/[a-zA-Z0-9.+-]+|text\/plain)$/.test(attachment.mimeType)
+    }).refine(attachment => /^(?:(image|video|audio)\/[a-zA-Z0-9.+-]+|text\/plain)$/.test(attachment.mimeType)
       || !!getReadableFileMimeType(attachment.path, attachment.mimeType), "不支持此附件格式")
       .transform(attachment => ({ ...attachment, mimeType: getReadableFileMimeType(attachment.path, attachment.mimeType) ?? attachment.mimeType }))
   )

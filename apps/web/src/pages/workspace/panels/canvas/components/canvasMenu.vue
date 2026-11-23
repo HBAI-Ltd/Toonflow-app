@@ -39,7 +39,7 @@
     </el-card>
     <div class="menuExtension"><slot /></div>
   </panel>
-  <panel v-if="showToonflowBalance || otherProviderBalances.length" class="balanceMenuPanel" position="top-right">
+  <panel v-if="showToonflowBalance || otherProviderBalances.length" style="display: none" class="balanceMenuPanel" position="top-right">
     <div class="balanceList" tabindex="0" aria-label="供应商余额">
       <toonflowBalance v-if="showToonflowBalance" :token="toonflowAccountToken" />
       <el-card v-for="item in otherProviderBalances" :key="item.id" class="balanceCard" shadow="never" :bodyStyle="{ padding: '2px 4px' }">

@@ -1,7 +1,6 @@
 <template>
   <div class="home" :class="{ sidebarCollapsed }" :inert="creating || opening || workspaceStore.projectLoadingVisible">
     <bg class="pageBackground" :scrollTop="backgroundScrollTop" />
-    <homeAdvertisementCarousel class="topPromotion" :advertisements="advertisements.banners" placement="banner" :mode="advertisements.bannerMode" :interval="advertisements.bannerInterval" @activate="activateAdvertisement" />
     <aside id="homeSidebar" class="homeSidebar" aria-label="首页侧栏">
       <div class="sidebarHeader">
         <div class="sidebarBrand">
@@ -29,7 +28,6 @@
         </button>
       </nav>
       <div class="sidebarFooter">
-        <homeAdvertisementCarousel class="sidebarPromotion" :advertisements="advertisements.sidebar" @activate="activateAdvertisement" />
         <homeAccount :collapsed="sidebarCollapsed" @openSettings="settingsVisible = true" @openAccount="settingsDialog?.openPanel('account')" @openUpdate="settingsDialog?.openPanel('about')" @openDeviceLink="mobileConnectVisible = true" />
       </div>
     </aside>
@@ -54,21 +52,18 @@
 <script setup lang="ts">
 import { translate } from "@toonflow/i18n/vue";
 import axios from "axios";
-import { defineAsyncComponent, onMounted, onUnmounted, provide, ref, watch } from "vue";
+import { defineAsyncComponent, onUnmounted, provide, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox, type ScrollbarInstance } from "element-plus";
 import { IconHome, IconCompass, IconFolder } from "@tabler/icons-vue";
-import type { HomeAdvertisement, HomeAdvertisements } from "@toonflow/server/channel";
 import logoUrl from "@toonflow/assets/logo.svg";
 import { useWorkspaceStore, type Project } from "@/stores/workspace";
 import { currentUser, publicWeb } from "@/stores/multiTenant";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
-import http from "@/lib/http";
 import { waitForControlValue } from "@/lib/mcpControl";
 import settings from "@/components/settings/index.vue";
 import bg from "./bg.vue";
 import workspacePicker from "./workspacePicker.vue";
-import homeAdvertisementCarousel from "./homeAdvertisementCarousel.vue";
 import homeAccount from "./homeAccount.vue";
 import homePage from "./pages/home/index.vue";
 import projectsPage from "./pages/projects/index.vue";
@@ -79,7 +74,6 @@ import trumanMapPage from "./pages/trumanMap/index.vue";
 const settingsVisible = ref(false);
 const settingsDialog = ref<InstanceType<typeof settings>>();
 provide("openSettingsPanel", (id: string) => settingsDialog.value?.openPanel(id));
-const advertisements = ref<HomeAdvertisements>({ banner: null, banners: [], bannerMode: "carousel", bannerInterval: 5, sidebar: [] });
 const mobileConnectVisible = ref(false);
 const sidebarCollapsed = ref(false);
 const pageScroll = ref<ScrollbarInstance>();
@@ -98,10 +92,6 @@ const opening = ref(false);
 const relocationPicker = ref<InstanceType<typeof workspacePicker>>();
 const workspaceStore = useWorkspaceStore();
 
-onMounted(() => {
-  void loadAdvertisements();
-});
-
 onUnmounted(() => {
   pageLifetime.abort();
   if (router.currentRoute.value.path !== "/workspace") workspaceStore.projectLoading = false;
@@ -118,109 +108,6 @@ watch([creating, opening], ([creating, opening]) => {
 watch(() => currentUser.value?.role, role => {
   if (role === "user" && activeSection.value === "assets") showSection("home");
 });
-
-async function loadAdvertisements() {
-  // ACT: 默认读取后台配置；开发环境显式指定预览模式时才使用临时预览。
-  const preview = router.currentRoute.value.query.advertisementPreview;
-  if (import.meta.env.DEV && typeof preview === "string" && ["text", "image", "web", "carousel", "stack"].includes(preview)) {
-    const now = Date.now();
-    const previewSlides: { title: string; subtitle: string; color: string; actionType: HomeAdvertisement["actionType"]; actionTarget: string }[] = [
-      { title: "探索创作灵感", subtitle: "从一个想法，开始你的下一个作品", color: "#273442", actionType: preview === "web" ? "web" : "path", actionTarget: preview === "web" ? "https://github.com/HBAI-Ltd/Toonflow-app" : "/home?section=explore" },
-      { title: "搭建你的工作流", subtitle: "前往插件市场，发现更多创作工具", color: "#2c303b", actionType: "settings", actionTarget: "pluginMarket" },
-      { title: "一起创造更多", subtitle: "在 GitHub 了解 Toonflow 的新进展", color: "#243734", actionType: "web", actionTarget: "https://github.com/HBAI-Ltd/Toonflow-app" },
-    ];
-    const sidebar = previewSlides.map((slide, index): HomeAdvertisement => ({
-      title: slide.title,
-      content: "",
-      imageUrl: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
-        <defs><linearGradient id="background" x2="1" y2="1"><stop stop-color="${slide.color}"/><stop offset="1" stop-color="#13202f"/></linearGradient></defs>
-        <rect width="640" height="360" fill="url(#background)"/>
-        <circle cx="562" cy="60" r="150" fill="#409eff" opacity=".15"/>
-        <path d="M330 235H400V160H485" fill="none" stroke="#6db5ff" stroke-width="4"/>
-        <rect x="280" y="205" width="100" height="64" rx="12" fill="#337ecc"/>
-        <rect x="450" y="125" width="110" height="70" rx="12" fill="#409eff"/>
-        <circle cx="330" cy="237" r="12" fill="#fff" opacity=".85"/>
-        <path d="m495 146 25 14-25 14z" fill="#fff"/>
-        <g fill="#fff" font-family="Arial, Microsoft YaHei, sans-serif">
-          <text x="40" y="58" font-size="17" letter-spacing="3" opacity=".7">TOONFLOW · PREVIEW</text>
-          <text x="40" y="136" font-size="38" font-weight="bold">${slide.title}</text>
-          <text x="40" y="177" font-size="19" opacity=".7">${slide.subtitle}</text>
-          <text x="40" y="303" font-size="16" opacity=".6">侧栏轮播预览 · ${index + 1} / 3</text>
-        </g>
-      </svg>`)}`,
-      buttonText: "",
-      actionType: slide.actionType,
-      actionTarget: slide.actionTarget,
-      endsAt: null,
-      updatedAt: now,
-    }));
-    const bannerImage = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="40" viewBox="0 0 1000 40">
-        <rect width="1000" height="40" rx="4" fill="#23262b"/>
-        <g fill="#d8dce3" font-family="Arial, Microsoft YaHei, sans-serif">
-          <text x="12" y="25" font-size="14" font-weight="500">创作灵感，从这里开始</text>
-          <text x="178" y="25" font-size="12" opacity=".65">探索更多工具，开始你的下一个作品</text>
-        </g>
-      </svg>`)}`;
-    const banner: HomeAdvertisement = {
-      title: "创作灵感，从这里开始",
-      content: "探索 **节点与技能**，开始你的下一个作品。\n[创作灵感](/home?section=explore) · [插件市场](settings:pluginMarket) · [项目主页](https://github.com/HBAI-Ltd/Toonflow-app)",
-      imageUrl: preview === "image" ? bannerImage : "",
-      buttonText: "发现工具",
-      actionType: "settings",
-      actionTarget: "pluginMarket",
-      endsAt: now + 2 * 86400000 + 3 * 3600000,
-      updatedAt: now,
-      appearance: { mode: preview === "image" ? "image" : "text", backgroundColor: "", backgroundEndColor: "", textColor: "", buttonColor: "", buttonTextColor: "" },
-    };
-    const banners = preview === "carousel" || preview === "stack"
-      ? previewSlides.map((slide, index): HomeAdvertisement => ({ ...banner, title: slide.title, content: index === 0 ? banner.content : slide.subtitle, buttonText: "立即查看", actionType: slide.actionType, actionTarget: slide.actionTarget }))
-      : [banner];
-    advertisements.value = {
-      banner: banners[0] ?? null,
-      banners,
-      bannerMode: preview === "stack" ? "stack" : "carousel",
-      bannerInterval: 5,
-      sidebar,
-    };
-    return;
-  }
-  try {
-    const result = await http<HomeAdvertisements>({ method: "GET", url: "/api/channel/community/getAdvertisements", signal: pageLifetime.signal });
-    if (!pageLifetime.signal.aborted) advertisements.value = result;
-  } catch (error) {
-    if (!pageLifetime.signal.aborted) console.warn("加载首页广告失败", error);
-  }
-}
-
-async function activateAdvertisement(advertisement: HomeAdvertisement) {
-  if (advertisement.actionType === "settings") {
-    if (!settingsDialog.value?.openPanel(advertisement.actionTarget)) ElMessage.warning("当前设备不支持该设置项");
-    return;
-  }
-  if (advertisement.actionType !== "path") return;
-  const target = advertisement.actionTarget;
-  if (!target.startsWith("/") || target.startsWith("//") || /[\\\u0000-\u0020]/.test(target)) return;
-  const resolved = router.resolve(target);
-  if (!resolved.matched.length) {
-    ElMessage.warning("当前版本不支持该页面");
-    return;
-  }
-  if (resolved.matched.some(route => ["/workspace", "/canvas"].includes(route.path)) && !workspaceStore.project?.directory) {
-    ElMessage.info("请先打开一个项目");
-    return;
-  }
-  try {
-    await router.push(target);
-    if (resolved.matched.some(route => route.path === "/home")) {
-      const section = typeof resolved.query.section === "string" ? resolved.query.section : resolved.hash.slice(1);
-      showSection(homeSections.some(item => item.id === section) ? section : "home");
-    }
-  } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : "无法打开页面");
-  }
-}
 
 function showSection(section: string) {
   activeSection.value = section;

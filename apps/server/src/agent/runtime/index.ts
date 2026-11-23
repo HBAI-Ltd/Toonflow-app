@@ -15,6 +15,7 @@ import { createAgentResources } from "@/agent/runtime/resources";
 import { createAgentModel, getAgentModelConfiguration } from "@/agent/runtime/model";
 import { configureAgentRequests } from "@/agent/runtime/requests";
 import { configureAgentDelivery } from "@/agent/runtime/delivery";
+import { attachHindsight } from "@/agent/runtime/hindsight";
 import { getAgentImageReference, getOffloadedImageText, readAgentImage } from "@/agent/runtime/imageAttachments";
 import { createSubAgentTool } from "@/agent/tools/subAgent";
 import { createMemoryTool } from "@/agent/tools/memory";
@@ -237,6 +238,7 @@ export async function run(
         },
       })),
     });
+    if (process.env.TOONFLOW_HINDSIGHT_AUTO === "1") attachHindsight(session);
     let messageIndex = 0;
     configureAgentRequests(session, undefined, signal, replyTo => send({ type: "retry", blockPrefix: `${messageIndex}:`, replyTo }));
     const delivery = configureAgentDelivery(session, peerMessage ? undefined : {

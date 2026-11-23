@@ -53,6 +53,7 @@
         </div>
         <promptInput v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" expandable />
         <div class="promptFooter">
+          <el-switch :modelValue="!data.generationDisabled" :disabled="cancelling" activeText="启用" inactiveText="停用" aria-label="启用视频生成" @change="setGenerationEnabled(Boolean($event))" />
           <modelSelect
             :empty="!models.length"
             :modelValue="selectedModel ? data.model : ''"
@@ -93,7 +94,7 @@
             <el-button
               class="sendButton"
               :icon="generating ? IconPlayerStop : IconArrowUp"
-              :disabled="cancelling || deleting || uploading || (!generating && !pendingRecovery && (!generationPrompt || !selectedModel))"
+              :disabled="data.generationDisabled || cancelling || deleting || uploading || (!generating && !pendingRecovery && (!generationPrompt || !selectedModel))"
               :title="generating ? '停止生成' : pendingRecovery ? '复查任务' : '生成视频'"
               :aria-label="generating ? '停止生成' : pendingRecovery ? '复查任务' : '生成视频'"
               @click="generating ? generationState.cancel().catch(error => showNodeError(error, '停止生成失败')) : startGeneration().catch((error) => showNodeError(error, '视频生成失败'))" />
@@ -141,7 +142,7 @@ const { id, node, nodeProps, nodeEvent, outputs, files, ai, updateNodeInternals 
   onModelsChanged: () => void refreshProviderModels(),
 });
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
-const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean; other: Record<string, unknown> });
+const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean; generationDisabled?: boolean; other: Record<string, unknown> });
 data.value.prompt ??= "";
 data.value.promptModel ??= [];
 data.value.model ??= "";
@@ -161,7 +162,7 @@ const player = ref<InstanceType<typeof videoPlayer>>();
 const actions = ref<InstanceType<typeof videoActions>>();
 const videoWidth = ref(0);
 let generationController: AbortController | undefined;
-const generationState = useNodeGeneration(outputs, () => generationController?.abort(), { ai });
+const generationState = useNodeGeneration(outputs, () => generationController?.abort(), { ai, canRecover: () => !data.value.generationDisabled });
 const { generating, pendingRecovery, cancelling } = generationState;
 let generation: Promise<void> | undefined;
 let modelsRequest: Promise<void> | undefined;
@@ -354,6 +355,7 @@ function selectModel(value: string) {
 }
 
 async function startGeneration() {
+  if (data.value.generationDisabled) throw new Error("此节点已停用，请先启用");
   if (cancelling.value) throw new Error("任务正在取消，请稍后重试");
   if (generating.value) throw new Error("视频正在生成，请等待完成");
   if (uploading.value) throw new Error("视频正在替换，请等待完成");
@@ -401,6 +403,13 @@ async function startGeneration() {
   return { status: "generating" };
 }
 
+async function setGenerationEnabled(enabled: boolean) {
+  try {
+    if (!enabled && (generating.value || pendingRecovery.value)) await generationState.cancel();
+    data.value.generationDisabled = !enabled;
+  } catch (error) { showNodeError(error, "切换节点状态失败"); }
+}
+
 nodeEvent.on("save", (reason) => {
   if (reason === "reload" && (generating.value || uploading.value || deleting.value)) throw new Error("视频处理中，请完成后再刷新节点");
 });
@@ -441,6 +450,17 @@ function getConfig() {
     matchingModes: matchingModes.value,
   };
 }
+
+nodeTools.register({
+  name: "setGenerationEnabled",
+  description: "启用或停用视频生成；停用会请求取消当前任务并保留历史结果，启用不会自动生成。",
+  parameters: z.strictObject({ enabled: z.boolean() }),
+  async execute({ enabled }) {
+    if (!enabled && (generating.value || pendingRecovery.value)) await generationState.cancel();
+    data.value.generationDisabled = !enabled;
+    return { enabled };
+  },
+});
 
 nodeTools.register({
   name: "getConfig",

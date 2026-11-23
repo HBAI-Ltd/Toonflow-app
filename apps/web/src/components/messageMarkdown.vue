@@ -16,11 +16,18 @@
       :postnormalize="resolveImageReferences"
       :parseMarkdownIntoBlocks="definitions ? keepChunk : undefined"
       :locale="markdownLocale" />
+    <el-dialog v-model="fileVisible" :title="filePath.split('/').at(-1)" width="min(800px, 90vw)" alignCenter appendToBody destroyOnClose>
+      <p v-if="fileError" role="alert">{{ fileError }}</p>
+      <p v-else-if="fileLoading" role="status">正在读取文件…</p>
+      <video v-if="fileUrl && fileKind === 'video'" :src="fileUrl" controls autoplay playsinline style="width: 100%; max-height: 65vh" />
+      <audio v-if="fileUrl && fileKind === 'audio'" :src="fileUrl" controls autoplay style="width: 100%" />
+      <el-button @click="revealFile">打开所在文件夹</el-button>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, h } from "vue";
+import { computed, h, ref, watch } from "vue";
 import { translate } from "@toonflow/i18n/vue";
 import { Markdown, NodeList, parseMarkdownIntoBlocks, useSanitizers } from "vue-stream-markdown";
 import { MarkdownAstParser, postnormalize, type DefinitionNode, type ParsedNode, type SyntaxTree } from "@markmend/ast";
@@ -30,6 +37,7 @@ import "vue-stream-markdown/theme.css";
 import markdownOverlays from "./markdownOverlays";
 import markdownImage from "./markdownImage.vue";
 import { markdownLocale } from "@/lib/i18n";
+import useWorkspaceFiles from "@/lib/workspaceFiles";
 
 const { content, streaming = false, codeOptions, directory } = defineProps<{ content: string; streaming?: boolean; codeOptions?: CodeOptions; directory?: string }>();
 const renderImage = (image: ImageNodeRendererProps) => h(markdownImage, { image: { ...image }, directory: directory! });
@@ -43,6 +51,29 @@ const definitionParser = new MarkdownAstParser({ mode: "static" });
 const isDefinition = (block: string) => /^ {0,3}\[(?!\^)[^\]\n]+\]:/.test(block)
   && definitionParser.markdownToAst(block).children.every(node => node.type === "definition");
 const definitions = computed(() => blocks.value.length > 1 ? blocks.value.filter(isDefinition).join("\n\n") : "");
+const fileVisible = ref(false), filePath = ref(""), fileUrl = ref(""), fileError = ref(""), fileLoading = ref(false);
+const fileKind = computed(() => /\.(mp4|webm|mov|m4v)$/i.test(filePath.value) ? "video" : /\.(mp3|wav|ogg|m4a|flac|aac|opus)$/i.test(filePath.value) ? "audio" : "file");
+let fileDirectory = "";
+watch(fileVisible, (visible, _previous, onCleanup) => {
+  if (!visible || fileKind.value === "file") return;
+  let active = true;
+  const file = useWorkspaceFiles(fileDirectory).acquireUrl(filePath.value);
+  fileLoading.value = true;
+  onCleanup(() => { active = false; file.release(); fileUrl.value = ""; });
+  void file.url.then(url => { if (active) fileUrl.value = url; }).catch(() => { if (active) fileError.value = "无法读取文件，请检查文件是否存在。"; }).finally(() => { if (active) fileLoading.value = false; });
+});
+async function revealFile() {
+  try { await useWorkspaceFiles(fileDirectory).reveal(filePath.value); }
+  catch { fileError.value = "无法打开所在文件夹，请检查文件是否存在及是否使用本机桌面版。"; }
+}
+function openFileLink(event: MouseEvent, href: string) {
+  if (!directory || event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || /^(?:[a-z][a-z\d+.-]*:|[\\/]|#|\?)/i.test(href)) return;
+  let path: string;
+  try { path = decodeURIComponent(href.split(/[?#]/, 1)[0]!); } catch { return; }
+  if (!path || path.includes("\\") || path.includes("\0") || path.split("/").includes("..") || !/\.(mp4|webm|mov|m4v|mp3|wav|ogg|m4a|flac|aac|opus|png|jpe?g|webp|gif|bmp|pdf|txt|md|json|srt|zip)$/i.test(path)) return;
+  event.preventDefault();
+  fileDirectory = directory; filePath.value = path; fileError.value = ""; fileVisible.value = true;
+}
 
 function renderLink(link: LinkNodeRendererProps) {
   // ACT: 解析器会把端口后紧跟的全角括号说明并入网址；仅修正端口尾部，保留路径中的括号。
@@ -51,7 +82,7 @@ function renderLink(link: LinkNodeRendererProps) {
   const loading = streaming && link.markdownParser.hasLoadingNode([link.node]);
   // ACT: 只复用协议过滤，保留相对链接地址；正常链接仍直接交给浏览器打开。
   const renderedLink = h("a", {
-    class: "messageLink", href: loading || !allowed ? undefined : href, title: link.node.title,
+    class: "messageLink", href: loading || !allowed ? undefined : href, title: link.node.title, onClick: (event: MouseEvent) => openFileLink(event, href),
     target: "_blank", rel: "noreferrer", "data-stream-markdown": "link", "data-stream-markdown-loading": loading,
   }, h(NodeList, { ...link, parentNode: link.node, nodes: link.node.children, deep: link.deep + 1 }));
   if (!directory || !allowed) return renderedLink;

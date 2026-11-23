@@ -96,7 +96,7 @@ const prompt = ref("");
 const promptInput = ref<InputInstance>();
 const promptAttachments = ref<AgentAttachment[]>([]);
 const attachmentInput = ref<HTMLInputElement>();
-const attachmentAccept = `image/*,video/*,${readableFileAccept}`;
+const attachmentAccept = `image/*,video/*,audio/*,${readableFileAccept}`;
 const draggingAttachments = ref(false);
 let attachmentDragDepth = 0;
 const placeholderPhrases = [
@@ -247,8 +247,8 @@ function addAttachments(files: File[]) {
   for (const file of files) {
     const readableMimeType = getReadableFileMimeType(file.name, file.type);
     const mimeType = readableMimeType ?? file.type.split(";")[0]!.trim().toLowerCase();
-    if (!readableMimeType && !/^(image|video)\//.test(mimeType)) {
-      ElMessage.warning("只支持图片、视频和受支持的文本或文档文件");
+    if (!readableMimeType && !/^(image|video|audio)\//.test(mimeType)) {
+      ElMessage.warning("只支持图片、视频、音频和受支持的文本或文档文件");
       continue;
     }
     if (!file.size || file.size > 100 * 1024 * 1024) {

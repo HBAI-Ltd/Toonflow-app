@@ -23,6 +23,7 @@ export type NodeGenerationTask = {
 
 type GenerationOptions = {
   ai: ReturnType<typeof useNodeAi>;
+  canRecover?: () => boolean;
   recover?: (results: NodeMediaResult[], task: NodeGenerationTask, signal: AbortSignal) => Promise<NodeMediaResult[]>;
 };
 
@@ -247,7 +248,7 @@ export function useNodeGeneration(outputs: Readonly<Ref<NodeOutputs>>, cancel: (
 
   watch(() => getPersistence?.()?.canvasPath, path => {
     const task = savedData.value.mediaTask;
-    if (!path || !options || !task || generating.value || !needsRecovery() || attemptedTaskId === task.taskId) return;
+    if (!path || !options || options.canRecover?.() === false || !task || generating.value || !needsRecovery() || attemptedTaskId === task.taskId) return;
     attemptedTaskId = task.taskId;
     void resume().catch(error => { if (!lifetime.signal.aborted) showNodeError(error, "生成任务恢复失败"); });
   }, { immediate: true, flush: "post" });
