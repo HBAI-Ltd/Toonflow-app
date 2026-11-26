@@ -4041,5 +4041,6 @@
   "插件服务请求参数过长": "플러그인 서비스 요청 매개변수가 너무 깁니다",
   "插件服务端口必须是 0–65535 之间的整数": "플러그인 서비스 포트는 0~65535 사이의 정수여야 합니다",
   "插件服务公网地址必须是不含路径和凭据的 HTTP 或 HTTPS 根地址": "플러그인 서비스 공개 URL은 경로와 자격 증명을 포함하지 않는 HTTP 또는 HTTPS 루트 URL이어야 합니다",
-  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "HTTPS 배포 시 TOONFLOW_PLUGIN_SERVER_URL과 플러그인 서비스 역방향 프록시를 설정하세요"
+  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "HTTPS 배포 시 TOONFLOW_PLUGIN_SERVER_URL과 플러그인 서비스 역방향 프록시를 설정하세요",
+  "本地构建": "로컬 빌드"
 }

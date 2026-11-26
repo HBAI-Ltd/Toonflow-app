@@ -4041,5 +4041,6 @@
   "插件服务请求参数过长": "Eklenti hizmeti istek parametreleri çok uzun",
   "插件服务端口必须是 0–65535 之间的整数": "Eklenti hizmeti bağlantı noktası 0 ile 65535 arasında bir tam sayı olmalıdır",
   "插件服务公网地址必须是不含路径和凭据的 HTTP 或 HTTPS 根地址": "Eklenti hizmetinin genel URL'si, yol ve kimlik bilgileri içermeyen bir HTTP veya HTTPS kök URL'si olmalıdır",
-  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "HTTPS dağıtımları için TOONFLOW_PLUGIN_SERVER_URL ve eklenti hizmetinin ters proxy ayarlarını yapılandırın"
+  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "HTTPS dağıtımları için TOONFLOW_PLUGIN_SERVER_URL ve eklenti hizmetinin ters proxy ayarlarını yapılandırın",
+  "本地构建": "Yerel derleme"
 }

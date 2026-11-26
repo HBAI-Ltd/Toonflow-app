@@ -4041,5 +4041,6 @@
   "插件服务请求参数过长": "The plugin service request parameters are too long",
   "插件服务端口必须是 0–65535 之间的整数": "The plugin service port must be an integer between 0 and 65535",
   "插件服务公网地址必须是不含路径和凭据的 HTTP 或 HTTPS 根地址": "The plugin service public URL must be an HTTP or HTTPS root URL without a path or credentials",
-  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "For HTTPS deployments, configure TOONFLOW_PLUGIN_SERVER_URL and a reverse proxy for the plugin service"
+  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "For HTTPS deployments, configure TOONFLOW_PLUGIN_SERVER_URL and a reverse proxy for the plugin service",
+  "本地构建": "Local build"
 }

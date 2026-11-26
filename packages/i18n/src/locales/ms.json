@@ -4041,5 +4041,6 @@
   "插件服务请求参数过长": "Parameter permintaan perkhidmatan pemalam terlalu panjang",
   "插件服务端口必须是 0–65535 之间的整数": "Port perkhidmatan pemalam mestilah integer antara 0 hingga 65535",
   "插件服务公网地址必须是不含路径和凭据的 HTTP 或 HTTPS 根地址": "URL awam perkhidmatan pemalam mestilah URL akar HTTP atau HTTPS tanpa laluan dan bukti kelayakan",
-  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "Untuk penggunaan HTTPS, konfigurasikan TOONFLOW_PLUGIN_SERVER_URL dan proksi songsang perkhidmatan pemalam"
+  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "Untuk penggunaan HTTPS, konfigurasikan TOONFLOW_PLUGIN_SERVER_URL dan proksi songsang perkhidmatan pemalam",
+  "本地构建": "Binaan tempatan"
 }

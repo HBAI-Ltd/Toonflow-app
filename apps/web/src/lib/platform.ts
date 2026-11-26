@@ -16,6 +16,8 @@ export const actualPlatform = {
   isMac: navigator.platform.includes("Mac"),
 } as const;
 
+export const supportsAppUpdates = actualPlatform.isLocalDesktop || actualPlatform.isMobile;
+
 export const platformSimulation = platformSimulationValues.find(value => value === parameters.get("simulatePlatform")) ?? "actual";
 export const isMobile = platformSimulation === "actual" ? actualPlatform.isMobile : platformSimulation === "mobile";
 export const isDesktop = platformSimulation === "actual" ? actualPlatform.isDesktop : platformSimulation === "windowsDesktop" || platformSimulation === "macDesktop";

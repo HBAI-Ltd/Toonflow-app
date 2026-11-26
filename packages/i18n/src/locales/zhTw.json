@@ -4041,5 +4041,6 @@
   "插件服务请求参数过长": "外掛服務請求參數過長",
   "插件服务端口必须是 0–65535 之间的整数": "外掛服務連接埠必須是 0–65535 之間的整數",
   "插件服务公网地址必须是不含路径和凭据的 HTTP 或 HTTPS 根地址": "外掛服務公開網址必須是不含路徑與憑證的 HTTP 或 HTTPS 根網址",
-  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "HTTPS 部署請設定 TOONFLOW_PLUGIN_SERVER_URL 與外掛服務反向代理"
+  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "HTTPS 部署請設定 TOONFLOW_PLUGIN_SERVER_URL 與外掛服務反向代理",
+  "本地构建": "本機建置"
 }

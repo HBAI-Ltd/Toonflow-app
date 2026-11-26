@@ -6,12 +6,13 @@
         <h3>Toonflow</h3>
         <div class="brandMeta">
           <span v-if="currentVersion">v{{ currentVersion }}</span>
+          <span v-else-if="!actualPlatform.isDesktop">本地构建</span>
           <el-tag v-if="clientBuild?.channel || snapshot?.channel" type="info" size="small" round>{{ clientBuild?.channel || snapshot?.channel }}</el-tag>
         </div>
       </div>
     </div>
 
-    <el-card v-if="!publicWeb && (isMobile || !isRemoteConnection)" class="infoCard updateCard" shadow="never">
+    <el-card v-if="supportsAppUpdates && !publicWeb" class="infoCard updateCard" shadow="never">
       <div class="cardHeader">
         <div class="updateCopy">
           <div class="cardLabel">
@@ -20,7 +21,7 @@
           </div>
         </div>
         <div class="updateActions">
-          <el-button v-if="isMobile" tag="a" size="small" type="primary" plain :href="`${repositoryUrl}/releases/latest`" target="_blank" rel="noopener noreferrer">
+          <el-button v-if="actualPlatform.isMobile" tag="a" size="small" type="primary" plain :href="`${repositoryUrl}/releases/latest`" target="_blank" rel="noopener noreferrer">
             前往 GitHub 更新
           </el-button>
           <template v-else>
@@ -41,15 +42,15 @@
           </template>
         </div>
       </div>
-      <div v-if="isLocalDesktop" class="autoUpdateSetting">
+      <div v-if="actualPlatform.isLocalDesktop" class="autoUpdateSetting">
         <span>自动更新</span>
-        <el-switch :modelValue="desktopAutoUpdate" size="small" :loading="autoUpdateSaving" :disabled="!actualPlatform.isLocalDesktop" aria-label="自动更新" @change="(value) => saveAutoUpdate(value === true)" />
+        <el-switch :modelValue="desktopAutoUpdate" size="small" :loading="autoUpdateSaving" aria-label="自动更新" @change="(value) => saveAutoUpdate(value === true)" />
       </div>
-      <div v-if="!isMobile && snapshot?.hash" class="buildInfo">
+      <div v-if="actualPlatform.isLocalDesktop && snapshot?.hash" class="buildInfo">
         <span>构建标识</span>
         <code>{{ snapshot.hash }}</code>
       </div>
-      <div v-if="!isMobile && snapshot?.installFailure" class="installFailureNotice" role="alert">
+      <div v-if="actualPlatform.isLocalDesktop && snapshot?.installFailure" class="installFailureNotice" role="alert">
         <strong>上次更新未成功</strong>
         <p>{{ snapshot.installFailure.message }}</p>
         <p>请前往 GitHub 最新发布页或官网 toonflow.net，选择适合当前系统的完整安装包，关闭客户端后重新安装。</p>
@@ -223,7 +224,7 @@ import { computed, defineAsyncComponent, onMounted, onBeforeUnmount, ref } from 
 import { publicWeb } from "@/stores/multiTenant";
 import axios from "axios";
 import { ElMessage } from "element-plus";
-import { actualPlatform, isMobile, isLocalDesktop, isRemoteConnection } from "@/lib/platform";
+import { actualPlatform, supportsAppUpdates } from "@/lib/platform";
 import { QRCode } from "tdesign-vue-next";
 import {
   IconRefresh,
@@ -260,7 +261,7 @@ const repositoryUrl = "https://github.com/HBAI-Ltd/Toonflow-app";
 const communityUrl = "https://work.weixin.qq.com/u/vc66e4c7f8432af0d8?v=5.0.13.84802&bb=c03c3ad130";
 const clientBuild = ref<{ version: string; channel: string }>();
 const currentVersion = computed(() => actualPlatform.isDesktop && actualPlatform.isRemoteConnection
-  ? clientBuild.value?.version || "" : snapshot.value?.version || import.meta.env.appVersion);
+  ? clientBuild.value?.version || "" : snapshot.value?.version || import.meta.env.buildVersion);
 const isPatchUpdate = computed(() => !!snapshot.value?.updateAvailable && snapshot.value.latestVersion === snapshot.value.version);
 const sourceSaving = ref(false);
 const autoUpdateSaving = ref(false);

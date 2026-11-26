@@ -14,6 +14,7 @@ export default defineConfig(({ command }) => ({
   css: { postcss: postcssConfig },
   define: {
     "import.meta.env.appVersion": JSON.stringify(desktopConfig.app.version),
+    "import.meta.env.buildVersion": JSON.stringify(process.env.appVersion?.trim() ?? ""),
   },
   server: {
     proxy: {

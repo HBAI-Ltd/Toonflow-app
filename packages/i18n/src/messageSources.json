@@ -13168,5 +13168,8 @@
   ],
   "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": [
     "apps/server/src/utils/pluginServer/gateway.ts"
+  ],
+  "本地构建": [
+    "apps/web/src/components/settings/panels/about/index.vue"
   ]
 }

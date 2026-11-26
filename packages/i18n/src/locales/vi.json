@@ -4041,5 +4041,6 @@
   "插件服务请求参数过长": "Tham số yêu cầu dịch vụ plugin quá dài",
   "插件服务端口必须是 0–65535 之间的整数": "Cổng dịch vụ plugin phải là số nguyên từ 0 đến 65535",
   "插件服务公网地址必须是不含路径和凭据的 HTTP 或 HTTPS 根地址": "URL công khai của dịch vụ plugin phải là URL gốc HTTP hoặc HTTPS, không có đường dẫn và thông tin xác thực",
-  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "Khi triển khai HTTPS, hãy cấu hình TOONFLOW_PLUGIN_SERVER_URL và proxy ngược cho dịch vụ plugin"
+  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "Khi triển khai HTTPS, hãy cấu hình TOONFLOW_PLUGIN_SERVER_URL và proxy ngược cho dịch vụ plugin",
+  "本地构建": "Bản dựng cục bộ"
 }

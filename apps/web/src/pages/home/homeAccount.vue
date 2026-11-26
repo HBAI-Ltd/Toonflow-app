@@ -22,8 +22,8 @@
         </el-dropdown-menu>
       </template>
     </el-dropdown>
-    <el-badge class="updateBadge" isDot :hidden="!hasDesktopUpdate">
-      <el-button class="updateButton" type="primary" plain size="small" :icon="IconDownload" :title="hasDesktopUpdate ? '发现新版本' : '检查更新'" aria-label="检查更新" @click="emit('openUpdate')"><span class="updateLabel">新版</span></el-button>
+    <el-badge v-if="supportsAppUpdates && !publicWeb" class="updateBadge" isDot :hidden="!hasDesktopUpdate">
+      <el-button class="updateButton" type="primary" plain size="small" :icon="IconDownload" :title="updateButtonTitle" :aria-label="updateButtonTitle" @click="emit('openUpdate')"><span class="updateLabel">{{ hasDesktopUpdate ? translate("新版") : updateButtonTitle }}</span></el-button>
     </el-badge>
   </div>
 </template>
@@ -39,12 +39,14 @@ import { multiTenantEnabled, saveSettings, settings, toonflowAccountToken } from
 import { currentUser, publicWeb } from "@/stores/multiTenant";
 import { hasDesktopUpdate } from "@/stores/desktopUpdate";
 import { deviceHubEnabled, mobileConnection, mobileConnectionLabel } from "@/lib/mobile";
+import { supportsAppUpdates } from "@/lib/platform";
 
 defineProps<{ collapsed: boolean }>();
 const emit = defineEmits<{ openSettings: []; openAccount: []; openUpdate: []; openDeviceLink: [] }>();
 const loggedIn = computed(() => publicWeb.value ? !!currentUser.value : !!toonflowAccountToken.value);
 const accountName = computed(() => (publicWeb.value ? currentUser.value?.userName : (settings.value.toonflowAccount as Partial<Login> | null)?.info?.userName) || translate("未登录"));
 const showBalance = computed(() => loggedIn.value && (publicWeb.value ? currentUser.value?.role === "user" : !multiTenantEnabled.value));
+const updateButtonTitle = computed(() => hasDesktopUpdate.value ? translate("发现新版本") : translate("检查更新"));
 const balanceText = ref("");
 const balanceError = ref("");
 const loggingOut = ref(false);

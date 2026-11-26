@@ -4041,5 +4041,6 @@
   "插件服务请求参数过长": "Parameter permintaan layanan plugin terlalu panjang",
   "插件服务端口必须是 0–65535 之间的整数": "Port layanan plugin harus berupa bilangan bulat antara 0 dan 65535",
   "插件服务公网地址必须是不含路径和凭据的 HTTP 或 HTTPS 根地址": "URL publik layanan plugin harus berupa URL akar HTTP atau HTTPS tanpa jalur dan kredensial",
-  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "Untuk penerapan HTTPS, konfigurasikan TOONFLOW_PLUGIN_SERVER_URL dan proksi balik layanan plugin"
+  "HTTPS 部署请配置 TOONFLOW_PLUGIN_SERVER_URL 与插件服务反向代理": "Untuk penerapan HTTPS, konfigurasikan TOONFLOW_PLUGIN_SERVER_URL dan proksi balik layanan plugin",
+  "本地构建": "Build lokal"
 }
