@@ -1,4 +1,4 @@
-import { t, translateMessage, validationOptions } from "@/lib/i18n";
+import { createTranslator, t, translateMessage, validationOptions } from "@/lib/i18n";
 import { createHash } from "node:crypto";
 import { lstat, readFile, readdir } from "@toonflow/file";
 import { dirname, resolve } from "node:path";
@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import * as zod from "zod";
 import { toolMetadataSchema, toolNameSchema, type ToolMetadata, type ToolPlugin } from "@toonflow/tools-scaffold/runtime";
 import conf from "@/utils/conf";
+import type { ModelPlugin } from "./modelContext";
 
 export { toolNameSchema } from "@toonflow/tools-scaffold/runtime";
 
@@ -16,6 +17,7 @@ Bun.plugin({
   name: "toolHost",
   setup(build) {
     build.module("toonflow:tool-zod", () => ({ exports: zod, loader: "object" }));
+    build.module("toonflow:tool-i18n", () => ({ exports: { createTranslator }, loader: "object" }));
   },
 });
 
@@ -87,18 +89,24 @@ export async function listTools() {
 }
 
 export async function loadTool(name: string, directory = toolsDirectory) {
-  const { path, metadata } = await readTool(name, directory);
-  return loadToolModule(path, metadata);
+  const { path, metadata, revision } = await readTool(name, directory);
+  return loadToolModule(path, metadata, directory === toolsDirectory ? { kind: "tool", name, revision } : undefined);
 }
 
-export async function loadToolModule(path: string, metadata: ToolMetadata) {
+export async function loadToolModule(path: string, metadata: ToolMetadata, owner?: ModelPlugin) {
   // ACT: 工具是可信的服务端代码，不是沙箱；安装成功后由安装器清除模块缓存。
   const module = await import(pathToFileURL(path).href) as { default: ToolPlugin; [key: string]: unknown };
   const plugin = module.default;
   if (typeof plugin?.createTools !== "function" || typeof plugin.validateConfig !== "function") {
     throw Object.assign(new Error(t`${metadata.displayName} 未导出有效的工具插件`), { status: 400 });
   }
-  return { plugin, metadata, module };
+  const { createPluginModelContext } = await import("./modelContext");
+  const model = createPluginModelContext(owner);
+  const scopedPlugin: ToolPlugin = {
+    validateConfig: config => plugin.validateConfig(config),
+    createTools: context => plugin.createTools({ ...context, model }),
+  };
+  return { plugin: scopedPlugin, metadata, module };
 }
 
 export function validateToolConfig(plugin: ToolPlugin, config: Record<string, unknown>) {

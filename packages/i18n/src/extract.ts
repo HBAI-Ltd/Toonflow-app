@@ -4,6 +4,7 @@ import { parse } from "@babel/parser";
 import type { Node } from "@babel/types";
 import { parse as parseSfc } from "@vue/compiler-sfc";
 import { collectMessages } from "./transform";
+import { findWorkspaceDependencies } from "./plugin";
 import { escapeMessageText } from "./index";
 
 const root = resolve(import.meta.dirname, "../../..");
@@ -57,9 +58,27 @@ async function scan(directory: string) {
     }
   }
 }
-for (const path of ["apps/web/src", "apps/server/src", "apps/desktop/src", "apps/mobile/src", "packages/mcp/src", "packages/ffmpeg/src", "packages/multiTenant", "packages/providerWeb"]) await scan(resolve(root, path));
+// ACT: 插件 src 下的界面与服务端代码统一按宿主界面规则收集，服务端代码只会多出少量不翻译的候选键。
+async function scanPlugin(directory: string) {
+  for (const item of await readdir(directory, { withFileTypes: true })) {
+    const path = resolve(directory, item.name);
+    if (item.isDirectory()) { if (item.name !== "node_modules") await scanPlugin(path); continue; }
+    if (/\.(ts|vue)$/.test(item.name)) for (const message of collectMessages(await readFile(path, "utf8"), path)) add(message, path);
+  }
+}
+// 传入插件目录时只抽取该插件 src，写入插件自己的 i18n/zhCn.json。
+const pluginDirectory = process.argv[2] ? resolve(process.argv[2]) : undefined;
+if (pluginDirectory) {
+  await scanPlugin(resolve(pluginDirectory, "src"));
+  // 依赖包（如 nodeScaffold、nodeShared）字典中已有的词条构建时会合并进来，插件不再重复维护；需先抽取依赖包。
+  for (const directory of await findWorkspaceDependencies(pluginDirectory)) {
+    const source = await readFile(resolve(directory, "i18n/zhCn.json"), "utf8").catch(() => "{}");
+    for (const message of Object.keys(JSON.parse(source))) catalog.delete(message);
+  }
+} else for (const path of ["apps/web/src", "apps/server/src", "apps/desktop/src", "apps/mobile/src", "packages/mcp/src", "packages/ffmpeg/src", "packages/multiTenant", "packages/providerWeb"]) await scan(resolve(root, path));
 const messages = Object.fromEntries([...catalog].sort(([left], [right]) => left.localeCompare(right, "zh-CN")).map(([message]) => [message, message]));
-await mkdir(resolve(import.meta.dirname, "locales"), { recursive: true });
-await writeAtomic(resolve(import.meta.dirname, "locales/zhCn.json"), JSON.stringify(messages, null, 2) + "\n");
-await writeAtomic(resolve(import.meta.dirname, "messageSources.json"), JSON.stringify(Object.fromEntries([...catalog].map(([key, value]) => [key, [...value]])), null, 2) + "\n");
+const localesDirectory = pluginDirectory ? resolve(pluginDirectory, "i18n") : resolve(import.meta.dirname, "locales");
+await mkdir(localesDirectory, { recursive: true });
+await writeAtomic(resolve(localesDirectory, "zhCn.json"), JSON.stringify(messages, null, 2) + "\n");
+if (!pluginDirectory) await writeAtomic(resolve(import.meta.dirname, "messageSources.json"), JSON.stringify(Object.fromEntries([...catalog].map(([key, value]) => [key, [...value]])), null, 2) + "\n");
 console.log(`Extracted ${catalog.size} messages`);

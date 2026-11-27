@@ -6,10 +6,14 @@
   "exports": {
     ".": "./src/index.ts",
     "./protocol": "./src/protocol.ts",
+    "./localModelInference": "./src/localModelInference.ts",
+    "./localModels": "./src/localModels.ts",
     "./client": "./src/client.ts",
+    "./localModelClient": "./src/localModelClient.ts",
     "./vue": "./src/vue.ts",
     "./readme.md": "./readme.md"
   },
   "scripts": { "typecheck": "tsc" },
+  "dependencies": { "zod": "^4.6.2" },
   "peerDependencies": { "vue": "^3.5.42" }
 }

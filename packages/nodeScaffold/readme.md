@@ -28,6 +28,8 @@ data/nodes/
 
 `packages/nodeScaffold` 仅提供通用节点基础能力、构建配置与宿主接口，运行时能力从 `@toonflow/nodes-scaffold/runtime` 导入。插件专属组件、交互、提示词、预设与业务逻辑放在所属插件中，通过其公开导出复用；跨插件共享组件与业务逻辑统一放在 `packages/nodeShared`，通过独立包 `@toonflow/node-shared` 的公开子路径导入，不混入脚手架。根入口 `@toonflow/nodes-scaffold` 仅供 Vite 配置导入 `createNodeConfig`，不要在浏览器组件中引用。
 
+节点可在自身目录的 `i18n/` 维护多语言字典（`en.json`、`ja.json` 等），构建时并入 `.umd.js`，界面写法与宿主 Web 相同，语言随宿主切换；详见 [插件多语言](../i18n/readme.md#插件多语言)。
+
 ## 共享 Markdown 编辑依赖
 
 Tiptap、marked 和 DOMPurify 通过构建配置的 external 复用宿主依赖。编辑器、预览组件、工具栏和生命周期由各扩展或节点在自己的包内实现，不导入宿主组件，也没有组件转发层。子包使用这些依赖时声明与宿主兼容的 peerDependencies：当前 Tiptap 各包为 `3.31.3`，`marked` 为 `18.0.13`，`dompurify` 为 `3.4.16`。
@@ -65,6 +67,31 @@ const { refList, referenceMentions, setReferencePreview, removeReference } = use
 ```
 
 图片编辑、宫格切分、局部重绘和打光从 `@toonflow/node-image` 的对应子路径导入；视频播放器从 `@toonflow/node-video/videoPlayer` 导入。共享源码随使用方节点打包，Vue、VueFlow 和 Element Plus 继续复用宿主实例。
+
+## 本地模型
+
+在 `createNodeConfig` 的元数据中声明 `localModels`。每条定义包含插件内的小驼峰 `id`、模型名 `name`、可选的用途说明 `description`、`version`、`fileName`、字节数 `size`、完整文件的 `sha256`，以及下载源 `sources: [{ id, label, url }]`。只提供手动导入时可传空数组。列表默认显示 `name`。如果模型使用技术名称，可用可选的 `displayName` 提供易懂的标题，技术名称会显示在标题下方。启用插件后，用户可从「设置 → 插件市场 → 本地模型」选择下载源或导入对应权重。升级插件可以调整声明，禁用或卸载插件会撤下该插件的目录项。
+
+组件 setup 中取 `useNode().model` 或调用 `useNodeModel()`。用 `model.list()` 查询目录，按 `canRun` 决定是否启用操作。本地执行要求模型和所需运行库均已安装，部署端为该模型配置执行适配器也可提供推理。`installed` 仅表示文件已安装到磁盘。
+
+调用 `model.run(request, signal?)` 时，传入目录返回的完整模型 ID 和输入张量，由宿主后端选择执行方式。也可以用 `localModelId({ kind: "node", name: 插件名 }, 短ID)` 构造 ID。内置模型沿用原 ID。模型定义决定输入名、张量类型、尺寸与预处理。组件卸载会取消等待中的请求。
+
+浏览器的 `model.run` 用于单次推理，例如用户点击一次局部预览。宿主对同一客户端、同一模型在一秒窗口内最多接受 4 次单次推理请求，超出返回 HTTP 429。整图超分、整段视频增强和人声分离使用 `@toonflow/node-shared/mediaModelJob` 的 `runMediaModelJob` 一次提交素材，分块或分帧推理在后端执行，进度通过同一响应推送。
+
+```ts
+import { useNodeModel, packLocalTensor, unpackLocalTensor } from "@toonflow/nodes-scaffold/nodeModel";
+
+const model = useNodeModel();
+async function infer(id: string, inputName: string, pixels: Float32Array, dims: number[], outputName: string) {
+  const result = await model.run({
+    id, device: "auto", inputs: { [inputName]: packLocalTensor("float32", dims, pixels) }, outputs: [outputName],
+  });
+  const tensor = result.outputs[outputName];
+  return { type: tensor.type, dims: tensor.dims, bytes: unpackLocalTensor(tensor), provider: result.provider };
+}
+```
+
+`device` 可选 `auto`、`cpu` 或 `gpu`，返回值 `provider` 指明实际执行后端。节点需要动态调整自己的模型目录时，可以在随包的 `serverTool` 中调用[工具脚手架的模型接口](../toolScaffold/readme.md#本地模型)。
 
 ## 节点骨架
 
@@ -188,7 +215,7 @@ await ai.generate({
 
 
 - `useNodeModelMemory(type)`：读写该类型节点上次手动选择的模型键，返回 `{ get(), set(key) }`。宿主通过 `provide("nodeModelMemory", { get(type), set(type, key) })` 提供；图片、视频、音频生成节点分别使用 `image`、`video`、`audio`，仅在模型为空时优先采用仍可用的记忆值。未提供宿主能力时读取为空、写入忽略。
-- `ai.getMediaModels(signal?)`：读取已安装供应商声明的图片、视频模型，返回供应商与模型 ID、名称、类型及模式参数。图片模型可通过 `imageSizes`、`imageRatios` 声明支持的分辨率与比例选项，节点生成时使用 `size`、`ratio` 传入选择值。
+- `ai.getMediaModels(signal?)` 返回可用的图片、视频和音频模型及其能力。图片从 `imageSizes`、`imageRatios` 读取选项。视频按所选时长和分辨率匹配 `durationResolutionMap`，合并匹配行的 `ratio` 数组并去重。旧模型未声明映射，或匹配行省略 `ratio`、传空数组时，视频节点沿用 `16:9`、`9:16`、`1:1`、`4:3`、`3:4`。生成时通过 `ratio` 传入单个选中值。
 - `ai.generateImage(input, signal?)`：非流式生成并落盘，返回 `{ path, mimeType, mediaType: "image" }[]`。`input` 包含工作区绝对路径 `directory`、`providerId`、`modelId`、`prompt`、工作区相对目录 `outputDirectory`；可传 `images: { path, mimeType }[]`、`ratio`、`size`。图片参考只传工作区相对路径，由后端读取。
 - `ai.generateVideo(input, signal?)`：视频生成并落盘，返回 `{ path, mimeType, mediaType: "video" }[]`。基础字段同图片生成；使用 `duration`、`resolution`、`ratio`、`generateAudio`、`mode` 配置视频，可传 `images`、`videos`、`audios` 和 `firstFrame`、`lastFrame`，素材均为工作区内 `{ path, mimeType }` 引用。
 

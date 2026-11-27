@@ -79,7 +79,9 @@ function requestFile(url: URL, signal: AbortSignal, accept: string) {
   });
 }
 
-export async function downloadPublicFile(value: string, options: { signal: AbortSignal; maxBytes: number; label: string; httpsOnly?: boolean; accept?: string }) {
+type DownloadOptions = { signal: AbortSignal; maxBytes: number; label: string; httpsOnly?: boolean; accept?: string };
+
+export async function* streamPublicFile(value: string, options: DownloadOptions) {
   const { signal, maxBytes, label, httpsOnly = false, accept = "*/*" } = options;
   let url = remoteAddress(value, httpsOnly);
   for (let redirects = 0; redirects <= 5; redirects++) {
@@ -98,17 +100,22 @@ export async function downloadPublicFile(value: string, options: { signal: Abort
     }
     const tooLarge = () => invalid(t`${translateMessage(label)}不能超过 ${maxBytes / 1024 / 1024} MB`, 413);
     if (Number(response.headers["content-length"]) > maxBytes) { response.destroy(); tooLarge(); }
-    const chunks: Buffer[] = [];
     let size = 0;
     for await (const chunk of response) {
       signal.throwIfAborted();
       const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
       size += bytes.length;
       if (size > maxBytes) { response.destroy(); tooLarge(); }
-      chunks.push(bytes);
+      yield bytes;
     }
     signal.throwIfAborted();
-    return Buffer.concat(chunks, size);
+    return;
   }
   return invalid("下载重定向无效", 502);
+}
+
+export async function downloadPublicFile(value: string, options: DownloadOptions) {
+  const chunks: Buffer[] = [];
+  for await (const chunk of streamPublicFile(value, options)) chunks.push(chunk);
+  return Buffer.concat(chunks);
 }

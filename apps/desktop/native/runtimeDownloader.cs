@@ -60,12 +60,29 @@ internal sealed class downloadWindow : Form
     private readonly TextBox sourceAddressBox;
     private readonly ComboBox proxySelector;
     private readonly Button startButton;
+    private readonly Button localButton;
     private readonly Panel advancedPanel;
+    private readonly Panel offlinePanel;
+    private readonly Label chooseStep;
+    private readonly LinkLabel localStatus;
+    private readonly LinkLabel copyLink;
     private readonly LinkLabel advancedToggle;
+    private readonly LinkLabel offlineToggle;
     private readonly TextBox technicalDetails;
+    private readonly System.Windows.Forms.Timer copyTimer = new System.Windows.Forms.Timer { Interval = 2000 };
     private bool advancedExpanded;
+    private bool dragActive;
+    private bool scanning;
+    // null 表示没有待办；空字符串表示暂停后弹出文件选择框；其他值为暂停后要导入的文件。
+    private string pendingLocal;
+    private string candidateFile;
     private string latestTechnical = "";
+    private static readonly Color errorColor = Color.FromArgb(196, 43, 28);
+    private const string chooseText = "2. 拷贝到本机后选择或拖入该文件，验证通过后会自动继续。";
+    // ACT: 未跟随用户改过位置的“下载”文件夹（需 SHGetKnownFolderPath）；找不到时仍可拖入或手动选择。
+    private static readonly string downloadsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
     private const string runtimeDescription = "运行时：Bun " + runtimeConfig.version + " · Windows " + runtimeConfig.architecture + "\r\n完整性校验：SHA-256";
+    private static readonly string archiveName = runtimeConfig.archiveMember.Split('/')[0];
     private readonly Button cancelButton;
     private volatile bool cancelled;
     private volatile HttpWebRequest activeRequest;
@@ -100,10 +117,28 @@ internal sealed class downloadWindow : Form
         statusLabel = new Label { Left = 24, Top = 24, Width = 592, Height = 28, Text = "正在准备下载必要组件…" };
         progressBar = new ProgressBar { Left = 24, Top = 76, Width = 592, Height = 22, Minimum = 0, Maximum = 1000, Style = ProgressBarStyle.Continuous, MarqueeAnimationSpeed = 30 };
         detailLabel = new Label { Left = 24, Top = 112, Width = 592, Height = 42, Text = "需要下载约 " + Math.Ceiling(archiveSize / 1000000.0).ToString("F0") + " MB，完成后会自动继续。" };
-        advancedToggle = new LinkLabel { Left = 24, Top = 166, Width = 160, Height = 28, Text = "高级设置（可选）",
+        advancedToggle = new LinkLabel { Left = 24, Top = 166, Width = 110, Height = 28, Text = "下载源配置 ▼",
             LinkBehavior = LinkBehavior.HoverUnderline, LinkColor = SystemColors.HotTrack, TabIndex = 2,
-            AccessibleName = "高级设置", AccessibleDescription = "已折叠，可展开下载源和网络设置" };
-        advancedPanel = new Panel { Left = 24, Top = 200, Width = 592, Height = 272, Visible = false, TabIndex = 3 };
+            AccessibleName = "下载源配置", AccessibleDescription = "已折叠，可展开下载源和网络设置" };
+        offlineToggle = new LinkLabel { Left = 144, Top = 166, Width = 110, Height = 28, Text = "离线安装 ▼",
+            LinkBehavior = LinkBehavior.HoverUnderline, LinkColor = SystemColors.HotTrack, TabIndex = 3,
+            AccessibleName = "离线安装", AccessibleDescription = "已折叠，可展开离线安装说明并选择本地文件" };
+        advancedPanel = new Panel { Left = 24, Top = 200, Width = 592, Height = 272, Visible = false, TabIndex = 4 };
+        // 离线安装按两步排列，每一步的操作放在同一行：复制地址跟随第 1 步，选择文件跟随第 2 步；导入结果显示在第 2 步下方。
+        var downloadStep = new Label { Left = 0, Top = 0, Width = 500, Height = 24, TextAlign = ContentAlignment.MiddleLeft,
+            Text = "1. 用能上网的电脑下载 " + archiveName + ".zip（Bun " + runtimeConfig.version + "），地址任选其一：" };
+        copyLink = new LinkLabel { Left = 512, Top = 0, Width = 80, Height = 24, Text = "复制地址", TextAlign = ContentAlignment.MiddleRight,
+            LinkBehavior = LinkBehavior.HoverUnderline, LinkColor = SystemColors.HotTrack, TabIndex = 0, AccessibleName = "复制下载地址" };
+        var offlineAddresses = new TextBox { Left = 0, Top = 28, Width = 592, Height = 16 * runtimeConfig.sourceAddresses.Length + 12, Multiline = true, ReadOnly = true,
+            WordWrap = false, Text = String.Join("\r\n", runtimeConfig.sourceAddresses), AccessibleName = "运行时下载地址", TabIndex = 1 };
+        int chooseTop = offlineAddresses.Bottom + 12;
+        chooseStep = new Label { Left = 0, Top = chooseTop, Width = 460, Height = 32, TextAlign = ContentAlignment.MiddleLeft, Text = chooseText };
+        localButton = new Button { Left = 472, Top = chooseTop, Width = 120, Height = 32, Text = "选择文件…", TabIndex = 2,
+            AccessibleDescription = "选择从其他电脑拷贝来的 " + archiveName + ".zip 或 bun.exe，也可以把文件拖到窗口里" };
+        localStatus = new LinkLabel { Left = 0, Top = chooseTop + 38, Width = 592, Height = 36, LinkArea = new LinkArea(0, 0),
+            LinkBehavior = LinkBehavior.HoverUnderline, LinkColor = SystemColors.HotTrack, TabIndex = 3 };
+        offlinePanel = new Panel { Left = 24, Top = 200, Width = 592, Height = localStatus.Bottom + 4, Visible = false, TabIndex = 5 };
+        offlinePanel.Controls.AddRange(new Control[] { downloadStep, copyLink, offlineAddresses, chooseStep, localButton, localStatus });
         var sourceLabel = new Label { Left = 0, Top = 0, Width = 72, Height = 24, Text = "首选来源", TextAlign = ContentAlignment.MiddleLeft };
         sourceSelector = new ComboBox { Left = 80, Top = 0, Width = 512, DropDownStyle = ComboBoxStyle.DropDownList, AccessibleName = "下载源", TabIndex = 0 };
         sourceSelector.Items.AddRange(runtimeConfig.sourceNames);
@@ -123,10 +158,18 @@ internal sealed class downloadWindow : Form
         advancedPanel.Controls.AddRange(new Control[] { sourceLabel, sourceSelector, proxyLabel, proxySelector, addressLabel, sourceAddressBox, technicalDetails });
         startButton = new Button { Left = 400, Top = 210, Width = 100, Height = 34, Text = "暂停下载", Enabled = false, Anchor = AnchorStyles.Bottom | AnchorStyles.Right, TabIndex = 0 };
         cancelButton = new Button { Left = 510, Top = 210, Width = 106, Height = 34, Text = "取消", Anchor = AnchorStyles.Bottom | AnchorStyles.Right, TabIndex = 1 };
-        Controls.AddRange(new Control[] { statusLabel, progressBar, detailLabel, advancedToggle, advancedPanel, startButton, cancelButton });
-        advancedToggle.LinkClicked += delegate { toggleAdvanced(); };
+        Controls.AddRange(new Control[] { statusLabel, progressBar, detailLabel, advancedToggle, offlineToggle, advancedPanel, offlinePanel, startButton, cancelButton });
+        advancedToggle.LinkClicked += delegate { togglePanel(advancedPanel); };
+        offlineToggle.LinkClicked += delegate { togglePanel(offlinePanel); };
+        copyLink.LinkClicked += delegate { copyAddresses(); };
+        copyTimer.Tick += delegate { copyTimer.Stop(); copyLink.Text = "复制地址"; };
+        localStatus.LinkClicked += delegate { if (candidateFile != null) chooseLocalFile(candidateFile); };
         startButton.Click += delegate { if (busy) requestStop(false); else startDownload(); };
+        localButton.Click += delegate { chooseLocalFile(); };
         cancelButton.Click += delegate { requestStop(true); };
+        // 整个窗口都可以拖入文件。
+        enableDrop(this);
+        FormClosed += delegate { copyTimer.Dispose(); };
         sourceSelector.SelectedIndexChanged += delegate
         {
             int selected = sourceSelector.SelectedIndex;
@@ -160,16 +203,26 @@ internal sealed class downloadWindow : Form
         }
     }
 
-    private void toggleAdvanced()
+    // 下载源配置与离线安装共用折叠区，同一时间只展开一个。
+    private void togglePanel(Panel panel)
     {
         SuspendLayout();
-        advancedExpanded = !advancedExpanded;
-        if (!advancedExpanded) advancedToggle.Focus();
-        advancedPanel.Visible = advancedExpanded;
-        ClientSize = new Size(ClientSize.Width, ClientSize.Height + (advancedExpanded ? advancedPanel.Height : -advancedPanel.Height));
+        bool expand = !panel.Visible;
+        foreach (var current in new[] { advancedPanel, offlinePanel })
+        {
+            bool visible = expand && current == panel;
+            if (current.Visible == visible) continue;
+            current.Visible = visible;
+            ClientSize = new Size(ClientSize.Width, ClientSize.Height + (visible ? current.Height : -current.Height));
+        }
+        if (offlinePanel.Visible) findCandidate();
+        if (!expand) (panel == advancedPanel ? advancedToggle : offlineToggle).Focus();
+        advancedExpanded = advancedPanel.Visible;
         if (advancedExpanded) showTechnical(latestTechnical);
-        advancedToggle.Text = advancedExpanded ? "收起高级设置" : "高级设置（可选）";
+        advancedToggle.Text = advancedExpanded ? "下载源配置 ▲" : "下载源配置 ▼";
         advancedToggle.AccessibleDescription = advancedExpanded ? "已展开下载源和网络设置" : "已折叠，可展开下载源和网络设置";
+        offlineToggle.Text = offlinePanel.Visible ? "离线安装 ▲" : "离线安装 ▼";
+        offlineToggle.AccessibleDescription = offlinePanel.Visible ? "已展开离线安装说明" : "已折叠，可展开离线安装说明并选择本地文件";
         ResumeLayout(true);
     }
     private void showTechnical(string text)
@@ -200,15 +253,150 @@ internal sealed class downloadWindow : Form
         }
     }
 
-    private void startDownload()
+    private void copyAddresses()
+    {
+        try
+        {
+            Clipboard.SetText(archiveName + ".zip（Bun " + runtimeConfig.version + "，下载地址任选其一）\r\n" + String.Join("\r\n", runtimeConfig.sourceAddresses));
+            copyLink.Text = "已复制";
+        }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            copyLink.Text = "复制失败";
+        }
+        copyTimer.Stop();
+        copyTimer.Start();
+    }
+
+    private void showLocalStatus(string text, Color color, string linkText = null)
+    {
+        localStatus.Text = linkText == null ? text : text + "　" + linkText;
+        localStatus.LinkArea = linkText == null ? new LinkArea(0, 0) : new LinkArea(localStatus.Text.Length - linkText.Length, linkText.Length);
+        localStatus.ForeColor = color;
+    }
+
+    private void enableDrop(Control control)
+    {
+        control.AllowDrop = true;
+        control.DragEnter += dragEnter;
+        control.DragLeave += delegate { setDragActive(false); };
+        control.DragDrop += delegate(object sender, DragEventArgs args)
+        {
+            setDragActive(false);
+            string file = droppedFile(args.Data);
+            if (file != null) chooseLocalFile(file);
+        };
+        foreach (Control child in control.Controls) enableDrop(child);
+    }
+
+    private static string droppedFile(IDataObject data)
+    {
+        var files = data.GetData(DataFormats.FileDrop) as string[];
+        return files != null && files.Length == 1 && File.Exists(files[0]) ? files[0] : null;
+    }
+
+    private void dragEnter(object sender, DragEventArgs args)
+    {
+        args.Effect = !closing && droppedFile(args.Data) != null ? DragDropEffects.Copy : DragDropEffects.None;
+        setDragActive(args.Effect == DragDropEffects.Copy);
+    }
+
+    private void setDragActive(bool active)
+    {
+        if (dragActive == active) return;
+        dragActive = active;
+        if (active && !offlinePanel.Visible) togglePanel(offlinePanel);
+        chooseStep.Text = active ? "2. 松开鼠标即可导入该文件。" : chooseText;
+        chooseStep.ForeColor = active ? SystemColors.HotTrack : SystemColors.ControlText;
+    }
+
+    // ACT: 只看“下载”文件夹和可移动磁盘根目录的第一层，按文件名和大小粗筛；最终仍走完整 SHA-256 校验。需要覆盖更多位置时再加入安装包所在目录。
+    private void findCandidate()
+    {
+        if (scanning || candidateFile != null) return;
+        scanning = true;
+        string prefix = archiveName.ToLowerInvariant();
+        Task.Factory.StartNew(delegate
+        {
+            var folders = new List<string> { downloadsDirectory };
+            try
+            {
+                foreach (var drive in DriveInfo.GetDrives())
+                    if (drive.DriveType == DriveType.Removable && drive.IsReady) folders.Add(drive.RootDirectory.FullName);
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+            string found = null;
+            foreach (string folder in folders)
+            {
+                try
+                {
+                    foreach (string file in Directory.EnumerateFiles(folder))
+                    {
+                        string name = Path.GetFileName(file).ToLowerInvariant();
+                        long size = new FileInfo(file).Length;
+                        if ((name.StartsWith(prefix) && name.EndsWith(".zip") && !name.Contains("baseline") && size == archiveSize)
+                            || (name == "bun.exe" && size == binarySize)) { found = file; break; }
+                    }
+                }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
+                if (found != null) break;
+            }
+            try
+            {
+                BeginInvoke((Action)delegate
+                {
+                    scanning = false;
+                    if (found == null || closing) return;
+                    candidateFile = found;
+                    if (!busy && localStatus.Text.Length == 0) showLocalStatus("已找到：" + found, SystemColors.ControlText, "使用此文件");
+                });
+            }
+            catch (InvalidOperationException) { }
+        });
+    }
+
+    private void chooseLocalFile(string path = null)
+    {
+        if (closing) return;
+        if (!offlinePanel.Visible) togglePanel(offlinePanel);
+        if (busy)
+        {
+            // 先暂停当前下载，等后台任务结束后再导入或弹出文件选择器。
+            pendingLocal = path ?? "";
+            requestStop(false);
+            return;
+        }
+        if (path == null)
+        {
+            using (var dialog = new OpenFileDialog
+            {
+                Title = "选择 " + archiveName + ".zip 或 bun.exe（Bun " + runtimeConfig.version + "）",
+                Filter = "Bun 运行时 (" + archiveName + ".zip; bun.exe)|*.zip;*.exe|所有文件 (*.*)|*.*",
+                InitialDirectory = candidateFile != null ? Path.GetDirectoryName(candidateFile) : Directory.Exists(downloadsDirectory) ? downloadsDirectory : "",
+                FileName = candidateFile != null ? Path.GetFileName(candidateFile) : archiveName + ".zip",
+                CheckFileExists = true,
+                Multiselect = false,
+                RestoreDirectory = true
+            })
+            {
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                path = dialog.FileName;
+            }
+        }
+        startDownload(path);
+    }
+
+    private void startDownload(string localFile = null)
     {
         if (busy || closing) return;
         string address = sourceAddressBox.Text.Trim();
         Uri uri;
-        if (!Uri.TryCreate(address, UriKind.Absolute, out uri) || uri.Scheme != Uri.UriSchemeHttps
-            || uri.UserInfo.Length != 0 || uri.Fragment.Length != 0)
+        if (localFile == null && (!Uri.TryCreate(address, UriKind.Absolute, out uri) || uri.Scheme != Uri.UriSchemeHttps
+            || uri.UserInfo.Length != 0 || uri.Fragment.Length != 0))
         {
-            statusLabel.Text = "下载地址有误，请在高级设置中修改。";
+            statusLabel.Text = "下载地址有误，请在下载源配置中修改。";
             showTechnical(runtimeDescription + "\r\n请填写有效的 HTTPS 运行时 ZIP 地址，不能包含用户名、密码或地址片段。");
             return;
         }
@@ -217,22 +405,27 @@ internal sealed class downloadWindow : Form
         busy = true;
         cancelled = false;
         attemptNumber++;
-        startButton.Enabled = true;
+        // 本地文件校验很快且复制不可中断，此时不提供暂停。
+        startButton.Enabled = localFile == null;
         startButton.Text = "暂停下载";
+        localButton.Enabled = localFile == null;
         cancelButton.Enabled = true;
-        statusLabel.Text = "正在检查已下载的组件…";
-        detailLabel.Text = "请稍候，完成后会自动继续。";
-        showTechnical(runtimeDescription + "\r\n首选：" + sourceName + " · " + (direct ? "直连" : "系统代理") + "\r\n日志：" + Path.Combine(cacheDirectory, "download.log"));
+        statusLabel.Text = localFile == null ? "正在检查已下载的组件…" : "正在验证所选文件…";
+        detailLabel.Text = localFile == null ? "请稍候，完成后会自动继续。" : "验证通过后会自动继续安装，请稍候。";
+        if (localFile != null) showLocalStatus("正在验证 " + Path.GetFileName(localFile) + "，请稍候…", SystemColors.GrayText);
+        showTechnical(runtimeDescription + "\r\n" + (localFile == null ? "首选：" + sourceName + " · " + (direct ? "直连" : "系统代理") : "本地文件：" + localFile)
+            + "\r\n日志：" + Path.Combine(cacheDirectory, "download.log"));
         setProgressMode(true);
         Task.Factory.StartNew(delegate
         {
             Exception failure = null;
-            try { prepareRuntime(address, direct, sourceName); }
+            try { prepareRuntime(address, direct, sourceName, localFile); }
             catch (Exception error) { failure = error; }
             BeginInvoke((Action)delegate
             {
                 busy = false;
                 activeRequest = null;
+                localButton.Enabled = true;
                 setProgressMode(false);
                 if (closing)
                 {
@@ -245,25 +438,47 @@ internal sealed class downloadWindow : Form
                     detailLabel.Text = "已保留下载进度，点击继续下载即可。";
                     startButton.Text = "继续下载";
                     startButton.Enabled = true;
+                    if (localFile != null) showLocalStatus("", SystemColors.ControlText);
+                    if (pendingLocal != null)
+                    {
+                        string next = pendingLocal;
+                        pendingLocal = null;
+                        chooseLocalFile(next.Length == 0 ? null : next);
+                    }
                 }
                 else if (failure == null)
                 {
                     exitCode = 0;
                     Close();
                 }
+                else if (localFile != null)
+                {
+                    exitCode = 1;
+                    statusLabel.Text = "所选文件无法使用，未做任何更改。";
+                    detailLabel.Text = "原因见下方，可以重新拖入或选择文件。";
+                    showLocalStatus(failure is UnauthorizedAccessException
+                        ? "无法读取所选文件或写入组件，请检查文件和安装目录的访问权限。"
+                        : failure is InvalidDataException || failure is FileNotFoundException ? failure.Message
+                            : "无法导入所选文件：" + failure.Message, errorColor);
+                    showTechnical(runtimeDescription + "\r\n本地文件：" + localFile + "\r\n" + failure.Message);
+                    startButton.Text = "重试下载";
+                    startButton.Enabled = true;
+                }
                 else
                 {
                     exitCode = 1;
                     string message = Regex.Replace(failure.Message, @"https?://[^\s""<>]+", "[下载地址]");
-                    statusLabel.Text = failure is WebException ? "所有下载线路均未成功，请重试。" : "必要组件准备失败，请重试。";
+                    bool network = failure is WebException || failure is TimeoutException || failure is EndOfStreamException;
+                    statusLabel.Text = failure is WebException ? "无法连接下载服务，所有下载线路均未成功。" : "必要组件准备失败，请重试。";
                     detailLabel.Text = failure is UnauthorizedAccessException
                         ? "无法写入组件，请检查安装目录的访问权限。"
-                        : failure is WebException || failure is TimeoutException || failure is EndOfStreamException
-                            ? "请检查网络连接，或展开高级设置调整下载选项。"
-                            : "可以点击重试，或在高级设置中查看详细信息。";
+                        : network
+                            ? "请检查网络后重试。如果这台电脑无法上网，可展开下方“离线安装”，或直接把从其他电脑拷贝来的文件拖到此窗口。"
+                            : "可以点击重试，或在下载源配置中查看详细信息。";
                     showTechnical(runtimeDescription + "\r\n" + message + "\r\n日志：" + Path.Combine(cacheDirectory, "download.log"));
                     startButton.Text = "重试";
                     startButton.Enabled = true;
+                    if (network) findCandidate();
                 }
             });
         });
@@ -282,7 +497,10 @@ internal sealed class downloadWindow : Form
         startButton.Enabled = false;
         if (closing)
         {
+            pendingLocal = null;
+            localButton.Enabled = false;
             advancedToggle.Enabled = false;
+            offlineToggle.Enabled = false;
             sourceSelector.Enabled = false;
             sourceAddressBox.Enabled = false;
             proxySelector.Enabled = false;
@@ -352,7 +570,7 @@ internal sealed class downloadWindow : Form
         else File.Move(source, destination);
     }
 
-    private void prepareRuntime(string address, bool direct, string sourceName)
+    private void prepareRuntime(string address, bool direct, string sourceName, string localFile = null)
     {
         ensurePlainPath(cacheDirectory);
         ensurePlainPath(targetDirectory);
@@ -373,7 +591,8 @@ internal sealed class downloadWindow : Form
                     try { locked = mutex.WaitOne(500); }
                     catch (AbandonedMutexException) { locked = true; }
                 }
-                log("start; preferredSource=" + sourceName + "; preferredMode=" + (direct ? "direct" : "systemProxy"));
+                if (localFile != null) importLocal(localFile);
+                else log("start; preferredSource=" + sourceName + "; preferredMode=" + (direct ? "direct" : "systemProxy"));
                 string cachedBinary = Path.Combine(cacheDirectory, "bun.exe");
                 if (!fileMatches(cachedBinary, binarySize, binaryDigest))
                 {
@@ -407,6 +626,46 @@ internal sealed class downloadWindow : Form
             }
             finally { if (locked) mutex.ReleaseMutex(); }
         }
+    }
+
+    // ACT: 本地文件与下载走同一锁定校验，只接受与清单一致的 ZIP 或 bun.exe；通过后放入缓存，后续解压与安装沿用下载流程。
+    private void importLocal(string source)
+    {
+        var info = new FileInfo(source);
+        if (!info.Exists) throw new FileNotFoundException("找不到所选文件，请重新选择。");
+        log("local import start; name=" + info.Name + "; size=" + info.Length);
+        bool binary = info.Length == binarySize;
+        if (!binary && info.Length != archiveSize) throw new InvalidDataException(localMismatch(info.Name, false));
+        string temporary = Path.Combine(cacheDirectory, "bun" + Guid.NewGuid().ToString("N") + ".tmp");
+        try
+        {
+            // 先复制再校验副本，避免校验后源文件被替换。
+            File.Copy(source, temporary, false);
+            throwIfCancelled();
+            if (!fileMatches(temporary, info.Length, binary ? binaryDigest : archiveDigest))
+                throw new InvalidDataException(localMismatch(info.Name, true));
+            publishFile(temporary, Path.Combine(cacheDirectory, binary ? "bun.exe" : "bun.zip"));
+            log("local import verified; kind=" + (binary ? "binary" : "archive"));
+        }
+        catch (Exception error)
+        {
+            log("local import failed; type=" + error.GetType().Name);
+            throw;
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+    }
+
+    private static string localMismatch(string fileName, bool sizeMatched)
+    {
+        string name = Path.GetFileNameWithoutExtension(fileName).ToLowerInvariant();
+        string expected = archiveName + ".zip（Bun " + runtimeConfig.version + "）";
+        if (name.StartsWith("bun-") && name.Contains("baseline"))
+            return "所选文件是 baseline 版本，本机需要 " + expected + "，请重新下载。";
+        if (name.StartsWith("bun-") && !name.StartsWith(archiveName.ToLowerInvariant()))
+            return "所选文件适用于其他系统或架构，本机需要 " + expected + "，请重新下载。";
+        return sizeMatched
+            ? "所选文件已损坏或被修改，未通过完整性校验，请重新下载 " + expected + "。"
+            : "所选文件不是本机需要的 " + expected + "，可能版本不同，请重新下载。";
     }
 
     private sealed class downloadRoute

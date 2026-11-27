@@ -1,0 +1,138 @@
+diff --git a/dist/vue-flow-minimap.js b/dist/vue-flow-minimap.js
+index 79a287d..adfa063 100644
+--- a/dist/vue-flow-minimap.js
++++ b/dist/vue-flow-minimap.js
+@@ -2713,6 +2713,31 @@
+       emits.miniMapNodeMouseLeave(param);
+       emit("nodeMouseleave", param);
+     }
++    const miniMapNodes = () => (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(vue.unref(getNodesInitialized), (node) => {
++      return vue.openBlock(), vue.createBlock(_sfc_main$1, {
++        id: node.id,
++        key: node.id,
++        f: "",
++        position: node.computedPosition,
++        dimensions: node.dimensions,
++        selected: node.selected,
++        dragging: node.dragging,
++        style: vue.normalizeStyle(node.style),
++        class: vue.normalizeClass(nodeClassNameFunc.value(node)),
++        color: nodeColorFunc.value(node),
++        "border-radius": __props.nodeBorderRadius,
++        "stroke-color": nodeStrokeColorFunc.value(node),
++        "stroke-width": __props.nodeStrokeWidth,
++        "shape-rendering": vue.unref(shapeRendering),
++        type: node.type,
++        hidden: node.hidden,
++        onClick: ($event) => onNodeClick($event, node),
++        onDblclick: ($event) => onNodeDblClick($event, node),
++        onMouseenter: ($event) => onNodeMouseEnter($event, node),
++        onMousemove: ($event) => onNodeMouseMove($event, node),
++        onMouseleave: ($event) => onNodeMouseLeave($event, node)
++      }, null, 8, ["id", "position", "dimensions", "selected", "dragging", "style", "class", "color", "border-radius", "stroke-color", "stroke-width", "shape-rendering", "type", "hidden", "onClick", "onDblclick", "onMouseenter", "onMousemove", "onMouseleave"]);
++    }), 128));
+     return (_ctx, _cache) => {
+       return vue.openBlock(), vue.createBlock(vue.unref(core.Panel), {
+         position: _ctx.position,
+@@ -2733,31 +2758,7 @@
+               key: 0,
+               id: `vue-flow__minimap-${vue.unref(id2)}`
+             }, vue.toDisplayString(_ctx.ariaLabel), 9, _hoisted_2)) : vue.createCommentVNode("", true),
+-            (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(vue.unref(getNodesInitialized), (node) => {
+-              return vue.openBlock(), vue.createBlock(_sfc_main$1, {
+-                id: node.id,
+-                key: node.id,
+-                f: "",
+-                position: node.computedPosition,
+-                dimensions: node.dimensions,
+-                selected: node.selected,
+-                dragging: node.dragging,
+-                style: vue.normalizeStyle(node.style),
+-                class: vue.normalizeClass(nodeClassNameFunc.value(node)),
+-                color: nodeColorFunc.value(node),
+-                "border-radius": _ctx.nodeBorderRadius,
+-                "stroke-color": nodeStrokeColorFunc.value(node),
+-                "stroke-width": _ctx.nodeStrokeWidth,
+-                "shape-rendering": vue.unref(shapeRendering),
+-                type: node.type,
+-                hidden: node.hidden,
+-                onClick: ($event) => onNodeClick($event, node),
+-                onDblclick: ($event) => onNodeDblClick($event, node),
+-                onMouseenter: ($event) => onNodeMouseEnter($event, node),
+-                onMousemove: ($event) => onNodeMouseMove($event, node),
+-                onMouseleave: ($event) => onNodeMouseLeave($event, node)
+-              }, null, 8, ["id", "position", "dimensions", "selected", "dragging", "style", "class", "color", "border-radius", "stroke-color", "stroke-width", "shape-rendering", "type", "hidden", "onClick", "onDblclick", "onMouseenter", "onMousemove", "onMouseleave"]);
+-            }), 128)),
++            Object.keys(slots).length ? miniMapNodes() : (vue.openBlock(), vue.createBlock(miniMapNodes)),
+             vue.createElementVNode("path", {
+               class: "vue-flow__minimap-mask",
+               d: d.value,
+diff --git a/dist/vue-flow-minimap.mjs b/dist/vue-flow-minimap.mjs
+index 5db200c..3adbd73 100644
+--- a/dist/vue-flow-minimap.mjs
++++ b/dist/vue-flow-minimap.mjs
+@@ -2711,6 +2711,31 @@
+       emits.miniMapNodeMouseLeave(param);
+       emit("nodeMouseleave", param);
+     }
++    const miniMapNodes = () => (openBlock(true), createElementBlock(Fragment, null, renderList(unref(getNodesInitialized), (node) => {
++      return openBlock(), createBlock(_sfc_main$1, {
++        id: node.id,
++        key: node.id,
++        f: "",
++        position: node.computedPosition,
++        dimensions: node.dimensions,
++        selected: node.selected,
++        dragging: node.dragging,
++        style: normalizeStyle(node.style),
++        class: normalizeClass(nodeClassNameFunc.value(node)),
++        color: nodeColorFunc.value(node),
++        "border-radius": __props.nodeBorderRadius,
++        "stroke-color": nodeStrokeColorFunc.value(node),
++        "stroke-width": __props.nodeStrokeWidth,
++        "shape-rendering": unref(shapeRendering),
++        type: node.type,
++        hidden: node.hidden,
++        onClick: ($event) => onNodeClick($event, node),
++        onDblclick: ($event) => onNodeDblClick($event, node),
++        onMouseenter: ($event) => onNodeMouseEnter($event, node),
++        onMousemove: ($event) => onNodeMouseMove($event, node),
++        onMouseleave: ($event) => onNodeMouseLeave($event, node)
++      }, null, 8, ["id", "position", "dimensions", "selected", "dragging", "style", "class", "color", "border-radius", "stroke-color", "stroke-width", "shape-rendering", "type", "hidden", "onClick", "onDblclick", "onMouseenter", "onMousemove", "onMouseleave"]);
++    }), 128));
+     return (_ctx, _cache) => {
+       return openBlock(), createBlock(unref(Panel), {
+         position: _ctx.position,
+@@ -2731,31 +2756,7 @@
+               key: 0,
+               id: `vue-flow__minimap-${unref(id2)}`
+             }, toDisplayString(_ctx.ariaLabel), 9, _hoisted_2)) : createCommentVNode("", true),
+-            (openBlock(true), createElementBlock(Fragment, null, renderList(unref(getNodesInitialized), (node) => {
+-              return openBlock(), createBlock(_sfc_main$1, {
+-                id: node.id,
+-                key: node.id,
+-                f: "",
+-                position: node.computedPosition,
+-                dimensions: node.dimensions,
+-                selected: node.selected,
+-                dragging: node.dragging,
+-                style: normalizeStyle(node.style),
+-                class: normalizeClass(nodeClassNameFunc.value(node)),
+-                color: nodeColorFunc.value(node),
+-                "border-radius": _ctx.nodeBorderRadius,
+-                "stroke-color": nodeStrokeColorFunc.value(node),
+-                "stroke-width": _ctx.nodeStrokeWidth,
+-                "shape-rendering": unref(shapeRendering),
+-                type: node.type,
+-                hidden: node.hidden,
+-                onClick: ($event) => onNodeClick($event, node),
+-                onDblclick: ($event) => onNodeDblClick($event, node),
+-                onMouseenter: ($event) => onNodeMouseEnter($event, node),
+-                onMousemove: ($event) => onNodeMouseMove($event, node),
+-                onMouseleave: ($event) => onNodeMouseLeave($event, node)
+-              }, null, 8, ["id", "position", "dimensions", "selected", "dragging", "style", "class", "color", "border-radius", "stroke-color", "stroke-width", "shape-rendering", "type", "hidden", "onClick", "onDblclick", "onMouseenter", "onMousemove", "onMouseleave"]);
+-            }), 128)),
++            Object.keys(slots).length ? miniMapNodes() : (openBlock(), createBlock(miniMapNodes)),
+             createElementVNode("path", {
+               class: "vue-flow__minimap-mask",
+               d: d.value,

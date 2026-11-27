@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { lstat, mkdir, opendir, readFile, realpath, rmdir, unlink } from "@toonflow/file";
+import { lstat, mkdir, opendir, readFile, realpath, rm, unlink } from "@toonflow/file";
 import { basename, dirname, extname, join, relative, resolve, sep } from "node:path";
 import conf from "@/utils/conf";
 import { isWithin, lockWorkspaceFiles, protectWorkspaceRoot, renameWorkspaceFile, resolveWorkspacePath, writeWorkspaceFile } from "@/utils/workspace/files";
@@ -92,10 +92,10 @@ export async function removeAsset(path: string) {
     const info = await lstat(target.path);
     if (info.isDirectory()) {
       await closeAssetSearches(target.path);
-      await rmdir(target.path);
+      await rm(target.path, { recursive: true });
     }
     else if (info.isFile()) await unlink(target.path);
-    else throw new Error("只能删除普通素材文件或空文件夹");
+    else throw new Error("只能删除普通素材文件或文件夹");
   } finally { release(); }
 }
 

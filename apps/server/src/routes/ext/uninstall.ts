@@ -28,6 +28,7 @@ export default Router().delete("/", validateFields({ name: u.extPlugins.extNameS
       if (recorded) await unlink(removedPath);
       throw error;
     }
+    if (!marker) u.localModels.notifyModelCatalogChange();
     await unlink(markerPath).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
     const configs = u.conf.get("extConfigs", {});
     delete configs[name];

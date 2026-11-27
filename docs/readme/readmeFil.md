@@ -90,7 +90,7 @@
 </p>
 <p align="center">
   <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" />&nbsp;
-  <img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" />&nbsp;
+  <img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" />&nbsp;
   <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" />&nbsp;
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ Para sa iba pang tagubilin, tingnan ang [Gabay sa Paggamit](https://qcn7xdsqgc4z
 
 ### 4.2 Pag-install gamit ang Docker
 
-I-install muna ang Git, [Docker Engine](https://docs.docker.com/engine/install/), at Docker Compose. Sa Windows at macOS, maaaring gamitin ang Docker Desktop sa Linux container mode. Kasama sa repository ang [Dockerfile](../../Dockerfile), [configuration ng Compose](../../compose.yaml), at [mga hindi isinasama sa build](../../.dockerignore). Ginagamit ang Bun 1.4.3 sa pagbuo ng image, at kasama na ang FFmpeg.
+I-install muna ang Git, [Docker Engine](https://docs.docker.com/engine/install/), at Docker Compose. Sa Windows at macOS, maaaring gamitin ang Docker Desktop sa Linux container mode. Kasama sa repository ang [Dockerfile](../../Dockerfile), [configuration ng Compose](../../compose.yaml), at [mga hindi isinasama sa build](../../.dockerignore). Ginagamit ang Bun 1.4.5 sa pagbuo ng image, at kasama na ang FFmpeg.
 
 <details>
 <summary><strong>Tingnan ang mga hakbang sa pag-install gamit ang Docker</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 Pag-install sa Server
 
-Gamitin ang paraang ito upang direktang patakbuhin ang Web at Server sa isang Linux server. Ang halimbawa sa ibaba ay para sa Ubuntu / Debian at sa itinakdang bersyon ng proyekto na [Bun 1.4.3](https://bun.sh/docs/installation).
+Gamitin ang paraang ito upang direktang patakbuhin ang Web at Server sa isang Linux server. Ang halimbawa sa ibaba ay para sa Ubuntu / Debian at sa itinakdang bersyon ng proyekto na [Bun 1.4.5](https://bun.sh/docs/installation).
 
 <details>
 <summary><strong>Tingnan ang mga hakbang sa pag-install sa server</strong></summary>
@@ -453,7 +453,7 @@ I-install ang runtime environment:
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

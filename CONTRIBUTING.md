@@ -33,7 +33,7 @@
 
 本仓库使用 Bun Workspaces，Web、业务 Server 和桌面端在同一个仓库中开发，无需另行克隆前端仓库。
 
-- 安装 Git 和根目录 `package.json` 中指定的 **Bun 1.4.3**，使用 `bun --version` 确认版本。
+- 安装 Git 和根目录 `package.json` 中指定的 **Bun 1.4.5**，使用 `bun --version` 确认版本。
 - 使用 Bun 安装依赖、运行脚本，不混用 npm、Yarn 或 pnpm 的安装流程。
 - 除特别说明外，下面的命令都在仓库根目录执行。桌面端另有平台要求，见下方说明。
 
@@ -70,9 +70,9 @@ bun run dev
 
 ### 桌面开发（按需）
 
-桌面统一使用 **Electrobun 2.0.5**，支持 **Windows、macOS、Linux 的 x64 / ARM64** 六种目标，需要在对应系统与架构上运行，不提供跨系统交叉打包。
+桌面统一使用 **Electrobun 2.0.7**，支持 **Windows、macOS、Linux 的 x64 / ARM64** 六种目标，需要在对应系统与架构上运行，不提供跨系统交叉打包。
 
-- **Windows**：运行窗口需要 WebView2；构建脚本会调用 `%WINDIR%/Microsoft.NET/Framework64/v4.0.30319/csc.exe` 编译辅助程序。ARM64 需要 .NET Framework 4.8.1，较新的 Windows 11 已内置。NSIS 是制作 Windows 安装包的要求，不是普通 Web 开发或桌面开发的前置条件。
+- **Windows**：运行窗口需要 WebView2。启动器、更新助手等辅助程序由 Windows 自带的 .NET Framework 编译器 `%WINDIR%/Microsoft.NET/Framework64/v4.0.30319/csc.exe` 编译，用户无需另装 .NET。制作安装包还需要 Visual Studio C++ 生成工具（含 Windows SDK，ARM64 打包需安装 ARM64 组件），用于编译原生的 WebView2 检测程序。NSIS 是制作 Windows 安装包的要求，不是普通 Web 开发或桌面开发的前置条件。
 - **macOS**：最低支持 macOS 14，先安装 Xcode Command Line Tools。
 - **Linux**：DEB 面向 Debian / Ubuntu，需要 GTK 3、WebKitGTK 4.1、Ayatana AppIndicator、librsvg、Zenity、FFmpeg，以及提供 `dpkg-deb` 的 dpkg。DEB 在解包前联网准备并校验固定版本的 Bun；apt 会先安装 `Pre-Depends` 声明的 `ca-certificates`、`curl`、`unzip`，安装配置阶段再安装运行时。Ubuntu 24.04 的安装命令见[开发与构建指南](./docs/development.md)。
 

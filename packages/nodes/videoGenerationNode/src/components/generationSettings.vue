@@ -26,8 +26,8 @@
           </el-select>
         </div>
       </div>
-      <div class="sectionLabel">通用比例</div>
-      <div class="ratioOptions" role="group" aria-label="视频比例">
+      <div v-if="ratios.length" class="sectionLabel">视频比例</div>
+      <div v-if="ratios.length" class="ratioOptions" role="group" aria-label="视频比例">
         <el-button v-for="item in ratios" :key="item" class="ratioButton" :disabled="disabled" :aria-label="`比例 ${item}`" :aria-pressed="ratio === item" @click="ratio = item">
           <span class="ratioContent">
             <span class="ratioShape" :style="ratioStyle(item)" aria-hidden="true" />
@@ -51,7 +51,7 @@ import { IconChevronDown, IconChevronUp } from "@tabler/icons-vue";
 import type { NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
 import modelForm from "@toonflow/node-shared/modelForm";
 
-const props = defineProps<{ model?: NodeMediaModel; disabled?: boolean; ratios: string[] }>();
+const props = defineProps<{ model?: NodeMediaModel; disabled?: boolean; ratios: string[]; maxDuration?: number }>();
 const settingsVisible = ref(false);
 const duration = defineModel<number | undefined>("duration", { required: true });
 const resolution = defineModel<string>("resolution", { required: true });
@@ -67,7 +67,7 @@ const modes = computed(() => (props.model?.mode ?? []).map(item => ({
   label: Array.isArray(item) ? "混合参考" : modeLabels[item] ?? item,
 })));
 const mappings = computed(() => props.model?.durationResolutionMap ?? []);
-const durations = computed(() => [...new Set(mappings.value.flatMap(item => item.duration))].sort((a, b) => a - b));
+const durations = computed(() => [...new Set(mappings.value.flatMap(item => item.duration))].filter(value => props.maxDuration === undefined || (value >= 4 && value <= Math.min(30, props.maxDuration))).sort((a, b) => a - b));
 const resolutions = computed(() => resolutionsFor(duration.value));
 
 function resolutionsFor(value: number | undefined) {
@@ -75,8 +75,10 @@ function resolutionsFor(value: number | undefined) {
 }
 
 function ratioStyle(value: string) {
-  const [width = 1, height = 1] = value.split(":").map(Number);
-  return { width: `${16 * Math.min(width / height, 1)}px`, height: `${16 * Math.min(height / width, 1)}px` };
+  const [width, height] = value.split(":").map(Number);
+  const aspect = width / height;
+  if (!Number.isFinite(aspect) || aspect <= 0) return { display: "none" };
+  return { width: `${16 * Math.min(aspect, 1)}px`, height: `${16 * Math.min(1 / aspect, 1)}px` };
 }
 </script>
 

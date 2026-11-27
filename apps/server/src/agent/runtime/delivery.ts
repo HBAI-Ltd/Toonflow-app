@@ -76,6 +76,7 @@ export function configureAgentDelivery(session: AgentSession, initial?: UserMess
   });
 
   return {
+    setTaskMessageId(id: string) { taskMessageId = id; },
     forgetQueuedMessage(message: UserMessage) { queuedModes.delete(message); },
     savePendingMessages(onSaved: () => void) {
       for (const mode of ["steer", "followUp"] as const) {

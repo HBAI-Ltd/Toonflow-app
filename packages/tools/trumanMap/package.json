@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@toonflow/tools-scaffold": "workspace:*",
-    "@types/bun": "1.4.4",
+    "@types/bun": "1.4.5",
     "typescript": "6.0.3"
   }
 }

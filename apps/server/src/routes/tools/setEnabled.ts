@@ -27,6 +27,8 @@ export default router.put("/", validateFields({ name: u.plugins.toolNameSchema, 
     } else if (!marker) {
       await writeFile(markerPath, "", { flag: "wx" });
     }
+    const wasEnabled = !marker;
+    if (enabled !== wasEnabled) u.localModels.notifyModelCatalogChange();
     res.json(success({ name, enabled }));
   } finally { release(); }
 });

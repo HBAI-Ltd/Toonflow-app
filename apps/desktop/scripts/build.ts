@@ -33,7 +33,8 @@ if (isMac) {
   }
 }
 const ffmpegBuild = await Bun.build({
-  entrypoints: [resolve(projectDir, "packages/ffmpeg/src/ffmpegWorker.ts")],
+  entrypoints: [resolve(projectDir, "packages/ffmpeg/src/ffmpegWorker.ts"), resolve(projectDir, "apps/server/src/utils/localModel/onnx/localModelProcess.ts")],
+  naming: "[name].js",
   outdir: resolve(projectDir, "build/desktop/ffmpeg"),
   target: "bun",
   minify: true,
@@ -68,7 +69,7 @@ if (isWindows && process.arch === "x64") {
 if (isWindows) {
   const protocolDir = resolve(projectDir, "build/desktop/protocol");
   const csc = resolve(process.env.WINDIR!, "Microsoft.NET/Framework64/v4.0.30319/csc.exe");
-  // ACT: .NET Framework 4.8.1 的 AnyCPU 助手在 ARM64 原生运行，安装器检查该运行时。
+  // ACT: ARM64 的 AnyCPU 助手只调用系统 DLL，由系统 .NET Framework 按模拟架构运行，不要求 4.8.1。
   const helperPlatform = `/platform:${process.arch === "arm64" ? "anycpu" : "x64"}`;
   const version = desktopConfig.app.version;
   if (!/^\d+\.\d+\.\d+$/.test(version) || version.split(".").some(part => Number(part) > 65534)) {
@@ -127,10 +128,7 @@ cpSync(photonDirectory, photonOutput, { recursive: true });
 await copyDocumentPackages(resolve(projectDir, "build/desktop/node_modules"));
 await copySandboxPackages(resolve(projectDir, "build/desktop/node_modules"));
 const cli = resolve(projectDir, "apps/desktop/node_modules/electrobun/bin/electrobun.cjs");
-if (isMac && mode !== "dev") {
-  // ACT: 外置 Bun 的 macOS Bundle 身份尚待实机验证，正式构建继续内置；显式开启仅用于验证精简安装包。
-  if (process.env.TOONFLOW_EXTERNAL_RUNTIME === "1") await prepareMacRuntime();
-}
+if (isMac && mode !== "dev" && process.env.TOONFLOW_EXTERNAL_RUNTIME === "1") await prepareMacRuntime();
 // ACT: SDK 调用 Windows PowerShell 压缩产物，避免继承 PowerShell 7 的同名模块。
 const buildEnv = { ...process.env };
 if (isWindows && mode !== "dev") buildEnv.PSModulePath = resolve(process.env.WINDIR!, "System32/WindowsPowerShell/v1.0/Modules");

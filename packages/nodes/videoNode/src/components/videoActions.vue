@@ -22,11 +22,7 @@
           </div>
           <div class="timelineBody">
             <div ref="track" class="frameTrack" @pointerdown="seekTrack">
-              <div class="filmstrip" aria-hidden="true">
-                <div v-for="index in frameCount" :key="index" class="frameCell">
-                  <img v-if="frames[index - 1]" :src="frames[index - 1]" alt="" draggable="false" />
-                </div>
-              </div>
+              <videoFilmstrip :src="visible ? playbackSrc : ''" :duration="duration" />
               <div class="discardedArea" :style="{ left: 0, width: `${startPercent}%` }" />
               <div class="discardedArea" :style="{ left: `${endPercent}%`, right: 0 }" />
               <div class="selectedArea" :style="{ left: `${startPercent}%`, width: `${Math.max(0, endPercent - startPercent)}%` }" />
@@ -65,7 +61,7 @@
         </div>
         <p class="actionHint">{{ validRange ? '截取后生成新视频节点，原视频会保留。' : '请选择有效的起止时间。' }}</p>
       </template>
-      <p v-else class="actionHint">{{ action === 'extractAudio' ? '提取音轨并生成音频节点，保留原视频。' : '生成静音视频和音频两个节点，保留原视频。' }}</p>
+      <p v-else class="actionHint">{{ action === 'extractAudio' ? '将视频里的声音保存到新音频节点。' : '生成静音视频和音频两个节点，保留原视频。' }}</p>
       <div v-if="processing" class="processingStatus" role="status" aria-live="polite">
         <el-progress :percentage="100" :indeterminate="true" :showText="false" />
         <span>{{ cancelling ? '正在取消并清理文件…' : '正在处理视频…' }}</span>
@@ -76,16 +72,21 @@
       </div>
     </div>
   </el-dialog>
+  <mediaToolDialog ref="toolDialog" :file="file" :src="src" :disabled="disabled || processing || creatingAnalysis" :run="runVideoTool" />
 </template>
 
 <script setup lang="ts">
 import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import videoFilmstrip from "./videoFilmstrip.vue";
 import { useNode, useVueFlow, type Node } from "@vue-flow/core";
 import { ElButton, ElDialog, ElMessage, ElProgress } from "element-plus";
 import { useNodeFiles, useNodeFfmpeg, useNodeEvent, type WorkspaceFiles, type NodeMediaValue } from "@toonflow/nodes-scaffold/runtime";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { processVideo } from "../videoProcessing";
 import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
+import mediaToolDialog from "@toonflow/node-shared/mediaToolDialog";
+import type { MediaToolSelection } from "@toonflow/node-shared/mediaTools";
+import { videoTools, runVideoTool } from "../videoTools";
 
 const props = defineProps<{ file?: NodeMediaValue; src: string; disabled?: boolean }>();
 const { node } = useNode();
@@ -95,12 +96,14 @@ const loadFfmpeg = useNodeFfmpeg();
 const nodeEvent = useNodeEvent();
 const getCanvas = inject<(() => { id: string } | undefined) | undefined>("canvas", undefined);
 const batchHistory = inject<(action: () => Promise<void>) => Promise<void>>("batchCanvasHistory", action => action());
-const actionLabels = { extractAudio: "提取音轨", separate: "分离音视频", trim: "截取片段" };
+const actionLabels = { extractAudio: "提取声音", separate: "分开画面和声音", trim: "截取片段" };
 const action = ref<keyof typeof actionLabels>("trim");
 const visible = ref(false);
 const { src: playbackSrc, preparing: preparingPreview, error: previewError, handleError, handleLoaded } = useMediaPreview(() => visible.value && action.value === "trim" ? props.src : "", "video");
 const processing = ref(false);
 const creatingAnalysis = ref(false);
+const toolDialog = ref<InstanceType<typeof mediaToolDialog>>();
+const toolProcessing = computed(() => processing.value || !!toolDialog.value?.busy);
 const cancelling = ref(false);
 const preview = ref<HTMLVideoElement>();
 const duration = ref(0);
@@ -108,8 +111,6 @@ const start = ref(0);
 const end = ref(0);
 const track = ref<HTMLDivElement>();
 const currentTime = ref(0);
-const frames = ref<string[]>([]);
-const frameCount = 10;
 const dragging = ref<"start" | "end">();
 const clipLimit = computed(() => duration.value < 0.01 ? duration.value : Math.floor(duration.value * 100) / 100);
 const minimumLength = computed(() => Math.min(0.01, clipLimit.value));
@@ -118,8 +119,6 @@ const endPercent = computed(() => duration.value && Number.isFinite(end.value) ?
 const validRange = computed(() => Number.isFinite(start.value) && Number.isFinite(end.value) && start.value >= 0 && end.value > start.value && end.value <= duration.value);
 let controller: AbortController | undefined;
 let job: Promise<void> | undefined;
-let thumbnailVideo: HTMLVideoElement | undefined;
-let thumbnailTimer: number | undefined;
 let drag: { pointerId: number; target: HTMLElement; x: number; time: number; width: number } | undefined;
 
 function cancel() {
@@ -140,7 +139,7 @@ watch(() => props.src, reset, { flush: "sync" });
 watch(() => props.disabled, disabled => { if (disabled) reset(); }, { flush: "sync" });
 watch(() => getCanvas?.()?.id, reset, { flush: "sync" });
 watch(visible, value => { if (!value) clearPreview(); });
-watch(playbackSrc, () => { clearPreview(); duration.value = 0; frames.value = []; });
+watch(playbackSrc, () => { clearPreview(); duration.value = 0; });
 onBeforeUnmount(() => { cancel(); clearPreview(); });
 nodeEvent.on("save", reason => {
   if (reason === "reload" && processing.value) throw new Error("视频处理中，请完成或取消后再刷新节点");
@@ -148,24 +147,25 @@ nodeEvent.on("save", reason => {
 nodeEvent.on("delete", async () => { cancel(); await job; });
 
 function open(value: keyof typeof actionLabels) {
-  if (processing.value || creatingAnalysis.value || props.disabled || !props.file) return;
+  if (toolProcessing.value || creatingAnalysis.value || props.disabled || !props.file) return;
+  toolDialog.value?.close();
   action.value = value;
   duration.value = start.value = end.value = 0;
   currentTime.value = 0;
-  frames.value = [];
   visible.value = true;
   if (value !== "trim") run();
 }
 
-async function createFrameAnalysis() {
-  if (processing.value || creatingAnalysis.value || props.disabled || !props.file) return;
-  const type = "remote-frameAnalysisNode";
+async function createVideoChild(retake = false) {
+  if (toolProcessing.value || creatingAnalysis.value || props.disabled || !props.file) return;
+  const type = retake ? "remote-videoGenerationNode" : "remote-frameAnalysisNode";
+  const label = retake ? "重新生成片段" : "逐帧拉片";
   const canvasId = getCanvas?.()?.id;
   const source = props.file.url;
   const nodeId = crypto.randomUUID();
   creatingAnalysis.value = true;
   try {
-    if (!nodeTypes?.value?.[type]) throw new Error("请先启用逐帧拉片节点插件");
+    if (!nodeTypes?.value?.[type]) throw new Error(retake ? "请先启用视频生成节点插件" : "请先启用逐帧拉片节点插件");
     if (findNode(node.id) !== node) throw new Error("原视频节点已变化，请重新操作");
     const width = Math.max(240, node.dimensions.width || 320);
     const x = node.computedPosition.x + (node.dimensions.width || 320) + 80;
@@ -180,7 +180,7 @@ async function createFrameAnalysis() {
     await batchHistory(async () => {
       try {
         // 组内视频使用绝对坐标，新拉片节点直接放到画布，不继承父组的相对位置。
-        addNodes({ id: nodeId, type, position: { x, y }, data: { label: `${node.data.label || "视频"} · 逐帧拉片` } });
+        addNodes({ id: nodeId, type, position: { x, y }, data: { label: `${node.data.label || "视频"} · ${label}`, ...(retake && { retake: true, duration: 4 }) } });
         await nextTick();
         if (getCanvas?.()?.id !== canvasId || findNode(node.id) !== node || props.file?.url !== source
           || !nodeTypes?.value?.[type] || !findNode(nodeId)) throw new Error("画布或视频已变化，请重新操作");
@@ -201,20 +201,25 @@ async function createFrameAnalysis() {
       await setCenter(x + width / 2, y + 160, { zoom: 1, duration: 200 });
     }
   } catch (error) {
-    showNodeError(error, "创建逐帧拉片节点失败");
+    showNodeError(error, `创建${label}节点失败`);
   } finally {
     creatingAnalysis.value = false;
   }
 }
 
-defineExpose({ open, processing, createFrameAnalysis, creatingAnalysis });
+function openTool(choice: MediaToolSelection) {
+  if (toolProcessing.value || creatingAnalysis.value || props.disabled || !props.file) return;
+  visible.value = false;
+  toolDialog.value?.open(choice);
+}
+
+defineExpose({ open, processing: toolProcessing, createFrameAnalysis: () => createVideoChild(), createRetake: () => createVideoChild(true), creatingAnalysis, tools: videoTools, openTool, toolDialog });
 
 function readDuration(event: Event) {
   if (!handleLoaded(event)) return;
   const value = (event.currentTarget as HTMLVideoElement).duration;
   duration.value = Number.isFinite(value) && value > 0 ? value : 0;
   end.value = clipLimit.value;
-  if (duration.value) loadThumbnails();
 }
 
 function formatTime(value: number) {
@@ -222,54 +227,8 @@ function formatTime(value: number) {
   return `${String(Math.floor(centiseconds / 6000)).padStart(2, "0")}:${(centiseconds % 6000 / 100).toFixed(2).padStart(5, "0")}`;
 }
 
-function stopThumbnails() {
-  clearTimeout(thumbnailTimer);
-  if (!thumbnailVideo) return;
-  thumbnailVideo.onloadeddata = thumbnailVideo.onseeked = thumbnailVideo.onerror = null;
-  thumbnailVideo.removeAttribute("src");
-  thumbnailVideo.load();
-  thumbnailVideo = undefined;
-}
-
-function loadThumbnails() {
-  stopThumbnails();
-  frames.value = [];
-  const source = thumbnailVideo = document.createElement("video");
-  const canvas = document.createElement("canvas");
-  canvas.width = 160;
-  canvas.height = 96;
-  const context = canvas.getContext("2d");
-  if (!context) return void stopThumbnails();
-  // ACT: 只采样 10 张小图，缩略图数量与内存不随视频时长增长，不生成逐帧缓存。
-  const seekFrame = () => {
-    clearTimeout(thumbnailTimer);
-    thumbnailTimer = window.setTimeout(stopThumbnails, 15000);
-    const time = Math.min(duration.value * (frames.value.length + 0.5) / frameCount, Math.max(0, duration.value - 0.001));
-    if (source.readyState >= 2 && Math.abs(source.currentTime - time) < 0.000001) captureFrame();
-    else source.currentTime = time;
-  };
-  const captureFrame = () => {
-    try {
-      const scale = Math.max(canvas.width / source.videoWidth, canvas.height / source.videoHeight);
-      context.drawImage(source, (canvas.width - source.videoWidth * scale) / 2, (canvas.height - source.videoHeight * scale) / 2, source.videoWidth * scale, source.videoHeight * scale);
-      frames.value.push(canvas.toDataURL("image/jpeg", 0.75));
-      if (frames.value.length === frameCount) stopThumbnails();
-      else seekFrame();
-    } catch { stopThumbnails(); }
-  };
-  source.onloadeddata = seekFrame;
-  source.onseeked = captureFrame;
-  source.onerror = stopThumbnails;
-  source.muted = true;
-  source.preload = "auto";
-  source.src = playbackSrc.value;
-  thumbnailTimer = window.setTimeout(stopThumbnails, 15000);
-  source.load();
-}
-
 function clearPreview() {
   preview.value?.pause();
-  stopThumbnails();
   endDrag();
 }
 
@@ -449,20 +408,6 @@ async function process() {
         cursor: crosshair;
         touch-action: none;
         user-select: none;
-        .filmstrip {
-          display: flex;
-          height: 100%;
-          overflow: hidden;
-          border-radius: 5px;
-          background: var(--el-fill-color-darker);
-          .frameCell {
-            flex: 1;
-            min-width: 0;
-            border-right: 1px solid rgba(255, 255, 255, 0.12);
-            background: linear-gradient(135deg, transparent, rgba(0, 0, 0, 0.12));
-            img { display: block; width: 100%; height: 100%; object-fit: cover; }
-          }
-        }
         .discardedArea { position: absolute; top: 0; bottom: 0; background: rgba(9, 12, 20, 0.7); pointer-events: none; }
         .selectedArea { position: absolute; top: 0; bottom: 0; box-sizing: border-box; border-block: 3px solid var(--el-color-primary); background: color-mix(in srgb, var(--el-color-primary) 8%, transparent); pointer-events: none; }
         .playhead {

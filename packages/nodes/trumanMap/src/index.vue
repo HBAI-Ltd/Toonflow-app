@@ -14,11 +14,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, toRaw, watch } from "vue";
 import { ElDialog } from "element-plus";
+import { translate } from "@toonflow/i18n/vue";
 import { useVueFlow } from "@vue-flow/core";
 import { IconCube3dSphere } from "@tabler/icons-vue";
 import { nodeSkeleton, useNode, uploadNodeFile, type NodeHandle, type WorkspaceFiles, type NodeAiModel, z } from "@toonflow/nodes-scaffold/runtime";
 import { useNodePersistence, useNodeProject, type NodePersistenceContext } from "@toonflow/nodes-scaffold/nodeDocument";
 import sceneStudio from "./sceneStudio.vue";
+import { imageTypes } from "./promptImages";
 import { builtinAssets, downloadAsset, validateModel } from "./assetLibrary";
 import { resolveAssetModel } from "./assetModelResolver";
 import { createSceneDocument, type SceneDocument, type SceneAsset, type SceneAnchor } from "./sceneDocument";
@@ -571,7 +573,7 @@ ${upstreamText.value}` : ""}`;
     try {
       signal.throwIfAborted();
       if (!draft.changed) {
-        return { document: input.document, summary: [result.text.trim() || "本轮未修改场景或演绎。", result.incomplete].filter(Boolean).join("\n"), changed: false };
+        return { document: input.document, summary: [result.text.trim() || translate("本轮未修改场景或演绎。"), result.incomplete].filter(Boolean).join("\n"), changed: false };
       }
       input.onStatus(lifeOnly ? "保存演绎动线" : "校验交付并保存场景修订");
       input.onProgress?.({ type: "status", message: lifeOnly ? "保存演绎动线" : "校验交付并保存场景修订" });
@@ -583,7 +585,7 @@ ${upstreamText.value}` : ""}`;
       await draft.validateObservedAssets(signal, proposal);
       const summary = result.text.trim().slice(0, lifeOnly ? 1500 : 3000);
       const rehearsal = lifeOnly ? draft.getRehearsalSummary() : undefined;
-      return { document: proposal, summary: [summary, rehearsal, draft.autoCoverageNote, result.incomplete].filter(Boolean).join("\n") || (lifeOnly ? "已安排个体动线与关键事件，可直接在场景中调整。" : "已完成场景修订及真实视口核验"), changed: true };
+      return { document: proposal, summary: [summary, rehearsal, draft.autoCoverageNote, result.incomplete].filter(Boolean).join("\n") || (lifeOnly ? translate("已安排个体动线与关键事件，可直接在场景中调整。") : translate("已完成场景修订及真实视口核验")), changed: true };
     } finally { await result.closing; }
   } catch (error) {
     if (!lifeOnly && !signal.aborted && draft?.changed) {
@@ -592,7 +594,7 @@ ${upstreamText.value}` : ""}`;
       try { recoveryPath = await draft.saveRecovery(signal); }
       catch (failure) { recoveryError = failure instanceof Error ? failure.message : "无法保存草稿备份"; }
       signal.throwIfAborted();
-      const message = error instanceof Error ? error.message : "生成未能完成";
+      const message = error instanceof Error ? error.message : translate("生成未能完成");
       throw new Error(`${message}\n${recoveryPath ? `未采用的生成草稿已保留：${recoveryPath}` : `生成草稿备份失败：${recoveryError}`}`, { cause: error });
     }
     throw error;
@@ -736,7 +738,6 @@ nodeTools.register({
 type HostJob = { id: string; event: EditorEventName; startedAt: number; done: boolean; promise: Promise<void>; result?: unknown; error?: unknown };
 const hostJobs = new Map<string, HostJob>();
 const hostWaitMs = 100000;
-const imageTypes: Record<string, string> = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", gif: "image/gif" };
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 async function ensureEditor() {
   for (let tries = 0; closing.value && tries < 100; tries++) await wait(100);

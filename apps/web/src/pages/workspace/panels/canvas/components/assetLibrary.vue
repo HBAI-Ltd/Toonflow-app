@@ -1,5 +1,5 @@
 <template>
-  <assetBrowser v-if="visible && expanded" v-model:folder="folder" v-model:searchQuery="searchQuery" v-model:newFolderName="newFolderName" :entries="entries" :loading="loading" :uploading="uploading" :newFolderParent="newFolderParent" :folderSaving="folderSaving" :mediaKind="mediaKind" :assetUrl="assetUrl" :canSelect="canSelect" :selecting="selecting" :expandedFolders="expandedFolders" @select="emit('select', $event)" @upload="fileInput?.click()" @startFolder="startFolder" @saveFolder="saveFolder" @cancelFolder="cancelFolder" @preview="openPreview" @menu="openItemMenu" @drag="startAssetDrag" @expandFolder="expandFolder" @collapseFolder="collapseFolder" />
+  <assetBrowser v-if="visible && expanded" v-model:folder="folder" v-model:searchQuery="searchQuery" v-model:newFolderName="newFolderName" :entries="entries" :loading="loading" :uploading="uploading" :newFolderParent="newFolderParent" :folderSaving="folderSaving" :mediaKind="mediaKind" :assetUrl="assetUrl" :accept="accept" :selectionOrder="selectionOrder" :canSelect="canSelect" :selecting="selecting" :expandedFolders="expandedFolders" @select="emit('select', $event)" @upload="fileInput?.click()" @startFolder="startFolder" @saveFolder="saveFolder" @cancelFolder="cancelFolder" @preview="openPreview" @menu="openItemMenu" @drag="startAssetDrag" @expandFolder="expandFolder" @collapseFolder="collapseFolder" />
   <el-card v-else-if="visible" class="assetLibrary" shadow="never" :bodyStyle="{ padding: '8px' }" role="region" aria-label="素材库" @dblclick.stop>
     <div class="libraryToolbar">
       <el-input v-model="searchQuery" class="searchInput" :prefixIcon="IconSearch" placeholder="搜索素材" aria-label="搜索素材" clearable @keydown.esc.stop="searchQuery = ''" />
@@ -8,7 +8,7 @@
       <el-button class="toolbarButton" text :icon="IconX" title="关闭素材库" aria-label="关闭素材库" @click="visible = false" />
     </div>
     <el-scrollbar class="libraryScroll" maxHeight="min(440px, calc(100dvh - 198px))">
-      <el-tree ref="assetTree" class="assetTree" :data="displayEntries" nodeKey="path" :props="{ label: 'name' }" :icon="IconChevronRight" :currentNodeKey="folder === '.' ? undefined : folder" :filterNodeMethod="filterEntry" :defaultExpandAll="generalSettings.assetFoldersExpanded" :defaultExpandedKeys="expandedFolders" :autoExpandParent="false" highlightCurrent emptyText="" @nodeClick="selectFolder" @nodeExpand="(entry: AssetEntry) => expandFolder(entry.path)" @nodeCollapse="(entry: AssetEntry) => collapseFolder(entry.path)">
+      <el-tree ref="assetTree" class="assetTree" :data="displayEntries" nodeKey="path" :props="{ label: 'name' }" :icon="IconChevronRight" :currentNodeKey="folder === '.' ? undefined : folder" :filterNodeMethod="filterEntry" :defaultExpandAll="generalSettings.assetFoldersExpanded" :defaultExpandedKeys="expandedFolders" :autoExpandParent="false" highlightCurrent :emptyText="loading ? '' : searchQuery.trim() ? '没有找到匹配的素材' : '暂无素材'" @nodeClick="selectFolder" @nodeExpand="(entry: AssetEntry) => expandFolder(entry.path)" @nodeCollapse="(entry: AssetEntry) => collapseFolder(entry.path)">
         <template #default="{ data, node }">
           <div class="assetEntry" :title="data.name" :draggable="data.type === 'file'" @dragstart.stop="startAssetDrag($event, data)" @dblclick.stop="openPreview(data)" @contextmenu="openItemMenu($event, data)">
             <span v-if="data.type === 'directory'" class="fileIcon"><component :is="node.expanded && !node.isLeaf ? IconFolderOpen : IconFolder" :size="18" aria-hidden="true" /></span>
@@ -38,7 +38,7 @@
   </el-card>
 
   <input ref="fileInput" type="file" multiple hidden aria-label="选择本地素材" :disabled="uploading" @change="uploadFiles" />
-  <assetMenu v-if="visible" ref="assetMenuRef" :entries="entries" @changed="refreshAssets" />
+  <assetMenu v-if="visible" ref="assetMenuRef" :entries="entries" :insert="canSelect ? undefined : insertCanvasAsset" @changed="refreshAssets" />
 
   <el-image-viewer v-if="previewAsset?.kind === 'image'" :urlList="[mediaSrc]" teleported @error="handleError" @close="previewAsset = undefined" />
 
@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
+import { computed, inject, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import axios from "axios";
 import { t } from "@toonflow/i18n/vue";
 import { ElMessage, ElTree, type InputInstance, type TreeNodeData } from "element-plus";
@@ -115,7 +115,7 @@ import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
 type AssetEntry = { name: string; path: string; type: "file" | "directory"; children?: AssetEntry[]; draft?: boolean };
 type AssetOutput = { label: string; output: NodeOutput };
 
-const props = defineProps<{ directory?: string; expanded?: boolean; canSelect?: (entry: AssetEntry) => boolean; selecting?: boolean }>();
+const props = defineProps<{ directory?: string; expanded?: boolean; accept?: string; selectionOrder?: Map<string, number>; canSelect?: (entry: AssetEntry) => boolean; selecting?: boolean }>();
 const emit = defineEmits<{ select: [entry: AssetEntry] }>();
 const visible = defineModel<boolean>({ default: false });
 const saveVisible = ref(false);
@@ -140,6 +140,7 @@ const newFolderParent = ref<string>();
 const newFolderName = ref("");
 const folderSaving = ref(false);
 const assetMenuRef = ref<InstanceType<typeof assetMenu>>();
+const insertCanvasAsset = inject<((path: string) => Promise<void>) | undefined>("insertCanvasAsset", undefined);
 const previewAsset = ref<{ name: string; url: string; kind: "image" | "audio" | "video" }>();
 const { src: mediaSrc, preparing, error: previewError, handleError, handleLoaded } = useMediaPreview(() => previewAsset.value?.url, () => previewAsset.value?.kind ?? "image");
 watch(previewError, error => { if (error && previewAsset.value?.kind === "image") ElMessage.error(error); });
@@ -551,6 +552,11 @@ defineExpose({ openSave, chooseFolder });
         margin: 0;
         padding: 0;
         color: var(--el-text-color-secondary);
+
+        @media (any-pointer: coarse) {
+          width: 32px;
+          height: 32px;
+        }
       }
 
       .assetName {

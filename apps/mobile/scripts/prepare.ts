@@ -4,9 +4,9 @@ import { join, resolve } from "node:path";
 
 const buildRoot = resolve(import.meta.dir, "../../../build/mobile");
 const runtimeRoot = resolve(buildRoot, "runtime");
-const bunVersion = "1.4.2";
+const bunVersion = "1.4.5";
 const runtimes = [
-  { abi: "arm64-v8a", name: "bun-linux-aarch64-android", sha256: "a1c7e2983f1bb65146beb256a4d72449f23042412bc2cf278aa6397ba27e0274" },
+  { abi: "arm64-v8a", name: "bun-linux-aarch64-android", sha256: "587471d26c8cc685debc5655cd5bf6d95d052a3b4a4956bdc922f8c6f1779396" },
 ];
 
 if (process.platform !== "win32") throw new Error("当前 Android 验证构建使用 Windows SDK，请在 Windows 上执行。");

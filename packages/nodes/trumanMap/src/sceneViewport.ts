@@ -1435,9 +1435,14 @@ export function createSceneViewport(canvas: HTMLCanvasElement, options: Viewport
     const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? Math.max(1, canvas.clientHeight) : 1);
     if (!Number.isFinite(delta) || !delta) return;
     // 滚轮永远是放大缩小：朝鼠标指着的地方推近、拉远（按住右键环视时光标藏起来了，就朝画面中心）。
-    // 推拉只挪机位，不改焦段。
     const { left, top, width, height } = canvas.getBoundingClientRect();
-    const ray = firstPersonLook ? getRay(left + width / 2, top + height / 2) : getRay(event.clientX, event.clientY);
+    if (firstPersonLook) dollyCamera(left + width / 2, top + height / 2, delta);
+    else dollyCamera(event.clientX, event.clientY, delta);
+  }
+
+  // 推拉只挪机位，不改焦段；delta 与滚轮同单位，正值拉远，每 100 走掉到目标距离的 15%。
+  function dollyCamera(clientX: number, clientY: number, delta: number) {
+    const ray = getRay(clientX, clientY);
     if (!ray) return;
     cancelViewTransition();
     const direction = ray.direction.clone();
@@ -1560,6 +1565,74 @@ export function createSceneViewport(canvas: HTMLCanvasElement, options: Viewport
     queueFirstPersonLook(event);
     event.preventDefault();
     event.stopImmediatePropagation();
+  }
+
+  function beginFirstPersonLook(pointerId: number, x: number, y: number) {
+    applyView(readView());
+    controls.minPolarAngle = 0.01;
+    controls.maxPolarAngle = Math.PI - 0.01;
+    lookRotation.setFromQuaternion(camera.quaternion);
+    firstPersonLook = { pointerId, x, y, locked: false, yaw: lookRotation.y, pitch: lookRotation.x, time: performance.now() };
+    syncCameraControls();
+    pointerStart = undefined;
+    updateBrushIndicator(null);
+    updateCursor();
+  }
+
+  // ACT: 触屏双指导航：两指中点拖动环视（同按住右键），捏合朝两指中点推拉（同滚轮）；单指仍走点选、框选与拖动。
+  // 第一指已在搬物体、改轨迹、刷地形等编辑中时不接管，第二指忽略；暂不支持双指平移，平移仍靠中键。
+  const touchPoints = new Map<number, { x: number; y: number }>();
+  let touchGesture: { ids: number[]; distance: number } | undefined;
+
+  function touchCenter(ids: number[]) {
+    const [a, b] = ids.map(id => touchPoints.get(id)!);
+    return { x: (a!.x + b!.x) / 2, y: (a!.y + b!.y) / 2, distance: Math.hypot(a!.x - b!.x, a!.y - b!.y) };
+  }
+
+  function beginTouchGesture() {
+    if (cameraDrag || pathEdit || routeStroke || objectDrag || terrainStroke || performanceDragging || firstPersonLook) return false;
+    cancelBoxSelection();
+    if (!canNavigateCamera()) return false;
+    const ids = [...touchPoints.keys()];
+    const center = touchCenter(ids);
+    cancelViewTransition();
+    stopNavigation();
+    touchGesture = { ids, distance: center.distance };
+    beginFirstPersonLook(ids[0]!, center.x, center.y);
+    // 取消框选会释放第一指的捕获，两指都重新捕获，移出画布时仍能收到移动与抬起。
+    for (const id of ids) canvas.setPointerCapture(id);
+    return true;
+  }
+
+  function moveTouchGesture(event: PointerEvent) {
+    const point = touchPoints.get(event.pointerId);
+    if (!point) return;
+    point.x = event.clientX;
+    point.y = event.clientY;
+    const gesture = touchGesture;
+    const look = firstPersonLook;
+    if (!gesture?.ids.includes(event.pointerId)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (!look) return;
+    const center = touchCenter(gesture.ids);
+    look.yaw -= (center.x - look.x) * 0.003;
+    look.pitch = MathUtils.clamp(look.pitch - (center.y - look.y) * 0.003, -Math.PI / 2 + 0.02, Math.PI / 2 - 0.02);
+    look.x = center.x;
+    look.y = center.y;
+    if (center.distance > 0 && gesture.distance > 0 && center.distance !== gesture.distance) {
+      // 两指间距放大 s 倍，到目标的距离缩短为 1/s，与滚轮推拉同一公式。
+      dollyCamera(center.x, center.y, 100 * Math.log(center.distance / gesture.distance) / Math.log(0.85));
+      gesture.distance = center.distance;
+    }
+    invalidate();
+  }
+
+  function endTouchPoint(event: PointerEvent) {
+    if (!touchPoints.delete(event.pointerId) || !touchGesture?.ids.includes(event.pointerId)) return false;
+    touchGesture = undefined;
+    cancelFirstPersonLook(true);
+    return true;
   }
 
   function handlePointerLockChange() {
@@ -3764,6 +3837,15 @@ export function createSceneViewport(canvas: HTMLCanvasElement, options: Viewport
   }
 
   function handlePointerDown(event: PointerEvent) {
+    if (event.pointerType === "touch") {
+      // 新的主触点说明此前的手指都已离开，清掉可能漏收抬起事件的残留触点。
+      if (event.isPrimary) {
+        touchPoints.clear();
+        if (touchGesture) { touchGesture = undefined; cancelFirstPersonLook(true); }
+      }
+      touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (touchGesture || touchPoints.size === 2 && beginTouchGesture()) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+    }
     if (isShotView() || cameraDrag) { event.preventDefault(); event.stopImmediatePropagation(); return; }
     if (event.button === 0 && event.isPrimary && cameraPathDrawing && camerasVisible && navigationEnabled) {
       const pose = getCameraPose(cameraPathDrawing);
@@ -3831,16 +3913,8 @@ export function createSceneViewport(canvas: HTMLCanvasElement, options: Viewport
       event.stopImmediatePropagation();
       if (!event.isPrimary || !canNavigateCamera()) return;
       cancelObjectDrag();
-      applyView(readView());
-      controls.minPolarAngle = 0.01;
-      controls.maxPolarAngle = Math.PI - 0.01;
-      lookRotation.setFromQuaternion(camera.quaternion);
-      firstPersonLook = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, locked: false, yaw: lookRotation.y, pitch: lookRotation.x, time: performance.now() };
       canvas.setPointerCapture(event.pointerId);
-      syncCameraControls();
-      pointerStart = undefined;
-      updateBrushIndicator(null);
-      updateCursor();
+      beginFirstPersonLook(event.pointerId, event.clientX, event.clientY);
       // ACT: 按住右键使用浏览器指针锁；未获支持时仍用文档鼠标移动完成拖拽环视。
       try {
         canvas.requestPointerLock?.()?.then(() => {
@@ -4346,6 +4420,7 @@ export function createSceneViewport(canvas: HTMLCanvasElement, options: Viewport
   }
 
   function handlePointerCancel(event: PointerEvent) {
+    if (endTouchPoint(event)) return;
     if (cameraDrag?.pointer === event.pointerId) cancelCameraDrag();
     if (pathEdit?.pointer === event.pointerId) cancelPathEdit();
     endRouteStroke(event, false);
@@ -4357,6 +4432,7 @@ export function createSceneViewport(canvas: HTMLCanvasElement, options: Viewport
   }
 
   function handlePointerUp(event: PointerEvent) {
+    if (endTouchPoint(event)) return;
     if (cameraDrag?.pointer === event.pointerId) { finishCameraDrag(event); return; }
     if (pathEdit?.pointer === event.pointerId) { finishPathEdit(event); return; }
     if (endRouteStroke(event, true)) return;
@@ -4758,6 +4834,7 @@ export function createSceneViewport(canvas: HTMLCanvasElement, options: Viewport
   transform.addEventListener("change", invalidate);
   transform.addEventListener("dragging-changed", onDraggingChanged);
   canvas.addEventListener("pointerdown", handlePointerDown, true);
+  canvas.addEventListener("pointermove", moveTouchGesture, true);
   canvas.addEventListener("pointermove", moveBoxSelection, true);
   canvas.addEventListener("pointermove", moveFirstPersonPointer, true);
   canvas.addEventListener("pointermove", movePerformancePointer, true);
@@ -4873,6 +4950,7 @@ export function createSceneViewport(canvas: HTMLCanvasElement, options: Viewport
     resizeObserver.disconnect();
     themeObserver.disconnect();
     canvas.removeEventListener("pointerdown", handlePointerDown, true);
+    canvas.removeEventListener("pointermove", moveTouchGesture, true);
     canvas.removeEventListener("pointermove", moveBoxSelection, true);
     canvas.removeEventListener("pointermove", moveFirstPersonPointer, true);
     canvas.removeEventListener("pointermove", movePerformancePointer, true);

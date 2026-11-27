@@ -8,7 +8,7 @@ import { actualPlatform } from "./platform";
 type UsageEvent = "onboarding.complete" | "onboarding.skip" | "workspace.canvas" | "workspace.document";
 type AgentOutcome = "success" | "failed" | "cancelled";
 type CanvasSnapshot = { nodes: readonly { type?: string }[]; edgeCount: number };
-const nodeTypes = ["textNode", "imageNode", "videoNode", "audioNode", "imageGenerationNode", "videoGenerationNode", "audioGenerationNode", "director3dNode", "canvasGroup"];
+const nodeTypes = ["textNode", "imageNode", "videoNode", "audioNode", "imageGenerationNode", "videoGenerationNode", "audioGenerationNode", "canvasGroup"];
 let readCanvas: (() => CanvasSnapshot | undefined) | undefined;
 let collector: { track: (event: UsageEvent) => void; startAgent: () => (outcome: AgentOutcome) => void } | undefined;
 

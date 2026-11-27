@@ -70,9 +70,9 @@ watch([previewVisible, selected, () => props.directory], async ([visible, mentio
   loading.value = true;
   try {
     if (mention.source.kind === "asset" && mentionThumbnailProps(mention).globalAsset) {
-      const { data } = await axios.get<Blob>("/api/assets/read", { params: { path: mention.source.path }, responseType: "blob", signal: controller.signal });
+      const { data, headers } = await axios.get<ArrayBuffer>("/api/assets/read", { params: { path: mention.source.path }, responseType: "arraybuffer", signal: controller.signal });
       controller.signal.throwIfAborted();
-      previewUrl.value = URL.createObjectURL(data);
+      previewUrl.value = URL.createObjectURL(new Blob([data], { type: String(headers["content-type"] || "") }));
       const url = previewUrl.value;
       release = () => URL.revokeObjectURL(url);
     } else if (directory && value?.url) {

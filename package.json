@@ -13,9 +13,10 @@
     "email": "ltlctools@outlook.com"
   },
   "type": "module",
-  "packageManager": "bun@1.4.3",
+  "packageManager": "bun@1.4.5",
   "patchedDependencies": {
     "@vue-flow/core@1.48.2": "patches/vueFlowCore.patch",
+    "@vue-flow/minimap@1.5.4": "patches/vueFlowMinimap.patch",
     "@earendil-works/pi-agent-core@0.85.1": "patches/piAgentCore.patch",
     "@earendil-works/pi-coding-agent@0.85.1": "patches/piCodingAgent.patch"
   },
@@ -53,7 +54,7 @@
   },
   "devDependencies": {
     "@toonflow/file": "workspace:*",
-    "@types/bun": "^1.4.2",
+    "@types/bun": "^1.4.5",
     "@types/postcss-pxtorem": "^6.1.0",
     "postcss": "^8.5.28",
     "postcss-pxtorem": "^6.1.0",

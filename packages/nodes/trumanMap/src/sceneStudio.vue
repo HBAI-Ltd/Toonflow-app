@@ -1,7 +1,7 @@
 <template>
   <div ref="studioRoot" class="sceneStudio" :class="{ splitLayout: timelineVisible, filmPreview, inspectorBeside: !!editorPanel && editorPanel !== 'life' }" :style="{ '--performanceBottom': timelineVisible ? (timelineCollapsed ? '68px' : `${timelineHeight + 24}px`) : '0px', '--chatHeight': `${chatHeight}px` }" tabindex="-1" @keydown.stop="handleKeyDown">
     <main class="worldCanvas" :class="{ dragOver, trackPicking }" @dragover.prevent.stop @drop.prevent.stop @pointerdown.capture="cancelTrackPick">
-      <canvas ref="canvas" tabindex="0" aria-label="3D 场景，左键拖动框选，中键平移，按住右键环视，WASD 移动，Shift 下降，空格上升，滚轮放大缩小" @contextmenu.prevent />
+      <canvas ref="canvas" tabindex="0" aria-label="3D 场景，左键拖动框选，中键平移，按住右键环视，WASD 移动，Shift 下降，空格上升，滚轮放大缩小；触屏单指框选，双指拖动环视、捏合推拉" @contextmenu.prevent />
       <div v-if="filmPreview && filmAspectValue < 1" class="filmSafeFrame" aria-hidden="true"><i /></div>
     </main>
 
@@ -20,10 +20,10 @@
         <el-popover v-model:visible="exportMenuOpen" trigger="click" placement="bottom-end" :width="288" popperClass="exportMenuPopover" :disabled="locked || !studioCameras.length">
           <template #reference><button type="button" :class="{ exportHint: exportHint && studioCameras.length }" :disabled="locked || !studioCameras.length" aria-label="导出" :title="studioCameras.length ? '导出：分镜图、四视图、白模视频、场景微缩图、预演小样、镜头表（保存用 Ctrl+S，关闭时自动保存）' : '先分镜或加机位，再导出（保存用 Ctrl+S，关闭时自动保存）'"><icon-table-export :size="19" /></button></template>
           <div class="exportPanel">
-            <section v-for="group in exportGroups" :key="group.name" :aria-label="group.name">
-              <header>{{ group.name }}<small v-if="group.perShot && exportShotCount">{{ exportShotCount }} 镜</small></header>
+            <section v-for="group in exportGroups" :key="group.name" :aria-label="translate(group.name)">
+              <header>{{ translate(group.name) }}<small v-if="group.perShot && exportShotCount">{{ exportShotCount }} 镜</small></header>
               <div class="exportChoices">
-                <el-checkbox v-for="key in group.keys" :key="key" :modelValue="exportPicks[key]" :title="exportItemInfo[key].title" @update:modelValue="value => setExportPick(key, !!value)"><component :is="exportIcons[key]" :size="15" />{{ exportItemInfo[key].name }}</el-checkbox>
+                <el-checkbox v-for="key in group.keys" :key="key" :modelValue="exportPicks[key]" :title="translate(exportItemInfo[key].title)" @update:modelValue="value => setExportPick(key, !!value)"><component :is="exportIcons[key]" :size="15" />{{ translate(exportItemInfo[key].name) }}</el-checkbox>
               </div>
             </section>
             <footer>
@@ -49,7 +49,7 @@
       <div v-if="exportProgress" class="exportProgress">
         <div class="exportProgressCard floatingPanel" role="progressbar" aria-label="导出进度" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="exportPercent">
           <canvas ref="exportPreview" class="exportPreview" :width="exportPreviewSize.width" :height="exportPreviewSize.height" aria-hidden="true" />
-          <div class="exportProgressInfo"><strong>{{ exportPercent }}%</strong><span>{{ exportProgress.phase }}</span><small v-if="exportEtaText">{{ exportEtaText }}</small></div>
+          <div class="exportProgressInfo"><strong>{{ exportPercent }}%</strong><span>{{ translate(exportProgress.phase) }}</span><small v-if="exportEtaText">{{ exportEtaText }}</small></div>
           <el-progress :percentage="exportPercent" :showText="false" :strokeWidth="6" />
           <el-button size="small" @click="cancelExport"><icon-player-stop :size="14" />停止</el-button>
         </div>
@@ -154,22 +154,22 @@
           <button type="button" :class="{ active: editorPanel === 'brush' }" :aria-pressed="editorPanel === 'brush'" :disabled="locked" @click="chooseBrushPanel('brush')"><icon-brush :size="15" />物件</button>
         </div>
         <div v-if="editorPanel === 'view'" class="worldTabs" role="group" aria-label="世界设置分类">
-          <button v-for="tab in worldTabs" :key="tab.id" type="button" :class="{ active: worldTab === tab.id }" :aria-pressed="worldTab === tab.id" @click="selectWorldTab(tab.id)"><component :is="tab.icon" :size="15" stroke="1.6" />{{ tab.name }}</button>
+          <button v-for="tab in worldTabs" :key="tab.id" type="button" :class="{ active: worldTab === tab.id }" :aria-pressed="worldTab === tab.id" @click="selectWorldTab(tab.id)"><component :is="tab.icon" :size="15" stroke="1.6" />{{ translate(tab.name) }}</button>
         </div>
         <div class="editScroll" :class="{ worldScroll: editorPanel === 'view' }">
           <sceneBrushPanel v-if="editorPanel === 'brush'" v-model="sceneBrushSettings" :availableAssets="brushAvailableAssets" :loadModel="loadModel" :disabled="locked" :painting="sceneBrushPainting" :status="sceneBrushStatus" @togglePainting="togglePainting" @choose="chooseSceneBrush" @assetsLoaded="mergeAvailableAssets" @selecting="sceneBrushSelecting = $event" />
           <template v-else-if="editorPanel === 'terrain'">
             <section class="editSection terrainBrushPanel" aria-label="地形笔刷">
-              <div v-for="group in terrainBrushGroups" :key="group.name" class="terrainBrushGroup"><h4>{{ group.name }}</h4><div class="terrainBrushes" :class="{ shapeBrushes: group.name !== '水体', landformBrushes: group.name === '自然地形', waterBrushes: group.name === '水体' }" role="group" :aria-label="`${group.name}笔刷`"><button v-for="brush in group.brushes" :key="brush.id" type="button" :class="{ active: terrainPainting && terrainBrush === brush.id }" :disabled="locked" :aria-pressed="terrainPainting && terrainBrush === brush.id" @click="chooseTerrainBrush(brush.id)"><svg v-if="brush.profile" class="brushProfile" viewBox="0 0 36 22" fill="none" aria-hidden="true"><path :d="brush.profile" /></svg><component v-else :is="brush.icon" :size="18" stroke="1.6" /><span>{{ brush.name }}</span></button></div></div>
+              <div v-for="group in terrainBrushGroups" :key="group.name" class="terrainBrushGroup"><h4>{{ translate(group.name) }}</h4><div class="terrainBrushes" :class="{ shapeBrushes: group.name !== '水体', landformBrushes: group.name === '自然地形', waterBrushes: group.name === '水体' }" role="group" :aria-label="`${translate(group.name)}笔刷`"><button v-for="brush in group.brushes" :key="brush.id" type="button" :class="{ active: terrainPainting && terrainBrush === brush.id }" :disabled="locked" :aria-pressed="terrainPainting && terrainBrush === brush.id" @click="chooseTerrainBrush(brush.id)"><svg v-if="brush.profile" class="brushProfile" viewBox="0 0 36 22" fill="none" aria-hidden="true"><path :d="brush.profile" /></svg><component v-else :is="brush.icon" :size="18" stroke="1.6" /><span>{{ translate(brush.name) }}</span></button></div></div>
               <div v-if="selectedTerrainPaint" class="terrainPalette">
                 <div class="paletteHeading"><span>{{ isTerrainWaterBrush ? "水体颜色" : "画笔颜色" }}</span><button type="button" :disabled="locked" @click="applyTerrainColor(selectedTerrainPaint.color)">还原</button></div>
                 <div class="paletteColors" role="group" aria-label="画笔颜色"><button v-for="color in terrainPaletteColors" :key="color" type="button" :style="{ backgroundColor: color }" :class="{ active: terrainColor.toLowerCase() === color }" :disabled="locked" :aria-label="`使用颜色 ${color}`" :aria-pressed="terrainColor.toLowerCase() === color" @click="applyTerrainColor(color)" /><label class="customTerrainColor" title="自定义颜色"><input type="color" :value="terrainColor" :disabled="locked" aria-label="自定义画笔颜色" @focus="beginTerrainColor" @pointerdown="beginTerrainColor" @keydown.enter="beginTerrainColor" @keydown.space="beginTerrainColor" @input="previewTerrainColor" @change="commitTerrainColor" @blur="cancelTerrainColor" @keydown.esc.stop="cancelTerrainColor" /></label></div>
                 <p class="terrainHint">用于接下来的笔触，已刷区域保持原色。</p>
               </div>
               <div class="terrainBrushGroup">
-                <h4>地貌<span v-if="selectedTerrainSurface" class="selectedSurfaceName">{{ selectedTerrainSurface.name }}</span></h4>
-                <div class="terrainSurfaceGroups" role="group" aria-label="地表类别"><button v-for="group in terrainSurfaceGroups" :key="group.id" type="button" :class="{ active: terrainSurfaceGroup === group.id }" :aria-pressed="terrainSurfaceGroup === group.id" :disabled="locked" @click="terrainSurfaceGroup = group.id">{{ group.name }}</button></div>
-                <div class="terrainBrushes surfaceBrushes" role="group" aria-label="地表材质"><button v-for="surface in surfaceBrushes" :key="surface.id" type="button" :class="{ active: terrainPainting && terrainBrush === surface.brush }" :aria-pressed="terrainPainting && terrainBrush === surface.brush" :disabled="locked" @click="chooseTerrainBrush(surface.brush)"><span class="surfaceSwatch" :style="{ backgroundColor: terrainBrushColors[String(surface.id)] ?? surface.color }" aria-hidden="true" /><span>{{ surface.name }}</span></button></div>
+                <h4>地貌<span v-if="selectedTerrainSurface" class="selectedSurfaceName">{{ translate(selectedTerrainSurface.name) }}</span></h4>
+                <div class="terrainSurfaceGroups" role="group" aria-label="地表类别"><button v-for="group in terrainSurfaceGroups" :key="group.id" type="button" :class="{ active: terrainSurfaceGroup === group.id }" :aria-pressed="terrainSurfaceGroup === group.id" :disabled="locked" @click="terrainSurfaceGroup = group.id">{{ translate(group.name) }}</button></div>
+                <div class="terrainBrushes surfaceBrushes" role="group" aria-label="地表材质"><button v-for="surface in surfaceBrushes" :key="surface.id" type="button" :class="{ active: terrainPainting && terrainBrush === surface.brush }" :aria-pressed="terrainPainting && terrainBrush === surface.brush" :disabled="locked" @click="chooseTerrainBrush(surface.brush)"><span class="surfaceSwatch" :style="{ backgroundColor: terrainBrushColors[String(surface.id)] ?? surface.color }" aria-hidden="true" /><span>{{ translate(surface.name) }}</span></button></div>
 
                 <p class="terrainHint">涂刷地表材质，不改变地形高度。</p>
               </div>
@@ -198,11 +198,11 @@
               <section class="editSection spaceAtmosphere">
                 <div class="sectionHeading"><h3>空气透视</h3><el-switch :modelValue="atmosphere.enabled" :disabled="locked" aria-label="空气透视" @update:modelValue="value => updateAtmosphere({ enabled: Boolean(value) })" /></div>
                 <div v-if="atmosphere.enabled" @pointerdown.capture="beginAtmosphereEdit" @keydown.capture="beginAtmosphereEdit">
-                  <label v-for="field in atmosphereFields" :key="field.key" class="terrainRange"><span>{{ field.name }}<output>{{ field.percent ? Math.round(atmosphere[field.key] * 100) : atmosphere[field.key] }}<small>{{ field.percent ? '%' : 'm' }}</small></output></span><el-slider :modelValue="atmosphere[field.key]" :min="field.min" :max="field.max" :step="field.step" :disabled="locked" :showTooltip="false" :aria-label="`空气透视${field.name}`" @update:modelValue="value => previewAtmosphere({ [field.key]: Number(value) })" @change="commitAtmosphereDraft" /></label>
+                  <label v-for="field in atmosphereFields" :key="field.key" class="terrainRange"><span>{{ translate(field.name) }}<output>{{ field.percent ? Math.round(atmosphere[field.key] * 100) : atmosphere[field.key] }}<small>{{ field.percent ? '%' : 'm' }}</small></output></span><el-slider :modelValue="atmosphere[field.key]" :min="field.min" :max="field.max" :step="field.step" :disabled="locked" :showTooltip="false" :aria-label="`空气透视${translate(field.name)}`" @update:modelValue="value => previewAtmosphere({ [field.key]: Number(value) })" @change="commitAtmosphereDraft" /></label>
                   <label class="lightingColor"><span>散射颜色</span><output>{{ atmosphere.color }}</output><input type="color" :value="atmosphere.color" :disabled="locked" aria-label="空气透视散射颜色" @focus="beginAtmosphereEdit" @input="previewAtmosphere({ color: ($event.target as HTMLInputElement).value })" @change="commitAtmosphereDraft" /></label>
                 </div>
               </section>
-              <section class="editSection spaceDisplay"><h3>显示效果</h3><div class="worldGridToggle"><span>地面网格</span><el-switch :modelValue="modelValue.gridVisible" :disabled="locked" aria-label="显示网格" @update:modelValue="value => commit({ ...modelValue, gridVisible: Boolean(value) })" /></div><div v-for="option in spaceDisplayOptions" :key="option.key" class="worldGridToggle"><span>{{ option.name }}</span><el-switch :modelValue="modelValue.display?.[option.key] ?? option.defaultValue" :disabled="locked" :aria-label="option.name" @update:modelValue="value => updateSpaceDisplay(option.key, Boolean(value))" /></div></section>
+              <section class="editSection spaceDisplay"><h3>显示效果</h3><div class="worldGridToggle"><span>地面网格</span><el-switch :modelValue="modelValue.gridVisible" :disabled="locked" aria-label="显示网格" @update:modelValue="value => commit({ ...modelValue, gridVisible: Boolean(value) })" /></div><div v-for="option in spaceDisplayOptions" :key="option.key" class="worldGridToggle"><span>{{ translate(option.name) }}</span><el-switch :modelValue="modelValue.display?.[option.key] ?? option.defaultValue" :disabled="locked" :aria-label="translate(option.name)" @update:modelValue="value => updateSpaceDisplay(option.key, Boolean(value))" /></div></section>
             </div>
             <div v-show="worldTab === 'time'" class="worldTabContent" role="region" aria-label="时间与天象设置">
               <worldTimePanel :modelValue="displayTime" :disabled="locked" @begin="beginTimeEdit" @preview="previewTime" @commit="commitTimeDraft" @update="updateTime" />
@@ -212,9 +212,9 @@
                 <div class="sectionHeading"><h3>天气叠加</h3><button type="button" :disabled="locked || !activeWeatherLayers.length" @click="clearWeatherLayers">清空</button></div>
                 <p class="worldHint">{{ effectiveRain > 0 ? `${rainLevel} · ` : '' }}选择效果后可独立调整强度。</p>
                 <div v-for="group in weatherGroups" :key="group.id" class="weatherGroup">
-                  <h4>{{ group.name }}</h4>
-                  <div class="weatherOptions" role="group" :aria-label="`${group.name}，可叠加`"><button v-for="layer in weatherLayerOptions.filter(layer => layer.group === group.id)" :key="layer.key" type="button" :class="{ active: weatherLayers[layer.key] > 0 }" :aria-pressed="weatherLayers[layer.key] > 0" :disabled="locked" @click="toggleWeatherLayer(layer.key)"><component :is="layer.icon" :size="21" stroke="1.5" /><span>{{ layer.name }}</span></button></div>
-                  <div class="weatherLayers" @pointerdown.capture="beginWeatherEdit" @keydown.capture="beginWeatherEdit"><label v-for="layer in activeWeatherLayers.filter(layer => layer.group === group.id)" :key="layer.key" class="layerIntensity"><span>{{ layer.strengthLabel }}</span><el-slider :modelValue="weatherLayers[layer.key]" :min="0" :max="1" :step="0.05" :disabled="locked" :showTooltip="false" :aria-label="`${layer.name}强度`" @update:modelValue="value => previewWeatherLayers({ ...weatherLayers, [layer.key]: Number(value) })" @change="commitWeatherDraft" /><output>{{ Math.round(weatherLayers[layer.key] * 100) }}<small>%</small></output></label></div>
+                  <h4>{{ translate(group.name) }}</h4>
+                  <div class="weatherOptions" role="group" :aria-label="`${translate(group.name)}，可叠加`"><button v-for="layer in weatherLayerOptions.filter(layer => layer.group === group.id)" :key="layer.key" type="button" :class="{ active: weatherLayers[layer.key] > 0 }" :aria-pressed="weatherLayers[layer.key] > 0" :disabled="locked" @click="toggleWeatherLayer(layer.key)"><component :is="layer.icon" :size="21" stroke="1.5" /><span>{{ translate(layer.name) }}</span></button></div>
+                  <div class="weatherLayers" @pointerdown.capture="beginWeatherEdit" @keydown.capture="beginWeatherEdit"><label v-for="layer in activeWeatherLayers.filter(layer => layer.group === group.id)" :key="layer.key" class="layerIntensity"><span>{{ translate(layer.strengthLabel) }}</span><el-slider :modelValue="weatherLayers[layer.key]" :min="0" :max="1" :step="0.05" :disabled="locked" :showTooltip="false" :aria-label="`${translate(layer.name)}强度`" @update:modelValue="value => previewWeatherLayers({ ...weatherLayers, [layer.key]: Number(value) })" @change="commitWeatherDraft" /><output>{{ Math.round(weatherLayers[layer.key] * 100) }}<small>%</small></output></label></div>
                 </div>
                 <div v-if="weatherLayers.aurora > 0" class="auroraSettings" @pointerdown.capture="beginWeatherEdit" @keydown.capture="beginWeatherEdit">
                   <label class="lightingColor"><span>极光颜色</span><output>{{ weather.auroraColor ?? '#7ce8b7' }}</output><input type="color" :value="weather.auroraColor ?? '#7ce8b7'" :disabled="locked" aria-label="极光颜色" @focus="beginWeatherEdit" @input="previewWeather({ auroraColor: ($event.target as HTMLInputElement).value })" @change="commitWeatherDraft" /></label>
@@ -233,21 +233,21 @@
             <div v-show="worldTab === 'lighting'" class="worldTabContent" role="region" aria-label="光照设置">
               <section class="editSection weatherSection lightingSection" @pointerdown.capture="beginWeatherEdit" @keydown.capture="beginWeatherEdit">
                 <div class="sectionHeading"><h3>光照</h3><button type="button" :disabled="locked || !weather.lighting" title="恢复当前时段的默认光照" @click="updateWeather({ lighting: undefined })">重置</button></div>
-                <div class="moodPresets" role="group" aria-label="光线氛围"><button v-for="mood in moodPresets" :key="mood.name" type="button" :disabled="locked" :title="mood.title" @click="applyMood(mood)">{{ mood.name }}</button></div>
+                <div class="moodPresets" role="group" aria-label="光线氛围"><button v-for="mood in moodPresets" :key="mood.name" type="button" :disabled="locked" :title="translate(mood.title)" @click="applyMood(mood)">{{ translate(mood.name) }}</button></div>
                 <div class="lightingGroup">
                   <h4>主光</h4>
-                  <label v-for="field in sunlightFields" :key="field.key" class="terrainRange"><span>{{ field.name }}<output>{{ field.unit === '°' ? Math.round(weatherLighting[field.key] * 10) / 10 : round(weatherLighting[field.key]) }}<small>{{ field.unit }}</small></output></span><el-slider :modelValue="weatherLighting[field.key]" :min="field.min" :max="field.max" :step="field.step" :disabled="locked" :showTooltip="false" :aria-label="field.name" @update:modelValue="value => previewLighting({ [field.key]: Number(value) })" @change="commitWeatherDraft" /></label>
+                  <label v-for="field in sunlightFields" :key="field.key" class="terrainRange"><span>{{ translate(field.name) }}<output>{{ field.unit === '°' ? Math.round(weatherLighting[field.key] * 10) / 10 : round(weatherLighting[field.key]) }}<small>{{ field.unit }}</small></output></span><el-slider :modelValue="weatherLighting[field.key]" :min="field.min" :max="field.max" :step="field.step" :disabled="locked" :showTooltip="false" :aria-label="translate(field.name)" @update:modelValue="value => previewLighting({ [field.key]: Number(value) })" @change="commitWeatherDraft" /></label>
                   <label class="lightingColor"><span>主光颜色</span><output>{{ weatherLighting.sunColor }}</output><input type="color" :value="weatherLighting.sunColor" :disabled="locked" aria-label="主光颜色" @focus="beginWeatherEdit" @input="previewLighting({ sunColor: ($event.target as HTMLInputElement).value })" @change="commitWeatherDraft" /></label>
                   <p class="lightingHint">光源来向：0° 东，90° 南，180° 西，270° 北。</p>
               </div>
               <div class="lightingGroup">
                 <h4>环境</h4>
-                <label v-for="field in environmentLightFields" :key="field.key" class="terrainRange"><span>{{ field.name }}<output>{{ round(weatherLighting[field.key]) }}</output></span><el-slider :modelValue="weatherLighting[field.key]" :min="field.min" :max="field.max" :step="field.step" :disabled="locked" :showTooltip="false" :aria-label="field.name" @update:modelValue="value => previewLighting({ [field.key]: Number(value) })" @change="commitWeatherDraft" /></label>
+                <label v-for="field in environmentLightFields" :key="field.key" class="terrainRange"><span>{{ translate(field.name) }}<output>{{ round(weatherLighting[field.key]) }}</output></span><el-slider :modelValue="weatherLighting[field.key]" :min="field.min" :max="field.max" :step="field.step" :disabled="locked" :showTooltip="false" :aria-label="translate(field.name)" @update:modelValue="value => previewLighting({ [field.key]: Number(value) })" @change="commitWeatherDraft" /></label>
                 <label class="lightingColor"><span>补光颜色</span><output>{{ weatherLighting.ambientColor }}</output><input type="color" :value="weatherLighting.ambientColor" :disabled="locked" aria-label="补光颜色" @focus="beginWeatherEdit" @input="previewLighting({ ambientColor: ($event.target as HTMLInputElement).value })" @change="commitWeatherDraft" /></label>
               </div>
               <div class="lightingGroup">
                 <h4>成像与天气</h4>
-                <label v-for="field in lightingResponseFields" :key="field.key" class="terrainRange"><span>{{ field.name }}<output>{{ field.key === 'weatherInfluence' ? Math.round(weatherLighting[field.key] * 100) : round(weatherLighting[field.key]) }}<small>{{ field.unit }}</small></output></span><el-slider :modelValue="weatherLighting[field.key]" :min="field.min" :max="field.max" :step="field.step" :disabled="locked" :showTooltip="false" :aria-label="field.name" @update:modelValue="value => previewLighting({ [field.key]: Number(value) })" @change="commitWeatherDraft" /></label>
+                <label v-for="field in lightingResponseFields" :key="field.key" class="terrainRange"><span>{{ translate(field.name) }}<output>{{ field.key === 'weatherInfluence' ? Math.round(weatherLighting[field.key] * 100) : round(weatherLighting[field.key]) }}<small>{{ field.unit }}</small></output></span><el-slider :modelValue="weatherLighting[field.key]" :min="field.min" :max="field.max" :step="field.step" :disabled="locked" :showTooltip="false" :aria-label="translate(field.name)" @update:modelValue="value => previewLighting({ [field.key]: Number(value) })" @change="commitWeatherDraft" /></label>
                 <p class="lightingHint">云雨、雪与雾会影响最终亮度和色调。联动为 0% 时保持手动光照，未调整的光照项跟随时段。</p>
               </div>
             </section>
@@ -278,7 +278,7 @@
             <div v-if="compacting && !aiController" class="compactionStatus" role="status"><el-icon class="is-loading" aria-hidden="true"><icon-loader-2 :size="14" /></el-icon><span>正在压缩上下文…</span><button type="button" aria-label="停止压缩" title="停止压缩" @click="compactionController?.abort()"><icon-x :size="12" /></button></div>
           </section>
         </transition>
-        <div v-if="!modelValue.objects.length && !isPerformanceConversation && !aiController" class="setTemplates" role="group" aria-label="一键布景"><el-popover v-if="!upstreamPrevis" trigger="click" placement="top-start" :width="320" popperClass="pasteScriptPopover"><template #reference><button type="button" class="scriptPaste" :disabled="locked" title="粘贴一场戏的剧本（“角色：台词”），按地点搭景、按角色站位、按对白分镜"><icon-movie :size="13" /><span>粘贴剧本</span></button></template><div class="pasteScript" @keydown.stop><textarea v-model="pastedScript" rows="7" maxlength="6000" aria-label="剧本" placeholder="第7场 客栈大堂 夜 内&#10;店小二：客官，小店打烊了。&#10;林冲（冷笑）：给我一壶酒。&#10;（店小二转身离去）" /><button type="button" :disabled="locked || !pastedScript.trim()" @click="previsFromScript(pastedScript)">一键预演</button></div></el-popover><button v-if="upstreamPrevis" type="button" class="scriptPrevis" :disabled="locked" :title="upstreamPrevis" @click="previsFromUpstream"><icon-movie :size="13" /><span>按剧本一键预演</span></button><span class="setGenres"><button v-for="genre in setTemplateGenres" :key="genre" type="button" :class="{ active: setGenre === genre }" :aria-pressed="setGenre === genre" :title="setGenre === genre ? '显示全部布景' : `只看${genre}布景`" @click="setGenre = setGenre === genre ? '' : genre"><component :is="setTemplateIcons[genre]" :size="12" /><span>{{ genre }}</span></button></span><button v-for="template in visibleSetTemplates" :key="template.id" type="button" :disabled="locked" :title="`一键搭好${template.name}（${template.genre}），每件都可再改`" @click="applySetTemplate(template)"><component :is="setTemplateIcons[template.genre]" :size="13" /><span>{{ template.name }}</span></button></div>
+        <div v-if="!modelValue.objects.length && !isPerformanceConversation && !aiController" class="setTemplates" role="group" aria-label="一键布景"><el-popover v-if="!upstreamPrevis" trigger="click" placement="top-start" :width="320" popperClass="pasteScriptPopover"><template #reference><button type="button" class="scriptPaste" :disabled="locked" title="粘贴一场戏的剧本（“角色：台词”），按地点搭景、按角色站位、按对白分镜"><icon-movie :size="13" /><span>粘贴剧本</span></button></template><div class="pasteScript" @keydown.stop><textarea v-model="pastedScript" rows="7" maxlength="6000" aria-label="剧本" placeholder="第7场 客栈大堂 夜 内&#10;店小二：客官，小店打烊了。&#10;林冲（冷笑）：给我一壶酒。&#10;（店小二转身离去）" /><button type="button" :disabled="locked || !pastedScript.trim()" @click="previsFromScript(pastedScript)">一键预演</button></div></el-popover><button v-if="upstreamPrevis" type="button" class="scriptPrevis" :disabled="locked" :title="upstreamPrevis" @click="previsFromUpstream"><icon-movie :size="13" /><span>按剧本一键预演</span></button><span class="setGenres"><button v-for="genre in setTemplateGenres" :key="genre" type="button" :class="{ active: setGenre === genre }" :aria-pressed="setGenre === genre" :title="setGenre === genre ? '显示全部布景' : `只看${translate(genre)}布景`" @click="setGenre = setGenre === genre ? '' : genre"><component :is="setTemplateIcons[genre]" :size="12" /><span>{{ translate(genre) }}</span></button></span><button v-for="template in visibleSetTemplates" :key="template.id" type="button" :disabled="locked" :title="`一键搭好${translate(template.name)}（${translate(template.genre)}），每件都可再改`" @click="applySetTemplate(template)"><component :is="setTemplateIcons[template.genre]" :size="13" /><span>{{ translate(template.name) }}</span></button></div>
         <div v-if="isPerformanceConversation" class="promptAnchorRow"><span class="promptAnchorChip"><icon-heartbeat :size="14" /><span>演绎 · {{ performanceContextLabel }}</span><button type="button" :disabled="locked" aria-label="退出演绎对话" title="返回场景对话" @click="clearPerformanceConversation"><icon-x :size="13" /></button></span></div>
         <div v-if="sceneAnchor" class="promptAnchorRow"><span class="promptAnchorChip" :title="sceneAnchorTitle"><component :is="sceneAnchor.kind === 'object' ? IconPackage : IconFocusCentered" :size="14" /><span>{{ sceneAnchorName }}</span><small v-if="sceneAnchor.kind === 'point'">{{ sceneAnchorCoordinates }}</small><button type="button" aria-label="移除选中锚点" title="移除锚点" @click="clearSceneAnchor"><icon-x :size="13" /></button></span></div>
         <section v-if="promptQueue.length" class="promptQueue" aria-label="排队消息">
@@ -299,7 +299,7 @@
         <input ref="imagePicker" class="imagePicker" type="file" :accept="promptFileAccept" multiple tabindex="-1" aria-label="选择附件" @change="selectPromptImages" />
         <div class="quickCreationInput">
           <button type="button" :class="{ active: chatOpen && (messages.length || historySessions.length) }" :disabled="!messages.length && !historySessions.length" :aria-expanded="chatOpen && !!(messages.length || historySessions.length)" aria-label="Agent 对话" title="查看 Agent 对话" @click="toggleChat"><icon-sparkles :size="18" stroke="1.5" /></button>
-          <textarea ref="promptInput" v-model="prompt" rows="1" :disabled="locked || voiceActive" aria-label="描述场景或修改要求" :placeholder="promptPlaceholder" maxlength="12000" @keydown="promptKeydown" @input="updatePromptMenu" @click="updatePromptMenu" @keyup="promptKeyup" @blur="promptMenuDismissed = true" @focus="promptMenuDismissed = false" />
+          <textarea ref="promptInput" v-model="prompt" rows="1" :disabled="locked || voiceActive" aria-label="描述场景或修改要求" :placeholder="composerPlaceholder" maxlength="12000" @keydown="promptKeydown" @input="updatePromptMenu" @click="updatePromptMenu" @keyup="promptKeyup" @blur="promptMenuDismissed = true" @focus="promptMenuDismissed = false" />
           <agentPromptMenu ref="promptMenu" :open="promptMenuState.open" :kind="promptMenuState.kind" :items="promptMenuState.items" :loading="promptMenuState.kind === 'skill' && skillsLoading" @select="selectPromptMenuItem" @dismiss="promptMenuDismissed = true" />
         </div>
         <div class="promptToolbar">
@@ -335,6 +335,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
 import { ElButton, ElCheckbox, ElIcon, ElPopover, ElProgress, ElSlider, ElSwitch } from "element-plus";
+import { markMessages, t, translate } from "@toonflow/i18n/vue";
 import { IconTableExport, IconCut, IconX, IconSparkles, IconPackage, IconArrowUp, IconArrowBackUp, IconArrowForwardUp, IconPlayerPause, IconCopy, IconTrash, IconLoader2, IconFocusCentered, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconRotate, IconTiltShift, IconArrowsDiagonal, IconArrowBarDown, IconFeather, IconEye, IconEyeOff } from "@tabler/icons-vue";
 import { IconMountain, IconRipple, IconSun, IconDiamond, IconSnowflake, IconBrush, IconCloud, IconCloudRain, IconMist, IconWind, IconWorld, IconClock, IconBolt, IconRainbow, IconMeteor } from "@tabler/icons-vue";
 import { IconPaperclip, IconPencil, IconCornerDownRight, IconListDetails, IconPlayerStopFilled } from "@tabler/icons-vue";
@@ -357,6 +358,7 @@ import agentModelPicker from "./agentConversation/agentModelPicker.vue";
 import agentPromptMenu, { type PromptMenuItem } from "./agentConversation/agentPromptMenu.vue";
 import { parseSkillCommand, type HostSkill } from "./agentHost";
 import { createReplyStream, type AgentMessage, type AgentTextPart, type AgentToolPart } from "./agentConversation";
+import { validatePromptImages } from "./promptImages";
 import agentConversation from "./agentConversation.vue";
 import agentMenu from "./agentConversation/agentMenu.vue";
 import agentContextUsage from "./agentConversation/agentContextUsage.vue";
@@ -430,8 +432,8 @@ const studioRoot = ref<HTMLElement>();
 const atmosphereDraft = shallowRef<SceneAtmosphere>();
 const atmosphere = computed(() => atmosphereDraft.value ?? props.modelValue.atmosphere ?? defaultAtmosphere);
 let atmosphereEditCanceled = false;
-const atmosphereFields = [{ key: "intensity", name: "强度", min: 0, max: 2, step: 0.01, percent: true }, { key: "start", name: "起始距离", min: 0, max: 2000, step: 1, percent: false }, { key: "distance", name: "衰减距离", min: 10, max: 4000, step: 1, percent: false }, { key: "weatherInfluence", name: "天气联动", min: 0, max: 1, step: 0.01, percent: true }] as const;
-const spaceDisplayOptions = [{ key: "axesVisible", name: "坐标轴", defaultValue: false }, { key: "shadowsEnabled", name: "物体阴影", defaultValue: true }] as const;
+const atmosphereFields = markMessages([{ key: "intensity", name: "强度", min: 0, max: 2, step: 0.01, percent: true }, { key: "start", name: "起始距离", min: 0, max: 2000, step: 1, percent: false }, { key: "distance", name: "衰减距离", min: 10, max: 4000, step: 1, percent: false }, { key: "weatherInfluence", name: "天气联动", min: 0, max: 1, step: 0.01, percent: true }] as const);
+const spaceDisplayOptions = markMessages([{ key: "axesVisible", name: "坐标轴", defaultValue: false }, { key: "shadowsEnabled", name: "物体阴影", defaultValue: true }] as const);
 const worldTime = shallowRef(getSceneTime(props.modelValue));
 const timeDraft = shallowRef<SceneTime>();
 let timeEditCanceled = false;
@@ -442,7 +444,7 @@ const worldTimeLabel = computed(() => {
 });
 const editorPanel = ref<"" | "scene" | "object" | "terrain" | "brush" | "view" | "life">("");
 const worldTab = ref<"assets" | "space" | "time" | "weather" | "lighting">("assets");
-const worldTabs = [{ id: "assets", name: "资产", icon: IconPackage }, { id: "space", name: "空间", icon: IconWorld }, { id: "time", name: "时间", icon: IconClock }, { id: "weather", name: "天气", icon: IconCloud }, { id: "lighting", name: "光照", icon: IconSun }] as const;
+const worldTabs = markMessages([{ id: "assets", name: "资产", icon: IconPackage }, { id: "space", name: "空间", icon: IconWorld }, { id: "time", name: "时间", icon: IconClock }, { id: "weather", name: "天气", icon: IconCloud }, { id: "lighting", name: "光照", icon: IconSun }] as const);
 const worldSize = computed(() => props.modelValue.terrain?.size ?? worldSizeLimits.default);
 const worldSizeInput = ref(String(worldSize.value));
 const worldSizeValid = computed(() => Number.isFinite(Number(worldSizeInput.value)) && Number(worldSizeInput.value) >= worldSizeLimits.min && Number(worldSizeInput.value) <= worldSizeLimits.max);
@@ -460,7 +462,7 @@ const handleDrag = shallowRef<ObjectHandleDrag>();
 const terrainBrush = ref<TerrainBrush>("raise");
 const terrainPainting = ref(true);
 const terrainSurfaceGroup = ref<"natural" | "built" | "biome" | "scifi">("natural");
-const terrainSurfaceGroups = [{ id: "natural", name: "自然" }, { id: "built", name: "人工" }, { id: "biome", name: "荒漠冰雪" }, { id: "scifi", name: "科幻" }] as const;
+const terrainSurfaceGroups = markMessages([{ id: "natural", name: "自然" }, { id: "built", name: "人工" }, { id: "biome", name: "荒漠冰雪" }, { id: "scifi", name: "科幻" }] as const);
 const surfaceBrushes = computed(() => terrainSurfaceOptions.flatMap(surface => surface.brush && surface.group === terrainSurfaceGroup.value ? [{ ...surface, brush: surface.brush }] : []));
 const selectedTerrainSurface = computed(() => terrainSurfaceOptions.find(surface => surface.brush === terrainBrush.value));
 const isTerrainWaterBrush = computed(() => terrainBrush.value === "river" || terrainBrush.value === "lake");
@@ -525,7 +527,7 @@ function setFilmFormatChoice(key: string) {
   const format = key as FilmFormat;
   setFilmFormat(format);
   commit({ ...props.modelValue, film: { ...props.modelValue.film, format } });
-  notice.value = `成片画幅改为${filmFormatNames[format]}`;
+  notice.value = t`成片画幅改为${translate(filmFormatNames[format])}`;
 }
 // ACT: 成片监看和全屏预演标出此刻是第几镜、是否越轴（和时间轴成片行、镜头表同一套编号与越轴判断）。
 const programCuts = computed(() => {
@@ -561,7 +563,7 @@ const exportMenuOpen = ref(false);
 const videoEdge = ref((() => { try { return localStorage.getItem("trumanMap.videoEdge") === "1920" ? 1920 : 1280; } catch { return 1280; } })());
 function setVideoEdge(value: number) { videoEdge.value = value; try { localStorage.setItem("trumanMap.videoEdge", String(value)); } catch { /* 存不下就只在本次生效 */ } }
 // ACT: 导出面板：勾选要导出的内容（每镜三样、整场五样），勾选和清晰度记在本机，下次打开还是这几项。
-const exportGroups: { name: string; perShot: boolean; keys: ExportItem[] }[] = [{ name: "每镜", perShot: true, keys: ["frames", "views", "clips"] }, { name: "整场", perShot: false, keys: ["overview", "script", "previs", "shotList", "edl"] }];
+const exportGroups: { name: string; perShot: boolean; keys: ExportItem[] }[] = markMessages([{ name: "每镜", perShot: true, keys: ["frames", "views", "clips"] }, { name: "整场", perShot: false, keys: ["overview", "script", "previs", "shotList", "edl"] }]);
 const exportIcons = { frames: IconPhoto, views: IconLayoutGrid, clips: IconMovie, overview: IconMap, script: IconFileText, previs: IconVideo, shotList: IconTableExport, edl: IconCut } satisfies Record<ExportItem, unknown>;
 const exportPicks = ref<ExportPicks>((() => {
   try {
@@ -585,7 +587,7 @@ const activeTrack = computed(() => editTake.value?.track ?? monitorCamera.value?
 const trackName = computed(() => {
   const track = activeTrack.value;
   if (!track) return "";
-  return track.objectId ? props.modelValue.objects.find(object => object.id === track.objectId)?.name ?? "物体" : "定点";
+  return track.objectId ? props.modelValue.objects.find(object => object.id === track.objectId)?.name ?? translate("物体") : translate("定点");
 });
 const trackPicking = ref(false);
 const objectCarrying = ref(false);
@@ -912,7 +914,7 @@ const performanceContextLabel = computed(() => {
   const object = props.modelValue.objects.find(object => object.id === (context?.objectId ?? subjectId.value));
   const track = timelineTracks.value.find(track => track.id === (context?.trackId ?? selectedTrackId.value));
   const clip = object && track && getPerformanceClips(track, object).find(clip => clip.id === (context?.clipId ?? selectedPerformanceClipId.value));
-  return [object?.name, clip?.name].filter(Boolean).join(" · ") || "场景演绎";
+  return [object?.name, clip?.name].filter(Boolean).join(" · ") || translate("场景演绎");
 });
 const performancePlanningId = ref("");
 const modelKey = ref("");
@@ -957,7 +959,7 @@ let assetDragFrame: number | undefined;
 const axes = ["x", "y", "z"] as const;
 const positionAxes = ["x", "y", "z"] as const;
 const transformFields = [{ key: "rotation", label: "旋转（°）" }, { key: "scale", label: "缩放" }] as const;
-const terrainBrushGroups: { name: string; brushes: TerrainBrushOption[] }[] = [
+const terrainBrushGroups: { name: string; brushes: TerrainBrushOption[] }[] = markMessages([
   { name: "塑形", brushes: [
     { id: "auto", name: "自动", profile: "M3 18h5c5 0 4-12 9-12s4 12 9 12h7M16 2v4m-5-2 3 3m7-3-3 3" },
     { id: "raise", name: "抬高", profile: "M3 18h5c5 0 5-13 10-13s5 13 10 13h5" },
@@ -982,26 +984,26 @@ const terrainBrushGroups: { name: string; brushes: TerrainBrushOption[] }[] = [
     { id: "volcano", name: "火山", profile: "M3 18 13 5l5 5 5-5 10 13" },
   ] },
   { name: "水体", brushes: [{ id: "river", name: "河流", icon: IconRipple }] },
-];
+]);
 const defaultWeather: SceneWeather = { condition: "clear", timeOfDay: "day", intensity: 0.6, wind: 0.25, windDirection: 45 };
 const weatherDraft = shallowRef<SceneWeather>();
 let weatherEditCanceled = false;
 const weather = computed(() => ({ ...defaultWeather, ...(weatherDraft.value ?? props.modelValue.weather) }));
 const weatherLighting = computed(() => getWeatherLighting(weather.value, displayTime.value));
-const sunlightFields = [
+const sunlightFields = markMessages([
   { key: "sunIntensity", name: "主光强度", min: 0, max: 10, step: 0.05, unit: "" },
   { key: "sunAzimuth", name: "光源方位", min: 0, max: 360, step: 1, unit: "°" },
   { key: "sunElevation", name: "光源高度角", min: 0, max: 90, step: 1, unit: "°" },
-] as const;
-const environmentLightFields = [
+] as const);
+const environmentLightFields = markMessages([
   { key: "ambientIntensity", name: "环境补光", min: 0, max: 3, step: 0.05 },
   { key: "skyIntensity", name: "天空亮度", min: 0, max: 5, step: 0.05 },
-] as const;
-const lightingResponseFields = [
+] as const);
+const lightingResponseFields = markMessages([
   { key: "exposure", name: "曝光", min: 0.1, max: 3, step: 0.05, unit: "×" },
   { key: "weatherInfluence", name: "天气联动", min: 0, max: 1, step: 0.05, unit: "%" },
-] as const;
-const weatherLayerOptions = [
+] as const);
+const weatherLayerOptions = markMessages([
   { key: "clouds", condition: "cloudy", group: "precipitation", name: "多云", strengthLabel: "云量", icon: IconCloud },
   { key: "rain", condition: "rain", group: "precipitation", name: "降雨", strengthLabel: "雨量", icon: IconCloudRain },
   { key: "snow", condition: "snow", group: "precipitation", name: "降雪", strengthLabel: "雪量", icon: IconSnowflake },
@@ -1015,13 +1017,13 @@ const weatherLayerOptions = [
   { key: "aurora", condition: "clear", group: "sky", name: "极光", strengthLabel: "极光", icon: IconSparkles },
   { key: "rainbow", condition: "clear", group: "sky", name: "彩虹", strengthLabel: "彩虹", icon: IconRainbow },
   { key: "meteors", condition: "clear", group: "sky", name: "流星", strengthLabel: "流星", icon: IconMeteor },
-] as const;
-const weatherGroups = [{ id: "precipitation", name: "云雾与降水" }, { id: "extreme", name: "风沙与极端天气" }, { id: "sky", name: "天空现象" }] as const;
+] as const);
+const weatherGroups = markMessages([{ id: "precipitation", name: "云雾与降水" }, { id: "extreme", name: "风沙与极端天气" }, { id: "sky", name: "天空现象" }] as const);
 const weatherLayers = computed(() => getWeatherLayers(weather.value));
 const acceptedWeatherLayers = computed(() => getWeatherLayers(props.modelValue.weather));
 const activeWeatherLayers = computed(() => weatherLayerOptions.filter(layer => weatherLayers.value[layer.key] > 0 || !!weatherDraft.value && acceptedWeatherLayers.value[layer.key] > 0));
 const effectiveRain = computed(() => weatherLayers.value.rain * weather.value.intensity);
-const rainLevel = computed(() => effectiveRain.value < 0.25 ? "小雨" : effectiveRain.value < 0.5 ? "中雨" : effectiveRain.value < 0.8 ? "大雨" : "暴雨");
+const rainLevel = computed(() => effectiveRain.value < 0.25 ? translate("小雨") : effectiveRain.value < 0.5 ? translate("中雨") : effectiveRain.value < 0.8 ? translate("大雨") : translate("暴雨"));
 const windDirectionOptions = computed(() => {
   const direction = weather.value.windDirection ?? 45;
   const options = [
@@ -1092,15 +1094,15 @@ const handleBadge = computed(() => {
   const drag = handleDrag.value;
   const object = selectedObject.value;
   if (!drag || !object) return "";
-  if (drag.kind === "height") return `高度 ${round(object.height ?? 0)} m`;
-  if (drag.kind === "rotate") return `水平旋转 ${round(object.rotation.y)}°`;
-  if (drag.kind === "scale") { const scale = objectDraft.value?.id === object.id ? objectDraft.value.scale : object.scale; return `缩放 ×${round(scale.x)}`; }
-  return `前后倾斜 ${round(object.rotation.x)}° · 左右侧倾 ${round(object.rotation.z)}°`;
+  if (drag.kind === "height") return t`高度 ${round(object.height ?? 0)} m`;
+  if (drag.kind === "rotate") return t`水平旋转 ${round(object.rotation.y)}°`;
+  if (drag.kind === "scale") { const scale = objectDraft.value?.id === object.id ? objectDraft.value.scale : object.scale; return t`缩放 ×${round(scale.x)}`; }
+  return t`前后倾斜 ${round(object.rotation.x)}° · 左右侧倾 ${round(object.rotation.z)}°`;
 });
 const objectGravity = computed(() => !!selectedObject.value && getObjectGravityEnabled(selectedObject.value));
 const sceneAnchorName = computed(() => {
   const anchor = sceneAnchor.value;
-  return anchor?.kind === "object" ? props.modelValue.objects.find(object => object.id === anchor.objectId)?.name ?? "场景物体" : "场景点";
+  return anchor?.kind === "object" ? props.modelValue.objects.find(object => object.id === anchor.objectId)?.name ?? translate("场景物体") : translate("场景点");
 });
 const sceneAnchorCoordinates = computed(() => sceneAnchor.value ? [sceneAnchor.value.position.x, sceneAnchor.value.position.y, sceneAnchor.value.position.z].map(round).join(", ") : "");
 const sceneAnchorTitle = computed(() => `${sceneAnchorName.value} · XYZ（m）：${sceneAnchorCoordinates.value}`);
@@ -1114,7 +1116,7 @@ function viewportDocument(value = props.modelValue) {
   return { ...value, objects: draft ? value.objects.map(object => object.id === draft.id ? draft : object) : value.objects, weather: weatherDraft.value ?? value.weather, atmosphere: atmosphereDraft.value ?? value.atmosphere };
 }
 function clone(value: SceneDocument): SceneDocument { return JSON.parse(JSON.stringify(value)); }
-function fail(error: unknown) { for (const sink of failureSinks) sink(error); if (!disposed) notice.value = error instanceof Error ? error.message : "操作失败，请重试"; }
+function fail(error: unknown) { for (const sink of failureSinks) sink(error); if (!disposed) notice.value = error instanceof Error ? error.message : translate("操作失败，请重试"); }
 // 外部总Agent的操作（hostEvents）在执行期间收集界面报错，作为调用失败返回；界面提示照常显示。
 const failureSinks = new Set<(error: unknown) => void>();
 // 外部总Agent导出镜头表、剪辑表时，文件交给节点存进工作区，不弹浏览器下载。
@@ -1696,7 +1698,7 @@ async function coverScript(script?: string, pace?: number) {
   notice.value = "";
   if (script) {
     const { scene, count } = firstScene(script);
-    if (count > 1) { script = scene; sceneNote = `剧本有${count}场，先做了第一场；要做别的场，把那一段粘进对白框再按对白剪辑`; }
+    if (count > 1) { script = scene; sceneNote = t`剧本有${count}场，先做了第一场；要做别的场，把那一段粘进对白框再按对白剪辑`; }
   }
   const template = script && !props.modelValue.objects.length ? matchSetTemplate(script) : undefined;
   if (template) {
@@ -1705,7 +1707,7 @@ async function coverScript(script?: string, pace?: number) {
     await nextTick();
   }
   addShotCoverage(script, pace);
-  if (template || sceneNote) notice.value = [template ? `按剧本搭了${template.name}` : "", notice.value, sceneNote].filter(Boolean).join("；");
+  if (template || sceneNote) notice.value = [template ? t`按剧本搭了${translate(template.name)}` : "", notice.value, sceneNote].filter(Boolean).join(translate("；"));
 }
 function addShotCoverage(script?: string, pace?: number) {
   if (cameraLocked.value) return;
@@ -1750,7 +1752,7 @@ function addShotCoverage(script?: string, pace?: number) {
       viewport?.settleClock();
       const dropped = staged ? dropBlockedStageMoves() : "";
       seekFilm(0);
-      if (dropped) notice.value = [notice.value, dropped].filter(Boolean).join("；");
+      if (dropped) notice.value = [notice.value, dropped].filter(Boolean).join(translate("；"));
     });
   } catch (error) { fail(error); }
 }
@@ -1819,7 +1821,7 @@ function dropBlockedStageMoves() {
   const stuck = staged.filter(track => blocked.has(track.id));
   if (!stuck.length) return "";
   commit({ ...props.modelValue, life: { ...life, tracks: life.tracks.map(track => stuck.includes(track) ? { ...track, clips: track.clips!.filter(clip => !isStage(clip)) } : track) } }, false);
-  return `${stuck.map(track => track.name!.replace(/^台词·/, "")).join("、")}的剧本走位在这里接不上导航（站在桌边柜前，或这件整块布景的地面没有导航网格），已去掉，可在演绎里拖动路线`;
+  return t`${stuck.map(track => track.name!.replace(/^台词·/, "")).join(translate("、"))}的剧本走位在这里接不上导航（站在桌边柜前，或这件整块布景的地面没有导航网格），已去掉，可在演绎里拖动路线`;
 }
 /** 已落地的“分镜·”机位（Agent 生成的）补遮挡避让和活动墙，并进上一步撤销。 */
 function refineCoverageCameras(ids: readonly string[]) {
@@ -1986,7 +1988,7 @@ function advanceExport(phase: string, units = 1) {
   if (now - exportShownAt < 120) return;
   exportShownAt = now;
   exportProgress.value = { ...exportState };
-  busy.value = `导出 ${exportPercent.value}%`;
+  busy.value = t`导出 ${exportPercent.value}%`;
 }
 /** 进度卡上的缩略图：正在导出的这一帧（每250毫秒最多画一次）。 */
 function showExportPreview(source: HTMLCanvasElement | Blob) {
@@ -2072,7 +2074,7 @@ async function runExport(items: readonly ExportItem[], destination: ExportDestin
   exportPreviewAt = 0;
   const slice = createYielder(30);
   exporting.value = true;
-  busy.value = "导出 0%";
+  busy.value = translate("导出 0%");
   try {
     // 画布缺图片/视频节点插件时先报，别等整段渲染完才发现建不了节点。
     target?.check({ image: pick.has("overview") || pick.has("frames") || pick.has("views"), video: videos });
@@ -2095,17 +2097,17 @@ async function runExport(items: readonly ExportItem[], destination: ExportDestin
     if (shotPass) {
       for (const [index, segment] of segments.entries()) {
         signal.throwIfAborted();
-        const at = `第${index + 1}/${segments.length}镜`;
-        advanceExport(`${at} · 分镜图`, 0);
+        const at = t`第${index + 1}/${segments.length}镜`;
+        advanceExport(t`${at} · 分镜图`, 0);
         const { row, blob, pose, subjectAt } = await captureProgramShot(index, segment, cameras, range.start, width, false);
         showExportPreview(blob);
-        advanceExport(`${at} · 分镜图`, 3);
+        advanceExport(t`${at} · 分镜图`, 3);
         const shot: (typeof shots)[number] = { row, ...(pick.has("frames") ? { frame: blob } : {}) };
         if (pick.has("views")) {
-          shot.views = await captureFourViews(view, props.modelValue, pose, subjectAt, width, { signal, step: async () => { advanceExport(`${at} · 四视图`, 2); await slice(); } });
+          shot.views = await captureFourViews(view, props.modelValue, pose, subjectAt, width, { signal, step: async () => { advanceExport(t`${at} · 四视图`, 2); await slice(); } });
           showExportPreview(shot.views);
         }
-        if (pick.has("shotList")) { row.image = await blobToDataUrl(await view.capture(pose, 640, "image/jpeg")); advanceExport(`${at} · 镜头表`, 1.5); }
+        if (pick.has("shotList")) { row.image = await blobToDataUrl(await view.capture(pose, 640, "image/jpeg")); advanceExport(t`${at} · 镜头表`, 1.5); }
         shots.push(shot);
         await slice();
       }
@@ -2119,7 +2121,7 @@ async function runExport(items: readonly ExportItem[], destination: ExportDestin
         slate: { title: info.label, detail: `画幅 ${filmFormat.value} · ${segments.length} 个镜头 · ${Math.round(duration)} 秒` },
         step: async (frame, shotIndex) => {
           showExportPreview(frame);
-          advanceExport(shotIndex >= 0 ? `第${shotIndex + 1}/${segments.length}镜 · ${kind}` : "预演小样 · 黑场");
+          advanceExport(shotIndex >= 0 ? t`第${shotIndex + 1}/${segments.length}镜 · ${translate(kind)}` : "预演小样 · 黑场");
           await slice();
         },
       });
@@ -2154,8 +2156,8 @@ async function runExport(items: readonly ExportItem[], destination: ExportDestin
         }).filter(shot => shot.frame || shot.views || shot.clip),
       }, signal, () => advanceExport("在画布上建节点", 0.5));
       for (const file of [shotList, edl]) if (file) deliverFile(file);
-      const downloaded = [shotList && "镜头表", edl && "剪辑表"].filter(Boolean).join("、");
-      notice.value = `已在画布上建了 ${nodes} 个节点${downloaded ? `，${downloaded}已${fileSink ? "存进工作区" : "下载"}` : ""}${issues}`;
+      const downloaded = [shotList && translate("镜头表"), edl && translate("剪辑表")].filter(Boolean).join(translate("、"));
+      notice.value = t`已在画布上建了 ${nodes} 个节点${downloaded ? (fileSink ? t`，${downloaded}已存进工作区` : t`，${downloaded}已下载`) : ""}${issues}`;
       return { nodes, fileCount: [shotList, edl].filter(Boolean).length };
     }
     // 打包：整场的放最外层，每镜一个文件夹（第01镜/分镜图.jpg、四视图.jpg、白模视频.mp4）。
@@ -2178,19 +2180,19 @@ async function runExport(items: readonly ExportItem[], destination: ExportDestin
     ];
     if (!entries.length) throw new Error("没有可导出的内容");
     const megabytes = (entries.reduce((sum, entry) => sum + entry.file.size, 0) / 1048576).toFixed(1);
-    const edlNote = edl && !lastPrevisFile ? "（剪辑表对应的预演小样还没导出过：一起勾上预演小样）" : "";
+    const edlNote = edl && !lastPrevisFile ? translate("（剪辑表对应的预演小样还没导出过：一起勾上预演小样）") : "";
     // 白模预演：按打包的目录结构存进全局素材库里选好的文件夹。
     if (destination === "assets" && props.exportAssets) {
       advanceExport("存进素材库", 0);
       const folder = await props.exportAssets(assetFolder, entries, signal);
-      notice.value = `已存进素材库“${folder}”：${segments.length} 个镜头 · ${entries.length} 个文件 · ${megabytes} MB${edlNote}${issues}`;
+      notice.value = t`已存进素材库“${folder}”：${segments.length} 个镜头 · ${entries.length} 个文件 · ${megabytes} MB${edlNote}${issues}`;
       return { fileCount: entries.length };
     }
     // 外部总Agent：每个文件单独存进工作区；只有一个文件直接下载；多个打成ZIP。
     if (fileSink) for (const entry of entries) deliverFile(entry.file);
     else if (entries.length === 1) deliverFile(entries[0]!.file);
     else { advanceExport("打包", 0); deliverFile(new File([await createZip(entries, date, () => advanceExport("打包", 0.5))], `分镜包${sceneName}-${stamp}.zip`, { type: "application/zip" })); }
-    notice.value = `已导出${entries.length === 1 ? ` ${entries[0]!.file.name}` : ` ${segments.length} 个镜头 · ${entries.length} 个文件${fileSink ? "" : "（ZIP）"}`} · ${megabytes} MB${edlNote}${issues}`;
+    notice.value = entries.length === 1 ? t`已导出 ${entries[0]!.file.name} · ${megabytes} MB${edlNote}${issues}` : fileSink ? t`已导出 ${segments.length} 个镜头 · ${entries.length} 个文件 · ${megabytes} MB${edlNote}${issues}` : t`已导出 ${segments.length} 个镜头 · ${entries.length} 个文件（ZIP） · ${megabytes} MB${edlNote}${issues}`;
     return { fileCount: entries.length };
   } catch (error) { if (!disposed) fail(error); return undefined; }
   finally {
@@ -2210,8 +2212,8 @@ function programIssues() {
   // 一刀里可能有好几段镜头（反应段接台词段），每段都查。
   const long = [...new Set(cuts.filter(cut => (cameras.find(camera => camera.id === cut.cameraId)?.shots ?? []).some(shot => shot.end > cut.start + 0.001 && shot.start < cut.end - 0.001 && lineOverrun({ start: shot.start, end: shot.end, shot }))).map(cut => cut.number))];
   const gaps = cuts.slice(1).flatMap((cut, index) => cut.start - cuts[index]!.end > 0.3 ? [`${clock(cuts[index]!.end)}–${clock(cut.start)}`] : []);
-  const parts = [axis.length ? `第${[...new Set(axis)].join("、")}镜越轴` : "", long.length ? `第${long.join("、")}镜台词说不完` : "", gaps.length ? `黑场 ${gaps.slice(0, 3).join("、")}` : ""].filter(Boolean);
-  return parts.length ? `；检查：${parts.join("；")}` : "";
+  const parts = [axis.length ? t`第${[...new Set(axis)].join(translate("、"))}镜越轴` : "", long.length ? t`第${long.join(translate("、"))}镜台词说不完` : "", gaps.length ? t`黑场 ${gaps.slice(0, 3).join(translate("、"))}` : ""].filter(Boolean);
+  return parts.length ? t`；检查：${parts.join(translate("；"))}` : "";
 }
 /** 导出文件名里的场景名：第一个成套景（模板集合）的名字，只留文字和数字，前面带“-”；没有就空。 */
 // 最近一次导出的预演小样文件名：剪辑表里的片段名对上它，剪辑软件导入时自动关联。
@@ -2319,7 +2321,7 @@ function drawCameraPath(id: string, points: Vector3Value[]) {
     const gap = getCameraGap(camera, start);
     const length = getPathLength(points);
     const end = gap ? roundTime(Math.min(gap.end, start + Math.min(12, Math.max(2, length / 2)))) : start;
-    if (!gap || end - start < minShotSeconds) { notice.value = "播放头这里已经被别的镜头段占满，先在时间轴上框出一段时间"; return; }
+    if (!gap || end - start < minShotSeconds) { notice.value = translate("播放头这里已经被别的镜头段占满，先在时间轴上框出一段时间"); return; }
     shotId = crypto.randomUUID();
     next = insertCameraShot(camera, { id: shotId, start, end, frame: toFraming(sampleSceneCamera(camera, start)), front: getTopShotFront(studioCameras.value) + 1 });
   }
@@ -2369,7 +2371,7 @@ function fixLineTiming() {
     const talking = withTalkClips({ ...scene, cameras: next }, next.filter(camera => camera.name.startsWith("分镜·")));
     commit({ ...scene, cameras: next, ...(talking ?? {}) });
     const pushed = pushes.reduce((sum, push) => sum + push.delta, 0);
-    notice.value = `拉长了 ${longer.size} 个镜头${pushed > 0.05 ? `，后面的镜头整体往后推了 ${pushed.toFixed(1)} 秒` : "（后面原本有空档，不用推）"}`;
+    notice.value = pushed > 0.05 ? t`拉长了 ${longer.size} 个镜头，后面的镜头整体往后推了 ${pushed.toFixed(1)} 秒` : t`拉长了 ${longer.size} 个镜头（后面原本有空档，不用推）`;
   } catch (error) { fail(error); }
 }
 function changeCameraShot(id: string, shotId: string, start: number, end: number) {
@@ -2663,7 +2665,7 @@ function addShotKey(cameraId: string, shotId: string, at: number, x?: number) {
   const time = Math.min(1, Math.max(0, Math.round(at * 10000) / 10000));
   const existing = shot.keys?.find(key => Math.abs(key.at - time) * (shot.end - shot.start) < 0.05);
   if (existing) { selectShotKey(cameraId, shotId, existing.id, x); return; }
-  if ((shot.keys?.length ?? 0) >= 64) { notice.value = "一段镜头最多64个关键点"; return; }
+  if ((shot.keys?.length ?? 0) >= 64) { notice.value = translate("一段镜头最多64个关键点"); return; }
   const id = crypto.randomUUID();
   // 新关键点要等存档回写后才查得到，这里直接按已知的时刻选中它。
   if (writeShotKeys(cameraId, shotId, keys => [...keys, { id, at: time, ...roundKey(getShotKeyValues(shot, time)) }])) openShotKey(cameraId, shot, id, time, x);
@@ -2671,7 +2673,7 @@ function addShotKey(cameraId: string, shotId: string, at: number, x?: number) {
 function addShotKeyAtPlayhead() {
   const camera = monitorCamera.value && getStoredCamera(monitorCamera.value.id);
   const shot = camera && getCameraShotAt(camera, filmTime.value);
-  if (!camera || !shot) { notice.value = "播放头要在一段镜头里才能加关键点"; return; }
+  if (!camera || !shot) { notice.value = translate("播放头要在一段镜头里才能加关键点"); return; }
   // 关键点卡片出现在时间轴播放头上方。
   const needle = studioRoot.value?.querySelector<HTMLElement>(".timelinePanel .worldNeedle")?.getBoundingClientRect();
   const host = studioRoot.value?.getBoundingClientRect();
@@ -3047,7 +3049,7 @@ function drawPerformanceStroke(objectId: string, points: Vector3Value[], appendT
     const end = draft.points.at(-1)!;
     const added = points.slice(1).filter(point => Math.hypot(point.x - end[0], point.z - end[2]) > 0.2).map(point => [point.x, point.y, point.z] as [number, number, number]);
     if (!added.length) { cancelPerformanceRoute(); return; }
-    if (draft.points.length + added.length > 64) notice.value = "动线最多64个点，多出的部分没有加上。";
+    if (draft.points.length + added.length > 64) notice.value = translate("动线最多64个点，多出的部分没有加上。");
     performanceDraft.value = { ...draft, points: [...draft.points, ...added].slice(0, 64) };
     finishPerformanceRoute();
     return;
@@ -3091,7 +3093,7 @@ function appendClipRoute(track: PerformanceTrack, points: Vector3Value[]) {
   if (!end) return;
   const added = points.slice(1).filter(point => Math.hypot(point.x - end[0], point.z - end[2]) > 0.2).map(point => [point.x, point.y, point.z] as [number, number, number]);
   if (!added.length) return;
-  if (added.length + 1 > 64) notice.value = "一段移动最多64个点，多出的部分没有加上。";
+  if (added.length + 1 > 64) notice.value = translate("一段移动最多64个点，多出的部分没有加上。");
   const route = [[end[0], end[1], end[2]] as [number, number, number], ...added].slice(0, 64);
   let length = 0;
   for (let index = 1; index < route.length; index++) length += Math.hypot(route[index]![0] - route[index - 1]![0], route[index]![2] - route[index - 1]![2]);
@@ -3107,7 +3109,7 @@ function appendClipRoute(track: PerformanceTrack, points: Vector3Value[]) {
 function addPerformanceRoutePoint(position: Vector3Value) {
   const draft = performanceDraft.value;
   if (!draft || locked.value) return;
-  if (draft.points.length >= 64) { notice.value = "路线已达到 64 个点，请完成或撤回一点。"; return; }
+  if (draft.points.length >= 64) { notice.value = translate("路线已达到 64 个点，请完成或撤回一点。"); return; }
   const previous = draft.points.at(-1)!;
   const y = draft.mode === "air" || draft.mode === "water" ? previous[1] : position.y;
   if (Math.hypot(position.x - previous[0], y - previous[1], position.z - previous[2]) < 0.05) return;
@@ -3156,7 +3158,7 @@ async function activateLifeWorld() {
   prompt.value = prompt.value.trim() ? instruction + "\n补充要求：" + prompt.value.trim() : instruction;
   await nextTick();
   if (!selectedAiModel.value) {
-    notice.value = "请在下方选择模型和思考强度，然后发送。";
+    notice.value = translate("请在下方选择模型和思考强度，然后发送。");
     modelPicker.value?.open();
     return;
   }
@@ -3197,13 +3199,13 @@ function commitTimeDraft() {
 // 夜戏按影视“月光夜景”布光：冷蓝主光当月光、提高环境补光和曝光，暗而看得清，不是一片黑。
 type MoodPreset = { name: string; title: string; hour: number; layers: Partial<Record<WeatherLayerKey, number>>; lighting?: SceneLighting };
 const moonlight: SceneLighting = { sunIntensity: 1.4, sunAzimuth: 200, sunElevation: 35, sunColor: "#a9bdf0", ambientIntensity: 0.9, ambientColor: "#7f93c9", skyIntensity: 0.6, exposure: 1.5, weatherInfluence: 1 };
-const moodPresets: MoodPreset[] = [
+const moodPresets: MoodPreset[] = markMessages([
   { name: "日戏", title: "上午10点、晴、自然光", hour: 10, layers: {} },
   { name: "黄昏", title: "傍晚18:10夕阳暖光", hour: 18.17, layers: {} },
   { name: "夜戏", title: "晚上21点月光夜景：冷蓝月光加补光，暗而看得清", hour: 21, layers: {}, lighting: moonlight },
   { name: "阴天", title: "午后13点浓云、柔光", hour: 13, layers: { clouds: 0.85 } },
   { name: "雨夜", title: "晚上21点下雨、云层，月光补光", hour: 21, layers: { clouds: 0.8, rain: 0.7 }, lighting: moonlight },
-];
+]);
 /** 套用氛围预设后的时间和天气（界面氛围按钮、按场次标题自动切换共用）。 */
 function moodPatch(document: SceneDocument, mood: MoodPreset, paused = worldTime.value.paused): Pick<SceneDocument, "time" | "weather"> {
   const layers = Object.fromEntries(weatherLayerKeys.map(key => [key, mood.layers[key] ?? 0])) as NonNullable<SceneWeather["layers"]>;
@@ -3353,7 +3355,7 @@ async function applySceneBrush(objects: SceneObject[]) {
   if (locked.value || disposed || !objects.length) return;
   const base = props.modelValue;
   const version = ++sceneBrushVersion;
-  busy.value = "完成绘制";
+  busy.value = translate("完成绘制");
   try {
     // 笔刷只追加物件，已有文档和分组已经校验；新物件仍走导入时的完整物件规则。
     const accepted = parseSceneDocument({ ...createSceneDocument(), objects }).objects;
@@ -3380,7 +3382,7 @@ async function applySceneBrush(objects: SceneObject[]) {
 // ACT: 空场景一键布景：复用AI的布景工具在本地搭整套景，一次提交可撤销；搭的过程中场景被改就不覆盖。
 const setTemplateIcons = { 古装: IconBuildingPavilion, 现代: IconBuildingSkyscraper, 奇幻: IconWand, 民国: IconBuildingArch } as const;
 // 一键布景按题材筛：点一个题材只看这类景，再点一次回到全部。
-const setTemplateGenres = (["古装", "民国", "现代", "奇幻"] as const).filter(genre => setTemplates.some(template => template.genre === genre));
+const setTemplateGenres = markMessages(["古装", "民国", "现代", "奇幻"] as const).filter(genre => setTemplates.some(template => template.genre === genre));
 const setGenre = ref<"" | (typeof setTemplateGenres)[number]>("");
 const visibleSetTemplates = computed(() => setGenre.value ? setTemplates.filter(template => template.genre === setGenre.value) : setTemplates);
 // 已有场景（素材库“整套景”）：在当前视野中心附近找一块放得下的空地，保留原有物体和时间。
@@ -3394,7 +3396,7 @@ async function applySetTemplate(template: SetTemplate) {
     if (!spot) { fail(new Error(`场景里没有足够的空地放下${template.name}（约${template.half[0] * 2}×${template.half[1] * 2}米），可删掉一些物体或扩大世界后再试`)); return; }
     at = spot;
   }
-  busy.value = `搭建${template.name}`;
+  busy.value = t`搭建${translate(template.name)}`;
   try {
     const next = await buildSetTemplate(template, base, operationController.signal, at);
     if (disposed) return;
@@ -3576,7 +3578,7 @@ async function settleNewObject(id: string) {
 }
 async function addAsset(asset: SceneAsset, position?: Vector3Value) {
   if (locked.value) return;
-  busy.value = `载入${asset.name}`;
+  busy.value = t`载入${asset.name}`;
   let added = "";
   try {
     const prepared = await props.prepareAsset(asset, operationController.signal);
@@ -3603,7 +3605,7 @@ function cancelAssetPlacement() {
   viewport?.endAssetPlacement();
 }
 function updateAssetDragMessage(placement: AssetPlacement | null) {
-  assetDragMessage.value = assetPlacementLoading.value ? `正在载入${draggedAsset.value?.name ?? "模型"}，请稍候再放置` : placement?.valid ? "松开，将素材放入场景" : placement?.reason || "请移动到可放置的表面";
+  assetDragMessage.value = assetPlacementLoading.value ? t`正在载入${draggedAsset.value?.name ?? translate("模型")}，请稍候再放置` : placement?.valid ? translate("松开，将素材放入场景") : placement?.reason ? translate(placement.reason) : translate("请移动到可放置的表面");
 }
 async function startAssetPlacement(asset: SceneAsset) {
   cancelAssetPlacement();
@@ -3657,7 +3659,7 @@ async function dropAsset(x: number, y: number) {
   const version = ++assetDropVersion;
   const base = props.modelValue;
   cancelAssetPlacement();
-  busy.value = `放置${asset.name}`;
+  busy.value = t`放置${asset.name}`;
   let dropped = "";
   try {
     const prepared = await props.prepareAsset(asset, operationController.signal);
@@ -3675,7 +3677,7 @@ async function dropAsset(x: number, y: number) {
 }
 async function importFile(file: File) {
   if (locked.value) return;
-  busy.value = "导入模型";
+  busy.value = translate("导入模型");
   try {
     const asset = await props.importModel(file, operationController.signal);
     if (disposed) return;
@@ -3694,7 +3696,7 @@ function saveSessions() {
   if (!store || !sessionsLoaded) return;
   if (sessionSave) { sessionSaveQueued = true; return; }
   sessionSave = store.save(storeAgentSessions(historySessions.value, activeSessionId.value)).then(() => { sessionSaveFailed = false; }, error => {
-    if (!disposed && !sessionSaveFailed) notice.value = `对话没有保存下来：${error instanceof Error ? error.message : "写入失败"}`;
+    if (!disposed && !sessionSaveFailed) notice.value = t`对话没有保存下来：${error instanceof Error ? error.message : translate("写入失败")}`;
     sessionSaveFailed = true;
   }).finally(() => {
     sessionSave = undefined;
@@ -3718,7 +3720,7 @@ async function loadSessions() {
     sessionsLoaded = true;
     if (started.length) saveSessions();
   } catch (error) {
-    if (!disposed && !operationController.signal.aborted) notice.value = `历史对话没有读出来，本次对话不会保存：${error instanceof Error ? error.message : "读取失败"}`;
+    if (!disposed && !operationController.signal.aborted) notice.value = t`历史对话没有读出来，本次对话不会保存：${error instanceof Error ? error.message : translate("读取失败")}`;
   }
 }
 function newSession() {
@@ -3767,12 +3769,12 @@ async function compactSession(session: AgentSession, fold: AgentMessage[], signa
 }
 async function compactNow() {
   if (sessionBusy.value || locked.value || !canCompact.value) return;
-  if (!selectedAiModel.value) { notice.value = "请先在下方选择模型，再压缩上下文。"; modelPicker.value?.open(); return; }
+  if (!selectedAiModel.value) { notice.value = translate("请先在下方选择模型，再压缩上下文。"); modelPicker.value?.open(); return; }
   const controller = new AbortController();
   compactionController.value = controller;
   const session = activeSession.value;
   try { await compactSession(session, compactableMessages(session, 2), AbortSignal.any([controller.signal, operationController.signal])); }
-  catch (error) { if (!disposed && !controller.signal.aborted) notice.value = `上下文压缩没有完成：${error instanceof Error ? error.message : "摘要生成失败"}`; }
+  catch (error) { if (!disposed && !controller.signal.aborted) notice.value = t`上下文压缩没有完成：${error instanceof Error ? error.message : translate("摘要生成失败")}`; }
   finally { compactionController.value = undefined; }
 }
 /** 给附图做一张 160px 的小图：存盘和释放旧原图后，对话里还能看到发过什么。 */
@@ -3870,12 +3872,7 @@ async function addPromptImages(files: File[]) {
   if (!files.length || locked.value) return;
   if (imagesReading.value) { fail(new Error("正在读取图片，请稍候再添加。")); return; }
   try {
-    if (promptImages.value.length + files.length > 4) throw new Error("每轮最多添加 4 张图片，请移除部分图片后重试。");
-    for (const file of files) {
-      if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type)) throw new Error("请选择 PNG、JPEG、WebP 或 GIF 图片。");
-      if (!file.size || file.size > 10 * 1024 * 1024) throw new Error(`图片“${file.name}”为空或超过 10 MB，请换一张图片。`);
-    }
-    if (promptImages.value.reduce((bytes, image) => bytes + image.bytes, 0) + files.reduce((bytes, file) => bytes + file.size, 0) > 20 * 1024 * 1024) throw new Error("本轮图片总计不能超过 20 MB，请减少图片或缩小文件后重试。");
+    validatePromptImages(files, promptImages.value.map(image => image.bytes));
     imagesReading.value = true;
     const added: PromptImage[] = [];
     for (const file of files) {
@@ -3898,7 +3895,7 @@ async function addPromptImages(files: File[]) {
   finally { imagesReading.value = false; }
 }
 // ===== ACT: 输入框（与宿主画布 Agent 对齐）=====
-const promptPlaceholder = computed(() => voiceActive.value ? "正在听，请说话…" : aiController.value ? "Enter 排队，Ctrl + Enter 引导当前任务" : isPerformanceConversation.value ? "继续描述要修改的动作、时间或速度…" : "描述场景或修改要求，@ 提及，/ 技能");
+const composerPlaceholder = computed(() => voiceActive.value ? translate("正在听，请说话…") : aiController.value ? translate("Enter 排队，Ctrl + Enter 引导当前任务") : isPerformanceConversation.value ? translate("继续描述要修改的动作、时间或速度…") : translate("描述场景或修改要求，@ 提及，/ 技能"));
 const sendDisabled = computed(() => aiController.value
   ? !prompt.value.trim() || !!editingMessageId.value || voiceActive.value
   : locked.value || compacting.value || !!performanceDraft.value || voiceActive.value || imagesReading.value || (!prompt.value.trim() && !promptImages.value.length && !promptDocuments.value.length) || !selectedAiModel.value || !props.generateAi);
@@ -3984,8 +3981,8 @@ function submitPrompt(mode: "steer" | "followUp" = "followUp") {
 function queuePrompt(mode: "steer" | "followUp") {
   const text = prompt.value.trim();
   if (!text || voiceActive.value) return;
-  if (editingMessageId.value) { notice.value = "生成期间不能重发编辑的消息，请等本轮完成或先停止。"; return; }
-  if (promptImages.value.length || promptDocuments.value.length) { notice.value = "生成期间仅支持发送文字，附件请在本轮结束后发送；当前草稿已保留。"; return; }
+  if (editingMessageId.value) { notice.value = translate("生成期间不能重发编辑的消息，请等本轮完成或先停止。"); return; }
+  if (promptImages.value.length || promptDocuments.value.length) { notice.value = translate("生成期间仅支持发送文字，附件请在本轮结束后发送；当前草稿已保留。"); return; }
   promptQueue.value = [...promptQueue.value, { id: crypto.randomUUID(), text, steer: mode === "steer" }];
   prompt.value = "";
 }
@@ -3994,7 +3991,7 @@ function removeQueued(id: string) { promptQueue.value = promptQueue.value.filter
 function editQueued(id: string) {
   const item = promptQueue.value.find(entry => entry.id === id);
   if (!item) return;
-  if (prompt.value.trim() || promptImages.value.length || promptDocuments.value.length) { notice.value = "请先发送或清空输入框，再编辑排队消息。"; return; }
+  if (prompt.value.trim() || promptImages.value.length || promptDocuments.value.length) { notice.value = translate("请先发送或清空输入框，再编辑排队消息。"); return; }
   removeQueued(id);
   prompt.value = item.text;
   void nextTick(() => promptInput.value?.focus());
@@ -4047,7 +4044,7 @@ function formatFileSize(bytes: number) {
 }
 async function addPromptFiles(files: File[]) {
   if (!files.length || locked.value) return;
-  if (aiController.value) { notice.value = "生成期间仅支持发送文字，请在本轮完成后添加附件。"; return; }
+  if (aiController.value) { notice.value = translate("生成期间仅支持发送文字，请在本轮完成后添加附件。"); return; }
   const images = files.filter(file => /^image\//.test(file.type));
   const documents = files.filter(file => !/^image\//.test(file.type) && (textFilePattern.test(file.name) || /^text\//.test(file.type) || file.type === "application/json"));
   if (images.length + documents.length < files.length) fail(new Error("只支持图片和文本文档（txt、md、json、csv、srt 等），其余文件没有添加。"));
@@ -4165,7 +4162,7 @@ function stopAi() {
 }
 /** queued：排队消息轮到时直接发它的文字，不动输入框里正在写的草稿。 */
 async function runAi(queued?: { text: string }) {
-  if (performanceDraft.value) { notice.value = "请先完成或取消正在绘制的路线。"; return; }
+  if (performanceDraft.value) { notice.value = translate("请先完成或取消正在绘制的路线。"); return; }
   if (aiController.value || locked.value || compacting.value || voiceActive.value || imagesReading.value || !props.generateAi || (queued ? !queued.text.trim() : !prompt.value.trim() && !promptImages.value.length && !promptDocuments.value.length) || !selectedAiModel.value) return;
 
   if (objectDraft.value) {
@@ -4194,13 +4191,13 @@ async function runAi(queued?: { text: string }) {
     const context = performanceContext.value;
     if (context?.objectId && !props.modelValue.objects.some(object => object.id === context.objectId)) {
       clearPerformanceConversation();
-      notice.value = "原对话的物体已移除，请选择要修改的动画后继续。";
+      notice.value = translate("原对话的物体已移除，请选择要修改的动画后继续。");
       return;
     }
     const track = timelineTracks.value.find(track => track.id === context?.trackId);
     const object = props.modelValue.objects.find(object => object.id === track?.objectId);
     if (context?.trackId && (!track || !object) || context?.clipId && (!track || !object || !getPerformanceClips(track, object).some(clip => clip.id === context.clipId))) {
-      notice.value = "原对话的轨道或片段已移除，请重新选择要修改的动画。";
+      notice.value = translate("原对话的轨道或片段已移除，请重新选择要修改的动画。");
       return;
     }
     if (editorPanel.value === "life" && (subjectId.value || !context?.objectId)) rememberPerformanceContext();
@@ -4839,13 +4836,13 @@ function beginReplace(ids: string[]) {
 async function replaceWithAsset(asset: SceneAsset) {
   const targets = new Set(replaceTargets.value);
   if (locked.value || !targets.size) return;
-  busy.value = `替换为${asset.name}`;
+  busy.value = t`替换为${asset.name}`;
   try {
     const prepared = await props.prepareAsset(asset, operationController.signal);
     if (disposed) return;
     const objects = replaceObjectsAsset(props.modelValue.objects, targets, prepared);
     commit({ ...props.modelValue, objects });
-    notice.value = `已把 ${targets.size} 件换成${asset.name}`;
+    notice.value = t`已把 ${targets.size} 件换成${asset.name}`;
     replaceTargets.value = [];
   } catch (error) { fail(error); }
   finally { if (!disposed) busy.value = ""; }
@@ -4948,7 +4945,7 @@ function flushView() {
 }
 async function requestSave() {
   finishCameraGesture();
-  if (performanceDraft.value) { notice.value = "请先完成或取消正在绘制的路线，再保存场景。"; return; }
+  if (performanceDraft.value) { notice.value = translate("请先完成或取消正在绘制的路线，再保存场景。"); return; }
   if (terrainColorDraft.value && !applyTerrainColor(terrainColorDraft.value)) return;
   if (viewport?.finishTerrainStroke() === false) return;
   await nextTick();

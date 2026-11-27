@@ -1,5 +1,8 @@
 <template>
-  <main class="workspacePage" :inert="workspaceStore.projectLoadingVisible" :style="{ '--agentWidth': `${agentVisible ? agentWidth : 0}px` }">
+  <main class="workspacePage" :class="{ sideToolbar: activePanel === 'canvas' && canvasLayout.side }"
+    :data-canvas-layout="activePanel === 'canvas' ? generalSettings.canvasLayoutMode : undefined"
+    :data-agent-position="activePanel === 'canvas' ? canvasLayout.agent : undefined"
+    :inert="workspaceStore.projectLoadingVisible" :style="{ '--agentWidth': `${agentVisible ? agentWidth : 0}px` }">
     <canvasPanel
       :key="workspaceStore.project?.directory"
       v-model:selectedTool="selectedTool"
@@ -9,7 +12,7 @@
       :inert="activePanel !== 'canvas'"
       :aria-hidden="activePanel !== 'canvas'"
       :active="activePanel === 'canvas'"
-      :settingsVisible="settingsVisible" />
+      :settingsVisible="workspaceDialogOpen" />
     <keep-alive :key="workspaceStore.project?.directory" :max="1">
       <documentPanel
         v-if="activePanel === 'document'"
@@ -35,71 +38,25 @@
           </span>
         </template>
       </el-segmented>
+      <el-card v-if="activePanel === 'canvas' && canvasLayout.cornerSearch && canvasPanelRef?.canvasId" class="cornerSearch" shadow="never" :bodyStyle="{ display: 'flex', padding: '2px' }">
+        <canvasToolButtons :buttons="['search']" placement="bottom" :ready="canvasPanelRef?.canvasReady && !workspaceDialogOpen" @search="canvasPanelRef?.openNodeSearch()" />
+      </el-card>
       <div class="bottomTools">
-        <el-card v-if="activePanel === 'canvas'" class="toolMenu" shadow="never" :bodyStyle="{ padding: '2px 4px' }">
-          <div class="toolMenuContent" role="toolbar" aria-label="画布工具">
-            <el-tooltip content="添加节点" placement="top" :showArrow="false" :hideAfter="0" :enterable="false" :triggerKeys="[]">
-              <el-button class="toolButton addNodeButton" :disabled="!canvasPanelRef?.canvasReady || settingsVisible" aria-label="添加节点" aria-haspopup="menu" @click="canvasPanelRef?.addNodeAtPointer()">
-                <icon-plus :size="18" aria-hidden="true" />
-              </el-button>
-            </el-tooltip>
-            <el-tooltip :content="selectedTool === 'move' ? '移动工具，点击切换为抓手' : '抓手工具，点击切换为移动'" placement="top" :showArrow="false" :hideAfter="0" :enterable="false" :triggerKeys="[]">
-              <el-button
-                class="toolButton"
-                text
-                :type="selectedTool === 'hand' ? 'primary' : 'default'"
-                :aria-pressed="selectedTool === 'hand'"
-                aria-label="切换抓手/移动工具"
-                @click="selectedTool = selectedTool === 'move' ? 'hand' : 'move'">
-                <component :is="selectedTool === 'move' ? IconPointer : IconHandStop" :size="18" aria-hidden="true" />
-              </el-button>
-            </el-tooltip>
-            <el-tooltip content="搜索节点" placement="top" :showArrow="false" :hideAfter="0" :enterable="false" :triggerKeys="[]">
-              <el-button class="toolButton" text :disabled="!canvasPanelRef?.canvasReady || settingsVisible" aria-label="搜索节点" @click="canvasPanelRef?.openNodeSearch()">
-                <icon-search :size="18" aria-hidden="true" />
-              </el-button>
-            </el-tooltip>
-            <el-tooltip :showArrow="false" content="帮助" placement="top" :hideAfter="0" :enterable="false" :triggerKeys="[]" :disabled="helpVisible">
-              <span class="toolTrigger">
-                <el-popover v-model:visible="helpVisible" trigger="click" placement="top-end" :width="196">
-                  <template #reference>
-                    <el-button class="toolButton" text aria-label="帮助">
-                      <icon-help :size="18" />
-                    </el-button>
-                  </template>
-                  <div class="helpMenu">
-                    <el-button
-                      class="helpAction"
-                      tag="a"
-                      text
-                      :icon="IconBook"
-                      href="https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      @click="helpVisible = false">
-                      使用教程
-                    </el-button>
-                    <el-button
-                      class="helpAction"
-                      tag="a"
-                      text
-                      :icon="IconBug"
-                      href="https://docs.qq.com/smartsheet/form/EmvmQBrmlPmr%2Fss_vsqk2v%2FvhiGzE?tab=ss_vsqk2v"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Toonflow 需求/BUG反馈表"
-                      @click="helpVisible = false">
-                      汇报 BUG
-                    </el-button>
-                    <el-button class="helpAction" text :icon="IconBrandWechat" @click="showContact('community')">加入交流群</el-button>
-                    <el-button class="helpAction" text :icon="IconBriefcase" @click="showContact('business')">商务合作</el-button>
-                  </div>
-                </el-popover>
-              </span>
-            </el-tooltip>
+        <el-card v-if="activePanel === 'canvas'" class="toolMenu" shadow="never" :bodyStyle="{ padding: canvasLayout.side ? '4px 2px' : '2px 4px' }">
+          <div class="toolMenuContent" role="toolbar" :aria-orientation="canvasLayout.side ? 'vertical' : 'horizontal'" aria-label="画布工具">
+            <canvasToolButtons
+              v-if="canvasPanelRef"
+              v-model:selectedTool="selectedTool"
+              v-model:assetsVisible="canvasPanelRef.assetsVisible"
+              :buttons="canvasPanelRef.canvasId ? canvasLayout.primary : canvasLayouts.default.primary"
+              :placement="canvasLayout.side ? 'right' : 'top'"
+              :hasCanvas="!!canvasPanelRef.canvasId"
+              :ready="canvasPanelRef.canvasReady && !workspaceDialogOpen"
+              @add="canvasPanelRef?.addNodeAtPointer()"
+              @search="canvasPanelRef?.openNodeSearch()" />
           </div>
         </el-card>
-        <el-tooltip v-if="!agentVisible" content="Toonflow Agent" placement="top" :showArrow="false" :hideAfter="0">
+        <el-tooltip v-if="!agentVisible" content="Toonflow Agent" :placement="activePanel === 'canvas' && canvasLayout.agent === 'topRight' ? 'bottom' : 'top'" :showArrow="false" :hideAfter="0">
           <el-button
             class="agentButton"
             :class="{ standalone: activePanel !== 'canvas' }"
@@ -112,20 +69,7 @@
     </div>
     <floatingAgent v-model="agentVisible" :inert="workspaceStore.projectLoadingVisible" @resize="agentWidth = $event" />
     <settings ref="settingsDialog" v-model="settingsVisible" />
-    <el-dialog v-model="contactVisible" :title="contactInfo.title" width="min(360px, calc(100vw - 32px))" alignCenter appendToBody>
-      <div class="contactContent">
-        <q-r-code
-          :value="contactInfo.url"
-          :size="192"
-          type="svg"
-          color="#000000"
-          bgColor="#ffffff"
-          borderless
-          role="img"
-          :aria-label="`${contactInfo.title}二维码`" />
-        <p class="contactTip">{{ contactInfo.tip }}</p>
-      </div>
-    </el-dialog>
+    <modelInstallDialog ref="modelInstaller" />
   </main>
 </template>
 
@@ -134,12 +78,13 @@ import { translate } from "@toonflow/i18n/vue";
 import { computed, defineAsyncComponent, nextTick, onMounted, onScopeDispose, provide, ref, shallowRef, watch, type ComponentPublicInstance } from "vue";
 import { onBeforeRouteLeave } from "vue-router";
 import axios from "axios";
-import { IconVector, IconFileText, IconPointer, IconHandStop, IconPlus, IconSearch, IconHelp, IconBook, IconBug, IconBrandWechat, IconBriefcase } from "@tabler/icons-vue";
+import { IconVector, IconFileText } from "@tabler/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { QRCode } from "tdesign-vue-next";
 import settings from "@/components/settings/index.vue";
+import modelInstallDialog from "@/components/settings/panels/pluginMarket/modelInstallDialog.vue";
 import modelLoginGuide from "@/components/modelLoginGuide.vue";
-import { multiTenantEnabled, toonflowAccountToken } from "@/stores/settings";
+import { generalSettings, multiTenantEnabled, toonflowAccountToken } from "@/stores/settings";
+import { canvasLayouts } from "@/lib/canvasLayouts";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { registerWorkspaceControl, waitForControlValue } from "@/lib/mcpControl";
 import anonymousData from "@/lib/anonymousData";
@@ -147,12 +92,14 @@ import { useProviderBalances } from "@/lib/providerBilling";
 import canvasPanel from "./panels/canvas/canvasHost.vue";
 import type { DocumentNodeOptions } from "./panels/canvas/canvasFiles";
 import workspaceMenu from "./components/workspaceMenu.vue";
+import canvasToolButtons, { type CanvasPointerTool } from "./components/canvasToolButtons.vue";
 import floatingAgent from "./components/floatingAgent.vue";
 
 const documentPanel = defineAsyncComponent(() => import("./panels/document/index.vue"));
 
 const activePanel = ref<"canvas" | "document">("canvas");
-const selectedTool = ref<"move" | "hand">("move");
+const canvasLayout = computed(() => canvasLayouts[generalSettings.value.canvasLayoutMode]);
+const selectedTool = ref<CanvasPointerTool>("move");
 const sideButtonEvents = ["mousedown", "mouseup", "auxclick"] as const;
 // 鼠标侧键会直接触发原生历史导航，需在 DOM 事件阶段拦截，避免生成中的工作区被误关闭。
 function preventSideButtonNavigation(event: MouseEvent) {
@@ -175,30 +122,11 @@ const agentVisible = ref(true);
 const agentWidth = ref(0);
 const settingsVisible = ref(false);
 const settingsDialog = ref<InstanceType<typeof settings>>();
+const modelInstaller = ref<InstanceType<typeof modelInstallDialog>>();
+const workspaceDialogOpen = computed(() => settingsVisible.value || !!modelInstaller.value?.visible);
 provide("openSettingsPanel", (id: string) => settingsDialog.value?.openPanel(id));
+provide("openModelInstaller", (id: string) => modelInstaller.value?.open(id));
 provide("modelLoginGuide", computed(() => !multiTenantEnabled.value && !toonflowAccountToken.value ? modelLoginGuide : undefined));
-const helpVisible = ref(false);
-const contactVisible = ref(false);
-const contactType = ref<"community" | "business">("community");
-const contacts = {
-  community: {
-    title: "加入交流群",
-    url: "https://work.weixin.qq.com/u/vc66e4c7f8432af0d8?v=5.0.13.84802&bb=c03c3ad130",
-    tip: "Toonflow 是为爱发电的开源项目。欢迎文明交流、友善反馈；回复可能需要一些时间，请避免责问或命令式沟通，感谢你的理解与尊重。",
-  },
-  business: {
-    title: "商务合作",
-    url: "https://work.weixin.qq.com/u/vc66e4c7f8432af0d8?v=5.0.13.84802&bb=c03c3ad130",
-    tip: "此联系方式仅用于商务合作接洽，不提供问题答疑。使用问题欢迎在交流群交流，需求与 BUG 可通过反馈表提交。感谢理解。",
-  },
-};
-const contactInfo = computed(() => contacts[contactType.value]);
-
-function showContact(type: "community" | "business") {
-  contactType.value = type;
-  helpVisible.value = false;
-  contactVisible.value = true;
-}
 const canvasPanelRef = ref<InstanceType<typeof canvasPanel>>();
 watch(() => canvasPanelRef.value?.canvasListReady, ready => {
   workspaceStore.projectLoading = !ready;
@@ -231,6 +159,7 @@ registerWorkspaceControl({
   getState: () => ({
     directory: workspaceStore.project?.directory ?? null,
     canvasId: canvasPanelRef.value?.canvasId || null,
+    canvasIds: canvasPanelRef.value?.canvasIds ?? [],
     panel: activePanel.value,
     tools: canvasPanelRef.value?.canvasReady ? canvasPanelRef.value.getCanvasContext()?.tools ?? [] : [],
     document: documentPanelRef.value?.getDocument(false),
@@ -261,12 +190,12 @@ registerWorkspaceControl({
       checkDirectory();
       return panel.getDocument();
     }
-    if (!(await switchPanel("canvas"))) throw new Error("画布面板无法打开");
-    const context = await waitForControlValue(
+    const context = request.canvasId ? await canvasPanelRef.value?.resolveCanvasContext(request.canvasId, callSignal) : await waitForControlValue(
       () => (canvasPanelRef.value?.canvasReady || (!canvasPanelRef.value?.canvasId && canvasPanelRef.value?.canvasListReady) ? canvasPanelRef.value.getCanvasContext() : undefined),
       callSignal
     );
     checkDirectory();
+    if (!context) throw new Error("目标画布不可用");
     return context.call({ name: request.name, args: request.args }, callSignal);
   },
 });
@@ -382,6 +311,7 @@ function saveDocumentNode(directory: string, canvasPath: string, nodeId: string,
   :deep(.balanceCard),
   :deep(.canvasControlsCard),
   .panelSwitcher,
+  .cornerSearch,
   .toolMenu {
     background: color-mix(in srgb, var(--el-bg-color-overlay) 70%, transparent);
     backdrop-filter: blur(6px);
@@ -409,12 +339,65 @@ function saveDocumentNode(directory: string, canvasPath: string, nodeId: string,
     z-index: 5;
   }
 
+  &.sideToolbar {
+    .workspaceTools .bottomTools {
+      display: contents;
+
+      .toolMenu {
+        position: absolute;
+        top: 50%;
+        left: 15px;
+        z-index: 5;
+        transform: translateY(-50%);
+
+        .toolMenuContent {
+          flex-direction: column;
+        }
+      }
+
+      .agentButton {
+        right: 15px;
+        bottom: 15px;
+        left: auto;
+        z-index: 5;
+      }
+    }
+
+    :deep(.menuExtension) {
+      left: 54px;
+      .assetLibrary { max-width: calc(100cqw - 84px); }
+    }
+  }
+
+  &[data-agent-position="topRight"] {
+    .workspaceTools .bottomTools .agentButton { top: 15px; bottom: auto; }
+  }
+  @container canvasWorkspace (min-width: 1041px) {
+    &:has(.cornerSearch) :deep(.balanceMenuPanel),
+    &[data-agent-position="topRight"]:has(.agentButton) :deep(.balanceMenuPanel) {
+      right: 50px;
+      max-width: calc(50% - 140px);
+    }
+  }
+
+  @container workspaceTools (max-width: 390px) {
+    &[data-agent-position="bottomRight"] .workspaceTools .bottomTools .agentButton { bottom: 65px; }
+  }
+
   .workspaceTools {
     position: absolute;
     inset: 0;
     width: calc(100% - var(--agentWidth, 0px));
     container: workspaceTools / inline-size;
     pointer-events: none;
+
+    .cornerSearch {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 5;
+      pointer-events: auto;
+    }
 
     .panelSwitcher {
       --el-border-radius-base: var(--ui-radius-large);
@@ -463,27 +446,6 @@ function saveDocumentNode(directory: string, canvasPath: string, nodeId: string,
           display: flex;
           align-items: center;
           gap: 2px;
-
-          .toolButton {
-            width: 28px;
-            height: 28px;
-            margin: 0;
-            padding: 0;
-
-            &.addNodeButton {
-              margin-right: 6px;
-              color: var(--el-bg-color);
-              background: var(--el-text-color-primary);
-              border-color: transparent;
-
-              &:hover { opacity: 0.85; }
-              &.is-disabled { opacity: 0.45; }
-            }
-          }
-
-          .toolTrigger { display: inline-flex; }
-
-          .el-divider { margin: 0; }
         }
       }
 
@@ -628,30 +590,6 @@ function saveDocumentNode(directory: string, canvasPath: string, nodeId: string,
   }
   87.5% {
     background-position: 98% 60%, 0 0, 0 0;
-  }
-}
-.helpMenu {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  .helpAction {
-    justify-content: flex-start;
-    margin-left: 0;
-  }
-}
-
-.contactContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-
-  .contactTip {
-    margin: 0;
-    color: var(--el-text-color-secondary);
-    font-size: 12px;
-    line-height: 1.7;
   }
 }
 </style>

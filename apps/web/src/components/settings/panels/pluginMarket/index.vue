@@ -3,10 +3,9 @@
     <div class="marketToolbar">
       <div class="marketHeader">
         <nav class="marketNav" aria-label="插件列表">
-          <button class="navButton" type="button" :aria-pressed="isMarketTab" @click="activeTab = 'discover'">发现插件</button>
-          <button class="navButton" type="button" :aria-pressed="activeTab === 'installed'" @click="activeTab = 'installed'">已安装</button>
-          <button class="navButton" type="button" :aria-pressed="activeTab === 'mcp'" @click="activeTab = 'mcp'">MCP</button>
-          <button class="navButton" type="button" :aria-pressed="activeTab === 'ffmpeg'" @click="activeTab = 'ffmpeg'">FFmpeg</button>
+          <button v-for="(label, key) in tabs" :key class="navButton" type="button" :aria-pressed="activeTab === key" @click="activeTab = key">
+            {{ label }}
+          </button>
         </nav>
         <div class="marketLinks">
           <el-button tag="a" href="https://api.toonflow.net/console/plugIn" target="_blank" rel="noopener noreferrer" size="small" text :icon="IconExternalLink">
@@ -74,6 +73,7 @@
 
     <ffmpeg v-if="activeTab === 'ffmpeg'" :visible />
     <mcpServers v-else-if="activeTab === 'mcp'" :visible />
+    <localModels v-else-if="activeTab === 'localModels'" :visible />
     <template v-else>
       <template v-if="activeTab === 'installed'">
         <el-alert v-for="message in visibleLoadErrors" :key="message" class="loadError" :title="message" type="error" :closable="false" showIcon />
@@ -377,6 +377,7 @@ import { getPluginExistence } from "./marketUpload";
 import skillEditorDialog from "./skillEditorDialog.vue";
 import ffmpeg from "./ffmpeg.vue";
 import mcpServers from "./mcpServers.vue";
+import localModels from "./localModels.vue";
 import agentEditorDialog from "./agentEditorDialog.vue";
 import agentConnectDialog from "./agentConnectDialog.vue";
 import a2aSettingsDialog from "./a2aSettingsDialog.vue";
@@ -393,7 +394,13 @@ const pluginTypes = {
   tool: { label: "工具", path: "tools", icon: IconTool, tagType: "warning" },
   agent: { label: "Agent", path: agentMarketEnabled ? "agents" : null, icon: IconSparkles2, tagType: "danger" },
 } as const;
-const tabs = { get discover() { return translate("发现插件"); }, get installed() { return translate("已安装"); }, mcp: "MCP", ffmpeg: "FFmpeg" } as const;
+const tabs = {
+  get discover() { return translate("发现插件"); },
+  get installed() { return translate("已安装"); },
+  get mcp() { return translate("MCP连接器"); },
+  ffmpeg: "FFmpeg",
+  get localModels() { return translate("本地模型"); },
+} as const;
 const activeTab = ref<keyof typeof tabs>("discover");
 const isMarketTab = computed(() => activeTab.value === "discover");
 const marketPage = ref(1);

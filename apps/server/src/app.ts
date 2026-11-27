@@ -11,6 +11,8 @@ import { getRuntimePlatform } from "@/lib/platform";
 import initializePlugins from "@/utils/plugins/initialize";
 import { languageRequest, setLocaleFallback, translateError, translateMessage } from "@/lib/i18n";
 import { detectLocale, normalizeLocale } from "@toonflow/i18n";
+import type { ResolveModelRunner } from "@/types/localModels";
+import { configureModelRunners } from "@/utils/localModel/runners";
 
 export async function createApp({
   webRoot,
@@ -22,6 +24,7 @@ export async function createApp({
   skillsRoot,
   agentsRoot,
   pluginRevision,
+  resolveModelRunner,
 }: {
   webRoot: string;
   appVersion?: string;
@@ -32,6 +35,7 @@ export async function createApp({
   skillsRoot?: string;
   agentsRoot?: string;
   pluginRevision?: string;
+  resolveModelRunner?: ResolveModelRunner;
 }) {
   // conf 由下方的路由动态加载，必须先确定整个进程共用的数据目录。
   if (dataDirectory) process.env.TOONFLOW_DATA_DIR = resolve(dataDirectory);
@@ -51,8 +55,6 @@ export async function createApp({
       });
     }
   }
-  const { initializeNetwork } = await import("@/utils/network");
-  await initializeNetwork();
   setLocaleFallback(() => normalizeLocale((conf.get("settings", {}).ui as { language?: unknown } | undefined)?.language)
     ?? detectLocale([Intl.DateTimeFormat().resolvedOptions().locale]));
   if (dataDirectory && toolsRoot)
@@ -120,12 +122,14 @@ export async function createApp({
   // 错误处理
   app.use((err: Error & { status?: number }, request: Request, response: Response, next: NextFunction) => {
     if (response.headersSent) return next(err);
-    console.error(err);
     const body = errorFromCause(err);
+    // ACT: 4xx 是已回给调用方的预期失败（如先读后建的 ENOENT、幂等建目录的 EEXIST），只记录 5xx，避免淹没真正的服务端错误。
+    if (body.code >= 500) console.error(err);
     response.status(body.code).json(body);
   });
 
   const { initializeMobileLinkRuntime } = await import("@/utils/mobileLink");
   initializeMobileLinkRuntime(app);
+  configureModelRunners(resolveModelRunner);
   return app;
 }

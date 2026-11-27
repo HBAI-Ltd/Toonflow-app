@@ -199,6 +199,17 @@ async function disconnectRemote() {
   }
 }
 
+function applyStatus(next: LinkStatus, resetForm: boolean) {
+  status.value = next;
+  deviceHubEnabled.value = next.hubEnabled ?? next.enabled;
+  form.enabled = deviceHubEnabled.value;
+  if (resetForm) Object.assign(form, {
+    port: next.port, publicUrl: next.publicUrl,
+    directories: next.initialized === false ? [...new Set(workspaceStore.projectList.map(project => project.directory))] : [...next.directories],
+  });
+  if (!next.addresses.includes(selectedAddress.value)) selectedAddress.value = next.addresses[0] ?? "";
+}
+
 async function loadStatus(resetForm = true, quiet = false) {
   if (isRemoteConnection) return;
   if (quiet && (busy.value || polling || !props.visible || document.hidden)) return;
@@ -225,16 +236,9 @@ async function loadStatus(resetForm = true, quiet = false) {
       pairedSuccessfully.value = false;
       pairingMessage.value = msg`设备授权已撤销，可重新生成二维码。`;
     }
-    status.value = data.data;
-    deviceHubEnabled.value = data.data.hubEnabled ?? data.data.enabled;
-    if (!preserveForm) Object.assign(form, {
-      enabled: data.data.hubEnabled ?? data.data.enabled, port: data.data.port, publicUrl: data.data.publicUrl,
-      directories: data.data.initialized === false ? [...new Set(workspaceStore.projectList.map(project => project.directory))] : [...data.data.directories],
-    });
-    if (!data.data.addresses.includes(selectedAddress.value)) selectedAddress.value = data.data.addresses[0] ?? "";
+    applyStatus(data.data, !preserveForm);
     if (!data.data.enabled) pairing.value = undefined;
     if (!quiet && !pairing.value && !pairingFinished.value) autoPairingUrl = "";
-    return true;
   } catch (cause) {
     if (!request.signal.aborted) {
       if (!quiet) error.value = errorMessage(cause);
@@ -250,6 +254,7 @@ async function loadStatus(resetForm = true, quiet = false) {
 
 async function saveConfig(enabled = form.enabled) {
   if (isRemoteConnection || busy.value || !status.value) return;
+  readController?.abort();
   form.enabled = enabled;
   saving.value = true;
   error.value = "";
@@ -257,12 +262,12 @@ async function saveConfig(enabled = form.enabled) {
     if (!Number.isInteger(form.port) || form.port < 1 || form.port > 65535) throw new Error("请输入 1–65535 之间的端口");
     const { data } = await axios.put<ApiResponse<LinkStatus>>("/api/mobileLink/config", { ...form, publicUrl: form.publicUrl.trim() }, { headers });
     if (data.code !== 200) throw new Error(data.message || "保存配置失败");
-    deviceHubEnabled.value = data.data.hubEnabled ?? data.data.enabled;
+    applyStatus(data.data, true);
     pairing.value = undefined;
     pairingMessage.value = "";
     pairedSuccessfully.value = pairingFinished.value = false;
     autoPairingUrl = "";
-    if (await loadStatus()) ElMessage.success("互联配置已保存");
+    ElMessage.success("互联配置已保存");
   } catch (cause) {
     form.enabled = status.value.hubEnabled ?? status.value.enabled;
     error.value = errorMessage(cause);
@@ -334,7 +339,6 @@ watch(pairingUrl, () => {
   autoPairingUrl = "";
 });
 watch(() => props.visible, visible => {
-  clearInterval(timer);
   readController?.abort();
   pairingController?.abort();
   pairingController = undefined;
@@ -348,8 +352,8 @@ watch(() => props.visible, visible => {
   addressMode.value = "lan";
   selectedAddress.value = "";
   void loadStatus();
-  updatePolling();
 }, { immediate: true });
+watch([() => props.visible, () => status.value?.enabled], updatePolling);
 watch([() => props.visible, () => status.value?.enabled, pairingUrl, pairing, busy], () => {
   if (props.visible && status.value?.enabled && pairingUrl.value && !pairing.value && !pairingFinished.value && !busy.value && autoPairingUrl !== pairingUrl.value) {
     void generatePairing();
@@ -358,7 +362,9 @@ watch([() => props.visible, () => status.value?.enabled, pairingUrl, pairing, bu
 
 function updatePolling() {
   clearInterval(timer);
-  if (props.visible && !isRemoteConnection && !document.hidden) timer = setInterval(() => { void loadStatus(false, true); }, 3000);
+  if (props.visible && status.value?.enabled && !isRemoteConnection && !document.hidden) {
+    timer = setInterval(() => { void loadStatus(false, true); }, 3000);
+  }
 }
 
 function visibilityChanged() {

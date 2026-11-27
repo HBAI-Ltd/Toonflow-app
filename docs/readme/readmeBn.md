@@ -90,7 +90,7 @@
 </p>
 <p align="center">
 <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" /> 
-<img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" /> 
+<img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" /> 
 <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" /> 
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ sudo spctl --master-disable
 
 ### 4.2 Docker ইনস্টলেশন
 
-প্রথমে Git, [Docker Engine](https://docs.docker.com/engine/install/) এবং Docker Compose ইনস্টল করুন। Windows ও macOS-এ Docker Desktop-এর Linux container mode ব্যবহার করা যায়। রিপোজিটরিতে [Dockerfile](../../Dockerfile), [Compose কনফিগারেশন](../../compose.yaml) এবং [বিল্ড থেকে বাদ দেওয়ার নিয়ম](../../.dockerignore) রয়েছে। ইমেজটি Bun 1.4.3 দিয়ে তৈরি করা হয় এবং এতে FFmpeg অন্তর্ভুক্ত থাকে।
+প্রথমে Git, [Docker Engine](https://docs.docker.com/engine/install/) এবং Docker Compose ইনস্টল করুন। Windows ও macOS-এ Docker Desktop-এর Linux container mode ব্যবহার করা যায়। রিপোজিটরিতে [Dockerfile](../../Dockerfile), [Compose কনফিগারেশন](../../compose.yaml) এবং [বিল্ড থেকে বাদ দেওয়ার নিয়ম](../../.dockerignore) রয়েছে। ইমেজটি Bun 1.4.5 দিয়ে তৈরি করা হয় এবং এতে FFmpeg অন্তর্ভুক্ত থাকে।
 
 <details>
 <summary><strong>Eপ্রসারিত করুন Docker ইনস্টলেশন পদক্ষেপ</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 সার্ভারে ইনস্টলেশন
 
-সরাসরি Linux সার্ভারে Web এবং Server চালানোর জন্য এই বিকল্পটি ব্যবহার করুন। নীচের উদাহরণটি Ubuntu / Debian এবং প্রকল্পের নির্দিষ্ট সংস্করণ, [Bun 1.4.3](https://bun.sh/docs/installation) ব্যবহার করে৷
+সরাসরি Linux সার্ভারে Web এবং Server চালানোর জন্য এই বিকল্পটি ব্যবহার করুন। নীচের উদাহরণটি Ubuntu / Debian এবং প্রকল্পের নির্দিষ্ট সংস্করণ, [Bun 1.4.5](https://bun.sh/docs/installation) ব্যবহার করে৷
 
 <details>
 <summary><strong>Eপ্রসারিত সার্ভার ইনস্টলেশন পদক্ষেপ</strong></summary>
@@ -453,7 +453,7 @@ docker compose start
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

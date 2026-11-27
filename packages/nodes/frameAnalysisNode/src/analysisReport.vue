@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="visible" title="拉片报告" width="min(1040px, calc(100vw - 32px))" alignCenter appendToBody destroyOnClose>
+  <el-dialog v-model="visible" title="镜头分析报告" width="min(1040px, calc(100vw - 32px))" alignCenter appendToBody destroyOnClose>
     <div class="analysisReport nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.stop>
       <div class="reportToolbar">
         <div class="reportFacts">
@@ -11,7 +11,7 @@
         <el-button v-if="manifestUrl" class="downloadButton" tag="a" :href="manifestUrl" download="sceneManifest.json" :icon="IconDownload" text size="small">下载清单</el-button>
       </div>
       <el-alert v-if="manifestError" :title="manifestError" type="error" :closable="false" showIcon />
-      <el-alert v-if="result.ai?.overviewError" :title="`整段归纳未完成：${result.ai.overviewError}`" type="warning" :closable="false" showIcon />
+      <el-alert v-if="result.ai?.overviewError" :title="`全片总结失败：${result.ai.overviewError}`" type="warning" :closable="false" showIcon />
       <el-tabs v-model="activeTab" class="reportTabs" :class="{ singleView: !result.overview }">
         <el-tab-pane label="镜头明细" name="scenes">
           <div class="sceneLayout">
@@ -119,7 +119,7 @@ onBeforeUnmount(() => previewVideo.value?.pause());
 const previewUrl = files.useFileUrl(previewFile, () => { previewError.value = "画面读取失败，文件可能已被移动或删除"; });
 const manifestUrl = files.useFileUrl(
   computed(() => visible.value ? { url: props.result.manifest, mimeType: "application/json" } : undefined),
-  () => { manifestError.value = "拉片清单读取失败，文件可能已被移动或删除"; },
+  () => { manifestError.value = "镜头清单读取失败，文件可能已被移动或删除"; },
 );
 watch(selectedScene, scene => {
   if (scene && !(previewKind.value === "image" ? scene.image : scene.video)) previewKind.value = scene.image ? "image" : "video";

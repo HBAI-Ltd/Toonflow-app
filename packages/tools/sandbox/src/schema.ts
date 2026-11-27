@@ -1,9 +1,10 @@
 import { z } from "zod";
 
-const relativePathSchema = z.string().min(1).max(4096).regex(
-  /^(?!\.{1,2}(?:\/|$))(?!.*\/\.{1,2}(?:\/|$))[^/\\:\u0000-\u001f\u007f]+(?:\/[^/\\:\u0000-\u001f\u007f]+)*$/,
-  "请使用以 / 分隔的相对路径，不能包含空路径段、.、..、盘符或控制字符",
-);
+const relativePathMessage = "请使用以 / 分隔的相对路径，不能包含空路径段、.、..、盘符或控制字符";
+// ACT: OpenAI 严格 schema 不支持正则前后瞻，. 与 .. 段改用 refine 在运行时校验，不进入工具 JSON schema。
+const relativePathSchema = z.string().min(1).max(4096)
+  .regex(/^[^/\\:\u0000-\u001f\u007f]+(?:\/[^/\\:\u0000-\u001f\u007f]+)*$/, relativePathMessage)
+  .refine(value => value.split("/").every(part => part !== "." && part !== ".."), relativePathMessage);
 
 export const sandboxRequestSchema = z.object({
   command: z.string().min(1).max(20000).describe("在 /workspace 执行的 Bash 脚本；JavaScript 使用 js-exec，Python 使用 python3"),

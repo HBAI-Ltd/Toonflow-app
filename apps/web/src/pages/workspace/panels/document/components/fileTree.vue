@@ -31,7 +31,7 @@
       <div v-if="directory && !treeRows.length && !loadingKeys.size && !searching" class="emptyTree">{{ searchTerm.trim() ? '没有匹配的文件或节点' : '暂无文件' }}</div>
       <div class="treeRows" :style="{ height: `${treeVirtualizer.getTotalSize()}px` }">
         <div v-for="{ row, data, index, start } in visibleRows" :id="`${treeId}-${index}`" :key="row.item.key" class="treeRow" :class="{ current: currentKey === row.item.key, focused: focusedItem?.key === row.item.key, dropTarget: dropTargetKey === row.item.key }" :data-key="row.item.key"
-          :style="{ transform: `translateY(${start}px)`, paddingLeft: `${(row.level - 1) * 16}px` }" role="treeitem" :aria-label="row.item.displayLabel || row.item.name" :aria-level="row.level" :aria-posinset="row.position" :aria-setsize="row.size"
+          :style="{ transform: `translateY(${start}px)`, height: `${rowHeight}px`, paddingLeft: `${(row.level - 1) * 16}px` }" role="treeitem" :aria-label="row.item.displayLabel || row.item.name" :aria-level="row.level" :aria-posinset="row.position" :aria-setsize="row.size"
           :aria-expanded="!row.item.isLeaf ? expandedSet.has(row.item.key) : undefined" :aria-selected="currentKey === row.item.key" :aria-checked="multiple && row.item.type !== 'node' ? checkedKeys.has(row.item.key) : undefined"
           :draggable="!busy && !creating && row.item.type !== 'node'"
           @dragstart.stop="startDrag($event, row.item)" @dragend.stop="clearDrag" @dragover.stop="dragOver($event, row.item)" @dragleave.stop="dragLeave" @drop.stop="dropFiles($event, row.item)"
@@ -53,6 +53,9 @@
             <span class="fileName">{{ data.displayLabel || data.name }}<small v-if="searchTerm.trim()">{{ data.path }}</small></span>
             <small v-if="data.displayLabel && data.nodeId" class="nodeId" :title="data.nodeId">({{ data.nodeId.slice(0, 8) }}{{ data.nodeId.length > 8 ? '…' : '' }})</small>
           </span>
+          <button v-if="touchScreen" type="button" class="rowMore" tabindex="-1" aria-label="更多操作" @click.stop="openMenu($event, row.item)" @dblclick.stop>
+            <icon-dots :size="16" aria-hidden="true" />
+          </button>
         </div>
       </div>
     </div>
@@ -86,11 +89,11 @@ import type { IDockviewPanelProps } from "dockview-vue";
 import type { DropdownInstance } from "element-plus";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { defaultRangeExtractor, useVirtualizer } from "@tanstack/vue-virtual";
-import { IconBox, IconChevronRight, IconFile, IconFilePlus, IconFileSearch, IconFocus2, IconFolder, IconFolderOpen, IconFolderPlus, IconVector, IconListCheck, IconLoader2, IconRefresh, IconSearch } from "@tabler/icons-vue";
+import { IconBox, IconChevronRight, IconDots, IconFile, IconFilePlus, IconFileSearch, IconFocus2, IconFolder, IconFolderOpen, IconFolderPlus, IconVector, IconListCheck, IconLoader2, IconRefresh, IconSearch } from "@tabler/icons-vue";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { settingsStorage } from "@/stores/settings";
 import { writeClipboardText } from "@/lib/clipboard";
-import { isMobile, isRemoteConnection } from "@/lib/platform";
+import { isMobile, isRemoteConnection, touchScreen } from "@/lib/platform";
 import { t, translate } from "@toonflow/i18n/vue";
 import { isCanvasFile } from "@/pages/workspace/canvasFile";
 import { extensionCandidates, extensionIcon, listExtensions } from "../extensions";
@@ -178,6 +181,8 @@ const treeRows = computed<TreeRow[]>(() => {
   return rows;
 });
 const rowIndexes = computed(() => new Map(treeRows.value.map((row, index) => [row.item.key, index])));
+// 触屏加高行便于点中，虚拟列表按同一行高计算。
+const rowHeight = touchScreen ? 36 : 28;
 // ACT: 数据与展开状态完整保留，只挂载可见行和少量缓冲；目录仍按需读取。
 const treeVirtualizer = useVirtualizer<HTMLDivElement, HTMLDivElement>(computed(() => {
   const sourceIndex = rowIndexes.value.get(draggedKey.value ?? "");
@@ -185,7 +190,7 @@ const treeVirtualizer = useVirtualizer<HTMLDivElement, HTMLDivElement>(computed(
     count: treeRows.value.length,
     getScrollElement: () => treeContent.value ?? null,
     getItemKey: (index: number) => treeRows.value[index]!.item.key,
-    estimateSize: () => 28,
+    estimateSize: () => rowHeight,
     overscan: 6,
     rangeExtractor: range => {
       const indexes = defaultRangeExtractor(range);
@@ -923,23 +928,35 @@ function loadChildren(item: FileTreeItem): Promise<void> {
       display: flex;
       align-items: center;
       width: 100%;
-      height: 28px;
       box-sizing: border-box;
       cursor: pointer;
       user-select: none;
       &:hover { background: var(--el-fill-color-light); }
       &.current { background: var(--el-color-primary-light-9); }
-      :deep(.el-checkbox) { height: 28px; margin-right: 7px; }
+      :deep(.el-checkbox) { height: 100%; margin-right: 7px; }
       .expandIcon {
         display: flex;
         align-items: center;
         justify-content: center;
         width: 24px;
-        height: 28px;
+        height: 100%;
         flex-shrink: 0;
         color: var(--el-text-color-placeholder);
         &.expanded:not(.loading) svg { transform: rotate(90deg); }
         &.loading svg { animation: treeLoading 1s linear infinite; }
+      }
+      .rowMore {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 100%;
+        flex-shrink: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--el-text-color-secondary);
+        cursor: pointer;
       }
     }
     &:focus-visible .treeRow.focused { outline: 1px solid var(--el-color-primary); outline-offset: -1px; }

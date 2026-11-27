@@ -1,7 +1,7 @@
 <template>
   <div class="imageEditor" :class="{ editing: mode, previewUnavailable: preparingPreview || previewError }" :style="{ '--imageRatio': imageRatio }" :aria-busy="preparingPreview">
     <img ref="sourceImage" :src="previewSrc" :alt="alt" draggable="false" @load="imageLoaded" @error="handleError" />
-    <div v-if="preparingPreview || previewError" class="previewStatus" role="status">{{ preparingPreview ? "正在生成兼容预览…" : previewError }}</div>
+    <div v-if="preparingPreview || previewError" class="previewStatus" role="status">{{ preparingPreview ? "正在生成兼容预览…" : previewFailure }}</div>
     <canvas
       v-if="mode"
       ref="paintCanvas"
@@ -35,7 +35,7 @@
   </div>
   <teleport v-if="mode && toolbarTarget" :to="toolbarTarget">
     <div class="paintToolbar" @keydown.esc.stop.prevent="!busy && cancel()">
-      <el-button class="exitButton" :icon="IconX" :disabled="busy" text :title="mode === 'mark' ? '取消标记' : '取消局部重绘'" :aria-label="mode === 'mark' ? '取消标记' : '取消局部重绘'" @click="cancel">{{ mode === 'mark' ? '标记' : '局部重绘' }}</el-button>
+      <el-button class="exitButton" :icon="IconX" :disabled="busy" text :title="mode === 'mark' ? '取消标记' : '取消涂抹重画'" :aria-label="mode === 'mark' ? '取消标记' : '取消涂抹重画'" @click="cancel">{{ mode === 'mark' ? '标记' : '涂抹重画' }}</el-button>
       <el-button :icon="IconBrush" :type="tool === 'brush' ? 'primary' : 'default'" :disabled="busy" text title="画笔" aria-label="画笔" :aria-pressed="tool === 'brush'" @click="tool = 'brush'" />
       <template v-if="mode === 'mark'">
         <el-button :icon="IconSquare" :type="tool === 'rectangle' ? 'primary' : 'default'" :disabled="busy" text title="矩形" aria-label="矩形" :aria-pressed="tool === 'rectangle'" @click="tool = 'rectangle'" />
@@ -59,15 +59,17 @@ import { useNode, useVueFlow } from "@vue-flow/core";
 import { ElButton, ElMessage } from "element-plus";
 import { IconBrush, IconEraser, IconSquare, IconCircle, IconTypography, IconArrowBackUp, IconArrowForwardUp, IconTrash, IconCheck, IconX } from "@tabler/icons-vue";
 import { uploadNodeFile, useNodeFiles } from "@toonflow/nodes-scaffold/runtime";
+import { translate } from "@toonflow/i18n/vue";
 import { showNodeError } from "@toonflow/node-shared/showNodeError";
 import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
 import { useImageVariationNode } from "../useImageVariationNode";
 import { buildInpaintPrompt, type InpaintDraftInput } from "../imageInpaint";
 
-const props = defineProps<{ src: string; alt: string; toolbarTarget?: HTMLElement; disabled?: boolean }>();
+const props = defineProps<{ src: string; alt: string; toolbarTarget?: HTMLElement; disabled?: boolean; imageFormat?: string }>();
 const emit = defineEmits<{ load: [event: Event]; error: [error: Error] }>();
 const { src: previewSrc, preparing: preparingPreview, error: previewError, handleError, handleLoaded } = useMediaPreview(() => props.src, "image");
-watch(previewError, message => { if (message) emit("error", new Error(message)); });
+const previewFailure = computed(() => props.imageFormat && previewError.value ? `无法处理这张 ${props.imageFormat} 图片：${previewError.value}。可先转为 PNG 或 JPEG 再导入。` : previewError.value);
+watch(previewError, message => { if (message) emit("error", new Error(previewFailure.value)); });
 const { node } = useNode();
 const { addNodes, addEdges, findNode, getNodes, nodeTypes } = useVueFlow();
 const files = useNodeFiles();
@@ -393,7 +395,7 @@ async function createInpaint(input: InpaintDraftInput, signal: AbortSignal) {
       await workspace.rename(path, paths[index]!);
     }
     const result = await createVariation({
-      label: "局部重绘", nodeId, prompt: buildInpaintPrompt(input.prompt),
+      label: translate("涂抹重画"), nodeId, prompt: buildInpaintPrompt(input.prompt),
       model: typeof node.data.model === "string" ? node.data.model : "",
       size: typeof node.data.size === "string" ? node.data.size : "",
       ratio: typeof node.data.ratio === "string" ? node.data.ratio : "16:9",
@@ -412,7 +414,7 @@ async function createInpaint(input: InpaintDraftInput, signal: AbortSignal) {
   }
 }
 
-defineExpose({ mode, busy, start, cancel, createInpaint, previewSrc });
+defineExpose({ mode, busy, start, cancel, createInpaint, previewSrc, preparingPreview, previewError });
 </script>
 
 <style scoped lang="scss">

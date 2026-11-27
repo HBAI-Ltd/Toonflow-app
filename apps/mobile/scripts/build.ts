@@ -49,12 +49,13 @@ if (existsSync(staging)) {
   if (!path || path.startsWith("..") || isAbsolute(path)) throw new Error(`拒绝清理构建目录之外的路径：${staging}`);
   await rm(staging, { recursive: true });
 }
-const payload = join(staging, "assets/payload");
+const payload = join(staging, "payload");
 await mkdir(payload, { recursive: true });
+await mkdir(join(staging, "assets"), { recursive: true });
 
 const result = await Bun.build({
   // ACT: 服务端与 stdio 共用构建依赖，避免在 APK 中重复携带 MCP、Zod 和语言包。
-  entrypoints: [join(mobileRoot, "src/server.ts"), join(projectRoot, "packages/mcp/src/stdio.ts"), join(projectRoot, "packages/ffmpeg/src/ffmpegWorker.ts"), join(projectRoot, "packages/tools/sandbox/src/sandboxProcess.ts")],
+  entrypoints: [join(mobileRoot, "src/server.ts"), join(projectRoot, "packages/mcp/src/stdio.ts"), join(projectRoot, "packages/ffmpeg/src/ffmpegWorker.ts"), join(projectRoot, "apps/server/src/utils/localModel/onnx/localModelProcess.ts"), join(projectRoot, "packages/tools/sandbox/src/sandboxProcess.ts")],
   target: "bun", format: "esm", splitting: true, outdir: payload,
   naming: "[name].js", minify: true, external: ["@silvia-odwyer/photon-node", "@firecrawl/anydoc", "@firecrawl/anydoc-wasm", "just-bash"],
   define: { "process.env.appVersion": JSON.stringify(version) },
@@ -64,18 +65,32 @@ for (const directory of ["web", "nodes", "tools", "ext", "skills"]) {
   await cp(join(projectRoot, "build", directory), join(payload, directory), { recursive: true });
 }
 // ACT: Photon 与 anydoc 按自身目录读取 WASM，沿用 server 的完整 external 包布局。
-await cp(join(projectRoot, "build/server/node_modules"), join(payload, "node_modules"), { recursive: true });
+// anydoc 原生平台包来自构建机（如 win32-x64），手机上无法加载，只保留包本体与 WASM 回退。
+await cp(join(projectRoot, "build/server/node_modules"), join(payload, "node_modules"), {
+  recursive: true,
+  filter: (source) => !/[\\/]@firecrawl[\\/]anydoc-(?!wasm$|android-arm64$)[^\\/]+$/.test(source),
+});
 const revision = new Bun.CryptoHasher("sha256");
+const payloadFiles: Record<string, Uint8Array | string> = {};
 async function hashPayload(directory: string) {
   const entries = await readdir(directory, { withFileTypes: true });
   for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) await hashPayload(path);
-    else revision.update(relative(payload, path).replaceAll("\\", "/")).update("\0").update(await readFile(path)).update("\0");
+    else {
+      const name = relative(payload, path).replaceAll("\\", "/");
+      payloadFiles[name] = await readFile(path);
+      revision.update(name).update("\0").update(payloadFiles[name]).update("\0");
+    }
   }
 }
 await hashPayload(payload);
-await writeAtomic(join(payload, "revision.txt"), revision.digest("hex"));
+payloadFiles["revision.txt"] = revision.digest("hex");
+// ACT: payload 打成单个 tar 再用 zstd 19 级压缩，比 APK 逐文件 Deflate 小约三成；
+// 整包约 100 MiB 一次性放在内存里，构建机与手机解压时都按此峰值估算，体积再翻倍时改为流式。
+const payloadArchive = await new Bun.Archive(payloadFiles).bytes();
+await writeAtomic(join(staging, "assets/payload.tar.zst"), Bun.zstdCompressSync(payloadArchive, { level: 19 }));
+await writeAtomic(join(staging, "assets/payloadRevision.txt"), payloadFiles["revision.txt"]);
 for (const abi of abis) {
   const destination = join(staging, "lib", abi, "libbun.so");
   await mkdir(dirname(destination), { recursive: true });

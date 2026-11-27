@@ -121,7 +121,7 @@ export const appOperations: {
     name: "renameAsset", description: "在全局素材库移动或重命名文件、文件夹，不覆盖已有目标。", method: "POST", path: "/api/assets/rename", parameters: z.strictObject({ path, target: path }),
   },
   {
-    name: "removeAsset", description: "从全局素材库删除文件或空文件夹，不递归删除内容。", method: "DELETE", path: "/api/assets/remove", parameters: z.strictObject({ path }),
+    name: "removeAsset", description: "从全局素材库删除文件或文件夹，文件夹连同其中内容递归删除。", method: "DELETE", path: "/api/assets/remove", parameters: z.strictObject({ path }),
   },
   {
     name: "readAsset", description: "读取不超过 20 MB 的全局素材文件，返回 base64 和 MIME 类型。", method: "GET", path: "/api/assets/read", parameters: z.strictObject({ path }),

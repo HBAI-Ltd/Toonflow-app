@@ -51,6 +51,8 @@ android {
     targetCompatibility = JavaVersion.VERSION_17
   }
   lint { checkReleaseBuilds = false }
+  // payload 已是 zstd 整包，APK 直接存储，避免重复 Deflate 和启动时多解一层。
+  androidResources { noCompress += "zst" }
   packaging {
     jniLibs {
       useLegacyPackaging = true

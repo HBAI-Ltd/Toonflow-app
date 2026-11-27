@@ -90,7 +90,7 @@
 </p>
 <p align="center">
   <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" />&nbsp;
-  <img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" />&nbsp;
+  <img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" />&nbsp;
   <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" />&nbsp;
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ Untuk petunjuk lebih lanjut, lihat [Panduan Pengguna](https://qcn7xdsqgc4z.feish
 
 ### 4.2 Instalasi Docker
 
-Instal Git, [Docker Engine](https://docs.docker.com/engine/install/), dan Docker Compose terlebih dahulu. Di Windows dan macOS, Anda dapat menggunakan Docker Desktop dalam mode kontainer Linux. Repositori ini menyertakan [Dockerfile](../../Dockerfile), [konfigurasi Compose](../../compose.yaml), dan [daftar pengecualian build](../../.dockerignore). Image dibangun dengan Bun 1.4.3 dan sudah menyertakan FFmpeg.
+Instal Git, [Docker Engine](https://docs.docker.com/engine/install/), dan Docker Compose terlebih dahulu. Di Windows dan macOS, Anda dapat menggunakan Docker Desktop dalam mode kontainer Linux. Repositori ini menyertakan [Dockerfile](../../Dockerfile), [konfigurasi Compose](../../compose.yaml), dan [daftar pengecualian build](../../.dockerignore). Image dibangun dengan Bun 1.4.5 dan sudah menyertakan FFmpeg.
 
 <details>
 <summary><strong>Tampilkan langkah instalasi Docker</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 Instalasi Server
 
-Gunakan opsi ini untuk menjalankan Web dan Server langsung di server Linux. Contoh berikut menggunakan Ubuntu / Debian dan versi yang ditentukan proyek, yaitu [Bun 1.4.3](https://bun.sh/docs/installation).
+Gunakan opsi ini untuk menjalankan Web dan Server langsung di server Linux. Contoh berikut menggunakan Ubuntu / Debian dan versi yang ditentukan proyek, yaitu [Bun 1.4.5](https://bun.sh/docs/installation).
 
 <details>
 <summary><strong>Tampilkan langkah instalasi server</strong></summary>
@@ -453,7 +453,7 @@ Instal lingkungan runtime:
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

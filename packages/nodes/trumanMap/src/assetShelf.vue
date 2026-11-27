@@ -5,14 +5,7 @@
       <el-button v-if="!selecting" size="small" :disabled="disabled" title="导入不超过 50 MB 的自包含 GLB" @click="fileInput?.click()"><icon-upload :size="15" />导入 GLB</el-button>
       <input ref="fileInput" class="fileInput" type="file" accept=".glb,model/gltf-binary" @change="importAsset" />
     </header>
-    <div class="searchRow">
-      <label class="searchField"><icon-search :size="15" /><input v-model="search" type="search" placeholder="搜索主素材" aria-label="搜索主素材" /></label>
-    </div>
-    <div class="assetFilters">
-      <label><span>分类</span><select v-model="categoryChoice" :disabled="disabled" aria-label="素材分类"><option v-for="item in categories" :key="item" :value="item">{{ item === '全部' ? '全部分类' : item }}</option><option v-if="!selecting" value="整套景">整套景</option><option v-if="recentIds.length" value="最近用过">最近用过</option></select></label>
-      <label><span>题材</span><select v-model="theme" :disabled="disabled || category === '基础' || setsMode" aria-label="素材题材"><option value="">全部题材</option><option v-for="item in assetThemes" :key="item" :value="item">{{ item }}</option></select></label>
-      <label><span>类型</span><select v-model="itemType" :disabled="disabled || category === '基础' || setsMode" aria-label="物品类型"><option value="">全部类型</option><option v-for="item in assetItemTypes" :key="item" :value="item">{{ item }}</option></select></label>
-    </div>
+    <assetSearchControls v-model="search" v-model:category="categoryChoice" v-model:theme="theme" v-model:itemType="itemType" :disabled="disabled" :selecting="selecting" :hasRecent="!!recentIds.length" />
     <div class="libraryHeading">
       <span :title="setsMode ? undefined : `${filteredAssets.length.toLocaleString()} 个主素材，另含 ${(assetTotal - filteredAssets.length).toLocaleString()} 个款式与状态`">{{ setsMode ? `${filteredSets.length} 套整套景` : `${assetTotal.toLocaleString()} 个素材` }}</span>
       <span>{{ setsMode ? '点击放到视野附近的空地' : selecting ? `已选 ${selectedIds?.length ?? 0} 种 · 点击多选` : '点击添加 · 拖入放置' }}</span>
@@ -20,31 +13,31 @@
     <div ref="assetContent" class="assetContent">
       <div v-if="fileError" class="libraryNotice" role="alert"><p>{{ fileError }}</p></div>
       <div v-if="setsMode" class="setGrid">
-        <button v-for="template in filteredSets" :key="template.id" type="button" class="setCard" :disabled="disabled" :title="`在视野附近的空地搭好整套${template.name}，每件都可再改`" @click="emit('addSet', template.id)"><strong>{{ template.name }}</strong><span>{{ template.genre }} · 约{{ template.half[0] * 2 }}×{{ template.half[1] * 2 }}米</span></button>
+        <button v-for="template in filteredSets" :key="template.id" type="button" class="setCard" :disabled="disabled" :title="`在视野附近的空地搭好整套${translate(template.name)}，每件都可再改`" @click="emit('addSet', template.id)"><strong>{{ translate(template.name) }}</strong><span>{{ translate(template.genre) }} · 约{{ template.half[0] * 2 }}×{{ template.half[1] * 2 }}米</span></button>
       </div>
       <div v-else class="assetGrid">
         <template v-for="(row, rowIndex) in assetRows" :key="rowIndex">
           <div class="assetRow" :style="{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }">
             <article v-for="asset in row" :key="asset.id" class="assetCard" :class="{ expanded: expandedAsset?.id === asset.id }">
-              <button type="button" class="assetMain" :class="{ selected: selecting && selectedIdSet.has(asset.id), selecting }" :disabled="disabled" draggable="false" :aria-pressed="selecting ? selectedIdSet.has(asset.id) : undefined" :title="selecting ? `${asset.name} · 点击${selectedIdSet.has(asset.id) ? '取消选择' : '加入笔刷'}` : `${asset.name} · 点击添加或拖入场景`" @click="addAsset(asset, $event)" @pointerdown="startAssetDrag($event, asset)">
+              <button type="button" class="assetMain" :class="{ selected: selecting && selectedIdSet.has(asset.id), selecting }" :disabled="disabled" draggable="false" :aria-pressed="selecting ? selectedIdSet.has(asset.id) : undefined" :title="assetTitle(asset, builtinAssetSet.has(asset))" @click="addAsset(asset, $event)" @pointerdown="startAssetDrag($event, asset)">
                 <assetThumbnail :asset="asset" :loadModel="loadModel" />
                 <span v-if="selecting" class="selectionMark" aria-hidden="true"><icon-check v-if="selectedIdSet.has(asset.id)" :size="12" /></span>
-                <span class="assetName">{{ asset.name }}</span>
-                <span class="assetMeta">{{ asset.theme || asset.category }}<span v-if="asset.theme"> · {{ getAssetItemType(asset) }}</span></span>
+                <span class="assetName">{{ getAssetDisplayName(asset, builtinAssetSet.has(asset)) }}</span>
+                <span class="assetMeta">{{ translate(asset.theme || asset.category) }}<span v-if="asset.theme"> · {{ translate(getAssetItemType(asset)) }}</span></span>
               </button>
-              <button v-if="derivableIds.has(asset.id)" type="button" class="derivativeToggle" :disabled="disabled" :aria-label="`${asset.name}的款式与状态`" :aria-expanded="expandedAsset?.id === asset.id" :aria-controls="derivativePanelId" @click="toggleDerivatives(asset)"><span>款式与状态</span><icon-chevron-down :size="12" /></button>
+              <button v-if="derivableIds.has(asset.id)" type="button" class="derivativeToggle" :disabled="disabled" :aria-label="t`${getAssetDisplayName(asset, builtinAssetSet.has(asset))}的款式与状态`" :aria-expanded="expandedAsset?.id === asset.id" :aria-controls="derivativePanelId" @click="toggleDerivatives(asset)"><span>款式与状态</span><icon-chevron-down :size="12" /></button>
             </article>
           </div>
-          <section v-if="expandedAsset && row.some(asset => asset.id === expandedAsset?.id)" :id="derivativePanelId" class="derivativePanel" :aria-label="`${expandedAsset.name}的款式与状态`">
-            <header class="derivativeHeader"><strong>{{ expandedAsset.name }}</strong><span>{{ derivatives.length }} 个衍生</span><button type="button" aria-label="收起衍生素材" @click="closeDerivatives"><icon-x :size="14" /></button></header>
+          <section v-if="expandedAsset && row.some(asset => asset.id === expandedAsset?.id)" :id="derivativePanelId" class="derivativePanel" :aria-label="t`${getAssetDisplayName(expandedAsset, builtinAssetSet.has(expandedAsset))}的款式与状态`">
+            <header class="derivativeHeader"><strong>{{ getAssetDisplayName(expandedAsset, builtinAssetSet.has(expandedAsset)) }}</strong><span>{{ derivatives.length }} 个衍生</span><button type="button" aria-label="收起衍生素材" @click="closeDerivatives"><icon-x :size="14" /></button></header>
             <div class="derivativeFilters">
-              <label><span>状态</span><select v-model="derivativeState" :disabled="disabled" aria-label="衍生状态"><option value="">全部状态</option><option v-for="item in assetStates" :key="item" :value="item">{{ item }}</option></select></label>
+              <label><span>状态</span><select v-model="derivativeState" :disabled="disabled" aria-label="衍生状态"><option value="">全部状态</option><option v-for="item in assetStates" :key="item" :value="item">{{ translate(item) }}</option></select></label>
               <label v-if="derivativeVariants.length"><span>款式</span><select v-model="derivativeVariant" :disabled="disabled" aria-label="衍生款式"><option value="">全部款式</option><option v-for="variant in derivativeVariants" :key="variant" :value="variant">{{ variantName(variant) }}</option></select></label>
             </div>
             <div class="derivativeGrid" :style="{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }">
-              <button v-for="asset in visibleDerivatives" :key="asset.id" type="button" class="derivativeCard" :class="{ selected: selecting && selectedIdSet.has(asset.id), selecting }" :disabled="disabled" draggable="false" :aria-pressed="selecting ? selectedIdSet.has(asset.id) : undefined" :title="selecting ? `${asset.name} · 点击${selectedIdSet.has(asset.id) ? '取消选择' : '加入笔刷'}` : `${asset.name} · 点击添加或拖入场景`" @click="addAsset(asset, $event)" @pointerdown="startAssetDrag($event, asset)">
+              <button v-for="asset in visibleDerivatives" :key="asset.id" type="button" class="derivativeCard" :class="{ selected: selecting && selectedIdSet.has(asset.id), selecting }" :disabled="disabled" draggable="false" :aria-pressed="selecting ? selectedIdSet.has(asset.id) : undefined" :title="assetTitle(asset, !!expandedAsset && builtinAssetSet.has(expandedAsset))" @click="addAsset(asset, $event)" @pointerdown="startAssetDrag($event, asset)">
                 <span v-if="selecting" class="selectionMark" aria-hidden="true"><icon-check v-if="selectedIdSet.has(asset.id)" :size="12" /></span>
-                <assetThumbnail :asset="asset" :loadModel="loadModel" /><span>{{ asset.recipe ? `${asset.state || '原始'} · ${variantName(asset.recipe.variant)}` : asset.name }}</span>
+                <assetThumbnail :asset="asset" :loadModel="loadModel" /><span>{{ asset.recipe ? `${translate(asset.state || '原始')} · ${variantName(asset.recipe.variant)}` : getAssetDisplayName(asset, !!expandedAsset && builtinAssetSet.has(expandedAsset)) }}</span>
               </button>
             </div>
             <nav v-if="derivativePageCount > 1" class="derivativePages" aria-label="衍生素材分页"><button type="button" :disabled="disabled || derivativePage === 1" @click="derivativePage--">上一组</button><span>{{ derivativePage }} / {{ derivativePageCount }}</span><button type="button" :disabled="disabled || derivativePage === derivativePageCount" @click="derivativePage++">下一组</button></nav>
@@ -65,10 +58,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, useId, watch } from "vue";
 import { ElButton } from "element-plus";
-import { IconCheck, IconChevronDown, IconSearch, IconUpload, IconX } from "@tabler/icons-vue";
+import { t, translate } from "@toonflow/i18n/vue";
+import { IconCheck, IconChevronDown, IconUpload, IconX } from "@tabler/icons-vue";
+import assetSearchControls from "./assetSearchControls.vue";
 import assetThumbnail from "./assetThumbnail.vue";
 import { builtinAssets } from "./assetLibrary";
-import { assetThemes, assetStates, assetItemTypes, type AssetCategory, type AssetTheme, type AssetState, type AssetItemType, type SceneAsset } from "./sceneDocument";
+import { getAssetDisplayName } from "./assetLocale";
+import { assetStates, type AssetCategory, type AssetTheme, type AssetState, type AssetItemType, type SceneAsset } from "./sceneDocument";
 import { getAssetItemType } from "./assetMetadata";
 import { setTemplates } from "./setTemplates";
 import { sameJson } from "./sameJson";
@@ -97,10 +93,9 @@ function rememberAsset(asset: SceneAsset) {
   try { localStorage.setItem("trumanMap.recentAssets", JSON.stringify(recentIds.value)); } catch { /* 存不下就只在本次生效 */ }
 }
 const categoryChoice = computed({ get: () => setsMode.value ? "整套景" : recentMode.value ? "最近用过" : category.value, set: (value: string) => { setsMode.value = value === "整套景"; recentMode.value = value === "最近用过"; if (!setsMode.value && !recentMode.value) category.value = value as AssetCategory; else if (recentMode.value) category.value = "全部" as AssetCategory; } });
-const filteredSets = computed(() => { const query = search.value.trim(); return setTemplates.filter(template => !query || (template.name + template.genre).includes(query)); });
+const filteredSets = computed(() => { const query = search.value.trim().toLocaleLowerCase(); return setTemplates.filter(template => !query || `${template.name}${template.genre} ${translate(template.name)} ${translate(template.genre)}`.toLocaleLowerCase().includes(query)); });
 const theme = ref<AssetTheme | "">("");
 const itemType = ref<AssetItemType | "">("");
-const categories: AssetCategory[] = ["全部", "基础", "自然", "道具", "建筑", "本地", "生成"];
 const assetPage = ref(1);
 const assetPageSize = 48;
 const columnCount = ref(4);
@@ -111,6 +106,7 @@ const derivativeState = ref<AssetState | "">("原始");
 const derivativeVariant = ref<number | "">("");
 const derivativePage = ref(1);
 const derivativePageSize = 12;
+const builtinAssetSet = new Set(builtinAssets);
 const derivableIds = new Set(builtinAssets.filter(hasAssetDerivatives).map(asset => asset.id));
 const localAssets = shallowRef<SceneAsset[]>([]);
 const fileError = ref("");
@@ -122,14 +118,27 @@ let resizeObserver: ResizeObserver | undefined;
 // 按引用逐层比较（不整份 JSON.stringify）：场景里内联了 AI 模型顶点时，每次提交都序列化几 MB。
 watch(() => props.localAssets ?? [], assets => { if (!sameJson(assets, localAssets.value)) localAssets.value = assets; }, { immediate: true });
 const allAssets = computed(() => [...new Map([...builtinAssets, ...localAssets.value].filter(asset => !isCatalogDerivative(asset)).map(asset => [asset.id, asset])).values()]);
+const translatedAssetNames = computed(() => new Map(allAssets.value.filter(asset => builtinAssetSet.has(asset)).map(asset => [asset, getAssetDisplayName(asset, true).toLocaleLowerCase()])));
+function matchesAssetSearch(asset: SceneAsset, tokens: string[]) {
+  const text = getAssetSearchText(asset);
+  const translatedName = translatedAssetNames.value.get(asset) ?? "";
+  return tokens.every(token => matchesSearchToken(text, token) || translatedName.includes(token));
+}
+function matchesDerivativeSearch(asset: SceneAsset, query: string, builtin: boolean) {
+  return getAssetSearchText(asset).includes(query) || (builtin && getAssetDisplayName(asset, true).toLocaleLowerCase().includes(query));
+}
+function assetTitle(asset: SceneAsset, builtin: boolean) {
+  const name = getAssetDisplayName(asset, builtin);
+  return selecting.value ? t`${name} · 点击${selectedIdSet.value.has(asset.id) ? translate("取消选择") : translate("加入笔刷")}` : t`${name} · 点击添加或拖入场景`;
+}
 // ACT: 搜索按空格分词（“古代 椅子”两个词都要对上），名字里就有的排在只是标签沾边的前面，名字正好相同的最前；同档内保持素材库原有顺序。
 const filteredAssets = computed(() => {
   const query = search.value.trim().toLocaleLowerCase();
   const tokens = query.split(/\s+/).filter(Boolean);
-  if (recentMode.value) { const byId = new Map(allAssets.value.map(asset => [asset.id, asset])); return recentIds.value.map(id => byId.get(id)).filter((asset): asset is SceneAsset => !!asset && (!tokens.length || tokens.every(token => matchesSearchToken(getAssetSearchText(asset), token)))); }
-  const matched = allAssets.value.filter(asset => matchesAssetFilters(asset, { category: category.value, theme: theme.value, itemType: itemType.value }) && (!tokens.length || (text => tokens.every(token => matchesSearchToken(text, token)))(getAssetSearchText(asset))));
+  if (recentMode.value) { const byId = new Map(allAssets.value.map(asset => [asset.id, asset])); return recentIds.value.map(id => byId.get(id)).filter((asset): asset is SceneAsset => !!asset && (!tokens.length || matchesAssetSearch(asset, tokens))); }
+  const matched = allAssets.value.filter(asset => matchesAssetFilters(asset, { category: category.value, theme: theme.value, itemType: itemType.value }) && (!tokens.length || matchesAssetSearch(asset, tokens)));
   if (!tokens.length) return matched;
-  const tier = (asset: SceneAsset) => { const name = asset.name.toLocaleLowerCase(); return name === query ? 0 : tokens.some(token => name.includes(token)) ? 1 : 2; };
+  const tier = (asset: SceneAsset) => { const name = asset.name.toLocaleLowerCase(); const translatedName = translatedAssetNames.value.get(asset) ?? ""; return name === query || translatedName === query ? 0 : tokens.some(token => name.includes(token) || translatedName.includes(token)) ? 1 : 2; };
   return matched.map((asset, index) => ({ asset, index, tier: tier(asset) })).sort((a, b) => a.tier - b.tier || a.index - b.index).map(item => item.asset);
 });
 // 全部数量 = 列出的主素材 + 展开后能看到的款式与状态（与衍生面板同样按分类、题材、类型及名称筛选，不计面板内的状态/款式选择）。
@@ -138,8 +147,8 @@ const assetTotal = computed(() => {
   const matchesMetadata = (asset: SceneAsset) => (category.value === "全部" || asset.category === category.value) && (!theme.value || asset.theme === theme.value) && (!itemType.value || getAssetItemType(asset) === itemType.value);
   return filteredAssets.value.reduce((sum, asset) => {
     if (!derivableIds.has(asset.id)) return sum + 1;
-    if (!query || getAssetSearchText(asset, false).includes(query)) return sum + 1 + countAssetDerivatives(asset, matchesMetadata);
-    return sum + 1 + getAssetDerivatives(asset).filter(child => matchesMetadata(child) && getAssetSearchText(child).includes(query)).length;
+    if (!query || getAssetSearchText(asset, false).includes(query) || (translatedAssetNames.value.get(asset) ?? "").includes(query)) return sum + 1 + countAssetDerivatives(asset, matchesMetadata);
+    return sum + 1 + getAssetDerivatives(asset).filter(child => matchesMetadata(child) && matchesDerivativeSearch(child, query, builtinAssetSet.has(asset))).length;
   }, 0);
 });
 const assetPageCount = computed(() => Math.max(1, Math.ceil(filteredAssets.value.length / assetPageSize)));
@@ -148,8 +157,9 @@ const assetRows = computed(() => Array.from({ length: Math.ceil(visibleAssets.va
 const derivativeVariants = computed(() => [...new Set(derivatives.value.flatMap(asset => asset.recipe ? [asset.recipe.variant] : []))].sort((first, second) => first - second));
 const filteredDerivatives = computed(() => {
   const query = search.value.trim().toLocaleLowerCase();
-  const filterByName = !!query && expandedAsset.value && !getAssetSearchText(expandedAsset.value, false).includes(query);
-  return derivatives.value.filter(asset => (category.value === "全部" || asset.category === category.value) && (!theme.value || asset.theme === theme.value) && (!itemType.value || getAssetItemType(asset) === itemType.value) && (!derivativeState.value || (asset.state ?? "原始") === derivativeState.value) && (derivativeVariant.value === "" || (asset.recipe?.variant ?? 0) === derivativeVariant.value) && (!filterByName || getAssetSearchText(asset).includes(query)));
+  const builtin = !!expandedAsset.value && builtinAssetSet.has(expandedAsset.value);
+  const filterByName = !!query && expandedAsset.value && !getAssetSearchText(expandedAsset.value, false).includes(query) && !(translatedAssetNames.value.get(expandedAsset.value) ?? "").includes(query);
+  return derivatives.value.filter(asset => (category.value === "全部" || asset.category === category.value) && (!theme.value || asset.theme === theme.value) && (!itemType.value || getAssetItemType(asset) === itemType.value) && (!derivativeState.value || (asset.state ?? "原始") === derivativeState.value) && (derivativeVariant.value === "" || (asset.recipe?.variant ?? 0) === derivativeVariant.value) && (!filterByName || matchesDerivativeSearch(asset, query, builtin)));
 });
 const derivativePageCount = computed(() => Math.max(1, Math.ceil(filteredDerivatives.value.length / derivativePageSize)));
 const visibleDerivatives = computed(() => filteredDerivatives.value.slice((derivativePage.value - 1) * derivativePageSize, derivativePage.value * derivativePageSize));
@@ -172,7 +182,7 @@ function toggleDerivatives(asset: SceneAsset) {
   derivativeVariant.value = "";
   derivativePage.value = 1;
 }
-function variantName(variant: number) { return variant ? `款式 ${String(variant).padStart(2, "0")}` : "原版"; }
+function variantName(variant: number) { return variant ? t`款式 ${String(variant).padStart(2, "0")}` : translate("原版"); }
 
 function changeAssetPage(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -288,16 +298,6 @@ onBeforeUnmount(() => { resizeObserver?.disconnect(); cancelAssetDrag(); });
     .el-button { margin: 0; :deep(> span) { gap: 5px; } }
     .fileInput { display: none; }
   }
-  .searchRow { display: flex; flex-shrink: 0; gap: 6px; margin: 0 12px 8px;
-    .searchField { display: flex; align-items: center; flex: 1; gap: 6px; min-width: 0; padding: 0 8px; border: 1px solid var(--studioBorderColor, var(--el-border-color-light)); border-radius: var(--ui-radius-small, 4px); color: var(--el-text-color-secondary); background: var(--studioControlBackground);
-      &:focus-within { border-color: var(--el-color-primary); }
-      > svg { flex-shrink: 0; }
-      input { width: 100%; min-width: 0; min-height: 32px; padding: 5px 0; color: var(--el-text-color-primary); border: 0; background: transparent; outline: none; caret-color: var(--el-color-primary); &::placeholder { color: var(--el-text-color-placeholder); } }
-    }
-  }
-  .assetFilters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); flex-shrink: 0; gap: 8px; margin: 0 12px 8px;
-    > label { display: flex; align-items: center; gap: 5px; min-width: 0; color: var(--el-text-color-secondary); font-size: 11px; > span { flex-shrink: 0; } }
-  }
   .libraryHeading { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 8px; padding: 0 12px 8px; color: var(--el-text-color-secondary); font-size: 11px;
     > span:first-child { color: var(--el-text-color-regular); font-variant-numeric: tabular-nums; }
     > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -365,6 +365,5 @@ onBeforeUnmount(() => { resizeObserver?.disconnect(); cancelAssetDrag(); });
     }
   }
 }
-@media (max-width: 420px) { .assetShelf .assetFilters { gap: 5px; > label { > span { display: none; } } } }
 @media (prefers-reduced-motion: reduce) { .assetShelf .assetContent .assetGrid .assetRow .assetCard .derivativeToggle > svg { transition: none; } }
 </style>

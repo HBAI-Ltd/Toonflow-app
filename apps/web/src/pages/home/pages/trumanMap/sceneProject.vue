@@ -9,11 +9,12 @@
 
 <script setup lang="ts">
 import axios from "axios";
-import { markRaw, onMounted, provide, shallowRef, watch } from "vue";
+import { markRaw, onBeforeUnmount, onMounted, provide, shallowRef, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { VueFlow, useVueFlow, type Node, type NodeTypesObject } from "@vue-flow/core";
 import type { NodePersistenceContext, NodeProjectContext } from "@toonflow/nodes-scaffold/nodeDocument";
 import { useNodeToolsContext } from "@toonflow/nodes-scaffold/nodeTools";
+import { uploadNodeFile } from "@toonflow/nodes-scaffold/workspaceFiles";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { currentUser } from "@/stores/multiTenant";
 import { useWorkspaceStore } from "@/stores/workspace";
@@ -21,9 +22,10 @@ import { loadNodeComponent } from "@/pages/workspace/panels/canvas/loadNodeCompo
 import assetLibrary from "@/pages/workspace/panels/canvas/components/assetLibrary.vue";
 
 type ProjectFile = { toonflowCanvas: true; nodes: Node[]; edges: unknown[]; viewport: { x: number; y: number; zoom: number } };
+export type SceneRequest = { prompt: string; images: File[]; model: string; reasoningEffort: string; format: string };
 
 // request：首页“生成预演”新建的场景，打开后设好画幅，把描述作为第一条消息发给内置 Agent。
-const props = defineProps<{ directory: string; request?: { prompt: string; model: string; reasoningEffort: string; format: string } }>();
+const props = defineProps<{ directory: string; request?: SceneRequest }>();
 const emit = defineEmits<{ close: [] }>();
 // 项目文件沿用画布格式，场景数据由插件写在同一目录的 assets/节点ID/ 下；同一文件夹也能作为普通项目打开。
 const projectPath = "白模预演.json";
@@ -43,6 +45,8 @@ let files: ReturnType<typeof useWorkspaceFiles> | undefined;
 let directory = "";
 let project: ProjectFile | undefined;
 const nodeId = shallowRef("");
+const lifetime = new AbortController();
+onBeforeUnmount(() => lifetime.abort());
 let saving = Promise.resolve();
 
 function showError(error: unknown) {
@@ -149,20 +153,26 @@ onMounted(async () => {
     emit("close");
     return;
   }
-  if (props.request) sendRequest(props.request).catch(showError);
+  if (props.request) sendRequest(props.request, files).catch(error => { if (!lifetime.signal.aborted) showError(error); });
 });
 
 // 通过插件注册的节点函数操作编辑器（自动打开编辑器、等视口就绪），和画布总 Agent 调用的是同一入口。
-async function sendRequest(request: NonNullable<typeof props.request>) {
+async function sendRequest(request: SceneRequest, target: ReturnType<typeof useWorkspaceFiles>) {
   const tools = getNodeTools();
-  const call = (name: string, args: Record<string, unknown>) => tools.call({ nodeId: nodeId.value, name: `node:${name}`, args });
+  const call = (name: string, args: Record<string, unknown>) => tools.call({ nodeId: nodeId.value, name: `node:${name}`, args }, lifetime.signal);
   // ACT: 节点函数在节点组件 setup 时注册，挂载时机由 Vue Flow 决定，这里轮询最多 10 秒。
   for (let tries = 0; !tools.list([nodeId.value], ["node:editorAgentChat"]).next().value; tries++) {
+    lifetime.signal.throwIfAborted();
     if (tries >= 200) throw new Error("TrumanMap 插件版本过旧，不支持自动发送描述，请更新插件后重试");
     await new Promise(resolve => setTimeout(resolve, 50));
   }
   await call("editorCameras", { action: "format", format: request.format });
-  await call("editorAgentChat", { message: request.prompt, ...(request.model ? { model: request.model } : {}), ...(request.reasoningEffort ? { thinking: request.reasoningEffort } : {}) });
+  const images: string[] = [];
+  for (const file of request.images) {
+    lifetime.signal.throwIfAborted();
+    images.push(await uploadNodeFile(target, nodeId.value, file));
+  }
+  await call("editorAgentChat", { message: request.prompt, ...(images.length ? { images } : {}), ...(request.model ? { model: request.model } : {}), ...(request.reasoningEffort ? { thinking: request.reasoningEffort } : {}) });
 }
 </script>
 

@@ -1,5 +1,38 @@
 import type { CanvasToolCall, QuestionRequest, ToolCall } from "@toonflow/tools-scaffold/runtime";
 import type { ThinkingLevel } from "../../lib/modelReasoning";
+export type AgentSchedule =
+  | { kind: "once"; at: number }
+  | { kind: "interval"; everySeconds: number }
+  | { kind: "daily"; time: string; timeZone: string }
+  | { kind: "weekly"; time: string; timeZone: string; weekdays: number[] };
+export type AgentAutomationInput = {
+  name: string; prompt: string; schedule: AgentSchedule; sessionFile?: string;
+  providerId: string; modelId: string; thinkingLevel?: ThinkingLevel;
+};
+export type AgentAutomationSource = { taskId: string; runId: string; name: string };
+export type AgentAutomationRun = {
+  id: string; startedAt: number; finishedAt?: number; sessionFile?: string;
+  status: "running" | "completed" | "failed" | "interrupted" | "cancelled"; error?: string;
+};
+export type AgentAutomation = AgentAutomationInput & {
+  id: string; revision: number; enabled: boolean; createdAt: number;
+  nextRunAt: number | null; runs: AgentAutomationRun[]; cancelledAt?: number; queued?: boolean;
+};
+export type AgentAutomationCommand =
+  | { action: "save"; id?: string; revision?: number; task: AgentAutomationInput }
+  | { action: "run"; id: string; revision: number; retryRunId?: string }
+  | { action: "pause" | "resume" | "cancel" | "delete"; id: string; revision: number };
+
+export type AgentPlan = { active: boolean };
+export type AgentGoal = {
+  id: string; revision: number; objective: string; status: "active" | "paused" | "completed" | "blocked";
+  rounds: number; maxRounds: number; reason?: string; running: boolean;
+};
+export type AgentCommand =
+  | { action: "plan"; enabled: boolean }
+  | { action: "create"; objective: string }
+  | { action: "edit"; id: string; revision: number; objective: string }
+  | { action: "pause" | "resume" | "clear"; id: string; revision: number };
 
 export type AgentToolCall = ToolCall & { question?: QuestionRequest & { callId: string } };
 
@@ -53,6 +86,9 @@ export type AgentPeerMessage = {
 };
 
 export type AgentEvent =
+  | { type: "plan"; plan: AgentPlan }
+  | { type: "goal"; goal: AgentGoal | null }
+  | { type: "goalRound"; replyTo: string }
   | { type: "text" | "thinking"; blockId: string; delta?: string; content?: string; done?: boolean }
   | { type: "retry"; blockPrefix: string; replyTo?: string }
   | { type: "compaction"; active: boolean }
@@ -61,7 +97,7 @@ export type AgentEvent =
   | ({ type: "question"; callId: string; toolCallId: string } & QuestionRequest)
   | { type: "error"; message: string }
   | { type: "session"; file: string; runId: string }
-  | { type: "userMessage"; id: string; queueId?: string; content?: string; attachments?: { name: string; path: string; mimeType: string }[]; mentions?: AgentMention[]; delivery?: AgentMessageDelivery }
+  | { type: "userMessage"; id: string; queueId?: string; content?: string; attachments?: { name: string; path: string; mimeType: string }[]; mentions?: AgentMention[]; delivery?: AgentMessageDelivery; automation?: AgentAutomationSource }
   | { type: "subAgent"; agent: AgentSubAgent }
   | { type: "subAgentEvent"; file: string; runId: string; event: AgentEvent }
   | { type: "report"; parentFile: string; file: string; name: string; content: string; id: string }

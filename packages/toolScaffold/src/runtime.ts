@@ -2,9 +2,13 @@ import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import type { Rule } from "@form-create/element-ui";
 import type { BrowserFfmpegRequest, FfmpegFactory, FfmpegRemoteEvent } from "@toonflow/ffmpeg/types";
 import type { Stats } from "@toonflow/file";
+import type { LocalModelClient } from "@toonflow/plugin-server/localModelClient";
 import { z } from "zod";
+import { localModelDefinitionsSchema, type LocalModelDefinition } from "@toonflow/plugin-server/localModels";
 
 export type { ToolDefinition } from "@earendil-works/pi-coding-agent";
+export { localModelId, packLocalTensor, unpackLocalTensor } from "@toonflow/plugin-server/localModelClient";
+export type { LocalModelDefinition, LocalModelItem, LocalModelRunRequest, LocalModelRunResult, LocalModelTensor, LocalModelTensorType } from "@toonflow/plugin-server/localModelClient";
 export type { FfmpegFactory, FfmpegCommand, FfprobeData } from "@toonflow/ffmpeg/types";
 
 export const asrRequestSchema = z.strictObject({
@@ -15,6 +19,7 @@ export const asrRequestSchema = z.strictObject({
 
 export const toolNameSchema = z.string().max(96).regex(/^[a-z][a-zA-Z0-9]*$/);
 export const toolMetadataSchema = z.object({
+  localModels: localModelDefinitionsSchema.optional(),
   name: toolNameSchema,
   version: z.string().trim().min(1).max(100).default(""),
   displayName: z.string().trim().min(1).max(100),
@@ -29,6 +34,7 @@ export const toolMetadataSchema = z.object({
 });
 
 export interface ToolMetadata {
+  localModels?: LocalModelDefinition[];
   name: string;
   version?: string;
   displayName: string;
@@ -88,7 +94,7 @@ export interface MediaModel {
   mode?: unknown;
   imageSizes?: string[];
   imageRatios?: string[];
-  durationResolutionMap?: { duration: number[]; resolution: string[] }[];
+  durationResolutionMap?: { duration: number[]; resolution: string[]; ratio?: string[] }[];
   audio?: boolean | "optional";
   voices?: { title: string; voice: string }[];
 }
@@ -205,6 +211,11 @@ export interface ToolFiles {
 }
 
 export interface ToolContext {
+  model: LocalModelClient & {
+    register(definition: LocalModelDefinition): Promise<void>;
+    update(definition: LocalModelDefinition): Promise<void>;
+    remove(id: string): Promise<void>;
+  };
   /** 平台要求模型请求统一路由时，阻止插件直接使用独立供应商凭据。 */
   requireDirectModelAccess?(): void;
   asr: {

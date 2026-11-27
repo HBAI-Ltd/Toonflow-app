@@ -90,7 +90,7 @@
 </p>
 <p align="center">
   <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" />&nbsp;
-  <img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" />&nbsp;
+  <img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" />&nbsp;
   <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" />&nbsp;
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ Xem thêm trong [hướng dẫn sử dụng](https://qcn7xdsqgc4z.feishu.cn/docx
 
 ### 4.2 Cài đặt bằng Docker
 
-Trước tiên, cài Git, [Docker Engine](https://docs.docker.com/engine/install/) và Docker Compose. Trên Windows / macOS, có thể dùng chế độ container Linux của Docker Desktop. Kho mã cung cấp [Dockerfile](../../Dockerfile), [cấu hình Compose](../../compose.yaml) và [quy tắc loại trừ khi build](../../.dockerignore), sử dụng Bun 1.4.3 để build và tích hợp FFmpeg trong image.
+Trước tiên, cài Git, [Docker Engine](https://docs.docker.com/engine/install/) và Docker Compose. Trên Windows / macOS, có thể dùng chế độ container Linux của Docker Desktop. Kho mã cung cấp [Dockerfile](../../Dockerfile), [cấu hình Compose](../../compose.yaml) và [quy tắc loại trừ khi build](../../.dockerignore), sử dụng Bun 1.4.5 để build và tích hợp FFmpeg trong image.
 
 <details>
 <summary><strong>Mở các bước cài đặt bằng Docker</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 Cài đặt trên máy chủ
 
-Dành cho việc chạy Web và Server trực tiếp trên máy chủ Linux. Ví dụ dưới đây dùng Ubuntu / Debian và [Bun 1.4.3](https://bun.sh/docs/installation) theo phiên bản mà dự án chỉ định.
+Dành cho việc chạy Web và Server trực tiếp trên máy chủ Linux. Ví dụ dưới đây dùng Ubuntu / Debian và [Bun 1.4.5](https://bun.sh/docs/installation) theo phiên bản mà dự án chỉ định.
 
 <details>
 <summary><strong>Mở các bước cài đặt trên máy chủ</strong></summary>
@@ -453,7 +453,7 @@ Cài đặt môi trường chạy:
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

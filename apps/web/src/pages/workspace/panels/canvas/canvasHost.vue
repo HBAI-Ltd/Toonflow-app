@@ -35,13 +35,20 @@ import type { NodeDocumentState } from "@toonflow/nodes-scaffold/nodeDocument";
 import { copyCanvasFiles, findRemainingCanvas, readCanvasFiles, type DocumentNode, type DocumentNodeOptions } from "./canvasFiles";
 
 const props = withDefaults(defineProps<{ active?: boolean; settingsVisible?: boolean }>(), { active: true, settingsVisible: false });
-const selectedTool = defineModel<"move" | "hand">("selectedTool", { default: "move" });
+const selectedTool = defineModel<"move" | "hand" | "select">("selectedTool", { default: "move" });
 type CanvasInstance = InstanceType<typeof canvasPanel>;
 const entries = shallowRef<{ key: string; fileName?: string }[]>([{ key: crypto.randomUUID() }]);
 const activeKey = ref(entries.value[0]!.key);
 const instances = shallowReactive(new Map<string, CanvasInstance>());
 const activeInstance = computed(() => instances.get(activeKey.value));
+const assetsVisible = computed({
+  get: () => activeInstance.value?.assetsVisible ?? false,
+  set: (visible: boolean) => {
+    if (activeInstance.value) activeInstance.value.assetsVisible = visible;
+  },
+});
 const canvasId = computed(() => activeInstance.value?.canvasId ?? "");
+const canvasIds = computed(() => entries.value.map(entry => instances.get(entry.key)?.canvasId || entry.fileName).filter((id): id is string => !!id));
 const canvasReady = computed(() => activeInstance.value?.canvasReady ?? false);
 const canvasListReady = computed(() => activeInstance.value?.canvasListReady ?? false);
 const lifetime = new AbortController();
@@ -80,6 +87,8 @@ function canonicalCanvasPath(path: string) {
 }
 
 async function ensureCanvas(fileName: string, signal?: AbortSignal, activate = false) {
+  const directory = workspaceStore.project?.directory ?? "";
+  checkDirectory(directory);
   const callSignal = AbortSignal.any([lifetime.signal, AbortSignal.timeout(120000), ...(signal ? [signal] : [])]);
   callSignal.throwIfAborted();
   fileName = relativePath(fileName);
@@ -88,8 +97,6 @@ async function ensureCanvas(fileName: string, signal?: AbortSignal, activate = f
   }
   fileName = canonicalCanvasPath(fileName);
   if (!canvases.value.some(canvas => canvas.id === fileName)) {
-    const directory = workspaceStore.project?.directory;
-    if (!directory) throw new Error("请先选择工作目录");
     const data = await useWorkspaceFiles(directory).readJson<{ toonflowCanvas?: boolean; nodes?: unknown[]; edges?: unknown[]; viewport?: { x: number; y: number; zoom: number } }>(fileName);
     checkDirectory(directory);
     callSignal.throwIfAborted();
@@ -98,6 +105,8 @@ async function ensureCanvas(fileName: string, signal?: AbortSignal, activate = f
     fileName = canonicalCanvasPath(fileName);
     if (!canvases.value.some(canvas => canvas.id === fileName)) canvases.value = [...canvases.value, { id: fileName, name: canvasName(fileName) }];
   }
+  checkDirectory(directory);
+  callSignal.throwIfAborted();
   const previousKey = activeKey.value;
   let entry = entries.value.find(item => instances.get(item.key)?.canvasId === fileName || (!instances.get(item.key)?.canvasId && item.fileName === fileName));
   if (!entry) {
@@ -112,11 +121,13 @@ async function ensureCanvas(fileName: string, signal?: AbortSignal, activate = f
       const instance = instances.get(key);
       return instance?.canvasReady || instance?.loadError ? instance : undefined;
     }, callSignal);
+    checkDirectory(directory);
     if (panel.loadError) throw new Error(panel.loadError);
     return panel;
   } catch (error) {
     if (activate && activeKey.value === key) activeKey.value = previousKey;
-    if (!instances.get(key)?.canvasId) entries.value = entries.value.filter(item => item.key !== key);
+    // 单次等待取消不卸载共享实例，其他 Agent/MCP 可能仍在等待同一画布加载。
+    if (!callSignal.aborted && !instances.get(key)?.canvasId) entries.value = entries.value.filter(item => item.key !== key);
     throw error;
   }
 }
@@ -202,13 +213,13 @@ async function readDocumentNodes(directory: string, options: DocumentNodeOptions
   })));
 }
 
-function resolveCanvasContext(fileName: string): CanvasContext | undefined {
-  fileName = canonicalCanvasPath(fileName);
-  return [...instances.values()].find(instance => instance.canvasId === fileName)?.getCanvasContext();
+async function resolveCanvasContext(fileName: string, signal?: AbortSignal): Promise<CanvasContext | undefined> {
+  if (fileActionBusy) throw new Error("工作区文件正在操作，请稍后重试");
+  return (await ensureCanvas(fileName, signal)).getCanvasContext();
 }
 
 function getCanvasContext() {
-  return props.active ? activeInstance.value?.getCanvasContext() : undefined;
+  return activeInstance.value?.getCanvasContext();
 }
 
 async function flushSave(action?: () => Promise<void>) {
@@ -407,7 +418,7 @@ const mentionSource: MentionCanvasSource = {
   },
 };
 
-defineExpose({ canvasId, canvasReady, canvasListReady, getCanvasContext, readDocumentNode, readDocumentNodes, focusDocumentNode, saveDocumentNode, mountDocumentNode, observeDocumentNode, resolveDocumentNodeFile, performFileAction, flushSave, cancelSave,
+defineExpose({ canvasId, canvasIds, canvasReady, canvasListReady, assetsVisible, getCanvasContext, resolveCanvasContext, readDocumentNode, readDocumentNodes, focusDocumentNode, saveDocumentNode, mountDocumentNode, observeDocumentNode, resolveDocumentNodeFile, performFileAction, flushSave, cancelSave,
   addNodeAtPointer: () => activeInstance.value?.addNodeAtPointer(),
   openNodeSearch: () => activeInstance.value?.openNodeSearch(),
   mentionSource,

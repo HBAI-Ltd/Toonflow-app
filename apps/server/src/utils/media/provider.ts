@@ -37,6 +37,7 @@ export const mediaModelsSchema = z.array(z.object({
   durationResolutionMap: z.array(z.object({
     duration: z.array(z.number()),
     resolution: z.array(z.string()),
+    ratio: z.array(z.string()).optional(),
   }).catchall(z.json())).optional(),
   voices: z.array(z.object({
     title: z.string(),
@@ -580,7 +581,11 @@ export async function refreshMediaProviderModels(fileName: string, revision: str
     modelInfo: z.object({
       mode: z.array(z.union([z.string().min(1), z.array(z.string().min(1))])).optional(),
       audio: z.union([z.literal("optional"), z.boolean()]).optional(),
-      durationResolutionMap: z.array(z.object({ duration: z.array(z.number().positive()), resolution: z.array(z.string().min(1)) })).optional(),
+      durationResolutionMap: z.array(z.object({
+        duration: z.array(z.number().positive()),
+        resolution: z.array(z.string().min(1)),
+        ratio: z.array(z.string()).optional(),
+      })).optional(),
       imageSizes: z.array(z.string().min(1)).optional(),
       imageRatios: z.array(z.string().min(1)).optional(),
     }).catchall(z.json()).optional(),

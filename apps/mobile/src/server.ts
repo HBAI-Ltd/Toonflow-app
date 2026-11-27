@@ -101,6 +101,7 @@ app.route("/api/mobile/exports/:id")
 app.use("/api/connection", connection.router);
 
 let toonflow: express.Express | undefined;
+let stopAutomations: (() => Promise<void>) | undefined;
 if (connection.proxy) {
   app.use(connection.proxy);
 } else {
@@ -131,7 +132,14 @@ origin = `http://127.0.0.1:${address.port}`;
 if (toonflow) {
   const { initializeMcpRuntime } = await import("@toonflow/server/mcp");
   await initializeMcpRuntime(toonflow, origin, resolve(resources, fromSource ? "mcp/stdio.js" : "stdio.js"), undefined, { Cookie: `toonflowMobile=${token}` });
+  const automations = await import("@toonflow/server/agent/automations");
+  stopAutomations = automations.stopAutomations;
+  automations.startAutomations();
 }
 console.log(`TOONFLOW_MOBILE_URL=${origin}/?token=${token}`);
 server.on("error", error => { console.error(error); process.exit(1); });
-process.on("SIGTERM", () => { connection.stop(); server.close(() => process.exit(0)); });
+process.once("SIGTERM", async () => {
+  connection.stop();
+  await stopAutomations?.();
+  server.close(() => process.exit(0));
+});

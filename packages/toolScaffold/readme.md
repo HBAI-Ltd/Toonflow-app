@@ -16,6 +16,8 @@
 
 `import { z } from "zod"` 无需修改：构建时将 `zod` 转为外部模块 `toonflow:tool-zod`，Server 在加载工具前通过 Bun 虚拟模块提供完整的 Zod 4 导出。仅共享精确的 `zod` 导入，子路径仍随工具打包。发布这些新产物时须同步更新 Server；旧版自带 Zod 的工具仍可加载。
 
+工具可在自身目录的 `i18n/` 维护多语言字典，构建时同时并入服务端代码与客户端组件。组件写法与宿主 Web 相同；服务端 `import { t } from "@toonflow/i18n"` 按当前请求语言翻译，构建时转为宿主提供的 `toonflow:tool-i18n`。详见 [插件多语言](../i18n/readme.md#插件多语言)。
+
 在仓库根目录运行 `bun run build:tools` 会清空 `build/tools` 后构建默认工具，不改动 `data/tools`；`dev:desktop` 会先执行 `dev:plugins` 同步开发产物。插件开发工具位于 `packages/tools/pluginDeveloper`，随默认工具构建和内置。在“设置 → 插件市场”中安装 `.tool.js`、启停、卸载或编辑配置；配置写入 `data/settings.json` 的 `toolConfigs`，下一次发送消息时生效。桌面构建会携带默认工具，首次启动初始化后，用户卸载的工具不会因普通重启而自动恢复。
 
 文件首行 `/*! toonflowTool:<JSON> */` 包含 `ToolMetadata`，其中 `version` 为工具版本，随单个 `.tool.js` 文件安装和分享。服务端可以读取这段数据而不执行插件；旧工具没有版本时仍可加载，列表返回空字符串表示未知版本，不推断或补造版本号。
@@ -80,3 +82,23 @@ ffmpeg.ffprobe("assets/first.mp4", (error, data) => {
 工具插件是可信的服务端代码，导入后拥有服务器进程权限，**不是沙箱**。`context.resolvePath` 等方法限制现有工作区工具的行为，不能阻止第三方插件自行调用系统 API。仅安装可信来源的工具文件。
 
 直接使用供应商密钥发起模型请求的工具应在请求前调用 `context.requireDirectModelAccess?.()`。宿主在多租户模式下拒绝此类直连，图片、视频和音频生成复用 `context.media` 的统一任务入口；该能力检查不替代第三方插件的执行隔离。
+
+## 本地模型
+
+固定的权重放在 `createToolConfig` 的 `localModels` 数组中。每项 `LocalModelDefinition` 包含短 `id`、模型名 `name`、可选的用途说明 `description`、`version`、`fileName`、文件字节数 `size`、完整文件的 `sha256` 和下载源数组 `sources`。列表默认显示 `name`，也可用 `displayName` 指定用途标题并在其下保留模型名。每个源含 `id`、`label` 和 HTTPS 地址 `url`，仅支持用户手动导入时可传空数组。
+
+工具服务端可通过 `createTools(context)` 中的 `context.model` 使用以下方法。
+
+| 调用 | 用途 |
+| --- | --- |
+| `await model.list(signal?)` | 列出内置与启用插件提供的模型，含完整 ID、名称、用途、版本、磁盘安装状态 `installed` 和推理可用状态 `canRun`。 |
+| `await model.register(definition)` | 在本插件名下登记新模型。 |
+| `await model.update(definition)` | 使用相同的短 ID 和完整定义更新已有条目。变更权重时同时更新版本、大小与哈希。 |
+| `await model.remove(id)` | 使用本插件的短 ID 撤下目录项，保留用户下载或导入的文件。 |
+| `await model.run({ id, inputs, outputs?, device? }, signal?)` | 使用完整 ID 把推理请求交给宿主后端，返回实际执行方 `provider` 和输出张量。 |
+
+调用方用 `canRun` 判断当前部署能否执行模型。本机有可用运行库和匹配的模型文件，或部署端为该模型配置了执行适配器时，均可调用同一 `run` 接口。`installed` 仅表示文件已安装到磁盘。
+
+从 `list()` 读取完整 ID，或用 `localModelId({ kind: "tool", name: 插件名 }, 短ID)` 构造。张量以模型指定的类型、形状和小端连续字节传输。用 `@toonflow/tools-scaffold/runtime` 的 `packLocalTensor` 和 `unpackLocalTensor` 可处理 typed array 及其子视图。省略 `outputs` 时返回模型的所有输出，`device` 支持 `auto`、`cpu`、`gpu`。
+
+宿主按实际加载的插件包绑定登记权限。节点配套服务登记到对应节点，团队私有工具可查询目录、调用模型。运行时登记和修改按已安装的插件修订保留。发布新包时把需要继续提供的条目加入新包声明，或由新版本重新登记。工具的浏览器组件可从 `@toonflow/tools-scaffold/client` 导入 `createLocalModelClient`，通过返回的客户端调用 `list` 和 `run`。

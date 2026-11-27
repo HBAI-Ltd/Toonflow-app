@@ -53,7 +53,8 @@ async function run() {
     return "";
   });
   if (manifest.type === "node") {
-    const metadata = { displayName: manifest.displayName.trim(), author: manifest.author.trim(), github: manifest.github.trim(), configRules: manifest.configRules, version, readme };
+    const metadata = { displayName: manifest.displayName.trim(), author: manifest.author.trim(), github: manifest.github.trim(),
+      configRules: manifest.configRules, localModels: manifest.localModels, version, readme };
     if (metadata.github) {
       const url = new URL(metadata.github);
       if (url.origin !== "https://github.com" || url.username || url.password) throw new Error("GitHub 地址必须是 https://github.com 下的地址");

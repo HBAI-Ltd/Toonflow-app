@@ -1,19 +1,18 @@
 <template>
   <nodeSkeleton
     v-bind="nodeProps"
-    :topVisible="node.selected"
-    :bottomVisible="node.selected && actions?.mode === 'speed'"
-    :bottomWidth="440"
+    :processing="task"
+    :topVisible="node.selected && !task"
     topWidth="max-content"
-    :downloadUrl="previewUrl"
+    :downloadUrl="outputFile ? previewUrl : ''"
     :downloadName="outputFile?.url.split(/[\\/]/).at(-1)"
     :fullscreenVisible="false"
     style="width: 360px">
     <template #topActions>
-      <el-button :icon="IconTextRecognition" :loading="transcribing" :disabled="!outputFile || uploading || actions?.processing" text title="音频转文本" aria-label="音频转文本" @click.stop="transcribe">转文本</el-button>
-      <el-button v-if="transcribing" :icon="IconPlayerStop" text title="取消转文本" aria-label="取消转文本" @click.stop="cancelTranscription">取消</el-button>
-      <el-button :icon="IconScissors" :disabled="!previewUrl || uploading || transcribing || actions?.processing" text title="截取音频" aria-label="截取音频" @click.stop="actions?.open('clip')">截取</el-button>
-      <el-button :icon="IconGauge" :disabled="!previewUrl || uploading || transcribing || actions?.processing" text title="音频变速" aria-label="音频变速" @click.stop="actions?.open('speed')">变速</el-button>
+      <el-button :icon="IconTextRecognition" :loading="transcribing" :disabled="!outputFile || uploading || actions?.processing" text title="语音转文字" aria-label="语音转文字" @click.stop="transcribe">语音转文字</el-button>
+      <el-button v-if="transcribing" :icon="IconPlayerStop" text title="取消转文字" aria-label="取消转文字" @click.stop="cancelTranscription">取消</el-button>
+      <el-button :icon="IconScissors" :disabled="!previewUrl || uploading || transcribing || actions?.processing" text title="剪辑音频" aria-label="剪辑音频" @click.stop="actions?.open('audioClip', $event)">剪辑音频</el-button>
+      <el-button :icon="IconGauge" :disabled="!previewUrl || uploading || transcribing || actions?.processing" text title="调整播放速度" aria-label="调整播放速度" @click.stop="actions?.open('audioSpeed', $event)">调整播放速度</el-button>
       <el-button
         :icon="IconTransfer"
         :loading="uploading"
@@ -21,19 +20,20 @@
         text
         title="替换音频"
         aria-label="替换音频"
-        @click.stop="fileInput?.click()">替换音频</el-button>
+        @click.stop="toolMenu?.replaceSource('替换音频')">替换音频</el-button>
+      <mediaToolMenu ref="toolMenu" :tools="actions?.audioSourceTools ?? []" :source="outputFile" sourceKind="audio" :importSource="setAudioFile" :disabled="uploading || transcribing || actions?.processing" @select="actions?.openTool($event)" />
     </template>
-    <div class="audioContent nopan">
+    <div class="audioContent nopan" :inert="!!task">
       <audioPlayer
         v-if="previewUrl"
         ref="player"
         class="audioPreview"
         :src="previewUrl"
-        :mimeType="outputFile?.mimeType"
+        :mimeType="previewFile?.mimeType"
         v-model:pcmOptions="pcmOptions"
         @loadedmetadata="updateNodeInternals" />
       <input ref="fileInput" class="fileInput" type="file" accept="audio/*" aria-label="选择音频" :disabled="uploading || transcribing || actions?.processing" @change="uploadAudio" />
-      <div v-if="!outputs.audio" class="emptyActions">
+      <div v-if="!task && !outputs.audio" class="emptyActions">
         <el-button
           class="nodrag nopan"
           :icon="IconUpload"
@@ -55,9 +55,8 @@
           @click.stop="selectAsset">从素材库选择</el-button>
       </div>
     </div>
-    <template v-if="actions?.mode === 'speed'" #bottom><div ref="speedTarget" /></template>
   </nodeSkeleton>
-  <audioActions ref="actions" v-model:pcmOptions="pcmOptions" :file="outputFile" :src="previewUrl" :target="speedTarget" :disabled="uploading || transcribing" @pause="player?.pause()" />
+  <audioActions ref="actions" v-model:pcmOptions="pcmOptions" :file="outputFile" :src="previewUrl" :disabled="uploading || transcribing" @pause="player?.pause()" />
 </template>
 
 <script setup lang="ts">
@@ -67,9 +66,11 @@ import { ElButton, ElMessage } from "element-plus";
 import { nodeSkeleton, nodeTools, useNode, z, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
 import { useAudioTranscription } from "@toonflow/node-shared/useAudioTranscription";
 import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
-import type { PcmOptions } from "@toonflow/node-shared/pcmPreview";
+import { isPcmMimeType, type PcmOptions } from "@toonflow/node-shared/pcmPreview";
+import { useMediaToolResult } from "@toonflow/node-shared/mediaTools";
 import audioPlayer from "./components/audioPlayer.vue";
 import audioActions from "./components/audioActions.vue";
+import mediaToolMenu from "@toonflow/node-shared/mediaToolMenu";
 
 defineOptions({
   inheritAttrs: false,
@@ -79,18 +80,21 @@ defineOptions({
 const { node, nodeProps, outputs, nodeEvent, files, updateNodeInternals } = useNode({
   label: "音频",
 });
+const { task, preview } = useMediaToolResult(node.id, "audio");
 const fileInput = ref<HTMLInputElement>();
+const toolMenu = ref<InstanceType<typeof mediaToolMenu>>();
 const uploading = ref(false);
 const player = ref<InstanceType<typeof audioPlayer>>();
 const actions = ref<InstanceType<typeof audioActions>>();
-const speedTarget = ref<HTMLElement>();
 
 const outputFile = computed(() => outputs.value.audio?.dataType === "AUDIO" ? outputs.value.audio.value : undefined);
+// 原节点的裸 PCM 参数不包含在素材引用中，结果节点只预览可独立解码的源音频。
+const previewFile = computed(() => outputFile.value ?? (preview.value && !isPcmMimeType(preview.value.mimeType) ? preview.value : undefined));
 const pcmOptions = ref<Partial<PcmOptions>>({});
 watch(() => outputFile.value?.url, () => { pcmOptions.value = {}; }, { flush: "sync" });
 const { processing: transcribing, transcribe, cancel: cancelTranscription, cancelAndWait: cancelTranscriptionAndWait } = useAudioTranscription(outputFile);
 const previewUrl = files.useFileUrl(
-  outputFile,
+  previewFile,
   (error) => showError(error, "音频读取失败")
 );
 
@@ -118,7 +122,7 @@ nodeTools.register({
   }),
   async execute({ path, mimeType }, { signal }) {
     signal?.throwIfAborted();
-    if (uploading.value || transcribing.value || actions.value?.processing) throw new Error("音频处理中，请稍后重试");
+    if (task.value || uploading.value || transcribing.value || actions.value?.processing) throw new Error("音频处理中，请稍后重试");
     uploading.value = true;
     try {
       const content = await files.getWorkspaceFiles().read(path);
@@ -144,7 +148,8 @@ async function selectAsset() {
   if (file) await setAudioFile(file);
 }
 
-async function setAudioFile(file: File) {
+async function setAudioFile(file: File, canCommit?: () => boolean): Promise<string | void> {
+  if (canCommit && !canCommit()) return;
   if (uploading.value || transcribing.value || actions.value?.processing) return;
   const mimeType = getMediaMimeType(file);
   if (!mimeType.startsWith("audio/")) return void ElMessage.error("请选择音频文件");
@@ -152,8 +157,10 @@ async function setAudioFile(file: File) {
   uploading.value = true;
   try {
     const url = await files.uploadFile(file);
+    if (canCommit && !canCommit()) return;
     // ACT: 复制节点可能仍引用旧音频，替换输出不删除共享文件。
     outputs.value.audio = { dataType: "AUDIO", value: { url, mimeType } };
+    return url;
   } catch (error) {
     showError(error, "音频替换失败");
   } finally {
@@ -169,6 +176,7 @@ function showError(error: unknown, fallback: string) {
 
 <style scoped lang="scss">
 .audioContent {
+  &[inert] :deep(.playerControls) { visibility: hidden; }
   position: relative;
   min-height: 144px;
   display: flex;

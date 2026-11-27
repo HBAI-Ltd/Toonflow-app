@@ -129,10 +129,12 @@ export async function create(options: {
     const context = createAgentToolContext(cwd, {}, undefined, question, session.workspaceAvailable);
     const available = new Map((await listTools()).map(tool => [tool.name, tool]));
     let nodeServices: Awaited<ReturnType<typeof listNodeServerTools>> | undefined;
-    const names = new Set<string>();
+    // 记录工具来源，重名时报出两个插件。
+    const names = new Map<string, string>();
     for (const reference of options.tools) {
       signal?.throwIfAborted();
       let definitions: ToolDefinition[];
+      const label = typeof reference === "string" ? reference : "node" in reference ? reference.node : "plugin" in reference ? reference.plugin : "client";
       if (typeof reference !== "string" && "name" in reference) definitions = [createClientTool(session, reference)];
       else {
         const pluginName = typeof reference === "string" ? reference : "node" in reference ? reference.node : reference.plugin;
@@ -156,8 +158,10 @@ export async function create(options: {
       }
       for (const tool of definitions) {
         if (!tool.name || typeof tool.execute !== "function") throw new Error("插件返回了无效的工具");
-        if (names.has(tool.name)) throw Object.assign(new Error(t`工具名称重复：${tool.name}`), { status: 400 });
-        names.add(tool.name);
+        const owner = names.get(tool.name);
+        const duplicate = `${tool.name} ("${owner}", "${label}")`;
+        if (owner) throw Object.assign(new Error(t`工具名称重复：${duplicate}`), { status: 400 });
+        names.set(tool.name, label);
         session.tools.push(tool);
       }
     }

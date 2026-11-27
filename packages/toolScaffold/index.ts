@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { build, type PluginOption } from "vite";
 import type { BunPlugin } from "bun";
 import vue from "@vitejs/plugin-vue";
+import { pluginI18n, readPluginCatalogs } from "@toonflow/i18n/plugin";
 import postcssConfig from "../../postcss.config.ts";
 import { toolMetadataSchema, type ToolMetadata } from "./src/runtime";
 
@@ -52,7 +53,7 @@ export async function createToolConfig(
       configFile: false,
       root,
       css: { postcss: postcssConfig },
-      plugins: [...(options.clientPlugins ?? []), vue(), {
+      plugins: [...(options.clientPlugins ?? []), pluginI18n(root), vue(), {
         name: "toolClientEntry",
         resolveId(id) { return id === "virtual:toonflowToolClient" ? entryId : undefined; },
         load(id) {
@@ -86,6 +87,7 @@ export async function createToolConfig(
               "element-plus": "toonflowToolHost.elementPlus",
               axios: "toonflowToolHost.axios",
               "@form-create/element-ui": "toonflowToolHost.formCreate",
+              "toonflow:i18n": "toonflowToolHost.i18n",
             },
           },
         },
@@ -113,6 +115,16 @@ export async function createToolConfig(
         }));
       },
     }, {
+      name: "toolI18n",
+      setup(build) {
+        // 服务端代码 import { t } from "@toonflow/i18n" 时，使用工具自带字典，按当前请求语言翻译。
+        build.onResolve({ filter: /^@toonflow\/i18n$/ }, () => ({ path: "i18n", namespace: "toolI18n" }));
+        build.onLoad({ filter: /^i18n$/, namespace: "toolI18n" }, async () => ({
+          contents: `module.exports = require("toonflow:tool-i18n").createTranslator(${JSON.stringify((await readPluginCatalogs(root))?.catalogs ?? {})});`,
+          loader: "js",
+        }));
+      },
+    }, {
       name: "inlineDshVersion",
       setup(build) {
         build.onLoad({ filter: /[\\/]@deepseek-ai[\\/]dsh-llm[\\/]lib[\\/]index\.js$/ }, async ({ path }) => {
@@ -129,7 +141,7 @@ export async function createToolConfig(
     target: "bun",
     format: "esm",
     packages: "bundle",
-    external: ["toonflow:tool-zod"],
+    external: ["toonflow:tool-zod", "toonflow:tool-i18n"],
     minify: true,
     tsconfig: options.tsconfig,
   });

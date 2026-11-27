@@ -5,7 +5,7 @@ import { useNodeEvent } from "@toonflow/nodes-scaffold/nodeEvent";
 
 type CanvasSnapshot = { nodes: Node[]; edges: Edge[]; key: string };
 
-export function useCanvasHistory(flow: ReturnType<typeof useVueFlow>, binding: () => string) {
+export function useCanvasHistory(flow: ReturnType<typeof useVueFlow>, isPersistent: (element: Node | Edge) => boolean, binding: () => string) {
   const snapshots = shallowRef<CanvasSnapshot[]>([]);
   const cursor = ref(-1);
   const applying = ref(false);
@@ -20,15 +20,17 @@ export function useCanvasHistory(flow: ReturnType<typeof useVueFlow>, binding: (
   const canRedo = computed(() => !!binding() && !applying.value && !grouping.value && cursor.value < snapshots.value.length - 1);
 
   function capture(): CanvasSnapshot {
-    flow.getNodes.value.forEach(node => nodeReferences.set(node.id, node));
-    flow.getEdges.value.forEach(edge => edgeReferences.set(edge.id, edge));
+    const nodes = flow.getNodes.value.filter(isPersistent);
+    const edges = flow.getEdges.value.filter(isPersistent);
+    nodes.forEach(node => nodeReferences.set(node.id, node));
+    edges.forEach(edge => edgeReferences.set(edge.id, edge));
     const fields = (element: Node | Edge, runtimeFields: Set<string>) => Object.fromEntries(
       Object.entries(element).filter(([key]) => !runtimeFields.has(key)),
     );
     // ACT: 只复制结构和名称；删除后恢复内容由上面的节点、连线引用保留。
     const key = JSON.stringify({
-      nodes: flow.getNodes.value.map(node => ({ ...fields(node, nodeRuntimeFields), data: { label: node.data?.label } })),
-      edges: flow.getEdges.value.map(edge => fields(edge, edgeRuntimeFields)),
+      nodes: nodes.map(node => ({ ...fields(node, nodeRuntimeFields), data: { label: node.data?.label } })),
+      edges: edges.map(edge => fields(edge, edgeRuntimeFields)),
     });
     return { ...JSON.parse(key), key };
   }
@@ -64,7 +66,7 @@ export function useCanvasHistory(flow: ReturnType<typeof useVueFlow>, binding: (
     const currentRevision = revision;
     const before = capture();
     const nodeIds = new Set(snapshot.nodes.map(node => node.id));
-    const removedNodes = flow.getNodes.value.filter(node => !nodeIds.has(node.id));
+    const removedNodes = flow.getNodes.value.filter(node => isPersistent(node) && !nodeIds.has(node.id));
     applying.value = true;
     record.cancel();
     try {
@@ -77,7 +79,7 @@ export function useCanvasHistory(flow: ReturnType<typeof useVueFlow>, binding: (
       if (capture().key !== before.key || removedNodes.some(node => flow.findNode(node.id) !== node)) {
         throw new Error("画布已发生变化，请重新撤销或重做");
       }
-      flow.setNodes(snapshot.nodes.map(saved => {
+      const restoredNodes = snapshot.nodes.map(saved => {
         const node = flow.findNode(saved.id);
         if (node) {
           restoreFields(node, saved, nodeRuntimeFields);
@@ -91,7 +93,8 @@ export function useCanvasHistory(flow: ReturnType<typeof useVueFlow>, binding: (
         const restored = { ...saved, data };
         Reflect.deleteProperty(restored, "initialized");
         return restored;
-      }));
+      });
+      flow.setNodes([...restoredNodes, ...flow.nodes.value.filter(node => !isPersistent(node))]);
       flow.setEdges(snapshot.edges.map(saved => {
         const edge = flow.findEdge(saved.id);
         if (edge) {
@@ -143,8 +146,8 @@ export function useCanvasHistory(flow: ReturnType<typeof useVueFlow>, binding: (
     }
   }
 
-  flow.onNodeDragStart(() => {
-    if (!binding() || applying.value || dragging) return;
+  flow.onNodeDragStart(({ nodes }) => {
+    if (!binding() || applying.value || dragging || !nodes.some(isPersistent)) return;
     record.cancel();
     commit();
     dragging = true;
@@ -175,6 +178,6 @@ export function useCanvasHistory(flow: ReturnType<typeof useVueFlow>, binding: (
   }, { immediate: true, flush: "sync" });
   onScopeDispose(() => { revision++; record.cancel(); });
 
-  const getRetainedNodes = () => [...nodeReferences.values(), ...flow.getNodes.value];
+  const getRetainedNodes = () => [...nodeReferences.values(), ...flow.getNodes.value.filter(isPersistent)];
   return { canUndo, canRedo, record, commit, undo, redo, batch, getRetainedNodes };
 }

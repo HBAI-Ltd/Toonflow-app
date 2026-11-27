@@ -1,7 +1,6 @@
 import { $ } from "bun";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, realpathSync, renameSync, rmSync } from "@toonflow/file";
 import { file, write } from "@toonflow/file/bun";
-import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import desktopConfig from "../../../electrobun.config";
 import signWindows from "./signWindows";
@@ -23,10 +22,11 @@ const csc = join(process.env.WINDIR!, "Microsoft.NET/Framework64/v4.0.30319/csc.
 const helperPlatform = `/platform:${process.arch === "arm64" ? "anycpu" : "x64"}`;
 const webViewDir = join(nsisDir, "webview2");
 const bootstrapper = join(webViewDir, "MicrosoftEdgeWebview2Setup.exe");
-const loader = join(webViewDir, "WebView2Loader.dll");
+const webViewChecker = join(webViewDir, "checkWebView2.exe");
 const webViewSdkVersion = "1.0.4191.47";
+// ACT: 静态库无法做 Authenticode 校验，改为固定 NuGet 包 SHA-256；升级 SDK 版本时必须同步更新。
+const webViewSdkHash = "f492bbf547d0da329553b6727435b677579b1e9f91cc9e4a1ad029366d5f23d0";
 const webViewSdkDir = join(nsisDir, `webViewSdk${webViewSdkVersion}`);
-const webViewCore = join(webViewDir, "Microsoft.Web.WebView2.Core.dll");
 const runningChecker = join(nsisDir, "checkRunning.exe");
 const assemblyInfo = resolve("build/desktop/protocol/assemblyInfo.cs");
 const initializeInstallScript = join(nsisDir, "initializeInstall.js");
@@ -52,16 +52,23 @@ try {
   const archive = await file(join(artifactDir, manifest.artifact.file)).arrayBuffer();
   await write(tarFile, Bun.zstdDecompressSync(archive));
   const { stdout: archiveListing } = await $`tar.exe -tf ${tarFile}`.quiet();
-  const archiveEntries = archiveListing.toString().split(/\r?\n/).filter(Boolean);
+  // ACT: bsdtar 按系统代码页输出成员名，按 latin1 保留原始字节比较；代码页无法表示的字符会被替换，届时需改为自行解析 TAR 头。
+  const archiveEntries = archiveListing.toString("latin1").split(/\r?\n/).filter(Boolean);
   const runtimeMember = `${desktopConfig.app.name.replace(/\s/g, "")}/bin/bun.exe`;
   if (archiveEntries.filter(name => name === runtimeMember).length !== 1) {
     throw new Error("SDK 更新归档必须包含且仅包含一份目标 Bun，请重新运行 package:desktop。");
   }
+  // 本地模型运行库依赖 VC++ 运行库，由 restoreWindowsRuntime.ts 附带到 bun.exe 同目录。
+  const vcRuntimeFiles = ["msvcp140.dll", "msvcp140_1.dll", "vcruntime140.dll", "vcruntime140_1.dll"];
+  if (!vcRuntimeFiles.every(name => archiveEntries.includes(`${dirname(runtimeMember)}/${name}`))) {
+    throw new Error("更新归档缺少 VC++ 运行库，请安装 Visual Studio C++ 生成工具后重新运行 package:desktop。");
+  }
   // ACT: 旧客户端更新助手只有 120 秒启动预算，更新归档仍保留 Bun；仅 NSIS 排除运行时。
   // ACT: USTAR 不生成 PAX 编码声明；超出其路径或单文件 8 GiB 上限时直接失败，不回退到 PAX。
   await $`tar.exe -cf ${installerTar} --format=ustar --options hdrcharset=UTF-8 --exclude ${runtimeMember} ${`@${tarFile}`}`.quiet();
-  const { stdout: installerListing } = await $`tar.exe -tf ${installerTar}`.quiet();
-  const installerEntries = installerListing.toString().split(/\r?\n/).filter(Boolean);
+  // USTAR 头不带编码声明，读取时同样指定 UTF-8，与原 PAX 归档的成员名按同一字符集列出。
+  const { stdout: installerListing } = await $`tar.exe -tf ${installerTar} --options hdrcharset=UTF-8`.quiet();
+  const installerEntries = installerListing.toString("latin1").split(/\r?\n/).filter(Boolean);
   if (installerEntries.some(name => /(?:^|\/)bun\.exe$/i.test(name))
     || installerEntries.sort().join("\n") !== archiveEntries.filter(name => name !== runtimeMember).sort().join("\n")) {
     throw new Error("安装归档成员不一致，必须仅移除 Bun 并保留其他应用文件。");
@@ -97,37 +104,50 @@ foreach ($path in @(${helpers.map(name => quotePowerShell(join(stagingDir, name)
   });
   if (!initializeInstallBuild.success) throw new AggregateError(initializeInstallBuild.logs, "安装初始化脚本构建失败。");
 
-  const dependencies = await file(".hutch/dependencies.lock").json();
-  const electrobun = dependencies.objects.find(
-    (item: { type: string; platform: string }) => item.type === "electrobun" && item.platform === `windows-${process.arch}`
-  );
-  if (!electrobun) throw new Error(`缺少 Windows ${process.arch} 的 Electrobun 原生依赖记录。`);
-  const hutchHome = process.env.HUTCH_HOME ?? join(homedir(), ".hutch");
-  copyFileSync(join(hutchHome, electrobun.relativeRoot, "WebView2Loader.dll"), loader);
-
-  // 实际启动检测使用微软 SDK 的 Core 程序集，避免手写 COM 接口；仅随安装器释放。
-  const sdkCore = join(webViewSdkDir, "lib/net462/Microsoft.Web.WebView2.Core.dll");
+  // 实际启动检测按目标架构原生编译，静态链接微软 SDK 的 Loader，不依赖 .NET 运行时。
+  const sdkInclude = join(webViewSdkDir, "build/native/include");
+  const sdkLoader = join(webViewSdkDir, `build/native/${process.arch}/WebView2LoaderStatic.lib`);
   const sdkLicense = join(webViewSdkDir, "LICENSE.txt");
   const sdkNotice = join(webViewSdkDir, "NOTICE.txt");
-  if (![sdkCore, sdkLicense, sdkNotice].every(existsSync)) {
+  if (![join(sdkInclude, "WebView2.h"), sdkLoader, sdkLicense, sdkNotice].every(existsSync)) {
     mkdirSync(webViewSdkDir, { recursive: true });
     const sdkArchive = join(webViewSdkDir, "webViewSdk.nupkg");
     try {
       await $`curl.exe --fail --location --max-time 120 --output ${sdkArchive} https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/${webViewSdkVersion}/microsoft.web.webview2.${webViewSdkVersion}.nupkg`;
-      await $`tar.exe -xf ${sdkArchive} -C ${webViewSdkDir} lib/net462/Microsoft.Web.WebView2.Core.dll LICENSE.txt NOTICE.txt`;
+      const sdkHash = new Bun.CryptoHasher("sha256").update(await file(sdkArchive).arrayBuffer()).digest("hex");
+      if (sdkHash !== webViewSdkHash) throw new Error(`WebView2 SDK 包哈希不一致，已拒绝使用：${sdkHash}`);
+      await $`tar.exe -xf ${sdkArchive} -C ${webViewSdkDir} build/native/include/WebView2.h build/native/x64/WebView2LoaderStatic.lib build/native/arm64/WebView2LoaderStatic.lib LICENSE.txt NOTICE.txt`;
     } catch (error) {
-      rmSync(sdkCore, { force: true });
+      rmSync(sdkLoader, { force: true });
       throw error;
     } finally {
       rmSync(sdkArchive, { force: true });
     }
   }
-  copyFileSync(sdkCore, webViewCore);
   copyFileSync(sdkLicense, join(webViewDir, "webView2SdkLicense.txt"));
   copyFileSync(sdkNotice, join(webViewDir, "webView2SdkNotice.txt"));
-  await $`${csc} /nologo /target:exe ${helperPlatform} /optimize+ /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:${webViewCore} /out:${join(webViewDir, "checkWebView2.exe")} ${assemblyInfo} ${join(installerDir, "checkWebView2.cs")}`;
+  const vswhere = join(process.env["ProgramFiles(x86)"]!, "Microsoft Visual Studio/Installer/vswhere.exe");
+  const vcComponent = `Microsoft.VisualStudio.Component.VC.Tools.${process.arch === "arm64" ? "ARM64" : "x86.x64"}`;
+  const vsPath = existsSync(vswhere)
+    ? (await $`${vswhere} -latest -products ${"*"} -requires ${vcComponent} -property installationPath`.quiet()).stdout.toString().trim()
+    : "";
+  const vcvars = join(vsPath, "VC/Auxiliary/Build/vcvarsall.bat");
+  if (!vsPath || !existsSync(vcvars)) throw new Error(`缺少 Visual Studio C++ 生成工具（${vcComponent}），无法编译 WebView2 检测程序。`);
+  // ACT: 经 .cmd 文件调用 vcvarsall 取得编译环境，避免命令行引号被 cmd 与进程参数规则二次解析。
+  const vcvarsScript = join(stagingDir, "vcvars.cmd");
+  await write(vcvarsScript, `@call "${vcvars}" ${process.arch} >nul || exit /b 1\r\n@set\r\n`);
+  const { stdout: vcvarsOutput } = await $`cmd.exe /d /c ${vcvarsScript}`.quiet();
+  const msvcEnv = Object.fromEntries(vcvarsOutput.toString().split(/\r?\n/).flatMap(line => {
+    const match = /^([^=]+)=(.*)$/.exec(line);
+    return match ? [[match[1], match[2]]] : [];
+  }));
+  const cl = Bun.which("cl.exe", { PATH: msvcEnv.Path ?? msvcEnv.PATH ?? "" });
+  if (!cl) throw new Error("vcvarsall 未提供 cl.exe，无法编译 WebView2 检测程序。");
+  await $`${cl} /nologo /std:c++17 /EHsc /O1 /MT /W4 /utf-8 /DUNICODE /D_UNICODE /I${sdkInclude} /Fe${webViewChecker} ${join(installerDir, "checkWebView2.cpp")} /link /MANIFEST:EMBED ${sdkLoader} version.lib ole32.lib user32.lib advapi32.lib shell32.lib shlwapi.lib wintrust.lib crypt32.lib`
+    .env(msvcEnv)
+    .cwd(stagingDir);
   await $`${csc} /nologo /target:exe ${helperPlatform} /optimize+ /out:${runningChecker} ${assemblyInfo} ${join(installerDir, "checkRunning.cs")}`;
-  await signWindows([join(webViewDir, "checkWebView2.exe"), runningChecker]);
+  await signWindows([webViewChecker, runningChecker]);
   // ACT: 每次打包刷新微软引导器，验签通过后才替换旧文件，避免长期沿用旧版组件。
   // ACT: 官方短链不可达时，可显式传入它当前重定向的微软 CDN 地址；不关闭 TLS 或复用旧缓存。
   let bootstrapperUrl = new URL(process.env.webView2BootstrapperUrl || "https://go.microsoft.com/fwlink/p/?LinkId=2124703");
@@ -163,11 +183,9 @@ foreach ($path in @(${helpers.map(name => quotePowerShell(join(stagingDir, name)
     await $`powershell.exe -NoProfile -NonInteractive -Command ${`
   $ErrorActionPreference = 'Stop'
   Import-Module "$PSHOME/Modules/Microsoft.PowerShell.Security/Microsoft.PowerShell.Security.psd1"
-  foreach ($file in @(${quotePowerShell(loader)}, ${quotePowerShell(webViewCore)}, ${quotePowerShell(temporary)})) {
-    $signature = Get-AuthenticodeSignature -LiteralPath $file
-    if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
-      throw "Microsoft signature verification failed: $file"
-    }
+  $signature = Get-AuthenticodeSignature -LiteralPath ${quotePowerShell(temporary)}
+  if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
+    throw "Microsoft signature verification failed: WebView2 bootstrapper"
   }`}`;
     renameSync(temporary, bootstrapper);
   } finally {

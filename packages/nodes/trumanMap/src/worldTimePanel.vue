@@ -7,22 +7,22 @@
       </div>
       <div class="hourSlider" @pointerdown.capture="beginEdit" @keydown.capture="beginEdit"><el-slider :modelValue="modelValue.hour" :min="0" :max="1439 / 60" :step="1 / 60" :disabled="disabled" :showTooltip="false" :formatValueText="formatHour" aria-label="一天中的时间，精确到分钟" @update:modelValue="value => previewNumber('hour', value)" @change="commitEdit" /></div>
       <div class="timeScale" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:59</span></div>
-      <div class="quickChoices sunChoices" role="group" aria-label="一天中的时段"><button v-for="moment in sunMoments" :key="moment.name" type="button" :disabled="disabled || moment.hour === null" :title="moment.hour === null ? '此地点当天没有日出或日落' : formatHour(moment.hour)" @click="setHour(moment.hour)">{{ moment.name }}</button></div>
+      <div class="quickChoices sunChoices" role="group" aria-label="一天中的时段"><button v-for="moment in sunMoments" :key="moment.name" type="button" :disabled="disabled || moment.hour === null" :title="moment.hour === null ? '此地点当天没有日出或日落' : formatHour(moment.hour)" @click="setHour(moment.hour)">{{ translate(moment.name) }}</button></div>
       <p v-if="sunTimes.polarDay || sunTimes.polarNight" class="timeHint">此地点当天没有日出或日落，可以换个地点或季节。</p>
-      <div class="seasonControl"><span>季节</span><div class="quickChoices" role="group" aria-label="选择季节"><button v-for="(season, index) in seasons" :key="season.name" type="button" :class="{ active: seasonIndex === index }" :aria-pressed="seasonIndex === index" :disabled="disabled" @click="changeSeason(season.month)">{{ season.name }}</button></div></div>
+      <div class="seasonControl"><span>季节</span><div class="quickChoices" role="group" aria-label="选择季节"><button v-for="(season, index) in seasons" :key="season.name" type="button" :class="{ active: seasonIndex === index }" :aria-pressed="seasonIndex === index" :disabled="disabled" @click="changeSeason(season.month)">{{ translate(season.name) }}</button></div></div>
       <label class="selectField"><span>时间流速</span><select :value="modelValue.speed" :disabled="disabled" aria-label="时间流速" @change="update({ speed: Number(($event.target as HTMLSelectElement).value) })"><option v-for="speed in speedOptions" :key="speed.value" :value="speed.value">{{ speed.label }}</option></select></label>
       <div class="clockFooter"><span>{{ dayDuration }}</span><button type="button" :disabled="disabled" title="使用电脑现在的日期和时间" @click="useComputerTime">电脑时间</button></div>
     </section>
 
     <section class="timeSection">
       <div class="sectionHeading"><h3>月亮</h3><span>{{ automaticPhase ? '跟随日期变化' : '自定义' }}</span></div>
-      <div class="quickChoices" role="group" aria-label="月亮的形状"><button v-for="phase in phaseChoices" :key="phase.name" type="button" :class="{ active: isPhaseSelected(phase.value) }" :aria-pressed="isPhaseSelected(phase.value)" :disabled="disabled" @click="update({ moonPhase: phase.value })">{{ phase.name }}</button></div>
+      <div class="quickChoices" role="group" aria-label="月亮的形状"><button v-for="phase in phaseChoices" :key="phase.name" type="button" :class="{ active: isPhaseSelected(phase.value) }" :aria-pressed="isPhaseSelected(phase.value)" :disabled="disabled" @click="update({ moonPhase: phase.value })">{{ translate(phase.name) }}</button></div>
     </section>
 
     <details class="celestialDetails">
       <summary>更多设置</summary>
       <div class="detailBody">
-        <label class="selectField"><span>地点</span><select :value="selectedCity" :disabled="disabled" aria-label="选择场景所在地点" @change="changeCity"><option v-for="city in cities" :key="city.name" :value="city.name">{{ city.name }}</option><option v-if="!locationCity" value="custom" disabled>当前场景</option></select></label>
+        <label class="selectField"><span>地点</span><select :value="selectedCity" :disabled="disabled" aria-label="选择场景所在地点" @change="changeCity"><option v-for="city in cities" :key="city.name" :value="city.name">{{ translate(city.name) }}</option><option v-if="!locationCity" value="custom" disabled>当前场景</option></select></label>
         <p class="timeHint">地点影响日出和日落。</p>
         <label class="dateField"><span>日期</span><input type="date" :value="modelValue.date" min="1900-01-01" max="2200-12-31" required :disabled="disabled" aria-label="场景日期" @change="changeDate" /></label>
         <label class="rangeField" @pointerdown.capture="beginEdit" @keydown.capture="beginEdit"><span>月光</span><el-slider :modelValue="modelValue.moonIntensity" :min="0" :max="2" :step="0.05" :disabled="disabled" :showTooltip="false" aria-label="月光亮度" @update:modelValue="value => previewNumber('moonIntensity', value)" @change="commitEdit" /><output>{{ Math.round(modelValue.moonIntensity * 100) }}<small>%</small></output></label>
@@ -35,6 +35,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { ElSlider } from "element-plus";
+import { markMessages, t, translate } from "@toonflow/i18n/vue";
 import type { SceneTime } from "./sceneDocument";
 import { getCelestialState, getSunTimes } from "./worldTime";
 
@@ -47,13 +48,13 @@ const celestial = computed(() => getCelestialState(props.modelValue));
 const sunTimes = computed(() => getSunTimes(props.modelValue));
 const automaticPhase = computed(() => props.modelValue.moonPhase === undefined);
 const clockLabel = computed(() => formatHour(props.modelValue.hour));
-const cities: SceneCity[] = [
+const cities: SceneCity[] = markMessages([
   { name: "北京", latitude: 39.9042, longitude: 116.4074, utcOffset: 8, timeZone: "Asia/Shanghai" },
   { name: "上海", latitude: 31.2304, longitude: 121.4737, utcOffset: 8, timeZone: "Asia/Shanghai" },
   { name: "伦敦", latitude: 51.5074, longitude: -0.1278, utcOffset: 0, timeZone: "Europe/London" },
   { name: "纽约", latitude: 40.7128, longitude: -74.006, utcOffset: -5, timeZone: "America/New_York" },
   { name: "悉尼", latitude: -33.8688, longitude: 151.2093, utcOffset: 10, timeZone: "Australia/Sydney" },
-];
+]);
 const locationCity = computed(() => cities.find(city => Math.abs(city.latitude - props.modelValue.latitude) < 0.0001 && Math.abs(city.longitude - (props.modelValue.longitude ?? 120)) < 0.0001));
 const selectedCity = computed(() => locationCity.value?.name ?? "custom");
 const speedOptions = computed(() => {
@@ -61,20 +62,20 @@ const speedOptions = computed(() => {
   if (!options.some(option => option.value === props.modelValue.speed)) options.push({ value: props.modelValue.speed, label: "自定义" });
   return options;
 });
-const dayDuration = computed(() => props.modelValue.speed === 1 ? "与现实时间同步" : props.modelValue.speed === 24 ? "一天约 1 小时" : "一天约 " + Number((1440 / props.modelValue.speed).toFixed(1)) + " 分钟");
-const sunMoments = computed(() => [{ name: "清晨", hour: sunTimes.value.sunrise }, { name: "白天", hour: sunTimes.value.noon }, { name: "傍晚", hour: sunTimes.value.sunset }, { name: "深夜", hour: 0 }]);
-const seasons = computed(() => [
+const dayDuration = computed(() => props.modelValue.speed === 1 ? translate("与现实时间同步") : props.modelValue.speed === 24 ? translate("一天约 1 小时") : t`一天约 ${Number((1440 / props.modelValue.speed).toFixed(1))} 分钟`);
+const sunMoments = computed(() => markMessages([{ name: "清晨", hour: sunTimes.value.sunrise }, { name: "白天", hour: sunTimes.value.noon }, { name: "傍晚", hour: sunTimes.value.sunset }, { name: "深夜", hour: 0 }]));
+const seasons = computed(() => markMessages([
   { name: "春", month: props.modelValue.latitude < 0 ? "09" : "03" },
   { name: "夏", month: props.modelValue.latitude < 0 ? "12" : "06" },
   { name: "秋", month: props.modelValue.latitude < 0 ? "03" : "09" },
   { name: "冬", month: props.modelValue.latitude < 0 ? "06" : "12" },
-]);
+]));
 const seasonIndex = computed(() => {
   const monthDay = props.modelValue.date.slice(5);
   const index = monthDay < "03-21" || monthDay >= "12-21" ? 3 : monthDay < "06-21" ? 0 : monthDay < "09-21" ? 1 : 2;
   return props.modelValue.latitude < 0 ? (index + 2) % 4 : index;
 });
-const phaseChoices: { value?: number; name: string }[] = [{ name: "自然" }, { value: 0.125, name: "弯月" }, { value: 0.25, name: "半月" }, { value: 0.5, name: "满月" }];
+const phaseChoices: { value?: number; name: string }[] = markMessages([{ name: "自然" }, { value: 0.125, name: "弯月" }, { value: 0.25, name: "半月" }, { value: 0.5, name: "满月" }]);
 
 function isPhaseSelected(value: number | undefined) {
   if (value === undefined) return automaticPhase.value;

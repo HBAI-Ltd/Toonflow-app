@@ -6,6 +6,7 @@ import { translateMessage } from "@/lib/i18n";
 import { getModelLimits, getModelReasoning, providerSchema } from "@/utils/ai/provider";
 import { getChannel } from "@/utils/channel";
 import { mediaModelsSchema, parseAccountProviderSources, validateMediaProviderSource } from "@/utils/media/provider";
+import { imageRatioSchema } from "@/utils/media/schemas";
 
 const mediaTypeSchema = z.enum(["image", "video", "audio"]);
 const cloudLanguageSchema = providerSchema.extend({ token: z.string().trim().min(1).max(16384).optional() })
@@ -232,9 +233,13 @@ function mediaCapabilities({ route, upstream: { model, secretValues } }: ModelEx
   const referenceMode = z.string().regex(/^(?:image|video|audio)Reference:(?:[1-9]\d?|1\d{2}|2[0-4]\d|25[0-6])$/);
   const safe = z.object({
     mode: z.array(z.union([mode, z.array(referenceMode).min(1).max(3)])).max(32).optional(),
-    durationResolutionMap: z.array(z.object({ duration: z.array(z.number().positive()).max(100), resolution: z.array(safeString).max(100) })).max(100).optional(),
+    durationResolutionMap: z.array(z.object({
+      duration: z.array(z.number().positive()).max(100),
+      resolution: z.array(safeString).max(100),
+      ratio: z.array(safeString).max(100).optional(),
+    })).max(100).optional(),
     audio: z.union([z.boolean(), z.literal("optional")]).optional(),
-    imageSizes: z.array(safeString).max(100).optional(), imageRatios: z.array(z.string().regex(/^[1-9]\d{0,3}:[1-9]\d{0,3}$/)).max(100).optional(),
+    imageSizes: z.array(safeString).max(100).optional(), imageRatios: z.array(imageRatioSchema).max(100).optional(),
     voices: z.array(z.object({ title: safeString, voice: safeString })).max(1000).optional(),
   }).safeParse(model);
   if (!safe.success || containsSecret(safe.data, secretValues)) fail("平台模型能力配置无效", 503);

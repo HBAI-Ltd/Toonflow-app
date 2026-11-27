@@ -6,6 +6,7 @@ import { useNodeEvent } from "./nodeEvent";
 import { nodeTools } from "./nodeTools";
 import { useNodeFiles } from "./workspaceFiles";
 import { useNodeAi } from "./nodeAi";
+import { useNodeModel } from "./nodeModel";
 import { useNodeFfmpeg } from "./nodeFfmpeg";
 import { useNodeAsr } from "./nodeAsr";
 import { useNodeServer } from "./nodeServer";
@@ -44,7 +45,7 @@ export function useNode<T extends NodeOutputs = NodeOutputs>(options: NodeOption
     outputs: outputs.value,
   }));
   const nodeEvent = useNodeEvent();
-  const { getWorkspaceFiles, uploadFile, removeNodeFiles, useFileUrl, pickAsset } = useNodeFiles();
+  const { getWorkspaceFiles, uploadFile, removeNodeFiles, useFileUrl, pickAsset, pickAssets } = useNodeFiles();
 
   return {
     id,
@@ -57,6 +58,7 @@ export function useNode<T extends NodeOutputs = NodeOutputs>(options: NodeOption
     nodeEvent,
     nodeTools,
     ai: useNodeAi({ onModelsChanged: options.onModelsChanged }),
+    model: useNodeModel(),
     ffmpeg: useNodeFfmpeg(),
     asr: useNodeAsr(),
     server: useNodeServer(),
@@ -66,6 +68,7 @@ export function useNode<T extends NodeOutputs = NodeOutputs>(options: NodeOption
       uploadFile: (file: File) => uploadFile(id, file),
       removeNodeFiles: () => removeNodeFiles(id),
       pickAsset: pickAsset && ((kind: "image" | "video" | "audio") => pickAsset(id, kind)),
+      pickAssets: pickAssets && ((accept: string, multiple?: boolean, signal?: AbortSignal) => pickAssets(id, accept, multiple, signal)),
     },
     updateNodeInternals: () => {
       if (!documentContext?.targets.has(id)) updateNodeInternals([id]);

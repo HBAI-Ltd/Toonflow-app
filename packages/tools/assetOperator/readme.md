@@ -10,7 +10,7 @@
 | `update` | 替换已有文件，拒绝覆盖读取后发生变化的素材 | `path`、最近一次读取返回的 `revision`，`content` 或 `sourcePath` 二选一 |
 | `mkdir` | 新建文件夹 | `path` |
 | `move` | 移动或重命名素材、文件夹，不覆盖目标 | `path`、`target` |
-| `delete` | 删除文件或空文件夹 | `path` |
+| `delete` | 删除文件或文件夹，文件夹连同其中内容递归删除 | `path` |
 | `import` | 复制全局素材到当前工作区，不修改全局原件 | `path`，可选 `target`；省略目标时生成唯一新文件 |
 
 `path` 相对于全局素材库根目录；`list` 省略路径时查询根目录。`sourcePath` 相对于当前工作区；`move` 的 `target` 位于全局素材库，`import` 的 `target` 位于当前工作区。两个范围不能混用，也不能越出对应目录。

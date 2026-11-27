@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { aspectRatioPattern } from "@toonflow/providers";
 
 const relativePath = z.string().min(1).max(2048).refine(
   path => !/^[\\/]|[:\u0000-\u001f]/.test(path) && path.split(/[\\/]/).every(part => part && part !== "." && part !== ".."),
@@ -7,6 +8,7 @@ const relativePath = z.string().min(1).max(2048).refine(
 const imageReference = z.strictObject({ path: relativePath, mimeType: z.string().regex(/^image\/[a-z0-9.+-]+$/i) });
 const videoReference = z.strictObject({ path: relativePath, mimeType: z.string().regex(/^video\/[a-z0-9.+-]+$/i) });
 const audioReference = z.strictObject({ path: relativePath, mimeType: z.string().regex(/^audio\/[a-z0-9.+-]+$/i) });
+export const imageRatioSchema = z.string().regex(aspectRatioPattern);
 const sharedFields = {
   providerId: z.string().regex(/^[a-z][a-zA-Z0-9]{0,95}$/),
   modelId: z.string().trim().min(1).max(256),
@@ -14,17 +16,18 @@ const sharedFields = {
   other: z.record(z.string(), z.json()).optional(),
   outputDirectory: relativePath.optional(),
   images: z.array(imageReference).max(64).optional(),
-  ratio: z.string().regex(/^[1-9]\d{0,3}:[1-9]\d{0,3}$/).optional(),
 };
 const referenceMode = z.templateLiteral([z.enum(["image", "video", "audio"]), "Reference:", z.number()])
   .refine(value => /Reference:(?:[1-9]\d?|1\d{2}|2[0-4]\d|25[0-6])$/.test(value), "参考数量必须在 1 到 256 之间");
 
 export const imageGenerationSchema = z.strictObject({
   ...sharedFields,
+  ratio: imageRatioSchema.optional(),
   size: z.string().trim().min(1).max(64).optional(),
 });
 export const videoGenerationSchema = z.strictObject({
   ...sharedFields,
+  ratio: z.string().optional(),
   referenceOrder: z.array(z.union([
     z.strictObject({ type: z.enum(["image", "video", "audio"]), index: z.number().int().min(0).max(63) }),
     z.strictObject({ type: z.enum(["firstFrame", "lastFrame", "text"]) }),

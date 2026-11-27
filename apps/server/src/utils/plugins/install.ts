@@ -6,8 +6,9 @@ import { crc32, inflateRawSync } from "node:zlib";
 import { parseFrontmatter } from "@earendil-works/pi-coding-agent";
 import type { PluginInstallType } from "@/types/desktop";
 import conf from "@/utils/conf";
+import { notifyModelCatalogChange } from "@/utils/localModel/events";
 import { parseTool, toolsDirectory } from "@/utils/plugins/tools";
-import { parseNodeServerTool } from "@/utils/plugins/nodes";
+import { parseNodeModels, parseNodeServerTool } from "@/utils/plugins/nodes";
 import { extDirectory, extFileName, extNameFromFile, extPaths, parseExt, resolveExtPath, validateExtSource } from "@/utils/plugins/ext";
 import { addMediaProvider } from "@/utils/media/provider";
 import { isSafeSegment } from "@/utils/skills/files";
@@ -19,6 +20,7 @@ const require = createRequire(import.meta.url);
 export function recordInstalledAt(type: PluginInstallType, name: string) {
   // ACT: 记录最近一次成功安装（含更新）；卸载后重装会覆盖旧时间，配置和内容编辑不修改此记录。
   conf.set("pluginInstalledAt", { ...conf.get("pluginInstalledAt", {}), [`${type}:${name}`]: Date.now() });
+  if (type === "node" || type === "tool" || type === "ext") notifyModelCatalogChange();
 }
 
 export function getMarketIdentifiers(type: PluginInstallType, name: string) {
@@ -143,6 +145,7 @@ export async function installNode(fileName: string, source: string, force = fals
   try { new Bun.Transpiler({ loader: "js" }).scan(source); }
   catch { invalid("节点脚本语法无效，请重新构建并上传完整的 .umd.js 文件"); }
   parseNodeServerTool(source, name);
+  parseNodeModels(source);
   const directory = resolve(dirname(conf.path), "nodes");
   await mkdir(directory, { recursive: true });
   if ((await lstat(directory)).isSymbolicLink()) invalid("节点目录不能是符号链接", 403);

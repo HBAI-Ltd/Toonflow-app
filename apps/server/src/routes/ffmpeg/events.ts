@@ -10,11 +10,21 @@ export default Router().get("/", (req, res) => {
   const unsubscribe = u.ffmpeg.onRequired(() => {
     if (!res.destroyed) res.write('data: {"type":"required"}\n\n');
   });
-  const heartbeat = setInterval(() => res.write(": keepalive\n\n"), 20000);
+  const sendProgress = () => {
+    if (res.destroyed || res.writableNeedDrain) return;
+    const { phase, file, received, total } = u.ffmpeg.getProgress();
+    res.write(`event: progress\ndata: ${JSON.stringify({ phase, file, received, total })}\n\n`);
+  };
+  const stopProgress = u.ffmpeg.onProgress(sendProgress);
+  res.on("drain", sendProgress);
+  sendProgress();
+  const heartbeat = setInterval(() => { if (!res.destroyed && !res.writableNeedDrain) res.write(": keepalive\n\n"); }, 20000);
   const socket = req.socket;
   const close = () => {
     clearInterval(heartbeat);
     unsubscribe();
+    stopProgress();
+    res.off("drain", sendProgress);
     res.off("close", close);
     socket.off("close", close);
   };

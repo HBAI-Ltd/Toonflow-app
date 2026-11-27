@@ -21,7 +21,7 @@
     "@toonflow/nodes-scaffold": "workspace:*",
     "@toonflow/node-shared": "workspace:*",
     "@toonflow/tools-scaffold": "workspace:*",
-    "@types/bun": "1.4.2",
+    "@types/bun": "1.4.5",
     "@types/postcss-pxtorem": "6.1.0",
     "postcss-pxtorem": "6.1.0",
     "sass": "1.104.0",

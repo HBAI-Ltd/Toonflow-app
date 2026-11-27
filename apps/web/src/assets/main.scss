@@ -28,6 +28,25 @@ html:root {
     --el-popover-border-radius: var(--ui-radius-large);
   }
 
+  .canvasToolPopover {
+    max-width: calc(100vw - 24px);
+
+    .el-button {
+      justify-content: flex-start;
+      gap: 6px;
+      height: auto;
+      min-height: 32px;
+      margin: 0;
+      padding-block: 5px;
+      text-align: start;
+      line-height: 1.4;
+      white-space: normal;
+      overflow-wrap: anywhere;
+
+      > span { min-width: 0; margin: 0; }
+    }
+  }
+
   .el-dropdown__popper {
     > .el-scrollbar { border-radius: max(0px, calc(var(--el-popper-border-radius) - 1px)); }
   }
@@ -49,6 +68,36 @@ body,
 // ACT: 去掉 WebKit 列表标记，避免下拉选项内容下移后被裁剪。
 .el-select-dropdown__item {
   list-style: none;
+}
+
+.el-select-group__wrap:has(.modelLabel) {
+  > .el-select-group__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px 4px;
+    color: color-mix(in srgb, var(--el-text-color-regular) 60%, var(--el-text-color-secondary));
+    font-weight: 400;
+    line-height: 18px;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: default;
+
+    &::before,
+    &::after {
+      content: "";
+      flex: 1 0 12px;
+      border-block-start: 1px solid var(--el-border-color-lighter);
+    }
+  }
+}
+
+// ACT: 触屏只加高下拉菜单项，便于手指点中；按钮尺寸由各工具栏按自身布局放大。
+@media (any-pointer: coarse) {
+  .el-dropdown-menu__item {
+    min-height: 40px;
+  }
 }
 
 .stream-markdown [data-stream-markdown="tooltip"] {

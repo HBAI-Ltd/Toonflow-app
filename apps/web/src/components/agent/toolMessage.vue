@@ -1,12 +1,14 @@
 <template>
-  <component v-if="renderer" :is="renderer" :tool="tool" :directory="directory" :toolSessionId="toolSessionId" @copy="emit('copy', $event)" />
+  <!-- 工具组件未声明 copy 事件时，@copy 会落到根元素的原生复制事件上，只转发字符串。 -->
+  <component v-if="renderer" :is="renderer" :tool="tool" :directory="directory" :toolSessionId="toolSessionId" @copy="typeof $event === 'string' && emit('copy', $event)" />
   <el-text v-if="rendererError" type="danger">工具界面加载失败，请停止后重试：{{ rendererError }}</el-text>
   <chat-reasoning v-model:collapsed="collapsed" class="messageReasoning toolCall" expandIconPlacement="left">
     <template #expandIcon><component :is="collapsed ? IconChevronRight : IconChevronDown" :size="14" aria-hidden="true" /></template>
     <template #header>
       <span class="toolHeader" :data-status="tool.status">
         <icon-tool :size="14" />
-        <span class="toolName">{{ tool.name === "installMarketPlugin" ? "安装插件" : renderer ? "操作工具" : tool.name || "工具调用" }}</span>
+        <span v-if="tool.name === 'manageAutomation'" class="toolName">自动化任务</span>
+        <span v-else class="toolName">{{ tool.name === "installMarketPlugin" ? "安装插件" : renderer ? "操作工具" : tool.name || "工具调用" }}</span>
         <span class="toolState">{{ tool.name === 'subAgent' && tool.status === 'success' ? '调用已返回' : toolStatusLabels[tool.status] }}</span>
       </span>
     </template>
@@ -46,8 +48,8 @@ watch(() => [tool.name, tool.question?.callId] as const, async ([name], previous
     renderer.value = marketInstallApproval;
     return;
   }
-  if (name !== previous?.[0]) renderer.value = name === "subAgent" ? undefined : getCachedToolComponent(name);
-  if (name === "subAgent") return;
+  if (["subAgent", "exit_plan_mode", "getGoal", "updateGoal", "manageAutomation"].includes(name)) { renderer.value = undefined; return; }
+  if (name !== previous?.[0]) renderer.value = getCachedToolComponent(name);
   const initialRenderer = renderer.value;
   try {
     const component = await loadToolComponent(name);

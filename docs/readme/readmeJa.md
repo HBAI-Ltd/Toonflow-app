@@ -90,7 +90,7 @@
 </p>
 <p align="center">
   <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" />&nbsp;
-  <img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" />&nbsp;
+  <img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" />&nbsp;
   <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" />&nbsp;
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ sudo spctl --master-disable
 
 ### 4.2 Docker でのインストール
 
-まず Git、[Docker Engine](https://docs.docker.com/engine/install/)、Docker Compose をインストールしてください。Windows / macOS では Docker Desktop の Linux コンテナモードを利用できます。リポジトリには [Dockerfile](../../Dockerfile)、[Compose 設定](../../compose.yaml)、[ビルド除外設定](../../.dockerignore)が含まれています。Bun 1.4.3 を使用してビルドし、イメージには FFmpeg も含まれます。
+まず Git、[Docker Engine](https://docs.docker.com/engine/install/)、Docker Compose をインストールしてください。Windows / macOS では Docker Desktop の Linux コンテナモードを利用できます。リポジトリには [Dockerfile](../../Dockerfile)、[Compose 設定](../../compose.yaml)、[ビルド除外設定](../../.dockerignore)が含まれています。Bun 1.4.5 を使用してビルドし、イメージには FFmpeg も含まれます。
 
 <details>
 <summary><strong>Docker のインストール手順を開く</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 サーバーへのインストール
 
-Web と Server を Linux サーバー上で直接実行する場合の手順です。以下では Ubuntu / Debian を例に、プロジェクト指定の [Bun 1.4.3](https://bun.sh/docs/installation)を使用します。
+Web と Server を Linux サーバー上で直接実行する場合の手順です。以下では Ubuntu / Debian を例に、プロジェクト指定の [Bun 1.4.5](https://bun.sh/docs/installation)を使用します。
 
 <details>
 <summary><strong>サーバーへのインストール手順を開く</strong></summary>
@@ -453,7 +453,7 @@ Web と Server を Linux サーバー上で直接実行する場合の手順で�
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

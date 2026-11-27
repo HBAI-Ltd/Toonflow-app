@@ -653,14 +653,14 @@ public class mobileActivity extends Activity {
 
   private void startBun() {
     try {
-      File appDirectory;
-      synchronized (payloadLock) {
-        if (stopping) return;
-        appDirectory = preparePayload();
-      }
       String nativeDirectory = getApplicationInfo().nativeLibraryDir;
       File runtime = new File(nativeDirectory, "libbun.so");
       if (!runtime.canExecute()) throw new IOException("APK 中缺少可执行 Bun：" + runtime);
+      File appDirectory;
+      synchronized (payloadLock) {
+        if (stopping) return;
+        appDirectory = preparePayload(runtime);
+      }
       ProcessBuilder builder = new ProcessBuilder(runtime.getAbsolutePath(), "--no-orphans", new File(appDirectory, "server.js").getAbsolutePath());
       builder.directory(appDirectory).redirectErrorStream(true);
       builder.environment().put("TOONFLOW_MOBILE_DATA_DIR", new File(getFilesDir(), "data").getAbsolutePath());
@@ -734,14 +734,14 @@ public class mobileActivity extends Activity {
     }
   }
 
-  private File preparePayload() throws IOException {
+  private File preparePayload(File runtime) throws IOException, InterruptedException {
     removeProgramDirectory(new File(getCacheDir(), "browserUploads"));
     File directory = new File(getFilesDir(), "app");
     File nextDirectory = new File(getFilesDir(), "appNext");
     File previousDirectory = new File(getFilesDir(), "appPrevious");
     if (!directory.exists() && previousDirectory.exists()) Files.move(previousDirectory.toPath(), directory.toPath());
     String revision;
-    try (InputStream input = getAssets().open("payload/revision.txt"); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+    try (InputStream input = getAssets().open("payloadRevision.txt"); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
       copyStream(input, output);
       revision = new String(output.toByteArray(), StandardCharsets.UTF_8).trim();
     }
@@ -754,7 +754,7 @@ public class mobileActivity extends Activity {
       return directory;
     }
     removeProgramDirectory(nextDirectory);
-    copyPayload("payload", nextDirectory);
+    extractPayload(runtime, nextDirectory);
     removeProgramDirectory(previousDirectory);
     if (directory.exists()) Files.move(directory.toPath(), previousDirectory.toPath());
     try {
@@ -767,16 +767,32 @@ public class mobileActivity extends Activity {
     return directory;
   }
 
-  private void copyPayload(String assetPath, File destination) throws IOException {
+  private void extractPayload(File runtime, File destination) throws IOException, InterruptedException {
     if (stopping) throw new IOException("程序启动已取消");
-    String[] entries = getAssets().list(assetPath);
-    if (entries != null && entries.length > 0) {
-      if (!destination.isDirectory() && !destination.mkdirs()) throw new IOException("无法创建程序目录：" + destination);
-      for (String entry : entries) copyPayload(assetPath + "/" + entry, new File(destination, entry));
-      return;
-    }
-    try (InputStream input = getAssets().open(assetPath); OutputStream output = new FileOutputStream(destination)) {
-      copyStream(input, output);
+    // ACT: APK 资源没有普通文件路径，经 stdin 把 zstd 整包交给内置 Bun 解压并展开 tar。
+    ProcessBuilder builder = new ProcessBuilder(runtime.getAbsolutePath(), "--no-orphans", "-e",
+      "await new Bun.Archive(Bun.zstdDecompressSync(await Bun.stdin.bytes())).extract(process.env.mobilePayloadTarget);");
+    builder.redirectErrorStream(true);
+    builder.environment().put("mobilePayloadTarget", destination.getAbsolutePath());
+    builder.environment().put("TMPDIR", getCacheDir().getAbsolutePath());
+    Process process = builder.start();
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    IOException writeError = null;
+    try {
+      try (InputStream input = getAssets().open("payload.tar.zst"); OutputStream stdin = process.getOutputStream()) {
+        copyStream(input, stdin);
+      } catch (IOException error) {
+        writeError = error;
+      }
+      try (InputStream stdout = process.getInputStream()) {
+        copyStream(stdout, output);
+      }
+      int exitCode = process.waitFor();
+      if (writeError != null || exitCode != 0 || !new File(destination, "server.js").isFile()) {
+        throw new IOException("解压程序文件失败，退出码：" + exitCode + "\n" + new String(output.toByteArray(), StandardCharsets.UTF_8).trim(), writeError);
+      }
+    } finally {
+      process.destroy();
     }
   }
 

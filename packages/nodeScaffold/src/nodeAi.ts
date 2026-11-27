@@ -78,7 +78,14 @@ export type NodeImageResult = { path: string; mimeType: string; mediaType: "imag
 export type NodeVideoRequest = Omit<MediaGenerationRequest, "size"> & { directory: string; outputDirectory: string };
 export type NodeVideoResult = { path: string; mimeType: string; mediaType: "video" };
 export type NodeMediaPriceRequest = (NodeImageRequest & { mediaType: "image" }) | (NodeVideoRequest & { mediaType: "video" }) | (NodeAudioRequest & { mediaType: "audio" });
-export type NodeMediaPrice = { price: string; tips: string };
+export type NodeMediaPrice = { price: string; tips: string; totalAmount?: number };
+
+export function getMediaPriceKey(input: NodeMediaPriceRequest) {
+  // 保存目录不参与计价；重绘的临时输出目录、对象属性顺序也不改变同一次报价。
+  return JSON.stringify({ ...input, outputDirectory: undefined }, (_key, value) =>
+    value && typeof value === "object" && !Array.isArray(value)
+      ? Object.fromEntries(Object.keys(value).sort().map(key => [key, value[key]])) : value);
+}
 export type NodeAudioRequest = Pick<MediaGenerationRequest, "providerId" | "modelId" | "prompt" | "images" | "audios" | "voice" | "speed" | "volume" | "pitch" | "language" | "format" | "sampleRate" | "other"> & { directory: string; outputDirectory: string };
 export type NodeAudioResult = { path: string; mimeType: string; mediaType: "audio" };
 export type NodeAiRequest = {
@@ -113,7 +120,7 @@ async function readResult<T>(response: Response): Promise<T> {
 }
 
 type MediaPriceCache = {
-  prices: Map<string, { expires: number; value: Promise<NodeMediaPrice | null> }>;
+  prices: Map<string, { expires: number; fresh?: boolean; value: Promise<NodeMediaPrice | null> }>;
   requestedAt: Map<string, number>;
 };
 const mediaPriceCacheKey = Symbol.for("toonflow.nodeMediaPrices");
@@ -303,7 +310,7 @@ export function useNodeAi(options: { onModelsChanged?: () => unknown } = {}) {
     return readNodeModels<NodeMediaModel>("media", requestSignal(signal), fresh);
   }
 
-  async function getMediaPrice(input: NodeMediaPriceRequest, signal?: AbortSignal): Promise<NodeMediaPrice | null> {
+  async function getMediaPrice(input: NodeMediaPriceRequest, signal?: AbortSignal, fresh = false): Promise<NodeMediaPrice | null> {
     const waitingSignal = requestSignal(signal);
     waitingSignal.throwIfAborted();
     const requestedInput = input;
@@ -316,8 +323,9 @@ export function useNodeAi(options: { onModelsChanged?: () => unknown } = {}) {
     const { prices, requestedAt } = mediaPriceCache;
     for (const [key, entry] of prices) if (entry.expires <= now) prices.delete(key);
     for (const [key, time] of requestedAt) if (time + 2000 <= now) requestedAt.delete(key);
-    const key = JSON.stringify({ ...input, outputDirectory: undefined });
+    const key = getMediaPriceKey(input);
     let entry = prices.get(key);
+    if (fresh && !(entry?.fresh && entry.expires === Infinity)) entry = undefined;
     if (!entry) {
       // ACT: 节流状态跨节点面板重建保留；每个节点最多每 2 秒发起一次新报价。
       const nodeKey = JSON.stringify([input.directory, input.outputDirectory, input.providerId]);
@@ -331,7 +339,7 @@ export function useNodeAi(options: { onModelsChanged?: () => unknown } = {}) {
             cancel = () => reject(waitingSignal.reason);
             waitingSignal.addEventListener("abort", cancel, { once: true });
           });
-          return await getMediaPrice(requestedInput, signal);
+          return await getMediaPrice(requestedInput, signal, fresh);
         } finally {
           clearTimeout(timer);
           waitingSignal.removeEventListener("abort", cancel);
@@ -342,15 +350,16 @@ export function useNodeAi(options: { onModelsChanged?: () => unknown } = {}) {
       if (prices.size >= 500) prices.delete(prices.keys().next().value!);
       const hasReferences = !!(input.images?.length || ("videos" in input && input.videos?.length) || ("audios" in input && input.audios?.length)
         || ("firstFrame" in input && input.firstFrame) || ("lastFrame" in input && input.lastFrame));
-      const pending = { expires: Infinity, value: Promise.resolve<NodeMediaPrice | null>(null) };
+      const pending = { expires: Infinity, fresh, value: Promise.resolve<NodeMediaPrice | null>(null) };
       // ACT: 最多缓存 500 条 / 30 秒；参考文件没有前端修订号，只合并进行中的查询，避免同路径覆盖后复用旧价。
       pending.value = fetch("/api/ai/media/price", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-toonflow-workspace": "1" },
-        body: JSON.stringify(input),
+        body: JSON.stringify(fresh ? { ...input, fresh } : input),
         signal: AbortSignal.timeout(15000),
       }).then(readResult<NodeMediaPrice | null>).then(price => {
-        if (price !== null && (!price || typeof price.price !== "string" || !price.price.trim() || typeof price.tips !== "string")) {
+        if (price !== null && (!price || typeof price.price !== "string" || !price.price.trim() || typeof price.tips !== "string" ||
+          (price.totalAmount !== undefined && !(Number.isFinite(price.totalAmount) && price.totalAmount >= 0 && price.totalAmount <= Number.MAX_SAFE_INTEGER)))) {
           throw new Error("价格响应格式不正确");
         }
         pending.expires = hasReferences ? 0 : Date.now() + 30000;
@@ -370,7 +379,7 @@ export function useNodeAi(options: { onModelsChanged?: () => unknown } = {}) {
         waitingSignal.addEventListener("abort", cancel, { once: true });
       })]);
       waitingSignal.throwIfAborted();
-      return prices.get(key) === entry ? price : getMediaPrice(requestedInput, signal);
+      return prices.get(key) === entry ? price : getMediaPrice(requestedInput, signal, fresh);
     } finally {
       waitingSignal.removeEventListener("abort", cancel);
     }

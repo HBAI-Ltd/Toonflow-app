@@ -1,29 +1,29 @@
 <template>
   <nodeSkeleton
     v-bind="nodeProps"
+    :processing="running || uploading"
     :topVisible="node.selected"
     :bottomVisible="node.selected"
-    :bottomWidth="actions?.mode === 'speed' ? 440 : 660"
+    :bottomWidth="660"
     topWidth="max-content"
     :downloadUrl="previewUrl"
     :downloadName="outputFile?.url.split(/[\\/]/).at(-1)"
     :fullscreenVisible="false"
     style="width: 360px">
     <template #topActions>
-      <el-button :icon="IconTextRecognition" :loading="transcribing" :disabled="busy || !outputFile" text title="音频转文本" aria-label="音频转文本" @click.stop="transcribe">转文本</el-button>
-      <el-button v-if="transcribing" :icon="IconPlayerStop" text title="取消转文本" aria-label="取消转文本" @click.stop="cancelTranscription">取消</el-button>
-      <el-button :icon="IconScissors" :disabled="busy || !previewUrl" text title="截取音频" aria-label="截取音频" @click.stop="actions?.open('clip')">截取</el-button>
-      <el-button :icon="IconGauge" :disabled="busy || !previewUrl" text title="音频变速" aria-label="音频变速" @click.stop="actions?.open('speed')">变速</el-button>
-      <el-button :icon="IconTransfer" :loading="uploading" :disabled="busy" text title="替换音频" aria-label="替换音频" @click.stop="fileInput?.click()">替换音频</el-button>
-      <input ref="fileInput" type="file" accept="audio/*" hidden aria-label="选择替换音频" :disabled="busy" @change="replaceOutput" />
+      <el-button :icon="IconTextRecognition" :loading="transcribing" :disabled="busy || !outputFile" text title="语音转文字" aria-label="语音转文字" @click.stop="transcribe">语音转文字</el-button>
+      <el-button v-if="transcribing" :icon="IconPlayerStop" text title="取消转文字" aria-label="取消转文字" @click.stop="cancelTranscription">取消</el-button>
+      <el-button :icon="IconScissors" :disabled="busy || !previewUrl" text title="剪辑音频" aria-label="剪辑音频" @click.stop="actions?.open('audioClip', $event)">剪辑音频</el-button>
+      <el-button :icon="IconGauge" :disabled="busy || !previewUrl" text title="调整播放速度" aria-label="调整播放速度" @click.stop="actions?.open('audioSpeed', $event)">调整播放速度</el-button>
+      <el-button :icon="IconTransfer" :loading="uploading" :disabled="busy" text title="替换音频" aria-label="替换音频" @click.stop="toolMenu?.replaceSource('替换音频')">替换音频</el-button>
+      <mediaToolMenu ref="toolMenu" :tools="actions?.audioSourceTools ?? []" :source="outputFile" sourceKind="audio" :importSource="setAudioFile" :disabled="busy" @select="actions?.openTool($event)" />
     </template>
-    <div v-loading="generating || uploading" class="audioContent nopan" :aria-busy="generating || uploading">
+    <div class="audioContent nopan">
       <audioPlayer v-if="previewUrl" ref="player" v-model:pcmOptions="pcmOptions" class="audioPreview" :src="previewUrl" :mimeType="outputFile?.mimeType" @loadedmetadata="updateNodeInternals" />
       <div v-else class="audioEmpty" role="img" aria-label="暂无生成音频"><icon-music-bolt :size="48" stroke="1.25" aria-hidden="true" /></div>
     </div>
     <template #bottom>
-      <div v-if="actions?.mode === 'speed'" ref="speedTarget" />
-      <el-card v-else class="promptCard" shadow="never" :bodyStyle="{ padding: '14px 16px 12px' }">
+      <el-card class="promptCard" shadow="never" :bodyStyle="{ padding: '14px 16px 12px' }">
         <referenceItem v-if="refList.length" v-model="refList" @preview="setReferencePreview" @remove="removeReference" />
         <promptInput v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" placeholder="描述您想要的音频效果或输入待朗读文本" expandable />
         <div class="promptFooter">
@@ -50,27 +50,27 @@
           </modelSelect>
           <generationSettings v-model:language="data.language" v-model:sampleRate="data.sampleRate" v-model:format="data.format" v-model:other="data.other" :model="selectedModel" :disabled="busy || !selectedModel" />
           <div class="generationActions">
-            <mediaPrice v-if="generationInput" :input="{ ...generationInput, mediaType: 'audio' }" :supported="selectedModel?.supportsPrice === true" />
+            <mediaPrice v-if="generationInput" :quote="mediaQuote" />
             <el-button
               class="sendButton"
-              :icon="generating ? IconPlayerStop : IconArrowUp"
-              :disabled="cancelling || deleting || uploading || transcribing || actions?.processing || (!generating && !pendingRecovery && (!generationPrompt || !selectedModel))"
-              :title="generating ? '停止生成' : pendingRecovery ? '复查任务' : '生成音频'"
-              :aria-label="generating ? '停止生成' : pendingRecovery ? '复查任务' : '生成音频'"
-              @click="generating ? generationState.cancel().catch(error => showNodeError(error, '停止生成失败')) : startGeneration().catch(error => showNodeError(error, '音频生成失败'))" />
+              :icon="running ? IconPlayerStop : IconArrowUp"
+              :disabled="costBlocked || cancelling || deleting || uploading || transcribing || actions?.processing || (!generating && !pendingRecovery && (!generationPrompt || !selectedModel))"
+              :title="running ? '停止生成' : pendingRecovery ? '复查任务' : '生成音频'"
+              :aria-label="running ? '停止生成' : pendingRecovery ? '复查任务' : '生成音频'"
+              @click="running ? generationState.cancel().catch(error => showNodeError(error, '停止生成失败')) : startGeneration().catch(error => showNodeError(error, '音频生成失败'))" />
           </div>
         </div>
       </el-card>
     </template>
   </nodeSkeleton>
-  <audioActions ref="actions" v-model:pcmOptions="pcmOptions" :file="outputFile" :src="previewUrl" :target="speedTarget" :disabled="generating || deleting || uploading || transcribing" @pause="player?.pause()" />
+  <audioActions ref="actions" v-model:pcmOptions="pcmOptions" :file="outputFile" :src="previewUrl" :disabled="generating || deleting || uploading || transcribing" @pause="player?.pause()" />
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, onScopeDispose, ref, shallowRef, watch } from "vue";
-import { ElButton, ElCard, ElLoading, ElOption, ElOptionGroup } from "element-plus";
+import { ElButton, ElCard, ElOption, ElOptionGroup } from "element-plus";
 import { IconArrowUp, IconGauge, IconMusicBolt, IconPlayerStop, IconScissors, IconTransfer, IconTextRecognition } from "@tabler/icons-vue";
-import { findNodeModel, getNodeModelIdentity, getNodeModelKey, getTargetValues, isTypeCompatible, nodeSkeleton, nodeTools, useNode, useNodeModelMemory, useNodeModelSelection, z, type NodeAudioRequest, type NodeHandle, type NodeInputValue, type NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
+import { findNodeModel, getNodeModelIdentity, getNodeModelKey, isTypeCompatible, nodeSkeleton, nodeTools, useNode, useNodeInputs, useNodeModelMemory, useNodeModelSelection, z, type NodeAudioRequest, type NodeHandle, type NodeInputValue, type NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import modelLabel from "@toonflow/node-shared/modelLabel";
 import modelSelect from "@toonflow/node-shared/modelSelect";
@@ -83,9 +83,11 @@ import { useNodeReferences } from "@toonflow/node-shared/useNodeReferences";
 import { getModelFormValues, useModelForm } from "@toonflow/node-shared/useModelForm";
 import audioPlayer from "@toonflow/node-audio/audioPlayer";
 import audioActions from "@toonflow/node-audio/audioActions";
+import mediaToolMenu from "@toonflow/node-shared/mediaToolMenu";
 import promptInput from "@toonflow/node-shared/promptInput";
 import referenceItem from "@toonflow/node-shared/referenceItem";
 import mediaPrice from "@toonflow/node-shared/mediaPrice";
+import { useMediaPrice } from "@toonflow/node-shared/useMediaPrice";
 import generationSettings from "./components/generationSettings.vue";
 import { formatOptions, languageOptions, sampleRateOptions } from "./audioSettings";
 
@@ -97,7 +99,6 @@ defineOptions({
     { id: "audio", type: "source", dataType: "AUDIO", label: "音频输出" },
   ] satisfies NodeHandle[],
 });
-const vLoading = ElLoading.directive;
 const { id, node, nodeProps, nodeEvent, outputs, files, ai, updateNodeInternals } = useNode({ label: "音频生成", onModelsChanged: () => void refreshProviderModels() });
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
 const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; language: string; sampleRate: number; format: string; other: Record<string, unknown> });
@@ -113,10 +114,9 @@ const models = shallowRef<NodeMediaModel[]>([]);
 const modelsLoading = ref(false);
 const uploading = ref(false);
 const deleting = ref(false);
-const fileInput = ref<HTMLInputElement>();
+const toolMenu = ref<InstanceType<typeof mediaToolMenu>>();
 const player = ref<InstanceType<typeof audioPlayer>>();
 const actions = ref<InstanceType<typeof audioActions>>();
-const speedTarget = ref<HTMLElement>();
 const outputFile = computed(() => outputs.value.audio?.dataType === "AUDIO" ? outputs.value.audio.value : undefined);
 const pcmOptions = ref<Partial<PcmOptions>>({});
 watch(() => outputFile.value?.url, () => { pcmOptions.value = {}; }, { flush: "sync" });
@@ -126,10 +126,6 @@ let generationController: AbortController | undefined;
 let generation: Promise<void> | undefined;
 let modelsRequest: Promise<void> | undefined;
 let modelsRefreshPending = false;
-const generationState = useNodeGeneration(outputs, () => generationController?.abort(), { ai });
-const { generating, pendingRecovery, cancelling } = generationState;
-const busy = computed(() => generating.value || uploading.value || deleting.value || transcribing.value || !!actions.value?.processing);
-watch(busy, value => { if (!value && modelsRefreshPending) void refreshProviderModels(); });
 const selectedModel = useNodeModelSelection(models, computed({ get: () => data.value.model, set: value => { data.value.model = value; } }));
 const modelMemory = useNodeModelMemory("audio");
 useModelForm(data, selectedModel);
@@ -151,18 +147,19 @@ const generationInput = computed<Omit<NodeAudioRequest, "directory"> | undefined
     audios: refList.value.flatMap(item => item.dataType === "AUDIO" && item.value ? [{ path: item.value.url, mimeType: item.value.mimeType }] : []),
   };
 });
+const mediaQuote = useMediaPrice(ai, "audio", () => generationInput.value, () => selectedModel.value?.supportsPrice === true);
+const generationState = useNodeGeneration(outputs, () => generationController?.abort(), { ai, models, quote: mediaQuote });
+const { generating, running, costBlocked, pendingRecovery, cancelling } = generationState;
+const busy = computed(() => generating.value || uploading.value || deleting.value || transcribing.value || !!actions.value?.processing);
+watch(busy, value => { if (!value && modelsRefreshPending) void refreshProviderModels(); });
 const previewUrl = files.useFileUrl(outputFile, error => showNodeError(error, "音频读取失败"));
 
 function referencesAllowed(values: NodeInputValue[]) {
   return values.filter(item => isTypeCompatible(item.dataType, ["IMAGE", "AUDIO"])).length <= 1;
 }
 
-nodeEvent.on("canConnect", (connection, context) => {
-  // ACT: 重验已有连线时不重复计数；未产出内容的来源仍按声明类型占位。
-  const edges = context.edges.filter(edge => edge.source !== connection.source || edge.sourceHandle !== connection.sourceHandle
-    || edge.target !== connection.target || edge.targetHandle !== connection.targetHandle);
-  return referencesAllowed(getTargetValues(id, "in", context.nodes, [...edges, connection]));
-});
+const inputs = useNodeInputs();
+nodeEvent.on("canConnect", (connection, context) => referencesAllowed(inputs.getConnectionValues("in", connection, context)));
 
 onMounted(() => {
   window.addEventListener("toonflow:plugin-installed", refreshProviderModels);
@@ -230,12 +227,9 @@ async function startGeneration() {
   if (!referencesAllowed(refList.value)) throw new Error("图片和音频不能同时引用，且合计最多引用一个；文本数量不限");
   if (refList.value.some(item => item.value === undefined)) throw new Error("引用节点暂无内容，请先补充引用内容");
   if (!languageOptions.some(item => item.value === data.value.language) || !sampleRateOptions.includes(data.value.sampleRate) || !formatOptions.includes(data.value.format)) throw new Error("请重新选择有效的语种、采样率和输出格式");
-  const workspace = files.getWorkspaceFiles();
   const controller = new AbortController();
   generationController = controller;
-  generation = generationState.run(async () => {
-    const { directory } = await workspace.list();
-    controller.signal.throwIfAborted();
+  generation = generationState.run(async directory => {
     const [result] = await generationState.generate("audio", { ...input, directory }, controller.signal);
     controller.signal.throwIfAborted();
     if (!result) throw new Error("供应商未返回音频");
@@ -246,11 +240,9 @@ async function startGeneration() {
   return { status: "generating" };
 }
 
-async function replaceOutput(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  input.value = "";
-  if (!file || busy.value || disposed) return;
+async function setAudioFile(file: File, canCommit?: () => boolean): Promise<string | void> {
+  if (canCommit && !canCommit()) return;
+  if (busy.value || disposed) return;
   const mimeType = getMediaMimeType(file);
   if (!mimeType.startsWith("audio/")) return void showNodeError("请选择音频文件", "音频替换失败");
   if (!file.size || file.size > 100 * 1024 * 1024) return void showNodeError("音频不能为空且不能超过 100 MB", "音频替换失败");
@@ -258,12 +250,14 @@ async function replaceOutput(event: Event) {
   try {
     const workspace = files.getWorkspaceFiles();
     const url = await files.uploadFile(file);
+    if (canCommit && (disposed || !canCommit())) return;
     if (disposed) {
       await workspace.remove(url);
       return;
     }
     // ACT: 替换不删除旧音频，保留复制节点与撤销记录的文件引用。
     outputs.value.audio = { dataType: "AUDIO", value: { url, mimeType } };
+    return url;
   } catch (error) {
     showNodeError(error, "音频替换失败");
   } finally {
@@ -378,7 +372,6 @@ nodeTools.register({
 
   .audioPreview { display: block; width: 100%; border-radius: var(--el-border-radius-base); }
   .audioEmpty { display: grid; place-items: center; width: 100%; min-height: 144px; color: var(--el-text-color-placeholder); }
-  :deep(.el-loading-mask) { pointer-events: none; }
 }
 .promptCard {
   .promptFooter {

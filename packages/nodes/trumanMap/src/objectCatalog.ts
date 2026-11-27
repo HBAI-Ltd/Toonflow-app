@@ -27,9 +27,15 @@ const packs: ObjectPack[] = [
   { names: arcaneNames, itemType: "设施", theme: "科幻", frames: ["四点基架", "门式基架", "双板基架", "中柱基架", "悬臂基架"], layouts: ["单核心", "双核心", "三核心", "四核交错"], joints: ["横梁连接", "斜梁连接"], create: createArcane },
 ];
 
-function objectName(design: number) {
+export function getObjectNameParts(design: number): [string, string, string, string] | undefined {
+  if (!Number.isInteger(design) || design < 0 || design >= 8000) return;
   const pack = packs[Math.floor(design / 800)]!, family = Math.floor(design % 800 / 40), code = objectCode(design % 40);
-  return `${pack.names[family]}·${pack.frames[code.frame]}${pack.layouts[code.layout]}${pack.joints[code.joint]}`;
+  return [pack.names[family]!, pack.frames[code.frame]!, pack.layouts[code.layout]!, pack.joints[code.joint]!];
+}
+
+function objectName(design: number) {
+  const [name, frame, layout, joint] = getObjectNameParts(design)!;
+  return `${name}·${frame}${layout}${joint}`;
 }
 
 // 200个独立用途父项与7800个结构配置子项按设计序交错；子项不能计入独立主素材数量。

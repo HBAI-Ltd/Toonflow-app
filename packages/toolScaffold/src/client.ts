@@ -2,17 +2,19 @@ import * as vueRuntime from "vue";
 import * as elementPlusRuntime from "element-plus";
 import axios from "axios";
 import formCreate from "@form-create/element-ui";
+import { createTranslator } from "@toonflow/i18n/vue";
 import type { Component } from "vue";
 
 export { createBrowserAsr, isBrowserAsrSupported, isBrowserAudioAsrSupported, transcribeBrowserAudio } from "@toonflow/asr";
+export * from "@toonflow/plugin-server/localModelClient";
 export type { BrowserAsrState, BrowserAsrResult, BrowserAsrError, BrowserAsrOptions, BrowserAudioAsrOptions } from "@toonflow/asr";
 
 type ToolRenderer = { name: string; tools: string[]; url: string };
 const toolWindow = window as typeof window & {
-  toonflowToolHost?: { vue: typeof vueRuntime; elementPlus: typeof elementPlusRuntime; axios: typeof axios; formCreate: typeof formCreate };
+  toonflowToolHost?: { vue: typeof vueRuntime; elementPlus: typeof elementPlusRuntime; axios: typeof axios; formCreate: typeof formCreate; i18n: { createTranslator: typeof createTranslator } };
   toonflowToolViews?: Record<string, Record<string, Component>>;
 };
-toolWindow.toonflowToolHost = { vue: vueRuntime, elementPlus: elementPlusRuntime, axios, formCreate };
+toolWindow.toonflowToolHost = { vue: vueRuntime, elementPlus: elementPlusRuntime, axios, formCreate, i18n: { createTranslator } };
 const componentLoads = new Map<string, { pending: Promise<Record<string, Component>>; components: Map<string, Component> }>();
 let rendererRequest: Promise<ToolRenderer[]> | undefined;
 

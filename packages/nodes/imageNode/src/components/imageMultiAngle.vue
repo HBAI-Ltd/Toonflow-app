@@ -1,11 +1,11 @@
 <template>
   <teleport :to="target ?? 'body'" :disabled="!target">
-    <section v-show="!!target" class="multiAnglePanel nodrag nopan nowheel" aria-label="图片多角度" @pointerdown.stop @mousedown.stop @dblclick.stop @wheel.stop @keydown.stop>
+    <section v-show="!!target" class="multiAnglePanel nodrag nopan nowheel" aria-label="更换视角" @pointerdown.stop @mousedown.stop @dblclick.stop @wheel.stop @keydown.stop>
       <header class="panelHeader">
-        <div class="panelTitle"><icon-camera-rotate :size="18" /><strong>多角度</strong></div>
+        <div class="panelTitle"><icon-camera-rotate :size="18" /><strong>更换视角</strong></div>
         <div class="headerActions">
           <el-button :icon="IconRestore" text size="small" :disabled="busy" @click="reset">重置</el-button>
-          <el-button :icon="IconX" text :disabled="generating" aria-label="关闭多角度" @click="emit('close')" />
+          <el-button :icon="IconX" text :disabled="generating" aria-label="关闭" @click="emit('close')" />
         </div>
       </header>
       <div class="angleWorkspace">
@@ -58,7 +58,7 @@
         :aspectRatio="sourceRatio"
         :prompt="buildMultiAnglePrompt(settings)"
         :disabled="props.disabled"
-        label="多角度"
+        label="更换视角"
         buttonLabel="生成新视角"
         @generated="emit('close')" />
     </section>

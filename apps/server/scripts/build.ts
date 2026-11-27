@@ -18,6 +18,7 @@ await rm(resolve(outputDirectory, "pluginSdk"), { recursive: true, force: true }
 // ACT: Photon、anydoc 与沙盒依赖保留运行时目录，WASM/Worker 不依赖源码目录或启动位置。
 await $`${process.execPath} build src/index.ts --target=bun --minify --external @silvia-odwyer/photon-node --external @firecrawl/anydoc --external @firecrawl/anydoc-wasm --external just-bash --define ${`process.env.appVersion:${JSON.stringify(config.app.version)}`} --outdir ${outputDirectory}`.cwd(resolve(projectDir, "apps/server"));
 await $`${process.execPath} build packages/ffmpeg/src/ffmpegWorker.ts --target=bun --minify --outdir ${outputDirectory}`.cwd(projectDir);
+await $`${process.execPath} build apps/server/src/utils/localModel/onnx/localModelProcess.ts --target=bun --minify --outdir ${outputDirectory}`.cwd(projectDir);
 await $`${process.execPath} build packages/tools/sandbox/src/sandboxProcess.ts --target=bun --minify --external just-bash --outdir ${outputDirectory}`.cwd(projectDir);
 const photonOutput = resolve(projectDir, "build/server/node_modules/@silvia-odwyer/photon-node");
 await rm(photonOutput, { recursive: true, force: true });

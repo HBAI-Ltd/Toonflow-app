@@ -1,5 +1,5 @@
 import { inject, nextTick, watch, type Ref } from "vue";
-import { useVueFlow, type XYPosition } from "@vue-flow/core";
+import { useVueFlow, type GraphNode, type XYPosition } from "@vue-flow/core";
 import { useNodeEvent, useNodeToolsContext, validateConnection } from "@toonflow/nodes-scaffold/runtime";
 import { canvasSchemas, isNodeToolAllowed, type CanvasContext, type CanvasToolCall } from "@toonflow/tool-canvas/runtime";
 import { asrRequestSchema } from "@toonflow/tools-scaffold/runtime";
@@ -16,6 +16,8 @@ import { canvasEdgeSummary, canvasNodeSummary, createCanvasQueries, isCanvasRead
 
 export function useCanvasTools(options: {
   availableNodes: Ref<{ type: string; label: string }[]>;
+  nodes: Ref<GraphNode[]>;
+  findNode(id: string): GraphNode | undefined;
   flushSave(): Promise<void>;
   reloadPlugin(type: "node" | "tool", name: string): Promise<void>;
   menu(): {
@@ -26,7 +28,7 @@ export function useCanvasTools(options: {
     renameCanvas(canvasId: string, name: string, signal?: AbortSignal): Promise<void>;
   };
   getCanvasBinding(): { id: string; signal: AbortSignal };
-  resolveCanvasContext?(id: string): CanvasContext | undefined;
+  resolveCanvasContext?(id: string, signal?: AbortSignal): Promise<CanvasContext | undefined>;
 }) {
   const flow = useVueFlow();
   const workspaceStore = useWorkspaceStore();
@@ -34,13 +36,15 @@ export function useCanvasTools(options: {
   const getNodeTools = useNodeToolsContext();
   let nodeRevision = 0;
   let edgeRevision = 0;
+  // ACT: 同一实例的所有 Agent/MCP 上下文共用队列；不同画布各自执行，互不等待。
+  let callQueue = Promise.resolve();
   // 只跟踪列表结构，不深读节点 data；批量更新合并到同一 tick。
-  watch(flow.nodes, () => nodeRevision++, { deep: 1 });
+  watch(options.nodes, () => nodeRevision++);
   watch(flow.edges, () => edgeRevision++, { deep: 1 });
   const readCanvas = createCanvasQueries({
-    nodes: () => flow.nodes.value,
+    nodes: () => options.nodes.value,
     edges: () => flow.edges.value,
-    findNode: flow.findNode,
+    findNode: options.findNode,
     viewport: () => flow.viewport.value,
     selectedCount: () => flow.getSelectedNodes.value.length,
     nodeRevision: () => nodeRevision,
@@ -52,7 +56,7 @@ export function useCanvasTools(options: {
   });
 
   function findNode(nodeId: string) {
-    const node = flow.findNode(nodeId);
+    const node = options.findNode(nodeId);
     if (!node) throw new Error(`节点不存在：${nodeId}`);
     return node;
   }
@@ -78,59 +82,80 @@ export function useCanvasTools(options: {
       tools: [],
       getNodeLabel(nodeId) {
         if (redirected) return redirected.getNodeLabel?.(nodeId);
-        const node = flow.findNode(nodeId);
+        const node = options.findNode(nodeId);
         const label = node?.data.label ?? node?.label;
         return typeof label === "string" && label.trim() ? label : undefined;
       },
       async call(request, signal) {
-        if (redirected) return redirected.call(request, signal);
         const changesCanvas = request.name === "addCanvas" || request.name === "switchCanvas" || request.name === "renameCanvas";
-        // ACT: 转写按音频时长运行，复用 ASR 的停滞与收尾超时，不套用画布操作的总时限。
-        const callSignal = AbortSignal.any([workspaceSignal, ...(changesCanvas ? [] : [canvasSignal]), ...(request.name === "transcribeAudio" ? [] : [AbortSignal.timeout(request.name === "developPlugin" ? 360000 : 120000)]), ...(signal ? [signal] : [])]);
+        let callSignal: AbortSignal | undefined;
         let cancel = () => {};
         try {
+          workspaceSignal.throwIfAborted();
+          signal?.throwIfAborted();
+          if (request.name !== "switchCanvas" && Object.hasOwn(canvasSchemas, request.name) && request.args.canvasId !== undefined) {
+            const { canvasId: targetId, ...args } = request.args;
+            if (typeof targetId !== "string" || !targetId || targetId.length > 256) throw new Error("画布 ID 无效");
+            const targetSignal = AbortSignal.any([workspaceSignal, ...(signal ? [signal] : [])]);
+            const target = await options.resolveCanvasContext?.(targetId, targetSignal);
+            targetSignal.throwIfAborted();
+            if (!target) throw new Error("目标画布不可用");
+            return await target.call({ name: request.name, args }, targetSignal);
+          }
+          if (redirected) return await redirected.call(request, signal);
           canvasSignal.throwIfAborted();
-          id = options.getCanvasBinding().id;
+          // ACT: 转写按音频时长运行，复用 ASR 的停滞与收尾超时，不套用画布操作的总时限。
+          callSignal = AbortSignal.any([workspaceSignal, ...(changesCanvas ? [] : [canvasSignal]), ...(request.name === "transcribeAudio" ? [] : [AbortSignal.timeout(request.name === "developPlugin" ? 360000 : 120000)]), ...(signal ? [signal] : [])]);
           callSignal.throwIfAborted();
-          return await Promise.race([
-            Promise.resolve().then(async () => {
-              canvasSignal.throwIfAborted();
-              let result = await execute(request, callSignal, id);
-              callSignal.throwIfAborted();
-              if (changesCanvas) {
-                const nextContext = options.resolveCanvasContext?.(String(result));
-                if (nextContext) {
-                  redirected = nextContext;
-                  return nextContext.call({ name: "getCanvas", args: {} }, callSignal);
-                }
-                const binding = options.getCanvasBinding();
-                if (binding.id !== result) throw Object.assign(new Error("画布已再次切换，请重新发送消息"), { code: "CANVAS_UNAVAILABLE" });
-                id = binding.id;
-                canvasSignal = binding.signal;
-                canvasSignal.throwIfAborted();
-                result = await execute({ name: "getCanvas", args: {} }, callSignal, id);
-              }
-              if (!isCanvasRead(request.name) && !["selectNodes", "transcribeAudio", "developPlugin"].includes(request.name)) await options.flushSave();
-              callSignal.throwIfAborted();
-              canvasSignal.throwIfAborted();
-              return result;
-            }),
+          const executionSignal = callSignal;
+          const pending = callQueue.then(async () => {
+            executionSignal.throwIfAborted();
+            canvasSignal.throwIfAborted();
+            id = options.getCanvasBinding().id;
+            const result = await execute(request, executionSignal, id);
+            executionSignal.throwIfAborted();
+            if (!isCanvasRead(request.name) && !["selectNodes", "transcribeAudio", "developPlugin"].includes(request.name)) await options.flushSave();
+            executionSignal.throwIfAborted();
+            return result;
+          });
+          // 取消可以立即回传，但队列仍等待已开始的操作收尾，避免同画布交叉写入。
+          callQueue = pending.then(() => {}, () => {});
+          let result = await Promise.race([
+            pending,
             new Promise<never>((_resolve, reject) => {
-              cancel = () => reject(callSignal.reason);
-              callSignal.addEventListener("abort", cancel, { once: true });
+              cancel = () => reject(executionSignal.reason);
+              executionSignal.addEventListener("abort", cancel, { once: true });
             }),
           ]);
+          callSignal.throwIfAborted();
+          if (changesCanvas) {
+            // 释放原画布队列后再读取目标，避免切换/重命名时嵌套等待同一队列。
+            const nextContext = await options.resolveCanvasContext?.(String(result), callSignal);
+            callSignal.throwIfAborted();
+            if (nextContext) {
+              redirected = nextContext;
+              return await nextContext.call({ name: "getCanvas", args: {} }, callSignal);
+            }
+            const binding = options.getCanvasBinding();
+            if (binding.id !== result) throw Object.assign(new Error("画布已再次切换，请重新发送消息"), { code: "CANVAS_UNAVAILABLE" });
+            id = binding.id;
+            canvasSignal = binding.signal;
+            result = await execute({ name: "getCanvas", args: {} }, callSignal, id);
+          }
+          canvasSignal.throwIfAborted();
+          return result;
         } catch (error) {
+          if (workspaceSignal.aborted) throw Object.assign(new Error("工作区已关闭或切换，本轮画布操作已停止"), { code: "WORKSPACE_UNAVAILABLE" });
           if (signal?.aborted) throw signal.reason;
-          if (canvasSignal.aborted || workspaceSignal.aborted || callSignal.aborted) {
+          if (canvasSignal.aborted || callSignal?.aborted) {
             throw Object.assign(new Error(error instanceof Error ? error.message : "画布已不可用，请重新发送消息"), { code: "CANVAS_UNAVAILABLE" });
           }
           throw error;
         } finally {
-          callSignal.removeEventListener("abort", cancel);
+          callSignal?.removeEventListener("abort", cancel);
         }
       },
-      };
+    };
   }
 
   async function execute(request: CanvasToolCall, signal: AbortSignal, canvasId: string): Promise<unknown> {
@@ -300,7 +325,7 @@ export function useCanvasTools(options: {
       }
       case "arrangeCanvas": {
         canvasSchemas.arrangeCanvas.parse(request.args);
-        const { arrangedNodeIds, viewport } = await arrangeCanvas(flow, signal);
+        const { arrangedNodeIds, viewport } = await arrangeCanvas(flow, signal, () => options.nodes.value);
         return { arrangedNodeIds: arrangedNodeIds.slice(0, 100), arrangedCount: arrangedNodeIds.length, truncated: arrangedNodeIds.length > 100, viewport };
       }
       case "fitCanvas": {
@@ -308,10 +333,11 @@ export function useCanvasTools(options: {
         nodeIds?.forEach(findNode);
         await nextTick();
         signal.throwIfAborted();
-        flow.updateNodeInternals(nodeIds ?? flow.getNodes.value.map(node => node.id));
-        const fitted = await flow.fitView({ nodes: nodeIds, padding: 0.2, duration: 0 });
+        const targetIds = nodeIds ?? options.nodes.value.map(node => node.id);
+        flow.updateNodeInternals(targetIds);
+        const fitted = await flow.fitView({ nodes: targetIds, padding: 0.2, duration: 0 });
         signal.throwIfAborted();
-        return { fitted, nodeIds: nodeIds?.slice(0, 100), nodeCount: nodeIds?.length ?? flow.nodes.value.length, truncated: (nodeIds?.length ?? 0) > 100, viewport: { ...flow.viewport.value } };
+        return { fitted, nodeIds: nodeIds?.slice(0, 100), nodeCount: targetIds.length, truncated: (nodeIds?.length ?? 0) > 100, viewport: { ...flow.viewport.value } };
       }
       case "nodeTools": {
         const args = canvasSchemas.nodeTools.parse(request.args);

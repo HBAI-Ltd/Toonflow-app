@@ -25,10 +25,12 @@ export default function prepareRuntime() {
     throw new Error(`缺少经过核对的必要运行时元数据：${target}。`);
   }
   const dependencies = JSON.parse(readFileSync(resolve(projectDirectory, ".hutch/dependencies.lock"), "utf8")) as {
-    objects: { type: string; toolchain?: string; platform: string; version: string }[];
+    objects: { type: string; toolchain?: string; platform: string; version: string; relativeRoot: string }[];
   };
-  const runtime = dependencies.objects.find(item => item.type === "toolchain" && item.toolchain === "bun" && item.platform === target);
-  if (runtime?.version !== catalog.version) throw new Error(`Bun 托管版本与下载校验清单不一致（${target}），请核对 SDK 与 runtimeInfo.json。`);
+  // Hutch 同时登记构建脚本和应用的 Bun，安装器须使用应用选定的版本。
+  const runtime = dependencies.objects.find(item =>
+    item.type === "toolchain" && item.toolchain === "bun" && item.platform === target && item.version === catalog.version);
+  if (!runtime) throw new Error(`Bun 托管版本与下载校验清单不一致（${target}），请核对 SDK 与 runtimeInfo.json。`);
   const archiveName = `bun-${platform === "macos" ? "darwin" : platform}-${process.arch === "arm64" ? "aarch64" : "x64"}`;
   const archiveUrl = `https://github.com/oven-sh/bun/releases/download/bun-v${catalog.version}/${archiveName}.zip`;
   const mirrorUrl = `https://cdn.npmmirror.com/binaries/bun/bun-v${catalog.version}/${archiveName}.zip`;
@@ -75,5 +77,5 @@ export default function prepareRuntime() {
       "",
     ].join("\n"));
   }
-  return info;
+  return { ...info, toolchainRelativeRoot: runtime.relativeRoot };
 }

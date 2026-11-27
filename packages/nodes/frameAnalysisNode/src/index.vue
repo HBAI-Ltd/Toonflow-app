@@ -1,6 +1,7 @@
 <template>
   <nodeSkeleton
     v-bind="nodeProps"
+    :titleDetail="metadata.width && metadata.height ? `${metadata.width}x${metadata.height}` : ''"
     v-model:bottomVisible="node.selected"
     :topVisible="node.selected"
     topWidth="max-content"
@@ -15,7 +16,7 @@
     </template>
     <div class="analysisContent">
       <div class="videoArea nodrag nopan nowheel" @pointerdown.stop @dblclick.stop>
-        <videoPlayer v-if="previewUrl" ref="player" :src="previewUrl" label="拉片视频" @loadedmetadata="readMetadata" />
+        <videoPlayer v-if="previewUrl" ref="player" :src="previewUrl" label="视频" @loadedmetadata="readMetadata" />
         <el-button v-else class="uploadButton" text :loading="uploading" :disabled="busy || connected" @click="fileInput?.click()">
           <icon-upload :size="40" stroke="1.5" aria-hidden="true" />
           <span>{{ connected ? '等待上游视频' : '选择视频' }}</span>
@@ -25,7 +26,6 @@
       <el-button v-if="!previewUrl && !connected && files.pickAsset" class="assetButton nodrag nopan" :icon="IconFolder" text :disabled="busy" @dblclick.stop @click="selectAsset">从素材库选择</el-button>
       <div v-if="metadata.width" class="sourceInfo">
         <span>{{ formatDuration(metadata.duration) }}</span>
-        <span>{{ metadata.width }} × {{ metadata.height }}</span>
       </div>
       <p v-if="previewFailed" class="statusText">当前格式无法预览，仍可尝试本地处理</p>
       <div v-if="processing" class="progressArea" role="status" aria-live="polite">
@@ -36,24 +36,24 @@
         <span>{{ lastResult!.scenes.length }} 个镜头<span v-if="lastResult!.audio"> · 原音轨</span></span>
       </div>
       <p v-if="errorMessage" class="errorMessage nodrag nopan nowheel" role="alert">{{ errorMessage }}</p>
-      <p v-else-if="lastResultMatches && lastResult?.ai?.overviewError" class="warningMessage">逐镜头分析已保存，整段归纳未完成：{{ lastResult.ai.overviewError }}</p>
+      <p v-else-if="lastResultMatches && lastResult?.ai?.overviewError" class="warningMessage">镜头分析已保存，全片总结失败：{{ lastResult.ai.overviewError }}</p>
       <p v-else-if="lastResultMatches && lastResult?.warning" class="warningMessage">{{ lastResult.warning }}</p>
     </div>
     <template #bottom>
       <el-card class="promptCard nodrag nopan nowheel" shadow="never" :bodyStyle="{ padding: '14px 16px 12px' }" @pointerdown.stop @dblclick.stop>
         <div class="promptHeader">
           <div class="dimensionOptions">
-            <el-checkbox v-model="settings.frames" :disabled="busy" title="每个镜头提取一张关键帧"><icon-photo :size="15" />分镜</el-checkbox>
-            <el-checkbox v-model="settings.clips" :disabled="busy" title="按镜头边界切割视频片段"><icon-movie :size="15" />动态</el-checkbox>
+            <el-checkbox v-model="settings.frames" :disabled="busy" title="每个镜头提取一张关键帧"><icon-photo :size="15" />关键帧</el-checkbox>
+            <el-checkbox v-model="settings.clips" :disabled="busy" title="按镜头边界切割视频片段"><icon-movie :size="15" />视频片段</el-checkbox>
             <el-checkbox v-model="settings.audio" :disabled="busy" title="保留完整原声，包含人声、音乐和环境声"><icon-wave-sine :size="15" />原音轨</el-checkbox>
           </div>
           <el-popover placement="top-end" :width="300" trigger="click">
             <template #reference><el-button :icon="IconAdjustmentsHorizontal" text size="small">检测设置</el-button></template>
             <div class="settingsFields nodrag nopan nowheel" @pointerdown.stop @dblclick.stop>
-              <label class="settingRow"><span>检测算法</span><el-select v-model="settings.method" :disabled="busy" aria-label="检测算法"><el-option value="adaptive" label="自适应变化" /><el-option value="content" label="固定变化阈值" /></el-select></label>
-              <label class="settingRow"><span>切镜阈值</span><el-input-number v-model="settings.threshold" :min="0.1" :max="255" :step="settings.method === 'adaptive' ? 0.1 : 1" controlsPosition="right" :disabled="busy" aria-label="切镜阈值" /></label>
+              <label class="settingRow"><span>识别方式</span><el-select v-model="settings.method" :disabled="busy" aria-label="识别方式"><el-option value="adaptive" label="自动调整" /><el-option value="content" label="固定数值" /></el-select></label>
+              <label class="settingRow"><span>画面变化幅度</span><el-input-number v-model="settings.threshold" :min="0.1" :max="255" :step="settings.method === 'adaptive' ? 0.1 : 1" controlsPosition="right" :disabled="busy" aria-label="画面变化幅度" /></label>
               <label class="settingRow"><span>最短镜头（秒）</span><el-input-number v-model="settings.minSceneSeconds" :min="0" :max="60" :step="0.1" controlsPosition="right" :disabled="busy" aria-label="最短镜头秒数" /></label>
-              <p class="settingHint">阈值越低，检测越敏感。分镜提取关键帧，动态导出视频片段。</p>
+              <p class="settingHint">数值越小，越容易识别出镜头切换。</p>
             </div>
           </el-popover>
         </div>
@@ -61,9 +61,9 @@
           <promptInput v-model="focusModel" v-model:text="settings.focus" :references="[]" placeholder="填写分析重点，例如：镜头如何推动叙事、节奏如何变化…" />
           <div class="promptHint"><span>逐镜头观察，再归纳叙事、节奏与剪辑 · 模型需支持图片理解</span><span :class="{ overLimit: settings.focus.length > 2000 }">{{ settings.focus.length }}/2000</span></div>
         </template>
-        <p v-else class="localHint">本地检测分镜、提取关键帧与原音轨，结果直接生成到画布。</p>
+        <p v-else class="localHint">勾选想提取的素材，分析完成后会放到画布上。</p>
         <div class="promptFooter">
-          <modelSelect v-if="settings.aiEnabled" :modelValue="selectedModel ? settings.aiModel : ''" :empty="!models.length" class="modelSelect" :loading="modelsLoading" :disabled="busy" filterable placeholder="选择语言模型" aria-label="拉片语言模型" noDataText="请先在设置中添加模型" placement="top-start" @update:modelValue="settings.aiModel = $event" @visibleChange="(visible: boolean) => visible && loadModels()">
+          <modelSelect v-if="settings.aiEnabled" :modelValue="selectedModel ? settings.aiModel : ''" :empty="!models.length" class="modelSelect" :loading="modelsLoading" :disabled="busy" filterable placeholder="选择语言模型" aria-label="选择语言模型" noDataText="请先在设置中添加模型" placement="top-start" @update:modelValue="settings.aiModel = $event" @visibleChange="(visible: boolean) => visible && loadModels()">
             <template v-if="!selectedModel" #prefix><icon-sparkles :size="17" /></template>
             <template #label="{ label }"><modelLabel :label="label" :providerId="selectedModel?.providerId" :modelId="selectedModel?.modelId" /></template>
             <el-option-group v-for="provider in modelGroups" :key="provider.id" :label="provider.label">
@@ -74,11 +74,11 @@
           </modelSelect>
           <span v-else class="localLabel"><icon-scissors :size="17" />本地分析</span>
           <div class="promptActions">
-            <el-switch v-model="settings.aiEnabled" :disabled="busy" activeText="AI 辅助" aria-label="AI 辅助拉片" />
+            <el-switch v-model="settings.aiEnabled" :disabled="busy" activeText="AI 辅助" aria-label="AI 辅助" />
             <el-button v-if="processing" :icon="IconPlayerStop" :disabled="cancelling" @click="cancel">{{ cancelling ? '正在取消' : '取消' }}</el-button>
             <template v-else>
-              <el-button v-if="settings.aiEnabled && lastResultMatches" :icon="IconSparkles" text :disabled="busy || !selectedModel || settings.focus.length > 2000" @click="runAi">{{ retryOverview ? '重试归纳' : lastResult?.ai ? '重新分析' : '补充分析' }}</el-button>
-              <el-button class="sendButton" :icon="IconArrowUp" :disabled="busy || !source || !hasDimensions || (settings.aiEnabled && (!selectedModel || settings.focus.length > 2000))" @click="run">{{ lastResultMatches ? '重新拉片' : '开始拉片' }}</el-button>
+              <el-button v-if="settings.aiEnabled && lastResultMatches" :icon="IconSparkles" text :disabled="busy || !selectedModel || settings.focus.length > 2000" @click="runAi">{{ retryOverview ? '重试总结' : 'AI 分析' }}</el-button>
+              <el-button class="sendButton" :icon="IconArrowUp" :disabled="busy || !source || !hasDimensions || (settings.aiEnabled && (!selectedModel || settings.focus.length > 2000))" @click="run">{{ lastResultMatches ? '重新分析' : '开始分析' }}</el-button>
             </template>
           </div>
         </div>
@@ -94,7 +94,7 @@ import { computed, inject, nextTick, onScopeDispose, reactive, ref, shallowRef, 
 import { IconMovie, IconPhoto, IconUpload, IconFolder, IconWaveSine, IconScissors, IconAdjustmentsHorizontal, IconSparkles, IconTransfer, IconMaximize, IconFileText, IconArrowUp, IconPlayerStop } from "@tabler/icons-vue";
 import { ElMessage, ElSelect, ElOption, ElOptionGroup, ElButton, ElCard, ElCheckbox, ElPopover, ElInputNumber, ElSwitch, ElProgress } from "element-plus";
 import {
-  findNodeModel, getNodeModelKey, getTargetValues, isNodeOutput, nodeSkeleton, useNode, useNodeInputs, useNodeModelSelection, uploadNodeFile,
+  findNodeModel, getNodeModelKey, isNodeOutput, nodeSkeleton, useNode, useNodeInputs, useNodeModelSelection, uploadNodeFile,
   type NodeHandle, type NodeMediaValue, type WorkspaceFiles, type NodeAiModel, type BrowserFfmpegFactory,
 } from "@toonflow/nodes-scaffold/runtime";
 import { analyzeVideo, type AnalysisResult } from "./videoAnalysis";
@@ -129,10 +129,7 @@ type AnalysisSettings = {
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
 type AnalysisState = AnalysisSettings & { source?: NodeMediaValue; lastResult?: AnalysisResult; resultSource?: string };
 
-const { id, node, nodeProps, outputs, ai, nodeEvent, files, ffmpeg: loadFfmpeg, updateNodeInternals } = useNode({ label: "逐帧拉片", onModelsChanged: () => void loadModels() });
-// ACT: 拉片结果由独立素材节点承载，本节点仅保留视频输入；迁移旧版遗留输出。
-outputs.value = {};
-node.data.outputs = outputs.value;
+const { id, node, nodeProps, ai, nodeEvent, files, ffmpeg: loadFfmpeg, updateNodeInternals } = useNode({ label: "逐帧拉片", onModelsChanged: () => void loadModels() });
 const nodeData = node.data as typeof node.data & { frameAnalysis?: AnalysisState };
 const saved = nodeData.frameAnalysis;
 const settings = reactive<AnalysisSettings>({
@@ -182,9 +179,8 @@ const selectedModel = useNodeModelSelection(models, computed({ get: () => settin
 const modelGroups = computed(() => groupNodeModels(models.value));
 const retryOverview = computed(() => !!lastResult.value?.ai?.overviewError
   && !!selectedModel.value && !!findNodeModel([selectedModel.value], lastResult.value.ai)
-  && (lastResult.value.ai.focus ?? "") === settings.focus.trim());
+  && lastResult.value.ai.focus === settings.focus.trim());
 const resultNodes = useResultNodes();
-resultNodes.removeOutputEdges();
 const getCanvas = inject<(() => { id: string } | undefined) | undefined>("canvas", undefined);
 const getDirectory = inject<(() => string) | undefined>("workspaceDirectory", undefined);
 const batchHistory = inject<(action: () => Promise<void>) => Promise<void>>("batchCanvasHistory", action => action());
@@ -214,13 +210,9 @@ watch([() => source.value?.url, () => getCanvas?.()?.id, readDirectory], () => {
 }, { flush: "sync" });
 onScopeDispose(() => { disposed = true; cancel(); preview?.pause(); });
 
-nodeEvent.on("canConnect", (connection, context) => {
-  const edges = context.edges.filter(edge => edge.source !== connection.source || edge.sourceHandle !== connection.sourceHandle
-    || edge.target !== connection.target || edge.targetHandle !== connection.targetHandle);
-  return getTargetValues(id, "in", context.nodes, [...edges, connection]).length <= 1;
-});
+nodeEvent.on("canConnect", (connection, context) => inputs.getConnectionValues("in", connection, context).length <= 1);
 nodeEvent.on("save", reason => {
-  if (reason === "reload" && busy.value) throw new Error("拉片处理中，请完成或取消后再刷新节点");
+  if (reason === "reload" && busy.value) throw new Error("正在分析镜头，请等待完成或取消后再刷新节点");
   if (uploading.value) throw new Error("视频上传中，请稍后切换画布或删除节点");
   if (player.value?.capturing) throw new Error("截图保存中，请稍后切换画布或删除节点");
 });
@@ -382,8 +374,8 @@ async function processAi() {
     const ffmpeg = await loadFfmpeg(current.signal);
     await enhanceResult(result, workspace, ffmpeg, current.signal, model, focus);
     progress.value = 100;
-    if (lastResult.value?.ai?.overviewError) ElMessage.warning("逐镜头分析已保存，整段归纳未完成，可重试归纳");
-    else ElMessage.success("AI 拉片报告已生成");
+    if (lastResult.value?.ai?.overviewError) ElMessage.warning("镜头分析已保存，可重试全片总结");
+    else ElMessage.success("AI 分析报告已生成");
   } catch (error) {
     if (!current.signal.aborted) errorMessage.value = `本地结果已保留；${readError(error, "AI 分析失败")}`;
   } finally {
@@ -400,7 +392,7 @@ async function processVideo() {
   const options = { ...settings };
   const model = selectedModel.value;
   if (options.aiEnabled && (!model || (!options.frames && !options.clips))) {
-    errorMessage.value = !model ? "请选择支持图片理解的模型" : "AI 辅助拉片需要开启分镜或动态";
+    errorMessage.value = !model ? "请选择支持图片理解的模型" : "使用 AI 分析时，请勾选关键帧或视频片段";
     return;
   }
   if (options.aiEnabled && options.focus.trim().length > 2000) {
@@ -409,7 +401,7 @@ async function processVideo() {
   }
   if (!Number.isFinite(options.threshold) || options.threshold <= 0 || options.threshold > 255
     || !Number.isFinite(options.minSceneSeconds) || options.minSceneSeconds < 0 || options.minSceneSeconds > 60) {
-    errorMessage.value = "请填写有效的切镜阈值和最短镜头时长";
+    errorMessage.value = "请填写有效的画面变化幅度和最短镜头时长";
     return;
   }
   const current = controller = new AbortController();
@@ -471,10 +463,10 @@ async function processVideo() {
       await enhanceResult(result, workspace, ffmpeg, current.signal, model, options.focus);
     }
     progress.value = 100;
-    if (lastResult.value?.ai?.overviewError) ElMessage.warning("本地拉片及逐镜头分析已完成，整段归纳未完成");
-    else ElMessage.success(`拉片完成，已识别 ${result.scenes.length} 个镜头`);
+    if (lastResult.value?.ai?.overviewError) ElMessage.warning("镜头分析已保存，可重试全片总结");
+    else ElMessage.success(`分析完成，已识别 ${result.scenes.length} 个镜头`);
   } catch (error) {
-    if (!current.signal.aborted) errorMessage.value = `${committed ? "本地结果已保留；" : ""}${readError(error, "逐帧拉片失败")}`;
+    if (!current.signal.aborted) errorMessage.value = `${committed ? "本地结果已保留；" : ""}${readError(error, "") || "分析镜头失败"}`;
   } finally {
     if (!committed && workspace && directoryCreated) {
       try { await workspace.remove(directory, true); }

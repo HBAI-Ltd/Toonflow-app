@@ -1,8 +1,153 @@
 diff --git a/dist/vue-flow-core.js b/dist/vue-flow-core.js
-index c8213e0..3cc6c59 100644
+index c8213e0..ad7f65b 100644
 --- a/dist/vue-flow-core.js
 +++ b/dist/vue-flow-core.js
-@@ -4739,6 +4739,7 @@ function updateEdgeAction(edge, newConnection, prevEdge, shouldReplaceId, trigge
+@@ -4512,57 +4512,61 @@ const alwaysValid$1 = () => true;
+ function resetRecentHandle(handleDomNode) {
+   handleDomNode == null ? void 0 : handleDomNode.classList.remove("valid", "connecting", "vue-flow__handle-valid", "vue-flow__handle-connecting");
+ }
+-function getNodesWithinDistance(position, nodeLookup, distance2) {
+-  const nodes = [];
+-  const rect = {
+-    x: position.x - distance2,
+-    y: position.y - distance2,
+-    width: distance2 * 2,
+-    height: distance2 * 2
+-  };
+-  for (const node of nodeLookup.values()) {
+-    if (getOverlappingArea(rect, nodeToRect(node)) > 0) {
+-      nodes.push(node);
+-    }
+-  }
+-  return nodes;
+-}
+-const ADDITIONAL_DISTANCE = 250;
+-function getClosestHandle(position, connectionRadius, nodeLookup, fromHandle) {
+-  var _a, _b;
+-  let closestHandles = [];
+-  let minDistance = Number.POSITIVE_INFINITY;
+-  const closeNodes = getNodesWithinDistance(position, nodeLookup, connectionRadius + ADDITIONAL_DISTANCE);
+-  for (const node of closeNodes) {
+-    const allHandles = [...((_a = node.handleBounds) == null ? void 0 : _a.source) ?? [], ...((_b = node.handleBounds) == null ? void 0 : _b.target) ?? []];
+-    for (const handle of allHandles) {
+-      if (fromHandle.nodeId === handle.nodeId && fromHandle.type === handle.type && fromHandle.id === handle.id) {
+-        continue;
+-      }
+-      const { x, y } = getHandlePosition(node, handle, handle.position, true);
+-      const distance2 = Math.sqrt((x - position.x) ** 2 + (y - position.y) ** 2);
+-      if (distance2 > connectionRadius) {
+-        continue;
+-      }
+-      if (distance2 < minDistance) {
+-        closestHandles = [{ ...handle, x, y }];
+-        minDistance = distance2;
+-      } else if (distance2 === minDistance) {
+-        closestHandles.push({ ...handle, x, y });
+-      }
+-    }
+-  }
+-  if (!closestHandles.length) {
+-    return null;
+-  }
+-  if (closestHandles.length > 1) {
+-    const oppositeHandleType = fromHandle.type === "source" ? "target" : "source";
+-    return closestHandles.find((handle) => handle.type === oppositeHandleType) ?? closestHandles[0];
+-  }
+-  return closestHandles[0];
++function createHandleIndex(nodes, radius) {
++  const cellSize = Math.max(1, radius);
++  const cells = new Map();
++  let order = 0;
++  for (const node of nodes.values()) {
++    const { width, height } = node.dimensions;
++    if (!node.computedPosition || !(width > 0 && height > 0)) continue;
++    const { x: left, y: top } = node.computedPosition;
++    const bounds = { left, top, right: left + width, bottom: top + height };
++    for (const handles of [node.handleBounds?.source, node.handleBounds?.target]) {
++      for (const handle of handles ?? []) {
++        const { x, y } = getHandlePosition(node, handle, handle.position, true);
++        const key = `${Math.floor(x / cellSize)},${Math.floor(y / cellSize)}`;
++        let bucket = cells.get(key);
++        if (!bucket) {
++          bucket = [];
++          cells.set(key, bucket);
++        }
++        bucket.push({ handle, x, y, bounds, order: order++ });
++      }
++    }
++  }
++  return { cells, cellSize };
++}
++function getClosestHandle(point, radius, index, from) {
++  if (!(radius >= 0)) return null;
++  const col = Math.floor(point.x / index.cellSize);
++  const row = Math.floor(point.y / index.cellSize);
++  const reach = radius + 250;
++  let best;
++  let distance = radius * radius;
++  // ACT: 格子至少与吸附半径等宽，只查邻近九格。端口完全重叠时仍按原有优先级逐个比较。
++  for (let dy = -1; dy <= 1; dy++) {
++    for (let dx = -1; dx <= 1; dx++) {
++      const bucket = index.cells.get(`${col + dx},${row + dy}`);
++      if (!bucket) continue;
++      for (const entry of bucket) {
++        const { handle, bounds } = entry;
++        if (from.nodeId === handle.nodeId && from.type === handle.type && from.id === handle.id) continue;
++        if (point.x + reach <= bounds.left || point.x - reach >= bounds.right || point.y + reach <= bounds.top || point.y - reach >= bounds.bottom) continue;
++        const squared = (entry.x - point.x) ** 2 + (entry.y - point.y) ** 2;
++        if (!(squared <= distance)) continue;
++        if (best && squared === distance) {
++          if (handle.type === best.handle.type ? entry.order >= best.order : handle.type === from.type) continue;
++        }
++        best = entry;
++        distance = squared;
++      }
++    }
++  }
++  return best ? { ...best.handle, x: best.x, y: best.y } : null;
+ }
+ function isValidHandle(event, {
+   handle,
++  findClosest,
+   connectionMode,
+   fromNodeId,
+   fromHandleId,
+@@ -4573,12 +4577,16 @@ function isValidHandle(event, {
+   isValidConnection = alwaysValid$1
+ }, edges, nodes, findNode, nodeLookup) {
+   const isTarget = fromType === "target";
+-  const handleDomNode = handle ? doc.querySelector(`.${lib}-flow__handle[data-id="${flowId}-${handle == null ? void 0 : handle.nodeId}-${handle == null ? void 0 : handle.id}-${handle == null ? void 0 : handle.type}"]`) : null;
+   const { x, y } = getEventPosition(event);
+   const handleBelow = doc.elementFromPoint(x, y);
+-  const handleToCheck = (handleBelow == null ? void 0 : handleBelow.classList.contains(`${lib}-flow__handle`)) ? handleBelow : handleDomNode;
++  let handleToCheck = handleBelow;
++  if (!handleBelow?.classList.contains(`${lib}-flow__handle`)) {
++    if (findClosest) handle = findClosest();
++    handleToCheck = handle ? doc.querySelector(`.${lib}-flow__handle[data-id="${flowId}-${handle.nodeId}-${handle.id}-${handle.type}"]`) : null;
++  }
+   const result = {
+     handleDomNode: handleToCheck,
++    closestHandle: handle,
+     isValid: false,
+     connection: null,
+     toHandle: null
+@@ -4630,15 +4638,6 @@ function getConnectionStatus(isInsideConnectionRadius, isHandleValid) {
+   }
+   return connectionStatus;
+ }
+-function isConnectionValid(isInsideConnectionRadius, isHandleValid) {
+-  let isValid = null;
+-  if (isHandleValid) {
+-    isValid = true;
+-  } else if (isInsideConnectionRadius && !isHandleValid) {
+-    isValid = false;
+-  }
+-  return isValid;
+-}
+ function getHandle(nodeId, handleType, handleId, nodeLookup, connectionMode, withAbsolutePosition = false) {
+   var _a, _b, _c;
+   const node = nodeLookup.get(nodeId);
+@@ -4739,6 +4738,7 @@ function updateEdgeAction(edge, newConnection, prevEdge, shouldReplaceId, trigge
  function createGraphNodes(nodes, findNode, triggerError) {
    const parentNodes = {};
    const nextNodes = [];
@@ -10,7 +155,7 @@ index c8213e0..3cc6c59 100644
    for (let i = 0; i < nodes.length; ++i) {
      const node = nodes[i];
      if (!isNode(node)) {
-@@ -4752,9 +4753,10 @@ function createGraphNodes(nodes, findNode, triggerError) {
+@@ -4752,9 +4752,10 @@ function createGraphNodes(nodes, findNode, triggerError) {
        parentNodes[node.parentNode] = true;
      }
      nextNodes[i] = parsed;
@@ -22,8 +167,400 @@ index c8213e0..3cc6c59 100644
      if (node.parentNode && !parentNode) {
        triggerError(new VueFlowError(ErrorCode.NODE_MISSING_PARENT, node.id, node.parentNode));
      }
-@@ -8288,6 +8290,8 @@ const _sfc_main$a = /* @__PURE__ */ vue.defineComponent({
-       selectionStarted = true;
+@@ -5187,6 +5188,7 @@ function useGetPointerPosition() {
+ function alwaysValid() {
+   return true;
+ }
++const activeHandleDrags = new WeakMap();
+ function useHandle({
+   handleId,
+   nodeId,
+@@ -5216,182 +5218,140 @@ function useHandle({
+     edges,
+     nodes,
+     isValidConnection: isValidConnectionProp,
+-    nodeLookup
++    nodeLookup,
++    handleIndex
+   } = useVueFlow();
+-  let connection = null;
+-  let isValid = false;
+-  let handleDomNode = null;
++  let cancelActiveDrag;
++  tryOnScopeDispose(() => cancelActiveDrag?.());
+   function handlePointerDown(event) {
+-    var _a;
+-    const isTarget = vue.toValue(type) === "target";
+-    const isMouseTriggered = isMouseEvent(event);
+-    const doc = getHostForElement(event.target);
+     const clickedHandle = event.currentTarget;
+-    if (clickedHandle && (isMouseTriggered && event.button === 0 || !isMouseTriggered)) {
+-      let onPointerMove = function(event2) {
+-        connectionPosition = getEventPosition(event2, containerBounds);
+-        closestHandle = getClosestHandle(
+-          pointToRendererPoint(connectionPosition, viewport.value, false, [1, 1]),
+-          connectionRadius.value,
+-          nodeLookup.value,
+-          fromHandle
+-        );
+-        if (!autoPanStarted) {
+-          autoPan();
+-          autoPanStarted = true;
++    if (!clickedHandle || (isMouseEvent(event) && event.button !== 0)) return;
++    const doc = getHostForElement(clickedHandle);
++    const view = clickedHandle.ownerDocument.defaultView;
++    const handleType = getHandleType(vue.toValue(edgeUpdaterType), clickedHandle);
++    const bounds = vueFlowRef.value?.getBoundingClientRect();
++    if (!bounds || !handleType) return;
++    const fromHandle = getHandle(vue.toValue(nodeId), handleType, vue.toValue(handleId), nodeLookup.value, connectionMode.value);
++    if (!fromHandle) return;
++    activeHandleDrags.get(handleIndex)?.();
++    const fromNodeId = vue.toValue(nodeId);
++    const fromHandleId = vue.toValue(handleId);
++    const from = { ...fromHandle, nodeId: fromNodeId, type: handleType };
++    const initialPoint = getEventPosition(event, bounds);
++    const fromType = vue.toValue(type) === "target" ? "target" : "source";
++    let lastMove;
++    let frame = 0;
++    let stopIndex;
++    let activeElement;
++    let activeValid;
++    let previousPoint;
++    let previousHandle;
++    let previousStatus;
++
++    function scheduleFrame() {
++      if (lastMove && !frame) frame = requestAnimationFrame(draw);
++    }
++    function findClosest(point) {
++      // 拖动期间订阅几何变化。节点或端口移动时，静止指针的吸附结果也会刷新。
++      stopIndex ??= vue.watch(handleIndex, scheduleFrame);
++      return getClosestHandle(pointToRendererPoint(point, viewport.value), connectionRadius.value, handleIndex.value, from);
++    }
++    function preview(input, point = getEventPosition(input, bounds)) {
++      const result = isValidHandle(input, {
++        findClosest: () => findClosest(point),
++        connectionMode: connectionMode.value,
++        fromNodeId,
++        fromHandleId,
++        fromType,
++        isValidConnection: vue.toValue(isValidConnection) || isValidConnectionProp.value || alwaysValid,
++        doc,
++        lib: "vue",
++        flowId
++      }, edges.value, nodes.value, findNode, nodeLookup.value);
++      const handle = result.toHandle ?? result.closestHandle ?? null;
++      const status = getConnectionStatus(!!handle, result.isValid);
++      const end = result.isValid && handle ? rendererPointToPoint(handle, viewport.value) : point;
++      if (end.x !== previousPoint?.x || end.y !== previousPoint?.y || status !== previousStatus
++        || handle?.nodeId !== previousHandle?.nodeId || handle?.type !== previousHandle?.type || handle?.id !== previousHandle?.id
++        || handle?.x !== previousHandle?.x || handle?.y !== previousHandle?.y || handle?.position !== previousHandle?.position
++        || handle?.width !== previousHandle?.width || handle?.height !== previousHandle?.height) {
++        updateConnection(end, handle, status);
++        previousPoint = end;
++        previousHandle = handle;
++        previousStatus = status;
++      }
++      const element = result.connection && result.connection.source !== result.connection.target ? result.handleDomNode : null;
++      if (element !== activeElement) {
++        resetRecentHandle(activeElement);
++        activeElement = element;
++        activeValid = undefined;
++        element?.classList.add("connecting", "vue-flow__handle-connecting");
++      }
++      if (element && activeValid !== result.isValid) {
++        element.classList.toggle("valid", result.isValid);
++        element.classList.toggle("vue-flow__handle-valid", result.isValid);
++        activeValid = result.isValid;
++      }
++      return result;
++    }
++    function draw() {
++      frame = 0;
++      const point = getEventPosition(lastMove, bounds);
++      const [x, y] = autoPanOnConnect.value ? calcAutoPan(point, bounds, autoPanSpeed.value) : [0, 0];
++      const panned = (x || y) && panBy({ x, y });
++      preview(lastMove, point);
++      if (panned) scheduleFrame();
++    }
++    function move(input) {
++      lastMove = input;
++      scheduleFrame();
++    }
++    function finish(input, cancelled) {
++      if (cancelActiveDrag !== cancel) return;
++      if (!cancelled && input.touches?.length) return;
++      cancelActiveDrag = undefined;
++      try {
++        // 松手时同步使用最终坐标和当前业务规则，即使最后一次移动仍在等下一帧。
++        const result = !cancelled && lastMove ? preview(input) : null;
++        if (result?.isValid && result.connection) {
++          if (onEdgeUpdate) onEdgeUpdate(input, result.connection);
++          else emits.connect(result.connection);
+         }
+-        const result = isValidHandle(
+-          event2,
+-          {
+-            handle: closestHandle,
+-            connectionMode: connectionMode.value,
+-            fromNodeId: vue.toValue(nodeId),
+-            fromHandleId: vue.toValue(handleId),
+-            fromType: isTarget ? "target" : "source",
+-            isValidConnection: isValidConnectionHandler,
+-            doc,
+-            lib: "vue",
+-            flowId,
+-            nodeLookup: nodeLookup.value
+-          },
+-          edges.value,
+-          nodes.value,
+-          findNode,
+-          nodeLookup.value
+-        );
+-        handleDomNode = result.handleDomNode;
+-        connection = result.connection;
+-        isValid = isConnectionValid(!!closestHandle, result.isValid);
+-        const newConnection2 = {
+-          // from stays the same
+-          ...previousConnection,
+-          isValid,
+-          to: result.toHandle && isValid ? rendererPointToPoint({ x: result.toHandle.x, y: result.toHandle.y }, viewport.value) : connectionPosition,
+-          toHandle: result.toHandle,
+-          toPosition: isValid && result.toHandle ? result.toHandle.position : oppositePosition[fromHandle.position],
+-          toNode: result.toHandle ? nodeLookup.value.get(result.toHandle.nodeId) : null
+-        };
+-        if (isValid && closestHandle && (previousConnection == null ? void 0 : previousConnection.toHandle) && newConnection2.toHandle && previousConnection.toHandle.type === newConnection2.toHandle.type && previousConnection.toHandle.nodeId === newConnection2.toHandle.nodeId && previousConnection.toHandle.id === newConnection2.toHandle.id && previousConnection.to.x === newConnection2.to.x && previousConnection.to.y === newConnection2.to.y) {
+-          return;
++        const endEvent = cancelled && input?.type !== "touchcancel" ? undefined : input;
++        emits.connectEnd(endEvent);
++        if (edgeUpdaterType) onEdgeUpdateEnd?.(endEvent);
++      } finally {
++        stopIndex?.();
++        cancelAnimationFrame(frame);
++        resetRecentHandle(activeElement);
++        doc.removeEventListener("mousemove", move);
++        doc.removeEventListener("mouseup", up);
++        doc.removeEventListener("touchmove", move);
++        doc.removeEventListener("touchend", up);
++        doc.removeEventListener("touchcancel", cancel);
++        view?.removeEventListener("blur", cancel);
++        if (activeHandleDrags.get(handleIndex) === cancel) {
++          activeHandleDrags.delete(handleIndex);
++          endConnection(input);
+         }
+-        const connectingHandle = closestHandle ?? result.toHandle;
+-        updateConnection(
+-          connectingHandle && isValid ? rendererPointToPoint(
+-            {
+-              x: connectingHandle.x,
+-              y: connectingHandle.y
+-            },
+-            viewport.value
+-          ) : connectionPosition,
+-          connectingHandle,
+-          getConnectionStatus(!!connectingHandle, isValid)
+-        );
+-        previousConnection = newConnection2;
+-        if (!closestHandle && !isValid && !handleDomNode) {
+-          return resetRecentHandle(prevActiveHandle);
+-        }
+-        if (connection && connection.source !== connection.target && handleDomNode) {
+-          resetRecentHandle(prevActiveHandle);
+-          prevActiveHandle = handleDomNode;
+-          handleDomNode.classList.add("connecting", "vue-flow__handle-connecting");
+-          handleDomNode.classList.toggle("valid", !!isValid);
+-          handleDomNode.classList.toggle("vue-flow__handle-valid", !!isValid);
+-        }
+-      }, onPointerUp = function(event2) {
+-        if ("touches" in event2 && event2.touches.length > 0) {
+-          return;
+-        }
+-        if ((closestHandle || handleDomNode) && connection && isValid) {
+-          if (!onEdgeUpdate) {
+-            emits.connect(connection);
+-          } else {
+-            onEdgeUpdate(event2, connection);
+-          }
+-        }
+-        emits.connectEnd(event2);
+-        if (edgeUpdaterType) {
+-          onEdgeUpdateEnd == null ? void 0 : onEdgeUpdateEnd(event2);
+-        }
+-        resetRecentHandle(prevActiveHandle);
+-        cancelAnimationFrame(autoPanId);
+-        endConnection(event2);
+-        autoPanStarted = false;
+-        isValid = false;
+-        connection = null;
+-        handleDomNode = null;
+-        doc.removeEventListener("mousemove", onPointerMove);
+-        doc.removeEventListener("mouseup", onPointerUp);
+-        doc.removeEventListener("touchmove", onPointerMove);
+-        doc.removeEventListener("touchend", onPointerUp);
+-      };
+-      const node = findNode(vue.toValue(nodeId));
+-      let isValidConnectionHandler = vue.toValue(isValidConnection) || isValidConnectionProp.value || alwaysValid;
+-      if (!isValidConnectionHandler && node) {
+-        isValidConnectionHandler = (!isTarget ? node.isValidTargetPos : node.isValidSourcePos) || alwaysValid;
+-      }
+-      let closestHandle;
+-      let autoPanId = 0;
+-      const { x, y } = getEventPosition(event);
+-      const handleType = getHandleType(vue.toValue(edgeUpdaterType), clickedHandle);
+-      const containerBounds = (_a = vueFlowRef.value) == null ? void 0 : _a.getBoundingClientRect();
+-      if (!containerBounds || !handleType) {
+-        return;
+-      }
+-      const fromHandleInternal = getHandle(vue.toValue(nodeId), handleType, vue.toValue(handleId), nodeLookup.value, connectionMode.value);
+-      if (!fromHandleInternal) {
+-        return;
+-      }
+-      let prevActiveHandle;
+-      let connectionPosition = getEventPosition(event, containerBounds);
+-      let autoPanStarted = false;
+-      const autoPan = () => {
+-        if (!autoPanOnConnect.value) {
+-          return;
+-        }
+-        const [xMovement, yMovement] = calcAutoPan(connectionPosition, containerBounds, autoPanSpeed.value);
+-        panBy({ x: xMovement, y: yMovement });
+-        autoPanId = requestAnimationFrame(autoPan);
+-      };
+-      const fromHandle = {
+-        ...fromHandleInternal,
+-        nodeId: vue.toValue(nodeId),
+-        type: handleType,
+-        position: fromHandleInternal.position
+-      };
+-      const fromNodeInternal = nodeLookup.value.get(vue.toValue(nodeId));
+-      const from = getHandlePosition(fromNodeInternal, fromHandle, Position.Left, true);
+-      const newConnection = {
+-        inProgress: true,
+-        isValid: null,
+-        from,
+-        fromHandle,
+-        fromPosition: fromHandle.position,
+-        fromNode: fromNodeInternal,
+-        to: connectionPosition,
+-        toHandle: null,
+-        toPosition: oppositePosition[fromHandle.position],
+-        toNode: null
+-      };
+-      startConnection(
+-        {
+-          nodeId: vue.toValue(nodeId),
+-          id: vue.toValue(handleId),
+-          type: handleType,
+-          position: (clickedHandle == null ? void 0 : clickedHandle.getAttribute("data-handlepos")) || Position.Top,
+-          ...connectionPosition
+-        },
+-        {
+-          x: x - containerBounds.left,
+-          y: y - containerBounds.top
+-        }
+-      );
+-      emits.connectStart({ event, nodeId: vue.toValue(nodeId), handleId: vue.toValue(handleId), handleType });
+-      let previousConnection = newConnection;
+-      doc.addEventListener("mousemove", onPointerMove);
+-      doc.addEventListener("mouseup", onPointerUp);
+-      doc.addEventListener("touchmove", onPointerMove);
+-      doc.addEventListener("touchend", onPointerUp);
+-    }
++      }
++    }
++    function up(input) { finish(input, false); }
++    function cancel(input) { finish(input, true); }
++
++    cancelActiveDrag = cancel;
++    activeHandleDrags.set(handleIndex, cancel);
++    startConnection({
++      nodeId: fromNodeId, id: fromHandleId, type: handleType,
++      position: clickedHandle.getAttribute("data-handlepos") || Position.Top, ...initialPoint
++    }, initialPoint);
++    doc.addEventListener("mousemove", move);
++    doc.addEventListener("mouseup", up);
++    doc.addEventListener("touchmove", move);
++    doc.addEventListener("touchend", up);
++    doc.addEventListener("touchcancel", cancel);
++    view?.addEventListener("blur", cancel);
++    emits.connectStart({ event, nodeId: fromNodeId, handleId: fromHandleId, handleType });
+   }
+   function handleClick(event) {
+     var _a, _b;
+@@ -6964,10 +6924,12 @@ const _sfc_main$f = /* @__PURE__ */ vue.defineComponent({
+     const handle = vue.ref();
+     const isConnectableStart = vue.toRef(() => typeof __props.connectableStart !== "undefined" ? __props.connectableStart : true);
+     const isConnectableEnd = vue.toRef(() => typeof __props.connectableEnd !== "undefined" ? __props.connectableEnd : true);
+-    const isConnecting = vue.toRef(
++    const showConnectionIndicator = vue.computed(
+       () => {
++        if (isConnectableStart.value === isConnectableEnd.value) return isConnectableStart.value;
+         var _a, _b, _c, _d, _e, _f;
+-        return ((_a = connectionStartHandle.value) == null ? void 0 : _a.nodeId) === nodeId && ((_b = connectionStartHandle.value) == null ? void 0 : _b.id) === __props.id && ((_c = connectionStartHandle.value) == null ? void 0 : _c.type) === type.value || ((_d = connectionEndHandle.value) == null ? void 0 : _d.nodeId) === nodeId && ((_e = connectionEndHandle.value) == null ? void 0 : _e.id) === __props.id && ((_f = connectionEndHandle.value) == null ? void 0 : _f.type) === type.value;
++        const connecting = ((_a = connectionStartHandle.value) == null ? void 0 : _a.nodeId) === nodeId && ((_b = connectionStartHandle.value) == null ? void 0 : _b.id) === __props.id && ((_c = connectionStartHandle.value) == null ? void 0 : _c.type) === type.value || ((_d = connectionEndHandle.value) == null ? void 0 : _d.nodeId) === nodeId && ((_e = connectionEndHandle.value) == null ? void 0 : _e.id) === __props.id && ((_f = connectionEndHandle.value) == null ? void 0 : _f.type) === type.value;
++        return connecting ? isConnectableEnd.value : isConnectableStart.value;
+       }
+     );
+     const isClickConnecting = vue.toRef(
+@@ -7073,7 +7035,7 @@ const _sfc_main$f = /* @__PURE__ */ vue.defineComponent({
+             connecting: isClickConnecting.value,
+             connectablestart: isConnectableStart.value,
+             connectableend: isConnectableEnd.value,
+-            connectionindicator: isConnectable.value && (isConnectableStart.value && !isConnecting.value || isConnectableEnd.value && isConnecting.value)
++            connectionindicator: isConnectable.value && showConnectionIndicator.value
+           }
+         ]]),
+         onMousedown: onPointerDown,
+@@ -7968,6 +7930,7 @@ function useGetters(state, nodeLookup, edgeLookup) {
+       ...actions,
+       ...toRefs(reactiveState),
+       nodeLookup,
++      handleIndex: vue.computed(() => createHandleIndex(nodeLookup.value, reactiveState.connectionRadius)),
+       edgeLookup,
+       emits,
+       id: id2,
+@@ -8226,6 +8189,9 @@ const _sfc_main$a = /* @__PURE__ */ vue.defineComponent({
+       connectionLookup,
+       defaultEdgeOptions,
+       connectionStartHandle,
++      autoPanOnNodeDrag,
++      autoPanSpeed,
++      panBy,
+       panOnDrag
+     } = useVueFlow();
+     const container = vue.shallowRef(null);
+@@ -8235,7 +8201,13 @@ const _sfc_main$a = /* @__PURE__ */ vue.defineComponent({
+     const hasActiveSelection = vue.toRef(() => elementsSelectable.value && (__props.isSelecting || userSelectionActive.value));
+     const connectionInProgress = vue.toRef(() => connectionStartHandle.value !== null);
+     let selectionInProgress = false;
+-    let selectionStarted = false;
++    let selectionPointer;
++    let selectionOrigin;
++    let panFrame = 0;
++    useEventListener("blur", () => {
++      if (selectionPointer) finishSelection(selectionPointer);
++    });
++    vue.onBeforeUnmount(() => cancelAnimationFrame(panFrame));
+     const deleteKeyPressed = useKeyPress(deleteKeyCode, { actInsideInputWithModifier: false });
+     const multiSelectKeyPressed = useKeyPress(multiSelectionKeyCode);
+     vue.watch(deleteKeyPressed, (isKeyPressed) => {
+@@ -8279,15 +8251,21 @@ const _sfc_main$a = /* @__PURE__ */ vue.defineComponent({
+     }
+     function onPointerDown(event) {
+       var _a, _b, _c;
++      if (selectionPointer || !elementsSelectable.value || !__props.isSelecting || event.button !== 0 || event.target !== container.value) {
++        return;
++      }
+       containerBounds.value = ((_a = vueFlowRef.value) == null ? void 0 : _a.getBoundingClientRect()) ?? null;
+-      if (!elementsSelectable.value || !__props.isSelecting || event.button !== 0 || event.target !== container.value || !containerBounds.value) {
++      if (!containerBounds.value) {
+         return;
+       }
+       (_c = (_b = event.target) == null ? void 0 : _b.setPointerCapture) == null ? void 0 : _c.call(_b, event.pointerId);
+       const { x, y } = getMousePosition(event, containerBounds.value);
+-      selectionStarted = true;
++      selectionPointer = event;
++      selectionOrigin = pointToRendererPoint({ x, y }, viewport.value);
        selectionInProgress = false;
        removeSelectedElements();
 +      selectedNodeIds.value = new Set();
@@ -31,11 +568,262 @@ index c8213e0..3cc6c59 100644
        userSelectionRect.value = {
          width: 0,
          height: 0,
+@@ -8299,13 +8277,27 @@ const _sfc_main$a = /* @__PURE__ */ vue.defineComponent({
+       emits.selectionStart(event);
+     }
+     function onPointerMove(event) {
++      if (selectionPointer?.pointerId !== event.pointerId || !userSelectionRect.value) {
++        return;
++      }
++      selectionPointer = event;
++      selectionInProgress = true;
++      updateSelection(getMousePosition(event, containerBounds.value));
++      if (!panFrame && autoPanOnNodeDrag.value) panFrame = requestAnimationFrame(panSelection);
++    }
++    function panSelection() {
++      panFrame = 0;
++      if (!selectionPointer || !userSelectionActive.value || !autoPanOnNodeDrag.value) return;
++      const pointer = getMousePosition(selectionPointer, containerBounds.value);
++      const [x, y] = calcAutoPan(pointer, containerBounds.value, autoPanSpeed.value);
++      if (panBy({ x, y })) {
++        updateSelection(pointer);
++        panFrame = requestAnimationFrame(panSelection);
++      }
++    }
++    function updateSelection({ x: mouseX, y: mouseY }) {
+       var _a;
+-      if (!containerBounds.value || !userSelectionRect.value) {
+-        return;
+-      }
+-      selectionInProgress = true;
+-      const { x: mouseX, y: mouseY } = getEventPosition(event, containerBounds.value);
+-      const { startX = 0, startY = 0 } = userSelectionRect.value;
++      const { x: startX, y: startY } = rendererPointToPoint(selectionOrigin, viewport.value);
+       const nextUserSelectRect = {
+         startX,
+         startY,
+@@ -8347,13 +8339,15 @@ const _sfc_main$a = /* @__PURE__ */ vue.defineComponent({
+       userSelectionActive.value = true;
+       nodesSelectionActive.value = false;
+     }
+-    function onPointerUp(event) {
+-      var _a;
+-      if (event.button !== 0 || !selectionStarted) {
++    function finishSelection(event) {
++      if (selectionPointer?.pointerId !== event.pointerId || (event.type === "pointerup" && event.button !== 0)) {
+         return;
+       }
+-      (_a = event.target) == null ? void 0 : _a.releasePointerCapture(event.pointerId);
+-      if (!userSelectionActive.value && userSelectionRect.value && event.target === container.value) {
++      selectionPointer = void 0;
++      cancelAnimationFrame(panFrame);
++      panFrame = 0;
++      if (container.value?.hasPointerCapture(event.pointerId)) container.value.releasePointerCapture(event.pointerId);
++      if (event.type === "pointerup" && !userSelectionActive.value && userSelectionRect.value && event.target === container.value) {
+         onClick(event);
+       }
+       userSelectionActive.value = false;
+@@ -8363,7 +8357,6 @@ const _sfc_main$a = /* @__PURE__ */ vue.defineComponent({
+       if (__props.selectionKeyPressed) {
+         selectionInProgress = false;
+       }
+-      selectionStarted = false;
+     }
+     return (_ctx, _cache) => {
+       return vue.openBlock(), vue.createElementBlock("div", {
+@@ -8376,7 +8369,9 @@ const _sfc_main$a = /* @__PURE__ */ vue.defineComponent({
+         onPointerenter: _cache[3] || (_cache[3] = (event) => hasActiveSelection.value ? void 0 : vue.unref(emits).paneMouseEnter(event)),
+         onPointerdown: _cache[4] || (_cache[4] = (event) => hasActiveSelection.value ? onPointerDown(event) : vue.unref(emits).paneMouseMove(event)),
+         onPointermove: _cache[5] || (_cache[5] = (event) => hasActiveSelection.value ? onPointerMove(event) : vue.unref(emits).paneMouseMove(event)),
+-        onPointerup: _cache[6] || (_cache[6] = (event) => hasActiveSelection.value ? onPointerUp(event) : void 0),
++        onPointerup: finishSelection,
++        onPointercancel: finishSelection,
++        onLostpointercapture: finishSelection,
+         onPointerleave: _cache[7] || (_cache[7] = ($event) => vue.unref(emits).paneMouseLeave($event))
+       }, [
+         vue.renderSlot(_ctx.$slots, "default"),
+@@ -8576,23 +8571,14 @@ const _sfc_main$8 = /* @__PURE__ */ vue.defineComponent({
+         const buttonAllowed = Array.isArray(panOnDrag.value) && panOnDrag.value.includes(eventButton) || selectionKeyCode.value === true && Array.isArray(panOnDrag.value) && !panOnDrag.value.includes(0) || !eventButton || eventButton <= 1;
+         return (!event.ctrlKey || panKeyPressed.value || isWheelEvent) && buttonAllowed;
+       });
+-      vue.watch(
+-        [userSelectionActive, shouldPanOnDrag],
+-        () => {
+-          if (userSelectionActive.value && !isZoomingOrPanning.value) {
+-            d3Zoom.on("zoom", null);
+-          } else if (!userSelectionActive.value) {
+-            d3Zoom.on("zoom", (event) => {
+-              viewport.value = { x: event.transform.x, y: event.transform.y, zoom: event.transform.k };
+-              const flowTransform = eventToFlowTransform(event.transform);
+-              zoomedWithRightMouseButton = isRightClickPan(shouldPanOnDrag.value, mouseButton ?? 0);
+-              emits.viewportChange(flowTransform);
+-              emits.move({ event, flowTransform });
+-            });
+-          }
+-        },
+-        { immediate: true }
+-      );
++      d3Zoom.on("zoom", (event) => {
++        if (event.sourceEvent && userSelectionActive.value && !isZoomingOrPanning.value) return;
++        const flowTransform = eventToFlowTransform(event.transform);
++        viewport.value = { ...flowTransform };
++        zoomedWithRightMouseButton = isRightClickPan(shouldPanOnDrag.value, mouseButton ?? 0);
++        emits.viewportChange(flowTransform);
++        emits.move({ event, flowTransform });
++      });
+       vue.watch(
+         [userSelectionActive, shouldPanOnScroll, panOnScrollMode, zoomKeyPressed, zoomOnPinch, preventScrolling, noWheelClassName],
+         () => {
 diff --git a/dist/vue-flow-core.mjs b/dist/vue-flow-core.mjs
-index 96b8e8d..4f1ce5d 100644
+index 96b8e8d..c14ebe6 100644
 --- a/dist/vue-flow-core.mjs
 +++ b/dist/vue-flow-core.mjs
-@@ -4737,6 +4737,7 @@ function updateEdgeAction(edge, newConnection, prevEdge, shouldReplaceId, trigge
+@@ -4510,57 +4510,61 @@ const alwaysValid$1 = () => true;
+ function resetRecentHandle(handleDomNode) {
+   handleDomNode == null ? void 0 : handleDomNode.classList.remove("valid", "connecting", "vue-flow__handle-valid", "vue-flow__handle-connecting");
+ }
+-function getNodesWithinDistance(position, nodeLookup, distance2) {
+-  const nodes = [];
+-  const rect = {
+-    x: position.x - distance2,
+-    y: position.y - distance2,
+-    width: distance2 * 2,
+-    height: distance2 * 2
+-  };
+-  for (const node of nodeLookup.values()) {
+-    if (getOverlappingArea(rect, nodeToRect(node)) > 0) {
+-      nodes.push(node);
+-    }
+-  }
+-  return nodes;
+-}
+-const ADDITIONAL_DISTANCE = 250;
+-function getClosestHandle(position, connectionRadius, nodeLookup, fromHandle) {
+-  var _a, _b;
+-  let closestHandles = [];
+-  let minDistance = Number.POSITIVE_INFINITY;
+-  const closeNodes = getNodesWithinDistance(position, nodeLookup, connectionRadius + ADDITIONAL_DISTANCE);
+-  for (const node of closeNodes) {
+-    const allHandles = [...((_a = node.handleBounds) == null ? void 0 : _a.source) ?? [], ...((_b = node.handleBounds) == null ? void 0 : _b.target) ?? []];
+-    for (const handle of allHandles) {
+-      if (fromHandle.nodeId === handle.nodeId && fromHandle.type === handle.type && fromHandle.id === handle.id) {
+-        continue;
+-      }
+-      const { x, y } = getHandlePosition(node, handle, handle.position, true);
+-      const distance2 = Math.sqrt((x - position.x) ** 2 + (y - position.y) ** 2);
+-      if (distance2 > connectionRadius) {
+-        continue;
+-      }
+-      if (distance2 < minDistance) {
+-        closestHandles = [{ ...handle, x, y }];
+-        minDistance = distance2;
+-      } else if (distance2 === minDistance) {
+-        closestHandles.push({ ...handle, x, y });
+-      }
+-    }
+-  }
+-  if (!closestHandles.length) {
+-    return null;
+-  }
+-  if (closestHandles.length > 1) {
+-    const oppositeHandleType = fromHandle.type === "source" ? "target" : "source";
+-    return closestHandles.find((handle) => handle.type === oppositeHandleType) ?? closestHandles[0];
+-  }
+-  return closestHandles[0];
++function createHandleIndex(nodes, radius) {
++  const cellSize = Math.max(1, radius);
++  const cells = new Map();
++  let order = 0;
++  for (const node of nodes.values()) {
++    const { width, height } = node.dimensions;
++    if (!node.computedPosition || !(width > 0 && height > 0)) continue;
++    const { x: left, y: top } = node.computedPosition;
++    const bounds = { left, top, right: left + width, bottom: top + height };
++    for (const handles of [node.handleBounds?.source, node.handleBounds?.target]) {
++      for (const handle of handles ?? []) {
++        const { x, y } = getHandlePosition(node, handle, handle.position, true);
++        const key = `${Math.floor(x / cellSize)},${Math.floor(y / cellSize)}`;
++        let bucket = cells.get(key);
++        if (!bucket) {
++          bucket = [];
++          cells.set(key, bucket);
++        }
++        bucket.push({ handle, x, y, bounds, order: order++ });
++      }
++    }
++  }
++  return { cells, cellSize };
++}
++function getClosestHandle(point, radius, index, from) {
++  if (!(radius >= 0)) return null;
++  const col = Math.floor(point.x / index.cellSize);
++  const row = Math.floor(point.y / index.cellSize);
++  const reach = radius + 250;
++  let best;
++  let distance = radius * radius;
++  // ACT: 格子至少与吸附半径等宽，只查邻近九格。端口完全重叠时仍按原有优先级逐个比较。
++  for (let dy = -1; dy <= 1; dy++) {
++    for (let dx = -1; dx <= 1; dx++) {
++      const bucket = index.cells.get(`${col + dx},${row + dy}`);
++      if (!bucket) continue;
++      for (const entry of bucket) {
++        const { handle, bounds } = entry;
++        if (from.nodeId === handle.nodeId && from.type === handle.type && from.id === handle.id) continue;
++        if (point.x + reach <= bounds.left || point.x - reach >= bounds.right || point.y + reach <= bounds.top || point.y - reach >= bounds.bottom) continue;
++        const squared = (entry.x - point.x) ** 2 + (entry.y - point.y) ** 2;
++        if (!(squared <= distance)) continue;
++        if (best && squared === distance) {
++          if (handle.type === best.handle.type ? entry.order >= best.order : handle.type === from.type) continue;
++        }
++        best = entry;
++        distance = squared;
++      }
++    }
++  }
++  return best ? { ...best.handle, x: best.x, y: best.y } : null;
+ }
+ function isValidHandle(event, {
+   handle,
++  findClosest,
+   connectionMode,
+   fromNodeId,
+   fromHandleId,
+@@ -4571,12 +4575,16 @@ function isValidHandle(event, {
+   isValidConnection = alwaysValid$1
+ }, edges, nodes, findNode, nodeLookup) {
+   const isTarget = fromType === "target";
+-  const handleDomNode = handle ? doc.querySelector(`.${lib}-flow__handle[data-id="${flowId}-${handle == null ? void 0 : handle.nodeId}-${handle == null ? void 0 : handle.id}-${handle == null ? void 0 : handle.type}"]`) : null;
+   const { x, y } = getEventPosition(event);
+   const handleBelow = doc.elementFromPoint(x, y);
+-  const handleToCheck = (handleBelow == null ? void 0 : handleBelow.classList.contains(`${lib}-flow__handle`)) ? handleBelow : handleDomNode;
++  let handleToCheck = handleBelow;
++  if (!handleBelow?.classList.contains(`${lib}-flow__handle`)) {
++    if (findClosest) handle = findClosest();
++    handleToCheck = handle ? doc.querySelector(`.${lib}-flow__handle[data-id="${flowId}-${handle.nodeId}-${handle.id}-${handle.type}"]`) : null;
++  }
+   const result = {
+     handleDomNode: handleToCheck,
++    closestHandle: handle,
+     isValid: false,
+     connection: null,
+     toHandle: null
+@@ -4628,15 +4636,6 @@ function getConnectionStatus(isInsideConnectionRadius, isHandleValid) {
+   }
+   return connectionStatus;
+ }
+-function isConnectionValid(isInsideConnectionRadius, isHandleValid) {
+-  let isValid = null;
+-  if (isHandleValid) {
+-    isValid = true;
+-  } else if (isInsideConnectionRadius && !isHandleValid) {
+-    isValid = false;
+-  }
+-  return isValid;
+-}
+ function getHandle(nodeId, handleType, handleId, nodeLookup, connectionMode, withAbsolutePosition = false) {
+   var _a, _b, _c;
+   const node = nodeLookup.get(nodeId);
+@@ -4737,6 +4736,7 @@ function updateEdgeAction(edge, newConnection, prevEdge, shouldReplaceId, trigge
  function createGraphNodes(nodes, findNode, triggerError) {
    const parentNodes = {};
    const nextNodes = [];
@@ -43,7 +831,7 @@ index 96b8e8d..4f1ce5d 100644
    for (let i = 0; i < nodes.length; ++i) {
      const node = nodes[i];
      if (!isNode(node)) {
-@@ -4750,9 +4751,10 @@ function createGraphNodes(nodes, findNode, triggerError) {
+@@ -4750,9 +4750,10 @@ function createGraphNodes(nodes, findNode, triggerError) {
        parentNodes[node.parentNode] = true;
      }
      nextNodes[i] = parsed;
@@ -55,8 +843,400 @@ index 96b8e8d..4f1ce5d 100644
      if (node.parentNode && !parentNode) {
        triggerError(new VueFlowError(ErrorCode.NODE_MISSING_PARENT, node.id, node.parentNode));
      }
-@@ -8286,6 +8288,8 @@ const _sfc_main$a = /* @__PURE__ */ defineComponent({
-       selectionStarted = true;
+@@ -5185,6 +5186,7 @@ function useGetPointerPosition() {
+ function alwaysValid() {
+   return true;
+ }
++const activeHandleDrags = new WeakMap();
+ function useHandle({
+   handleId,
+   nodeId,
+@@ -5214,182 +5216,140 @@ function useHandle({
+     edges,
+     nodes,
+     isValidConnection: isValidConnectionProp,
+-    nodeLookup
++    nodeLookup,
++    handleIndex
+   } = useVueFlow();
+-  let connection = null;
+-  let isValid = false;
+-  let handleDomNode = null;
++  let cancelActiveDrag;
++  tryOnScopeDispose(() => cancelActiveDrag?.());
+   function handlePointerDown(event) {
+-    var _a;
+-    const isTarget = toValue$1(type) === "target";
+-    const isMouseTriggered = isMouseEvent(event);
+-    const doc = getHostForElement(event.target);
+     const clickedHandle = event.currentTarget;
+-    if (clickedHandle && (isMouseTriggered && event.button === 0 || !isMouseTriggered)) {
+-      let onPointerMove = function(event2) {
+-        connectionPosition = getEventPosition(event2, containerBounds);
+-        closestHandle = getClosestHandle(
+-          pointToRendererPoint(connectionPosition, viewport.value, false, [1, 1]),
+-          connectionRadius.value,
+-          nodeLookup.value,
+-          fromHandle
+-        );
+-        if (!autoPanStarted) {
+-          autoPan();
+-          autoPanStarted = true;
++    if (!clickedHandle || (isMouseEvent(event) && event.button !== 0)) return;
++    const doc = getHostForElement(clickedHandle);
++    const view = clickedHandle.ownerDocument.defaultView;
++    const handleType = getHandleType(toValue$1(edgeUpdaterType), clickedHandle);
++    const bounds = vueFlowRef.value?.getBoundingClientRect();
++    if (!bounds || !handleType) return;
++    const fromHandle = getHandle(toValue$1(nodeId), handleType, toValue$1(handleId), nodeLookup.value, connectionMode.value);
++    if (!fromHandle) return;
++    activeHandleDrags.get(handleIndex)?.();
++    const fromNodeId = toValue$1(nodeId);
++    const fromHandleId = toValue$1(handleId);
++    const from = { ...fromHandle, nodeId: fromNodeId, type: handleType };
++    const initialPoint = getEventPosition(event, bounds);
++    const fromType = toValue$1(type) === "target" ? "target" : "source";
++    let lastMove;
++    let frame = 0;
++    let stopIndex;
++    let activeElement;
++    let activeValid;
++    let previousPoint;
++    let previousHandle;
++    let previousStatus;
++
++    function scheduleFrame() {
++      if (lastMove && !frame) frame = requestAnimationFrame(draw);
++    }
++    function findClosest(point) {
++      // 拖动期间订阅几何变化。节点或端口移动时，静止指针的吸附结果也会刷新。
++      stopIndex ??= watch(handleIndex, scheduleFrame);
++      return getClosestHandle(pointToRendererPoint(point, viewport.value), connectionRadius.value, handleIndex.value, from);
++    }
++    function preview(input, point = getEventPosition(input, bounds)) {
++      const result = isValidHandle(input, {
++        findClosest: () => findClosest(point),
++        connectionMode: connectionMode.value,
++        fromNodeId,
++        fromHandleId,
++        fromType,
++        isValidConnection: toValue$1(isValidConnection) || isValidConnectionProp.value || alwaysValid,
++        doc,
++        lib: "vue",
++        flowId
++      }, edges.value, nodes.value, findNode, nodeLookup.value);
++      const handle = result.toHandle ?? result.closestHandle ?? null;
++      const status = getConnectionStatus(!!handle, result.isValid);
++      const end = result.isValid && handle ? rendererPointToPoint(handle, viewport.value) : point;
++      if (end.x !== previousPoint?.x || end.y !== previousPoint?.y || status !== previousStatus
++        || handle?.nodeId !== previousHandle?.nodeId || handle?.type !== previousHandle?.type || handle?.id !== previousHandle?.id
++        || handle?.x !== previousHandle?.x || handle?.y !== previousHandle?.y || handle?.position !== previousHandle?.position
++        || handle?.width !== previousHandle?.width || handle?.height !== previousHandle?.height) {
++        updateConnection(end, handle, status);
++        previousPoint = end;
++        previousHandle = handle;
++        previousStatus = status;
++      }
++      const element = result.connection && result.connection.source !== result.connection.target ? result.handleDomNode : null;
++      if (element !== activeElement) {
++        resetRecentHandle(activeElement);
++        activeElement = element;
++        activeValid = undefined;
++        element?.classList.add("connecting", "vue-flow__handle-connecting");
++      }
++      if (element && activeValid !== result.isValid) {
++        element.classList.toggle("valid", result.isValid);
++        element.classList.toggle("vue-flow__handle-valid", result.isValid);
++        activeValid = result.isValid;
++      }
++      return result;
++    }
++    function draw() {
++      frame = 0;
++      const point = getEventPosition(lastMove, bounds);
++      const [x, y] = autoPanOnConnect.value ? calcAutoPan(point, bounds, autoPanSpeed.value) : [0, 0];
++      const panned = (x || y) && panBy({ x, y });
++      preview(lastMove, point);
++      if (panned) scheduleFrame();
++    }
++    function move(input) {
++      lastMove = input;
++      scheduleFrame();
++    }
++    function finish(input, cancelled) {
++      if (cancelActiveDrag !== cancel) return;
++      if (!cancelled && input.touches?.length) return;
++      cancelActiveDrag = undefined;
++      try {
++        // 松手时同步使用最终坐标和当前业务规则，即使最后一次移动仍在等下一帧。
++        const result = !cancelled && lastMove ? preview(input) : null;
++        if (result?.isValid && result.connection) {
++          if (onEdgeUpdate) onEdgeUpdate(input, result.connection);
++          else emits.connect(result.connection);
+         }
+-        const result = isValidHandle(
+-          event2,
+-          {
+-            handle: closestHandle,
+-            connectionMode: connectionMode.value,
+-            fromNodeId: toValue$1(nodeId),
+-            fromHandleId: toValue$1(handleId),
+-            fromType: isTarget ? "target" : "source",
+-            isValidConnection: isValidConnectionHandler,
+-            doc,
+-            lib: "vue",
+-            flowId,
+-            nodeLookup: nodeLookup.value
+-          },
+-          edges.value,
+-          nodes.value,
+-          findNode,
+-          nodeLookup.value
+-        );
+-        handleDomNode = result.handleDomNode;
+-        connection = result.connection;
+-        isValid = isConnectionValid(!!closestHandle, result.isValid);
+-        const newConnection2 = {
+-          // from stays the same
+-          ...previousConnection,
+-          isValid,
+-          to: result.toHandle && isValid ? rendererPointToPoint({ x: result.toHandle.x, y: result.toHandle.y }, viewport.value) : connectionPosition,
+-          toHandle: result.toHandle,
+-          toPosition: isValid && result.toHandle ? result.toHandle.position : oppositePosition[fromHandle.position],
+-          toNode: result.toHandle ? nodeLookup.value.get(result.toHandle.nodeId) : null
+-        };
+-        if (isValid && closestHandle && (previousConnection == null ? void 0 : previousConnection.toHandle) && newConnection2.toHandle && previousConnection.toHandle.type === newConnection2.toHandle.type && previousConnection.toHandle.nodeId === newConnection2.toHandle.nodeId && previousConnection.toHandle.id === newConnection2.toHandle.id && previousConnection.to.x === newConnection2.to.x && previousConnection.to.y === newConnection2.to.y) {
+-          return;
++        const endEvent = cancelled && input?.type !== "touchcancel" ? undefined : input;
++        emits.connectEnd(endEvent);
++        if (edgeUpdaterType) onEdgeUpdateEnd?.(endEvent);
++      } finally {
++        stopIndex?.();
++        cancelAnimationFrame(frame);
++        resetRecentHandle(activeElement);
++        doc.removeEventListener("mousemove", move);
++        doc.removeEventListener("mouseup", up);
++        doc.removeEventListener("touchmove", move);
++        doc.removeEventListener("touchend", up);
++        doc.removeEventListener("touchcancel", cancel);
++        view?.removeEventListener("blur", cancel);
++        if (activeHandleDrags.get(handleIndex) === cancel) {
++          activeHandleDrags.delete(handleIndex);
++          endConnection(input);
+         }
+-        const connectingHandle = closestHandle ?? result.toHandle;
+-        updateConnection(
+-          connectingHandle && isValid ? rendererPointToPoint(
+-            {
+-              x: connectingHandle.x,
+-              y: connectingHandle.y
+-            },
+-            viewport.value
+-          ) : connectionPosition,
+-          connectingHandle,
+-          getConnectionStatus(!!connectingHandle, isValid)
+-        );
+-        previousConnection = newConnection2;
+-        if (!closestHandle && !isValid && !handleDomNode) {
+-          return resetRecentHandle(prevActiveHandle);
+-        }
+-        if (connection && connection.source !== connection.target && handleDomNode) {
+-          resetRecentHandle(prevActiveHandle);
+-          prevActiveHandle = handleDomNode;
+-          handleDomNode.classList.add("connecting", "vue-flow__handle-connecting");
+-          handleDomNode.classList.toggle("valid", !!isValid);
+-          handleDomNode.classList.toggle("vue-flow__handle-valid", !!isValid);
+-        }
+-      }, onPointerUp = function(event2) {
+-        if ("touches" in event2 && event2.touches.length > 0) {
+-          return;
+-        }
+-        if ((closestHandle || handleDomNode) && connection && isValid) {
+-          if (!onEdgeUpdate) {
+-            emits.connect(connection);
+-          } else {
+-            onEdgeUpdate(event2, connection);
+-          }
+-        }
+-        emits.connectEnd(event2);
+-        if (edgeUpdaterType) {
+-          onEdgeUpdateEnd == null ? void 0 : onEdgeUpdateEnd(event2);
+-        }
+-        resetRecentHandle(prevActiveHandle);
+-        cancelAnimationFrame(autoPanId);
+-        endConnection(event2);
+-        autoPanStarted = false;
+-        isValid = false;
+-        connection = null;
+-        handleDomNode = null;
+-        doc.removeEventListener("mousemove", onPointerMove);
+-        doc.removeEventListener("mouseup", onPointerUp);
+-        doc.removeEventListener("touchmove", onPointerMove);
+-        doc.removeEventListener("touchend", onPointerUp);
+-      };
+-      const node = findNode(toValue$1(nodeId));
+-      let isValidConnectionHandler = toValue$1(isValidConnection) || isValidConnectionProp.value || alwaysValid;
+-      if (!isValidConnectionHandler && node) {
+-        isValidConnectionHandler = (!isTarget ? node.isValidTargetPos : node.isValidSourcePos) || alwaysValid;
+-      }
+-      let closestHandle;
+-      let autoPanId = 0;
+-      const { x, y } = getEventPosition(event);
+-      const handleType = getHandleType(toValue$1(edgeUpdaterType), clickedHandle);
+-      const containerBounds = (_a = vueFlowRef.value) == null ? void 0 : _a.getBoundingClientRect();
+-      if (!containerBounds || !handleType) {
+-        return;
+-      }
+-      const fromHandleInternal = getHandle(toValue$1(nodeId), handleType, toValue$1(handleId), nodeLookup.value, connectionMode.value);
+-      if (!fromHandleInternal) {
+-        return;
+-      }
+-      let prevActiveHandle;
+-      let connectionPosition = getEventPosition(event, containerBounds);
+-      let autoPanStarted = false;
+-      const autoPan = () => {
+-        if (!autoPanOnConnect.value) {
+-          return;
+-        }
+-        const [xMovement, yMovement] = calcAutoPan(connectionPosition, containerBounds, autoPanSpeed.value);
+-        panBy({ x: xMovement, y: yMovement });
+-        autoPanId = requestAnimationFrame(autoPan);
+-      };
+-      const fromHandle = {
+-        ...fromHandleInternal,
+-        nodeId: toValue$1(nodeId),
+-        type: handleType,
+-        position: fromHandleInternal.position
+-      };
+-      const fromNodeInternal = nodeLookup.value.get(toValue$1(nodeId));
+-      const from = getHandlePosition(fromNodeInternal, fromHandle, Position.Left, true);
+-      const newConnection = {
+-        inProgress: true,
+-        isValid: null,
+-        from,
+-        fromHandle,
+-        fromPosition: fromHandle.position,
+-        fromNode: fromNodeInternal,
+-        to: connectionPosition,
+-        toHandle: null,
+-        toPosition: oppositePosition[fromHandle.position],
+-        toNode: null
+-      };
+-      startConnection(
+-        {
+-          nodeId: toValue$1(nodeId),
+-          id: toValue$1(handleId),
+-          type: handleType,
+-          position: (clickedHandle == null ? void 0 : clickedHandle.getAttribute("data-handlepos")) || Position.Top,
+-          ...connectionPosition
+-        },
+-        {
+-          x: x - containerBounds.left,
+-          y: y - containerBounds.top
+-        }
+-      );
+-      emits.connectStart({ event, nodeId: toValue$1(nodeId), handleId: toValue$1(handleId), handleType });
+-      let previousConnection = newConnection;
+-      doc.addEventListener("mousemove", onPointerMove);
+-      doc.addEventListener("mouseup", onPointerUp);
+-      doc.addEventListener("touchmove", onPointerMove);
+-      doc.addEventListener("touchend", onPointerUp);
+-    }
++      }
++    }
++    function up(input) { finish(input, false); }
++    function cancel(input) { finish(input, true); }
++
++    cancelActiveDrag = cancel;
++    activeHandleDrags.set(handleIndex, cancel);
++    startConnection({
++      nodeId: fromNodeId, id: fromHandleId, type: handleType,
++      position: clickedHandle.getAttribute("data-handlepos") || Position.Top, ...initialPoint
++    }, initialPoint);
++    doc.addEventListener("mousemove", move);
++    doc.addEventListener("mouseup", up);
++    doc.addEventListener("touchmove", move);
++    doc.addEventListener("touchend", up);
++    doc.addEventListener("touchcancel", cancel);
++    view?.addEventListener("blur", cancel);
++    emits.connectStart({ event, nodeId: fromNodeId, handleId: fromHandleId, handleType });
+   }
+   function handleClick(event) {
+     var _a, _b;
+@@ -6962,10 +6922,12 @@ const _sfc_main$f = /* @__PURE__ */ defineComponent({
+     const handle = ref();
+     const isConnectableStart = toRef(() => typeof __props.connectableStart !== "undefined" ? __props.connectableStart : true);
+     const isConnectableEnd = toRef(() => typeof __props.connectableEnd !== "undefined" ? __props.connectableEnd : true);
+-    const isConnecting = toRef(
++    const showConnectionIndicator = computed(
+       () => {
++        if (isConnectableStart.value === isConnectableEnd.value) return isConnectableStart.value;
+         var _a, _b, _c, _d, _e, _f;
+-        return ((_a = connectionStartHandle.value) == null ? void 0 : _a.nodeId) === nodeId && ((_b = connectionStartHandle.value) == null ? void 0 : _b.id) === __props.id && ((_c = connectionStartHandle.value) == null ? void 0 : _c.type) === type.value || ((_d = connectionEndHandle.value) == null ? void 0 : _d.nodeId) === nodeId && ((_e = connectionEndHandle.value) == null ? void 0 : _e.id) === __props.id && ((_f = connectionEndHandle.value) == null ? void 0 : _f.type) === type.value;
++        const connecting = ((_a = connectionStartHandle.value) == null ? void 0 : _a.nodeId) === nodeId && ((_b = connectionStartHandle.value) == null ? void 0 : _b.id) === __props.id && ((_c = connectionStartHandle.value) == null ? void 0 : _c.type) === type.value || ((_d = connectionEndHandle.value) == null ? void 0 : _d.nodeId) === nodeId && ((_e = connectionEndHandle.value) == null ? void 0 : _e.id) === __props.id && ((_f = connectionEndHandle.value) == null ? void 0 : _f.type) === type.value;
++        return connecting ? isConnectableEnd.value : isConnectableStart.value;
+       }
+     );
+     const isClickConnecting = toRef(
+@@ -7071,7 +7033,7 @@ const _sfc_main$f = /* @__PURE__ */ defineComponent({
+             connecting: isClickConnecting.value,
+             connectablestart: isConnectableStart.value,
+             connectableend: isConnectableEnd.value,
+-            connectionindicator: isConnectable.value && (isConnectableStart.value && !isConnecting.value || isConnectableEnd.value && isConnecting.value)
++            connectionindicator: isConnectable.value && showConnectionIndicator.value
+           }
+         ]]),
+         onMousedown: onPointerDown,
+@@ -7966,6 +7928,7 @@ function useGetters(state, nodeLookup, edgeLookup) {
+       ...actions,
+       ...toRefs(reactiveState),
+       nodeLookup,
++      handleIndex: computed(() => createHandleIndex(nodeLookup.value, reactiveState.connectionRadius)),
+       edgeLookup,
+       emits,
+       id: id2,
+@@ -8224,6 +8187,9 @@ const _sfc_main$a = /* @__PURE__ */ defineComponent({
+       connectionLookup,
+       defaultEdgeOptions,
+       connectionStartHandle,
++      autoPanOnNodeDrag,
++      autoPanSpeed,
++      panBy,
+       panOnDrag
+     } = useVueFlow();
+     const container = shallowRef(null);
+@@ -8233,7 +8199,13 @@ const _sfc_main$a = /* @__PURE__ */ defineComponent({
+     const hasActiveSelection = toRef(() => elementsSelectable.value && (__props.isSelecting || userSelectionActive.value));
+     const connectionInProgress = toRef(() => connectionStartHandle.value !== null);
+     let selectionInProgress = false;
+-    let selectionStarted = false;
++    let selectionPointer;
++    let selectionOrigin;
++    let panFrame = 0;
++    useEventListener("blur", () => {
++      if (selectionPointer) finishSelection(selectionPointer);
++    });
++    onBeforeUnmount(() => cancelAnimationFrame(panFrame));
+     const deleteKeyPressed = useKeyPress(deleteKeyCode, { actInsideInputWithModifier: false });
+     const multiSelectKeyPressed = useKeyPress(multiSelectionKeyCode);
+     watch(deleteKeyPressed, (isKeyPressed) => {
+@@ -8277,15 +8249,21 @@ const _sfc_main$a = /* @__PURE__ */ defineComponent({
+     }
+     function onPointerDown(event) {
+       var _a, _b, _c;
++      if (selectionPointer || !elementsSelectable.value || !__props.isSelecting || event.button !== 0 || event.target !== container.value) {
++        return;
++      }
+       containerBounds.value = ((_a = vueFlowRef.value) == null ? void 0 : _a.getBoundingClientRect()) ?? null;
+-      if (!elementsSelectable.value || !__props.isSelecting || event.button !== 0 || event.target !== container.value || !containerBounds.value) {
++      if (!containerBounds.value) {
+         return;
+       }
+       (_c = (_b = event.target) == null ? void 0 : _b.setPointerCapture) == null ? void 0 : _c.call(_b, event.pointerId);
+       const { x, y } = getMousePosition(event, containerBounds.value);
+-      selectionStarted = true;
++      selectionPointer = event;
++      selectionOrigin = pointToRendererPoint({ x, y }, viewport.value);
        selectionInProgress = false;
        removeSelectedElements();
 +      selectedNodeIds.value = new Set();
@@ -64,3 +1244,109 @@ index 96b8e8d..4f1ce5d 100644
        userSelectionRect.value = {
          width: 0,
          height: 0,
+@@ -8297,13 +8275,27 @@ const _sfc_main$a = /* @__PURE__ */ defineComponent({
+       emits.selectionStart(event);
+     }
+     function onPointerMove(event) {
++      if (selectionPointer?.pointerId !== event.pointerId || !userSelectionRect.value) {
++        return;
++      }
++      selectionPointer = event;
++      selectionInProgress = true;
++      updateSelection(getMousePosition(event, containerBounds.value));
++      if (!panFrame && autoPanOnNodeDrag.value) panFrame = requestAnimationFrame(panSelection);
++    }
++    function panSelection() {
++      panFrame = 0;
++      if (!selectionPointer || !userSelectionActive.value || !autoPanOnNodeDrag.value) return;
++      const pointer = getMousePosition(selectionPointer, containerBounds.value);
++      const [x, y] = calcAutoPan(pointer, containerBounds.value, autoPanSpeed.value);
++      if (panBy({ x, y })) {
++        updateSelection(pointer);
++        panFrame = requestAnimationFrame(panSelection);
++      }
++    }
++    function updateSelection({ x: mouseX, y: mouseY }) {
+       var _a;
+-      if (!containerBounds.value || !userSelectionRect.value) {
+-        return;
+-      }
+-      selectionInProgress = true;
+-      const { x: mouseX, y: mouseY } = getEventPosition(event, containerBounds.value);
+-      const { startX = 0, startY = 0 } = userSelectionRect.value;
++      const { x: startX, y: startY } = rendererPointToPoint(selectionOrigin, viewport.value);
+       const nextUserSelectRect = {
+         startX,
+         startY,
+@@ -8345,13 +8337,15 @@ const _sfc_main$a = /* @__PURE__ */ defineComponent({
+       userSelectionActive.value = true;
+       nodesSelectionActive.value = false;
+     }
+-    function onPointerUp(event) {
+-      var _a;
+-      if (event.button !== 0 || !selectionStarted) {
++    function finishSelection(event) {
++      if (selectionPointer?.pointerId !== event.pointerId || (event.type === "pointerup" && event.button !== 0)) {
+         return;
+       }
+-      (_a = event.target) == null ? void 0 : _a.releasePointerCapture(event.pointerId);
+-      if (!userSelectionActive.value && userSelectionRect.value && event.target === container.value) {
++      selectionPointer = void 0;
++      cancelAnimationFrame(panFrame);
++      panFrame = 0;
++      if (container.value?.hasPointerCapture(event.pointerId)) container.value.releasePointerCapture(event.pointerId);
++      if (event.type === "pointerup" && !userSelectionActive.value && userSelectionRect.value && event.target === container.value) {
+         onClick(event);
+       }
+       userSelectionActive.value = false;
+@@ -8361,7 +8355,6 @@ const _sfc_main$a = /* @__PURE__ */ defineComponent({
+       if (__props.selectionKeyPressed) {
+         selectionInProgress = false;
+       }
+-      selectionStarted = false;
+     }
+     return (_ctx, _cache) => {
+       return openBlock(), createElementBlock("div", {
+@@ -8374,7 +8367,9 @@ const _sfc_main$a = /* @__PURE__ */ defineComponent({
+         onPointerenter: _cache[3] || (_cache[3] = (event) => hasActiveSelection.value ? void 0 : unref(emits).paneMouseEnter(event)),
+         onPointerdown: _cache[4] || (_cache[4] = (event) => hasActiveSelection.value ? onPointerDown(event) : unref(emits).paneMouseMove(event)),
+         onPointermove: _cache[5] || (_cache[5] = (event) => hasActiveSelection.value ? onPointerMove(event) : unref(emits).paneMouseMove(event)),
+-        onPointerup: _cache[6] || (_cache[6] = (event) => hasActiveSelection.value ? onPointerUp(event) : void 0),
++        onPointerup: finishSelection,
++        onPointercancel: finishSelection,
++        onLostpointercapture: finishSelection,
+         onPointerleave: _cache[7] || (_cache[7] = ($event) => unref(emits).paneMouseLeave($event))
+       }, [
+         renderSlot(_ctx.$slots, "default"),
+@@ -8574,23 +8569,14 @@ const _sfc_main$8 = /* @__PURE__ */ defineComponent({
+         const buttonAllowed = Array.isArray(panOnDrag.value) && panOnDrag.value.includes(eventButton) || selectionKeyCode.value === true && Array.isArray(panOnDrag.value) && !panOnDrag.value.includes(0) || !eventButton || eventButton <= 1;
+         return (!event.ctrlKey || panKeyPressed.value || isWheelEvent) && buttonAllowed;
+       });
+-      watch(
+-        [userSelectionActive, shouldPanOnDrag],
+-        () => {
+-          if (userSelectionActive.value && !isZoomingOrPanning.value) {
+-            d3Zoom.on("zoom", null);
+-          } else if (!userSelectionActive.value) {
+-            d3Zoom.on("zoom", (event) => {
+-              viewport.value = { x: event.transform.x, y: event.transform.y, zoom: event.transform.k };
+-              const flowTransform = eventToFlowTransform(event.transform);
+-              zoomedWithRightMouseButton = isRightClickPan(shouldPanOnDrag.value, mouseButton ?? 0);
+-              emits.viewportChange(flowTransform);
+-              emits.move({ event, flowTransform });
+-            });
+-          }
+-        },
+-        { immediate: true }
+-      );
++      d3Zoom.on("zoom", (event) => {
++        if (event.sourceEvent && userSelectionActive.value && !isZoomingOrPanning.value) return;
++        const flowTransform = eventToFlowTransform(event.transform);
++        viewport.value = { ...flowTransform };
++        zoomedWithRightMouseButton = isRightClickPan(shouldPanOnDrag.value, mouseButton ?? 0);
++        emits.viewportChange(flowTransform);
++        emits.move({ event, flowTransform });
++      });
+       watch(
+         [userSelectionActive, shouldPanOnScroll, panOnScrollMode, zoomKeyPressed, zoomOnPinch, preventScrolling, noWheelClassName],
+         () => {

@@ -11,6 +11,7 @@ const inputSchema = z.object({
   error: z.string().min(1).max(8000).optional(),
   cancelled: z.boolean().optional(),
   unavailable: z.boolean().optional(),
+  workspaceUnavailable: z.boolean().optional(),
 });
 
 export default Router().post("/", validateFields(inputSchema.shape), async (req, res) => {

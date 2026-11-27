@@ -90,7 +90,7 @@
 </p>
 <p align="center">
 <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" /> 
-<img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" /> 
+<img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" /> 
 <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" /> 
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ sudo spctl --master-disable
 
 ### 4.2 Docker ਸਥਾਪਨਾ
 
-ਪਹਿਲਾਂ Git, [Docker Engine](https://docs.docker.com/engine/install/) ਅਤੇ Docker Compose ਸਥਾਪਿਤ ਕਰੋ। Windows ਅਤੇ macOS ਉੱਤੇ Docker Desktop ਦਾ Linux container mode ਵਰਤ ਸਕਦੇ ਹੋ। ਰਿਪੋਜ਼ਟਰੀ ਵਿੱਚ [Dockerfile](../../Dockerfile), [Compose ਸੈਟਿੰਗਾਂ](../../compose.yaml) ਅਤੇ [ਬਿਲਡ ਤੋਂ ਬਾਹਰ ਰੱਖਣ ਦੇ ਨਿਯਮ](../../.dockerignore) ਦਿੱਤੇ ਹਨ। ਇਮੇਜ Bun 1.4.3 ਨਾਲ ਬਣਦੀ ਹੈ ਅਤੇ ਇਸ ਵਿੱਚ FFmpeg ਸ਼ਾਮਲ ਹੈ।
+ਪਹਿਲਾਂ Git, [Docker Engine](https://docs.docker.com/engine/install/) ਅਤੇ Docker Compose ਸਥਾਪਿਤ ਕਰੋ। Windows ਅਤੇ macOS ਉੱਤੇ Docker Desktop ਦਾ Linux container mode ਵਰਤ ਸਕਦੇ ਹੋ। ਰਿਪੋਜ਼ਟਰੀ ਵਿੱਚ [Dockerfile](../../Dockerfile), [Compose ਸੈਟਿੰਗਾਂ](../../compose.yaml) ਅਤੇ [ਬਿਲਡ ਤੋਂ ਬਾਹਰ ਰੱਖਣ ਦੇ ਨਿਯਮ](../../.dockerignore) ਦਿੱਤੇ ਹਨ। ਇਮੇਜ Bun 1.4.5 ਨਾਲ ਬਣਦੀ ਹੈ ਅਤੇ ਇਸ ਵਿੱਚ FFmpeg ਸ਼ਾਮਲ ਹੈ।
 
 <details>
 <summary><strong>Docker ਸਥਾਪਨਾ ਦੇ ਕਦਮ ਖੋਲ੍ਹੋ</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 ਸਰਵਰ ਸਥਾਪਨਾ
 
-Web ਅਤੇ Server ਨੂੰ ਸਿੱਧੇ Linux ਸਰਵਰ 'ਤੇ ਚਲਾਉਣ ਲਈ ਇਸ ਵਿਕਲਪ ਦੀ ਵਰਤੋਂ ਕਰੋ। ਹੇਠਾਂ ਦਿੱਤੀ ਉਦਾਹਰਨ Ubuntu / Debian ਅਤੇ ਪ੍ਰੋਜੈਕਟ ਦੇ ਨਿਰਧਾਰਤ ਸੰਸਕਰਣ, [Bun 1.4.3](https://bun.sh/docs/installation) ਦੀ ਵਰਤੋਂ ਕਰਦੀ ਹੈ।
+Web ਅਤੇ Server ਨੂੰ ਸਿੱਧੇ Linux ਸਰਵਰ 'ਤੇ ਚਲਾਉਣ ਲਈ ਇਸ ਵਿਕਲਪ ਦੀ ਵਰਤੋਂ ਕਰੋ। ਹੇਠਾਂ ਦਿੱਤੀ ਉਦਾਹਰਨ Ubuntu / Debian ਅਤੇ ਪ੍ਰੋਜੈਕਟ ਦੇ ਨਿਰਧਾਰਤ ਸੰਸਕਰਣ, [Bun 1.4.5](https://bun.sh/docs/installation) ਦੀ ਵਰਤੋਂ ਕਰਦੀ ਹੈ।
 
 <details>
 <summary><strong>ਸਰਵਰ ਸਥਾਪਨਾ ਦੇ ਕਦਮ ਖੋਲ੍ਹੋ</strong></summary>
@@ -453,7 +453,7 @@ Web ਅਤੇ Server ਨੂੰ ਸਿੱਧੇ Linux ਸਰਵਰ 'ਤੇ ਚਲ
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

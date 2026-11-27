@@ -1,7 +1,7 @@
 <template>
   <el-popover
     v-model:visible="visible"
-    trigger="hover"
+    :trigger="touchScreen ? 'click' : 'hover'"
     placement="top"
     :width="280"
     :offset="10"
@@ -36,6 +36,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { AgentContext, AgentStats } from "@toonflow/server/agent/types";
+import { touchScreen } from "@/lib/platform";
 
 const props = defineProps<{ usage?: AgentContext; stats?: AgentStats; contextWindow: number; disabled: boolean }>();
 const visible = defineModel<boolean>("visible", { default: false });

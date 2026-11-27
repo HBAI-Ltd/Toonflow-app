@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import { pluginI18n } from "@toonflow/i18n/plugin";
+import { localModelDefinitionsSchema, mergeLocalModelDeclarations, type LocalModelDefinition } from "@toonflow/plugin-server/localModels";
 import type { Rule } from "@form-create/element-ui";
 import { z } from "zod";
 import postcssConfig from "../../postcss.config.ts";
@@ -28,6 +30,7 @@ const tiptapGlobals = {
 };
 
 export interface NodeConfig {
+  localModels?: LocalModelDefinition[];
   name: string;
   displayName: string;
   author: string;
@@ -39,6 +42,7 @@ export interface NodeConfig {
 export function createNodeConfig(config: NodeConfig, configUrl: string, options: { outDir?: string; syncToData?: boolean } = {}) {
   const { name: nodeName } = config;
   const metadata = {
+    localModels: localModelDefinitionsSchema.optional().parse(config.localModels),
     displayName: config.displayName.trim(),
     author: config.author.trim(),
     github: config.github.trim(),
@@ -60,7 +64,11 @@ export function createNodeConfig(config: NodeConfig, configUrl: string, options:
     root,
     css: { postcss: postcssConfig },
     plugins: [
-      vue(),
+      pluginI18n(root),
+      vue({ features: {
+        // 每个节点都独立构建，同名相对路径的组件在同一张画布上也要隔离样式。
+        componentIdGenerator: (path, source, isProduction, getHash) => getHash(`node:${nodeName}/${path}${isProduction ? source : ""}`),
+      } }),
       {
         name: "syncNodeFile",
         enforce: "post",
@@ -83,17 +91,20 @@ export function createNodeConfig(config: NodeConfig, configUrl: string, options:
             throw error;
           });
           let serverTool: string | undefined;
+          let localModels = metadata.localModels;
           if (config.serverTool !== undefined) {
             const toolPath = resolve(root, config.serverTool);
             this.addWatchFile(toolPath);
             serverTool = await readFile(toolPath, "utf8");
             const toolHeader = serverTool.match(/^\/\*! toonflowTool:([^\r\n]*) \*\/(?:\r?\n|$)/)?.[1];
-            if (!toolHeader || JSON.parse(toolHeader).name !== nodeName || Buffer.byteLength(serverTool, "utf8") > 20 * 1024 * 1024) {
+            const toolMetadata = toolHeader && JSON.parse(toolHeader);
+            if (!toolMetadata || toolMetadata.name !== nodeName || Buffer.byteLength(serverTool, "utf8") > 20 * 1024 * 1024) {
               throw new Error(`节点配套服务必须是同名且不超过 20 MB 的已构建工具：${nodeName}`);
             }
+            if (toolMetadata.localModels !== undefined) localModels = mergeLocalModelDeclarations(localModels, toolMetadata.localModels);
           }
           // 压缩后再写入，防止元数据注释被移除。
-          chunk.code = `/*! toonflowNode:${JSON.stringify({ ...metadata, version, readme, ...(serverTool ? { serverTool } : {}) }).replaceAll("/", "\\u002f")} */\n${chunk.code}`;
+          chunk.code = `/*! toonflowNode:${JSON.stringify({ ...metadata, localModels, version, readme, ...(serverTool ? { serverTool } : {}) }).replaceAll("/", "\\u002f")} */\n${chunk.code}`;
           if (Buffer.byteLength(chunk.code, "utf8") > 20 * 1024 * 1024) throw new Error(`节点与配套服务合计不能超过 20 MB：${nodeName}`);
         },
         async writeBundle() {
@@ -138,6 +149,7 @@ export function createNodeConfig(config: NodeConfig, configUrl: string, options:
             "@toonflow/model-icons": "toonflowNodeHost.modelIcons",
             "@earendil-works/pi-agent-core": "toonflowNodeHost.ai",
             "@earendil-works/pi-ai": "toonflowNodeHost.ai",
+            "toonflow:i18n": "toonflowNodeHost.i18n",
           },
         },
       },

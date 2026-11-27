@@ -29,23 +29,26 @@
             </div>
           </el-form-item>
           <div class="parameterGrid">
+            <el-form-item v-if="activeModel?.type === 'video'" label="时长（秒）">
+              <el-select v-if="hasVideoRatios" v-model="duration" clearable aria-label="视频时长">
+                <el-option v-for="item in durations" :key="item" :value="item" />
+              </el-select>
+              <el-input-number v-else v-model="duration" :min="1" :precision="0" controlsPosition="right" aria-label="视频时长" />
+            </el-form-item>
+            <el-form-item v-if="activeModel?.type === 'video'" label="分辨率">
+              <el-select v-model="resolution" clearable filterable :allowCreate="!hasVideoRatios" defaultFirstOption aria-label="视频分辨率">
+                <el-option v-for="item in resolutions" :key="item" :label="item" :value="item" />
+              </el-select>
+            </el-form-item>
             <el-form-item v-if="activeModel?.type !== 'audio'" label="比例">
-              <el-select v-model="ratio" clearable filterable allowCreate defaultFirstOption aria-label="画面比例">
-                <el-option v-for="item in activeModel?.imageRatios ?? ['1:1', '16:9', '9:16']" :key="item" :label="item" :value="item" />
+              <el-select v-model="ratio" clearable filterable :allowCreate="!hasVideoRatios" defaultFirstOption aria-label="画面比例">
+                <el-option v-for="item in ratios" :key="item" :label="item" :value="item" />
               </el-select>
             </el-form-item>
             <el-form-item v-if="activeModel?.type === 'image'" label="尺寸">
               <el-select v-model="size" clearable filterable allowCreate defaultFirstOption aria-label="图片尺寸">
                 <el-option v-for="item in activeModel.imageSizes ?? ['1K', '2K', '4K']" :key="item" :label="item" :value="item" />
               </el-select>
-            </el-form-item>
-            <el-form-item v-if="activeModel?.type === 'video'" label="分辨率">
-              <el-select v-model="resolution" clearable filterable allowCreate defaultFirstOption aria-label="视频分辨率">
-                <el-option v-for="item in resolutions" :key="item" :label="item" :value="item" />
-              </el-select>
-            </el-form-item>
-            <el-form-item v-if="activeModel?.type === 'video'" label="时长（秒）">
-              <el-input-number v-model="duration" :min="1" :precision="0" controlsPosition="right" aria-label="视频时长" />
             </el-form-item>
             <el-form-item v-if="activeModel?.type === 'video'" label="生成音频"><el-switch v-model="generateAudio" aria-label="生成音频" /></el-form-item>
             <el-form-item v-if="activeModel?.type === 'audio'" label="音色">
@@ -108,7 +111,7 @@ import { locale, translate } from "@toonflow/i18n/vue";
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import axios from "axios";
 import { IconPlus, IconX, IconMusic, IconPlayerPlay, IconPlayerStop } from "@tabler/icons-vue";
-import type { Provider } from "@toonflow/providers";
+import { getVideoRatios, type Provider } from "@toonflow/providers";
 import videoPlayer from "@/components/videoPlayer.vue";
 import formCreate, { copyProviderRules, type Api, type Options } from "@toonflow/provider-web/formCreate";
 import type { MediaProvider, MediaProviderModel } from "@toonflow/provider-web/types";
@@ -135,12 +138,20 @@ const formOptions = computed<Options>(() => ({ form: { labelPosition: "top", dis
 const mediaModels = computed(() => (props.models ?? props.provider.models).filter(model => model.type !== "text") as Provider["models"]);
 const selectedModelId = ref("");
 const activeModel = computed(() => mediaModels.value.find(model => model.id === selectedModelId.value));
-const resolutions = computed(() => [...new Set(activeModel.value?.durationResolutionMap?.flatMap(item => item.resolution) ?? ["720p", "1080p"])]);
 const prompt = ref("");
 const ratio = ref("");
 const size = ref("");
 const resolution = ref("");
 const duration = ref<number>();
+const mappings = computed(() => activeModel.value?.type === "video" ? activeModel.value.durationResolutionMap : undefined);
+const hasVideoRatios = computed(() => mappings.value?.some(row => row.ratio?.length) ?? false);
+const durations = computed(() => [...new Set(mappings.value?.flatMap(row => row.duration))].sort((a, b) => a - b));
+const resolutions = computed(() => [...new Set(mappings.value
+  ?.filter(row => !hasVideoRatios.value || duration.value === undefined || row.duration.includes(duration.value))
+  .flatMap(row => row.resolution) ?? ["720p", "1080p"])]);
+const ratios = computed(() => activeModel.value?.type === "video"
+  ? getVideoRatios(hasVideoRatios.value ? mappings.value : undefined, duration.value, resolution.value)
+  : activeModel.value?.imageRatios ?? ["1:1", "16:9", "9:16"]);
 const generateAudio = ref(false);
 const voice = ref("");
 const extraParameters = ref("");
@@ -406,6 +417,12 @@ watch(() => props.modelId, modelId => { if (modelId) selectedModelId.value = mod
 watch(mediaModels, models => {
   if (!models.some(model => model.id === selectedModelId.value)) selectedModelId.value = models[0]?.id ?? "";
 }, { immediate: true });
+watch([durations, resolutions, ratios], () => {
+  if (!hasVideoRatios.value) return;
+  if (duration.value !== undefined && !durations.value.includes(duration.value)) duration.value = undefined;
+  if (resolution.value && !resolutions.value.includes(resolution.value)) resolution.value = "";
+  if (ratio.value && !ratios.value.includes(ratio.value)) ratio.value = "";
+});
 watch(busy, value => emit("busyChange", value), { flush: "sync" });
 onBeforeUnmount(reset);
 defineExpose({ run, stop, reset });

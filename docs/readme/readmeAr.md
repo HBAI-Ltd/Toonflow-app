@@ -90,7 +90,7 @@
 </p>
 <p align="center">
   <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" />&nbsp;
-  <img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" />&nbsp;
+  <img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" />&nbsp;
   <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" />&nbsp;
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ sudo spctl --master-disable
 
 ### 4.2 التثبيت باستخدام Docker
 
-ثبّت أولًا Git و[Docker Engine](https://docs.docker.com/engine/install/) وDocker Compose. على Windows وmacOS، يمكنك استخدام Docker Desktop في وضع حاويات Linux. يتضمن المستودع [Dockerfile](../../Dockerfile) و[إعدادات Compose](../../compose.yaml) و[استثناءات البناء](../../.dockerignore). تُبنى الصورة باستخدام Bun 1.4.3 وتتضمن FFmpeg.
+ثبّت أولًا Git و[Docker Engine](https://docs.docker.com/engine/install/) وDocker Compose. على Windows وmacOS، يمكنك استخدام Docker Desktop في وضع حاويات Linux. يتضمن المستودع [Dockerfile](../../Dockerfile) و[إعدادات Compose](../../compose.yaml) و[استثناءات البناء](../../.dockerignore). تُبنى الصورة باستخدام Bun 1.4.5 وتتضمن FFmpeg.
 
 <details>
 <summary><strong>عرض خطوات التثبيت باستخدام Docker</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 التثبيت على الخادم
 
-استخدم هذا الخيار لتشغيل Web وServer مباشرة على خادم Linux. يستخدم المثال التالي Ubuntu / Debian وإصدار المشروع المحدد، [Bun 1.4.3](https://bun.sh/docs/installation).
+استخدم هذا الخيار لتشغيل Web وServer مباشرة على خادم Linux. يستخدم المثال التالي Ubuntu / Debian وإصدار المشروع المحدد، [Bun 1.4.5](https://bun.sh/docs/installation).
 
 <details>
 <summary><strong>عرض خطوات التثبيت على الخادم</strong></summary>
@@ -453,7 +453,7 @@ docker compose start
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

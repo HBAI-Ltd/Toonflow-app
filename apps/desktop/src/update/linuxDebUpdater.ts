@@ -1,60 +1,18 @@
-import { createWriteStream, lstatSync, mkdir, mkdtemp, rename, rm } from "@toonflow/file";
+import { lstatSync, mkdir, mkdtemp, rename, rm } from "@toonflow/file";
 import { file } from "@toonflow/file/bun";
 import type { updateSnapshot } from "@toonflow/server/desktop";
 import { t } from "@toonflow/server/i18n";
 import { execFile, spawn } from "node:child_process";
-import { createHash, randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
-import { Readable, Transform } from "node:stream";
-import { pipeline } from "node:stream/promises";
 import { promisify } from "node:util";
+import { downloadPackage, matches, packageAssetName, readInstalledVersion, readPackageManifest, shaPattern, validAsset, type packageAsset, type versionInfo } from "./packageDownload";
 
 const execFileAsync = promisify(execFile);
-const maxSize = 512 * 1024 * 1024;
-const shaPattern = /^[a-f0-9]{64}$/;
-const buildPattern = /^[a-zA-Z0-9]{1,64}$/;
-const versionPattern = /^\d+\.\d+\.\d+$/;
-type asset = { file: string; size: number; sha256: string };
-type debPatch = asset & { fromHash: string; fromSha256: string };
-type manifestInfo = { version: string; hash: string; deb: asset & { patch?: debPatch } };
-type versionInfo = { identifier: string; version: string; channel: string; hash: string; baseUrl: string };
+type debPatch = packageAsset & { fromHash: string; fromSha256: string };
+type manifestInfo = { version: string; hash: string; deb: packageAsset & { patch?: debPatch } };
 type lifecycle = { requestQuitApproval(): unknown; cancelQuitApproval(approval: unknown): void; quitAfterApproval(approval: unknown): void };
-
-function validAsset(value: asset | undefined, name: string) {
-  return value?.file === name && typeof value.sha256 === "string" && shaPattern.test(value.sha256)
-    && Number.isSafeInteger(value.size) && value.size > 0 && value.size <= maxSize;
-}
-
-async function matches(path: string, sha256: string, size?: number) {
-  const stat = lstatSync(path, { throwIfNoEntry: false });
-  if (!stat?.isFile() || stat.size > maxSize || (size !== undefined && size !== stat.size)) return false;
-  const digest = createHash("sha256");
-  for await (const chunk of file(path).stream()) digest.update(chunk);
-  return digest.digest("hex") === sha256;
-}
-
-// 系统即将以管理员身份安装此包；包括重定向在内只接受 HTTPS，本机自定义更新源可用 HTTP。
-async function fetchAsset(baseUrl: string, name: string, signal: AbortSignal) {
-  let url = new URL(name, baseUrl.replace(/\/?$/, "/"));
-  let requiresHttps = false;
-  url.searchParams.set("transaction", randomUUID());
-  for (let redirect = 0; redirect <= 5; redirect++) {
-    requiresHttps ||= url.protocol === "https:";
-    if (url.username || url.password || (url.protocol !== "https:" &&
-      (requiresHttps || url.protocol !== "http:" || !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)))) {
-      throw new Error(t`更新地址无效`);
-    }
-    const response = await fetch(url, { signal, redirect: "manual" });
-    if (response.ok && response.body) return response.body;
-    await response.body?.cancel();
-    const location = response.headers.get("location");
-    if (![301, 302, 303, 307, 308].includes(response.status) || !location) throw new Error(t`下载更新失败：HTTP ${response.status}`);
-    url = new URL(location, url);
-  }
-  throw new Error(t`更新地址无效`);
-}
 
 export default function createLinuxDebUpdater(resourcesDirectory: string, dataDirectory: string, lifecycle: lifecycle) {
   const cacheHome = process.env.XDG_CACHE_HOME;
@@ -67,13 +25,7 @@ export default function createLinuxDebUpdater(resourcesDirectory: string, dataDi
   let updateProgress: updateSnapshot["updateProgress"];
 
   async function getLocalInfo() {
-    if (!local) {
-      const info = await file(join(resourcesDirectory, "version.json")).json();
-      if (info?.identifier !== "local.toonflow.desktop" || info.channel !== "stable" || typeof info.version !== "string"
-        || !versionPattern.test(info.version) || typeof info.hash !== "string" || !buildPattern.test(info.hash)
-        || typeof info.baseUrl !== "string") throw new Error(t`桌面安装标识无效，请重新安装`);
-      local = info;
-    }
+    local ??= readInstalledVersion(resourcesDirectory, ["stable"]);
     return local;
   }
 
@@ -82,20 +34,7 @@ export default function createLinuxDebUpdater(resourcesDirectory: string, dataDi
     busy = true;
     try {
       const info = await getLocalInfo();
-      const prefix = `${info.channel}-linux-${process.arch}`;
-      const body = await fetchAsset(info.baseUrl, `${prefix}-update.json`, AbortSignal.timeout(30000));
-      const chunks: Uint8Array[] = [];
-      let length = 0;
-      for await (const chunk of body) {
-        length += chunk.length;
-        if (length > 65536) throw new Error(t`更新清单过大`);
-        chunks.push(chunk);
-      }
-      const next = JSON.parse(Buffer.concat(chunks).toString("utf8"));
-      if (next?.schemaVersion !== 1 || next.identifier !== info.identifier || next.channel !== info.channel
-        || next.platform !== "linux" || next.arch !== process.arch || typeof next.version !== "string" || !versionPattern.test(next.version)
-        || typeof next.hash !== "string" || !buildPattern.test(next.hash)) throw new Error(t`更新清单不匹配当前应用`);
-      if (Bun.semver.order(next.version, info.version) < 0) throw new Error(t`更新源版本 ${next.version} 早于当前版本 ${info.version}，已阻止降级`);
+      const next = await readPackageManifest(info, "linux");
       // 旧版清单未记录 DEB 摘要；同构建无须更新，不能用缺少校验值的包执行系统安装。
       if (next.hash !== info.hash && !validAsset(next.deb, `toonflow-${next.version}-linux-${process.arch}.deb`)) {
         throw new Error(t`更新清单不匹配当前应用`);
@@ -111,20 +50,8 @@ export default function createLinuxDebUpdater(resourcesDirectory: string, dataDi
     return state;
   }
 
-  async function download(asset: asset, name: string, path: string) {
-    const signal = AbortSignal.timeout(15 * 60_000);
-    const body = await fetchAsset(local.baseUrl, name, signal);
-    const digest = createHash("sha256");
-    const progress: NonNullable<typeof updateProgress> = { phase: "downloading", received: 0, total: asset.size };
-    updateProgress = progress;
-    await pipeline(Readable.from(body), new Transform({ transform(chunk: Buffer, encoding, callback) {
-      progress.received += chunk.length;
-      if (progress.received > asset.size) return callback(new Error(t`更新包大小与清单不一致`));
-      digest.update(chunk);
-      callback(null, chunk);
-    } }), createWriteStream(path, { flags: "wx", mode: 0o600 }), { signal });
-    if (progress.received !== asset.size || digest.digest("hex") !== asset.sha256) throw new Error(t`更新包校验失败`);
-    progress.phase = "preparing";
+  function download(asset: packageAsset, name: string, path: string) {
+    return downloadPackage(local.baseUrl, asset, name, path, progress => { updateProgress = progress; });
   }
 
   async function findBase(sha256: string) {
@@ -172,8 +99,7 @@ export default function createLinuxDebUpdater(resourcesDirectory: string, dataDi
           }
         }
         if (!patched) {
-          const official = local.baseUrl.replace(/\/$/, "") === "https://api.toonflow.net/web/version/desktopUpdates";
-          await download(deb, official ? `${prefix}-${target.hash}.deb` : deb.file, nextPath);
+          await download(deb, packageAssetName(local.baseUrl, `${prefix}-${target.hash}.deb`, deb.file), nextPath);
         }
         await rename(nextPath, finalPath);
         console.log(`DEB 更新包已准备：${local.version} → ${target.version}，${patched ? "Patch" : "全量"}`);

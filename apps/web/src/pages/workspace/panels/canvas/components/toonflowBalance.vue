@@ -120,8 +120,7 @@ onBeforeUnmount(() => {
   font-variant-numeric: tabular-nums;
 
   .balanceTrigger {
-    min-width: 164px;
-    width: 100%;
+    width: fit-content;
     height: auto;
     padding: 5px 8px;
     font-size: 12px;
@@ -130,8 +129,6 @@ onBeforeUnmount(() => {
     :deep(> span) {
       display: grid;
       gap: 2px;
-      width: 100%;
-      min-width: 0;
     }
 
     .balanceRow, .bonusRow {

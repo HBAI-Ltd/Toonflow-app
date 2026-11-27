@@ -66,7 +66,11 @@ async function openLink(event: MouseEvent) {
 </script>
 
 <style lang="scss">
-.nodeMarkdownPreview .previewError { color: var(--el-color-danger); font-size: 12px; }
+.nodeMarkdownPreview {
+  .previewError { color: var(--el-color-danger); font-size: 12px; }
+  // 节点默认仅 220px 宽，单元格最小宽度会让多列表格撑出横向滚动；预览里按字符折行。
+  .textNodeMarkdown :is(td, th) { min-width: 0; padding: 4px 6px; }
+}
 .textNodeMarkdown {
   color: var(--el-text-color-primary);
   font-size: 14px;

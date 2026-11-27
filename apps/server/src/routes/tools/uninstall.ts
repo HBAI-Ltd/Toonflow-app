@@ -28,6 +28,7 @@ export default router.delete("/", validateFields({ name: u.plugins.toolNameSchem
       await rm(toolResources, { recursive: true });
     }
     await unlink(path);
+    u.localModels.notifyModelCatalogChange();
     await unlink(resolve(u.plugins.toolsDirectory, `${name}.disabled`)).catch((err: NodeJS.ErrnoException) => {
       if (err.code !== "ENOENT") throw err;
     });

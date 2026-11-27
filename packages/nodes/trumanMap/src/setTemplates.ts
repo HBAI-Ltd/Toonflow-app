@@ -1,3 +1,4 @@
+import { markMessages } from "@toonflow/i18n/vue";
 import { builtinAssets } from "./assetLibrary";
 import { catalogAssets } from "./assetCatalog";
 import { getSceneLife } from "./lifeDocument";
@@ -40,7 +41,7 @@ const view = (position: [number, number, number], target: [number, number, numbe
 export const setTemplates: SetTemplate[] = [
   {
     milling: ["古街"],
-    id: "ancientStreet", half: [18, 38], name: "古街集市", genre: "古装",
+    id: "ancientStreet", half: [18, 38], name: markMessages("古街集市"), genre: "古装",
     view: view([18, 22, 46], [-1, 0, -4]),
     async build(run) {
       await run("createBrushPath", { mode: "paving", style: "flagstone", points: [{ x: 0, z: -38 }, { x: 0, z: 38 }], width: 12, height: 0.06 });
@@ -51,7 +52,7 @@ export const setTemplates: SetTemplate[] = [
   {
     // 夜戏街景：同一条古街，晚上8点半，暖色灯笼光为主、冷蓝月光补轮廓，暗而看得清。
     milling: ["古街"],
-    id: "nightMarket", half: [18, 38], name: "古街夜市", genre: "古装",
+    id: "nightMarket", half: [18, 38], name: markMessages("古街夜市"), genre: "古装",
     view: view([18, 22, 46], [-1, 0, -4]),
     async build(run) {
       await setTemplates.find(template => template.id === "ancientStreet")!.build(run);
@@ -62,7 +63,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     milling: ["客人"],
-    id: "inn", half: [7, 5], name: "客栈大堂", genre: "古装",
+    id: "inn", half: [7, 5], name: markMessages("客栈大堂"), genre: "古装",
     view: view([0, 11, 14], [0, 0, -1]),
     async build(run) {
       await run("createBrushPath", { mode: "paving", style: "boardwalk", points: [{ x: -7, z: 0 }, { x: 7, z: 0 }], width: 10, height: 0.06 });
@@ -76,7 +77,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     milling: ["家眷"],
-    id: "courtyard", half: [11, 11], name: "四合院", genre: "古装",
+    id: "courtyard", half: [11, 11], name: markMessages("四合院"), genre: "古装",
     view: view([9, 13, 22], [0, 0, 1]),
     async build(run) {
       await run("arrangeAssets", { pattern: "walls", center: { x: 0, z: 0 }, width: 19, depth: 20, sides: ["back", "left", "right", "front"], bySide: { back: ["easternCnCourtyardHouse"], left: ["easternCnCourtyardHouse", "easternCnCourtyardHouse"], right: ["easternCnCourtyardHouse", "easternCnCourtyardHouse"], front: ["easternCnGatehouse"] }, gap: 0.4, enclose: { style: "whiteTile", height: 2.6 }, name: "四合院" });
@@ -87,7 +88,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     milling: ["营兵"],
-    id: "camp", half: [15, 24], name: "军营", genre: "古装",
+    id: "camp", half: [15, 24], name: markMessages("军营"), genre: "古装",
     view: view([0, 26, 38], [0, 0, 11]),
     async build(run) {
       await run("addAsset", { assetId: "nature4510", position: { x: 0, y: 0, z: 0 } });
@@ -99,7 +100,7 @@ export const setTemplates: SetTemplate[] = [
     walkers: { name: "巡营", path: [{ x: -14, z: 22 }, { x: 14, z: 22 }], width: 2, count: 3 },
   },
   {
-    id: "throneRoom", half: [8, 14], name: "王座大殿", genre: "奇幻",
+    id: "throneRoom", half: [8, 14], name: markMessages("王座大殿"), genre: "奇幻",
     view: view([0, 12, 24], [0, 1, -2]),
     async build(run) {
       await run("createBrushPath", { mode: "paving", style: "marble", points: [{ x: 0, z: -14 }, { x: 0, z: 14 }], width: 16, height: 0.06 });
@@ -111,7 +112,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     milling: ["同事"],
-    id: "office", half: [9, 7], name: "开放办公室", genre: "现代",
+    id: "office", half: [9, 7], name: markMessages("开放办公室"), genre: "现代",
     view: view([0, 16, 17], [0, 0, 0]),
     async build(run) {
       await run("createBrushPath", { mode: "paving", style: "concreteSlab", points: [{ x: -9, z: 0 }, { x: 9, z: 0 }], width: 14, height: 0.05 });
@@ -123,7 +124,7 @@ export const setTemplates: SetTemplate[] = [
     },
   },
   {
-    id: "lectureHall", half: [15, 17], name: "报告厅", genre: "现代",
+    id: "lectureHall", half: [15, 17], name: markMessages("报告厅"), genre: "现代",
     view: view([0, 13, 20], [0, 0, 1]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture0141", position: { x: 0, y: 0, z: -6 } });
@@ -135,7 +136,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     milling: ["行人"],
-    id: "modernStreet", half: [20, 38], name: "现代街道", genre: "现代",
+    id: "modernStreet", half: [20, 38], name: markMessages("现代街道"), genre: "现代",
     // 沿街纵深看过去（以前斜上方的视角被右侧楼群整块挡住）。
     view: view([3, 10, 44], [0, 1, 10]),
     async build(run) {
@@ -152,7 +153,7 @@ export const setTemplates: SetTemplate[] = [
     drivers: [{ name: "行驶车辆1", path: [{ x: -2.2, z: -34 }, { x: -2.2, z: 34 }], speed: 5 }, { name: "行驶车辆2", path: [{ x: 1.4, z: 34 }, { x: 1.4, z: -34 }], speed: 5 }],
   },
   {
-    id: "interrogation", half: [3.2, 2.6], name: "审讯室", genre: "现代",
+    id: "interrogation", half: [3.2, 2.6], name: markMessages("审讯室"), genre: "现代",
     view: view([0.6, 2.4, 4.6], [0.2, 0.9, 0]),
     async build(run) {
       // 现成的“现代审讯室三壁内景（单向玻璃）”整块布景；射线实测：地面0.1米，审讯桌在中间（x≈-0.6..0.8），两端各一把椅子（x≈-0.9、+1.3）。
@@ -165,7 +166,7 @@ export const setTemplates: SetTemplate[] = [
     },
   },
   {
-    id: "courtroom", half: [6.5, 5.5], name: "法庭", genre: "现代",
+    id: "courtroom", half: [6.5, 5.5], name: markMessages("法庭"), genre: "现代",
     view: view([0, 7, 13], [0, 0.5, -1.2]),
     async build(run) {
       // 用现成的“现代法庭三壁内景”整块布景（审判席、原被告席、栏杆、旁听席），人按布景里的座位放。
@@ -180,7 +181,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     milling: ["家人"],
-    id: "livingRoom", half: [5, 4], name: "现代客厅", genre: "现代",
+    id: "livingRoom", half: [5, 4], name: markMessages("现代客厅"), genre: "现代",
     view: view([0, 7.5, 10], [0, 0.5, -0.5]),
     async build(run) {
       await run("createBrushPath", { mode: "paving", style: "boardwalk", points: [{ x: -4.5, z: 0 }, { x: 4.5, z: 0 }], width: 7, height: 0.05 });
@@ -193,7 +194,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     milling: ["客人"],
-    id: "cafe", half: [6, 5], name: "咖啡馆", genre: "现代",
+    id: "cafe", half: [6, 5], name: markMessages("咖啡馆"), genre: "现代",
     view: view([0, 10, 13], [0, 0, -0.5]),
     async build(run) {
       await run("createBrushPath", { mode: "paving", style: "herringbone", points: [{ x: -6, z: 0 }, { x: 6, z: 0 }], width: 9, height: 0.05 });
@@ -207,7 +208,7 @@ export const setTemplates: SetTemplate[] = [
     },
   },
   {
-    id: "classroom", half: [6, 5], name: "教室", genre: "现代",
+    id: "classroom", half: [6, 5], name: markMessages("教室"), genre: "现代",
     view: view([0, 10, 12], [0, 0, -1]),
     async build(run) {
       await run("createBrushPath", { mode: "paving", style: "concreteSlab", points: [{ x: -6, z: 0 }, { x: 6, z: 0 }], width: 9, height: 0.05 });
@@ -220,7 +221,7 @@ export const setTemplates: SetTemplate[] = [
     },
   },
   {
-    id: "church", half: [8, 12], name: "教堂婚礼", genre: "现代",
+    id: "church", half: [8, 12], name: markMessages("教堂婚礼"), genre: "现代",
     view: view([0, 8, 17], [0, 1, -3]),
     async build(run) {
       await run("createBrushPath", { mode: "paving", style: "marble", points: [{ x: 0, z: -12 }, { x: 0, z: 12 }], width: 16, height: 0.05 });
@@ -232,7 +233,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     milling: ["医护"],
-    id: "ward", half: [6, 9], name: "医院病房", genre: "现代",
+    id: "ward", half: [6, 9], name: markMessages("医院病房"), genre: "现代",
     view: view([0, 14, 13], [0, 0, -1]),
     async build(run) {
       await run("createBrushPath", { mode: "paving", style: "concreteSlab", points: [{ x: 0, z: -9 }, { x: 0, z: 9 }], width: 12, height: 0.05 });
@@ -243,7 +244,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代医院走廊三壁内景”（射线实测：两侧墙 x=±1.8，尽头墙 z=-6.8，+z端敞开；右墙边候诊长椅 x=1.4、z=-5.6..-0.8，左侧推床 x=-1.4..-1.0、z=3.6..5.2）；家属靠左墙站着说话，医护沿走廊中线偏右来回走，不从家属中间穿过。
-    id: "hospitalCorridor", half: [3, 8], name: "医院走廊", genre: "现代",
+    id: "hospitalCorridor", half: [3, 8], name: markMessages("医院走廊"), genre: "现代",
     view: view([0.6, 2.6, 11], [0, 1, -2]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2896", name: "医院走廊", position: { x: 0, y: 0, z: 0 } });
@@ -254,7 +255,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代便利店三壁内景”（射线实测：墙 x=-5.0..4.2、后墙 z=-3.2 冰柜，+z敞开；两排货架 z=0 与 z=1.6；收银台 x=2.2..2.6、z=0.8..2.4）。夜里的便利店。
-    id: "convenienceStore", half: [5.5, 4], name: "便利店", genre: "现代",
+    id: "convenienceStore", half: [5.5, 4], name: markMessages("便利店"), genre: "现代",
     view: view([2, 3.4, 8.5], [0, 0.8, -0.5]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2909", name: "便利店", position: { x: 0, y: 0, z: 0 } });
@@ -269,7 +270,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代酒吧三壁内景”（射线实测：墙 x=-4.8..4.4、后墙 z=-3.4，+z敞开；吧台 z=-1.4..-1.0、x=-2.8..2.4，吧凳 z=-0.2；右墙卡座 x≈3.0；左侧大桌 x=-4.4..-2.4、z=1.0..1.8）。
-    id: "bar", half: [5.2, 4], name: "酒吧", genre: "现代",
+    id: "bar", half: [5.2, 4], name: markMessages("酒吧"), genre: "现代",
     view: view([0.5, 3.6, 9], [0, 0.9, -1]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2899", name: "酒吧", position: { x: 0, y: 0, z: 0 } });
@@ -283,7 +284,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装衙门公堂三壁内景”（射线从2.2米往下实测：高台 z=-3.0..-1.4、高约0.4，案桌 x=-1.8..1.2、z=-2.6..-2.0，案后官椅座面约 x=-0.4、z=-2.75，椅背后贴着一道折屏 z≈-2.9（座位再往后就钻进屏风里了）；堂下 z=-1.0..3.4 空地，+z敞开）。
-    id: "yamen", half: [5.5, 4], name: "衙门公堂", genre: "古装",
+    id: "yamen", half: [5.5, 4], name: markMessages("衙门公堂"), genre: "古装",
     view: view([0.5, 3.4, 8.5], [-0.4, 0.9, -1]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2847", name: "衙门公堂", position: { x: 0, y: 0, z: 0 } });
@@ -296,7 +297,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装大牢囚室三壁内景”（射线从2.2米往下实测：左半边稻草堆 x=-2.4..-0.4、z=-1.6..0.4，长凳 x=-2.4..-1.2、z=1.2..1.6，右后角木桶）；犯人坐长凳，探监的人站在囚室里。
-    id: "prison", half: [3.2, 3], name: "大牢", genre: "古装",
+    id: "prison", half: [3.2, 3], name: markMessages("大牢"), genre: "古装",
     view: view([0.4, 2.6, 6.5], [-0.6, 0.8, 0]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2848", name: "大牢", position: { x: 0, y: 0, z: 0 } });
@@ -309,7 +310,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装喜堂三壁内景”（射线从2.2米往下实测：供桌 x=-1.2..0.4、z=-2.4..-2.0，两把太师椅座面约 x=-1.0/0.6、z=-1.2，红毯 z=-0.6..1.8）；高堂坐椅、新人站红毯面向高堂、司仪在侧、宾客两边站。
-    id: "weddingHall", half: [3.8, 3.2], name: "喜堂拜堂", genre: "古装",
+    id: "weddingHall", half: [3.8, 3.2], name: markMessages("喜堂拜堂"), genre: "古装",
     view: view([-0.2, 3.4, 6.8], [-0.2, 0.9, -1.2]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2846", name: "喜堂", position: { x: 0, y: 0, z: 0 } });
@@ -324,7 +325,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装灵堂三壁内景”（射线实测：棺椁 x≈0.2、z=-1.6..0.0、高约1.3，跪垫 x=-0.4..0.8、z=0.4..1.6、高约0.2）；孝子孝女跪在跪垫上（跪坐）、亲属分立两侧、吊唁者从前面进来。
-    id: "mourningHall", half: [3.8, 3.2], name: "灵堂", genre: "古装",
+    id: "mourningHall", half: [3.8, 3.2], name: markMessages("灵堂"), genre: "古装",
     view: view([0.8, 2.3, 6.6], [0.1, 1, -0.6]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2845", name: "灵堂", position: { x: 0, y: 0, z: 0 } });
@@ -338,7 +339,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装书房三壁内景”（射线实测：书案 x=-0.6..1.2、z=0..0.3，案后圈椅座面约 x=0.4、z=-0.45，背墙书架，案前客凳 x=-0.3、z=1.2）；主人坐案后、来客站案前、书童在侧。
-    id: "study", half: [3.2, 3], name: "书房", genre: "古装",
+    id: "study", half: [3.2, 3], name: markMessages("书房"), genre: "古装",
     view: view([0.6, 2, 5.8], [0.3, 1, -0.4]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2842", name: "书房", position: { x: 0, y: 0, z: 0 } });
@@ -349,7 +350,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装闺房绣楼三壁内景”（射线实测：梳妆台 x=-0.9..-0.3、z=-1.8..-1.5，台前绣凳 x=-0.6、z=-0.9，拔步床 x=0.6..2.1、z=-1.8..0）；小姐对镜坐、丫鬟侍立。
-    id: "boudoir", half: [3.2, 3], name: "闺房", genre: "古装",
+    id: "boudoir", half: [3.2, 3], name: markMessages("闺房"), genre: "古装",
     view: view([0.2, 1.9, 5.6], [-0.2, 1, -0.8]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2843", name: "闺房", position: { x: 0, y: 0, z: 0 } });
@@ -359,7 +360,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装客栈客房三壁内景”（射线实测：床靠左墙 x=-2.4..-1.2、z=-1.8..0，方桌 x=0.3..0.9、z=-0.6..0，桌边凳 x=0/1.2、z=-0.3 和 x=0.6、z=0.45）；两人隔桌对坐，小二进门送茶。
-    id: "innRoom", half: [3.2, 3], name: "客栈客房", genre: "古装",
+    id: "innRoom", half: [3.2, 3], name: markMessages("客栈客房"), genre: "古装",
     view: view([0.3, 2, 5.6], [0.3, 0.9, -0.5]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2841", name: "客栈客房", position: { x: 0, y: 0, z: 0 } });
@@ -371,7 +372,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“民国老上海公寓客厅三壁内景”（射线实测：沙发靠后墙 x=-0.6..0.9、z=-1.8..-1.5，圆茶几 x≈0.15、z=-0.9..0，地毯 z=0.25..1.55）；夫妇坐沙发、访客站地毯上、女佣在侧。
-    id: "shanghaiParlor", half: [3.4, 3], name: "民国客厅", genre: "民国",
+    id: "shanghaiParlor", half: [3.4, 3], name: markMessages("民国客厅"), genre: "民国",
     view: view([-0.4, 1.9, 5.8], [0.1, 1, -0.8]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2849", name: "民国客厅", position: { x: 0, y: 0, z: 0 } });
@@ -383,7 +384,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装药铺堂屋三壁内景百子柜”（射线实测：后墙百子柜 x=-2.7..2.7、z=-2.4..-2.1，柜台横在前面 x=-1.8..1.8、z=0.9..1.2，台前候诊凳 x=-1.8/-1.2、z=2.1）；掌柜在柜台后面朝外，伙计在百子柜前抓药，病人坐凳上、家属在台前。
-    id: "apothecary", half: [3.6, 3.2], name: "药铺", genre: "古装",
+    id: "apothecary", half: [3.6, 3.2], name: markMessages("药铺"), genre: "古装",
     view: view([1.2, 2.3, 6.4], [0, 1.1, -0.6]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2844", name: "药铺", position: { x: 0, y: 0, z: 0 } });
@@ -395,7 +396,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代警局办公室三壁内景证物板”（射线实测：两排办公桌 x=-2.7..-1.5 / -0.3..0.9、z=-1.2..-0.6 与 0.9..1.5，椅子在桌子+z侧 x=-2.1 / 0.45，后墙证物板 x≈0..1.6，右墙白板 x≈3.3）；队长站在后墙证物板旁给大家讲案情。
-    id: "policeOffice", half: [3.8, 3.2], name: "警局办公室", genre: "现代",
+    id: "policeOffice", half: [3.8, 3.2], name: markMessages("警局办公室"), genre: "现代",
     view: view([-0.6, 2.3, 6.2], [0.6, 1.1, -0.6]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2855", name: "警局办公室", position: { x: 0, y: 0, z: 0 } });
@@ -409,7 +410,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“民国理发店三壁内景”（射线实测：后墙镜台 x=-2.1..2.1、z=-2.1..-1.8，两把理发椅 x≈-1.65 / 1.05、z=-0.75（座面高0.91，比一般椅子高，座位抬到0.46），前面等候长凳 x=-2.7..-1.2、z=1.8）；客人坐理发椅对镜、师傅站在身后，长凳上有人等着。
-    id: "barberShop", half: [3.6, 3.2], name: "理发店", genre: "民国",
+    id: "barberShop", half: [3.6, 3.2], name: markMessages("理发店"), genre: "民国",
     view: view([0.9, 2, 5.8], [-0.4, 1.1, -1]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2850", name: "理发店", position: { x: 0, y: 0, z: 0 } });
@@ -421,7 +422,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“戏班后台化妆间三壁内景”（射线实测：后墙一排三张妆台 x=-3.0..1.8、z=-2.1..-1.8，台前凳 x=-2.4 / -0.6 / 1.2、z=-1.2，前面两排戏服架 z=1.5、x=-3.3..-1.5 / -0.6..1.2，中间和右边留口子）；角儿对镜上妆，化妆师在旁，班主从右边进来。
-    id: "backstage", half: [3.8, 3.2], name: "戏班后台", genre: "民国",
+    id: "backstage", half: [3.8, 3.2], name: markMessages("戏班后台"), genre: "民国",
     view: view([3, 2.2, 3.2], [-1, 1, -1.4]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2853", name: "戏班后台", position: { x: 0, y: 0, z: 0 } });
@@ -434,7 +435,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代总裁办公室三壁内景落地窗夜景”（射线实测：大班台 x=-1.2..0.8、z=-1.6..-0.8，台后老板椅约 x=-0.2、z=-2.0，台前两把访客椅 x=-0.8/0.4、z=0，左墙沙发 x≈-3.0、z=0.4..2.0）；总裁坐台后，访客坐台前，秘书站在一边。
-    id: "ceoOffice", half: [4, 3.4], name: "总裁办公室", genre: "现代",
+    id: "ceoOffice", half: [4, 3.4], name: markMessages("总裁办公室"), genre: "现代",
     view: view([0.6, 2.2, 6.4], [-0.2, 1, -1]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2891", name: "总裁办公室", position: { x: 0, y: 0, z: 0 } });
@@ -446,7 +447,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代酒店客房三壁内景大床窗帘”（射线实测：大床床头靠后墙 x=-0.4..1.2、z=-2.6..-1.4，床尾凳 z≈-1.0，左墙矮柜 x≈-2.4、右墙书桌 x≈2.8）；一人坐床尾，另一人站在床前。
-    id: "hotelRoom", half: [3.6, 3.4], name: "酒店客房", genre: "现代",
+    id: "hotelRoom", half: [3.6, 3.4], name: markMessages("酒店客房"), genre: "现代",
     view: view([0.8, 2.1, 6], [0.3, 0.9, -1]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2893", name: "酒店客房", position: { x: 0, y: 0, z: 0 } });
@@ -457,7 +458,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“中餐包间三壁内景大圆桌转盘屏风”（射线实测：大圆桌中心约 x=0、z=0.4、半径约0.9，椅子一圈在半径约1.6处，左墙屏风 x≈-3.2）；一桌人围坐吃饭，服务员站在边上。
-    id: "privateDining", half: [3.6, 3.2], name: "中餐包间", genre: "现代",
+    id: "privateDining", half: [3.6, 3.2], name: markMessages("中餐包间"), genre: "现代",
     view: view([1.6, 2.6, 5.8], [0, 0.8, 0.2]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2911", name: "中餐包间", position: { x: 0, y: 0, z: 0 } });
@@ -468,7 +469,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代卧室三壁内景大床衣柜梳妆台”（射线实测：大床床头靠后墙 x=-0.4..0.8、z=-2.0..-0.4，床头柜 x≈1.6..2.0、z=-2.0，左墙衣柜 x≈-2.4，右前梳妆台 x≈1.2..2.0、z=1.6）；一人坐床边，一人站着。
-    id: "bedroom", half: [3.2, 3.2], name: "现代卧室", genre: "现代",
+    id: "bedroom", half: [3.2, 3.2], name: markMessages("现代卧室"), genre: "现代",
     view: view([0.6, 2, 5.6], [0.2, 0.9, -0.8]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2906", name: "现代卧室", position: { x: 0, y: 0, z: 0 } });
@@ -479,7 +480,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装御书房三壁内景龙案奏折”（射线实测：龙案 x=-1.2..1.2、z=-1.6..-0.8，案后御座约 x=-0.2、z=-2.0，左墙书架 x≈-3.6，案前 z=0.4..2.8 空地）；皇帝坐案后批奏折，大臣在案前回话，太监侍立一旁。
-    id: "imperialStudy", half: [4, 3.6], name: "御书房", genre: "古装",
+    id: "imperialStudy", half: [4, 3.6], name: markMessages("御书房"), genre: "古装",
     view: view([0.8, 2.4, 6.8], [-0.2, 1, -1.2]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2871", name: "御书房", position: { x: 0, y: 0, z: 0 } });
@@ -490,7 +491,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装茶馆三壁内景说书台柜台”（射线实测：说书台平台高0.82、x=-1.6..1.2、z=-3.2..-1.6，台上书桌 z≈-2.6；右墙柜台 x≈4.0..4.8；中排四张茶桌 z=0..0.4、长凳在桌北 z=-0.4，前排两桌 x=±2.4、z=2.4..2.8、长凳在桌南 z=3.2）；说书人站台上，茶客坐着听，小二在柜台边。
-    id: "teahouse", half: [5, 4], name: "茶馆说书", genre: "古装",
+    id: "teahouse", half: [5, 4], name: markMessages("茶馆说书"), genre: "古装",
     view: view([1.2, 2.8, 7.6], [0, 1, -1.2]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2877", name: "茶馆", position: { x: 0, y: 0, z: 0 } });
@@ -501,7 +502,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装中军大帐三壁内景帅案沙盘”（射线实测：帐内满铺木台高0.18，帅案 x=-0.8..1.2、z=-2.4..-2.0，案后帅椅座面0.65、约 x=0.2、z=-2.8，右前沙盘 x=1.2..3.2、z=0.4..1.6）；将军坐帅案后，副将回话，谋士看沙盘，传令兵在帐中。夜里点灯议事。
-    id: "warTent", half: [4.4, 3.8], name: "中军大帐", genre: "古装",
+    id: "warTent", half: [4.4, 3.8], name: markMessages("中军大帐"), genre: "古装",
     view: view([0.2, 2.6, 7], [0.4, 1, -1]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2878", name: "中军大帐", position: { x: 0, y: 0, z: 0 } });
@@ -515,7 +516,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代KTV包间三壁内景沙发大屏灯球”（射线实测：长沙发靠后墙 x=-1.6..2.0、座面 z=-1.6，茶几 x=0..1.2、z=0.4，右前音箱 x≈2.6）；朋友们坐沙发，一人拿麦站在茶几边唱。
-    id: "ktv", half: [3.4, 3.2], name: "KTV包间", genre: "现代",
+    id: "ktv", half: [3.4, 3.2], name: markMessages("KTV包间"), genre: "现代",
     view: view([0.4, 2.1, 5.8], [0.2, 0.9, -0.8]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2900", name: "KTV包间", position: { x: 0, y: 0, z: 0 } });
@@ -526,7 +527,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代会议室三壁内景长桌投影幕”（射线实测：长会议桌 x=-2.4..2.0、z=0..0.8（中线 z=0.4），北侧椅子 z=-0.4、南侧 z=1.2，西头主位椅 x≈-2.8）；老板坐主位，几个人分坐两边开会。
-    id: "meetingRoom", half: [4.8, 3.6], name: "会议室", genre: "现代",
+    id: "meetingRoom", half: [4.8, 3.6], name: markMessages("会议室"), genre: "现代",
     view: view([1.8, 2.6, 6.6], [-0.4, 0.9, 0]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2892", name: "会议室", position: { x: 0, y: 0, z: 0 } });
@@ -537,7 +538,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“八十年代家庭客厅三壁内景沙发电视缝纫机”（射线实测：屋子 x=-3.2..1.6，后墙一排柜子，长沙发 x=-2.4..-0.8、座面 z≈-1.4，右后电视柜缝纫机 x=0.8..1.6）；年代剧一家人：父母坐沙发，孩子站着说话。
-    id: "eightiesHome", half: [3.6, 3.2], name: "八十年代客厅", genre: "现代",
+    id: "eightiesHome", half: [3.6, 3.2], name: markMessages("八十年代客厅"), genre: "现代",
     view: view([-0.4, 2.1, 5.6], [-0.8, 0.9, -0.8]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2888", name: "八十年代客厅", position: { x: 0, y: 0, z: 0 } });
@@ -548,7 +549,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代厨房三壁内景橱柜灶台冰箱”（射线实测：后墙橱柜灶台 x=-2.4..1.6、z=-1.6..-1.2，左墙橱柜 x=-2.4..-2.0，冰箱 x≈1.6..2.0、z=-1.2，小餐桌 x=-0.4..0.4、z=1.2..1.6，桌南椅 z=2.0）；妈妈在灶台前做饭，孩子坐餐桌边，爸爸站着说话。
-    id: "kitchen", half: [3.2, 3], name: "现代厨房", genre: "现代",
+    id: "kitchen", half: [3.2, 3], name: markMessages("现代厨房"), genre: "现代",
     view: view([1.4, 2, 5.8], [-0.2, 1, -0.6]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2907", name: "现代厨房", position: { x: 0, y: 0, z: 0 } });
@@ -560,7 +561,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代手术室三壁内景无影灯”（射线实测：手术台在中间 x≈0、z=-0.4..0.4，后墙器械柜 x=-2.8..1.6、z=-2.4..-2.0，无影灯在台上方）；主刀、助手站手术台两边，护士在器械旁。
-    id: "operatingRoom", half: [3.2, 3], name: "手术室", genre: "现代",
+    id: "operatingRoom", half: [3.2, 3], name: markMessages("手术室"), genre: "现代",
     view: view([1.6, 2.4, 5.6], [0, 1, 0]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2856", name: "手术室", position: { x: 0, y: 0, z: 0 } });
@@ -571,7 +572,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“民国咖啡厅三壁内景吧台圆桌”（射线实测：后墙吧台酒柜 x=-2.4..2.4、z=-2.8..-2.4，前面两排小圆桌（z≈0.6 和 2.6），中间那桌 x≈-0.2、两边椅子 x=-0.8/0.4）；一对男女隔着小圆桌说话，侍者站在吧台前，邻桌有客人。
-    id: "minguoCafe", half: [4.8, 3.6], name: "民国咖啡厅", genre: "民国",
+    id: "minguoCafe", half: [4.8, 3.6], name: markMessages("民国咖啡厅"), genre: "民国",
     view: view([0.8, 2.2, 6.6], [-0.2, 1, -0.4]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2881", name: "民国咖啡厅", position: { x: 0, y: 0, z: 0 } });
@@ -584,7 +585,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代酒店走廊三壁内景客房门成排”（射线实测：走廊 x=-1.4..1.4、z=-6..7，满铺地毯高0.12，两侧一排客房门）；两人在走廊里迎面站着说话，一个客人沿走廊边走过。
-    id: "hotelCorridor", half: [2.2, 7.5], name: "酒店走廊", genre: "现代",
+    id: "hotelCorridor", half: [2.2, 7.5], name: markMessages("酒店走廊"), genre: "现代",
     view: view([0.4, 1.9, 9.5], [0, 1.2, -1]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2894", name: "酒店走廊", position: { x: 0, y: 0, z: 0 } });
@@ -596,7 +597,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装青楼花厅三壁内景舞台二楼挑台”（射线实测：后面舞台高0.75、x=-2.0..1.6、z=-3.6..-1.6，两侧和前排小桌，椅子座面0.58：西桌椅 x=-2.8/-4.4、东桌椅 x=1.6/3.2、前排椅 x=-1.2、z=2.0 和 x=0.4、z=2.4）；舞姬在台上，客人围桌看，老鸨在一边招呼。
-    id: "brothelHall", half: [5, 4.2], name: "青楼花厅", genre: "古装",
+    id: "brothelHall", half: [5, 4.2], name: markMessages("青楼花厅"), genre: "古装",
     view: view([0.6, 3, 8], [-0.2, 1, -1.2]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2873", name: "青楼花厅", position: { x: 0, y: 0, z: 0 } });
@@ -608,7 +609,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装后妃寝殿三壁内景凤榻妆台古筝”（射线实测：凤榻 x=0.8..2.4、z=-2.0..-0.4，左后妆台 x=-1.6..-0.8、z=-2.0、妆凳 x=-1.2、z=-1.2，左前古筝 x=-2.8..-1.6、z=0.8，榻尾矮凳 z=0.4）；娘娘坐在凤榻边，宫女侍立，太医/来人站在榻前。
-    id: "consortChamber", half: [3.6, 3.2], name: "后妃寝殿", genre: "古装",
+    id: "consortChamber", half: [3.6, 3.2], name: markMessages("后妃寝殿"), genre: "古装",
     view: view([0.2, 2.2, 6.2], [0.4, 1, -0.8]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2872", name: "后妃寝殿", position: { x: 0, y: 0, z: 0 } });
@@ -620,7 +621,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装镖局练功房三壁内景兵器架梅花桩”（射线实测：地面0.12，中间3×3梅花桩 x=-1.2/0/1.2、z=-0.4/0.8/2.0，桩顶高低不一（0.62到1.32），四周兵器架）；两个徒弟站在桩顶对练（武侠戏，人站在桩顶上），师父在地上看。
-    id: "martialHall", half: [5, 4], name: "镖局练功房", genre: "古装",
+    id: "martialHall", half: [5, 4], name: markMessages("镖局练功房"), genre: "古装",
     view: view([3.2, 2.2, 6.4], [0.4, 1.3, 0.4]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2875", name: "镖局练功房", position: { x: 0, y: 0, z: 0 } });
@@ -631,7 +632,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装古墓墓室三壁内景石棺长明灯”（射线实测：石棺顺着进深放 x=-0.4..0.8、z=-2.0..0.4，两侧长明灯 x=-1.6/2.0，右墙壁龛 x≈3.2）；三个人举着火围着石棺，夜里没有天光，只有灯火。
-    id: "tomb", half: [4.4, 4.2], name: "古墓墓室", genre: "古装",
+    id: "tomb", half: [4.4, 4.2], name: markMessages("古墓墓室"), genre: "古装",
     view: view([0.8, 2.6, 6.8], [0.2, 0.9, -0.8]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2879", name: "古墓墓室", position: { x: 0, y: 0, z: 0 } });
@@ -644,7 +645,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“民国督军府会客厅三壁内景壁炉沙发座钟”（射线实测：后墙壁炉 x=-1.2..1.2，中间长沙发 x=-0.8..0.8、座面 z≈-0.6，茶几 z=0.4..0.8，两侧单人沙发 x=-2.2/2.2、z≈0.6，前排长沙发背对镜头 z=2.0）；督军坐中间沙发，客人坐单人沙发，副官站在一边。
-    id: "warlordParlor", half: [4.6, 3.6], name: "督军府会客厅", genre: "民国",
+    id: "warlordParlor", half: [4.6, 3.6], name: markMessages("督军府会客厅"), genre: "民国",
     view: view([1.2, 2.3, 6.6], [0, 0.9, -0.6]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2885", name: "督军府会客厅", position: { x: 0, y: 0, z: 0 } });
@@ -656,7 +657,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“民国舞厅三壁内景舞池乐队台卡座”（射线实测：后面大乐队台高1.02、z=-4.0..-1.6，舞池地面0.12、z=-1.2..4.4，左墙卡座座面0.56、x=-4.4，右墙吧台 x≈4.2）；歌女在台上唱，舞池里两对跳舞，卡座有客人看。
-    id: "ballroom", half: [5.6, 4.8], name: "民国舞厅", genre: "民国",
+    id: "ballroom", half: [5.6, 4.8], name: markMessages("民国舞厅"), genre: "民国",
     view: view([1.6, 2.6, 8.6], [-0.2, 1.2, -1]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2880", name: "民国舞厅", position: { x: 0, y: 0, z: 0 } });
@@ -671,7 +672,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“民国照相馆三壁内景布景幕布大木箱相机”（射线实测：后墙布景幕布 z≈-2.4，幕前拍照椅 x≈0.4、z=-1.0，大木箱相机在前面 x=0..0.4、z=1.6..2.0）；一对新人在幕前一坐一站拍合影，照相师傅站在相机后面。
-    id: "photoStudio", half: [3.6, 3.2], name: "照相馆", genre: "民国",
+    id: "photoStudio", half: [3.6, 3.2], name: markMessages("照相馆"), genre: "民国",
     view: view([2.2, 2, 5.6], [0, 1, -0.6]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2886", name: "照相馆", position: { x: 0, y: 0, z: 0 } });
@@ -682,7 +683,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代地下停车场一角三壁内景”（射线实测：地面空旷 x=-4.4..3.6、z=-2.8..3.2，中间靠后两组车/柱 x≈-1.4、0.9、z≈-0.2）；夜里女主走向车子，有人在后面跟着——悬疑戏常用。
-    id: "parkingGarage", half: [5.2, 4], name: "地下停车场", genre: "现代",
+    id: "parkingGarage", half: [5.2, 4], name: markMessages("地下停车场"), genre: "现代",
     view: view([2.4, 1.8, 7], [-0.4, 1.1, 0.4]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2861", name: "地下停车场", position: { x: 0, y: 0, z: 0 } });
@@ -694,7 +695,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代凌乱出租屋被翻乱三壁内景”（射线实测：小屋 x=-1.6..2.8、z=-1.6..2.4，左后衣柜，右边单人床 x=1.6..2.4、z=-1.2..0，地上一地被翻出来的杂物）；警察站在门口看现场，房东跟在旁边。
-    id: "ransackedRoom", half: [3.2, 3], name: "被翻乱的出租屋", genre: "现代",
+    id: "ransackedRoom", half: [3.2, 3], name: markMessages("被翻乱的出租屋"), genre: "现代",
     view: view([0.8, 2.2, 5.6], [0.4, 0.8, -0.2]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2859", name: "出租屋", position: { x: 0, y: 0, z: 0 } });
@@ -704,7 +705,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代老旧小区楼梯间三壁内景”（射线实测：上层平台高1.74、z=-2.4..0.4，右边楼梯 x≈2.0 从平台一路下到 z=2.8 的底层地面0.12，底层空地 x=-0.4..1.2、z=0.4..2.8）；楼道对峙：一人站在平台上往下看，一人在楼梯底下抬头。
-    id: "stairwell", half: [3.2, 3.4], name: "老小区楼梯间", genre: "现代",
+    id: "stairwell", half: [3.2, 3.4], name: markMessages("老小区楼梯间"), genre: "现代",
     view: view([0.6, 1.9, 6.4], [0.6, 1.6, -0.4]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2860", name: "楼梯间", position: { x: 0, y: 0, z: 0 } });
@@ -715,7 +716,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代新闻演播室三壁内景主播台灯架”（射线实测：主播台 x=-2.0..1.2、z=-1.2..-0.8，台后两把主播椅 x=-1.2/0.4、z=-2.0，前面两侧灯架 x=-2.4/2.0、z≈1.4）；两位主播坐台后，摄像师在前面，导播站在一边。
-    id: "newsStudio", half: [4.8, 4], name: "新闻演播室", genre: "现代",
+    id: "newsStudio", half: [4.8, 4], name: markMessages("新闻演播室"), genre: "现代",
     view: view([1.8, 2.2, 6.4], [-0.4, 1.1, -1.2]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2903", name: "新闻演播室", position: { x: 0, y: 0, z: 0 } });
@@ -726,7 +727,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代健身房三壁内景跑步机镜墙器械”（射线实测：三台跑步机跑带高0.44、x=-3.0/-1.8/-0.6、z=-1.2..0，右后镜墙，右前卧推凳 x≈2.8，前面地垫 z=2.0..2.4）；两人在跑步机上跑，私教站在旁边说话。
-    id: "gym", half: [5.2, 4], name: "健身房", genre: "现代",
+    id: "gym", half: [5.2, 4], name: markMessages("健身房"), genre: "现代",
     view: view([1.6, 2, 6.4], [-1.2, 1.1, -0.6]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2904", name: "健身房", position: { x: 0, y: 0, z: 0 } });
@@ -737,7 +738,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代指挥中心三壁内景视频墙操作席”（射线实测：三排操作台 z=-1.2..-0.8 / 0.8..1.2 / 2.4..2.8，每排后面椅子 z=0 / 1.6 / 3.6、x≈-2.4/0.4/2.8，右侧视频墙 x≈3.8）；操作员坐在台前盯屏幕，指挥官站在排间下命令。
-    id: "commandCenter", half: [5.2, 4.2], name: "指挥中心", genre: "现代",
+    id: "commandCenter", half: [5.2, 4.2], name: markMessages("指挥中心"), genre: "现代",
     view: view([1.2, 2.8, 7.4], [-0.2, 1, -0.6]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2905", name: "指挥中心", position: { x: 0, y: 0, z: 0 } });
@@ -748,7 +749,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“古装书院学堂三壁内景讲台课桌”（射线实测：后面讲台高0.36、z=-2.8..-1.6，台上书案、先生座椅座面0.83约 x=-0.2、z=-2.6；下面三排矮书案，学生坐垫高0.19在 x=-2.4/0/2.4、z=0/1.6/3.2）；先生坐讲台上，学生跪坐在矮案后听讲。
-    id: "academy", half: [4.8, 4.2], name: "书院学堂", genre: "古装",
+    id: "academy", half: [4.8, 4.2], name: markMessages("书院学堂"), genre: "古装",
     view: view([1.6, 2.6, 7.4], [-0.2, 0.8, -0.6]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2876", name: "书院学堂", position: { x: 0, y: 0, z: 0 } });
@@ -758,7 +759,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“日式和室三壁内景榻榻米壁龛”（射线实测：满铺榻榻米高0.22，中间矮桌高0.62、约 x=0.4、z=0.2，后面壁龛台高0.35）；两人隔着矮桌跪坐对谈（民国谍战、日式茶道）。
-    id: "tatamiRoom", half: [4.2, 3.2], name: "日式和室", genre: "民国",
+    id: "tatamiRoom", half: [4.2, 3.2], name: markMessages("日式和室"), genre: "民国",
     view: view([2.6, 1.8, 5.2], [0.4, 0.7, 0.3]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2884", name: "日式和室", position: { x: 0, y: 0, z: 0 } });
@@ -768,7 +769,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“民国银行营业厅三壁内景柜台金库门”（射线实测：营业柜台 x=-4.4..-2.0 和 -1.2..1.2、z=-2.4..-2.0，柜台后是柜员，后墙金库门 z≈-3.6，前面两排候客长椅 z=2.4、x=-3.2..-1.2 和 0.4..2.4）；柜员在柜台后，客户在台前办事，有人坐长椅等，门口站着警卫。
-    id: "bankHall", half: [5.6, 4.4], name: "民国银行", genre: "民国",
+    id: "bankHall", half: [5.6, 4.4], name: markMessages("民国银行"), genre: "民国",
     view: view([1.4, 2.4, 7.8], [-0.8, 1.1, -1.6]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2883", name: "民国银行", position: { x: 0, y: 0, z: 0 } });
@@ -781,7 +782,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“民国报馆三壁内景编辑部排字房印刷机”（射线实测：左边两排编辑桌 z=-1.2..-0.8 和 1.2..1.6、x=-3.6..-0.4，椅子在桌南 z=0 / 2.0、x=-3.2/-0.8，右边印刷机 x=2.0..3.2、z=1.2..2.8）；编辑伏案写稿，主编站在桌前训话，工人守着印刷机。
-    id: "newspaperOffice", half: [5.2, 4], name: "民国报馆", genre: "民国",
+    id: "newspaperOffice", half: [5.2, 4], name: markMessages("民国报馆"), genre: "民国",
     view: view([1.2, 2.4, 7], [-1, 1, -0.4]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2882", name: "民国报馆", position: { x: 0, y: 0, z: 0 } });
@@ -792,7 +793,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 整块“现代电梯轿厢三壁内景”（约2×1.6米，+z门侧敞开）；三个乘客面朝门，悬疑、对峙、尴尬沉默的常用景。
-    id: "elevator", half: [1.5, 1.5], name: "电梯", genre: "现代",
+    id: "elevator", half: [1.5, 1.5], name: markMessages("电梯"), genre: "现代",
     view: view([0.3, 1.7, 3.6], [0, 1.2, 0]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture2901", name: "电梯", position: { x: 0, y: 0, z: 0 } });
@@ -803,7 +804,7 @@ export const setTemplates: SetTemplate[] = [
   },
   {
     // 白模“地铁站台·岛式·36m×18m·筒拱隧道”（射线实测：中间轨道 |z|<3、两侧站台面高1.40、|z|=3..8.8，立柱在 z=±3.5）；候车的人面朝轨道，站台上有人走过。
-    id: "subwayPlatform", half: [18.5, 10], name: "地铁站台", genre: "现代",
+    id: "subwayPlatform", half: [18.5, 10], name: markMessages("地铁站台"), genre: "现代",
     view: view([-15, 3.2, 7.5], [4, 1.6, 4.5]),
     async build(run) {
       await run("addAsset", { assetId: "masterArchitecture3032", name: "地铁站台", position: { x: 0, y: 0, z: 0 } });

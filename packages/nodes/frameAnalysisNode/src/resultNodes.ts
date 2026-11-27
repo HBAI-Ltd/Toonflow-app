@@ -17,11 +17,7 @@ export function formatSceneTime(value: number) {
 
 export function useResultNodes() {
   const { node } = useNode();
-  const { addNodes, removeNodes, removeEdges, findNode, getNodes, getEdges, nodeTypes } = useVueFlow();
-
-  function removeOutputEdges() {
-    removeEdges(getEdges.value.filter(edge => edge.source === node.id).map(edge => edge.id));
-  }
+  const { addNodes, removeNodes, findNode, getNodes, nodeTypes } = useVueFlow();
 
   function verify(dimensions: ResultDimensions) {
     if (findNode(node.id) !== node) throw new Error("逐帧拉片节点已变化，请重新开始");
@@ -42,8 +38,8 @@ export function useResultNodes() {
     const groups: { node: Node; width: number; height: number }[] = [];
     const previewWidth = Math.max(180, result.height > 0 ? 240 * result.width / result.height : 320) + 18;
     const dimensions = [
-      { key: "frames", type: "remote-imageNode", output: "image", dataType: "IMAGE", mimeType: "image/jpeg", label: "分镜", prefix: "S", width: previewWidth, height: 300 },
-      { key: "clips", type: "remote-videoNode", output: "video", dataType: "VIDEO", mimeType: "video/mp4", label: "动态参考", prefix: "M", width: previewWidth, height: 300 },
+      { key: "frames", type: "remote-imageNode", output: "image", dataType: "IMAGE", mimeType: "image/jpeg", label: "关键帧", prefix: "S", width: previewWidth, height: 300 },
+      { key: "clips", type: "remote-videoNode", output: "video", dataType: "VIDEO", mimeType: "video/mp4", label: "视频片段", prefix: "M", width: previewWidth, height: 300 },
       { key: "audio", type: "remote-audioNode", output: "audio", dataType: "AUDIO", mimeType: "audio/mpeg", label: "原音轨", prefix: "A", width: 360, height: 220 },
     ] as const;
 
@@ -136,5 +132,5 @@ export function useResultNodes() {
     }
   }
 
-  return { verify, create, remove, annotate, removeOutputEdges };
+  return { verify, create, remove, annotate };
 }

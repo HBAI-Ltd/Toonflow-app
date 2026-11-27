@@ -1,8 +1,10 @@
 import type { Component } from "vue";
 import type { Rule } from "@form-create/element-ui";
 import type { PluginServer } from "@toonflow/plugin-server";
+import type { LocalModelDefinition } from "@toonflow/plugin-server/localModels";
 
 export { createServerClient } from "@toonflow/plugin-server/client";
+export * from "@toonflow/plugin-server/localModelClient";
 export type { PluginServer } from "@toonflow/plugin-server";
 
 export type ExtResource =
@@ -44,6 +46,7 @@ export interface ExtContext {
 }
 
 export interface ExtDefinition {
+  localModels?: LocalModelDefinition[];
   id: string;
   displayName: string;
   icon?: string;

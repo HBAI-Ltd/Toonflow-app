@@ -37,7 +37,8 @@ if ($options.silent) {
 $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
 [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($options.appId).Show($toast)
 `;
-  const powershell = resolve(process.env.WINDIR!, "System32/WindowsPowerShell/v1.0/powershell.exe");
+  // ACT: Electrobun 入口改写 env 后再起 Worker，Bun 给 Worker 的 env 变为区分大小写，系统原名 windir 读不到 WINDIR；按 SystemRoot 原名读取并兜底。
+  const powershell = resolve(process.env.SystemRoot ?? "C:\\Windows", "System32/WindowsPowerShell/v1.0/powershell.exe");
   await execFileAsync(powershell, ["-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(script, "utf16le").toString("base64")], {
     windowsHide: true,
     timeout: 15000,

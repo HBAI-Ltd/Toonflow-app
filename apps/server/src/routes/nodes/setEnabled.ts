@@ -24,11 +24,11 @@ export default router.put("/", validateFields({ name: z.string().regex(/^[a-z][a
   if (marker && !marker.isFile()) return res.status(409).json(error("节点状态文件无效", null, 409));
 
   if (enabled) {
-    await unlink(markerPath).catch((err: NodeJS.ErrnoException) => {
+    await unlink(markerPath).then(u.localModels.notifyModelCatalogChange).catch((err: NodeJS.ErrnoException) => {
       if (err.code !== "ENOENT") throw err;
     });
   } else if (!marker) {
-    await writeFile(markerPath, "", { flag: "wx" }).catch(async (err: NodeJS.ErrnoException) => {
+    await writeFile(markerPath, "", { flag: "wx" }).then(u.localModels.notifyModelCatalogChange).catch(async (err: NodeJS.ErrnoException) => {
       if (err.code !== "EEXIST") throw err;
       if (!(await lstat(markerPath)).isFile()) throw Object.assign(new Error("节点状态文件无效"), { status: 409 });
     });

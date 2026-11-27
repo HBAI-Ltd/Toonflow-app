@@ -103,12 +103,14 @@ URI 结构为 `toonflow://skills/<技能名称编码>/<技能内文件路径分�
 
 ```json
 {
-  "target": { "connectionId": "连接 ID", "directory": "工作区绝对路径", "canvasId": "当前画布 ID" },
+  "target": { "connectionId": "连接 ID", "directory": "工作区绝对路径", "canvasId": "目标画布 ID" },
   "args": { "工具原有参数": "值" }
 }
 ```
 
-`target` 及其字段可选，操作画布时建议明确传入 `connectionId`、`directory` 和 `canvasId`，避免用户手动切换画布后旧命令作用于新画布。切换项目或画布成功后重新读取状态，更新目标 ID。
+`target` 及其字段可选，操作画布时建议明确传入 `connectionId`、`directory` 和 `canvasId`。画布工具可用 `target.canvasId` 或 `args.canvasId` 指定工作区内的画布文件路径，例如 `画布1.json`，无需切换当前显示画布；两者同时填写时必须一致。未指定时使用调用开始时的当前画布。同一页面的不同画布可以并行控制，同一画布的命令按顺序执行；新增、切换、重命名画布及应用界面操作仍与其他控制命令互斥。`switchCanvas` 的 `args.canvasId` 表示切换目的地，不要求与 `target.canvasId` 一致。普通应用工具中的 `target.canvasId` 仍用于校验当前画布；切换项目或重命名后重新读取状态，更新目标 ID。
+
+`runAgent` 的 `target.canvasId` 指定本轮初始画布；内置 Agent 可在后续画布工具的 `args.canvasId` 中选择其他画布，界面无需跟随。`getAppState` 中的 `canvasIds` 列出页面已加载的画布，包含后台画布；这些画布同样禁止通过原始文件写入或移动覆盖。
 
 画布工具与内置 Agent 共用已有实现。`getCanvas` 默认返回概览，按需附带分页的画布列表或节点类型；`findCanvasNodes` 筛选定位节点，`getCanvasNodes` 按 ID 和字段读取详情，`getCanvasEdges` 分页查询局部连接，`getNodeTools` 查询目标节点完整函数 schema，再通过 `nodeTools` 调用。每次读取限制为 64 KiB，使用 `hasMore/nextCursor` 续读，空结果也可能仍需扫描；大节点字段可通过 `path` 和 `textOffset/textLimit` 或 `valueOffset/valueLimit` 分段读取。全图任务按批推进并保留摘要和游标，不注入全量节点函数。插件禁用、目标不匹配、连接断开时返回明确错误。
 

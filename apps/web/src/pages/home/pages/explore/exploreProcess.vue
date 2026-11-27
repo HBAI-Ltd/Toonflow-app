@@ -53,12 +53,15 @@
               <nodeSkeleton
                 class="processNode"
                 :label="data.label"
+                :titleDetail="data.resolution"
                 :handles="data.handles"
                 :icon="data.media?.type === 'video' ? IconVideo : data.media?.type === 'image' ? IconPhoto : data.media?.type === 'audio' ? IconMusic : IconFileText"
                 :style="{ width: `${data.width}px` }"
                 readOnly>
-                <img v-if="data.media?.type === 'image'" class="nodeImage" :src="data.media.url" :alt="data.label" draggable="false" referrerpolicy="no-referrer" />
-                <videoPlayer v-else-if="data.media?.type === 'video'" :src="data.media.url" :label="data.label" readOnly />
+                <mediaNodePreview v-if="data.media?.type === 'image' || data.media?.type === 'video'" v-model:resolution="data.resolution" :src="data.media.url">
+                  <img v-if="data.media.type === 'image'" class="nodeImage" :src="data.media.url" :alt="data.label" draggable="false" referrerpolicy="no-referrer" />
+                  <videoPlayer v-else :src="data.media.url" :label="data.label" readOnly />
+                </mediaNodePreview>
                 <audio v-else-if="data.media?.type === 'audio'" class="nodeAudio nopan nowheel" :src="data.media.url" controls preload="none" />
                 <div v-else class="nodeText nopan nowheel">
                   <markdownPreview :modelValue="data.text || ''" />
@@ -114,6 +117,7 @@ import { VueFlow, Panel, type Node, type Edge, type VueFlowStore } from "@vue-fl
 import { Background } from "@vue-flow/background";
 import { IconArrowLeft, IconFileText, IconFocusCentered, IconLayersIntersect, IconLock, IconMinus, IconMusic, IconPhoto, IconPlus, IconVideo, IconX } from "@tabler/icons-vue";
 import nodeSkeleton from "@toonflow/nodes-scaffold/nodeSkeleton";
+import mediaNodePreview from "@toonflow/node-shared/mediaNodePreview";
 import videoPlayer from "@toonflow/node-video/videoPlayer";
 import markdownPreview from "@toonflow/node-text/markdownPreview";
 import groupNode from "@/pages/workspace/panels/canvas/components/groupNode.vue";

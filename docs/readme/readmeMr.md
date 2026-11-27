@@ -90,7 +90,7 @@
 </p>
 <p align="center">
 <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" /> 
-<img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" /> 
+<img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" /> 
 <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" /> 
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ sudo spctl --master-disable
 
 ### 4.2 Docker स्थापना
 
-प्रथम Git, [Docker Engine](https://docs.docker.com/engine/install/) आणि Docker Compose स्थापित करा. Windows व macOS वर Docker Desktop चा Linux container mode वापरता येतो. रिपॉझिटरीमध्ये [Dockerfile](../../Dockerfile), [Compose कॉन्फिगरेशन](../../compose.yaml) आणि [बिल्डमधून वगळण्याचे नियम](../../.dockerignore) आहेत. इमेज Bun 1.4.3 वापरून तयार होते आणि त्यात FFmpeg समाविष्ट आहे.
+प्रथम Git, [Docker Engine](https://docs.docker.com/engine/install/) आणि Docker Compose स्थापित करा. Windows व macOS वर Docker Desktop चा Linux container mode वापरता येतो. रिपॉझिटरीमध्ये [Dockerfile](../../Dockerfile), [Compose कॉन्फिगरेशन](../../compose.yaml) आणि [बिल्डमधून वगळण्याचे नियम](../../.dockerignore) आहेत. इमेज Bun 1.4.5 वापरून तयार होते आणि त्यात FFmpeg समाविष्ट आहे.
 
 <details>
 <summary><strong>Docker स्थापनेच्या पायऱ्या उघडा</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 Server स्थापना
 
-Web आणि Server थेट Linux सर्व्हरवर चालवण्यासाठी हा पर्याय वापरा. खालील उदाहरण Ubuntu / Debian आणि प्रकल्पाची निर्दिष्ट आवृत्ती, [Bun 1.4.3](https://bun.sh/docs/installation) वापरते.
+Web आणि Server थेट Linux सर्व्हरवर चालवण्यासाठी हा पर्याय वापरा. खालील उदाहरण Ubuntu / Debian आणि प्रकल्पाची निर्दिष्ट आवृत्ती, [Bun 1.4.5](https://bun.sh/docs/installation) वापरते.
 
 <details>
 <summary><strong>सर्व्हर स्थापनेच्या पायऱ्या उघडा</strong></summary>
@@ -453,7 +453,7 @@ Web आणि Server थेट Linux सर्व्हरवर चालवण
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

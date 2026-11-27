@@ -97,6 +97,7 @@
 
 <script setup lang="ts">
 import { computed, ref, shallowRef } from "vue";
+import { translate } from "@toonflow/i18n/vue";
 import { IconPlayerPause, IconPlayerPlay, IconSparkles, IconRoute, IconTrash, IconRefresh, IconFocusCentered, IconCheck, IconArrowBackUp, IconRepeat } from "@tabler/icons-vue";
 import { getSceneLife, sceneLifeSchema, type SceneLife, type LifeStatus } from "./lifeDocument";
 import { getPerformanceEventDuration, getPerformanceObjectIds, getPerformanceTracks, mergePerformanceTracks, type PerformanceTrack, type PerformanceEvent } from "./performanceDocument";
@@ -113,7 +114,7 @@ const inputHandlers: Record<string, (event: Event) => void> = { name: renameTrac
 const settings = computed(() => getSceneLife(props.modelValue));
 const conversion = computed(() => {
   try { return { tracks: getPerformanceTracks(props.modelValue, props.objects, props.groups), error: "" }; }
-  catch (error) { return { tracks: [] as PerformanceTrack[], error: error instanceof Error ? error.message : "原有活动暂时无法转为独立动线" }; }
+  catch (error) { return { tracks: [] as PerformanceTrack[], error: error instanceof Error ? error.message : translate("原有活动暂时无法转为独立动线") }; }
 });
 const tracks = computed(() => conversion.value.tracks);
 const clips = computed(() => selected.value && selectedObject.value ? getPerformanceClips(selected.value, selectedObject.value) : []);
@@ -166,14 +167,14 @@ function inputKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') { inputDraft.value = undefined; draft.input.value = draft.initial; }
   draft.input.blur();
 }
-function trackName(track: PerformanceTrack) { return track.name ?? (track.controller === "object" ? objectsById.value.get(track.objectId)?.name : objectNames.value.get(track.objectId)) ?? "场景物体"; }
+function trackName(track: PerformanceTrack) { return track.name ?? (track.controller === "object" ? objectsById.value.get(track.objectId)?.name : objectNames.value.get(track.objectId)) ?? translate("场景物体"); }
 function trackSpeed(track: PerformanceTrack) { return track.speed ?? (track.mode === "road" ? 5.5 : 1.35); }
 function trackEnabled(track: PerformanceTrack) { return track.enabled !== false; }
 function eventAt(index: number) { return selected.value?.events?.find(event => event.at === index); }
 function save(patch: Partial<Omit<SceneLife, "tracks">> & { tracks?: PerformanceTrack[] }) {
   if (props.disabled || props.planning || props.drawing || conversion.value.error) return false;
   const result = sceneLifeSchema.safeParse(getSceneLife({ ...settings.value, ...patch, ...(patch.tracks ? { tracks: mergePerformanceTracks(props.modelValue, patch.tracks, props.objects ?? []) } : {}) }));
-  if (!result.success) { message.value = result.error.issues[0]?.message ?? "动线未保存，请检查输入"; return false; }
+  if (!result.success) { message.value = result.error.issues[0]?.message ?? translate("动线未保存，请检查输入"); return false; }
   message.value = "";
   emit("update:modelValue", result.data);
   return true;
@@ -182,7 +183,7 @@ function changeTrack(id: string, patch: Partial<PerformanceTrack>) { return save
 function changeClip(patch: Partial<PerformanceClip>) {
   if (!selected.value || !selectedClip.value || props.disabled || props.planning || props.drawing) return false;
   const parsed = performanceClipSchema.safeParse({ ...selectedClip.value, ...patch });
-  if (!parsed.success) { message.value = parsed.error.issues[0]?.message ?? "片段设置无效"; return false; }
+  if (!parsed.success) { message.value = parsed.error.issues[0]?.message ?? translate("片段设置无效"); return false; }
   message.value = "";
   emit("changeClip", selected.value.id, selectedClip.value.id, patch);
   return true;
@@ -219,14 +220,14 @@ function triggerLabel(clip: PerformanceClip) {
   const source = tracks.value.find(track => track.id === clip.trigger?.trackId);
   const object = source && objectsById.value.get(source.objectId);
   const trigger = source && object && getPerformanceClips(source, object).find(item => item.id === clip.trigger?.clipId);
-  return source && trigger ? `${trackName(source)} · ${trigger.name}` : "源片段已移除";
+  return source && trigger ? `${trackName(source)} · ${trigger.name}` : translate("源片段已移除");
 }
 function addEffect(event: Event) {
   const input = event.target as HTMLSelectElement;
   const effect = input.value;
   input.value = "";
   if (!["fire", "smoke", "explosion"].includes(effect) || !selectedObject.value) return;
-  if (selected.value && selected.value.controller !== "object") { message.value = "此物体已有移动或人物动线，请先删除该动线，再添加物件效果。"; return; }
+  if (selected.value && selected.value.controller !== "object") { message.value = translate("此物体已有移动或人物动线，请先删除该动线，再添加物件效果。"); return; }
   const object = selectedObject.value;
   const names = { fire: "火焰", smoke: "烟雾", explosion: "爆炸" };
   const start = Math.max(0, (props.worldSeconds ?? 0) - (selectedStatus.value?.startTime ?? props.worldSeconds ?? 0));

@@ -90,7 +90,7 @@
 </p>
 <p align="center">
 <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" /> 
-<img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" /> 
+<img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" /> 
 <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" /> 
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ sudo spctl --master-disable
 
 ### 4.2 Docker நிறுவல்
 
-முதலில் Git, [Docker Engine](https://docs.docker.com/engine/install/) மற்றும் Docker Compose-ஐ நிறுவவும். Windows மற்றும் macOS-இல் Docker Desktop-இன் Linux container முறையைப் பயன்படுத்தலாம். இந்தக் களஞ்சியத்தில் [Dockerfile](../../Dockerfile), [Compose அமைப்பு](../../compose.yaml) மற்றும் [உருவாக்கத்திலிருந்து விலக்கப்படும் கோப்புகளின் விதிகள்](../../.dockerignore) உள்ளன. இமேஜ் Bun 1.4.3-ஐக் கொண்டு உருவாக்கப்படுகிறது; FFmpeg-ஐயும் உள்ளடக்கியது.
+முதலில் Git, [Docker Engine](https://docs.docker.com/engine/install/) மற்றும் Docker Compose-ஐ நிறுவவும். Windows மற்றும் macOS-இல் Docker Desktop-இன் Linux container முறையைப் பயன்படுத்தலாம். இந்தக் களஞ்சியத்தில் [Dockerfile](../../Dockerfile), [Compose அமைப்பு](../../compose.yaml) மற்றும் [உருவாக்கத்திலிருந்து விலக்கப்படும் கோப்புகளின் விதிகள்](../../.dockerignore) உள்ளன. இமேஜ் Bun 1.4.5-ஐக் கொண்டு உருவாக்கப்படுகிறது; FFmpeg-ஐயும் உள்ளடக்கியது.
 
 <details>
 <summary><strong>Docker நிறுவல் படிகளை விரிவாக்கு</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 Server நிறுவல்
 
-Web மற்றும் Server ஆகியவற்றை நேரடியாக Linux சர்வரில் இயக்க இந்த விருப்பத்தைப் பயன்படுத்தவும். கீழே உள்ள எடுத்துக்காட்டு Ubuntu / Debian மற்றும் திட்டத்தின் குறிப்பிட்ட பதிப்பான [Bun 1.4.3](https://bun.sh/docs/installation) ஐப் பயன்படுத்துகிறது.
+Web மற்றும் Server ஆகியவற்றை நேரடியாக Linux சர்வரில் இயக்க இந்த விருப்பத்தைப் பயன்படுத்தவும். கீழே உள்ள எடுத்துக்காட்டு Ubuntu / Debian மற்றும் திட்டத்தின் குறிப்பிட்ட பதிப்பான [Bun 1.4.5](https://bun.sh/docs/installation) ஐப் பயன்படுத்துகிறது.
 
 <details>
 <summary><strong> சேவையக நிறுவல் படிகளை விரிவாக்கு</strong></summary>
@@ -453,7 +453,7 @@ Web மற்றும் Server ஆகியவற்றை நேரடிய�
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

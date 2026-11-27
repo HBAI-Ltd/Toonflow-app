@@ -22,6 +22,8 @@ export const isDesktop = platformSimulation === "actual" ? actualPlatform.isDesk
 export const isRemoteConnection = actualPlatform.isRemoteConnection;
 export const isLocalDesktop = isDesktop && !isRemoteConnection;
 export const isLocalMobile = isMobile && !isRemoteConnection;
+// ACT: 只在启动时判断是否存在触屏，用于显示触屏专用入口；具体手势仍按每次事件的 pointerType 区分，触屏笔记本接鼠标时不改鼠标操作。
+export const touchScreen = isMobile || window.matchMedia("(any-pointer: coarse)").matches;
 export const isWindows = platformSimulation === "actual" || platformSimulation === "browser" ? actualPlatform.isWindows : platformSimulation === "windowsDesktop";
 export const isMac = platformSimulation === "actual" || platformSimulation === "browser" ? actualPlatform.isMac : platformSimulation === "macDesktop";
 

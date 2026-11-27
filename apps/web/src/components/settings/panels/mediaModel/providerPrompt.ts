@@ -74,7 +74,7 @@ ComfyUI 接入分支（仅在我的资料或回答涉及 ComfyUI 时使用）
 - 文件没有说明服务环境时，再单独确认「这套工作流是在你自己的电脑、自己租的服务器，还是某个网站里运行的？」。区分本地/自建 ComfyUI、第三方托管平台、官方 Comfy Cloud 或 Comfy API 部署。第三方托管即使使用 ComfyUI，也可能只接受工作流 id 和输入映射；以用户实际平台文档为准。官方不同 API 版本和自建代理也不能混用，不自动升级、更换平台或要求额外安装代理。
 - 地址必须是 Toonflow 服务端能访问的 HTTP(S) 地址，由我提供正在使用的地址或部署资料，再由你辨认接口入口；不能固定写 localhost:8188。localhost 指运行 Toonflow 服务端的机器，不一定是浏览器所在电脑；只有需要时才用通俗问题确认是否在同一台机器。不能要求我关闭鉴权或把服务公开到公网。地址、工作流或工作流 id 等非秘密值确认后写入完整适配文件，不要求我修改源码或去不存在的配置项填写。
 - 读懂图中连线和输入后，内部建立「Toonflow 请求字段 → 这份工作流的节点 id 与输入名」映射，处理提示词、负面提示词、参考图/首尾帧等实际需要的内容。节点 id 必须来自这份文件，不能照抄示例的 3、6、9 或把第一个文本节点当成正面提示词；有歧义时用节点标题、截图位置或最终效果只问当前这一处，不要求我解释 class_type。保留未要求改变的连线、模型文件名和固定参数，每次调用独立复制 JSON 模板，避免并发请求互相覆盖。
-- Toonflow 的模型条目可对应已确认的工作流或其生成方案，不等于自动扫描全部 checkpoint。依据最终输出声明 image、video 或 audio 及真实能力，明确哪些字段改变哪些输入；时长与帧数/帧率、比例与宽高的关系必须有工作流依据。只暴露确实实现的模式，不能用默认工作流忽略用户的参考素材。当前 Toonflow 画布生成入口只接图片和视频；若用户要纯音频，应说明类型协议支持但当前画布没有对应生成入口，不承诺导入后就能在画布调用。
+- Toonflow 的模型条目可对应已确认的工作流或其生成方案。按最终输出选择图片、视频或音频生成节点。视频工作流要从实际节点确定每组时长、分辨率和比例如何落到帧数、帧率与宽高，只声明工作流能兑现的组合与参考模式。
 - 提交、排队、执行、完成、失败与结果读取必须来自目标服务对应版本的资料。自建常见的 /prompt、/history/{prompt_id}、/view 只是核对线索，不是可直接套用的接口承诺；云端可能使用另一套任务和素材接口。跟踪本次提交得到的任务 id，不靠「队列为空」判断成功，不读取别的任务结果；检查工作流校验错误和执行错误。若缺少查询或结果片段，只请我提供当前这一项，不能只返回任务 id 或用假结果完成适配。
 - 通过 this.tool.fetch 按已确认的 HTTP 协议轮询任务与结果，不依赖 WebSocket、EventSource、官方 SDK 或任何 import。提交、轮询、下载都使用 this.signal 和有限总超时，等待时响应取消并清理资源。停止等待不等于远端任务已取消；只有文档明确支持按任务 id 安全取消本次任务时才调用，不能用无任务范围的 /interrupt 或清空队列误停其他生成。不具备安全取消接口时说明远端可能继续运行，不虚构取消成功。
 - 工作流需要外部素材时，先核实上传协议、返回的文件标识，以及目标输入节点接受的是标识、URL 还是其他格式。使用宿主传入的 URL/Base64/二进制完成转换与上传，不能把浏览器文件路径或 Toonflow 工作区路径直接塞给 ComfyUI。上传名称避免覆盖已有文件；需要 multipart 时，用宿主已有的 Blob、Buffer 或 Uint8Array 按文档构造请求体和边界，不假设存在 FormData、File、文件系统或额外依赖。
@@ -101,6 +101,15 @@ ComfyUI 接入分支（仅在我的资料或回答涉及 ComfyUI 时使用）
 5. rules 使用 form-create 的配置格式，直接写成 JSON 字面量数组，也可引用顶层 const 定义的 JSON 字面量数组；需要密钥的服务包含 API Key 密码输入项，field 为 apiKey，value 为空字符串，额外密钥分别声明独立的密码输入项。已确认无鉴权的服务使用 rules: []，不添加 apiKey 项或强制检查。只声明厂商或工作流真实支持的 image、video、audio 模型及其能力，未实现的生成方法保持缺省，不虚构尺寸、比例、时长、分辨率、音色或参考素材数量。
 6. 文件在服务端 Bun 环境执行，不依赖本项目目录。禁止 import、动态 import、require、第三方依赖、浏览器 DOM、直接文件系统访问和 process。请在文件内声明实际需要的 TypeScript 类型。下方完整类型约定仅用于说明协议，无需把未用到的声明全部复制到产物中。文件保持在 1 MB 以内。
 
+图片与视频的规格声明：
+- 图片模型在模型顶层用 imageSizes 和 imageRatios 声明已确认的尺寸和比例。视频模型在 durationResolutionMap 的每一行填写 duration（秒数数组）、resolution（分辨率数组）和可选的 ratio（比例字符串数组）。宽高比通常写作 "16:9"，厂商专用比例值按文档原样填写。视频的时长、分辨率和比例都有专用字段，无需在模型 rules 或 request.other 中重复设置。
+- 同一行中任取一个时长、一个分辨率和一个比例，都应是该模型实际支持的组合。适用范围不同就拆行。同一时长和分辨率命中多行时，界面合并这些行的比例。假设文档明确写了 720p 的 4 秒和 6 秒均支持 16:9 和 9:16，而 1080p 只有 4 秒且仅支持 21:9，则模型字段如下。
+  "durationResolutionMap": [
+    { "duration": [4, 6], "resolution": ["720p"], "ratio": ["16:9", "9:16"] },
+    { "duration": [4], "resolution": ["1080p"], "ratio": ["21:9"] }
+  ]
+  这些值仅用于演示分组。请按实际资料填写，只支持一个比例也写成单项数组。修改旧供应商时，保留与本次修改无关的映射。旧行省略 ratio 或使用空数组时，界面会显示通用比例，实际支持范围仍以厂商资料为准。
+
 运行约定：
 - 生成方法使用普通 async 方法而非箭头函数，通过 this.config.apiKey 取得用户配置，通过 this.signal 取得取消信号，通过 this.tool.fetch 发起请求。不得硬编码真实密钥或把鉴权信息写入日志、错误消息和返回结果。
 - 媒体供应商编辑界面按 rules 渲染、校验并保存全部表单字段，生成时通过 this.config 的同名字段读取。公开的接口地址等按已确认资料写入适配器；用户专属配置由表单填写，必填和格式要求在对应规则的 validate 中声明，不要求用户把额外密钥写进代码。
@@ -114,13 +123,14 @@ ComfyUI 接入分支（仅在我的资料或回答涉及 ComfyUI 时使用）
 - data 使用 ProviderTaskData 的 JSON 对象，只保存恢复所需的任务 ID、阶段、模型、地区等非鉴权字段，不保存 API Key、token、请求头、二进制、函数或 AbortSignal。resumeTask 必须验证 data 结构，通过 this.config 重新取得凭据，仅查询原任务并返回最终媒体，不得重新上传或重新提交同一任务。多阶段流程在每次接单后保存新的 data；继续提交下一阶段前先保存明确的提交中状态，响应丢失时恢复应报提交状态未知，不能自动重提。
 - 供应商明确返回失败、取消、过期等不可恢复终态时，使用 Object.assign(new Error(中文原因), { code: "MEDIA_TASK_FAILED" })；网络中断、查询超时、鉴权暂不可用和未知状态不得标记成远端失败。恢复可重新限定本次等待时长，本地等待超时不代表原任务已失效。
 - 对照模型声明映射公共请求字段。参考素材可能是 URL、Base64 或二进制，由适配器按厂商协议转换；需要上传素材时，也应在适配器内完成。明确校验无法支持的字段，不要悄悄丢掉参考图、首尾帧、参考视频或音频。request.other 只用于厂商专属参数，不允许覆盖鉴权信息或绕过公共字段校验。
+- generateVideo 收到的 request.duration、request.resolution 和 request.ratio 都是单值。按目标模型校验本次组合，再把所选比例映射到厂商的比例参数或实际宽高。对不支持的组合，在提交生成前报错。请求省略可选值时按已确认的上游默认行为处理。实现 getPrice 时，估价也使用本次请求的同一组规格。
 - 没有明确要求时，不添加检查更新、自动升级或其他与模型生成无关的行为。
 
 以下嵌入 packages/providers/types.d.ts 的当前内容；FfmpegFactory 直接使用 @renmu/fluent-ffmpeg 的原生类型。这是 Toonflow 的接口类型约定，请以此为准，不需要用户阅读、修改或额外提供：
 
 ${providerTypes}
 
-下面是独立的最小结构示例，使用虚构的同步图片接口。它只演示导出形式、API Key 配置、鉴权、错误处理和结果归一化。真实实现必须使用用户已确认的实际服务平台资料，准确实现其接口、模型、字段和能力。用户使用聚合平台或自建接口时，不得擅自换成模型原厂或其他平台的协议；不要照抄示例地址和响应格式。
+下面是独立的最小结构示例，使用虚构的同步图片接口。该接口用 size 指定输出宽高，只支持 1024x1024 方图。真实实现必须使用用户已确认的实际服务平台资料，准确实现其接口、模型、字段和能力。用户使用聚合平台或自建接口时，不得擅自换成模型原厂或其他平台的协议；不要照抄示例地址和响应格式。
 
 \`\`\`typescript
 type ImageRequest = {
@@ -151,14 +161,17 @@ export default {
     type: "input", field: "apiKey", title: "API Key", value: "",
     props: { type: "password", showPassword: true, autocomplete: "off" },
   }],
-  models: [{ id: "exampleImage", label: "示例文生图", type: "image", mode: ["text"] }],
+  models: [{ id: "exampleImage", label: "示例文生图", type: "image", mode: ["text"], imageSizes: ["1024x1024"], imageRatios: ["1:1"] }],
   async generateImage(this: Context, request: ImageRequest): Promise<MediaAsset[]> {
     this.signal?.throwIfAborted();
     const apiKey = this.config.apiKey?.trim();
     if (!apiKey) throw new Error("请填写 API Key");
     if (request.model !== "exampleImage" || !request.prompt.trim()) throw new Error("模型或提示词无效");
+    if ((request.ratio !== undefined && request.ratio !== "1:1") || (request.size !== undefined && request.size !== "1024x1024")) {
+      throw new Error("此示例仅支持 1024x1024 方图");
+    }
     if (request.images?.length || request.mask || (request.n !== undefined && request.n !== 1)
-      || request.ratio !== undefined || request.size !== undefined || request.quality !== undefined
+      || request.quality !== undefined
       || request.outputFormat !== undefined || Object.keys(request.other ?? {}).length) {
       throw new Error("此示例仅支持基础文生图");
     }
@@ -166,7 +179,7 @@ export default {
     const response = await this.tool.fetch("https://example.invalid/images/generate", {
       method: "POST",
       headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: request.model, prompt: request.prompt }),
+      body: JSON.stringify({ model: request.model, prompt: request.prompt, size: request.size ?? "1024x1024" }),
       signal,
     });
     if (!response.ok) throw new Error("图片请求失败，HTTP " + response.status);

@@ -56,7 +56,7 @@ Windows 安装器负责注册协议；macOS 需要将应用放入 `/Applications
 
 | 层级 | 技术 |
 | --- | --- |
-| 运行时与包管理 | Bun 1.4.3、Bun Workspaces |
+| 运行时与包管理 | Bun 1.4.5、Bun Workspaces |
 | 前端 | Vue 3、Vite、TypeScript、Pinia、Element Plus、Vue Flow |
 | 服务端 | Bun、Express 5、Zod |
 | Agent | Pi Agent SDK、工具插件、Markdown 技能与记忆 |
@@ -108,6 +108,25 @@ Windows 桌面日志位于安装目录的 `app/bin/app.log`。桌面 JavaScript 
 
 插件开发工具位于 `packages/tools/pluginDeveloper`，作为工作区子包随默认工具构建和内置，产物为 `build/tools/pluginDeveloper.tool.js`，开发构建同步到 `data/tools/`。SDK 下载、缓存和插件构建由工具负责，主程序只提供本机权限校验及安装、刷新、上传桥接。工具私有资源在卸载时一并清理。
 
+### 部署时选择插件模型的执行方式
+
+节点、工具和扩展都通过 `model.run({ id, inputs, outputs?, device? }, signal?)` 调用模型。后端核对当前已登记的模型 ID，校验输入和输出张量，并将取消信号传给执行器。独立部署默认使用本机 ONNX Runtime。
+
+自定义服务入口可在 `createApp` 时传入 `resolveModelRunner`，按模型 ID 和版本选择自己的后端函数。例如，以下部署把深度估计交给自己的 API 适配器，其他模型沿用本机运行库。
+
+```ts
+import { createApp } from "@toonflow/server/app";
+import type { ResolveModelRunner } from "@toonflow/server/localModels";
+import { runDepthApi } from "./depthApi";
+
+const resolveModelRunner: ResolveModelRunner = model =>
+  model.id === "depthAnything" && model.version === "V2 Small" ? runDepthApi : undefined;
+
+const app = await createApp({ webRoot: "build/web", resolveModelRunner });
+```
+
+解析函数只负责选取执行器，查询模型列表时也会调用它。执行器接收同一份请求和 `AbortSignal`，负责把张量转换为上游格式并返回 `{ provider, outputs }`。服务地址、凭据和超时由服务端适配器管理。已选执行器的错误会直接返回给调用者。模型列表的 `canRun` 表示当前部署具备执行方式，`installed` 仅表示本机有已校验的文件。自定义适配器可以在未安装本机权重时提供服务。多租户创作仍按平台模型网关的发布与授权规则执行。
+
 ### 云端渠道
 
 账号、插件市场、余额统计、探索、首页广告和供应商 TS 的调用链为：页面直接请求本地 `/api/channel/*` → 后端 `Channel` 接口 → `Toonflow` 实现。前端只保留通用 HTTP 工具，不维护渠道抽象。外网地址、响应转换和供应商 TS 临时实现统一放在 `apps/server/src/utils/channel/toonflow.ts`，前后端共享的纯类型通过 `@toonflow/server/channel` 导出。
@@ -128,7 +147,7 @@ Windows 桌面日志位于安装目录的 `app/bin/app.log`。桌面 JavaScript 
 
 语言字典与翻译运行时集中在 [`packages/i18n`](../packages/i18n/readme.md)。Web 的明确展示位置由 Vite 插件在编译时转换，业务源码可继续使用中文；动态文案使用 `t` / `msg` 标签模板。服务端使用请求语言上下文，避免并发请求之间串语言。
 
-修改中文文案后，手动执行上面的 `extract` 命令，再补齐 `packages/i18n/src/locales/` 中各语言的同名键，保留占位符。开发启动和构建不会自动抽取，也不会自动生成译文。翻译仅用于显示，不改变用户数据、模型正文或业务判断值；供应商、tools、nodes、节点脚手架子包及安装器不在翻译范围内。具体用法、语言回退规则和验证记录见[多语言维护说明](../packages/i18n/readme.md)。
+修改中文文案后，手动执行上面的 `extract` 命令，再补齐 `packages/i18n/src/locales/` 中各语言的同名键，保留占位符。开发启动和构建不会自动抽取，也不会自动生成译文。翻译仅用于显示，不改变用户数据、模型正文或业务判断值；供应商和安装器不在翻译范围内；nodes、tools 插件可在自身 `i18n/` 目录维护字典，构建时并入产物。具体用法、语言回退规则和验证记录见[多语言维护说明](../packages/i18n/readme.md)。
 
 <details>
 <summary><strong>在本机运行构建后的 Web 与 Server</strong></summary>
@@ -149,7 +168,7 @@ bun run start:server
 <details>
 <summary><strong>桌面构建准备：Windows、macOS 与 Linux</strong></summary>
 
-六种桌面目标统一使用 Electrobun 2.0.5：Windows、macOS、Linux，各支持 x64 / ARM64。需要在对应系统与架构上构建，不提供跨系统交叉打包。安装工作区依赖后，首次构建或单独类型检查前显式准备当前平台 SDK：
+六种桌面目标统一使用 Electrobun 2.0.7：Windows、macOS、Linux，各支持 x64 / ARM64。需要在对应系统与架构上构建，不提供跨系统交叉打包。安装工作区依赖后，首次构建或单独类型检查前显式准备当前平台 SDK：
 
 ```sh
 bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
@@ -157,7 +176,7 @@ bun apps/desktop/node_modules/electrobun/bin/electrobun.cjs prepare
 
 **Windows**
 
-运行应用需要 WebView2；ARM64 还需 .NET Framework 4.8.1，较新的 Windows 11 已内置。构建脚本通过 `%WINDIR%/Microsoft.NET/Framework64/v4.0.30319/csc.exe` 编译辅助程序。打包需要 NSIS，默认查找 `C:/Program Files (x86)/NSIS/makensis.exe`，可通过 `NSIS_PATH` 指定路径。首次打包会下载并验证微软 WebView2 引导程序。
+运行应用需要 WebView2。启动器、更新助手等辅助程序由 Windows 自带的 .NET Framework 编译器 `%WINDIR%/Microsoft.NET/Framework64/v4.0.30319/csc.exe` 编译，用户无需另装 .NET。打包需要 Visual Studio C++ 生成工具（含 Windows SDK，ARM64 打包需安装 ARM64 组件，用于编译原生的 WebView2 检测程序）和 NSIS，默认查找 `C:/Program Files (x86)/NSIS/makensis.exe`，可通过 `NSIS_PATH` 指定路径。首次打包会下载并验证微软 WebView2 引导程序和 WebView2 SDK 包。
 
 ```sh
 bun run build:desktop
@@ -170,7 +189,9 @@ NSIS 安装包不内置 Bun。安装器会自动打开“必要运行时下载�
 
 线路探测最多 4 路并发，每次仅请求实际 ZIP 的前 32 KiB；单次目标上限 2 秒、整个阶段预算 6 秒，每条线路首次成功后才做第二次确认。出现连续两次成功的候选后，再留 500 毫秒比较其他已启动的线路，然后中断剩余探测、等待工作任务结束并开始单路下载；未测或探测失败的线路继续保留为后备。暂停、取消或更改设置会同时停止全部探测。短时结果只代表当前连接表现；操作系统的 DNS、代理和取消收尾仍可能增加实际等待时间，不承诺所有网络下恰好 6 秒结束。
 
-为兼容已经安装的旧版更新助手，Windows 的 `.tar.zst` 更新归档仍保留 Bun；仅 NSIS 使用剔除运行时的独立归档，解压后删除这份归档，不将它冒用为原始增量基线。因此通过精简安装包安装后，首次更新会使用完整更新包，之后恢复正常增量更新。构建时的 Bun 版本和下载摘要由 `apps/desktop/runtimeInfo.json` 锁定，并与 Hutch 的托管版本核对；升级 SDK 携带的 Bun 时需同步核验相关平台的清单。
+为兼容已经安装的旧版更新助手，Windows 的 `.tar.zst` 更新归档仍保留 Bun；仅 NSIS 使用剔除运行时的独立归档，解压后删除这份归档，不将它冒用为原始增量基线。因此通过精简安装包安装后，首次更新会使用完整更新包，之后恢复正常增量更新。
+
+桌面应用的 Bun 版本及六个平台的下载摘要由 `apps/desktop/runtimeInfo.json` 锁定。`build.bun.version` 读取该清单，安装器按平台和版本匹配 Hutch 的托管运行时。Hutch 0.30.0 另外使用 Bun 1.4.4 执行自身的构建钩子，因此依赖锁中也会出现这个版本。
 
 **macOS**
 
@@ -189,6 +210,10 @@ TOONFLOW_EXTERNAL_RUNTIME=1 bun run package:desktop
 打包入口使用 `apps/desktop/scripts/packageMacPkg.ts`。签名需要 Developer ID Application 和 Developer ID Installer 两种证书及各自匹配的私钥，分别用于应用和 PKG。
 
 GitHub Debug 与 Release 构建均启用 `TOONFLOW_EXTERNAL_RUNTIME=1`；本机精简打包也需按上面的命令显式设置，未设置时仍内置 Bun。精简 PKG 只包含原生运行时启动器，在安装阶段以当前桌面用户身份下载、解压并校验 Bun，完成后才继续安装；缓存有效时直接复用，启动应用时静默校验，不再弹出准备窗口。必要时仍显示下载、暂停、切换来源和重试界面。完整热更新归档仍保留 Bun。外置 Bun 改变了可执行文件路径，麦克风权限、协议链接及应用身份仍需在 Intel、Apple Silicon Mac 上分别回归验证。
+
+macOS 的更新清单通过 `pkg.file`、`pkg.size` 和 `pkg.sha256` 标识最终安装包。发布构建在完成签名和公证票据装订后计算摘要。PKG 内的 `Resources/updateIdentity.json` 随安装包一起签名，记录应用标识、渠道、版本、构建 hash、平台和架构。GitHub 和独立更新服务器使用安装包原名，官网使用 `stable-macos-<架构>-<hash>.pkg` 别名指向同一份文件。远程自定义源使用 HTTPS，本机回环地址也支持 HTTP。
+
+新版 Mac 客户端从选中的源下载完整 PKG，检查包的摘要、签名团队、公证和构建信息。点击“打开系统安装器”后，用户可以保存工作、退出 Toonflow 并按向导完成更新，也可以取消后从关于页再次打开安装器。旧客户端继续使用已有 TAR 和补丁。
 
 本机默认生成未做 Developer ID 签名与公证的开发包；GitHub Actions 的两种 Mac 包都会按下方配置自动签名并公证。旧版 Intel 客户端首次迁移到统一 SDK 版本时，须下载完整 PKG 覆盖安装，不能通过旧版增量更新直接迁移；安装前退出应用并备份原数据目录。对于自己构建且确认来源的开发应用，若被隔离属性拦截，可仅移除该应用的隔离属性，路径按实际位置调整：
 
@@ -257,7 +282,7 @@ git push --no-follow-tags origin refs/tags/v2.0.0:refs/tags/v2.0.0
 | Linux ARM64 | `toonflow-<版本号>-linux-arm64.deb` | `stable-linux-arm64-*` |
 | Android ARM64 | `toonflow-<版本号>-android-arm64.apk` | APK 随 Release 发布，不使用桌面更新清单 |
 
-各桌面目标包含完整更新包 `.tar.zst`、更新清单 `*-update.json`，以及**GitHub 最新发布版 → 当前版本**的 `<平台前缀>-<旧 hash>.patch`。首次发布找不到该目标清单（HTTP 404）时只生成安装包和完整更新包；Intel Mac 首次遇到旧 SDK 清单时也只生成统一 SDK 的首版完整包。其他网络错误、无效清单或缺失 patch 会中止构建。版本号必须高于更新源中的上一版。
+各桌面目标包含完整更新包 `.tar.zst`、更新清单 `*-update.json` 和归档校验清单 `*-checksum.json`。找到上一版基线时还会生成**GitHub 最新发布版 → 当前版本**的 `<平台前缀>-<旧 hash>.patch`。首次发布找不到该目标清单（HTTP 404）及 Intel Mac 首次遇到旧 SDK 清单时均跳过补丁。其他网络错误、无效清单或缺失预期补丁会中止构建。版本号必须高于更新源中的上一版。
 
 构建固定使用 GitHub Releases 的 `releases/latest/download` 读取上一版清单及完整包，用于生成补丁。GitHub Actions 使用当前工作流仓库（`GITHUB_SERVER_URL` / `GITHUB_REPOSITORY`），本机构建默认使用 `HBAI-Ltd/Toonflow-app`。此地址写入 SDK 的构建配置，不受客户端设置影响；客户端运行时在“设置 → 关于”选择更新源，默认使用官方源 `https://api.toonflow.net/version/desktopUpdates`，也可切换到 GitHub Releases。开发者选项可保存一个自定义更新文件目录地址，保存后会出现在“关于”的更新源下拉框。Release 工作流会上传安装包和更新文件到 GitHub Release，再通过配置的托管接口登记六个桌面目标；使用独立更新服务时按下方命令单独同步。
 

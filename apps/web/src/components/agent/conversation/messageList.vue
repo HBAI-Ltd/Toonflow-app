@@ -30,6 +30,8 @@
           :ref="measureMessage"
           :data-index="row.index"
           :data-message-id="item.id"
+          :tabindex="item.id === resultMessageId ? -1 : undefined"
+          :aria-current="item.id === resultMessageId ? 'true' : undefined"
           :data-live-message="item.streaming || item.id === browserMessages.liveMessageId || undefined"
           class="messageRow"
           :style="{ transform: `translateY(${row.start}px)` }"
@@ -37,6 +39,7 @@
           <chat-item :role="item.role" :variant="item.role === 'user' ? 'base' : 'text'" :textLoading="!!item.streaming && !compacting && !item.parts?.some(part => part.type === 'tool' || part.content)" animation="moving" @vue:updated="measureMessage($event.el?.parentElement ?? null)">
             <template #content>
               <div class="messageContent">
+                <div v-if="item.automation" class="automationLabel"><icon-calendar-clock :size="14" aria-hidden="true" /><span>自动化任务</span><bdi :title="item.automation.name">{{ item.automation.name }}</bdi></div>
                 <span v-if="item.role === 'user' && item.delivery?.mode === 'steer'" class="steeringLabel" title="当前任务的补充引导，已完成的操作不会撤销"><icon-corner-down-right :size="14" aria-hidden="true" />引导</span>
                 <div v-if="item.report" class="reportHeader"><icon-users-group :size="14" />{{ item.report.name }} 上报</div>
                 <div v-if="item.agentMessage" class="reportHeader"><icon-users-group :size="14" />来自 {{ item.agentMessage.fromName }} 的消息</div>
@@ -86,7 +89,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onUpdated, ref, watch, type ComponentPublicInstance } from "vue";
 import { defaultRangeExtractor, observeElementRect, useVirtualizer } from "@tanstack/vue-virtual";
-import { IconArrowDown, IconArrowFork, IconArrowUpRight, IconAtom, IconChevronDown, IconChevronRight, IconCopy, IconCornerDownRight, IconMovie, IconPencil, IconPhoto, IconTrash, IconUsersGroup, IconVector, IconX } from "@tabler/icons-vue";
+import { IconArrowDown, IconArrowFork, IconArrowUpRight, IconAtom, IconCalendarClock, IconChevronDown, IconChevronRight, IconCopy, IconCornerDownRight, IconMovie, IconPencil, IconPhoto, IconTrash, IconUsersGroup, IconVector, IconX } from "@tabler/icons-vue";
 import logoUrl from "@toonflow/assets/logo.svg";
 import browserPanel from "@toonflow/tool-browser/panel";
 import { isBrowserTool } from "@toonflow/tool-browser/client";
@@ -139,12 +142,13 @@ const browserMessages = computed(() => {
 const displayedMessages = computed(() => props.messages.filter(message => browserMessages.value.tools.has(message.id) || message.role === "user" || message.error || message.report || message.agentMessage || message.attachments?.length ||
   !message.parts?.length || message.parts.some(part => part.type !== "tool" || !isBrowserTool(part.tool))));
 const messageList = ref<HTMLDivElement>();
+const resultMessageId = ref<string>();
 const atLatestMessage = ref(true);
 let messageListInitialized = false;
 let messageScrollOffset = 0;
 const messageKeys = computed(() => displayedMessages.value.map(item => item.id));
 // ACT: 只常驻当前轮的实时画面，历史浏览器消息仍按需挂载，避免长对话累积连接和 DOM。
-const retainedMessages = computed(() => displayedMessages.value.flatMap((item, index) => item.streaming || item.id === props.editingId || item.id === browserMessages.value.liveMessageId ? [index] : []));
+const retainedMessages = computed(() => displayedMessages.value.flatMap((item, index) => item.streaming || item.id === resultMessageId.value || item.id === props.editingId || item.id === browserMessages.value.liveMessageId ? [index] : []));
 const messageVirtualizer = useVirtualizer<HTMLDivElement, HTMLDivElement>(computed(() => {
   const keys = messageKeys.value;
   const retained = retainedMessages.value;
@@ -176,6 +180,22 @@ const messageVirtualizer = useVirtualizer<HTMLDivElement, HTMLDivElement>(comput
   };
 }));
 const visibleMessages = computed(() => messageVirtualizer.value.getVirtualItems().map(row => ({ row, item: displayedMessages.value[row.index]! })));
+async function revealAutomationResult(runId: string) {
+  const rows = displayedMessages.value;
+  const source = rows.findIndex(item => item.automation?.runId === runId);
+  // 旧记录仅保存会话文件，无法可靠定位到某次运行。
+  if (source < 0) return;
+  const replyTo = rows[source]!.entryId ?? rows[source]!.id;
+  const reply = rows.findLastIndex(item => item.role === "assistant" && item.replyTo === replyTo);
+  const index = reply < 0 ? source : reply;
+  resultMessageId.value = rows[index]!.id;
+  // 编辑器会在挂载帧自动聚焦；待列表布局完成后再把焦点交给所选回复。
+  await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+  if (!props.active || displayedMessages.value[index]?.id !== resultMessageId.value) return;
+  messageVirtualizer.value.scrollToIndex(index, { align: "start" });
+  messageList.value?.querySelector<HTMLElement>('[aria-current="true"].messageRow')?.focus({ preventScroll: true });
+}
+defineExpose({ revealAutomationResult });
 // Vue 适配层未在尺寸更新后调用此钩子；占位高度提交后补偿被浏览器截断的滚动。
 onUpdated(() => messageVirtualizer.value._willUpdate());
 let messageMeasurePending = false;
@@ -315,6 +335,11 @@ const welcomeSuggestions = [
       box-sizing: border-box;
       padding: 0 12px 12px;
 
+      &[aria-current="true"]:focus {
+        outline: none;
+        .messageContent { border-inline-start: 2px solid var(--el-color-primary); padding-inline-start: 8px; }
+      }
+
       @media (hover: hover) {
         &:not(:hover):not(:has(:focus-visible)) {
           .messageActions {
@@ -391,7 +416,7 @@ const welcomeSuggestions = [
       overflow-wrap: anywhere;
       color: var(--el-text-color-primary);
 
-      .steeringLabel {
+      .steeringLabel, .automationLabel {
         display: inline-flex;
         align-items: center;
         gap: 4px;
@@ -399,6 +424,11 @@ const welcomeSuggestions = [
         color: var(--el-text-color-secondary);
         font-size: 12px;
         line-height: 18px;
+      }
+      .automationLabel {
+        max-width: 100%;
+        svg, span { flex-shrink: 0; }
+        bdi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       }
 
       .messageReasoning {
