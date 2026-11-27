@@ -2,6 +2,7 @@ import { chmodSync, copyFileSync, lstatSync, mkdirSync, mkdtempSync, realpathSyn
 import { file, write } from "@toonflow/file/bun";
 import { join, resolve } from "node:path";
 import desktopConfig from "../../../electrobun.config";
+import readMacPackageIdentity from "../src/update/macPackageIdentity";
 
 if (process.platform !== "darwin" || !["x64", "arm64"].includes(process.arch)) {
   throw new Error("macOS 安装包需要在 Mac x64/arm64 环境构建。");
@@ -15,12 +16,8 @@ async function run(command: string[]) {
   console.log(`完成 macOS 打包命令：${command[0]}`);
 }
 
-function verifyPackageIdentity(path: string, identity: string) {
-  const result = Bun.spawnSync(["/usr/bin/tar", "-xOf", path, "Resources/updateIdentity.json"], { stdout: "pipe", stderr: "pipe" });
-  if (result.exitCode === 0 && result.stdout.toString() === identity) return;
-  const listing = Bun.spawnSync(["/usr/bin/tar", "-tf", path], { stdout: "pipe", stderr: "pipe" });
-  const xarListing = Bun.spawnSync(["/usr/bin/xar", "-tf", path], { stdout: "pipe", stderr: "pipe" });
-  throw new Error(`macOS 安装包中的更新标识不一致：${path}\n${result.stderr.toString()}\ntar 条目：\n${listing.stdout.toString()}${listing.stderr.toString()}\nxar 条目：\n${xarListing.stdout.toString()}${xarListing.stderr.toString()}`);
+async function verifyPackageIdentity(path: string, identity: string) {
+  if (await readMacPackageIdentity(path) !== identity) throw new Error(`macOS 安装包中的更新标识不一致：${path}`);
 }
 
 const projectDir = realpathSync(resolve(import.meta.dirname, "../../.."));
@@ -137,24 +134,19 @@ trap 'exit 2' HUP INT TERM
     await run(["/usr/bin/pkgbuild", "--component", appPath, "--install-location", "/Applications",
       "--identifier", desktopConfig.app.identifier, "--version", version, component]);
   }
+  const productResources = join(stagingDir, "productResources");
+  mkdirSync(productResources);
   const identity = JSON.stringify({
     identifier: appVersion.identifier, channel: appVersion.channel, version, hash: appVersion.hash, platform: "macos", arch: process.arch,
   });
+  writeAtomicSync(join(productResources, "updateIdentity.json"), identity);
   const distribution = join(stagingDir, "distribution.xml");
   await run(["/usr/bin/productbuild", "--synthesize", "--package", component, distribution]);
   // ACT: 直接使用系统 Installer 的继续、安装、完成向导，不再生成拖拽 DMG 或兼容脚本。
-  const productArchive = join(stagingDir, "product.pkg");
-  await run(["/usr/bin/productbuild", "--identifier", `${desktopConfig.app.identifier}.installer`, "--version", version,
-    "--distribution", distribution, "--package-path", stagingDir, productArchive]);
-  // ACT: 发行标识在签名前显式写入 PKG，不依赖 productbuild 的安装向导资源收录。
-  const expandedPackage = join(stagingDir, "expandedPackage");
-  await run(["/usr/sbin/pkgutil", "--expand", productArchive, expandedPackage]);
-  const productResources = join(expandedPackage, "Resources");
-  mkdirSync(productResources, { recursive: true });
-  writeAtomicSync(join(productResources, "updateIdentity.json"), identity);
   const unsignedOutput = signed ? join(stagingDir, "unsigned.pkg") : output;
-  await run(["/usr/sbin/pkgutil", "--flatten", expandedPackage, unsignedOutput]);
-  verifyPackageIdentity(unsignedOutput, identity);
+  await run(["/usr/bin/productbuild", "--identifier", `${desktopConfig.app.identifier}.installer`, "--version", version,
+    "--distribution", distribution, "--package-path", stagingDir, "--resources", productResources, unsignedOutput]);
+  await verifyPackageIdentity(unsignedOutput, identity);
   if (signed) {
     await run(["/usr/bin/productsign", "--sign", installerIdentity!, "--timestamp",
       ...(installerKeychain ? ["--keychain", installerKeychain] : []), unsignedOutput, output]);
@@ -174,7 +166,7 @@ trap 'exit 2' HUP INT TERM
       await run(["xcrun", "stapler", "validate", output]);
     }
   }
-  verifyPackageIdentity(output, identity);
+  await verifyPackageIdentity(output, identity);
   const pkg = file(output);
   const digest = new Bun.CryptoHasher("sha256");
   for await (const chunk of pkg.stream()) digest.update(chunk);

@@ -3,6 +3,7 @@ import { t } from "@toonflow/server/i18n";
 import { execFile } from "node:child_process";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { promisify } from "node:util";
+import readMacPackageIdentity from "./macPackageIdentity";
 
 const execFileAsync = promisify(execFile);
 const appIdentifier = "local.toonflow.desktop";
@@ -40,8 +41,7 @@ export async function verifyMacInstaller(path: string, resourcesDirectory: strin
   // 系统通过签名及公证检查后，只读取签名包内的发行标识。
   let identity;
   try {
-    const { stdout } = await execFileAsync("/usr/bin/tar", ["-xOf", pkg, "Resources/updateIdentity.json"], options);
-    identity = JSON.parse(stdout);
+    identity = JSON.parse(await readMacPackageIdentity(pkg));
   } catch (cause) {
     throw new Error(t`更新包版本与清单不一致`, { cause });
   }
