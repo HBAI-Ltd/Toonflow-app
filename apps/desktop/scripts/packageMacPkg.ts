@@ -129,18 +129,23 @@ trap 'exit 2' HUP INT TERM
     await run(["/usr/bin/pkgbuild", "--component", appPath, "--install-location", "/Applications",
       "--identifier", desktopConfig.app.identifier, "--version", version, component]);
   }
-  const productResources = join(stagingDir, "productResources");
-  mkdirSync(productResources);
   const identity = JSON.stringify({
     identifier: appVersion.identifier, channel: appVersion.channel, version, hash: appVersion.hash, platform: "macos", arch: process.arch,
   });
-  writeAtomicSync(join(productResources, "updateIdentity.json"), identity);
   const distribution = join(stagingDir, "distribution.xml");
   await run(["/usr/bin/productbuild", "--synthesize", "--package", component, distribution]);
   // ACT: 直接使用系统 Installer 的继续、安装、完成向导，不再生成拖拽 DMG 或兼容脚本。
-  const unsignedOutput = signed ? join(stagingDir, "unsigned.pkg") : output;
+  const productArchive = join(stagingDir, "product.pkg");
   await run(["/usr/bin/productbuild", "--identifier", `${desktopConfig.app.identifier}.installer`, "--version", version,
-    "--distribution", distribution, "--package-path", stagingDir, "--resources", productResources, unsignedOutput]);
+    "--distribution", distribution, "--package-path", stagingDir, productArchive]);
+  // ACT: 发行标识在签名前显式写入 PKG，不依赖 productbuild 的安装向导资源收录。
+  const expandedPackage = join(stagingDir, "expandedPackage");
+  await run(["/usr/sbin/pkgutil", "--expand", productArchive, expandedPackage]);
+  const productResources = join(expandedPackage, "Resources");
+  mkdirSync(productResources, { recursive: true });
+  writeAtomicSync(join(productResources, "updateIdentity.json"), identity);
+  const unsignedOutput = signed ? join(stagingDir, "unsigned.pkg") : output;
+  await run(["/usr/sbin/pkgutil", "--flatten", expandedPackage, unsignedOutput]);
   if (signed) {
     await run(["/usr/bin/productsign", "--sign", installerIdentity!, "--timestamp",
       ...(installerKeychain ? ["--keychain", installerKeychain] : []), unsignedOutput, output]);

@@ -195,7 +195,18 @@ jobs:
         if: matrix.platform == 'win32' && matrix.target != 'androidArm64'
         # ACT: 使用原生环境，避免 Git Bash 的 GNU tar 将 Windows 盘符识别为远程主机。
         shell: pwsh
-        run: bun run release:desktop "$env:appVersion" "$env:releaseMode"
+        run: |
+          & "$env:SystemRoot/System32/tar.exe" --version
+          $buildStarted = Get-Date
+          bun run release:desktop "$env:appVersion" "$env:releaseMode"
+          $buildExitCode = $LASTEXITCODE
+          if ($buildExitCode -ne 0) {
+            # SDK 仅返回归档失败；保留系统记录的 tar 崩溃原因。
+            Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $buildStarted; Id = 1000, 1001 } -ErrorAction SilentlyContinue |
+              Where-Object { $_.Message -match 'tar\.exe' } |
+              Format-List TimeCreated, Id, Message
+          }
+          exit $buildExitCode
       - name: 准备 Android Bun、GeckoView 与构建依赖
         if: matrix.target == 'androidArm64'
         shell: pwsh
