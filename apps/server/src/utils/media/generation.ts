@@ -2,7 +2,7 @@ import { t, translateMessage } from "@/lib/i18n";
 import { mkdir, readFile, realpath, stat, unlink } from "@toonflow/file";
 import { join, relative } from "node:path";
 import { createHash } from "node:crypto";
-import type { Provider, ProviderTaskData } from "@toonflow/providers";
+import { aspectRatioPattern, getQuoteTotal, type Provider, type ProviderTaskData } from "@toonflow/providers";
 import type { GeneratedMedia, MediaGenerationRequest, MediaModel, MediaReference } from "@toonflow/tools-scaffold/runtime";
 import conf from "@/utils/conf";
 import { getAccountProvider } from "@/utils/ai/provider";
@@ -75,7 +75,7 @@ export async function listMediaModels(): Promise<MediaModel[]> {
       ...(model.type === "audio" ? { voices: model.voices } : {}),
       ...(model.type === "image" ? {
         imageSizes: imageOptions(model.imageSizes, /^[^\u0000-\u001f\u007f]+$/),
-        imageRatios: imageOptions(model.imageRatios, /^[1-9]\d{0,3}:[1-9]\d{0,3}$/),
+        imageRatios: imageOptions(model.imageRatios, aspectRatioPattern),
       } : {}),
     } as MediaModel];
   }));
@@ -227,17 +227,17 @@ async function preparePriceRequest(directory: string | undefined, mediaType: "im
   }
 }
 
-export async function getMediaPrice(directory: string | undefined, mediaType: "image" | "video" | "audio", request: MediaGenerationRequest, signal?: AbortSignal) {
+export async function getMediaPrice(directory: string | undefined, mediaType: "image" | "video" | "audio", request: MediaGenerationRequest, signal?: AbortSignal, fresh = false) {
   signal?.throwIfAborted();
   if (modelGateway.enabled()) {
     const quote = await modelGateway.quoteRequest(mediaType, request.providerId, request.modelId, request);
-    return { ...quote, price: `${quote.amount} ${quote.currency}`, tips: translateMessage("平台售价，按实际用量结算") };
+    return { ...quote, price: `${quote.amount} ${quote.currency}`, tips: translateMessage("平台售价，按实际用量结算"), totalAmount: getQuoteTotal(quote.amount) };
   }
   const { provider } = await configuredProvider(request, mediaType, signal, directory);
   if (!provider.getPrice) return null;
   const prepared = await preparePriceRequest(directory, mediaType, request, signal);
   signal?.throwIfAborted();
-  return getProviderPrice(provider, prepared);
+  return getProviderPrice(provider, prepared, fresh);
 }
 
 export async function generateMedia(

@@ -80,15 +80,18 @@ type CanvasFileContext = {
 export async function dropCanvasFiles(event: DragEvent, context: CanvasFileContext) {
   const transfer = event.dataTransfer;
   if (!transfer) return;
-  const path = transfer.getData(assetDragType);
-  let droppedFiles = Array.from(transfer.files);
-  const { signal, flow } = context;
-  const position = flow.screenToFlowCoordinate({ x: event.clientX, y: event.clientY });
+  const position = context.flow.screenToFlowCoordinate({ x: event.clientX, y: event.clientY });
+  await importCanvasSource(transfer.getData(assetDragType), Array.from(transfer.files), position, context);
+}
+
+// 拖放与素材菜单「插入到画布」共用：素材库路径先读成文件，再按普通文件导入；错误在此提示。
+export async function importCanvasSource(path: string, droppedFiles: File[], position: { x: number; y: number }, context: CanvasFileContext) {
+  const { signal } = context;
   try {
     signal.throwIfAborted();
     if (path) {
-      const { data } = await axios.get<Blob>("/api/assets/read", { params: { path }, responseType: "blob", signal });
-      droppedFiles = [new File([data], path.split("/").pop()!, { type: data.type })];
+      const { data, headers } = await axios.get<ArrayBuffer>("/api/assets/read", { params: { path }, responseType: "arraybuffer", signal });
+      droppedFiles = [new File([data], path.split("/").pop()!, { type: String(headers["content-type"] || "") })];
     }
     await importCanvasFiles(droppedFiles, position, context);
   } catch (error) {

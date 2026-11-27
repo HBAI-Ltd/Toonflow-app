@@ -90,7 +90,7 @@
 </p>
 <p align="center">
   <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" />&nbsp;
-  <img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" />&nbsp;
+  <img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" />&nbsp;
   <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" />&nbsp;
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ sudo spctl --master-disable
 
 ### 4.2 نصب با Docker
 
-ابتدا Git، ‏[Docker Engine](https://docs.docker.com/engine/install/) و Docker Compose را نصب کنید. در Windows و macOS می‌توانید Docker Desktop را در حالت کانتینرهای Linux به کار ببرید. مخزن شامل [Dockerfile](../../Dockerfile)، ‏[پیکربندی Compose](../../compose.yaml) و [موارد مستثنا از ساخت](../../.dockerignore) است. ایمیج با Bun 1.4.3 ساخته می‌شود و FFmpeg را در خود دارد.
+ابتدا Git، ‏[Docker Engine](https://docs.docker.com/engine/install/) و Docker Compose را نصب کنید. در Windows و macOS می‌توانید Docker Desktop را در حالت کانتینرهای Linux به کار ببرید. مخزن شامل [Dockerfile](../../Dockerfile)، ‏[پیکربندی Compose](../../compose.yaml) و [موارد مستثنا از ساخت](../../.dockerignore) است. ایمیج با Bun 1.4.5 ساخته می‌شود و FFmpeg را در خود دارد.
 
 <details>
 <summary><strong>نمایش مراحل نصب با Docker</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 نصب روی سرور
 
-برای اجرای مستقیم Web و Server روی سرور Linux از این روش استفاده کنید. مثال زیر بر پایهٔ Ubuntu / Debian و نسخهٔ تعیین‌شدهٔ پروژه، یعنی [Bun 1.4.3](https://bun.sh/docs/installation)، است.
+برای اجرای مستقیم Web و Server روی سرور Linux از این روش استفاده کنید. مثال زیر بر پایهٔ Ubuntu / Debian و نسخهٔ تعیین‌شدهٔ پروژه، یعنی [Bun 1.4.5](https://bun.sh/docs/installation)، است.
 
 <details>
 <summary><strong>نمایش مراحل نصب روی سرور</strong></summary>
@@ -453,7 +453,7 @@ docker compose start
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

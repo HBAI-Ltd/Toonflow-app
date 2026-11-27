@@ -29,10 +29,11 @@
           </header>
           <div class="menuList">
             <div
-              v-for="item in column.items"
+              v-for="(item, index) in column.items"
               :key="item.id"
               class="menuRow"
               :class="{
+                touchRow: touchScreen,
                 selectedItem: selectedId === item.id || openGroups.includes(item.id),
                 editingItem: editingId === item.id,
                 hiddenItem: item.hidden,
@@ -53,6 +54,14 @@
                 <span v-if="item.type && disabledTypes.has(item.type)" class="itemStatus" title="已停用">停用</span>
               </button>
               <div class="rowActions" @dragstart.stop.prevent>
+                <template v-if="touchScreen">
+                  <button class="rowAction" type="button" aria-label="上移" title="上移" :disabled="index === 0" @click.stop="shiftItem(item, -1)">
+                    <icon-arrow-up :size="14" aria-hidden="true" />
+                  </button>
+                  <button class="rowAction" type="button" aria-label="下移" title="下移" :disabled="index === column.items.length - 1" @click.stop="shiftItem(item, 1)">
+                    <icon-arrow-down :size="14" aria-hidden="true" />
+                  </button>
+                </template>
                 <el-popover
                   :visible="editingId === item.id"
                   trigger="click"
@@ -123,9 +132,10 @@ import axios from "axios";
 import { translate } from "@toonflow/i18n/vue";
 import { computed, onBeforeUnmount, onMounted, ref, watch, type Component } from "vue";
 import { ElMessage, type InputInstance } from "element-plus";
-import { IconBox, IconFolder, IconFolderOpen, IconFolderMinus, IconRestore, IconChevronRight, IconEdit, IconEye, IconEyeOff, IconPlus, IconDragDrop, IconFileText, IconPhoto, IconVideo, IconMusic, IconMusicBolt, IconCube3dSphere, IconPhotoAi, IconCameraAi } from "@tabler/icons-vue";
+import { IconBox, IconFolder, IconFolderOpen, IconFolderMinus, IconRestore, IconChevronRight, IconEdit, IconEye, IconEyeOff, IconPlus, IconDragDrop, IconFileText, IconPhoto, IconVideo, IconMusic, IconMusicBolt, IconPhotoAi, IconCameraAi, IconArrowUp, IconArrowDown } from "@tabler/icons-vue";
 import { normalizeNodeMenu, resolveNodeMenu, serializeNodeMenu, type NodeMenuItem } from "@toonflow/server/nodeMenu";
 import { generalSettings, updateGeneralSettings } from "@/stores/settings";
+import { touchScreen } from "@/lib/platform";
 
 type MenuEntry = { item: NodeMenuItem; parentId: string; depth: number; siblings: NodeMenuItem[]; index: number; path: string[] };
 type MenuColumn = { id: string; depth: number; label: string; items: NodeMenuItem[] };
@@ -137,7 +147,6 @@ const nodeIcons: Record<string, Component> = {
   "remote-videoNode": IconVideo,
   "remote-audioNode": IconMusic,
   "remote-audioGenerationNode": IconMusicBolt,
-  "remote-director3dNode": IconCube3dSphere,
   "remote-imageGenerationNode": IconPhotoAi,
   "remote-videoGenerationNode": IconCameraAi,
 };
@@ -278,6 +287,13 @@ function moveEntry(entry: MenuEntry, parentId: string, index: number) {
   items.splice(position, 0, entry.item);
   selectItem(entry.item);
   saveMenu();
+}
+
+// ACT: 触屏不能依赖原生拖放，只补同级上移、下移；移入或移出子菜单仍用拖动，后续可加「移到…」目标选择。
+function shiftItem(item: NodeMenuItem, offset: -1 | 1) {
+  const entry = menuEntries.value.find(entry => entry.item.id === item.id);
+  const index = entry ? entry.index + (offset > 0 ? 2 : -1) : -1;
+  if (entry && index >= 0 && index <= entry.siblings.length) moveEntry(entry, entry.parentId, index);
 }
 
 function saveMenu() {
@@ -466,6 +482,7 @@ onBeforeUnmount(() => {
           }
           &:hover, &:focus-within, &.editingItem {
             .itemSelect { padding-right: 76px; }
+            &.touchRow .itemSelect { padding-right: 136px; }
             .submenuArrow { opacity: 0; }
             .rowActions { background: var(--el-fill-color); }
             .rowActions .rowAction { opacity: 1; pointer-events: auto; }
@@ -530,6 +547,7 @@ onBeforeUnmount(() => {
               transition: opacity 0.12s, background 0.12s;
 
               &.isHidden { opacity: 1; pointer-events: auto; color: var(--el-text-color-placeholder); }
+              &:disabled, &:disabled:hover { color: var(--el-text-color-disabled); background: transparent; cursor: not-allowed; }
               &:hover, &:focus-visible { color: var(--el-color-primary); background: var(--el-fill-color-dark); }
               &.deleteButton:hover, &.deleteButton:focus-visible { color: var(--el-color-danger); background: var(--el-color-danger-light-9); }
             }

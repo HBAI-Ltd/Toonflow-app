@@ -22,7 +22,7 @@
 
 手机端默认使用 75% 界面缩放，可在「设置 → 通用设置 → 界面缩放」通过滑块调整为 50%–100%，每档 5%。拖动时只显示所选比例，松手后生效并随应用设置保存。使用 WebView 视口缩放，画布和弹出层保持统一坐标，保留原有页面布局与设置侧栏。
 
-使用官方 **Bun 1.4.2 Android** 运行时，仅构建 `arm64-v8a`。打包参考社区 [minapk](https://github.com/jjtseng93/minapk) 的原生库目录启动方式；通过 Gradle 与 Android SDK 构建，不依赖其终端环境。Bun 运行时随 APK 安装到原生库目录，JS、WASM 和页面复制到应用程序目录，设置与工作区保存在独立的数据目录。来源和许可证见 [thirdParty.md](thirdParty.md)。
+使用官方 **Bun 1.4.5 Android** 运行时，仅构建 `arm64-v8a`。打包参考社区 [minapk](https://github.com/jjtseng93/minapk) 的原生库目录启动方式；通过 Gradle 与 Android SDK 构建，不依赖其终端环境。Bun 运行时随 APK 安装到原生库目录，JS、WASM 和页面以 zstd 整包随 APK 分发，首次启动或升级时由内置 Bun 解压到应用程序目录，设置与工作区保存在独立的数据目录。来源和许可证见 [thirdParty.md](thirdParty.md)。
 
 启动时先用系统 WebView 加载独立的本地能力预检页面，通过后直接进入 Toonflow，不初始化 GeckoView。检测项与网页入口共用 `@toonflow/web/browserCapabilities`，检查 12 项 JavaScript 与 CSS 能力，避免旧内核在加载业务依赖时先白屏。
 
@@ -49,7 +49,7 @@ bun run --cwd apps/mobile build
 
 `setup` 显式下载固定版本 ARM64 Android Bun 和 Gradle 9.6.0，校验 SHA256 后分别缓存到 `build/mobile/runtime`、`build/mobile/gradle`；随后由 AGP 9.4.0 自动安装所需 SDK，并准备 GeckoView 及其构建依赖，Gradle 缓存位于 `build/mobile/gradleHome`。SDK 自动安装要求该目录已接受许可。`build` 使用 `--offline` 并禁止 SDK 下载；缺少 SDK 或缓存时先重新执行 `setup`。GeckoView 的 Java、资源与 ARM64 原生内核由 Android 构建工具合并进 APK。
 
-`build` 先调用根目录的 `build:server`，构建节点、工具、扩展、前端、后端及 MCP，再将移动端服务与 MCP stdio 入口一起构建，共享重复依赖。APK 的 payload 包含 `server.js`、`stdio.js`、共享代码块、`web`、`nodes`、`tools`、`ext`、`skills` 和 Photon 的 JS/WASM 包；内置供应商列表与源码在线获取，团队保持当前仓库未内置打包的状态。payload 内容生成 `revision.txt`，用于随构建更新内置插件。发行包启用 R8 代码优化与资源裁剪，保留 Gecko 官方消费者规则及完整 ARM64 内核。
+`build` 先调用根目录的 `build:server`，构建节点、工具、扩展、前端、后端及 MCP，再将移动端服务与 MCP stdio 入口一起构建，共享重复依赖。APK 的 payload 包含 `server.js`、`stdio.js`、共享代码块、`web`、`nodes`、`tools`、`ext`、`skills` 和 Photon 的 JS/WASM 包；anydoc 只带包本体与 WASM 回退，不携带构建机的原生平台包（如 `win32-x64`）；内置供应商列表与源码在线获取，团队保持当前仓库未内置打包的状态。payload 内容生成 `revision.txt`，用于随构建更新内置插件；整个 payload 打成 tar 后以 zstd 19 级压缩为 `assets/payload.tar.zst`（APK 内不再二次压缩），版本标识另存为 `assets/payloadRevision.txt`，版本未变时启动不解压。发行包启用 R8 代码优化与资源裁剪，保留 Gecko 官方消费者规则及完整 ARM64 内核。
 
 输出：`build/mobile/toonflowMobile.apk`。包名为 `com.toonflow.mobile`，最低 Android 8 / API 26，目标 API 34。本地和 CI 共用仓库内公开的默认签名 `native/defaultSigning.keystore`，别名为 `androiddebugkey`，密码均为 `android`。沿用此前本地默认签名，不再每次生成密钥，后续版本可直接覆盖安装并保留应用数据。
 

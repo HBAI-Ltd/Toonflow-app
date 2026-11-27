@@ -1,4 +1,4 @@
-const userFields = ["ui", "general", "privacy", "stores", "helloCompleted"];
+const userFields = ["ui", "general", "privacy", "stores", "helloCompleted", "mediaCostReminders"];
 const hostFields = [...userFields, "agentSystemPrompt", "agentNodeTools"];
 
 export function userSettings(settings: Record<string, unknown>, host = false) {

@@ -22,6 +22,10 @@
           <icon-library-photo :size="18" aria-hidden="true" />
           <span class="sidebarText">素材库</span>
         </button>
+        <button v-if="!publicWeb" class="sidebarItem" :class="{ active: activeSection === 'pluginMarket' }" type="button" :aria-current="activeSection === 'pluginMarket' ? 'page' : undefined" aria-label="插件市场" title="插件市场" @click="showSection('pluginMarket')">
+          <icon-building-store :size="18" aria-hidden="true" />
+          <span class="sidebarText">插件市场</span>
+        </button>
         <hr v-if="currentUser?.role !== 'user'" class="sidebarDivider" />
         <button class="sidebarItem" :class="{ active: activeSection === 'trumanMap' }" type="button" :aria-current="activeSection === 'trumanMap' ? 'page' : undefined" aria-label="白模预演 TrumanMap" title="白模预演 TrumanMap" @click="showSection('trumanMap')">
           <icon-cube :size="18" aria-hidden="true" />
@@ -39,6 +43,10 @@
           <homePage v-show="activeSection === 'home'" :disabled="creating || opening" :loading="creating" @create="createProject" @open="openProject" @showSection="showSection" />
           <projectsPage v-show="activeSection === 'projects'" :disabled="creating || opening" :loading="creating || !!relocationPicker?.selecting" @create="createProject()" @open="openProject" />
           <explorePage v-show="activeSection === 'explore'" :scrollElement="pageScroll?.wrapRef" />
+          <section v-if="!publicWeb && activeSection === 'pluginMarket'" class="marketPage" aria-labelledby="marketTitle">
+            <h2 id="marketTitle">插件市场</h2>
+            <pluginMarket />
+          </section>
           <trumanMapPage v-show="activeSection === 'trumanMap'" />
         </el-main>
       </div>
@@ -91,6 +99,7 @@ const homeSections = [
   { id: "explore", label: "探索", icon: IconCompass },
 ];
 const mobileConnect = defineAsyncComponent(() => import("@/components/mobileConnect.vue"));
+const pluginMarket = defineAsyncComponent(() => import("@/components/settings/panels/pluginMarket/index.vue"));
 const router = useRouter();
 const pageLifetime = new AbortController();
 const creating = ref(false);
@@ -335,6 +344,12 @@ async function createProject(request?: NonNullable<typeof workspaceStore.pending
             .sidebarToggle { opacity: 1; }
           }
         }
+
+        // 触屏没有悬停，收起后直接显示展开按钮。
+        @media (min-width: 901px) and (any-pointer: coarse) {
+          .sidebarLogo { opacity: 0; }
+          .sidebarToggle { opacity: 1; }
+        }
       }
 
       .sidebarItem {
@@ -487,6 +502,18 @@ async function createProject(request?: NonNullable<typeof workspaceStore.pending
 
       .pageContent {
         padding: 24px clamp(20px, 4vw, 56px) 56px;
+
+        .marketPage {
+          max-width: 1280px;
+          margin-inline: auto;
+
+          h2 { margin: 0 0 16px; font-size: 22px; font-weight: 600; line-height: 1.5; }
+          :deep(.marketToolbar) { position: static; background: transparent; }
+          :deep(.ffmpegPanel .advancedSettings) {
+            --el-collapse-header-bg-color: transparent;
+            --el-collapse-content-bg-color: transparent;
+          }
+        }
       }
     }
   }

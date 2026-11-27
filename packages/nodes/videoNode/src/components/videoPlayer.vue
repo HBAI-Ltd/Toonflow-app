@@ -1,5 +1,5 @@
 <template>
-  <div class="videoPlayer" :aria-busy="preparingPreview">
+  <div class="videoPlayer" :class="{ editingFrame: !!$slots.frameOverlay }" :style="$slots.frameOverlay ? { '--frameAspect': frameAspect } : undefined" :aria-busy="preparingPreview">
     <video
       ref="video"
       class="videoPreview"
@@ -13,23 +13,26 @@
       :aria-label="label"
       @fullscreenchange="fullscreen = !!video?.matches(':fullscreen')"
       @loadedmetadata="readMetadata"
+      @durationchange="readLateDuration"
       @loadeddata="readPreview"
-      @timeupdate="currentTime = video?.currentTime ?? 0"
-      @play="playing = true"
+      @timeupdate="readPlaybackTime"
+      @seeking="constrainSeek"
+      @play="beginPlayback"
       @pause="playing = false"
       @ended="playing = false"
       @volumechange="readVolume"
       @error="mediaError" />
+    <div v-if="$slots.frameOverlay && ready && video" class="overlayViewport"><slot name="frameOverlay" :video="video" /></div>
     <div v-if="preparingPreview || previewError" class="previewStatus" role="status">
       {{ preparingPreview ? "正在生成兼容预览…" : previewError }}
     </div>
     <div v-show="!fullscreen" class="playerControls nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.stop>
       <el-button class="playerButton playButton" text circle :icon="playing ? IconPlayerPause : IconPlayerPlay" :disabled="!ready" :aria-label="playing ? '暂停视频' : '播放视频'" :title="playing ? '暂停' : '播放'" @click="togglePlayback" />
-      <span class="currentTime">{{ formatTime(currentTime) }}</span>
-      <el-slider class="progressSlider" :modelValue="currentTime" :min="0" :max="duration || 1" :step="0.01" :disabled="!ready || !duration" :formatTooltip="formatTime" aria-label="视频播放进度" @input="seek" />
-      <span class="durationLabel"><span class="timeSeparator">/</span>{{ formatTime(duration) }}</span>
+      <span class="currentTime" :title="`${formatTime(currentTime)} / ${formatTime(duration)}`">{{ formatTime(currentTime) }}</span>
+      <el-slider class="progressSlider" :modelValue="currentTime" :min="playRange?.start ?? 0" :max="playRange?.end ?? (duration || 1)" :step="0.01" :disabled="!ready || !duration" :formatTooltip="value => `${formatTime(value)} / ${formatTime(duration)}`" :formatValueText="formatTime" aria-label="视频播放进度" @input="seek" />
+      <span class="durationLabel">{{ formatTime(duration) }}</span>
       <div class="volumeControl">
-        <el-popover trigger="hover" placement="top" :width="40" :popperStyle="{ minWidth: '40px', padding: '8px 0', borderRadius: 'var(--el-border-radius-base)' }" :showArrow="false" :showAfter="80" :hideAfter="150" :disabled="!ready">
+        <el-popover trigger="hover" placement="top" :width="40" :teleported="!$slots.frameOverlay" :popperStyle="{ minWidth: '40px', padding: '8px 0', borderRadius: 'var(--el-border-radius-base)' }" :showArrow="false" :showAfter="80" :hideAfter="150" :disabled="!ready">
           <template #reference>
             <el-button class="playerButton volumeButton" text circle :icon="muted || !volume ? IconVolumeOff : IconVolume" :disabled="!ready" :aria-pressed="muted || !volume" :aria-label="muted || !volume ? '取消静音' : '静音视频'" title="音量 · 点击切换静音" @click="toggleMute" />
           </template>
@@ -49,7 +52,7 @@
           </el-dropdown-menu>
         </template>
       </el-dropdown>
-      <el-button class="playerButton fullscreenButton" text circle :icon="IconMaximize" :disabled="!ready" aria-label="全屏视频" title="全屏" @click="enterFullscreen" />
+      <el-button v-if="!$slots.frameOverlay" class="playerButton fullscreenButton" text circle :icon="IconMaximize" :disabled="!ready" aria-label="全屏视频" title="全屏" @click="enterFullscreen" />
     </div>
   </div>
 </template>
@@ -62,11 +65,13 @@ import { IconPlayerPlay, IconPlayerPause, IconVolume, IconVolumeOff, IconPhotoSc
 import { useNodeFiles } from "@toonflow/nodes-scaffold/workspaceFiles";
 import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
 
-const { src, label = "节点视频", readOnly = false } = defineProps<{ src: string; label?: string; readOnly?: boolean }>();
-const emit = defineEmits<{ loadedmetadata: [event: Event] }>();
+const { src, label = "节点视频", readOnly = false, audioGain, hoverPlaying = false, playRange } = defineProps<{ src: string; label?: string; readOnly?: boolean; audioGain?: number; hoverPlaying?: boolean; playRange?: { start: number; end: number } }>();
+const emit = defineEmits<{ loadedmetadata: [event: Event]; ready: [ready: boolean] }>();
 const video = ref<HTMLVideoElement>();
+const frameAspect = ref(16 / 9);
 const fullscreen = ref(false);
 const ready = ref(false);
+watch(ready, value => emit("ready", value), { immediate: true, flush: "sync" });
 const poster = ref("");
 const playing = ref(false);
 const muted = ref(false);
@@ -74,6 +79,7 @@ const volume = ref(100);
 let lastVolume = 100;
 const currentTime = ref(0);
 const duration = ref(0);
+let metadataRead = false;
 const capturing = ref(false);
 const captureMenuVisible = ref(false);
 const { src: playbackSrc, preparing: preparingPreview, error: previewError, handleError, handleLoaded } = useMediaPreview(() => src, "video");
@@ -88,6 +94,7 @@ watch(() => getCanvas?.()?.id, () => captureController?.abort(), { flush: "sync"
 watch(() => readOnly, value => { if (value) captureController?.abort(); }, { flush: "sync" });
 watch(playbackSrc, () => {
   captureController?.abort();
+  metadataRead = false;
   ready.value = false;
   poster.value = "";
   playing.value = false;
@@ -107,7 +114,34 @@ async function enterFullscreen() {
   }
 }
 
-defineExpose({ enterFullscreen, ready, capturing, captureFrame, previewSrc: playbackSrc });
+defineExpose({ enterFullscreen, ready, capturing, captureFrame, seek, playVideo, playing, pause: () => video.value?.pause(), previewSrc: playbackSrc });
+
+function constrainSeek() {
+  const source = video.value;
+  if (!source || !playRange) return;
+  if (source.currentTime < playRange.start || source.currentTime > playRange.end) seek(source.currentTime);
+}
+
+function beginPlayback() {
+  playing.value = true;
+  if (playRange && video.value && (video.value.currentTime < playRange.start || video.value.currentTime >= playRange.end)) seek(playRange.start);
+}
+
+function readPlaybackTime() {
+  const source = video.value;
+  if (!source) return;
+  if (playRange && !source.paused && source.currentTime >= playRange.end) {
+    source.pause();
+    seek(playRange.end);
+  }
+  currentTime.value = source.currentTime;
+}
+
+watch([() => playRange, playing, currentTime], ([range, active], _, cleanup) => {
+  if (!range || !active || !video.value) return;
+  const timer = window.setTimeout(readPlaybackTime, Math.max(16, (range.end - video.value.currentTime) * 1000 / (video.value.playbackRate || 1)));
+  cleanup(() => window.clearTimeout(timer));
+});
 
 function formatTime(value: number) {
   const seconds = Math.floor(Number.isFinite(value) ? Math.max(0, value) : 0);
@@ -115,9 +149,16 @@ function formatTime(value: number) {
 }
 
 function readMetadata(event: Event) {
+  metadataRead = true;
+  if (video.value?.videoWidth && video.value.videoHeight) frameAspect.value = video.value.videoWidth / video.value.videoHeight;
   const value = video.value?.duration ?? 0;
   duration.value = Number.isFinite(value) ? value : 0;
   emit("loadedmetadata", event);
+}
+
+function readLateDuration(event: Event) {
+  const length = video.value?.duration;
+  if (metadataRead && !duration.value && length && Number.isFinite(length)) readMetadata(event);
 }
 
 function readPreview(event: Event) {
@@ -149,39 +190,73 @@ function mediaError(event: Event) {
   else previewError.value = "无法预览该视频";
 }
 
-async function togglePlayback() {
-  if (!video.value) return;
-  if (playing.value) video.value.pause();
-  else {
-    try { await video.value.play(); }
-    catch (error) { if (!(error instanceof DOMException && error.name === "AbortError")) ElMessage.error("视频播放失败"); }
+let hoverTimer: number | undefined;
+watch([() => hoverPlaying, ready], ([hover, loaded], [wasHovered], onCleanup) => {
+  if (fullscreen.value) return;
+  if (hover && loaded) {
+    hoverTimer = window.setTimeout(() => {
+      if (!fullscreen.value) void playVideo(true);
+    }, 250);
+    onCleanup(() => window.clearTimeout(hoverTimer));
+  } else if (wasHovered) video.value?.pause();
+});
+
+async function playVideo(fromHover = false) {
+  const source = video.value;
+  if (!source) return;
+  try {
+    await source.play();
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") return;
+    if (fromHover && error instanceof DOMException && error.name === "NotAllowedError" && !source.muted) {
+      if (hoverPlaying && ready.value && video.value === source) {
+        source.muted = true;
+        await playVideo();
+      }
+      return;
+    }
+    ElMessage.error("视频播放失败");
   }
+}
+
+function togglePlayback() {
+  window.clearTimeout(hoverTimer);
+  if (playing.value) video.value?.pause();
+  else void playVideo();
 }
 
 function seek(value: number | number[]) {
   if (!video.value || !Number.isFinite(value)) return;
-  video.value.currentTime = Math.min(duration.value, Math.max(0, Number(value)));
+  video.value.currentTime = Math.min(playRange?.end ?? duration.value, Math.max(playRange?.start ?? 0, Number(value)));
   currentTime.value = video.value.currentTime;
 }
 
 function readVolume() {
   if (!video.value) return;
-  volume.value = Math.round(video.value.volume * 100);
+  if (audioGain === undefined) volume.value = Math.round(video.value.volume * 100);
   muted.value = video.value.muted;
   if (volume.value > 0) lastVolume = volume.value;
 }
 
+function applyVolume() {
+  if (video.value) video.value.volume = volume.value / 100 * Math.max(0, Math.min(1, audioGain ?? 1));
+}
+watch([video, () => audioGain], ([el, gain], [, previous]) => {
+  if (el && (gain !== undefined || previous !== undefined)) applyVolume();
+});
+
 function setVolume(value: number | number[]) {
   if (!video.value || typeof value !== "number" || !Number.isFinite(value)) return;
-  video.value.volume = Math.min(100, Math.max(0, value)) / 100;
-  video.value.muted = video.value.volume === 0;
+  volume.value = Math.min(100, Math.max(0, value));
+  applyVolume();
+  video.value.muted = volume.value === 0;
   readVolume();
 }
 
 function toggleMute() {
   if (!video.value) return;
-  const silent = video.value.muted || video.value.volume === 0;
-  if (video.value.volume === 0) video.value.volume = lastVolume / 100;
+  const silent = video.value.muted || volume.value === 0;
+  if (volume.value === 0) { volume.value = lastVolume; applyVolume(); }
   video.value.muted = !silent;
   readVolume();
 }
@@ -322,12 +397,10 @@ async function captureFrame(command: "current" | "first" | "last") {
     bottom: 0;
     left: 0;
     right: 0;
-    display: grid;
-    grid-template-columns: 28px auto minmax(0, 1fr) 28px 28px 28px;
-    grid-template-areas: "progress progress progress progress progress progress" "play current duration volume capture fullscreen";
+    display: flex;
     align-items: center;
-    gap: 2px 3px;
-    padding: 8px 8px 4px;
+    gap: 2px;
+    padding: 8px 4px 4px;
     border-radius: 0 0 var(--el-border-radius-base) var(--el-border-radius-base);
     background: linear-gradient(transparent, color-mix(in srgb, var(--el-bg-color-overlay) 85%, transparent));
     color: var(--el-text-color-primary);
@@ -337,6 +410,7 @@ async function captureFrame(command: "current" | "first" | "last") {
     transition: opacity 120ms ease;
 
     .playerButton {
+      flex: none;
       width: 28px;
       height: 28px;
       margin: 0;
@@ -344,30 +418,18 @@ async function captureFrame(command: "current" | "first" | "last") {
       font-size: 15px;
       &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
     }
-    .playButton { grid-area: play; }
-    .volumeControl {
-      grid-area: volume;
-      .volumeButton { color: var(--el-text-color-regular); }
-    }
-    .captureMenu { grid-area: capture; }
-    .fullscreenButton { grid-area: fullscreen; }
+    .volumeControl .volumeButton { color: var(--el-text-color-regular); }
     .currentTime, .durationLabel {
       white-space: nowrap;
-      font-size: 10px;
+      font-size: 11px;
       line-height: 16px;
       font-variant-numeric: tabular-nums;
     }
-    .currentTime { grid-area: current; text-align: right; }
-    .durationLabel {
-      grid-area: duration;
-      color: var(--el-text-color-secondary);
-      .timeSeparator { margin-right: 3px; color: var(--el-text-color-placeholder); }
-    }
+    .durationLabel { color: var(--el-text-color-secondary); }
     .progressSlider {
-      grid-area: progress;
+      flex: 1;
       min-width: 0;
-      width: calc(100% - 8px);
-      justify-self: center;
+      margin-inline: 4px;
       height: 16px;
       --el-slider-height: 2px;
       --el-slider-button-size: 8px;
@@ -384,24 +446,51 @@ async function captureFrame(command: "current" | "first" | "last") {
     }
 
     @container (max-width: 230px) {
-      grid-template-columns: 28px minmax(0, 1fr) 28px 28px 28px;
-      grid-template-areas: "progress progress progress progress progress" "current current duration duration duration" "play . volume capture fullscreen";
-      .currentTime { text-align: left; }
-      .durationLabel { text-align: right; }
+      gap: 0;
+      padding-inline: 2px;
+      .playerButton { width: 24px; height: 24px; }
+      .currentTime, .durationLabel { font-size: 10px; }
     }
-    @container (min-width: 320px) {
-      grid-template-columns: 28px auto minmax(32px, 1fr) auto 28px 28px 28px;
-      grid-template-areas: "play current progress duration volume capture fullscreen";
-      gap: 6px;
-      padding: 8px 8px 4px;
-      .currentTime, .durationLabel { font-size: 11px; }
-      .durationLabel .timeSeparator { display: none; }
+    @container (max-width: 200px) {
+      .durationLabel { display: none; }
+    }
+    @container (max-width: 160px) {
+      .currentTime { display: none; }
     }
     @media (prefers-reduced-motion: reduce) { transition: none; }
   }
   &:hover .playerControls, .playerControls:has(:focus-visible) {
     opacity: 1;
     pointer-events: auto;
+  }
+  &.editingFrame {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    height: auto;
+    background: #101114;
+    cursor: default;
+    --frameMaxHeight: min(40dvh, 380px);
+    .videoPreview, .overlayViewport {
+      grid-area: 1 / 1;
+      width: min(100%, calc(var(--frameMaxHeight) * var(--frameAspect)));
+      height: auto;
+      max-height: none;
+      aspect-ratio: var(--frameAspect);
+      border-radius: 0;
+    }
+    .overlayViewport { position: relative; }
+    .previewStatus { grid-area: 1 / 1; }
+    .playerControls {
+      position: relative;
+      inset: auto;
+      grid-area: 2 / 1;
+      justify-self: stretch;
+      padding: 3px 8px;
+      background: var(--el-fill-color-light);
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
 }
 .volumePanel {

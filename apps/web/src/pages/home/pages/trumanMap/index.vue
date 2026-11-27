@@ -20,31 +20,9 @@
       <p class="introDescription">一句话搭出白模场景，排好人物走位和镜头路线，开拍前先把整场戏走一遍。</p>
     </div>
 
-    <div class="composer">
-      <el-input v-model="prompt" type="textarea" :autosize="{ minRows: 3, maxRows: 8 }" resize="none" placeholder="写下场景布局、人物走位和镜头运动，生成可以反复调整的白模预演" aria-label="预演描述" />
-      <div class="composerBar">
-        <div class="composerTools">
-          <workspacePicker ref="folderPicker" v-model="sceneDirectory" :disabled="busy" />
-          <modelPopover v-model="selectedModel" v-model:reasoningEffort="reasoningEffort" class="modelPill" />
-          <el-select v-model="aspectRatio" class="toolPill" aria-label="画面比例">
-            <template #prefix><icon-aspect-ratio :size="15" aria-hidden="true" /></template>
-            <el-option v-for="ratio in aspectRatios" :key="ratio" :label="ratio" :value="ratio" />
-          </el-select>
-          <el-select v-model="duration" class="toolPill" aria-label="预演时长">
-            <template #prefix><icon-clock-hour-4 :size="15" aria-hidden="true" /></template>
-            <el-option v-for="option in durationOptions" :key="option.value" :label="translate(option.label)" :value="option.value" />
-          </el-select>
-        </div>
-        <button v-if="!sceneDirectory" class="generateButton" type="button" :disabled="busy" @click="folderPicker?.chooseDirectory()">
-          <icon-folder :size="14" aria-hidden="true" />
-          <span>选择文件夹</span>
-        </button>
-        <button v-else class="generateButton" type="button" :disabled="busy || !prompt.trim()" :aria-busy="generating" @click="generate">
-          <icon-player-play-filled :size="14" aria-hidden="true" />
-          <span>生成预演</span>
-        </button>
-      </div>
-    </div>
+    <sceneComposer ref="composer" v-model="prompt" v-model:directory="sceneDirectory" v-model:selectedModel="selectedModel" v-model:reasoningEffort="reasoningEffort"
+      v-model:aspectRatio="aspectRatio" v-model:duration="duration" :busy="busy" :canGenerate="canGenerate" :generating="generating" :attachments="imagePreviews"
+      @paste="pasteImages" @remove="images.splice($event, 1)" @generate="generate" />
     <p v-if="!sceneDirectory" class="folderHint" role="status">请先选择一个空文件夹，白模场景和导出的素材会保存在这里。</p>
 
     <div class="suggestions" role="group" aria-label="示例描述">
@@ -76,17 +54,21 @@
 </template>
 
 <script setup lang="ts">
-import { translate } from "@toonflow/i18n/vue";
+import { markMessages, translate } from "@toonflow/i18n/vue";
+import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
+import { imageTypes, validatePromptImages } from "@toonflow/node-truman-map/promptImages";
 import axios from "axios";
 import { computed, defineAsyncComponent, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { IconEdit, IconTrash } from "@tabler/icons-vue";
-import modelPopover from "@/components/modelPopover.vue";
+import sceneComposer, { durationOptions } from "./sceneComposer.vue";
+import { getClipboardFiles } from "@/lib/clipboard";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { useWorkspaceStore, type Project } from "@/stores/workspace";
 import workspacePicker from "../../workspacePicker.vue";
 import projectCard from "../projects/projectCard.vue";
 import stageScene from "./stageScene.vue";
+import type { SceneRequest } from "./sceneProject.vue";
 
 // 承载 TrumanMap 时要加载 three 等节点运行时，打开场景时才载入。
 const sceneProject = defineAsyncComponent(() => import("./sceneProject.vue"));
@@ -114,43 +96,75 @@ async function renameScene(scene: Project) {
 }
 
 const prompt = ref("");
+const images = ref<File[]>([]);
+const imagePreviews = computed(() => images.value.map(file => ({ name: file.name, path: "", mimeType: file.type, file })));
+const pendingPastes = ref(0);
 const selectedModel = ref("");
 const reasoningEffort = ref("");
-const folderPicker = ref<InstanceType<typeof workspacePicker>>();
+const composer = ref<InstanceType<typeof sceneComposer>>();
 // 首页输入框选的场景文件夹；“生成预演”在这里新建场景并把描述发给内置 Agent。
 const sceneDirectory = ref("");
-const sceneRequest = ref<{ prompt: string; model: string; reasoningEffort: string; format: string }>();
+const sceneRequest = ref<SceneRequest>();
 const generating = ref(false);
-const busy = computed(() => generating.value || !!projectDirectory.value || !!picker.value?.selecting || !!folderPicker.value?.selecting);
+const busy = computed(() => generating.value || !!projectDirectory.value || !!picker.value?.selecting || !!composer.value?.selecting);
+const canGenerate = computed(() => !busy.value && !pendingPastes.value && (!!prompt.value.trim() || !!images.value.length));
+
+// 首页在插件载入前就显示这些校验提示，宿主字典也要收录。
+markMessages([
+  "每轮最多添加 4 张图片，请移除部分图片后重试。",
+  "请选择 PNG、JPEG、WebP 或 GIF 图片。",
+  "图片“{0}”为空或超过 10 MB，请换一张图片。",
+  "本轮图片总计不能超过 20 MB，请减少图片或缩小文件后重试。",
+]);
+
+async function pasteImages(event: ClipboardEvent) {
+  if (busy.value) return;
+  const pending = getClipboardFiles(event);
+  if (!pending) return;
+  event.preventDefault();
+  pendingPastes.value++;
+  try {
+    const added: File[] = [];
+    for (const file of await pending) {
+      const type = getMediaMimeType(file);
+      if (!type.startsWith("image/")) continue;
+      // 节点按工作区文件后缀识图，截图可能只有 MIME 类型。
+      const extension = file.name.match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase();
+      const name = extension && imageTypes[extension] === type ? file.name : `${file.name || "image"}.${type.slice(6)}`;
+      added.push(file.type === type && file.name === name ? file : new File([file], name, { type }));
+    }
+    if (!added.length) return;
+    validatePromptImages(added, images.value.map(file => file.size));
+    images.value.push(...added);
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : "添加附件失败，请重试");
+  } finally {
+    pendingPastes.value--;
+  }
+}
 
 // 和首页新建项目一致：只用空文件夹新建，已有场景从“我的白模场景”打开。
 async function generate() {
-  if (busy.value || !prompt.value.trim()) return;
+  if (!canGenerate.value) return;
   generating.value = true;
   try {
-    const { empty } = await useWorkspaceFiles(sceneDirectory.value).list();
+    const { empty, directory } = await useWorkspaceFiles(sceneDirectory.value).list();
     if (!empty) return void ElMessage.warning("该文件夹不为空，请重新选择空文件夹；已有场景请在“我的白模场景”里打开。");
     const seconds = durationOptions.find(option => option.value === duration.value && option.value !== "auto");
+    const description = prompt.value.trim() || "请参考附图搭建白模场景。";
     sceneRequest.value = {
-      prompt: seconds ? `${prompt.value.trim()}\n\n预演时长：约${seconds.value}秒。` : prompt.value.trim(),
+      prompt: seconds ? `${description}\n\n预演时长：约${seconds.value}秒。` : description,
+      images: [...images.value],
       model: selectedModel.value, reasoningEffort: reasoningEffort.value, format: aspectRatio.value,
     };
-    projectDirectory.value = sceneDirectory.value;
+    projectDirectory.value = directory;
   } catch (error) {
     ElMessage.error(axios.isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || "无法读取文件夹，请重试" : error instanceof Error ? error.message : "无法读取文件夹，请重试");
   } finally {
     generating.value = false;
   }
 }
-// 与 TrumanMap 成片画幅一致。
-const aspectRatios = ["16:9", "9:16", "2.39:1", "1.85:1", "4:3"];
-const aspectRatio = ref(aspectRatios[0]!);
-const durationOptions = [
-  { value: "auto", label: "自动时长" },
-  { value: "5", label: "5 秒" },
-  { value: "10", label: "10 秒" },
-  { value: "15", label: "15 秒" },
-];
+const aspectRatio = ref("16:9");
 const duration = ref("auto");
 const suggestionOptions = [
   { label: "雨夜巷口两人对峙，镜头从背后缓慢推近" },
@@ -325,111 +339,7 @@ const activeShot = 3;
     }
   }
 
-  .composer {
-    max-width: 800px;
-    margin: 24px auto 0;
-    padding: 16px 18px 12px;
-    border: 1px solid color-mix(in srgb, var(--el-text-color-primary) 12%, transparent);
-    border-radius: 22px;
-    background: color-mix(in srgb, var(--el-bg-color-overlay) 78%, transparent);
-    box-shadow: 0 30px 60px -30px rgb(0 0 0 / 45%), inset 0 1px 0 color-mix(in srgb, var(--el-text-color-primary) 6%, transparent);
-    backdrop-filter: blur(16px);
-    transition: border-color 0.2s, box-shadow 0.2s;
-
-    &:focus-within {
-      border-color: color-mix(in srgb, var(--el-color-primary) 55%, transparent);
-      box-shadow: 0 30px 60px -30px rgb(0 0 0 / 45%), 0 0 0 4px color-mix(in srgb, var(--el-color-primary) 10%, transparent);
-    }
-
-    @media (prefers-reduced-motion: reduce) { transition: none; }
-
-    :deep(.el-textarea__inner) {
-      padding: 2px 2px 6px;
-      box-shadow: none;
-      background: transparent;
-      font-size: 15px;
-      line-height: 1.85;
-    }
-
-    .composerBar {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 6px;
-
-      .composerTools {
-        display: flex;
-        align-items: center;
-        flex: 1 1 280px;
-        flex-wrap: wrap;
-        min-width: 0;
-        gap: 6px;
-
-        :deep(.workspaceButton) {
-          max-width: 200px;
-          height: 32px;
-          margin: 0;
-          padding: 0 12px;
-          border-radius: 999px;
-          background: var(--el-fill-color-light);
-          color: var(--el-text-color-regular);
-
-          &:hover { background: var(--el-fill-color); }
-        }
-
-        .modelPill {
-          min-width: 0;
-          max-width: 230px;
-
-          :deep(.modelButton) {
-            height: 32px;
-            padding: 0 12px;
-            border-radius: 999px;
-            background: var(--el-fill-color-light);
-          }
-        }
-
-        .toolPill {
-          width: 124px;
-
-          :deep(.el-select__wrapper) {
-            min-height: 32px;
-            padding: 0 12px;
-            border-radius: 999px;
-            background: var(--el-fill-color-light);
-            box-shadow: none;
-
-            &:hover { background: var(--el-fill-color); }
-          }
-        }
-      }
-
-      .generateButton {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        height: 38px;
-        margin-inline-start: auto;
-        padding: 0 18px;
-        border: 0;
-        border-radius: 999px;
-        background: var(--el-text-color-primary);
-        color: var(--el-bg-color);
-        font: inherit;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: opacity 0.2s, transform 0.2s;
-
-        &:hover:not(:disabled) { transform: translateY(-1px); }
-        &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 3px; }
-        &:disabled { cursor: not-allowed; opacity: 0.32; }
-
-        @media (prefers-reduced-motion: reduce) { transition: none; }
-      }
-    }
-  }
+  .composer { margin-top: 24px; }
 
   .folderHint {
     max-width: 800px;
@@ -556,7 +466,6 @@ const activeShot = 3;
 
   @container (max-width: 640px) {
     .shotReel .shotTrack .shotCard { width: 140px; &.active { width: 176px; } }
-    .composer { padding: 14px 14px 10px; }
   }
 }
 

@@ -26,6 +26,47 @@ internal static class updateHelper
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool CreateDirectoryW(string path, IntPtr securityAttributes);
 
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct startupInfo
+    {
+        public int cb;
+        public string reserved, desktop, title;
+        public int x, y, width, height, columns, rows, fillAttribute, flags;
+        public short showWindow, reservedSize;
+        public IntPtr reservedData, standardInput, standardOutput, standardError;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct processInformation
+    {
+        public IntPtr process, thread;
+        public int processId, threadId;
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CreateProcessW(string application, StringBuilder commandLine, IntPtr processAttributes, IntPtr threadAttributes,
+        [MarshalAs(UnmanagedType.Bool)] bool inheritHandles, uint flags, IntPtr environment, string directory, ref startupInfo startup, out processInformation information);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsProcessInJob(IntPtr process, IntPtr job, [MarshalAs(UnmanagedType.Bool)] out bool result);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool QueryInformationJobObject(IntPtr job, int informationClass, IntPtr information, int length, IntPtr returnLength);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern uint ResumeThread(IntPtr thread);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool TerminateProcess(IntPtr process, uint exitCode);
+
+    [DllImport("kernel32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CloseHandle(IntPtr handle);
+
     [STAThread]
     private static int Main(string[] args)
     {
@@ -194,7 +235,7 @@ internal static class updateHelper
 
     private static void spawnScheduledUpdate(string executable, string planPath, bool quiet)
     {
-        // ACT: breakaway 成功仍可能留在外层 Job，统一由当前用户的任务服务启动；不提权、不设置触发器。
+        // ACT: breakaway 成功仍可能留在外层 Job，优先由当前用户的任务服务启动；不提权、不设置触发器。
         string taskName = scheduledTaskName(planPath);
         string stage = "identity", sid = "unknown";
         bool administratorToken = false;
@@ -246,8 +287,62 @@ internal static class updateHelper
                     detail += "\n更新任务清理失败（HRESULT=0x" + cleanupError.HResult.ToString("X8") + "）：" + cleanupError.Message;
                 }
             }
+            else
+            {
+                // 任务未注册（策略、安全软件或任务目录权限拒绝）时服务不可能已接收，可安全改走脱离 Job 的子进程。
+                try
+                {
+                    spawnBreakawayUpdate(executable, planPath, quiet);
+                    return;
+                }
+                catch (Exception fallbackError)
+                {
+                    detail += "\n脱离 Job 直接启动也失败（HRESULT=0x" + fallbackError.HResult.ToString("X8") + "）：" + fallbackError.Message;
+                }
+            }
             // Run 报错也可能已被服务接收；由宿主撤销原计划，不在这里盲目重发或改用普通子进程。
             throw new InvalidOperationException(detail, error);
+        }
+    }
+
+    private static void spawnBreakawayUpdate(string executable, string planPath, bool quiet)
+    {
+        // 挂起创建，确认已脱离宿主的 Job 后才恢复；外层 Job 禁止脱离或仍在宿主 Job 内时终止子进程并报错。
+        var startup = new startupInfo { cb = Marshal.SizeOf(typeof(startupInfo)) };
+        var commandLine = new StringBuilder(quote(executable) + " --apply-update " + quote(planPath) + (quiet ? " --quiet" : ""));
+        processInformation child;
+        const uint createSuspended = 0x00000004, createBreakawayFromJob = 0x01000000;
+        if (!CreateProcessW(executable, commandLine, IntPtr.Zero, IntPtr.Zero, false, createSuspended | createBreakawayFromJob,
+            IntPtr.Zero, Path.GetDirectoryName(executable), ref startup, out child))
+            throw new Win32Exception(Marshal.GetLastWin32Error());
+        bool resumed = false;
+        IntPtr list = IntPtr.Zero;
+        try
+        {
+            bool inJob;
+            if (!IsProcessInJob(Process.GetCurrentProcess().Handle, IntPtr.Zero, out inJob))
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "无法确认更新助手的 Job 状态。");
+            if (inJob)
+            {
+                // ACT: hJob 为空时读取当前进程最内层的 Job，即宿主退出时一并结束的 Job；更外层与 Toonflow 无关的 Job 允许保留。
+                // 列表上限 4096 个进程，超出或读取失败都按失败处理，不冒险交接。
+                int size = 8 + 4096 * IntPtr.Size;
+                list = Marshal.AllocHGlobal(size);
+                if (!QueryInformationJobObject(IntPtr.Zero, 3, list, size, IntPtr.Zero)) // JobObjectBasicProcessIdList
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "无法读取宿主 Job 的进程列表。");
+                for (int index = Marshal.ReadInt32(list, 4) - 1; index >= 0; index--)
+                    if (Marshal.ReadIntPtr(list, 8 + index * IntPtr.Size).ToInt64() == child.processId)
+                        throw new InvalidOperationException("更新助手未能脱离宿主的 Job，宿主退出时会被一并结束。");
+            }
+            if (ResumeThread(child.thread) == uint.MaxValue) throw new Win32Exception(Marshal.GetLastWin32Error(), "无法恢复更新助手。");
+            resumed = true;
+        }
+        finally
+        {
+            if (list != IntPtr.Zero) Marshal.FreeHGlobal(list);
+            if (!resumed) TerminateProcess(child.process, 1);
+            CloseHandle(child.thread);
+            CloseHandle(child.process);
         }
     }
 
@@ -546,7 +641,8 @@ internal static class updateHelper
         ensurePlainTree(stage);
         if (tar != null)
         {
-            runArchiveTool(tar, "-xf " + quote(archive) + " -C " + quote(stage) + " --strip-components=1", 600000);
+            // 安装载荷是不带编码声明的 USTAR，成员名为 UTF-8；不指定时 bsdtar 按系统代码页解码，中文文件名会乱码。PAX 的 path 属性不受此选项影响。
+            runArchiveTool(tar, "-xf " + quote(archive) + " -C " + quote(stage) + " --strip-components=1 --options hdrcharset=UTF-8", 600000);
             return;
         }
         // ACT: 缺少系统 tar 时用内置解析器解包，不联网获取第三方工具；只还原目录和文件内容，不还原时间与属性。

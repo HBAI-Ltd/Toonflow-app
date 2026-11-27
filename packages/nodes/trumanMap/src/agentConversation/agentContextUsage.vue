@@ -1,5 +1,5 @@
 <template>
-  <el-popover v-model:visible="visible" trigger="hover" placement="top" :width="280" :offset="10" :showArrow="false" popperClass="agentContextPopover">
+  <el-popover v-model:visible="visible" :trigger="coarsePointer ? 'click' : 'hover'" placement="top" :width="280" :offset="10" :showArrow="false" popperClass="agentContextPopover">
     <template #reference>
       <el-button class="agentContextButton" text circle :aria-label="tokens ? `查看上下文用量，已使用 ${percent.toFixed(1)}%` : '查看上下文用量，暂无数据'" title="查看上下文用量">
         <el-progress type="circle" :width="14" :strokeWidth="2" :percentage="Math.min(100, percent)" :color="color" :showText="false" />
@@ -23,6 +23,9 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { ElButton, ElPopover, ElProgress } from "element-plus";
+
+// 触屏没有悬停，改为点击展开用量。
+const coarsePointer = window.matchMedia("(any-pointer: coarse)").matches;
 
 /**
  * 与宿主输入区的上下文用量环同构：悬停看估算用量。

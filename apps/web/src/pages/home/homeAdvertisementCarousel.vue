@@ -147,6 +147,7 @@ onUnmounted(() => motionPreference.removeEventListener("change", updateMotionPre
     &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: -2px; }
   }
   &:hover .rotationToggle, &:focus-within .rotationToggle { opacity: 1; }
+  @media (any-pointer: coarse) { .rotationToggle { opacity: 1; } }
 
   &.bannerGroup {
     max-width: none;

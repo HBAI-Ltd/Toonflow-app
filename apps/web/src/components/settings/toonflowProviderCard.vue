@@ -23,6 +23,7 @@
         </div>
       </div>
       <div class="providerActions">
+        <slot name="actions" />
         <el-button class="rechargeButton" plain :icon="IconCreditCard" @click="rechargeVisible = true">充值</el-button>
         <el-button class="viewButton" plain :icon="IconEye" @click="catalogVisible = true">查看</el-button>
       </div>
@@ -161,6 +162,7 @@ const providerLoaded = computed(() => !!toonflowAccountToken.value && !!props.pr
 
     .providerActions {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 8px;
       margin-inline-start: auto;

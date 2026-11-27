@@ -57,7 +57,9 @@ export async function refreshMobileConnection() {
     } finally {
       clearTimeout(requestTimeout);
       connectionRequest = undefined;
-      if (!document.hidden) connectionTimer = setTimeout(() => { void refreshMobileConnection().catch(() => {}); }, 5000);
+      if (!document.hidden && mobileConnection.value.mode === "remote") {
+        connectionTimer = setTimeout(() => { void refreshMobileConnection().catch(() => {}); }, 5000);
+      }
     }
   })();
   return connectionRequest;

@@ -6,10 +6,10 @@ import { translateMessage, validationOptions } from "@/lib/i18n";
 import u from "@/utils";
 
 export default Router().post("/", validateFields({
-  directory: z.string().min(1).max(4096).optional(), mediaType: z.enum(["image", "video", "audio"]),
+  directory: z.string().min(1).max(4096).optional(), mediaType: z.enum(["image", "video", "audio"]), fresh: z.boolean().optional(),
 }), async (req, res) => {
   u.mcpControl.assertAppRequest(req);
-  const { directory, mediaType, ...request } = req.body;
+  const { directory, mediaType, fresh, ...request } = req.body;
   const schema = (mediaType === "image" ? u.mediaSchemas.imageGenerationSchema : mediaType === "video" ? u.mediaSchemas.videoGenerationSchema : u.mediaSchemas.audioGenerationSchema).extend({ prompt: z.string().trim().max(100000) });
   const parsed = schema.safeParse(request, validationOptions());
   if (!parsed.success) {
@@ -23,7 +23,7 @@ export default Router().post("/", validateFields({
   req.socket.once("close", close);
   try {
     const cwd = directory ? await u.workspace.resolveWorkspace(req, directory) : undefined;
-    const price = await u.mediaGeneration.getMediaPrice(cwd, mediaType, parsed.data, controller.signal);
+    const price = await u.mediaGeneration.getMediaPrice(cwd, mediaType, parsed.data, controller.signal, fresh);
     if (!res.destroyed) res.set("Cache-Control", "no-store").json(success(price));
   } catch (err) {
     if (!controller.signal.aborted) throw err;

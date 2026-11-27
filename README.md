@@ -92,7 +92,7 @@
 </p>
 <p align="center">
   <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" />&nbsp;
-  <img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" />&nbsp;
+  <img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" />&nbsp;
   <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" />&nbsp;
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -363,7 +363,7 @@ https://github.com/user-attachments/assets/bb2f7bfe-46de-44ff-b3b3-95379f9d4b20
 | Linux ARM64（Debian / Ubuntu） | [DEB 安装包](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
 | Android ARM64 | [APK 下载](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
 
-- **Windows**：Intel / AMD 选 `toonflow-版本号-Setup.exe`，ARM64 选 `toonflow-版本号-win-arm64-Setup.exe`（需 .NET Framework 4.8.1，新版 Windows 11 已内置）。打开闪退请手动安装 [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/)。
+- **Windows**：Intel / AMD 选 `toonflow-版本号-Setup.exe`，ARM64 选 `toonflow-版本号-win-arm64-Setup.exe`。打开闪退请手动安装 [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/)。
 - **macOS**：按架构选 `toonflow-版本号-macos-arm64.pkg` 或 `-macos-x64.pkg`，双击安装，安装时需联网准备运行时。旧版 Intel Mac 客户端须下载完整 PKG 覆盖安装，安装前先退出应用并备份数据目录。
 - **Linux**：按架构下载 `.deb`，执行 `sudo apt install ./安装包文件名.deb`，安装需联网。
 - **Android**：仅支持 ARM64，内置本地后端可独立运行，也可在首页「设备互联」连接电脑或远程后端。
@@ -403,7 +403,7 @@ sudo spctl --master-disable
 
 ### 4.2 Docker 安装
 
-先安装 Git、[Docker Engine](https://docs.docker.com/engine/install/) 和 Docker Compose；Windows / macOS 可使用 Docker Desktop 的 Linux 容器模式。仓库提供 [Dockerfile](./Dockerfile)、[Compose 配置](./compose.yaml) 和 [构建排除规则](./.dockerignore)，基于 Bun 1.4.3 构建，镜像内包含 FFmpeg。
+先安装 Git、[Docker Engine](https://docs.docker.com/engine/install/) 和 Docker Compose；Windows / macOS 可使用 Docker Desktop 的 Linux 容器模式。仓库提供 [Dockerfile](./Dockerfile)、[Compose 配置](./compose.yaml) 和 [构建排除规则](./.dockerignore)，基于 Bun 1.4.5 构建，镜像内包含 FFmpeg。
 
 <details>
 <summary><strong>展开 Docker 安装步骤</strong></summary>
@@ -447,7 +447,7 @@ docker compose start
 
 ### 4.3 服务器安装
 
-适用于直接在 Linux 服务器上运行 Web 与 Server。以下以 Ubuntu / Debian 为例，使用项目指定的 [Bun 1.4.3](https://bun.sh/docs/installation)。
+适用于直接在 Linux 服务器上运行 Web 与 Server。以下以 Ubuntu / Debian 为例，使用项目指定的 [Bun 1.4.5](https://bun.sh/docs/installation)。
 
 <details>
 <summary><strong>展开服务器安装步骤</strong></summary>
@@ -457,7 +457,7 @@ docker compose start
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

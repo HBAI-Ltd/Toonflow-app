@@ -62,8 +62,9 @@ export default function useWorkspaceFiles(directory?: MaybeRefOrGetter<string | 
     const key = JSON.stringify([directory, path, mimeType]);
     let entry = fileUrls.get(key);
     if (!entry) {
-      const url = client.get<Blob>("/read", { params: { directory, path }, responseType: "blob" })
-        .then(({ data }) => URL.createObjectURL(mimeType ? new Blob([data], { type: mimeType }) : data));
+      // ACT: 部分 Chromium 环境下 XHR 的 blob 响应在大文件（约 10 MB 起的视频）上会以 net::ERR_FAILED 失败，改读 ArrayBuffer 再自建 Blob；代价是读取时短暂占用双份内存。
+      const url = client.get<ArrayBuffer>("/read", { params: { directory, path }, responseType: "arraybuffer" })
+        .then(({ data, headers }) => URL.createObjectURL(new Blob([data], { type: mimeType || String(headers["content-type"] || "") })));
       entry = { directory, path, url, users: 0 };
       fileUrls.set(key, entry);
       const current = entry;

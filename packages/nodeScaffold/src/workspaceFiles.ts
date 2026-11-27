@@ -6,7 +6,7 @@ export interface WorkspaceFiles {
   list(path?: string): Promise<{ directory: string; entries: { name: string; path: string; type: "file" | "directory" }[] }>;
   read(path: string): Promise<ArrayBuffer>;
   acquireUrl?(path: string, mimeType: string): { url: Promise<string>; release(): void };
-  readText(path: string): Promise<string>;
+  readText(path: string, maxBytes?: number, signal?: AbortSignal): Promise<string>;
   readTextSnapshot(path: string): Promise<{ text: string; revision: string; encoding: "utf-8" | "utf-8-bom" | "utf-16le" | "utf-16be" }>;
   writeTextSnapshot(path: string, text: string, snapshot: { revision: string; encoding: "utf-8" | "utf-8-bom" | "utf-16le" | "utf-16be" }): Promise<string>;
   readJson<T = unknown>(path: string): Promise<T>;
@@ -35,11 +35,14 @@ export async function uploadNodeFile(files: WorkspaceFiles, nodeId: string, file
   return path;
 }
 
+export type PickNodeAssets = (nodeId: string, accept: string, multiple?: boolean, signal?: AbortSignal) => Promise<File[]>;
+
 export function useNodeFiles() {
   const createFiles = inject<(() => WorkspaceFiles) | undefined>("workspaceFiles", undefined);
   const retainNodeFiles = inject("retainNodeFiles", false);
   // 宿主未提供素材库（如无权限的账号）时为 undefined，节点据此隐藏入口；取消选择或节点已移除时返回 undefined。
   const pickAsset = inject<((nodeId: string, kind: "image" | "video" | "audio") => Promise<File | undefined>) | undefined>("pickNodeAsset", undefined);
+  const pickAssets = inject<PickNodeAssets | undefined>("pickNodeAssets", undefined);
 
   function getWorkspaceFiles() {
     if (!createFiles) throw new Error("当前画布未提供工作区文件能力");
@@ -92,5 +95,5 @@ export function useNodeFiles() {
     return fileUrl;
   }
 
-  return { getWorkspaceFiles, uploadFile, removeNodeFiles, useFileUrl, pickAsset };
+  return { getWorkspaceFiles, uploadFile, removeNodeFiles, useFileUrl, pickAsset, pickAssets };
 }

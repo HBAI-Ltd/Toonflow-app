@@ -1,8 +1,8 @@
 <template>
   <el-dropdown ref="menu" trigger="contextmenu" virtualTriggering :virtualRef="menuAnchor" placement="bottom-start" :showArrow="false" :hideOnClick="false" popperClass="assetActionMenu" @command="handleCommand" @visibleChange="(opened: boolean) => { if (!opened) moveVisible = false; }">
     <template #dropdown>
-      <el-dropdown-menu v-if="activeEntry">
-        <el-dropdown-item command="move" :disabled="busy">
+      <assetMenuItems v-if="activeEntry" :canInsert="!!insert && activeEntry.type === 'file'" :isFile="activeEntry.type === 'file'" :busy="busy">
+        <template #move>
           <el-popover v-model:visible="moveVisible" trigger="hover" placement="right-start" :width="220" :offset="0" :showArrow="false" :showAfter="0" :hideAfter="150" appendTo=".assetActionMenu">
             <template #reference>
               <span class="moveTrigger"><span class="moveLabel">移动到</span><icon-chevron-right :size="14" /></span>
@@ -14,11 +14,8 @@
               </el-scrollbar>
             </div>
           </el-popover>
-        </el-dropdown-item>
-        <el-dropdown-item v-if="activeEntry.type === 'file'" command="download" divided>下载</el-dropdown-item>
-        <el-dropdown-item command="rename" :disabled="busy">重命名</el-dropdown-item>
-        <el-dropdown-item class="deleteAction" command="delete" :disabled="busy || !!activeEntry.children?.length" :title="activeEntry.children?.length ? '请先删除文件夹内的素材' : undefined">删除</el-dropdown-item>
-      </el-dropdown-menu>
+        </template>
+      </assetMenuItems>
     </template>
   </el-dropdown>
 </template>
@@ -30,9 +27,11 @@ import axios from "axios";
 import saveFile from "@/lib/saveFile";
 import { ElMessage, ElMessageBox, type DropdownInstance } from "element-plus";
 import { IconChevronRight, IconFolder, IconFolderPlus } from "@tabler/icons-vue";
+import assetMenuItems from "./assetMenuItems.vue";
 
 type AssetEntry = { name: string; path: string; type: "file" | "directory"; children?: AssetEntry[] };
-const props = defineProps<{ entries: AssetEntry[] }>();
+// insert：拖放到画布的替代入口，供触屏等无法原生拖放的场景把素材放到视口中心。
+const props = defineProps<{ entries: AssetEntry[]; insert?: (path: string) => Promise<void> }>();
 const emit = defineEmits<{ changed: [path?: string, target?: string] }>();
 const menu = ref<DropdownInstance>();
 const menuAnchor = shallowRef({ getBoundingClientRect: () => new DOMRect() });
@@ -126,6 +125,7 @@ async function handleCommand(command: string) {
   const parent = parentPath.value;
   closeMenu();
   try {
+    if (command === "insert") await props.insert?.(entry.path);
     if (command === "download") {
       await saveFile(() => axios.get<Blob>("/api/assets/read", { params: { path: entry.path, download: true }, responseType: "blob" }).then(({ data }) => data), entry.name);
     }
@@ -141,7 +141,9 @@ async function handleCommand(command: string) {
       await relocate(entry, parent === "." ? value.trim() : parent + "/" + value.trim());
     }
     if (command === "delete") {
-      await ElMessageBox.confirm("确定删除“" + entry.name + "”？", "删除素材", { type: "warning", confirmButtonText: "删除", cancelButtonText: "取消" });
+      await ElMessageBox.confirm(entry.type === "directory"
+        ? `确定删除文件夹“${entry.name}”及其全部内容？此操作无法撤销。`
+        : "确定删除“" + entry.name + "”？", "删除素材", { type: "warning", confirmButtonText: "删除", cancelButtonText: "取消" });
       busy.value = true;
       try {
         await axios.delete("/api/assets/remove", { data: { path: entry.path } });
@@ -168,10 +170,6 @@ defineExpose({ openMenu });
 .moveLabel {
   flex: 1;
   min-width: 132px;
-}
-
-:global(.assetActionMenu .deleteAction:not(.is-disabled)) {
-  color: var(--el-color-danger);
 }
 
 .moveDestinations {

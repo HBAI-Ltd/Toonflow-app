@@ -8,6 +8,7 @@ export * from "./nodeTools";
 export * from "./workspaceFiles";
 
 export * from "./nodeAi";
+export * from "./nodeModel";
 export * from "./nodeFfmpeg";
 export * from "./nodeAsr";
 export * from "./nodeServer";

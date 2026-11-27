@@ -38,7 +38,41 @@ const countLabel = computed(() => t`已选择 ${selectedCount.value} 个节点`)
 
 语言来源按每个请求的 `Accept-Language`（含 q 权重）隔离；无支持的请求语言时使用保存的应用语言或系统语言。Zod 使用一次注册、按请求读取的语言分派器。SSE、MCP 和 FFmpeg 仅处理已识别的系统错误，模型正文、工具成功结果、供应商未知错误、用户内容和日志详情保持原样。
 
-供应商、tools、nodes 子包和节点脚手架不接入多语言，也不参与文案抽取。插件名称和插件自身文案使用原值；Web 中的插件管理菜单、安装操作和配置校验提示仍属于应用界面。节点构建和宿主之间不提供语言运行时接口。
+## 插件多语言
+
+节点（`nodeScaffold`）和工具（`toolScaffold`）可选接入与宿主相同的多语言能力，字典由插件自己维护，不进入宿主字典，宿主 `extract` 也不扫描插件：
+
+```text
+packages/nodes/imageNode/
+  i18n/
+    zhCn.json    抽取出的中文源字典，不打包
+    en.json      “中文原文 → 译文”，文件名与 src/locales 相同（zhTw、ja、pt……）
+```
+
+- 插件目录存在 `i18n/` 时，构建器对插件自身源码执行与 Web 相同的编译期转换，界面继续写中文；显式文案同样使用 `import { t, msg, translate, locale } from "@toonflow/i18n/vue"`。工具服务端代码使用 `import { t, msg, translate } from "@toonflow/i18n"`，按当前请求语言翻译。
+- 构建时读取并校验 `i18n/*.json`，内联进产物 `.umd.js` / `.tool.js`，不生成额外资源。文件名不属于支持语言或内容不是字符串对象时构建失败；缺少的语言或词条回退中文原文。
+- 语言与 ICU 格式化由宿主提供：节点读取 `toonflowNodeHost.i18n`，工具组件读取 `toonflowToolHost.i18n`，工具服务端读取 `toonflow:tool-i18n`。使用多语言的插件需要配套宿主版本；没有 `i18n/` 也不导入 `@toonflow/i18n` 的插件产物不变。
+- 插件有 `i18n/` 时，随插件打包且自身也有 `i18n/` 的工作区依赖（`nodeScaffold`、`nodeShared`、被引用的 `@toonflow/node-image` 等节点包）一并转换，字典按依赖合并、插件自身优先；共享文案只在所属包维护一份。没有 `i18n/` 的共享包不转换。插件名称、元数据、提示词与预设保持原值。类型提示需要插件 `package.json` 声明 `"@toonflow/i18n": "workspace:*"`。
+- 自动转换只覆盖已知显示位置。显示数组、配置对象里的文案（如 `name` 字段、代码里比较或交给 Agent 的数据）保持原文，用 `markMessages(...)` 包住定义，让抽取收进字典，显示时再调用 `translate(item.name)`；`markMessages` 原样返回参数，不改变数据。计算属性的块状函数体、`notice` 等非约定变量里的文案，直接写 `t\`...\`` 或 `translate("...")`。变量名含 `prompt` 的声明会整体跳过抽取，界面文案不要放在这类变量里。
+- 工具只翻译界面组件与显式 `t`；返回给模型的工具结果和错误保持原样，没有界面的工具不建 `i18n/`。
+
+在仓库根目录抽取插件源文案，生成 `<插件目录>/i18n/zhCn.json`，再补齐其他语言文件。先抽取依赖包（`nodeScaffold` → `nodeShared` → 被引用的节点包），插件自身的源字典会自动排除依赖已有的词条：
+
+```sh
+bun packages/i18n/src/extract.ts packages/nodes/imageNode
+```
+
+白模预演的内置素材名称由目录数据动态生成，需使用其专用入口：
+
+```sh
+bun run --cwd packages/nodes/trumanMap extractI18n
+```
+
+该入口先运行通用插件抽取，再将内置主素材、非配方衍生素材及配方源素材名称合并到 `i18n/zhCn.json`；用户素材不参与抽取。配方衍生的状态和款式在显示时组合，无需为每个组合单独维护名称。该命令不会修改其他语言字典；新增名称需补充译文，缺失时显示原名。
+
+内置插件字典覆盖宿主支持的 22 种语言，但白模预演的素材名称尚未全部翻译。新增译文包含机器翻译，尚需母语及领域术语校对；新增词条缺少译文时回退中文原文。
+
+Web 中的插件管理菜单、安装操作和配置校验提示仍属于应用界面，使用宿主字典。
 
 ## 更新文案
 

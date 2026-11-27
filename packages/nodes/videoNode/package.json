@@ -4,8 +4,19 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./portraitMatting": "./src/portraitMatting.ts",
+    "./videoFilmstrip": "./src/components/videoFilmstrip.vue",
+    "./videoProcessing": "./src/videoProcessing.ts",
+    "./rifeFrames": "./src/rifeFrames.ts",
+    "./videoSubject": "./src/videoSubject.ts",
+    "./videoTextDetection": "./src/videoTextDetection.ts",
+    "./subtitleRepair": "./src/subtitleRepair.ts",
+    "./videoRecognition": "./src/videoRecognition.ts",
+    "./videoTracking": "./src/videoTracking.ts",
+    "./soundTools": "./src/videoSound.ts",
     "./videoActions": "./src/components/videoActions.vue",
-    "./videoPlayer": "./src/components/videoPlayer.vue"
+    "./videoPlayer": "./src/components/videoPlayer.vue",
+    "./videoScaleOptions": "./src/components/videoScaleOptions.vue"
   },
   "scripts": {
     "build": "vite build",
@@ -18,9 +29,12 @@
     "element-plus": "^2.14.5"
   },
   "dependencies": {
+    "@toonflow/node-image": "workspace:*",
+    "@toonflow/plugin-server": "workspace:*",
     "@tabler/icons-vue": "^3.46.0"
   },
   "devDependencies": {
+    "@toonflow/i18n": "workspace:*",
     "@toonflow/node-shared": "workspace:*",
     "@toonflow/ffmpeg": "workspace:*",
     "@toonflow/nodes-scaffold": "workspace:*",

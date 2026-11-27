@@ -1,9 +1,9 @@
 <template>
   <teleport :to="target ?? 'body'" :disabled="!target">
-    <section v-show="!!target" class="lightingPanel nodrag nopan nowheel" aria-label="图片打光" @pointerdown.stop @mousedown.stop @dblclick.stop @wheel.stop @keydown.stop>
+    <section v-show="!!target" class="lightingPanel nodrag nopan nowheel" aria-label="调整光线" @pointerdown.stop @mousedown.stop @dblclick.stop @wheel.stop @keydown.stop>
       <header class="panelHeader">
-        <div><icon-sun :size="18" /><strong>打光</strong><span>调整光线，保留画面</span></div>
-        <el-button :icon="IconX" text :disabled="generating" aria-label="关闭打光" @click="emit('close')" />
+        <div><icon-sun :size="18" /><strong>调整光线</strong></div>
+        <el-button :icon="IconX" text :disabled="generating" aria-label="关闭" @click="emit('close')" />
       </header>
       <div class="lightingWorkspace">
         <div class="stageColumn">
@@ -52,7 +52,7 @@
         <div class="switchControl"><span>智能模式</span><el-switch v-model="settings.smartMode" :disabled="busy" aria-label="智能模式" /></div>
         <el-input v-if="settings.smartMode" v-model="settings.smartDesc" type="textarea" :autosize="{ minRows: 2, maxRows: 5 }" :disabled="busy" placeholder="描述你想要的光影、氛围或局部细节…" aria-label="智能打光描述" />
       </div>
-      <imageVariationGenerator v-model:generating="generating" :settings="settings" :source="source" :aspectRatio="sourceRatio" :prompt="buildLightingPrompt(settings)" :disabled="disabled" label="打光" @generated="emit('close')" />
+      <imageVariationGenerator v-model:generating="generating" :settings="settings" :source="source" :aspectRatio="sourceRatio" :prompt="buildLightingPrompt(settings)" :disabled="disabled" label="调整光线" @generated="emit('close')" />
     </section>
   </teleport>
 </template>

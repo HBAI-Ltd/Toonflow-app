@@ -18,7 +18,6 @@ export default router.put("/", validateFields({ expectedRevision: z.number().int
     id: z.string().min(1).refine(value => value.toLowerCase() !== "toonflow", "toonflow 为账号供应商保留 ID"), label: z.string(),
   })).optional(),
   toonflowProvider: accountProviderSchema.nullable().optional(),
-  network: u.network.networkSchema.optional(),
   multiTenantEnabled: z.boolean().optional(),
   desktopAutoUpdate: z.boolean().optional(),
   desktopUpdateSource: z.enum(["official", "github", "custom"]).optional(),
@@ -36,7 +35,7 @@ export default router.put("/", validateFields({ expectedRevision: z.number().int
     res.set("X-Toonflow-Settings-Revision", String(saved.revision));
     return res.json(success({ multiTenantEnabled: true, aiModels: await u.ai.listAiModels() }, "设置已保存"));
   }
-  // ACT: 系统代理读取是异步的；串行保存完整快照，避免较早的请求覆盖较晚的配置。
+  // ACT: 串行保存完整快照，避免较早的请求覆盖较晚的配置。
   const saving = saveQueue.then(async () => {
     if (res.locals.multiTenantWeb === true && user?.role === "admin") {
       const previousSettings = u.conf.get("settings", {});
@@ -53,15 +52,9 @@ export default router.put("/", validateFields({ expectedRevision: z.number().int
     const previousAccount = previousSettings.toonflowAccount as { token?: unknown } | null | undefined;
     const nextAccount = settings.toonflowAccount as { token?: unknown } | null | undefined;
     if (!nextAccount?.token || nextAccount.token !== previousAccount?.token) settings.toonflowProvider = null;
-    const network = settings.network !== undefined || previousSettings.network !== undefined
-      ? await u.network.prepareNetwork(settings.network) : undefined;
-    const commit = () => {
-      // 开关只由超管接口修改；异步准备完成后读取最新值，避免其他页面的旧快照覆盖。
-      settings.multiTenantEnabled = u.multiTenant.isEnabled();
-      u.conf.set("settings", settings);
-    };
-    if (network) u.network.configureNetwork(network, undefined, commit);
-    else commit();
+    // 开关只由超管接口修改；保存时读取最新值，避免其他页面的旧快照覆盖。
+    settings.multiTenantEnabled = u.multiTenant.isEnabled();
+    u.conf.set("settings", settings);
     await u.mcpRuntime.reloadMcpRuntime();
     return { customProviders: settings.customProviders ?? [], mediaProviderConfigs: settings.mediaProviderConfigs ?? {}, toonflowProvider: settings.toonflowProvider ?? null,
       aiModels: await u.ai.listAiModels(), nodeMenu: u.conf.get("settings.general.nodeMenu") ?? null, multiTenantEnabled: u.multiTenant.isEnabled() };

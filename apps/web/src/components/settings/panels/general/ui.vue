@@ -38,13 +38,19 @@
         @click="captureThemeClickPoint"
         @change="(value) => changeTheme(String(value))">
         <el-radio v-for="item in themes" :key="item.value" :value="item.value" border>
-          <span class="themeLabel">
+          <span class="cardLabel">
             <component :is="item.icon" :size="22" />
             <strong>{{ item.label }}</strong>
             <small>{{ item.description }}</small>
           </span>
         </el-radio>
       </el-radio-group>
+    </section>
+
+    <section class="settingSection" aria-labelledby="canvasLayoutTitle">
+      <h3 id="canvasLayoutTitle"><icon-layout-grid :size="18" />画布布局模式</h3>
+      <canvasLayoutOptions :modelValue="generalSettings.canvasLayoutMode" aria-labelledby="canvasLayoutTitle"
+        @update:modelValue="mode => updateGeneralSettings({ canvasLayoutMode: mode })" />
     </section>
 
     <section class="settingSection" aria-labelledby="colorTitle">
@@ -139,13 +145,15 @@ import {
   IconMoon,
   IconDeviceDesktop,
   IconSunMoon,
+  IconLayoutGrid,
   IconPalette,
   IconSparkles,
   IconCheck,
   IconRestore,
 } from "@tabler/icons-vue";
-import { defaultUiSettings, uiSettings, updateUiSettings } from "@/stores/settings";
+import { defaultUiSettings, generalSettings, uiSettings, updateGeneralSettings, updateUiSettings } from "@/stores/settings";
 import { isMobile } from "@/lib/platform";
+import canvasLayoutOptions from "@/components/canvasLayoutOptions.vue";
 import languageSelect from "@/components/languageSelect.vue";
 
 const mobileScale = ref(uiSettings.value.mobileScale);
@@ -266,7 +274,7 @@ function changeTheme(value: string) {
         }
       }
 
-      .themeLabel {
+      .cardLabel {
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -364,7 +372,7 @@ function changeTheme(value: string) {
   @media (max-width: 700px) {
     .settingSection .themeOptions {
       grid-template-columns: 1fr;
-      .themeLabel {
+      .cardLabel {
         flex-direction: row;
         align-items: center;
         flex-wrap: wrap;

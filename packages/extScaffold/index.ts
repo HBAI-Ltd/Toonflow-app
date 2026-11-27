@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, loadConfigFromFile } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { z } from "zod";
+import { localModelDefinitionsSchema } from "@toonflow/plugin-server/localModels";
 import { defineExt, type ExtDefinition } from "./src/runtime.ts";
 
 const tiptapGlobals = {
@@ -58,6 +59,7 @@ export function createExtConfig(config: ExtMetadata, configUrl: string) {
           for (const dependency of loaded.dependencies) this.addWatchFile(dependency);
           const { load: _load, ...metadata } = defineExt({ ...loaded.config as unknown as ExtMetadata, load: async () => ({ default: {} }) });
           if (metadata.id !== config.id) throw new Error("修改扩展 ID 后请重新启动构建命令");
+          metadata.localModels = localModelDefinitionsSchema.optional().parse(metadata.localModels);
           const configRules = z.array(z.record(z.string(), z.json())).max(100).parse(metadata.configRules ?? []);
           this.addWatchFile(packagePath);
           this.addWatchFile(readmePath);

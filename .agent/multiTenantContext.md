@@ -86,6 +86,8 @@
 
 ## 本次交接状态与接手方式
 
+- 视频模型目录支持在 `durationResolutionMap` 的每组时长和分辨率下声明可选 `ratio: string[]`。英文冒号是界面输入提示，视频生成和报价按供应商声明的比例文本传参。平台目录沿用公开文本和敏感信息过滤规则，旧行可省略比例。隔离验证已确认供应商源码编辑、平台目录和视频请求均保留 `16：9`、`auto`、`2.39:1`，图片请求仍按原宽高比格式处理。
+
 - 2026-11-11 内置供应商改为通过既有 Channel 的 `getVendors` / `getVendorSource` 在线读取，创作端和超管共享编辑器均按需获取列表与源码；后台新增 `/api/multiTenant/providers/builtin/list`、`source`，仍验证超管身份，公开创作入口权限不放宽。在线源码只沿现有 AST 校验，安装／配置保存及实际执行仍使用原本地或 SQL 链路，不切换 `sourceMapping.providers` 草稿、不隐式更新已有供应商。`@toonflow/providers` 只导出类型，静态源码不再参与运行与桌面／server／Android 打包；用户确认源码已放到云端后，已删除 `src/language` 与 `src/media` 下的四份旧源码。旧媒体源码若缺图片尺寸／比例字段，使用界面默认值，需更新源码后获得对应能力。Web、Server、desktop、mobile、providerWeb、adminWeb、toolScaffold、i18n 类型检查及 Web／Server 构建通过；四份实际线上源码解析通过，隔离临时目录 HTTP 验证列表／源码 `200`、非法类型 `400`、缺少页面来源 `403`、后台未登录 `401`。未执行真实付费模型、桌面／Android 安装包或浏览器交互验证，未删除线上数据。
 
 - 已完成代码分析、方案讨论，以及 `AGENTS.md` 的引用和 `.agent/` 中的多租户规范与交接文档；现有独立包为 `db`、`auth`、`adminWeb`、`userWeb`、`sourceMapping`、`models`、`billing` 与最新统一编排领域 `gateway`。原父目录总包已拆除，gateway 也不是父总包，宿主按各包公开导出接入。

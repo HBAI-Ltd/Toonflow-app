@@ -1,3 +1,4 @@
+import { markMessages } from "@toonflow/i18n/vue";
 import type { ModelDefinition } from "./modelGeometry";
 import type { SceneLife, SceneNavigation } from "./lifeDocument";
 import type { SceneCamera } from "./cameraDocument";
@@ -8,11 +9,11 @@ export type SceneAnchor = { kind: "point"; position: Vector3Value } | { kind: "o
 export const primitiveShapes = ["box", "cuboid", "sphere", "cylinder", "cone", "frustum", "torus", "plane", "disc", "pyramid", "capsule", "person", "seatedPerson", "kneelingPerson", "riggedPerson", "backdrop"] as const;
 export type PrimitiveShape = typeof primitiveShapes[number];
 export type AssetCategory = "全部" | "自然" | "道具" | "建筑" | "基础" | "本地" | "生成";
-export const assetThemes = ["中式", "日式", "欧式", "异域", "现代", "奇幻", "科幻", "蒸汽朋克", "赛博朋克", "废土"] as const;
+export const assetThemes = markMessages(["中式", "日式", "欧式", "异域", "现代", "奇幻", "科幻", "蒸汽朋克", "赛博朋克", "废土"] as const);
 export type AssetTheme = typeof assetThemes[number];
-export const assetStates = ["原始", "老旧", "破损", "废弃"] as const;
+export const assetStates = markMessages(["原始", "老旧", "破损", "废弃"] as const);
 export type AssetState = typeof assetStates[number];
-export const assetItemTypes = ["建筑", "家具", "交通", "灯具", "器物", "设施", "植物", "岩石", "构件", "人物", "动物", "食品", "服饰", "乐器", "运动用品", "电子设备"] as const;
+export const assetItemTypes = markMessages(["建筑", "家具", "交通", "灯具", "器物", "设施", "植物", "岩石", "构件", "人物", "动物", "食品", "服饰", "乐器", "运动用品", "电子设备"] as const);
 export type AssetItemType = typeof assetItemTypes[number];
 export const assetBlueprintPacks = ["architecture", "objects", "nature", "masterArchitecture", "masterObjects", "masterNature", "masterTransport"] as const;
 export type SceneAsset = {

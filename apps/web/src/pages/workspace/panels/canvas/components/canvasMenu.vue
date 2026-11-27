@@ -91,6 +91,7 @@ const props = defineProps<{
   initialCanvasId?: string;
   activateCanvas?: (id: string, signal?: AbortSignal) => Promise<void>;
   flushSave: (action?: () => Promise<void>) => Promise<void>;
+  getSnapshot: () => FlowExportObject;
 }>();
 const workspaceStore = useWorkspaceStore();
 const showToonflowBalance = computed(() => !multiTenantEnabled.value && !!toonflowAccountToken.value);
@@ -128,7 +129,7 @@ const newCanvasId = ref<string | null>(null);
 const nameInput = ref<InputInstance>();
 const canvasName = ref("");
 const renameError = ref("");
-const { toObject, setNodes, setEdges, setViewport } = useVueFlow();
+const { setNodes, setEdges, setViewport } = useVueFlow();
 type CanvasEntry = { path: string; name: string; type: "file" | "directory"; children?: CanvasEntry[]; empty?: boolean; draft?: boolean };
 const folders = inject<ShallowRef<CanvasEntry[]>>("canvasFolders", shallowRef<CanvasEntry[]>([]));
 const loadedDirectories = inject<ShallowRef<string[]>>("canvasLoadedDirectories", shallowRef<string[]>([]));
@@ -393,7 +394,7 @@ async function applyCanvas(canvasId: string, directory: string, signal?: AbortSi
   }
   await props.flushSave();
   checkCanvasDirectory(directory, signal);
-  if (currentCanvas) currentCanvas.flow = toObject();
+  if (currentCanvas) currentCanvas.flow = props.getSnapshot();
   // 应用画布数据时暂时清空文件名，避免初始化触发自动保存。
   activeCanvasId.value = "";
   setNodes(nextCanvas.flow.nodes);
@@ -834,6 +835,9 @@ defineExpose({ getCanvases, peekCanvases, initialized, addCanvas, switchCanvas, 
     overflow-x: auto;
     scrollbar-width: thin;
 
+    // 横向滚动区域会把卡片的外阴影裁成矩形。
+    :deep(.balanceCard) { box-shadow: none; }
+
     .balanceCard {
       flex-shrink: 0;
       font-variant-numeric: tabular-nums;
@@ -888,7 +892,7 @@ defineExpose({ getCanvases, peekCanvases, initialized, addCanvas, switchCanvas, 
       .moreButton { width: 24px; height: 24px; padding: 0; margin: 0; flex-shrink: 0; opacity: 0; }
 
       &:hover, &:focus-within { .moreButton { opacity: 1; } }
-      @media (hover: none) { .moreButton { opacity: 1; } }
+      @media (hover: none), (any-pointer: coarse) { .moreButton { width: 32px; height: 32px; opacity: 1; } }
     }
   }
 }
@@ -969,6 +973,7 @@ defineExpose({ getCanvases, peekCanvases, initialized, addCanvas, switchCanvas, 
       min-width: 0;
       height: 28px;
       padding: 0 3px;
+      font-family: inherit;
       font-size: 13px;
       :deep(> span) { display: flex; align-items: center; gap: 4px; min-width: 0; }
       span { min-width: 0; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }

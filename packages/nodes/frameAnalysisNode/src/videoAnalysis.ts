@@ -24,8 +24,8 @@ export type AnalysisResult = {
   height: number;
   manifest: string;
   warning?: string;
-  sourceVideoOffset?: number;
-  sourceVideoStreamIndex?: number;
+  sourceVideoOffset: number;
+  sourceVideoStreamIndex: number;
   overview?: {
     summary: string;
     narrative: string;
@@ -33,7 +33,7 @@ export type AnalysisResult = {
     editing: string;
     focusResponse: string;
   };
-  ai?: { providerId: string; modelId: string; analyzedAt: string; focus?: string; overviewError?: string };
+  ai?: { providerId: string; modelId: string; analyzedAt: string; focus: string; overviewError?: string };
 };
 
 export type AnalysisOptions = {
@@ -53,7 +53,7 @@ export type AnalysisOptions = {
 
 export function analysisPath(path: string) {
   if (!path || /[\x00-\x1f]/.test(path) || /^(?:[\\/]|[a-z][a-z\d+.-]*:)/i.test(path) || path.split(/[\\/]+/).includes("..")) {
-    throw new Error("拉片素材必须使用工作区内的相对路径");
+    throw new Error("视频素材必须使用工作区内的相对路径");
   }
   return path.split(/[\\/]+/).filter(part => part && part !== ".").join("/");
 }
@@ -124,10 +124,10 @@ async function detectScenes(options: AnalysisOptions, videoIndex: number, estima
       const path = `${temporary}/frame${String(index).padStart(8, "0")}.rgb`;
       const content = new Uint8Array(await workspace.read(path));
       signal.throwIfAborted();
-      if (!frameBytes || !content.byteLength || content.byteLength % frameBytes) throw new Error("解码帧文件不完整，已停止拉片");
+      if (!frameBytes || !content.byteLength || content.byteLength % frameBytes) throw new Error("解码帧文件不完整，已停止分析");
       for (let offset = 0; offset < content.byteLength; offset += frameBytes) {
         const time = timestamps[frameCount];
-        if (time === undefined) throw new Error("视频帧与时间戳无法对应，已停止拉片");
+        if (time === undefined) throw new Error("视频帧与时间戳无法对应，已停止分析");
         cuts.push(...detector.processFrame(content.subarray(offset, offset + frameBytes), time));
         frameCount++;
         // ACT: 每 12 帧让出主线程，保证长视频处理中仍能响应取消和画布操作。
@@ -192,7 +192,7 @@ async function detectScenes(options: AnalysisOptions, videoIndex: number, estima
   signal.throwIfAborted();
   if (failure) throw failure;
   if (commandFailure) throw commandFailure;
-  if (!decodedCount || frameCount !== decodedCount) throw new Error("视频帧数与解码结果不一致，已停止拉片");
+  if (!decodedCount || frameCount !== decodedCount) throw new Error("视频帧数与解码结果不一致，已停止分析");
   cuts.push(...detector.finish());
   await workspace.remove(temporary, true);
   // ACT: VFR 的最后一帧不能沿用前一帧间隔；优先取帧自身时长或有效流时长。
@@ -209,7 +209,7 @@ export async function analyzeVideo(options: AnalysisOptions): Promise<AnalysisRe
   const source = analysisPath(options.source);
   const directory = analysisPath(options.directory);
   if (source.toLowerCase().startsWith(`${directory.toLowerCase()}/`)) throw new Error("输出目录不能包含输入视频");
-  if (!options.frames && !options.clips && !options.audio) throw new Error("请至少选择一个拆解维度");
+  if (!options.frames && !options.clips && !options.audio) throw new Error("请至少勾选一种要提取的素材");
   createSceneDetector(options);
   signal.throwIfAborted();
   onProgress(1, "读取视频信息");

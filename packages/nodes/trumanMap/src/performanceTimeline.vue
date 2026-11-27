@@ -2,11 +2,9 @@
   <section ref="root" class="performanceTimeline" :class="{ collapsed, resizing: !!resizeDrag, razor: tool === 'razor', groupMoving: !!groupDrag, multiPick: picked.size > 1 }" :style="collapsed ? undefined : { height: `${panelHeight}px`, '--groupShift': `${groupShift}px` }" tabindex="-1" aria-label="演绎时间轴" @pointermove="move" @pointerup="finish" @pointercancel="cancel" @lostpointercapture="cancel" @wheel.stop="wheel">
     <div v-if="!collapsed" class="resizeGrip" role="separator" aria-orientation="horizontal" aria-label="拖动调整时间轴高度" title="拖动调整高度" @pointerdown.stop="beginResize" @pointermove.stop="moveResize" @pointerup.stop="endResize" @pointercancel.stop="endResize" @lostpointercapture.stop="endResize" @dblclick="emit('update:height', defaultHeight)" />
     <header class="timelineHeader">
-      <div class="transportGroup">
-        <button type="button" :disabled="disabled || interacting" aria-label="回到开头" title="回到开头（Home）" @click="seekTo(playbackRange.start)"><icon-player-skip-back :size="16" /></button>
-        <button type="button" class="playButton" :disabled="disabled || interacting" :aria-label="playLabel" :title="playLabel" @click="emit('togglePlayback')"><component :is="completed ? IconRotate : running ? IconPlayerPause : IconPlayerPlay" :size="17" /></button>
-      </div>
-      <output class="timeReadout" aria-label="当前位置及总时长"><b><span ref="elapsedWhole" /><span ref="elapsedFraction" class="fraction" /></b><span class="total">/ {{ totalLabel }}</span></output>
+      <timelineTransport :disabled="disabled || interacting" :running="running" :completed="completed" :totalLabel="totalLabel" @rewind="seekTo(playbackRange.start)" @togglePlayback="emit('togglePlayback')">
+        <span ref="elapsedWhole" /><span ref="elapsedFraction" class="fraction" />
+      </timelineTransport>
       <template v-if="!collapsed">
         <i class="headerDivider" aria-hidden="true" />
         <div class="editTools" role="group" aria-label="编辑">
@@ -16,7 +14,7 @@
           <el-popover trigger="click" placement="top-start" :width="300" popperClass="dialogueCoveragePopover" :disabled="disabled || interacting">
             <template #reference><button type="button" class="coverageMore" :disabled="disabled || interacting || cameraCount + 3 > maxCameras" aria-label="按对白分镜" title="按对白分镜：粘贴“角色：台词”（两人正反打，3到6人群戏），按每句台词切到说话的人并配字幕；场景里没有的角色自动新建站位"><icon-chevron-down :size="12" /></button></template>
             <div class="dialogueCoverage" @keydown.stop>
-              <div class="coveragePace" role="radiogroup" aria-label="剪辑节奏"><span>节奏</span><button v-for="item in paceOptions" :key="item.value" type="button" role="radio" :aria-checked="coveragePace === item.value" :class="{ active: coveragePace === item.value }" :title="item.title" @click="coveragePace = item.value">{{ item.name }}</button></div>
+              <div class="coveragePace" role="radiogroup" aria-label="剪辑节奏"><span>节奏</span><button v-for="item in paceOptions" :key="item.value" type="button" role="radio" :aria-checked="coveragePace === item.value" :class="{ active: coveragePace === item.value }" :title="item.title" @click="coveragePace = item.value">{{ translate(item.name) }}</button></div>
               <textarea v-model="dialogueScript" rows="6" maxlength="6000" placeholder="每行一句“角色：台词”；场景里没有这些角色会自动新建并站好位（也可先选中说话的人）：&#10;林冲：这风雪，怕是要下一夜了。&#10;陆谦：兄长且饮一杯。&#10;（两人对视）" aria-label="对白" />
               <small v-if="scriptSpeakers.length" class="scriptSpeakers">识别到 {{ scriptSpeakers.length }} 个角色：{{ scriptSpeakers.join("、") }}{{ scriptSpeakers.length === 1 ? "（至少要两个人说话）" : "" }}</small>
               <template v-if="upstreamScenes.length > 1"><button v-for="(scene, index) in upstreamScenes" :key="index" type="button" class="paceApply" :title="'把上游剧本的这一场填进对白框：' + sceneTitle(scene)" @click="dialogueScript = scene">带入第{{ index + 1 }}场</button></template>
@@ -35,8 +33,8 @@
       <div v-if="!collapsed" class="zoomGroup" role="group" aria-label="时间轴缩放">
         <button type="button" class="snapToggle" :class="{ active: snapping }" :aria-pressed="snapping" :title="snapping ? '吸附已开：拖动时贴到播放头、镜头段和片段边缘（按住 Alt 临时关闭）' : '吸附已关：可自由放到任意时刻'" @click="emit('update:snapping', !snapping)"><icon-magnet :size="16" /></button>
         <button type="button" aria-label="适应全片" title="缩放到正好放下整部成片" :disabled="interacting" @click="fitZoom"><icon-arrows-horizontal :size="16" /></button>
-        <button type="button" aria-label="缩小时间轴" :title="`缩小时间轴（${zoomHint}）`" :disabled="interacting || scale <= minZoom" @click="zoomBy(0.5)"><icon-zoom-out :size="16" /></button>
-        <button type="button" aria-label="放大时间轴" :title="`放大时间轴（${zoomHint}）`" :disabled="interacting || scale >= maxScale" @click="zoomBy(2)"><icon-zoom-in :size="16" /></button>
+        <button type="button" aria-label="缩小时间轴" :title="`缩小时间轴（${translate(zoomHint)}）`" :disabled="interacting || scale <= minZoom" @click="zoomBy(0.5)"><icon-zoom-out :size="16" /></button>
+        <button type="button" aria-label="放大时间轴" :title="`放大时间轴（${translate(zoomHint)}）`" :disabled="interacting || scale >= maxScale" @click="zoomBy(2)"><icon-zoom-in :size="16" /></button>
       </div>
       <button type="button" class="collapseAction" :aria-label="collapsed ? '展开时间轴' : '收起时间轴'" :title="collapsed ? '展开时间轴' : '收起时间轴'" :aria-expanded="!collapsed" @click="cancel(); emit('update:collapsed', !collapsed)"><icon-chevron-down :size="16" /></button>
     </header>
@@ -96,6 +94,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
 import { nextTick } from "vue";
+import { markMessages, translate } from "@toonflow/i18n/vue";
 import { extractSpeakers, findAxisCrossings, splitScenes } from "./shotCoverage";
 import { lineOverrun } from "./shotList";
 // 对白框里识别到的角色（按出场先后），让人点之前就知道谁会被站位、拍到。
@@ -104,7 +103,8 @@ const scriptSpeakers = computed(() => dialogueScript.value.trim() ? extractSpeak
 const upstreamScenes = computed(() => props.upstreamScript ? splitScenes(props.upstreamScript).filter(scene => extractSpeakers(scene).length >= 1).slice(0, 8) : []);
 function sceneTitle(scene: string) { return scene.split(/\r?\n/)[0]?.trim() ?? ""; }
 import { ElPopover } from "element-plus";
-import { IconEye, IconEyeOff, IconScissors, IconPlayerSkipBack, IconPlayerPlay, IconPlayerPause, IconRotate, IconChevronDown, IconChevronRight, IconTrash, IconCamera, IconCameraPlus, IconMapPinPlus, IconZoomIn, IconZoomOut, IconArrowNarrowRight, IconRoute, IconFolder, IconFolderPlus, IconFolderOff, IconMagnet, IconArrowsHorizontal, IconBroadcast, IconMovie } from "@tabler/icons-vue";
+import { IconEye, IconEyeOff, IconScissors, IconChevronDown, IconChevronRight, IconTrash, IconCamera, IconCameraPlus, IconMapPinPlus, IconZoomIn, IconZoomOut, IconArrowNarrowRight, IconRoute, IconFolder, IconFolderPlus, IconFolderOff, IconMagnet, IconArrowsHorizontal, IconBroadcast, IconMovie } from "@tabler/icons-vue";
+import timelineTransport from "./timelineTransport.vue";
 import { getCameraGap, getCameraShot, getCamerasDuration, getProgramSegments, minFilmSeconds, numberProgramSegments, type CameraShot, type SceneCamera, type ShotKey } from "./cameraDocument";
 import type { TimelineFolder } from "./sceneDocument";
 import { getPerformanceEventDuration, getPerformanceSegmentDuration, insertPerformancePoint, performanceTrackSchema, type PerformanceTrack } from "./performanceDocument";
@@ -116,7 +116,7 @@ const props = defineProps<{ folders?: TimelineFolder[]; snapping?: boolean; trac
 // 按对白分镜的剧本，本次编辑会话里保留。
 const dialogueScript = ref("");
 // 剪辑节奏：一键分镜时每个镜头的时长倍数（动作戏快切、文戏舒缓），本次编辑会话里保留。
-const paceOptions = [{ name: "快切", value: 0.6, title: "镜头约2秒一切，适合打斗、追逐、紧张场面" }, { name: "标准", value: 1, title: "镜头约3到4秒一切" }, { name: "舒缓", value: 1.6, title: "镜头约5到6秒一切，适合文戏、抒情、交代环境" }];
+const paceOptions = markMessages([{ name: "快切", value: 0.6, title: "镜头约2秒一切，适合打斗、追逐、紧张场面" }, { name: "标准", value: 1, title: "镜头约3到4秒一切" }, { name: "舒缓", value: 1.6, title: "镜头约5到6秒一切，适合文戏、抒情、交代环境" }]);
 const coveragePace = ref(1);
 const emit = defineEmits<{ change: [id: string, patch: Partial<PerformanceTrack>]; select: [id: string, index?: number]; selectClip: [id: string, clipId: string]; removeClip: [id: string, clipId: string]; remove: [id: string]; addCamera: []; autoCoverage: [script?: string, pace?: number]; exportShots: []; exportEdl: []; exportFrames: []; exportVideo: [longEdge: number]; fixLineTiming: []; selectCamera: [id: string, shotId?: string]; createShot: [id: string, start: number, end: number]; changeShot: [id: string, shotId: string, start: number, end: number]; removeShot: [id: string, shotId: string]; removeCamera: [id: string]; "update:collapsed": [value: boolean]; togglePlayback: []; seek: [seconds: number, phase: "start" | "move" | "end" | "cancel"]; "update:folders": [value: TimelineFolder[]]; "update:snapping": [value: boolean]; "update:height": [value: number]; pickProgram: [cameraId: string, time: number];
   splitShot: [cameraId: string, shotId: string, time: number]; splitClip: [trackId: string, clipId: string, time: number];
@@ -143,7 +143,7 @@ type ShotDrag = { pointer: number; x: number; scroll: number; scale: number; key
 const maxCameras = 24;
 const maxShots = 64;
 const minDragShot = 0.3;
-const zoomHint = "Ctrl / ⌘ + 滚轮缩放 · Shift + 滚轮横移";
+const zoomHint = markMessages("Ctrl / ⌘ + 滚轮缩放 · Shift + 滚轮横移");
 const maxFolders = 32;
 // ACT: 缩放从整天总览（约每像素百秒）到逐帧（每秒2400像素，1/24秒约100像素）；内容宽度上限按浏览器可承受的DOM宽度给。
 const minZoom = 0.01, maxZoom = 2400;
@@ -295,7 +295,7 @@ function makeRow(track: PerformanceTrack, start: number): TrackRow {
   const anchors: Anchor[] = track.clips ? (track.controller === "object" ? [] : getClipRouteTiming(track.clips).arrivals.map((offset, index) => ({ index, offset, teleport: false })))
     : getPerformancePointOffsets(clips, track.points.length).map((offset, index) => ({ index, offset, teleport: !!track.teleports?.includes(index) }));
   const length = Math.max(0, ...blocks.map(block => block.offset + block.seconds));
-  return { kind: "track", key: "track:" + track.id, id: track.id, enabled: track.enabled, startAt: track.startAt, track, start, length, blocks, anchors, name: track.name ?? object?.name ?? "场景物体", color: performanceColor(track.id) };
+  return { kind: "track", key: "track:" + track.id, id: track.id, enabled: track.enabled, startAt: track.startAt, track, start, length, blocks, anchors, name: track.name ?? object?.name ?? translate("场景物体"), color: performanceColor(track.id) };
 }
 function makeCameraRow(camera: SceneCamera): CameraRow {
   return { kind: "camera", key: "camera:" + camera.id, id: camera.id, enabled: camera.enabled, camera, shots: camera.shots ?? [], name: camera.name, color: performanceColor("camera:" + camera.id) };
@@ -384,15 +384,15 @@ const selectedClipBlock = computed(() => {
 const selectedRouteRow = computed(() => trackRows.value.find(row => row.id === props.selectedTrackId && row.track.controller !== "object" && (!row.track.clips || row.track.clips.some(clip => clip.kind === "move" && clip.enabled !== false))));
 const deleteTarget = computed(() => {
   if (picked.value.size > 1) { const items = pickedItems(); return { label: `删除所选 ${items.length} 项`, run: () => { emit("removeItems", items); clearPicks(); } }; }
-  if (props.selectedShotKey && selectedShot.value?.keys?.some(key => key.id === props.selectedShotKey)) return { label: "删除关键点", run: () => emit("removeShotKey") };
+  if (props.selectedShotKey && selectedShot.value?.keys?.some(key => key.id === props.selectedShotKey)) return { label: translate("删除关键点"), run: () => emit("removeShotKey") };
   const camera = props.selectedCameraId ? cameraMap.value.get(props.selectedCameraId) : undefined;
   const shot = selectedShot.value;
-  if (camera && shot) return { label: "删除镜头段", run: () => emit("removeShot", camera.id, shot.id) };
+  if (camera && shot) return { label: translate("删除镜头段"), run: () => emit("removeShot", camera.id, shot.id) };
   const clip = selectedClipBlock.value;
-  if (clip) return { label: "删除片段", run: () => emit("removeClip", clip.row.id, clip.block.clip.id) };
-  if (camera) return { label: "删除机位", run: () => emit("removeCamera", camera.id) };
+  if (clip) return { label: translate("删除片段"), run: () => emit("removeClip", clip.row.id, clip.block.clip.id) };
+  if (camera) return { label: translate("删除机位"), run: () => emit("removeCamera", camera.id) };
   const track = props.selectedTrackId ? props.tracks.find(track => track.id === props.selectedTrackId) : undefined;
-  return track ? { label: "删除动线", run: () => emit("remove", track.id) } : undefined;
+  return track ? { label: translate("删除动线"), run: () => emit("remove", track.id) } : undefined;
 });
 const playbackRange = computed(() => {
   const range = props.range;
@@ -405,7 +405,6 @@ const filmStart = computed(() => playbackRange.value.start);
 const filmLength = computed(() => Math.max(0, playbackRange.value.end - playbackRange.value.start));
 const filmNow = computed(() => clampSeek(playhead.value) - filmStart.value);
 const totalLabel = computed(() => clock(Math.max(0, Math.ceil(filmLength.value - 0.05))));
-const playLabel = computed(() => props.completed ? "重播" : props.running ? "暂停" : "播放");
 const origin = computed(() => Math.floor(Math.min(filmStart.value, ...trackRows.value.map(row => row.start))) - 1);
 // ACT: 空时间轴（只等着加机位）也至少铺开minFilmSeconds秒，宽度不会塌成0或NaN。
 const span = computed(() => Math.max(filmStart.value + Math.max(minFilmSeconds, filmLength.value), ...trackRows.value.map(row => row.start + row.length)) - origin.value + 4);
@@ -1197,9 +1196,6 @@ function removeRow(event: KeyboardEvent, row: Row) {
   .timelineHeader {
     display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 8px; white-space: nowrap;
     button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0; min-width: 30px; height: 30px; padding: 0 7px; &:active:not(:disabled) { background: var(--studioPressedBackground); transform: scale(0.94); } }
-    .transportGroup { display: flex; align-items: center; gap: 2px; flex-shrink: 0; padding: 2px; border-radius: 8px; background: var(--studioControlBackground); }
-    .playButton { width: 38px; color: var(--el-color-white, #fff); background: var(--el-color-primary); box-shadow: 0 1px 3px color-mix(in srgb, var(--el-color-primary) 40%, transparent); &:hover:not(:disabled) { background: color-mix(in srgb, var(--el-color-primary) 84%, #fff); } &:active:not(:disabled) { background: color-mix(in srgb, var(--el-color-primary) 86%, #000); } }
-    .timeReadout { flex-shrink: 0; font-variant-numeric: tabular-nums; b { font-weight: 600; } .total { margin-inline-start: 4px; color: var(--el-text-color-secondary); } }
     .headerDivider { flex-shrink: 0; width: 1px; height: 18px; background: var(--el-border-color-lighter); }
     .editTools, .zoomGroup { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
     .editTools .deleteAction:hover:not(:disabled) { color: var(--el-color-danger); }
@@ -1295,6 +1291,13 @@ function removeRow(event: KeyboardEvent, row: Row) {
   }
   .worldNeedle { position: absolute; z-index: 5; top: 0; bottom: 0; left: 0; width: 2px; margin-left: -1px; background: var(--el-color-primary); pointer-events: none; will-change: transform; .playheadHandle { position: sticky; display: block; top: 2px; width: 14px; height: 22px; padding: 0; transform: translateX(-6px); border-radius: 2px; background: var(--el-color-primary); clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%); pointer-events: auto; cursor: ew-resize; touch-action: none; } }
   @media (prefers-reduced-motion: reduce) { &, * { transition: none !important; } }
+  // 触屏没有悬停：常显静音、删除轨道和片段拖柄，高度拖条加大到手指可按。
+  @media (any-pointer: coarse) {
+    .muteToggle { opacity: 1; }
+    .resizeGrip { height: 14px; &::after { top: 5px; opacity: 1; } }
+    .timelineRow.folderRow .removeTrack { opacity: 1; }
+    .timelineRow .shotBlock .grip { width: min(14px, 30%); opacity: 1; }
+  }
 }
 // ACT: 时间轴宽度跟着窗口70%走，按自身宽度而不是视口宽度收起次要元素：先藏文字标签，再藏小数和分隔线，最后藏缩放。
 @container performanceTimeline (max-width: 720px) { .performanceTimeline .toolLabel { display: none; } }

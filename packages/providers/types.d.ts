@@ -21,7 +21,8 @@ interface ProviderModel<TRules extends readonly ProviderFormRule[] = readonly Pr
   audio?: "optional" | boolean;
   imageSizes?: string[];
   imageRatios?: string[];
-  durationResolutionMap?: { duration: number[]; resolution: string[] }[];
+  /** 一行中的时长、分辨率和比例可任意组合。同一时长与分辨率匹配多行时合并比例。旧行省略 ratio 或传 [] 时界面沿用通用视频比例。 */
+  durationResolutionMap?: { duration: number[]; resolution: string[]; ratio?: string[] }[];
   voices?: { title: string; voice: string }[];
   /** 模型专属的 form-create JSON 规则，节点表单值作为 request.other 传入。 */
   rules?: TRules;
@@ -163,7 +164,7 @@ interface VideoRequest extends MediaRequest {
   lastFrame?: MediaInput;
   /** 输出时长，单位秒；支持范围由供应商按模型校验。 */
   duration?: number;
-  /** 画面宽高比，如 16:9。 */
+  /** 本次所选的比例字符串，如 "21:9"，取值来自模型在当前时长和分辨率下支持的选项。 */
   ratio?: string;
   /** 分辨率档位，如 720p、1080p。 */
   resolution?: string;
@@ -245,7 +246,7 @@ interface ProviderDefinition<TRules extends readonly ProviderFormRule[] = readon
   /**
    * 只读估价，不创建生成任务或扣费。request.type 区分图片、视频和音频。
    * 参考素材只传元信息，不传文件内容或地址；其余参数与对应生成请求一致。
-   * 返回 { price, tips }，由供应商自由提供价格展示文本与提示；null 表示当前参数无法估价，节点保留占位。
+   * 返回价格展示文本与提示，可附本次请求的总估价 totalAmount；null 表示当前参数无法估价。
    */
   getPrice?: (this: ProviderContext<ProviderConfig<TRules>>, request: ProviderPriceRequest) => Promise<ProviderPrice | null>;
   /** 查询当前配置账户的余额；计价单位由供应商返回。 */
@@ -260,10 +261,12 @@ interface ProviderDefinition<TRules extends readonly ProviderFormRule[] = readon
   processMedia?: (this: ProviderContext<ProviderConfig<TRules>>, request: ImageRequest | VideoRequest | AudioRequest) => Promise<ImageRequest | VideoRequest | AudioRequest>;
 }
 
-/** 仅用于展示，不参与余额计算；没有额外提示时 tips 返回空字符串。 */
+/** 用于报价展示与生成前提醒；没有额外提示时 tips 返回空字符串。 */
 interface ProviderPrice {
   price: string;
   tips: string;
+  /** 当前参数对应的单次生成总额，使用供应商自身的计价单位。仅有单价或区间时省略。 */
+  totalAmount?: number;
 }
 
 /** 估价专用素材元信息；不包含 base64、二进制、URL 或本地路径。未知字段省略，不能视作 0。 */

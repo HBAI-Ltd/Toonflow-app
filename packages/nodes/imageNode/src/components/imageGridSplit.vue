@@ -11,7 +11,7 @@
     :popperStyle="{ maxWidth: 'calc(100vw - 24px)', padding: '16px', borderRadius: '12px' }">
     <div class="gridSplitPanel nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.stop @keydown.esc.prevent="visible = false; trigger?.focus()">
       <div class="panelHeader">
-        <strong>宫格切分</strong>
+        <strong>分格切图</strong>
         <span>保留原图</span>
       </div>
       <div class="gridPresets" aria-label="常用宫格">
@@ -38,7 +38,7 @@
       </div>
       <div v-if="visible" class="previewArea">
         <div class="previewImage">
-          <img :src="src" alt="宫格切分预览" @load="readSize" @error="imageSize = { width: 0, height: 0 }" />
+          <img :src="src" alt="分格切图预览" @load="readSize" @error="imageSize = { width: 0, height: 0 }" />
           <div v-if="validGrid" class="previewGrid" :style="{ gridTemplateColumns: `repeat(${columns}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }" aria-hidden="true">
             <span v-for="cell in rows * columns" :key="cell"><small>{{ cell }}</small></span>
           </div>

@@ -10,17 +10,55 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { getNodesInside, useVueFlow } from "@vue-flow/core";
+import { useVueFlow } from "@vue-flow/core";
 import { IconX } from "@tabler/icons-vue";
 
-const { nodes, dimensions, viewport, fitView } = useVueFlow();
+const { nodes, dimensions, vueFlowRef, fitView } = useVueFlow();
 const dismissed = ref(false);
-const viewportEmpty = computed(() => {
-  const { width, height } = dimensions.value;
-  return width > 0 && height > 0
-    && nodes.value.some(node => !node.hidden)
-    && !getNodesInside(nodes.value, { x: 0, y: 0, width, height }, viewport.value, true).length;
-});
+const allOutside = ref(false);
+const hasPendingNode = computed(() => nodes.value.some(node => !node.hidden && (node.dragging || !node.dimensions.width || !node.dimensions.height)));
+const viewportEmpty = computed(() => allOutside.value && dimensions.value.width > 0 && dimensions.value.height > 0 && !hasPendingNode.value);
+
+watch(vueFlowRef, (surface, _, cleanup) => {
+  const layer = surface?.querySelector(".vue-flow__nodes");
+  if (!surface || !layer) return;
+  const visible = new Set<Element>();
+  function update() {
+    allOutside.value = !!layer?.childElementCount && !visible.size;
+  }
+  const intersections = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (entry.target.parentElement === layer && entry.intersectionRect.width > 0 && entry.intersectionRect.height > 0) visible.add(entry.target);
+      else visible.delete(entry.target);
+    }
+    update();
+  }, { root: surface, threshold: Number.EPSILON });
+  function observe(element: Element) {
+    // 首次相交结果在下一帧返回，挂载期间先不显示空视口提示。
+    visible.add(element);
+    intersections.observe(element);
+  }
+  const changes = new MutationObserver(records => {
+    for (const record of records) {
+      for (const node of record.removedNodes) {
+        if (!(node instanceof Element)) continue;
+        intersections.unobserve(node);
+        visible.delete(node);
+      }
+      for (const node of record.addedNodes) {
+        if (node instanceof Element) observe(node);
+      }
+    }
+    update();
+  });
+  for (const element of layer.children) observe(element);
+  changes.observe(layer, { childList: true });
+  cleanup(() => {
+    changes.disconnect();
+    intersections.disconnect();
+    allOutside.value = false;
+  });
+}, { immediate: true, flush: "post" });
 
 watch(viewportEmpty, empty => {
   if (!empty) dismissed.value = false;
@@ -83,10 +121,22 @@ watch(viewportEmpty, empty => {
 }
 
 @container canvasWorkspace (max-width: 1040px) {
-  .canvasViewportHint { bottom: 104px; }
+  [data-canvas-layout="default"] .canvasViewportHint { bottom: 104px; }
 }
 
 @container canvasWorkspace (max-width: 768px) {
-  :global(.vue-flow:has(.canvasMiniMap) .canvasViewportHint) { bottom: 270px; }
+  .vue-flow:has(.canvasMiniMap) .canvasViewportHint { bottom: 230px; }
+  [data-canvas-layout="default"] .vue-flow:has(.canvasMiniMap) .canvasViewportHint { bottom: 270px; }
+}
+
+@container canvasWorkspace (max-width: 390px) {
+  [data-agent-position="bottomRight"] .canvasViewportHint { bottom: 108px; }
+
+  @media (max-height: 720px) {
+    .sideToolbar .canvasViewportHint {
+      left: calc(50% + 27px);
+      max-width: calc(100% - 84px);
+    }
+  }
 }
 </style>

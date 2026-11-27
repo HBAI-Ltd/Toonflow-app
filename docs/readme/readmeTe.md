@@ -90,7 +90,7 @@
 </p>
 <p align="center">
 <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" /> 
-<img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" /> 
+<img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" /> 
 <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" /> 
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ sudo spctl --master-disable
 
 ### 4.2 Docker ఇన్‌స్టాలేషన్
 
-ముందుగా Git, [Docker Engine](https://docs.docker.com/engine/install/), Docker Composeను ఇన్‌స్టాల్ చేయండి. Windows, macOSలో Docker Desktopను Linux container modeలో ఉపయోగించవచ్చు. రిపోజిటరీలో [Dockerfile](../../Dockerfile), [Compose కాన్ఫిగరేషన్](../../compose.yaml), [బిల్డ్ నుంచి మినహాయించే నియమాలు](../../.dockerignore) ఉన్నాయి. ఇమేజ్‌ను Bun 1.4.3తో నిర్మిస్తారు; ఇందులో FFmpeg కూడా ఉంటుంది.
+ముందుగా Git, [Docker Engine](https://docs.docker.com/engine/install/), Docker Composeను ఇన్‌స్టాల్ చేయండి. Windows, macOSలో Docker Desktopను Linux container modeలో ఉపయోగించవచ్చు. రిపోజిటరీలో [Dockerfile](../../Dockerfile), [Compose కాన్ఫిగరేషన్](../../compose.yaml), [బిల్డ్ నుంచి మినహాయించే నియమాలు](../../.dockerignore) ఉన్నాయి. ఇమేజ్‌ను Bun 1.4.5తో నిర్మిస్తారు; ఇందులో FFmpeg కూడా ఉంటుంది.
 
 <details>
 <summary><strong>Docker ఇన్‌స్టాలేషన్ దశలను విస్తరించండి</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 Server ఇన్‌స్టాలేషన్
 
-Web మరియు Server నేరుగా Linux సర్వర్‌లో అమలు చేయడానికి ఈ ఎంపికను ఉపయోగించండి. దిగువ ఉదాహరణ Ubuntu / Debian మరియు ప్రాజెక్ట్ యొక్క పేర్కొన్న సంస్కరణను ఉపయోగిస్తుంది, [Bun 1.4.3](https://bun.sh/docs/installation).
+Web మరియు Server నేరుగా Linux సర్వర్‌లో అమలు చేయడానికి ఈ ఎంపికను ఉపయోగించండి. దిగువ ఉదాహరణ Ubuntu / Debian మరియు ప్రాజెక్ట్ యొక్క పేర్కొన్న సంస్కరణను ఉపయోగిస్తుంది, [Bun 1.4.5](https://bun.sh/docs/installation).
 
 <details>
 <summary><strong> సర్వర్ ఇన్‌స్టాలేషన్ దశలను విస్తరించండి</strong></summary>
@@ -453,7 +453,7 @@ Web మరియు Server నేరుగా Linux సర్వర్‌లో 
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

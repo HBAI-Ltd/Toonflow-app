@@ -1,6 +1,6 @@
 import { computed, type ComputedRef } from "vue";
 import { useVueFlow } from "@vue-flow/core";
-import type { Connection, Node } from "@vue-flow/core";
+import type { Connection, Node, ValidConnectionFunc } from "@vue-flow/core";
 import { isTypeCompatible, type NodeData, type NodeHandle } from "./connection";
 import { isNodeOutput, type NodeInputValue, type NodeOutput } from "./values";
 
@@ -59,9 +59,19 @@ export function useNodeInputs(canvas = useVueFlow()) {
   // ACT: 按画布共享分组，保留重复边和原顺序；不依赖 VueFlow 会合并重复端点的连接索引。
   const targetEdges = flow[targetEdgesKey] ?? computed(() => Map.groupBy(canvas.getEdges.value, edge => edge.target));
   if (!flow[targetEdgesKey]) Object.defineProperty(flow, targetEdgesKey, { value: targetEdges });
+  const getTargetEdges = (targetId: string) => targetEdges.value.get(targetId) ?? [];
   return {
-    getTargetSources: (targetId: string, targetHandleId: string) => getTargetSources(targetId, targetHandleId, nodeLookup.value, targetEdges.value.get(targetId) ?? []),
-    getTargetValues: (targetId: string, targetHandleId: string) => getTargetValues(targetId, targetHandleId, nodeLookup.value, targetEdges.value.get(targetId) ?? []),
+    getTargetEdges,
+    getTargetSources: (targetId: string, targetHandleId: string) => getTargetSources(targetId, targetHandleId, nodeLookup.value, getTargetEdges(targetId)),
+    getTargetValues: (targetId: string, targetHandleId: string) => getTargetValues(targetId, targetHandleId, nodeLookup.value, getTargetEdges(targetId)),
+    getConnectionValues: (targetHandleId: string, connection: Connection, { nodes, edges }: Parameters<ValidConnectionFunc>[1]) => {
+      // 批量连线及素材预览可能传入尚未提交的边或节点，分别按实际传入的集合取值。
+      const candidates = edges === canvas.getEdges.value ? getTargetEdges(connection.target) : edges;
+      const incoming: Connection[] = candidates.filter(edge => edge.target === connection.target && edge.targetHandle === targetHandleId
+        && !(edge.source === connection.source && edge.sourceHandle === connection.sourceHandle && edge.targetHandle === connection.targetHandle));
+      incoming.push(connection);
+      return getTargetValues(connection.target, targetHandleId, nodes === canvas.nodes.value ? nodeLookup.value : nodes, incoming);
+    },
     getSourceValue: (sourceId: string, sourceHandleId: string) => getSourceValue(sourceId, sourceHandleId, nodeLookup.value),
   };
 }

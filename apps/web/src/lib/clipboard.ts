@@ -32,6 +32,26 @@ function clipboardFile(type: string, base64: string, name: string) {
   return new File([bytes], name, { type });
 }
 
+export function getClipboardFiles(event: ClipboardEvent, textToFile?: (text: string) => File | undefined): Promise<File[]> | undefined {
+  const transfer = event.clipboardData;
+  const files = Array.from(transfer?.files ?? []);
+  if (!files.length) {
+    for (const item of Array.from(transfer?.items ?? [])) {
+      const file = item.kind === "file" ? item.getAsFile() : null;
+      if (file) files.push(file);
+    }
+  }
+  if (files.length) return Promise.resolve(files);
+  const text = transfer?.getData("text/plain") ?? "";
+  if (text) {
+    const file = textToFile?.(text);
+    if (file) return Promise.resolve([file]);
+  } else if (event.isTrusted && actualPlatform.isDesktop) {
+    // 部分桌面 WebView 不在粘贴事件中提供图片，交给原生剪贴板读取。
+    return readClipboardFiles();
+  }
+}
+
 export async function readClipboardFiles(): Promise<File[]> {
   if (actualPlatform.isDesktop) {
     const { data } = await axios.post<{ code: number; data: { files: { name: string; mimeType: string; data: string }[] }; message: string }>(

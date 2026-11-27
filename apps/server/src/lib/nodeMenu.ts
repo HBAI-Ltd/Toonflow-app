@@ -65,10 +65,12 @@ export function resolveNodeMenu(saved: NodeMenuItem[], nodes: { type: string; la
   }
   updateLabels(items);
   const order: Record<string, number> = { "remote-textNode": 0, "remote-imageNode": 1, "remote-videoNode": 2, "remote-audioNode": 3 };
+  // 逐帧拉片主要从视频节点工具栏创建，默认不进添加菜单；已保存的菜单配置仍以用户设置为准。
+  const hiddenByDefault = new Set(["remote-frameAnalysisNode"]);
   for (const node of [...nodes].sort((left, right) => (order[left.type] ?? 4) - (order[right.type] ?? 4) || left.type.localeCompare(right.type))) {
     if (existing.has(node.type)) continue;
     existing.add(node.type);
-    items.push({ id: `node:${node.type}`, type: node.type, label: node.label, hidden: false });
+    items.push({ id: `node:${node.type}`, type: node.type, label: node.label, hidden: hiddenByDefault.has(node.type) });
   }
   return items;
 }

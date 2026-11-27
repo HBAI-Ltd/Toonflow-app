@@ -1,5 +1,5 @@
-import type { ElectrobunConfig } from "./.hutch/devkit/api/config/ElectrobunConfig";
-import { fileURLToPath } from "node:url";
+import type { ElectrobunConfig } from "./.hutch/devkit/api/config/ElectrobunConfig.ts";
+import runtimeInfo from "./apps/desktop/runtimeInfo.json" with { type: "json" };
 
 const startupTarget = process.platform === "darwin" ? (process.arch === "x64" ? "macX64" : "macArm64")
   : process.platform === "win32" && process.arch === "x64" ? "windowsX64" : undefined;
@@ -18,14 +18,14 @@ export default {
     mainProcess: "bun",
     // ACT: Photon、anydoc 与沙盒依赖保留运行时目录，避免 WASM/Worker 引用构建机路径。
     bun: {
+      // Hutch 0.30 按此字段选择托管运行时，Electrobun 2.0.7 的配置类型尚未声明该字段。
+      version: runtimeInfo.version,
       entrypoint: "apps/desktop/src/bootstrap.ts", minify: true,
       external: ["@silvia-odwyer/photon-node", "@firecrawl/anydoc", "@firecrawl/anydoc-wasm", "just-bash"],
-      ...(process.platform === "darwin" && process.env.TOONFLOW_EXTERNAL_RUNTIME === "1" ? {
-        alias: { "electrobun/main": fileURLToPath(new URL("./build/desktop/runtime/electrobunMain.js", import.meta.url)) },
-      } : {}),
     },
     copy: {
       "build/desktop/ffmpeg/ffmpegWorker.js": "bun/ffmpegWorker.js",
+      "build/desktop/ffmpeg/localModelProcess.js": "bun/localModelProcess.js",
       "build/desktop/sandbox/sandboxProcess.js": "bun/sandboxProcess.js",
       "build/desktop/node_modules": "bun/node_modules",
       "build/desktop/photon": "bun/node_modules/@silvia-odwyer/photon-node",
@@ -88,4 +88,4 @@ export default {
   } : process.platform === "win32" ? {
     scripts: { postBuild: "apps/desktop/scripts/restoreWindowsRuntime.ts" },
   } : {}),
-} satisfies ElectrobunConfig;
+} satisfies ElectrobunConfig & { build: { bun: { version: string } } };

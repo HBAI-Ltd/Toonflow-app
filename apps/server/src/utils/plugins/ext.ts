@@ -1,6 +1,7 @@
 import { lstat, readFile } from "@toonflow/file";
 import { dirname, resolve } from "node:path";
 import { z } from "zod";
+import { localModelDefinitionsSchema } from "@toonflow/plugin-server/localModels";
 import { parse } from "@babel/parser";
 import { t } from "@/lib/i18n";
 import conf from "@/utils/conf";
@@ -33,6 +34,7 @@ export async function resolveExtPath(name: string, directory = extDirectory) {
   return paths[0]!;
 }
 const metadataSchema = z.object({
+  localModels: localModelDefinitionsSchema.optional(),
   id: extNameSchema,
   displayName: z.string().trim().min(1),
   extensions: z.array(z.string().regex(/^[a-z0-9]+$/)),

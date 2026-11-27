@@ -22,8 +22,11 @@
         </el-dropdown-menu>
       </template>
     </el-dropdown>
-    <el-badge class="updateBadge" isDot :hidden="!hasDesktopUpdate">
-      <el-button class="updateButton" type="primary" plain size="small" :icon="IconDownload" :title="hasDesktopUpdate ? '发现新版本' : '检查更新'" aria-label="检查更新" @click="emit('openUpdate')"><span class="updateLabel">新版</span></el-button>
+    <el-badge v-if="updateDownloading || hasDesktopUpdate" class="updateBadge" isDot :hidden="updateDownloading">
+      <el-button v-if="updateDownloading" class="updateButton" type="primary" plain size="small" loading title="正在下载" aria-label="正在下载" @click="emit('openUpdate')">
+        <span class="updateLabel">{{ updatePercentage === undefined ? "正在下载" : `${updatePercentage}%` }}</span>
+      </el-button>
+      <el-button v-else class="updateButton" type="primary" plain size="small" :icon="IconDownload" title="发现新版本" aria-label="发现新版本" @click="emit('openUpdate')"><span class="updateLabel">新版</span></el-button>
     </el-badge>
   </div>
 </template>
@@ -37,7 +40,7 @@ import type { Login, PreviewData } from "@toonflow/server/channel";
 import http from "@/lib/http";
 import { multiTenantEnabled, saveSettings, settings, toonflowAccountToken } from "@/stores/settings";
 import { currentUser, publicWeb } from "@/stores/multiTenant";
-import { hasDesktopUpdate } from "@/stores/desktopUpdate";
+import { desktopUpdateAction, desktopUpdateSnapshot, hasDesktopUpdate } from "@/stores/desktopUpdate";
 import { deviceHubEnabled, mobileConnection, mobileConnectionLabel } from "@/lib/mobile";
 
 defineProps<{ collapsed: boolean }>();
@@ -45,6 +48,12 @@ const emit = defineEmits<{ openSettings: []; openAccount: []; openUpdate: []; op
 const loggedIn = computed(() => publicWeb.value ? !!currentUser.value : !!toonflowAccountToken.value);
 const accountName = computed(() => (publicWeb.value ? currentUser.value?.userName : (settings.value.toonflowAccount as Partial<Login> | null)?.info?.userName) || translate("未登录"));
 const showBalance = computed(() => loggedIn.value && (publicWeb.value ? currentUser.value?.role === "user" : !multiTenantEnabled.value));
+const updateDownloading = computed(() => desktopUpdateAction.value === "download"
+  || (!!desktopUpdateSnapshot.value?.updating && !desktopUpdateSnapshot.value.updateReady));
+const updatePercentage = computed(() => {
+  const progress = desktopUpdateSnapshot.value?.updateProgress;
+  return progress?.total ? Math.min(100, Math.floor(progress.received / progress.total * 100)) : undefined;
+});
 const balanceText = ref("");
 const balanceError = ref("");
 const loggingOut = ref(false);

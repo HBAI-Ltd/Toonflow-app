@@ -6,24 +6,24 @@
     </template>
     <template v-else>
       <div class="brushModes" role="group" aria-label="场景画笔类型">
-        <button v-for="mode in brushModes" :key="mode.id" type="button" :class="{ active: modelValue.mode === mode.id }" :aria-pressed="modelValue.mode === mode.id" :disabled="disabled" @click="chooseMode(mode.id)"><component :is="mode.icon" :size="15" /><span>{{ mode.name }}</span></button>
+        <button v-for="mode in brushModes" :key="mode.id" type="button" :class="{ active: modelValue.mode === mode.id }" :aria-pressed="modelValue.mode === mode.id" :disabled="disabled" @click="chooseMode(mode.id)"><component :is="mode.icon" :size="15" /><span>{{ translate(mode.name) }}</span></button>
       </div>
       <template v-if="modelValue.mode === 'assets'">
         <div class="brushSelection"><div><h3>涂放物件</h3><span>已选 {{ modelValue.assets.length }} 种</span></div><button type="button" :disabled="disabled" @click="openAssetSelection"><icon-plus :size="14" />{{ modelValue.assets.length ? '更换素材' : '选择素材' }}</button></div>
         <ul v-if="modelValue.assets.length" class="brushSlots" aria-label="已选涂放物件">
-          <li v-for="choice in visibleChoices" :key="choice.id" class="brushSlot" :title="choice.name">
+          <li v-for="choice in visibleChoices" :key="choice.id" class="brushSlot" :title="translate(choice.name)">
             <assetThumbnail :asset="choice.asset" :loadModel="loadModel" />
-            <span>{{ choice.name }}</span>
-            <button type="button" class="removeBrushAsset" :disabled="disabled" :aria-label="'移出笔刷：' + choice.name" :title="'移出笔刷：' + choice.name" @click="removeAsset(choice.id)"><icon-x :size="13" /></button>
+            <span>{{ translate(choice.name) }}</span>
+            <button type="button" class="removeBrushAsset" :disabled="disabled" :aria-label="'移出笔刷：' + translate(choice.name)" :title="'移出笔刷：' + translate(choice.name)" @click="removeAsset(choice.id)"><icon-x :size="13" /></button>
           </li>
         </ul>
         <p v-else class="emptySelection">先选择素材，可以同时选多种。</p>
       </template>
       <template v-else>
         <label class="brushSearch"><icon-search :size="15" /><input v-model="search" type="search" :placeholder="'搜索' + brushName" :aria-label="'搜索' + brushName + '笔刷'" :disabled="disabled" /></label>
-        <div class="brushFilters"><label><span>{{ modelValue.mode === 'wall' ? '类型' : '用途' }}</span><select v-model="group" :disabled="disabled" :aria-label="brushName + '分类'"><option value="">全部</option><option v-for="item in groups" :key="item" :value="item">{{ item }}</option></select></label><span>{{ choices.length }} 种</span></div>
+        <div class="brushFilters"><label><span>{{ modelValue.mode === 'wall' ? '类型' : '用途' }}</span><select v-model="group" :disabled="disabled" :aria-label="brushName + '分类'"><option value="">全部</option><option v-for="item in groups" :key="item" :value="item">{{ translate(item) }}</option></select></label><span>{{ choices.length }} 种</span></div>
         <div class="brushAssets" :aria-label="brushName + '样式'">
-          <button v-for="choice in visibleChoices" :key="choice.id" type="button" class="brushAsset" :class="{ active: selectedChoice === choice.id }" :aria-pressed="selectedChoice === choice.id" :disabled="disabled" :title="choice.name" @click="chooseAsset(choice)"><assetThumbnail :asset="choice.asset" :loadModel="loadModel" /><span>{{ choice.name }}</span></button>
+          <button v-for="choice in visibleChoices" :key="choice.id" type="button" class="brushAsset" :class="{ active: selectedChoice === choice.id }" :aria-pressed="selectedChoice === choice.id" :disabled="disabled" :title="translate(choice.name)" @click="chooseAsset(choice)"><assetThumbnail :asset="choice.asset" :loadModel="loadModel" /><span>{{ translate(choice.name) }}</span></button>
         </div>
         <p v-if="!choices.length" class="emptySelection">没有匹配的样式，换个关键词试试。</p>
       </template>
@@ -33,7 +33,7 @@
         <template v-if="modelValue.mode === 'assets'">
           <label class="brushRange"><span>范围 <output>{{ modelValue.radius.toFixed(1) }} <small>m</small></output></span><el-slider :modelValue="modelValue.radius" :min="1" :max="16" :step="0.5" :disabled="controlsDisabled" :showTooltip="false" aria-label="涂放范围半径" @update:modelValue="value => changeNumber('radius', value, 1, 16)" /></label>
           <label class="brushRange"><span>疏密 <output>间隔 {{ modelValue.spacing.toFixed(1) }} <small>m</small></output></span><el-slider :modelValue="13 - modelValue.spacing" :min="1" :max="12" :step="0.5" :disabled="controlsDisabled" :showTooltip="false" aria-label="物件疏密，向右更密集" @update:modelValue="changeDensity" /></label>
-          <div class="densityChoices" role="group" aria-label="物件疏密快捷选择"><button v-for="density in densityChoices" :key="density.name" type="button" :class="{ active: Math.abs(modelValue.spacing - density.spacing) < 0.01 }" :aria-pressed="Math.abs(modelValue.spacing - density.spacing) < 0.01" :disabled="controlsDisabled" @click="changeNumber('spacing', density.spacing, 1, 12)">{{ density.name }}</button></div>
+          <div class="densityChoices" role="group" aria-label="物件疏密快捷选择"><button v-for="density in densityChoices" :key="density.name" type="button" :class="{ active: Math.abs(modelValue.spacing - density.spacing) < 0.01 }" :aria-pressed="Math.abs(modelValue.spacing - density.spacing) < 0.01" :disabled="controlsDisabled" @click="changeNumber('spacing', density.spacing, 1, 12)">{{ translate(density.name) }}</button></div>
           <label class="brushRange"><span>大小 <output>{{ Math.round(modelValue.size * 100) }}<small>%</small></output></span><el-slider :modelValue="modelValue.size" :min="0.25" :max="3" :step="0.05" :disabled="controlsDisabled" :showTooltip="false" aria-label="涂放物件大小" @update:modelValue="value => changeNumber('size', value, 0.25, 3)" /></label>
         </template>
         <template v-else-if="modelValue.mode === 'wall'">
@@ -57,6 +57,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { ElSlider } from "element-plus";
+import { markMessages, t, translate } from "@toonflow/i18n/vue";
 import { IconBrush, IconCheck, IconChevronLeft, IconChevronRight, IconCube, IconPlayerPause, IconPlus, IconRoad, IconSearch, IconWall, IconX } from "@tabler/icons-vue";
 import assetThumbnail from "./assetThumbnail.vue";
 import assetShelf from "./assetShelf.vue";
@@ -66,8 +67,8 @@ import type { SceneAsset } from "./sceneDocument";
 const props = defineProps<{ modelValue: SceneBrushSettings; availableAssets: SceneAsset[]; loadModel: (asset: SceneAsset) => Promise<ArrayBuffer>; disabled?: boolean; painting: boolean; status?: SceneBrushStatus }>();
 const emit = defineEmits<{ "update:modelValue": [value: SceneBrushSettings]; choose: [value: SceneBrushSettings]; assetsLoaded: [assets: SceneAsset[]]; selecting: [value: boolean]; togglePainting: [] }>();
 type BrushChoice = (typeof wallBrushStyles)[number];
-const brushModes = [{ id: "assets", name: "素材", icon: IconCube }, { id: "wall", name: "围墙", icon: IconWall }, { id: "paving", name: "铺装", icon: IconRoad }] as const;
-const densityChoices = [{ name: "稀疏", spacing: 6 }, { name: "适中", spacing: 3 }, { name: "密集", spacing: 1.5 }];
+const brushModes = markMessages([{ id: "assets", name: "素材", icon: IconCube }, { id: "wall", name: "围墙", icon: IconWall }, { id: "paving", name: "铺装", icon: IconRoad }] as const);
+const densityChoices = markMessages([{ name: "稀疏", spacing: 6 }, { name: "适中", spacing: 3 }, { name: "密集", spacing: 1.5 }]);
 const pickingAssets = ref(false);
 const draftAssets = ref<SceneAsset[]>([]);
 const availableBrushAssets = computed(() => [...new Map([...treeBrushAssets, ...props.availableAssets, ...props.modelValue.assets].map(asset => [asset.id, asset])).values()]);
@@ -75,7 +76,7 @@ const search = ref("");
 const group = ref("");
 const choicePage = ref(1);
 const pageSize = computed(() => props.modelValue.mode === "assets" ? 6 : 9);
-const brushName = computed(() => brushModes.find(mode => mode.id === props.modelValue.mode)!.name);
+const brushName = computed(() => translate(brushModes.find(mode => mode.id === props.modelValue.mode)!.name));
 const allChoices = computed<BrushChoice[]>(() => {
   if (props.modelValue.mode === "wall") return wallBrushStyles;
   if (props.modelValue.mode === "paving") return pavingBrushStyles;
@@ -97,12 +98,12 @@ const prepareTotal = computed(() => Math.max(0, props.status?.total ?? props.mod
 const preparedCount = computed(() => Math.max(0, Math.min(prepareTotal.value, prepareTotal.value - (props.status?.loading ?? 0))));
 const paintingActionDisabled = computed(() => !!props.disabled || !hasSelection.value);
 const statusLabel = computed(() => {
-  if (props.disabled) return "暂不可绘制";
-  if (!hasSelection.value) return "选择素材后即可涂放";
-  if (!props.painting) return "已暂停 · 可以自由浏览";
-  if (!brushReady.value && prepareTotal.value > 0 && props.status?.loading === 0) return "素材准备失败，请重新选择";
-  if (!brushReady.value) return "准备素材 " + preparedCount.value + " / " + prepareTotal.value;
-  return props.painting ? (props.modelValue.mode === "assets" ? "可涂放 · 按住左键开始" : "可绘制 · 按住左键开始") : "已暂停 · 可以自由浏览";
+  if (props.disabled) return translate("暂不可绘制");
+  if (!hasSelection.value) return translate("选择素材后即可涂放");
+  if (!props.painting) return translate("已暂停 · 可以自由浏览");
+  if (!brushReady.value && prepareTotal.value > 0 && props.status?.loading === 0) return translate("素材准备失败，请重新选择");
+  if (!brushReady.value) return t`准备素材 ${preparedCount.value} / ${prepareTotal.value}`;
+  return props.modelValue.mode === "assets" ? translate("可涂放 · 按住左键开始") : translate("可绘制 · 按住左键开始");
 });
 
 function openAssetSelection() {

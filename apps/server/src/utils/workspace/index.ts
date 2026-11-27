@@ -60,6 +60,14 @@ export async function resolveWorkspace(req: Request, path: string) {
     throw err;
   });
   if (!(await stat(directory)).isDirectory()) throw Object.assign(new Error("工作目录不是文件夹，请重新选择"), { status: 404 });
+  if (getRuntimePlatform().desktop) {
+    // 桌面程序目录会被更新替换且可能只读：macOS 为 .app（bun 位于 Contents/MacOS），其他系统为 bin 的上一级。
+    const appRoot = await realpath(resolve(process.execPath, process.platform === "darwin" ? "../../.." : "../.."));
+    const offset = relative(appRoot, directory);
+    if (offset !== ".." && !offset.startsWith(`..${sep}`) && !isAbsolute(offset)) {
+      throw Object.assign(new Error("不能使用应用安装目录作为工作目录，请选择其他文件夹"), { status: 400 });
+    }
+  }
   if (user?.role === "admin") return directory;
   if (userRoot) {
     const offset = relative(userRoot, directory);

@@ -19,10 +19,10 @@ const userReadRoutes = new Set(["/api/ai/models", "/api/ai/media/models", "/api/
 const modelWriteRoutes = new Set(["/api/ai/generate", "/api/ai/media/price", "/api/ai/media/generate", "/api/ai/media/tasks/status", "/api/ai/media/tasks/cancel"]);
 const communityReads = new Set(["getAdvertisements", "getExploreProjects", "getExploreProject", "getExploreProcess", "getExploreDownload", "getSponsorList"]
   .map(name => `/api/channel/community/${name.toLowerCase()}`));
-const platformPrefixes = ["/api/providers", "/api/plugins", "/api/mcp/servers", "/api/channel/account", "/api/channel/model", "/api/channel/provider", "/api/channel/subaccounts", "/api/channel/user", "/api/channel/wallet", "/api/channel/plugin"];
+const platformPrefixes = ["/api/providers", "/api/plugins", "/api/localmodels", "/api/mcp/servers", "/api/channel/account", "/api/channel/model", "/api/channel/provider", "/api/channel/subaccounts", "/api/channel/user", "/api/channel/wallet", "/api/channel/plugin"];
 const platformControlRoutes = new Set(["nodes", "tools", "ext", "agents"].flatMap(kind =>
   ["install", "save", "setenabled", "uninstall", "connect"].map(action => `/api/${kind}/${action}`))
-  .concat(["/api/agents/a2a/get", "/api/agents/a2a/save", "/api/settings/network/test"]));
+  .concat(["/api/agents/a2a/get", "/api/agents/a2a/save"]));
 
 function accessPath(req: Request) {
   const raw = req.path;

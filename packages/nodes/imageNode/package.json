@@ -4,6 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./imageParts": "./src/imageParts.ts",
+    "./materialNormals": "./src/materialNormals.ts",
+    "./handPose": "./src/handPose.ts",
+    "./upscaleTiles": "./src/upscaleTiles.ts",
+    "./imageUpscaleEditor": "./src/components/imageUpscaleEditor.vue",
+    "./imageTools": "./src/imageTools.ts",
+    "./imageSequenceTools": "./src/imageSequenceTools.ts",
+    "./imageSequenceOptions": "./src/components/imageSequenceOptions.vue",
     "./imageInpaint": "./src/imageInpaint.ts",
     "./imagePanorama": "./src/components/imagePanorama.vue",
     "./imageLighting": "./src/components/imageLighting.vue",
@@ -23,10 +31,12 @@
     "element-plus": "^2.14.5"
   },
   "dependencies": {
+    "@toonflow/plugin-server": "workspace:*",
     "three": "0.184.0",
     "@tabler/icons-vue": "^3.46.0"
   },
   "devDependencies": {
+    "@toonflow/i18n": "workspace:*",
     "@toonflow/node-shared": "workspace:*",
     "@types/three": "0.184.0",
     "@toonflow/nodes-scaffold": "workspace:*",

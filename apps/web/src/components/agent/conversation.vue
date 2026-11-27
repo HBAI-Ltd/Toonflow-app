@@ -1,6 +1,7 @@
 <template>
   <div class="agentConversation">
     <messageList
+      ref="messageView"
       :messages="messages"
       :directory="directory"
       :active="active"
@@ -23,6 +24,9 @@
       <el-icon class="is-loading" aria-hidden="true"><icon-loader-2 :size="14" /></el-icon>
       <span>正在压缩上下文…</span>
     </div>
+    <goalBar v-if="goal && goal.status !== 'completed'" :goal="goal" :disabled="queueLocked" :busy="busy || remoteRunning" @command="applyCommand($event)" />
+    <automationBar v-if="active && !disabled && !initialSession?.parentFile && !reviewQuestion && automations.length"
+      :tasks="automations" :sessionFile="sessionFile" :cancelling="cancellingAutomation" @open="openAutomations(false)" @cancel="emit('cancelAutomation', $event)" />
     <section v-if="queuedMessages.length" class="messageQueue" aria-label="排队消息">
       <div v-for="message in queuedMessages" :key="message.id" class="queueMessage">
         <icon-list-details class="queueIcon" :size="14" aria-hidden="true" />
@@ -37,14 +41,18 @@
         </div>
       </div>
     </section>
+    <planReview v-if="reviewQuestion && directory" :key="reviewQuestion.callId" :question="reviewQuestion" :directory="directory" @answered="answeredReview = $event" />
     <messageInput
+      v-show="!reviewQuestion"
       ref="input"
       v-model:selectedModel="selectedModel"
       v-model:reasoningEffort="reasoningEffort"
       v-model:editingId="editingId"
       v-model:voiceActive="voiceActive"
       v-model:restoringAttachment="restoringAttachment"
-      :active="active"
+      :active="active && !reviewQuestion"
+      :planActive="planActive"
+      :commandsEnabled="!initialSession?.parentFile"
       :disabled="disabled || compacting || (busy && (!sessionFile || !remoteRunning))"
       :busy="busy"
       :submitting="submitting"
@@ -56,39 +64,56 @@
       :stats="stats"
       :contextWindow="contextWindow"
       @submit="submitMessage"
+      @compact="compactContext"
+      @automations="openAutomations"
+      @exitPlan="applyCommand({ action: 'plan', enabled: false })"
       @stop="stopMessage" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { locale, translate } from "@toonflow/i18n/vue";
-import { computed, inject, onBeforeUnmount, reactive, ref, watch } from "vue";
+import { computed, inject, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
 import axios from "axios";
 import { IconCornerDownRight, IconListDetails, IconLoader2, IconPencil, IconTrash } from "@tabler/icons-vue";
 import { ElMessage } from "element-plus";
 import { getReadableFileExtension, getReadableFileMimeType } from "@toonflow/server/documentFormats";
 import { useNodeModelSelection } from "@toonflow/nodes-scaffold/nodeAi";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
+import http from "@/lib/http";
 import { onAgentStopped, stopAgent } from "@/lib/agentControl";
 import { writeClipboardText } from "@/lib/clipboard";
 import { showNotification } from "@/lib/notification";
 import anonymousData from "@/lib/anonymousData";
 import { modelChoices, refreshModelChoices } from "@/stores/settings";
 import { useWorkspaceStore } from "@/stores/workspace";
-import type { AgentAttachment, AgentConversation, AgentMessage } from "./types";
-import type { AgentEvent, AgentQueue, AgentQueuedMessage } from "@toonflow/server/agent/types";
+import type { AgentAttachment, AgentAutomationEntry, AgentConversation, AgentMessage } from "./types";
+import type { AgentAutomation, AgentCommand, AgentEvent, AgentGoal, AgentPlan, AgentQueue, AgentQueuedMessage } from "@toonflow/server/agent/types";
 import { createConversationStream, createReplyStream, readAgentEvents } from "./replyStream";
 import { mentionPlainText } from "./mentionText";
 import type { CanvasContext } from "@toonflow/tool-canvas/runtime";
 import messageList from "./conversation/messageList.vue";
 import messageInput from "./conversation/messageInput.vue";
+import goalBar from "./conversation/goalBar.vue";
+import automationBar from "./conversation/automationBar.vue";
+import planReview from "./conversation/planReview.vue";
 
-const props = defineProps<{ active: boolean; initialSession: AgentConversation | null; initialModel?: string; sessionFile?: string; disabled: boolean; branchingId?: string }>();
-const emit = defineEmits<{ session: [file: string]; sent: [prompt: string]; event: [event: AgentEvent]; branch: [message: AgentMessage] }>();
+const props = defineProps<{ active: boolean; initialSession: AgentConversation | null; initialModel?: string; sessionFile?: string; automations: AgentAutomation[]; cancellingAutomation: boolean; disabled: boolean; branchingId?: string }>();
+const emit = defineEmits<{ session: [file: string]; sent: [prompt: string]; event: [event: AgentEvent]; branch: [message: AgentMessage]; automations: [entry: AgentAutomationEntry]; automationsChanged: []; cancelAutomation: [task: AgentAutomation] }>();
 const workspaceStore = useWorkspaceStore();
 const directory = workspaceStore.project?.directory;
 const createCanvasContext = inject<(() => CanvasContext | undefined) | undefined>("canvas", undefined);
 const messages = ref<AgentMessage[]>((props.initialSession?.messages ?? []).map(message => ({ ...message })));
+const planActive = ref(props.initialSession?.plan?.active ?? false);
+const goal = ref<AgentGoal | null>(props.initialSession?.goal ?? null);
+const answeredReview = ref("");
+const reviewQuestion = computed(() => {
+  if (!remoteRunning.value) return;
+  for (let index = messages.value.length - 1; index >= 0; index--) {
+    const part = messages.value[index]?.parts?.findLast(item => item.type === "tool" && item.tool.name === "exit_plan_mode" && item.tool.status === "running" && item.tool.question);
+    if (part?.type === "tool" && part.tool.question?.callId !== answeredReview.value) return part.tool.question;
+  }
+});
 const stream = createConversationStream(messages);
 const remoteRunning = ref(props.initialSession?.running ?? false);
 const stats = ref(props.initialSession?.stats);
@@ -104,6 +129,7 @@ const compacting = ref(false);
 const deletingId = ref<string>();
 const restoringAttachment = ref(false);
 const input = ref<InstanceType<typeof messageInput>>();
+const messageView = ref<InstanceType<typeof messageList>>();
 const voiceActive = ref(false);
 const locked = computed(() => props.disabled || busy.value || submitting.value || stopping.value || projectStops.value > 0 || deletingId.value !== undefined || restoringAttachment.value || voiceActive.value);
 const editingId = ref<string>();
@@ -111,7 +137,10 @@ const queueLocked = computed(() => !props.active || props.disabled || submitting
   || compacting.value || deletingId.value !== undefined || restoringAttachment.value || voiceActive.value || editingId.value !== undefined);
 let controller: AbortController | undefined;
 let queueController: AbortController | undefined;
+let commandController: AbortController | undefined;
+let goalEpoch = 0;
 let runId = props.initialSession?.runId;
+let scheduledRunId = props.initialSession?.scheduled ? runId : undefined;
 // 新一轮结束后仍保留标识，避免旧 HTTP 流重新取得回复归并权。
 let lastSessionRunId = runId;
 const pendingRunIds = new Set<string>();
@@ -121,6 +150,9 @@ const pendingMessage = props.initialSession?.parentFile ? undefined : workspaceS
 const selectedModel = ref(pendingMessage?.model ?? (props.initialSession?.providerId && props.initialSession.modelId
   ? JSON.stringify([props.initialSession.providerId, props.initialSession.modelId]) : props.initialModel ?? ""));
 const reasoningEffort = ref(pendingMessage?.reasoningEffort ?? props.initialSession?.thinkingLevel ?? "");
+function openAutomations(timer: boolean, token?: string, prompt?: string, runTaskId?: string) {
+  emit("automations", { timer, token, prompt, runTaskId, model: selectedModel.value, thinking: reasoningEffort.value });
+}
 const selectedModelChoice = useNodeModelSelection(modelChoices, selectedModel);
 const contextWindow = computed(() => contextUsage.value?.contextWindow ?? selectedModelChoice.value?.contextWindow ?? 262144);
 function showSteeringMessage(message: AgentQueuedMessage) {
@@ -146,6 +178,8 @@ function clearQueue() {
 
 function applyEvent(event: AgentEvent) {
   switch (event.type) {
+    case "plan": planActive.value = event.plan.active; break;
+    case "goal": goalEpoch++; goal.value = event.goal; break;
     case "subAgent":
     case "subAgentEvent": emit("event", event); break;
     case "report":
@@ -204,11 +238,176 @@ function receiveEvent(event: AgentEvent) {
   }
 }
 
-defineExpose({ receiveEvent, beginProjectStop, getRunId: () => runId, getSelectedModel: () => selectedModel.value });
+function canRefreshAutomation() {
+  return !controller && !submitting.value && !stopping.value && !projectStops.value && !receivingForwardedStream
+    && !editingId.value && !deletingId.value && !restoringAttachment.value;
+}
+
+function refreshAutomation(session: AgentConversation) {
+  if (!canRefreshAutomation() || session.running) return false;
+  // 后台轮次只追加消息；保留未发送的草稿和仅在本地的失败消息。
+  const known = new Map<string, AgentMessage>();
+  const partialReplies = new Map<string, AgentMessage>();
+  for (const message of messages.value) {
+    known.set(message.id, message);
+    if (message.entryId) known.set(message.entryId, message);
+    if (message.role === "assistant" && !message.report && !message.agentMessage && message.replyTo
+      && (!message.entryId || message.entryId === "streaming")) partialReplies.set(message.replyTo, message);
+  }
+  for (const message of session.messages) {
+    const partial = message.role === "assistant" && !message.report && !message.agentMessage && message.replyTo ? partialReplies.get(message.replyTo) : undefined;
+    const saved = known.get(message.entryId ?? message.id) ?? known.get(message.id) ?? partial;
+    if (!saved) messages.value.push({ ...message });
+    else {
+      if (message.automation) saved.automation = message.automation;
+      if (saved === partial) partialReplies.delete(message.replyTo!);
+      if (saved.streaming || !saved.entryId || saved.entryId === "streaming") {
+        Object.assign(saved, message, { id: saved.id === "streaming" ? message.id : saved.id, streaming: false });
+      }
+    }
+  }
+  messages.value = messages.value.filter(message => message.entryId !== "streaming");
+  stats.value = session.stats;
+  contextUsage.value = session.contextUsage;
+  planActive.value = session.plan?.active ?? false;
+  goal.value = session.goal ?? null;
+  remoteRunning.value = false;
+  runId = undefined;
+  scheduledRunId = undefined;
+  clearQueue();
+  return true;
+}
+
+defineExpose({ receiveEvent, beginProjectStop, canRefreshAutomation, refreshAutomation, openAutomations, clearCommandText: (token?: string) => input.value?.clearCommandText(token),
+  getRunId: () => runId, getSelectedModel: () => selectedModel.value,
+  revealAutomationResult: (id: string) => messageView.value?.revealAutomationResult(id) });
 
 function submitMessage(mode?: "steer" | "followUp") {
+  const draft = input.value?.getDraft();
+  const match = !editingId.value && !props.initialSession?.parentFile && draft?.prompt.trim().match(/^\/(plan|goal|compact)(?:\s+([\s\S]*))?$/);
+  if (match) {
+    const arg = match[2]?.trim() ?? "";
+    const hasFiles = !!(draft?.attachments.length || draft?.mentionedIds.length);
+    if (match[1] === "compact") {
+      if (hasFiles) return ElMessage.warning("此命令仅支持文字");
+      return compactContext(draft?.prompt, arg);
+    }
+    const current = goal.value;
+    if (match[1] === "plan") {
+      if (arg === "off" && hasFiles) return ElMessage.warning("此命令仅支持文字");
+      return applyCommand({ action: "plan", enabled: arg !== "off" }, true, arg && arg !== "off" ? arg : hasFiles ? translate("请根据附件制定计划") : undefined);
+    }
+    if (!arg) return ElMessage.info(current?.objective ?? translate("输入 /goal 和目标内容来创建目标"));
+    if (["pause", "resume", "clear"].includes(arg) || /^edit(?:\s|$)/.test(arg)) {
+      if (!current) return ElMessage.warning("当前会话没有目标");
+      if (hasFiles) return ElMessage.warning("此命令仅支持文字");
+      const target = { id: current.id, revision: current.revision };
+      if (arg === "pause" || arg === "resume" || arg === "clear") return applyCommand({ action: arg, ...target }, true);
+      const objective = arg.slice(4).trim();
+      if (!objective) return ElMessage.warning("请输入目标内容");
+      return applyCommand({ action: "edit", objective, ...target }, true);
+    }
+    return applyCommand({ action: "create", objective: arg }, true);
+  }
   if (busy.value || remoteRunning.value) return sendQueuedMessage(mode ?? "followUp");
   return sendMessage(editingId.value ? messages.value.find(item => item.id === editingId.value) : undefined);
+}
+
+async function compactContext(tokenToClear?: string, instructions = "") {
+  if (queueLocked.value || props.initialSession?.parentFile || !directory) return;
+  if (busy.value || remoteRunning.value) return ElMessage.warning("请先停止当前回复");
+  const sessionFile = props.sessionFile;
+  if (!sessionFile || !messages.value.length) return ElMessage.info("暂无可压缩的上下文");
+  if (!selectedModelChoice.value) return ElMessage.warning("请先选择模型");
+
+  const request = new AbortController();
+  const requestRunId = crypto.randomUUID();
+  controller = request;
+  runId = requestRunId;
+  busy.value = true;
+  compacting.value = true;
+  try {
+    await refreshModelChoices(true, request.signal);
+    request.signal.throwIfAborted();
+    const model = selectedModelChoice.value;
+    if (!model) throw new Error("请先选择模型");
+    const response = await fetch("/api/agent", {
+      method: "POST", signal: request.signal,
+      headers: { "Accept-Language": locale.value, "Content-Type": "application/json", "x-toonflow-workspace": "1" },
+      body: JSON.stringify({ operation: "compact", prompt: instructions, directory, sessionFile, runId: requestRunId,
+        providerId: model.providerId, modelId: model.modelId, thinkingLevel: reasoningEffort.value || undefined }),
+    });
+    connected = response.ok;
+    for await (const event of readAgentEvents(response, request.signal)) {
+      if (runId !== requestRunId) continue;
+      if (event.type === "session") remoteRunning.value = true;
+      if (event.type === "session" || event.type === "stats") applyEvent(event);
+    }
+    if (runId !== requestRunId || request.signal.aborted) return;
+    await input.value?.clearCommandText(tokenToClear);
+    if (props.active) ElMessage.success("上下文已压缩");
+  } catch (error) {
+    if (props.active && !request.signal.aborted && !stopping.value && !projectStops.value) ElMessage.error(error instanceof Error ? error.message : "请求失败");
+  } finally {
+    if (runId === requestRunId) {
+      runId = undefined;
+      remoteRunning.value = false;
+      compacting.value = false;
+    }
+    busy.value = false;
+    controller = undefined;
+    connected = false;
+  }
+}
+
+async function applyCommand(command: AgentCommand, fromInput = false, planPrompt?: string) {
+  if (!directory || !input.value || queueLocked.value || props.initialSession?.parentFile) return;
+  const startsGoal = command.action === "create" || command.action === "resume";
+  if ((startsGoal || planPrompt) && (busy.value || remoteRunning.value)) return ElMessage.warning("请先停止当前回复");
+  const draft = input.value.getDraft();
+  const saveGoalOnly = command.action === "create" && !selectedModelChoice.value && !draft.attachments.length && !draft.mentionedIds.length;
+  if ((startsGoal || planPrompt) && !selectedModelChoice.value && !saveGoalOnly) return ElMessage.warning("请先选择模型");
+  const request = new AbortController();
+  commandController = request;
+  submitting.value = true;
+  const epoch = goalEpoch;
+  let file = props.sessionFile;
+  let start: Pick<AgentGoal, "id" | "revision"> | undefined;
+  try {
+    if (!file) {
+      const session = await http<AgentConversation>({ method: "POST", url: "/api/agent/create", data: { directory }, signal: request.signal });
+      file = session.file;
+      emit("session", file);
+      await nextTick();
+    }
+    const state = await http<{ plan: AgentPlan; goal: AgentGoal | null }>({ method: "POST", url: "/api/agent/command",
+      data: { directory, sessionFile: file, command }, signal: request.signal });
+    planActive.value = state.plan.active;
+    if (epoch === goalEpoch) goal.value = state.goal;
+    if (startsGoal && state.goal && !saveGoalOnly) start = { id: state.goal.id, revision: state.goal.revision };
+    if (fromInput && !start && !planPrompt) await input.value?.clearDraft();
+  } catch (error) {
+    if (!request.signal.aborted) {
+      ElMessage.error(error instanceof Error ? error.message : "请求失败");
+      if ((error as { status?: number }).status === 409 && file) {
+        try {
+          const session = await http<AgentConversation>({ method: "GET", url: "/api/agent/get", params: { directory, sessionFile: file }, signal: request.signal });
+          if (goalEpoch === epoch) goal.value = session.goal ?? null;
+          planActive.value = session.plan?.active ?? false;
+        } catch { /* 保留原命令错误及草稿 */ }
+      }
+    }
+    return;
+  } finally {
+    submitting.value = false;
+    commandController = undefined;
+  }
+  if (request.signal.aborted || !props.active || props.sessionFile !== file) return;
+  if (saveGoalOnly) { ElMessage.info("请先选择模型"); return; }
+  if (start || planPrompt) await sendMessage(undefined, {
+    prompt: planPrompt ?? (command.action === "create" ? `/goal ${command.objective}` : "/goal resume"),
+    goalStart: start, preserveDraft: !fromInput,
+  });
 }
 
 async function sendQueuedMessage(streamingBehavior: "steer" | "followUp") {
@@ -270,6 +469,7 @@ async function sendQueuedMessage(streamingBehavior: "steer" | "followUp") {
             contextUsage.value = session.contextUsage;
             remoteRunning.value = session.running ?? false;
             runId = session.runId;
+            scheduledRunId = session.scheduled ? session.runId : undefined;
             receivingForwardedStream = false;
             compacting.value = false;
             queue.value = session.queue ?? { runId: session.runId ?? "", revision: 0, steering: [], followUp: [] };
@@ -374,10 +574,11 @@ function abortRequest() {
   if (controller) remoteRunning.value = true;
   controller?.abort();
   queueController?.abort();
+  commandController?.abort();
 }
 
 function beginProjectStop() {
-  const runIds = [...pendingRunIds, ...(runId ? [runId] : [])];
+  const runIds = [...pendingRunIds, ...(runId ? [runId] : [])].filter(id => id !== scheduledRunId);
   const wasRunning = !!controller || remoteRunning.value;
   projectStops.value++;
   abortRequest();
@@ -390,7 +591,7 @@ function beginProjectStop() {
       if (success) {
         for (const id of runIds) pendingRunIds.delete(id);
         // 项目停止已断开转发来源；本地主流仍由自己的 finally 收尾。
-        if (!controller) receiveEvent({ type: "done" });
+        if (!controller && (!runId || runId !== scheduledRunId)) receiveEvent({ type: "done" });
       }
       else if (wasRunning) remoteRunning.value = true;
       projectStops.value--;
@@ -448,10 +649,18 @@ async function sendCanvasResult(event: Extract<AgentEvent, { type: "canvasCall" 
     const result = await canvasContext.call(event, signal);
     body = JSON.stringify({ directory, callId: event.callId, result: result ?? null });
   } catch (error) {
-    body = JSON.stringify({ directory, callId: event.callId, error: (error instanceof Error && error.message ? error.message : translate("画布操作失败")).slice(0, 8000), unavailable: (error as { code?: string })?.code === "CANVAS_UNAVAILABLE" });
+    body = JSON.stringify({
+      directory, callId: event.callId,
+      error: (error instanceof Error && error.message ? error.message : translate("画布操作失败")).slice(0, 8000),
+      unavailable: (error as { code?: string })?.code === "CANVAS_UNAVAILABLE",
+      workspaceUnavailable: (error as { code?: string })?.code === "WORKSPACE_UNAVAILABLE",
+    });
   }
   const cancelled = signal.aborted;
-  if (cancelled) body = JSON.stringify({ directory, callId: event.callId, error: translate("画布操作已取消"), cancelled: true });
+  if (cancelled) {
+    const timedOut = signal.reason?.name === "TimeoutError";
+    body = JSON.stringify({ directory, callId: event.callId, error: timedOut ? translate("画布操作超时") : translate("画布操作已取消"), cancelled: !timedOut });
+  }
   try {
     const response = await fetch("/api/agent/canvasResult", {
       method: "POST",
@@ -470,11 +679,11 @@ async function sendCanvasResult(event: Extract<AgentEvent, { type: "canvasCall" 
   }
 }
 
-async function sendMessage(source?: AgentMessage) {
+async function sendMessage(source?: AgentMessage, command?: { prompt: string; goalStart?: Pick<AgentGoal, "id" | "revision">; preserveDraft: boolean }) {
   const instance = input.value;
-  const draft = instance?.getDraft();
+  const draft = command?.preserveDraft ? undefined : instance?.getDraft();
   const editing = source && editingId.value === source.id;
-  const prompt = (source && !editing ? source.content : (draft?.prompt ?? "")).trim();
+  const prompt = (command?.prompt ?? (source && !editing ? source.content : (draft?.prompt ?? ""))).trim();
   const attachments = reactive((source && !editing ? source.attachments ?? [] : draft?.attachments ?? []).map(item => ({ ...item })));
   const mentionedIds = source && !editing ? (source.mentions ?? []).filter(mention => prompt.includes(`{{mention:${mention.id}}}`)).map(mention => mention.id)
     : draft?.mentionedIds ?? [];
@@ -516,14 +725,17 @@ async function sendMessage(source?: AgentMessage) {
   const notifiedQuestions = new Set<string>();
   // ACT: 保留到本流结束，停止后才读到的缓冲调用也不能再执行。
   const stoppedRunIds = new Set<string>();
-  let canvasCall: { controller: AbortController; runIds: string[] } | undefined;
+  const canvasCalls = new Map<string, { controller: AbortController; runIds: string[]; promise: Promise<void> }>();
+  let canvasError: Error | undefined;
   const unlistenStop = onAgentStopped(runIds => {
     for (const id of runIds) stoppedRunIds.add(id);
-    if (canvasCall?.runIds.some(id => stoppedRunIds.has(id))) canvasCall.controller.abort();
+    for (const call of canvasCalls.values()) {
+      if (call.runIds.some(id => stoppedRunIds.has(id))) call.controller.abort();
+    }
   });
   const finishStats = anonymousData.startAgent();
   try {
-    if (!source) await instance.clearDraft();
+    if (!source && !command?.preserveDraft) await instance.clearDraft();
     requestController.signal.throwIfAborted();
     await uploadAttachments(attachments, directory, requestController.signal);
     await refreshModelChoices(true, requestController.signal);
@@ -534,7 +746,7 @@ async function sendMessage(source?: AgentMessage) {
     const response = await fetch("/api/agent", {
       method: "POST",
       headers: { "Accept-Language": locale.value, "Content-Type": "application/json", "x-toonflow-workspace": "1" },
-      body: JSON.stringify({ prompt, mentions, attachments: attachments.map(({ name, path, mimeType }) => ({ name, path, mimeType })), directory, runId: requestRunId, providerId: currentModel.providerId, modelId: currentModel.modelId, thinkingLevel: reasoningEffort.value || undefined, sessionFile: props.sessionFile, resendFrom, canvas: canvasContext ? { id: canvasContext.id, tools: canvasContext.tools } : undefined }),
+      body: JSON.stringify({ prompt, mentions, attachments: attachments.map(({ name, path, mimeType }) => ({ name, path, mimeType })), directory, runId: requestRunId, providerId: currentModel.providerId, modelId: currentModel.modelId, thinkingLevel: reasoningEffort.value || undefined, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, sessionFile: props.sessionFile, resendFrom, goalStart: command?.goalStart, canvas: canvasContext ? { id: canvasContext.id, tools: canvasContext.tools } : undefined }),
       signal: requestController.signal,
     });
     connected = response.ok;
@@ -573,6 +785,7 @@ async function sendMessage(source?: AgentMessage) {
       }
       if (toolEvent.type === "tool" && toolEvent.tool.status !== "running") {
         pendingQuestions.delete(`${scope}${toolEvent.tool.id}`);
+        if (toolEvent.tool.name === "manageAutomation" && toolEvent.tool.status === "success") emit("automationsChanged");
         if (toolEvent.tool.name === "installMarketPlugin" && toolEvent.tool.status === "success" && toolEvent.tool.result) {
           const result = JSON.parse(toolEvent.tool.result);
           if (result.installed === true) {
@@ -585,11 +798,19 @@ async function sendMessage(source?: AgentMessage) {
       if (toolEvent.type === "canvasCall") {
         if (handledCanvasCalls.has(toolEvent.callId)) throw new Error("收到重复的画布调用");
         handledCanvasCalls.add(toolEvent.callId);
-        canvasCall = { controller: new AbortController(), runIds: canvasRunIds };
-        if (canvasRunIds.some(id => stoppedRunIds.has(id))) canvasCall.controller.abort();
-        try {
-          await sendCanvasResult(toolEvent, canvasContext, AbortSignal.any([requestController.signal, canvasCall.controller.signal]));
-        } finally { canvasCall = undefined; }
+        const callId = toolEvent.callId;
+        const callController = new AbortController();
+        if (canvasRunIds.some(id => stoppedRunIds.has(id))) callController.abort();
+        const callSignal = AbortSignal.any([requestController.signal, callController.signal,
+          ...(toolEvent.name === "transcribeAudio" ? [] : [AbortSignal.timeout(toolEvent.name === "developPlugin" ? 360000 : 120000)])]);
+        const promise = sendCanvasResult(toolEvent, canvasContext, callSignal)
+          .catch(error => {
+            if (requestController.signal.aborted) return;
+            canvasError = error instanceof Error ? error : new Error("画布操作结果回传失败");
+            requestController.abort(canvasError);
+          })
+          .finally(() => canvasCalls.delete(callId));
+        canvasCalls.set(callId, { controller: callController, runIds: canvasRunIds, promise });
         continue;
       }
       switch (event.type) {
@@ -644,6 +865,8 @@ async function sendMessage(source?: AgentMessage) {
         default: applyEvent(event);
       }
     }
+    await Promise.all([...canvasCalls.values()].map(call => call.promise));
+    requestController.signal.throwIfAborted();
     if (ownsStream && !forwarded && !isSuperseded()) {
       remoteRunning.value = false;
       clearQueue();
@@ -659,6 +882,7 @@ async function sendMessage(source?: AgentMessage) {
         .catch(error => console.warn("系统通知发送失败", error));
     }
   } catch (error) {
+    error = canvasError ?? error;
     if ((error as { terminal?: boolean })?.terminal) {
       pendingRunIds.delete(requestRunId);
       if (!isSuperseded() && (!wasRemoteRunning || runId === requestRunId)) {
@@ -667,9 +891,10 @@ async function sendMessage(source?: AgentMessage) {
         clearQueue();
       }
     }
-    finishStats(requestController.signal.aborted ? "cancelled" : "failed");
+    const cancelled = !canvasError && requestController.signal.aborted;
+    finishStats(cancelled ? "cancelled" : "failed");
     const responseMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
-    const message = requestController.signal.aborted || stoppedRunIds.has(requestRunId) ? translate("已停止生成") : responseMessage || (error instanceof Error ? error.message : translate("发送失败，请重试"));
+    const message = cancelled || stoppedRunIds.has(requestRunId) ? translate("已停止生成") : responseMessage || (error instanceof Error ? error.message : translate("发送失败，请重试"));
     if ((source && !accepted) || !ownsStream) { userMessage.error = message; ElMessage.error(message); }
     else if (isSuperseded()) {
       reply.error = message;
@@ -678,6 +903,8 @@ async function sendMessage(source?: AgentMessage) {
     }
     else stream.receive({ type: "error", message });
   } finally {
+    for (const call of canvasCalls.values()) call.controller.abort();
+    await Promise.all([...canvasCalls.values()].map(call => call.promise));
     unlistenStop();
     // ACT: Bun 的流断开事件可能不触发；主动结束仍在等待的提问，不依赖断开通知。
     for (const callId of pendingQuestions.values()) {

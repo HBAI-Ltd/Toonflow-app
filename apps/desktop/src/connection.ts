@@ -7,6 +7,7 @@ import type { Server } from "node:http";
 import { createRemoteConnection } from "@toonflow/server/remoteConnection";
 import { getMobileLinkConfig, getMobileLinkStatus, startMobileLinkRuntime, stopMobileLinkRuntime, suspendMobileLinkRuntime } from "@toonflow/server/mobileLink";
 import { initializeMcpRuntime, stopMcpRuntime } from "@toonflow/server/mcp";
+import { startAutomations, stopAutomations } from "@toonflow/server/agent/automations";
 import { languageRequest, translateError, translateMessage } from "@toonflow/server/i18n";
 import { isEnabled, startMultiTenantRuntime, stopMultiTenantRuntime } from "@toonflow/server/multiTenant";
 
@@ -132,12 +133,16 @@ export default async function createDesktopConnection(app: express.Express, dire
     await once(server, "listening");
     const port = (server.address() as AddressInfo).port;
     origin = `http://127.0.0.1:${port}`;
-    if (!connection.remote) await initializeMcpRuntime(app, origin, mcpEntry);
+    if (!connection.remote) {
+      await initializeMcpRuntime(app, origin, mcpEntry);
+      startAutomations();
+    }
     return { connection, server, sockets, port };
   }
 
   async function stopGateway() {
     current?.connection.stop();
+    await stopAutomations();
     await stopMultiTenantRuntime(app);
     if (!current?.server) return;
     await new Promise<void>(resolve => {

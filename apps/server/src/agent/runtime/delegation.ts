@@ -12,7 +12,7 @@ import type { ThinkingLevel } from "@/lib/modelReasoning";
 export async function runDelegatedAgent(options: {
   cwd: string; parentFile?: string; name: string; task: string; message?: AgentPeerMessage;
   providerId: string; modelId: string; thinkingLevel?: ThinkingLevel;
-  canvas?: CanvasContext; signal?: AbortSignal; send: (event: AgentEvent) => void; onProgress?: (text: string) => void;
+  canvas?: CanvasContext; signal?: AbortSignal; background?: boolean; send: (event: AgentEvent) => void; onProgress?: (text: string) => void;
   onCanvasCancel?: (reason: Error) => void; onReady?: () => void;
 }) {
   const { cwd, parentFile, name, task, message, providerId, modelId, thinkingLevel, canvas, signal, onProgress } = options;
@@ -40,10 +40,11 @@ export async function runDelegatedAgent(options: {
       controller.abort(reason);
       options.onCanvasCancel?.(reason);
     }) : undefined;
-    const questions = createQuestionContext(cwd, send, () => controller.abort());
+    const questions = options.background ? undefined : createQuestionContext(cwd, send, () => controller.abort());
     const result: SubAgentResult = { name, file: child.file, status: "running", result: "准备执行" };
     try {
-      await run({ prompt: task, cwd, runId, sessionFile: child.file, providerId, modelId, thinkingLevel, canvas: bridge?.context, question: questions.context, signal: childSignal, onCancel: () => controller.abort(), onCanvasCancel: options.onCanvasCancel }, send, message ? { ...message, startsTurn: true } : undefined, snapshot => { entries = snapshot; });
+      await run({ prompt: task, cwd, runId, sessionFile: child.file, providerId, modelId, thinkingLevel, scheduled: options.background ? "delegated" : undefined,
+        canvas: bridge?.context, question: questions?.context, signal: childSignal, onCancel: () => controller.abort(), onCanvasCancel: options.onCanvasCancel }, send, message ? { ...message, startsTurn: true } : undefined, snapshot => { entries = snapshot; });
       result.status = childSignal.aborted ? "cancelled" : "completed";
     } catch (error) {
       result.status = childSignal.aborted ? "cancelled" : (error as { code?: string })?.code === "AGENT_LENGTH" ? "limited" : "error";
@@ -52,7 +53,7 @@ export async function runDelegatedAgent(options: {
       if (started || !message) send({ type: "error", message: result.result });
     } finally {
       bridge?.dispose();
-      questions.dispose();
+      questions?.dispose();
       if (started || !message) send({ type: "done" });
     }
     const usage = emptyUsage();

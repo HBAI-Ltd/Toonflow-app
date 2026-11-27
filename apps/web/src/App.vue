@@ -6,6 +6,8 @@
           <component :is="currentComponent" />
         </transition>
       </router-view>
+      <generationCostDialog v-if="costPrompt" :key="costPrompt.key" :modelValue="true" v-bind="costPrompt.props"
+        @update:modelValue="costPrompt.setVisible" @confirm="costPrompt.confirm" />
       <loadingPage v-model:visible="workspaceStore.projectLoadingVisible" v-model:drawn="workspaceStore.projectLoadingDrawn" :active="workspaceStore.projectLoading" />
       <ffmpegRequired v-if="currentUser?.role !== 'user'" />
       <desktopQuit v-if="actualPlatform.isDesktop" />
@@ -14,8 +16,7 @@
         v-model="updateBoxVisible"
         :version="updateBoxBuild.version"
         :buildCode="updateBoxBuild.hash"
-        @opened="rememberUpdateBox"
-        @close="rememberUpdateBox" />
+        @dismiss="rememberUpdateBox" />
       <el-dialog v-if="installFailure" v-model="installFailureVisible" title="更新未成功" width="min(520px, 92vw)" alignCenter appendToBody :closeOnClickModal="false">
         <div v-if="installFailure" class="installFailureContent">
           <p class="failureMessage">{{ installFailure.message }}</p>
@@ -43,7 +44,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, shallowRef, watch, watchEffect } from "vue";
-import { ElMessage, useZIndex } from "element-plus";
+import { useZIndex } from "element-plus";
 import { elementLocales } from "@toonflow/i18n/elementPlus";
 import { ConfigProvider, type GlobalConfigProvider } from "tdesign-vue-next";
 import tdesignZhCn from "tdesign-vue-next/es/locale/zh_CN";
@@ -58,19 +59,23 @@ import type { updateSnapshot } from "@toonflow/server/desktop";
 import { chatLocale } from "@/lib/i18n";
 import { registerAppearance } from "@/lib/appearance";
 import { actualPlatform, isMobile } from "@/lib/platform";
-import { saveSettings, settings, uiSettings } from "@/stores/settings";
+import { uiSettings } from "@/stores/settings";
 import { desktopUpdateSnapshot, stopDesktopUpdateObservation } from "@/stores/desktopUpdate";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { currentUser } from "@/stores/multiTenant";
 import loadingPage from "@/components/loadingPage.vue";
+import generationCostDialog from "@/components/generationCostDialog.vue";
+import { useMediaCostReminder } from "@/lib/mediaCostReminder";
 import { useMcpControl } from "@/lib/mcpControl";
 import ffmpegRequired from "@/components/settings/ffmpegRequired.vue";
 import desktopQuit from "@/components/desktopQuit.vue";
-import updateBox from "@/components/updateBox.vue";
+import updateBox from "@/components/updateBox/index.vue";
+import { useUpdateBox } from "@/components/updateBox/useUpdateBox";
 import "element-plus/theme-chalk/dark/css-vars.css";
 
 if (currentUser.value?.role !== "user") useMcpControl();
 const workspaceStore = useWorkspaceStore();
+const costPrompt = useMediaCostReminder();
 
 // ACT: TDesign 缺少的语言使用英语基底，聊天控件由应用字典补齐。
 const tdesignLocales = {
@@ -81,9 +86,7 @@ const elementLocale = computed(() => elementLocales[locale.value]);
 // ACT: TDesign 自带语言包声明为 readonly，而 ConfigProvider 的只读使用接口声明为可写。
 const tdesignLocale = computed(() => ({ ...tdesignLocales[locale.value], chat: chatLocale.value }) as unknown as GlobalConfigProvider);
 
-const updateBoxVisible = ref(false);
-const updateBoxBuild = shallowRef<{ version: string; hash: string }>();
-const shownUpdateBuilds = new Set<string>();
+const { updateBoxVisible, updateBoxBuild, showUpdateBox, rememberUpdateBox } = useUpdateBox();
 const installFailureVisible = ref(false);
 const installFailure = shallowRef<updateSnapshot["installFailure"]>();
 const shownInstallAttempts = new Set<string>();
@@ -111,23 +114,8 @@ watch(desktopUpdateSnapshot, snapshot => {
     installFailure.value = undefined;
     installFailureVisible.value = false;
   }
-  const buildKey = `${snapshot.version}:${snapshot.hash}`;
-  const seenBuilds = settings.value.updateBoxSeenBuilds;
-  if (shownUpdateBuilds.has(buildKey) || Array.isArray(seenBuilds) && seenBuilds.includes(buildKey)) return;
-  shownUpdateBuilds.add(buildKey);
-  updateBoxBuild.value = { version: snapshot.version, hash: snapshot.hash };
-  updateBoxVisible.value = true;
+  showUpdateBox(snapshot.version, snapshot.hash);
 }, { immediate: true });
-
-function rememberUpdateBox() {
-  if (!updateBoxBuild.value) return;
-  const buildKey = `${updateBoxBuild.value.version}:${updateBoxBuild.value.hash}`;
-  // ACT: 桌面端启动端口会变化，复用应用设置；展示完成或提前关闭时记录，保存队列内去重。
-  void saveSettings(current => {
-    const seenBuilds = Array.isArray(current.updateBoxSeenBuilds) ? current.updateBoxSeenBuilds.filter(value => typeof value === "string") : [];
-    return seenBuilds.includes(buildKey) ? undefined : { updateBoxSeenBuilds: [...seenBuilds, buildKey] };
-  }).catch(() => { ElMessage.warning("更新说明的展示记录保存失败，下次启动时可能再次显示。"); });
-}
 
 function preventPageZoom(event: WheelEvent) {
   if (event.ctrlKey || event.metaKey) event.preventDefault();
@@ -160,8 +148,13 @@ onBeforeUnmount(registerAppearance());
 
 <style lang="scss">
 html {
+  --canvasGridBackground: var(--el-bg-color);
   background-color: var(--el-bg-color);
   color: var(--el-text-color-primary);
+
+  &[theme-mode="light"] {
+    --canvasGridBackground: var(--el-bg-color-page);
+  }
 }
 
 .installFailureContent {
@@ -240,6 +233,24 @@ input[inputmode="decimal"],
   --vf-node-color: var(--el-border-color-darker);
   --vf-connection-path: var(--el-text-color-secondary);
   --vf-handle: var(--el-text-color-secondary);
+
+  .vue-flow__background { background-color: var(--canvasGridBackground); }
+
+  html[theme-mode="light"] & {
+    .vue-flow__node {
+      .contentCard,
+      .groupNode {
+        border-color: color-mix(in srgb, var(--el-text-color-regular) 70%, var(--el-border-color));
+
+        &.selected {
+          border-color: color-mix(in srgb, var(--el-color-primary) 40%, var(--el-text-color-primary));
+          outline: 1px solid var(--el-color-primary);
+        }
+      }
+
+      .groupLabel { color: var(--el-text-color-regular); }
+    }
+  }
 
   .vue-flow__minimap {
     background-color: var(--el-bg-color);

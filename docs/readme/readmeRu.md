@@ -90,7 +90,7 @@
 </p>
 <p align="center">
   <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" />&nbsp;
-  <img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" />&nbsp;
+  <img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" />&nbsp;
   <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" />&nbsp;
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ sudo spctl --master-disable
 
 ### 4.2 Установка через Docker
 
-Сначала установите Git, [Docker Engine](https://docs.docker.com/engine/install/) и Docker Compose. В Windows и macOS можно использовать Docker Desktop в режиме контейнеров Linux. В репозитории есть [Dockerfile](../../Dockerfile), [конфигурация Compose](../../compose.yaml) и [правила исключения файлов из сборки](../../.dockerignore). Образ собирается на Bun 1.4.3 и содержит FFmpeg.
+Сначала установите Git, [Docker Engine](https://docs.docker.com/engine/install/) и Docker Compose. В Windows и macOS можно использовать Docker Desktop в режиме контейнеров Linux. В репозитории есть [Dockerfile](../../Dockerfile), [конфигурация Compose](../../compose.yaml) и [правила исключения файлов из сборки](../../.dockerignore). Образ собирается на Bun 1.4.5 и содержит FFmpeg.
 
 <details>
 <summary><strong>Показать шаги установки через Docker</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 Установка на сервер
 
-Этот вариант позволяет запускать Web и Server непосредственно на сервере Linux. Ниже приведён пример для Ubuntu / Debian с указанной в проекте версией [Bun 1.4.3](https://bun.sh/docs/installation).
+Этот вариант позволяет запускать Web и Server непосредственно на сервере Linux. Ниже приведён пример для Ubuntu / Debian с указанной в проекте версией [Bun 1.4.5](https://bun.sh/docs/installation).
 
 <details>
 <summary><strong>Показать шаги установки на сервер</strong></summary>
@@ -453,7 +453,7 @@ docker compose start
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

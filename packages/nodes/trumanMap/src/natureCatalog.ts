@@ -17,16 +17,25 @@ const natureFamilies = [
   { start: 4500, count: 18, step: 1, parents: specialLandforms, name: "特别地景", itemType: "构件" as const },
 ];
 
+export type NatureNameUnit = "枝" | "株" | "节叶" | "主块" | "侧枝" | "刺座" | "主枝" | "枝梢" | "节点" | "伴生器官";
+export type NatureNamePart = string | { count: number; unit: NatureNameUnit };
+export const natureNameTemplate = "{0}·{1}·{2}";
+
+export function getNatureNameParts(design: number): NatureNamePart[] | undefined {
+  if (!Number.isInteger(design) || design < 0 || design >= 4518) return;
+  if (design < 900) return [treeBodies[Math.floor(design / 100)]!, { count: 3 + Math.floor(design / 10) % 10, unit: "枝" }, treeCrowns[design % 10]!];
+  if (design < 1620) { const local = design - 900; return [flowerForms[Math.floor(local / 90)]!, { count: 1 + Math.floor(local / 10) % 9, unit: "株" }, { count: 2 + local % 10, unit: "节叶" }]; }
+  if (design < 2250) { const local = design - 1620; return [rockLayouts[Math.floor(local / 70)]!, { count: 3 + Math.floor(local / 10) % 7, unit: "主块" }, rockForms[local % 10]!]; }
+  if (design < 2670) { const local = design - 2250; return [cactusForms[Math.floor(local / 60)]!, { count: 1 + Math.floor(local / 10) % 6, unit: "侧枝" }, { count: 1 + local % 10, unit: "刺座" }]; }
+  if (design < 3090) { const local = design - 2670; return [mushroomForms[Math.floor(local / 60)]!, mushroomStems[Math.floor(local / 10) % 6]!, { count: 1 + local % 10, unit: "株" }]; }
+  if (design < 3510) { const local = design - 3090; return [coralForms[Math.floor(local / 60)]!, { count: 3 + Math.floor(local / 10) % 6, unit: "主枝" }, { count: 1 + local % 10, unit: "枝梢" }]; }
+  if (design < 3870) { const local = design - 3510; return [landscapeForms[Math.floor(local / 40)]!, { count: 2 + Math.floor(local / 8) % 5, unit: "节点" }, { count: 3 + local % 8, unit: "伴生器官" }]; }
+  if (design < 4500) { const local = design - 3870; return [creatureBodies[Math.floor(local / 70)]!, creatureLimbs[Math.floor(local / 10) % 7]!, creatureHeads[local % 10]!]; }
+  return [specialLandforms[design - 4500]!];
+}
+
 function natureName(design: number) {
-  if (design < 900) return `${treeBodies[Math.floor(design / 100)]}·${3 + Math.floor(design / 10) % 10}枝·${treeCrowns[design % 10]}`;
-  if (design < 1620) { const local = design - 900; return `${flowerForms[Math.floor(local / 90)]}·${1 + Math.floor(local / 10) % 9}株·${2 + local % 10}节叶`; }
-  if (design < 2250) { const local = design - 1620; return `${rockLayouts[Math.floor(local / 70)]}·${3 + Math.floor(local / 10) % 7}主块·${rockForms[local % 10]}`; }
-  if (design < 2670) { const local = design - 2250; return `${cactusForms[Math.floor(local / 60)]}·${1 + Math.floor(local / 10) % 6}侧枝·${1 + local % 10}刺座`; }
-  if (design < 3090) { const local = design - 2670; return `${mushroomForms[Math.floor(local / 60)]}·${mushroomStems[Math.floor(local / 10) % 6]}·${1 + local % 10}株`; }
-  if (design < 3510) { const local = design - 3090; return `${coralForms[Math.floor(local / 60)]}·${3 + Math.floor(local / 10) % 6}主枝·${1 + local % 10}枝梢`; }
-  if (design < 3870) { const local = design - 3510; return `${landscapeForms[Math.floor(local / 40)]}·${2 + Math.floor(local / 8) % 5}节点·${3 + local % 8}伴生器官`; }
-  if (design < 4500) { const local = design - 3870; return `${creatureBodies[Math.floor(local / 70)]}·${creatureLimbs[Math.floor(local / 10) % 7]}·${creatureHeads[local % 10]}`; }
-  return specialLandforms[design - 4500]!;
+  return getNatureNameParts(design)!.map(part => typeof part === "string" ? part : `${part.count}${part.unit}`).join("·");
 }
 
 export function createNatureModel(design: number): ModelDefinition {

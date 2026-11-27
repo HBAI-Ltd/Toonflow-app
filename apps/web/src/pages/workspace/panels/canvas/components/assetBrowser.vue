@@ -10,7 +10,7 @@
       <el-scrollbar class="directoryScroll">
         <el-tree class="directoryTree" :data="directoryTree" nodeKey="path" :props="{ label: 'name' }" :icon="IconChevronRight" :currentNodeKey="folder === '.' ? undefined : folder" :expandOnClickNode="false" :defaultExpandAll="generalSettings.assetFoldersExpanded" :defaultExpandedKeys="expandedFolders" :autoExpandParent="false" highlightCurrent emptyText="" @nodeClick="selectDirectory" @nodeExpand="(entry: DirectoryEntry) => emit('expandFolder', entry.path)" @nodeCollapse="(entry: DirectoryEntry) => emit('collapseFolder', entry.path)">
           <template #default="{ data, node }">
-            <span class="directoryEntry" :title="data.name" :aria-disabled="navigationLocked" @contextmenu.prevent.stop="emit('menu', $event, data.source)">
+            <span class="directoryEntry" :title="data.name" :aria-disabled="navigationLocked" @contextmenu.prevent.stop="!canSelect && emit('menu', $event, data.source)">
               <component :is="node.expanded && !node.isLeaf ? IconFolderOpen : IconFolder" :size="17" aria-hidden="true" />
               <span>{{ data.name }}</span>
             </span>
@@ -32,17 +32,17 @@
           <div class="directoryTitle">
             <div class="titleLine">
               <h2>{{ currentDirectory?.name ?? '全部素材' }}</h2>
-              <el-button v-if="currentDirectory" class="directoryMore" text :icon="IconDots" :aria-label="'更多 ' + currentDirectory.name" title="目录操作" @click="emit('menu', $event, currentDirectory)" />
+              <el-button v-if="currentDirectory && !canSelect" class="directoryMore" text :icon="IconDots" :aria-label="'更多 ' + currentDirectory.name" title="目录操作" @click="emit('menu', $event, currentDirectory)" />
             </div>
             <p>{{ scopeFiles.length }} 个素材<span v-if="scopeDirectories.length"> · {{ scopeDirectories.length }} 个文件夹</span></p>
           </div>
           <div class="headerActions">
-            <el-input v-model="searchQuery" class="searchInput" :prefixIcon="IconSearch" :placeholder="folder === '.' ? '搜索全部素材' : '搜索当前文件夹'" aria-label="搜索素材" clearable @keydown.esc.stop="searchQuery = ''" />
-            <el-button class="createButton" :icon="IconFolderPlus" :disabled="newFolderParent !== undefined || loading" @click="emit('startFolder')">新建文件夹</el-button>
-            <el-button class="uploadButton" type="primary" :icon="IconUpload" :loading="uploading" :disabled="newFolderParent !== undefined || loading || selecting" @click="emit('upload')">本地上传</el-button>
+            <el-input v-model="searchQuery" class="searchInput" :prefixIcon="IconSearch" :placeholder="folder === '.' ? '搜索全部素材' : '搜索当前文件夹'" aria-label="搜索素材" clearable @keydown.esc="clearSearch" />
+            <el-button v-if="!canSelect" class="createButton" :icon="IconFolderPlus" :disabled="newFolderParent !== undefined || loading" @click="emit('startFolder')">新建文件夹</el-button>
+            <el-button v-if="!canSelect" class="uploadButton" type="primary" :icon="IconUpload" :loading="uploading" :disabled="newFolderParent !== undefined || loading || selecting" @click="emit('upload')">本地上传</el-button>
           </div>
         </div>
-        <div class="filterRow" role="group" aria-label="素材类型">
+        <div v-if="!accept || filters.length > 2" class="filterRow" role="group" aria-label="素材类型">
           <button v-for="item in filters" :key="item.value" class="filterButton" :class="{ active: selectedKind === item.value }" type="button" :aria-pressed="selectedKind === item.value" @click="selectedKind = item.value">
             {{ item.label }}<span>{{ item.count }}</span>
           </button>
@@ -58,21 +58,23 @@
 
       <el-scrollbar v-loading="loading" class="assetScroll" aria-label="素材列表">
         <div v-if="displayEntries.length" class="assetGrid">
-          <article v-for="entry in displayEntries" :key="entry.path" class="assetCard" :draggable="!canSelect && entry.type === 'file'" @dragstart="emit('drag', $event, entry)" @contextmenu.prevent.stop="emit('menu', $event, entry)">
-            <component :is="canSelect || entry.type === 'directory' || mediaKind(entry) ? 'button' : 'div'" class="assetOpen" :type="canSelect || entry.type === 'directory' || mediaKind(entry) ? 'button' : undefined" :disabled="entry.type === 'directory' ? navigationLocked : canSelect && (selecting || !canSelect(entry))" :aria-label="entry.type === 'directory' ? '打开文件夹 ' + entry.name : canSelect ? '引用素材 ' + entry.name : mediaKind(entry) ? '预览素材 ' + entry.name : undefined" @click="openEntry(entry)">
+          <article v-for="entry in displayEntries" :key="entry.path" class="assetCard" :class="{ picked: selectionOrder?.has(entry.path) }" :draggable="!canSelect && entry.type === 'file'" @dragstart="emit('drag', $event, entry)" @contextmenu.prevent.stop="!canSelect && emit('menu', $event, entry)">
+            <component :is="canSelect || entry.type === 'directory' || mediaKind(entry) ? 'button' : 'div'" class="assetOpen" :type="canSelect || entry.type === 'directory' || mediaKind(entry) ? 'button' : undefined" :disabled="entry.type === 'directory' ? navigationLocked : canSelect && (selecting || !canSelect(entry))" :aria-pressed="entry.type === 'file' && selectionOrder ? selectionOrder.has(entry.path) : undefined" :aria-label="entry.type === 'directory' ? '打开文件夹 ' + entry.name : canSelect ? '引用素材 ' + entry.name : mediaKind(entry) ? '预览素材 ' + entry.name : undefined" @click="openEntry(entry)">
               <span class="assetVisual" :class="entry.type === 'directory' ? 'folderVisual' : mediaKind(entry) + 'Visual'">
                 <mentionThumbnail v-if="mediaKind(entry) === 'image'" class="assetImage" :thumbnail="{ url: entry.path, mimeType: getMediaMimeType({ name: entry.path, type: '' }) }" globalAsset><span class="imageError"><icon-photo :size="38" aria-hidden="true" /></span></mentionThumbnail>
                 <icon-folder v-else-if="entry.type === 'directory'" :size="58" stroke="1.25" aria-hidden="true" />
                 <template v-else-if="mediaKind(entry) === 'video'"><mentionThumbnail class="assetVideo" :thumbnail="{ url: entry.path, mimeType: mentionAssetType(entry.path).mimeType }" globalAsset><icon-video class="mediaBackdrop" :size="76" stroke="1" aria-hidden="true" /></mentionThumbnail><span class="playButton"><icon-player-play :size="22" fill="currentColor" aria-hidden="true" /></span></template>
                 <icon-music v-else-if="mediaKind(entry) === 'audio'" :size="52" stroke="1.25" aria-hidden="true" />
                 <icon-file v-else :size="52" stroke="1.25" aria-hidden="true" />
+                <span v-if="selectionOrder?.has(entry.path)" class="selectionBadge" aria-hidden="true">{{ selectionOrder.get(entry.path) }}</span>
                 <span v-if="mediaKind(entry)" class="mediaBadge">{{ typeLabel(entry) }}</span>
               </span>
               <span class="assetName" :title="entry.name">{{ entry.name }}</span>
             </component>
             <div class="cardFooter">
               <span class="assetDetails" :title="entry.path">{{ entry.type === 'directory' ? `${entry.children?.length ?? 0} 个项目` : folder === '.' && entry.path.includes('/') ? entry.path.slice(0, entry.path.lastIndexOf('/')) : typeLabel(entry) }}</span>
-              <el-button class="moreButton" text :icon="IconDots" :aria-label="'更多 ' + entry.name" title="更多操作" @click="emit('menu', $event, entry)" />
+              <el-button v-if="canSelect && mediaKind(entry)" class="moreButton" text :icon="IconEye" :disabled="selecting" aria-label="预览" title="预览" @click="emit('preview', entry)" />
+              <el-button v-if="!canSelect" class="moreButton" text :icon="IconDots" :aria-label="'更多 ' + entry.name" title="更多操作" @click="emit('menu', $event, entry)" />
             </div>
           </article>
         </div>
@@ -87,11 +89,11 @@
 </template>
 
 <script setup lang="ts">
-import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
+import { acceptsMediaFile, getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
 import { computed, nextTick, ref, watch } from "vue";
 import { t, translate } from "@toonflow/i18n/vue";
 import type { InputInstance } from "element-plus";
-import { IconChevronRight, IconDots, IconFile, IconFolder, IconFolderOpen, IconFolderPlus, IconLayoutGrid, IconMusic, IconPhoto, IconPlayerPlay, IconSearch, IconUpload, IconVideo } from "@tabler/icons-vue";
+import { IconChevronRight, IconDots, IconEye, IconFile, IconFolder, IconFolderOpen, IconFolderPlus, IconLayoutGrid, IconMusic, IconPhoto, IconPlayerPlay, IconSearch, IconUpload, IconVideo } from "@tabler/icons-vue";
 import { mentionAssetType } from "@toonflow/server/agent/mentionSources";
 import mentionThumbnail from "@/components/agent/mentionThumbnail.vue";
 import { generalSettings } from "@/stores/settings";
@@ -110,6 +112,8 @@ const props = defineProps<{
   assetUrl: (path: string) => string;
   canSelect?: (entry: AssetEntry) => boolean;
   selecting?: boolean;
+  accept?: string;
+  selectionOrder?: Map<string, number>;
   expandedFolders: string[];
 }>();
 const folder = defineModel<string>("folder", { default: "." });
@@ -135,7 +139,7 @@ const allEntries = computed(() => {
   const items: AssetEntry[] = [];
   function collectEntries(entries: AssetEntry[]) {
     for (const entry of entries) {
-      if (entry.draft) continue;
+      if (entry.draft || !matchesAccept(entry)) continue;
       items.push(entry);
       if (entry.children) collectEntries(entry.children);
     }
@@ -143,9 +147,12 @@ const allEntries = computed(() => {
   collectEntries(props.entries);
   return items;
 });
+function matchesAccept(entry: AssetEntry) {
+  return !props.accept || entry.type === "directory" || acceptsMediaFile(props.accept, { name: entry.name, type: "" });
+}
 const allFiles = computed(() => allEntries.value.filter(entry => entry.type === "file"));
 const currentDirectory = computed(() => allEntries.value.find(entry => entry.path === folder.value && entry.type === "directory"));
-const scopeEntries = computed(() => folder.value === "." ? allFiles.value : (currentDirectory.value?.children ?? []).filter(entry => !entry.draft));
+const scopeEntries = computed(() => folder.value === "." ? allFiles.value : (currentDirectory.value?.children ?? []).filter(entry => !entry.draft && matchesAccept(entry)));
 const scopeFiles = computed(() => scopeEntries.value.filter(entry => entry.type === "file"));
 const scopeDirectories = computed(() => scopeEntries.value.filter(entry => entry.type === "directory"));
 const directoryTree = computed(() => {
@@ -161,7 +168,7 @@ const filters = computed(() => [
   { value: "video" as const, label: translate("视频"), count: scopeFiles.value.filter(entry => props.mediaKind(entry) === "video").length },
   { value: "audio" as const, label: translate("音频"), count: scopeFiles.value.filter(entry => props.mediaKind(entry) === "audio").length },
   { value: "other" as const, label: translate("其他"), count: scopeFiles.value.filter(entry => !props.mediaKind(entry)).length },
-]);
+].filter(item => !props.accept || item.value === "all" || item.count > 0));
 const displayEntries = computed(() => {
   const query = searchQuery.value.trim().toLocaleLowerCase();
   return scopeEntries.value.filter(entry => {
@@ -187,6 +194,13 @@ function openEntry(entry: AssetEntry) {
     if (!props.selecting && props.canSelect(entry)) emit("select", entry);
   }
   else if (props.mediaKind(entry)) emit("preview", entry);
+}
+
+function clearSearch(event: Event) {
+  if (searchQuery.value) {
+    event.stopPropagation();
+    searchQuery.value = "";
+  }
 }
 
 function typeLabel(entry: AssetEntry) {
@@ -454,6 +468,7 @@ watch(folder, path => {
 
           &:hover { border-color: var(--el-border-color); }
           &:focus-within { border-color: var(--el-color-primary-light-5); }
+          &.picked { border-color: var(--el-color-primary); box-shadow: inset 0 0 0 1px var(--el-color-primary); }
 
           .assetOpen {
             display: block;
@@ -510,6 +525,22 @@ watch(folder, path => {
                 background: var(--el-bg-color-overlay);
 
                 svg { margin-left: 2px; }
+              }
+
+              .selectionBadge {
+                position: absolute;
+                inset-block-start: 8px;
+                inset-inline-end: 8px;
+                display: grid;
+                place-items: center;
+                min-width: 24px;
+                height: 24px;
+                padding-inline: 5px;
+                border-radius: 12px;
+                background: var(--el-color-primary);
+                color: var(--el-color-white);
+                font-size: 12px;
+                font-weight: 600;
               }
 
               .mediaBadge {

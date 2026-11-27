@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import type { Request, Response } from "express";
 import { z } from "zod";
+import { canvasOperations } from "@toonflow/tool-canvas/runtime";
 import conf from "@/utils/conf";
 import { isMobileLinkRequest } from "@/utils/mobileLink";
 import { getRuntimePlatform } from "@/lib/platform";
@@ -8,6 +9,7 @@ import { getRuntimePlatform } from "@/lib/platform";
 export const controlStateSchema = z.object({
   directory: z.string().max(4096).nullable(),
   canvasId: z.string().max(256).nullable(),
+  canvasIds: z.array(z.string().min(1).max(256)).max(10000).optional(),
   panel: z.string().max(32),
   projectList: z.array(z.object({ directory: z.string().max(4096), name: z.string().max(256), lastOpenedAt: z.number() })).max(1000),
   tools: z.array(z.object({
@@ -18,7 +20,7 @@ export const controlStateSchema = z.object({
 
 type ControlState = z.infer<typeof controlStateSchema>;
 type ControlResult = { result?: unknown; error?: string };
-type Connection = { id: string; state: ControlState; revision: number; response: Response; signal: AbortSignal; pending?: { id: string; finish(result: ControlResult): void } };
+type Connection = { id: string; state: ControlState; revision: number; response: Response; signal: AbortSignal; pending: Map<string, { parallel: boolean; finish(result: ControlResult): void }> };
 // ACT: 控制连接只属于当前单进程，重连重新注册，不持久化运行中的命令。
 const connections = new Map<string, Connection>();
 
@@ -84,7 +86,7 @@ export function getConnection(id?: string, directory?: string) {
 export function connectControl(id: string, response: Response) {
   if (connections.has(id)) throw Object.assign(new Error("控制连接已存在"), { status: 409 });
   const lifetime = new AbortController();
-  const connection: Connection = { id, response, signal: lifetime.signal, revision: 0, state: { directory: null, canvasId: null, panel: "home", projectList: [], tools: [] } };
+  const connection: Connection = { id, response, signal: lifetime.signal, revision: 0, pending: new Map(), state: { directory: null, canvasId: null, panel: "home", projectList: [], tools: [] } };
   response.set({ "Content-Type": "text/event-stream", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no" });
   response.flushHeaders();
   connections.set(id, connection);
@@ -96,7 +98,7 @@ export function connectControl(id: string, response: Response) {
     response.off("close", close);
     socket?.off("close", close);
     if (connections.get(id) === connection) connections.delete(id);
-    connection.pending?.finish({ error: "Toonflow 页面已断开，操作已取消" });
+    for (const call of connection.pending.values()) call.finish({ error: "Toonflow 页面已断开，操作已取消" });
     lifetime.abort(new Error("Toonflow 页面已断开，操作已取消"));
   };
   response.once("close", close);
@@ -112,40 +114,46 @@ export function updateControlState(id: string, revision: number, state: ControlS
 
 export function finishControlCall(connectionId: string, callId: string, result: ControlResult) {
   const connection = getConnection(connectionId)!;
-  if (connection.pending?.id !== callId) throw Object.assign(new Error("控制命令已取消或不存在"), { status: 404 });
-  connection.pending.finish(result);
+  const call = connection.pending.get(callId);
+  if (!call) throw Object.assign(new Error("控制命令已取消或不存在"), { status: 404 });
+  call.finish(result);
 }
 
-export function callControl(connectionId: string, name: string, args: Record<string, unknown>, signal: AbortSignal, directory?: string) {
+export function callControl(connectionId: string, name: string, args: Record<string, unknown>, signal: AbortSignal, directory?: string, canvasId?: string) {
   signal.throwIfAborted();
   const connection = getConnection(connectionId)!;
-  if (connection.pending) throw new Error("此页面正在执行另一条控制命令，请等待完成");
+  const canvasOperation = canvasOperations.some(operation => operation.name === name);
+  const parallel = canvasOperation && !["addCanvas", "switchCanvas", "renameCanvas"].includes(name);
+  // ACT: 画布实例负责各自排队；切换、重命名及应用操作仍独占页面，避免改变并行调用的工作环境。
+  if (connection.pending.size && (!parallel || [...connection.pending.values()].some(call => !call.parallel))) throw new Error("此页面正在执行另一条控制命令，请等待完成");
   if (directory && connection.state.directory !== directory) throw new Error("工作区已切换，请重新调用 getAppState");
+  if (canvasOperation) canvasId = name !== "switchCanvas" && typeof args.canvasId === "string" ? args.canvasId : canvasId ?? connection.state.canvasId ?? undefined;
   const callId = crypto.randomUUID();
   return new Promise<unknown>((resolve, reject) => {
     const finish = ({ result, error }: ControlResult) => {
-      if (connection.pending?.id !== callId) return;
-      delete connection.pending;
+      if (!connection.pending.delete(callId)) return;
       clearTimeout(timer);
       signal.removeEventListener("abort", abort);
       if (error !== undefined) reject(new Error(error));
       else resolve(result);
     };
     const abort = () => {
-      if (!connection.response.destroyed) connection.response.write(`data: ${JSON.stringify({ type: "cancel", callId })}\n\n`);
+      try { if (!connection.response.destroyed) connection.response.write(`data: ${JSON.stringify({ type: "cancel", callId })}\n\n`); }
+      catch (error) { finish({ error: error instanceof Error ? error.message : "发送取消命令失败" }); return; }
       finish({ error: "控制命令已取消或超时" });
     };
     // ACT: A2A/MCP 的转写与 Agent 共用浏览器 ASR 超时，避免长音频在两分钟时被截断。
     const timer = name === "transcribeAudio" ? undefined : setTimeout(abort, name === "developPlugin" ? 360000 : 120000);
-    connection.pending = { id: callId, finish };
+    connection.pending.set(callId, { parallel, finish });
     signal.addEventListener("abort", abort, { once: true });
-    connection.response.write(`data: ${JSON.stringify({ type: "call", callId, name, args, directory })}\n\n`);
+    try { connection.response.write(`data: ${JSON.stringify({ type: "call", callId, name, args, directory, canvasId })}\n\n`); }
+    catch (error) { finish({ error: error instanceof Error ? error.message : "发送控制命令失败" }); }
   });
 }
 
 for (const key of ["settings.mcp.enabled", "settings.mcp.token"] as const) conf.onDidChange(key, () => {
   for (const connection of connections.values()) {
-    connection.pending?.finish({ error: "MCP 设置已修改，控制命令已取消" });
+    for (const call of connection.pending.values()) call.finish({ error: "MCP 设置已修改，控制命令已取消" });
     connection.response.end();
   }
   connections.clear();

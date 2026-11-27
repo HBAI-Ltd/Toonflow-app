@@ -68,6 +68,10 @@ export default defineExt({ ...metadata, load: () => import("./index.vue") });
 
 ## 组件上下文
 
+扩展可以在构建元数据的 `localModels` 中声明所需模型。[模型声明字段](../toolScaffold/readme.md#本地模型)
+
+从 `@toonflow/ext-scaffold/runtime` 导入 `createLocalModelClient` 并创建客户端。用 `model.list()` 获取完整 ID 和 `canRun`，再将 ID 和输入张量传给 `model.run(request, signal?)`，由宿主后端执行推理。本机有可用运行库和匹配的模型文件，或部署端为该模型配置了执行适配器时，`canRun` 为真。`installed` 仅表示文件已安装到磁盘。
+
 ```ts
 import type { ExtContext } from "@toonflow/ext-scaffold/runtime";
 

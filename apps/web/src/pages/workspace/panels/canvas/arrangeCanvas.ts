@@ -3,15 +3,16 @@ import type { useVueFlow } from "@vue-flow/core";
 import { graphlib, layout } from "@dagrejs/dagre";
 import { getSelectionTree } from "./selectionNodes";
 
-export async function arrangeCanvas(flow: ReturnType<typeof useVueFlow>, signal?: AbortSignal) {
+export async function arrangeCanvas(flow: ReturnType<typeof useVueFlow>, signal?: AbortSignal, getNodes = () => flow.getNodes.value) {
   signal?.throwIfAborted();
   await nextTick();
   signal?.throwIfAborted();
-  flow.updateNodeInternals(flow.getNodes.value.map((node) => node.id));
+  flow.updateNodeInternals(getNodes().map((node) => node.id));
   await nextTick();
   signal?.throwIfAborted();
 
-  const nodes = flow.getNodes.value.filter((node) => !node.parentNode);
+  const allNodes = getNodes();
+  const nodes = allNodes.filter((node) => !node.parentNode);
   const snapshot = nodes.map((node) => ({ id: node.id, position: { ...node.position } }));
   if (!nodes.length) return { snapshot, viewport: { ...flow.viewport.value }, arrangedNodeIds: [] };
   for (const node of nodes) {
@@ -35,7 +36,7 @@ export async function arrangeCanvas(flow: ReturnType<typeof useVueFlow>, signal?
   graph.setDefaultEdgeLabel(() => ({}));
   nodes.forEach((node) => graph.setNode(node.id, { width: node.dimensions.width, height: node.dimensions.height }));
   const rootIds = new Map<string, string>();
-  for (const node of getSelectionTree(flow.getNodes.value, flow.getNodes.value)) {
+  for (const node of getSelectionTree(allNodes, allNodes)) {
     const rootId = node.parentNode ? rootIds.get(node.parentNode) : node.id;
     if (rootId) rootIds.set(node.id, rootId);
   }
@@ -84,7 +85,7 @@ export async function arrangeCanvas(flow: ReturnType<typeof useVueFlow>, signal?
   positions.forEach(({ id, position }) => flow.updateNode(id, { position }));
   await nextTick();
   signal?.throwIfAborted();
-  await flow.fitView({ duration: 0 });
+  await flow.fitView({ duration: 0, nodes: allNodes.map(node => node.id) });
   signal?.throwIfAborted();
   return { snapshot, viewport: { ...flow.viewport.value }, arrangedNodeIds: nodes.map((node) => node.id) };
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { toolMetadataSchema } from "@toonflow/tools-scaffold/runtime";
 
 export interface PluginDevelopmentHost {
   resolveWorkspacePath(directory: string, path: string, allowMissing?: boolean): Promise<{ path: string }>;
@@ -29,6 +30,7 @@ export const pluginManifestSchema = z.strictObject({
   description: z.string().max(2000).default(""),
   prompt: z.string().max(20000).default(""),
   configRules: z.array(z.record(z.string(), z.json())).max(100).default([]),
+  localModels: toolMetadataSchema.shape.localModels,
   components: z.record(z.string().regex(/^[a-z][a-zA-Z0-9]*$/), pathSchema.refine(path => path.startsWith("src/") && path.endsWith(".vue"))).optional(),
 });
 

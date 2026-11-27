@@ -21,6 +21,8 @@ export default Router().put("/", validateFields({ name: u.extPlugins.extNameSche
     if (marker && !marker.isFile()) return res.status(409).json(error("文件扩展状态文件无效", null, 409));
     if (enabled) await unlink(markerPath).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
     else if (!marker) await writeFile(markerPath, "", { flag: "wx" });
+    const wasEnabled = !marker;
+    if (enabled !== wasEnabled) u.localModels.notifyModelCatalogChange();
     res.json(success({ name, enabled }));
   } finally { release(); }
 });

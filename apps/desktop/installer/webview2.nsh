@@ -37,8 +37,6 @@ FunctionEnd
 Function ensureWebView2
   InitPluginsDir
   File "/oname=$PLUGINSDIR\checkWebView2.exe" "${webView2Dir}\checkWebView2.exe"
-  File "/oname=$PLUGINSDIR\WebView2Loader.dll" "${webView2Dir}\WebView2Loader.dll"
-  File "/oname=$PLUGINSDIR\Microsoft.Web.WebView2.Core.dll" "${webView2Dir}\Microsoft.Web.WebView2.Core.dll"
   File "/oname=$PLUGINSDIR\webView2SdkLicense.txt" "${webView2Dir}\webView2SdkLicense.txt"
   File "/oname=$PLUGINSDIR\webView2SdkNotice.txt" "${webView2Dir}\webView2SdkNotice.txt"
 

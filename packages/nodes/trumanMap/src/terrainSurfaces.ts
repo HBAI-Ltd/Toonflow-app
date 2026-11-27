@@ -1,3 +1,4 @@
+import { markMessages } from "@toonflow/i18n/vue";
 export type TerrainSurfaceBrush = "grass" | "forest" | "desert" | "gobi" | "ice" | "concrete" | "mud" | "dirt" | "clay" | "sand" | "gravel" | "rock" | "asphalt" | "paving" | "brick" | "snow" | "moss" | "dryGrass" | "humus" | "fallenLeaves" | "pebbles" | "marsh" | "chalk" | "sandstone" | "cobblestone" | "woodPlanks" | "tiles" | "terrazzo" | "rubber" | "rammedEarth" | "saltFlat" | "crackedEarth" | "volcanic" | "ash" | "tundra" | "permafrost" | "mirror" | "mercury" | "energy" | "hologram" | "metalGrid" | "carbonFiber" | "luminousGrid" | "alienSoil" | "armorPlates" | "solarPanels" | "ceramicArmor" | "rustedMetal" | "lavaEnergy" | "obsidianCrystal" | "plasmaFissures" | "alienMycelium" | "nanoHoneycomb" | "dataTraces" | "meteoricIron" | "stardustSand";
 export type TerrainSurfaceOption = {
   id: number;
@@ -12,7 +13,7 @@ export type TerrainSurfaceOption = {
 };
 
 // ACT: 0–6沿用旧存档编号；新材质只追加，不复用森林、水体等已有编号。
-export const terrainSurfaceOptions: TerrainSurfaceOption[] = [
+export const terrainSurfaceOptions: TerrainSurfaceOption[] = markMessages([
   { id: 0, brush: "grass", name: "草地", group: "natural", color: "#98ad7c", roughness: 0.98, wetness: 0.5 },
   { id: 1, name: "山石", color: "#8d9084", roughness: 0.92, wetness: 0.35 },
   { id: 2, name: "水体", color: "#718d86", roughness: 0.22, wetness: 0.3 },
@@ -72,7 +73,7 @@ export const terrainSurfaceOptions: TerrainSurfaceOption[] = [
   { id: 56, brush: "dataTraces", name: "数据光路", group: "scifi", color: "#66c8ff", roughness: 0.4, wetness: 0.2, metalness: 0.65, emission: 1.8 },
   { id: 57, brush: "meteoricIron", name: "陨铁岩", group: "scifi", color: "#686b72", roughness: 0.82, wetness: 0.55, metalness: 0.6 },
   { id: 58, brush: "stardustSand", name: "星尘沙", group: "scifi", color: "#b7a3bc", roughness: 0.91, wetness: 0.3, metalness: 0.15, emission: 0.3 },
-];
+]);
 
 export const terrainSurfaceMaxId = terrainSurfaceOptions.length - 1;
 const surfaceIds = new Map<string, number>(terrainSurfaceOptions.flatMap(surface => surface.brush ? [[surface.brush, surface.id] as const] : []));

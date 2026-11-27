@@ -1,14 +1,14 @@
 <template>
   <div ref="root" class="cameraViewfinder" :class="[rightHalf ? 'rightHalf' : 'leftHalf', { gesturing: gestureKind !== '', moving: windowMoving, resizing, disabled, monitor, picking: trackPicking }]" :style="windowStyle" role="group" :aria-label="monitor ? '总监看' : '取景窗'">
     <header class="viewfinderHeader" @pointerdown="beginWindowDrag" @pointermove="moveWindowDrag" @pointerup="endWindowDrag" @pointercancel="endWindowDrag" @lostpointercapture="endWindowDrag">
-      <span v-if="monitor" class="programBadge">监看</span>
+      <span v-if="monitor" class="programBadge">{{ translate("监看") }}</span>
       <i class="cameraDot" aria-hidden="true" />
       <strong class="cameraName" :title="name">{{ name }}</strong>
       <span v-if="rangeLabel" class="rangeChip">{{ rangeLabel }}</span>
       <el-popover v-if="formats.length" trigger="click" placement="bottom-end" :width="150" popperClass="filmFormatPopover">
         <template #reference><button type="button" class="formatChip" :disabled="disabled" title="成片画幅：横屏、宽银幕、竖屏短剧" @pointerdown.stop>{{ format }}</button></template>
         <div class="filmFormats" role="menu" aria-label="成片画幅">
-          <button v-for="item in formats" :key="item.key" type="button" role="menuitemradio" :aria-checked="item.key === format" :class="{ active: item.key === format }" @click="emit('format', item.key)"><i :style="{ aspectRatio: String(item.aspect) }" />{{ item.name }}</button>
+          <button v-for="item in formats" :key="item.key" type="button" role="menuitemradio" :aria-checked="item.key === format" :class="{ active: item.key === format }" @click="emit('format', item.key)"><i :style="{ aspectRatio: String(item.aspect) }" />{{ translate(item.name) }}</button>
         </div>
       </el-popover>
     </header>
@@ -59,9 +59,9 @@
           <el-popover trigger="click" placement="top-end" :width="260" popperClass="cameraFeelPopover" :disabled="disabled || !hasShot">
             <template #reference><button type="button" :class="{ active: shake > 0 }" :disabled="disabled || !hasShot" aria-label="这段镜头" :title="hasShot ? '这段镜头：景别、角度、运镜、手持晃动、缓动' : '先在时间轴上框出一段镜头'" @pointerdown.stop><icon-movie :size="15" /></button></template>
             <div class="feelRows" role="group" aria-label="这段镜头" @keydown.stop>
-              <div class="cameraMoves" role="group" aria-label="景别"><span>景别</span><div><button v-for="size in shotSizes" :key="size.kind" type="button" :title="size.title + '（按跟拍或注视的人算焦段，焦段不够时前后挪机位）'" @click="emit('shotSize', size.kind)">{{ size.name }}</button></div></div>
-              <div class="cameraMoves" role="group" aria-label="角度"><span>角度</span><div><button v-for="angle in cameraAngles" :key="angle.kind" type="button" :title="angle.title" @click="emit('cameraAngle', angle.kind)">{{ angle.name }}</button></div></div>
-              <div class="cameraMoves" role="group" aria-label="运镜"><span>运镜</span><div><button v-for="move in cameraMoves" :key="move.kind" type="button" :title="move.title" @click="emit('cameraMove', move.kind)">{{ move.name }}</button></div></div>
+              <div class="cameraMoves" role="group" aria-label="景别"><span>景别</span><div><button v-for="size in shotSizes" :key="size.kind" type="button" :title="translate(size.title) + '（按跟拍或注视的人算焦段，焦段不够时前后挪机位）'" @click="emit('shotSize', size.kind)">{{ translate(size.name) }}</button></div></div>
+              <div class="cameraMoves" role="group" aria-label="角度"><span>角度</span><div><button v-for="angle in cameraAngles" :key="angle.kind" type="button" :title="translate(angle.title)" @click="emit('cameraAngle', angle.kind)">{{ translate(angle.name) }}</button></div></div>
+              <div class="cameraMoves" role="group" aria-label="运镜"><span>运镜</span><div><button v-for="move in cameraMoves" :key="move.kind" type="button" :title="translate(move.title)" @click="emit('cameraMove', move.kind)">{{ translate(move.name) }}</button></div></div>
               <label class="feelRow" title="晃动幅度，0为三脚架般稳定"><span>晃动</span><el-slider :modelValue="shake" :min="0" :max="1" :step="0.05" :showTooltip="false" aria-label="晃动幅度" @input="value => setFeel('shake', value, true)" @change="value => setFeel('shake', value, false)" /><output>{{ Math.round(shake * 100) }}%</output></label>
               <label class="feelRow" title="晃动快慢：慢像肩扛，快像奔跑"><span>节奏</span><el-slider :modelValue="shakeRate" :min="0.25" :max="4" :step="0.05" :showTooltip="false" :disabled="shake <= 0" aria-label="晃动节奏" @input="value => setFeel('shakeRate', value, true)" @change="value => setFeel('shakeRate', value, false)" /><output>{{ shakeRate.toFixed(2) }}×</output></label>
               <label class="feelRow" title="开：起步慢慢加速、结束慢慢停下；关：全程匀速"><span>缓动</span><el-switch :modelValue="easeInOut" size="small" aria-label="缓入缓出" @change="value => emit('shotFeel', { easing: value ? 'smooth' : 'linear' }, false)" /><output>{{ easeInOut ? '缓入缓出' : '匀速' }}</output></label>
@@ -91,6 +91,7 @@ export type ViewfinderDelta =
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, type Component } from "vue";
 import { IconMaximize, IconX, IconRoute, IconTarget, IconAdjustmentsHorizontal, IconMovie, IconKeyframe } from "@tabler/icons-vue";
 import { ElInputNumber, ElPopover, ElSlider, ElSwitch } from "element-plus";
+import { markMessages, translate } from "@toonflow/i18n/vue";
 import { getCameraFov } from "./cameraDocument";
 
 const props = withDefaults(defineProps<{
@@ -114,18 +115,18 @@ const props = withDefaults(defineProps<{
   aspect?: number; format?: string; formats?: { key: string; name: string; aspect: number }[];
 }>(), { format: "16:9", formats: () => [], aspect: 16 / 9, hasPath: false, recording: false, disabled: false, speed: 6, roll: 0, keyActive: false, tracking: "", trackName: "", trackPicking: false, drawingPath: false, trackSmooth: 0.4, trackDeadzone: 0, trackLimit: 180, trackStabilize: 0.5, shake: 0, shakeRate: 1, hasShot: false, easeInOut: true, monitor: false, storageKey: "trumanMap.viewfinder", defaultRight: 16, defaultTop: 68 });
 // ACT: 一键运镜：给这段镜头写入轨迹或关键点（不是开关），写完可在时间轴、取景窗里继续改。
-const cameraMoves = [
+const cameraMoves = markMessages([
   { kind: "push", name: "推近", title: "推：机位沿视线向前移，画面逐渐变紧" }, { kind: "pull", name: "拉远", title: "拉：机位沿视线后退，逐渐交代环境" },
   { kind: "truckLeft", name: "左移", title: "移：机位横向向左平移" }, { kind: "truckRight", name: "右移", title: "移：机位横向向右平移" },
   { kind: "craneUp", name: "升", title: "升：机位上升（升降臂）" }, { kind: "craneDown", name: "降", title: "降：机位下降" },
   { kind: "panLeft", name: "左摇", title: "摇：机位不动，镜头向左摇约35°" }, { kind: "panRight", name: "右摇", title: "摇：机位不动，镜头向右摇约35°" },
   { kind: "orbitLeft", name: "左绕", title: "环绕：绕注视点向左转40°" }, { kind: "orbitRight", name: "右绕", title: "环绕：绕注视点向右转40°" },
   { kind: "zoomIn", name: "变焦推", title: "变焦：焦段逐渐拉长到约1.8倍，机位不动" }, { kind: "clear", name: "清除", title: "清除这段镜头的轨迹和关键点，回到固定机位" },
-] as const;
-const cameraAngles = [
+] as const);
+const cameraAngles = markMessages([
   { kind: "eye", name: "平视", title: "平视：机位和人眼差不多高，最自然的视角" }, { kind: "high", name: "俯拍", title: "俯拍：机位在上往下看，人显得弱小、被压迫" }, { kind: "low", name: "仰拍", title: "仰拍：机位在下往上看，人显得高大、有压迫感" },
   { kind: "overhead", name: "顶拍", title: "顶拍：几乎垂直往下，交代走位和空间关系" }, { kind: "dutch", name: "荷兰角", title: "荷兰角：画面倾斜15°，不安、失衡（再点一次扶正）" },
-] as const;
+] as const);
 // ACT: 精确焦段：输入数值或点常用定焦，走和滚轮变焦同一条手势通道（选中关键点时改关键点，否则改这段镜头）。
 const primeLenses = [18, 24, 35, 50, 85, 135] as const;
 function setFocal(value: number) {
@@ -136,10 +137,10 @@ function setFocal(value: number) {
   emit("gesture", { kind: "zoom", factor: target / props.focalLength });
   emit("gestureEnd");
 }
-const shotSizes = [
+const shotSizes = markMessages([
   { kind: "extremeWide", name: "大全", title: "大全景：人很小，交代整个环境" }, { kind: "wide", name: "全景", title: "全景：人全身入画、头脚留余" }, { kind: "medium", name: "中景", title: "中景：膝盖或腰部以上" },
   { kind: "close", name: "近景", title: "近景：胸部以上" }, { kind: "closeUp", name: "特写", title: "特写：脸部" },
-] as const;
+] as const);
 const emit = defineEmits<{ format: [key: string]; cameraAngle: [kind: string]; shotSize: [kind: string]; cameraMove: [kind: string]; canvas: [canvas: HTMLCanvasElement | null]; gestureStart: []; gesture: [delta: ViewfinderDelta]; gestureEnd: []; gestureCancel: []; expand: [];
   track: []; trackMode: [mode: "aim" | "follow"]; trackSettings: [patch: { smooth?: number; deadzone?: number; limit?: number; stabilize?: number }, live: boolean]; shotFeel: [patch: { shake?: number; shakeRate?: number; easing?: "smooth" | "linear" }, live: boolean]; drawPath: []; addKey: []; clearPath: [] }>();
 
@@ -202,6 +203,7 @@ function sizeCanvas(cssWidth: number) {
 }
 
 function restorePlacement() {
+  if (!storageKey) return;
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null") as unknown;
     if (!saved || typeof saved !== "object") return;
@@ -212,6 +214,7 @@ function restorePlacement() {
 }
 
 function savePlacement() {
+  if (!storageKey) return;
   try { localStorage.setItem(storageKey, JSON.stringify({ side: anchorRight.value ? "right" : "left", x: Math.round(offsetX.value), y: Math.round(offsetY.value), width: width.value })); } catch { /* 存不下时只在本次生效 */ }
 }
 
@@ -468,7 +471,7 @@ const gimbalFields: { key: GimbalKey; label: string; title: string; min: number;
   { key: "stabilize", label: "防抖", title: "被拍物体剧烈抖动、高速旋转时，镜头不跟着乱晃乱甩", min: 0, max: 1, step: 0.05, format: value => Math.round(value * 100) + "%" },
   { key: "smooth", label: "平滑", title: "目标突然变化时，镜头追过去的柔和程度", min: 0, max: 2, step: 0.05, format: value => value.toFixed(2) + "s" },
   { key: "deadzone", label: "死区", title: "目标在这个角度内晃动时镜头不动", min: 0, max: 20, step: 0.5, format: value => value.toFixed(1) + "°" },
-  { key: "limit", label: "限位", title: "相对这段镜头原本的朝向，云台最多能转多少度", min: 10, max: 180, step: 5, format: value => value >= 180 ? "不限" : "±" + value + "°" },
+  { key: "limit", label: "限位", title: "相对这段镜头原本的朝向，云台最多能转多少度", min: 10, max: 180, step: 5, format: value => value >= 180 ? translate("不限") : "±" + value + "°" },
 ];
 function gimbalValue(key: GimbalKey) { return key === "stabilize" ? props.trackStabilize : key === "smooth" ? props.trackSmooth : key === "deadzone" ? props.trackDeadzone : props.trackLimit; }
 function sliderNumber(value: number | number[]) { const next = Array.isArray(value) ? value[0] : value; return next !== undefined && Number.isFinite(next) ? next : undefined; }
@@ -643,6 +646,11 @@ onBeforeUnmount(() => {
   }
   &:hover .resizeGrip::after, &.resizing .resizeGrip::after { opacity: 1; }
   &.gesturing .resizeGrip::after { opacity: 0; }
+  // 触屏没有悬停：画面按钮和缩放角常显并放大，手势进行中仍按上面的规则隐藏。
+  @media (any-pointer: coarse) {
+    &:not(.gesturing) .pictureActions { opacity: 1; transform: none; pointer-events: auto; > button { width: 32px; height: 32px; } }
+    &:not(.gesturing) .resizeGrip { width: 32px; height: 32px; &::after { opacity: 1; } }
+  }
 }
 // 键盘聚焦时按钮也要露出来；:has 不被支持时整条规则失效，所以单独写。
 .cameraViewfinder .pictureActions:has(:focus-visible) { opacity: 1; transform: none; pointer-events: auto; }

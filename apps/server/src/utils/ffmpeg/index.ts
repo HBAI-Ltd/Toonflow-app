@@ -11,6 +11,21 @@ let downloadError: unknown;
 // ACT: 沿用 server 单进程模型，每次只下载一套程序；不持久化运行中的任务。
 let controller: AbortController | undefined;
 const requiredListeners = new Set<() => void>();
+const progressListeners = new Set<() => void>();
+let lastNotification = 0;
+
+export function onProgress(listener: () => void) {
+  progressListeners.add(listener);
+  return () => { progressListeners.delete(listener); };
+}
+
+function reportDownload(next: DownloadState) {
+  const changed = download.phase !== next.phase || download.file !== next.file;
+  download = next;
+  if (!changed && Date.now() - lastNotification < 500) return;
+  lastNotification = Date.now();
+  for (const listener of progressListeners) listener();
+}
 
 export function onRequired(listener: () => void) {
   requiredListeners.add(listener);
@@ -80,15 +95,15 @@ export function startDownload(source: SourceId) {
   if (!build) throw Object.assign(new Error(t`暂不支持自动下载 ${target} 版本`), { status: 400 });
   const active = new AbortController();
   controller = active;
-  download = { phase: "downloading", received: 0 };
   downloadError = undefined;
-  void installFfmpeg(directory, source, active.signal, state => { download = state; }).then(() => {
-    download = { phase: "completed", received: 0 };
+  reportDownload({ phase: "downloading", received: 0 });
+  void installFfmpeg(directory, source, active.signal, reportDownload).then(() => {
+    reportDownload({ phase: "completed", received: 0 });
   }).catch((error: unknown) => {
     downloadError = error;
-    download = active.signal.aborted
+    reportDownload(active.signal.aborted
       ? { phase: "cancelled", received: 0 }
-      : { phase: "error", received: 0, error: error instanceof Error ? error.message : String(error) };
+      : { phase: "error", received: 0, error: error instanceof Error ? error.message : String(error) });
   }).finally(() => { controller = undefined; });
   return getProgress();
 }

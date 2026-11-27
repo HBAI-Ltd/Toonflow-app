@@ -28,7 +28,7 @@
       <div class="editorRow">
         <span class="rowLabel" title="从上一点到这里的速度">速度</span>
         <span class="speedOptions" role="group" aria-label="进入该点的速度">
-          <button v-for="preset in speedPresets" :key="preset.label" type="button" :class="{ active: preset.value === activeSpeed }" :aria-pressed="preset.value === activeSpeed" :disabled="disabled || index === 0 || incomingTeleport" :title="`进入该点的速度 ${preset.value} m/s`" @click="emit('updateSpeed', preset.value)">{{ preset.label }}</button>
+          <button v-for="preset in speedPresets" :key="preset.label" type="button" :class="{ active: preset.value === activeSpeed }" :aria-pressed="preset.value === activeSpeed" :disabled="disabled || index === 0 || incomingTeleport" :title="`进入该点的速度 ${preset.value} m/s`" @click="emit('updateSpeed', preset.value)">{{ translate(preset.label) }}</button>
         </span>
         <small>{{ incomingTeleport ? '瞬移' : `${speed.toFixed(2)} m/s` }}</small>
       </div>
@@ -80,13 +80,14 @@
 import { computed } from "vue";
 import { IconTrash, IconX } from "@tabler/icons-vue";
 import { ElSwitch } from "element-plus";
+import { markMessages, translate } from "@toonflow/i18n/vue";
 
 const props = defineProps<{ name: string; color: string; index: number; total: number; arrival: number; dwell: number; speed: number; height: number; inertia: number; eventText: string; teleportNext: boolean; incomingTeleport: boolean; followLine?: boolean; parkour?: boolean; disabled?: boolean;
   // 片段式动线（Agent或剪辑生成）：没有逐点惯性和瞬移，这两行不显示。
   clipRoute?: boolean }>();
 const emit = defineEmits<{ updateArrival: [seconds: number]; updateDwell: [seconds: number]; updateSpeed: [speed: number]; updateHeight: [meters: number]; updateInertia: [value: number]; updateEventText: [text: string]; updateTeleport: [value: boolean]; updateFollowLine: [value: boolean]; updateParkour: [value: boolean]; remove: []; close: [] }>();
 
-const speedPresets = [{ label: "慢", value: 0.8 }, { label: "中", value: 1.35 }, { label: "快", value: 2.5 }, { label: "飞快", value: 5 }];
+const speedPresets = markMessages([{ label: "慢", value: 0.8 }, { label: "中", value: 1.35 }, { label: "快", value: 2.5 }, { label: "飞快", value: 5 }]);
 const arrivalText = computed(() => props.arrival.toFixed(1));
 const dwellText = computed(() => props.dwell.toFixed(1));
 const heightText = computed(() => props.height.toFixed(1));

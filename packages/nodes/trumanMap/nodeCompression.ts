@@ -15,10 +15,7 @@ export function compressNode(): Plugin {
     async generateBundle(_options, bundle) {
       const chunk = bundle["trumanMap.umd.js"];
       if (!chunk || chunk.type !== "chunk") throw new Error("未生成 TrumanMap 节点脚本");
-      const headerEnd = chunk.code.indexOf("\n") + 1;
-      if (!chunk.code.startsWith("/*! toonflowNode:") || !headerEnd) throw new Error("节点安装元数据缺失");
-      const header = chunk.code.slice(0, headerEnd);
-      const source = chunk.code.slice(headerEnd);
+      const source = chunk.code;
       const raw = Buffer.from(source, "utf8");
       // zstd 22 级单帧（窗口覆盖整份脚本、帧头写入原长）：跨模块的重复几何代码比 gzip 32KB 窗口多压约两成；Node/Bun 内置编码，fzstd 同步解码。
       const compressed = zstdCompressSync(raw, { params: { [constants.ZSTD_c_compressionLevel]: 22, [constants.ZSTD_c_contentSizeFlag]: 1 } });
@@ -42,7 +39,7 @@ export function compressNode(): Plugin {
         encoded.push(alphabet[buffer % 90]!);
         if (bits > 7 || buffer >= 90) encoded.push(alphabet[Math.floor(buffer / 90)]!);
       }
-      // ACT: 安装头保持明文；仅打包本次构建的可信 UMD，不执行网络或用户输入。
+      // ACT: 脚手架在压缩后添加明文安装头并校验最终文件大小；这里只打包本次构建的可信 UMD。
       // 同步解包以兼容旧宿主的 script.onload 注册协议；需要宿主允许动态脚本执行。
       // 宿主按脚本文本是否含 toonflowTiptapHost 决定先加载 marked/DOMPurify；压缩会藏住这个标记，解包器需显式引用它。
       const tiptapHost = source.includes("toonflowTiptapHost");
@@ -98,9 +95,8 @@ export function compressNode(): Plugin {
       const sandbox = createContext({ toonflowNodeHost: {}, toonflowTiptapHost: {}, TextDecoder, Function: function (code: string) { unpacked = code; return () => ({}); } });
       runInContext(loader, sandbox, { filename: "trumanMapLoaderCheck.js" });
       if (unpacked !== `${source}\nreturn globalThis.toonflowNodes.trumanMap;\n//# sourceURL=trumanMap.unpacked.js`) throw new Error("节点解包器还原的脚本与构建结果不一致");
-      chunk.code = header + loader;
-      const size = Buffer.byteLength(chunk.code, "utf8");
-      this.info(`原始 ${raw.length} 字节，zstd ${compressed.length} 字节，安装头 ${Buffer.byteLength(header, "utf8")} 字节，单文件 ${size} 字节`);
+      chunk.code = loader;
+      this.info(`原始 ${raw.length} 字节，zstd ${compressed.length} 字节，解包器 ${Buffer.byteLength(loader, "utf8")} 字节`);
     },
   };
 }

@@ -30,10 +30,17 @@
           :aria-pressed="selectedPlanId === plan.id"
           :disabled="mutationBusy"
           @click="selectedPlanId = plan.id">
-          <strong>{{ formatMoney(plan.amount) }}</strong>
-          <span>充值到账 {{ formatMoney(plan.points) }}</span>
-          <span v-if="plan.bonusAmount > 0" class="planBonus">赠送 {{ formatMoney(plan.bonusAmount) }}</span>
-          <span v-if="plan.bonusAmount > 0">合计到账 {{ formatMoney(plan.totalAmount) }}</span>
+          <span class="planDetails">
+            <strong dir="ltr">{{ formatMoney(plan.amount) }}</strong>
+            <span class="planCredit">
+              <span>到账</span>
+              <b dir="ltr">{{ formatMoney(plan.totalAmount) }}</b>
+            </span>
+          </span>
+          <span v-if="plan.bonusAmount > 0" class="planBonus">
+            <span>赠送</span>
+            <b dir="ltr">{{ formatCompactMoney(plan.bonusAmount) }}</b>
+          </span>
           <span v-if="plan.description" class="planDescription">{{ plan.description }}</span>
         </button>
         <button
@@ -51,39 +58,39 @@
           <el-input-number v-model="customMoney" :min="1" :precision="2" :step="1" :controls="false" placeholder="请输入充值金额" />
         </el-form-item>
       </el-form>
-      <section v-if="activeRechargeActivity" class="bonusRules" aria-labelledby="bonusRulesTitle">
-        <header class="bonusRulesHeader">
-          <h4 id="bonusRulesTitle"><icon-gift :size="17" aria-hidden="true" />赠送细则</h4>
-          <span class="bonusActivityName">{{ activeRechargeActivity.name }}</span>
-        </header>
+      <details v-if="activeRechargeActivity" class="bonusRules">
+        <summary>赠送细则</summary>
+        <p v-if="activeRechargeActivity.name" class="bonusActivityName">{{ activeRechargeActivity.name }}</p>
         <dl class="bonusRuleFacts">
-          <div>
+          <div class="bonusRuleMethod">
             <dt>赠送方式</dt>
             <dd v-if="activeRechargeActivity.rateMode === 'fixed'">赠送比例 <strong>{{ formatRate(activeRechargeActivity.rate) }}</strong></dd>
             <dd v-else>按本次支付金额匹配档位，整笔金额使用对应比例</dd>
           </div>
           <div v-if="bonusRulesExpiry"><dt>赠送金有效期</dt><dd>{{ bonusRulesExpiry }}</dd></div>
-          <div v-if="activeRechargeActivity.startsAt !== null"><dt>活动开始</dt><dd><time>{{ formatTime(activeRechargeActivity.startsAt) }}</time></dd></div>
-          <div v-if="activeRechargeActivity.endsAt !== null"><dt>活动截止</dt><dd><time>{{ formatTime(activeRechargeActivity.endsAt) }}</time></dd></div>
+          <div v-if="activeRechargeActivity.startsAt !== null"><dt>活动开始</dt><dd><time dir="ltr">{{ formatTime(activeRechargeActivity.startsAt) }}</time></dd></div>
+          <div v-if="activeRechargeActivity.endsAt !== null"><dt>活动截止</dt><dd><time dir="ltr">{{ formatTime(activeRechargeActivity.endsAt) }}</time></dd></div>
         </dl>
         <div v-if="activeRechargeActivity.rateMode === 'tiered'" class="bonusTierList" tabindex="0" role="region" aria-label="阶梯赠送比例">
           <table class="bonusTierTable">
-            <thead><tr><th scope="col">本次支付金额</th><th scope="col">赠送比例</th><th scope="col"><span class="srOnly">当前档位</span></th></tr></thead>
+            <thead><tr><th scope="col">本次支付金额</th><th scope="col">赠送比例</th></tr></thead>
             <tbody>
               <tr v-for="(tier, index) in activeRechargeActivity.tiers" :key="tier.upTo" :class="{ currentTier: currentBonusTier === index }" :aria-current="currentBonusTier === index ? 'true' : undefined">
                 <td>
-                  <template v-if="activeRechargeActivity.tiers.length === 1">全部支付金额</template>
-                  <template v-else-if="index === 0">不超过 {{ formatMoney(tier.upTo) }}</template>
-                  <template v-else-if="index === activeRechargeActivity.tiers.length - 1">超过 {{ formatMoney(activeRechargeActivity.tiers[index - 1]?.upTo) }}</template>
-                  <template v-else>超过 {{ formatMoney(activeRechargeActivity.tiers[index - 1]?.upTo) }}，不超过 {{ formatMoney(tier.upTo) }}</template>
+                  <div class="bonusTierAmount">
+                    <span v-if="activeRechargeActivity.tiers.length === 1">全部支付金额</span>
+                    <span v-else-if="index === 0">不超过 {{ formatMoney(tier.upTo) }}</span>
+                    <span v-else-if="index === activeRechargeActivity.tiers.length - 1">超过 {{ formatMoney(activeRechargeActivity.tiers[index - 1]?.upTo) }}</span>
+                    <span v-else>超过 {{ formatMoney(activeRechargeActivity.tiers[index - 1]?.upTo) }}，不超过 {{ formatMoney(tier.upTo) }}</span>
+                    <span v-if="currentBonusTier === index" class="currentTierLabel">当前档位</span>
+                  </div>
                 </td>
-                <td>{{ formatRate(tier.rate) }}</td>
-                <td><span v-if="currentBonusTier === index" class="currentTierLabel">当前档位</span></td>
+                <td><bdi>{{ formatRate(tier.rate) }}</bdi></td>
               </tr>
             </tbody>
           </table>
         </div>
-      </section>
+      </details>
       <div v-if="rechargeReady" class="rechargeSummary" aria-live="polite">
         <dl>
           <div><dt>充值到账</dt><dd>{{ formatMoney(rechargePoints) }}</dd></div>
@@ -365,6 +372,10 @@ function paymentSnapshot() {
 
 function formatMoney(value?: number) {
   return typeof value === "number" && Number.isFinite(value) ? moneyFormat.format(value) : "";
+}
+
+function formatCompactMoney(value: number) {
+  return formatMoney(value).replace(/\.00$/, "");
 }
 
 function formatRate(value: number) {
@@ -733,22 +744,62 @@ defineExpose({ refresh });
 
       .planCard {
         display: grid;
-        align-content: start;
-        gap: 8px;
+        grid-template-columns: minmax(0, 1fr) fit-content(49%);
+        align-items: start;
+        gap: 0 8px;
         padding: 18px 14px;
         border: 1px solid var(--el-border-color-light);
-        border-radius: var(--ui-radius);
+        border-radius: var(--ui-radius-large);
         background: var(--el-fill-color-extra-light);
         color: var(--el-text-color-regular);
         font: inherit;
+        font-family: var(--el-font-family);
+        font-size: 12px;
         text-align: start;
         cursor: pointer;
+        overflow-wrap: anywhere;
 
         strong { color: var(--el-text-color-primary); font-size: 20px; font-variant-numeric: tabular-nums; }
-        span { font-size: 12px; }
-        .planBonus { justify-self: start; padding: 3px 7px; border-radius: 4px; background: var(--el-color-primary-light-9); color: var(--el-text-color-primary); font-weight: 600; }
-        .planDescription { color: var(--el-text-color-secondary); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
-        &.selected { border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); }
+        .planDetails {
+          display: grid;
+          gap: 8px;
+          padding-block: 3px;
+
+          strong { justify-self: start; font-weight: 750; line-height: 1.2; }
+
+          .planCredit {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 2px 6px;
+            color: var(--el-text-color-primary);
+            font-size: 15px;
+            font-weight: 650;
+            b { font-weight: 750; font-variant-numeric: tabular-nums; }
+          }
+        }
+        .planBonus {
+          display: grid;
+          align-content: center;
+          justify-items: center;
+          gap: 5px;
+          box-sizing: border-box;
+          min-width: 78px;
+          min-height: 94px;
+          margin-block-start: -18px;
+          padding: 10px 4px 20px;
+          clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 15px), 0 100%);
+          background: linear-gradient(128deg, #a81229 7%, #bc1a32 35%, #dd2f40 50%, #cb1e32 66%, #9f1024);
+          color: #fff;
+          text-align: center;
+          line-height: 1.25;
+          font-size: 13px;
+          font-weight: 700;
+
+          b { max-width: 100%; font-size: 25px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+        }
+        .planDescription { grid-column: 1 / -1; margin-block-start: 8px; color: var(--el-text-color-secondary); line-height: 1.5; white-space: pre-wrap; }
+        &.selected { background: var(--el-color-primary-light-9); border-color: var(--el-color-primary); }
         &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
         &:disabled { cursor: default; opacity: 0.6; }
       }
@@ -758,53 +809,70 @@ defineExpose({ refresh });
       .el-input-number { width: min(100%, 280px); }
     }
     .bonusRules {
+      --bonusAccentText: #91233a;
+      --bonusAccentSurface: #fff0f2;
+      --bonusAccentBorder: #bd3e53;
       min-width: 0;
-      padding: 16px;
-      border: 1px solid var(--el-border-color-light);
-      border-radius: var(--ui-radius);
       color: var(--el-text-color-regular);
-      font-size: 13px;
-      line-height: 1.6;
+      font-size: 12px;
+      line-height: 1.5;
 
-      .bonusRulesHeader {
+      html.dark & {
+        --bonusAccentText: #ffbac4;
+        --bonusAccentSurface: #3a1e25;
+        --bonusAccentBorder: #c25f72;
+      }
+      summary {
+        width: fit-content;
+        max-width: 100%;
+        padding-block: 3px;
+        cursor: pointer;
+        overflow-wrap: anywhere;
+
+        &:hover { color: var(--el-text-color-primary); }
+        &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 2px; }
+      }
+      .bonusActivityName { margin: 6px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+      .bonusRuleFacts {
         display: flex;
         flex-wrap: wrap;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 8px 16px;
-        margin-bottom: 14px;
+        gap: 6px 12px;
+        margin: 6px 0 0;
 
-        h4 { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--el-text-color-primary); font-size: 14px; svg { color: var(--el-color-primary); flex-shrink: 0; } }
-        .bonusActivityName { color: var(--el-text-color-regular); overflow-wrap: anywhere; }
-      }
-      .bonusRuleFacts {
-        display: grid;
-        gap: 8px;
-        margin: 0;
-
-        div { display: grid; grid-template-columns: minmax(80px, 100px) minmax(0, 1fr); align-items: baseline; gap: 8px 16px; }
-        dt { color: var(--el-text-color-regular); }
+        div { display: grid; align-content: start; flex: 1 1 154px; gap: 2px; min-width: 0; }
+        .bonusRuleMethod { flex-basis: 100%; }
+        dt { overflow-wrap: anywhere; }
         dd { margin: 0; color: var(--el-text-color-primary); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
       }
       .bonusTierList {
-        max-height: 280px;
-        margin-top: 16px;
+        max-height: 240px;
+        margin-top: 8px;
         overflow: auto;
+        border: 1px solid var(--el-border-color-lighter);
+        border-radius: var(--ui-radius);
         &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 3px; }
 
         .bonusTierTable {
           width: 100%;
-          border-collapse: collapse;
+          border-spacing: 0;
           font-variant-numeric: tabular-nums;
-          text-align: start;
 
-          th, td { padding: 9px 12px; border-bottom: 1px solid var(--el-border-color-lighter); text-align: start; }
-          th { position: sticky; top: 0; z-index: 1; background: var(--el-fill-color-light); color: var(--el-text-color-regular); font-size: 12px; font-weight: 500; }
-          th:nth-child(2), td:nth-child(2), th:nth-child(3), td:nth-child(3) { white-space: nowrap; }
-          td:nth-child(3) { width: 64px; text-align: end; }
-          .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-          .currentTier { background: var(--el-color-primary-light-9); color: var(--el-text-color-primary); td:nth-child(2) { font-weight: 600; } }
-          .currentTierLabel { color: var(--el-text-color-primary); font-size: 12px; font-weight: 600; }
+          th, td { padding: 5px 8px; border-block-end: 1px solid var(--el-border-color-lighter); text-align: start; overflow-wrap: anywhere; }
+          th { position: sticky; inset-block-start: 0; z-index: 1; background: var(--el-fill-color-light); font-weight: 600; }
+          th:first-child, td:first-child { border-inline-start: 2px solid transparent; }
+          th:last-child, td:last-child { inline-size: 25%; text-align: end; }
+          tbody tr:last-child td { border-block-end: 0; }
+          td:last-child { color: var(--el-text-color-primary); font-weight: 700; }
+
+          .bonusTierAmount { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+          .currentTier {
+            background: var(--bonusAccentSurface);
+            color: var(--el-text-color-primary);
+
+            td:first-child { border-inline-start-color: var(--bonusAccentBorder); }
+            td:last-child { color: var(--bonusAccentText); }
+            .currentTierLabel { padding-inline: 6px; border: 1px solid var(--bonusAccentBorder); border-radius: 999px; color: var(--bonusAccentText); font-size: 11px; font-weight: 650; }
+          }
         }
       }
     }

@@ -23,7 +23,7 @@
               </div>
               <div class="sendActions">
                 <modelPopover v-model="selectedModel" v-model:reasoningEffort="reasoningEffort" class="modelSelect" :disabled="disabled" />
-                <el-button class="sendButton" type="primary" :circle="!!workspaceDirectory" :icon="workspaceDirectory ? IconArrowUp : IconFolder" :loading="loading" :disabled="disabled" :aria-label="workspaceDirectory ? '发送' : '选择工作目录'" @click="workspaceDirectory ? submit() : promptWorkspacePicker?.chooseDirectory()">
+                <el-button class="sendButton" type="primary" :circle="!!workspaceDirectory" :icon="workspaceDirectory ? IconArrowUp : IconFolder" :loading="loading" :disabled="disabled || (!!workspaceDirectory && pendingPastes > 0)" :aria-label="workspaceDirectory ? '发送' : '选择工作目录'" @click="workspaceDirectory ? submit() : promptWorkspacePicker?.chooseDirectory()">
                   <template v-if="!workspaceDirectory" #default>选择工作目录</template>
                 </el-button>
               </div>
@@ -61,6 +61,7 @@ import { locale, translate } from "@toonflow/i18n/vue";
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { ElMessage, type InputInstance } from "element-plus";
 import { getReadableFileMimeType, readableFileAccept } from "@toonflow/server/documentFormats";
+import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
 import type { ExplorePage, ExploreProject } from "@toonflow/server/channel";
 import { IconArrowUp, IconFolder, IconPaperclip } from "@tabler/icons-vue";
 import modelPopover from "@/components/modelPopover.vue";
@@ -69,6 +70,7 @@ import { createPastedTextFile, readTextAttachment } from "@/components/agent/tex
 import type { AgentAttachment } from "@/components/agent/types";
 import logoUrl from "@toonflow/assets/logo.svg";
 import { useWorkspaceStore, type Project } from "@/stores/workspace";
+import { getClipboardFiles } from "@/lib/clipboard";
 import http from "@/lib/http";
 import workspacePicker from "@/pages/home/workspacePicker.vue";
 import projectCard from "../projects/projectCard.vue";
@@ -95,6 +97,7 @@ const reasoningEffort = ref("");
 const prompt = ref("");
 const promptInput = ref<InputInstance>();
 const promptAttachments = ref<AgentAttachment[]>([]);
+const pendingPastes = ref(0);
 const attachmentInput = ref<HTMLInputElement>();
 const attachmentAccept = `image/*,video/*,${readableFileAccept}`;
 const draggingAttachments = ref(false);
@@ -175,25 +178,26 @@ async function loadExploreProjects() {
 }
 
 function submit() {
+  if (pendingPastes.value) return;
   emit("create", { directory: workspaceDirectory.value, prompt: prompt.value, attachments: [...promptAttachments.value], model: selectedModel.value, reasoningEffort: reasoningEffort.value });
 }
 
-function pasteAttachments(event: ClipboardEvent) {
+async function pasteAttachments(event: ClipboardEvent) {
   if (props.disabled) return;
+  pendingPastes.value++;
   try {
-    const files = Array.from(event.clipboardData?.files ?? []);
-    if (!files.length) {
-      const file = createPastedTextFile(event.clipboardData?.getData("text/plain") ?? "");
-      if (file) files.push(file);
-    }
-    if (!files.length) return;
+    const pending = getClipboardFiles(event, createPastedTextFile);
+    if (!pending) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    addAttachments(files);
+    const files = await pending;
+    if (!pageLifetime.signal.aborted) addAttachments(files);
   } catch (error) {
     event.preventDefault();
     event.stopImmediatePropagation();
-    ElMessage.error(error instanceof Error ? error.message : "添加附件失败，请重试");
+    if (!pageLifetime.signal.aborted) ElMessage.error(error instanceof Error ? error.message : "添加附件失败，请重试");
+  } finally {
+    pendingPastes.value--;
   }
 }
 
@@ -246,7 +250,7 @@ function addAttachments(files: File[]) {
   if (props.disabled) return;
   for (const file of files) {
     const readableMimeType = getReadableFileMimeType(file.name, file.type);
-    const mimeType = readableMimeType ?? file.type.split(";")[0]!.trim().toLowerCase();
+    const mimeType = readableMimeType ?? getMediaMimeType(file);
     if (!readableMimeType && !/^(image|video)\//.test(mimeType)) {
       ElMessage.warning("只支持图片、视频和受支持的文本或文档文件");
       continue;

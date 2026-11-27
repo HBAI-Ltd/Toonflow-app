@@ -78,7 +78,16 @@ if ! verifyFile "$archivePath" "$archiveSize" "$archiveSha256"; then
     downloadPath=
   done
 fi
-verifyFile "$archivePath" "$archiveSize" "$archiveSha256" || fail '必要运行时下载失败，请检查网络后重新安装 Toonflow 软件包。'
+if ! verifyFile "$archivePath" "$archiveSize" "$archiveSha256"; then
+  # 离线电脑可预先放入同一缓存位置，重新安装时会先校验并复用，不再联网。
+  {
+    printf '%s\n' "Toonflow：如果这台电脑无法上网，可在其他电脑下载 ${archiveMember%%/*}.zip（Bun $runtimeVersion），下载地址任选其一："
+    for sourceUrl do printf '  %s\n' "$sourceUrl"; done
+    printf '%s\n' "Toonflow：拷贝到本机后执行以下命令放入安装缓存，再重新安装 Toonflow 软件包：" \
+      "  sudo install -D -m 600 <下载的 ${archiveMember%%/*}.zip> $archivePath"
+  } >&2
+  fail '必要运行时下载失败，请检查网络后重新安装 Toonflow 软件包。'
+fi
 
 if [ "$prepareOnly" -eq 1 ]; then
   runtimeTemporary=$(mktemp "$cacheDirectory/.bun.XXXXXXXX")

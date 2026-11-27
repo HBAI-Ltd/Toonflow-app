@@ -1,11 +1,12 @@
 <template>
   <nodeSkeleton
     v-bind="nodeProps"
-    v-model:bottomVisible="node.selected"
-    :topVisible="node.selected"
+    :processing="task"
+    :bottomVisible="node.selected && !task"
+    :topVisible="node.selected && !task"
     topWidth="max-content"
     :downloadUrl="downloadUrl"
-    :downloadName="`${nodeProps.label || '文本'}.md`"
+    :downloadName="`${nodeProps.label || '文本'}.${extension}`"
     :bottomWidth="660"
     @fullscreen="fullscreen = true; editing = true">
     <div class="textContent" :class="{ empty: !outputs.text.value.trim(), resized }">
@@ -14,7 +15,8 @@
         <el-button text size="small" :disabled="generating" :loading="textReloading" @click="reloadText">重新读取磁盘</el-button>
       </el-alert>
       <div v-if="outputs.text.value.trim() && previewReady" class="textPreview nopan nowheel" aria-label="文本内容">
-        <markdownPreview :modelValue="outputs.text.value" :files="textReady ? textFiles : undefined" :path="textPath" :active="previewReady" />
+        <pre v-if="extension !== 'md'" class="subtitlePreview">{{ outputs.text.value }}</pre>
+        <markdownPreview v-else :modelValue="outputs.text.value" :files="textReady ? textFiles : undefined" :path="textPath" :active="previewReady" />
       </div>
       <el-button class="editButton nodrag nopan" :icon="IconEdit" :disabled="generating || !textReady" text @dblclick.stop @click.stop="editing = true">编辑</el-button>
     </div>
@@ -44,9 +46,10 @@
       </el-card>
     </template>
   </nodeSkeleton>
-  <el-dialog v-model="editing" title="编辑文本" width="min(860px, calc(100vw - 32px))" :fullscreen="fullscreen" alignCenter appendToBody @closed="fullscreen = false">
+  <el-dialog v-model="editing" :title="extension === 'md' ? '编辑文本' : '编辑字幕'" width="min(860px, calc(100vw - 32px))" :fullscreen="fullscreen" alignCenter appendToBody @closed="fullscreen = false">
     <div class="textEditor" :class="{ fullscreen }">
-      <markdownEditor v-model="outputs.text.value" :files="textReady ? textFiles : undefined" :path="textPath" :active="editing" :disabled="generating || textReloading" :readonly="!!documentState.error" ariaLabel="编辑文本内容" />
+      <textarea v-if="extension !== 'md'" v-model="outputs.text.value" class="subtitleEditor" aria-label="编辑字幕原文" :disabled="generating || textReloading" :readonly="!!documentState.error" spellcheck="false" />
+      <markdownEditor v-else v-model="outputs.text.value" :files="textReady ? textFiles : undefined" :path="textPath" :active="editing" :disabled="generating || textReloading" :readonly="!!documentState.error" ariaLabel="编辑文本内容" />
     </div>
   </el-dialog>
 </template>
@@ -60,6 +63,7 @@ import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import modelLabel from "@toonflow/node-shared/modelLabel";
 import modelSelect from "@toonflow/node-shared/modelSelect";
 import { useNodeReferences } from "@toonflow/node-shared/useNodeReferences";
+import { useMediaToolResult } from "@toonflow/node-shared/mediaTools";
 import markdownEditor from "./markdownEditor.vue";
 import markdownPreview from "./markdownPreview.vue";
 import referenceItem from "@toonflow/node-shared/referenceItem";
@@ -82,6 +86,9 @@ const { node, nodeProps, outputs, ai, files, nodeEvent, previewReady } = useNode
   outputs: { text: { dataType: "STRING", value: "" } },
 });
 const { refList, referenceMentions, setReferencePreview, removeReference } = useNodeReferences();
+const { task } = useMediaToolResult(node.id, "text");
+const data = computed(() => node.data as typeof node.data & { prompt?: string; promptModel?: PromptModel; model?: string; textPath?: string; textSnapshot?: string; subtitleFormat?: string });
+const extension = computed(() => data.value.subtitleFormat === "srt" || data.value.subtitleFormat === "vtt" ? data.value.subtitleFormat : "md");
 const editing = ref(false);
 const fullscreen = ref(false);
 const downloadUrl = ref("");
@@ -90,11 +97,10 @@ const resized = computed(() => !documentContext?.targets.has(node.id) && typeof 
 watch([() => outputs.value.text.value, () => node.selected || !!documentContext?.targets.has(node.id)], ([text, visible], _previous, onCleanup) => {
   downloadUrl.value = "";
   if (!visible || !text.trim()) return;
-  const url = URL.createObjectURL(new Blob([text], { type: "text/markdown;charset=utf-8" }));
+  const url = URL.createObjectURL(new Blob([text], { type: extension.value === "md" ? "text/markdown;charset=utf-8" : `text/${extension.value};charset=utf-8` }));
   downloadUrl.value = url;
   onCleanup(() => URL.revokeObjectURL(url));
 }, { immediate: true });
-const data = computed(() => node.data as typeof node.data & { prompt?: string; promptModel?: PromptModel; model?: string; textPath?: string; textSnapshot?: string });
 const prompt = computed({ get: () => data.value.prompt ?? "", set: (value: string) => { data.value.prompt = value; } });
 const model = computed({ get: () => data.value.model ?? "", set: (value: string) => { data.value.model = value; } });
 const models = ref<NodeAiModel[]>([]);
@@ -143,7 +149,8 @@ nodeEvent.on("save", async (reason) => {
   } while (pending !== textSaving);
   if (reason === "reload" && generating.value) throw new Error("文本正在生成，请完成后再刷新节点");
 });
-onMounted(() => { textLoading = loadText(); });
+onMounted(() => { if (!task.value) textLoading = loadText(); });
+watch(task, (current, previous) => { if (!current && previous && data.value.textPath) textLoading = loadText(true); });
 async function loadText(fromDisk = false) {
   textReloading.value = true;
   textReady.value = false;
@@ -211,7 +218,7 @@ nodeEvent.on("copy", () => {
   return { textPath: undefined, textSnapshot: outputs.value.text.value };
 });
 
-onMounted(loadModels);
+onMounted(() => { if (!task.value) void loadModels(); });
 
 async function loadModels() {
   if (modelsLoading.value) return;
@@ -278,6 +285,11 @@ nodeTools.register({
 .textEditor {
   height: min(560px, calc(100dvh - 144px));
   min-height: 0;
+  .subtitleEditor {
+    width: 100%; height: 100%; box-sizing: border-box; padding: 12px; resize: none;
+    color: var(--el-text-color-primary); background: var(--el-bg-color); border: 1px solid var(--el-border-color);
+    font: 14px/1.8 var(--el-font-family); font-variant-numeric: tabular-nums;
+  }
 
   &.fullscreen {
     height: calc(100dvh - 112px);
@@ -318,6 +330,7 @@ nodeTools.register({
     overflow: auto;
     overflow-wrap: anywhere;
     user-select: none;
+    .subtitlePreview { margin: 0; font: inherit; white-space: pre-wrap; font-variant-numeric: tabular-nums; }
   }
 
   .editButton {

@@ -3,8 +3,9 @@
   <teleport :to="documentTarget ?? 'body'" :disabled="!documentTarget">
   <div ref="skeletonElement" v-bind="$attrs" class="nodeSkeleton" :class="{ documentNode: documentTarget, resized: !!resizedStyle.height, resizing: !!resize }" :style="resizedStyle" @wheel.capture="zoomCanvas" @dblclick.stop="focusNode" @contextmenu="documentTarget && openMenu($event)">
     <el-dropdown
-      v-if="!readOnly"
+      v-if="interactive && menuAnchor"
       ref="menu"
+      class="nodeContextMenu"
       trigger="contextmenu"
       virtualTriggering
       :virtualRef="menuAnchor"
@@ -16,7 +17,8 @@
       <template #dropdown>
         <el-dropdown-menu>
           <el-dropdown-item v-if="assetOutputs.length && saveNodeToAssets" command="saveAsset" :icon="IconFolderPlus">保存到素材库</el-dropdown-item>
-          <el-dropdown-item :divided="!!(assetOutputs.length && saveNodeToAssets)" command="copy" :icon="IconCopy">复制节点</el-dropdown-item>
+          <el-dropdown-item :divided="!!(assetOutputs.length && saveNodeToAssets)" command="rename" :icon="IconPencil">重命名</el-dropdown-item>
+          <el-dropdown-item command="copy" :icon="IconCopy">复制节点</el-dropdown-item>
           <el-dropdown-item command="duplicate" :icon="IconCopyPlus">创建副本</el-dropdown-item>
           <el-dropdown-item command="delete" :icon="IconTrash">删除节点</el-dropdown-item>
           <el-dropdown-item divided command="clipboard" :icon="IconCopy" :disabled="!copyNodeToClipboard || copyingToClipboard">
@@ -26,7 +28,7 @@
       </template>
     </el-dropdown>
     <div
-      v-if="!readOnly && (documentTarget || (topVisible && slotsVisible))"
+      v-if="interactive && (documentTarget || (topVisible && slotsVisible))"
       class="floatingSlot topSlot nodrag nopan nowheel"
       :style="{ width: typeof topWidth === 'number' ? `${topWidth}px` : topWidth }"
       @pointerdown.stop
@@ -71,7 +73,7 @@
       </slot>
     </div>
     <div
-      v-if="!readOnly && $slots.bottom && (documentTarget || (bottomVisible && slotsVisible))"
+      v-if="interactive && $slots.bottom && (documentTarget || (bottomVisible && slotsVisible))"
       class="floatingSlot bottomSlot nodrag nopan nowheel"
       :style="{ width: typeof bottomWidth === 'number' ? `${bottomWidth}px` : bottomWidth }"
       @pointerdown.stop
@@ -81,10 +83,10 @@
       @contextmenu.stop>
       <slot name="bottom" />
     </div>
-    <div v-show="!documentTarget" class="titleBar">
+    <div v-show="!documentTarget" class="titleBar" :class="{ touchDetail: interactive && titleDetail && !node.selected }">
       <component :is="icon ?? IconBox" class="titleIcon" :size="16" aria-hidden="true" />
       <input
-        v-if="editingLabel && !readOnly"
+        v-if="editingLabel && interactive"
         ref="labelInput"
         v-model="labelDraft"
         class="labelInput nodrag nopan"
@@ -99,13 +101,18 @@
       <span
         v-else
         class="labelText"
-        :tabindex="readOnly ? undefined : 0"
-        :title="readOnly ? label : `${label}（双击编辑名称）`"
-        @dblclick="!readOnly && ($event.stopPropagation(), editLabel())"
+        :tabindex="interactive ? 0 : undefined"
+        :title="interactive ? `${label}（双击编辑名称）` : label"
+        @dblclick="interactive && ($event.stopPropagation(), editLabel())"
         @keydown.enter.stop.prevent="editLabel">
         {{ label }}
       </span>
-      <div v-if="!readOnly" class="nodeActions nodrag nopan" @pointerdown.stop @mousedown.stop @dblclick.stop>
+      <span v-if="titleDetail && !processingTask?.cancel" class="titleDetail" dir="ltr">{{ titleDetail }}</span>
+      <div v-if="processingTask?.cancel" class="nodeActions processingActions nodrag nopan" @pointerdown.stop @mousedown.stop @dblclick.stop>
+        <el-button text :icon="IconPlayerStop" :loading="processingTask.cancelling" :disabled="processingTask.cancelling"
+          :title="processingTask.cancelling ? '正在取消…' : '取消处理'" :aria-label="processingTask.cancelling ? '正在取消…' : '取消处理'" @click.stop="processingTask.cancel()" />
+      </div>
+      <div v-else-if="interactive" class="nodeActions nodrag nopan" @pointerdown.stop @mousedown.stop @dblclick.stop>
         <el-button
           :icon="IconRefresh"
           :loading="loading || reloading"
@@ -115,12 +122,17 @@
           aria-label="刷新节点"
           @click.stop="reloadNode" />
         <el-button :icon="IconTrash" text title="移除节点" aria-label="移除节点" @click.stop="deleteNode" :loading="deleting" />
+        <el-button class="moreAction" :icon="IconDots" text title="更多操作" aria-label="更多操作" aria-haspopup="menu" @click.stop="openMenu" />
       </div>
     </div>
-    <div class="cardContainer">
+    <div class="cardContainer" :class="{ targetZones: !readOnly && !loading && !documentTarget && !localStartHandle }">
+      <span v-if="documentTarget && titleDetail" class="documentDetail" dir="ltr">{{ titleDetail }}</span>
       <el-card
+        v-loading="loadingOptions"
         class="contentCard"
-        :class="{ selected: node.selected }"
+        :class="{ selected: node.selected || connectionTarget, processingCard: !!processingTask }"
+        :aria-busy="processing ? true : undefined"
+        :aria-label="processingTask?.text"
         shadow="never"
         :bodyStyle="{ padding: '8px' }"
         :style="{ minHeight: `${cardHeight}px` }">
@@ -128,9 +140,16 @@
           <icon-loader2 class="loadingIcon" :size="24" aria-hidden="true" />
           <span>加载中...</span>
         </div>
-        <slot v-else-if="previewReady || documentTarget" />
+        <template v-else-if="previewReady || documentTarget">
+          <div v-if="processingTask" class="processingContent" inert><slot /></div>
+          <slot v-else />
+        </template>
       </el-card>
-      <template v-for="group in handleGroups" :key="group.type">
+      <div
+        v-for="group in handleGroups"
+        :key="group.type"
+        class="handleLayer"
+        :class="{ [group.position]: group.items.length && interactive && !loading && !documentTarget && !connectionStartHandle }">
         <handle
           v-for="(item, index) in group.items"
           :id="item.id"
@@ -143,11 +162,11 @@
             linking: localStartHandle?.id === item.id && localStartHandle.type === group.type,
           }"
           :type="group.type"
-          :connectable="!readOnly && !loading"
+          :connectable="interactive && !loading"
           :position="group.position"
           :isValidConnection="validateConnection"
           :data-connection-status="getHandleStatus(item)"
-          :style="{ top: `${((index + 1) / (group.items.length + 1)) * 100}%` }"
+          :style="getHandleStyle(index, group.items.length)"
           :title="`${item.label ?? item.id} · ${Array.isArray(item.dataType) ? item.dataType.join(' / ') : item.dataType}`"
           :aria-label="`${item.label ?? item.id} · ${Array.isArray(item.dataType) ? item.dataType.join(' / ') : item.dataType}`"
           @pointermove="moveHandle"
@@ -155,9 +174,9 @@
           @pointercancel="resetHandle">
           <component :is="isHandleConnected(item) ? IconCircleDot : IconCircleDashed" class="handleIcon" :size="18" aria-hidden="true" />
         </handle>
-      </template>
+      </div>
       <button
-        v-if="!readOnly && !loading && !documentTarget"
+        v-if="interactive && !loading && !documentTarget"
         class="resizeCorner nodrag nopan"
         type="button"
         aria-label="调整节点大小（方向键微调）"
@@ -190,8 +209,11 @@ import {
   IconCircleDashed,
   IconCircleDot,
   IconLoader2,
+  IconPlayerStop,
+  IconDots,
+  IconPencil,
 } from "@tabler/icons-vue";
-import { ElCard, ElButton, ElDivider, ElDropdown, ElDropdownMenu, ElDropdownItem, ElMessage } from "element-plus";
+import { ElCard, ElButton, ElDivider, ElDropdown, ElDropdownMenu, ElDropdownItem, ElLoading, ElMessage } from "element-plus";
 import type { DropdownInstance } from "element-plus";
 import { getAssetOutputs, validateConnection } from "./connection";
 import { useNodeEvent } from "./nodeEvent";
@@ -204,12 +226,15 @@ defineOptions({ inheritAttrs: false });
 const topVisible = defineModel<boolean>("topVisible", { default: false });
 const bottomVisible = defineModel<boolean>("bottomVisible", { default: false });
 const emit = defineEmits<{ fullscreen: [] }>();
+const vLoading = ElLoading.directive;
 const downloading = ref(false);
 const props = withDefaults(
   defineProps<
     NodeData & {
       icon?: Component;
+      titleDetail?: string;
       loading?: boolean;
+      processing?: boolean | { text: string; cancelling?: boolean; cancel?: () => void };
       readOnly?: boolean;
       previewReady?: boolean;
       topWidth?: string | number;
@@ -223,6 +248,7 @@ const props = withDefaults(
     label: "未命名节点",
     handles: () => [],
     outputs: () => ({}),
+    processing: false,
     previewReady: true,
     readOnly: false,
     fullscreenVisible: true,
@@ -230,6 +256,9 @@ const props = withDefaults(
     bottomWidth: "20vw",
   }
 );
+const processingTask = computed(() => typeof props.processing === "object" ? props.processing : undefined);
+const interactive = computed(() => !props.readOnly && !processingTask.value);
+const loadingOptions = computed(() => processingTask.value ? { text: processingTask.value.text } : props.processing);
 const handleGroups = computed(() => [
   { type: "target" as const, position: Position.Left, items: props.handles.filter((item) => item.type === "target") },
   { type: "source" as const, position: Position.Right, items: props.handles.filter((item) => item.type === "source") },
@@ -237,12 +266,12 @@ const handleGroups = computed(() => [
 const cardHeight = computed(() => Math.max(100, ...handleGroups.value.map((group) => (group.items.length + 1) * 44)));
 const { id: nodeId, node } = useNode();
 const documentContext = inject<NodeDocumentContext | undefined>("nodeDocument", undefined);
-const documentTarget = computed(() => props.readOnly ? undefined : documentContext?.targets.get(nodeId));
+const documentTarget = computed(() => interactive.value ? documentContext?.targets.get(nodeId) : undefined);
 const skeletonElement = ref<HTMLElement>();
 const canvasSize = shallowRef<{ width: string; height: string }>();
 let documentLease: symbol | undefined;
 function mountDocument(target: HTMLElement) {
-  if (props.readOnly) throw new Error("只读节点不能挂载到工作区文档");
+  if (!interactive.value) throw new Error("只读节点不能挂载到工作区文档");
   const element = skeletonElement.value;
   if (!documentContext || !element || !target.isConnected) throw new Error("节点视图尚未就绪");
   if (!documentTarget.value) canvasSize.value = {
@@ -262,9 +291,8 @@ function mountDocument(target: HTMLElement) {
     });
   };
 }
-watch(() => props.loading, loading => {
-  if (props.readOnly) return;
-  if (loading) {
+watch(() => interactive.value && !props.loading, available => {
+  if (!available) {
     if (documentContext?.mounts.get(nodeId) === mountDocument) documentContext.mounts.delete(nodeId);
   } else documentContext?.mounts.set(nodeId, mountDocument);
 }, { immediate: true });
@@ -276,7 +304,7 @@ onScopeDispose(() => {
 });
 const selectionConnection = inject<ShallowRef<NodeConnectionFeedback | undefined> | undefined>("selectionConnection", undefined);
 const nodeEvent = useNodeEvent();
-if (!props.readOnly) node.isValidTargetPos = (...args) => !props.readOnly && nodeEvent.emit("canConnect", ...args);
+if (!props.readOnly) node.isValidTargetPos = (...args) => interactive.value && nodeEvent.emit("canConnect", ...args);
 const {
   d3Zoom,
   d3Selection,
@@ -331,7 +359,7 @@ const resize = shallowRef<{
 }>();
 
 function startResize(event: PointerEvent) {
-  if (props.readOnly || props.loading || documentTarget.value || event.button !== 0 || resize.value) return;
+  if (!interactive.value || props.loading || documentTarget.value || event.button !== 0 || resize.value) return;
   const element = event.currentTarget as HTMLElement;
   const skeleton = skeletonElement.value;
   if (!skeleton) return;
@@ -359,7 +387,7 @@ function setNodeSize(width: number, height: number) {
 function moveResize(event: PointerEvent) {
   const state = resize.value;
   if (!state || event.pointerId !== state.pointerId) return;
-  if (props.readOnly || props.loading || documentTarget.value || findNode(nodeId) !== node) return finishResize();
+  if (!interactive.value || props.loading || documentTarget.value || findNode(nodeId) !== node) return finishResize();
   const point = screenToFlowCoordinate({ x: event.clientX, y: event.clientY });
   setNodeSize(state.width + point.x - state.point.x, state.height + point.y - state.point.y);
 }
@@ -374,7 +402,7 @@ function finishResize(event?: PointerEvent) {
 }
 
 function resizeWithKeyboard(event: KeyboardEvent) {
-  if (props.readOnly || props.loading || documentTarget.value || resize.value) return;
+  if (!interactive.value || props.loading || documentTarget.value || resize.value) return;
   const skeleton = skeletonElement.value;
   if (!skeleton || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
   event.preventDefault();
@@ -384,10 +412,21 @@ function resizeWithKeyboard(event: KeyboardEvent) {
 }
 
 onScopeDispose(() => finishResize());
-watch(() => [props.readOnly, props.loading, documentTarget.value], () => finishResize());
+watch(() => [interactive.value, props.loading, documentTarget.value], () => finishResize());
 const localStartHandle = computed(() => (connectionStartHandle.value?.nodeId === nodeId ? connectionStartHandle.value : undefined));
+// 输入命中区按卡片高度均分，起点相对 18px 端口的左上角计算。
+function getHandleStyle(index: number, count: number) {
+  const position = (index + 1) / (count + 1);
+  return {
+    top: `${position * 100}%`,
+    "--zoneTop": `calc(9px + ${(index / count - position) * 100}cqh)`,
+    "--zoneHeight": `${100 / count}cqh`,
+  };
+}
 const localEndHandle = computed(() => (connectionEndHandle.value?.nodeId === nodeId ? connectionEndHandle.value : undefined));
 const localSelectionConnection = computed(() => (selectionConnection?.value?.nodeId === nodeId ? selectionConnection.value : undefined));
+// 预连接（松手即可连上）时，卡片边框按选中样式高亮。
+const connectionTarget = computed(() => (!!localEndHandle.value && connectionStatus.value === "valid") || localSelectionConnection.value?.status === "valid");
 const connectedHandles = computed<Set<string>>((previous) => {
   const connected = new Set(
     props.handles.filter((item) => connectionLookup.value.get(`${nodeId}-${item.type}-${item.id}`)?.size).map((item) => `${item.type}-${item.id}`)
@@ -396,7 +435,7 @@ const connectedHandles = computed<Set<string>>((previous) => {
 });
 
 async function focusNode(event: MouseEvent) {
-  if (documentTarget.value) return;
+  if (documentTarget.value || processingTask.value) return;
   const element = event.currentTarget as HTMLElement;
   await nextTick();
   const flowElement = vueFlowRef.value;
@@ -451,7 +490,7 @@ const reloadRemoteNode = inject<((type: string) => Promise<void>) | undefined>("
 const reloading = ref(false);
 const deleting = ref(false);
 const menu = ref<DropdownInstance>();
-const menuAnchor = shallowRef({ getBoundingClientRect: () => new DOMRect() });
+const menuAnchor = shallowRef<{ getBoundingClientRect: () => DOMRect }>();
 onPaneClick(() => menu.value?.handleClose());
 onPaneContextMenu(() => menu.value?.handleClose());
 onSelectionContextMenu(() => menu.value?.handleClose());
@@ -463,7 +502,7 @@ onNodeContextMenu(({ event, node }) => {
 });
 
 async function reloadNode() {
-  if (props.readOnly || !reloadRemoteNode || reloading.value) return;
+  if (!interactive.value || !reloadRemoteNode || reloading.value) return;
   reloading.value = true;
   try {
     await reloadRemoteNode(node.type);
@@ -475,7 +514,7 @@ async function reloadNode() {
 }
 
 async function openMenu(event: MouseEvent | TouchEvent) {
-  if (props.readOnly) return;
+  if (!interactive.value) return;
   event.preventDefault();
   if (documentTarget.value) event.stopPropagation();
   menu.value?.handleClose();
@@ -487,7 +526,7 @@ async function openMenu(event: MouseEvent | TouchEvent) {
 }
 
 async function deleteNode() {
-  if (props.readOnly || deleting.value) return;
+  if (!interactive.value || deleting.value) return;
   deleting.value = true;
   try {
     await nodeEvent.emit("delete");
@@ -509,8 +548,9 @@ const saveNodeToAssets = inject<((label: string, outputs: { label: string; outpu
 const assetOutputs = computed(() => getAssetOutputs(props));
 
 async function handleCommand(command: string) {
-  if (props.readOnly) return;
+  if (!interactive.value) return;
   if (command === "saveAsset") saveNodeToAssets?.(props.label, assetOutputs.value);
+  if (command === "rename") void editLabel();
   if (command === "clipboard" && copyNodeToClipboard && !copyingToClipboard.value) {
     copyingToClipboard.value = true;
     try {
@@ -566,7 +606,7 @@ async function handleCommand(command: string) {
 }
 
 async function editLabel() {
-  if (props.readOnly) return;
+  if (!interactive.value) return;
   labelDraft.value = props.label;
   editingLabel.value = true;
   await nextTick();
@@ -574,20 +614,20 @@ async function editLabel() {
 }
 
 function saveLabel() {
-  if (props.readOnly || !editingLabel.value) return;
+  if (!interactive.value || !editingLabel.value) return;
   const label = labelDraft.value.trim();
   if (label) node.data.label = label;
   editingLabel.value = false;
 }
 
 function confirmLabel(event: KeyboardEvent) {
-  if (props.readOnly || event.isComposing) return;
+  if (!interactive.value || event.isComposing) return;
   event.preventDefault();
   saveLabel();
 }
 
 function moveHandle(event: PointerEvent) {
-  if (event.pointerType === "touch") return;
+  if (event.pointerType === "touch" || connectionStartHandle.value) return;
   const element = event.currentTarget as HTMLElement;
   const rect = element.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
@@ -662,6 +702,8 @@ watch(
   color: var(--el-text-color-primary);
   text-align: left;
 
+  .nodeContextMenu { position: absolute; }
+
   &.resized {
     display: flex;
     flex-direction: column;
@@ -710,8 +752,19 @@ watch(
     opacity: 1;
   }
 
-  &:hover .titleBar .nodeActions {
-    visibility: visible;
+  /* 连接点中心离卡片 12px，半径 9px。斜向接近时让这段空隙也保持悬停。 */
+  &:hover .cardContainer .handleLayer:is(.left, .right)::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    width: 21px;
+    pointer-events: auto;
+  }
+
+  &:hover .titleBar,
+  .titleBar:has(:focus-visible) {
+    .nodeActions { visibility: visible; }
+    .titleDetail:has(+ .nodeActions) { visibility: hidden; }
   }
 
   &:hover,
@@ -745,19 +798,15 @@ watch(
   }
 
   .titleBar {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 6px;
     padding: 0 4px 8px;
     font-size: 14px;
     line-height: 20px;
 
-    .titleIcon {
-      flex-shrink: 0;
-    }
-
     .labelText {
-      flex: 1;
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -771,7 +820,7 @@ watch(
     }
 
     .labelInput {
-      flex: 1;
+      box-sizing: border-box;
       min-width: 0;
       width: 100%;
       padding: 0 4px;
@@ -784,23 +833,45 @@ watch(
       line-height: inherit;
     }
 
+    .titleDetail,
+    .nodeActions {
+      grid-area: 1 / 3;
+      justify-self: end;
+    }
+
     .nodeActions {
       visibility: hidden;
       display: flex;
-      flex-shrink: 0;
       gap: 2px;
+
+      &.processingActions { visibility: visible; }
 
       .el-button {
         width: 24px;
         height: 24px;
         margin: 0;
         padding: 0;
+        transition-property: color, background-color, border-color;
       }
+
+      .moreAction { display: none; }
     }
   }
 
   .cardContainer {
     position: relative;
+
+    .documentDetail { display: block; text-align: end; }
+
+    .handleLayer {
+      position: absolute;
+      inset: 0;
+      container-type: size;
+      pointer-events: none;
+
+      &.left::before { right: 100%; }
+      &.right::before { left: 100%; }
+    }
 
     .resizeCorner {
       position: absolute;
@@ -830,6 +901,16 @@ watch(
 
     .contentCard.selected {
       border-color: color-mix(in srgb, var(--el-color-primary) 50%, var(--el-border-color-light));
+    }
+
+    .contentCard > :deep(.el-loading-mask) {
+      pointer-events: none;
+    }
+
+    .processingCard {
+      .processingContent { display: contents; }
+      :deep(.el-loading-spinner) { margin-top: 0; transform: translateY(-50%); }
+      :deep(.el-loading-text) { margin: 4px 8px 0; overflow-wrap: anywhere; }
     }
 
     .contentCard .loadingContent {
@@ -906,6 +987,64 @@ watch(
           transform: none;
           transition: none;
         }
+      }
+    }
+
+    .connectingFromSource &.targetZones {
+      .handleLayer { z-index: 10; }
+
+      .nodeHandle.target {
+        &::before {
+          inset: auto;
+          top: var(--zoneTop);
+          left: 0;
+          width: calc(100cqw + 21px);
+          height: var(--zoneHeight);
+          border-radius: 0;
+        }
+      }
+
+      /* 严格模式下输出端不能作为输出连线的终点，避免右缘命中区盖住输入区。 */
+      .nodeHandle.source {
+        pointer-events: none;
+      }
+    }
+  }
+
+  .titleDetail,
+  .documentDetail {
+    color: var(--el-text-color-secondary);
+    font-size: 10px;
+    line-height: 14px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* 纯触屏用点选节点切换尺寸和操作按钮。 */
+  @media (any-pointer: coarse) and (hover: none) {
+    .cardContainer .nodeHandle .handleIcon { opacity: 1; }
+
+    .cardContainer .resizeCorner {
+      width: 10px;
+      height: 10px;
+      opacity: 0.55;
+
+      &::before { inset: -15px; }
+    }
+
+    .titleBar {
+      .nodeActions {
+        visibility: visible;
+
+        .el-button { width: 32px; height: 32px; }
+        .moreAction { display: inline-flex; }
+      }
+
+      .titleDetail:has(+ .nodeActions) { visibility: hidden; }
+      &.touchDetail:not(:has(:focus-visible)) {
+        .titleDetail { visibility: visible; }
+        .nodeActions { visibility: hidden; }
       }
     }
   }

@@ -149,7 +149,7 @@ flowchart TB
 | `nodes` | 6 | 节点插件列表、文件、安装与控制 → 节点目录与插件工具 |
 | `plugins` | 2 | 插件开发、构建／安装预览与导出 → 插件工具及本机权限校验 |
 | `providers` | 11 | 原文本／媒体供应商安装、源码、配置与调试 → 原供应商抽象；公开多租户入口拒绝 |
-| `settings` | 6 | 设置、个性化、系统提示词及网络测试 → settings／network；普通账号仅 get/save 放行 |
+| `settings` | 5 | 设置、个性化及系统提示词 → settings；普通账号仅 get/save 放行 |
 | `singleAgent` | 5 | 单 Agent 会话与流 → 同一 Agent runtime／模型执行能力 |
 | `skills` | 10 | 技能内容、安装与控制 → 技能目录与工具 |
 | `tools` | 7 | 工具插件与执行 → 工具运行时；模型工具继续进入统一模型／媒体链 |

@@ -1,7 +1,6 @@
 <template>
   <el-card
     v-if="visible"
-    ref="toolbar"
     class="selectionToolbar nodrag nopan nowheel"
     shadow="never"
     :bodyStyle="{ padding: '4px' }"
@@ -65,6 +64,7 @@
       <el-button text :icon="IconCopyPlus" :disabled="busy || disabled" @click="operate('duplicate')">创建副本</el-button>
       <el-button text :icon="IconBoxMultiple" :disabled="busy || disabled" @click="operate('group')">打组</el-button>
       <el-button text :icon="IconDeselect" :disabled="busy || disabled || !hasGroup" @click="operate('ungroup')">解组</el-button>
+      <el-button text :icon="IconTrash" :disabled="busy || disabled || !canDelete" @click="emit('deleteSelection')">删除</el-button>
     </div>
   </el-card>
 </template>
@@ -74,7 +74,7 @@ import { computed, nextTick, ref, watch } from "vue";
 import { getRectOfNodes, useVueFlow, type GraphNode, type Node, type XYPosition } from "@vue-flow/core";
 import { ElButton, ElCard, ElColorPicker, ElMessage, ElPopover } from "element-plus";
 import {
-  IconCopyPlus, IconBoxMultiple, IconDeselect,
+  IconCopyPlus, IconBoxMultiple, IconDeselect, IconTrash,
   IconLayoutGrid, IconLayoutColumns, IconLayoutRows,
 } from "@tabler/icons-vue";
 import { useNodeEvent } from "@toonflow/nodes-scaffold/nodeEvent";
@@ -85,10 +85,11 @@ import { remapNodeReferences } from "../canvasFiles";
 const props = defineProps<{
   batchHistory: (action: () => Promise<void>) => Promise<void>;
   getSignal: () => AbortSignal;
+  canDelete: boolean;
   disabled?: boolean;
 }>();
+const emit = defineEmits<{ deleteSelection: [] }>();
 const flow = useVueFlow();
-const toolbar = ref<InstanceType<typeof ElCard>>();
 const busy = ref(false);
 const colorMenuVisible = ref(false);
 const colors = [
@@ -132,15 +133,16 @@ const visible = computed(() => !props.disabled && !flow.userSelectionActive.valu
 watch(() => visible.value && hasGroup.value, value => {
   if (!value) colorMenuVisible.value = false;
 });
+const selectionBounds = computed(() => getRectOfNodes(flow.getSelectedNodes.value));
 const toolbarStyle = computed(() => {
-  const bounds = getRectOfNodes(flow.getSelectedNodes.value);
+  const bounds = selectionBounds.value;
   const { x, y, zoom } = flow.viewport.value;
-  const width = toolbar.value?.$el.offsetWidth ?? 0;
-  const height = toolbar.value?.$el.offsetHeight ?? 0;
-  const left = Math.max(width / 2 + 8, Math.min(x + (bounds.x + bounds.width / 2) * zoom, flow.dimensions.value.width - width / 2 - 8));
-  // ACT: 顶部导航约占 56px，留出 8px 间隔；高度变化时再按导航实际尺寸定位。
-  const top = Math.max(height + 64, Math.min(y + bounds.y * zoom - 12 - (hasGroup.value ? 30 * zoom : 0), flow.dimensions.value.height - 8));
-  return { left: `${left}px`, top: `${top}px` };
+  return {
+    "--selectionCenter": `${x + (bounds.x + bounds.width / 2) * zoom}px`,
+    "--selectionTop": `${y + bounds.y * zoom - 12 - (hasGroup.value ? 30 * zoom : 0)}px`,
+    "--canvasWidth": `${flow.dimensions.value.width}px`,
+    "--canvasHeight": `${flow.dimensions.value.height}px`,
+  };
 });
 
 function changeGroupColor(color: string | null) {
@@ -386,21 +388,36 @@ defineExpose({ operate, startDragCopy, busy });
 <style scoped lang="scss">
 .selectionToolbar {
   position: absolute;
+  top: 0;
+  left: 0;
   z-index: 6;
   width: max-content;
-  transform: translate(-50%, -100%);
+  max-width: calc(100% - 16px);
+  max-height: calc(100% - 72px);
+  overflow-y: auto;
+  transition-property: box-shadow;
+  // translate 的百分比随工具栏实际尺寸变化，换行时仍贴近选区并避开顶部导航。
+  transform: translate(
+    clamp(8px, calc(var(--selectionCenter) - 50%), calc(var(--canvasWidth) - 100% - 8px)),
+    clamp(64px, calc(var(--selectionTop) - 100%), calc(var(--canvasHeight) - 100% - 8px))
+  );
 
   .toolbarActions {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
     gap: 2px;
-    white-space: nowrap;
 
     .el-button {
-      height: 28px;
+      max-width: 100%;
+      min-height: 28px;
+      height: auto;
       margin: 0;
-      padding: 0 8px;
+      padding: 4px 8px;
+      line-height: 1.35;
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
 
     .colorButton {

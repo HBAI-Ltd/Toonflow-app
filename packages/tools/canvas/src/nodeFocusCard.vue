@@ -73,6 +73,8 @@ const getCanvas = inject<() => CanvasContext | undefined>("canvas");
 const activateCanvasPanel = inject<() => Promise<boolean>>("activateCanvasPanel");
 const nodes = computed(() => {
   const canvas = getCanvas?.();
+  const canvasId = props.tool.args?.canvasId;
+  if (typeof canvasId === "string" && canvasId !== canvas?.id) return nodeSummaries.value;
   return nodeSummaries.value.map(item => ({ ...item, label: canvas?.getNodeLabel?.(item.nodeId) || item.label }));
 });
 
@@ -85,6 +87,8 @@ async function focusNode(nodeId: string) {
     return;
   }
   try {
+    const canvasId = props.tool.args?.canvasId;
+    if (typeof canvasId === "string" && canvasId !== canvas.id) await canvas.call({ name: "switchCanvas", args: { canvasId } });
     await canvas.call({ name: "fitCanvas", args: { nodeIds: [nodeId] } });
     await canvas.call({ name: "selectNodes", args: { nodeIds: [nodeId] } });
   } catch (error) {

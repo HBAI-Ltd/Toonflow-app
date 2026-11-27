@@ -3,6 +3,7 @@ import { setRuntimeHost } from "@toonflow/server/platform";
 import { detectLocale, normalizeLocale } from "@toonflow/i18n";
 import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { homedir } from "node:os";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { existsSync, writeAtomicSync } from "@toonflow/file";
 import { file } from "@toonflow/file/bun";
@@ -15,6 +16,7 @@ import Electrobun, { ApplicationMenu, BrowserWindow, PATHS, Screen, Utils, Updat
 import { parseInstallUrl } from "./protocol";
 import saveFile, { selectSaveFile } from "./saveFile";
 import createLinuxDebUpdater from "./update/linuxDebUpdater";
+import createMacPkgUpdater from "./update/macPkgUpdater";
 import createWindowsUpdater, { confirmWindowsUpdateStartup } from "./update/windowsUpdater";
 import showWindowsNotification from "./windowsNotification";
 import registerWindowAppearance from "./windowAppearance";
@@ -413,7 +415,9 @@ async function start() {
     });
     let isShowing = false;
     const lifecycle = Utils as unknown as Parameters<typeof createWindowsUpdater>[1];
-    const updater = process.platform === "win32" ? createWindowsUpdater(PATHS.RESOURCES_FOLDER, lifecycle)
+    const usesSystemInstaller = process.platform === "darwin";
+    const updater = usesSystemInstaller ? createMacPkgUpdater(PATHS.RESOURCES_FOLDER)
+      : process.platform === "win32" ? createWindowsUpdater(PATHS.RESOURCES_FOLDER, lifecycle)
       : process.platform === "linux" && process.env.TOONFLOW_INSTALL_METHOD === "deb"
         ? createLinuxDebUpdater(PATHS.RESOURCES_FOLDER, dataDirectory, lifecycle) : Updater;
     app.locals.desktop = {
@@ -421,6 +425,16 @@ async function start() {
       async showNotification(options) {
         if (process.platform === "win32") {
           await showWindowsNotification(`${identifier}.${channel}`, resolve(PATHS.RESOURCES_FOLDER, "app.ico"), options);
+        } else if (process.platform === "darwin") {
+          // ACT: 运行时 bun 在 .app 外，SDK 原生通知会因 UNUserNotificationCenter 断言导致进程崩溃；改用 osascript，通知来源显示为脚本编辑器。
+          const sound = options.silent ? "" : " sound name \"default\"";
+          await execFileAsync("/usr/bin/osascript", [
+            "-e", "on run argv",
+            "-e", `display notification (item 2 of argv) with title (item 1 of argv)${sound}`,
+            "-e", "end run",
+            options.title,
+            options.body ?? "",
+          ], { timeout: 15000 });
         } else {
           Utils.showNotification(options);
         }
@@ -432,12 +446,13 @@ async function start() {
       writeClipboardText: Utils.clipboardWriteText,
       selectSaveFile,
       saveFile,
+      // ACT: 默认起始目录 "~/" 在 macOS 原生层会按进程工作目录（.app/Contents/MacOS）解析，须传绝对路径。
       async selectProviderFile() {
-        const [path] = await Utils.openFileDialog({ allowedFileTypes: "ts", canChooseFiles: true, canChooseDirectory: false, allowsMultipleSelection: false });
+        const [path] = await Utils.openFileDialog({ startingFolder: homedir(), allowedFileTypes: "ts", canChooseFiles: true, canChooseDirectory: false, allowsMultipleSelection: false });
         return path ?? null;
       },
       async selectDirectory() {
-        const [path] = await Utils.openFileDialog({ canChooseFiles: false, canChooseDirectory: true, allowsMultipleSelection: false });
+        const [path] = await Utils.openFileDialog({ startingFolder: homedir(), canChooseFiles: false, canChooseDirectory: true, allowsMultipleSelection: false });
         return path ?? null;
       },
       async ready(failed = false) {
@@ -456,7 +471,6 @@ async function start() {
         }
         if (failed && !connection.remote) {
           if (process.platform === "win32") confirmWindowsUpdateStartup(PATHS.RESOURCES_FOLDER, true);
-          else await (Updater as DesktopRuntime["updater"]).confirmStartup?.(true);
           deliverInstall = undefined;
           return;
         }
@@ -464,7 +478,6 @@ async function start() {
           // 远端离线不代表本机更新启动失败；安装协议等回到独立运行后再投递。
           deliverInstall = undefined;
           if (process.platform === "win32") confirmWindowsUpdateStartup(PATHS.RESOURCES_FOLDER);
-          else await (Updater as DesktopRuntime["updater"]).confirmStartup?.();
           return;
         }
         deliverInstall = request => {
@@ -478,12 +491,13 @@ async function start() {
           pendingInstalls.shift();
         }
         if (process.platform === "win32") confirmWindowsUpdateStartup(PATHS.RESOURCES_FOLDER);
-        else await (Updater as DesktopRuntime["updater"]).confirmStartup?.();
       },
       openDevTools() { mainWindow.webview.openDevTools(); },
       updater: {
         ...updater,
+        usesSystemInstaller,
         applyUpdate: async () => {
+          if (usesSystemInstaller) return updater.applyUpdate();
           if (!await confirmQuit()) throw new Error(t`更新重启已取消`);
           // ACT: 只批准这次更新调用链中的退出；普通关闭仍需确认，更新失败后不会留下全局放行状态。
           await quitApproval.run(true, () => updater.applyUpdate());

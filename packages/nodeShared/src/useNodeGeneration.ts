@@ -1,10 +1,11 @@
-import { computed, onScopeDispose, ref, watch, type Ref } from "vue";
+import { computed, inject, onScopeDispose, ref, watch, type Ref } from "vue";
 import { useNode, useVueFlow } from "@vue-flow/core";
 import { nodeTools, z } from "@toonflow/nodes-scaffold/nodeTools";
 import { useNodePersistence, type NodePersistenceContext } from "@toonflow/nodes-scaffold/nodeDocument";
-import type { NodeAudioRequest, NodeImageRequest, NodeMediaResult, NodeMediaTaskStatus, NodeVideoRequest, useNodeAi } from "@toonflow/nodes-scaffold/nodeAi";
+import { findNodeModel, type NodeAudioRequest, type NodeImageRequest, type NodeMediaModel, type NodeMediaPrice, type NodeMediaPriceRequest, type NodeMediaResult, type NodeMediaTaskStatus, type NodeVideoRequest, type useNodeAi } from "@toonflow/nodes-scaffold/nodeAi";
 import type { NodeOutputs } from "@toonflow/nodes-scaffold/values";
 import { showNodeError } from "./showNodeError";
+import type { useMediaPrice } from "./useMediaPrice";
 
 export type NodeGenerationTask = {
   taskId: string;
@@ -23,25 +24,37 @@ export type NodeGenerationTask = {
 
 type GenerationOptions = {
   ai: ReturnType<typeof useNodeAi>;
+  models?: Readonly<Ref<readonly NodeMediaModel[]>>;
+  quote?: ReturnType<typeof useMediaPrice>;
   recover?: (results: NodeMediaResult[], task: NodeGenerationTask, signal: AbortSignal) => Promise<NodeMediaResult[]>;
 };
+
+export type ConfirmMediaCost = (
+  request: { providerId: string; providerLabel: string; mediaType: NodeGenerationTask["mediaType"] },
+  getQuote: (signal: AbortSignal) => Promise<NodeMediaPrice | null>,
+  signal: AbortSignal,
+) => Promise<boolean>;
 
 export function useNodeGeneration(outputs: Readonly<Ref<NodeOutputs>>, cancel: () => void, options?: GenerationOptions) {
   const { id, node } = useNode();
   const { findNode } = useVueFlow();
   const getPersistence = useNodePersistence();
+  const confirmMediaCost = inject<ConfirmMediaCost | undefined>("confirmMediaCost", undefined);
   const savedData = computed(() => node.data as { mediaTask?: NodeGenerationTask });
   const lifetime = new AbortController();
-  let executionController: AbortController | undefined;
+  const costCancelled = Symbol();
+  let execution: { controller: AbortController; context?: NodePersistenceContext; taskId?: string } | undefined;
   let recoveryController: AbortController | undefined;
   let recovering: Promise<void> | undefined;
   let attemptedTaskId = "";
-  const status = ref<"idle" | "running" | "succeeded" | "failed">("idle");
+  const status = ref<"idle" | "preparing" | "running" | "succeeded" | "failed">("idle");
   const error = ref("");
   const cancelling = ref(false);
-  const generating = computed(() => status.value === "running");
+  const running = computed(() => status.value === "running");
+  const generating = computed(() => status.value === "preparing" || running.value);
   const pendingRecovery = computed(() => !generating.value && needsRecovery());
-  const getStatus = () => ({ status: status.value, outputs: outputs.value, ...(error.value ? { error: error.value } : {}),
+  const costBlocked = computed(() => status.value === "preparing" || (!generating.value && !pendingRecovery.value && options?.quote?.blocked.value === true));
+  const getStatus = () => ({ status: generating.value ? "running" : status.value, outputs: outputs.value, ...(error.value ? { error: error.value } : {}),
     ...(savedData.value.mediaTask ? { task: { taskId: savedData.value.mediaTask.taskId, state: savedData.value.mediaTask.state, resumable: savedData.value.mediaTask.resumable } } : {}) });
 
   nodeTools.register({
@@ -119,25 +132,42 @@ export function useNodeGeneration(outputs: Readonly<Ref<NodeOutputs>>, cancel: (
   async function generate<T extends "image" | "video" | "audio">(mediaType: T, input: NodeImageRequest | NodeVideoRequest | NodeAudioRequest, signal: AbortSignal, recoveryData?: unknown) {
     if (!options) throw new Error("节点未提供媒体生成能力");
     if (needsRecovery()) throw new Error("当前节点仍有未确认的生成任务，已结束该任务，请重新生成");
-    const context = getPersistence?.();
+    const context = execution ? execution.context : getPersistence?.();
     if (!context || context.directory !== input.directory) throw new Error("画布尚未就绪，无法保存生成任务");
+    if (!confirmMediaCost) throw new Error("费用提醒尚未就绪，请重新加载页面后再生成");
+    const waitingSignal = AbortSignal.any([lifetime.signal, signal]);
+    waitingSignal.throwIfAborted();
+    // 报价和提交共用同一份参数快照，包含重绘参考图、时长和供应商自定义参数。
+    const request = { ...JSON.parse(JSON.stringify(input)), mediaType } as NodeMediaPriceRequest;
+    const recovery = recoveryData === undefined ? undefined : JSON.parse(JSON.stringify(recoveryData));
+    const model = findNodeModel(options.models?.value ?? [], request);
+    const confirmed = await confirmMediaCost(
+      { providerId: request.providerId, providerLabel: model?.providerLabel || request.providerId, mediaType },
+      quoteSignal => options.quote ? options.quote.getQuote(request, quoteSignal)
+        : model?.supportsPrice ? options.ai.getMediaPrice(request, quoteSignal) : Promise.resolve(null),
+      waitingSignal,
+    );
+    const current = getPersistence?.();
+    if (!confirmed || waitingSignal.aborted || findNode(id) !== node || current?.directory !== context.directory || current.canvasPath !== context.canvasPath) throw costCancelled;
+    if (needsRecovery()) throw new Error("节点正在生成，请等待完成");
+    status.value = "running";
     let task: NodeGenerationTask = {
       taskId: crypto.randomUUID(), directory: context.directory, canvasPath: context.canvasPath, nodeId: id,
-      mediaType, providerId: input.providerId, modelId: input.modelId, state: "submitting",
-      ...(recoveryData === undefined ? {} : { recoveryData: JSON.parse(JSON.stringify(recoveryData)) }),
+      mediaType, providerId: request.providerId, modelId: request.modelId, state: "submitting",
+      ...(recovery === undefined ? {} : { recoveryData: recovery }),
     };
+    if (execution) execution.taskId = task.taskId;
     savedData.value.mediaTask = task;
     task = savedData.value.mediaTask;
-    const waitingSignal = AbortSignal.any([lifetime.signal, signal]);
     try { await context.save(waitingSignal); }
     catch (error) { if (task.state !== "cancelled") task.state = "failed"; throw error; }
     signal.throwIfAborted();
     checkTask(task, context);
     const requestOptions = taskOptions(task, context, waitingSignal);
     try {
-      const result = mediaType === "image" ? await options.ai.generateImage(input as NodeImageRequest, signal, requestOptions)
-        : mediaType === "video" ? await options.ai.generateVideo(input as NodeVideoRequest, signal, requestOptions)
-        : await options.ai.generateAudio(input as NodeAudioRequest, signal, requestOptions);
+      const result = mediaType === "image" ? await options.ai.generateImage(request as NodeImageRequest, signal, requestOptions)
+        : mediaType === "video" ? await options.ai.generateVideo(request as NodeVideoRequest, signal, requestOptions)
+        : await options.ai.generateAudio(request as NodeAudioRequest, signal, requestOptions);
       checkTask(task, context);
       signal.throwIfAborted();
       return result as Extract<NodeMediaResult, { mediaType: T }>[];
@@ -165,26 +195,29 @@ export function useNodeGeneration(outputs: Readonly<Ref<NodeOutputs>>, cancel: (
     catch (error) { task.applied = applied; throw error; }
   }
 
-  async function execute<T>(action: () => Promise<T>): Promise<T> {
+  async function execute(action: (context?: NodePersistenceContext) => Promise<void>) {
     if (cancelling.value) throw new Error("任务正在取消，请稍后重试");
     if (generating.value) throw new Error("节点正在生成，请等待完成");
-    const controller = executionController = new AbortController();
-    status.value = "running";
+    const active = execution = { controller: new AbortController(), context: getPersistence?.(), taskId: needsRecovery() ? savedData.value.mediaTask?.taskId : undefined };
+    status.value = active.taskId || !options?.quote ? "running" : "preparing";
     error.value = "";
     try {
-      const result = await action();
-      await finish(AbortSignal.any([lifetime.signal, controller.signal]));
+      await action(active.context);
+      await finish(AbortSignal.any([lifetime.signal, active.controller.signal]));
       status.value = "succeeded";
-      return result;
     } catch (failure) {
-      await release();
+      if (failure === costCancelled || !active.taskId && (active.controller.signal.aborted || lifetime.signal.aborted)) {
+        status.value = "idle";
+        return;
+      }
+      if (active.taskId && active.taskId === savedData.value.mediaTask?.taskId) await release();
       status.value = "failed";
       const message = (failure as { response?: { data?: { message?: string } } })?.response?.data?.message;
       error.value = failure instanceof Error && failure.name === "AbortError" ? "生成已取消"
         : message || (failure instanceof Error ? failure.message : "生成失败");
       throw failure;
     } finally {
-      if (executionController === controller) executionController = undefined;
+      if (execution === active) execution = undefined;
     }
   }
 
@@ -212,9 +245,12 @@ export function useNodeGeneration(outputs: Readonly<Ref<NodeOutputs>>, cancel: (
     return recovering;
   }
 
-  async function run(action: () => Promise<void>) {
+  async function run(action: (directory: string) => Promise<void>) {
     if (needsRecovery()) return resume();
-    return execute(action);
+    return execute(context => {
+      if (options && !context) throw new Error("画布尚未就绪，无法保存生成任务");
+      return action(context?.directory ?? "");
+    });
   }
 
   async function cancelGeneration(persist = true) {
@@ -237,7 +273,7 @@ export function useNodeGeneration(outputs: Readonly<Ref<NodeOutputs>>, cancel: (
         }
       }
       recoveryController?.abort();
-      executionController?.abort();
+      execution?.controller.abort();
       cancel();
       await recovering?.catch(() => {});
     } finally {
@@ -257,5 +293,5 @@ export function useNodeGeneration(outputs: Readonly<Ref<NodeOutputs>>, cancel: (
   }, { deep: true, flush: "sync" });
   onScopeDispose(() => lifetime.abort());
 
-  return { generating, pendingRecovery, cancelling, run, generate, resume, cancel: cancelGeneration };
+  return { generating, running, costBlocked, pendingRecovery, cancelling, run, generate, resume, cancel: cancelGeneration };
 }

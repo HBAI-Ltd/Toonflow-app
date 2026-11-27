@@ -79,7 +79,7 @@ async function selectNode(index: number) {
   if (!node || props.disabled) return;
   visible.value = false;
   flow.removeSelectedElements();
-  flow.addSelectedNodes([node]);
+  if (node.selectable !== false) flow.addSelectedNodes([node]);
   flow.nodesSelectionActive.value = false;
   await nextTick();
   await flow.fitView({ nodes: [node.id], padding: 0.4, maxZoom: 1.4, duration: 200 });

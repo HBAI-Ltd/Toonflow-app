@@ -4,6 +4,7 @@ import { computed, nextTick, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { getNodeModelKey, invalidateNodeModels, readNodeModels, subscribeNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
 import { canvasShortcutFields, defaultCanvasShortcuts, getShortcutBindings, isShortcutAllowed, normalizeShortcut, type CanvasShortcuts } from "@/lib/canvasShortcuts";
+import { resolveCanvasLayout } from "@/lib/canvasLayouts";
 import { normalizeNodeMenu, type StoredNodeMenuItem } from "@toonflow/server/nodeMenu";
 import { nodeToolPermissionsSchema } from "@toonflow/tool-canvas/runtime";
 import type { ReasoningEfforts, ThinkingLevel } from "@toonflow/server/modelReasoning";
@@ -81,6 +82,7 @@ export const generalSettings = computed(() => {
     nodeMenu: normalizeNodeMenu(general.nodeMenu),
     agentNotificationsEnabled: general.agentNotificationsEnabled !== false,
     assetFoldersExpanded: general.assetFoldersExpanded === true,
+    canvasLayoutMode: resolveCanvasLayout(general.canvasLayoutMode),
     canvasCompositingEnabled: general.canvasCompositingEnabled === true,
     canvasEdgeAnimationEnabled: general.canvasEdgeAnimationEnabled !== false,
     canvasEdgeColorMode: general.canvasEdgeColorMode === "none" || general.canvasEdgeColorMode === "custom" ? general.canvasEdgeColorMode : "theme",
@@ -98,6 +100,38 @@ export const generalSettings = computed(() => {
 export function updateGeneralSettings(patch: Omit<Partial<typeof generalSettings.value>, "nodeMenu"> & { nodeMenu?: StoredNodeMenuItem[] }) {
   const current = settings.value.general;
   settings.value = { ...settings.value, general: { ...(current && typeof current === "object" && !Array.isArray(current) ? current : {}), ...patch } };
+}
+
+type MediaCostReminder = { remindersEnabled: boolean; reminderAmount: number };
+
+function isSettingsRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+export function getMediaCostReminder(providerId?: string): MediaCostReminder {
+  const reminders = settings.value.mediaCostReminders;
+  const saved = providerId !== undefined && isSettingsRecord(reminders) && Object.hasOwn(reminders, providerId) ? reminders[providerId] : undefined;
+  const preference = isSettingsRecord(saved) ? saved : {};
+  const amount = preference.reminderAmount;
+  return {
+    remindersEnabled: preference.remindersEnabled !== false,
+    reminderAmount: typeof amount === "number" && Number.isFinite(amount) && amount >= 0 ? amount : 30,
+  };
+}
+
+export async function saveMediaCostReminder(providerId: string, preference: MediaCostReminder) {
+  if (typeof providerId !== "string" || !providerId.trim()) throw new Error("供应商 ID 无效");
+  if (!preference || typeof preference.remindersEnabled !== "boolean" || !Number.isFinite(preference.reminderAmount) || preference.reminderAmount < 0) {
+    throw new Error("当前供应商配置格式无效");
+  }
+  const { remindersEnabled, reminderAmount } = preference;
+  await saveSettings(current => {
+    const reminders = current.mediaCostReminders;
+    if (reminders !== undefined && !isSettingsRecord(reminders)) throw new Error("媒体供应商配置格式无效");
+    const saved = reminders && Object.hasOwn(reminders, providerId) ? reminders[providerId] : undefined;
+    if (isSettingsRecord(saved) && saved.remindersEnabled === remindersEnabled && saved.reminderAmount === reminderAmount) return;
+    return { mediaCostReminders: { ...reminders, [providerId]: { remindersEnabled, reminderAmount } } };
+  });
 }
 
 export const privacySettings = computed(() => {

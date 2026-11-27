@@ -7,30 +7,31 @@
           <button
             class="settingsItem"
             type="button"
+            :title="item.label"
             :aria-label="item.id === 'about' && hasDesktopUpdate ? `${item.label}，有新版本可用` : item.label"
             :aria-pressed="activePanel.id === item.id"
             @click="activePanel = item">
             <el-badge class="panelIcon" isDot :hidden="item.id !== 'about' || !hasDesktopUpdate">
               <component :is="item.icon" :size="18" aria-hidden="true" />
             </el-badge>
-            <span>{{ item.label }}</span>
+            <span class="itemLabel">{{ item.label }}</span>
           </button>
         </template>
       </aside>
       <section class="content" :aria-label="activePanel.label" tabindex="0">
         <h2 class="panelTitle">{{ activePanel.label }}</h2>
         <div class="panelContent">
-          <transition name="el-fade-in" mode="out-in">
-            <keep-alive include="personalization">
-              <userAccount v-if="publicWeb && activePanel.id === 'account'" :request="http" :userName="currentUser?.userName ?? ''" :role="currentUser?.role" @loggedOut="loggedOut" />
-              <component
-                v-else
-                :is="activePanel.component"
-                v-bind="
-                  ['account', 'pluginMarket', 'languageModel', 'mediaModel', 'personalization', 'deviceLink'].includes(activePanel.id) ? { visible } : {}
-                " />
-            </keep-alive>
-          </transition>
+          <keep-alive include="personalization">
+            <userAccount v-if="publicWeb && activePanel.id === 'account'" :request="http" :userName="currentUser?.userName ?? ''" :role="currentUser?.role" @loggedOut="loggedOut">
+              <template #actions><providerCostSettings providerId="multiTenant" providerLabel="Toonflow" /></template>
+            </userAccount>
+            <component
+              v-else
+              :is="activePanel.component"
+              v-bind="
+                ['account', 'pluginMarket', 'languageModel', 'mediaModel', 'personalization', 'deviceLink'].includes(activePanel.id) ? { visible } : {}
+              " />
+          </keep-alive>
         </div>
       </section>
     </div>
@@ -41,6 +42,7 @@
 import { translate } from "@toonflow/i18n/vue";
 import { computed, defineAsyncComponent, shallowRef, watch } from "vue";
 import userAccount from "@toonflow/multi-tenant-user-web/account";
+import providerCostSettings from "./panels/mediaModel/providerCostSettings.vue";
 import { hasDesktopUpdate } from "@/stores/desktopUpdate";
 import { multiTenantEnabled } from "@/stores/settings";
 import { currentUser, publicWeb } from "@/stores/multiTenant";
@@ -56,7 +58,6 @@ import {
   IconUserCog,
   IconSubtitlesAi,
   IconDevices,
-  IconNetwork,
   IconUserCircle,
   IconUsersGroup,
 } from "@tabler/icons-vue";
@@ -80,7 +81,6 @@ const allSettingsPanels = [
     component: defineAsyncComponent(() => import("./panels/pluginMarket/index.vue")),
   },
   { id: "mcp", label: "MCP", icon: IconPlugConnected, groupLabel: "通讯", component: defineAsyncComponent(() => import("./panels/mcp/index.vue")) },
-  { id: "network", label: "网络设置", icon: IconNetwork, component: defineAsyncComponent(() => import("./panels/network/index.vue")) },
   ...(!isMobile
     ? [{ id: "deviceLink", label: "设备互联", icon: IconDevices, component: defineAsyncComponent(() => import("./panels/deviceLink/index.vue")) }]
     : []),
@@ -98,7 +98,7 @@ const allSettingsPanels = [
 const publicAccountPanel = { ...allSettingsPanels[0]!, get label() { return translate("账号"); } };
 const settingsPanels = computed(() => allSettingsPanels.filter(item => {
   if (publicWeb.value && currentUser.value?.role === "user") return ["account", "general", "about"].includes(item.id);
-  if (publicWeb.value && ["multiTenant", "deviceLink", "network", "mcp", "developer", "pluginMarket"].includes(item.id)) return false;
+  if (publicWeb.value && ["multiTenant", "deviceLink", "mcp", "developer", "pluginMarket"].includes(item.id)) return false;
   return !multiTenantEnabled.value || !["languageModel", "mediaModel", "developer"].includes(item.id);
 }).map(item => publicWeb.value && item.id === "account" ? publicAccountPanel : item));
 const activePanel = shallowRef(settingsPanels.value[0]!);
@@ -124,13 +124,15 @@ defineExpose({ openPanel });
 <style lang="scss" scoped>
 .settings {
   display: grid;
-  grid-template-columns: 160px minmax(0, 1fr);
+  grid-template-columns: fit-content(32%) minmax(0, 1fr);
   height: min(72vh, calc(100dvh - 140px));
   overflow: hidden;
 
   .sidebar {
+    min-width: 160px;
     min-height: 0;
     overflow-y: auto;
+    scrollbar-gutter: stable;
     padding: 2px;
 
     .settingsGroupLabel {
@@ -161,9 +163,9 @@ defineExpose({ openPanel });
         flex-shrink: 0;
       }
 
-      > span {
+      .itemLabel {
         min-width: 0;
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
       }
 
       &:hover {
@@ -203,11 +205,6 @@ defineExpose({ openPanel });
       padding-left: 5px;
       padding-right: 5px;
       padding-bottom: 50px;
-
-      > :deep(.el-fade-in-enter-active),
-      > :deep(.el-fade-in-leave-active) {
-        transition-duration: 100ms;
-      }
     }
   }
 
@@ -215,22 +212,25 @@ defineExpose({ openPanel });
     grid-template-columns: 44px minmax(0, 1fr);
 
     .sidebar {
-      .settingsGroupLabel {
-        margin: 12px 0 6px;
-        text-align: center;
+      min-width: 0;
+      scrollbar-gutter: auto;
+
+      .settingsGroupLabel, .settingsItem .itemLabel {
+        display: none;
+      }
+
+      .settingsGroupLabel + .settingsItem {
+        margin-top: 12px;
       }
 
       .settingsItem {
         justify-content: center;
-        padding: 12px;
-        span {
-          display: none;
-        }
+        padding: 12px 0;
       }
     }
 
     .content {
-      padding: 0 8px 0 16px;
+      padding-inline: 16px 8px;
     }
   }
 }

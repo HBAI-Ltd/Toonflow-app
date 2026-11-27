@@ -1,7 +1,9 @@
 <template>
   <div class="providerList">
     <div class="itemList">
-      <toonflowProviderCard scope="media" :provider="providers.find(item => item.id === 'toonflow')" />
+      <toonflowProviderCard scope="media" :provider="providers.find(item => item.id === 'toonflow')">
+        <template #actions><providerCostSettings providerId="toonflow" providerLabel="Toonflow" /></template>
+      </toonflowProviderCard>
       <el-card v-for="item in visibleProviders" :key="item.fileName" class="providerItem" shadow="never">
         <div class="providerHeader">
           <div v-if="item.icon" class="providerMark" aria-hidden="true">
@@ -22,6 +24,7 @@
             <el-text size="small" type="info">{{ item.models.length }} 个模型</el-text>
           </div>
           <el-space class="itemActions" wrap>
+            <providerCostSettings v-if="!item.loadError" :key="item.id" :providerId="item.id" :providerLabel="item.label" />
             <el-popconfirm v-if="upgradeVersion(item)" title="升级会用新版代码覆盖此供应商，自行修改的代码和模型不会保留，连接配置保留。确定升级？" width="280" confirmButtonText="升级" cancelButtonText="取消" @confirm="upgradeProvider(item)">
               <template #reference><el-button text type="warning" :icon="IconArrowUp" :loading="upgradingFile === item.fileName" :disabled="busy || !item.revision">升级</el-button></template>
             </el-popconfirm>
@@ -55,6 +58,7 @@ import { invalidateNodeModels } from "@toonflow/nodes-scaffold/nodeAi";
 import { getBuiltinSource, useBuiltinUpgrades } from "@/lib/builtinProviders";
 import { withTerminalConfirm } from "@/lib/pluginInstallConfirmation";
 import toonflowProviderCard from "../../toonflowProviderCard.vue";
+import providerCostSettings from "./providerCostSettings.vue";
 
 defineProps<{ visible?: boolean }>();
 const upgradeVersion = useBuiltinUpgrades("media");

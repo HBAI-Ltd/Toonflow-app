@@ -121,7 +121,7 @@ jobs:
             "",
             "## 🚀 安装说明",
             "",
-            "- 💻 **Windows**：双击下载的安装包，按提示完成安装。ARM64 需要 .NET Framework 4.8.1，较新的 Windows 11 已内置。",
+            "- 💻 **Windows**：双击下载的安装包，按提示完成安装。",
             "- 🍎 **Mac（macOS 14 及以上）**：双击下载的 `.pkg`，按提示继续安装；安装期间会自动下载并准备必要运行时，完成后从“应用程序”打开 Toonflow。",
             "- 🐧 **Linux（Debian / Ubuntu）**：选择对应架构的 DEB，在下载目录执行 `sudo apt install ./toonflow-版本号-linux-架构.deb`。安装后可在「设置 → 关于」更新；使用 2.0.10 的用户需先手动覆盖安装一次。",
             "- 📱 **Android**：在手机上打开 APK，按系统提示允许此来源安装应用。后续版本可直接覆盖安装。",
@@ -146,7 +146,7 @@ jobs:
           files: artifacts/*
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.3
+          bun-version: 1.4.5
       - name: 上传到更新托管网站
         timeout-minutes: 60
         env:
@@ -205,15 +205,29 @@ jobs:
             if (typeof archiveName !== "string" || !archiveName.startsWith(prefix) || !archiveName.endsWith(".tar.zst") || !names.includes(archiveName)) {
               throw new Error(`${manifestName} 引用的完整更新包不存在`);
             }
-            const fileNames = [installers[0]!, archiveName, ...names.filter(name => name.startsWith(prefix) && name.endsWith(".patch")), manifestName];
+            const fileNames = [installers[0]!, archiveName, ...names.filter(name => name.startsWith(prefix) && name.endsWith(".patch"))];
+            const checksumName = `${prefix}checksum.json`;
+            if (names.includes(checksumName)) fileNames.push(checksumName);
+            fileNames.push(manifestName);
             for (const name of fileNames) {
               if (!Bun.file(join("artifacts", name)).size) throw new Error(`构建产物为空：${name}`);
             }
-            if (target.platform === "linux" && (manifest.deb?.file !== installers[0] || !/^[a-zA-Z0-9]+$/.test(manifest.hash))) {
-              throw new Error(`${manifestName} 的 Debian 安装包或构建号无效`);
+            let installerAlias: string | undefined;
+            if (target.platform === "linux" || (target.platform === "macos" && manifest.pkg !== undefined)) {
+              const format = target.platform === "linux" ? "deb" : "pkg";
+              const asset = manifest[format];
+              if (asset?.file !== installers[0] || typeof manifest.hash !== "string" || !/^[a-zA-Z0-9]+$/.test(manifest.hash)) {
+                throw new Error(`${manifestName} 的安装包或构建号无效`);
+              }
+              if (format === "pkg") {
+                const pkg = Bun.file(join("artifacts", asset.file));
+                const digest = new Bun.CryptoHasher("sha256");
+                for await (const chunk of pkg.stream()) digest.update(chunk);
+                if (pkg.size !== asset.size || digest.digest("hex") !== asset.sha256) throw new Error(`${asset.file} 与更新清单不一致`);
+              }
+              installerAlias = `${prefix}${manifest.hash}.${format}`;
             }
-            const debAlias = target.platform === "linux" ? `${prefix}${manifest.hash}.deb` : undefined;
-            return { ...target, fileNames, debAlias };
+            return { ...target, fileNames, installerAlias };
           }));
           const plannedNames = new Set(plans.flatMap(plan => plan.fileNames));
           if (names.some(name => !plannedNames.has(name))) throw new Error("存在无法归属到发布平台的构建产物");
@@ -281,7 +295,7 @@ jobs:
             }
             const [application, ...files] = uploadedFiles;
             // 官网更新路由只查带渠道及架构前缀的 files；别名复用安装包对象，不重复上传。
-            if (plan.debAlias) files.push({ ...application!, fileName: plan.debAlias });
+            if (plan.installerAlias) files.push({ ...application!, fileName: plan.installerAlias });
             return { platform: plan.platform, arch: plan.arch, applicationPath: application!.fileUrl, files };
           })).catch(error => {
             uploadController.abort();

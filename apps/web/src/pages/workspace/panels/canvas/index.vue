@@ -2,13 +2,14 @@
   <div
     ref="canvasElement"
     class="canvas"
-    :class="{ canvasUnselected: !canvasId, edgesHidden: !showEdges, handMode, multiSelectionMode: flow.multiSelectionActive.value, compositingEnabled: generalSettings.canvasCompositingEnabled }"
+    :class="{ canvasUnselected: !canvasId, edgesHidden: !showEdges, handMode, movingSelectionViewport, selectionLinkVisible, multiSelectionMode: flow.multiSelectionActive.value, compositingEnabled: generalSettings.canvasCompositingEnabled }"
     :style="{ '--canvasEdgeColor': generalSettings.canvasEdgeColorMode === 'custom' ? generalSettings.canvasEdgeColor : 'var(--el-color-primary)' }"
     @dblclick="openNodeMenu"
     @wheel.capture="zoomCanvas"
     @gesturestart.capture="zoomCanvas"
     @gesturechange.capture="zoomCanvas"
     @gestureend.capture="zoomCanvas"
+    @pointerover.capture="touchInput = isMobile || $event.pointerType === 'touch'"
     @pointerdown.capture="updateCanvasSelection"
     @click.capture="updateCanvasSelection"
     @auxclick.capture="preventMiddleClick"
@@ -18,6 +19,7 @@
     @drop="dropFiles">
     <vue-flow
       :id="runtimeKey"
+      :class="{ connectingFromSource: flow.connectionStartHandle.value?.type === 'source' }"
       :only-render-visible-elements="false"
       :nodes-draggable="true"
       :node-types="nodeTypes"
@@ -39,10 +41,10 @@
       :zoomOnPinch="active && !settingsVisible"
       :panOnScroll="active && !settingsVisible && !defaultWheelZoom"
       :panOnScrollSpeed="1"
-      :panOnDrag="handMode || isMobile ? true : defaultDragPan ? [0, 1] : [1]"
+      :panOnDrag="panOnDrag"
       :panOnScrollMode="PanOnScrollMode.Free"
       :delete-key-code="null"
-      :selectionKeyCode="active && !settingsVisible && !handMode && !isMobile && selectionKeyPressed"
+      :selectionKeyCode="active && !settingsVisible && !handMode && (selectMode || !touchInput && selectionKeyPressed)"
       :selectionMode="SelectionMode.Partial"
       :multi-selection-key-code="null"
       :zoomActivationKeyCode="zoomKeyPressed ? true : null"
@@ -69,18 +71,22 @@
         :availableNodes="availableNodes"
         @create="createEmptyNode" />
       <canvasViewportHint v-if="active && !settingsVisible && project?.directory && canvasReady" :key="canvasId" />
-      <canvasMenu ref="canvasMenuRef" v-model:canvasId="canvasId" :directory="project?.directory" :initialCanvasId="initialCanvasId" :activateCanvas="activateCanvas" :flushSave="flushCanvases ?? flushCanvasSave">
+      <canvasMenu ref="canvasMenuRef" v-model:canvasId="canvasId" :directory="project?.directory" :initialCanvasId="initialCanvasId" :activateCanvas="activateCanvas" :flushSave="flushCanvases ?? flushCanvasSave" :getSnapshot="mediaResults.getSnapshot">
         <assetLibrary v-if="currentUser?.role !== 'user'" ref="assetLibraryRef" v-model="assetsVisible" :directory="project?.directory" />
       </canvasMenu>
       <canvasControls
         v-if="canvasId"
         ref="canvasControlsRef"
         v-model:assetsVisible="assetsVisible"
+        v-model:selectedTool="selectedTool"
         v-model:snapEnabled="snapEnabled"
         v-model:showEdges="showEdges"
+        :active="active"
+        :ready="canvasReady && !settingsVisible && active"
         :canvasId="canvasId"
         :directory="project?.directory"
         :batchHistory="canvasHistory.batch"
+        @search="nodeSearchRef?.open()"
         @update:showEdges="edgeDisconnect = undefined" />
       <nodeMenu
         :key="JSON.stringify(['nodeMenu', project?.directory, canvasId])"
@@ -103,11 +109,21 @@
         ref="selectionToolbarRef"
         :batchHistory="canvasHistory.batch"
         :getSignal="() => canvasController.signal"
-        :disabled="!canvasId || !project?.directory" />
+        :canDelete="canDeleteSelection"
+        :disabled="!canvasId || !project?.directory || nodeMenuRef?.deleting"
+        @deleteSelection="deleteSelectedNodes" />
       <nodeSearch ref="nodeSearchRef" :disabled="!active || settingsVisible || !canvasId || !project?.directory" />
     </vue-flow>
     <el-dialog v-if="currentUser?.role !== 'user'" :modelValue="!!(assetSelection || assetPick)" class="referenceAssetDialog" title="全局素材库" width="min(1200px, 88vw)" alignCenter appendToBody destroyOnClose @update:modelValue="finishAssetSelection(); finishAssetPick()">
-      <assetLibrary :modelValue="!!(assetSelection || assetPick)" expanded :canSelect="canSelectAsset" :selecting="assetSelecting" @select="selectAsset" />
+      <assetLibrary :modelValue="!!(assetSelection || assetPick)" expanded :canSelect="canSelectAsset" :selecting="assetSelecting"
+        :accept="assetPick?.accept" :selectionOrder="selectionOrder" @select="selectAsset" />
+      <template v-if="assetPick?.multiple" #footer>
+        <div class="assetPickFooter">
+          <span aria-live="polite">{{ t`已选 ${pickedEntries.length} 项` }}</span>
+          <el-button @click="finishAssetPick()">取消</el-button>
+          <el-button type="primary" :loading="assetSelecting" :disabled="!pickedEntries.length" @click="readPickedAssets(assetPick, pickedEntries)">确定</el-button>
+        </div>
+      </template>
     </el-dialog>
     <teleport to="body">
       <el-button
@@ -159,6 +175,7 @@ import { useCanvasTools } from "./useCanvasTools";
 import type { CanvasContext } from "@toonflow/tool-canvas/runtime";
 import { loadNodeComponent } from "./loadNodeComponent";
 import { useCanvasHistory } from "./useCanvasHistory";
+import { useMediaToolResults } from "./useMediaToolResults";
 import { copyNodeToClipboard, copyNodesToClipboard, nodeClipboardCommand, readClipboardNodes } from "./nodeClipboard";
 import { remapNodeReferences } from "./canvasFiles";
 import { readClipboardFiles, readClipboardText, writeClipboardImage } from "@/lib/clipboard";
@@ -175,7 +192,8 @@ import nodeSearch from "./components/nodeSearch.vue";
 import { finishGroupDrag, fitGroupBounds, getSelectionTree } from "./selectionNodes";
 import type { NodeOutput } from "@toonflow/nodes-scaffold/values";
 import { getAssetOutputs, validateConnection, type NodeConnectionFeedback, type NodeHandle } from "@toonflow/nodes-scaffold/connection";
-import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
+import { acceptsMediaFile, getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
+import type { PickNodeAssets } from "@toonflow/nodes-scaffold/runtime";
 import { useNodeEvent } from "@toonflow/nodes-scaffold/nodeEvent";
 import type { NodeDocumentContext, NodeDocumentState } from "@toonflow/nodes-scaffold/nodeDocument";
 import { useNodeToolsContext } from "@toonflow/nodes-scaffold/nodeTools";
@@ -185,7 +203,7 @@ import { generalSettings, settingsStorage } from "@/stores/settings";
 import { getShortcutBindings, shortcutLabel, shortcutMatches, shortcutPressed } from "@/lib/canvasShortcuts";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
 import anonymousData from "@/lib/anonymousData";
-import { createClipboardMediaFile, dropCanvasFiles, getCanvasFileType, getClipboardMediaFiles, importCanvasFiles, isCanvasFileDrag } from "./canvasDrop";
+import { createClipboardMediaFile, dropCanvasFiles, getCanvasFileType, getClipboardMediaFiles, importCanvasFiles, importCanvasSource, isCanvasFileDrag } from "./canvasDrop";
 import "@vue-flow/core/dist/style.css";
 import "@vue-flow/core/dist/theme-default.css";
 import "@vue-flow/minimap/dist/style.css";
@@ -196,7 +214,7 @@ const props = withDefaults(defineProps<{
   runtimeKey?: string;
   initialCanvasId?: string;
   activateCanvas?: (canvasId: string, signal?: AbortSignal) => Promise<void>;
-  resolveCanvasContext?: (canvasId: string) => CanvasContext | undefined;
+  resolveCanvasContext?: (canvasId: string, signal?: AbortSignal) => Promise<CanvasContext | undefined>;
   flushCanvases?: (action?: () => Promise<void>) => Promise<void>;
 }>(), { active: true, settingsVisible: false });
 const { project } = storeToRefs(useWorkspaceStore());
@@ -227,9 +245,15 @@ const zoomKeyPressed = ref(false);
 const panKeyPressed = ref(false);
 const selectionKeyPressed = ref(false);
 const defaultWheelZoom = computed(() => getShortcutBindings(generalSettings.value.canvasShortcuts.zoom).includes("None"));
+const wheelZoomShortcut = computed(() => getShortcutBindings(generalSettings.value.canvasShortcuts.zoom).filter(binding => binding !== "None").join(" / "));
 const defaultDragPan = computed(() => getShortcutBindings(generalSettings.value.canvasShortcuts.pan).includes("None"));
-const selectedTool = defineModel<"move" | "hand">("selectedTool", { default: "move" });
+const selectedTool = defineModel<"move" | "hand" | "select">("selectedTool", { default: "move" });
 const handMode = computed(() => props.active && !props.settingsVisible && (selectedTool.value === "hand" || panKeyPressed.value));
+const selectMode = computed(() => selectedTool.value === "select");
+// ACT: pointerover 先于 pointerdown 单独派发，Vue Flow 在按下前已拿到新的拖动配置；触屏单指默认平移画布。
+const touchInput = ref(isMobile);
+// ACT: 框选工具下单指用于框选，Vue Flow 会拒绝触摸平移和双指缩放；需要缩放时切回移动工具。
+const panOnDrag = computed(() => handMode.value || (touchInput.value && !selectMode.value) ? true : !selectMode.value && defaultDragPan.value ? [0, 1] : [1]);
 let pointerPosition: XYPosition | undefined;
 const pressedCodes = new Set<string>();
 let gestureScale: number | undefined;
@@ -239,6 +263,12 @@ const assetsVisible = ref(false);
 const assetLibraryRef = ref<InstanceType<typeof assetLibrary>>();
 const edgeDisconnect = ref<{ id: string; x: number; y: number }>();
 const flow = useVueFlow(props.runtimeKey);
+const mediaResults = useMediaToolResults(flow);
+const persistentNodes = computed<GraphNode[]>((previous) => {
+  const nodes = flow.nodes.value.filter(mediaResults.isPersistent);
+  return previous?.length === nodes.length && nodes.every((node, index) => node === previous[index]) ? previous : nodes;
+});
+const findPersistentNode = (id: string) => mediaResults.pending.has(id) ? undefined : flow.findNode(id);
 const nodeDocument: NodeDocumentContext = { targets: shallowReactive(new Map()), mounts: new Map(), states: shallowReactive(new Map()) };
 const canvasDirty = ref(false);
 const canvasSaveError = ref("");
@@ -255,7 +285,7 @@ flow.onNodeDragStart(({ event, nodes }) => {
   const shortcuts = generalSettings.value.canvasShortcuts;
   const withEdges = shortcutPressed(event, shortcuts.duplicateOnDrag, pressedCodes);
   if (withEdges || shortcutPressed(event, shortcuts.copyOnDrag, pressedCodes)) {
-    dragCopy = selectionToolbarRef.value?.startDragCopy(nodes, withEdges);
+    dragCopy = selectionToolbarRef.value?.startDragCopy(nodes.filter(mediaResults.isPersistent), withEdges);
   }
 });
 flow.onNodeDrag(() => dragCopy?.update());
@@ -263,9 +293,9 @@ flow.onNodeDragStop(({ nodes }) => {
   const copy = dragCopy;
   dragCopy = undefined;
   if (copy) copy.finish();
-  else finishGroupDrag(flow.getNodes.value, nodes);
+  else finishGroupDrag(flow.getNodes.value, nodes.filter(mediaResults.isPersistent));
 });
-const canvasHistory = useCanvasHistory(flow, () =>
+const canvasHistory = useCanvasHistory(flow, mediaResults.isPersistent, () =>
   project.value?.directory && canvasId.value ? JSON.stringify([project.value.directory, canvasId.value]) : ""
 );
 const { canUndo, canRedo } = canvasHistory;
@@ -280,6 +310,17 @@ provide("copyNodeToClipboard", async (node: Parameters<typeof copyNodeToClipboar
 });
 provide("retainNodeFiles", true);
 provide("selectionConnection", shallowRef<NodeConnectionFeedback>());
+const selectionLinkVisible = shallowRef(false);
+provide("selectionLinkVisible", selectionLinkVisible);
+// 素材菜单的「插入到画布」：代替触屏上不可用的原生拖放，放到当前视口中心。
+provide("insertCanvasAsset", async (path: string) => {
+  const directory = project.value?.directory;
+  const rect = canvasElement.value?.getBoundingClientRect();
+  if (!props.active || props.settingsVisible || !canvasId.value || !directory || !rect) return;
+  const position = screenToFlowCoordinate({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+  const context = { directory, availableNodes: availableNodes.value, signal: canvasController.signal, flow };
+  await canvasHistory.batch(() => importCanvasSource(path, [], position, context));
+});
 provide("saveNodeToAssets", currentUser.value?.role === "user" ? undefined : (label: string, outputs: { label: string; output: NodeOutput }[]) => assetLibraryRef.value?.openSave([{ label, outputs }]));
 function saveSelectionToAssets(selection: GraphNode[]) {
   const nodes = getSelectionTree(selection, flow.getNodes.value).flatMap(node => {
@@ -322,41 +363,54 @@ watch(() => assetSelection.value && (!props.active || props.settingsVisible || a
 });
 onScopeDispose(() => finishAssetSelection());
 
-// 节点从素材库选取文件：只返回文件内容，由节点按自己的上传流程写入工作区。
-type AssetPick = { target: GraphNode; kind: "image" | "video" | "audio"; controller: AbortController; signal: AbortSignal; resolve: (file?: File) => void };
+type PickedEntry = { name: string; path: string; type: string };
+type AssetPick = { target: GraphNode; accept: string; multiple: boolean; controller: AbortController; signal: AbortSignal; resolve: (files: File[]) => void };
 const assetPick = shallowRef<AssetPick>();
-provide("pickNodeAsset", currentUser.value?.role === "user" ? undefined : (targetId: string, kind: AssetPick["kind"]) => {
+const pickedEntries = shallowRef<PickedEntry[]>([]);
+const selectionOrder = computed(() => assetPick.value?.multiple ? new Map(pickedEntries.value.map((entry, index) => [entry.path, index + 1])) : undefined);
+const pickNodeAssets: PickNodeAssets = (targetId, accept, multiple = false, callerSignal) => {
+  const target = findNode(targetId);
+  if (!target || currentUser.value?.role === "user" || !props.active || !canvasId.value || callerSignal?.aborted) return Promise.resolve([]);
   finishAssetSelection();
   finishAssetPick();
-  const target = findNode(targetId);
-  if (!target || !props.active || !canvasId.value) return Promise.resolve(undefined);
-  return new Promise<File | undefined>(resolve => {
+  return new Promise<File[]>(resolve => {
     const controller = new AbortController();
-    const signal = AbortSignal.any([controller.signal, canvasController.signal, workspaceController.signal]);
-    assetPick.value = { target, kind, controller, signal, resolve };
+    const signals = [controller.signal, canvasController.signal, workspaceController.signal];
+    if (callerSignal) signals.push(callerSignal);
+    const signal = AbortSignal.any(signals);
+    if (signal.aborted) { resolve([]); return; }
+    assetPick.value = { target, accept, multiple, controller, signal, resolve };
     signal.addEventListener("abort", () => {
       if (assetPick.value?.signal === signal) finishAssetPick();
     }, { once: true });
   });
-});
-function finishAssetPick(file?: File) {
+};
+provide("pickNodeAssets", currentUser.value?.role === "user" ? undefined : pickNodeAssets);
+provide("pickNodeAsset", currentUser.value?.role === "user" ? undefined : async (id: string, kind: "image" | "video" | "audio") => (await pickNodeAssets(id, `${kind}/*`))[0]);
+function finishAssetPick(files: File[] = []) {
   const pick = assetPick.value;
   assetPick.value = undefined;
+  pickedEntries.value = [];
   assetSelecting.value = false;
   pick?.controller.abort();
-  pick?.resolve(file);
+  pick?.resolve(files);
 }
-watch(() => assetPick.value && (!props.active || props.settingsVisible || findNode(assetPick.value.target.id) !== assetPick.value.target), invalid => {
+watch(() => assetPick.value && (!props.active || props.settingsVisible || currentUser.value?.role === "user" || findNode(assetPick.value.target.id) !== assetPick.value.target), invalid => {
   if (invalid) finishAssetPick();
 });
 onScopeDispose(() => finishAssetPick());
 
-async function pickAssetFile(pick: AssetPick, entry: { name: string; path: string; type: string }) {
-  if (assetSelecting.value || !canSelectAsset(entry)) return;
+async function readPickedAssets(pick: AssetPick, entries: PickedEntry[]) {
+  if (pick !== assetPick.value || assetSelecting.value || !entries.length || !entries.every(canSelectAsset)) return;
   assetSelecting.value = true;
   try {
-    const { data } = await axios.get<Blob>("/api/assets/read", { params: { path: entry.path }, responseType: "blob", signal: pick.signal });
-    if (assetPick.value === pick) finishAssetPick(new File([data], entry.name, { type: data.type }));
+    const files: File[] = [];
+    for (const entry of entries) {
+      const { data, headers } = await axios.get<ArrayBuffer>("/api/assets/read", { params: { path: entry.path }, responseType: "arraybuffer", signal: pick.signal });
+      pick.signal.throwIfAborted();
+      files.push(new File([data], entry.name, { type: getMediaMimeType({ name: entry.name, type: String(headers["content-type"] || "") }) }));
+    }
+    if (assetPick.value === pick) finishAssetPick(files);
   } catch (error) {
     if (!pick.signal.aborted) ElMessage.error(axios.isAxiosError<{ message: string }>(error) ? error.response?.data.message || error.message : (error as Error).message);
   } finally {
@@ -376,19 +430,24 @@ function assetConnection(type: string, selection: AssetSelection, source?: Graph
 
 function canSelectAsset(entry: { name: string; type: string }) {
   const pick = assetPick.value;
-  if (pick) return entry.type === "file" && getMediaMimeType({ name: entry.name, type: "" }).startsWith(`${pick.kind}/`);
+  if (pick) return entry.type === "file" && acceptsMediaFile(pick.accept, { name: entry.name, type: "" });
   const selection = assetSelection.value;
   const { type } = getCanvasFileType({ name: entry.name, type: "" });
   return !!selection && entry.type === "file" && !!type && availableNodes.value.some(node => node.type === type) && !!assetConnection(type, selection);
 }
 
-async function selectAsset(entry: { name: string; path: string; type: string }) {
-  if (assetPick.value) return pickAssetFile(assetPick.value, entry);
+async function selectAsset(entry: PickedEntry) {
+  if (assetPick.value) {
+    if (assetSelecting.value || !canSelectAsset(entry)) return;
+    if (!assetPick.value.multiple) return readPickedAssets(assetPick.value, [entry]);
+    pickedEntries.value = selectionOrder.value?.has(entry.path) ? pickedEntries.value.filter(item => item.path !== entry.path) : [...pickedEntries.value, entry];
+    return;
+  }
   const selection = assetSelection.value;
   if (!selection || assetSelecting.value || !canSelectAsset(entry)) return;
   assetSelecting.value = true;
   try {
-    const { data } = await axios.get<Blob>("/api/assets/read", { params: { path: entry.path }, responseType: "blob", signal: selection.signal });
+    const { data, headers } = await axios.get<ArrayBuffer>("/api/assets/read", { params: { path: entry.path }, responseType: "arraybuffer", signal: selection.signal });
     selection.signal.throwIfAborted();
     await canvasHistory.batch(async () => {
       let importedId: string | undefined;
@@ -397,7 +456,7 @@ async function selectAsset(entry: { name: string; path: string; type: string }) 
       const target = selection.target;
       const position = { x: target.computedPosition.x - 440, y: target.computedPosition.y };
       try {
-        [importedId] = await importCanvasFiles([new File([data], entry.name, { type: data.type })], position, {
+        [importedId] = await importCanvasFiles([new File([data], entry.name, { type: String(headers["content-type"] || "") })], position, {
           directory: selection.directory, availableNodes: availableNodes.value, signal: selection.signal, flow,
         });
         if (!importedId) return;
@@ -430,6 +489,8 @@ async function selectAsset(entry: { name: string; path: string; type: string }) 
 }
 const { createCanvasContext, getNodeRevision } = useCanvasTools({
   availableNodes,
+  nodes: persistentNodes,
+  findNode: findPersistentNode,
   flushSave: flushCanvasSave,
   async reloadPlugin(type, name) {
     const event = new CustomEvent("toonflow:plugin-installed", { detail: { type, name } });
@@ -443,12 +504,14 @@ const { createCanvasContext, getNodeRevision } = useCanvasTools({
     return canvasMenuRef.value;
   },
   getCanvasBinding: () => ({ id: canvasId.value, signal: canvasController.signal }),
-  resolveCanvasContext: id => props.resolveCanvasContext?.(id),
+  resolveCanvasContext: async (id, signal) => props.resolveCanvasContext?.(id, signal),
 });
 function getCanvasContext() {
   return canvasId.value || canvasMenuRef.value?.initialized ? createCanvasContext(canvasId.value, canvasController.signal, workspaceController.signal) : undefined;
 }
 const canvasReady = computed(() => !!canvasId.value && !nodeListLoading.value && nodeLoads.size === 0);
+const canDeleteSelection = computed(() => props.active && !props.settingsVisible && canvasReady.value
+  && flow.getSelectedNodes.value.some(node => node.deletable !== false));
 provide("canvas", getCanvasContext);
 provide("nodePersistence", () => {
   const directory = project.value?.directory;
@@ -473,14 +536,14 @@ provide("nodePersistence", () => {
     },
   };
 });
-defineExpose({ canvasId, canvasReady, getCanvasContext, addNodeAtPointer, readDocumentNode, saveDocumentNode, mountDocumentNode, observeDocumentNode, prepareCanvasDelete, flushSave: flushCanvasSave, cancelSave: cancelCanvasSave,
+defineExpose({ canvasId, canvasReady, assetsVisible, getCanvasContext, addNodeAtPointer, readDocumentNode, saveDocumentNode, mountDocumentNode, observeDocumentNode, prepareCanvasDelete, flushSave: flushCanvasSave, cancelSave: cancelCanvasSave,
   openNodeSearch: () => nodeSearchRef.value?.open(),
   getCanvases: (signal?: AbortSignal) => {
     if (!canvasMenuRef.value) throw new Error("画布菜单尚未就绪");
     return canvasMenuRef.value.getCanvases(signal);
   },
   syncCanvasPath: (previous: string, target: string) => canvasMenuRef.value?.syncCanvasPath(previous, target),
-  getMentionNodes: () => flow.nodes.value, findMentionNode: flow.findNode,
+  getMentionNodes: () => persistentNodes.value, findMentionNode: findPersistentNode,
   getMentionRevision: () => `${props.runtimeKey}:${getNodeRevision()}`,
   getRetainedNodes: canvasHistory.getRetainedNodes,
   get canvasListReady() { return canvasMenuRef.value?.initialized ?? false; },
@@ -490,7 +553,7 @@ defineExpose({ canvasId, canvasReady, getCanvasContext, addNodeAtPointer, readDo
 async function prepareCanvasDelete() {
   const directory = project.value?.directory;
   const fileName = canvasId.value;
-  const nodes = [...flow.getNodes.value];
+  const nodes = [...persistentNodes.value];
   const signal = AbortSignal.any([workspaceController.signal, canvasController.signal]);
   function checkCanvas() {
     signal.throwIfAborted();
@@ -508,7 +571,7 @@ async function prepareCanvasDelete() {
     checkCanvas();
     if (flow.findNode(node.id) !== node) throw new Error("画布节点已变化，请重新删除");
   }
-  if (flow.getNodes.value.length !== nodes.length || nodes.some(node => flow.findNode(node.id) !== node)) {
+  if (persistentNodes.value.length !== nodes.length || nodes.some(node => flow.findNode(node.id) !== node)) {
     throw new Error("画布节点已变化，请重新删除");
   }
 }
@@ -743,7 +806,7 @@ let saveCancelled = false;
 let changedWhilePaused = false;
 let saveRevision = 0;
 const saveCanvas = debounce((directory: string, fileName: string) => {
-  const flow = toObject();
+  const flow = mediaResults.getSnapshot();
   const revision = saveRevision;
   // ACT: 同页保存按顺序完成，防止慢请求覆盖后续修改；不处理多个客户端的并发编辑。
   saving = saving.then(async () => {
@@ -798,8 +861,9 @@ const nodeRuntimeFields = new Set([
 const edgeRuntimeFields = new Set(["data", "selected", "sourceNode", "targetNode", "sourceX", "sourceY", "targetX", "targetY", "events"]);
 // ACT: 仅增删、替换元素时扫描列表；位移与 data 各自监听，单个节点变化不遍历其余节点。
 watch(
-  () => [...flow.nodes.value, ...flow.edges.value],
-  (elements) => {
+  () => [...persistentNodes.value, ...flow.edges.value.filter(mediaResults.isPersistent)],
+  (elements, previous) => {
+    if (previous?.length === elements.length && elements.every((item, index) => item === previous[index])) return;
     const current = new Set<Node | Edge>(elements);
     for (const [element, stop] of elementSaveWatchers) {
       if (!current.has(element)) {
@@ -870,7 +934,16 @@ watch(
   { immediate: true, flush: "post" }
 );
 onScopeDispose(() => elementSaveWatchers.forEach((stop) => stop()));
-watch(() => [viewport.value.x, viewport.value.y, viewport.value.zoom], scheduleCanvasSave, { flush: "post" });
+const movingSelectionViewport = ref(false);
+const resumeEdgeAnimations = debounce(() => { movingSelectionViewport.value = false; }, 150);
+watch(() => [viewport.value.x, viewport.value.y, viewport.value.zoom], () => {
+  scheduleCanvasSave();
+  if (flow.getSelectedNodes.value.length > 1) {
+    movingSelectionViewport.value = true;
+    resumeEdgeAnimations();
+  }
+}, { flush: "post" });
+onScopeDispose(resumeEdgeAnimations.cancel);
 
 watch(
   [() => project.value?.directory, canvasId],
@@ -885,6 +958,7 @@ watch(
     resetCanvasKeys();
     // 同一实例只在重新装载画布时失效；重命名仅更新保存路径。
     if (directory !== previousDirectory || !fileName || !previousFileName) {
+      mediaResults.cancelAll();
       canvasController.abort(new Error("画布已重新加载，本次画布调用已停止"));
       canvasController = new AbortController();
     }
@@ -914,7 +988,7 @@ function flushCanvasSave(action?: () => Promise<void>): Promise<void> {
 
 async function saveCanvasState(action?: () => Promise<void>) {
   if (saveCancelled) throw new Error("画布保存已取消");
-  await Promise.all(flow.getNodes.value.map((node) => useNodeEvent(node.id, flow).emit("save")));
+  await Promise.all(persistentNodes.value.map((node) => useNodeEvent(node.id, flow).emit("save")));
   await nextTick();
   if (saveCancelled) throw new Error("画布保存已取消");
   if (saveError && project.value?.directory && canvasId.value) saveCanvas(project.value.directory, canvasId.value);
@@ -936,7 +1010,7 @@ async function saveCanvasState(action?: () => Promise<void>) {
       // 否则每次保存都改数据的节点会让循环永不结束。最后一次保存事件带来的改动交给自动保存落盘。
       changed = revision !== saveRevision;
       // 画布写入期间节点可能完成生成，等新增落盘后重新保存变化。
-      await Promise.all(flow.getNodes.value.map((node) => useNodeEvent(node.id, flow).emit("save")));
+      await Promise.all(persistentNodes.value.map((node) => useNodeEvent(node.id, flow).emit("save")));
       await nextTick();
     } while (changed);
     if (saveCancelled) throw new Error("画布保存已取消");
@@ -1132,12 +1206,14 @@ function zoomCanvas(event: WheelEvent | (Event & { scale: number })) {
     factor = event.type === "gesturechange" && gestureScale !== undefined ? event.scale / gestureScale : 1;
     gestureScale = event.type === "gestureend" ? undefined : event.scale;
   } else {
-    // ACT: Chromium 捏合发送 Ctrl+wheel，但不发送 Control 按键；WebKit 使用上方原生 gesture 事件。
-    const pinching = event.ctrlKey && !pressedCodes.has("ControlLeft") && !pressedCodes.has("ControlRight");
-    // 无需按键的滚轮缩放让节点控件保留自己的滚动；显式缩放快捷键及捏合仍沿用原行为。
-    if (defaultWheelZoom.value && !pinching && !zoomKeyPressed.value
+    // ACT: 失焦时收不到实体 Ctrl 的按键事件，悬停收到的 Ctrl+滚轮按普通步长处理。WebKit 仍以原生手势为准。
+    const pinching = event.ctrlKey && (gestureScale !== undefined
+      || document.hasFocus() && !pressedCodes.has("ControlLeft") && !pressedCodes.has("ControlRight"));
+    const explicitZoom = shortcutPressed(event, wheelZoomShortcut.value, pressedCodes);
+    // 默认滚轮缩放时保留控件自己的滚动，Ctrl+滚轮由画布统一处理，避免节点再次放大步长。
+    if (defaultWheelZoom.value && !event.ctrlKey && !explicitZoom
       && event.target.closest(".nowheel, input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='slider']")) return;
-    if (!pinching && !shortcutPressed(event, generalSettings.value.canvasShortcuts.zoom, pressedCodes)) {
+    if (!pinching && !defaultWheelZoom.value && !explicitZoom) {
       if (!event.ctrlKey) return;
       // 实体 Ctrl 未绑定缩放时，阻止 Vue Flow 和节点骨架将它误判为捏合。
       factor = 1;
@@ -1171,8 +1247,20 @@ function preventMiddleClick(event: MouseEvent) {
 function updateCanvasSelection(event: MouseEvent | KeyboardEvent) {
   // 失焦期间可能漏掉修饰键；不能在按下到抬起之间改变已命中的选区，避免 click 落到画布清空选择。
   if (event.type === "pointerdown" && event.target instanceof Element && event.target.closest(".vue-flow__nodesselection-rect")) return;
+  // 框选工具下点击节点即追加或取消选择，代替触屏无法按住的追加选择键。
   flow.multiSelectionActive.value = props.active && !props.settingsVisible && !handMode.value
-    && shortcutPressed(event, generalSettings.value.canvasShortcuts.multiSelection, pressedCodes);
+    && (selectMode.value || shortcutPressed(event, generalSettings.value.canvasShortcuts.multiSelection, pressedCodes));
+}
+
+async function deleteSelectedNodes() {
+  const menu = nodeMenuRef.value;
+  if (!menu || menu.deleting || !canDeleteSelection.value || selectionToolbarRef.value?.busy) return;
+  const nodes = [...flow.getSelectedNodes.value];
+  try {
+    await canvasHistory.batch(() => menu.deleteSelection(nodes));
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : "节点删除失败");
+  }
 }
 
 function updateCanvasKeys(event: KeyboardEvent) {
@@ -1187,7 +1275,7 @@ function updateCanvasKeys(event: KeyboardEvent) {
     !target.closest("[role='dialog'], #agentPanel") &&
     (target === document.body || target === document.documentElement || canvasElement.value?.contains(target));
   // None 只配置默认鼠标手势，不能触发会禁用节点交互的临时抓手或节点内部缩放。
-  zoomKeyPressed.value = !event.isComposing && shortcutPressed(event, getShortcutBindings(shortcuts.zoom).filter(binding => binding !== "None").join(" / "), pressedCodes);
+  zoomKeyPressed.value = !event.isComposing && shortcutPressed(event, wheelZoomShortcut.value, pressedCodes);
   selectionKeyPressed.value = !event.isComposing && shortcutPressed(event, shortcuts.selection, pressedCodes);
   if (!selectionKeyPressed.value && !flow.userSelectionActive.value) flow.userSelectionRect.value = null;
   const editing =
@@ -1215,18 +1303,8 @@ function updateCanvasKeys(event: KeyboardEvent) {
   if (!actualPlatform.isDesktop && action === "paste" && event.code === "KeyV" && (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey) return;
   event.preventDefault();
   if (event.repeat) return;
-  if (action === "delete") {
-    const nodes = [...flow.getSelectedNodes.value];
-    const menu = nodeMenuRef.value;
-    if (!menu || !nodes.some((node) => node.deletable !== false)) return;
-    void canvasHistory
-      .batch(() => menu.deleteSelection(nodes))
-      .catch((error) => {
-        ElMessage.error(error instanceof Error ? error.message : "节点删除失败");
-      });
-    return;
-  }
-  if (action === "copy") void copySelectedNodes();
+  if (action === "delete") void deleteSelectedNodes();
+  else if (action === "copy") void copySelectedNodes();
   else if (action === "paste") void pasteNodeAtCenter();
   else if (action === "undo" || action === "redo") void changeHistory(action);
   else if (action === "group" || action === "mergeGroup" || action === "ungroup") {
@@ -1281,6 +1359,7 @@ onBeforeUnmount(() => {
   document.removeEventListener("beforepaste", beforeClipboard);
   workspaceController.abort(new Error("工作区已关闭"));
   canvasController.abort(new Error("画布已关闭"));
+  mediaResults.cancelAll();
   saveCanvas.flush();
   loadRequest++;
 });
@@ -1449,6 +1528,14 @@ const defaultEdgeOptions = markRaw({
   overflow: hidden;
 }
 
+.assetPickFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  span { margin-inline-end: auto; color: var(--el-text-color-secondary); }
+  :deep(.el-button + .el-button) { margin-left: 0; }
+}
+
 .canvas {
   width: 100%;
   height: 100%;
@@ -1498,7 +1585,19 @@ const defaultEdgeOptions = markRaw({
     stroke: var(--canvasEdgeColor);
   }
 
-  &:has(.selectionConnection) :deep(.vue-flow__node:not(.selected) .nodeHandle.target .handleIcon) {
+  &.movingSelectionViewport :deep(.vue-flow__edge.animated .vue-flow__edge-path) {
+    animation-play-state: paused;
+  }
+
+  &.movingSelectionViewport :deep(.vue-flow__pane.dragging)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: auto;
+  }
+
+  &.selectionLinkVisible :deep(.vue-flow__node:not(.selected) .nodeHandle.target .handleIcon) {
     opacity: 1;
   }
 

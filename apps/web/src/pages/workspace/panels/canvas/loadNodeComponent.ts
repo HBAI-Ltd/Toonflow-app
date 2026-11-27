@@ -3,10 +3,14 @@ import { shallowReactive, type Component } from "vue";
 import * as vueRuntime from "vue";
 import * as vueFlowRuntime from "@vue-flow/core";
 import * as elementPlusRuntime from "element-plus";
+// ACT: 节点拿到的是完整 element-plus 运行时，宿主却只按需加载自己用到的组件样式（如滑块样式只在打开界面设置后才有），
+// 节点里的滑块、开关等会不可见；这里随共享运行时加载完整样式。宿主覆盖写在 html:root 下，优先级更高，不受加载顺序影响。
+import "element-plus/theme-chalk/index.css";
 import * as threeRuntime from "three";
 import * as modelIcons from "@toonflow/model-icons";
 import { runAgentLoop } from "@earendil-works/pi-agent-core";
 import { createAssistantMessageEventStream } from "@earendil-works/pi-ai";
+import { createTranslator } from "@toonflow/i18n/vue";
 
 type NodeComponent = Exclude<NodeTypesObject[string], string>;
 
@@ -15,6 +19,7 @@ const requests = new Map<string, Promise<NodeComponent>>();
 // 节点 UMD 脚本从这里取宿主共享的运行时；画布与白模预演都经此加载节点。
 (window as typeof window & { toonflowNodeHost?: unknown }).toonflowNodeHost = {
   vue: vueRuntime, vueFlow: vueFlowRuntime, elementPlus: elementPlusRuntime, three: threeRuntime, modelIcons, ai: { runAgentLoop, createAssistantMessageEventStream },
+  i18n: { createTranslator },
 };
 
 export function getNodeIcon(type?: string): Component | undefined {

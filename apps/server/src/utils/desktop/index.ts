@@ -160,6 +160,7 @@ export async function getDesktopUpdate(req: Request): Promise<updateSnapshot> {
     updateReady: !installFailure && validUpdate && (update?.updateReady ?? false),
     updating: state.downloadingUpdate || state.applyingUpdate,
     canUpdate: typeof updater.downloadUpdate === "function" && typeof updater.applyUpdate === "function",
+    usesSystemInstaller: updater.usesSystemInstaller,
     updateProgress: state.downloadingUpdate && validUpdate ? update?.updateProgress ?? state.updateProgress : undefined,
   };
 }
@@ -250,9 +251,15 @@ export async function applyDesktopUpdate(req: Request): Promise<void> {
   let attempt: desktopUpdateAttempt | undefined;
   try {
     await assertUpdateVersion(updater, state);
-    const local = await updater.getLocalInfo();
     const target = updater.updateInfo();
     if (!target?.version || !target.hash) throw new Error("更新包缺少目标版本或构建号，请重新下载。");
+    if (updater.usesSystemInstaller) {
+      // 用户可在系统安装器中取消或稍后安装，打开窗口就释放互斥，允许再次打开。
+      await withUpdateSource(updater, updateBaseUrl, () => updater.applyUpdate!());
+      state.applyingUpdate = false;
+      return;
+    }
+    const local = await updater.getLocalInfo();
     attempt = { attemptId: crypto.randomUUID(), runtimeId: updateRuntimeId, channel: local.channel, targetVersion: target.version, targetHash: target.hash };
     // ACT: SDK 可能直接退出进程，必须在交接前写入 app 外的数据目录。
     conf.set("desktopUpdateAttempt", attempt);

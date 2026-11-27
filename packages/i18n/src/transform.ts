@@ -145,6 +145,8 @@ function analyze(source: string, id: string) {
       if (node.type === "TaggedTemplateExpression" && node.tag.type === "Identifier" && ["t", "msg"].includes(node.tag.name)) {
         const template = node.quasi.quasis.map((part, index) => `${node.quasi.expressions.length ? escapeMessageText(part.value.cooked ?? part.value.raw) : part.value.cooked ?? part.value.raw}${index < node.quasi.expressions.length ? `{${index}}` : ""}`).join("");
         if (hasChinese(template)) messages.add(template);
+        // 参数里嵌套的 t/msg/translate 只收集词条，不改写代码。
+        for (const expression of node.quasi.expressions) collectExplicit(expression);
         return;
       }
       if (node.type === "CallExpression") {
@@ -166,6 +168,19 @@ function analyze(source: string, id: string) {
         if (callee.type === "Identifier" && ["translate", "t", "msg"].includes(callee.name)) {
           const message = node.arguments[0];
           if (message?.type === "StringLiteral" && hasChinese(message.value)) messages.add(message.value);
+        }
+        // markMessages(value) 原样返回数据，只把其中的中文字面量收进字典，显示时由调用方 translate。
+        if (callee.type === "Identifier" && callee.name === "markMessages") {
+          const collectLiterals = (child: Node) => {
+            if (child.type === "ObjectProperty" && excludedName.test(propertyName(child) ?? "")) return;
+            if (child.type === "StringLiteral" && hasChinese(child.value)) messages.add(child.value);
+            if (child.type === "TemplateLiteral" && !child.expressions.length && hasChinese(child.quasis[0]?.value.cooked ?? "")) messages.add(child.quasis[0]!.value.cooked!);
+            for (const value of Object.values(child)) {
+              if (Array.isArray(value)) { for (const item of value) if (item && typeof item === "object" && "type" in item) collectLiterals(item as Node); }
+              else if (value && typeof value === "object" && "type" in value) collectLiterals(value as Node);
+            }
+          };
+          for (const argument of node.arguments) collectLiterals(argument as Node);
         }
       }
       if (node.type === "NewExpression" && node.callee.type === "Identifier" && /^(?:Error|TypeError|RangeError|DOMException)$/.test(node.callee.name)) {

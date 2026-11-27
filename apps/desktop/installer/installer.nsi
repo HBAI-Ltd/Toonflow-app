@@ -62,15 +62,6 @@ Function .onInit
     SetErrorLevel 2
     Abort
   ${EndIf}
-  ; ACT: AnyCPU 助手依赖 4.8.1 的 ARM64 CLR，避免在旧 CLR 下加载 ARM64 WebView2Loader。
-  SetRegView 64
-  ReadRegDWORD $0 HKLM "SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full" "Release"
-  SetRegView 32
-  ${If} $0 < 533320
-    MessageBox MB_OK|MB_ICONSTOP "请先安装 .NET Framework 4.8.1 或更新 Windows，再安装 Toonflow ARM64。下载地址：https://dotnet.microsoft.com/download/dotnet-framework/net481" /SD IDOK
-    SetErrorLevel 2
-    Abort
-  ${EndIf}
 !else
   ${IfNot} ${RunningX64}
     MessageBox MB_OK|MB_ICONSTOP "此安装包需要 64 位 Windows。" /SD IDOK

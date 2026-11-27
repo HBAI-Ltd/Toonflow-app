@@ -178,7 +178,7 @@ function validateExploreProject(project: ExploreProject) {
     || (project.author.avatarUrl !== undefined && !isExploreUrl(project.author.avatarUrl, true))) fail("探索项目响应格式不正确", 502);
 }
 
-const advertisementSettingsPanels = ["account", "general", "languageModel", "mediaModel", "pluginMarket", "mcp", "network", "deviceLink", "personalization", "developer", "multiTenant", "about"];
+const advertisementSettingsPanels = ["account", "general", "languageModel", "mediaModel", "pluginMarket", "mcp", "deviceLink", "personalization", "developer", "multiTenant", "about"];
 const advertisementColor = z.string().regex(/^(?:|#[\da-f]{3}|#[\da-f]{6}|#[\da-f]{8})$/i);
 const homeAdvertisement = z.object({
   title: z.string().trim().min(1).max(120), content: z.string().max(500), imageUrl: z.string().refine(value => isExploreUrl(value, true)), buttonText: z.string().max(40),

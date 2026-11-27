@@ -10,3 +10,14 @@ export function getMediaMimeType(file: Pick<File, "name" | "type">) {
   const type = file.type.split(";")[0]?.trim().toLowerCase() ?? "";
   return !type || type === "application/octet-stream" ? mediaMimeTypes[file.name.split(".").at(-1)?.toLowerCase() ?? ""] ?? type : type;
 }
+
+export function acceptsMediaFile(accept: string, file: Pick<File, "name" | "type">) {
+  const mime = getMediaMimeType(file);
+  const name = file.name.toLowerCase();
+  return accept.toLowerCase().split(",").some(part => {
+    const value = part.trim();
+    if (value.startsWith(".")) return name.endsWith(value);
+    if (value.endsWith("/*")) return mime.startsWith(value.slice(0, -1));
+    return value !== "" && value === mime;
+  });
+}

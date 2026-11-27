@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { lstat, mkdir, readFile, readdir, writeAtomic } from "@toonflow/file";
 import { dirname, resolve } from "node:path";
 import { z } from "zod";
+import { mergeLocalModelDeclarations } from "@toonflow/plugin-server/localModels";
 import conf from "@/utils/conf";
 import { loadToolModule, parseTool, validateToolConfig } from "./tools";
 
@@ -57,6 +58,13 @@ function nodeDetails(name: string, metadata: Record<string, unknown>, installedA
 export async function readNode(name: string) {
   const { metadata, file } = await readNodePackage(name);
   return nodeDetails(name, metadata, file.mtimeMs);
+}
+
+export function parseNodeModels(source: string) {
+  const { localModels, serverTool } = parseNodeMetadata(source);
+  const toolHeader = typeof serverTool === "string" ? serverTool.match(/^\/\*! toonflowTool:([^\r\n]*) \*\/(?:\r?\n|$)/)?.[1] : undefined;
+  try { return mergeLocalModelDeclarations(localModels, toolHeader ? JSON.parse(toolHeader).localModels : undefined); }
+  catch (cause) { throw Object.assign(new Error("节点或配套工具的本地模型声明无效或冲突", { cause }), { status: 400 }); }
 }
 
 export function parseNodeServerTool(source: string, name: string) {
@@ -114,7 +122,7 @@ export async function loadNodeServerTool(name: string) {
   }
   if (!(await lstat(path)).isFile()) throw Object.assign(new Error(t`节点服务缓存文件无效`), { status: 403 });
   if (await readFile(path, "utf8") !== tool.source) throw Object.assign(new Error(t`节点服务缓存与已安装修订不一致`), { status: 409 });
-  const loaded = await loadToolModule(path, tool.metadata);
+  const loaded = await loadToolModule(path, tool.metadata, { kind: "node", name, revision: createHash("sha256").update(bundle.source).digest("hex") });
   return { ...loaded, config: validateToolConfig(loaded.plugin, getNodeConfig(nodeDetails(name, bundle.metadata, bundle.file.mtimeMs))) };
 }
 

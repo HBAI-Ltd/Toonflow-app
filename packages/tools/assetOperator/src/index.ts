@@ -11,7 +11,7 @@ const plugin: ToolPlugin = {
     return [{
       name: "assetOperator",
       label: "全局资产管理",
-      description: `统一管理全局素材库：list 分页查询；read 读取文本、支持的图片和文档（Office、OpenDocument、RTF、EPUB、CSV、PDF 转为 Markdown，offset/limit 对应解析后的行，扫描 PDF 需先 OCR），其他格式返回文件信息，均返回 revision；create 新建文件且不覆盖；update 用完整文本或工作区文件替换已有素材；mkdir 新建文件夹；move 移动或重命名且不覆盖；delete 删除文件或空文件夹；import 将素材复制到当前工作区且不覆盖。path 始终为全局素材库内的相对路径，sourcePath 为当前工作区内的相对路径，文件最多 100 MB。${readOnly ? "当前为只读模式，仅允许 list、read、import，import 只写工作区副本。" : "修改文件须先 read 并使用其 revision。"}`,
+      description: `统一管理全局素材库：list 分页查询；read 读取文本、支持的图片和文档（Office、OpenDocument、RTF、EPUB、CSV、PDF 转为 Markdown，offset/limit 对应解析后的行，扫描 PDF 需先 OCR），其他格式返回文件信息，均返回 revision；create 新建文件且不覆盖；update 用完整文本或工作区文件替换已有素材；mkdir 新建文件夹；move 移动或重命名且不覆盖；delete 删除文件或文件夹（连同其中内容递归删除）；import 将素材复制到当前工作区且不覆盖。path 始终为全局素材库内的相对路径，sourcePath 为当前工作区内的相对路径，文件最多 100 MB。${readOnly ? "当前为只读模式，仅允许 list、read、import，import 只写工作区副本。" : "修改文件须先 read 并使用其 revision。"}`,
       promptSnippet: "查询和维护全局素材，将生成结果归档，或将已有素材导入当前工作区。",
       promptGuidelines: [
         "全局素材库与当前工作区 assets 文件夹属于不同范围。使用 assetOperator 管理全局素材，不通过工作区 write、edit 或其他文件入口绕过路径、配置与冲突检查。",

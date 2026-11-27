@@ -9,4 +9,4 @@ const config = createNodeConfig({
   github: "https://github.com/HBAI-Ltd/Toonflow-app",
 }, import.meta.url);
 
-export default { ...config, plugins: [compactAnimationData(), ...config.plugins ?? [], compressNode()] };
+export default { ...config, plugins: [compactAnimationData(), compressNode(), ...config.plugins ?? []] };

@@ -1,4 +1,5 @@
 import { z } from "@toonflow/nodes-scaffold/runtime";
+import { markMessages } from "@toonflow/i18n/vue";
 
 const coordinate = z.number().finite().min(-10000).max(10000);
 const vector = z.strictObject({ x: coordinate, y: coordinate, z: coordinate });
@@ -25,7 +26,7 @@ export type ShotKeyValues = Omit<ShotKey, "id" | "at">;
 /** ACT: 成片画幅（宽高比）：横屏16:9、电影宽银幕2.39:1和1.85:1、老电视4:3、竖屏短剧9:16。 */
 export const filmFormats = { "16:9": 16 / 9, "2.39:1": 2.39, "1.85:1": 1.85, "4:3": 4 / 3, "9:16": 9 / 16 } as const;
 export type FilmFormat = keyof typeof filmFormats;
-export const filmFormatNames: Record<FilmFormat, string> = { "16:9": "横屏 16:9", "2.39:1": "宽银幕 2.39", "1.85:1": "遮幅 1.85", "4:3": "4:3", "9:16": "竖屏 9:16" };
+export const filmFormatNames: Record<FilmFormat, string> = markMessages({ "16:9": "横屏 16:9", "2.39:1": "宽银幕 2.39", "1.85:1": "遮幅 1.85", "4:3": "4:3", "9:16": "竖屏 9:16" });
 /** 当前成片画幅：取景窗、机位视锥、全屏预演、截图、镜头表、预演小样统一使用；由场景文档的 film.format 设定（setFilmFormat）。 */
 export let filmAspect = 16 / 9;
 export function setFilmFormat(format: FilmFormat | undefined) { filmAspect = filmFormats[format ?? "16:9"] ?? 16 / 9; }

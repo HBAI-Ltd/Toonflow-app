@@ -3,6 +3,7 @@ import { createModelGroup, modelSchema } from "./modelGeometry";
 import type { ModelDefinition } from "./modelGeometry";
 import { createSceneObject, type SceneAsset, type SceneTerrain, type Vector3Value } from "./sceneDocument";
 import { getTerrainHeight } from "./terrainModel";
+import { markMessages } from "@toonflow/i18n/vue";
 
 export type SceneBrushMode = "assets" | "wall" | "paving";
 export type SceneBrushStatus = { ready: boolean; loading: number; total: number };
@@ -52,11 +53,11 @@ function leafyTree(id: string, name: string, colors: string[], height: number, s
 function spruceTree() {
   const parts = [branch([0, 0, 0], [0, 7.8, 0], 0.17)];
   for (let index = 0; index < 5; index++) parts.push(part("层叠针叶", "cone", ["#426650", "#52735b", "#3a5a48"][index % 3]!, [0, 2.5 + index * 1.08, 0], [3.7 - index * 0.62, 2.85 - index * 0.16, 3.7 - index * 0.62]));
-  return asset("brushSpruce", "云杉", "自然", parts);
+  return asset("brushSpruce", markMessages("云杉"), "自然", parts);
 }
 
 function birchTree() {
-  const tree = leafyTree("brushBirch", "白桦", ["#8ba06b", "#a3b37e", "#7e985e"], 7.7, 3.5, "#d5d2bf");
+  const tree = leafyTree("brushBirch", markMessages("白桦"), ["#8ba06b", "#a3b37e", "#7e985e"], 7.7, 3.5, "#d5d2bf");
   for (let index = 0; index < 9; index++) tree.model!.parts.push(part("白桦树皮", "box", "#655e53", [index % 2 ? 0.05 : -0.05, 0.45 + index * 0.39, 0.164], [0.15 + index % 3 * 0.025, 0.065, 0.025]));
   return tree;
 }
@@ -73,7 +74,7 @@ function palmTree() {
     const vertices = [base, middle.clone().addScaledVector(side, 0.42), middle.clone().add(new Vector3(0, 0.12, 0)), middle.clone().addScaledVector(side, -0.42), end];
     parts.push({ ...part("棕榈叶", "mesh", index % 2 ? "#607952" : "#748b5e", [0, 0, 0], [1, 1, 1]), vertices: vertices.map(point => ({ x: point.x, y: point.y, z: point.z })), indices: [0, 1, 2, 0, 2, 3, 1, 4, 2, 2, 4, 3, 2, 1, 0, 3, 2, 0, 2, 4, 1, 3, 4, 2] });
   }
-  return asset("brushPalm", "棕榈", "自然", parts);
+  return asset("brushPalm", markMessages("棕榈"), "自然", parts);
 }
 
 function deadTree() {
@@ -85,17 +86,17 @@ function deadTree() {
     parts.push(branch(start, end, 0.1, "#8b8170"));
     parts.push(branch(end, [end[0]! * 1.2, end[1]! + 0.95, end[2]! * 1.12], 0.045, "#8b8170"));
   }
-  return asset("brushDeadTree", "枯树", "自然", parts);
+  return asset("brushDeadTree", markMessages("枯树"), "自然", parts);
 }
 
 const treeBrushDefinitions: SceneAsset[] = [
-  leafyTree("brushBroadleaf", "阔叶树", ["#6f8861", "#839a6d", "#607d55"], 7.4, 4.6),
+  leafyTree("brushBroadleaf", markMessages("阔叶树"), ["#6f8861", "#839a6d", "#607d55"], 7.4, 4.6),
   spruceTree(),
   birchTree(),
   palmTree(),
-  leafyTree("brushCherry", "山樱", ["#ddb4b9", "#e8c7c9", "#cf9ba7"], 6.1, 4.7),
+  leafyTree("brushCherry", markMessages("山樱"), ["#ddb4b9", "#e8c7c9", "#cf9ba7"], 6.1, 4.7),
   deadTree(),
-  leafyTree("brushMaple", "红枫", ["#a65d46", "#bf7450", "#954c3d"], 6.7, 4.2),
+  leafyTree("brushMaple", markMessages("红枫"), ["#a65d46", "#bf7450", "#954c3d"], 6.7, 4.2),
 ];
 
 const treeModels = new Map(treeBrushDefinitions.map(asset => [asset.id, asset.model!]));
@@ -749,7 +750,7 @@ export function createLineBrushAsset(mode: "wall" | "paving", style: string, len
   return createPathBrushAsset(mode, style, [{ x: -length / 2, y: Math.max(0, -rise), z: 0 }, { x: length / 2, y: Math.max(0, rise), z: 0 }], width, height);
 }
 
-const wallStyles = [
+const wallStyles = markMessages([
   { id: "brick", name: "砖石墙", group: "实墙", width: 0.35, height: 1.8 },
   { id: "redBrick", name: "红砖院墙", group: "实墙", width: 0.3, height: 1.6 },
   { id: "stucco", name: "粉刷院墙", group: "实墙", width: 0.3, height: 2 },
@@ -790,8 +791,8 @@ const wallStyles = [
   { id: "mechanical", name: "机械装甲墙", group: "科幻", width: 0.5, height: 2 },
   { id: "future", name: "未来悬浮栏", group: "科幻", width: 0.2, height: 1.1 },
   { id: "laser", name: "光导隔离栏", group: "科幻", width: 0.16, height: 1.3 },
-];
-const pavingStyles = [
+]);
+const pavingStyles = markMessages([
   { id: "street", name: "双车道街道", group: "道路", width: 7.2, height: 0.14 },
   { id: "fourLane", name: "四车道道路", group: "道路", width: 14.4, height: 0.16 },
   { id: "dividedRoad", name: "分隔式四车道", group: "道路", width: 16, height: 0.18 },
@@ -832,7 +833,7 @@ const pavingStyles = [
   { id: "hexTech", name: "科技六边形路", group: "科幻", width: 3, height: 0.12 },
   { id: "lightRail", name: "光导轨道", group: "科幻", width: 2.4, height: 0.12 },
   { id: "circuit", name: "未来电路地坪", group: "科幻", width: 3, height: 0.1 },
-];
+]);
 const wallStyleNames: Record<string, string> = Object.fromEntries(wallStyles.map(style => [style.id, style.name]));
 const pavingStyleNames: Record<string, string> = Object.fromEntries(pavingStyles.map(style => [style.id, style.name]));
 export const wallBrushStyles: BrushStyle[] = wallStyles.map(style => ({ ...style, asset: createLineBrushAsset("wall", style.id, 3, style.width, style.height) }));

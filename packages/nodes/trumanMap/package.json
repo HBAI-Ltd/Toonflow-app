@@ -3,9 +3,16 @@
   "version": "0.16.47",
   "private": true,
   "type": "module",
+  "exports": {
+    "./promptImages": "./src/promptImages.ts",
+    "./assetSearchControls": "./src/assetSearchControls.vue",
+    "./cameraViewfinder": "./src/cameraViewfinder.vue",
+    "./timelineTransport": "./src/timelineTransport.vue"
+  },
   "scripts": {
     "dev": "bun --bun vite build --watch",
     "build": "bun --bun vite build",
+    "extractI18n": "bun extractI18n.ts",
     "typecheck": "vue-tsc --noEmit"
   },
   "peerDependencies": {
@@ -28,6 +35,7 @@
     "@gltf-transform/extensions": "4.5.1",
     "@gltf-transform/functions": "4.5.1",
     "@toonflow/file": "workspace:*",
+    "@toonflow/i18n": "workspace:*",
     "@toonflow/node-shared": "workspace:*",
     "@toonflow/nodes-scaffold": "workspace:*",
     "@types/three": "0.184.0",

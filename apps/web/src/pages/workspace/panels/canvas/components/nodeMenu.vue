@@ -1,16 +1,18 @@
 <template>
-  <selectionHandle
-    v-if="!singleGroupSelected"
-    ref="selectionHandleRef"
-    @start="startSelectionConnection"
-    @release="(event, nodes) => openMenu(event, true, [], undefined, nodes)" />
-  <selectionHandle
-    v-for="group in groups"
-    :key="group.id"
-    ref="groupHandleRefs"
-    :nodes="[group]"
-    @start="startSelectionConnection"
-    @release="(event, nodes) => openMenu(event, true, [], undefined, nodes)" />
+  <div ref="handleLayer" class="handleLayer">
+    <selectionHandle
+      v-if="!singleGroupSelected"
+      ref="selectionHandleRef"
+      @start="startSelectionConnection"
+      @release="(event, nodes) => openMenu(event, true, [], undefined, nodes)" />
+    <selectionHandle
+      v-for="group in groups"
+      :key="group.id"
+      ref="groupHandleRefs"
+      :nodes="[group]"
+      @start="startSelectionConnection"
+      @release="(event, nodes) => openMenu(event, true, [], undefined, nodes)" />
+  </div>
   <el-dropdown
     ref="menu"
     trigger="contextmenu"
@@ -73,15 +75,13 @@
           <el-dropdown-item v-if="!directNodes" command="actions" :icon="IconChevronLeft">返回操作菜单</el-dropdown-item>
           <el-dropdown-item v-else disabled>添加节点</el-dropdown-item>
           <el-dropdown-item v-if="!menuItems.length" disabled>{{ pendingHandle || pendingGroup.length ? "没有可连接的节点" : "没有可显示的节点" }}</el-dropdown-item>
-          <nodeMenuItems
+          <cascadeMenuItems
             v-if="menuVisible"
             ref="nodeMenuItemsRef"
-            :items="menuItems"
-            :nodes="filteredNodes"
+            :items="creationMenu"
+            :icons="nodeIcons"
             :appendTo="menuContainer"
-            :uploadDisabled="!uploadFiles"
             @select="handleCommand"
-            @upload="handleCommand('upload')"
             @close="menu?.handleClose()" />
         </template>
       </el-dropdown-menu>
@@ -90,13 +90,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch, type Component } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch, watchEffect, type Component } from "vue";
 import { useVueFlow, type ConnectingHandle, type GraphNode, type HandleType } from "@vue-flow/core";
 import { getAssetOutputs, isTypeCompatible, useNodeEvent, validateConnection, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
 import { ElMessage } from "element-plus";
 import type { DropdownInstance } from "element-plus";
 import selectionHandle from "./selectionHandle.vue";
-import nodeMenuItems from "./nodeMenuItems.vue";
+import cascadeMenuItems, { type CascadeMenuItem } from "@toonflow/node-shared/cascadeMenuItems";
+import { translate } from "@toonflow/i18n/vue";
 import { generalSettings } from "@/stores/settings";
 import { filterNodeMenu, resolveNodeMenu } from "@toonflow/server/nodeMenu";
 import { getSelectionConnections } from "../selectionConnections";
@@ -134,7 +135,7 @@ const emit = defineEmits<{ history: []; undo: []; redo: []; duplicateSelection: 
 const menu = ref<DropdownInstance>();
 const menuList = ref<{ $el: HTMLElement }>();
 const menuVisible = ref(false);
-const nodeMenuItemsRef = ref<InstanceType<typeof nodeMenuItems>>();
+const nodeMenuItemsRef = ref<InstanceType<typeof cascadeMenuItems>>();
 const menuContainer = computed(() => menuList.value?.$el.closest<HTMLElement>(".el-dropdown__popper") ?? undefined);
 const menuLevel = ref<"actions" | "nodes" | "selection" | "arrange">("actions");
 const selectedNodes = shallowRef<GraphNode[]>([]);
@@ -150,6 +151,12 @@ const pendingHandle = shallowRef<DraggedHandle>();
 const pendingGroup = shallowRef<GraphNode[]>([]);
 const selectionHandleRef = ref<InstanceType<typeof selectionHandle>>();
 const groupHandleRefs = ref<InstanceType<typeof selectionHandle>[]>([]);
+const handleLayer = ref<HTMLElement>();
+watchEffect(() => {
+  if (!handleLayer.value) return;
+  const { x, y, zoom } = flow.viewport.value;
+  handleLayer.value.style.transform = `translate(${x}px, ${y}px) scale(${zoom})`;
+});
 const groups = computed(() => flow.getNodes.value.filter(node => node.type === "canvasGroup" && !node.hidden));
 const singleGroupSelected = computed(() => flow.getSelectedNodes.value.length === 1 && flow.getSelectedNodes.value[0]?.type === "canvasGroup");
 const canArrangeSelection = computed(() => {
@@ -188,6 +195,11 @@ const menuItems = computed(() => filterNodeMenu(
   resolveNodeMenu(generalSettings.value.nodeMenu, remoteNodes),
   new Set(filteredNodes.value.map(node => node.type)),
 ));
+
+const nodeIcons = computed(() => new Map(filteredNodes.value.map(node => [node.type, node.icon])));
+const creationMenu = computed<CascadeMenuItem[]>(() => [...menuItems.value, {
+  id: "upload", label: translate("上传"), type: "upload", icon: IconUpload, disabled: !uploadFiles, divided: true,
+}]);
 
 async function onMenuVisibleChange(visible: boolean) {
   menuVisible.value = visible;
@@ -278,7 +290,7 @@ flow.onNodeContextMenu(() => {
   clearConnection();
   menu.value?.handleClose();
 });
-defineExpose({ openMenu, deleteSelection, addNode });
+defineExpose({ openMenu, deleteSelection, deleting, addNode });
 
 async function addNode(type: string, position: { x: number; y: number }) {
   clearConnection();
@@ -374,7 +386,7 @@ async function runCommand(command: unknown) {
   if (group.length) {
     if (!created) return;
     const connections = flow.nodesConnectable.value
-      ? getSelectionConnections(group, created, flow.getNodes.value, flow.getEdges.value)
+      ? getSelectionConnections(group, created, flow)
       : undefined;
     if (connections) {
       flow.addEdges(connections);
@@ -448,6 +460,15 @@ async function deleteSelection(selection = selectedNodes.value) {
 </script>
 
 <style lang="scss" scoped>
+.handleLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
 .nodeMenu {
   min-width: 180px;
 

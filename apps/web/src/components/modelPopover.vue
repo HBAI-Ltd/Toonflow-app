@@ -7,7 +7,7 @@
       :width="340"
       :offset="10"
       :showArrow="false"
-      popperClass="agentModelPopover"
+      popperClass="hostAgentModelPopover"
       :popperStyle="{ padding: '20px', maxWidth: 'calc(100vw - 24px)' }">
       <template #reference>
         <el-button class="modelButton" text :disabled="disabled" aria-label="模型与思考强度设置">
@@ -133,7 +133,7 @@ watch(visible, value => { if (value) void refreshModelChoices().catch(() => {});
   }
 }
 
-.agentModelPopover {
+.hostAgentModelPopover {
   .modelOptions {
     .el-form-item {
       margin-bottom: 20px;

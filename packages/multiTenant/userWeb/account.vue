@@ -3,6 +3,7 @@
     <div class="identityRow">
       <span class="accountAvatar" aria-hidden="true">{{ Array.from(userName.trim())[0]?.toUpperCase() }}</span>
       <p class="userName">{{ userName }}</p>
+      <slot name="actions" />
     </div>
     <section v-if="role === 'user'" class="billingSection" aria-labelledby="accountBalanceTitle" :aria-busy="balanceLoading">
       <header class="sectionHeader">
@@ -162,7 +163,7 @@ onBeforeUnmount(() => {
       line-height: 1;
     }
 
-    .userName { min-width: 0; margin: 0; color: var(--el-text-color-primary); font-size: 15px; font-weight: 600; line-height: 1.6; overflow-wrap: anywhere; }
+    .userName { min-width: 0; margin: 0; margin-inline-end: auto; color: var(--el-text-color-primary); font-size: 15px; font-weight: 600; line-height: 1.6; overflow-wrap: anywhere; }
   }
 
   .accountActions {

@@ -1,6 +1,7 @@
 import { computed, inject, onScopeDispose, ref, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useNode, useVueFlow } from "@vue-flow/core";
 import { ElMessage } from "element-plus";
+import { translate } from "@toonflow/i18n/vue";
 import { useNodeAsr, type NodeMediaValue } from "@toonflow/nodes-scaffold/runtime";
 
 export function useAudioTranscription(source: MaybeRefOrGetter<NodeMediaValue | undefined>) {
@@ -56,7 +57,7 @@ export function useAudioTranscription(source: MaybeRefOrGetter<NodeMediaValue | 
           const position = other.computedPosition;
           if (position.x < x + 320 && position.x + (other.dimensions.width || 320) > x && position.y < y + height && position.y + (other.dimensions.height || 300) > y) y = position.y + (other.dimensions.height || 300) + 40;
         }
-        addNodes({ id: crypto.randomUUID(), type: "remote-textNode", position: { x, y }, data: { label: `${node.data.label || "音频"} · 转文本`, outputs: { text: { dataType: "STRING", value: text } } } });
+        addNodes({ id: crypto.randomUUID(), type: "remote-textNode", position: { x, y }, data: { label: `${node.data.label || translate("音频")} · ${translate("语音转文字")}`, outputs: { text: { dataType: "STRING", value: text } } } });
       });
     } catch (error) {
       if (!current.signal.aborted && !(error instanceof Error && error.name === "AbortError")) {

@@ -16,16 +16,16 @@ export type AiAnalysisOptions = {
 };
 
 function readFields<T extends Record<string, number>>(text: string, limits: T, allowEmpty: (keyof T)[] = []): Record<keyof T, string> {
-  if (typeof text !== "string" || text.length > 16000) throw new Error("AI 返回的拉片描述格式无效");
+  if (typeof text !== "string" || text.length > 16000) throw new Error("AI 返回的镜头描述格式无效");
   const content = text.trim().replace(/^```(?:json)?\s*\n([\s\S]*?)\n```$/i, "$1");
   let parsed: unknown;
-  try { parsed = JSON.parse(content); } catch { throw new Error("AI 未返回有效 JSON，请重新进行 AI 辅助拉片"); }
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("AI 返回的拉片描述格式无效");
+  try { parsed = JSON.parse(content); } catch { throw new Error("AI 未返回有效 JSON，请重新进行 AI 分析"); }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("AI 返回的镜头描述格式无效");
   const value = parsed as Record<string, unknown>;
   const keys = Object.keys(limits) as (keyof T & string)[];
   if (Object.keys(value).length !== keys.length || keys.some(key => typeof value[key] !== "string"
     || (!allowEmpty.includes(key) && !value[key].trim()) || value[key].length > limits[key])) {
-    throw new Error("AI 返回的描述字段缺失或过长，请重新进行 AI 辅助拉片");
+    throw new Error("AI 返回的描述字段缺失或过长，请重新进行 AI 分析");
   }
   return Object.fromEntries(keys.map(key => [key, (value[key] as string).replace(/\s+/g, " ").trim()])) as Record<keyof T, string>;
 }
@@ -43,40 +43,37 @@ export async function analyzeSceneDescriptions(options: AiAnalysisOptions): Prom
   const previousManifest = analysisPath(result.manifest);
   const separator = previousManifest.lastIndexOf("/");
   const directory = separator > 0 ? previousManifest.slice(0, separator) : "";
-  if (!directory || !/^(?:[a-z]:[\\/]|\/|\\\\)/i.test(workspaceDirectory)) throw new Error("请先选择有效工作区并完成本地拉片");
+  if (!directory || !/^(?:[a-z]:[\\/]|\/|\\\\)/i.test(workspaceDirectory)) throw new Error("请先选择有效工作区并完成本地分析");
   if (!model.providerId || !model.modelId) throw new Error("请先选择支持图片输入的 AI 模型");
   if (!Number.isFinite(result.duration) || result.duration <= 0 || !result.scenes.length) throw new Error("没有可供 AI 分析的分镜");
   if (typeof options.focus !== "undefined" && typeof options.focus !== "string") throw new Error("分析重点必须是文字");
   const focus = options.focus?.trim() ?? "";
   if (focus.length > 2000) throw new Error("分析重点最多填写 2000 字");
   // ACT: 首版整段归纳采用单次请求，最多分析 200 个镜头；更长影片应先分段，避免静默漏掉镜头。
-  if (result.scenes.length > 200) throw new Error("AI 辅助拉片每次最多分析 200 个镜头，请先将长视频分段；本地拉片结果已保留");
-  const offset = result.sourceVideoOffset ?? 0;
-  if (!Number.isFinite(offset) || offset < 0) throw new Error("视频时间信息无效，请重新执行本地拉片");
+  if (result.scenes.length > 200) throw new Error("AI 每次最多分析 200 个镜头，请先将长视频分段；本地分析结果已保留");
+  const offset = result.sourceVideoOffset;
+  if (!Number.isFinite(offset) || offset < 0) throw new Error("视频时间信息无效，请重新执行本地分析");
   const streamIndex = result.sourceVideoStreamIndex;
-  if (streamIndex !== undefined && (!Number.isInteger(streamIndex) || streamIndex < 0)) throw new Error("视频流信息无效，请重新执行本地拉片");
-  const plans = result.scenes.map(scene => {
+  if (!Number.isInteger(streamIndex) || streamIndex < 0) throw new Error("视频流信息无效，请重新执行本地分析");
+  const sampleTimes = result.scenes.map(scene => {
     if (!Number.isFinite(scene.start) || !Number.isFinite(scene.end) || scene.start < 0 || scene.end <= scene.start
-      || scene.end > result.duration + 0.001) throw new Error("分镜时间信息无效，请重新执行本地拉片");
+      || scene.end > result.duration + 0.001) throw new Error("分镜时间信息无效，请重新执行本地分析");
     const times = scene.sampleTimes;
-    if (times?.length) {
-      if (times.length > 3 || times.some((time, index) => !Number.isFinite(time) || time < scene.start || time >= scene.end
-        || (index > 0 && time <= times[index - 1]))) throw new Error("分镜采样信息无效，请重新执行本地拉片");
-      return { times, image: undefined };
-    }
-    if (!scene.image) throw new Error("该结果没有时序采样信息，请先开启分镜或动态并重新执行本地拉片");
-    return { times: [], image: analysisPath(scene.image) };
+    if (!Array.isArray(times) || !times.length) throw new Error("请勾选关键帧或视频片段后重新分析");
+    if (times.length > 3 || times.some((time, index) => !Number.isFinite(time) || time < scene.start || time >= scene.end
+      || (index > 0 && time <= times[index - 1]))) throw new Error("分镜采样信息无效，请重新执行本地分析");
+    return times;
   });
   signal.throwIfAborted();
   const operationId = crypto.randomUUID().replaceAll("-", "");
   const temporary = `${directory}/aiFrames${operationId}`;
   let scenes: AnalysisScene[] = [];
   if (typeof result.ai?.overviewError === "string" && result.ai.overviewError && findNodeModel([model], result.ai)
-    && (result.ai.focus ?? "") === focus) {
+    && result.ai.focus === focus) {
     try {
       scenes = result.scenes.map((scene, index) => ({
         ...scene,
-        annotation: readAnnotation(JSON.stringify(scene.annotation), plans[index].image ? 1 : plans[index].times.length),
+        annotation: readAnnotation(JSON.stringify(scene.annotation), sampleTimes[index].length),
       }));
     } catch {
       scenes = [];
@@ -91,17 +88,13 @@ export async function analyzeSceneDescriptions(options: AiAnalysisOptions): Prom
       for (let index = 0; index < result.scenes.length; index++) {
         signal.throwIfAborted();
         const scene = result.scenes[index];
-        const plan = plans[index];
+        const times = sampleTimes[index];
         const paths: string[] = [];
-        const sampleCount = plan.image ? 1 : plan.times.length;
-        for (let sample = 0; sample < sampleCount; sample++) {
+        for (let sample = 0; sample < times.length; sample++) {
           onProgress(index / result.scenes.length * 80, `抽取 AI 参考画面 · ${index + 1}/${result.scenes.length}`);
           const path = `${temporary}/scene${index + 1}Frame${sample + 1}.jpg`;
-          const command = ffmpeg(plan.image ?? source);
-          if (!plan.image) {
-            command.seekInput(Math.max(0, offset + plan.times[sample] - 0.000001))
-              .outputOptions("-map", streamIndex === undefined ? "0:v:0" : `0:${streamIndex}`);
-          }
+          const command = ffmpeg(source).seekInput(Math.max(0, offset + times[sample] - 0.000001))
+            .outputOptions("-map", `0:${streamIndex}`);
           await runFfmpeg(command.noAudio().videoFilters("scale=640:640:force_original_aspect_ratio=decrease")
             .outputOptions("-q:v", "4").frames(1).output(path), signal);
           signal.throwIfAborted();
@@ -109,8 +102,7 @@ export async function analyzeSceneDescriptions(options: AiAnalysisOptions): Prom
           if (image.length < 4 || image[0] !== 0xff || image[1] !== 0xd8) throw new Error(`第 ${index + 1} 个镜头的 AI 参考画面生成失败`);
           paths.push(path);
         }
-        const timeDescription = plan.image ? "仅提供这个镜头的一张关键帧，没有时序信息。"
-          : `按时间顺序提供 ${paths.length} 张画面，时间分别为 ${plan.times.map(time => `${(time - scene.start).toFixed(3)} 秒`).join("、")}，相对于本镜头起点。`;
+        const timeDescription = `按时间顺序提供 ${paths.length} 张画面，时间分别为 ${times.map(time => `${(time - scene.start).toFixed(3)} 秒`).join("、")}，相对于本镜头起点。`;
         onProgress((index + 0.35) / result.scenes.length * 80, `AI 分析镜头 · ${index + 1}/${result.scenes.length}`);
         const response = await ai.generate({
           ...getNodeModelIdentity(model),
@@ -136,7 +128,7 @@ ${focus ? `用户指定的分析重点：${JSON.stringify(focus)}。在现有四
       failure = error;
     } finally {
       try { await workspace.remove(temporary, true); } catch (error) {
-        failure = failure ? new AggregateError([failure, error], "AI 拉片未完成，临时画面清理也失败，请检查工作区连接") : error;
+        failure = failure ? new AggregateError([failure, error], "AI 分析未完成，临时画面清理也失败，请检查工作区连接") : error;
       }
     }
     if (failure) throw failure;
@@ -184,10 +176,10 @@ ${JSON.stringify(observations)}`;
     if (!focus) overview.focusResponse = "";
   } catch (error) {
     signal.throwIfAborted();
-    overviewError = error instanceof Error && error.message.trim() ? error.message.slice(0, 1000) : "整段归纳未完成，请重试";
+    overviewError = error instanceof Error && error.message.trim() ? error.message.slice(0, 1000) : "全片总结失败，请重试";
   }
   signal.throwIfAborted();
-  onProgress(96, overviewError ? "保存已完成的逐镜头分析" : "保存整段视频拉片分析");
+  onProgress(96, overviewError ? "保存已完成的逐镜头分析" : "保存全片总结");
   const annotated: AnalysisResult = {
     ...result,
     scenes,
@@ -200,6 +192,6 @@ ${JSON.stringify(observations)}`;
     await workspace.remove(annotated.manifest);
     signal.throwIfAborted();
   }
-  onProgress(98, "更新 AI 拉片描述");
+  onProgress(98, "更新镜头描述");
   return annotated;
 }

@@ -57,6 +57,7 @@ export function validateSocketClose(code: number, reason: string) {
 }
 
 export function bytesToBase64(bytes: Uint8Array): string {
+  if (typeof bytes.toBase64 === "function") return bytes.toBase64();
   let text = "";
   for (let offset = 0; offset < bytes.byteLength; offset += 16384) text += String.fromCharCode(...bytes.subarray(offset, offset + 16384));
   return btoa(text);
@@ -66,9 +67,13 @@ export function base64ToBytes(value: string, maxBytes = pluginServerLimits.bodyB
   if (value.length > Math.ceil(maxBytes / 3) * 4 || value.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(value)) {
     throw new Error("插件服务二进制数据无效或超过大小限制");
   }
+  const size = value.length / 4 * 3 - (value.endsWith("==") ? 2 : value.endsWith("=") ? 1 : 0);
+  if (size > maxBytes) throw new Error("插件服务消息超过大小限制");
+  if (typeof Uint8Array.fromBase64 === "function") return Uint8Array.fromBase64(value);
   const decoded = atob(value);
-  if (decoded.length > maxBytes) throw new Error("插件服务消息超过大小限制");
-  return Uint8Array.from(decoded, character => character.charCodeAt(0));
+  const bytes = new Uint8Array(size);
+  for (let i = 0; i < size; i++) bytes[i] = decoded.charCodeAt(i);
+  return bytes;
 }
 
 export function encodeSocketData(value: unknown): PluginSocketData {

@@ -233,7 +233,8 @@ async function openAgent() {
     const { data } = await axios.get<{ data: { tools: { name: string; enabled: boolean; loadError?: string }[] } }>("/api/tools/get", { signal: controller.signal });
     if (controller.signal.aborted || !visible.value) return;
     const browser = data.data.tools.find(tool => tool.name === "browser");
-    if (!browser?.enabled) throw new Error("请先在「工具市场」安装并启用网页浏览器工具");
+    if (!browser) throw new Error("未安装网页浏览器工具，请在「插件市场」的「工具」中安装");
+    if (!browser.enabled) throw new Error("网页浏览器工具已停用，请在「插件市场」的「工具」中启用");
     if (browser.loadError) throw new Error(`浏览器工具加载失败：${browser.loadError}`);
     askUserEnabled.value = data.data.tools.some(tool => tool.name === "askUser" && tool.enabled && !tool.loadError);
     providerAgentDialog.value ??= defineAsyncComponent(() => import("./providerAgentDialog.vue"));

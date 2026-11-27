@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/bun": "^1.4.2",
+    "@types/bun": "^1.4.5",
     "typescript": "^7.0.2"
   }
 }

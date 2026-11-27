@@ -176,5 +176,6 @@ function setBinding(value: string) {
     .el-button { width: 20px; padding: 0; }
   }
   &:hover .clearButton, &:focus-within .clearButton { opacity: 1; }
+  @media (any-pointer: coarse) { .clearButton { opacity: 1; } }
 }
 </style>

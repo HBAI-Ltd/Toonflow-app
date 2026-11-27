@@ -1,5 +1,6 @@
 <template>
   <div class="audioClipEditor nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.capture="handleKeydown" @keydown.stop>
+    <p v-if="splitOutputs" class="splitHint">点击波形添加切点，点击分界线移除。每个片段会生成一个音频节点。</p>
     <audioPlayer ref="player" v-model:pcmOptions="pcmOptions" :src="src" :mimeType="mimeType" label="音频剪辑预览" :inert="disabled" @loadedmetadata="readDuration" @play="startPlayback">
       <template #track="{ peaks }">
         <div class="timeline">
@@ -7,11 +8,16 @@
             <span v-for="tick in 6" :key="tick" :style="{ left: `${(tick - 1) * 20}%` }">{{ formatTime((tick - 1) * timelineDuration / 5) }}</span>
           </div>
           <div class="segmentTrack" role="group" aria-label="音频剪辑轨道">
-            <button v-for="(clip, index) in clips" :key="index" class="segmentItem" :class="{ selected: selectedIndex === index }" :style="{ left: `${clip.offset / timelineDuration * 100}%`, width: `${clip.length / timelineDuration * 100}%` }" type="button" :disabled="disabled" :aria-pressed="selectedIndex === index" :aria-label="`片段 ${index + 1}，时长 ${clip.length.toFixed(2)} 秒`" @click="selectSegment(index, $event)" @keydown.left.prevent="seekAt(playhead - 0.1)" @keydown.right.prevent="seekAt(playhead + 0.1)" @keydown.delete.prevent="selectedIndex = index; removeSegment()">
+            <button v-for="(clip, index) in clips" :key="index" class="segmentItem" :class="{ selected: selectedIndex === index }" :style="{ left: `${clip.offset / timelineDuration * 100}%`, width: `${clip.length / timelineDuration * 100}%` }" type="button" :disabled="disabled" :aria-pressed="selectedIndex === index" :aria-label="`片段 ${index + 1}，时长 ${clip.length.toFixed(2)} 秒`" @click="activateSegment(index, $event)" @keydown.left.prevent="seekAt(playhead - 0.1)" @keydown.right.prevent="seekAt(playhead + 0.1)" @keydown.delete.prevent="selectedIndex = index; splitOutputs ? removeCut(Math.max(1, index)) : removeSegment()">
               <span class="segmentName">片段 {{ index + 1 }}</span>
               <template v-if="peaks.length"><svg v-for="(part, partIndex) in clip.parts" :key="partIndex" class="segmentWaveform" :style="{ left: `${part.offset / clip.length * 100}%`, width: `${part.length / clip.length * 100}%` }" :viewBox="`${part.start / duration * 512} 0 ${part.length / duration * 512} 100`" preserveAspectRatio="none" aria-hidden="true"><rect v-for="(peak, bar) in peaks" :key="bar" :x="bar * 4 + 1" :y="50 - Math.max(2, peak * 78) / 2" width="2" :height="Math.max(2, peak * 78)" rx="1" /></svg></template>
               <span class="segmentDuration">{{ clip.length.toFixed(2) }} 秒</span>
             </button>
+            <template v-if="splitOutputs">
+              <button v-for="(clip, i) in clips.slice(1)" :key="'cut' + i" type="button" class="cutHandle"
+                :style="{ left: clip.offset / timelineDuration * 100 + '%' }" :disabled="disabled"
+                :title="`移除 ${formatTime(clip.offset)} 的切点`" :aria-label="`移除 ${formatTime(clip.offset)} 的切点`" @click="removeCut(i + 1)" />
+            </template>
           </div>
           <span v-if="segments.length" class="playhead" :style="{ left: `${playhead / timelineDuration * 100}%` }" aria-hidden="true" />
           <input class="cursorInput" type="range" min="0" :max="totalDuration || 1" step="0.01" :value="playhead" :disabled="disabled || !valid" aria-label="剪辑游标" :aria-valuetext="`${formatTime(playhead)} / ${formatTime(totalDuration)}`" @pointerdown.stop @input="seekCursor" />
@@ -22,23 +28,41 @@
     <div class="editActions">
       <el-button :icon="IconArrowBackUp" :disabled="disabled || !undoStack.length" title="撤销（Ctrl+Z）" @click="undo">撤销</el-button>
       <el-button :icon="IconArrowForwardUp" :disabled="disabled || !redoStack.length" title="恢复（Ctrl+Y）" @click="redo">恢复</el-button>
-      <el-button :icon="IconScissors" :disabled="disabled || !canSplit" @click="splitSegment">分割</el-button>
-      <el-button :icon="IconLink" :disabled="disabled || !canMerge" :title="selectedIndex > 0 ? '与前一片段粘合' : '与后一片段粘合'" @click="mergeSegment">粘合</el-button>
-      <el-button :icon="IconTrash" :disabled="disabled || !activeSegment" @click="removeSegment">删除选中片段</el-button>
+      <el-button :icon="IconScissors" :disabled="disabled || !canSplit" @click="splitSegment">{{ splitOutputs ? '在游标处添加切点' : '分割' }}</el-button>
+      <el-button v-if="splitOutputs && clips.length <= 1" :disabled="disabled || !valid || totalDuration < 0.02" @click="splitInHalf">均分为两段</el-button>
+      <template v-if="!splitOutputs">
+        <el-button :icon="IconLink" :disabled="disabled || !canMerge" :title="selectedIndex > 0 ? '与前一片段粘合' : '与后一片段粘合'" @click="mergeSegment">粘合</el-button>
+        <el-button :icon="IconTrash" :disabled="disabled || !activeSegment" @click="removeSegment">删除选中片段</el-button>
+      </template>
     </div>
+    <ol v-if="splitOutputs && clips.length > 1" class="clipAuditions">
+      <li v-for="(clip, index) in clips" :key="index">
+        <button type="button" :class="{ current: selectedIndex === index }" :disabled="disabled || !valid"
+          :aria-label="t`片段 ${index + 1}` + ' · ' + translate(selectedIndex === index && player?.playing ? '暂停音频' : '播放音频')"
+          @click="previewSegment(index)">
+          <component :is="selectedIndex === index && player?.playing ? IconPlayerPause : IconPlayerPlay" :size="16" aria-hidden="true" />
+          <span>{{ t`片段 ${index + 1}` }}</span>
+          <span class="clipTime" dir="ltr">{{ formatTime(clip.offset) }} – {{ formatTime(clip.offset + clip.length) }}</span>
+          <span class="clipLocation" aria-hidden="true"><i :style="{ left: clip.offset / timelineDuration * 100 + '%', width: clip.length / timelineDuration * 100 + '%' }" /></span>
+        </button>
+      </li>
+    </ol>
+    <p v-if="splitOutputs && clips.length > maxAudioCuts" class="splitHint">每次最多拆分为 {{ maxAudioCuts + 1 }} 段。</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { ElButton } from "element-plus";
-import { IconArrowBackUp, IconArrowForwardUp, IconLink, IconScissors, IconTrash } from "@tabler/icons-vue";
+import { IconArrowBackUp, IconArrowForwardUp, IconLink, IconPlayerPause, IconPlayerPlay, IconScissors, IconTrash } from "@tabler/icons-vue";
+import { t, translate } from "@toonflow/i18n/vue";
+import { maxAudioCuts } from "../audioProcessing";
 import type { AudioSegment } from "../audioProcessing";
 import audioPlayer from "./audioPlayer.vue";
 import type { PcmOptions } from "@toonflow/node-shared/pcmPreview";
 
 type EditState = { groups: AudioSegment[][]; selectedIndex: number; playhead: number };
-const props = defineProps<{ src: string; mimeType?: string; disabled?: boolean }>();
+const props = defineProps<{ src: string; mimeType?: string; disabled?: boolean; splitOutputs?: boolean }>();
 const segments = defineModel<AudioSegment[]>({ required: true });
 const pcmOptions = defineModel<Partial<PcmOptions>>("pcmOptions", { default: () => ({}) });
 const player = ref<InstanceType<typeof audioPlayer>>();
@@ -69,7 +93,7 @@ const timelineDuration = computed(() => totalDuration.value || duration.value ||
 const valid = computed(() => !!player.value?.duration && !player.value.failed && duration.value > 0 && groups.value.length > 0 && groups.value.flat().every(segment => Number.isFinite(segment.start) && Number.isFinite(segment.end) && segment.start >= 0 && segment.end > segment.start && segment.end <= duration.value));
 const canSplit = computed(() => {
   const clip = clips.value[selectedIndex.value];
-  return clip && playhead.value - clip.offset >= 0.01 && clip.offset + clip.length - playhead.value >= 0.01;
+  return clip && (!props.splitOutputs || clips.value.length <= maxAudioCuts) && playhead.value - clip.offset >= 0.01 && clip.offset + clip.length - playhead.value >= 0.01;
 });
 const canMerge = computed(() => !!activeSegment.value && groups.value.length > 1);
 let playbackClipIndex = 0;
@@ -143,7 +167,7 @@ function handleKeydown(event: KeyboardEvent) {
   else undo();
 }
 
-function selectSegment(index: number, event?: MouseEvent) {
+function activateSegment(index: number, event?: MouseEvent) {
   const clip = clips.value[index];
   if (props.disabled || !clip) return;
   let time = clip.offset;
@@ -152,6 +176,22 @@ function selectSegment(index: number, event?: MouseEvent) {
     time += clip.length * Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
   }
   seekAt(time);
+  if (props.splitOutputs && event?.detail) splitSegment();
+}
+
+function removeCut(index: number) {
+  if (props.disabled || index < 1 || index >= groups.value.length) return;
+  const next = [...groups.value];
+  next.splice(index - 1, 2, [{ start: next[index - 1]![0]!.start, end: next[index]![0]!.end }]);
+  commit(next, index - 1, clips.value[index]!.offset);
+}
+
+function previewSegment(index: number) {
+  const clip = clips.value[index];
+  if (props.disabled || !clip) return;
+  if (selectedIndex.value === index && player.value?.playing) return pause();
+  if (selectedIndex.value !== index || playhead.value >= clip.offset + clip.length) seekAt(clip.offset);
+  void player.value?.togglePlayback();
 }
 
 function seekTimeline(event: MouseEvent) {
@@ -179,6 +219,11 @@ function seekPlayer() {
   playbackPartIndex = partIndex < 0 ? clip.parts.length - 1 : partIndex;
   const part = clip.parts[playbackPartIndex]!;
   player.value?.seekTo(part.start + playhead.value - clip.offset - part.offset);
+}
+
+function splitInHalf() {
+  seekAt(totalDuration.value / 2);
+  splitSegment();
 }
 
 function splitSegment() {
@@ -229,6 +274,7 @@ function updatePlayback(time: number | undefined) {
   if (!clip || !part || time === undefined || !Number.isFinite(time)) return;
   playhead.value = clip.offset + part.offset + Math.min(part.length, Math.max(0, time - part.start));
   if (!player.value?.playing || time < part.end) return;
+  if (props.splitOutputs) return pause();
   // ACT: 复用播放器帧更新跳过已删除片段；试听切点受帧率限制，导出由 FFmpeg 精确裁剪。
   let next = clip.parts[++playbackPartIndex];
   if (!next) {
@@ -244,6 +290,23 @@ function updatePlayback(time: number | undefined) {
 <style scoped lang="scss">
 .audioClipEditor {
   min-width: 0;
+  .splitHint { margin: 0 0 8px; font-size: 13px; color: var(--el-text-color-regular); }
+  .clipAuditions {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(174px, 100%), 1fr)); gap: 6px;
+    margin: 12px 0 0; padding: 0; list-style: none;
+    button {
+      position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 2px 7px;
+      width: 100%; padding: 7px 10px 10px; overflow: hidden; border: 1px solid var(--el-border-color);
+      border-radius: var(--el-border-radius-base); color: var(--el-text-color-primary); background: var(--el-fill-color-blank);
+      font: inherit; text-align: start; cursor: pointer;
+      svg { grid-row: span 2; }
+      .clipTime { color: var(--el-text-color-regular); font-size: 12px; font-variant-numeric: tabular-nums; text-align: start; }
+      .clipLocation { position: absolute; inset: auto 9px 4px; height: 2px; background: var(--el-border-color-light); i { position: absolute; height: 100%; min-width: 2px; background: var(--el-color-primary); } }
+      &:hover, &.current { border-color: var(--el-color-primary); color: var(--el-color-primary); }
+      &:focus-visible { outline: 2px solid var(--el-color-primary); outline-offset: 1px; }
+      &:disabled { opacity: 0.65; cursor: default; }
+    }
+  }
   :deep(.audioPlayer .waveformPanel .waveformTrack) { height: 148px; }
   .timeline {
     position: absolute; inset: 0;
@@ -252,6 +315,12 @@ function updatePlayback(time: number | undefined) {
       span { position: absolute; top: 2px; transform: translateX(-50%); color: var(--el-text-color-secondary); font-size: 10px; font-variant-numeric: tabular-nums; &::after { content: ""; position: absolute; top: 17px; left: 50%; height: 6px; border-left: 1px solid var(--el-border-color); } &:first-child { transform: none; } &:last-child { transform: translateX(-100%); } }
     }
     .segmentTrack {
+      .cutHandle {
+        position: absolute; z-index: 2; top: 0; bottom: 0; width: 12px; padding: 0; border: 0;
+        background: transparent; transform: translateX(-50%); cursor: pointer;
+        &::before { content: ""; position: absolute; inset: 0 5px; background: var(--el-color-primary); }
+        &:hover::before, &:focus-visible::before { background: var(--el-color-danger); }
+      }
       position: relative; height: 120px;
       .segmentItem {
         position: absolute; top: 0; bottom: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 8px 10px; border: 1px solid var(--el-color-primary-light-5); border-radius: 4px; text-align: left; color: var(--el-color-primary); background: var(--el-color-primary-light-9); cursor: pointer;

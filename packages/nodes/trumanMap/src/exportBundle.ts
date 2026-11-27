@@ -1,10 +1,11 @@
+import { markMessages, t, translate } from "@toonflow/i18n/vue";
 // ACT: 勾选式导出：右上角导出面板、外部总Agent的 editorExport 共用一套导出项；画布里按镜分行建节点，独立打开时打成一个 ZIP 下载。
 
 /** 导出项：每镜三样（分镜图、场景四视图、白模视频），整场五样（场景微缩图、分镜脚本、预演小样、镜头表、剪辑表）。 */
 export const exportItemKeys = ["overview", "frames", "views", "clips", "script", "previs", "shotList", "edl"] as const;
 export type ExportItem = (typeof exportItemKeys)[number];
 export type ExportPicks = Record<ExportItem, boolean>;
-export const exportItemInfo: Record<ExportItem, { name: string; perShot: boolean; title: string }> = {
+export const exportItemInfo: Record<ExportItem, { name: string; perShot: boolean; title: string }> = markMessages({
   frames: { name: "分镜图", perShot: true, title: "每镜一张关键帧（这台机位此刻的真实画面）；多于一镜时加一张分镜总览" },
   views: { name: "四视图", perShot: true, title: "每镜一张场景四视图：以这一镜的主体为中心，从机位一侧、右、后、左四个方向斜俯拍，拼成2×2" },
   clips: { name: "白模视频", perShot: true, title: "每镜一段白模视频，干净画面不带字幕，可直接做视频参考" },
@@ -13,7 +14,7 @@ export const exportItemInfo: Record<ExportItem, { name: string; perShot: boolean
   previs: { name: "预演小样", perShot: false, title: "整片按成片切换，带镜号、时间码和台词字幕" },
   shotList: { name: "镜头表", perShot: false, title: "逐镜截图、景别、入画人物、台词，带机位平面图；可打印、存PDF、下CSV" },
   edl: { name: "剪辑表 EDL", perShot: false, title: "剪辑软件导入后把预演小样按镜头切开" },
-};
+});
 export const defaultExportPicks: ExportPicks = { overview: true, frames: true, views: true, clips: true, script: false, previs: false, shotList: false, edl: false };
 
 /** 画布上的导出包：左边一列整场的（微缩图、分镜总览、分镜脚本、预演小样），右边每镜一行（分镜图、四视图、白模视频）。 */
@@ -24,7 +25,7 @@ export function exportEta(progress: ExportProgress, now = performance.now()) {
   const elapsed = (now - progress.startedAt) / 1000, ratio = progress.done / Math.max(1, progress.total);
   if (ratio < 0.03 || elapsed < 1.5 || ratio >= 1) return "";
   const left = elapsed * (1 - ratio) / ratio;
-  return left < 5 ? "马上就好" : left < 60 ? `约 ${Math.ceil(left / 5) * 5} 秒` : `约 ${Math.ceil(left / 60)} 分钟`;
+  return left < 5 ? translate("马上就好") : left < 60 ? t`约 ${Math.ceil(left / 5) * 5} 秒` : t`约 ${Math.ceil(left / 60)} 分钟`;
 }
 export type CanvasExportBundle = {
   overview?: { file: File; label: string };

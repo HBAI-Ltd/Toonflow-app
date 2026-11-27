@@ -169,7 +169,7 @@
           v-if="!updateError && !snapshot?.installFailure && (action === 'download' || updateProgress || (snapshot?.updateReady && !updateInProgress))"
           class="updateProgress">
           <div v-if="updateInProgress" class="progressHeader">
-            <span>{{ updateProgress?.phase === "preparing" ? "正在解压并校验更新包" : "下载进度" }}</span>
+            <span>{{ updateProgress?.phase === "preparing" ? (snapshot?.usesSystemInstaller ? "正在校验" : "正在解压并校验更新包") : "下载进度" }}</span>
             <span v-if="updateProgress && (updateProgress.received > 0 || updateProgress.total)">
               {{ formatBytes(updateProgress.received) }}<template v-if="updateProgress.total"> / {{ formatBytes(updateProgress.total) }}</template>
             </span>
@@ -209,7 +209,7 @@
           :type="snapshot.updateReady ? 'danger' : 'primary'"
           :loading="working"
           @click="runUpdate(snapshot.updateReady ? 'apply' : 'download')">
-          {{ snapshot.updateReady ? "重启并更新" : "下载更新" }}
+          {{ snapshot.updateReady ? (snapshot.usesSystemInstaller ? "打开系统安装器" : "重启并更新") : "下载更新" }}
         </el-button>
       </template>
     </el-dialog>
@@ -279,7 +279,7 @@ const resultTitle = computed(() => {
   if (updateError.value) return translate("更新未完成");
   if (checking.value) return translate("正在检查更新");
   if (action.value === "read") return translate("正在读取更新状态");
-  if (action.value === "apply") return translate("正在重启并更新");
+  if (action.value === "apply") return snapshot.value?.usesSystemInstaller ? translate("正在准备更新") : translate("正在重启并更新");
   if (working.value) return translate("正在准备更新");
   if (snapshot.value?.updateReady) return translate("更新已准备完成");
   if (isPatchUpdate.value) return translate("发现小补丁更新");
@@ -290,10 +290,14 @@ const resultMessage = computed(() => {
   if (updateError.value) return updateError.value;
   if (checking.value) return translate("正在获取最新版本信息…");
   if (action.value === "read") return translate("正在确认客户端的更新状态，请稍候…");
+  if (snapshot.value?.usesSystemInstaller && (action.value === "apply" || snapshot.value.updateReady)) {
+    return translate("打开安装器后，请保存工作并退出 Toonflow。安装完成后重新打开应用。");
+  }
   if (action.value === "apply") return translate("客户端即将关闭，更新完成后会自动重新打开。");
   if (working.value) return translate("正在下载并校验更新包，可以关闭此弹窗继续使用。");
   if (snapshot.value?.updateReady) return translate("点击“重启并更新”安装新版本，请先完成正在进行的任务。");
   if (!snapshot.value?.updateAvailable) return t`当前已是最新版本 v${currentVersion.value}`;
+  if (snapshot.value.usesSystemInstaller) return translate("下载完成后，可通过系统安装器更新。");
   return snapshot.value.canUpdate ? translate("有新的版本可用，下载完成后可重启更新。") : translate("当前客户端不支持应用内更新，请下载安装包。");
 });
 
@@ -377,7 +381,10 @@ async function runUpdate(nextAction: "read" | "check" | "download" | "apply") {
   if (working.value || sourceSaving.value) return;
   updateError.value = "";
   try {
-    await runDesktopUpdate(nextAction);
+    const result = await runDesktopUpdate(nextAction);
+    if (nextAction === "apply" && result.usesSystemInstaller && !result.error) {
+      ElMessage.success(translate("已打开系统安装器"));
+    }
     if (snapshot.value?.channel === "dev") updateError.value = "开发版本不提供更新检查，请使用正式桌面客户端。";
   } catch {
     // 错误与交接状态由全局 Store 保留，关闭面板不取消更新观察。

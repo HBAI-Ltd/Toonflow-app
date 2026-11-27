@@ -16,7 +16,13 @@
       @rename="renameConversation"
       @remove="removeConversation"
       @close="visible = false">
-      <template #actions><slot name="menuActions" /></template>
+      <template #actions>
+        <el-button v-if="!multiTenantEnabled && !selectedConversation?.parentFile" text circle :disabled="!initialized || loading"
+          :aria-label="automationLabel" :title="automationLabel" @click="conversationRefs.get(conversationKey)?.openAutomations(false)">
+          <el-badge isDot :hidden="!unreadRuns.size" type="primary"><icon-calendar-clock :size="16" aria-hidden="true" /></el-badge>
+        </el-button>
+        <slot name="menuActions" />
+      </template>
     </agentMenu>
     <conversation
       v-for="item in conversations"
@@ -27,27 +33,45 @@
       :initialSession="item.session"
       :initialModel="item.initialModel"
       :sessionFile="item.file"
+      :automations="automations"
+      :cancellingAutomation="cancellingAutomation"
       :disabled="loading || !initialized"
       :branchingId="branchingId"
       @session="setSessionFile(item, $event)"
       @branch="newConversation({ file: item.file, message: $event })"
+      @automations="automationEntry = { ...$event, key: item.key }"
+      @automationsChanged="reloadAutomations"
+      @cancelAutomation="cancelFromBar"
       @event="receiveAgentEvent"
       @sent="updateConversationName(item, $event)" />
+    <automationDialog v-if="automationEntry && automationSource && projectDirectory" :entry="automationEntry" :directory="projectDirectory" :tasks="automations"
+      :sourceFile="automationSource.file" :unreadRuns="unreadRuns" :load="loadAutomations" :update="updateAutomation" :ensureSession="ensureAutomationSession" @read="markAutomationRead"
+      @close="closeAutomations" @saved="automationEntry.saved = true" @result="openAutomationResult" />
   </section>
 </template>
 
+<script lang="ts">
+// ACT: 浏览器禁用本地存储时，仅在当前标签页内保留已读状态，切换项目仍可恢复。
+const fallbackReads = new Map<string, string>();
+</script>
+
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from "vue";
+import { computed, h, nextTick, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from "vue";
 import axios from "axios";
 import { translate } from "@toonflow/i18n/vue";
-import { ElMessage } from "element-plus";
+import { ElButton, ElMessage, ElMessageBox, ElNotification } from "element-plus";
+import { IconCalendarClock } from "@tabler/icons-vue";
 import { useWorkspaceStore } from "@/stores/workspace";
+import { multiTenantEnabled, settings } from "@/stores/settings";
+import { mobileConnection } from "@/lib/mobile";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
+import http from "@/lib/http";
 import { stopAgent } from "@/lib/agentControl";
-import type { AgentConversation, AgentHistory, AgentMessage } from "./types";
-import type { AgentEvent, AgentSubAgent } from "@toonflow/server/agent/types";
+import type { AgentAutomationEntry, AgentConversation, AgentHistory, AgentMessage } from "./types";
+import type { AgentAutomation, AgentAutomationCommand, AgentEvent, AgentSubAgent } from "@toonflow/server/agent/types";
 import agentMenu from "./menu.vue";
 import conversation from "./conversation.vue";
+import automationDialog from "./automationDialog.vue";
 
 const visible = defineModel<boolean>({ default: false });
 type OpenConversation = { key: number; name: string; file?: string; parentFile?: string; runId?: string; retiredRunIds: Set<string>; subAgents: AgentSubAgent[]; session: AgentConversation | null; initialModel?: string };
@@ -72,6 +96,204 @@ let requestId = 0;
 let nextConversationKey = 0;
 const conversationRefs = new Map<number, InstanceType<typeof conversation>>();
 const pendingEvents = new Map<number, AgentEvent[]>();
+const automations = ref<AgentAutomation[]>([]);
+const cancellingAutomation = ref(false);
+const automationNotices = new Set<ReturnType<typeof ElNotification>>();
+const automationEntry = ref<(AgentAutomationEntry & { key: number; saved?: boolean })>();
+const automationSource = computed(() => conversations.value.find(item => item.key === automationEntry.value?.key));
+const readScope = computed(() => {
+  const directory = workspaceStore.project?.directory;
+  if (!directory || multiTenantEnabled.value) return;
+  const account = settings.value.toonflowAccount as { info?: { phone?: string; userName?: string } } | null | undefined;
+  const host = mobileConnection.value.mode === "remote" ? mobileConnection.value.url ?? "remote" : "local";
+  return "toonflow.automationReadRuns." + JSON.stringify([host, directory, account?.info?.phone || account?.info?.userName || null]);
+});
+const unreadRuns = ref(new Map<string, string>());
+function readMarker(key: string) {
+  try { return fallbackReads.get(key) ?? localStorage.getItem(key); }
+  catch { return fallbackReads.get(key); }
+}
+function saveMarker(key: string, value: string) {
+  try { localStorage.setItem(key, value); fallbackReads.delete(key); }
+  catch { fallbackReads.set(key, value); }
+}
+function latestResult(task: AgentAutomation) {
+  return task.runs.find(run => run.finishedAt && run.status !== "cancelled");
+}
+function refreshUnreadRuns() {
+  const unread = new Map<string, string>();
+  const scope = readScope.value;
+  const marker = scope && readMarker(scope);
+  if (scope && marker != null) {
+    const baseline = new Set(marker.split(","));
+    for (const task of automations.value) {
+      const run = latestResult(task);
+      if (run && !baseline.has(run.id) && readMarker(scope + "." + task.id) !== run.id) unread.set(task.id, run.id);
+    }
+  }
+  unreadRuns.value = unread;
+}
+watch([readScope, automations], refreshUnreadRuns, { flush: "sync" });
+const automationLabel = computed(() => [translate("自动化任务"), unreadRuns.value.size && translate("有新的运行结果")].filter(Boolean).join(" · "));
+function markAutomationRead(runId: string) {
+  const scope = readScope.value;
+  if (!scope || !visible.value || document.visibilityState !== "visible") return;
+  for (const [taskId, unreadId] of unreadRuns.value) {
+    if (runId !== unreadId) continue;
+    saveMarker(scope + "." + taskId, runId);
+    unreadRuns.value.delete(taskId);
+    return;
+  }
+}
+function syncReadMarker(event: StorageEvent) {
+  const scope = readScope.value;
+  if (scope && (event.key === null || event.key === scope || event.key.startsWith(scope + "."))) {
+    if (event.key === null) fallbackReads.clear();
+    else fallbackReads.delete(event.key);
+    refreshUnreadRuns();
+  }
+}
+const syncedRuns = new Map<number, string>();
+const syncingRuns = new Set<number>();
+let automationVersion = 0;
+let automationRead: Promise<void> | undefined;
+
+function applyAutomationList(tasks: AgentAutomation[]) {
+  const previous = new Map(automations.value.map(task => [task.id, task]));
+  const scope = readScope.value;
+  // 首次进入时记住已有结果 ID，服务端时钟回拨也不会隐藏后来的结果。
+  if (scope && readMarker(scope) == null) {
+    const baseline = tasks.map(task => latestResult(task)?.id).filter(Boolean);
+    saveMarker(scope, baseline.join(","));
+  }
+  automations.value = tasks;
+  if (!previous.size || !visible.value || document.visibilityState !== "visible" || automationEntry.value || selectedConversation.value?.parentFile) return;
+  const directory = projectDirectory;
+  for (const task of tasks) {
+    const before = previous.get(task.id);
+    const run = task.runs[0];
+    if (!before || !run?.finishedAt || run.status === "running" || run.status === "cancelled" || task.cancelledAt || !unreadRuns.value.has(task.id)
+      || (task.sessionFile && task.sessionFile !== sessionFile.value)) continue;
+    const priorRun = before.runs[0];
+    if (priorRun?.id === run.id && priorRun.finishedAt) continue;
+    if (!before.queued && priorRun?.status !== "running" && !(before.enabled && before.nextRunAt !== null && before.nextRunAt <= run.startedAt)) continue;
+    const labels = { completed: translate("已完成"), failed: translate("失败"), interrupted: translate("已中断") };
+    const resultFile = run.status === "completed" && run.sessionFile;
+    const notice = ElNotification({
+      title: task.name + " · " + labels[run.status], type: run.status === "completed" ? "success" : "warning",
+      customClass: "automationNotice", duration: 9000,
+      message: h(ElButton, { link: true, type: "primary", onClick: () => {
+        notice.close();
+        if (readScope.value !== scope || projectDirectory !== directory || !visible.value || automationEntry.value) return;
+        if (resultFile) openAutomationResult(resultFile, run.id);
+        else conversationRefs.get(conversationKey.value)?.openAutomations(false, undefined, undefined, task.id);
+      } }, () => resultFile ? translate("查看结果") : translate("运行记录")),
+      onClose: () => automationNotices.delete(notice),
+    });
+    automationNotices.add(notice);
+  }
+}
+
+async function refreshTimerResults(directory: string, tasks: AgentAutomation[]) {
+  const latest = new Map<string, { id: string; finishedAt: number }>();
+  for (const task of tasks) for (const run of task.runs) {
+    if (run.sessionFile && run.finishedAt && run.finishedAt > (latest.get(run.sessionFile)?.finishedAt ?? 0)) {
+      latest.set(run.sessionFile, { id: run.id, finishedAt: run.finishedAt });
+    }
+  }
+  for (const item of conversations.value) {
+    const file = item.file;
+    const run = file && latest.get(file);
+    const view = conversationRefs.get(item.key);
+    if (!file || !run || syncedRuns.get(item.key) === run.id || syncingRuns.has(item.key) || !view?.canRefreshAutomation()) continue;
+    syncingRuns.add(item.key);
+    try {
+      const session = await readConversation(directory, file);
+      if (directory === projectDirectory && conversationRefs.get(item.key) === view && view.refreshAutomation(session)) syncedRuns.set(item.key, run.id);
+    } catch (cause) {
+      // 已移除的历史对话无需继续拉取，其余错误留待下一次刷新。
+      if (axios.isAxiosError(cause) && cause.response?.status === 404) syncedRuns.set(item.key, run.id);
+    } finally { syncingRuns.delete(item.key); }
+  }
+}
+
+function loadAutomations() {
+  if (automationRead) return automationRead;
+  const directory = workspaceStore.project?.directory;
+  if (!directory || multiTenantEnabled.value) return Promise.resolve();
+  const version = automationVersion;
+  const pending = http<AgentAutomation[]>({ method: "GET", url: "/api/agent/automations/list", params: { directory } }).then(tasks => {
+    if (version !== automationVersion || directory !== projectDirectory) return;
+    applyAutomationList(tasks);
+    return refreshTimerResults(directory, tasks);
+  }).finally(() => { if (automationRead === pending) automationRead = undefined; });
+  automationRead = pending;
+  return pending;
+}
+
+function pollAutomations() {
+  if (visible.value && document.visibilityState === "visible") {
+    void loadAutomations().catch(() => { /* 下次轮询重试；打开管理页时直接显示读取错误。 */ });
+  }
+}
+
+function reloadAutomations() {
+  automationVersion++;
+  automationRead = undefined;
+  pollAutomations();
+}
+
+async function updateAutomation(directory: string, command: AgentAutomationCommand) {
+  const scope = readScope.value;
+  if (command.action === "cancel") {
+    const task = automations.value.find(item => item.id === command.id);
+    if (!task || directory !== projectDirectory) throw new Error(translate("任务已变更，请刷新后重试"));
+    try {
+      await ElMessageBox.confirm(translate("确定取消此任务？当前执行和后续计划都将停止。"), task.name, {
+        type: "warning", confirmButtonText: translate("取消任务"), cancelButtonText: translate("返回"),
+      });
+    } catch { return; }
+  }
+  if (!scope || scope !== readScope.value || directory !== projectDirectory) throw new Error("项目已切换");
+  const tasks = await http<AgentAutomation[]>({ method: "POST", url: "/api/agent/automations/update", data: { directory, command } });
+  if (scope !== readScope.value || directory !== projectDirectory) return;
+  automationVersion++;
+  applyAutomationList(tasks);
+  await refreshTimerResults(directory, tasks);
+}
+
+async function cancelFromBar(task: AgentAutomation) {
+  if (!projectDirectory || cancellingAutomation.value) return;
+  cancellingAutomation.value = true;
+  try { await updateAutomation(projectDirectory, { action: "cancel", id: task.id, revision: task.revision }); }
+  catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : translate("请求失败"));
+    if ((error as { status?: number })?.status === 409) reloadAutomations();
+  } finally { cancellingAutomation.value = false; }
+}
+
+async function ensureAutomationSession() {
+  const item = automationSource.value;
+  const directory = projectDirectory;
+  if (!item || !directory) throw new Error("请先打开项目");
+  if (item.file) return item.file;
+  if (conversationRefs.get(item.key)?.getRunId()) throw new Error("对话正在准备，请稍后发送");
+  const session = await http<AgentConversation>({ method: "POST", url: "/api/agent/create", data: { directory } });
+  if (directory !== projectDirectory || item !== automationSource.value) throw new Error("项目已切换");
+  if (!item.file) setSessionFile(item, session.file);
+  return item.file ?? session.file;
+}
+
+function closeAutomations() {
+  const entry = automationEntry.value;
+  automationEntry.value = undefined;
+  if (entry && (entry.saved || !entry.prompt)) void conversationRefs.get(entry.key)?.clearCommandText(entry.token);
+}
+
+function openAutomationResult(file: string, runId: string) {
+  closeAutomations();
+  void selectConversation(file, runId);
+}
 
 function showConversation(session: AgentConversation | null, activate = true) {
   const existing = session && conversations.value.find(item => item.file === session.file);
@@ -255,26 +477,33 @@ async function loadHistory(openLatest = false) {
   }
 }
 
-async function selectConversation(file: string) {
+async function selectConversation(file: string, resultRunId?: string) {
   const directory = workspaceStore.project?.directory;
-  if (!directory || loading.value || historyLoading.value || file === sessionFile.value) return;
+  if (!directory || loading.value || historyLoading.value || (!resultRunId && file === sessionFile.value)) return;
   const existing = conversations.value.find(item => item.file === file);
-  if (existing) {
+  if (existing && !resultRunId) {
     conversationKey.value = existing.key;
     return;
   }
   const currentRequest = ++requestId;
+  let selectedKey: number | undefined;
   loading.value = true;
   try {
     const session = await readConversation(directory, file);
     if (currentRequest !== requestId) return;
-    showConversation(session);
+    if (existing) conversationRefs.get(existing.key)?.refreshAutomation(session);
+    selectedKey = showConversation(session).key;
     initialized.value = true;
   } catch (error) {
     if (currentRequest === requestId) ElMessage.error(error instanceof Error ? error.message : "读取对话失败");
   } finally {
     if (currentRequest === requestId) loading.value = false;
   }
+  if (selectedKey === undefined || !resultRunId) return;
+  await nextTick();
+  if (currentRequest !== requestId || selectedKey !== conversationKey.value || !visible.value) return;
+  conversationRefs.get(selectedKey)?.revealAutomationResult(resultRunId);
+  markAutomationRead(resultRunId);
 }
 
 async function renameConversation(file: string, value: string) {
@@ -347,6 +576,7 @@ watch(() => workspaceStore.project?.directory, directory => {
   if (projectDirectory && projectDirectory !== directory) stopProject(projectDirectory);
   projectDirectory = directory;
   requestId++;
+  syncedRuns.clear();
   history.value = [];
   conversations.value = [];
   conversationRefs.clear();
@@ -359,18 +589,51 @@ watch(() => workspaceStore.project?.directory, directory => {
   if (visible.value && directory) void loadHistory(true);
 }, { immediate: true, flush: "sync" });
 watch(visible, active => {
+  if (!active) closeAutomations();
   if (active && !initialized.value) void loadHistory(true);
 });
+watch([visible, readScope], ([active, scope], [, previousScope], onCleanup) => {
+  if (scope !== previousScope) {
+    automationVersion++;
+    automationRead = undefined;
+    automations.value = [];
+    automationEntry.value = undefined;
+  }
+  if (!active || !scope) return;
+  pollAutomations();
+  const stopTimer = watch(automations, (tasks, _, cleanup) => {
+    const now = Date.now();
+    let delay = 15000;
+    for (const task of tasks) {
+      if (task.cancelledAt) continue;
+      if (task.queued || task.runs[0]?.status === "running") delay = Math.min(delay, 1500);
+      if (task.enabled && task.nextRunAt !== null) delay = Math.min(delay, Math.max(1500, task.nextRunAt - now + 100));
+    }
+    const timer = window.setInterval(pollAutomations, delay);
+    cleanup(() => window.clearInterval(timer));
+  }, { immediate: true });
+  document.addEventListener("visibilitychange", pollAutomations);
+  window.addEventListener("focus", pollAutomations);
+  onCleanup(() => {
+    for (const notice of automationNotices) notice.close();
+    stopTimer();
+    document.removeEventListener("visibilitychange", pollAutomations);
+    window.removeEventListener("focus", pollAutomations);
+  });
+}, { immediate: true, flush: "sync" });
 window.addEventListener("pagehide", pageHide);
+window.addEventListener("storage", syncReadMarker);
 onBeforeUnmount(() => {
   requestId++;
   stopProject();
   window.removeEventListener("pagehide", pageHide);
+  window.removeEventListener("storage", syncReadMarker);
 });
 
 </script>
 
 <style scoped lang="scss">
+:global(.automationNotice) { max-width: calc(100vw - 32px); overflow-wrap: anywhere; }
 .agent {
   display: flex;
   flex-direction: column;

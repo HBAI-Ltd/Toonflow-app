@@ -100,9 +100,19 @@ const manifest = await file(join(artifactDir, manifestName)).json();
 if (manifest.version !== version) {
   throw new Error("本次构建的更新 JSON 与请求版本不一致。");
 }
-const names: string[] = [manifest.artifact.file];
-if (isMac) names.push(`toonflow-${version}-macos-${process.arch}.pkg`);
-else if (platform === "linux") {
+const checksumName = `${prefix}-checksum.json`;
+const checksum = await file(join(artifactDir, checksumName)).json();
+if (typeof manifest.hash !== "string" || !manifest.hash || checksum?.hash !== manifest.hash
+  || typeof checksum.tarSha256 !== "string" || !/^[a-f0-9]{64}$/.test(checksum.tarSha256)
+  || !Number.isSafeInteger(checksum.tarSize) || checksum.tarSize <= 0) {
+  throw new Error(`本次构建的归档校验清单无效或与更新清单不匹配：${checksumName}`);
+}
+const names: string[] = [manifest.artifact.file, checksumName];
+if (isMac) {
+  const packageName = `toonflow-${version}-macos-${process.arch}.pkg`;
+  if (manifest.pkg?.file !== packageName) throw new Error("本次 macOS 构建缺少 PKG 安装包清单。");
+  names.push(packageName);
+} else if (platform === "linux") {
   const packageName = `toonflow-${version}-linux-${process.arch}.deb`;
   if (manifest.deb?.file !== packageName) throw new Error("本次 Linux 构建缺少 Debian 安装包清单。");
   names.push(packageName);

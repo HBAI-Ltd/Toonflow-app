@@ -7,16 +7,20 @@ import u from "@/utils";
 import { translateError, translateMessage } from "@/lib/i18n";
 import { thinkingLevels } from "@/lib/modelReasoning";
 import { getAgentModelConfiguration } from "@/agent/runtime/model";
+import { timeZoneSchema } from "@/agent/runtime/schedule";
 
 const inputSchema = z.object({
   prompt: z.string().trim(), directory: z.string().min(1),
+  operation: z.literal("compact").optional(),
   runId: z.uuid().optional(),
   expectedRunId: z.uuid().optional(),
   attachments: u.agent.agentAttachmentsSchema.optional(),
   mentions: u.agent.agentMentionsSchema.optional(),
   providerId: z.string().min(1), modelId: z.string().min(1),
   thinkingLevel: z.enum(thinkingLevels).optional(),
+  timeZone: timeZoneSchema.optional(),
   sessionFile: z.string().regex(/^[\w-]+\.jsonl$/).optional(),
+  goalStart: z.strictObject({ id: z.uuid(), revision: z.number().int().positive() }).optional(),
   resendFrom: z.string().min(1).max(128).optional(),
   streamingBehavior: z.enum(["steer", "followUp"]).optional(),
   canvas: z.strictObject({
@@ -33,7 +37,14 @@ const inputSchema = z.object({
 });
 
 export default Router().post("/", validateFields(inputSchema.shape), async (req, res) => {
-  const { directory, canvas, runId = crypto.randomUUID(), ...options } = req.body as z.infer<typeof inputSchema>;
+  const { directory, canvas, runId = crypto.randomUUID(), ...options } = inputSchema.parse(req.body);
+  if (options.operation === "compact" && (!options.sessionFile || options.prompt.trim().length > 8000 || options.resendFrom || options.streamingBehavior ||
+    options.expectedRunId || options.goalStart || options.attachments?.length || options.mentions?.length || canvas)) {
+    throw Object.assign(new Error("请在空闲的主对话中单独压缩上下文"), { status: 400 });
+  }
+  if (options.goalStart && (!options.sessionFile || options.streamingBehavior || options.expectedRunId || options.resendFrom)) {
+    throw Object.assign(new Error("请在空闲的目标会话中开始新一轮"), { status: 400 });
+  }
   if (options.streamingBehavior && !options.expectedRunId) {
     throw Object.assign(new Error("排队或引导需要指定当前任务标识，请刷新对话后重试"), { status: 400 });
   }
@@ -57,7 +68,7 @@ export default Router().post("/", validateFields(inputSchema.shape), async (req,
     unregister = u.agent.registerAgentRun(run);
     const cwd = await workspace;
     controller.signal.throwIfAborted();
-    await getAgentModelConfiguration(options.providerId, options.modelId, options.thinkingLevel);
+    if (options.operation !== "compact") await getAgentModelConfiguration(options.providerId, options.modelId, options.thinkingLevel);
     res.set({ "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no" });
     res.flushHeaders();
     send = (event: AgentEvent) => {

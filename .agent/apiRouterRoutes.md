@@ -294,7 +294,6 @@
 | 方法 | 完整路径 | 路由源码 |
 | --- | --- | --- |
 | GET | `/api/settings/get` | [settings/get.ts](../apps/server/src/routes/settings/get.ts) |
-| POST | `/api/settings/network/test` | [settings/network/test.ts](../apps/server/src/routes/settings/network/test.ts) |
 | GET | `/api/settings/personalization/get` | [settings/personalization/get.ts](../apps/server/src/routes/settings/personalization/get.ts) |
 | PUT | `/api/settings/personalization/save` | [settings/personalization/save.ts](../apps/server/src/routes/settings/personalization/save.ts) |
 | PUT | `/api/settings/save` | [settings/save.ts](../apps/server/src/routes/settings/save.ts) |

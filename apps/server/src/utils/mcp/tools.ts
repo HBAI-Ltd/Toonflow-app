@@ -6,6 +6,7 @@ import { realpath, stat, mkdir, readdir, readFile } from "@toonflow/file";
 import { z } from "zod";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { CanvasContext } from "@toonflow/tools-scaffold/runtime";
+import { canvasOperations } from "@toonflow/tool-canvas/runtime";
 import type { McpTool } from "@toonflow/mcp";
 import { createAgentTools } from "@/agent/tools";
 import { run as runAgent } from "@/agent";
@@ -47,11 +48,11 @@ async function resolveDirectory(directory?: string) {
   return path;
 }
 
-async function resolveTarget(target: z.infer<typeof targetSchema> = {}, requireDirectory = true) {
+async function resolveTarget(target: z.infer<typeof targetSchema> = {}, requireDirectory = true, allowBackgroundCanvas = false) {
   const requestedDirectory = target.directory ? await resolveDirectory(target.directory) : undefined;
   const connection = getConnection(target.connectionId, requestedDirectory);
   if (target.connectionId && requestedDirectory && connection?.state.directory !== requestedDirectory) throw new Error("目标页面的工作区已切换，请重新获取 getAppState");
-  if (target.canvasId && connection?.state.canvasId !== target.canvasId) throw new Error("目标画布已切换，请重新获取 getAppState");
+  if (!allowBackgroundCanvas && target.canvasId && connection?.state.canvasId !== target.canvasId) throw new Error("目标画布已切换，请重新获取 getAppState");
   const directory = requireDirectory ? requestedDirectory ?? await resolveDirectory(connection?.state.directory ?? undefined) : undefined;
   return { connection, directory };
 }
@@ -132,7 +133,7 @@ async function assertFileNotOpen(directory: string, path: string) {
   for (const { state } of listConnections()) {
     if (state.directory !== directory) continue;
     const document = state.document as { selection?: { filePath?: string; canvasPath?: string } } | undefined;
-    const openPaths = [state.canvasId, document?.selection?.filePath, document?.selection?.canvasPath];
+    const openPaths = [state.canvasId, ...(state.canvasIds ?? []), document?.selection?.filePath, document?.selection?.canvasPath];
     for (const file of openPaths) {
       if (!file) continue;
       const opened = (await resolveWorkspacePath(directory, relative(directory, resolve(directory, file)), true)).path;
@@ -145,7 +146,7 @@ export async function getMcpTools(): Promise<McpTool[]> {
   const authorizationSignal = authorizationController.signal;
   let pluginError: string | undefined;
   const tools: McpTool[] = [{
-    name: "getAppState", description: t`列出连接的 Toonflow 页面及其 connectionId、工作目录、画布、项目列表和节点能力。控制多个页面时用 target.connectionId 明确操作对象。市场搜索无需连接页面，服务端工作区工具可显式指定 target.directory。`,
+    name: "getAppState", description: t`列出连接的 Toonflow 页面及其 connectionId、工作目录、当前画布、已加载画布 canvasIds、项目列表和节点能力。控制多个页面时用 target.connectionId 明确操作对象；画布工具通过 canvasId 指定目标，可并行操作不同画布且不切换界面。市场搜索无需连接页面，服务端工作区工具可显式指定 target.directory。`,
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     async execute() {
       const workspaceRoot = resolve(dirname(conf.path), "workspaces");
@@ -189,11 +190,14 @@ export async function getMcpTools(): Promise<McpTool[]> {
         const details = await runPluginDevelopment(directory, args, signal);
         return { content: [{ type: "text", text: JSON.stringify(details ?? null) }], details };
       }
-      const { connection, directory } = await resolveTarget(target);
+      const canvasOperation = canvasOperations.some(operation => operation.name === definition.name);
+      const { connection, directory } = await resolveTarget(target, true, canvasOperation);
+      if (canvasOperation && definition.name !== "switchCanvas" && target.canvasId && typeof args.canvasId === "string" && target.canvasId !== args.canvasId) throw new Error("target.canvasId 与 args.canvasId 必须指向同一画布");
       if (["write", "edit"].includes(definition.name) && typeof args.path === "string") await assertFileNotOpen(directory!, args.path);
+      const canvasId = target.canvasId ?? connection?.state.canvasId ?? undefined;
       const canvas: CanvasContext | undefined = connection ? {
-        id: connection.state.canvasId ?? "mcp", tools: connection.state.tools,
-        call: (request, callSignal) => callControl(connection.id, request.name, request.args, callSignal ?? signal, directory),
+        id: canvasId ?? "mcp", tools: connection.state.tools,
+        call: (request, callSignal) => callControl(connection.id, request.name, request.args, callSignal ?? signal, directory, canvasId),
       } : undefined;
       const current = (await createAgentTools(directory!, canvas, undefined, false)).find(tool => tool.name === definition.name);
       if (!current) throw new Error("工具已禁用，或所需 Toonflow 页面未连接，请重新读取工具列表");
@@ -275,10 +279,17 @@ export async function getMcpTools(): Promise<McpTool[]> {
   });
   tools.push(wrapTool("runAgent", "按用户请求调用 Toonflow 内置 Agent，等待本轮完成并返回对话文件与回复；会使用配置的模型。外部 Agent 可直接操作其他工具，仅需要委托内置 Agent 时调用。支持 MCP 取消，历史保存到工作区。", z.toJSONSchema(runAgentSchema), async (input, target, signal) => {
     const args = runAgentSchema.parse(input);
-    const { directory, connection } = await resolveTarget(target);
+    const { directory, connection } = await resolveTarget(target, true, true);
+    let canvasId = target.canvasId ?? connection?.state.canvasId ?? undefined;
     const canvas: CanvasContext | undefined = connection ? {
-      id: connection.state.canvasId ?? "mcp", tools: connection.state.tools,
-      call: (request, callSignal) => callControl(connection.id, request.name, request.args, callSignal ?? signal, directory),
+      get id() { return canvasId ?? "mcp"; }, tools: connection.state.tools,
+      async call(request, callSignal) {
+        const redirectsCanvas = request.name === "addCanvas" || request.name === "switchCanvas"
+          || (request.name === "renameCanvas" && (request.args.canvasId === undefined || request.args.canvasId === canvasId));
+        const result = await callControl(connection.id, request.name, request.args, callSignal ?? signal, directory, canvasId);
+        if (redirectsCanvas && result && typeof result === "object" && "id" in result && typeof result.id === "string") canvasId = result.id;
+        return result;
+      },
     } : undefined;
     const blocks = new Map<string, string>();
     let sessionFile = args.sessionFile;

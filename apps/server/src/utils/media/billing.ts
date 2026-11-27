@@ -1,7 +1,7 @@
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import type { Response } from "express";
 import { z } from "zod";
-import type { ProviderBalance, ProviderPrice, ProviderPriceRequest } from "@toonflow/providers";
+import { getQuoteTotal, type ProviderBalance, type ProviderPrice, type ProviderPriceRequest } from "@toonflow/providers";
 import conf from "@/utils/conf";
 import { getMediaProvider, loadMediaProviderSource } from "@/utils/media/provider";
 
@@ -16,11 +16,20 @@ type Account = BalanceSnapshot & {
 };
 
 const unitSchema = z.string().trim().min(1).max(64);
-// ACT: 已安装的旧供应商仍可返回数值报价，统一转换为展示文本。
-const priceSchema = z.object({ price: z.string().trim().min(1), tips: z.string() }).or(
-  z.object({ amount: z.number().finite().nonnegative(), unit: unitSchema })
-    .transform(({ amount, unit }) => ({ price: `${amount} ${unit}`, tips: "以实际扣费为准" })),
-);
+const amountSchema = z.number().nonnegative().max(Number.MAX_SAFE_INTEGER);
+
+const legacyPriceSchema = z.object({ amount: z.number().finite().nonnegative(), unit: unitSchema });
+const priceSchema = z.object({
+  price: z.string().trim().min(1), tips: z.string(), totalAmount: amountSchema.optional(),
+  amount: z.unknown().optional(), unit: z.unknown().optional(),
+}).transform(({ price, tips, totalAmount, amount, unit }) => {
+  if (totalAmount !== undefined) return { price, tips, totalAmount };
+  const legacy = amount === undefined ? undefined : legacyPriceSchema.safeParse({ amount, unit });
+  const total = legacy?.success ? getQuoteTotal(legacy.data.amount, [price, tips, legacy.data.unit].join(" ")) : getQuoteTotal(price, tips);
+  return { price, tips, totalAmount: total };
+}).or(legacyPriceSchema.transform(({ amount, unit }) => ({
+  price: `${amount} ${unit}`, tips: "以实际扣费为准", totalAmount: getQuoteTotal(amount, unit),
+})));
 const balanceSchema = z.object({
   balance: z.number().finite(), unit: unitSchema,
   keyBalance: z.number().finite().nullable().optional(),
@@ -121,13 +130,13 @@ export async function getProviderBalance(providerId: string, apiKey?: string): P
   return snapshot(account);
 }
 
-export async function getProviderPrice(provider: RuntimeProvider, request: ProviderPriceRequest): Promise<ProviderPrice | null> {
+export async function getProviderPrice(provider: RuntimeProvider, request: ProviderPriceRequest, fresh = false): Promise<ProviderPrice | null> {
   if (!provider.getPrice) return null;
   const now = Date.now();
   for (const [key, cached] of prices) if (cached.expires <= now) prices.delete(key);
   const key = createHash("sha256").update(accountId(provider)).update(provider.sourceRevision).update(JSON.stringify(request)).digest("hex");
   const cached = prices.get(key);
-  if (cached) return cached.value;
+  if (cached && !fresh) return cached.value;
   // ACT: 报价缓存仅保留哈希与结果，最多 500 项 / 30 秒；不缓存媒体内容。
   if (prices.size >= 500) prices.delete(prices.keys().next().value!);
   const entry = { expires: now + 30000, value: Promise.resolve<ProviderPrice | null>(null) };

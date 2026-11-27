@@ -1,31 +1,32 @@
 import { IntlMessageFormat } from "intl-messageformat";
 import { escapeMessageText } from "./messageText.ts";
 export { escapeMessageText } from "./messageText.ts";
-import zhTw from "./locales/zhTw.json";
-import en from "./locales/en.json";
-import ja from "./locales/ja.json";
-import ru from "./locales/ru.json";
-import vi from "./locales/vi.json";
-import th from "./locales/th.json";
-import ko from "./locales/ko.json";
-import hi from "./locales/hi.json";
-import id from "./locales/id.json";
-import ms from "./locales/ms.json";
-import fil from "./locales/fil.json";
-import bn from "./locales/bn.json";
-import ur from "./locales/ur.json";
-import ta from "./locales/ta.json";
-import te from "./locales/te.json";
-import mr from "./locales/mr.json";
-import pa from "./locales/pa.json";
-import ar from "./locales/ar.json";
-import fa from "./locales/fa.json";
-import tr from "./locales/tr.json";
-import pt from "./locales/pt.json";
+import zhTw from "./locales/zhTw.json" with { type: "json" };
+import en from "./locales/en.json" with { type: "json" };
+import ja from "./locales/ja.json" with { type: "json" };
+import ru from "./locales/ru.json" with { type: "json" };
+import vi from "./locales/vi.json" with { type: "json" };
+import th from "./locales/th.json" with { type: "json" };
+import ko from "./locales/ko.json" with { type: "json" };
+import hi from "./locales/hi.json" with { type: "json" };
+import id from "./locales/id.json" with { type: "json" };
+import ms from "./locales/ms.json" with { type: "json" };
+import fil from "./locales/fil.json" with { type: "json" };
+import bn from "./locales/bn.json" with { type: "json" };
+import ur from "./locales/ur.json" with { type: "json" };
+import ta from "./locales/ta.json" with { type: "json" };
+import te from "./locales/te.json" with { type: "json" };
+import mr from "./locales/mr.json" with { type: "json" };
+import pa from "./locales/pa.json" with { type: "json" };
+import ar from "./locales/ar.json" with { type: "json" };
+import fa from "./locales/fa.json" with { type: "json" };
+import tr from "./locales/tr.json" with { type: "json" };
+import pt from "./locales/pt.json" with { type: "json" };
 
 export type Locale = "zh-CN" | "zh-TW" | "en" | "ja" | "ru" | "vi" | "th" | "ko" | "hi"
   | "id" | "ms" | "fil" | "bn" | "ur" | "ta" | "te" | "mr" | "pa" | "ar" | "fa" | "tr" | "pt";
 export interface MessageDescriptor { id: string; values?: Record<string, unknown> }
+export type Catalogs = Partial<Record<Locale, Record<string, string>>>;
 export const supportedLocales: { code: Locale; name: string }[] = [
   { code: "zh-CN", name: "简体中文" }, { code: "zh-TW", name: "繁體中文" },
   { code: "en", name: "English" }, { code: "ja", name: "日本語" },
@@ -37,7 +38,7 @@ export const supportedLocales: { code: Locale; name: string }[] = [
   { code: "ar", name: "العربية" }, { code: "fa", name: "فارسی" }, { code: "tr", name: "Türkçe" },
   { code: "pt", name: "Português (Brasil)" },
 ];
-const catalogs: Record<string, Record<string, string>> = { "zh-TW": zhTw, en, ja, ru, vi, th, ko, hi, id, ms, fil, bn, ur, ta, te, mr, pa, ar, fa, tr, pt };
+const catalogs: Catalogs = { "zh-TW": zhTw, en, ja, ru, vi, th, ko, hi, id, ms, fil, bn, ur, ta, te, mr, pa, ar, fa, tr, pt };
 let activeLocale: Locale = "zh-CN";
 const listeners = new Set<(locale: Locale) => void>();
 const formatters = new Map<string, IntlMessageFormat>();
@@ -88,10 +89,10 @@ export function msg(strings: TemplateStringsArray, ...values: unknown[]): Messag
   };
 }
 
-export function translate(message: string | MessageDescriptor, values?: Record<string, unknown>, language: Locale = activeLocale): string {
+export function translate(message: string | MessageDescriptor, values?: Record<string, unknown>, language: Locale = activeLocale, dictionaries: Catalogs = catalogs): string {
   const id = typeof message === "string" ? message : message.id;
   const parameters = values ?? (typeof message === "string" ? undefined : message.values);
-  const catalog = Object.hasOwn(catalogs, language) ? catalogs[language] : undefined;
+  const catalog = Object.hasOwn(dictionaries, language) ? dictionaries[language] : undefined;
   const translated = catalog && Object.hasOwn(catalog, id) && typeof catalog[id] === "string" ? catalog[id] : id;
   if (!parameters || !Object.keys(parameters).length) return translated;
   const format = (text: string) => {
@@ -118,4 +119,17 @@ export function translate(message: string | MessageDescriptor, values?: Record<s
 
 export function t(strings: TemplateStringsArray, ...values: unknown[]): string {
   return translate(msg(strings, ...values));
+}
+
+/**
+ * 原样返回参数，只供文案抽取识别：其中的中文字面量会收进字典，数据本身保持原文。
+ * 用于业务比较或交给 Agent 的数据数组，显示时再在显示边界调用 translate。
+ */
+export function markMessages<T>(value: T): T { return value; }
+
+// 插件使用自带字典翻译，语言由宿主提供：Web 读取响应式语言，Server 读取请求语言。
+export function createTranslator(dictionaries: Catalogs, getLanguage: () => Locale = getLocale) {
+  const translateText = (message: string | MessageDescriptor, values?: Record<string, unknown>) =>
+    translate(message, values, getLanguage(), dictionaries);
+  return { msg, translate: translateText, t: (strings: TemplateStringsArray, ...values: unknown[]) => translateText(msg(strings, ...values)) };
 }

@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { detectLocale, msg, normalizeLocale, translate } from "@toonflow/i18n";
-import type { Locale, MessageDescriptor } from "@toonflow/i18n";
+import { createTranslator as createCatalogTranslator, detectLocale, msg, normalizeLocale, translate } from "@toonflow/i18n";
+import type { Catalogs, Locale, MessageDescriptor } from "@toonflow/i18n";
 import type { RequestHandler } from "express";
 import { ar, bn, en, fa, hi, id, ja, ko, ms, pt, ru, ta, th, tr, ur, vi, zhCN, zhTW } from "zod/locales";
 import { z } from "zod";
@@ -52,6 +52,9 @@ export function translateError(error: unknown): string {
 export function t(strings: TemplateStringsArray, ...values: unknown[]): string {
   return translateMessage(msg(strings, ...values));
 }
+
+/** 工具插件使用自带字典，按当前请求语言翻译。 */
+export function createTranslator(dictionaries: Catalogs) { return createCatalogTranslator(dictionaries, getLocale); }
 
 export function validationOptions() { return { error: validationLocales[getLocale()].localeError }; }
 

@@ -39,7 +39,7 @@ function acquirePreview(signal: AbortSignal) {
   });
 }
 
-export async function createPreview(content: Buffer, kind: PreviewKind, signal: AbortSignal) {
+export async function createPreview(content: Buffer, kind: PreviewKind, signal: AbortSignal, maxImagePixels?: number) {
   const release = await acquirePreview(signal);
   const timeout = AbortSignal.timeout(120000);
   const active = AbortSignal.any([signal, timeout]);
@@ -66,7 +66,8 @@ export async function createPreview(content: Buffer, kind: PreviewKind, signal: 
         : ["-map", "0:a:0", "-c:a", "libmp3lame", "-b:a", "192k", "-ar", "48000", "-ac", "2"];
     active.throwIfAborted();
     const child = Bun.spawn([paths.ffmpeg, "-hide_banner", "-v", "error", "-nostdin", "-n",
-      "-protocol_whitelist", "file", "-max_streams", "32", ...inputOptions, "-i", source,
+      "-protocol_whitelist", "file", "-max_streams", "32", ...inputOptions,
+      ...(kind === "image" && maxImagePixels ? ["-max_pixels", String(maxImagePixels)] : []), "-i", source,
       ...outputOptions, "-map_metadata", "-1", "-fs", String(previewLimit), output], {
       cwd: directory, stdin: "ignore", stdout: "ignore", stderr: "pipe", windowsHide: true, signal: active,
       env: Object.fromEntries(Object.entries(process.env).filter(([key]) => key.toUpperCase() !== "FFREPORT")),

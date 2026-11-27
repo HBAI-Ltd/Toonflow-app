@@ -1,4 +1,4 @@
-import { t } from "@/lib/i18n";
+import { t, translateError } from "@/lib/i18n";
 import { listMediaModels, generateMedia } from "@/utils/media/generation";
 import { createWorkspaceFfmpeg, executeWorkspaceFfmpeg } from "@/utils/ffmpeg";
 import { createBrowserContext } from "@/utils/browser";
@@ -18,6 +18,7 @@ import conf from "@/utils/conf";
 import { isWithin, resolveWorkspacePath, writeWorkspaceFile, renameWorkspaceFile, removeWorkspaceFile, lockWorkspaceFiles, protectWorkspaceRoot } from "@/utils/workspace/files";
 import { listTools, loadTool, validateToolConfig } from "@/utils/plugins/tools";
 import { listNodeServerTools, loadNodeServerTool } from "@/utils/plugins/nodes";
+import { createPluginModelContext } from "@/utils/plugins/modelContext";
 import { createSkillContext } from "@/agent/skills";
 import { createAssetContext } from "@/agent/assets";
 import { readDocument } from "@/utils/documents";
@@ -124,6 +125,7 @@ export function createAgentToolContext(cwd: string, config: Record<string, unkno
   };
   return {
     cwd, config, files, resolvePath, writeFile: files.writeFile, canvas, question, requireDirectModelAccess,
+    model: createPluginModelContext(),
     skills: workspaceAvailable ? createSkillContext(cwd) : undefined, assets: workspaceAvailable ? createAssetContext(cwd) : undefined,
     browser: createBrowserContext(cwd),
     // ACT: OHOS 使用禁用 WASM 的嵌入式 Node，无法启动当前沙盒子进程。
@@ -170,29 +172,42 @@ export function createAgentToolContext(cwd: string, config: Record<string, unkno
 
 export async function createAgentTools(cwd: string, canvas?: CanvasContext, question?: QuestionContext, includeMcp = true): Promise<ToolDefinition[]> {
   const tools = createPluginMarketTools(question);
-  const names = new Set(tools.map(tool => tool.name));
+  // 记录工具来源：重名时报出两个插件，例如旧版 word3dMap 节点与内置白模预演都提供 kilnPrepare。
+  const names = new Map(tools.map(tool => [tool.name, "Toonflow"]));
   const context = createAgentToolContext(cwd, {}, canvas, question);
   function appendTools(definitions: ToolDefinition[], prompt: string, label: string) {
     for (const tool of definitions) {
       if (!tool.name || typeof tool.execute !== "function") throw new Error(t`${label} 返回了无效的工具`);
-      if (names.has(tool.name)) throw new Error(t`工具名称重复：${tool.name}`);
-      names.add(tool.name);
+      const owner = names.get(tool.name);
+      const duplicate = `${tool.name} ("${owner}", "${label}")`;
+      if (owner) throw new Error(t`工具名称重复：${duplicate}`);
+      names.set(tool.name, label);
       tools.push({ ...tool, promptGuidelines: [...(prompt ? [prompt] : []), ...(tool.promptGuidelines ?? [])] });
     }
   }
+  // 第三方插件的原始异常（如 Invalid URL）不带来源，补上插件名称再抛出，便于用户定位后禁用或修复。
+  async function appendPluginTools(label: string, load: () => Promise<{ definitions: ToolDefinition[]; prompt?: string }>) {
+    let result: { definitions: ToolDefinition[]; prompt?: string };
+    try { result = await load(); }
+    catch (error) { throw new Error(`${label}：${translateError(error)}`, { cause: error }); }
+    appendTools(result.definitions, result.prompt ?? "", label);
+  }
   const nodeServices = await listNodeServerTools();
   for (const item of nodeServices) {
-    const { plugin, metadata, config } = await loadNodeServerTool(item.name);
-    appendTools(await plugin.createTools({ ...context, config }), metadata.prompt ?? "", item.displayName);
+    await appendPluginTools(item.displayName, async () => {
+      const { plugin, metadata, config } = await loadNodeServerTool(item.name);
+      return { definitions: await plugin.createTools({ ...context, config }), prompt: metadata.prompt };
+    });
   }
   for (const item of await listTools()) {
     if (nodeServices.some(node => node.name === item.name)) continue;
     if (!item.enabled) continue;
     if (item.loadError) throw new Error(`${item.displayName}：${item.loadError}`);
-    const { plugin, metadata } = await loadTool(item.name);
-    const config = validateToolConfig(plugin, item.config);
-    const definitions = await plugin.createTools({ ...context, config });
-    appendTools(definitions, metadata.prompt ?? "", item.displayName);
+    await appendPluginTools(item.displayName, async () => {
+      const { plugin, metadata } = await loadTool(item.name);
+      const config = validateToolConfig(plugin, item.config);
+      return { definitions: await plugin.createTools({ ...context, config }), prompt: metadata.prompt };
+    });
   }
   if (includeMcp) appendTools(await createMcpAgentTools(), "", "MCP");
   return tools;

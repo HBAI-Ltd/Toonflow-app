@@ -157,7 +157,7 @@ const providerDebugDialog = defineAsyncComponent(() => import("./providerDebugDi
 const providerDebugVisible = ref(false);
 const systemPromptDialog = defineAsyncComponent(() => import("./systemPromptDialog.vue"));
 const systemPromptVisible = ref(false);
-const updateBox = defineAsyncComponent(() => import("@/components/updateBox.vue"));
+const updateBox = defineAsyncComponent(() => import("@/components/updateBox/index.vue"));
 const updateBoxVisible = ref(false);
 const openingUpdateBox = ref(false);
 const updateBoxBuild = ref({ version: import.meta.env.appVersion ?? "", hash: import.meta.env.DEV ? "dev" : "" });

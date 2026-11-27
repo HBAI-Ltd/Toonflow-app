@@ -7,9 +7,9 @@ import { saveSettings, settings } from "@/stores/settings";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { confirmPluginInstall } from "@/lib/pluginInstallConfirmation";
 
-type ControlCall = { type: "call"; callId: string; name: string; args: Record<string, unknown>; directory?: string };
+type ControlCall = { type: "call"; callId: string; name: string; args: Record<string, unknown>; directory?: string; canvasId?: string };
 type WorkspaceControl = {
-  getState(): { directory: string | null; canvasId: string | null; panel: string; tools: NodeToolInfo[]; document?: unknown };
+  getState(): { directory: string | null; canvasId: string | null; canvasIds?: string[]; panel: string; tools: NodeToolInfo[]; document?: unknown };
   call(request: ControlCall, signal: AbortSignal): Promise<unknown>;
   flushSave(): Promise<void>;
 };

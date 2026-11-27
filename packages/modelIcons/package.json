@@ -10,6 +10,6 @@
     "vue": "^3.5.42"
   },
   "dependencies": {
-    "@lobehub/icons-static-svg": "^1.95.0"
+    "@lobehub/icons-static-svg": "^1.106.0"
   }
 }

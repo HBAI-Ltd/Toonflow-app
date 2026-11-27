@@ -90,7 +90,7 @@
 </p>
 <p align="center">
   <img src="https://ziadoua.github.io/m3-Markdown-Badges/badges/TypeScript/typescript2.svg" alt="TypeScript" height="28" />&nbsp;
-  <img src="https://img.shields.io/badge/Bun-1.4.3-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.3" />&nbsp;
+  <img src="https://img.shields.io/badge/Bun-1.4.5-14151A?style=for-the-badge&logo=bun&logoColor=white" alt="Bun 1.4.5" />&nbsp;
   <img src="https://img.shields.io/badge/Vue-3-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3" />&nbsp;
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
@@ -399,7 +399,7 @@ Untuk arahan lanjut, rujuk [Panduan Pengguna](https://qcn7xdsqgc4z.feishu.cn/doc
 
 ### 4.2 Pemasangan Docker
 
-Pasang Git, [Docker Engine](https://docs.docker.com/engine/install/) dan Docker Compose terlebih dahulu. Pada Windows dan macOS, anda boleh menggunakan Docker Desktop dalam mod kontena Linux. Repositori ini menyediakan [Dockerfile](../../Dockerfile), [konfigurasi Compose](../../compose.yaml) dan [senarai pengecualian binaan](../../.dockerignore). Imej dibina dengan Bun 1.4.3 dan merangkumi FFmpeg.
+Pasang Git, [Docker Engine](https://docs.docker.com/engine/install/) dan Docker Compose terlebih dahulu. Pada Windows dan macOS, anda boleh menggunakan Docker Desktop dalam mod kontena Linux. Repositori ini menyediakan [Dockerfile](../../Dockerfile), [konfigurasi Compose](../../compose.yaml) dan [senarai pengecualian binaan](../../.dockerignore). Imej dibina dengan Bun 1.4.5 dan merangkumi FFmpeg.
 
 <details>
 <summary><strong>Paparkan langkah pemasangan Docker</strong></summary>
@@ -443,7 +443,7 @@ docker compose start
 
 ### 4.3 Pemasangan Pelayan
 
-Gunakan pilihan ini untuk menjalankan Web dan Server terus pada pelayan Linux. Contoh di bawah menggunakan Ubuntu / Debian serta versi yang ditetapkan oleh projek, [Bun 1.4.3](https://bun.sh/docs/installation).
+Gunakan pilihan ini untuk menjalankan Web dan Server terus pada pelayan Linux. Contoh di bawah menggunakan Ubuntu / Debian serta versi yang ditetapkan oleh projek, [Bun 1.4.5](https://bun.sh/docs/installation).
 
 <details>
 <summary><strong>Paparkan langkah pemasangan pelayan</strong></summary>
@@ -453,7 +453,7 @@ Pasang persekitaran masa jalan:
 ```sh
 sudo apt-get update
 sudo apt-get install -y git curl unzip ffmpeg
-curl -fsSL https://bun.com/install | bash -s "bun-v1.4.3"
+curl -fsSL https://bun.com/install | bash -s "bun-v1.4.5"
 export PATH="$HOME/.bun/bin:$PATH"
 bun --version
 ```

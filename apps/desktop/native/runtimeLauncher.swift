@@ -22,6 +22,7 @@ private struct RuntimeInfo: Decodable {
   let executableSha256: String
   let executableSize: Int64
   let archiveMember: String
+  var archiveName: String { String(archiveMember.split(separator: "/").first ?? "bun") }
 }
 
 private enum RuntimeFailure: Error, LocalizedError {
@@ -407,7 +408,51 @@ private final class RuntimePreparation {
     }.map { $0.route }
   }
 
-  func prepare(preferred: String, direct: Bool) throws -> URL {
+  // ACT: 本地文件与下载走同一锁定校验，只接受与清单一致的 ZIP 或 bun；通过后放入缓存，后续解压与启动沿用下载流程。
+  func importLocal(_ selected: URL) throws {
+    let source = selected.resolvingSymlinksInPath()
+    status("正在验证所选文件…", source.lastPathComponent, nil)
+    guard let size = (try? FileManager.default.attributesOfItem(atPath: source.path)[.size] as? NSNumber)?.int64Value else {
+      throw RuntimeFailure.local("无法读取所选文件，请检查文件是否存在及访问权限。")
+    }
+    let isBinary = size == info.executableSize
+    guard isBinary || size == info.archiveSize else { throw RuntimeFailure.invalid(localMismatch(source.lastPathComponent, sizeMatched: false)) }
+    let temporary = directory.appendingPathComponent("bun.\(UUID().uuidString).import")
+    defer { try? FileManager.default.removeItem(at: temporary) }
+    // 逐块复制成新文件，不带入源文件的隔离等扩展属性；再校验副本，避免校验后源文件被替换。
+    guard let input = FileHandle(forReadingAtPath: source.path) else { throw RuntimeFailure.local("无法读取所选文件，请检查访问权限。") }
+    defer { try? input.close() }
+    let descriptor = open(temporary.path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, mode_t(0o600))
+    guard descriptor >= 0 else { throw RuntimeFailure.local("无法写入运行时缓存。") }
+    let output = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+    do {
+      defer { try? output.close() }
+      while let chunk = try input.read(upToCount: 1024 * 1024), !chunk.isEmpty {
+        try requireActive()
+        try output.write(contentsOf: chunk)
+      }
+      try output.synchronize()
+    } catch RuntimeFailure.stopped { throw RuntimeFailure.stopped }
+    catch { throw RuntimeFailure.local("无法复制所选文件：\(error.localizedDescription)") }
+    guard try verified(temporary, size: size, hash: isBinary ? info.executableSha256 : info.archiveSha256) else {
+      throw RuntimeFailure.invalid(localMismatch(source.lastPathComponent, sizeMatched: true))
+    }
+    if isBinary { guard chmod(temporary.path, mode_t(0o700)) == 0 else { throw RuntimeFailure.local("无法设置运行时执行权限。") } }
+    let destination = isBinary ? binary : directory.appendingPathComponent("bun.zip")
+    try removeCacheFile(destination)
+    try FileManager.default.moveItem(at: temporary, to: destination)
+  }
+
+  func localMismatch(_ fileName: String, sizeMatched: Bool) -> String {
+    let name = (fileName as NSString).deletingPathExtension.lowercased()
+    let expected = "\(info.archiveName).zip（Bun \(info.version)）"
+    if name.hasPrefix("bun-") && name.contains("baseline") { return "所选文件是 baseline 版本，本机需要 \(expected)，请重新下载。" }
+    if name.hasPrefix("bun-") && !name.hasPrefix(info.archiveName.lowercased()) { return "所选文件适用于其他系统或架构，本机需要 \(expected)，请重新下载。" }
+    return sizeMatched ? "所选文件已损坏或被修改，未通过完整性校验，请重新下载 \(expected)。"
+      : "所选文件不是本机需要的 \(expected)，可能版本不同，请重新下载。"
+  }
+
+  func prepare(preferred: String, direct: Bool, local: URL? = nil) throws -> URL {
     try requireActive()
     try rejectLinks(directory)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
@@ -421,6 +466,7 @@ private final class RuntimePreparation {
       try requireActive()
       Thread.sleep(forTimeInterval: 0.15)
     }
+    if let local = local { try importLocal(local) }
     if try verified(binary, size: info.executableSize, hash: info.executableSha256) {
       guard chmod(binary.path, mode_t(0o700)) == 0 else { throw RuntimeFailure.local("无法设置运行时执行权限。") }
       return binary
@@ -521,13 +567,58 @@ private final class RuntimePreparation {
   }
 }
 
+// 整个窗口都可以拖入文件；拖放区只负责显示状态。
+private final class FileDropView: NSView {
+  var accepts: () -> Bool = { false }
+  var onHover: (Bool) -> Void = { _ in }
+  var onDrop: (URL) -> Void = { _ in }
+
+  override init(frame: NSRect) {
+    super.init(frame: frame)
+    registerForDraggedTypes([.fileURL])
+  }
+
+  required init?(coder: NSCoder) { return nil }
+
+  func droppedFile(_ sender: NSDraggingInfo) -> URL? {
+    guard accepts(), let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL],
+          urls.count == 1 else { return nil }
+    var isDirectory: ObjCBool = false
+    return FileManager.default.fileExists(atPath: urls[0].path, isDirectory: &isDirectory) && !isDirectory.boolValue ? urls[0] : nil
+  }
+
+  override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+    let file = droppedFile(sender)
+    onHover(file != nil)
+    return file == nil ? [] : .copy
+  }
+
+  override func draggingExited(_ sender: NSDraggingInfo?) { onHover(false) }
+
+  override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+    onHover(false)
+    guard let file = droppedFile(sender) else { return false }
+    onDrop(file)
+    return true
+  }
+}
+
 private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindowDelegate, NSTextFieldDelegate {
   let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 600, height: 235), styleMask: [.titled, .closable], backing: .buffered, defer: false)
   let root = NSStackView()
   let statusLabel = NSTextField(labelWithString: "正在准备必要运行时…")
   let detailLabel = NSTextField(wrappingLabelWithString: "完成后将自动打开 Toonflow。")
   let progress = NSProgressIndicator()
-  let toggle = NSButton(title: "高级设置（可选）", target: nil, action: nil)
+  let toggle = NSButton(title: "下载源配置 ▼", target: nil, action: nil)
+  let offlineToggle = NSButton(title: "离线安装 ▼", target: nil, action: nil)
+  let offline = NSStackView()
+  let downloadStep = NSTextField(labelWithString: "")
+  let offlineAddresses = NSTextField(wrappingLabelWithString: "")
+  let chooseText = "2. 拷贝到本机后选择或拖入该文件，验证通过后会自动继续。"
+  let chooseStep = NSTextField(labelWithString: "")
+  let copyAddress = NSButton(title: "复制地址", target: nil, action: nil)
+  let localStatus = NSTextField(wrappingLabelWithString: "")
+  let localButton = NSButton(title: "选择文件…", target: nil, action: nil)
   let pause = NSButton(title: "暂停下载", target: nil, action: nil)
   let cancel = NSButton(title: "取消", target: nil, action: nil)
   let advanced = NSStackView()
@@ -540,6 +631,9 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
   var busy = false
   var quitting = false
   var advancedVisible = false
+  var localImport = false
+  var localRequested = false
+  var pendingFile: URL?
   var latestTechnical = ""
   var pendingUrls: [String] = []
   let preparationResources: URL?
@@ -570,6 +664,15 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
     window.title = "必要运行时下载"
     window.delegate = self
     window.isReleasedWhenClosed = false
+    let dropTarget = FileDropView(frame: window.contentRect(forFrameRect: window.frame))
+    dropTarget.accepts = { [unowned self] in !self.quitting }
+    dropTarget.onHover = { [unowned self] active in
+      if active && self.offline.isHidden { self.showPanel(self.offline) }
+      self.chooseStep.stringValue = active ? "2. 松开鼠标即可导入该文件。" : self.chooseText
+      self.chooseStep.textColor = active ? .controlAccentColor : .labelColor
+    }
+    dropTarget.onDrop = { [unowned self] file in self.importLocal(file) }
+    window.contentView = dropTarget
     root.orientation = .vertical
     root.alignment = .leading
     root.spacing = 14
@@ -593,12 +696,42 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
     progress.widthAnchor.constraint(equalTo: root.widthAnchor, constant: -48).isActive = true
     detailLabel.widthAnchor.constraint(equalTo: progress.widthAnchor).isActive = true
     detailLabel.heightAnchor.constraint(equalToConstant: 36).isActive = true
-    let actions = NSStackView(views: [toggle, NSView(), pause, cancel])
+    // 展开项紧跟说明文字，展开内容出现在它们正下方；下载操作按钮固定在最底部。
+    let toggles = NSStackView(views: [toggle, offlineToggle, NSView()])
+    toggles.orientation = .horizontal
+    toggles.spacing = 16
+    root.addArrangedSubview(toggles)
+    toggles.widthAnchor.constraint(equalTo: progress.widthAnchor).isActive = true
+    let actions = NSStackView(views: [NSView(), pause, cancel])
     actions.orientation = .horizontal
     actions.spacing = 10
-    root.addArrangedSubview(actions)
-    actions.widthAnchor.constraint(equalTo: progress.widthAnchor).isActive = true
     toggle.target = self; toggle.action = #selector(toggleAdvanced)
+    offlineToggle.target = self; offlineToggle.action = #selector(toggleOffline)
+    copyAddress.target = self; copyAddress.action = #selector(copyAddresses)
+    localButton.target = self; localButton.action = #selector(chooseLocalFile)
+    localButton.toolTip = "选择从其他电脑拷贝来的运行时 ZIP 或 bun 文件，也可以把文件拖到窗口里"
+    // 展开项用链接样式，与底部的下载操作按钮区分主次。
+    for link in [toggle, offlineToggle, copyAddress] {
+      link.isBordered = false
+      link.contentTintColor = .linkColor
+    }
+    // 离线安装按两步排列，每一步的操作放在同一行：复制地址跟随第 1 步，选择文件跟随第 2 步；导入结果显示在第 2 步下方。
+    offline.orientation = .vertical; offline.alignment = .leading; offline.spacing = 10
+    downloadStep.font = .systemFont(ofSize: 12)
+    chooseStep.font = .systemFont(ofSize: 12)
+    chooseStep.stringValue = chooseText
+    offlineAddresses.font = .systemFont(ofSize: 11)
+    offlineAddresses.textColor = .secondaryLabelColor
+    offlineAddresses.isSelectable = true
+    localStatus.font = .systemFont(ofSize: 12)
+    let downloadRow = NSStackView(views: [downloadStep, NSView(), copyAddress])
+    let chooseRow = NSStackView(views: [chooseStep, NSView(), localButton])
+    let offlineViews: [NSView] = [downloadRow, offlineAddresses, chooseRow, localStatus]
+    for view in offlineViews { offline.addArrangedSubview(view) }
+    root.addArrangedSubview(offline)
+    offline.isHidden = true
+    offline.widthAnchor.constraint(equalTo: progress.widthAnchor).isActive = true
+    for view in offlineViews { view.widthAnchor.constraint(equalTo: progress.widthAnchor).isActive = true }
     pause.target = self; pause.action = #selector(pauseDownload)
     cancel.target = self; cancel.action = #selector(cancelDownload)
     network.addItems(withTitles: ["自动（优先系统代理）", "自动（优先直连）"])
@@ -610,6 +743,8 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
     for view in advancedViews { advanced.addArrangedSubview(view) }
     root.addArrangedSubview(advanced)
     advanced.isHidden = true
+    root.addArrangedSubview(actions)
+    actions.widthAnchor.constraint(equalTo: progress.widthAnchor).isActive = true
     advanced.widthAnchor.constraint(equalTo: progress.widthAnchor).isActive = true
     address.widthAnchor.constraint(equalTo: progress.widthAnchor).isActive = true
     technical.widthAnchor.constraint(equalTo: progress.widthAnchor).isActive = true
@@ -618,6 +753,8 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
     technical.textColor = .secondaryLabelColor
     technical.isSelectable = true
     address.isEditable = false
+    root.layoutSubtreeIfNeeded()
+    window.setContentSize(NSSize(width: 600, height: max(235, root.fittingSize.height)))
     window.center()
     do {
       guard let resources = preparationResources ?? Bundle.main.resourceURL else { throw RuntimeFailure.invalid("找不到 Toonflow 应用资源。") }
@@ -625,6 +762,8 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
       info = try JSONDecoder().decode(RuntimeInfo.self, from: Data(contentsOf: configuration))
       source.addItems(withTitles: info!.sources.map { $0.name } + ["自定义 HTTPS 地址"])
       address.stringValue = info!.sources.first?.url ?? info!.mirrorUrl
+      downloadStep.stringValue = "1. 用能上网的电脑下载 \(info!.archiveName).zip（Bun \(info!.version)），地址任选其一："
+      offlineAddresses.stringValue = info!.sources.map { $0.url }.joined(separator: "\n")
       startDownload()
     } catch {
       if preparationResources != nil {
@@ -640,12 +779,21 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
     }
   }
 
-  @objc func toggleAdvanced() {
-    advancedVisible.toggle()
-    advanced.isHidden = !advancedVisible
-    toggle.title = advancedVisible ? "收起高级设置" : "高级设置（可选）"
+  @objc func toggleAdvanced() { showPanel(advanced) }
+
+  @objc func toggleOffline() { showPanel(offline) }
+
+  // 下载源配置与离线安装共用折叠区，同一时间只展开一个。
+  func showPanel(_ panel: NSView) {
+    let expand = panel.isHidden
+    advanced.isHidden = !(expand && panel === advanced)
+    offline.isHidden = !(expand && panel === offline)
+    advancedVisible = !advanced.isHidden
+    toggle.title = advancedVisible ? "下载源配置 ▲" : "下载源配置 ▼"
+    offlineToggle.title = offline.isHidden ? "离线安装 ▼" : "离线安装 ▲"
     if advancedVisible { technical.stringValue = latestTechnical }
-    let height: CGFloat = advancedVisible ? 470 : 235
+    root.layoutSubtreeIfNeeded()
+    let height = max(advancedVisible ? 470 : 235, root.fittingSize.height)
     var frame = window.frame
     frame.origin.y += frame.height - (height + window.frame.height - window.contentRect(forFrameRect: window.frame).height)
     frame.size.height = height + window.frame.height - window.contentRect(forFrameRect: window.frame).height
@@ -668,8 +816,52 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
     else { startDownload() }
   }
 
+  @objc func copyAddresses() {
+    guard let info = info else { return }
+    NSPasteboard.general.clearContents()
+    let text = "\(info.archiveName).zip（Bun \(info.version)，下载地址任选其一）\n" + info.sources.map { $0.url }.joined(separator: "\n")
+    copyAddress.title = NSPasteboard.general.setString(text, forType: .string) ? "已复制" : "复制失败"
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in self?.copyAddress.title = "复制地址" }
+  }
+
+  func showLocalStatus(_ text: String, color: NSColor) {
+    localStatus.stringValue = text
+    localStatus.textColor = color
+  }
+
+  @objc func chooseLocalFile() { importLocal(nil) }
+
+  // ACT: macOS 不自动扫描“下载”文件夹或外接磁盘：读取它们会弹出系统隐私授权，对用户是惊吓；改为选择框默认打开“下载”文件夹，并支持拖入。
+  func importLocal(_ file: URL?) {
+    guard let info = info, !quitting else { return }
+    if offline.isHidden { showPanel(offline) }
+    if busy {
+      // 先暂停当前下载，等后台任务结束后再导入或弹出文件选择器。
+      localRequested = true
+      pendingFile = file
+      preparation?.cancel(); pause.isEnabled = false; localButton.isEnabled = false
+      statusLabel.stringValue = "正在暂停，请稍候…"
+      return
+    }
+    if let file = file { startDownload(local: file); return }
+    let panel = NSOpenPanel()
+    panel.title = "选择必要运行时文件"
+    panel.message = "请选择从其他电脑拷贝来的 \(info.archiveName).zip，或其中的 bun 文件（Bun \(info.version)）。"
+    panel.prompt = "使用此文件"
+    panel.canChooseFiles = true
+    panel.canChooseDirectories = false
+    panel.allowsMultipleSelection = false
+    panel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+    showWindow()
+    guard panel.runModal() == .OK, let url = panel.url else { return }
+    startDownload(local: url)
+  }
+
   @objc func cancelDownload() {
     quitting = true
+    localRequested = false
+    pendingFile = nil
+    localButton.isEnabled = false
     if busy { preparation?.cancel(); pause.isEnabled = false; cancel.isEnabled = false }
     else { finish(EXIT_FAILURE) }
   }
@@ -688,28 +880,33 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
     return .terminateNow
   }
 
-  func startDownload() {
+  func startDownload(local: URL? = nil) {
     guard !busy, let info = info else { return }
     do {
       let worker = try RuntimePreparation(info: info)
       let preferred = address.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-      _ = try RuntimePreparation.source(preferred)
+      if local == nil { _ = try RuntimePreparation.source(preferred) }
       let direct = network.indexOfSelectedItem == 1
       preparation = worker
       busy = true
-      pause.title = "暂停下载"; pause.isEnabled = true
+      localImport = local != nil
+      // 本地文件校验很快，此时不提供暂停；取消仍可中止。
+      pause.title = "暂停下载"; pause.isEnabled = local == nil
+      localButton.isEnabled = local == nil
       if progress.isIndeterminate { progress.startAnimation(nil) }
-      showStatus("正在准备必要运行时…", detail: completionMessage, value: nil)
+      showStatus(local == nil ? "正在准备必要运行时…" : "正在验证所选文件…", detail: completionMessage, value: nil)
+      if let local = local { showLocalStatus("正在验证 \(local.lastPathComponent)，请稍候…", color: .secondaryLabelColor) }
       worker.status = { [weak self, weak worker] text, detail, value in
         DispatchQueue.main.async {
-          guard let self = self, let worker = worker, self.preparation === worker, self.busy, self.pause.isEnabled else { return }
+          guard let self = self, let worker = worker, self.preparation === worker, self.busy,
+                self.pause.isEnabled || (self.localImport && !self.quitting) else { return }
           self.showWindow()
           self.showStatus(text, detail: detail, value: value)
         }
       }
       DispatchQueue.global(qos: .userInitiated).async {
         do {
-          let binary = try worker.prepare(preferred: preferred, direct: direct)
+          let binary = try worker.prepare(preferred: preferred, direct: direct, local: local)
           DispatchQueue.main.async {
             guard self.preparation === worker else { return }
             self.busy = false
@@ -756,12 +953,31 @@ private final class RuntimeApplication: NSObject, NSApplicationDelegate, NSWindo
     busy = false
     progress.stopAnimation(nil)
     pause.isEnabled = true
+    localButton.isEnabled = true
+    let local = localImport
+    localImport = false
     latestTechnical = error.localizedDescription
     if advancedVisible { technical.stringValue = latestTechnical }
     if case RuntimeFailure.stopped = error {
       pause.title = "继续下载"
       statusLabel.stringValue = "已暂停"
       detailLabel.stringValue = "已下载的内容会保留，点击继续即可。"
+      if local { showLocalStatus("", color: .labelColor) }
+      if localRequested {
+        localRequested = false
+        let file = pendingFile
+        pendingFile = nil
+        DispatchQueue.main.async { self.importLocal(file) }
+      }
+    } else if local {
+      pause.title = "重试下载"
+      statusLabel.stringValue = "所选文件无法使用，未做任何更改。"
+      detailLabel.stringValue = "原因见下方，可以重新拖入或选择文件。"
+      showLocalStatus(error.localizedDescription, color: .systemRed)
+    } else if case RuntimeFailure.network = error {
+      pause.title = "重试"
+      statusLabel.stringValue = "无法连接下载服务，所有下载线路均未成功。"
+      detailLabel.stringValue = "请检查网络后重试。如果这台 Mac 无法上网，可展开下方“离线安装”，或直接把从其他电脑拷贝来的文件拖到此窗口。"
     } else {
       pause.title = "重试"
       statusLabel.stringValue = "必要运行时尚未准备好"

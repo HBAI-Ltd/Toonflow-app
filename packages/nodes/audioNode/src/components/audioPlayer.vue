@@ -4,7 +4,15 @@
     <div v-if="isPcm" class="pcmSettings nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop>
       <label>采样率（Hz）<el-input-number :modelValue="pcmOptions.sampleRate" :min="1" :max="384000" :controls="false" size="small" placeholder="填写采样率" @update:modelValue="pcmOptions = { ...pcmOptions, sampleRate: $event ?? undefined }" /></label>
       <label>声道<el-input-number :modelValue="pcmOptions.channels" :min="1" :max="32" :controls="false" size="small" placeholder="填写声道数" @update:modelValue="pcmOptions = { ...pcmOptions, channels: $event ?? undefined }" /></label>
-      <label class="pcmFormat">采样格式<el-select :modelValue="pcmOptions.format" size="small" placeholder="选择采样格式" @update:modelValue="pcmOptions = { ...pcmOptions, format: $event }"><el-option v-for="option in pcmFormats" :key="option.value" :label="option.label" :value="option.value" /></el-select></label>
+      <fieldset class="pcmFormat">
+        <legend>采样格式</legend>
+        <div class="formatOptions">
+          <label v-for="option in pcmFormats" :key="option.value">
+            <input type="radio" :name="formatGroup" :value="option.value" :checked="pcmOptions.format === option.value"
+              @change="pcmOptions = { ...pcmOptions, format: option.value }" />{{ translate(option.label) }}
+          </label>
+        </div>
+      </fieldset>
       <p>裸 PCM 不含格式信息，请按来源填写以上参数后预览。原文件保持不变。</p>
     </div>
     <p v-if="statusMessage" class="audioStatus" :role="failed ? 'alert' : 'status'">{{ statusMessage }}</p>
@@ -20,7 +28,9 @@
           <span v-if="duration && !failed" class="playhead" :style="{ left: `${progress}%` }" aria-hidden="true" />
           <input
             class="seekInput nodrag nopan nowheel"
+            :class="{ fullTrack: seekOnWaveform }"
             type="range"
+            dir="ltr"
             min="0"
             :max="duration || 1"
             step="0.01"
@@ -34,6 +44,7 @@
             @input="seek"
             @keydown.space.prevent="togglePlayback" />
         </slot>
+        <slot name="overlay" />
       </div>
     </div>
     <div class="playerControls">
@@ -48,16 +59,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, shallowRef, watch } from "vue";
-import { ElButton, ElInputNumber, ElMessage, ElOption, ElSelect } from "element-plus";
+import { computed, onBeforeUnmount, ref, shallowRef, useId, watch } from "vue";
+import { ElButton, ElInputNumber, ElMessage } from "element-plus";
+import { translate } from "@toonflow/i18n/vue";
 import { IconPlayerPlay, IconPlayerPause, IconVolume, IconVolumeOff } from "@tabler/icons-vue";
 import { useMediaPreview } from "@toonflow/node-shared/mediaPreview";
 import { getPcmOptions, isPcmMimeType, pcmFormats, pcmToWav, type PcmOptions } from "@toonflow/node-shared/pcmPreview";
 import { getWaveformPeaks } from "../audioWaveform";
 
-const { src, mimeType, label = "节点音频" } = defineProps<{ src: string; mimeType?: string; label?: string }>();
+const { src, mimeType, label = "节点音频", seekOnWaveform = false } = defineProps<{ src: string; mimeType?: string; label?: string; seekOnWaveform?: boolean }>();
 const pcmOptions = defineModel<Partial<PcmOptions>>("pcmOptions", { default: () => ({}) });
-const emit = defineEmits<{ loadedmetadata: [event: Event]; play: [] }>();
+const formatGroup = useId();
+const emit = defineEmits<{ loadedmetadata: [event: Event]; decoded: [buffer?: AudioBuffer]; play: [] }>();
 const isPcm = computed(() => isPcmMimeType(mimeType));
 const pcmUrl = ref("");
 const pcmError = ref("");
@@ -112,6 +125,7 @@ watch(playbackSrc, async (value, _previous, onCleanup) => {
   currentTime.value = duration.value = 0;
   failed.value = false;
   peaks.value = [];
+  emit("decoded", undefined);
   waveformLoading.value = !!value;
   if (!value) return;
   try {
@@ -119,11 +133,12 @@ watch(playbackSrc, async (value, _previous, onCleanup) => {
     if (!response.ok) throw new Error("无法读取音频");
     const content = await response.arrayBuffer();
     controller.signal.throwIfAborted();
-    // ACT: 使用浏览器完整解码后仅保留 128 个峰值；超长素材的解码内存开销可通过服务端分段提取优化。
+    // ACT: 播放器只保存 128 个峰值，波形视频预览复用这一次解码取得游标附近的实际采样。
     const context = new OfflineAudioContext(1, 1, 48000);
     const buffer = await context.decodeAudioData(content);
     controller.signal.throwIfAborted();
     peaks.value = getWaveformPeaks(Array.from({ length: buffer.numberOfChannels }, (_, index) => buffer.getChannelData(index)));
+    emit("decoded", buffer);
   } catch {
     // ACT: 浏览器能播放但不能解码的格式仍保留播放和定位，波形区域提示不可用。
   } finally {
@@ -208,7 +223,7 @@ function pause() {
   audio.value?.pause();
 }
 
-defineExpose({ duration, currentTime, playing, failed, seekTo, pause });
+defineExpose({ duration, currentTime, playing, failed, seekTo, pause, togglePlayback });
 
 function readVolume() {
   volume.value = Math.round((audio.value?.volume ?? 1) * 100);
@@ -249,15 +264,25 @@ function mediaError(event: Event) {
     flex-wrap: wrap;
     gap: 8px;
     padding-bottom: 12px;
-    label {
+    > label {
       display: flex;
       flex: 1 1 120px;
       flex-direction: column;
       gap: 4px;
       color: var(--el-text-color-secondary);
       font-size: 12px;
-      .el-input-number, .el-select { width: 100%; }
-      &.pcmFormat { flex-basis: 100%; }
+      .el-input-number { width: 100%; }
+    }
+    .pcmFormat {
+      flex: 1 1 100%; min-inline-size: 0; margin: 0; padding: 0; border: 0;
+      legend { padding: 0; margin-bottom: 4px; color: var(--el-text-color-regular); font-size: 12px; }
+      .formatOptions {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(min(132px, 100%), 1fr)); gap: 4px;
+        label { display: flex; align-items: center; gap: 4px; padding: 4px 6px; color: var(--el-text-color-regular); font-size: 12px; cursor: pointer; border-radius: var(--el-border-radius-base); background: var(--el-fill-color-light); }
+        label:has(:checked) { color: var(--el-color-primary); background: var(--el-color-primary-light-9); }
+        label:focus-within { outline: 1px solid var(--el-color-primary); }
+        input { margin: 0; accent-color: var(--el-color-primary); }
+      }
     }
     p { flex-basis: 100%; margin: 0; color: var(--el-text-color-secondary); font-size: 12px; }
   }
@@ -294,6 +319,7 @@ function mediaError(event: Event) {
         // ACT: 只让位置线附近的滑块接收拖动，波形其余区域交给节点拖拽。
         pointer-events: none;
         touch-action: none;
+        &.fullTrack:not(:disabled) { pointer-events: auto; cursor: crosshair; }
         &::-webkit-slider-thumb { appearance: none; width: 12px; height: 96px; pointer-events: auto; cursor: ew-resize; }
         &::-moz-range-thumb { width: 12px; height: 96px; border: 0; pointer-events: auto; cursor: ew-resize; }
         &:disabled::-webkit-slider-thumb { pointer-events: none; }

@@ -24,6 +24,7 @@ export default router.delete("/", validateFields({ name: z.string().regex(/^[a-z
   if (marker && !marker.isFile()) return res.status(409).json(error("节点状态文件无效", null, 409));
   try {
     await unlink(filePath);
+    if (!marker) u.localModels.notifyModelCatalogChange();
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return res.status(404).json(error("节点不存在", null, 404));
     throw err;

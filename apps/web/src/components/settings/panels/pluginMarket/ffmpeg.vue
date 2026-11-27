@@ -55,7 +55,7 @@
           :indeterminate="busy && !download.total"
           :status="download.phase === 'error' ? 'exception' : download.phase === 'completed' ? 'success' : undefined" />
       </div>
-      <el-alert v-if="operationError || download.error" :title="operationError || download.error" type="error" :closable="false" showIcon />
+      <el-alert v-if="downloadError" :title="downloadError" type="error" :closable="false" showIcon />
     </el-card>
 
     <el-collapse class="advancedSettings">
@@ -96,11 +96,11 @@ import { computed, onBeforeUnmount, ref, watch } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
 import { isLocalMobile } from "@/lib/platform";
+import { connectFfmpegEvents, ffmpegDisconnected, ffmpegProgress, type DownloadState } from "@/lib/ffmpegEvents";
 import { IconDownload, IconRefresh } from "@tabler/icons-vue";
 import { saveSettings, settings } from "@/stores/settings";
 
 type FfmpegConfig = { mode: "auto" | "download" | "system"; source: string };
-type DownloadState = { phase: "idle" | "downloading" | "verifying" | "installing" | "completed" | "error" | "cancelled"; file?: string; received: number; total?: number; error?: string };
 type ToolStatus = { path: string | null; version: string | null; error: string | null; origin: "download" | "system" | null };
 type FfmpegStatus = {
   platform: string; arch: string; target: string; supported: boolean; directory: string; version: string;
@@ -145,9 +145,9 @@ const loading = ref(false);
 const saving = ref(false);
 const submitting = ref(false);
 const busy = computed(() => ["downloading", "verifying", "installing"].includes(download.value.phase));
+const downloadError = computed(() => operationError.value || download.value.error || (busy.value && ffmpegDisconnected.value ? translate("读取下载进度失败") : ""));
 const canDownload = computed(() => status.value?.supported && status.value.sources.some(source => source.id === config.value.source && source.available) && !loading.value && !saving.value && !busy.value && !submitting.value);
 const percentage = computed(() => download.value.phase === "completed" ? 100 : download.value.total ? Math.min(100, Math.round(download.value.received / download.value.total * 100)) : 0);
-let timer: ReturnType<typeof setTimeout> | undefined;
 let readController = new AbortController();
 
 function errorMessage(error: unknown) {
@@ -159,32 +159,22 @@ function formatBytes(bytes: number) {
 }
 
 function stopReading() {
-  clearTimeout(timer);
   readController.abort();
 }
 
-function pollProgress() {
-  clearTimeout(timer);
-  if (!props.visible || readController.signal.aborted || !busy.value) return;
-  const signal = readController.signal;
-  timer = setTimeout(async () => {
-    try {
-      const { data } = await axios.get<{ code: number; data: DownloadState; message?: string }>("/api/ffmpeg/progress", { headers, signal });
-      if (signal.aborted) return;
-      if (data.code !== 200) throw new Error(data.message || "读取下载进度失败");
-      download.value = data.data;
-      if (busy.value) pollProgress();
-      else await refreshStatus();
-    } catch (error) {
-      if (!signal.aborted) operationError.value = `${errorMessage(error)}，请刷新查看下载状态。`;
-    }
-  }, 1000);
-}
+watch(ffmpegProgress, next => {
+  if (!props.visible || !next) return;
+  const wasBusy = busy.value;
+  download.value = next;
+  if (wasBusy && !busy.value) void refreshStatus();
+});
 
 async function refreshStatus() {
   stopReading();
   readController = new AbortController();
   const signal = readController.signal;
+  connectFfmpegEvents();
+  const previousProgress = ffmpegProgress.value;
   loading.value = true;
   statusError.value = "";
   operationError.value = "";
@@ -193,8 +183,7 @@ async function refreshStatus() {
     if (signal.aborted) return;
     if (data.code !== 200) throw new Error(data.message || "读取 FFmpeg 状态失败");
     status.value = data.data;
-    download.value = data.data.download;
-    pollProgress();
+    if (ffmpegProgress.value === previousProgress || !busy.value) download.value = data.data.download;
     return true;
   } catch (error) {
     if (!signal.aborted) statusError.value = errorMessage(error);
@@ -222,18 +211,14 @@ async function updateConfig(patch: Partial<FfmpegConfig>) {
 
 async function submitDownload(action: "download" | "cancel") {
   if (submitting.value || action === "download" && !canDownload.value) return;
-  stopReading();
-  readController = new AbortController();
   submitting.value = true;
   operationError.value = "";
+  connectFfmpegEvents();
+  const previousProgress = ffmpegProgress.value;
   try {
     const { data } = await axios.post<{ code: number; data: DownloadState; message?: string }>(`/api/ffmpeg/${action}`, action === "download" ? { source: config.value.source } : {}, { headers });
     if (data.code !== 200) throw new Error(data.message || "操作失败");
-    download.value = data.data;
-    if (props.visible && !readController.signal.aborted) {
-      if (busy.value) pollProgress();
-      else await refreshStatus();
-    }
+    if (props.visible && !readController.signal.aborted && ffmpegProgress.value === previousProgress) download.value = data.data;
   } catch (error) {
     const message = errorMessage(error);
     if (props.visible && !readController.signal.aborted) await refreshStatus();

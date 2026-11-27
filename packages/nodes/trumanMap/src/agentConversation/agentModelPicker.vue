@@ -1,6 +1,6 @@
 <template>
   <div class="agentModelPicker">
-    <el-popover v-model:visible="visible" trigger="click" placement="top-start" :width="300" :offset="10" :showArrow="false" popperClass="agentModelPopover" :popperStyle="{ padding: '16px', maxWidth: 'calc(100vw - 24px)' }">
+    <el-popover v-model:visible="visible" trigger="click" placement="top-start" :width="300" :offset="10" :showArrow="false" popperClass="trumanMapAgentModelPopover" :popperStyle="{ padding: '16px', maxWidth: 'calc(100vw - 24px)' }">
       <template #reference>
         <el-button class="modelButton" text :disabled="disabled" aria-label="模型与思考强度设置" :title="selected ? `${selected.label}${levels.length ? ` · 思考${reasoningLabel}` : ''}` : '选择模型'">
           <modelLabel class="modelName" :label="selected?.label ?? (loading ? '读取模型…' : '选择模型')" :providerId="selected?.providerId" :modelId="selected?.modelId" />
@@ -103,7 +103,7 @@ defineExpose({ open });
   }
 }
 
-.agentModelPopover {
+.trumanMapAgentModelPopover {
   .modelOptions {
     .el-form-item { margin-bottom: 14px; &:last-child { margin-bottom: 0; } }
     .el-form-item__label { margin-bottom: 6px; color: var(--el-text-color-secondary); font-size: 12px; line-height: 18px; }

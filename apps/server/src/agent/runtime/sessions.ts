@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { basename, dirname, resolve } from "node:path";
-import { readFile, readdir } from "@toonflow/file";
+import { readFile, readdir, stat } from "@toonflow/file";
 import { calculateContextTokens, estimateTokens, getLastAssistantUsage, parseSessionEntries, SessionManager } from "@earendil-works/pi-coding-agent";
 import type { AgentSession, FileEntry, SessionEntry } from "@earendil-works/pi-coding-agent";
 import type { UserMessage } from "@earendil-works/pi-ai";
-import type { AgentEvent, AgentMention, AgentMessageDelivery, AgentPeerMessage, AgentQueue, AgentQueuedMessage, AgentSubAgent, AgentToolCall } from "@/agent/runtime/types";
+import type { AgentAutomationSource, AgentCommand, AgentEvent, AgentMention, AgentMessageDelivery, AgentPeerMessage, AgentQueue, AgentQueuedMessage, AgentSubAgent, AgentToolCall } from "@/agent/runtime/types";
+import { readAgentPlan, setAgentPlan } from "@/agent/runtime/plan";
+import { applyGoalCommand, readAgentGoal } from "@/agent/runtime/goal";
 import { agentMentionsSchema } from "@/agent/runtime/mentions";
 import conf from "@/utils/conf";
 import { providerSchema, getModelLimits, getConfiguredProviders } from "@/utils/ai";
@@ -29,6 +31,7 @@ export const agentUserMessageSchema = z.object({
   messageId: z.string(), content: z.string(), attachments: agentAttachmentsSchema, mentions: agentMentionsSchema.optional(),
   queueId: z.uuid().optional(),
   delivery: z.object({ mode: z.enum(["steer", "followUp"]), taskMessageId: z.string().min(1) }).optional(),
+  automation: z.strictObject({ taskId: z.uuid(), runId: z.uuid(), name: z.string().min(1).max(120) }).optional(),
 });
 
 export function getAgentUserMessage(history: SessionManager, messageId: string) {
@@ -41,6 +44,7 @@ export function getAgentUserMessage(history: SessionManager, messageId: string) 
 
 export function getAgentTaskId(entry?: SessionEntry) {
   if (!entry) return undefined;
+  if (entry.type === "custom_message" && entry.customType === "toonflowGoalRound") return entry.id;
   if ((entry.type === "message" && entry.message.role === "user") || (entry.type === "custom" && entry.customType === "toonflowDeletedUser")) return entry.id;
   if (entry.type === "custom_message" && entry.customType === "agentMessage") {
     const details = entry.details as AgentPeerMessage | undefined;
@@ -51,11 +55,13 @@ export function getAgentTaskId(entry?: SessionEntry) {
 
 export type ActiveAgentSession = {
   runId: string;
+  scheduled?: boolean;
   signal: AbortSignal;
   queueRevision: number;
   history: SessionManager; session?: AgentSession; send: (event: AgentEvent) => void;
   entryOffset: number; tools: Map<string, AgentToolCall>;
   waitingForAgent?: string;
+  goalRound?: { id: string; revision: number; firstRound: number; handlingFollowUp?: boolean };
   forgetQueuedMessage?: (message: UserMessage) => void;
   abort(): Promise<void>;
 };
@@ -67,6 +73,7 @@ type SessionMessage = {
   agentMessage?: Omit<AgentPeerMessage, "id" | "content">;
   mentions?: AgentMention[];
   delivery?: AgentMessageDelivery;
+  automation?: AgentAutomationSource;
   parts: ({ id: string; type: "text" | "thinking"; content: string; collapsed?: boolean } | { id: string; type: "tool"; tool: AgentToolCall })[];
 };
 // ACT: 复用正在运行的 SDK 会话，文件锁仍由 run 持有；多进程部署时需共享会话所有权。
@@ -196,16 +203,36 @@ export function getParentSessionFile(history: SessionManager) {
   return parent && getSubAgentInfo(history) ? basename(parent) : undefined;
 }
 
-async function updateAgentSession(cwd: string, file: string, update: (history: SessionManager, active?: ActiveAgentSession) => void | Promise<void>) {
+async function updateAgentSession<T>(cwd: string, file: string, update: (history: SessionManager, active?: ActiveAgentSession) => T | Promise<T>) {
   if (!/^[\w-]+\.jsonl$/.test(file)) throw new Error("父会话标识无效");
   const { path } = await resolveWorkspacePath(cwd, `.agent/sessions/${file}`);
   const active = getActiveAgentSession(path);
   if (active) return update(active.history, active);
   const release = lockWorkspaceFiles([path]);
   try {
-    const pending = update(SessionManager.open(path, dirname(path), cwd));
-    if (pending) await pending;
+    const info = await stat(path).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") throw Object.assign(new Error("会话不存在，请重新打开对话"), { status: 404 });
+      throw error;
+    });
+    if (!info.isFile() || !info.size) throw Object.assign(new Error("会话文件无效"), { status: 400 });
+    return await update(SessionManager.open(path, dirname(path), cwd));
   } finally { release(); }
+}
+
+export async function applyAgentCommand(cwd: string, file: string, command: AgentCommand) {
+  return updateAgentSession(cwd, file, (history, active) => {
+    if (getParentSessionFile(history)) throw Object.assign(new Error("请在主对话中使用此命令"), { status: 400 });
+    if (command.action === "plan") {
+      if (active && [...active.tools.values()].some(tool => tool.name === "exit_plan_mode" && tool.status === "running")) {
+        throw Object.assign(new Error("请先停止当前回复再切换计划模式"), { status: 409 });
+      }
+      const plan = setAgentPlan(history, command.enabled);
+      active?.send({ type: "plan", plan });
+    } else {
+      applyGoalCommand(history, command, active);
+    }
+    return { plan: readAgentPlan(history), goal: readAgentGoal(history, active) };
+  });
 }
 
 export async function updateSubAgent(cwd: string, parentFile: string, agent: AgentSubAgent) {
@@ -479,6 +506,11 @@ export async function getAgentSession(cwd: string, path: string) {
   let replyTo: string | undefined;
   let delivery: AgentMessageDelivery | undefined;
   const entriesMessages = branch.flatMap<SessionMessage>((entry) => {
+    if (entry.type === "custom_message" && entry.customType === "toonflowGoalRound") {
+      replyTo = entry.id;
+      delivery = undefined;
+      return [];
+    }
     if (entry.type === "custom" && entry.customType === "toonflowDeletedUser") {
       replyTo = entry.id;
       const parsed = agentUserMessageSchema.shape.delivery.safeParse((entry.data as { delivery?: unknown } | null)?.delivery);
@@ -561,6 +593,7 @@ export async function getAgentSession(cwd: string, path: string) {
         error,
         attachments,
         mentions: attachmentMessage?.mentions,
+        automation: attachmentMessage?.automation,
         queueId: attachmentMessage?.queueId,
         delivery,
         report: undefined,
@@ -605,6 +638,8 @@ export async function getAgentSession(cwd: string, path: string) {
   return {
     file: basename(path),
     name: history.getSessionName() || (firstUserMessage?.content.trim() || firstUserMessage?.attachments?.[0]?.name)?.slice(0, 60) || translateMessage("新对话"),
+    plan: readAgentPlan(history),
+    goal: readAgentGoal(history, active),
     messages,
     stats: getAgentStats(history),
     contextUsage: getAgentContext(history, active?.session?.model?.contextWindow ?? (configuredModel && model ? getModelLimits(model.provider, configuredModel).contextWindow : 0)),
@@ -614,6 +649,7 @@ export async function getAgentSession(cwd: string, path: string) {
     parentFile: getParentSessionFile(history),
     subAgents: [...subAgents.values()],
     running: Boolean(active),
+    scheduled: active?.scheduled || undefined,
     runId: active?.runId,
     queue: getAgentQueue(active),
   };

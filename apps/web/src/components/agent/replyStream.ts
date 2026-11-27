@@ -167,8 +167,8 @@ export function createConversationStream(messages: Ref<AgentMessage[]>) {
     if (event.type === "retry" && event.replyTo && reply?.replyTo !== event.replyTo) {
       const previous = messages.value.findLast(message => message.role === "assistant" && message.replyTo === event.replyTo && !message.report && !message.agentMessage);
       if (previous) createReplyStream(previous).receive(event);
-    } else if (event.type === "agentMessage" && event.startsTurn) {
-      ensureReply(event.id);
+    } else if (event.type === "goalRound" || (event.type === "agentMessage" && event.startsTurn)) {
+      ensureReply(event.type === "goalRound" ? event.replyTo : event.id);
       reply!.delivery = undefined;
     } else if (event.type === "userMessage") {
       const existing = messages.value.find(message => message.role === "user"
@@ -181,7 +181,8 @@ export function createConversationStream(messages: Ref<AgentMessage[]>) {
         existing.error = undefined;
         existing.mentions = event.mentions;
         existing.delivery = event.delivery;
-      } else messages.value.push({ id: event.id, entryId: event.id, queueId: event.queueId, role: "user", content: event.content ?? "", attachments: event.attachments, mentions: event.mentions, delivery: event.delivery });
+        existing.automation = event.automation;
+      } else messages.value.push({ id: event.id, entryId: event.id, queueId: event.queueId, role: "user", content: event.content ?? "", attachments: event.attachments, mentions: event.mentions, delivery: event.delivery, automation: event.automation });
       ensureReply(event.id);
       reply!.delivery = event.delivery;
     } else if (["text", "thinking", "tool", "question", "retry"].includes(event.type)) {
