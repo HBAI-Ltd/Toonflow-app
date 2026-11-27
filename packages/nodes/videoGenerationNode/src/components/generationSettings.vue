@@ -3,7 +3,7 @@
     <template #reference>
       <el-button class="settingsButton" text size="small" :disabled="disabled" :aria-expanded="settingsVisible" aria-label="视频生成设置">
         <span class="ratioShape" :style="ratioStyle(ratio)" aria-hidden="true" />
-        <span>{{ [ratio, resolution, duration ? `${duration}秒` : ''].filter(Boolean).join(' · ') }}</span>
+        <span>{{ [ratio, resolution, duration && !retake ? `${duration}秒` : ''].filter(Boolean).join(' · ') }}</span>
         <component :is="settingsVisible ? IconChevronDown : IconChevronUp" :size="14" aria-hidden="true" />
       </el-button>
     </template>
@@ -26,8 +26,8 @@
           </el-select>
         </div>
       </div>
-      <div v-if="ratios.length" class="sectionLabel">视频比例</div>
-      <div v-if="ratios.length" class="ratioOptions" role="group" aria-label="视频比例">
+      <div v-if="ratios.length && !retake" class="sectionLabel">视频比例</div>
+      <div v-if="ratios.length && !retake" class="ratioOptions" role="group" aria-label="视频比例">
         <el-button v-for="item in ratios" :key="item" class="ratioButton" :disabled="disabled" :aria-label="`比例 ${item}`" :aria-pressed="ratio === item" @click="ratio = item">
           <span class="ratioContent">
             <span class="ratioShape" :style="ratioStyle(item)" aria-hidden="true" />
@@ -51,7 +51,8 @@ import { IconChevronDown, IconChevronUp } from "@tabler/icons-vue";
 import type { NodeMediaModel } from "@toonflow/nodes-scaffold/runtime";
 import modelForm from "@toonflow/node-shared/modelForm";
 
-const props = defineProps<{ model?: NodeMediaModel; disabled?: boolean; ratios: string[]; maxDuration?: number }>();
+// 片段重拍的时长由选区决定、比例跟随原视频，不提供这两项选择。
+const props = defineProps<{ model?: NodeMediaModel; disabled?: boolean; ratios: string[]; retake?: boolean }>();
 const settingsVisible = ref(false);
 const duration = defineModel<number | undefined>("duration", { required: true });
 const resolution = defineModel<string>("resolution", { required: true });
@@ -67,7 +68,7 @@ const modes = computed(() => (props.model?.mode ?? []).map(item => ({
   label: Array.isArray(item) ? "混合参考" : modeLabels[item] ?? item,
 })));
 const mappings = computed(() => props.model?.durationResolutionMap ?? []);
-const durations = computed(() => [...new Set(mappings.value.flatMap(item => item.duration))].filter(value => props.maxDuration === undefined || (value >= 4 && value <= Math.min(30, props.maxDuration))).sort((a, b) => a - b));
+const durations = computed(() => props.retake ? [] : [...new Set(mappings.value.flatMap(item => item.duration))].sort((a, b) => a - b));
 const resolutions = computed(() => resolutionsFor(duration.value));
 
 function resolutionsFor(value: number | undefined) {

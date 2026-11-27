@@ -96,7 +96,7 @@ const loadFfmpeg = useNodeFfmpeg();
 const nodeEvent = useNodeEvent();
 const getCanvas = inject<(() => { id: string } | undefined) | undefined>("canvas", undefined);
 const batchHistory = inject<(action: () => Promise<void>) => Promise<void>>("batchCanvasHistory", action => action());
-const actionLabels = { extractAudio: "提取声音", separate: "分开画面和声音", trim: "截取片段" };
+const actionLabels = { extractAudio: "提取声音", separate: "分离音视频", trim: "截取片段" };
 const action = ref<keyof typeof actionLabels>("trim");
 const visible = ref(false);
 const { src: playbackSrc, preparing: preparingPreview, error: previewError, handleError, handleLoaded } = useMediaPreview(() => visible.value && action.value === "trim" ? props.src : "", "video");

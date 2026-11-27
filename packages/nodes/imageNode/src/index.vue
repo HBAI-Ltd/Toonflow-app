@@ -10,7 +10,7 @@
     :downloadUrl="outputFile ? previewUrl : ''"
     :downloadName="outputFile?.url.split(/[\\/]/).at(-1)"
     @fullscreen="previewVisible = true"
-    :style="{ width: previewUrl && imageWidth ? `${imageWidth + 18}px` : undefined }">
+    :mediaAspect="previewUrl ? imageAspect : 0">
     <template v-if="editor?.mode" #top><div ref="paintToolbar" /></template>
     <template #topActions>
       <el-button v-if="comparison" :icon="IconColumns2" text @click.stop="compareVisible = true">对比原图</el-button>
@@ -137,7 +137,7 @@ const multiAngleVisible = ref(false);
 const panorama = ref<InstanceType<typeof imagePanorama>>();
 const uploading = ref(false);
 const previewVisible = ref(false);
-const imageWidth = ref(0);
+const imageAspect = ref(0);
 const resolution = ref("");
 
 const outputFile = computed(() => outputs.value.image?.dataType === "IMAGE" ? outputs.value.image.value : undefined);
@@ -195,7 +195,7 @@ nodeTools.register({
 async function resizeImage(event: Event) {
   const image = event.currentTarget as HTMLImageElement;
   if (!image.naturalWidth || !image.naturalHeight) return;
-  imageWidth.value = 240 * image.naturalWidth / image.naturalHeight;
+  imageAspect.value = image.naturalWidth / image.naturalHeight;
   await nextTick();
   updateNodeInternals();
 }

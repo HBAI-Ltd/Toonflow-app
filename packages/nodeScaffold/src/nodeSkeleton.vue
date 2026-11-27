@@ -1,7 +1,7 @@
 <template>
   <div v-if="documentTarget" class="nodeDocumentPlaceholder" :style="canvasSize" aria-hidden="true" />
   <teleport :to="documentTarget ?? 'body'" :disabled="!documentTarget">
-  <div ref="skeletonElement" v-bind="$attrs" class="nodeSkeleton" :class="{ documentNode: documentTarget, resized: !!resizedStyle.height, resizing: !!resize }" :style="resizedStyle" @wheel.capture="zoomCanvas" @dblclick.stop="focusNode" @contextmenu="documentTarget && openMenu($event)">
+  <div ref="skeletonElement" v-bind="$attrs" class="nodeSkeleton" :class="{ documentNode: documentTarget, resized: !!resizedStyle.height || !!mediaWidth, mediaSized: !!mediaWidth, resizing: !!resize }" :style="resizedStyle" @wheel.capture="zoomCanvas" @dblclick.stop="focusNode" @contextmenu="documentTarget && openMenu($event)">
     <el-dropdown
       v-if="interactive && menuAnchor"
       ref="menu"
@@ -125,7 +125,10 @@
         <el-button class="moreAction" :icon="IconDots" text title="更多操作" aria-label="更多操作" aria-haspopup="menu" @click.stop="openMenu" />
       </div>
     </div>
-    <div class="cardContainer" :class="{ targetZones: !readOnly && !loading && !documentTarget && !localStartHandle }">
+    <div
+      class="cardContainer"
+      :class="{ targetZones: !readOnly && !loading && !documentTarget && !localStartHandle }"
+      :style="mediaWidth ? { flex: 'none', height: `${(mediaWidth - 18) / mediaAspect! + 18}px` } : undefined">
       <span v-if="documentTarget && titleDetail" class="documentDetail" dir="ltr">{{ titleDetail }}</span>
       <el-card
         v-loading="loadingOptions"
@@ -242,6 +245,7 @@ const props = withDefaults(
       downloadUrl?: string;
       downloadName?: string;
       fullscreenVisible?: boolean;
+      mediaAspect?: number;
     }
   >(),
   {
@@ -342,7 +346,19 @@ const {
   onSelectionStart,
 } = useVueFlow();
 const batchHistory = inject<((action: () => Promise<void>) => Promise<void>) | undefined>("batchCanvasHistory", undefined);
+// 卡片边框 2px 与内边距 16px 之外的内容区按媒体比例铺满；拖动卡片高度不能低于端口所需高度。
+const mediaMinWidth = computed(() => Math.max(160, (cardHeight.value - 18) * (props.mediaAspect || 0) + 18));
+// 媒体节点只取保存的宽度，高度由比例计算，未缩放时内容高 240。
+// 高度写在 cardContainer：el-card 自带全属性过渡，直接改卡片高度会让缩放滞后。
+const mediaWidth = computed(() => {
+  const aspect = props.mediaAspect;
+  if (!aspect || !Number.isFinite(aspect) || documentTarget.value) return;
+  const style = typeof node.style === "function" ? node.style(node) : node.style;
+  const width = props.readOnly ? NaN : Number.parseFloat(String(style?.width));
+  return Math.max(mediaMinWidth.value, Number.isFinite(width) ? width : 240 * aspect + 18);
+});
 const resizedStyle = computed(() => {
+  if (mediaWidth.value) return { width: `${mediaWidth.value}px` };
   const style = typeof node.style === "function" ? node.style(node) : node.style;
   return props.readOnly || documentTarget.value ? {} : {
     ...(style?.width ? { width: style.width } : {}),
@@ -378,10 +394,17 @@ function startResize(event: PointerEvent) {
   });
 }
 
-function setNodeSize(width: number, height: number) {
+function setNodeSize(base: { width: number; height: number }, dx: number, dy: number) {
   const titleHeight = skeletonElement.value?.querySelector<HTMLElement>(".titleBar")?.offsetHeight ?? 32;
   const style = typeof node.style === "function" ? node.style(node) : node.style;
-  node.style = { ...style, width: `${Math.max(160, width)}px`, height: `${Math.max(cardHeight.value + titleHeight, height)}px` };
+  const aspect = mediaWidth.value && props.mediaAspect;
+  if (!aspect) {
+    node.style = { ...style, width: `${Math.max(160, base.width + dx)}px`, height: `${Math.max(cardHeight.value + titleHeight, base.height + dy)}px` };
+    return;
+  }
+  // 媒体节点锁定比例：按位移更大的方向换算宽度；保存高度供媒体清空后保持外框。
+  const width = Math.max(mediaMinWidth.value, base.width + (Math.abs(dx) >= Math.abs(dy * aspect) ? dx : dy * aspect));
+  node.style = { ...style, width: `${width}px`, height: `${(width - 18) / aspect + 18 + titleHeight}px` };
 }
 
 function moveResize(event: PointerEvent) {
@@ -389,7 +412,7 @@ function moveResize(event: PointerEvent) {
   if (!state || event.pointerId !== state.pointerId) return;
   if (!interactive.value || props.loading || documentTarget.value || findNode(nodeId) !== node) return finishResize();
   const point = screenToFlowCoordinate({ x: event.clientX, y: event.clientY });
-  setNodeSize(state.width + point.x - state.point.x, state.height + point.y - state.point.y);
+  setNodeSize(state, point.x - state.point.x, point.y - state.point.y);
 }
 
 function finishResize(event?: PointerEvent) {
@@ -408,7 +431,7 @@ function resizeWithKeyboard(event: KeyboardEvent) {
   event.preventDefault();
   const dx = event.key === "ArrowLeft" ? -10 : event.key === "ArrowRight" ? 10 : 0;
   const dy = event.key === "ArrowUp" ? -10 : event.key === "ArrowDown" ? 10 : 0;
-  setNodeSize(skeleton.offsetWidth + dx, skeleton.offsetHeight + dy);
+  setNodeSize({ width: skeleton.offsetWidth, height: skeleton.offsetHeight }, dx, dy);
 }
 
 onScopeDispose(() => finishResize());
@@ -696,6 +719,12 @@ watch(
 </script>
 
 <style scoped>
+/* ACT: VueFlow 会把保存的 style 宽高写到外层；媒体节点的尺寸由比例决定，外层随内容自适应，避免为旧尺寸改写画布和撤销历史。 */
+:global(.vue-flow__node:has(> .nodeSkeleton.mediaSized)) {
+  width: auto !important;
+  height: auto !important;
+}
+
 .nodeSkeleton {
   position: relative;
   width: 220px;

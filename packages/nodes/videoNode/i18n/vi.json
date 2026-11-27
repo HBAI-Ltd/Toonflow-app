@@ -206,7 +206,7 @@
   "片段重拍": "Tạo lại đoạn video",
   "逐帧拉片": "Phân tích từng khung hình",
   "提取声音": "Trích xuất rãnh âm thanh",
-  "分开画面和声音": "Tách âm thanh và video",
+  "分离音视频": "Tách âm thanh và video",
   "请先启用逐帧拉片节点插件": "Vui lòng bật plugin nút phân tích từng khung hình trước",
   "将视频里的声音保存到新音频节点。": "Trích xuất rãnh âm thanh và tạo nút âm thanh, giữ lại video gốc.",
   "已对齐的字幕": "Phụ đề đã đồng bộ",

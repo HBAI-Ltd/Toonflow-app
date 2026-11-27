@@ -7,14 +7,14 @@
     topWidth="max-content"
     :downloadUrl="!exporting && outputFile ? previewUrl : ''"
     :downloadName="outputFile?.url.split(/[\\/]/).at(-1)"
-    :style="{ width: previewUrl && videoWidth ? `${videoWidth + 18}px` : undefined }"
+    :mediaAspect="previewUrl ? videoAspect : 0"
     @pointerenter="hovered = $event.pointerType !== 'touch'"
     @pointerleave="hovered = false"
     @fullscreen="player?.enterFullscreen()">
     <template #topActions>
       <el-button :icon="IconMovie" text :disabled="!outputFile || uploading || exporting || actions?.processing || actions?.creatingAnalysis" @click.stop="actions?.createRetake()">片段重拍</el-button>
       <el-button :icon="IconMusic" text :disabled="!outputFile || uploading || exporting || actions?.processing" @click.stop="actions?.open('extractAudio')">提取声音</el-button>
-      <el-button :icon="IconLayersSubtract" text :disabled="!outputFile || uploading || exporting || actions?.processing" @click.stop="actions?.open('separate')">分开画面和声音</el-button>
+      <el-button :icon="IconLayersSubtract" text :disabled="!outputFile || uploading || exporting || actions?.processing" @click.stop="actions?.open('separate')">分离音视频</el-button>
       <el-button :icon="IconScissors" text :disabled="!outputFile || uploading || exporting || actions?.processing" @click.stop="actions?.open('trim')">截取片段</el-button>
       <el-button :icon="IconMovie" text :loading="actions?.creatingAnalysis" :disabled="!outputFile || uploading || exporting || actions?.processing || actions?.creatingAnalysis" @click.stop="actions?.createFrameAnalysis()">逐帧拉片</el-button>
       <el-button
@@ -106,7 +106,7 @@ const player = ref<InstanceType<typeof videoPlayer>>();
 const actions = ref<InstanceType<typeof videoActions>>();
 const exportProgress = computed(() => (node.data as typeof node.data & { exportProgress?: number }).exportProgress);
 const exporting = computed(() => typeof exportProgress.value === "number");
-const videoWidth = ref(0);
+const videoAspect = ref(0);
 const resolution = ref("");
 
 const outputFile = computed(() => outputs.value.video?.dataType === "VIDEO" ? outputs.value.video.value : undefined);
@@ -153,7 +153,7 @@ nodeTools.register({
 async function resizeVideo(event: Event) {
   const video = event.currentTarget as HTMLVideoElement;
   if (!video.videoWidth || !video.videoHeight) return;
-  videoWidth.value = Math.max(180, (240 * video.videoWidth) / video.videoHeight);
+  videoAspect.value = video.videoWidth / video.videoHeight;
   await nextTick();
   updateNodeInternals();
 }

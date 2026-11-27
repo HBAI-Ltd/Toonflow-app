@@ -227,7 +227,7 @@ async function preparePriceRequest(directory: string | undefined, mediaType: "im
   }
 }
 
-export async function getMediaPrice(directory: string | undefined, mediaType: "image" | "video" | "audio", request: MediaGenerationRequest, signal?: AbortSignal, fresh = false) {
+export async function getMediaPrice(directory: string | undefined, mediaType: "image" | "video" | "audio", request: MediaGenerationRequest, signal?: AbortSignal, fresh = false, videoDurations?: number[]) {
   signal?.throwIfAborted();
   if (modelGateway.enabled()) {
     const quote = await modelGateway.quoteRequest(mediaType, request.providerId, request.modelId, request);
@@ -237,6 +237,9 @@ export async function getMediaPrice(directory: string | undefined, mediaType: "i
   if (!provider.getPrice) return null;
   const prepared = await preparePriceRequest(directory, mediaType, request, signal);
   signal?.throwIfAborted();
+  // 参考视频提交前会被截取时，按截取后的时长估价，不超过文件实际时长。
+  if (prepared.type === "video" && videoDurations) prepared.videos = prepared.videos?.map((video, index) => videoDurations[index] === undefined ? video
+    : { ...video, duration: Math.min(video.duration ?? Infinity, videoDurations[index]) });
   return getProviderPrice(provider, prepared, fresh);
 }
 
@@ -348,11 +351,12 @@ async function executeMedia(
       const { bytes, mimeType } = content;
       signal?.throwIfAborted();
       const output = await resolveWorkspacePath(directory, outputDirectory, true);
-      const release = lockWorkspaceFiles([output.path]);
+      const file = join(outputDirectory, `${mediaType}${task ? `${task.taskId.replaceAll("-", "")}${index}` : crypto.randomUUID()}.${mediaExtensions[mimeType]}`);
+      const { path } = await resolveWorkspacePath(directory, file, true);
+      // 只锁本次写入的文件：同一节点的批量任务会同时写入同一输出目录，文件名已按任务区分；目录仍不能在写入期间被删改。
+      const release = lockWorkspaceFiles([path]);
       try {
         await mkdir(output.path, { recursive: true });
-        const file = join(outputDirectory, `${mediaType}${task ? `${task.taskId.replaceAll("-", "")}${index}` : crypto.randomUUID()}.${mediaExtensions[mimeType]}`);
-        const { path } = await resolveWorkspacePath(directory, file);
         const outputFile = { path: relative(directory, path).replace(/\\/g, "/"), mimeType, mediaType };
         if (task) {
           const fileRecord = { ...outputFile, index, hash: createHash("sha256").update(bytes).digest("hex") };

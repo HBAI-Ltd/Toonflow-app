@@ -10,7 +10,7 @@
     :downloadName="outputFile?.url.split(/[\\/]/).at(-1)"
     @fullscreen="previewVisible = true"
     :bottomWidth="660"
-    :style="{ width: (previewUrl || inpaintGuideUrl) && imageWidth ? `${imageWidth + 18}px` : undefined }">
+    :mediaAspect="previewUrl || inpaintGuideUrl ? imageAspect : 0">
     <template v-if="editor?.mode" #top><div ref="paintToolbar" /></template>
     <template #topActions>
       <el-button class="panoramaButton" :icon="IconPanoramaHorizontal" :disabled="toolDialog?.busy || generating || deleting || uploading || editor?.busy || lighting?.generating || multiAngle?.generating || gridSplit?.splitting || panorama?.busy || !previewUrl" text title="全景图" aria-label="全景图" @click.stop="panorama?.open($event)">全景图<icon-chevron-down class="menuChevron" :size="14" /></el-button>
@@ -194,7 +194,7 @@ let disposed = false;
 const deleting = ref(false);
 const previewVisible = ref(false);
 const inpaintPreviewVisible = ref(false);
-const imageWidth = ref(0);
+const imageAspect = ref(0);
 const resolution = ref("");
 let generationController: AbortController | undefined;
 let generation: Promise<void> | undefined;
@@ -244,8 +244,8 @@ const generationState = useNodeGeneration(outputs, () => generationController?.a
   ai,
   models,
   quote: mediaQuote,
-  async recover(results, task, signal) {
-    if (!task.recoveryData) return results;
+  async recover([results = []], [task], signal) {
+    if (!task?.recoveryData) return results;
     const recovery = task.recoveryData as { input: NodeImageRequest; inpaint: ImageInpaint };
     if (!recovery.input || !recovery.inpaint) throw new Error("局部重绘任务缺少恢复素材");
     return generateInpaint(recovery.input, recovery.inpaint, signal, results.filter(result => result.mediaType === "image"));
@@ -404,7 +404,7 @@ nodeEvent.on("delete", async () => {
 async function resizeImage(event: Event) {
   const image = event.currentTarget as HTMLImageElement;
   if (!image.naturalWidth || !image.naturalHeight) return;
-  imageWidth.value = (240 * image.naturalWidth) / image.naturalHeight;
+  imageAspect.value = image.naturalWidth / image.naturalHeight;
   await nextTick();
   updateNodeInternals();
 }

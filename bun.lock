@@ -504,6 +504,7 @@
         "@tabler/icons-vue": "^3.46.0",
         "@toonflow/i18n": "workspace:*",
         "@toonflow/model-icons": "workspace:*",
+        "@toonflow/providers": "workspace:*",
         "eventsource-parser": "3.1.1",
         "vue-draggable-plus": "^0.6.1",
         "x-sender": "1.4.6",

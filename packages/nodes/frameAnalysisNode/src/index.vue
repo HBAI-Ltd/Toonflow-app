@@ -170,7 +170,7 @@ const previewUrl = files.useFileUrl(source, error => { previewFailed.value = tru
 const busy = computed(() => processing.value || uploading.value || !!player.value?.capturing);
 const hasDimensions = computed(() => settings.frames || settings.clips || settings.audio);
 const lastResultMatches = computed(() => !!lastResult.value && resultSource.value === source.value?.url);
-const nodeWidth = computed(() => metadata.width && metadata.height ? Math.max(180, 240 * metadata.width / metadata.height) + 18 : 240);
+const nodeWidth = computed(() => metadata.width && metadata.height ? 240 * metadata.width / metadata.height + 18 : 240);
 const reportVisible = ref(false);
 const models = ref<NodeAiModel[]>([]);
 const modelsLoading = ref(false);

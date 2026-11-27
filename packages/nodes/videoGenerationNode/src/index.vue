@@ -2,7 +2,7 @@
   <nodeSkeleton
     v-bind="nodeProps"
     :titleDetail="resolution"
-    :processing="running || uploading"
+    :processing="nodeProcessing"
     v-model:bottomVisible="node.selected"
     :topVisible="node.selected"
     topWidth="max-content"
@@ -10,11 +10,11 @@
     :downloadName="outputFile?.url.split(/[\\/]/).at(-1)"
     @fullscreen="player?.enterFullscreen()"
     :bottomWidth="660"
-    :style="{ width: previewUrl && videoWidth ? `${videoWidth + 18}px` : undefined }">
+    :mediaAspect="displayUrl ? videoAspect : 0">
     <template #topActions>
       <el-button :icon="IconMovie" text :disabled="!outputFile || generating || deleting || uploading || actions?.processing || actions?.creatingAnalysis" @click.stop="actions?.createRetake()">片段重拍</el-button>
       <el-button :icon="IconMusic" text :disabled="!outputFile || generating || deleting || uploading || actions?.processing" @click.stop="actions?.open('extractAudio')">提取声音</el-button>
-      <el-button :icon="IconLayersSubtract" text :disabled="!outputFile || generating || deleting || uploading || actions?.processing" @click.stop="actions?.open('separate')">分开画面和声音</el-button>
+      <el-button :icon="IconLayersSubtract" text :disabled="!outputFile || generating || deleting || uploading || actions?.processing" @click.stop="actions?.open('separate')">分离音视频</el-button>
       <el-button :icon="IconScissors" text :disabled="!outputFile || generating || deleting || uploading || actions?.processing" @click.stop="actions?.open('trim')">截取片段</el-button>
       <el-button :icon="IconMovie" text :loading="actions?.creatingAnalysis" :disabled="!outputFile || generating || deleting || uploading || actions?.processing || actions?.creatingAnalysis" @click.stop="actions?.createFrameAnalysis()">逐帧拉片</el-button>
       <mediaHistory mediaType="video" :current="outputFile" :disabled="actions?.processing || generating || deleting || uploading" @select="outputs.video = { dataType: 'VIDEO', value: $event }" />
@@ -50,9 +50,6 @@
     <template #bottom>
       <el-card class="promptCard" :class="{ retakeCard: data.retake }" shadow="never" :bodyStyle="{ padding: '14px 16px 12px' }">
         <div v-if="data.retake" class="retakeEditor nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.stop>
-          <div v-if="previewUrl" class="previewButtons">
-            <el-button size="small" :type="previewMode === 'result' ? 'primary' : 'default'" @click="togglePreview('result')">{{ previewMode === 'result' && player?.playing ? '暂停结果' : '播放重拍结果' }}</el-button>
-          </div>
           <span v-if="!sourceFile">请连接一个原视频</span>
           <span v-else-if="sourceDuration < 4">{{ sourceDuration ? '原视频不足 4 秒，无法重拍' : '等待原视频时长' }}</span>
           <template v-else>
@@ -64,27 +61,20 @@
                 <button type="button" class="clipPlayback" :aria-label="!item.saved && clipPlaying ? '暂停片段' : '播放片段'" :title="!item.saved && clipPlaying ? '暂停片段' : '播放片段'" :disabled="generating || deleting" @pointerdown.stop @click="playClip(item.saved)"><component :is="!item.saved && clipPlaying ? IconPlayerPause : IconPlayerPlay" :size="13" fill="currentColor" /></button>
                 <strong class="rangeDuration">{{ item.length }} 秒</strong>
                 <button type="button" class="clipRemove" aria-label="删除片段" title="删除片段" :disabled="generating || deleting" @pointerdown.stop @click="removeClip(item.saved)"><icon-trash :size="13" /></button>
-                <el-dropdown class="rangeMenu" trigger="click" :disabled="generating || deleting" @command="command => command === 'play' ? playClip(item.saved) : removeClip(item.saved)">
-                  <button type="button" class="rangeMenuButton" aria-label="片段操作" :disabled="generating || deleting" @pointerdown.stop>⋯</button>
-                  <template #dropdown><el-dropdown-menu>
-                    <el-dropdown-item command="play">{{ !item.saved && clipPlaying ? '暂停' : '播放' }} · {{ item.length }} 秒</el-dropdown-item>
-                    <el-dropdown-item command="remove">删除片段</el-dropdown-item>
-                  </el-dropdown-menu></template>
-                </el-dropdown>
               </div>
               <div v-if="draftClip" class="draftClip" :style="clipStyle(draftClip)" />
               <button v-for="side in data.noRetakeClips ? [] : clipSides" :key="side" type="button" role="slider" class="rangeHandle" :disabled="generating || deleting"
                 :style="{ left: `${100 * (side === 'start' ? clipStart : clipEnd) / sourceDuration}%` }"
                 :aria-label="side === 'start' ? '片段起点' : '片段终点'" :aria-valuenow="side === 'start' ? clipStart : clipEnd"
-                :aria-valuemin="side === 'start' ? Math.max(clipBounds.left, clipEnd - 30) : clipStart + 4" :aria-valuemax="side === 'start' ? clipEnd - 4 : Math.min(clipBounds.right, clipStart + 30)"
+                :aria-valuemin="side === 'start' ? Math.max(clipBounds.left, clipEnd - maxClipLength) : clipStart + 4" :aria-valuemax="side === 'start' ? clipEnd - 4 : Math.min(clipBounds.right, clipStart + maxClipLength)"
                 @pointerdown="($event.currentTarget as HTMLElement).setPointerCapture($event.pointerId)" @pointermove="dragBoundary($event, side)"
-                @keydown.left.prevent="resizeClip(side, (side === 'start' ? clipStart : clipEnd) - 1)" @keydown.right.prevent="resizeClip(side, (side === 'start' ? clipStart : clipEnd) + 1)" />
+                @keydown.left.prevent="resizeClip(side, (side === 'start' ? clipStart : clipEnd) - 0.1)" @keydown.right.prevent="resizeClip(side, (side === 'start' ? clipStart : clipEnd) + 0.1)" />
             </div>
           </template>
         </div>
         <referenceItem
-          v-if="refList.length"
-          v-model="refList"
+          v-if="shownReferences.length"
+          v-model="shownReferences"
           @preview="setReferencePreview"
           @remove="removeReference" />
         <div v-if="frameMode" class="referenceHint">
@@ -125,17 +115,17 @@
             v-model:generateAudio="data.generateAudio"
             v-model:other="data.other"
             :ratios="ratioOptions"
-            :maxDuration="data.retake ? Math.max(0, clipBounds.right - clipStart) : undefined"
+            :retake="data.retake"
             :model="selectedModel"
             :disabled="generating || deleting || !selectedModel" />
           <div class="generationActions">
-            <mediaPrice v-if="generationInput" :quote="mediaQuote" />
+            <mediaPrice v-if="priceInput" :quote="mediaQuote" />
             <el-button
               class="sendButton"
               :icon="running ? IconPlayerStop : IconArrowUp"
-              :disabled="costBlocked || actions?.processing || cancelling || deleting || uploading || (!generating && !pendingRecovery && (!generationPrompt || !selectedModel || (data.retake && !clipReady)))"
-              :title="running ? '停止生成' : pendingRecovery ? '复查任务' : data.retake ? '重拍当前片段' : '生成视频'"
-              :aria-label="running ? '停止生成' : pendingRecovery ? '复查任务' : data.retake ? '重拍当前片段' : '生成视频'"
+              :disabled="costBlocked || actions?.processing || cancelling || deleting || uploading || (!generating && !pendingRecovery && (!selectedModel || (data.retake ? !retakeReady : !generationPrompt)))"
+              :title="running ? '停止生成' : pendingRecovery ? '复查任务' : data.retake ? '重拍所选片段' : '生成视频'"
+              :aria-label="running ? '停止生成' : pendingRecovery ? '复查任务' : data.retake ? '重拍所选片段' : '生成视频'"
               @click="running ? generationState.cancel().catch(error => showNodeError(error, '停止生成失败')) : startGeneration().catch((error) => showNodeError(error, '视频生成失败'))" />
           </div>
         </div>
@@ -151,7 +141,7 @@ import mediaNodePreview from "@toonflow/node-shared/mediaNodePreview";
 import { computed, nextTick, onMounted, onScopeDispose, ref, shallowRef, watch } from "vue";
 import { ElButton, ElCard, ElOption, ElOptionGroup, ElDropdown, ElDropdownMenu, ElDropdownItem } from "element-plus";
 import { IconCameraAi, IconSparkles, IconArrowUp, IconPlayerStop, IconPlayerPlay, IconPlayerPause, IconTrash, IconTransfer, IconMusic, IconLayersSubtract, IconScissors, IconMovie, IconPhotoScan, IconPlayerSkipBack, IconPlayerSkipForward } from "@tabler/icons-vue";
-import { findNodeModel, getNodeModelIdentity, getNodeModelKey, nodeSkeleton, nodeTools, useNode, useNodeModelMemory, useNodeModelSelection, z, type NodeMediaModel, type NodeVideoRequest, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
+import { findNodeModel, getNodeModelIdentity, getNodeModelKey, nodeSkeleton, nodeTools, useNode, useNodeModelMemory, useNodeModelSelection, z, type NodeMediaModel, type NodeMediaResult, type NodeVideoRequest, type NodeHandle } from "@toonflow/nodes-scaffold/runtime";
 import { groupNodeModels } from "@toonflow/node-shared/groupNodeModels";
 import { getVideoRatios } from "@toonflow/providers";
 import modelLabel from "@toonflow/node-shared/modelLabel";
@@ -164,7 +154,7 @@ import { getPromptText } from "@toonflow/node-shared/promptText";
 import promptInput from "@toonflow/node-shared/promptInput";
 import videoPlayer from "@toonflow/node-video/videoPlayer";
 import videoFilmstrip from "@toonflow/node-video/videoFilmstrip";
-import { processVideo } from "@toonflow/node-video/videoProcessing";
+import { processVideo, spliceVideo } from "@toonflow/node-video/videoProcessing";
 import { getMediaMimeType } from "@toonflow/node-shared/mediaTypes";
 import mediaToolMenu from "@toonflow/node-shared/mediaToolMenu";
 import videoActions from "@toonflow/node-video/videoActions";
@@ -188,9 +178,14 @@ const { id, node, nodeProps, nodeEvent, outputs, files, ai, ffmpeg, updateNodeIn
 });
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
 type RetakeClip = { id: string; start: number; length: number; prompt: string; promptModel: PromptModel; initialized?: boolean };
-const data = computed(() => node.data as { retake?: boolean; retakeClipId?: string; noRetakeClips?: boolean; otherClips?: RetakeClip[]; retakePromptInitialized?: boolean; clipStart?: number; prompt: string; promptModel: PromptModel; model: string; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean; other: Record<string, unknown> });
+// duration 为提交时四舍五入后的整秒时长，拼接时据此拉伸回选区时长；旧任务没有该字段则不拉伸。
+type RetakeRecovery = { source: string; start: number; end: number; duration?: number };
+const isRetakeTime = (tag: PromptModel[number][number]) => tag.type === "Custom" && tag.html.startsWith('<span class="retakeTime">');
+const data = computed(() => node.data as { retake?: boolean; retakeClipId?: string; noRetakeClips?: boolean; otherClips?: RetakeClip[]; retakePromptInitialized?: boolean; clipStart?: number; clipLength?: number; prompt: string; promptModel: PromptModel; model: string; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean; other: Record<string, unknown> });
 if (data.value.retake) {
   data.value.retakeClipId ??= crypto.randomUUID();
+  // 旧节点用 duration 记录当前片段长度；现在片段精确到 0.1 秒，duration 只表示提交给模型的时长。
+  data.value.clipLength ??= data.value.duration ?? 4;
   for (const clip of data.value.otherClips ?? []) clip.id ??= crypto.randomUUID();
 }
 data.value.prompt ??= "";
@@ -210,7 +205,7 @@ let disposed = false;
 const deleting = ref(false);
 const player = ref<InstanceType<typeof videoPlayer>>();
 const actions = ref<InstanceType<typeof videoActions>>();
-const videoWidth = ref(0);
+const videoAspect = ref(0);
 const resolution = ref("");
 const sourceFile = computed(() => {
   if (!data.value.retake) return;
@@ -220,12 +215,22 @@ const sourceFile = computed(() => {
 });
 const sourceUrl = files.useFileUrl(sourceFile, error => showNodeError(error, "原视频读取失败"));
 const sourceDuration = ref(0);
-watch(sourceUrl, () => { sourceDuration.value = 0; }, { flush: "sync" });
+const sourceAspect = ref(0);
+watch(sourceUrl, () => { sourceDuration.value = 0; sourceAspect.value = 0; }, { flush: "sync" });
 function readSourceDuration(event: Event) {
   const video = event.currentTarget as HTMLVideoElement;
-  if (video.getAttribute("src") === sourceUrl.value && Number.isFinite(video.duration)) sourceDuration.value = video.duration;
+  if (video.getAttribute("src") !== sourceUrl.value) return;
+  if (Number.isFinite(video.duration)) sourceDuration.value = video.duration;
+  if (video.videoWidth && video.videoHeight) sourceAspect.value = video.videoWidth / video.videoHeight;
 }
-const clipLength = computed(() => data.value.duration ?? 4);
+// 重拍的原视频由上方轨道展示和截取，提交的是选中片段，不作为参考素材列出。
+const shownReferences = computed({
+  get: () => data.value.retake ? refList.value.filter(item => item.dataType !== "VIDEO") : refList.value,
+  set: value => { refList.value = data.value.retake ? [...refList.value.filter(item => item.dataType === "VIDEO"), ...value] : value; },
+});
+const clipLength = computed(() => data.value.clipLength ?? 4);
+const tenth = (value: number) => Math.round(value * 10) / 10;
+const floorTenth = (value: number) => Math.floor(value * 10 + 0.000001) / 10;
 const otherClips = computed(() => data.value.otherClips ?? []);
 const clipBounds = computed(() => {
   const start = data.value.clipStart ?? 0;
@@ -248,6 +253,10 @@ const trackClips = computed<(TrackClip & { id: string })[]>(() => !data.value.re
 ].sort((left, right) => left.start - right.start));
 const promptSections = computed(() => trackClips.value.map(clip => clip.saved ?? data.value));
 const combinedPromptText = computed(() => promptSections.value.map(section => section.prompt).join("\n"));
+// 每个片段一个任务，时间标签后的文字归该片段；只有时间标签视为未填写。
+const retakeReady = computed(() => !!sourceFile.value && trackClips.value.length > 0 && trackClips.value.every((clip, index) =>
+  clip.length >= 4 && clip.length <= 30 && clip.start + clip.length <= sourceDuration.value + 0.05
+  && !!getPromptText(sectionLines(promptSections.value[index]!).map(line => line.filter(tag => !isRetakeTime(tag)))).trim()));
 function sectionLines(section: Pick<RetakeClip, "promptModel" | "prompt">): PromptModel {
   return section.promptModel.length ? section.promptModel : section.prompt.split("\n").map(text => [{ type: "Write", text }]);
 }
@@ -291,7 +300,7 @@ function selectClip(clip: RetakeClip, keepCurrent = true) {
   data.value.noRetakeClips = false;
   data.value.otherClips = remaining.sort((left, right) => left.start - right.start);
   data.value.clipStart = clip.start;
-  data.value.duration = clip.length;
+  data.value.clipLength = clip.length;
   data.value.prompt = clip.prompt;
   data.value.promptModel = clip.promptModel;
   data.value.retakePromptInitialized = clip.initialized;
@@ -340,8 +349,8 @@ function updateTrackDrag(event: PointerEvent) {
   if (!drag || drag.id !== event.pointerId || !track.value || (Math.abs(event.clientX - drag.x) < 3 && !draftClip.value)) return;
   const delta = (event.clientX - drag.x) / track.value.getBoundingClientRect().width * sourceDuration.value;
   if (drag.moving !== undefined) { moveClip(drag.moving + delta); return; }
-  const length = Math.min(30, Math.floor(drag.right - drag.left + 0.000001), Math.max(4, Math.round(Math.abs(delta))));
-  const start = Math.max(drag.left, Math.min(Math.floor((drag.right - length) * 10 + 0.000001) / 10, Number((delta < 0 ? drag.anchor - length : drag.anchor).toFixed(1))));
+  const length = Math.min(maxClipLength.value, floorTenth(drag.right - drag.left), Math.max(4, tenth(Math.abs(delta))));
+  const start = Math.max(drag.left, Math.min(floorTenth(drag.right - length), tenth(delta < 0 ? drag.anchor - length : drag.anchor)));
   draftClip.value = { start, length };
 }
 function finishTrackDrag(event: PointerEvent) {
@@ -360,11 +369,11 @@ type ClipSide = typeof clipSides[number];
 function resizeClip(side: ClipSide, boundary: number) {
   const start = clipStart.value;
   const end = clipEnd.value;
-  const limit = Math.floor(Number((side === "start" ? end - clipBounds.value.left : clipBounds.value.right - start).toFixed(6)));
+  const limit = floorTenth(side === "start" ? end - clipBounds.value.left : clipBounds.value.right - start);
   if (limit < 4) return;
-  const length = Math.min(30, limit, Math.max(4, Math.round(side === "start" ? end - boundary : boundary - start)));
-  data.value.clipStart = side === "start" ? Number((end - length).toFixed(1)) : start;
-  data.value.duration = length;
+  const length = Math.min(maxClipLength.value, limit, Math.max(4, tenth(side === "start" ? end - boundary : boundary - start)));
+  data.value.clipStart = side === "start" ? tenth(end - length) : start;
+  data.value.clipLength = length;
   inspectBoundary(side === "start" ? clipStart.value : clipEnd.value);
 }
 function dragBoundary(event: PointerEvent, side: ClipSide) {
@@ -378,16 +387,17 @@ function clipTime(seconds: number) {
   return `${String(minutes).padStart(2, "0")}:${(seconds % 60).toFixed(1).padStart(4, "0").replace(/\.0$/, "")}`;
 }
 const promptReferences = computed(() => data.value.retake ? referenceMentions.value.map(item => item.dataType === "VIDEO" ? { ...item, label: "视频1" } : item) : referenceMentions.value);
-watch([clipReady, trackClips, () => promptReferences.value.find(item => item.dataType === "VIDEO")?.value], ([ready, clips, reference]) => {
-  if (!ready || !reference) return;
+watch([clipReady, trackClips], ([ready, clips]) => {
+  if (!ready) return;
   for (const { saved, start, length } of clips) {
     const target = saved ?? data.value;
     const html = `<span class="retakeTime">${clipTime(start)}-${clipTime(start + length)}</span>`;
     if (!(saved ? saved.initialized : data.value.retakePromptInitialized)) {
       if (saved) saved.initialized = true;
       else data.value.retakePromptInitialized = true;
+      // 新片段的提示词只预填时间标签，后面的内容由用户填写。
       if (!target.prompt.trim() && !getPromptText(target.promptModel).trim()) {
-        target.promptModel = [[{ type: "Custom", html }, { type: "Write", text: clips.length === 1 ? ` 把${reference}中` : " " }]];
+        target.promptModel = [[{ type: "Custom", html }, { type: "Write", text: " " }]];
         target.prompt = getPromptText(target.promptModel);
       }
     }
@@ -434,8 +444,16 @@ function getMatchingModes(choice?: NodeMediaModel) {
 }
 
 function getDurations(choice: NodeMediaModel) {
-  return [...new Set((choice.durationResolutionMap ?? []).flatMap((item) => item.duration))].filter(duration => !data.value.retake || (duration >= 4 && duration <= 30 && (!sourceDuration.value || duration <= clipBounds.value.right - clipBounds.value.left))).sort((a, b) => a - b);
+  return [...new Set((choice.durationResolutionMap ?? []).flatMap((item) => item.duration))].filter(duration => !data.value.retake || (duration >= 4 && duration <= 30)).sort((a, b) => a - b);
 }
+
+// 片段按 0.1 秒选取，每段独立四舍五入到整秒提交和报价：截取时拉伸到整秒，取回后再拉伸回选区时长拼接。
+function requestDuration(length: number, choice = selectedModel.value) {
+  const rounded = Math.round(length);
+  const durations = choice ? getDurations(choice) : [];
+  return durations.length ? durations.find(duration => duration === rounded) : rounded;
+}
+const maxClipLength = computed(() => Math.min(30, (selectedModel.value && getDurations(selectedModel.value).at(-1)) || 30));
 
 function getResolutions(choice: NodeMediaModel, duration?: number) {
   // ACT: 当前视频分辨率使用 p 单位；出现其他单位时再统一换算。
@@ -448,6 +466,16 @@ function selectRatio(ratios: string[], current: string) {
   return ratios.includes("9:16") ? "9:16" : ratios[0] ?? "";
 }
 
+// 重拍片段要拼回原片，比例跟随原视频，取模型支持的最接近比例。
+function sourceRatio(ratios: string[]) {
+  if (!sourceAspect.value) return;
+  const distance = (ratio: string) => {
+    const [width, height] = ratio.split(":").map(Number);
+    return Math.abs(Math.log(width! / height! / sourceAspect.value));
+  };
+  return ratios.filter(ratio => Number.isFinite(distance(ratio))).sort((left, right) => distance(left) - distance(right))[0];
+}
+
 // ACT: 引用改变时只替换不适用的模式；普通媒体优先作为参考，避免自动变成首尾帧。
 watch([selectedModel, matchingModes, () => data.value.mode], ([choice, matches]) => {
   if (!choice || matches.some((item) => JSON.stringify(item) === data.value.mode)) return;
@@ -458,13 +486,15 @@ watch([selectedModel, matchingModes, () => data.value.mode], ([choice, matches])
   data.value.mode = mode === undefined ? "" : JSON.stringify(mode);
 }, { flush: "sync" });
 // ACT: 参数在节点内归一化，未选中、未挂载底部设置时也可由 Agent 直接生成。
-watch([selectedModel, () => data.value.duration, () => data.value.resolution, () => data.value.ratio, sourceDuration], ([choice]) => {
+watch([selectedModel, () => data.value.duration, () => data.value.resolution, () => data.value.ratio, clipLength, sourceAspect], ([choice]) => {
   if (!choice) return;
   const durations = getDurations(choice);
-  if (!durations.includes(data.value.duration!)) data.value.duration = durations[0];
+  // 重拍的时长跟随当前片段，只用来筛选可选的分辨率和比例。
+  if (data.value.retake) data.value.duration = requestDuration(clipLength.value, choice) ?? durations[0];
+  else if (!durations.includes(data.value.duration!)) data.value.duration = durations[0];
   const resolutions = getResolutions(choice, data.value.duration);
   if (!resolutions.includes(data.value.resolution)) data.value.resolution = resolutions[0] ?? "";
-  data.value.ratio = selectRatio(ratioOptions.value, data.value.ratio);
+  data.value.ratio = (data.value.retake && sourceRatio(ratioOptions.value)) || selectRatio(ratioOptions.value, data.value.ratio);
   if (choice.audio !== "optional") data.value.generateAudio = choice.audio === true;
 }, { flush: "sync" });
 const modelGroups = computed(() => groupNodeModels(models.value));
@@ -478,26 +508,52 @@ function getGenerationPrompt(prompt: string, references = refList.value) {
 }
 const generationPrompt = computed(() => getGenerationPrompt(data.value.prompt));
 // 报价和提交都按稳定 ID 解析提示词引用，顺序变化后仍对应同一份请求。
-const resolvedPrompt = computed(() => {
-  if (!data.value.promptModel.length) return data.value.prompt;
+function resolvePrompt(section: Pick<RetakeClip, "prompt" | "promptModel">, clipLength?: number) {
+  if (!section.promptModel.length) return section.prompt;
   let valid = true;
-  const requestModel = data.value.retake ? data.value.promptModel.map(line => line.map(tag =>
-    tag.type === "Custom" && tag.html.startsWith('<span class="retakeTime">')
-      ? { type: "Write" as const, text: `00:00-${clipTime(clipLength.value)}` } : tag)) : data.value.promptModel;
+  // 重拍提交的是截取后的片段，时间标签改写为从 00:00 开始。
+  const requestModel = clipLength === undefined ? section.promptModel : section.promptModel.map(line => line.map(tag =>
+    isRetakeTime(tag) ? { type: "Write" as const, text: `00:00-${clipTime(clipLength)}` } : tag));
   const prompt = getPromptText(requestModel, referenceId => {
     const value = referenceMentions.value.find(reference => reference.id === referenceId)?.value;
     if (value === undefined) valid = false;
     return value ?? "";
   });
   return valid ? prompt : undefined;
-});
+}
+const resolvedPrompt = computed(() => resolvePrompt(data.value));
 const generationInput = computed(() => resolvedPrompt.value === undefined ? undefined : getGenerationInput(resolvedPrompt.value));
-const mediaQuote = useMediaPrice(ai, "video", () => generationInput.value, () => selectedModel.value?.supportsPrice === true);
-const generationState = useNodeGeneration(outputs, () => generationController?.abort(), { ai, models, quote: mediaQuote });
+// 参考片段与生成结果都按四舍五入后的整秒计时，提示词的时间标签同样改写。
+const retakeInputs = computed(() => trackClips.value.map((clip, index) => {
+  const duration = requestDuration(clip.length);
+  const prompt = duration === undefined ? undefined : resolvePrompt(promptSections.value[index]!, duration);
+  return prompt === undefined ? undefined : getGenerationInput(prompt, duration);
+}));
+// 提交时原片换成拉伸到整秒的片段：报价按各段四舍五入后的时长计算参考视频，合计为各段之和。
+const priceInput = computed(() => !data.value.retake ? generationInput.value
+  : retakeInputs.value.length && retakeInputs.value.every(Boolean)
+    ? retakeInputs.value.map(input => ({ ...input!, videoDurations: input!.videos?.map(() => input!.duration!) })) : undefined);
+const mediaQuote = useMediaPrice(ai, "video", () => priceInput.value, () => selectedModel.value?.supportsPrice === true);
+const generationState = useNodeGeneration(outputs, () => generationController?.abort(), {
+  ai, models, quote: mediaQuote,
+  recover(results, tasks, signal) {
+    const clips = tasks.map(task => task.recoveryData as RetakeRecovery | undefined);
+    // 旧版单段重拍任务没有恢复信息，沿用生成片段作为输出。
+    return clips.every(clip => typeof clip?.source === "string") ? applyRetake(results, clips as RetakeRecovery[], signal) : Promise.resolve(results[0] ?? []);
+  },
+});
 const { generating, running, costBlocked, pendingRecovery, cancelling } = generationState;
+// 重拍从点击开始到拼接完成都遮罩节点并说明当前阶段；遮罩时底部面板隐藏，改由标题栏停止。
+const retakeStage = ref("");
+watch(generating, value => { if (!value) retakeStage.value = ""; });
+const nodeProcessing = computed(() => !data.value.retake || !generating.value ? running.value || uploading.value : {
+  text: retakeStage.value || "正在重拍片段…",
+  cancelling: cancelling.value,
+  cancel: () => void generationState.cancel().catch(error => showNodeError(error, "停止生成失败")),
+});
 watch(generating, value => { if (!value && !disposed && !deleting.value && !models.value.length) void loadModels().catch(error => showNodeError(error, "模型读取失败")); });
 
-function getGenerationInput(prompt: string): Omit<NodeVideoRequest, "directory"> | undefined {
+function getGenerationInput(prompt: string, duration = data.value.duration): Omit<NodeVideoRequest, "directory"> | undefined {
   const choice = selectedModel.value;
   if (!choice) return;
   const references = refList.value;
@@ -525,7 +581,7 @@ function getGenerationInput(prompt: string): Omit<NodeVideoRequest, "directory">
     ...getNodeModelIdentity(choice),
     prompt: getGenerationPrompt(prompt, references),
     mode: selectedMode.value,
-    duration: data.value.duration,
+    duration,
     resolution: data.value.resolution || undefined,
     ratio: data.value.ratio || undefined,
     generateAudio: choice.audio === "optional" ? data.value.generateAudio : choice.audio,
@@ -662,42 +718,68 @@ async function startGeneration() {
     return { status: "generating" };
   }
   const choice = selectedModel.value;
-  if (resolvedPrompt.value === undefined) throw new Error("提示词引用的素材已失效，请重新选择引用");
-  if (data.value.retake && !clipReady.value) throw new Error("请连接一个原视频，并选择不超出原片的 4–30 秒片段");
-  if (!choice || !generationInput.value) throw new Error("请先选择视频模型");
-  const input = { ...generationInput.value };
-  if (!input.prompt) throw new Error("请输入生成提示词");
+  if (!choice) throw new Error("请先选择视频模型");
+  if (data.value.retake && !retakeReady.value) throw new Error("请连接一个原视频，选择不超出原片的 4–30 秒片段，并为每个片段填写提示词");
+  const unsupported = data.value.retake ? trackClips.value.find(clip => requestDuration(clip.length, choice) === undefined) : undefined;
+  if (unsupported) throw new Error(`当前模型不支持 ${unsupported.length} 秒片段四舍五入后的 ${Math.round(unsupported.length)} 秒，请调整片段时长`);
+  const inputs = data.value.retake ? retakeInputs.value : [generationInput.value];
+  if (!inputs.every(Boolean)) throw new Error("提示词引用的素材已失效，请重新选择引用");
+  if (inputs.some(input => !input!.prompt)) throw new Error("请输入生成提示词");
   if (refList.value.some(item => item.value === undefined)) throw new Error("引用节点暂无内容，请先补充引用内容");
-  for (const match of input.prompt.matchAll(/\{\{ref (\d+)\}\}/g)) {
+  for (const match of inputs.flatMap(input => [...input!.prompt.matchAll(/\{\{ref (\d+)\}\}/g)])) {
     const reference = refList.value[Number(match[1]) - 1];
     if (reference?.dataType === "STRING" && !reference.value?.trim()) throw new Error(`参考 ${match[1]} 的文本为空，请补充内容或移除提示词中的引用`);
   }
   if (choice.mode?.length && !matchingModes.value.length) throw new Error("当前模型没有适合这些参考素材的生成模式，请更换模型或调整引用");
   const controller = new AbortController();
-  const clip = data.value.retake ? { source: sourceFile.value!.url, start: clipStart.value, end: clipStart.value + clipLength.value } : undefined;
+  const retake = data.value.retake ? { source: sourceFile.value!.url, clips: trackClips.value.map(clip => ({ start: clip.start, end: clip.start + clip.length })) } : undefined;
   generationController = controller;
   // ACT: 工具立即返回；任务身份先保存，卸载只停止等待，重新打开后复查。
   generation = generationState.run(async directory => {
-    if (clip) {
-      const workspace = files.getWorkspaceFiles();
-      const engine = await ffmpeg(controller.signal);
-      for (const path of ["assets", input.outputDirectory!]) {
-        await workspace.mkdir(path).catch(error => { if (error?.response?.data?.data?.code !== "EEXIST") throw error; });
-      }
-      const videoPath = `${input.outputDirectory}/retake${crypto.randomUUID()}.mp4`;
-      await processVideo(engine, clip.source, { action: "trim", videoPath, start: clip.start, end: clip.end }, controller.signal);
-      input.videos = [{ path: videoPath, mimeType: "video/mp4" }];
+    if (!retake) {
+      const [result] = await generationState.generate("video", { ...inputs[0]!, directory }, controller.signal);
+      controller.signal.throwIfAborted();
+      if (!result) throw new Error("供应商未返回视频");
+      outputs.value.video = { dataType: "VIDEO", value: { url: result.path, mimeType: result.mimeType } };
+      return;
     }
-    const [result] = await generationState.generate("video", { ...input, directory }, controller.signal);
+    // 每个片段截取后单独提交；全部完成后再替换回原片对应区间。
+    retakeStage.value = `正在截取 ${retake.clips.length} 个片段…`;
+    const workspace = files.getWorkspaceFiles();
+    const engine = await ffmpeg(controller.signal);
+    for (const path of ["assets", `assets/${id}`]) {
+      await workspace.mkdir(path).catch(error => { if (error?.response?.data?.data?.code !== "EEXIST") throw error; });
+    }
+    const items: { input: NodeVideoRequest; recoveryData: RetakeRecovery }[] = [];
+    for (const [index, clip] of retake.clips.entries()) {
+      const videoPath = `assets/${id}/retake${crypto.randomUUID()}.mp4`;
+      const duration = inputs[index]!.duration!;
+      await processVideo(engine, retake.source, { action: "trim", videoPath, ...clip, stretchTo: duration }, controller.signal);
+      items.push({ input: { ...inputs[index]!, videos: [{ path: videoPath, mimeType: "video/mp4" }], directory }, recoveryData: { source: retake.source, ...clip, duration } });
+    }
+    retakeStage.value = `正在生成 ${items.length} 个片段…`;
+    const results = await generationState.generateBatch("video", items, controller.signal);
+    const [result] = await applyRetake(results, items.map(item => item.recoveryData), controller.signal);
     controller.signal.throwIfAborted();
-    if (!result) throw new Error("供应商未返回视频");
-    outputs.value.video = { dataType: "VIDEO", value: { url: result.path, mimeType: result.mimeType } };
+    outputs.value.video = { dataType: "VIDEO", value: { url: result!.path, mimeType: result!.mimeType } };
   })
     .catch((error) => showNodeError(error, "视频生成失败"))
     .finally(() => {
       generationController = undefined;
     });
   return { status: "generating" };
+}
+
+/** 各片段任务结果按原选区拼回原视频；生成恢复时也走这里。 */
+async function applyRetake(results: NodeMediaResult[][], clips: RetakeRecovery[], signal: AbortSignal): Promise<NodeMediaResult[]> {
+  const replacements = results.map(([result], index) => {
+    if (result?.mediaType !== "video") throw new Error("供应商未返回视频");
+    return { ...clips[index]!, path: result.path };
+  });
+  const videoPath = `assets/${id}/retake${crypto.randomUUID()}.mp4`;
+  retakeStage.value = "正在拼接视频…";
+  await spliceVideo(await ffmpeg(signal), clips[0]!.source, replacements, videoPath, signal);
+  return [{ mediaType: "video", path: videoPath, mimeType: "video/mp4" }];
 }
 
 nodeEvent.on("save", (reason) => {
@@ -719,7 +801,7 @@ async function resizeVideo(event: Event) {
   const video = event.currentTarget as HTMLVideoElement;
   if (sourceUrl.value && displayUrl.value === sourceUrl.value && Number.isFinite(video.duration)) sourceDuration.value = video.duration;
   if (!video.videoWidth || !video.videoHeight) return;
-  videoWidth.value = Math.max(180, (240 * video.videoWidth) / video.videoHeight);
+  videoAspect.value = video.videoWidth / video.videoHeight;
   await nextTick();
   updateNodeInternals();
 }
@@ -873,7 +955,6 @@ nodeTools.register({
     margin-bottom: 12px;
     color: var(--el-text-color-regular);
     font-size: 13px;
-    .previewButtons { display: flex; align-items: center; margin-bottom: 8px; }
     .retakeTrack {
       position: relative;
       height: 54px;
@@ -897,24 +978,30 @@ nodeTools.register({
         cursor: grab;
       }
       .savedClip, .draftClip { border-style: dashed; }
+      // 时长固定在左上角始终显示；播放、删除放在下方两角避开时长，悬停或聚焦片段时才出现。
       .trackClip > .rangeDuration {
+        position: absolute;
+        top: 2px;
+        left: 6px;
         pointer-events: none;
         background: transparent;
         color: var(--el-color-white);
         text-shadow: 0 1px 3px #000, 0 0 4px #000;
-        font: 600 12px/16px var(--el-font-family, sans-serif);
+        font: 600 11px/14px var(--el-font-family, sans-serif);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
-      .clipPlayback, .clipRemove { position: absolute; top: 50%; transform: translateY(-50%); }
+      .clipPlayback, .clipRemove { position: absolute; bottom: 4px; visibility: hidden; }
+      .trackClip:hover, .trackClip:focus-within {
+        > .clipPlayback, > .clipRemove { visibility: visible; }
+      }
       .clipPlayback { left: 7px; }
       .clipRemove { right: 7px; }
-      .trackClip > .rangeMenu { display: none; padding: 0; background: transparent; }
-      .clipPlayback, .clipRemove, .rangeMenuButton {
+      .clipPlayback, .clipRemove {
         display: grid;
         place-items: center;
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
         padding: 0;
         border: 0;
         border-radius: 50%;
@@ -927,9 +1014,11 @@ nodeTools.register({
         &:disabled { opacity: .55; cursor: default; }
         &.clipRemove:enabled:hover { background: color-mix(in srgb, var(--el-color-danger) 55%, #101820); }
       }
-      @container (max-width: 102px) {
-        .clipPlayback, .trackClip > .rangeDuration, .clipRemove { display: none; }
-        .trackClip > .rangeMenu { display: inline-flex; }
+      // 片段较窄时缩小按钮，播放和删除仍直接可点。
+      @container (max-width: 64px) {
+        .clipPlayback, .clipRemove { width: 18px; height: 18px; }
+        .clipPlayback { left: 4px; }
+        .clipRemove { right: 4px; }
       }
 
       .rangeHandle {

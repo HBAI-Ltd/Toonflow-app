@@ -206,7 +206,7 @@
   "片段重拍": "Buuin muli ang clip",
   "逐帧拉片": "Frame-by-frame breakdown",
   "提取声音": "I-extract ang audio track",
-  "分开画面和声音": "Paghiwalayin ang audio at video",
+  "分离音视频": "Paghiwalayin ang audio at video",
   "请先启用逐帧拉片节点插件": "Paki-enable muna ang frame-by-frame breakdown node plugin",
   "将视频里的声音保存到新音频节点。": "Kinukuha ang audio track sa isang audio node; ang orihinal na video ay itinatago.",
   "已对齐的字幕": "Naiayon na subtitle",

@@ -206,7 +206,7 @@
   "片段重拍": "Klibi yeniden oluştur",
   "逐帧拉片": "Kare kare döküm",
   "提取声音": "Ses parçasını çıkar",
-  "分开画面和声音": "Ses ve videoyu ayır",
+  "分离音视频": "Ses ve videoyu ayır",
   "请先启用逐帧拉片节点插件": "Lütfen önce kare kare döküm düğümü eklentisini etkinleştirin",
   "将视频里的声音保存到新音频节点。": "Ses parçasını çıkarıp bir ses düğümü oluşturur; orijinal video korunur.",
   "已对齐的字幕": "Eşlenmiş altyazılar",
