@@ -48,7 +48,7 @@
       </div>
     </mediaNodePreview>
     <template #bottom>
-      <el-card class="promptCard" :class="{ retakeCard: data.retake }" shadow="never" :bodyStyle="{ padding: '14px 16px 12px' }">
+      <el-card class="promptCard" shadow="never" :bodyStyle="{ padding: '14px 16px 12px' }">
         <div v-if="data.retake" class="retakeEditor nodrag nopan nowheel" @pointerdown.stop @mousedown.stop @dblclick.stop @keydown.stop>
           <span v-if="!sourceFile">请连接一个原视频</span>
           <span v-else-if="sourceDuration < 4">{{ sourceDuration ? '原视频不足 4 秒，无法重拍' : '等待原视频时长' }}</span>
@@ -932,19 +932,6 @@ nodeTools.register({
 }
 
 .promptCard {
-  &.retakeCard {
-    --el-card-bg-color: #202225;
-    --el-bg-color: #202225;
-    --el-bg-color-overlay: #27292c;
-    --el-fill-color: #35373b;
-    --el-fill-color-light: #2c2e31;
-    --el-fill-color-dark: #3c3f43;
-    --el-border-color-light: #43464a;
-    --el-border-color-lighter: #3c3f43;
-    --el-text-color-primary: #f0f1f2;
-    --el-text-color-regular: #d6d8da;
-    --el-text-color-secondary: #acafb4;
-  }
   :deep(.retakeTime) {
     padding: 2px 6px;
     border-radius: 4px;
@@ -1005,8 +992,9 @@ nodeTools.register({
         padding: 0;
         border: 0;
         border-radius: 50%;
+        // 按钮叠在视频缩略图上，深浅主题都用半透明黑底白图标。
         color: white;
-        background: color-mix(in srgb, var(--el-card-bg-color) 90%, transparent);
+        background: rgb(0 0 0 / 60%);
         pointer-events: auto;
         cursor: pointer;
         &:enabled:hover { background: color-mix(in srgb, var(--rangeAccent) 55%, #101820); }
