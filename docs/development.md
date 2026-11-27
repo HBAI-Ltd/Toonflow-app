@@ -228,8 +228,8 @@ xattr -dr com.apple.quarantine "/Applications/toonflow.app"
 ```sh
 sudo apt-get update
 sudo apt-get install -y --no-install-recommends \
-  libgtk-3-0t64 libwebkit2gtk-4.1-0 libayatana-appindicator3-1 librsvg2-2 \
-  zenity ffmpeg dpkg
+  libgtk-3-0t64 libwebkit2gtk-4.1-0 gstreamer1.0-plugins-good gstreamer1.0-libav \
+  libayatana-appindicator3-1 librsvg2-2 zenity ffmpeg dpkg
 bun run build:desktop
 bun run package:desktop
 ```

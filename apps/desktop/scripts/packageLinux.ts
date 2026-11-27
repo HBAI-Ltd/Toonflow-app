@@ -109,7 +109,7 @@ try {
     "Maintainer: HBAI-Ltd <ltlctools@outlook.com>",
     `Installed-Size: ${sizeKiB}`,
     "Pre-Depends: ca-certificates, curl, unzip",
-    "Depends: libc6 (>= 2.39), libstdc++6, libgcc-s1, libgtk-3-0t64 | libgtk-3-0, libwebkit2gtk-4.1-0, libayatana-appindicator3-1, librsvg2-2, libpipewire-0.3-0t64 | libpipewire-0.3-0, zenity, ffmpeg, util-linux, xdg-utils, apt, pkexec | policykit-1",
+    "Depends: libc6 (>= 2.39), libstdc++6, libgcc-s1, libgtk-3-0t64 | libgtk-3-0, libwebkit2gtk-4.1-0, gstreamer1.0-plugins-good, gstreamer1.0-libav, libayatana-appindicator3-1, librsvg2-2, libpipewire-0.3-0t64 | libpipewire-0.3-0, zenity, ffmpeg, util-linux, xdg-utils, apt, pkexec | policykit-1",
     "Homepage: https://github.com/HBAI-Ltd/Toonflow-app",
     "Description: Toonflow AI creative workspace", " Local AI workflow for scripts, images and video.", "",
   ].join("\n"), { mode: 0o644 });

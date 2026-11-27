@@ -53,10 +53,12 @@ async function start() {
   }
 
   const childEnv: NodeJS.ProcessEnv = { ...process.env, TOONFLOW_DATA_DIR: directory };
-  if (childEnv.XDG_SESSION_TYPE === "wayland" && childEnv.WEBKIT_DISABLE_DMABUF_RENDERER === undefined) {
-    // ACT: 仅对已验证白屏的 VMware Wayland 会话禁用 DMA-BUF；保留用户显式配置，厂商信息不可读时沿用默认渲染。
-    const vendor = await readFile("/sys/class/dmi/id/sys_vendor", "utf8").catch(() => "");
-    if (vendor.trim() === "VMware, Inc.") childEnv.WEBKIT_DISABLE_DMABUF_RENDERER = "1";
+  if (childEnv.WEBKIT_DISABLE_DMABUF_RENDERER === undefined) {
+    // ACT: 仅对已验证的 VMware Wayland 白屏和 NVIDIA 专有驱动（含双显卡）卡死禁用 DMA-BUF；保留用户显式配置，信息不可读时沿用默认渲染。
+    const vmwareWayland = childEnv.XDG_SESSION_TYPE === "wayland"
+      && (await readFile("/sys/class/dmi/id/sys_vendor", "utf8").catch(() => "")).trim() === "VMware, Inc.";
+    const nvidia = await readFile("/proc/driver/nvidia/version", "utf8").then(() => true, () => false);
+    if (vmwareWayland || nvidia) childEnv.WEBKIT_DISABLE_DMABUF_RENDERER = "1";
   }
 
   // ACT: flock 随 SDK launcher 的整个生命周期持锁；启动超时也不能打开第二个写入相同数据的实例。

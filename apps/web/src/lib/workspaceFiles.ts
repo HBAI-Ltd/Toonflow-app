@@ -9,6 +9,8 @@ export type TextSnapshot = { text: string; revision: string; encoding: "utf-8" |
 const client = axios.create({ baseURL: "/api/workspaces/files", headers: { "x-toonflow-workspace": "1" } });
 registerApiLanguage(client);
 const fileUrls = new Map<string, { directory: string; path: string; url: Promise<string>; users: number }>();
+// ACT: Linux 桌面的 WebKitGTK 按 Range 读取 blob 音视频会错位，并可能导致主进程崩溃，因此改用服务端签名的 HTTP 直连；图片等仍使用 blob。
+const linkedMedia = actualPlatform.isLocalDesktop && !actualPlatform.isWindows && !actualPlatform.isMac;
 
 function cachePath(path: string) {
   return path.replaceAll("\\", "/").split("/").filter(part => part && part !== ".").join("/").toLowerCase();
@@ -63,8 +65,10 @@ export default function useWorkspaceFiles(directory?: MaybeRefOrGetter<string | 
     let entry = fileUrls.get(key);
     if (!entry) {
       // ACT: 部分 Chromium 环境下 XHR 的 blob 响应在大文件（约 10 MB 起的视频）上会以 net::ERR_FAILED 失败，改读 ArrayBuffer 再自建 Blob；代价是读取时短暂占用双份内存。
-      const url = client.get<ArrayBuffer>("/read", { params: { directory, path }, responseType: "arraybuffer" })
-        .then(({ data, headers }) => URL.createObjectURL(new Blob([data], { type: mimeType || String(headers["content-type"] || "") })));
+      const url = linkedMedia && /^(video|audio)\//.test(mimeType ?? "")
+        ? client.post<{ data: { url: string } }>("/link", { directory, path }).then(({ data }) => data.data.url)
+        : client.get<ArrayBuffer>("/read", { params: { directory, path }, responseType: "arraybuffer" })
+          .then(({ data, headers }) => URL.createObjectURL(new Blob([data], { type: mimeType || String(headers["content-type"] || "") })));
       entry = { directory, path, url, users: 0 };
       fileUrls.set(key, entry);
       const current = entry;

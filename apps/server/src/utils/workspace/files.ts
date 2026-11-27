@@ -1,4 +1,5 @@
 import { constants, copyFile, cp, lstat, mkdir, open, readdir, rename, rm, rmdir, unlink, realpath, writeAtomic } from "@toonflow/file";
+import { createHmac, randomBytes } from "node:crypto";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import type { Request } from "express";
 import { resolveWorkspace } from "@/utils/workspace";
@@ -137,6 +138,12 @@ export function lockWorkspaceFiles(paths: string[]) {
   }
   keys.forEach(path => busyFiles.add(path));
   return () => keys.forEach(path => busyFiles.delete(path));
+}
+
+// ACT: 媒体元素不能附带工作区请求头，用进程内随机密钥签名已授权的文件地址；无状态、随进程重启失效，多实例部署需改为共享密钥。
+const fileLinkSecret = randomBytes(32);
+export function signFileLink(directory: string, path: string) {
+  return createHmac("sha256", fileLinkSecret).update(`${directory}\0${path}`).digest("base64url");
 }
 
 export function protectWorkspaceRoot(directory: string, path: string) {
