@@ -15,6 +15,14 @@ async function run(command: string[]) {
   console.log(`完成 macOS 打包命令：${command[0]}`);
 }
 
+function verifyPackageIdentity(path: string, identity: string) {
+  const result = Bun.spawnSync(["/usr/bin/tar", "-xOf", path, "Resources/updateIdentity.json"], { stdout: "pipe", stderr: "pipe" });
+  if (result.exitCode === 0 && result.stdout.toString() === identity) return;
+  const listing = Bun.spawnSync(["/usr/bin/tar", "-tf", path], { stdout: "pipe", stderr: "pipe" });
+  const xarListing = Bun.spawnSync(["/usr/bin/xar", "-tf", path], { stdout: "pipe", stderr: "pipe" });
+  throw new Error(`macOS 安装包中的更新标识不一致：${path}\n${result.stderr.toString()}\ntar 条目：\n${listing.stdout.toString()}${listing.stderr.toString()}\nxar 条目：\n${xarListing.stdout.toString()}${xarListing.stderr.toString()}`);
+}
+
 const projectDir = realpathSync(resolve(import.meta.dirname, "../../.."));
 const artifactDir = resolve(projectDir, desktopConfig.build.artifactFolder);
 const version = desktopConfig.app.version;
@@ -146,6 +154,7 @@ trap 'exit 2' HUP INT TERM
   writeAtomicSync(join(productResources, "updateIdentity.json"), identity);
   const unsignedOutput = signed ? join(stagingDir, "unsigned.pkg") : output;
   await run(["/usr/sbin/pkgutil", "--flatten", expandedPackage, unsignedOutput]);
+  verifyPackageIdentity(unsignedOutput, identity);
   if (signed) {
     await run(["/usr/bin/productsign", "--sign", installerIdentity!, "--timestamp",
       ...(installerKeychain ? ["--keychain", installerKeychain] : []), unsignedOutput, output]);
@@ -165,8 +174,7 @@ trap 'exit 2' HUP INT TERM
       await run(["xcrun", "stapler", "validate", output]);
     }
   }
-  const packagedIdentity = Bun.spawnSync(["/usr/bin/tar", "-xOf", output, "Resources/updateIdentity.json"], { stdout: "pipe", stderr: "inherit" });
-  if (packagedIdentity.exitCode !== 0 || packagedIdentity.stdout.toString() !== identity) throw new Error("macOS 安装包中的更新标识不一致。");
+  verifyPackageIdentity(output, identity);
   const pkg = file(output);
   const digest = new Bun.CryptoHasher("sha256");
   for await (const chunk of pkg.stream()) digest.update(chunk);
