@@ -201,6 +201,12 @@ jobs:
           bun run release:desktop "$env:appVersion" "$env:releaseMode"
           $buildExitCode = $LASTEXITCODE
           if ($buildExitCode -ne 0) {
+            # 在失败构建的实际目录重现归档，直接保留 SDK 未输出的原生错误和退出码。
+            $bundleParent = Join-Path $env:GITHUB_WORKSPACE 'build/desktop/app/stable-win-${{ matrix.arch }}'
+            if (Test-Path -LiteralPath (Join-Path $bundleParent 'toonflow/bin/bun.exe')) {
+              & "$env:SystemRoot/System32/tar.exe" -cf (Join-Path $bundleParent 'toonflow.tar') -C $bundleParent toonflow
+              Write-Host ('tar exit code: 0x{0:X8}' -f $LASTEXITCODE)
+            }
             # SDK 仅返回归档失败；保留系统记录的 tar 崩溃原因。
             Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $buildStarted; Id = 1000, 1001 } -ErrorAction SilentlyContinue |
               Where-Object { $_.Message -match 'tar\.exe' } |
